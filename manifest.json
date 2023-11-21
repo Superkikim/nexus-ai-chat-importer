@@ -1,0 +1,15 @@
+{
+	"id": "obsidian-chatgpt-import",
+	"name": "ChatGPT Import",
+	"version": "1.0.0",
+	"author": "Akim Sissaoui",
+	"authorUrl": "https://github.com/Superkikim/obsidian-chatgpt-import/issues",
+	"manifest": "manifest.json",
+	"dependencies": [],
+	"isDesktopOnly": false,
+	"themeSupport": false,
+	"minAppVersion": "0.15.0",
+	"description": "A plugin to import ChatGPT archives into Obsidian.",
+	"license": "MIT"
+  }
+  
