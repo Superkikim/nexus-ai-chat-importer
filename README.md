@@ -5,20 +5,27 @@
 
 ## About
 
-The ChatGPT Import Plugin allows you to seamlessly import ChatGPT conversation archives into Obsidian. It simplifies the process of organizing and storing your chat data within your Obsidian vault.
-
-## How It Works
-
-1. Export your ChatGPT conversation data as a ZIP file.
-2. In Obsidian, click "Settings &gt; Community plugins" and enable the "ChatGPT Import" plugin.
-3. Use the "Import ChatGPT ZIP" command to select the ZIP file.
-4. The plugin will create Markdown files for each conversation in your specified folder.
+The ChatGPT Import Plugin simplifies the process of importing ChatGPT conversation archives into Obsidian. Follow the steps below to get started.
 
 ## Installation
 
-1. Download the plugin from the [Releases](https://github.com/Superkikim/obsidian-chatgpt-import/releases) page.
-2. In Obsidian, go to "Settings &gt; Community plugins" and enable the "ChatGPT Import" plugin.
-3. Follow the instructions above to start importing your ChatGPT data.
+1. Download a release from the [GitHub releases page](https://github.com/Superkikim/obsidian-chatgpt-import/releases)
+2. Put the downloaded release folder into the `.obsidian/plugins` folder within your Obsidian vault.
+3. In Obsidian, go to "Settings &gt; Community plugins" and enable the "ChatGPT Import" plugin.
+4. Follow the instructions above to start importing your ChatGPT data.
+   
+After installation, follow the setup instructions in the plugin settings to specify the folder path for saving conversations.
+
+## Usage
+
+1. Export your ChatGPT conversation data as a ZIP file:
+   - Click on your user icon in ChatGPT.
+   - Select "Settings & Beta" > "Data Control" > "Export Data" > "Export."
+   - You will receive an email with a link to download the ZIP file.
+2. In Obsidian, use the "Import ChatGPT ZIP" command:
+   - Select the ZIP file you downloaded.
+   - The plugin will create a subfolder named after the date of the export file in the specified folder
+   - For each chat in the archive, a note will be created
 
 ## Support
 
