@@ -1,49 +1,33 @@
 <div align="center">
-  <h1>🪨 Obsidian Plugin Creation</h1>
-  <p>How to create your own Obsidian plugin</p>
+  <h1>📥 Obsidian ChatGPT Import Plugin</h1>
+  <p>Import ChatGPT archives into Obsidian with ease</p>
 </div>
 
-# About Obsidian
+## About
 
-- [Obsidian](https://obsidian.md) is a **note taking** app based on Markdown files
-- It's **extensible**
+The ChatGPT Import Plugin allows you to seamlessly import ChatGPT conversation archives into Obsidian. It simplifies the process of organizing and storing your chat data within your Obsidian vault.
 
-# About this plugin
+## How It Works
 
-- Simple plugin, that counts the number of lines of the active file
-- The line count will be visible in the status bar
+1. Export your ChatGPT conversation data as a ZIP file.
+2. In Obsidian, click "Settings &gt; Community plugins" and enable the "ChatGPT Import" plugin.
+3. Use the "Import ChatGPT ZIP" command to select the ZIP file.
+4. The plugin will create Markdown files for each conversation in your specified folder.
 
-# Resources
+## Installation
 
-- Official [Obsidian Plugin Template](https://github.com/obsidianmd/obsidian-sample-plugin)
-- Unofficial [Obsidian Plugin Developer Docs](https://marcus.se.net/obsidian-plugin-docs)
+1. Download the plugin from the [Releases](https://github.com/Superkikim/obsidian-chatgpt-import/releases) page.
+2. In Obsidian, go to "Settings &gt; Community plugins" and enable the "ChatGPT Import" plugin.
+3. Follow the instructions above to start importing your ChatGPT data.
 
-# Usage
+## Support
 
-**Requirement**
+For any issues or feature requests, please [open an issue](https://github.com/Superkikim/obsidian-chatgpt-import/issues) on GitHub.
 
-- [Obsidian](https://obsidian.md)
-- [Git](https://git-scm.com)
-- [GitHub](https://github.com) account
-- [Node.js](https://nodejs.org)
-- Code Editor (I recommend [VSCode](https://code.visualstudio.com))
-- Basic [TypeScript](https://www.typescriptlang.org) knowledge
+## License
 
-**Installation**
+This plugin is licensed under the [MIT License](LICENSE).
 
-1. Open terminal
-2. `cd path/to/your/obsidian/vault/.obsidian/plugins`
-3. `git clone https://github.com/flolu/obsidian-plugin`
-4. `npm install`
-5. `npm run dev`
-6. In Obsidian, press `Ctrl + P` and select `Reload app without saving`
-7. In Obsidian, go to settings -> Community plugins -> Enable "Example Plugin"
+---
 
-**Commands**
-
-- `npm i` (Install dependencies)
-- `npm run dev` (Install dependencies)
-
-**Releasing**
-
-- [Releasing new releases](https://github.com/obsidianmd/obsidian-sample-plugin#releasing-new-releases)
+Enjoy importing your ChatGPT conversations into Obsidian!
