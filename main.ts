@@ -2,8 +2,27 @@ import { Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import JSZip from 'jszip';
 
 
+
 export default class ChatGPTImportPlugin extends Plugin {
     settings: PluginSettings;
+
+    /**
+     * Source Counters
+     */
+    totalExistingConversations: number = 0; // Count of all existing conversations in Obsidian
+    totalNewConversationsToImport: number = 0; // Count of new conversations to import
+    totalNonEmptyMessagesToImport: number = 0; // Count of non-empty messages in new conversations to import
+    totalNonEmptyMessagesToAdd: number = 0; // Count of non-empty messages to be added to existing conversations
+    totalExistingConversationsToUpdate: number = 0; // Count of existing conversations identified to be updated
+
+    /**
+     * Processed Counters
+     */
+    totalSanitizedFilenames: number = 0; // Count of sanitized filenames for new conversation notes
+    totalNewConversationsSuccessfullyImported: number = 0; // Count of new conversations successfully imported
+    totalConversationsActuallyUpdated: number = 0; // Count of conversations actually updated after processing
+    totalNonEmptyMessagesAdded: number = 0; // Count of non-empty messages actually added to conversations
+    
 
     async onload() {
         await this.loadSettings();
@@ -38,10 +57,13 @@ export default class ChatGPTImportPlugin extends Plugin {
         const chats = JSON.parse(conversationsJson);
         const newConversationIDs = await this.getNewConversationIDs(chats);
         const existingConversations = await this.getAllExistingConversations();
-    
+
+        this.totalNewConversationsToImport = newConversationIDs.length;
+        this.totalExistingConversations = existingConversations.length;
+
         for (const chat of chats) {
+
             const yearMonthFolder = this.getYearMonthFolder(chat.create_time);
-//            const folderPath = `${this.settings.archiveFolder}/${yearMonthFolder}`;
             const path = require('path');
             const folderPath = path.join(this.settings.archiveFolder, yearMonthFolder);
             try {
@@ -51,12 +73,35 @@ export default class ChatGPTImportPlugin extends Plugin {
             }
     
             if (newConversationIDs.includes(chat.id)) {
+                this.totalNewConversationsToImport++;
+                let nonEmptyMessageCount = 0;
+                for (const messageId in chat.mapping) {
+                    const message = chat.mapping[messageId].message;
+                    if (this.isValidMessage(message)) {
+                        nonEmptyMessageCount++;
+                    }
+                }
+                this.totalNonEmptyMessagesToImport += nonEmptyMessageCount;
                 await this.createMarkdown(chat, folderPath, existingConversations);
             }
         }
     
         // Now handle appending messages to existing notes
-        const conversationsWithNewMessages = await this.getConversationsWithNewMessages(chats, existingConversations);    await this.appendMessagesToNotes(conversationsWithNewMessages, chats, existingConversations);
+        const conversationsWithNewMessages = await this.getConversationsWithNewMessages(chats, existingConversations);
+        this.totalExistingConversationsToUpdate = conversationsWithNewMessages.length;
+
+        for (const [conversationId, newMessages] of Object.entries(conversationsWithNewMessages)) {
+            let nonEmptyMessageToAddCount = 0;
+            for (const message of newMessages) {
+                if (this.isValidMessage(message)) {
+                    nonEmptyMessageToAddCount++;
+                }
+            }
+            this.totalNonEmptyMessagesToAdd += nonEmptyMessageToAddCount;
+        }
+    
+        await this.appendMessagesToNotes(conversationsWithNewMessages, chats, existingConversations);
+    
     }
     
 
@@ -239,6 +284,7 @@ Last Updated: ${updateTimeStr}\n\n
         for (const chat of zipChats) {
             if (!existingConversations.hasOwnProperty(chat.id)) {
                 newConversationIDs.push(chat.id);
+                this.totalNewConversationsToImport++; // Increment the counter for each new conversation
             }
         }
     

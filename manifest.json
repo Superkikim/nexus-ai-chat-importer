@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-chatgpt-import",
 	"name": "ChatGPT Import",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"author": "Akim Sissaoui",
 	"authorUrl": "https://github.com/Superkikim/obsidian-chatgpt-import/issues",
 	"manifest": "manifest.json",
