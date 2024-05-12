@@ -52,8 +52,11 @@ export default class ChatGPTImportPlugin extends Plugin {
     async handleZipFile(file) {
         const zip = new JSZip();
         const content = await zip.loadAsync(file);
-        const conversationsJson = await content.file('conversations.json').async('string');
-    
+        const fileNames = Object.keys(content.files);
+        if (!fileNames.includes('conversations.json')) {
+            alert(`obsidian-chatgpt-import\n\nFile 'conversations.json' not found in the zip:\n${file.name}\n\nEither you have selected the wrong file, or openai.com has changed the ChatGPT export zip format.`);
+        }
+        const conversationsJson = await content.file("conversations.json").async("string");
         const chats = JSON.parse(conversationsJson);
         const newConversationIDs = await this.getNewConversationIDs(chats);
         const existingConversations = await this.getAllExistingConversations();
