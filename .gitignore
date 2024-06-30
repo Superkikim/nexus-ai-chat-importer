@@ -1,0 +1,40 @@
+# Dépendances
+node_modules/
+
+# Fichiers de configuration npm
+package-lock.json
+
+# Fichiers de données et de configuration Obsidian
+data.json
+
+# Fichiers système macOS
+.DS_Store
+
+# Fichiers système Windows
+Thumbs.db
+
+# Fichiers d'éditeur
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Fichiers de log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fichiers temporaires
+*.tmp
+*.temp
+
+# Fichiers de build optionnels (si vous ne voulez pas les inclure dans le repo)
+# Décommentez la ligne suivante si vous ne voulez pas inclure le fichier de build
+# dist/
+
+# Fichiers d'environnement (si vous en utilisez)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
