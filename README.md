@@ -3,6 +3,12 @@
   <p>Import ChatGPT archives into Obsidian with ease</p>
 </div>
 
+## ATTENTION: BUG ON CONVERSATIONS UPDATES
+
+I realized today there is a naughty bug on conversation updates. If you import already imported conversations, the messages will be removed from the note. 
+
+Until version 1.0.2 has not been released, ensure you DO NOT import already imported conversations, or keep save your zip files for later.
+
 ## About
 
 The ChatGPT Import Plugin simplifies the process of importing ChatGPT conversation archives into Obsidian. Follow the steps below to get started.
