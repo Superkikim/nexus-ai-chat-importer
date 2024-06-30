@@ -1,4 +1,4 @@
-import { Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { Plugin, PluginSettingTab, Setting, TFile, Modal, Notice } from 'obsidian';
 import JSZip from 'jszip';
 
 
@@ -22,13 +22,18 @@ export default class ChatGPTImportPlugin extends Plugin {
     totalNewConversationsSuccessfullyImported: number = 0; // Count of new conversations successfully imported
     totalConversationsActuallyUpdated: number = 0; // Count of conversations actually updated after processing
     totalNonEmptyMessagesAdded: number = 0; // Count of non-empty messages actually added to conversations
-    
 
+    processedFiles: string[] = [];
+    
     async onload() {
         await this.loadSettings();
-
+    
         this.addSettingTab(new ChatGPTImportPluginSettingTab(this.app, this));
-
+    
+        this.addRibbonIcon('message-square-plus', 'Import ChatGPT ZIP', (evt: MouseEvent) => {
+            this.selectZipFile();
+        });
+    
         this.addCommand({
             id: 'import-chatgpt-zip',
             name: 'Import ChatGPT ZIP',
@@ -37,73 +42,153 @@ export default class ChatGPTImportPlugin extends Plugin {
             }
         });
     }
-
     selectZipFile() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.zip';
         input.onchange = (e) => {
-            const file = e.target.files[0];
-            this.handleZipFile(file);
+            const file = e.target.files?.[0];
+            if (file) {
+                this.handleZipFile(file);
+            }
         };
+        // Reset the input value to allow selecting the same file again
+        input.value = '';
         input.click();
+    }
+
+    async saveProcessedFiles() {
+        await this.saveData({
+            settings: this.settings,
+            processedFiles: this.processedFiles
+        });
     }
 
     async handleZipFile(file) {
         const zip = new JSZip();
-        const content = await zip.loadAsync(file);
-        const conversationsJson = await content.file('conversations.json').async('string');
+        try {
+
+            const fileHash = await this.getFileHash(file);
     
-        const chats = JSON.parse(conversationsJson);
-        const newConversationIDs = await this.getNewConversationIDs(chats);
-        const existingConversations = await this.getAllExistingConversations();
-
-        this.totalNewConversationsToImport = newConversationIDs.length;
-        this.totalExistingConversations = existingConversations.length;
-
-        for (const chat of chats) {
-
-            const yearMonthFolder = this.getYearMonthFolder(chat.create_time);
-            const path = require('path');
-            const folderPath = path.join(this.settings.archiveFolder, yearMonthFolder);
-            try {
-                await this.ensureFolderExists(folderPath);
-            } catch (e) {
-                console.error("[chatgpt-import] Error ensuring folder exists:", e);
+            if (this.processedFiles.includes(fileHash)) {
+                const shouldProcess = await this.showConfirmationDialog(
+                    "This file has been processed before. Do you want to process it again?"
+                );
+                if (!shouldProcess) {
+                    return;
+                }
+            }
+        
+            const content = await zip.loadAsync(file);
+            const fileNames = Object.keys(content.files);
+    
+            if (!fileNames.includes('conversations.json')) {
+                this.showError(`File 'conversations.json' not found in the zip:\n${file.name}\n\nEither you have selected the wrong file, or openai.com has changed the ChatGPT export zip format.`);
+                return;
             }
     
-            if (newConversationIDs.includes(chat.id)) {
-                this.totalNewConversationsToImport++;
-                let nonEmptyMessageCount = 0;
-                for (const messageId in chat.mapping) {
-                    const message = chat.mapping[messageId].message;
+            const conversationsFile = content.file('conversations.json');
+            if (!conversationsFile) {
+                this.showError(`Unable to read 'conversations.json' from the zip file:\n${file.name}\n\nThe file might be corrupted or inaccessible.`);
+                return;
+            }
+    
+            const conversationsJson = await conversationsFile.async('string');
+            
+            const chats = JSON.parse(conversationsJson);
+            const newConversationIDs = await this.getNewConversationIDs(chats);
+            const existingConversations = await this.getAllExistingConversations();
+    
+            this.totalNewConversationsToImport = newConversationIDs.length;
+            this.totalExistingConversations = existingConversations.length;
+    
+            for (const chat of chats) {
+                const yearMonthFolder = this.getYearMonthFolder(chat.create_time);
+                const path = require('path');
+                const folderPath = path.join(this.settings.archiveFolder, yearMonthFolder);
+                try {
+                    await this.ensureFolderExists(folderPath);
+                } catch (e) {
+                    console.error("[chatgpt-import] Error ensuring folder exists:", e);
+                }
+        
+                if (newConversationIDs.includes(chat.id)) {
+                    this.totalNewConversationsToImport++;
+                    let nonEmptyMessageCount = 0;
+                    for (const messageId in chat.mapping) {
+                        const message = chat.mapping[messageId].message;
+                        if (this.isValidMessage(message)) {
+                            nonEmptyMessageCount++;
+                        }
+                    }
+                    this.totalNonEmptyMessagesToImport += nonEmptyMessageCount;
+                    await this.createMarkdown(chat, folderPath, existingConversations);
+                }
+            }
+        
+            // Now handle appending messages to existing notes
+            const conversationsWithNewMessages = await this.getConversationsWithNewMessages(chats, existingConversations);
+            this.totalExistingConversationsToUpdate = conversationsWithNewMessages.length;
+    
+            for (const [conversationId, newMessages] of Object.entries(conversationsWithNewMessages)) {
+                let nonEmptyMessageToAddCount = 0;
+                for (const message of newMessages) {
                     if (this.isValidMessage(message)) {
-                        nonEmptyMessageCount++;
+                        nonEmptyMessageToAddCount++;
                     }
                 }
-                this.totalNonEmptyMessagesToImport += nonEmptyMessageCount;
-                await this.createMarkdown(chat, folderPath, existingConversations);
+                this.totalNonEmptyMessagesToAdd += nonEmptyMessageToAddCount;
             }
-        }
-    
-        // Now handle appending messages to existing notes
-        const conversationsWithNewMessages = await this.getConversationsWithNewMessages(chats, existingConversations);
-        this.totalExistingConversationsToUpdate = conversationsWithNewMessages.length;
+        
+            await this.appendMessagesToNotes(conversationsWithNewMessages, chats, existingConversations);
 
-        for (const [conversationId, newMessages] of Object.entries(conversationsWithNewMessages)) {
-            let nonEmptyMessageToAddCount = 0;
-            for (const message of newMessages) {
-                if (this.isValidMessage(message)) {
-                    nonEmptyMessageToAddCount++;
-                }
+            if (!this.processedFiles.includes(fileHash)) {
+                this.processedFiles.push(fileHash);
+                await this.saveProcessedFiles();
             }
-            this.totalNonEmptyMessagesToAdd += nonEmptyMessageToAddCount;
+
+            new Notice("ChatGPT conversations imported successfully!");
+
+        } catch (error) {
+            console.error("Error handling zip file:", error);
+            this.showError("An error occurred while processing the zip file. Please try again.");
         }
-    
-        await this.appendMessagesToNotes(conversationsWithNewMessages, chats, existingConversations);
     
     }
     
+    showError(message) {
+        const errorMessage = `obsidian-chatgpt-import\n\n${message}\n\nPlease try selecting a file again.`;
+        new Notice(errorMessage, 10000);  // Show for 10 seconds
+        console.error(errorMessage);
+    }
+
+    showConfirmationDialog(message: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const modal = new Modal(this.app);
+            modal.contentEl.createEl("p", { text: message });
+            
+            const buttonContainer = modal.contentEl.createDiv();
+            
+            buttonContainer.createEl("button", { text: "Yes" }).addEventListener("click", () => {
+                modal.close();
+                resolve(true);
+            });
+            
+            buttonContainer.createEl("button", { text: "No" }).addEventListener("click", () => {
+                modal.close();
+                resolve(false);
+            });
+            
+            modal.open();
+        });
+    }
+
+    async getFileHash(file: File): Promise<string> {
+        const buffer = await file.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
     async ensureFolderExists(folderPath) {
         console.log(`[chatgpt-import] Checking for folder: ${folderPath}`);
@@ -119,7 +204,6 @@ export default class ChatGPTImportPlugin extends Plugin {
             console.error(`[chatgpt-import] Error handling folder '${folderPath}':`, e);
         }
     }
-    
     
     getYearMonthFolder(unixTime) {
         const date = new Date(unixTime * 1000);
@@ -270,7 +354,9 @@ Last Updated: ${updateTimeStr}\n\n
     }
 
     async loadSettings() {
-        this.settings = Object.assign({}, defaultSettings, await this.loadData());
+        const data = await this.loadData();
+        this.settings = Object.assign({}, defaultSettings, data.settings);
+        this.processedFiles = data.processedFiles || [];
     }
 
     async saveSettings() {
@@ -345,19 +431,33 @@ Last Updated: ${updateTimeStr}\n\n
         for (const conversationId of conversationsWithNewMessages) {
             const existingNotePath = existingConversations[conversationId];
             if (existingNotePath) {
-                const existingNoteContent = await this.app.vault.read(existingNotePath);
-                const chat = zipChats.find((chat) => chat.id === conversationId);
-                if (chat) {
-                    const newMessages = chat.mapping.filter((messageInfo) => {
-                        const uid = messageInfo.message.id;
-                        return !existingNoteContent.includes(`<!-- UID: ${uid} -->`);
-                    });
-                    if (newMessages.length > 0) {
-                        const newMessagesContent = this.generateMessagesContent(chat, newMessages);
-                        // Append new messages to the existing note content
-                        const updatedNoteContent = existingNoteContent + newMessagesContent;
-                        await this.writeToFile(existingNotePath, updatedNoteContent);
+                try {
+                    const existingNoteContent = await this.app.vault.read(this.app.vault.getAbstractFileByPath(existingNotePath));
+                    const chat = zipChats.find((chat) => chat.id === conversationId);
+                    if (chat) {
+                        // Extraire les métadonnées et le titre de la note existante
+                        const metadataMatch = existingNoteContent.match(/^---\n([\s\S]*?)\n---\n(# .*\n)/);
+                        const metadata = metadataMatch ? metadataMatch[1] : '';
+                        const title = metadataMatch ? metadataMatch[2] : '';
+    
+                        // Générer le nouveau contenu de la conversation
+                        const newContent = this.generateMessagesContent(chat);
+    
+                        // Combiner les métadonnées, le titre et le nouveau contenu
+                        const updatedNoteContent = `---\n${metadata}\n---\n${title}\n${newContent}`;
+    
+                        // Vérifier si le contenu a réellement changé
+                        if (existingNoteContent !== updatedNoteContent) {
+                            // Écrire le contenu mis à jour dans le fichier
+                            await this.writeToFile(existingNotePath, updatedNoteContent);
+                            console.log(`[chatgpt-import] Updated note: ${existingNotePath}`);
+                            this.totalConversationsActuallyUpdated++;
+                        } else {
+                            console.log(`[chatgpt-import] No changes needed for note: ${existingNotePath}`);
+                        }
                     }
+                } catch (error) {
+                    console.error(`[chatgpt-import] Error updating note ${existingNotePath}:`, error);
                 }
             }
         }
