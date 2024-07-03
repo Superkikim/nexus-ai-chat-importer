@@ -229,17 +229,15 @@ export default class ChatGPTImportPlugin extends Plugin {
 
     async createMarkdown(chat, folderPath, existingConversations) {
         try {
-            const title = this.formatTitle(chat.title);
-            // const create_time_str = this.formatTimestamp(chat.create_time, true);
-            // const update_time_str = this.formatTimestamp(chat.update_time, true);
+            const formattedTitle = this.formatTitle(chat.title);
             const create_time_str = `${this.formatTimestamp(chat.create_time, 'date')} at ${this.formatTimestamp(chat.create_time, 'time')}`;
             const update_time_str = `${this.formatTimestamp(chat.update_time, 'date')} at ${this.formatTimestamp(chat.update_time, 'time')}`;
 
-            let content = this.generateHeader(title, chat.id, create_time_str, update_time_str);
+            let content = this.generateHeader(formattedTitle, chat.id, create_time_str, update_time_str);
     
             content += this.generateMessagesContent(chat);
     
-            let fileName = await this.getUniqueFileName(chat.title, folderPath, existingConversations);
+            let fileName = await this.getUniqueFileName(formattedTitle, folderPath, existingConversations);
 
             console.log(`[chatgpt-import] Current addDatePrefix value: ${this.settings.addDatePrefix}`);
 
@@ -253,11 +251,11 @@ export default class ChatGPTImportPlugin extends Plugin {
             
             console.log(`[chatgpt-import] Creating note with file name: ${fileName}`);
             await this.writeToFile(fileName, content);
-            this.importLog.addSuccess(chat.title, fileName);
+            this.importLog.addSuccess(formattedTitle, fileName);
             this.totalNewConversationsSuccessfullyImported++;
         } catch (error) {
             console.error(`[chatgpt-import] Error creating markdown for chat ${chat.id}:`, error);
-            this.importLog.addError(chat.title, error.message);
+            this.importLog.addError(formattedTitle, error.message);
         }        
     }
 
