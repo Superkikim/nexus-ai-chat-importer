@@ -92,7 +92,14 @@ export default class ChatGPTImportPlugin extends Plugin {
                     const yearMonthFolder = this.getYearMonthFolder(chat.create_time);
                     const path = require('path');
                     const folderPath = path.join(this.settings.archiveFolder, yearMonthFolder);
-                    await this.ensureFolderExists(folderPath);
+                    const folderResult = await this.ensureFolderExists(folderPath);
+                    
+                    if (!folderResult.success) {
+                        // Ici, vous pouvez décider comment gérer l'erreur
+                        console.error(`Failed to create or access folder: ${folderPath}. Error: ${folderResult.error}`);
+                        // Pour l'instant, on continue avec le prochain chat
+                        continue;
+                    }
     
                     if (newConversationIDs.includes(chat.id)) {
                         let nonEmptyMessageCount = 0;
@@ -104,7 +111,6 @@ export default class ChatGPTImportPlugin extends Plugin {
                         }
                         this.totalNonEmptyMessagesToImport += nonEmptyMessageCount;
                         await this.createMarkdown(chat, folderPath, existingConversations);
-                        // La ligne this.importLog.addSuccess(chat.title); a été supprimée ici
                     }
                 } catch (chatError) {
                     console.error(`[chatgpt-import] Error processing chat:`, chatError);
@@ -129,6 +135,7 @@ export default class ChatGPTImportPlugin extends Plugin {
     
             await this.writeImportLog(file.name);
             new Notice(`Import completed. Log file created in the archive folder.`);
+
     
         } catch (error) {
             console.error("[chatgpt-import] Error handling zip file:", error);
@@ -172,23 +179,29 @@ export default class ChatGPTImportPlugin extends Plugin {
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    async ensureFolderExists(folderPath: string) {
-        console.log(`[chatgpt-import] Checking for folder: ${folderPath}`);
-        try {
-            const folder = this.app.vault.getAbstractFileByPath(folderPath);
-            if (!folder) {
-                console.log(`[chatgpt-import] Creating folder: ${folderPath}`);
-                await this.app.vault.createFolder(folderPath);
-            } else if (!(folder instanceof TFolder)) {
-                console.error(`[chatgpt-import] Path exists but is not a folder: ${folderPath}`);
-                throw new Error(`Path exists but is not a folder: ${folderPath}`);
-            } else {
-                console.log(`[chatgpt-import] Folder already exists: ${folderPath}`);
+    async ensureFolderExists(folderPath: string): Promise<{ success: boolean, error?: string }> {
+        const folders = folderPath.split("/").filter(p => p.length);
+        let currentPath = "";
+    
+        for (const folder of folders) {
+            currentPath += folder + "/";
+            const currentFolder = this.app.vault.getAbstractFileByPath(currentPath);
+            
+            if (!currentFolder) {
+                try {
+                    await this.app.vault.createFolder(currentPath);
+                } catch (error) {
+                    // Si le dossier existe déjà, ce n'est pas une erreur
+                    if (error.message !== "Folder already exists.") {
+                        console.error(`Failed to create folder: ${currentPath}`, error);
+                        return { success: false, error: `Failed to create folder: ${currentPath}. Reason: ${error.message}` };
+                    }
+                }
+            } else if (!(currentFolder instanceof TFolder)) {
+                return { success: false, error: `Path exists but is not a folder: ${currentPath}` };
             }
-        } catch (e) {
-            console.error(`[chatgpt-import] Error handling folder '${folderPath}':`, e);
-            throw e; // Propagate the error
         }
+        return { success: true };
     }
 
     getYearMonthFolder(unixTime) {
@@ -251,31 +264,33 @@ export default class ChatGPTImportPlugin extends Plugin {
     async writeImportLog(zipFileName: string) {
         const now = new Date();
         let prefix = this.formatTimestamp(now.getTime() / 1000, 'YYYY-MM-DD');
-    
+
         if (this.settings.addDatePrefix) {
             prefix = this.formatTimestamp(now.getTime() / 1000, this.settings.dateFormat === 'YYYY-MM-DD' ? 'YYYY-MM-DD' : 'YYYYMMDD');
         }
-    
+
         let logFileName = `${prefix} - ChatGPT Import log.md`;
-    
-        // Utiliser la méthode join de l'API Obsidian pour créer le chemin du dossier de logs
+
         const logFolderPath = `${this.settings.archiveFolder}/logs`;
         
-        // Créer le dossier de logs s'il n'existe pas
-        await this.ensureFolderExists(logFolderPath);
-    
+        const folderResult = await this.ensureFolderExists(logFolderPath);
+        if (!folderResult.success) {
+            console.error(`Failed to create or access log folder: ${logFolderPath}. Error: ${folderResult.error}`);
+            new Notice("Failed to create log file. Check console for details.");
+            return;
+        }
+
         let logFilePath = `${logFolderPath}/${logFileName}`;
-    
-        // Vérifie si le fichier existe déjà, et ajoute un suffixe numérique si c'est le cas
+
         let counter = 1;
         while (await this.app.vault.adapter.exists(logFilePath)) {
             logFileName = `${prefix}-${counter} - ChatGPT Import log.md`;
             logFilePath = `${logFolderPath}/${logFileName}`;
             counter++;
         }
-    
+
         const currentDate = `${this.formatTimestamp(now.getTime() / 1000, 'date')} ${this.formatTimestamp(now.getTime() / 1000, 'time')}`;
-    
+
         const logContent = `---
 importdate: ${currentDate}
 zipFile: ${zipFileName}
@@ -302,10 +317,17 @@ Imported ZIP file: ${zipFileName}
 - Total Non-Empty Messages Added to Existing Conversations: ${this.totalNonEmptyMessagesToAdd}
 
 ## Detailed Log
-${this.importLog.getDetailedLog()}s
-        `;
-    
-        await this.writeToFile(logFilePath, logContent);
+${this.importLog.getDetailedLog()}
+`;
+
+        try {
+            await this.writeToFile(logFilePath, logContent);
+            console.log(`Import log created: ${logFilePath}`);
+            new Notice(`Import log created: ${logFilePath}`);
+        } catch (error) {
+            console.error(`Failed to write import log: ${error.message}`);
+            new Notice("Failed to create log file. Check console for details.");
+        }
     }
 
     formatTitle(title) {
@@ -448,7 +470,6 @@ Last Updated: ${updateTimeStr}\n\n
         return newConversationIDs;
     }
     
-
     async getAllExistingConversations() {
         const files = this.app.vault.getMarkdownFiles();
         const conversations = {};
