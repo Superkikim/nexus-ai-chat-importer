@@ -1,8 +1,6 @@
 import { Plugin, PluginSettingTab, Setting, TFile, TFolder, Modal, Notice, moment } from 'obsidian';
 import JSZip from 'jszip';
 
-
-
 export default class ChatGPTImportPlugin extends Plugin {
     settings: PluginSettings;
 
@@ -25,7 +23,6 @@ export default class ChatGPTImportPlugin extends Plugin {
 
     processedFiles: string[] = [];
     private importLog: ImportLog;
-
     
     async onload() {
         console.log('Loading ChatGPT Import Plugin');
@@ -446,9 +443,10 @@ Last Updated: ${updateTimeStr}\n\n
         
     async loadSettings() {
         const data = await this.loadData();
-        this.settings = Object.assign({}, defaultSettings, data.settings);
-        this.processedFiles = data.processedFiles || [];
+        this.settings = Object.assign({}, defaultSettings, data?.settings || {});
+        this.processedFiles = data?.processedFiles || [];
     }
+
 
     async saveSettings() {
         await this.saveData(this.settings);
@@ -637,3 +635,4 @@ const defaultSettings: PluginSettings = {
     addDatePrefix: false,
     dateFormat: 'YYYY-MM-DD'
 }
+
