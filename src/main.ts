@@ -90,7 +90,6 @@ export default class ChatGPTImportPlugin extends Plugin {
         this.conversationRecords = data?.conversationRecords || {};
     }
     
-
     async saveSettings() {
         await this.saveData(this.settings);
     }
@@ -117,7 +116,6 @@ export default class ChatGPTImportPlugin extends Plugin {
         input.value = '';
         input.click();
     }
-
 
     async validateZipFile(file: File): Promise<JSZip> {
     try {
@@ -502,50 +500,63 @@ Last Updated: ${updateTimeStr}\n\n
     generateMessagesContent(chat) {
         let messagesContent = '';
         for (const messageId in chat.mapping) {
-            const message = chat.mapping[messageId].message;
-            if (this.isValidMessage(message)) {
-                messagesContent += this.formatMessage(message);
+            const messageObj = chat.mapping[messageId];
+            if (messageObj && messageObj.message && this.isValidMessage(messageObj.message)) {
+                messagesContent += this.formatMessage(messageObj.message);
             }
         }
         return messagesContent;
     }
-
+    
     isValidMessage(message) {
-        if (
+        return (
             message &&
+            typeof message === 'object' &&
             message.content &&
-            message.content.parts &&
-            message.content.parts.length > 0
-        ) {
-            let messageText = message.content.parts[0] + ""; // Convert to string explicitly
-            if (!messageText.trim()) {
-                return false; // Message is invalid (empty or whitespace-only)
-            }
-            return true; // Message is valid
-        }
-        return false; // Message is invalid
-    }
+            typeof message.content === 'object' &&
+            Array.isArray(message.content.parts) &&
+            message.content.parts.length > 0 &&
+            message.content.parts.some(part => typeof part === 'string' && part.trim() !== "")
+        );
+}
 
     formatMessage(message) {
-        // const messageTime = this.formatTimestamp(message.create_time, true);
-        const authorName = message.author.role === 'user' ? "User" : "ChatGPT";
+        if (!message || typeof message !== 'object') {
+            console.error('Invalid message object:', message);
+            return ''; // Return empty string for invalid messages
+        }
+    
+        const messageTime = this.formatTimestamp(message.create_time || Date.now() / 1000, 'date') + ' at ' + this.formatTimestamp(message.create_time || Date.now() / 1000, 'time');
+        
+        let authorName = "Unknown";
+        if (message.author && typeof message.author === 'object' && 'role' in message.author) {
+            authorName = message.author.role === 'user' ? "User" : "ChatGPT";
+        } else {
+            console.warn('Author information missing or invalid:', message.author);
+        }
+    
         const headingLevel = authorName === "User" ? "###" : "####";
         const quoteChar = authorName === "User" ? ">" : ">>";
-
-        let messageContent = `${headingLevel} ${authorName}, on ${this.formatTimestamp(message.create_time, 'date')} at ${this.formatTimestamp(message.create_time, 'time')};\n`;
+    
+        let messageContent = `${headingLevel} ${authorName}, on ${messageTime};\n`;
         
         if (
             message.content &&
-            message.content.parts &&
-            message.content.parts.length > 0 &&
-            typeof message.content.parts[0] === "string"
+            typeof message.content === 'object' &&
+            Array.isArray(message.content.parts) &&
+            message.content.parts.length > 0
         ) {
-            const messageText = message.content.parts[0];
+            const messageText = message.content.parts
+                .filter(part => typeof part === 'string')
+                .join('\n');
             messageContent += messageText.split('\n').map(line => `${quoteChar} ${line}`).join('\n');
+        } else {
+            console.warn('Message content missing or invalid:', message.content);
+            messageContent += `${quoteChar} [No content]`;
         }
-
-        messageContent += `\n<!-- UID: ${message.id} -->\n`;
-
+    
+        messageContent += `\n<!-- UID: ${message.id || 'unknown'} -->\n`;
+    
         if (authorName === "ChatGPT") {
             messageContent += "\n---\n";
         }
