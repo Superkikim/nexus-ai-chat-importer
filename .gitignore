@@ -1,6 +1,9 @@
 # Dépendances
 node_modules/
 
+# Local resources
+local_resources/conversations.json
+
 # Fichiers de configuration npm
 package-lock.json
 
