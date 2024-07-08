@@ -1,24 +1,51 @@
+// Imports
 import { Plugin, PluginSettingTab, Setting, TFile, TFolder, Modal, Notice, moment } from 'obsidian';
 import JSZip from 'jszip';
+import { PluginSettings, ChatMessage, Chat, ConversationRecord } from './types';
+import { formatTimestamp, getYearMonthFolder, formatTitle, isValidMessage } from './utils';
 
-interface PluginSettings {
-    archiveFolder: string;
-    addDatePrefix: boolean;
-    dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
-}
-
+// Constants
 const DEFAULT_SETTINGS: PluginSettings = {
     archiveFolder: 'ChatGPT Archives',
     addDatePrefix: false,
     dateFormat: 'YYYY-MM-DD'
 };
 
+enum LogLevel {
+    INFO,
+    WARN,
+    ERROR
+}
+
+class Logger {
+    private logToConsole(level: LogLevel, message: string, details?: any) {
+        const timestamp = new Date().toISOString();
+        const logMethod = level === LogLevel.ERROR ? console.error : 
+                          level === LogLevel.WARN ? console.warn : 
+                          console.log;
+        
+        logMethod(`[${timestamp}] [ChatGPT Import] [${LogLevel[level]}] ${message}`, details);
+    }
+
+    info(message: string, details?: any) {
+        this.logToConsole(LogLevel.INFO, message, details);
+    }
+
+    warn(message: string, details?: any) {
+        this.logToConsole(LogLevel.WARN, message, details);
+    }
+
+    error(message: string, details?: any) {
+        this.logToConsole(LogLevel.ERROR, message, details);
+    }
+}
+
 export default class ChatGPTImportPlugin extends Plugin {
+    // Properties
     settings: PluginSettings;
     private importLog: ImportLog;
     private importedArchives: Record<string, string> = {}; // hash -> filename
     private conversationRecords: Record<string, { path: string, updateTime: number }> = {};
-
     /**
      * Source Counters
      */
@@ -35,8 +62,10 @@ export default class ChatGPTImportPlugin extends Plugin {
     totalConversationsActuallyUpdated: number = 0; // Count of conversations actually updated after processing
     totalNonEmptyMessagesAdded: number = 0; // Count of non-empty messages actually added to conversations
     
+    // Lifecycle methods
     async onload() {
         console.log('Loading ChatGPT Import Plugin');
+        this.logger = new Logger();
         await this.loadSettings();
     
         this.addSettingTab(new ChatGPTImportPluginSettingTab(this.app, this));
@@ -82,18 +111,12 @@ export default class ChatGPTImportPlugin extends Plugin {
             }
         });
     }
-
     async loadSettings() {
         const data = await this.loadData();
         this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
         this.importedArchives = data?.importedArchives || {};
         this.conversationRecords = data?.conversationRecords || {};
     }
-    
-    async saveSettings() {
-        await this.saveData(this.settings);
-    }
-
     async saveSettings() {
         await this.saveData({
             settings: this.settings,
@@ -102,39 +125,7 @@ export default class ChatGPTImportPlugin extends Plugin {
         });
     }
 
-    selectZipFile() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.zip';
-        input.onchange = (e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-                this.handleZipFile(file);
-            }
-        };
-        // Reset the input value to allow selecting the same file again
-        input.value = '';
-        input.click();
-    }
-
-    async validateZipFile(file: File): Promise<JSZip> {
-    try {
-        const zip = new JSZip();
-        const content = await zip.loadAsync(file);
-        const fileNames = Object.keys(content.files);
-
-        if (!fileNames.includes('conversations.json')) {
-            throw new Error(`File 'conversations.json' not found in the zip: ${file.name}`);
-        }
-
-        return zip;
-    } catch (error) {
-        console.error("[chatgpt-import] Error validating zip file:", error);
-        this.importLog.addError('Zip File Validation', error.message);
-        throw error;
-    }
-    }
-
+    // Core functionality methods
     async handleZipFile(file: File) {
         this.importLog = new ImportLog();
         try {
@@ -144,206 +135,249 @@ export default class ChatGPTImportPlugin extends Plugin {
                     `This archive (${file.name}) has already been imported on ${this.importedArchives[fileHash].date}. Do you want to process it again?`
                 );
                 if (!shouldReimport) {
+                    this.logInfo("Import cancelled by user", { fileName: file.name });
                     new Notice("Import cancelled.");
                     return;
                 }
             }
-
+    
             const zip = await this.validateZipFile(file);
-            const conversationsJson = await zip.file('conversations.json').async('string');
-            const chats = JSON.parse(conversationsJson);
-            const existingConversations = await this.getAllExistingConversations();
-
-            this.totalExistingConversations = Object.keys(existingConversations).length;
-        
-            for (const chat of chats) {
-                try {
-                    const yearMonthFolder = this.getYearMonthFolder(chat.create_time);
-                    const path = require('path');
-                    const folderPath = path.join(this.settings.archiveFolder, yearMonthFolder);
-                    const folderResult = await this.ensureFolderExists(folderPath);
-                    
-                    if (!folderResult.success) {
-                        console.error(`Failed to create or access folder: ${folderPath}. Error: ${folderResult.error}`);
-                        continue;
-                    }
-
-                    const existingRecord = this.conversationRecords[chat.id];
-                    if (existingRecord) {
-                        const existingFile = this.app.vault.getAbstractFileByPath(existingRecord.path);
-                        if (!existingFile) {
-                            // File doesn't exist in the vault, remove it from records and process as new
-                            delete this.conversationRecords[chat.id];
-                            await this.createNewNote(chat, folderPath, existingConversations);
-                        } else if (existingRecord.updateTime >= chat.update_time) {
-                            this.importLog.addSkipped(chat.title || 'Untitled', "No updates");
-                            continue;
-                        } else {
-                            await this.updateExistingNote(chat, existingRecord.path);
-                        }
-                    } else {
-                        await this.createNewNote(chat, folderPath, existingConversations);
-                    }
-                    
-                    // Update conversation record
-                    this.conversationRecords[chat.id] = {
-                        path: `${folderPath}/${this.getFileName(chat)}`,
-                        updateTime: chat.update_time
-                    };
-                } catch (chatError) {
-                    console.error(`[chatgpt-import] Error processing chat:`, chatError);
-                    this.importLog.addError(chat.title || 'Untitled', chatError.message);
-                }
-            }
-
-            // Record the imported archive with the current date
+            await this.processConversations(zip, file);
+    
             this.importedArchives[fileHash] = {
                 fileName: file.name,
                 date: new Date().toISOString()
             };
             await this.saveSettings();
-
-            await this.writeImportLog(file.name);
-            new Notice(`Import completed. Log file created in the archive folder.`);
-        } catch (error) {
-            console.error("[chatgpt-import] Error handling zip file:", error);
-            this.importLog.addError('Zip File Processing', error.message);
-            await this.writeImportLog(file.name);
-            new Notice("An error occurred while processing the ZIP file. Please check the log file for details.");
-        }
-    }
-
-    async processConversations(zip: JSZip, file: File) {
-        try {
-            const conversationsJson = await zip.file('conversations.json').async('string');
-            const chats = JSON.parse(conversationsJson);
-            const existingConversations = await this.getAllExistingConversations();
-
-            this.totalExistingConversations = Object.keys(existingConversations).length;
-        
-            for (const chat of chats) {
-                try {
-                    const yearMonthFolder = this.getYearMonthFolder(chat.create_time);
-                    const path = require('path');
-                    const folderPath = path.join(this.settings.archiveFolder, yearMonthFolder);
-                    const folderResult = await this.ensureFolderExists(folderPath);
-                    
-                    if (!folderResult.success) {
-                        console.error(`Failed to create or access folder: ${folderPath}. Error: ${folderResult.error}`);
-                        continue;
-                    }
-
-                    const existingRecord = this.conversationRecords[chat.id];
-                    if (existingRecord) {
-                        if (existingRecord.updateTime >= chat.update_time) {
-                            this.importLog.addSkipped(chat.title || 'Untitled', "No updates");
-                            continue;
-                        }
-                        await this.updateExistingNote(chat, existingRecord.path);
-                    } else {
-                        await this.createNewNote(chat, folderPath, existingConversations);
-                    }
-                    
-                    // Update conversation record
-                    this.conversationRecords[chat.id] = {
-                        path: `${folderPath}/${this.getFileName(chat)}`,
-                        updateTime: chat.update_time
-                    };
-                } catch (chatError) {
-                    console.error(`[chatgpt-import] Error processing chat:`, chatError);
-                    this.importLog.addError(chat.title || 'Untitled', chatError.message);
-                }
-            }
-
-            await this.writeImportLog(file.name);
-            new Notice(`Import completed. Log file created in the archive folder.`);
-        } catch (error) {
-            console.error("[chatgpt-import] Error processing conversations:", error);
-            this.importLog.addError('Conversation Processing', error.message);
-            await this.writeImportLog(file.name);
-            new Notice("An error occurred while processing conversations. Please check the log file for details.");
-        }
-    }
-
-    async updateExistingNote(chat: any, filePath: string) {
-        const file = this.app.vault.getAbstractFileByPath(filePath);
-        if (file instanceof TFile) {
-            let content = await this.app.vault.read(file);
             
-            // Update metadata
-            content = content.replace(
-                /^update_time: .*$/m,
-                `update_time: ${this.formatTimestamp(chat.update_time, 'date')} at ${this.formatTimestamp(chat.update_time, 'time')}`
+            this.logInfo("Import completed successfully", { fileName: file.name });
+        } catch (error) {
+            this.logError("Error handling zip file", error.message);
+        } finally {
+            await this.writeImportLog(file.name);
+            new Notice(this.importLog.hasErrors() 
+                ? "An error occurred during import. Please check the log file for details."
+                : "Import completed. Log file created in the archive folder.");
+        }
+    }
+    async processConversations(zip: JSZip, file: File): Promise<void> {
+        try {
+            const chats = await this.extractChatsFromZip(zip);
+            this.logInfo(`Extracted ${chats.length} chats from zip file`, { fileName: file.name });
+                const existingConversations = await this.getAllExistingConversations();
+    
+            this.initializeCounters(existingConversations);
+    
+            for (const chat of chats) {
+                await this.processSingleChat(chat, existingConversations);
+            }
+    
+            this.updateImportLog();
+
+            this.logInfo(`Processed ${chats.length} conversations`, {
+                new: this.totalNewConversationsSuccessfullyImported,
+                updated: this.totalConversationsActuallyUpdated,
+                skipped: this.totalExistingConversations - this.totalConversationsActuallyUpdated
+            });
+    
+        } catch (error) {
+            this.logError("Error processing conversations", error.message);
+        }
+    }
+    async updateExistingNote(chat: Chat, filePath: string): Promise<void> {
+        try {
+            const file = this.app.vault.getAbstractFileByPath(filePath);
+            if (file instanceof TFile) {
+                await this.app.vault.process(file, (content) => {
+                    const existingMessageIds = this.extractMessageUIDsFromNote(content);
+                    const newMessages = this.getNewMessages(chat, existingMessageIds);
+                    
+                    // Update metadata
+                    content = this.updateMetadata(content, chat.update_time);
+                    
+                    // Append new messages
+                    content += this.formatNewMessages(newMessages);
+                    
+                    this.totalConversationsActuallyUpdated++;
+                    this.totalNonEmptyMessagesAdded += newMessages.length;
+                    
+                    return content;
+                });
+    
+                this.importLog.addUpdated(
+                    chat.title || 'Untitled',
+                    filePath,
+                    `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
+                    `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`
+                );
+            }
+        } catch (error) {
+            this.logError("Error updating existing note", error.message);
+            this.importLog.addFailed(chat.title || 'Untitled', filePath,
+                formatTimestamp(chat.create_time, 'date') + ' ' + formatTimestamp(chat.create_time, 'time'),
+                formatTimestamp(chat.update_time, 'date') + ' ' + formatTimestamp(chat.update_time, 'time'),
+                error.message
             );
+        }
+    }
+    async createNewNote(chat: Chat, folderPath: string, existingConversations: Record<string, string>): Promise<void> {
+        try {
+            const fileName = await this.getUniqueFileName(chat, folderPath, existingConversations);
+            const filePath = `${folderPath}/${fileName}`;
+            const content = this.generateMarkdownContent(chat);
+            await this.writeToFile(filePath, content);
+            this.importLog.addCreated(
+                chat.title || 'Untitled',
+                filePath,
+                `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
+                `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`
+            );
+            this.totalNewConversationsSuccessfullyImported++;
+            this.totalNonEmptyMessagesToImport += Object.values(chat.mapping).filter(msg => isValidMessage(msg)).length;
+        
+        } catch (error) {
+            this.logError("Error creating new note", error.message);
+            this.importLog.addFailed(chat.title || 'Untitled', filePath, 
+                formatTimestamp(chat.create_time, 'date') + ' ' + formatTimestamp(chat.create_time, 'time'),
+                formatTimestamp(chat.update_time, 'date') + ' ' + formatTimestamp(chat.update_time, 'time'),
+                error.message
+            );
+            throw error;
+        }
+    }
+
+    // Helper methods
+    private async extractChatsFromZip(zip: JSZip): Promise<Chat[]> {
+        const conversationsJson = await zip.file('conversations.json').async('string');
+        return JSON.parse(conversationsJson);
+    }
+
+    private initializeCounters(existingConversations: Record<string, string>): void {
+        this.totalExistingConversations = Object.keys(existingConversations).length;
+        this.totalNewConversationsToImport = 0;
+        this.totalExistingConversationsToUpdate = 0;
+        this.totalNewConversationsSuccessfullyImported = 0;
+        this.totalConversationsActuallyUpdated = 0;
+        this.totalNonEmptyMessagesToImport = 0;
+        this.totalNonEmptyMessagesToAdd = 0;
+        this.totalNonEmptyMessagesAdded = 0;
+    }
+
+    private async processSingleChat(chat: Chat, existingConversations: Record<string, string>): Promise<void> {
+        try {
+            const folderPath = await this.createFolderForChat(chat);
+            const existingRecord = this.conversationRecords[chat.id];
     
-            // Append new messages
-            const newMessages = this.getNewMessages(chat, content);
-            content += this.formatNewMessages(newMessages);
+            if (existingRecord) {
+                await this.handleExistingChat(chat, existingRecord, folderPath);
+            } else {
+                await this.handleNewChat(chat, folderPath, existingConversations);
+            }
     
-            await this.app.vault.modify(file, content);
-            this.importLog.addUpdated(chat.title || 'Untitled', filePath);
+            this.updateConversationRecord(chat, folderPath);
+        } catch (chatError) {
+            this.logError(`Error processing chat: ${chat.title || 'Untitled'}`, chatError.message);
         }
     }
     
-    async createNewNote(chat: any, folderPath: string, existingConversations: Record<string, string>) {
-        const fileName = await this.getUniqueFileName(chat, folderPath, existingConversations);
-        const filePath = `${folderPath}/${fileName}`;
+    private async createFolderForChat(chat: Chat): Promise<string> {
+        const yearMonthFolder = getYearMonthFolder(chat.create_time);
+        const folderPath = `${this.settings.archiveFolder}/${yearMonthFolder}`;
+        const folderResult = await this.ensureFolderExists(folderPath);
         
-        const content = this.generateMarkdownContent(chat);
+        if (!folderResult.success) {
+            throw new Error(`Failed to create or access folder: ${folderPath}. ${folderResult.error}`);
+        }
+    
+        return folderPath;
+    }
+    
+    private async handleExistingChat(chat: Chat, existingRecord: ConversationRecord, folderPath: string): Promise<void> {
+        if (existingRecord.updateTime >= chat.update_time) {
+            this.importLog.addSkipped(chat.title || 'Untitled', existingRecord.path, 
+                formatTimestamp(chat.create_time, 'date'), 
+                formatTimestamp(chat.update_time, 'date'), 
+                "No Updates");
+        } else {
+            this.totalExistingConversationsToUpdate++;
+            await this.updateExistingNote(chat, existingRecord.path);
+        }
+    }
+    
+    private async handleNewChat(chat: Chat, folderPath: string, existingConversations: Record<string, string>): Promise<void> {
+        this.totalNewConversationsToImport++;
+        await this.createNewNote(chat, folderPath, existingConversations);
+    }
+    
+    private updateConversationRecord(chat: Chat, folderPath: string): void {
+        this.conversationRecords[chat.id] = {
+            path: `${folderPath}/${this.getFileName(chat)}`,
+            updateTime: chat.update_time
+        };
+    }
+    
+    private updateImportLog(): void {
+        this.importLog.addSummary(
+            this.totalExistingConversations,
+            this.totalNewConversationsSuccessfullyImported,
+            this.totalConversationsActuallyUpdated,
+            this.totalNonEmptyMessagesAdded
+        );
+    }
+
+    updateMetadata(content: string, updateTime: number): string {
+        const updateTimeStr = `${formatTimestamp(updateTime, 'date')} at ${formatTimestamp(updateTime, 'time')}`;
         
-        await this.writeToFile(filePath, content);
-        this.importLog.addCreated(chat.title || 'Untitled', filePath);
-        this.totalNewConversationsSuccessfullyImported++;
+        // Update parameters
+        content = content.replace(
+            /^update_time: .*$/m,
+            `update_time: ${updateTimeStr}`
+        );
+        
+        // Update header
+        content = content.replace(
+            /^Last Updated: .*$/m,
+            `Last Updated: ${updateTimeStr}`
+        );
+        
+        return content;
     }
-    
-    getNewMessages(chat: any, existingContent: string): any[] {
-        const existingMessageIds = existingContent.match(/<!-- UID: (.*?) -->/g)?.map(match => match.split(' ')[2]) || [];
-        return Object.values(chat.mapping).filter(message => !existingMessageIds.includes(message.id));
+
+    getNewMessages(chat: any, existingMessageIds: string[]): ChatMessage[] {
+        return Object.values(chat.mapping)
+            .filter(message => 
+                message && message.id && 
+                !existingMessageIds.includes(message.id) &&
+                isValidMessage(message)
+            );
+    }  
+
+    formatNewMessages(messages: ChatMessage[]): string {
+        return messages
+            .filter(message => message !== undefined)
+            .map(message => this.formatMessage(message))
+            .filter(formattedMessage => formattedMessage !== '')
+            .join('\n\n');
     }
-    
-    formatNewMessages(messages: any[]): string {
-        return messages.map(message => this.formatMessage(message)).join('\n\n');
-    }
-    
+
     getFileName(chat: any): string {
-        let fileName = this.formatTitle(chat.title);
+        let fileName = formatTitle(chat.title);
         if (this.settings.addDatePrefix) {
-            const createTimeStr = this.formatTimestamp(chat.create_time, this.settings.dateFormat === 'YYYY-MM-DD' ? 'YYYY-MM-DD' : 'YYYYMMDD');
+            const createTimeStr = formatTimestamp(chat.create_time, 'prefix');
             fileName = `${createTimeStr} - ${fileName}`;
         }
         return `${fileName}.md`;
     }
-    
+
     generateMarkdownContent(chat: any): string {
-        const formattedTitle = this.formatTitle(chat.title);
-        const create_time_str = `${this.formatTimestamp(chat.create_time, 'date')} at ${this.formatTimestamp(chat.create_time, 'time')}`;
-        const update_time_str = `${this.formatTimestamp(chat.update_time, 'date')} at ${this.formatTimestamp(chat.update_time, 'time')}`;
+        const formattedTitle = formatTitle(chat.title);
+        const create_time_str = `${formatTimestamp(chat.create_time, 'date')} at ${formatTimestamp(chat.create_time, 'time')}`;
+        const update_time_str = `${formatTimestamp(chat.update_time, 'date')} at ${formatTimestamp(chat.update_time, 'time')}`;
     
         let content = this.generateHeader(formattedTitle, chat.id, create_time_str, update_time_str);
         content += this.generateMessagesContent(chat);
     
         return content;
-    }
-
-    showConfirmationDialog(message: string): Promise<boolean> {
-        return new Promise((resolve) => {
-            const modal = new Modal(this.app);
-            modal.contentEl.createEl("p", { text: message });
-            
-            const buttonContainer = modal.contentEl.createDiv();
-            
-            buttonContainer.createEl("button", { text: "Yes" }).addEventListener("click", () => {
-                modal.close();
-                resolve(true);
-            });
-            
-            buttonContainer.createEl("button", { text: "No" }).addEventListener("click", () => {
-                modal.close();
-                resolve(false);
-            });
-            
-            modal.open();
-        });
     }
 
     async getFileHash(file: File): Promise<string> {
@@ -365,11 +399,11 @@ export default class ChatGPTImportPlugin extends Plugin {
                 try {
                     await this.app.vault.createFolder(currentPath);
                 } catch (error) {
-                    // Si le dossier existe déjà, ce n'est pas une erreur
                     if (error.message !== "Folder already exists.") {
-                        console.error(`Failed to create folder: ${currentPath}`, error);
+                        this.logError(`Failed to create folder: ${currentPath}`, error.message);
                         return { success: false, error: `Failed to create folder: ${currentPath}. Reason: ${error.message}` };
                     }
+                    // If folder already exists, continue silently
                 }
             } else if (!(currentFolder instanceof TFolder)) {
                 return { success: false, error: `Path exists but is not a folder: ${currentPath}` };
@@ -378,109 +412,20 @@ export default class ChatGPTImportPlugin extends Plugin {
         return { success: true };
     }
 
-    getYearMonthFolder(unixTime) {
-        const date = new Date(unixTime * 1000);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // JavaScript months are 0-indexed
-        return `${year}/${month}`;
-    }
-
     async getUniqueFileName(chat, folderPath, existingConversations) {
-        let counter = 1;
         let fileName = this.getFileName(chat);
+        let counter = 1;
         let potentialFileName = fileName;
     
-        // Check if a file with this name already exists
         while (Object.values(existingConversations).some(existingFile => 
             existingFile.includes(folderPath) && existingFile.endsWith(potentialFileName)
         )) {
-            // If exists, append a counter to the name (before the extension)
             const nameWithoutExtension = fileName.slice(0, -3); // remove .md
-            potentialFileName = `${nameWithoutExtension}-${counter}.md`;
+            potentialFileName = `${nameWithoutExtension} (${counter}).md`;
             counter++;
         }
     
         return potentialFileName;
-    }
-    
-    async writeImportLog(zipFileName: string) {
-        const now = new Date();
-        let prefix = this.formatTimestamp(now.getTime() / 1000, 'YYYY-MM-DD');
-
-        if (this.settings.addDatePrefix) {
-            prefix = this.formatTimestamp(now.getTime() / 1000, this.settings.dateFormat === 'YYYY-MM-DD' ? 'YYYY-MM-DD' : 'YYYYMMDD');
-        }
-
-        let logFileName = `${prefix} - ChatGPT Import log.md`;
-
-        const logFolderPath = `${this.settings.archiveFolder}/logs`;
-        
-        const folderResult = await this.ensureFolderExists(logFolderPath);
-        if (!folderResult.success) {
-            console.error(`Failed to create or access log folder: ${logFolderPath}. Error: ${folderResult.error}`);
-            new Notice("Failed to create log file. Check console for details.");
-            return;
-        }
-
-        let logFilePath = `${logFolderPath}/${logFileName}`;
-
-        let counter = 1;
-        while (await this.app.vault.adapter.exists(logFilePath)) {
-            logFileName = `${prefix}-${counter} - ChatGPT Import log.md`;
-            logFilePath = `${logFolderPath}/${logFileName}`;
-            counter++;
-        }
-
-        const currentDate = `${this.formatTimestamp(now.getTime() / 1000, 'date')} ${this.formatTimestamp(now.getTime() / 1000, 'time')}`;
-
-        const logContent = `---
-importdate: ${currentDate}
-zipFile: ${zipFileName}
-totalSuccessfulImports: ${this.importLog.successfulImports}
-totalFailedImports: ${this.importLog.failedImports}
-totalExistingConversations: ${this.totalExistingConversations}
-newConversationsImported: ${this.totalNewConversationsSuccessfullyImported}
-conversationsUpdated: ${this.totalConversationsActuallyUpdated}
-totalNonEmptyMessagesImported: ${this.totalNonEmptyMessagesToImport}
-totalNonEmptyMessagesAddedToExisting: ${this.totalNonEmptyMessagesToAdd}
----
-
-# ChatGPT Import Log
-
-Imported ZIP file: ${zipFileName}
-
-## Statistics
-- Total Successful Imports: ${this.importLog.successfulImports}
-- Total Failed Imports: ${this.importLog.failedImports}
-- Total Existing Conversations: ${this.totalExistingConversations}
-- New Conversations Imported: ${this.totalNewConversationsSuccessfullyImported}
-- Conversations Updated: ${this.totalConversationsActuallyUpdated}
-- Total Non-Empty Messages Imported: ${this.totalNonEmptyMessagesToImport}
-- Total Non-Empty Messages Added to Existing Conversations: ${this.totalNonEmptyMessagesToAdd}
-
-## Detailed Log
-${this.importLog.getDetailedLog()}
-`;
-
-        try {
-            await this.writeToFile(logFilePath, logContent);
-            console.log(`Import log created: ${logFilePath}`);
-            new Notice(`Import log created: ${logFilePath}`);
-        } catch (error) {
-            console.error(`Failed to write import log: ${error.message}`);
-            new Notice("Failed to create log file. Check console for details.");
-        }
-    }
-
-    formatTitle(title) {
-        let formattedTitle = title
-            .replace(/[<>:"\/\\|?*\n\r]+/g, '_') // Replace invalid characters and newlines
-            .replace(/\.{2,}/g, '.') // Replace multiple consecutive dots with a single dot
-            .replace(/^\.+/, '') // Remove leading dots
-            .replace(/\.+$/, '') // Remove trailing dots
-            .trim(); // Trim whitespace from both ends
-    
-        return formattedTitle || "Untitled";
     }
     
     generateHeader(title, conversationId, createTimeStr, updateTimeStr) {
@@ -501,32 +446,20 @@ Last Updated: ${updateTimeStr}\n\n
         let messagesContent = '';
         for (const messageId in chat.mapping) {
             const messageObj = chat.mapping[messageId];
-            if (messageObj && messageObj.message && this.isValidMessage(messageObj.message)) {
+            if (messageObj && messageObj.message && isValidMessage(messageObj.message)) {
                 messagesContent += this.formatMessage(messageObj.message);
             }
         }
         return messagesContent;
     }
     
-    isValidMessage(message) {
-        return (
-            message &&
-            typeof message === 'object' &&
-            message.content &&
-            typeof message.content === 'object' &&
-            Array.isArray(message.content.parts) &&
-            message.content.parts.length > 0 &&
-            message.content.parts.some(part => typeof part === 'string' && part.trim() !== "")
-        );
-}
-
-    formatMessage(message) {
+    formatMessage(message: ChatMessage): string {
         if (!message || typeof message !== 'object') {
             console.error('Invalid message object:', message);
             return ''; // Return empty string for invalid messages
         }
     
-        const messageTime = this.formatTimestamp(message.create_time || Date.now() / 1000, 'date') + ' at ' + this.formatTimestamp(message.create_time || Date.now() / 1000, 'time');
+        const messageTime = formatTimestamp(message.create_time || Date.now() / 1000, 'date') + ' at ' + formatTimestamp(message.create_time || Date.now() / 1000, 'time');
         
         let authorName = "Unknown";
         if (message.author && typeof message.author === 'object' && 'role' in message.author) {
@@ -563,44 +496,22 @@ Last Updated: ${updateTimeStr}\n\n
         return messageContent + '\n\n';
     }
 
-    async writeToFile(fileName: string, content: string) {
+    async writeToFile(fileName: string, content: string): Promise<void> {
         try {
-            let file = this.app.vault.getAbstractFileByPath(fileName);
-            if (!file) {
-                // File doesn't exist, create it
-                await this.app.vault.create(fileName, content);
-                console.log(`[chatgpt-import] Created new file: ${fileName}`);
-            } else if (file instanceof TFile) {
-                // File exists, update its content
+            const file = this.app.vault.getAbstractFileByPath(fileName);
+            if (file instanceof TFile) {
                 await this.app.vault.modify(file, content);
                 console.log(`[chatgpt-import] Updated existing file: ${fileName}`);
             } else {
-                console.error(`[chatgpt-import] Path exists but is not a file: ${fileName}`);
-                throw new Error(`Path exists but is not a file: ${fileName}`);
+                await this.app.vault.create(fileName, content);
+                console.log(`[chatgpt-import] Created new file: ${fileName}`);
             }
-        } catch (e) {
-            console.error(`[chatgpt-import] Error creating or modifying file '${fileName}':`, e);
-            throw e; // Propagate the error
+        } catch (error) {
+            this.logError(`Error creating or modifying file '${fileName}'`, error.message);
+            throw error; // Propagate the error
         }
-    }
+    }    
 
-    formatTimestamp(unixTime: number, format: 'date' | 'time' | 'YYYY-MM-DD' | 'YYYYMMDD'): string {
-        const date = new Date(unixTime * 1000);
-
-        switch (format) {
-            case 'date':
-                return moment(date).format('L');
-            case 'time':
-                return moment(date).format('LT');
-            case 'YYYY-MM-DD':
-                return moment(date).format('YYYY-MM-DD');
-            case 'YYYYMMDD':
-                return moment(date).format('YYYYMMDD');
-            default:
-                return '';
-        }
-    }
-        
     async getAllExistingConversations() {
         const files = this.app.vault.getMarkdownFiles();
         const conversations = {};
@@ -616,27 +527,144 @@ Last Updated: ${updateTimeStr}\n\n
         return conversations;
     }
 
-    extractMessageUIDsFromNote(noteContent) {
+    extractMessageUIDsFromNote(content: string): string[] {
         const uidRegex = /<!-- UID: (.*?) -->/g;
         const uids = [];
         let match;
-        while ((match = uidRegex.exec(noteContent)) !== null) {
+        while ((match = uidRegex.exec(content)) !== null) {
             uids.push(match[1]);
         }
         return uids;
     }
 
+    async writeImportLog(zipFileName: string): Promise<void> {
+        const now = new Date();
+        let prefix = formatTimestamp(now.getTime() / 1000, 'prefix');
+    
+        let logFileName = `${prefix} - ChatGPT Import log.md`;
+        const logFolderPath = `${this.settings.archiveFolder}/logs`;
+        
+        const folderResult = await this.ensureFolderExists(logFolderPath);
+        if (!folderResult.success) {
+            this.logError(`Failed to create or access log folder: ${logFolderPath}`, folderResult.error);
+            new Notice("Failed to create log file. Check console for details.");
+            return;
+        }
+    
+        let logFilePath = `${logFolderPath}/${logFileName}`;
+    
+        let counter = 1;
+        while (await this.app.vault.adapter.exists(logFilePath)) {
+            logFileName = `${prefix}-${counter} - ChatGPT Import log.md`;
+            logFilePath = `${logFolderPath}/${logFileName}`;
+            counter++;
+        }
+    
+        const currentDate = `${formatTimestamp(now.getTime() / 1000, 'date')} ${formatTimestamp(now.getTime() / 1000, 'time')}`;
+    
+        const logContent = `---
+importdate: ${currentDate}
+zipFile: ${zipFileName}
+totalSuccessfulImports: ${this.importLog.created.length}
+totalUpdatedImports: ${this.importLog.updated.length}
+totalSkippedImports: ${this.importLog.skipped.length}
+---
+
+# ChatGPT Import Log
+
+Imported ZIP file: ${zipFileName}
+
+${this.importLog.generateLogContent()}
+`;
+    
+        try {
+            await this.writeToFile(logFilePath, logContent);
+            console.log(`Import log created: ${logFilePath}`);
+        } catch (error) {
+            this.logError(`Failed to write import log`, error.message);
+            new Notice("Failed to create log file. Check console for details.");
+        }
+    }
+    
     async resetCatalogs() {
         this.importedArchives = {};
         this.conversationRecords = {};
         await this.saveSettings();
         new Notice("All catalogs have been reset.");
         console.log("[chatgpt-import] All catalogs have been reset.");
+    }    
+
+    // Logging Methods
+    private logError(message: string, details: string): void {
+        this.logger.error(message, details);
+        this.importLog.addError(message, details);
+    }
+    private logInfo(message: string, details?: any): void {
+        this.logger.info(message, details);
+    }
+    private logWarn(message: string, details?: any): void {
+        this.logger.warn(message, details);
     }
 
+    // UI-related methods
+    selectZipFile() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.zip';
+        input.onchange = (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+                this.handleZipFile(file);
+            }
+        };
+        // Reset the input value to allow selecting the same file again
+        input.value = '';
+        input.click();
+    }
+    async validateZipFile(file: File): Promise<JSZip> {
+        try {
+            const zip = new JSZip();
+            const content = await zip.loadAsync(file);
+            const fileNames = Object.keys(content.files);
+    
+            if (!fileNames.includes('conversations.json')) {
+                throw new ChatGPTImportError("Invalid ZIP structure", "File 'conversations.json' not found in the zip");
+            }
+    
+            return zip;
+        } catch (error) {
+            if (error instanceof ChatGPTImportError) {
+                throw error;
+            } else {
+                throw new ChatGPTImportError("Error validating zip file", error.message);
+            }
+        }
+    }
+    showConfirmationDialog(message: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const modal = new Modal(this.app);
+            modal.contentEl.createEl("p", { text: message });
+            
+            const buttonContainer = modal.contentEl.createDiv();
+            
+            buttonContainer.createEl("button", { text: "Yes" }).addEventListener("click", () => {
+                modal.close();
+                resolve(true);
+            });
+            
+            buttonContainer.createEl("button", { text: "No" }).addEventListener("click", () => {
+                modal.close();
+                resolve(false);
+            });
+            
+            modal.open();
+        });
+    }
 }
 
 class ChatGPTImportPluginSettingTab extends PluginSettingTab {
+    // Settings tab implementation
+
     plugin: ChatGPTImportPlugin;
 
     constructor(app: App, plugin: ChatGPTImportPlugin) {
@@ -688,38 +716,111 @@ class ChatGPTImportPluginSettingTab extends PluginSettingTab {
 }
 
 class ImportLog {
-    private logs: string[] = [];
-    public successfulImports: number = 0;
-    public failedImports: number = 0;
-    public skippedImports: number = 0;
-    public updatedImports: number = 0;
+    // Properties and methods    
+    private created: LogEntry[] = [];
+    private updated: LogEntry[] = [];
+    private skipped: LogEntry[] = [];
+    private errors: LogEntry[] = [];
+    private failed: LogEntry[] = [];
+    private globalErrors: {message: string, details: string}[] = [];    
 
-    addSuccess(chatTitle: string, filePath: string) {
-        this.successfulImports++;
-        this.logs.push(`✅ Successfully imported: [[${filePath}|${chatTitle}]]`);
+    addCreated(title: string, filePath: string, createDate: string, updateDate: string) {
+        this.created.push({ title, filePath, createDate, updateDate });
+    }
+
+    addUpdated(title: string, filePath: string, createDate: string, updateDate: string) {
+        this.updated.push({ title, filePath, createDate, updateDate });
+    }
+
+    addSkipped(title: string, filePath: string, createDate: string, updateDate: string, reason: string) {
+        this.skipped.push({ title, filePath, createDate, updateDate, reason });
+    }
+
+    addFailed(title: string, filePath: string, createDate: string, updateDate: string, errorMessage: string) {
+        this.failed.push({ title, filePath, createDate, updateDate, errorMessage });
     }
     
-    addError(chatTitle: string, error: string) {
-        this.failedImports++;
-        this.logs.push(`❌ Error importing: ${chatTitle}\n   Error: ${error}`);
+    addError(message: string, details: string) {
+        this.globalErrors.push({ message, details });
     }
 
-    addSkipped(chatTitle: string, reason: string) {
-        this.skippedImports++;
-        this.logs.push(`⏭️ Skipped: ${chatTitle} (${reason})`);
+    addSummary(totalExisting: number, totalNew: number, totalUpdated: number, totalMessagesAdded: number) {
+        this.summary = `
+Summary:
+- Existing conversations: ${totalExisting}
+- New conversations imported: ${totalNew}
+- Conversations updated: ${totalUpdated}
+- New messages added: ${totalMessagesAdded}
+`;
+    }
+    
+    generateLogContent(): string {
+        let content = '# ChatGPT Import Log\n\n';
+        
+        if (this.summary) {
+            content += this.summary + '\n\n';
+        }
+
+        content += '## Legend\n';
+        content += '✨ Created | 🔄 Updated | ⏭️ Skipped | 🚫 Failed | ⚠️ Global Errors\n\n';
+        
+        content += '## Table of Contents\n';
+        if (this.created.length > 0) content += '- [Created Notes](#created-notes)\n';
+        if (this.updated.length > 0) content += '- [Updated Notes](#updated-notes)\n';
+        if (this.skipped.length > 0) content += '- [Skipped Notes](#skipped-notes)\n';
+        if (this.failed.length > 0) content += '- [Failed Imports](#failed-imports)\n';
+        if (this.globalErrors.length > 0) content += '- [Global Errors](#global-errors)\n';
+        content += '\n';
+    
+        if (this.created.length > 0) {
+            content += this.generateTable('Created Notes', this.created, '✨');
+        }
+        if (this.updated.length > 0) {
+            content += this.generateTable('Updated Notes', this.updated, '🔄');
+        }
+        if (this.skipped.length > 0) {
+            content += this.generateTable('Skipped Notes', this.skipped, '⏭️');
+        }
+        if (this.failed.length > 0) {
+            content += this.generateTable('Failed Imports', this.failed, '🚫');
+        }
+        if (this.globalErrors.length > 0) {
+            content += this.generateErrorTable('Global Errors', this.globalErrors, '⚠️');
+        }
+    
+        return content;
+    }
+    
+    private generateTable(title: string, entries: LogEntry[], emoji: string): string {
+        let table = `## ${title}\n\n`;
+        table += '| | Title | Created | Updated |\n';
+        table += '|---|:---|:---:|:---:|\n';
+        entries.forEach(entry => {
+            const sanitizedTitle = entry.title.replace(/\n/g, ' ').trim();
+            table += `| ${emoji} | [[${entry.filePath}\\|${sanitizedTitle}]] | ${entry.createDate} | ${entry.updateDate} |\n`;
+        });
+        return table + '\n\n';
     }
 
-    addUpdated(chatTitle: string, filePath: string) {
-        this.updatedImports++;
-        this.logs.push(`🔄 Updated: [[${filePath}|${chatTitle}]]`);
+    private generateErrorTable(title: string, entries: {message: string, details: string}[], emoji: string): string {
+        let table = `## ${title}\n\n`;
+        table += '| | Error | Details |\n';
+        table += '|---|:---|:---|\n';
+        entries.forEach(entry => {
+            table += `| ${emoji} | ${entry.message} | ${entry.details} |\n`;
+        });
+        return table + '\n\n';
     }
 
-    addCreated(chatTitle: string, filePath: string) {
-        this.successfulImports++;
-        this.logs.push(`✨ Created: [[${filePath}|${chatTitle}]]`);
+    hasErrors(): boolean {
+        return this.errors.length > 0 || this.failed.length > 0;
     }
+}
 
-    getDetailedLog(): string {
-        return this.logs.join('\n');
+class ChatGPTImportError extends Error {
+    // Implementation
+    constructor(message: string, public details?: any) {
+        super(message);
+        this.name = 'ChatGPTImportError';
     }
 }
