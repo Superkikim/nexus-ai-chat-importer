@@ -184,7 +184,7 @@ export default class ChatGPTImportPlugin extends Plugin {
             this.logError("Error processing conversations", error.message);
         }
     }
-    async updateExistingNote(chat: Chat, filePath: string): Promise<void> {
+    async updateExistingNote(chat: Chat, filePath: string, totalMessageCount: number): Promise<void> {
         try {
             const file = this.app.vault.getAbstractFileByPath(filePath);
             if (file instanceof TFile) {
@@ -192,14 +192,16 @@ export default class ChatGPTImportPlugin extends Plugin {
                     const existingMessageIds = this.extractMessageUIDsFromNote(content);
                     const newMessages = this.getNewMessages(chat, existingMessageIds);
                     
-                    // Update metadata
-                    content = this.updateMetadata(content, chat.update_time);
-                    
-                    // Append new messages
-                    content += this.formatNewMessages(newMessages);
-                    
-                    this.totalConversationsActuallyUpdated++;
-                    this.totalNonEmptyMessagesAdded += newMessages.length;
+                    if (newMessages.length > 0) {
+                        // Update metadata
+                        content = this.updateMetadata(content, chat.update_time);
+                        
+                        // Append new messages
+                        content += '\n\n' + this.formatNewMessages(newMessages);
+                        
+                        this.totalConversationsActuallyUpdated++;
+                        this.totalNonEmptyMessagesAdded += newMessages.length;
+                    }
                     
                     return content;
                 });
@@ -208,7 +210,8 @@ export default class ChatGPTImportPlugin extends Plugin {
                     chat.title || 'Untitled',
                     filePath,
                     `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
-                    `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`
+                    `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`,
+                    totalMessageCount
                 );
             }
         } catch (error) {
@@ -220,21 +223,27 @@ export default class ChatGPTImportPlugin extends Plugin {
             );
         }
     }
-    async createNewNote(chat: Chat, folderPath: string, existingConversations: Record<string, string>): Promise<void> {
+        async createNewNote(chat: Chat, folderPath: string, existingConversations: Record<string, string>): Promise<void> {
         try {
             const fileName = await this.getUniqueFileName(chat, folderPath, existingConversations);
             const filePath = `${folderPath}/${fileName}`;
             const content = this.generateMarkdownContent(chat);
             await this.writeToFile(filePath, content);
+            
+            // Count all valid messages in the chat
+            const messageCount = Object.values(chat.mapping)
+                .filter(msg => isValidMessage(msg.message))
+                .length;
+            
             this.importLog.addCreated(
                 chat.title || 'Untitled',
                 filePath,
                 `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
-                `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`
+                `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`,
+                messageCount
             );
             this.totalNewConversationsSuccessfullyImported++;
-            this.totalNonEmptyMessagesToImport += Object.values(chat.mapping).filter(msg => isValidMessage(msg)).length;
-        
+            this.totalNonEmptyMessagesToImport += messageCount;
         } catch (error) {
             this.logError("Error creating new note", error.message);
             this.importLog.addFailed(chat.title || 'Untitled', filePath, 
@@ -245,7 +254,7 @@ export default class ChatGPTImportPlugin extends Plugin {
             throw error;
         }
     }
-
+    
     // Helper methods
     private async extractChatsFromZip(zip: JSZip): Promise<Chat[]> {
         const conversationsJson = await zip.file('conversations.json').async('string');
@@ -293,14 +302,20 @@ export default class ChatGPTImportPlugin extends Plugin {
     }
     
     private async handleExistingChat(chat: Chat, existingRecord: ConversationRecord, folderPath: string): Promise<void> {
+        const totalMessageCount = Object.values(chat.mapping).filter(msg => isValidMessage(msg.message)).length;
+        
         if (existingRecord.updateTime >= chat.update_time) {
-            this.importLog.addSkipped(chat.title || 'Untitled', existingRecord.path, 
+            this.importLog.addSkipped(
+                chat.title || 'Untitled',
+                existingRecord.path, 
                 formatTimestamp(chat.create_time, 'date'), 
-                formatTimestamp(chat.update_time, 'date'), 
-                "No Updates");
+                formatTimestamp(chat.update_time, 'date'),
+                totalMessageCount,
+                "No Updates"
+            );
         } else {
             this.totalExistingConversationsToUpdate++;
-            await this.updateExistingNote(chat, existingRecord.path);
+            await this.updateExistingNote(chat, existingRecord.path, totalMessageCount);
         }
     }
     
@@ -343,14 +358,15 @@ export default class ChatGPTImportPlugin extends Plugin {
         return content;
     }
 
-    getNewMessages(chat: any, existingMessageIds: string[]): ChatMessage[] {
+    getNewMessages(chat: Chat, existingMessageIds: string[]): ChatMessage[] {
         return Object.values(chat.mapping)
             .filter(message => 
                 message && message.id && 
                 !existingMessageIds.includes(message.id) &&
-                isValidMessage(message)
-            );
-    }  
+                isValidMessage(message.message)
+            )
+            .map(message => message.message);
+    }
 
     formatNewMessages(messages: ChatMessage[]): string {
         return messages
@@ -724,16 +740,15 @@ class ImportLog {
     private failed: LogEntry[] = [];
     private globalErrors: {message: string, details: string}[] = [];    
 
-    addCreated(title: string, filePath: string, createDate: string, updateDate: string) {
-        this.created.push({ title, filePath, createDate, updateDate });
+    addCreated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number) {
+        this.created.push({ title, filePath, createDate, updateDate, messageCount });
     }
-
-    addUpdated(title: string, filePath: string, createDate: string, updateDate: string) {
-        this.updated.push({ title, filePath, createDate, updateDate });
+    addUpdated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number) {
+        this.updated.push({ title, filePath, createDate, updateDate, messageCount });
     }
-
-    addSkipped(title: string, filePath: string, createDate: string, updateDate: string, reason: string) {
-        this.skipped.push({ title, filePath, createDate, updateDate, reason });
+    
+    addSkipped(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, reason: string) {
+        this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason });
     }
 
     addFailed(title: string, filePath: string, createDate: string, updateDate: string, errorMessage: string) {
@@ -793,15 +808,15 @@ Summary:
     
     private generateTable(title: string, entries: LogEntry[], emoji: string): string {
         let table = `## ${title}\n\n`;
-        table += '| | Title | Created | Updated |\n';
-        table += '|---|:---|:---:|:---:|\n';
+        table += '| | Title | Created | Updated | Messages | Reason |\n';
+        table += '|---|:---|:---:|:---:|:---:|:---|\n';
         entries.forEach(entry => {
             const sanitizedTitle = entry.title.replace(/\n/g, ' ').trim();
-            table += `| ${emoji} | [[${entry.filePath}\\|${sanitizedTitle}]] | ${entry.createDate} | ${entry.updateDate} |\n`;
+            table += `| ${emoji} | [[${entry.filePath}\\|${sanitizedTitle}]] | ${entry.createDate} | ${entry.updateDate} | ${entry.messageCount} | ${entry.reason || '-'} |\n`;
         });
         return table + '\n\n';
     }
-
+    
     private generateErrorTable(title: string, entries: {message: string, details: string}[], emoji: string): string {
         let table = `## ${title}\n\n`;
         table += '| | Error | Details |\n';
