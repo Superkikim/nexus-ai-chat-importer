@@ -28,3 +28,12 @@ interface ConversationRecord {
     path: string;
     updateTime: number;
 }
+
+interface LogEntry {
+    title: string;
+    filePath: string;
+    createDate: string;
+    updateDate: string;
+    messageCount: number;
+    reason?: string;
+}
