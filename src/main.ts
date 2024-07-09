@@ -171,7 +171,12 @@ export default class ChatGPTImportPlugin extends Plugin {
             for (const chat of chats) {
                 await this.processSingleChat(chat, existingConversations);
             }
-    
+
+
+            // Log existing conversations
+            await this.logExistingConversations(existingConversations);
+
+
             this.updateImportLog();
 
             this.logInfo(`Processed ${chats.length} conversations`, {
@@ -223,18 +228,15 @@ export default class ChatGPTImportPlugin extends Plugin {
             );
         }
     }
-        async createNewNote(chat: Chat, folderPath: string, existingConversations: Record<string, string>): Promise<void> {
+    async createNewNote(chat: Chat, filePath: string, existingConversations: Record<string, string>): Promise<void> {
         try {
-            const fileName = await this.getUniqueFileName(chat, folderPath, existingConversations);
-            const filePath = `${folderPath}/${fileName}`;
             const content = this.generateMarkdownContent(chat);
             await this.writeToFile(filePath, content);
             
-            // Count all valid messages in the chat
             const messageCount = Object.values(chat.mapping)
                 .filter(msg => isValidMessage(msg.message))
                 .length;
-            
+    
             this.importLog.addCreated(
                 chat.title || 'Untitled',
                 filePath,
@@ -244,6 +246,9 @@ export default class ChatGPTImportPlugin extends Plugin {
             );
             this.totalNewConversationsSuccessfullyImported++;
             this.totalNonEmptyMessagesToImport += messageCount;
+            
+            // Add the new conversation to existingConversations
+            existingConversations[chat.id] = filePath;
         } catch (error) {
             this.logError("Error creating new note", error.message);
             this.importLog.addFailed(chat.title || 'Untitled', filePath, 
@@ -272,15 +277,39 @@ export default class ChatGPTImportPlugin extends Plugin {
         this.totalNonEmptyMessagesAdded = 0;
     }
 
+    // TEMPORARY METHOD
+    async logExistingConversations(existingConversations: Record<string, string>): Promise<void> {
+        const logFolderPath = `${this.settings.archiveFolder}/logs`;
+        const logFilePath = `${logFolderPath}/existingnotes.md`;
+    
+        try {
+            await this.ensureFolderExists(logFolderPath);
+    
+            let content = "# Existing Conversations Log\n\n";
+            content += "| Conversation ID | File Path |\n";
+            content += "|-----------------|-----------|\n";
+    
+            for (const [id, path] of Object.entries(existingConversations)) {
+                content += `| ${id} | ${path} |\n`;
+            }
+    
+            await this.writeToFile(logFilePath, content);
+            console.log(`Existing conversations log created: ${logFilePath}`);
+        } catch (error) {
+            this.logError("Error creating existing conversations log", error.message);
+        }
+    }
+    
     private async processSingleChat(chat: Chat, existingConversations: Record<string, string>): Promise<void> {
         try {
             const folderPath = await this.createFolderForChat(chat);
-            const existingRecord = this.conversationRecords[chat.id];
-    
-            if (existingRecord) {
-                await this.handleExistingChat(chat, existingRecord, folderPath);
+                     
+            if (existingConversations[chat.id]) {
+                await this.handleExistingChat(chat, {path: existingConversations[chat.id], updateTime: 0}, folderPath);
             } else {
-                await this.handleNewChat(chat, folderPath, existingConversations);
+                const uniqueFileName = await this.getUniqueFileName(chat, folderPath, existingConversations);
+                const filePath = `${folderPath}/${uniqueFileName}`;
+                await this.handleNewChat(chat, filePath, existingConversations);
             }
     
             this.updateConversationRecord(chat, folderPath);
@@ -288,7 +317,7 @@ export default class ChatGPTImportPlugin extends Plugin {
             this.logError(`Error processing chat: ${chat.title || 'Untitled'}`, chatError.message);
         }
     }
-    
+                
     private async createFolderForChat(chat: Chat): Promise<string> {
         const yearMonthFolder = getYearMonthFolder(chat.create_time);
         const folderPath = `${this.settings.archiveFolder}/${yearMonthFolder}`;
@@ -528,9 +557,17 @@ Last Updated: ${updateTimeStr}\n\n
         }
     }    
 
-    async getAllExistingConversations() {
-        const files = this.app.vault.getMarkdownFiles();
+    async getAllExistingConversations(): Promise<Record<string, string>> {
         const conversations = {};
+        const archiveFolder = this.app.vault.getAbstractFileByPath(this.settings.archiveFolder);
+    
+        if (!(archiveFolder instanceof TFolder)) {
+            console.log(`Archive folder not found: ${this.settings.archiveFolder}`);
+            return conversations;
+        }
+    
+        const files = this.app.vault.getMarkdownFiles()
+            .filter(file => file.path.startsWith(this.settings.archiveFolder));
     
         for (const file of files) {
             const fileContent = await this.app.vault.read(file);
@@ -540,9 +577,10 @@ Last Updated: ${updateTimeStr}\n\n
                 conversations[conversationId] = file.path;
             }
         }
+        
         return conversations;
     }
-
+    
     extractMessageUIDsFromNote(content: string): string[] {
         const uidRegex = /<!-- UID: (.*?) -->/g;
         const uids = [];
@@ -603,12 +641,38 @@ ${this.importLog.generateLogContent()}
     }
     
     async resetCatalogs() {
+        // Clear all internal data structures
         this.importedArchives = {};
         this.conversationRecords = {};
-        await this.saveSettings();
-        new Notice("All catalogs have been reset.");
-        console.log("[chatgpt-import] All catalogs have been reset.");
-    }    
+        this.totalExistingConversations = 0;
+        this.totalNewConversationsToImport = 0;
+        this.totalNonEmptyMessagesToImport = 0;
+        this.totalNonEmptyMessagesToAdd = 0;
+        this.totalExistingConversationsToUpdate = 0;
+        this.totalNewConversationsSuccessfullyImported = 0;
+        this.totalConversationsActuallyUpdated = 0;
+        this.totalNonEmptyMessagesAdded = 0;
+    
+        // Reset settings to default
+        this.settings = Object.assign({}, DEFAULT_SETTINGS);
+    
+        // Clear the data file
+        await this.saveData({});
+    
+        // Optionally, you can also delete the data.json file completely
+        // Be careful with this as it might require additional error handling
+        try {
+            await this.app.vault.adapter.remove(`${this.manifest.dir}/data.json`);
+        } catch (error) {
+            console.log("No data.json file to remove or error removing it:", error);
+        }
+    
+        // Reload the plugin to ensure a fresh start
+        await this.loadSettings();
+    
+        new Notice("All plugin data has been reset. You may need to restart Obsidian for changes to take full effect.");
+        console.log("[chatgpt-import] All plugin data has been reset.");
+    }
 
     // Logging Methods
     private logError(message: string, details: string): void {
