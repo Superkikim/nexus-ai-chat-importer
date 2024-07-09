@@ -1,41 +1,108 @@
-<div align="center">
-  <h1>📥 Obsidian ChatGPT Import Plugin</h1>
-  <p>Import ChatGPT archives into Obsidian with ease</p>
-</div>
+# Obsidian ChatGPT Import Plugin
 
-## ATTENTION: BUG ON CONVERSATIONS UPDATES
+## Overview
 
-I realized today there is a naughty bug on conversation updates. If you import already imported conversations, the messages will be removed from the note. 
+The ChatGPT Import Plugin for Obsidian allows you to seamlessly import your ChatGPT conversation archives into your Obsidian vault. This plugin organizes your ChatGPT conversations into readable Markdown files, making them easily accessible and searchable within Obsidian.
 
-Until version 1.0.2 has not been released, ensure you DO NOT import already imported conversations, or keep save your zip files for later.
+## Features
 
-## About
-
-The ChatGPT Import Plugin simplifies the process of importing ChatGPT conversation archives into Obsidian. Follow the steps below to get started.
+- Import ChatGPT conversation archives (ZIP files) directly into Obsidian
+- Automatically organize conversations by date
+- Create individual Markdown files for each conversation
+- Update existing conversations with new messages
+- Detailed import logs for tracking the import process
 
 ## Installation
 
-1. Download a release from the [GitHub releases page](https://github.com/Superkikim/obsidian-chatgpt-import/releases)
-2. Put the downloaded release folder into the `.obsidian/plugins` folder within your Obsidian vault.
-3. In Obsidian, go to "Settings &gt; Community plugins" and enable the "ChatGPT Import" plugin.
-4. Follow the instructions above to start importing your ChatGPT data.
-   
-After installation, follow the setup instructions in the plugin settings to specify the folder path for saving conversations.
+As this plugin is not yet available in the Obsidian Community Plugins repository, you'll need to install it manually. Follow these steps:
+
+1. Download the `main.js` file from the `dist` folder of the [GitHub repository](https://github.com/Superkikim/obsidian-chatgpt-import/tree/main/dist).
+2. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
+3. Create a new folder called `obsidian-chatgpt-import`.
+4. Place the downloaded `main.js` file into this new folder.
+5. Open Obsidian and go to Settings > Community Plugins.
+6. Disable Safe Mode if it's enabled.
+7. Refresh the list of plugins.
+8. Find "ChatGPT Import" in the list and enable it by toggling the switch.
+
+Note: You may need to restart Obsidian after installing the plugin for it to appear in the settings.
+
+After installation, proceed to the Configuration section to set up the plugin.
+
+## Configuration
+
+1. Go to Settings > ChatGPT Import
+2. Set the "ChatGPT Archive Folder" to specify where imported conversations will be stored
+3. Optionally, enable "Add Date Prefix to Filenames" and choose a date format
 
 ## Usage
 
-1. Export your ChatGPT conversation data as a ZIP file:
-   - Click on your user icon in ChatGPT.
-   - Select "Settings & Beta" > "Data Control" > "Export Data" > "Export."
-   - You will receive an email with a link to download the ZIP file.
-2. In Obsidian, use the "Import ChatGPT ZIP" command:
-   - Select the ZIP file you downloaded.
-   - The plugin will create a subfolder named after the date of the export file in the specified folder
-   - For each chat in the archive, a note will be created
+### Exporting ChatGPT Data
 
-## Support
+1. Log in to ChatGPT (chat.openai.com)
+2. Click on your user icon and select "Settings & Beta"
+3. Go to "Data Controls" and click on "Export Data"
+4. Click "Export" and wait for an email with the download link
+5. Download the ZIP file containing your ChatGPT data
 
-For any issues or feature requests, please [open an issue](https://github.com/Superkikim/obsidian-chatgpt-import/issues) on GitHub.
+### Importing into Obsidian
+
+1. In Obsidian, open the Command Palette (Cmd/Ctrl + P)
+2. Search for and select "ChatGPT Import: Import ChatGPT ZIP"
+3. Choose the ZIP file you downloaded from ChatGPT
+4. The plugin will process the file and import your conversations
+
+### Import Results
+
+- New conversations will be created as individual Markdown files
+- Existing conversations will be updated with new messages (if any)
+- An import log will be generated in the archive folder, detailing the results
+
+### Resetting the Import Catalog
+
+The plugin keeps a record of processed ZIP files to avoid unnecessary reprocessing. If you need to clear this record:
+
+1. Open the Command Palette (Cmd/Ctrl + P)
+2. Search for and select "ChatGPT Import: Reset ChatGPT Import Catalogs"
+3. Confirm the action when prompted
+
+Note: This action only clears the plugin's record of previously processed ZIP files. It does not affect your imported notes. After resetting, the plugin will no longer recognize previously imported ZIP files as already processed, allowing you to reimport them without warnings if needed.
+
+## Understanding the Import Log
+
+The import log provides a summary of the import process, including:
+
+- Total number of existing conversations
+- Number of new conversations imported
+- Number of conversations updated
+- Number of new messages added
+
+It also includes detailed tables for:
+
+- Created Notes: New conversations imported
+- Updated Notes: Existing conversations that were updated
+- Skipped Notes: Conversations that didn't need updating
+
+Each table shows the conversation title, creation date, update date, and number of messages.
+
+## Troubleshooting
+
+- If the import fails, check the console log for error messages
+- Ensure you have write permissions for your Obsidian vault
+- Verify that the ZIP file is a valid ChatGPT export
+
+## Known Issues
+
+- In versions prior to 1.0.1b, there is a bug that may remove messages when updating existing conversations. It's recommended to keep your original ZIP files until this is fixed.
+
+## Support and Contributions
+
+For support, feature requests, or to report bugs:
+
+1. Visit the [GitHub Issues page](https://github.com/Superkikim/obsidian-chatgpt-import/issues)
+2. Search for existing issues or create a new one
+
+Contributions to the plugin are welcome! Please refer to the repository's contribution guidelines for more information.
 
 ## License
 
@@ -43,4 +110,4 @@ This plugin is licensed under the [MIT License](LICENSE).
 
 ---
 
-Enjoy importing your ChatGPT conversations into Obsidian!
+We hope this plugin enhances your Obsidian experience by integrating your valuable ChatGPT conversations into your knowledge base!
