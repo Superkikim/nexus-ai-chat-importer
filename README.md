@@ -1,5 +1,13 @@
 # Obsidian ChatGPT Import Plugin
 
+![Version](https://img.shields.io/badge/version-1.0.1b-blue)
+
+## About
+
+Current Version: 1.0.1b (Beta)
+
+The ChatGPT Import Plugin simplifies the process of importing ChatGPT conversation archives into Obsidian.
+
 ## Overview
 
 The ChatGPT Import Plugin for Obsidian allows you to seamlessly import your ChatGPT conversation archives into your Obsidian vault. This plugin organizes your ChatGPT conversations into readable Markdown files, making them easily accessible and searchable within Obsidian.
@@ -16,7 +24,7 @@ The ChatGPT Import Plugin for Obsidian allows you to seamlessly import your Chat
 
 As this plugin is not yet available in the Obsidian Community Plugins repository, you'll need to install it manually. Follow these steps:
 
-1. Download the `main.js` file from the `dist` folder of the [GitHub repository](https://github.com/Superkikim/obsidian-chatgpt-import/tree/main/dist).
+1. Download the latest release (currently 1.0.1b) from the [GitHub repository](https://github.com/Superkikim/obsidian-chatgpt-import/releases).
 2. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
 3. Create a new folder called `obsidian-chatgpt-import`.
 4. Place the downloaded `main.js` file into this new folder.
