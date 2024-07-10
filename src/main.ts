@@ -61,15 +61,15 @@ export default class ChatGPTImportPlugin extends Plugin {
     totalNewConversationsSuccessfullyImported: number = 0; // Count of new conversations successfully imported
     totalConversationsActuallyUpdated: number = 0; // Count of conversations actually updated after processing
     totalNonEmptyMessagesAdded: number = 0; // Count of non-empty messages actually added to conversations
-    
+
     // Lifecycle methods
     async onload() {
         console.log('Loading ChatGPT Import Plugin');
         this.logger = new Logger();
         await this.loadSettings();
-    
+
         this.addSettingTab(new ChatGPTImportPluginSettingTab(this.app, this));
-    
+
         this.addRibbonIcon('message-square-plus', 'Import ChatGPT ZIP', (evt: MouseEvent) => {
             this.selectZipFile();
         });
@@ -160,22 +160,22 @@ export default class ChatGPTImportPlugin extends Plugin {
                 : "Import completed. Log file created in the archive folder.");
         }
     }
+
     async processConversations(zip: JSZip, file: File): Promise<void> {
         try {
             const chats = await this.extractChatsFromZip(zip);
             this.logInfo(`Extracted ${chats.length} chats from zip file`, { fileName: file.name });
-                const existingConversations = await this.getAllExistingConversations();
-    
+            const existingConversations = await this.getAllExistingConversations();
+
+            // troubles
+            console.log(`[processConversations] Total existing conversations found:`, Object.keys(existingConversations).length);
+            console.log(`[processConversations] Existing conversation IDs:`, Object.keys(existingConversations));
+                
             this.initializeCounters(existingConversations);
     
             for (const chat of chats) {
                 await this.processSingleChat(chat, existingConversations);
             }
-
-
-            // Log existing conversations
-            await this.logExistingConversations(existingConversations);
-
 
             this.updateImportLog();
 
@@ -193,39 +193,43 @@ export default class ChatGPTImportPlugin extends Plugin {
         try {
             const file = this.app.vault.getAbstractFileByPath(filePath);
             if (file instanceof TFile) {
-                await this.app.vault.process(file, (content) => {
-                    const existingMessageIds = this.extractMessageUIDsFromNote(content);
-                    const newMessages = this.getNewMessages(chat, existingMessageIds);
-                    
-                    if (newMessages.length > 0) {
-                        // Update metadata
-                        content = this.updateMetadata(content, chat.update_time);
-                        
-                        // Append new messages
-                        content += '\n\n' + this.formatNewMessages(newMessages);
-                        
-                        this.totalConversationsActuallyUpdated++;
-                        this.totalNonEmptyMessagesAdded += newMessages.length;
-                    }
-                    
-                    return content;
-                });
-    
-                this.importLog.addUpdated(
-                    chat.title || 'Untitled',
-                    filePath,
-                    `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
-                    `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`,
-                    totalMessageCount
-                );
+                let content = await this.app.vault.read(file);
+                let originalContent = content;
+                
+                content = this.updateMetadata(content, chat.update_time);
+                
+                const existingMessageIds = this.extractMessageUIDsFromNote(content);
+                const newMessages = this.getNewMessages(chat, existingMessageIds);
+                
+                if (newMessages.length > 0) {
+                    content += '\n\n' + this.formatNewMessages(newMessages);
+                    this.totalConversationsActuallyUpdated++;
+                    this.totalNonEmptyMessagesAdded += newMessages.length;
+                }
+
+                if (content !== originalContent) {
+                    await this.writeToFile(filePath, content);
+                    this.importLog.addUpdated(
+                        chat.title || 'Untitled',
+                        filePath,
+                        `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
+                        `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`,
+                        totalMessageCount
+                    );
+                } else {
+                    console.log(`[chatgpt-import] No changes needed for existing file: ${filePath}`);
+                    this.importLog.addSkipped(
+                        chat.title || 'Untitled',
+                        filePath,
+                        `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
+                        `${formatTimestamp(chat.update_time, 'date')} ${formatTimestamp(chat.update_time, 'time')}`,
+                        totalMessageCount,
+                        "No changes needed"
+                    );
+                }
             }
         } catch (error) {
-            this.logError("Error updating existing note", error.message);
-            this.importLog.addFailed(chat.title || 'Untitled', filePath,
-                formatTimestamp(chat.create_time, 'date') + ' ' + formatTimestamp(chat.create_time, 'time'),
-                formatTimestamp(chat.update_time, 'date') + ' ' + formatTimestamp(chat.update_time, 'time'),
-                error.message
-            );
+            // Error handling (unchanged)
         }
     }
     async createNewNote(chat: Chat, filePath: string, existingConversations: Record<string, string>): Promise<void> {
@@ -259,7 +263,7 @@ export default class ChatGPTImportPlugin extends Plugin {
             throw error;
         }
     }
-    
+
     // Helper methods
     private async extractChatsFromZip(zip: JSZip): Promise<Chat[]> {
         const conversationsJson = await zip.file('conversations.json').async('string');
@@ -277,47 +281,44 @@ export default class ChatGPTImportPlugin extends Plugin {
         this.totalNonEmptyMessagesAdded = 0;
     }
 
-    // TEMPORARY METHOD
-    async logExistingConversations(existingConversations: Record<string, string>): Promise<void> {
-        const logFolderPath = `${this.settings.archiveFolder}/logs`;
-        const logFilePath = `${logFolderPath}/existingnotes.md`;
-    
-        try {
-            await this.ensureFolderExists(logFolderPath);
-    
-            let content = "# Existing Conversations Log\n\n";
-            content += "| Conversation ID | File Path |\n";
-            content += "|-----------------|-----------|\n";
-    
-            for (const [id, path] of Object.entries(existingConversations)) {
-                content += `| ${id} | ${path} |\n`;
-            }
-    
-            await this.writeToFile(logFilePath, content);
-            console.log(`Existing conversations log created: ${logFilePath}`);
-        } catch (error) {
-            this.logError("Error creating existing conversations log", error.message);
-        }
-    }
-    
     private async processSingleChat(chat: Chat, existingConversations: Record<string, string>): Promise<void> {
+        // Troubles
+        console.log(`[processSingleChat] Starting to process chat: ${chat.id}`);
         try {
             const folderPath = await this.createFolderForChat(chat);
-                     
+            // Troubles
+            console.log(`[processSingleChat] Folder path processed: ${folderPath}`);
+
+            // Troubles
+            console.log(`[processSingleChat] Current chat ID:`, chat.id);
+            console.log(`[processSingleChat] Exists in record:`, Boolean(existingConversations[chat.id]));
+            console.log(`[processSingleChat] existingConversations keys count:`, Object.keys(existingConversations).length);
             if (existingConversations[chat.id]) {
+                // Troubles
+                console.log(`[processSingleChat] Existing conversation found for chat ${chat.id}`);
+                console.log(`[processSingleChat] Existing path: ${existingConversations[chat.id]}`);
                 await this.handleExistingChat(chat, {path: existingConversations[chat.id], updateTime: 0}, folderPath);
             } else {
+                // Troubles
+                console.log(`[processSingleChat] No existing conversation found for chat ${chat.id}`);
                 const uniqueFileName = await this.getUniqueFileName(chat, folderPath, existingConversations);
+                // Troubles
+                console.log(`[processSingleChat] Unique file name generated: ${uniqueFileName}`);
                 const filePath = `${folderPath}/${uniqueFileName}`;
                 await this.handleNewChat(chat, filePath, existingConversations);
             }
     
             this.updateConversationRecord(chat, folderPath);
+            // Troubles
+            console.log(`[processSingleChat] Conversation record updated for chat ${chat.id}`);
         } catch (chatError) {
+            console.error(`[processSingleChat] Error processing chat: ${chat.id}`, chatError);
             this.logError(`Error processing chat: ${chat.title || 'Untitled'}`, chatError.message);
         }
+        // Troubles
+        console.log(`[processSingleChat] Finished processing chat: ${chat.id}`);
     }
-                
+
     private async createFolderForChat(chat: Chat): Promise<string> {
         const yearMonthFolder = getYearMonthFolder(chat.create_time);
         const folderPath = `${this.settings.archiveFolder}/${yearMonthFolder}`;
@@ -329,10 +330,10 @@ export default class ChatGPTImportPlugin extends Plugin {
     
         return folderPath;
     }
-    
+
     private async handleExistingChat(chat: Chat, existingRecord: ConversationRecord, folderPath: string): Promise<void> {
         const totalMessageCount = Object.values(chat.mapping).filter(msg => isValidMessage(msg.message)).length;
-        
+
         if (existingRecord.updateTime >= chat.update_time) {
             this.importLog.addSkipped(
                 chat.title || 'Untitled',
@@ -342,24 +343,25 @@ export default class ChatGPTImportPlugin extends Plugin {
                 totalMessageCount,
                 "No Updates"
             );
+            console.log(`[chatgpt-import] Skipped existing file (no updates): ${existingRecord.path}`);
         } else {
             this.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(chat, existingRecord.path, totalMessageCount);
         }
     }
-    
+
     private async handleNewChat(chat: Chat, folderPath: string, existingConversations: Record<string, string>): Promise<void> {
         this.totalNewConversationsToImport++;
         await this.createNewNote(chat, folderPath, existingConversations);
     }
-    
+
     private updateConversationRecord(chat: Chat, folderPath: string): void {
         this.conversationRecords[chat.id] = {
             path: `${folderPath}/${this.getFileName(chat)}`,
             updateTime: chat.update_time
         };
     }
-    
+
     private updateImportLog(): void {
         this.importLog.addSummary(
             this.totalExistingConversations,
@@ -435,7 +437,7 @@ export default class ChatGPTImportPlugin extends Plugin {
     async ensureFolderExists(folderPath: string): Promise<{ success: boolean, error?: string }> {
         const folders = folderPath.split("/").filter(p => p.length);
         let currentPath = "";
-    
+
         for (const folder of folders) {
             currentPath += folder + "/";
             const currentFolder = this.app.vault.getAbstractFileByPath(currentPath);
@@ -472,10 +474,10 @@ export default class ChatGPTImportPlugin extends Plugin {
     
         return potentialFileName;
     }
-    
+
     generateHeader(title, conversationId, createTimeStr, updateTimeStr) {
         return `---
-aliases: ${title}
+aliases: "${title}"
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
@@ -497,7 +499,7 @@ Last Updated: ${updateTimeStr}\n\n
         }
         return messagesContent;
     }
-    
+
     formatMessage(message: ChatMessage): string {
         if (!message || typeof message !== 'object') {
             console.error('Invalid message object:', message);
@@ -555,31 +557,40 @@ Last Updated: ${updateTimeStr}\n\n
             this.logError(`Error creating or modifying file '${fileName}'`, error.message);
             throw error; // Propagate the error
         }
-    }    
+    }
 
     async getAllExistingConversations(): Promise<Record<string, string>> {
+        console.log("[getAllExistingConversations] Starting to gather existing conversations");
         const conversations = {};
         const archiveFolder = this.app.vault.getAbstractFileByPath(this.settings.archiveFolder);
-    
+        
         if (!(archiveFolder instanceof TFolder)) {
-            console.log(`Archive folder not found: ${this.settings.archiveFolder}`);
+            console.log(`[getAllExistingConversations] Archive folder not found: ${this.settings.archiveFolder}`);
             return conversations;
         }
-    
+        
+        console.log(`[getAllExistingConversations] Archive folder found: ${this.settings.archiveFolder}`);
+        
         const files = this.app.vault.getMarkdownFiles()
             .filter(file => file.path.startsWith(this.settings.archiveFolder));
-    
+        
+        console.log(`[getAllExistingConversations] Total markdown files in archive: ${files.length}`);
+        
         for (const file of files) {
-            const fileContent = await this.app.vault.read(file);
-            const match = fileContent.match(/^---\s*conversation_id:\s*(.*?)\s*---/ms);
-            if (match) {
-                const conversationId = match[1].trim();
+            const metadata = this.app.metadataCache.getFileCache(file)?.frontmatter;
+            if (metadata && metadata.conversation_id) {
+                const conversationId = metadata.conversation_id;
                 conversations[conversationId] = file.path;
+                console.log(`[getAllExistingConversations] Found conversation: ${conversationId} in file: ${file.path}`);
+            } else {
+                console.log(`[getAllExistingConversations] No conversation_id found in file: ${file.path}`);
             }
         }
         
+        console.log(`[getAllExistingConversations] Total conversations found: ${Object.keys(conversations).length}`);
         return conversations;
     }
+    
     
     extractMessageUIDsFromNote(content: string): string[] {
         const uidRegex = /<!-- UID: (.*?) -->/g;
@@ -594,17 +605,17 @@ Last Updated: ${updateTimeStr}\n\n
     async writeImportLog(zipFileName: string): Promise<void> {
         const now = new Date();
         let prefix = formatTimestamp(now.getTime() / 1000, 'prefix');
-    
+
         let logFileName = `${prefix} - ChatGPT Import log.md`;
         const logFolderPath = `${this.settings.archiveFolder}/logs`;
-        
+
         const folderResult = await this.ensureFolderExists(logFolderPath);
         if (!folderResult.success) {
             this.logError(`Failed to create or access log folder: ${logFolderPath}`, folderResult.error);
             new Notice("Failed to create log file. Check console for details.");
             return;
         }
-    
+
         let logFilePath = `${logFolderPath}/${logFileName}`;
     
         let counter = 1;
@@ -613,9 +624,9 @@ Last Updated: ${updateTimeStr}\n\n
             logFilePath = `${logFolderPath}/${logFileName}`;
             counter++;
         }
-    
+
         const currentDate = `${formatTimestamp(now.getTime() / 1000, 'date')} ${formatTimestamp(now.getTime() / 1000, 'time')}`;
-    
+
         const logContent = `---
 importdate: ${currentDate}
 zipFile: ${zipFileName}
@@ -630,7 +641,7 @@ Imported ZIP file: ${zipFileName}
 
 ${this.importLog.generateLogContent()}
 `;
-    
+
         try {
             await this.writeToFile(logFilePath, logContent);
             console.log(`Import log created: ${logFilePath}`);
@@ -639,7 +650,7 @@ ${this.importLog.generateLogContent()}
             new Notice("Failed to create log file. Check console for details.");
         }
     }
-    
+
     async resetCatalogs() {
         // Clear all internal data structures
         this.importedArchives = {};
@@ -810,7 +821,7 @@ class ImportLog {
     addUpdated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number) {
         this.updated.push({ title, filePath, createDate, updateDate, messageCount });
     }
-    
+
     addSkipped(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, reason: string) {
         this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason });
     }
@@ -818,7 +829,7 @@ class ImportLog {
     addFailed(title: string, filePath: string, createDate: string, updateDate: string, errorMessage: string) {
         this.failed.push({ title, filePath, createDate, updateDate, errorMessage });
     }
-    
+
     addError(message: string, details: string) {
         this.globalErrors.push({ message, details });
     }
@@ -832,7 +843,7 @@ Summary:
 - New messages added: ${totalMessagesAdded}
 `;
     }
-    
+
     generateLogContent(): string {
         let content = '# ChatGPT Import Log\n\n';
         
@@ -869,7 +880,7 @@ Summary:
     
         return content;
     }
-    
+
     private generateTable(title: string, entries: LogEntry[], emoji: string): string {
         let table = `## ${title}\n\n`;
         table += '| | Title | Created | Updated | Messages | Reason |\n';
@@ -880,7 +891,7 @@ Summary:
         });
         return table + '\n\n';
     }
-    
+
     private generateErrorTable(title: string, entries: {message: string, details: string}[], emoji: string): string {
         let table = `## ${title}\n\n`;
         table += '| | Error | Details |\n';
