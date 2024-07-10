@@ -177,7 +177,7 @@ export default class ChatGPTImportPlugin extends Plugin {
                 await this.processSingleChat(chat, existingConversations);
             }
 
-            this.updateImportLog();
+            this.updateImportLog(file.name);
 
             this.logInfo(`Processed ${chats.length} conversations`, {
                 new: this.totalNewConversationsSuccessfullyImported,
@@ -362,8 +362,9 @@ export default class ChatGPTImportPlugin extends Plugin {
         };
     }
 
-    private updateImportLog(): void {
+    private updateImportLog(zipFileName: string): void {
         this.importLog.addSummary(
+            zipFileName,
             this.totalExistingConversations,
             this.totalNewConversationsSuccessfullyImported,
             this.totalConversationsActuallyUpdated,
@@ -591,7 +592,6 @@ Last Updated: ${updateTimeStr}\n\n
         return conversations;
     }
     
-    
     extractMessageUIDsFromNote(content: string): string[] {
         const uidRegex = /<!-- UID: (.*?) -->/g;
         const uids = [];
@@ -634,10 +634,6 @@ totalSuccessfulImports: ${this.importLog.created.length}
 totalUpdatedImports: ${this.importLog.updated.length}
 totalSkippedImports: ${this.importLog.skipped.length}
 ---
-
-# ChatGPT Import Log
-
-Imported ZIP file: ${zipFileName}
 
 ${this.importLog.generateLogContent()}
 `;
@@ -747,7 +743,7 @@ ${this.importLog.generateLogContent()}
                 modal.close();
                 resolve(false);
             });
-            
+
             modal.open();
         });
     }
@@ -807,13 +803,13 @@ class ChatGPTImportPluginSettingTab extends PluginSettingTab {
 }
 
 class ImportLog {
-    // Properties and methods    
+    // Properties and methods
     private created: LogEntry[] = [];
     private updated: LogEntry[] = [];
     private skipped: LogEntry[] = [];
-    private errors: LogEntry[] = [];
     private failed: LogEntry[] = [];
-    private globalErrors: {message: string, details: string}[] = [];    
+    private globalErrors: {message: string, details: string}[] = [];
+    private summary: string = ''; 
 
     addCreated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number) {
         this.created.push({ title, filePath, createDate, updateDate, messageCount });
@@ -834,63 +830,74 @@ class ImportLog {
         this.globalErrors.push({ message, details });
     }
 
-    addSummary(totalExisting: number, totalNew: number, totalUpdated: number, totalMessagesAdded: number) {
+    addSummary(zipFileName: string, totalProcessed: number, totalCreated: number, totalUpdated: number, totalMessagesAdded: number) {
         this.summary = `
-Summary:
-- Existing conversations: ${totalExisting}
-- New conversations imported: ${totalNew}
-- Conversations updated: ${totalUpdated}
-- New messages added: ${totalMessagesAdded}
+## Summary
+- Processed ZIP file: ${zipFileName}
+- ${totalCreated > 0 ? `[[#Created notes]]` : 'Created notes'}: ${totalCreated} out of ${totalProcessed} conversations
+- ${totalUpdated > 0 ? `[[#Updated notes]]` : 'Updated notes'}: ${totalUpdated} with a total of ${totalMessagesAdded} new messages
+- ${this.skipped.length > 0 ? `[[#Skipped notes]]` : 'Skipped notes'}: ${this.skipped.length} out of ${totalProcessed} conversations
+- ${this.failed.length > 0 ? `[[#Failed imports]]` : 'Failed imports'}: ${this.failed.length}
+- ${this.globalErrors.length > 0 ? `[[#global-errors|Global Errors]]` : 'Global Errors'}: ${this.globalErrors.length}
 `;
     }
 
     generateLogContent(): string {
         let content = '# ChatGPT Import Log\n\n';
-        
+
         if (this.summary) {
             content += this.summary + '\n\n';
         }
 
         content += '## Legend\n';
         content += '✨ Created | 🔄 Updated | ⏭️ Skipped | 🚫 Failed | ⚠️ Global Errors\n\n';
-        
-        content += '## Table of Contents\n';
-        if (this.created.length > 0) content += '- [Created Notes](#created-notes)\n';
-        if (this.updated.length > 0) content += '- [Updated Notes](#updated-notes)\n';
-        if (this.skipped.length > 0) content += '- [Skipped Notes](#skipped-notes)\n';
-        if (this.failed.length > 0) content += '- [Failed Imports](#failed-imports)\n';
-        if (this.globalErrors.length > 0) content += '- [Global Errors](#global-errors)\n';
-        content += '\n';
-    
+
         if (this.created.length > 0) {
-            content += this.generateTable('Created Notes', this.created, '✨');
+            content += this.generateTable('Created Notes', this.created, '✨', ['Title', 'Created', 'Updated', 'Messages']);
         }
         if (this.updated.length > 0) {
-            content += this.generateTable('Updated Notes', this.updated, '🔄');
+            content += this.generateTable('Updated Notes', this.updated, '🔄', ['Title', 'Created', 'Updated', 'Added Messages']);
         }
         if (this.skipped.length > 0) {
-            content += this.generateTable('Skipped Notes', this.skipped, '⏭️');
+            content += this.generateTable('Skipped Notes', this.skipped, '⏭️', ['Title', 'Created', 'Updated', 'Messages']);
         }
         if (this.failed.length > 0) {
-            content += this.generateTable('Failed Imports', this.failed, '🚫');
+            content += this.generateTable('Failed Imports', this.failed, '🚫', ['Title', 'Created', 'Updated', 'Error']);
         }
         if (this.globalErrors.length > 0) {
             content += this.generateErrorTable('Global Errors', this.globalErrors, '⚠️');
         }
-    
+
         return content;
     }
 
-    private generateTable(title: string, entries: LogEntry[], emoji: string): string {
+    private generateTable(title: string, entries: LogEntry[], emoji: string, headers: string[]): string {
         let table = `## ${title}\n\n`;
-        table += '| | Title | Created | Updated | Messages | Reason |\n';
-        table += '|---|:---|:---:|:---:|:---:|:---|\n';
+        table += '| ' + headers.join(' | ') + ' |\n';
+        table += '|:---:'.repeat(headers.length) + '|\n';
         entries.forEach(entry => {
             const sanitizedTitle = entry.title.replace(/\n/g, ' ').trim();
-            table += `| ${emoji} | [[${entry.filePath}\\|${sanitizedTitle}]] | ${entry.createDate} | ${entry.updateDate} | ${entry.messageCount} | ${entry.reason || '-'} |\n`;
+            const row = headers.map(header => {
+                switch(header) {
+                    case 'Title':
+                        return `[[${entry.filePath}\\|${sanitizedTitle}]]`;
+                    case 'Created':
+                        return entry.createDate || '-';
+                    case 'Updated':
+                        return entry.updateDate || '-';
+                    case 'Messages':
+                        return entry.messageCount?.toString() || '-';
+                    case 'Reason':
+                        return entry.reason || '-';
+                    default:
+                        return '-';
+                }
+            });
+            table += `| ${emoji} | ${row.join(' | ')} |\n`;
         });
         return table + '\n\n';
     }
+    
 
     private generateErrorTable(title: string, entries: {message: string, details: string}[], emoji: string): string {
         let table = `## ${title}\n\n`;
@@ -903,7 +910,7 @@ Summary:
     }
 
     hasErrors(): boolean {
-        return this.errors.length > 0 || this.failed.length > 0;
+        return this.failed.length > 0 || this.globalErrors.length > 0;
     }
 }
 
