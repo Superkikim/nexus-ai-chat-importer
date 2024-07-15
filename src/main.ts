@@ -43,7 +43,7 @@ class Logger {
 export default class NexusAIChatImporterPlugin extends Plugin {
     // Properties
     settings: PluginSettings;
-    private importLog: ImportLog;
+    private importLog: ImportLog | null = null;
     private importedArchives: Record<string, string> = {}; // hash -> filename
     private conversationRecords: Record<string, { path: string, updateTime: number }> = {};
     /**
