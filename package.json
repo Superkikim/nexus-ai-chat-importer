@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-chatgpt-import",
-	"version": "1.0.1b",
-	"description": "This plugin allows to import ChatGPT conversation from the ZIP archive downloaded from your account",
+	"name": "nexus-chat-ai-importer",
+	"version": "2.0.0-alpha.1",
+	"description": "This plugin allows to import AI Chat (i.e. ChatGPT, Claude...) conversation from the ZIP archive downloaded from your account",
 	"main": "main.js",
 	"scripts": {
 	  "dev": "node esbuild.config.mjs",
