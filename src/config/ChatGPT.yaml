@@ -1,0 +1,11 @@
+provider: ChatGPT
+structure:
+  archiveType: zip
+  conversationsFile: conversations.json
+mapping:
+  conversationId: id
+  messages: mapping
+  messageId: id
+  messageAuthorRole: author.role
+  messageContent: content.parts
+  messageTimestamp: create_time

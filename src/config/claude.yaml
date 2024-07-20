@@ -1,0 +1,14 @@
+provider: Claude
+structure:
+  archiveType: json
+  conversationsFile: claude_conversations.json
+mapping:
+  conversationId: uuid
+  conversationName: name
+  createDate: created_at
+  updateDate: updated_at
+  messages: chat_messages
+  messageId: uuid
+  messageText: text
+  messageAuthorRole: sender
+  messageTimestamp: created_at

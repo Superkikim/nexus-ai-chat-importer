@@ -1,0 +1,5 @@
+providers:
+  ChatGPT:
+    handler: './chatgpt'
+  Claude:
+    handler: './claude'
