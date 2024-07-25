@@ -1,0 +1,8 @@
+- name: ChatGPT
+  config: /config/chatgpt.yaml
+- name: Claude
+  config: /config/chatgpt.yaml
+- name: Open WebUI
+  config: /config/openwebui.yaml
+- name: Poe
+  config: /config/poe.yaml

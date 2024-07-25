@@ -2,7 +2,7 @@
 node_modules/
 
 # Local resources
-local_resources/conversations.json
+local_resources/
 
 # Fichiers de configuration npm
 package-lock.json
@@ -33,7 +33,7 @@ yarn-error.log*
 
 # Fichiers de build optionnels (si vous ne voulez pas les inclure dans le repo)
 # Décommentez la ligne suivante si vous ne voulez pas inclure le fichier de build
-# dist/
+dist/
 
 # Fichiers d'environnement (si vous en utilisez)
 .env
