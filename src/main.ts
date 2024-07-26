@@ -6,7 +6,7 @@ import { formatTimestamp, getYearMonthFolder, formatTitle, isValidMessage } from
 
 // Constants
 const DEFAULT_SETTINGS: PluginSettings = {
-    archiveFolder: 'ChatGPT Archives',
+    archiveFolder: 'Nexus Conversations',
     addDatePrefix: false,
     dateFormat: 'YYYY-MM-DD'
 };
@@ -24,7 +24,7 @@ class Logger {
                           level === LogLevel.WARN ? console.warn : 
                           console.log;
         
-        logMethod(`[${timestamp}] [ChatGPT Import] [${LogLevel[level]}] ${message}`, details);
+        logMethod(`[${timestamp}] [Nexus AI Chat Importer] [${LogLevel[level]}] ${message}`, details);
     }
 
     info(message: string, details?: any) {
@@ -40,7 +40,7 @@ class Logger {
     }
 }
 
-export default class ChatGPTImportPlugin extends Plugin {
+export default class NexusAIChatImporterPlugin extends Plugin {
     // Properties
     settings: PluginSettings;
     private importLog: ImportLog;
@@ -64,14 +64,14 @@ export default class ChatGPTImportPlugin extends Plugin {
 
     // Lifecycle methods
     async onload() {
-        console.log('Loading ChatGPT Import Plugin');
+        console.log('Loading Nexus AI Chat Importer Plugin');
         this.logger = new Logger();
         await this.loadSettings();
 
-        this.addSettingTab(new ChatGPTImportPluginSettingTab(this.app, this));
+        this.addSettingTab(new NexusAIChatImporterPluginSettingTab(this.app, this));
 
-        this.addRibbonIcon('message-square-plus', 'Import ChatGPT ZIP', (evt: MouseEvent) => {
-            this.selectZipFile();
+        this.addRibbonIcon('message-square-plus', 'Import AI Chats', (evt: MouseEvent) => {
+            this.startImportProcess();
         });
 
         this.registerEvent(this.app.vault.on('delete', (file) => {
@@ -88,16 +88,16 @@ export default class ChatGPTImportPlugin extends Plugin {
         }));
         
         this.addCommand({
-            id: 'import-chatgpt-zip',
-            name: 'Import ChatGPT ZIP',
+            id: 'nexus-import-ai-chats',
+            name: 'Import AI Chat Conversations',
             callback: () => {
-                this.selectZipFile();
+                this.startImportProcess();
             }
         });
 
         this.addCommand({
-            id: 'reset-chatgpt-import-catalogs',
-            name: 'Reset ChatGPT Import Catalogs',
+            id: 'reset-nexus-ai-chat-importer-catalogs',
+            name: 'Reset Nexus AI Chat Importer Catalogs',
             callback: () => {
                 const modal = new Modal(this.app);
                 modal.contentEl.createEl('p', {text: 'This will reset all import catalogs. This action cannot be undone.'});
@@ -126,7 +126,19 @@ export default class ChatGPTImportPlugin extends Plugin {
     }
 
     // Core functionality methods
-    async handleZipFile(file: File) {
+    async startImportProcess() {
+        try {
+            const file = await this.selectExportFile();
+            if (file) {
+                await this.handleExportFile(file);
+            }
+        } catch (error) {
+            this.logError("Import process failed", error.message);
+            new Notice("Import process failed. Check the console for details.");
+        }
+    }
+    
+    async handleExportFile(file: File) {
         this.importLog = new ImportLog();
         try {
             const fileHash = await this.getFileHash(file);
@@ -217,7 +229,7 @@ export default class ChatGPTImportPlugin extends Plugin {
                         totalMessageCount
                     );
                 } else {
-                    console.log(`[chatgpt-import] No changes needed for existing file: ${filePath}`);
+                    console.log(`[Nexus AI Chat Importer] No changes needed for existing file: ${filePath}`);
                     this.importLog.addSkipped(
                         chat.title || 'Untitled',
                         filePath,
@@ -343,7 +355,7 @@ export default class ChatGPTImportPlugin extends Plugin {
                 totalMessageCount,
                 "No Updates"
             );
-            console.log(`[chatgpt-import] Skipped existing file (no updates): ${existingRecord.path}`);
+            console.log(`[Nexus AI Chat Importer] Skipped existing file (no updates): ${existingRecord.path}`);
         } else {
             this.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(chat, existingRecord.path, totalMessageCount);
@@ -549,10 +561,10 @@ Last Updated: ${updateTimeStr}\n\n
             const file = this.app.vault.getAbstractFileByPath(fileName);
             if (file instanceof TFile) {
                 await this.app.vault.modify(file, content);
-                console.log(`[chatgpt-import] Updated existing file: ${fileName}`);
+                console.log(`[Nexus AI Chat Importer] Updated existing file: ${fileName}`);
             } else {
                 await this.app.vault.create(fileName, content);
-                console.log(`[chatgpt-import] Created new file: ${fileName}`);
+                console.log(`[Nexus AI Chat Importer] Created new file: ${fileName}`);
             }
         } catch (error) {
             this.logError(`Error creating or modifying file '${fileName}'`, error.message);
@@ -606,7 +618,7 @@ Last Updated: ${updateTimeStr}\n\n
         const now = new Date();
         let prefix = formatTimestamp(now.getTime() / 1000, 'prefix');
 
-        let logFileName = `${prefix} - ChatGPT Import log.md`;
+        let logFileName = `${prefix} - Nexus AI Chat Importer Report.md`;
         const logFolderPath = `${this.settings.archiveFolder}/logs`;
 
         const folderResult = await this.ensureFolderExists(logFolderPath);
@@ -620,7 +632,7 @@ Last Updated: ${updateTimeStr}\n\n
     
         let counter = 1;
         while (await this.app.vault.adapter.exists(logFilePath)) {
-            logFileName = `${prefix}-${counter} - ChatGPT Import log.md`;
+            logFileName = `${prefix}-${counter} - Nexus AI Chat Importer Report.md`;
             logFilePath = `${logFolderPath}/${logFileName}`;
             counter++;
         }
@@ -678,7 +690,7 @@ ${this.importLog.generateLogContent()}
         await this.loadSettings();
     
         new Notice("All plugin data has been reset. You may need to restart Obsidian for changes to take full effect.");
-        console.log("[chatgpt-import] All plugin data has been reset.");
+        console.log("[Nexus AI Chat Importer] All plugin data has been reset.");
     }
 
     // Logging Methods
@@ -694,20 +706,30 @@ ${this.importLog.generateLogContent()}
     }
 
     // UI-related methods
-    selectZipFile() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.zip';
-        input.onchange = (e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-                this.handleZipFile(file);
-            }
-        };
-        // Reset the input value to allow selecting the same file again
-        input.value = '';
-        input.click();
+    selectExportFile(): Promise<File | null> {
+        return new Promise((resolve) => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.zip,.json';
+            input.onchange = (e: Event) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                    if (file.name.endsWith('.zip') || file.name.endsWith('.json')) {
+                        resolve(file);
+                    } else {
+                        new Notice("Please select a .zip or .json file.");
+                        resolve(null);
+                    }
+                } else {
+                    resolve(null);
+                }
+            };
+            // Reset the input value to allow selecting the same file again
+            input.value = '';
+            input.click();
+        });
     }
+
     async validateZipFile(file: File): Promise<JSZip> {
         try {
             const zip = new JSZip();
@@ -715,46 +737,49 @@ ${this.importLog.generateLogContent()}
             const fileNames = Object.keys(content.files);
     
             if (!fileNames.includes('conversations.json')) {
-                throw new ChatGPTImportError("Invalid ZIP structure", "File 'conversations.json' not found in the zip");
+                throw new NexusAIChatImporterError("Invalid ZIP structure", "File 'conversations.json' not found in the zip");
             }
     
             return zip;
         } catch (error) {
-            if (error instanceof ChatGPTImportError) {
+            if (error instanceof NexusAIChatImporterError) {
                 throw error;
             } else {
-                throw new ChatGPTImportError("Error validating zip file", error.message);
+                throw new NexusAIChatImporterError("Error validating zip file", error.message);
             }
         }
     }
+    
     showConfirmationDialog(message: string): Promise<boolean> {
         return new Promise((resolve) => {
             const modal = new Modal(this.app);
+    
             modal.contentEl.createEl("p", { text: message });
-            
+    
             const buttonContainer = modal.contentEl.createDiv();
-            
+    
             buttonContainer.createEl("button", { text: "Yes" }).addEventListener("click", () => {
                 modal.close();
                 resolve(true);
             });
-            
+    
             buttonContainer.createEl("button", { text: "No" }).addEventListener("click", () => {
                 modal.close();
                 resolve(false);
             });
-
+    
             modal.open();
         });
     }
+        
 }
 
-class ChatGPTImportPluginSettingTab extends PluginSettingTab {
+class NexusAIChatImporterPluginSettingTab extends PluginSettingTab {
     // Settings tab implementation
 
-    plugin: ChatGPTImportPlugin;
+    plugin: NexusAIChatImporterPlugin;
 
-    constructor(app: App, plugin: ChatGPTImportPlugin) {
+    constructor(app: App, plugin: NexusAIChatImporterPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -764,8 +789,8 @@ class ChatGPTImportPluginSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName('ChatGPT Archive Folder')
-            .setDesc('Choose a folder to store ChatGPT archives')
+            .setName('Nexus AI Chat Importer Conversations Folder')
+            .setDesc('Choose a folder to store conversations')
             .addText(text => text
                 .setPlaceholder('Enter folder name')
                 .setValue(this.plugin.settings.archiveFolder)
@@ -843,7 +868,7 @@ class ImportLog {
     }
 
     generateLogContent(): string {
-        let content = '# ChatGPT Import Log\n\n';
+        let content = '# Nexus AI Chat Importer Report\n\n';
 
         if (this.summary) {
             content += this.summary + '\n\n';
@@ -914,10 +939,10 @@ class ImportLog {
     }
 }
 
-class ChatGPTImportError extends Error {
+class NexusAIChatImporterError extends Error {
     // Implementation
     constructor(message: string, public details?: any) {
         super(message);
-        this.name = 'ChatGPTImportError';
+        this.name = 'NexusAIChatImporterError';
     }
 }
