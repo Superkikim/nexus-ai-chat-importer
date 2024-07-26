@@ -27,7 +27,7 @@ Nexus AI Chat Importer is an Obsidian plugin that seamlessly integrates AI chat 
 - Automatically organize conversations by date
 - Generate individual Markdown files for each conversation
 - Update existing notes with new messages
-- Provide detailed import logs
+- Provide detailed import reports
 
 ## Installation
 
