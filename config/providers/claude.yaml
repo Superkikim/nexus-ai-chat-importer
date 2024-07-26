@@ -1,0 +1,27 @@
+provider:
+  name: Claude
+  editor: Anthropic
+  model: null  # No specific model key provided
+
+export:
+  format: zip
+  pattern: "data-{timestamp}.zip"
+  timestamp:
+    format: "%Y-%m-%d-%H-%M-%S"
+
+conversation:
+  id: uuid
+  title: name
+  created_at: created_at
+    format: iso8601
+  updated_at: updated_at
+    format: iso8601
+  model: null  # No specific model key provided
+
+messages:
+  id: uuid
+  role: sender
+  content: text
+  timestamp: created_at
+    format: iso8601
+  model: null  # No specific model key provided

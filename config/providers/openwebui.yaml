@@ -1,0 +1,27 @@
+provider:
+  name: Open WebUI
+  editor: null
+  model: null  # No specific model key provided
+
+export:
+  format: json
+  pattern: "chat-export-{timestamp}.json"
+  timestamp:
+    format: unix_ms
+
+conversation:
+  id: id
+  title: title
+  created_at: created_at
+    format: unix_s
+  updated_at: updated_at
+    format: unix_s
+  model: chat.models  # No specific model key provided
+
+messages:
+  id: id
+  role: role
+  content: content
+  timestamp: timestamp
+    format: unix_s
+  model: null  # No specific model key provided

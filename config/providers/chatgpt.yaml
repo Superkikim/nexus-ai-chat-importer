@@ -1,0 +1,27 @@
+provider:
+  name: ChatGPT
+  editor: OpenAI
+  model: model_slug  # Corresponds to the model used
+
+export:
+  format: zip
+  pattern: "*-{timestamp}.zip"
+  timestamp:
+    format: "%Y-%m-%d-%H-%M-%S"
+
+conversation:
+  id: id
+  title: title
+  created_at: created_time
+    format: unix_float
+  updated_at: updated_time
+    format: unix_float
+  model: model_slug  # Corresponds to the model used
+
+messages:
+  id: id
+  role: author.role
+  content: content.parts
+  timestamp: create_time
+    format: unix_float
+  model: model_slug  # Corresponds to the model used
