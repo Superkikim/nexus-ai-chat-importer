@@ -43,7 +43,7 @@ class Logger {
 export default class NexusAIChatImporterPlugin extends Plugin {
     // Properties
     settings: PluginSettings;
-    private importLog: ImportLog;
+    private importReport: ImportReport;
     private importedArchives: Record<string, string> = {}; // hash -> filename
     private conversationRecords: Record<string, { path: string, updateTime: number }> = {};
     /**
@@ -137,9 +137,9 @@ export default class NexusAIChatImporterPlugin extends Plugin {
             new Notice("Import process failed. Check the console for details.");
         }
     }
-    
+
     async handleExportFile(file: File) {
-        this.importLog = new ImportLog();
+        this.importReport = new ImportReport();
         try {
             const fileHash = await this.getFileHash(file);
             if (this.importedArchives[fileHash]) {
@@ -153,7 +153,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                 }
             }
     
-            const zip = await this.validateZipFile(file);
+            const zip = await this.validateExportFile(file);
             await this.processConversations(zip, file);
     
             this.importedArchives[fileHash] = {
@@ -166,8 +166,8 @@ export default class NexusAIChatImporterPlugin extends Plugin {
         } catch (error) {
             this.logError("Error handling zip file", error.message);
         } finally {
-            await this.writeImportLog(file.name);
-            new Notice(this.importLog.hasErrors() 
+            await this.writeImportReport(file.name);
+            new Notice(this.importReport.hasErrors() 
                 ? "An error occurred during import. Please check the log file for details."
                 : "Import completed. Log file created in the archive folder.");
         }
@@ -189,7 +189,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                 await this.processSingleChat(chat, existingConversations);
             }
 
-            this.updateImportLog(file.name);
+            this.updateImportReport(file.name);
 
             this.logInfo(`Processed ${chats.length} conversations`, {
                 new: this.totalNewConversationsSuccessfullyImported,
@@ -221,7 +221,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
 
                 if (content !== originalContent) {
                     await this.writeToFile(filePath, content);
-                    this.importLog.addUpdated(
+                    this.importReport.addUpdated(
                         chat.title || 'Untitled',
                         filePath,
                         `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
@@ -230,7 +230,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                     );
                 } else {
                     console.log(`[Nexus AI Chat Importer] No changes needed for existing file: ${filePath}`);
-                    this.importLog.addSkipped(
+                    this.importReport.addSkipped(
                         chat.title || 'Untitled',
                         filePath,
                         `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
@@ -253,7 +253,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                 .filter(msg => isValidMessage(msg.message))
                 .length;
     
-            this.importLog.addCreated(
+            this.importReport.addCreated(
                 chat.title || 'Untitled',
                 filePath,
                 `${formatTimestamp(chat.create_time, 'date')} ${formatTimestamp(chat.create_time, 'time')}`,
@@ -267,7 +267,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
             existingConversations[chat.id] = filePath;
         } catch (error) {
             this.logError("Error creating new note", error.message);
-            this.importLog.addFailed(chat.title || 'Untitled', filePath, 
+            this.importReport.addFailed(chat.title || 'Untitled', filePath, 
                 formatTimestamp(chat.create_time, 'date') + ' ' + formatTimestamp(chat.create_time, 'time'),
                 formatTimestamp(chat.update_time, 'date') + ' ' + formatTimestamp(chat.update_time, 'time'),
                 error.message
@@ -347,7 +347,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
         const totalMessageCount = Object.values(chat.mapping).filter(msg => isValidMessage(msg.message)).length;
 
         if (existingRecord.updateTime >= chat.update_time) {
-            this.importLog.addSkipped(
+            this.importReport.addSkipped(
                 chat.title || 'Untitled',
                 existingRecord.path, 
                 formatTimestamp(chat.create_time, 'date'), 
@@ -374,8 +374,8 @@ export default class NexusAIChatImporterPlugin extends Plugin {
         };
     }
 
-    private updateImportLog(zipFileName: string): void {
-        this.importLog.addSummary(
+    private updateImportReport(zipFileName: string): void {
+        this.importReport.addSummary(
             zipFileName,
             this.totalExistingConversations,
             this.totalNewConversationsSuccessfullyImported,
@@ -614,45 +614,45 @@ Last Updated: ${updateTimeStr}\n\n
         return uids;
     }
 
-    async writeImportLog(zipFileName: string): Promise<void> {
+    async writeImportReport(zipFileName: string): Promise<void> {
         const now = new Date();
         let prefix = formatTimestamp(now.getTime() / 1000, 'prefix');
 
-        let logFileName = `${prefix} - Nexus AI Chat Importer Report.md`;
-        const logFolderPath = `${this.settings.archiveFolder}/logs`;
+        let reportFileName = `${prefix} - Nexus AI Chat Importer Report.md`;
+        const reportFolderPath = `${this.settings.archiveFolder}/Reports`;
 
-        const folderResult = await this.ensureFolderExists(logFolderPath);
+        const folderResult = await this.ensureFolderExists(reportFolderPath);
         if (!folderResult.success) {
-            this.logError(`Failed to create or access log folder: ${logFolderPath}`, folderResult.error);
-            new Notice("Failed to create log file. Check console for details.");
+            this.logError(`Failed to create or access report folder: ${reportFolderPath}`, folderResult.error);
+            new Notice("Failed to create report. Check console for details.");
             return;
         }
 
-        let logFilePath = `${logFolderPath}/${logFileName}`;
+        let reportFilePath = `${reportFolderPath}/${reportFileName}`;
     
         let counter = 1;
-        while (await this.app.vault.adapter.exists(logFilePath)) {
-            logFileName = `${prefix}-${counter} - Nexus AI Chat Importer Report.md`;
-            logFilePath = `${logFolderPath}/${logFileName}`;
+        while (await this.app.vault.adapter.exists(reportFilePath)) {
+            reportFileName = `${prefix}-${counter} - Nexus AI Chat Importer Report.md`;
+            reportFilePath = `${reportFolderPath}/${reportFileName}`;
             counter++;
         }
 
         const currentDate = `${formatTimestamp(now.getTime() / 1000, 'date')} ${formatTimestamp(now.getTime() / 1000, 'time')}`;
 
-        const logContent = `---
+        const reportContent = `---
 importdate: ${currentDate}
 zipFile: ${zipFileName}
-totalSuccessfulImports: ${this.importLog.created.length}
-totalUpdatedImports: ${this.importLog.updated.length}
-totalSkippedImports: ${this.importLog.skipped.length}
+totalSuccessfulImports: ${this.importReport.created.length}
+totalUpdatedImports: ${this.importReport.updated.length}
+totalSkippedImports: ${this.importReport.skipped.length}
 ---
 
-${this.importLog.generateLogContent()}
+${this.importReport.generateLogContent()}
 `;
 
         try {
-            await this.writeToFile(logFilePath, logContent);
-            console.log(`Import log created: ${logFilePath}`);
+            await this.writeToFile(reportFilePath, reportContent);
+            console.log(`Import log created: ${reportFilePath}`);
         } catch (error) {
             this.logError(`Failed to write import log`, error.message);
             new Notice("Failed to create log file. Check console for details.");
@@ -696,7 +696,7 @@ ${this.importLog.generateLogContent()}
     // Logging Methods
     private logError(message: string, details: string): void {
         this.logger.error(message, details);
-        this.importLog.addError(message, details);
+        this.importReport.addError(message, details);
     }
     private logInfo(message: string, details?: any): void {
         this.logger.info(message, details);
@@ -730,7 +730,7 @@ ${this.importLog.generateLogContent()}
         });
     }
 
-    async validateZipFile(file: File): Promise<JSZip> {
+    async validateExportFile(file: File): Promise<JSZip> {
         try {
             const zip = new JSZip();
             const content = await zip.loadAsync(file);
@@ -827,7 +827,7 @@ class NexusAIChatImporterPluginSettingTab extends PluginSettingTab {
     }
 }
 
-class ImportLog {
+class ImportReport {
     // Properties and methods
     private created: LogEntry[] = [];
     private updated: LogEntry[] = [];
