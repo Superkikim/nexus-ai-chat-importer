@@ -1,43 +1,48 @@
 // Imports
-import { Plugin, PluginSettingTab, Setting, TFile, TFolder, Modal, Notice, moment } from 'obsidian';
+import {
+    Modal,
+    Notice,
+    Plugin,
+    PluginSettingTab,
+    Setting,
+    TFile,
+    TFolder
+} from 'obsidian';
+
 import JSZip from 'jszip';
-import { PluginSettings, ChatMessage, Chat, ConversationRecord } from './types';
-import { formatTimestamp, getYearMonthFolder, formatTitle, isValidMessage } from './utils';
+
+import { 
+    Chat, 
+    ChatMessage, 
+    ConversationRecord, 
+    PluginSettings 
+} from './types';
+
+import { 
+    extractChatsFromZip,
+    formatTimestamp,
+    formatTitle,
+    generateHeader,
+    generateMarkdownContent,
+    getYearMonthFolder,
+    isValidMessage,
+    Logger,
+    LogLevel,
+    updateMetadata,
+    writeToFile 
+} from './utils';
 
 // Constants
 const DEFAULT_SETTINGS: PluginSettings = {
-    archiveFolder: 'Nexus Conversations',
     addDatePrefix: false,
+    archiveFolder: 'Nexus Conversations',
     dateFormat: 'YYYY-MM-DD'
-};
+}
 
 enum LogLevel {
     INFO,
     WARN,
     ERROR
-}
-
-class Logger {
-    private logToConsole(level: LogLevel, message: string, details?: any) {
-        const timestamp = new Date().toISOString();
-        const logMethod = level === LogLevel.ERROR ? console.error : 
-                          level === LogLevel.WARN ? console.warn : 
-                          console.log;
-        
-        logMethod(`[${timestamp}] [Nexus AI Chat Importer] [${LogLevel[level]}] ${message}`, details);
-    }
-
-    info(message: string, details?: any) {
-        this.logToConsole(LogLevel.INFO, message, details);
-    }
-
-    warn(message: string, details?: any) {
-        this.logToConsole(LogLevel.WARN, message, details);
-    }
-
-    error(message: string, details?: any) {
-        this.logToConsole(LogLevel.ERROR, message, details);
-    }
 }
 
 export default class NexusAIChatImporterPlugin extends Plugin {
@@ -133,7 +138,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                 await this.handleExportFile(file);
             }
         } catch (error) {
-            this.logError("Import process failed", error.message);
+            this.logger.error("Import process failed", error.message);
             new Notice("Import process failed. Check the console for details.");
         }
     }
@@ -147,7 +152,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                     `This archive (${file.name}) has already been imported on ${this.importedArchives[fileHash].date}. Do you want to process it again?`
                 );
                 if (!shouldReimport) {
-                    this.logInfo("Import cancelled by user", { fileName: file.name });
+                    this.logger.info("Import cancelled by user", { fileName: file.name });
                     new Notice("Import cancelled.");
                     return;
                 }
@@ -162,9 +167,9 @@ export default class NexusAIChatImporterPlugin extends Plugin {
             };
             await this.saveSettings();
             
-            this.logInfo("Import completed successfully", { fileName: file.name });
+            this.logger.info("Import completed successfully", { fileName: file.name });
         } catch (error) {
-            this.logError("Error handling zip file", error.message);
+            this.logger.error("Error handling zip file", error.message);
         } finally {
             await this.writeImportReport(file.name);
             new Notice(this.importReport.hasErrors() 
@@ -175,8 +180,8 @@ export default class NexusAIChatImporterPlugin extends Plugin {
 
     async processConversations(zip: JSZip, file: File): Promise<void> {
         try {
-            const chats = await this.extractChatsFromZip(zip);
-            this.logInfo(`Extracted ${chats.length} chats from zip file`, { fileName: file.name });
+            const chats = await extractChatsFromZip(zip);
+            this.logger.info(`Extracted ${chats.length} chats from zip file`, { fileName: file.name });
             const existingConversations = await this.getAllExistingConversations();
 
             // troubles
@@ -191,14 +196,14 @@ export default class NexusAIChatImporterPlugin extends Plugin {
 
             this.updateImportReport(file.name);
 
-            this.logInfo(`Processed ${chats.length} conversations`, {
+            this.logger.info(`Processed ${chats.length} conversations`, {
                 new: this.totalNewConversationsSuccessfullyImported,
                 updated: this.totalConversationsActuallyUpdated,
                 skipped: this.totalExistingConversations - this.totalConversationsActuallyUpdated
             });
     
         } catch (error) {
-            this.logError("Error processing conversations", error.message);
+            this.logger.error("Error processing conversations", error.message);
         }
     }
     async updateExistingNote(chat: Chat, filePath: string, totalMessageCount: number): Promise<void> {
@@ -208,7 +213,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                 let content = await this.app.vault.read(file);
                 let originalContent = content;
                 
-                content = this.updateMetadata(content, chat.update_time);
+                content = updateMetadata(content, chat.update_time);
                 
                 const existingMessageIds = this.extractMessageUIDsFromNote(content);
                 const newMessages = this.getNewMessages(chat, existingMessageIds);
@@ -220,7 +225,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                 }
 
                 if (content !== originalContent) {
-                    await this.writeToFile(filePath, content);
+                    await writeToFile(this.app, filePath, content);
                     this.importReport.addUpdated(
                         chat.title || 'Untitled',
                         filePath,
@@ -246,8 +251,8 @@ export default class NexusAIChatImporterPlugin extends Plugin {
     }
     async createNewNote(chat: Chat, filePath: string, existingConversations: Record<string, string>): Promise<void> {
         try {
-            const content = this.generateMarkdownContent(chat);
-            await this.writeToFile(filePath, content);
+            const content = generateMarkdownContent(chat);
+            await writeToFile(this.app, filePath, content);
             
             const messageCount = Object.values(chat.mapping)
                 .filter(msg => isValidMessage(msg.message))
@@ -266,7 +271,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
             // Add the new conversation to existingConversations
             existingConversations[chat.id] = filePath;
         } catch (error) {
-            this.logError("Error creating new note", error.message);
+            this.logger.error("Error creating new note", error.message);
             this.importReport.addFailed(chat.title || 'Untitled', filePath, 
                 formatTimestamp(chat.create_time, 'date') + ' ' + formatTimestamp(chat.create_time, 'time'),
                 formatTimestamp(chat.update_time, 'date') + ' ' + formatTimestamp(chat.update_time, 'time'),
@@ -277,11 +282,6 @@ export default class NexusAIChatImporterPlugin extends Plugin {
     }
 
     // Helper methods
-    private async extractChatsFromZip(zip: JSZip): Promise<Chat[]> {
-        const conversationsJson = await zip.file('conversations.json').async('string');
-        return JSON.parse(conversationsJson);
-    }
-
     private initializeCounters(existingConversations: Record<string, string>): void {
         this.totalExistingConversations = Object.keys(existingConversations).length;
         this.totalNewConversationsToImport = 0;
@@ -325,7 +325,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
             console.log(`[processSingleChat] Conversation record updated for chat ${chat.id}`);
         } catch (chatError) {
             console.error(`[processSingleChat] Error processing chat: ${chat.id}`, chatError);
-            this.logError(`Error processing chat: ${chat.title || 'Untitled'}`, chatError.message);
+            this.logger.error(`Error processing chat: ${chat.title || 'Untitled'}`, chatError.message);
         }
         // Troubles
         console.log(`[processSingleChat] Finished processing chat: ${chat.id}`);
@@ -384,23 +384,6 @@ export default class NexusAIChatImporterPlugin extends Plugin {
         );
     }
 
-    updateMetadata(content: string, updateTime: number): string {
-        const updateTimeStr = `${formatTimestamp(updateTime, 'date')} at ${formatTimestamp(updateTime, 'time')}`;
-        
-        // Update parameters
-        content = content.replace(
-            /^update_time: .*$/m,
-            `update_time: ${updateTimeStr}`
-        );
-        
-        // Update header
-        content = content.replace(
-            /^Last Updated: .*$/m,
-            `Last Updated: ${updateTimeStr}`
-        );
-        
-        return content;
-    }
 
     getNewMessages(chat: Chat, existingMessageIds: string[]): ChatMessage[] {
         return Object.values(chat.mapping)
@@ -429,16 +412,6 @@ export default class NexusAIChatImporterPlugin extends Plugin {
         return `${fileName}.md`;
     }
 
-    generateMarkdownContent(chat: any): string {
-        const formattedTitle = formatTitle(chat.title);
-        const create_time_str = `${formatTimestamp(chat.create_time, 'date')} at ${formatTimestamp(chat.create_time, 'time')}`;
-        const update_time_str = `${formatTimestamp(chat.update_time, 'date')} at ${formatTimestamp(chat.update_time, 'time')}`;
-    
-        let content = this.generateHeader(formattedTitle, chat.id, create_time_str, update_time_str);
-        content += this.generateMessagesContent(chat);
-    
-        return content;
-    }
 
     async getFileHash(file: File): Promise<string> {
         const buffer = await file.arrayBuffer();
@@ -460,7 +433,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
                     await this.app.vault.createFolder(currentPath);
                 } catch (error) {
                     if (error.message !== "Folder already exists.") {
-                        this.logError(`Failed to create folder: ${currentPath}`, error.message);
+                        this.logger.error(`Failed to create folder: ${currentPath}`, error.message);
                         return { success: false, error: `Failed to create folder: ${currentPath}. Reason: ${error.message}` };
                     }
                     // If folder already exists, continue silently
@@ -488,19 +461,7 @@ export default class NexusAIChatImporterPlugin extends Plugin {
         return potentialFileName;
     }
 
-    generateHeader(title, conversationId, createTimeStr, updateTimeStr) {
-        return `---
-aliases: "${title}"
-conversation_id: ${conversationId}
-create_time: ${createTimeStr}
-update_time: ${updateTimeStr}
----
 
-# Topic: ${title}
-Created: ${createTimeStr}
-Last Updated: ${updateTimeStr}\n\n
-`;
-    }
 
     generateMessagesContent(chat) {
         let messagesContent = '';
@@ -556,21 +517,6 @@ Last Updated: ${updateTimeStr}\n\n
         return messageContent + '\n\n';
     }
 
-    async writeToFile(fileName: string, content: string): Promise<void> {
-        try {
-            const file = this.app.vault.getAbstractFileByPath(fileName);
-            if (file instanceof TFile) {
-                await this.app.vault.modify(file, content);
-                console.log(`[Nexus AI Chat Importer] Updated existing file: ${fileName}`);
-            } else {
-                await this.app.vault.create(fileName, content);
-                console.log(`[Nexus AI Chat Importer] Created new file: ${fileName}`);
-            }
-        } catch (error) {
-            this.logError(`Error creating or modifying file '${fileName}'`, error.message);
-            throw error; // Propagate the error
-        }
-    }
 
     async getAllExistingConversations(): Promise<Record<string, string>> {
         console.log("[getAllExistingConversations] Starting to gather existing conversations");
@@ -613,7 +559,7 @@ Last Updated: ${updateTimeStr}\n\n
         }
         return uids;
     }
-
+    
     async writeImportReport(zipFileName: string): Promise<void> {
         const now = new Date();
         let prefix = formatTimestamp(now.getTime() / 1000, 'prefix');
@@ -623,7 +569,7 @@ Last Updated: ${updateTimeStr}\n\n
 
         const folderResult = await this.ensureFolderExists(reportFolderPath);
         if (!folderResult.success) {
-            this.logError(`Failed to create or access report folder: ${reportFolderPath}`, folderResult.error);
+            this.logger.error(`Failed to create or access report folder: ${reportFolderPath}`, folderResult.error);
             new Notice("Failed to create report. Check console for details.");
             return;
         }
@@ -651,10 +597,10 @@ ${this.importReport.generateLogContent()}
 `;
 
         try {
-            await this.writeToFile(reportFilePath, reportContent);
+            await writeToFile(this.app, reportFilePath, reportContent);
             console.log(`Import log created: ${reportFilePath}`);
         } catch (error) {
-            this.logError(`Failed to write import log`, error.message);
+            this.logger.error(`Failed to write import log`, error.message);
             new Notice("Failed to create log file. Check console for details.");
         }
     }
@@ -691,18 +637,6 @@ ${this.importReport.generateLogContent()}
     
         new Notice("All plugin data has been reset. You may need to restart Obsidian for changes to take full effect.");
         console.log("[Nexus AI Chat Importer] All plugin data has been reset.");
-    }
-
-    // Logging Methods
-    private logError(message: string, details: string): void {
-        this.logger.error(message, details);
-        this.importReport.addError(message, details);
-    }
-    private logInfo(message: string, details?: any): void {
-        this.logger.info(message, details);
-    }
-    private logWarn(message: string, details?: any): void {
-        this.logger.warn(message, details);
     }
 
     // UI-related methods
