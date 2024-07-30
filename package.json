@@ -6,7 +6,10 @@
 	"scripts": {
 	  "dev": "node esbuild.config.mjs",
 	  "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-	  "version": "node version-bump.mjs && git add manifest.json versions.json"
+	  "version": "node version-bump.mjs && git add manifest.json versions.json",
+	  "lint": "eslint . --ext .ts,.js",
+	  "lint:fix": "eslint . --ext .ts,.js --fix",
+	  "format": "prettier --write \"**/*.{ts,js,json,md}\""
 	},
 	"keywords": [],
 	"author": "",
@@ -22,7 +25,12 @@
 	  "typescript": "4.7.4",
 	  "glob": "^9.3.5",
 	  "rimraf": "^4.1.2",
-	  "@eslint/eslintrc": "^1.0.0"
+	  "@eslint/eslintrc": "^1.0.0",
+	  "eslint": "^8.0.1",
+	  "eslint-plugin-import": "^2.25.2",
+	  "eslint-plugin-prettier": "^4.0.0",
+	  "eslint-config-prettier": "^8.3.0",
+	  "prettier": "^2.3.2"
 	},
 	"dependencies": {
 	  "jszip": "^3.7.1"
