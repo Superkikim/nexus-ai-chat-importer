@@ -1,15 +1,15 @@
 {
-	"id": "obsidian-chatgpt-import",
+	"id": "nexus-ai-chat-importer",
 	"name": "ChatGPT Import",
-	"version": "1.0.1b",
+	"version": "1.0.2b",
 	"author": "Akim Sissaoui",
-	"authorUrl": "https://github.com/Superkikim/obsidian-chatgpt-import/issues",
+	"authorUrl": "https://github.com/Superkikim/nexus-ai-chat-importer/issues",
 	"manifest": "manifest.json",
 	"dependencies": [],
 	"isDesktopOnly": false,
 	"themeSupport": false,
 	"minAppVersion": "0.15.0",
-	"description": "A plugin to import ChatGPT archives into Obsidian.",
+	"description": "A plugin to import AI Chat converastions exports into Obsidian.",
 	"license": "MIT"
   }
   
