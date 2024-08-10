@@ -9,6 +9,7 @@ import {
     Notice,
     App,
     PluginManifest,
+    MarkdownView
 } from "obsidian";
 
 import JSZip from "jszip";
@@ -17,26 +18,29 @@ import {
     PluginSettings,
     ChatMessage,
     Chat,
-    ConversationRecord,
-    CustomError,
     ConversationCatalogEntry,
+    CustomError,
+    ConfirmationDialogOptions
 } from "./types";
 
 import {
     formatTimestamp,
-    getYearMonthFolder,
     formatTitle,
     isValidMessage,
     isCustomError,
-    addPrefix,
-    getFileName,
-    getUniqueFileName,
+    generateFileName,
+    generateUniqueFileName,
     getFileHash,
+    ensureFolderExists,
+    doesFilePathExist,
+    getConversationId,
+    checkAnyNexusFilesActive,
+    getProvider
 } from "./utils";
 
 // Constants
 const DEFAULT_SETTINGS: PluginSettings = {
-    archiveFolder: "ChatGPT Archives",
+    archiveFolder: "Nexus AI Chat Imports",
     addDatePrefix: false,
     dateFormat: "YYYY-MM-DD",
 };
@@ -76,7 +80,8 @@ class Logger {
     }
 }
 
-export default class ChatGPTImportPlugin extends Plugin {
+export default class NexusAiChatImporterPlugin extends Plugin {
+    clickListenerActive: boolean;
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
         this.conversationCatalog = {}; // Initialise le catalogue des conversations
@@ -100,7 +105,7 @@ export default class ChatGPTImportPlugin extends Plugin {
     /**
      * Plugin counters
      */
-    totalExistingConversations: number = this.conversationCatalog.length; // Count of all existing conversations in Obsidian
+    totalExistingConversations: number = Object.keys(this.conversationCatalog).length;
 
     /**
      * Selected file conversation counters
@@ -115,50 +120,82 @@ export default class ChatGPTImportPlugin extends Plugin {
     totalNonEmptyMessagesToAdd: number = 0; // Counts the number of messages that will have to be added to an existing note
     totalNonEmptyMessagesAdded: number = 0; // Counts the number of messages that have actually been added to a specific note
 
+    private tooltipEl: HTMLDivElement;
+
     // Lifecycle methods
     async onload() {
-        console.log("Loading ChatGPT Import Plugin");
+        // Bind the handleClick method to the current context and store it
+        this.handleClickBound = this.handleClick.bind(this);
+    
+        // Initialize the logger
         this.logger = new Logger();
+    
+        // Load the plugin settings
         await this.loadSettings();
-
-        this.addSettingTab(new ChatGPTImportPluginSettingTab(this.app, this));
-
-        this.addRibbonIcon(
+    
+        // Add the plugin's settings tab to Obsidian's settings
+        this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
+    
+        // Add a ribbon icon to the sidebar with a click event to import a new file
+        const ribbonIconEl = this.addRibbonIcon(
             "message-square-plus",
-            "Import ChatGPT ZIP",
+            "Nexus AI Chat Importer - Import new file",
             (evt: MouseEvent) => {
                 this.selectZipFile();
             }
         );
 
+        ribbonIconEl.addClass("nexus-ai-chat-ribbon");
+    
+        // Register an event to handle file deletion
         this.registerEvent(
-            this.app.vault.on("delete", (file) => {
-                if (file instanceof TFile && file.extension === "md") {
-                    // Remove the file from conversationCatalog if it exists
-                    for (const [id, record] of Object.entries(
-                        this.conversationCatalog
-                    )) {
-                        if (record.path === file.path) {
-                            delete this.conversationCatalog[id];
-                            this.saveSettings();
-                            break;
+            this.app.vault.on("delete", async (file) => {
+                console.log("File has been deleted: ", file);
+                if (file instanceof TFile) {
+                    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+                    if (frontmatter?.conversation_id) {
+                        for (const [id, record] of Object.entries(this.conversationCatalog)) {
+                            if (record.conversationId === frontmatter.conversation_id) {
+                                delete this.conversationCatalog[id];
+                                await this.saveSettings();
+                                break;
+                            }
                         }
                     }
                 }
             })
         );
 
+        // Register an event to track changes in the active file
+        this.registerEvent(
+            this.app.workspace.on("active-leaf-change", (leaf) => {
+                const file = this.app.workspace.getActiveFile();
+                if (file instanceof TFile) {
+                    this.initializeListenerIfNeeded(file);
+                }
+            })
+        );
+    
+        // Register an event to track file closures
+        this.registerEvent(
+            this.app.workspace.on("file-close", (file) => {
+                this.fileClosed(file);
+            })
+        );
+    
+        // Register a command to select a ZIP file for processing
         this.addCommand({
-            id: "import-chatgpt-zip",
-            name: "Import ChatGPT ZIP",
+            id: "nexus-ai-chat-importer-select-zip",
+            name: "Select ZIP file to process",
             callback: () => {
                 this.selectZipFile();
             },
         });
-
+    
+        // Register a command to reset the import catalogs
         this.addCommand({
-            id: "reset-chatgpt-import-catalogs",
-            name: "Reset ChatGPT Import Catalogs",
+            id: "reset-nexus-ai-chat-importer-catalogs",
+            name: "Reset Nexus AI Chat Importer Catalogs",
             callback: () => {
                 const modal = new Modal(this.app);
                 modal.contentEl.createEl("p", {
@@ -179,7 +216,11 @@ export default class ChatGPTImportPlugin extends Plugin {
                 modal.open();
             },
         });
+    
+        console.log("NexusAiChatImporterPlugin loaded.");
     }
+    
+    
     async loadSettings() {
         const data = await this.loadData();
         this.settings = Object.assign(
@@ -197,6 +238,224 @@ export default class ChatGPTImportPlugin extends Plugin {
             conversationCatalog: this.conversationCatalog,
         });
     }
+
+    async onload() {
+        // Bind the handleClick method to the current context and store it
+        this.handleClickBound = this.handleClick.bind(this);
+    
+        // Initialize the logger
+        this.logger = new Logger();
+    
+        // Load the plugin settings
+        await this.loadSettings();
+    
+        // Add the plugin's settings tab to Obsidian's settings
+        this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
+    
+        // Add a ribbon icon to the sidebar with a click event to import a new file
+        const ribbonIconEl = this.addRibbonIcon(
+            "message-square-plus",
+            "Nexus AI Chat Importer - Import new file",
+            (evt: MouseEvent) => {
+                this.selectZipFile();
+            }
+        );
+        ribbonIconEl.addClass("nexus-ai-chat-ribbon");
+    
+        // Register an event to handle file deletion
+        this.registerEvent(
+            this.app.vault.on("delete", async (file) => {
+                console.log("File has been deleted: ", file);
+                if (file instanceof TFile) {
+                    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+                    if (frontmatter?.conversation_id) {
+                        for (const [id, record] of Object.entries(this.conversationCatalog)) {
+                            if (record.conversationId === frontmatter.conversation_id) {
+                                delete this.conversationCatalog[id];
+                                await this.saveSettings();
+                                break;
+                            }
+                        }
+                    }
+                }
+            })
+        );
+    
+        // Register an event to track changes in the active file
+        this.registerEvent(
+            this.app.workspace.on("active-leaf-change", (leaf) => {
+                const file = this.app.workspace.getActiveFile();
+                if (file instanceof TFile) {
+                    this.initializeListenerIfNeeded(file);
+                }
+            })
+        );
+    
+        // Register an event to track file closures
+        this.registerEvent(
+            this.app.workspace.on("file-close", (file) => {
+                this.fileClosed(file);
+            })
+        );
+    
+        // Register a command to select a ZIP file for processing
+        this.addCommand({
+            id: "nexus-ai-chat-importer-select-zip",
+            name: "Select ZIP file to process",
+            callback: () => {
+                this.selectZipFile();
+            },
+        });
+    
+        // Register a command to reset the import catalogs
+        this.addCommand({
+            id: "reset-nexus-ai-chat-importer-catalogs",
+            name: "Reset Nexus AI Chat Importer Catalogs",
+            callback: () => {
+                const modal = new Modal(this.app);
+                modal.contentEl.createEl("p", {
+                    text: "This will reset all import catalogs. This action cannot be undone.",
+                });
+                const buttonDiv = modal.contentEl.createEl("div", {
+                    cls: "modal-button-container",
+                });
+                buttonDiv
+                    .createEl("button", { text: "Cancel" })
+                    .addEventListener("click", () => modal.close());
+                buttonDiv
+                    .createEl("button", { text: "Reset", cls: "mod-warning" })
+                    .addEventListener("click", () => {
+                        this.resetCatalogs();
+                        modal.close();
+                    });
+                modal.open();
+            },
+        });
+    
+        console.log("NexusAiChatImporterPlugin loaded.");
+    }
+    
+
+    // Initialize or remove click listener based on file relevance
+    initializeListenerIfNeeded(file: TFile) {
+        const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const isNexusRelated = frontmatter && frontmatter.nexus;
+
+        if (isNexusRelated && !this.clickListenerActive) {
+            this.addClickListener();
+        } else if (!isNexusRelated && this.clickListenerActive) {
+            this.removeClickListenerIfNotNeeded();
+        }
+    }
+
+    // Add click listener if not already active
+    addClickListener() {
+        if (!this.clickListenerActive) {
+            // Add click event listener
+            document.addEventListener('click', this.handleClickBound);
+            this.clickListenerActive = true;
+            console.log('Click listener activated.');
+        }
+    }
+
+    // Remove click listener if no nexus-related files are active
+    removeClickListenerIfNotNeeded() {
+        const anyNexusFilesActive = checkAnyNexusFilesActive(this.app);
+        if (!anyNexusFilesActive && this.clickListenerActive) {
+            document.removeEventListener('click', this.handleClickBound);
+            this.clickListenerActive = false;
+            console.log('Click listener deactivated.');
+        }
+    }
+
+    // Triggered when a file is closed
+    fileClosed(file: TFile) {
+        if (file && this.clickListenerActive) {
+            this.removeClickListenerIfNotNeeded();
+        }
+    }
+
+    async handleClick(event: { target: any; }) {
+        const target = event.target;
+    
+        // Check if the click is within the active editor
+        const editorContainer = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor.containerEl;
+        if (!editorContainer || !editorContainer.contains(target)) {
+            return; // Exit if not inside the active editor
+        }
+    
+        // Check for active file
+        const activeFile = this.app.workspace.getActiveFile();
+        if (!activeFile) {
+            return; // Exit if there is no active file
+        }
+    
+        // Check if the click is specifically on the inline-title class
+        if (target.classList.contains('inline-title')) {
+    
+            // Fetch the abstract file to check if it's a TFile
+            const file = this.app.vault.getAbstractFileByPath(activeFile.path);
+            if (file instanceof TFile) {
+                // Fetch the conversation ID using the utility function
+    
+                const conversationId = getConversationId(file); // Use the utility function
+
+                if (conversationId) {
+                    const provider = getProvider(activeFile);
+                    if (provider === "chatgpt") {
+                        const url = `https://chatgpt.com/c/${conversationId}`;
+                
+                        const userConfirmed = await this.showUrlConfirmationDialog({
+                            url: url, // Correctly setting the URL
+                            message: "Do you want to go there?", // Optional message
+                            note: "If the conversation has been deleted, it will not show." // Optional note
+                        });
+                
+                        if (userConfirmed) {
+                            window.open(url, "_blank"); // Open the URL in a new tab or window
+                        }
+                    }
+                }
+    
+            } else {
+                console.log('File is not an instance of TFile. Exiting...');
+            }
+        } else {
+            console.log('Click is not on inline-title. Exiting...');
+        }
+    }
+
+    async showUrlConfirmationDialog(options: ConfirmationDialogOptions): Promise<boolean> {
+        return new Promise((resolve) => {
+            const modal = new Modal(this.app);
+            modal.contentEl.createEl("p", { text: `Original conversation URL: ${options.url}` });
+            
+            const message = options.message || "Do you want to go there?";
+            const note = options.note || "If the conversation has been deleted, it will not show.";
+            
+            modal.contentEl.createEl("p", { text: message });
+            modal.contentEl.createEl("p", { text: note });
+    
+            const buttonDiv = modal.contentEl.createEl("div", {
+                cls: "modal-button-container"
+            });
+            
+            buttonDiv.createEl("button", { text: "Yes" })
+                .addEventListener("click", () => {
+                    modal.close();
+                    resolve(true); // User confirmed
+                });
+    
+            buttonDiv.createEl("button", { text: "No" })
+                .addEventListener("click", () => {
+                    modal.close();
+                    resolve(false); // User canceled
+                });
+    
+            modal.open();
+        });
+    }
+    
 
     // Core functionality methods
     async handleZipFile(file: File) {
@@ -261,15 +520,6 @@ export default class ChatGPTImportPlugin extends Plugin {
             });
             const existingConversations = this.conversationCatalog;
 
-            // troubles
-            console.log(
-                `[processConversations] Total existing conversations found:`,
-                Object.keys(existingConversations).length
-            );
-            console.log(
-                `[PLOP processConversations] Existing conversation at start IDs:`,
-                Object.keys(existingConversations)
-            );
 
             for (const chat of chats) {
                 await this.processSingleChat(chat, existingConversations);
@@ -285,14 +535,11 @@ export default class ChatGPTImportPlugin extends Plugin {
                     this.totalConversationsActuallyUpdated,
             });
 
-            console.log(
-                `[PLOP processConversations] Existing conversation at finish IDs:`,
-                Object.keys(existingConversations)
-            );
         } catch (error: CustomError) {
             this.logger.error("Error processing conversations", error.message);
         }
     }
+
     async updateExistingNote(
         chat: Chat,
         filePath: string,
@@ -335,9 +582,6 @@ export default class ChatGPTImportPlugin extends Plugin {
                         totalMessageCount
                     );
                 } else {
-                    console.log(
-                        `[chatgpt-import] No changes needed for existing file: ${filePath}`
-                    );
                     this.importReport.addSkipped(
                         chat.title || "Untitled",
                         filePath,
@@ -354,14 +598,23 @@ export default class ChatGPTImportPlugin extends Plugin {
                     );
                 }
             }
-        } catch (error: CustomError) {
-            // Error handling (unchanged)
+        } catch (error: unknown) {
+            // Error handling logic
+            if (isCustomError(error)) { // Check if it's a CustomError
+                this.logger.error("Error updating note", error.message);
+            } else if (error instanceof Error) {
+                this.logger.error("General error updating note", error.message);
+            } else {
+                this.logger.error("Unknown error updating note", "An unknown error occurred");
+            }
         }
+        
     }
-    async createNewNote(
+
+    private async createNewNote(
         chat: Chat,
         filePath: string,
-        existingConversations: Record<string, string>
+        existingConversations: Record<string, ConversationCatalogEntry> // Change this line
     ): Promise<void> {
         try {
             const content = this.generateMarkdownContent(chat);
@@ -414,68 +667,76 @@ export default class ChatGPTImportPlugin extends Plugin {
         return JSON.parse(conversationsJson);
     }
 
-    private async processSingleChat(
-        chat: Chat,
-        existingConversations: Record<string, string>
-    ): Promise<void> {
-        console.log("[SLICE] Chat object:", chat); // Log the entire chat object to inspect its properties
+    private async generateFilePath(
+        title: string, 
+        createdTime: number, 
+        prefixFormat: string,
+        archivePath: string
 
+    ) {
+        const date = new Date(createdTime * 1000);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+
+        const folderPath = `${archivePath}/${year}/${month}`;
+        const folderResult = await ensureFolderExists(folderPath, this.app.vault);
+        if (!folderResult.success) {
+            throw new Error(folderResult.error || "Failed to ensure folder exists."); // Handle the error appropriately
+        }
+
+        let fileName = generateFileName(title) + '.md';
+        
+        if (this.settings.addDatePrefix) {
+            const day = String(date.getDate()).padStart(2, "0");
+        
+            // Create the prefix based on the specified format
+            let prefix = '';
+            if (prefixFormat === "YYYY-MM-DD") {
+                prefix = `${year}-${month}-${day}`;
+            } else if (prefixFormat === "YYYYMMDD") {
+                prefix = `${year}${month}${day}`;
+            }
+        
+            // Add the prefix to the filename
+            fileName = `${prefix} - ${fileName}`;
+        }
+
+        let filePath = `${folderPath}/${fileName}`
+
+        if (await doesFilePathExist(filePath, this.app.vault)) {
+            // If the file path exists, generate a unique filename
+            filePath = await generateUniqueFileName(filePath, this.app.vault.adapter);
+//            filePath = `${folderPath}/${fileName}`; // Update filePath after generating unique filename
+        }
+
+        return filePath;
+
+    }
+
+    private async processSingleChat(chat: Chat, existingConversations: Record<string, ConversationCatalogEntry>): Promise<void> {
         try {
-            const folderPath = await this.createFolderForChat(chat);
+
+            // Check if the conversation already exists
             if (existingConversations[chat.id]) {
                 await this.handleExistingChat(
                     chat,
-                    { path: existingConversations[chat.id], updateTime: 0 },
-                    folderPath
+                    existingConversations[chat.id] // Pass the full ConversationCatalogEntry object
                 );
             } else {
-                const fileName = getFileName(chat.title);
-                console.log("[SLICE] fileName after getFileName:", fileName);
-                const prefixedFileName = addPrefix(
-                    fileName,
-                    chat.create_time,
-                    this.settings
-                );
-                const uniqueFileName = await getUniqueFileName(
-                    prefixedFileName,
-                    folderPath,
-                    this.app.vault.adapter
-                );
-                const filePath = `${folderPath}/${uniqueFileName}`;
+                // Check if the file needs to be made unique
+                const filePath = await this.generateFilePath(chat.title,chat.create_time, this.settings.dateFormat, this.settings.archiveFolder)
                 await this.handleNewChat(chat, filePath, existingConversations);
+                this.updateConversationCatalogEntry(chat, filePath);
             }
-
-            this.updateConversationRecord(chat, folderPath);
         } catch (chatError) {
-            console.error(
-                `[processSingleChat] Error processing chat: ${chat.id}`,
-                chatError
-            );
-            this.logger.error(
-                `Error processing chat: ${chat.title || "Untitled"}`,
-                chatError.message
-            );
+            console.error(`[processSingleChat] Error processing chat: ${chat.id}`, chatError);
+            this.logger.error(`Error processing chat: ${chat.title || "Untitled"}`, chatError.message);
         }
     }
-
-    private async createFolderForChat(chat: Chat): Promise<string> {
-        const yearMonthFolder = getYearMonthFolder(chat.create_time);
-        const folderPath = `${this.settings.archiveFolder}/${yearMonthFolder}`;
-        const folderResult = await this.ensureFolderExists(folderPath);
-
-        if (!folderResult.success) {
-            throw new Error(
-                `Failed to create or access folder: ${folderPath}. ${folderResult.error}`
-            );
-        }
-
-        return folderPath;
-    }
-
+    
     private async handleExistingChat(
         chat: Chat,
-        existingRecord: ConversationRecord,
-        folderPath: string
+        existingRecord: ConversationCatalogEntry
     ): Promise<void> {
         const totalMessageCount = Object.values(chat.mapping).filter((msg) =>
             isValidMessage(msg.message)
@@ -490,9 +751,6 @@ export default class ChatGPTImportPlugin extends Plugin {
                 totalMessageCount,
                 "No Updates"
             );
-            console.log(
-                `[chatgpt-import] Skipped existing file (no updates): ${existingRecord.path}`
-            );
         } else {
             this.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(
@@ -505,14 +763,14 @@ export default class ChatGPTImportPlugin extends Plugin {
 
     private async handleNewChat(
         chat: Chat,
-        folderPath: string,
-        existingConversations: Record<string, string>
+        filePath: string,
+        existingConversations: Record<string, ConversationCatalogEntry> // Change this line
     ): Promise<void> {
         this.totalNewConversationsToImport++;
-        await this.createNewNote(chat, folderPath, existingConversations);
+        await this.createNewNote(chat, filePath, existingConversations);
     }
 
-    private updateConversationRecord(chat: Chat, filePath: string): void {
+    private updateConversationCatalogEntry(chat: Chat, filePath: string): void {
         this.conversationCatalog[chat.id] = {
             conversationId: chat.id, // Add this line to include the conversation ID
             path: filePath, // Use the determined filePath directly
@@ -598,43 +856,6 @@ export default class ChatGPTImportPlugin extends Plugin {
         return content;
     }
 
-    async ensureFolderExists(
-        folderPath: string
-    ): Promise<{ success: boolean; error?: string }> {
-        const folders = folderPath.split("/").filter((p) => p.length);
-        let currentPath = "";
-
-        for (const folder of folders) {
-            currentPath += folder + "/";
-            const currentFolder =
-                this.app.vault.getAbstractFileByPath(currentPath);
-
-            if (!currentFolder) {
-                try {
-                    await this.app.vault.createFolder(currentPath);
-                } catch (error: CustomError) {
-                    if (error.message !== "Folder already exists.") {
-                        this.logger.error(
-                            `Failed to create folder: ${currentPath}`,
-                            error.message
-                        );
-                        return {
-                            success: false,
-                            error: `Failed to create folder: ${currentPath}. Reason: ${error.message}`,
-                        };
-                    }
-                    // If folder already exists, continue silently
-                }
-            } else if (!(currentFolder instanceof TFolder)) {
-                return {
-                    success: false,
-                    error: `Path exists but is not a folder: ${currentPath}`,
-                };
-            }
-        }
-        return { success: true };
-    }
-
     generateHeader(
         title: string,
         conversationId: string,
@@ -642,13 +863,16 @@ export default class ChatGPTImportPlugin extends Plugin {
         updateTimeStr: string
     ) {
         return `---
+nexus: ${this.manifest.id}
+provider: chatgpt
 aliases: "${title}"
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
 ---
 
-# Topic: ${title}
+# Title: [${title}](https://chatgpt.com/c/${conversationId})
+
 Created: ${createTimeStr}
 Last Updated: ${updateTimeStr}\n\n
 `;
@@ -728,23 +952,22 @@ Last Updated: ${updateTimeStr}\n\n
         return messageContent + "\n\n";
     }
 
-    async writeToFile(fileName: string, content: string): Promise<void> {
+    async writeToFile(filePath: string, content: string): Promise<void> {
         try {
-            const file = this.app.vault.getAbstractFileByPath(fileName);
+            const file = this.app.vault.getAbstractFileByPath(filePath); // Use filePath instead of fileName
+    
             if (file instanceof TFile) {
+                // Update existing file
                 await this.app.vault.modify(file, content);
-                console.log(
-                    `[chatgpt-import] Updated existing file: ${fileName}`
-                );
+            } else if (file instanceof TFolder) {
+                // Optional: Handle the case where the path is a folder
+                throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
             } else {
-                await this.app.vault.create(fileName, content);
-                console.log(`[chatgpt-import] Created new file: ${fileName}`);
+                // Create a new file
+                await this.app.vault.create(filePath, content);
             }
         } catch (error: CustomError) {
-            this.logger.error(
-                `Error creating or modifying file '${fileName}'`,
-                error.message
-            );
+            this.logger.error(`Error creating or modifying file '${filePath}'`, error.message);
             throw error; // Propagate the error
         }
     }
@@ -763,10 +986,10 @@ Last Updated: ${updateTimeStr}\n\n
         const now = new Date();
         let prefix = formatTimestamp(now.getTime() / 1000, "prefix");
 
-        let logFileName = `${prefix} - ChatGPT Import log.md`;
-        const logFolderPath = `${this.settings.archiveFolder}/logs`;
+        let logFileName = `${prefix} - Nexus AI Chat Chat Importer Report.md`;
+        const logFolderPath = `${this.settings.archiveFolder}/Reports`;
 
-        const folderResult = await this.ensureFolderExists(logFolderPath);
+        const folderResult = await ensureFolderExists(logFolderPath, this.app.vault);
         if (!folderResult.success) {
             this.logger.error(
                 `Failed to create or access log folder: ${logFolderPath}`,
@@ -780,7 +1003,7 @@ Last Updated: ${updateTimeStr}\n\n
 
         let counter = 1;
         while (await this.app.vault.adapter.exists(logFilePath)) {
-            logFileName = `${prefix}-${counter} - ChatGPT Import log.md`;
+            logFileName = `${prefix}-${counter} - Nexus AI Chat Chat Importer Report.md`;
             logFilePath = `${logFolderPath}/${logFileName}`;
             counter++;
         }
@@ -798,12 +1021,11 @@ totalUpdatedImports: ${this.importReport.updated.length}
 totalSkippedImports: ${this.importReport.skipped.length}
 ---
 
-${this.importReport.generateLogContent()}
+${this.importReport.generateReportContent()}
 `;
 
         try {
             await this.writeToFile(logFilePath, logContent);
-            console.log(`Import log created: ${logFilePath}`);
         } catch (error: CustomError) {
             this.logger.error(`Failed to write import log`, error.message);
             new Notice("Failed to create log file. Check console for details.");
@@ -848,7 +1070,7 @@ ${this.importReport.generateLogContent()}
         new Notice(
             "All plugin data has been reset. You may need to restart Obsidian for changes to take full effect."
         );
-        console.log("[chatgpt-import] All plugin data has been reset.");
+        console.log("[Nexus AI Chat Importer] All plugin data has been reset.");
     }
 
     // Logging Methods
@@ -885,7 +1107,7 @@ ${this.importReport.generateLogContent()}
             const fileNames = Object.keys(content.files);
 
             if (!fileNames.includes("conversations.json")) {
-                throw new ChatGPTImportError(
+                throw new NexusAiChatImporterError(
                     "Invalid ZIP structure",
                     "File 'conversations.json' not found in the zip"
                 );
@@ -893,10 +1115,10 @@ ${this.importReport.generateLogContent()}
 
             return zip;
         } catch (error: CustomError) {
-            if (error instanceof ChatGPTImportError) {
+            if (error instanceof NexusAiChatImporterError) {
                 throw error;
             } else {
-                throw new ChatGPTImportError(
+                throw new NexusAiChatImporterError(
                     "Error validating zip file",
                     error.message
                 );
@@ -929,12 +1151,12 @@ ${this.importReport.generateLogContent()}
     }
 }
 
-class ChatGPTImportPluginSettingTab extends PluginSettingTab {
+class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
     // Settings tab implementation
 
-    plugin: ChatGPTImportPlugin;
+    plugin: NexusAiChatImporterPlugin;
 
-    constructor(app: App, plugin: ChatGPTImportPlugin) {
+    constructor(app: App, plugin: NexusAiChatImporterPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -944,8 +1166,8 @@ class ChatGPTImportPluginSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName("ChatGPT Archive Folder")
-            .setDesc("Choose a folder to store ChatGPT archives")
+            .setName("Nexus AI Chat Importer Folder")
+            .setDesc("Choose a folder to store AI Chat conversations")
             .addText((text) =>
                 text
                     .setPlaceholder("Enter folder name")
@@ -1005,6 +1227,47 @@ class ImportReport {
     private globalErrors: { message: string; details: string }[] = [];
     private summary: string = "";
 
+    addParameters(currentDate: string, zipFileName: string): string {
+        return `---
+nexus: ${this.manifest.name}
+importdate: ${currentDate}
+zipFile: ${zipFileName}
+totalSuccessfulImports: ${this.created.length}
+totalUpdatedImports: ${this.updated.length}
+totalSkippedImports: ${this.skipped.length}
+---\n`;
+    }
+
+    addSummary(
+        zipFileName: string,
+        totalProcessed: number,
+        totalCreated: number,
+        totalUpdated: number,
+        totalMessagesAdded: number
+    ) {
+        this.summary = `
+## Summary
+- Processed ZIP file: ${zipFileName}
+- ${
+            totalCreated > 0 ? `[[#Created notes]]` : "Created notes"
+        }: ${totalCreated} out of ${totalProcessed} conversations
+- ${
+            totalUpdated > 0 ? `[[#Updated notes]]` : "Updated notes"
+        }: ${totalUpdated} with a total of ${totalMessagesAdded} new messages
+- ${this.skipped.length > 0 ? `[[#Skipped notes]]` : "Skipped notes"}: ${
+            this.skipped.length
+        } out of ${totalProcessed} conversations
+- ${this.failed.length > 0 ? `[[#Failed imports]]` : "Failed imports"}: ${
+            this.failed.length
+        }
+- ${
+            this.globalErrors.length > 0
+                ? `[[#global-errors|Global Errors]]`
+                : "Global Errors"
+        }: ${this.globalErrors.length}
+`;
+    }
+
     addCreated(
         title: string,
         filePath: string,
@@ -1020,6 +1283,7 @@ class ImportReport {
             messageCount,
         });
     }
+
     addUpdated(
         title: string,
         filePath: string,
@@ -1074,38 +1338,10 @@ class ImportReport {
         this.globalErrors.push({ message, details });
     }
 
-    addSummary(
-        zipFileName: string,
-        totalProcessed: number,
-        totalCreated: number,
-        totalUpdated: number,
-        totalMessagesAdded: number
-    ) {
-        this.summary = `
-## Summary
-- Processed ZIP file: ${zipFileName}
-- ${
-            totalCreated > 0 ? `[[#Created notes]]` : "Created notes"
-        }: ${totalCreated} out of ${totalProcessed} conversations
-- ${
-            totalUpdated > 0 ? `[[#Updated notes]]` : "Updated notes"
-        }: ${totalUpdated} with a total of ${totalMessagesAdded} new messages
-- ${this.skipped.length > 0 ? `[[#Skipped notes]]` : "Skipped notes"}: ${
-            this.skipped.length
-        } out of ${totalProcessed} conversations
-- ${this.failed.length > 0 ? `[[#Failed imports]]` : "Failed imports"}: ${
-            this.failed.length
-        }
-- ${
-            this.globalErrors.length > 0
-                ? `[[#global-errors|Global Errors]]`
-                : "Global Errors"
-        }: ${this.globalErrors.length}
-`;
-    }
 
-    generateLogContent(): string {
-        let content = "# ChatGPT Import Log\n\n";
+
+    generateReportContent(): string {
+        let content = "# Nexus AI Chat Importer Report\n\n";
 
         if (this.summary) {
             content += this.summary + "\n\n";
@@ -1209,10 +1445,14 @@ class ImportReport {
     }
 }
 
-class ChatGPTImportError extends Error {
+class NexusAiChatImporterError extends Error {
     // Implementation
     constructor(message: string, public details?: any) {
         super(message);
-        this.name = "ChatGPTImportError";
+        this.name = "NexusAiChatImporterError";
     }
 }
+function removeClickListenerIfNotNeeded() {
+    throw new Error("Function not implemented.");
+}
+

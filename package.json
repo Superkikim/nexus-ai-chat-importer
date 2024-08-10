@@ -1,16 +1,17 @@
 {
 	"name": "nexus-ai-chat-importer",
-	"version": "1.0.1b",
+	"version": "1.0.2b",
 	"description": "This plugin allows to import ChatGPT conversation from the ZIP archive downloaded from your account",
 	"main": "main.js",
 	"scripts": {
 	  "dev": "node esbuild.config.mjs",
-	  "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+	  "build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
 	  "version": "node version-bump.mjs && git add manifest.json versions.json",
 	  "lint": "eslint . --ext .ts,.js",
 	  "lint:fix": "eslint . --ext .ts,.js --fix",
 	  "format": "prettier --write \"**/*.{ts,js,json,md}\""
 	},
+
 	"keywords": [],
 	"author": "",
 	"license": "MIT",
@@ -30,7 +31,9 @@
 	  "eslint-plugin-import": "^2.25.2",
 	  "eslint-plugin-prettier": "^4.0.0",
 	  "eslint-config-prettier": "^8.3.0",
-	  "prettier": "^2.3.2"
+	  "prettier": "^2.3.2",
+	  "copyfiles": "^2.3.0",
+	  "fs-extra": "^11.2.0"
 	},
 	"dependencies": {
 	  "jszip": "^3.7.1"
