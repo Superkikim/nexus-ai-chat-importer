@@ -123,7 +123,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private tooltipEl: HTMLDivElement;
 
     // Lifecycle methods
-    async onload() {
+/*     async onload() {
         // Bind the handleClick method to the current context and store it
         this.handleClickBound = this.handleClick.bind(this);
     
@@ -218,8 +218,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         });
     
         console.log("NexusAiChatImporterPlugin loaded.");
-    }
-    
+    } */
     
     async loadSettings() {
         const data = await this.loadData();
@@ -335,7 +334,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         console.log("NexusAiChatImporterPlugin loaded.");
     }
     
-
     // Initialize or remove click listener based on file relevance
     initializeListenerIfNeeded(file: TFile) {
         const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
@@ -378,13 +376,22 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     async handleClick(event: { target: any; }) {
         const target = event.target;
     
-        // Check if the click is within the active editor
-        const editorContainer = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor.containerEl;
-        if (!editorContainer || !editorContainer.contains(target)) {
-            return; // Exit if not inside the active editor
+        // Get the active Markdown view
+        const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (!markdownView) {
+            return; // No active Markdown view
+        }
+        
+        // Determine if we are in Reading View or Editor View
+        const isEditorView = markdownView.getMode() === "source";
+        const container = isEditorView ? markdownView.editor.containerEl : markdownView.contentEl;
+    
+        // Exit if the click is outside the appropriate container
+        if (!container.contains(target)) {
+            return;
         }
     
-        // Check for active file
+        // Check for the active file
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile) {
             return; // Exit if there is no active file
@@ -392,36 +399,26 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     
         // Check if the click is specifically on the inline-title class
         if (target.classList.contains('inline-title')) {
-    
-            // Fetch the abstract file to check if it's a TFile
+            // Fetch the abstract file
             const file = this.app.vault.getAbstractFileByPath(activeFile.path);
             if (file instanceof TFile) {
                 // Fetch the conversation ID using the utility function
-    
-                const conversationId = getConversationId(file); // Use the utility function
-
+                const conversationId = getConversationId(file);
                 if (conversationId) {
                     const provider = getProvider(activeFile);
                     if (provider === "chatgpt") {
                         const url = `https://chatgpt.com/c/${conversationId}`;
-                
                         const userConfirmed = await this.showUrlConfirmationDialog({
-                            url: url, // Correctly setting the URL
-                            message: "Do you want to go there?", // Optional message
-                            note: "If the conversation has been deleted, it will not show." // Optional note
+                            url: url, 
+                            message: "Do you want to go there?", 
+                            note: "If the conversation has been deleted, it will not show."
                         });
-                
                         if (userConfirmed) {
                             window.open(url, "_blank"); // Open the URL in a new tab or window
                         }
                     }
                 }
-    
-            } else {
-                console.log('File is not an instance of TFile. Exiting...');
             }
-        } else {
-            console.log('Click is not on inline-title. Exiting...');
         }
     }
 
