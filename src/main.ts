@@ -195,7 +195,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Register a command to reset the import catalogs
         this.addCommand({
             id: "reset-nexus-ai-chat-importer-catalogs",
-            name: "Reset Nexus AI Chat Importer Catalogs",
+            name: "Reset Catalogs",
             callback: () => {
                 const modal = new Modal(this.app);
                 modal.contentEl.createEl("p", {
