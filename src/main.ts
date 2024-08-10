@@ -871,7 +871,7 @@ create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
 ---
 
-# Title: [${title}](https://chatgpt.com/c/${conversationId})
+# Title: ${title}
 
 Created: ${createTimeStr}
 Last Updated: ${updateTimeStr}\n\n
