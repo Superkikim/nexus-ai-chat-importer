@@ -4,9 +4,6 @@ node_modules/
 # Local resources
 local_resources/
 
-# Build output
-dist/
-
 # Obsidian data and configuration files
 data.json
 
