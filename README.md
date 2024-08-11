@@ -26,6 +26,8 @@ The Nexus AI Chat Importer Plugin for Obsidian allows you to seamlessly import y
 
 ## Installation
 
+⚠️ Due to a name change, old conversation records imported with version 1.0.1b and earlier cannot be accessed. Please delete any old data and re-import your conversations with the new version. Next versions will include an upgrade feature if required.
+
 1. Download the contents of the `dist` folder from the repository.
 2. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
 3. Create a new folder called `nexus-ai-chat-importer`.
