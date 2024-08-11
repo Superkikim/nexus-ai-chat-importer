@@ -38,11 +38,18 @@ import {
     getProvider
 } from "./utils";
 
+import {
+    showDialog
+} from "./dialogs"
+
+import { Upgrader } from './upgrade';
+
 // Constants
 const DEFAULT_SETTINGS: PluginSettings = {
     archiveFolder: "Nexus AI Chat Imports",
     addDatePrefix: false,
     dateFormat: "YYYY-MM-DD",
+    hasShownUpgradeNotice: false // Default to false
 };
 
 enum LogLevel {
@@ -121,105 +128,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     totalNonEmptyMessagesAdded: number = 0; // Counts the number of messages that have actually been added to a specific note
 
     private tooltipEl: HTMLDivElement;
-
-    // Lifecycle methods
-/*     async onload() {
-        // Bind the handleClick method to the current context and store it
-        this.handleClickBound = this.handleClick.bind(this);
-    
-        // Initialize the logger
-        this.logger = new Logger();
-    
-        // Load the plugin settings
-        await this.loadSettings();
-    
-        // Add the plugin's settings tab to Obsidian's settings
-        this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
-    
-        // Add a ribbon icon to the sidebar with a click event to import a new file
-        const ribbonIconEl = this.addRibbonIcon(
-            "message-square-plus",
-            "Nexus AI Chat Importer - Import new file",
-            (evt: MouseEvent) => {
-                this.selectZipFile();
-            }
-        );
-
-        ribbonIconEl.addClass("nexus-ai-chat-ribbon");
-    
-        // Register an event to handle file deletion
-        this.registerEvent(
-            this.app.vault.on("delete", async (file) => {
-                console.log("File has been deleted: ", file);
-                if (file instanceof TFile) {
-                    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-                    if (frontmatter?.conversation_id) {
-                        for (const [id, record] of Object.entries(this.conversationCatalog)) {
-                            if (record.conversationId === frontmatter.conversation_id) {
-                                delete this.conversationCatalog[id];
-                                await this.saveSettings();
-                                break;
-                            }
-                        }
-                    }
-                }
-            })
-        );
-
-        // Register an event to track changes in the active file
-        this.registerEvent(
-            this.app.workspace.on("active-leaf-change", (leaf) => {
-                const file = this.app.workspace.getActiveFile();
-                if (file instanceof TFile) {
-                    this.initializeListenerIfNeeded(file);
-                }
-            })
-        );
-    
-        // Register an event to track file closures
-        this.registerEvent(
-            this.app.workspace.on("file-close", (file) => {
-                this.fileClosed(file);
-            })
-        );
-    
-        // Register a command to select a ZIP file for processing
-        this.addCommand({
-            id: "nexus-ai-chat-importer-select-zip",
-            name: "Select ZIP file to process",
-            callback: () => {
-                this.selectZipFile();
-            },
-        });
-    
-        // Register a command to reset the import catalogs
-        this.addCommand({
-            id: "reset-nexus-ai-chat-importer-catalogs",
-            name: "Reset Catalogs",
-            callback: () => {
-                const modal = new Modal(this.app);
-                modal.contentEl.createEl("p", {
-                    text: "This will reset all import catalogs. This action cannot be undone.",
-                });
-                const buttonDiv = modal.contentEl.createEl("div", {
-                    cls: "modal-button-container",
-                });
-                buttonDiv
-                    .createEl("button", { text: "Cancel" })
-                    .addEventListener("click", () => modal.close());
-                buttonDiv
-                    .createEl("button", { text: "Reset", cls: "mod-warning" })
-                    .addEventListener("click", () => {
-                        this.resetCatalogs();
-                        modal.close();
-                    });
-                modal.open();
-            },
-        });
-    
-        console.log("NexusAiChatImporterPlugin loaded.");
-    } */
-    
+   
     async loadSettings() {
         const data = await this.loadData();
         this.settings = Object.assign(
@@ -230,24 +139,31 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         this.importedArchives = data?.importedArchives || {};
         this.conversationCatalog = data?.conversationCatalog || {};
     }
+
     async saveSettings() {
-        await this.saveData({
-            settings: this.settings,
-            importedArchives: this.importedArchives,
-            conversationCatalog: this.conversationCatalog,
-        });
+        try {
+            await this.saveData({
+                settings: this.settings,
+                importedArchives: this.importedArchives,
+                conversationCatalog: this.conversationCatalog,
+            });
+            this.logger.info("Settings saved successfully.");
+        } catch (error) {
+            this.logger.error("Error saving settings", error);
+        }
     }
 
     async onload() {
+
+        // Load the plugin settings
+        await this.loadSettings();
+
         // Bind the handleClick method to the current context and store it
         this.handleClickBound = this.handleClick.bind(this);
     
         // Initialize the logger
         this.logger = new Logger();
-    
-        // Load the plugin settings
-        await this.loadSettings();
-    
+
         // Add the plugin's settings tab to Obsidian's settings
         this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
     
@@ -264,7 +180,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Register an event to handle file deletion
         this.registerEvent(
             this.app.vault.on("delete", async (file) => {
-                console.log("File has been deleted: ", file);
                 if (file instanceof TFile) {
                     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
                     if (frontmatter?.conversation_id) {
@@ -331,9 +246,38 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             },
         });
     
+        const upgrader = new Upgrader(this);
+        await upgrader.checkForUpgrade();
+
         console.log("NexusAiChatImporterPlugin loaded.");
     }
     
+    async onunload() {
+        console.log('Unloading Nexus AI Chat Importer plugin');
+    
+        // Remove the click listener if it's active
+        if (this.clickListenerActive) {
+            document.removeEventListener('click', this.handleClickBound);
+            this.clickListenerActive = false;
+        }
+    
+        // Save any unsaved settings
+        await this.saveSettings();
+    
+        // Clear any runtime data that shouldn't persist
+        this.importReport = new ImportReport();
+        this.totalNewConversationsToImport = 0;
+        this.totalExistingConversationsToUpdate = 0;
+        this.totalNewConversationsSuccessfullyImported = 0;
+        this.totalConversationsActuallyUpdated = 0;
+        this.totalNonEmptyMessagesToImport = 0;
+        this.totalNonEmptyMessagesToAdd = 0;
+        this.totalNonEmptyMessagesAdded = 0;
+    
+        // Perform any other necessary cleanup
+    }
+
+
     // Initialize or remove click listener based on file relevance
     initializeListenerIfNeeded(file: TFile) {
         const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
@@ -352,7 +296,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             // Add click event listener
             document.addEventListener('click', this.handleClickBound);
             this.clickListenerActive = true;
-            console.log('Click listener activated.');
         }
     }
 
@@ -362,7 +305,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         if (!anyNexusFilesActive && this.clickListenerActive) {
             document.removeEventListener('click', this.handleClickBound);
             this.clickListenerActive = false;
-            console.log('Click listener deactivated.');
         }
     }
 
@@ -408,11 +350,20 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     const provider = getProvider(activeFile);
                     if (provider === "chatgpt") {
                         const url = `https://chatgpt.com/c/${conversationId}`;
-                        const userConfirmed = await this.showUrlConfirmationDialog({
-                            url: url, 
-                            message: "Do you want to go there?", 
-                            note: "If the conversation has been deleted, it will not show."
-                        });
+                        const conversationMessage = `Original conversation URL: ${url}\nDo you want to go there?\nIf the conversation has been deleted, it will not show.`;
+
+                        const userConfirmed = await showDialog(
+                            this.app, // Pass the app instance
+                            "confirmation", // Type of dialog
+                            "Open Link", // Title
+                            [ // Array of paragraphs
+                                `Original conversation URL: ${url}.`,
+                                `Do you want to go there?`
+                            ],
+                            "NOTE: If the conversation has been deleted, it will not show.", // Optional note
+                            { button1: "Let's go", button2: "No" } // Custom button labels
+                        );
+                        
                         if (userConfirmed) {
                             window.open(url, "_blank"); // Open the URL in a new tab or window
                         }
@@ -422,48 +373,25 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
     }
 
-    async showUrlConfirmationDialog(options: ConfirmationDialogOptions): Promise<boolean> {
-        return new Promise((resolve) => {
-            const modal = new Modal(this.app);
-            modal.contentEl.createEl("p", { text: `Original conversation URL: ${options.url}` });
-            
-            const message = options.message || "Do you want to go there?";
-            const note = options.note || "If the conversation has been deleted, it will not show.";
-            
-            modal.contentEl.createEl("p", { text: message });
-            modal.contentEl.createEl("p", { text: note });
-    
-            const buttonDiv = modal.contentEl.createEl("div", {
-                cls: "modal-button-container"
-            });
-            
-            buttonDiv.createEl("button", { text: "Yes" })
-                .addEventListener("click", () => {
-                    modal.close();
-                    resolve(true); // User confirmed
-                });
-    
-            buttonDiv.createEl("button", { text: "No" })
-                .addEventListener("click", () => {
-                    modal.close();
-                    resolve(false); // User canceled
-                });
-    
-            modal.open();
-        });
-    }
-    
-
     // Core functionality methods
     async handleZipFile(file: File) {
         this.importReport = new ImportReport(); // Initialize the import log at the beginning
         try {
             const fileHash = await getFileHash(file);
 
+
             // Check if the archive has already been imported
             if (this.importedArchives[fileHash]) {
-                const shouldReimport = await this.showConfirmationDialog(
-                    `This archive (${file.name}) has already been imported on ${this.importedArchives[fileHash].date}. Do you want to process it again?`
+                const shouldReimport = await showDialog(
+                    this.app, // Pass the app instance
+                    "confirmation", // Type of dialog
+                    "Already processed", // Title
+                    [ // Array of paragraphs
+                        `File ${file.name} has already been imported.`,
+                        `Do you want to reprocess it ?`
+                    ],
+                    "NOTE: This will not alter existing notes", // Optional note
+                    { button1: "Let's do this", button2: "Forget it" } // Custom button labels
                 );
 
                 // If the user cancels re-importing
@@ -1121,30 +1049,6 @@ ${this.importReport.generateReportContent()}
                 );
             }
         }
-    }
-    showConfirmationDialog(message: string): Promise<boolean> {
-        return new Promise((resolve) => {
-            const modal = new Modal(this.app);
-            modal.contentEl.createEl("p", { text: message });
-
-            const buttonContainer = modal.contentEl.createDiv();
-
-            buttonContainer
-                .createEl("button", { text: "Yes" })
-                .addEventListener("click", () => {
-                    modal.close();
-                    resolve(true);
-                });
-
-            buttonContainer
-                .createEl("button", { text: "No" })
-                .addEventListener("click", () => {
-                    modal.close();
-                    resolve(false);
-                });
-
-            modal.open();
-        });
     }
 }
 
