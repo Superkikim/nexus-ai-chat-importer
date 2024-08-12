@@ -49,8 +49,10 @@ const DEFAULT_SETTINGS: PluginSettings = {
     archiveFolder: "Nexus AI Chat Imports",
     addDatePrefix: false,
     dateFormat: "YYYY-MM-DD",
-    hasShownUpgradeNotice: false // Default to false
+    hasShownUpgradeNotice: false, // Keep this as it is
+    hasCompletedUpgrade: false, // Initialize to false
 };
+
 
 enum LogLevel {
     INFO,
@@ -69,7 +71,7 @@ class Logger {
                 : console.log;
 
         logMethod(
-            `[${timestamp}] [ChatGPT Import] [${LogLevel[level]}] ${message}`,
+            `[${timestamp}] [Nexus AI Chat Importer] [${LogLevel[level]}] ${message}`,
             details
         );
     }

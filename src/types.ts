@@ -3,7 +3,10 @@ export interface PluginSettings {
     archiveFolder: string;
     addDatePrefix: boolean;
     dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
+    hasShownUpgradeNotice: boolean; // Keep this as it is
+    hasCompletedUpgrade: boolean; // New property added
 }
+
 
 export interface ChatMessage {
     message(message: any): unknown;
