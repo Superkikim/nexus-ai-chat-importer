@@ -39,6 +39,10 @@ import {
 } from "./utils";
 
 import {
+    Logger
+} from "./logger";
+
+import {
     showDialog
 } from "./dialogs"
 
@@ -53,44 +57,9 @@ const DEFAULT_SETTINGS: PluginSettings = {
     hasCompletedUpgrade: false, // Initialize to false
 };
 
-
-enum LogLevel {
-    INFO,
-    WARN,
-    ERROR,
-}
-
-class Logger {
-    private logToConsole(level: LogLevel, message: string, details?: any) {
-        const timestamp = new Date().toISOString();
-        const logMethod =
-            level === LogLevel.ERROR
-                ? console.error
-                : level === LogLevel.WARN
-                ? console.warn
-                : console.log;
-
-        logMethod(
-            `[${timestamp}] [Nexus AI Chat Importer] [${LogLevel[level]}] ${message}`,
-            details
-        );
-    }
-
-    info(message: string, details?: any) {
-        this.logToConsole(LogLevel.INFO, message, details);
-    }
-
-    warn(message: string, details?: any) {
-        this.logToConsole(LogLevel.WARN, message, details);
-    }
-
-    error(message: string, details?: any) {
-        this.logToConsole(LogLevel.ERROR, message, details);
-    }
-}
-
 export default class NexusAiChatImporterPlugin extends Plugin {
     clickListenerActive: boolean;
+
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
         this.conversationCatalog = {}; // Initialise le catalogue des conversations
@@ -99,6 +68,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             addDatePrefix: false,
             dateFormat: "YYYY-MM-DD",
         }; // Initialize with default values
+
+        this.logger = new Logger(); // Initialize logger with a new instance
     }
 
     // Properties
@@ -111,23 +82,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     > = {}; // Stores imported archives
     private conversationCatalog: Record<string, ConversationCatalogEntry> = {}; // Stores conversation entries
 
-    /**
-     * Plugin counters
-     */
-    totalExistingConversations: number = Object.keys(this.conversationCatalog).length;
+    // Group Conversation Counters
+    private conversationCounters = {
+        totalExistingConversations: 0,
+        totalNewConversationsToImport: 0,
+        totalExistingConversationsToUpdate: 0,
+        totalNewConversationsSuccessfullyImported: 0,
+        totalConversationsActuallyUpdated: 0,
+    };
 
-    /**
-     * Selected file conversation counters
-     */
-    totalNewConversationsToImport: number = 0; // Counts the number of conversations which do not have any existing note in obsidian
-    totalExistingConversationsToUpdate: number = 0; // Counts the number of conversations that need to be updated
-    totalNewConversationsSuccessfullyImported: number = 0; //Counts the number of conversations that have been created successully
-    totalConversationsActuallyUpdated: number = 0; // Counts the number of conversations that have been updated succcessfully
-
-    // Message counters
-    totalNonEmptyMessagesToImport: number = 0; // Counts the number of non-empty messages that will need to be imported: We want to avoid importing empty messages
-    totalNonEmptyMessagesToAdd: number = 0; // Counts the number of messages that will have to be added to an existing note
-    totalNonEmptyMessagesAdded: number = 0; // Counts the number of messages that have actually been added to a specific note
+    // Group Message Counters
+    private messageCounters = {
+        totalNonEmptyMessagesToImport: 0,
+        totalNonEmptyMessagesToAdd: 0,
+        totalNonEmptyMessagesAdded: 0,
+    };
 
     private tooltipEl: HTMLDivElement;
    
@@ -268,13 +237,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     
         // Clear any runtime data that shouldn't persist
         this.importReport = new ImportReport();
-        this.totalNewConversationsToImport = 0;
-        this.totalExistingConversationsToUpdate = 0;
-        this.totalNewConversationsSuccessfullyImported = 0;
-        this.totalConversationsActuallyUpdated = 0;
-        this.totalNonEmptyMessagesToImport = 0;
-        this.totalNonEmptyMessagesToAdd = 0;
-        this.totalNonEmptyMessagesAdded = 0;
+        this.conversationCounters.totalNewConversationsToImport = 0;
+        this.conversationCounters.totalExistingConversationsToUpdate = 0;
+        this.conversationCounters.totalNewConversationsSuccessfullyImported = 0;
+        this.conversationCounters.totalConversationsActuallyUpdated = 0;
+        this.messageCounters.totalNonEmptyMessagesToImport = 0;
+        this.messageCounters.totalNonEmptyMessagesToAdd = 0;
+        this.messageCounters.totalNonEmptyMessagesAdded = 0;
     
         // Perform any other necessary cleanup
     }
@@ -455,11 +424,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.updateImportReport(file.name);
 
             this.logger.info(`Processed ${chats.length} conversations`, {
-                new: this.totalNewConversationsSuccessfullyImported,
-                updated: this.totalConversationsActuallyUpdated,
+                new: this.conversationCounters.totalNewConversationsSuccessfullyImported,
+                updated: this.conversationCounters.totalConversationsActuallyUpdated,
                 skipped:
-                    this.totalExistingConversations -
-                    this.totalConversationsActuallyUpdated,
+                    this.conversationCounters.totalExistingConversations -
+                    this.conversationCounters.totalConversationsActuallyUpdated,
             });
 
         } catch (error: CustomError) {
@@ -489,8 +458,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
                 if (newMessages.length > 0) {
                     content += "\n\n" + this.formatNewMessages(newMessages);
-                    this.totalConversationsActuallyUpdated++;
-                    this.totalNonEmptyMessagesAdded += newMessages.length;
+                    this.conversationCounters.totalConversationsActuallyUpdated++;
+                    this.messageCounters.totalNonEmptyMessagesAdded += newMessages.length;
                 }
 
                 if (content !== originalContent) {
@@ -564,8 +533,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 )}`,
                 messageCount
             );
-            this.totalNewConversationsSuccessfullyImported++;
-            this.totalNonEmptyMessagesToImport += messageCount;
+            this.conversationCounters.totalNewConversationsSuccessfullyImported++;
+            this.messageCounters.totalNonEmptyMessagesToImport += messageCount;
 
             // Add the new conversation to existingConversations
             existingConversations[chat.id] = filePath;
@@ -679,7 +648,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 "No Updates"
             );
         } else {
-            this.totalExistingConversationsToUpdate++;
+            this.conversationCounters.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(
                 chat,
                 existingRecord.path,
@@ -693,7 +662,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         filePath: string,
         existingConversations: Record<string, ConversationCatalogEntry> // Change this line
     ): Promise<void> {
-        this.totalNewConversationsToImport++;
+        this.conversationCounters.totalNewConversationsToImport++;
         await this.createNewNote(chat, filePath, existingConversations);
     }
 
@@ -714,9 +683,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         this.importReport.addSummary(
             zipFileName,
             totalExistingConversations, // Use the calculated count directly
-            this.totalNewConversationsSuccessfullyImported,
-            this.totalConversationsActuallyUpdated,
-            this.totalNonEmptyMessagesAdded
+            this.conversationCounters.totalNewConversationsSuccessfullyImported,
+            this.conversationCounters.totalConversationsActuallyUpdated,
+            this.messageCounters.totalNonEmptyMessagesAdded
         );
     }
 
@@ -963,14 +932,14 @@ ${this.importReport.generateReportContent()}
         // Clear all internal data structures
         this.importedArchives = {};
         this.conversationCatalog = {};
-        this.totalExistingConversations = 0;
-        this.totalNewConversationsToImport = 0;
-        this.totalNonEmptyMessagesToImport = 0;
-        this.totalNonEmptyMessagesToAdd = 0;
-        this.totalExistingConversationsToUpdate = 0;
-        this.totalNewConversationsSuccessfullyImported = 0;
-        this.totalConversationsActuallyUpdated = 0;
-        this.totalNonEmptyMessagesAdded = 0;
+        this.conversationCounters.totalExistingConversations = 0;
+        this.conversationCounters.totalNewConversationsToImport = 0;
+        this.messageCounters.totalNonEmptyMessagesToImport = 0;
+        this.messageCounters.totalNonEmptyMessagesToAdd = 0;
+        this.conversationCounters.totalExistingConversationsToUpdate = 0;
+        this.conversationCounters.totalNewConversationsSuccessfullyImported = 0;
+        this.conversationCounters.totalConversationsActuallyUpdated = 0;
+        this.messageCounters.totalNonEmptyMessagesAdded = 0;
 
         // Reset settings to default
         this.settings = Object.assign({}, DEFAULT_SETTINGS);
