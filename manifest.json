@@ -9,7 +9,7 @@
 	"isDesktopOnly": false,
 	"themeSupport": false,
 	"minAppVersion": "0.15.0",
-	"description": "A plugin to import AI Chat converastions exports into Obsidian.",
+	"description": "A plugin to import AI Chat conversations exports into Obsidian.",
 	"license": "MIT"
   }
   
