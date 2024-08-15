@@ -1,7 +1,7 @@
 {
 	"name": "nexus-ai-chat-importer",
 	"version": "1.0.2",
-	"description": "This plugin allows to import ChatGPT conversation from the ZIP archive downloaded from your account",
+	"description": "This plugin allows to import ChatGPT conversation from the export files downloaded from your account",
 	"main": "main.js",
 	"scripts": {
 	  "dev": "node esbuild.config.mjs",
