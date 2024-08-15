@@ -2,14 +2,14 @@
 	"id": "nexus-ai-chat-importer",
 	"name": "Nexus AI Chat Importer",
 	"version": "1.0.2",
-	"author": "Akim Sissaoui",
-	"authorUrl": "https://github.com/Superkikim/nexus-ai-chat-importer/issues",
+	"author": "Superkikim",
+	"authorUrl": "https://github.com/Superkikim",
 	"manifest": "manifest.json",
 	"dependencies": [],
 	"isDesktopOnly": false,
 	"themeSupport": false,
 	"minAppVersion": "0.15.0",
-	"description": "A plugin to import AI Chat conversations exports into Obsidian.",
+	"description": "A plugin to import AI Chat conversations exports.",
 	"license": "MIT"
   }
   
