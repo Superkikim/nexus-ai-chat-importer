@@ -89,6 +89,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         totalExistingConversationsToUpdate: 0,
         totalNewConversationsSuccessfullyImported: 0,
         totalConversationsActuallyUpdated: 0,
+        totalConversationsProcessed: 0
     };
 
     // Group Message Counters
@@ -347,6 +348,23 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     // Core functionality methods
     async handleZipFile(file: File) {
         this.importReport = new ImportReport(); // Initialize the import log at the beginning
+
+        // Resetting counters before processing a new ZIP file
+        this.conversationCounters = {
+            totalExistingConversations: Object.keys(this.conversationCatalog).length, // Set to the length of conversationCatalog at the start
+            totalNewConversationsToImport: 0,
+            totalExistingConversationsToUpdate: 0,
+            totalNewConversationsSuccessfullyImported: 0,
+            totalConversationsActuallyUpdated: 0,
+            totalConversationsProcessed: 0
+        };
+
+        this.messageCounters = {
+            totalNonEmptyMessagesToImport: 0,
+            totalNonEmptyMessagesToAdd: 0,
+            totalNonEmptyMessagesAdded: 0,
+        };
+
         try {
             const fileHash = await getFileHash(file);
 
@@ -624,6 +642,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await this.handleNewChat(chat, filePath, existingConversations);
                 this.updateConversationCatalogEntry(chat, filePath);
             }
+            this.conversationCounters.totalConversationsProcessed++;
         } catch (chatError) {
             console.error(`[processSingleChat] Error processing chat: ${chat.id}`, chatError);
             this.logger.error(`Error processing chat: ${chat.title || "Untitled"}`, chatError.message);
@@ -682,12 +701,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         this.importReport.addSummary(
             zipFileName,
-            totalExistingConversations, // Use the calculated count directly
+            this.conversationCounters.totalConversationsProcessed,
             this.conversationCounters.totalNewConversationsSuccessfullyImported,
             this.conversationCounters.totalConversationsActuallyUpdated,
             this.messageCounters.totalNonEmptyMessagesAdded
-        );
-    }
+        );    }
 
     updateMetadata(content: string, updateTime: number): string {
         const updateTimeStr = `${formatTimestamp(
@@ -932,14 +950,6 @@ ${this.importReport.generateReportContent()}
         // Clear all internal data structures
         this.importedArchives = {};
         this.conversationCatalog = {};
-        this.conversationCounters.totalExistingConversations = 0;
-        this.conversationCounters.totalNewConversationsToImport = 0;
-        this.messageCounters.totalNonEmptyMessagesToImport = 0;
-        this.messageCounters.totalNonEmptyMessagesToAdd = 0;
-        this.conversationCounters.totalExistingConversationsToUpdate = 0;
-        this.conversationCounters.totalNewConversationsSuccessfullyImported = 0;
-        this.conversationCounters.totalConversationsActuallyUpdated = 0;
-        this.messageCounters.totalNonEmptyMessagesAdded = 0;
 
         // Reset settings to default
         this.settings = Object.assign({}, DEFAULT_SETTINGS);
