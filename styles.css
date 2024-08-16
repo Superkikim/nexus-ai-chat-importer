@@ -1,0 +1,23 @@
+/* General modal styles */
+.modal-title {
+    font-size: 1.5em; /* Make title bigger */
+}
+
+.modal-paragraph {
+    /* You can customize the paragraph styling here */
+    margin: 0.5em 0; /* Add spacing between paragraphs */
+}
+
+/* Optional note styling */
+.modal-note {
+    font-size: 0.8em; /* Smaller font size */
+    color: #888; /* Optional: lighter color for notes */
+    text-transform: uppercase; /* All caps */
+}
+
+/* Button container styles */
+.button-container {
+    display: flex;
+    justify-content: center;
+    /* You can add additional styles if needed, like padding or margin */
+}
