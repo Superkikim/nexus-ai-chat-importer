@@ -1,6 +1,8 @@
 // utils.ts
 import { moment, App } from "obsidian";
-import { PluginSettings } from "./types";
+import { Logger } from "./logger";
+
+const logger = new Logger();
 
 export function formatTimestamp(
     // REQUIRE REFACTORING TO SUPPORT OTHER DATE FORMATS THAN UNIXTIME
@@ -44,12 +46,10 @@ export function addPrefix(
     timeStamp: number,
     dateFormat: string
 ): string {
-    console.log("[PREFIX] filename before prefix:", filename);
     const timeStampStr = formatTimestamp(timeStamp, dateFormat); // Use the specified format
     if (timeStampStr) {
         filename = `${timeStampStr} - ${filename}`;
     }
-    console.log("[PREFIX] Returned:", filename);
     return filename; // Return the filename with prefix if applicable
 }
 
@@ -136,7 +136,7 @@ export async function ensureFolderExists(
                 await vault.createFolder(currentPath);
             } catch (error: CustomError) {
                 if (error.message !== "Folder already exists.") {
-                    this.logger.error(
+                    logger.error(
                         `Failed to create folder: ${currentPath}`,
                         error.message
                     );
@@ -160,14 +160,10 @@ export async function ensureFolderExists(
 export async function checkConversationLink(conversationId: string): Promise<boolean> {
     const url = `https://chatgpt.com/c/${conversationId}`;
     try {
-        const response = await fetch(url, { method: "HEAD" });
-        
-        // Log the response status
-        console.log(`Checking link: ${url} - Status: ${response.status}`);
-        
+        const response = await fetch(url, { method: "HEAD" });        
         return response.ok; // Returns true for status codes 200-299
     } catch (error) {
-        console.error(`Error fetching ${url}:`, error);
+        logger.error(`Error fetching ${url}:`, error);
         return false; // Return false in case of error (e.g., network issues)
     }
 }
