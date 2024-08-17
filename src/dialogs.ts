@@ -1,27 +1,18 @@
-import {
-    Modal,
-    App
-} from "obsidian";
+import { Modal, App } from "obsidian";
 
 // Function to show the modal
 function displayModal(app: App, title: string, paragraphs: string[], note?: string): Modal {
     const modal = new Modal(app);
+    modal.contentEl.addClass("nexus-ai-chat-importer-modal");
 
-    // Format the title
-    const titleEl = modal.contentEl.createEl("h2", { text: title });
-    titleEl.style.fontSize = "1.5em"; // Make title bigger
+    modal.contentEl.createEl("h2", { text: title });
 
-    // Format the paragraphs
     paragraphs.forEach(paragraph => {
-        const paragraphEl = modal.contentEl.createEl("div");
-        paragraphEl.innerHTML = paragraph; // Allow for HTML content
+        modal.contentEl.createEl("p", { text: paragraph });
     });
 
-    // Format the optional note
     if (note) {
-        const noteEl = modal.contentEl.createEl("p", { text: note.toUpperCase() }); // All caps
-        noteEl.style.fontSize = "0.8em"; // Smaller font size
-        noteEl.style.color = "#888"; // Optional: lighter color
+        modal.contentEl.createEl("p", { text: note, cls: "note" });
     }
 
     return modal;
@@ -29,7 +20,7 @@ function displayModal(app: App, title: string, paragraphs: string[], note?: stri
 
 // Function to add buttons based on the type and custom labels
 function addButtons(modal: Modal, type: "information" | "confirmation", customLabels?: { button1?: string; button2?: string }, resolve: (value: boolean) => void) {
-    const buttonDiv = modal.contentEl.createEl("div", { cls: "modal-button-container" });
+    const buttonDiv = modal.contentEl.createEl("div", { cls: "button-container" });
     if (type === "information") {
         const buttonLabel = customLabels?.button1 || "Understood";
         const button = buttonDiv.createEl("button", { text: buttonLabel });
@@ -51,16 +42,13 @@ function addButtons(modal: Modal, type: "information" | "confirmation", customLa
             resolve(false);
         });
     }
-    // Center buttons
-    buttonDiv.style.display = "flex";
-    buttonDiv.style.justifyContent = "center";
 }
 
 // Main function to show confirmation or information dialog
 export async function showDialog(app: App, type: "information" | "confirmation", title: string, paragraphs: string[], note?: string, customLabels?: { button1?: string; button2?: string }): Promise<boolean> {
     return new Promise((resolve) => {
         const modal = displayModal(app, title, paragraphs, note);
-        addButtons(modal, type, customLabels, resolve); // Pass resolve to addButtons
+        addButtons(modal, type, customLabels, resolve);
         modal.open();
     });
 }

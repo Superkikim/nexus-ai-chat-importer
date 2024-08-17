@@ -59,28 +59,30 @@ const DEFAULT_SETTINGS: PluginSettings = {
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     clickListenerActive: boolean;
+    handleClickBound: (event: { target: any; }) => Promise<void>;
+    logger: Logger = new Logger(); // Initialize logger with a new instance
+    settings: PluginSettings; // Assuming this will be initialized based on user settings
+    private conversationCatalog: Record<string, ConversationCatalogEntry> = {}; // Stores conversation entries (retain this line)
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
-        this.conversationCatalog = {}; // Initialise le catalogue des conversations
+        this.clickListenerActive = false; // Click listener state
         this.settings = {
-            archiveFolder: "default-folder",
+            archiveFolder: "Nexus AI Chat Imports", // Default folder
             addDatePrefix: false,
             dateFormat: "YYYY-MM-DD",
+            hasShownUpgradeNotice: false, // Upgrade notice status
+            hasCompletedUpgrade: false // Upgrade completion status
         }; // Initialize with default values
-
-        this.logger = new Logger(); // Initialize logger with a new instance
+        this.handleClickBound = this.handleClick.bind(this); // Bind click handler
     }
 
     // Properties
-    settings: PluginSettings; // Assuming this will be initialized based on user settings
-    logger: Logger = new Logger(); // Initialize logger with a new instance
     private importReport: ImportReport = new ImportReport(); // Initialize import report
     private importedArchives: Record<
         string,
         { fileName: string; date: string }
     > = {}; // Stores imported archives
-    private conversationCatalog: Record<string, ConversationCatalogEntry> = {}; // Stores conversation entries
 
     // Group Conversation Counters
     private conversationCounters = {
@@ -99,8 +101,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         totalNonEmptyMessagesAdded: 0,
     };
 
-    private tooltipEl: HTMLDivElement;
-   
     async loadSettings() {
         const data = await this.loadData();
         this.settings = Object.assign(
@@ -119,7 +119,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 importedArchives: this.importedArchives,
                 conversationCatalog: this.conversationCatalog,
             });
-            this.logger.info("Settings saved successfully.");
         } catch (error) {
             this.logger.error("Error saving settings", error);
         }
@@ -167,23 +166,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             })
         );
     
-        // Register an event to track changes in the active file
+        // Register an event to detect if active file is from this plugin or not
         this.registerEvent(
             this.app.workspace.on("active-leaf-change", (leaf) => {
+                this.logger.info("Active leaf Change detected")
                 const file = this.app.workspace.getActiveFile();
                 if (file instanceof TFile) {
-                    this.initializeListenerIfNeeded(file);
+                    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+                    const isNexusRelated = frontmatter && frontmatter.nexus;
+        
+                    if (isNexusRelated && !this.clickListenerActive) {
+                        this.addClickListener();
+                    } else if (!isNexusRelated && this.clickListenerActive) {
+                        this.removeClickListenerIfNotNeeded();
+                    }
+                } else {
+                    // Optionally remove the listener if no file is active
+                    this.removeClickListenerIfNotNeeded();
                 }
             })
         );
-    
-        // Register an event to track file closures
-        this.registerEvent(
-            this.app.workspace.on("file-close", (file) => {
-                this.fileClosed(file);
-            })
-        );
-    
+            
         // Register a command to select a ZIP file for processing
         this.addCommand({
             id: "nexus-ai-chat-importer-select-zip",
@@ -220,12 +223,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     
         const upgrader = new Upgrader(this);
         await upgrader.checkForUpgrade();
-
-        console.log("NexusAiChatImporterPlugin loaded.");
     }
     
     async onunload() {
-        console.log('Unloading Nexus AI Chat Importer plugin');
     
         // Remove the click listener if it's active
         if (this.clickListenerActive) {
@@ -250,18 +250,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     }
 
 
-    // Initialize or remove click listener based on file relevance
-    initializeListenerIfNeeded(file: TFile) {
-        const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-        const isNexusRelated = frontmatter && frontmatter.nexus;
-
-        if (isNexusRelated && !this.clickListenerActive) {
-            this.addClickListener();
-        } else if (!isNexusRelated && this.clickListenerActive) {
-            this.removeClickListenerIfNotNeeded();
-        }
-    }
-
     // Add click listener if not already active
     addClickListener() {
         if (!this.clickListenerActive) {
@@ -277,13 +265,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         if (!anyNexusFilesActive && this.clickListenerActive) {
             document.removeEventListener('click', this.handleClickBound);
             this.clickListenerActive = false;
-        }
-    }
-
-    // Triggered when a file is closed
-    fileClosed(file: TFile) {
-        if (file && this.clickListenerActive) {
-            this.removeClickListenerIfNotNeeded();
         }
     }
 
@@ -385,9 +366,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
                 // If the user cancels re-importing
                 if (!shouldReimport) {
-                    this.logger.info("Import cancelled by user", {
-                        fileName: file.name,
-                    });
                     new Notice("Import cancelled.");
                     return; // Exit early if not re-importing
                 }
@@ -403,9 +381,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             };
 
             await this.saveSettings(); // Save the updated settings
-            this.logger.info("Import completed successfully", {
-                fileName: file.name,
-            });
         } catch (error: unknown) {
             // Handle errors
             const message = isCustomError(error)
@@ -429,9 +404,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     async processConversations(zip: JSZip, file: File): Promise<void> {
         try {
             const chats = await this.extractChatsFromZip(zip);
-            this.logger.info(`Extracted ${chats.length} chats from zip file`, {
-                fileName: file.name,
-            });
             const existingConversations = this.conversationCatalog;
 
 
@@ -441,16 +413,14 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             this.updateImportReport(file.name);
 
-            this.logger.info(`Processed ${chats.length} conversations`, {
-                new: this.conversationCounters.totalNewConversationsSuccessfullyImported,
-                updated: this.conversationCounters.totalConversationsActuallyUpdated,
-                skipped:
-                    this.conversationCounters.totalExistingConversations -
-                    this.conversationCounters.totalConversationsActuallyUpdated,
-            });
-
-        } catch (error: CustomError) {
-            this.logger.error("Error processing conversations", error.message);
+        } catch (error: unknown) {
+            if (isCustomError(error)) {
+                this.logger.error("Error processing conversations", error.message);
+            } else if (error instanceof Error) {
+                this.logger.error("General error processing conversations", error.message);
+            } else {
+                this.logger.error("Unknown error processing conversations", "An unknown error occurred");
+            }
         }
     }
 
@@ -629,7 +599,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     private async processSingleChat(chat: Chat, existingConversations: Record<string, ConversationCatalogEntry>): Promise<void> {
         try {
-
             // Check if the conversation already exists
             if (existingConversations[chat.id]) {
                 await this.handleExistingChat(
@@ -638,14 +607,14 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 );
             } else {
                 // Check if the file needs to be made unique
-                const filePath = await this.generateFilePath(chat.title,chat.create_time, this.settings.dateFormat, this.settings.archiveFolder)
+                const filePath = await this.generateFilePath(chat.title, chat.create_time, this.settings.dateFormat, this.settings.archiveFolder);
                 await this.handleNewChat(chat, filePath, existingConversations);
                 this.updateConversationCatalogEntry(chat, filePath);
             }
             this.conversationCounters.totalConversationsProcessed++;
-        } catch (chatError) {
-            console.error(`[processSingleChat] Error processing chat: ${chat.id}`, chatError);
-            this.logger.error(`Error processing chat: ${chat.title || "Untitled"}`, chatError.message);
+        } catch (chatError: unknown) {
+            const errorMessage = (chatError as Error).message || "Unknown error occurred";
+            this.logErrorInReport(`Error processing chat: ${chat.title || "Untitled"}`, errorMessage);
         }
     }
     
@@ -809,7 +778,7 @@ Last Updated: ${updateTimeStr}\n\n
 
     formatMessage(message: ChatMessage): string {
         if (!message || typeof message !== "object") {
-            console.error("Invalid message object:", message);
+            this.logger.error("Invalid message object:", message);
             return ""; // Return empty string for invalid messages
         }
 
@@ -964,7 +933,7 @@ ${this.importReport.generateReportContent()}
                 `${this.manifest.dir}/data.json`
             );
         } catch (error: CustomError) {
-            console.log(
+            this.logger.info(
                 "No data.json file to remove or error removing it:",
                 error
             );
@@ -976,19 +945,12 @@ ${this.importReport.generateReportContent()}
         new Notice(
             "All plugin data has been reset. You may need to restart Obsidian for changes to take full effect."
         );
-        console.log("[Nexus AI Chat Importer] All plugin data has been reset.");
     }
 
     // Logging Methods
-    private logError(message: string, details: string): void {
+    private logErrorInReport(message: string, details: string): void {
         this.logger.error(message, details);
         this.importReport.addError(message, details);
-    }
-    private logInfo(message: string, details?: any): void {
-        this.logger.info(message, details);
-    }
-    private logWarn(message: string, details?: any): void {
-        this.logger.warn(message, details);
     }
 
     // UI-related methods
