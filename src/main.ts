@@ -9,7 +9,7 @@ import {
     Notice,
     App,
     PluginManifest,
-    MarkdownView
+    MarkdownView,
 } from "obsidian";
 
 import JSZip from "jszip";
@@ -20,7 +20,7 @@ import {
     Chat,
     ConversationCatalogEntry,
     CustomError,
-    ConfirmationDialogOptions
+    ConfirmationDialogOptions,
 } from "./types";
 
 import {
@@ -35,18 +35,14 @@ import {
     doesFilePathExist,
     getConversationId,
     checkAnyNexusFilesActive,
-    getProvider
+    getProvider,
 } from "./utils";
 
-import {
-    Logger
-} from "./logger";
+import { Logger } from "./logger";
 
-import {
-    showDialog
-} from "./dialogs"
+import { showDialog } from "./dialogs";
 
-import { Upgrader } from './upgrade';
+import { Upgrader } from "./upgrade";
 
 // Constants
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -59,7 +55,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     clickListenerActive: boolean;
-    handleClickBound: (event: { target: any; }) => Promise<void>;
+    handleClickBound: (event: { target: any }) => Promise<void>;
     logger: Logger = new Logger(); // Initialize logger with a new instance
     settings: PluginSettings; // Assuming this will be initialized based on user settings
     private conversationCatalog: Record<string, ConversationCatalogEntry> = {}; // Stores conversation entries (retain this line)
@@ -72,7 +68,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             addDatePrefix: false,
             dateFormat: "YYYY-MM-DD",
             hasShownUpgradeNotice: false, // Upgrade notice status
-            hasCompletedUpgrade: false // Upgrade completion status
+            hasCompletedUpgrade: false, // Upgrade completion status
         }; // Initialize with default values
         this.handleClickBound = this.handleClick.bind(this); // Bind click handler
     }
@@ -91,7 +87,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         totalExistingConversationsToUpdate: 0,
         totalNewConversationsSuccessfullyImported: 0,
         totalConversationsActuallyUpdated: 0,
-        totalConversationsProcessed: 0
+        totalConversationsProcessed: 0,
     };
 
     // Group Message Counters
@@ -125,19 +121,20 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     }
 
     async onload() {
-
         // Load the plugin settings
         await this.loadSettings();
 
         // Bind the handleClick method to the current context and store it
         this.handleClickBound = this.handleClick.bind(this);
-    
+
         // Initialize the logger
         this.logger = new Logger();
 
         // Add the plugin's settings tab to Obsidian's settings
-        this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
-    
+        this.addSettingTab(
+            new NexusAiChatImporterPluginSettingTab(this.app, this)
+        );
+
         // Add a ribbon icon to the sidebar with a click event to import a new file
         const ribbonIconEl = this.addRibbonIcon(
             "message-square-plus",
@@ -147,15 +144,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             }
         );
         ribbonIconEl.addClass("nexus-ai-chat-ribbon");
-    
+
         // Register an event to handle file deletion
         this.registerEvent(
             this.app.vault.on("delete", async (file) => {
                 if (file instanceof TFile) {
-                    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+                    const frontmatter =
+                        this.app.metadataCache.getFileCache(file)?.frontmatter;
                     if (frontmatter?.conversation_id) {
-                        for (const [id, record] of Object.entries(this.conversationCatalog)) {
-                            if (record.conversationId === frontmatter.conversation_id) {
+                        for (const [id, record] of Object.entries(
+                            this.conversationCatalog
+                        )) {
+                            if (
+                                record.conversationId ===
+                                frontmatter.conversation_id
+                            ) {
                                 delete this.conversationCatalog[id];
                                 await this.saveSettings();
                                 break;
@@ -165,16 +168,16 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 }
             })
         );
-    
+
         // Register an event to detect if active file is from this plugin or not
         this.registerEvent(
             this.app.workspace.on("active-leaf-change", (leaf) => {
-                this.logger.info("Active leaf Change detected")
                 const file = this.app.workspace.getActiveFile();
                 if (file instanceof TFile) {
-                    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+                    const frontmatter =
+                        this.app.metadataCache.getFileCache(file)?.frontmatter;
                     const isNexusRelated = frontmatter && frontmatter.nexus;
-        
+
                     if (isNexusRelated && !this.clickListenerActive) {
                         this.addClickListener();
                     } else if (!isNexusRelated && this.clickListenerActive) {
@@ -186,7 +189,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 }
             })
         );
-            
+
         // Register a command to select a ZIP file for processing
         this.addCommand({
             id: "nexus-ai-chat-importer-select-zip",
@@ -195,11 +198,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this.selectZipFile();
             },
         });
-    
+
         // Register a command to reset the import catalogs
         this.addCommand({
             id: "reset-nexus-ai-chat-importer-catalogs",
-            name: "Reset Nexus AI Chat Importer Catalogs",
+            name: "Reset Catalogs",
             callback: () => {
                 const modal = new Modal(this.app);
                 modal.contentEl.createEl("p", {
@@ -220,22 +223,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 modal.open();
             },
         });
-    
+
         const upgrader = new Upgrader(this);
         await upgrader.checkForUpgrade();
     }
-    
+
     async onunload() {
-    
         // Remove the click listener if it's active
         if (this.clickListenerActive) {
-            document.removeEventListener('click', this.handleClickBound);
+            document.removeEventListener("click", this.handleClickBound);
             this.clickListenerActive = false;
         }
-    
+
         // Save any unsaved settings
         await this.saveSettings();
-    
+
         // Clear any runtime data that shouldn't persist
         this.importReport = new ImportReport();
         this.conversationCounters.totalNewConversationsToImport = 0;
@@ -245,16 +247,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         this.messageCounters.totalNonEmptyMessagesToImport = 0;
         this.messageCounters.totalNonEmptyMessagesToAdd = 0;
         this.messageCounters.totalNonEmptyMessagesAdded = 0;
-    
+
         // Perform any other necessary cleanup
     }
-
 
     // Add click listener if not already active
     addClickListener() {
         if (!this.clickListenerActive) {
             // Add click event listener
-            document.addEventListener('click', this.handleClickBound);
+            document.addEventListener("click", this.handleClickBound);
             this.clickListenerActive = true;
         }
     }
@@ -263,37 +264,40 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     removeClickListenerIfNotNeeded() {
         const anyNexusFilesActive = checkAnyNexusFilesActive(this.app);
         if (!anyNexusFilesActive && this.clickListenerActive) {
-            document.removeEventListener('click', this.handleClickBound);
+            document.removeEventListener("click", this.handleClickBound);
             this.clickListenerActive = false;
         }
     }
 
-    async handleClick(event: { target: any; }) {
+    async handleClick(event: { target: any }) {
         const target = event.target;
-    
+
         // Get the active Markdown view
-        const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const markdownView =
+            this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!markdownView) {
             return; // No active Markdown view
         }
-        
+
         // Determine if we are in Reading View or Editor View
         const isEditorView = markdownView.getMode() === "source";
-        const container = isEditorView ? markdownView.editor.containerEl : markdownView.contentEl;
-    
+        const container = isEditorView
+            ? markdownView.editor.containerEl
+            : markdownView.contentEl;
+
         // Exit if the click is outside the appropriate container
         if (!container.contains(target)) {
             return;
         }
-    
+
         // Check for the active file
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile) {
             return; // Exit if there is no active file
         }
-    
+
         // Check if the click is specifically on the inline-title class
-        if (target.classList.contains('inline-title')) {
+        if (target.classList.contains("inline-title")) {
             // Fetch the abstract file
             const file = this.app.vault.getAbstractFileByPath(activeFile.path);
             if (file instanceof TFile) {
@@ -309,14 +313,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                             this.app, // Pass the app instance
                             "confirmation", // Type of dialog
                             "Open Link", // Title
-                            [ // Array of paragraphs
+                            [
+                                // Array of paragraphs
                                 `Original conversation URL: ${url}.`,
-                                `Do you want to go there?`
+                                `Do you want to go there?`,
                             ],
                             "NOTE: If the conversation has been deleted, it will not show.", // Optional note
                             { button1: "Let's go", button2: "No" } // Custom button labels
                         );
-                        
+
                         if (userConfirmed) {
                             window.open(url, "_blank"); // Open the URL in a new tab or window
                         }
@@ -332,12 +337,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         // Resetting counters before processing a new ZIP file
         this.conversationCounters = {
-            totalExistingConversations: Object.keys(this.conversationCatalog).length, // Set to the length of conversationCatalog at the start
+            totalExistingConversations: Object.keys(this.conversationCatalog)
+                .length, // Set to the length of conversationCatalog at the start
             totalNewConversationsToImport: 0,
             totalExistingConversationsToUpdate: 0,
             totalNewConversationsSuccessfullyImported: 0,
             totalConversationsActuallyUpdated: 0,
-            totalConversationsProcessed: 0
+            totalConversationsProcessed: 0,
         };
 
         this.messageCounters = {
@@ -349,16 +355,16 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             const fileHash = await getFileHash(file);
 
-
             // Check if the archive has already been imported
             if (this.importedArchives[fileHash]) {
                 const shouldReimport = await showDialog(
                     this.app, // Pass the app instance
                     "confirmation", // Type of dialog
                     "Already processed", // Title
-                    [ // Array of paragraphs
+                    [
+                        // Array of paragraphs
                         `File ${file.name} has already been imported.`,
-                        `Do you want to reprocess it ?`
+                        `Do you want to reprocess it ?`,
                     ],
                     "NOTE: This will not alter existing notes", // Optional note
                     { button1: "Let's do this", button2: "Forget it" } // Custom button labels
@@ -406,20 +412,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const chats = await this.extractChatsFromZip(zip);
             const existingConversations = this.conversationCatalog;
 
-
             for (const chat of chats) {
                 await this.processSingleChat(chat, existingConversations);
             }
 
             this.updateImportReport(file.name);
-
         } catch (error: unknown) {
             if (isCustomError(error)) {
-                this.logger.error("Error processing conversations", error.message);
+                this.logger.error(
+                    "Error processing conversations",
+                    error.message
+                );
             } else if (error instanceof Error) {
-                this.logger.error("General error processing conversations", error.message);
+                this.logger.error(
+                    "General error processing conversations",
+                    error.message
+                );
             } else {
-                this.logger.error("Unknown error processing conversations", "An unknown error occurred");
+                this.logger.error(
+                    "Unknown error processing conversations",
+                    "An unknown error occurred"
+                );
             }
         }
     }
@@ -446,8 +459,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
                 if (newMessages.length > 0) {
                     content += "\n\n" + this.formatNewMessages(newMessages);
-                    this.conversationCounters.totalConversationsActuallyUpdated++;
-                    this.messageCounters.totalNonEmptyMessagesAdded += newMessages.length;
+                    this.conversationCounters
+                        .totalConversationsActuallyUpdated++;
+                    this.messageCounters.totalNonEmptyMessagesAdded +=
+                        newMessages.length;
                 }
 
                 if (content !== originalContent) {
@@ -484,15 +499,18 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             }
         } catch (error: unknown) {
             // Error handling logic
-            if (isCustomError(error)) { // Check if it's a CustomError
+            if (isCustomError(error)) {
+                // Check if it's a CustomError
                 this.logger.error("Error updating note", error.message);
             } else if (error instanceof Error) {
                 this.logger.error("General error updating note", error.message);
             } else {
-                this.logger.error("Unknown error updating note", "An unknown error occurred");
+                this.logger.error(
+                    "Unknown error updating note",
+                    "An unknown error occurred"
+                );
             }
         }
-        
     }
 
     private async createNewNote(
@@ -521,7 +539,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 )}`,
                 messageCount
             );
-            this.conversationCounters.totalNewConversationsSuccessfullyImported++;
+            this.conversationCounters
+                .totalNewConversationsSuccessfullyImported++;
             this.messageCounters.totalNonEmptyMessagesToImport += messageCount;
 
             // Add the new conversation to existingConversations
@@ -552,52 +571,61 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     }
 
     private async generateFilePath(
-        title: string, 
-        createdTime: number, 
+        title: string,
+        createdTime: number,
         prefixFormat: string,
         archivePath: string
-
     ) {
         const date = new Date(createdTime * 1000);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
 
         const folderPath = `${archivePath}/${year}/${month}`;
-        const folderResult = await ensureFolderExists(folderPath, this.app.vault);
+        const folderResult = await ensureFolderExists(
+            folderPath,
+            this.app.vault
+        );
         if (!folderResult.success) {
-            throw new Error(folderResult.error || "Failed to ensure folder exists."); // Handle the error appropriately
+            throw new Error(
+                folderResult.error || "Failed to ensure folder exists."
+            ); // Handle the error appropriately
         }
 
-        let fileName = generateFileName(title) + '.md';
-        
+        let fileName = generateFileName(title) + ".md";
+
         if (this.settings.addDatePrefix) {
             const day = String(date.getDate()).padStart(2, "0");
-        
+
             // Create the prefix based on the specified format
-            let prefix = '';
+            let prefix = "";
             if (prefixFormat === "YYYY-MM-DD") {
                 prefix = `${year}-${month}-${day}`;
             } else if (prefixFormat === "YYYYMMDD") {
                 prefix = `${year}${month}${day}`;
             }
-        
+
             // Add the prefix to the filename
             fileName = `${prefix} - ${fileName}`;
         }
 
-        let filePath = `${folderPath}/${fileName}`
+        let filePath = `${folderPath}/${fileName}`;
 
         if (await doesFilePathExist(filePath, this.app.vault)) {
             // If the file path exists, generate a unique filename
-            filePath = await generateUniqueFileName(filePath, this.app.vault.adapter);
-//            filePath = `${folderPath}/${fileName}`; // Update filePath after generating unique filename
+            filePath = await generateUniqueFileName(
+                filePath,
+                this.app.vault.adapter
+            );
+            //            filePath = `${folderPath}/${fileName}`; // Update filePath after generating unique filename
         }
 
         return filePath;
-
     }
 
-    private async processSingleChat(chat: Chat, existingConversations: Record<string, ConversationCatalogEntry>): Promise<void> {
+    private async processSingleChat(
+        chat: Chat,
+        existingConversations: Record<string, ConversationCatalogEntry>
+    ): Promise<void> {
         try {
             // Check if the conversation already exists
             if (existingConversations[chat.id]) {
@@ -607,17 +635,26 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 );
             } else {
                 // Check if the file needs to be made unique
-                const filePath = await this.generateFilePath(chat.title, chat.create_time, this.settings.dateFormat, this.settings.archiveFolder);
+                const filePath = await this.generateFilePath(
+                    chat.title,
+                    chat.create_time,
+                    this.settings.dateFormat,
+                    this.settings.archiveFolder
+                );
                 await this.handleNewChat(chat, filePath, existingConversations);
                 this.updateConversationCatalogEntry(chat, filePath);
             }
             this.conversationCounters.totalConversationsProcessed++;
         } catch (chatError: unknown) {
-            const errorMessage = (chatError as Error).message || "Unknown error occurred";
-            this.logErrorInReport(`Error processing chat: ${chat.title || "Untitled"}`, errorMessage);
+            const errorMessage =
+                (chatError as Error).message || "Unknown error occurred";
+            this.logErrorInReport(
+                `Error processing chat: ${chat.title || "Untitled"}`,
+                errorMessage
+            );
         }
     }
-    
+
     private async handleExistingChat(
         chat: Chat,
         existingRecord: ConversationCatalogEntry
@@ -674,7 +711,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.conversationCounters.totalNewConversationsSuccessfullyImported,
             this.conversationCounters.totalConversationsActuallyUpdated,
             this.messageCounters.totalNonEmptyMessagesAdded
-        );    }
+        );
+    }
 
     updateMetadata(content: string, updateTime: number): string {
         const updateTimeStr = `${formatTimestamp(
@@ -795,7 +833,7 @@ Last Updated: ${updateTimeStr}\n\n
         ) {
             authorName = message.author.role === "user" ? "User" : "ChatGPT";
         } else {
-            console.warn(
+            this.logger.warn(
                 "Author information missing or invalid:",
                 message.author
             );
@@ -820,7 +858,7 @@ Last Updated: ${updateTimeStr}\n\n
                 .map((line) => `${quoteChar} ${line}`)
                 .join("\n");
         } else {
-            console.warn(
+            this.logger.warn(
                 "Message content missing or invalid:",
                 message.content
             );
@@ -838,19 +876,24 @@ Last Updated: ${updateTimeStr}\n\n
     async writeToFile(filePath: string, content: string): Promise<void> {
         try {
             const file = this.app.vault.getAbstractFileByPath(filePath); // Use filePath instead of fileName
-    
+
             if (file instanceof TFile) {
                 // Update existing file
                 await this.app.vault.modify(file, content);
             } else if (file instanceof TFolder) {
                 // Optional: Handle the case where the path is a folder
-                throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
+                throw new Error(
+                    `Cannot write to '${filePath}'; it is a folder.`
+                );
             } else {
                 // Create a new file
                 await this.app.vault.create(filePath, content);
             }
         } catch (error: CustomError) {
-            this.logger.error(`Error creating or modifying file '${filePath}'`, error.message);
+            this.logger.error(
+                `Error creating or modifying file '${filePath}'`,
+                error.message
+            );
             throw error; // Propagate the error
         }
     }
@@ -872,7 +915,10 @@ Last Updated: ${updateTimeStr}\n\n
         let logFileName = `${prefix} - Nexus AI Chat Chat Importer Report.md`;
         const logFolderPath = `${this.settings.archiveFolder}/Reports`;
 
-        const folderResult = await ensureFolderExists(logFolderPath, this.app.vault);
+        const folderResult = await ensureFolderExists(
+            logFolderPath,
+            this.app.vault
+        );
         if (!folderResult.success) {
             this.logger.error(
                 `Failed to create or access log folder: ${logFolderPath}`,
@@ -933,7 +979,7 @@ ${this.importReport.generateReportContent()}
                 `${this.manifest.dir}/data.json`
             );
         } catch (error: CustomError) {
-            this.logger.info(
+            this.logger.error(
                 "No data.json file to remove or error removing it:",
                 error
             );
@@ -1182,8 +1228,6 @@ totalSkippedImports: ${this.skipped.length}
         this.globalErrors.push({ message, details });
     }
 
-
-
     generateReportContent(): string {
         let content = "# Nexus AI Chat Importer Report\n\n";
 
@@ -1299,4 +1343,3 @@ class NexusAiChatImporterError extends Error {
 function removeClickListenerIfNotNeeded() {
     throw new Error("Function not implemented.");
 }
-
