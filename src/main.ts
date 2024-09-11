@@ -63,13 +63,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
         this.clickListenerActive = false; // Click listener state
-        this.settings = {
-            archiveFolder: "Nexus AI Chat Imports", // Default folder
-            addDatePrefix: false,
-            dateFormat: "YYYY-MM-DD",
-            hasShownUpgradeNotice: false, // Upgrade notice status
-            hasCompletedUpgrade: false, // Upgrade completion status
-        }; // Initialize with default values
         this.handleClickBound = this.handleClick.bind(this); // Bind click handler
     }
 
@@ -972,7 +965,7 @@ ${this.importReport.generateReportContent()}
         // Clear the data file
         await this.saveData({});
 
-        // Optionally, you can also delete the data.json file completely
+        /*         // Optionally, you can also delete the data.json file completely
         // Be careful with this as it might require additional error handling
         try {
             await this.app.vault.adapter.remove(
@@ -984,7 +977,7 @@ ${this.importReport.generateReportContent()}
                 error
             );
         }
-
+ */
         // Reload the plugin to ensure a fresh start
         await this.loadSettings();
 
