@@ -27,8 +27,9 @@ yarn-error.log*
 # Temporary files
 *.tmp
 *.temp
-venv
-.venv
+venv/
+.venv/
+__pycache__/
 
 # Optional build files (uncomment if you don't want to include build files in the repo)
 # dist/
