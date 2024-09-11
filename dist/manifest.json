@@ -4,12 +4,8 @@
 	"version": "1.0.2",
 	"author": "Superkikim",
 	"authorUrl": "https://github.com/Superkikim",
-	"manifest": "manifest.json",
-	"dependencies": [],
-	"isDesktopOnly": false,
-	"themeSupport": false,
+	"isDesktopOnly": true,
 	"minAppVersion": "0.15.0",
-	"description": "A plugin to import AI Chat conversations exports.",
-	"license": "MIT"
-  }
+	"description": "Import conversations from ChatGPT export files."
+}
   
