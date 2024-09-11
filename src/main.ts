@@ -195,7 +195,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Register a command to reset the import catalogs
         this.addCommand({
             id: "reset-nexus-ai-chat-importer-catalogs",
-            name: "Reset Catalogs",
+            name: "Reset catalogs",
             callback: () => {
                 const modal = new Modal(this.app);
                 modal.contentEl.createEl("p", {
@@ -305,7 +305,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                         const userConfirmed = await showDialog(
                             this.app, // Pass the app instance
                             "confirmation", // Type of dialog
-                            "Open Link", // Title
+                            "Open link", // Title
                             [
                                 // Array of paragraphs
                                 `Original conversation URL: ${url}.`,
@@ -905,7 +905,7 @@ Last Updated: ${updateTimeStr}\n\n
         const now = new Date();
         let prefix = formatTimestamp(now.getTime() / 1000, "prefix");
 
-        let logFileName = `${prefix} - Nexus AI Chat Chat Importer Report.md`;
+        let logFileName = `${prefix} - import report.md`;
         const logFolderPath = `${this.settings.archiveFolder}/Reports`;
 
         const folderResult = await ensureFolderExists(
@@ -925,7 +925,7 @@ Last Updated: ${updateTimeStr}\n\n
 
         let counter = 1;
         while (await this.app.vault.adapter.exists(logFilePath)) {
-            logFileName = `${prefix}-${counter} - Nexus AI Chat Chat Importer Report.md`;
+            logFileName = `${prefix}-${counter} - import report.md`;
             logFilePath = `${logFolderPath}/${logFileName}`;
             counter++;
         }
@@ -1016,7 +1016,7 @@ ${this.importReport.generateReportContent()}
             if (!fileNames.includes("conversations.json")) {
                 throw new NexusAiChatImporterError(
                     "Invalid ZIP structure",
-                    "File 'conversations.json' not found in the zip"
+                    "File 'conversations.json' not found in the zip file"
                 );
             }
 
@@ -1049,8 +1049,10 @@ class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName("Nexus AI Chat Importer Folder")
-            .setDesc("Choose a folder to store AI Chat conversations")
+            .setName("Conversations folder")
+            .setDesc(
+                "Choose a folder to store ChatGPT conversations and import reports"
+            )
             .addText((text) =>
                 text
                     .setPlaceholder("Enter folder name")
@@ -1062,7 +1064,7 @@ class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName("Add Date Prefix to Filenames")
+            .setName("Add date prefix to filenames")
             .setDesc("Add creation date as a prefix to conversation filenames")
             .addToggle((toggle) =>
                 toggle
@@ -1077,7 +1079,7 @@ class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
 
         if (this.plugin.settings.addDatePrefix) {
             new Setting(containerEl)
-                .setName("Date Format")
+                .setName("Date format")
                 .setDesc("Choose the format for the date prefix")
                 .addDropdown(
                     (dropdown) =>
@@ -1146,7 +1148,7 @@ totalSkippedImports: ${this.skipped.length}
 - ${
             this.globalErrors.length > 0
                 ? `[[#global-errors|Global Errors]]`
-                : "Global Errors"
+                : "Global errors"
         }: ${this.globalErrors.length}
 `;
     }
@@ -1222,7 +1224,7 @@ totalSkippedImports: ${this.skipped.length}
     }
 
     generateReportContent(): string {
-        let content = "# Nexus AI Chat Importer Report\n\n";
+        let content = "# Nexus AI Chat Importer report\n\n";
 
         if (this.summary) {
             content += this.summary + "\n\n";
@@ -1233,7 +1235,7 @@ totalSkippedImports: ${this.skipped.length}
             "✨ Created | 🔄 Updated | ⏭️ Skipped | 🚫 Failed | ⚠️ Global Errors\n\n";
 
         if (this.created.length > 0) {
-            content += this.generateTable("Created Notes", this.created, "✨", [
+            content += this.generateTable("Created notes", this.created, "✨", [
                 "Title",
                 "Created",
                 "Updated",
@@ -1241,15 +1243,15 @@ totalSkippedImports: ${this.skipped.length}
             ]);
         }
         if (this.updated.length > 0) {
-            content += this.generateTable("Updated Notes", this.updated, "🔄", [
+            content += this.generateTable("Updated notes", this.updated, "🔄", [
                 "Title",
                 "Created",
                 "Updated",
-                "Added Messages",
+                "Added messages",
             ]);
         }
         if (this.skipped.length > 0) {
-            content += this.generateTable("Skipped Notes", this.skipped, "⏭️", [
+            content += this.generateTable("Skipped notes", this.skipped, "⏭️", [
                 "Title",
                 "Created",
                 "Updated",
@@ -1257,7 +1259,7 @@ totalSkippedImports: ${this.skipped.length}
             ]);
         }
         if (this.failed.length > 0) {
-            content += this.generateTable("Failed Imports", this.failed, "🚫", [
+            content += this.generateTable("Failed imports", this.failed, "🚫", [
                 "Title",
                 "Created",
                 "Updated",
@@ -1266,7 +1268,7 @@ totalSkippedImports: ${this.skipped.length}
         }
         if (this.globalErrors.length > 0) {
             content += this.generateErrorTable(
-                "Global Errors",
+                "Global errors",
                 this.globalErrors,
                 "⚠️"
             );
