@@ -1,6 +1,7 @@
 // utils.ts
 import { moment, App } from "obsidian";
 import { Logger } from "./logger";
+import { requestUrl } from "obsidian";
 
 const logger = new Logger();
 
@@ -75,7 +76,7 @@ export async function generateUniqueFileName(
     vaultAdapter: any
 ): Promise<string> {
     let uniqueFileName = filePath;
-    
+
     // Extract the base name and extension
     const baseName = filePath.replace(/\.md$/, ""); // Remove the .md extension for unique name generation
     let counter = 1;
@@ -90,7 +91,10 @@ export async function generateUniqueFileName(
 }
 
 // Function to check if the full file path exists
-export async function doesFilePathExist(filePath: string, vault: any): Promise<boolean> {
+export async function doesFilePathExist(
+    filePath: string,
+    vault: any
+): Promise<boolean> {
     const file = vault.getAbstractFileByPath(filePath);
     return file !== null; // Return true if the file exists, false otherwise
 }
@@ -157,11 +161,28 @@ export async function ensureFolderExists(
     return { success: true };
 }
 
-export async function checkConversationLink(conversationId: string): Promise<boolean> {
+/* export async function checkConversationLink(conversationId: string): Promise<boolean> {
     const url = `https://chatgpt.com/c/${conversationId}`;
     try {
         const response = await fetch(url, { method: "HEAD" });        
         return response.ok; // Returns true for status codes 200-299
+    } catch (error) {
+        logger.error(`Error fetching ${url}:`, error);
+        return false; // Return false in case of error (e.g., network issues)
+    }
+} */
+
+export async function checkConversationLink(
+    conversationId: string
+): Promise<boolean> {
+    const url = `https://chatgpt.com/c/${conversationId}`;
+    try {
+        const response = await requestUrl({
+            url: url,
+            method: "HEAD",
+        });
+
+        return response.status >= 200 && response.status < 300; // Returns true for status codes 200-299
     } catch (error) {
         logger.error(`Error fetching ${url}:`, error);
         return false; // Return false in case of error (e.g., network issues)
@@ -171,8 +192,9 @@ export async function checkConversationLink(conversationId: string): Promise<boo
 export function old_getConversationId(app: App): string | undefined {
     const activeFile = app.workspace.getActiveFile();
     if (activeFile) {
-      const frontmatter = app.metadataCache.getFileCache(activeFile)?.frontmatter;
-      return frontmatter?.conversation_id;
+        const frontmatter =
+            app.metadataCache.getFileCache(activeFile)?.frontmatter;
+        return frontmatter?.conversation_id;
     }
     return undefined; // Return undefined if there is no active file
 }
@@ -194,11 +216,12 @@ export function isNexusRelated(file: TFile): boolean {
 
 // Utility function to check if any currently active files are nexus-related
 export function checkAnyNexusFilesActive(app: App): boolean {
-    const leaves = app.workspace.getLeavesOfType('markdown');
+    const leaves = app.workspace.getLeavesOfType("markdown");
     for (const leaf of leaves) {
         const file = leaf.view.file;
         if (file) {
-            const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
+            const frontmatter =
+                app.metadataCache.getFileCache(file)?.frontmatter;
             if (frontmatter && frontmatter.nexus) {
                 return true;
             }
@@ -206,6 +229,3 @@ export function checkAnyNexusFilesActive(app: App): boolean {
     }
     return false;
 }
-
-
-    
