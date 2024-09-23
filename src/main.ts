@@ -40,7 +40,7 @@ import {
 
 import { Logger } from "./logger";
 
-import { showDialog } from "./dialogs";
+import { showDialog } from "./components/dialogs";
 
 import { Upgrader } from "./upgrade";
 
