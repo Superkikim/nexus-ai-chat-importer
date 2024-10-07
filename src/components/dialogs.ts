@@ -29,8 +29,8 @@ function displayModal(
 function addButtons(
     modal: Modal,
     type: "information" | "confirmation",
-    customLabels?: { button1?: string; button2?: string },
-    resolve: (value: boolean) => void
+    resolve: (value: boolean) => void, // Move resolve before customLabels
+    customLabels?: { button1?: string; button2?: string }
 ) {
     const buttonDiv = modal.contentEl.createEl("div", {
         cls: "button-container",
@@ -70,7 +70,7 @@ export async function showDialog(
 ): Promise<boolean> {
     return new Promise((resolve) => {
         const modal = displayModal(app, title, paragraphs, note);
-        addButtons(modal, type, customLabels, resolve);
+        addButtons(modal, type, resolve, customLabels); // Pass in customLabels
         modal.open();
     });
 }

@@ -37,6 +37,8 @@
 	"dependencies": {
 		"jszip": "^3.7.1",
 		"node": "^22.9.0",
-		"open": "^10.1.0"
+		"open": "^10.1.0",
+		"@eslint/config-array": "latest",
+		"@eslint/object-schema": "latest"
 	}
 }

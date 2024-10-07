@@ -1,5 +1,11 @@
 // models/import-report.ts
-import { ReportEntry } from "../types";
+import { Notice, App, PluginManifest } from "obsidian";
+import { PluginSettings, ReportEntry } from "../types";
+import { formatTimestamp } from "../utils/date-utils";
+import { ensureFolderExists, writeToFile } from "../utils/file-utils";
+import { Logger } from "../utils/logger";
+
+const logger = new Logger();
 
 export class ImportReport {
     // Properties and methods
@@ -9,8 +15,19 @@ export class ImportReport {
     private failed: ReportEntry[] = [];
     private globalErrors: { message: string; details: string }[] = [];
     private summary: string = "";
+    app: App;
+    manifest: PluginManifest;
 
-    addParameters(currentDate: string, zipFileName: string): string {
+    constructor(app: App, manifest: PluginManifest) {
+        this.app = app;
+        this.manifest = manifest;
+    }
+
+    addParameters(
+        currentDate: string,
+        zipFileName: string,
+        manifest: string
+    ): string {
         return `---
 nexus: ${this.manifest.name}
 importdate: ${currentDate}
@@ -106,7 +123,8 @@ totalSkippedImports: ${this.skipped.length}
         filePath: string,
         createDate: string,
         updateDate: string,
-        errorMessage: string
+        errorMessage: string,
+        messageCount: number
     ) {
         this.failed.push({
             title,
@@ -114,6 +132,7 @@ totalSkippedImports: ${this.skipped.length}
             createDate,
             updateDate,
             errorMessage,
+            messageCount,
         });
     }
 
@@ -223,5 +242,63 @@ totalSkippedImports: ${this.skipped.length}
 
     hasErrors(): boolean {
         return this.failed.length > 0 || this.globalErrors.length > 0;
+    }
+
+    async writeImportReport(
+        zipFileName: string,
+        settings: PluginSettings
+    ): Promise<void> {
+        const now = new Date();
+        const prefix = formatTimestamp(now.getTime() / 1000, "prefix");
+
+        let logFileName = `${prefix} - import report.md`;
+        const logFolderPath = `${settings.archiveFolder}/Reports`;
+
+        const folderResult = await ensureFolderExists(
+            logFolderPath,
+            this.app.vault
+        );
+        if (!folderResult.success) {
+            logger.error(
+                `Failed to create or access log folder: ${logFolderPath}`,
+                folderResult.error
+            );
+            new Notice("Failed to create log file. Check console for details.");
+            return;
+        }
+
+        let logFilePath = `${logFolderPath}/${logFileName}`;
+        let counter = 1;
+        while (await this.app.vault.adapter.exists(logFilePath)) {
+            logFileName = `${prefix}-${counter} - import report.md`;
+            logFilePath = `${logFolderPath}/${logFileName}`;
+            counter++;
+        }
+
+        const currentDate = `${formatTimestamp(
+            now.getTime() / 1000,
+            "date"
+        )} ${formatTimestamp(now.getTime() / 1000, "time")}`;
+
+        // Generate the report content
+        const reportContent = this.generateReportContent(); // Add this line to generate report content
+
+        const logContent = `---
+    importdate: ${currentDate}
+    zipFile: ${zipFileName}
+    totalSuccessfulImports: ${this.created.length}
+    totalUpdatedImports: ${this.updated.length}
+    totalSkippedImports: ${this.skipped.length}
+    ---\n
+    ${reportContent}`;
+
+        try {
+            await writeToFile(logFilePath, logContent, this.app);
+        } catch (error: any) {
+            logger.error(`Failed to write import report`, error.message);
+            new Notice(
+                "Failed to create report file. Check console for details."
+            );
+        }
     }
 }

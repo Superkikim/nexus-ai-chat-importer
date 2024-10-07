@@ -23,47 +23,58 @@ import {
     ConfirmationDialogOptions,
 } from "./types";
 
-import {
-    formatTimestamp,
-    formatTitle,
-    isValidMessage,
-    isCustomError,
-    generateFileName,
-    generateUniqueFileName,
-    getFileHash,
-    ensureFolderExists,
-    doesFilePathExist,
-    getConversationId,
-    checkAnyNexusFilesActive,
-    getProvider,
-} from "./utils";
+import { formatTimestamp } from "./utils/date-utils";
 
-import { Logger } from "./logger";
+import { Logger } from "./utils/logger";
 import { showDialog } from "./components/dialogs";
 import { Upgrader } from "./services/upgrader";
 import { ImportReport } from "./models/import-report";
 import { NexusAiChatImporterError } from "./models/nexus-ai-chat-importer-error";
+import { checkAnyNexusFilesActive } from "./utils/activity-utils";
+import { isCustomError, isValidMessage } from "./utils/validation-utils";
+import {
+    getConversationId,
+    getProvider,
+    isNexusRelated,
+} from "./utils/metadata-utils";
+
+import {
+    ensureFolderExists,
+    getFileHash,
+    writeToFile,
+    doesFilePathExist,
+    generateUniqueFileName,
+} from "./utils/file-utils";
+
+import { generateFileName, formatTitle } from "./utils/string-utils";
 
 // Constants
 const DEFAULT_SETTINGS: PluginSettings = {
     archiveFolder: "Nexus AI Chat Imports",
     addDatePrefix: false,
     dateFormat: "YYYY-MM-DD",
-    hasShownUpgradeNotice: false, // Keep this as it is
-    hasCompletedUpgrade: false, // Initialize to false
+    hasShownUpgradeNotice: false,
+    hasCompletedUpgrade: false,
 };
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     clickListenerActive: boolean;
     handleClickBound: (event: { target: any }) => Promise<void>;
-    logger: Logger = new Logger(); // Initialize logger with a new instance
-    settings: PluginSettings; // Assuming this will be initialized based on user settings
-    private conversationCatalog: Record<string, ConversationCatalogEntry> = {}; // Stores conversation entries (retain this line)
+    logger: Logger = new Logger();
+    settings!: PluginSettings;
+    private conversationCatalog: Record<string, ConversationCatalogEntry> = {};
+    private importReport: ImportReport = new ImportReport(
+        this.app,
+        this.manifest
+    );
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
-        this.clickListenerActive = false; // Click listener state
+        this.clickListenerActive = false; // Initialize other properties where needed
         this.handleClickBound = this.handleClick.bind(this); // Bind click handler
+
+        // Now initialize importReport
+        this.importReport = new ImportReport(app, manifest); // Pass the app and manifest
     }
 
     // Properties
@@ -116,12 +127,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Load the plugin settings
         await this.loadSettings();
 
-        // Bind the handleClick method to the current context and store it
-        this.handleClickBound = this.handleClick.bind(this);
-
-        // Initialize the import report class
-        this.importReport = new ImportReport();
-
         // Initialize the logger
         this.logger = new Logger();
 
@@ -169,17 +174,17 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.app.workspace.on("active-leaf-change", (leaf) => {
                 const file = this.app.workspace.getActiveFile();
                 if (file instanceof TFile) {
-                    const frontmatter =
-                        this.app.metadataCache.getFileCache(file)?.frontmatter;
-                    const isNexusRelated = frontmatter && frontmatter.nexus;
-
-                    if (isNexusRelated && !this.clickListenerActive) {
+                    // Use the isNexusRelated function
+                    const isNexusRelatedFile = isNexusRelated(file, this.app); // Call the function
+                    if (isNexusRelatedFile && !this.clickListenerActive) {
                         this.addClickListener();
-                    } else if (!isNexusRelated && this.clickListenerActive) {
+                    } else if (
+                        !isNexusRelatedFile &&
+                        this.clickListenerActive
+                    ) {
                         this.removeClickListenerIfNotNeeded();
                     }
                 } else {
-                    // Optionally remove the listener if no file is active
                     this.removeClickListenerIfNotNeeded();
                 }
             })
@@ -234,7 +239,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         await this.saveSettings();
 
         // Clear any runtime data that shouldn't persist
-        this.importReport = new ImportReport();
         this.conversationCounters.totalNewConversationsToImport = 0;
         this.conversationCounters.totalExistingConversationsToUpdate = 0;
         this.conversationCounters.totalNewConversationsSuccessfullyImported = 0;
@@ -280,6 +284,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             ? markdownView.editor.containerEl
             : markdownView.contentEl;
 
+        //        const container = isEditorView
+        //            ? markdownView.editor.containerEl
+        //            : markdownView.contentEl;
+
         // Exit if the click is outside the appropriate container
         if (!container.contains(target)) {
             return;
@@ -297,9 +305,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const file = this.app.vault.getAbstractFileByPath(activeFile.path);
             if (file instanceof TFile) {
                 // Fetch the conversation ID using the utility function
-                const conversationId = getConversationId(file);
+                const conversationId = getConversationId(file, this.app);
                 if (conversationId) {
-                    const provider = getProvider(activeFile);
+                    const provider = getProvider(activeFile, this.app);
                     if (provider === "chatgpt") {
                         const url = `https://chatgpt.com/c/${conversationId}`;
                         const conversationMessage = `Original conversation URL: ${url}\nDo you want to go there?\nIf the conversation has been deleted, it will not show.`;
@@ -328,12 +336,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     // Core functionality methods
     async handleZipFile(file: File) {
-        this.importReport = new ImportReport(); // Initialize the import log at the beginning
+        this.importReport = new ImportReport(this.app, this.manifest); // Pass app and manifest
 
         // Resetting counters before processing a new ZIP file
         this.conversationCounters = {
             totalExistingConversations: Object.keys(this.conversationCatalog)
-                .length, // Set to the length of conversationCatalog at the start
+                .length,
             totalNewConversationsToImport: 0,
             totalExistingConversationsToUpdate: 0,
             totalNewConversationsSuccessfullyImported: 0,
@@ -393,7 +401,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.logger.error("Error handling zip file", { message });
         } finally {
             // This will always run, even if there's an error
-            await this.writeImportReport(file.name);
+            await this.importReport.writeImportReport(file.name, this.settings); // Pass both parameters
+
             new Notice(
                 this.importReport.hasErrors()
                     ? "An error occurred during import. Please check the log file for details."
@@ -461,7 +470,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 }
 
                 if (content !== originalContent) {
-                    await this.writeToFile(filePath, content);
+                    await writeToFile(filePath, content, this.app);
                     this.importReport.addUpdated(
                         chat.title || "Untitled",
                         filePath,
@@ -511,15 +520,17 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private async createNewNote(
         chat: Chat,
         filePath: string,
-        existingConversations: Record<string, ConversationCatalogEntry> // Change this line
+        existingConversations: Record<string, ConversationCatalogEntry>
     ): Promise<void> {
+        let messageCount = 0; // Declare messageCount here
+
         try {
             const content = this.generateMarkdownContent(chat);
-            await this.writeToFile(filePath, content);
+            await writeToFile(filePath, content, this.app);
 
-            const messageCount = Object.values(chat.mapping).filter((msg) =>
-                isValidMessage(msg.message)
-            ).length;
+            messageCount = Object.values(chat.mapping).filter(
+                (msg) => isValidMessage(msg as ChatMessage) // Type assertion for clarity
+            ).length; // Assign valid message count
 
             this.importReport.addCreated(
                 chat.title || "Untitled",
@@ -534,14 +545,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 )}`,
                 messageCount
             );
+
             this.conversationCounters
                 .totalNewConversationsSuccessfullyImported++;
             this.messageCounters.totalNonEmptyMessagesToImport += messageCount;
 
-            // Add the new conversation to existingConversations
-            existingConversations[chat.id] = filePath;
-        } catch (error: CustomError) {
-            this.logger.error("Error creating new note", error.message);
+            existingConversations[chat.id] = {
+                conversationId: chat.id,
+                path: filePath,
+                updateTime: chat.update_time,
+                provider: "chatgpt",
+            };
+        } catch (error: unknown) {
+            let errorMessage = "Unknown error occurred";
+
+            if (error instanceof Error) {
+                this.logger.error("Error creating new note", error.message);
+                errorMessage = error.message;
+            } else {
+                this.logger.error("Error creating new note", errorMessage);
+            }
+
             this.importReport.addFailed(
                 chat.title || "Untitled",
                 filePath,
@@ -551,17 +575,23 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 formatTimestamp(chat.update_time, "date") +
                     " " +
                     formatTimestamp(chat.update_time, "time"),
-                error.message
+                errorMessage,
+                messageCount // messageCount is now accessible here
             );
-            throw error;
         }
     }
 
     // Helper methods
     private async extractChatsFromZip(zip: JSZip): Promise<Chat[]> {
-        const conversationsJson = await zip
-            .file("conversations.json")
-            .async("string");
+        const conversationsFile = zip.file("conversations.json");
+
+        if (!conversationsFile) {
+            throw new Error(
+                "The file 'conversations.json' was not found in the ZIP archive."
+            ); // Handle the null case
+        }
+
+        const conversationsJson = await conversationsFile.async("string");
         return JSON.parse(conversationsJson);
     }
 
@@ -655,7 +685,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         existingRecord: ConversationCatalogEntry
     ): Promise<void> {
         const totalMessageCount = Object.values(chat.mapping).filter((msg) =>
-            isValidMessage(msg.message)
+            isValidMessage(msg as ChatMessage)
         ).length;
 
         if (existingRecord.updateTime >= chat.update_time) {
@@ -677,13 +707,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
     }
 
-    private async handleNewChat(
+    async handleNewChat(
         chat: Chat,
         filePath: string,
-        existingConversations: Record<string, ConversationCatalogEntry> // Change this line
+        existingConversations: Record<string, ConversationCatalogEntry>
     ): Promise<void> {
         this.conversationCounters.totalNewConversationsToImport++;
         await this.createNewNote(chat, filePath, existingConversations);
+
+        // Update existingConversations to reflect the correct structure
+        existingConversations[chat.id] = {
+            conversationId: chat.id,
+            path: filePath,
+            updateTime: chat.update_time,
+            provider: "chatgpt", // Adjust as needed for your logic
+        };
     }
 
     private updateConversationCatalogEntry(chat: Chat, filePath: string): void {
@@ -732,14 +770,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     getNewMessages(chat: Chat, existingMessageIds: string[]): ChatMessage[] {
         return Object.values(chat.mapping)
-            .filter(
-                (message) =>
-                    message &&
-                    message.id &&
-                    !existingMessageIds.includes(message.id) &&
-                    isValidMessage(message.message)
-            )
-            .map((message) => message.message);
+            .filter((message) => isValidMessage(message as ChatMessage)) // Assert message type
+            .map((message) => message as ChatMessage) // Map to ensure type consistency
+            .filter((message) => !existingMessageIds.includes(message.id)); // You can also filter out existing IDs here
     }
 
     formatNewMessages(messages: ChatMessage[]): string {
@@ -801,9 +834,11 @@ Last Updated: ${updateTimeStr}\n\n
             if (
                 messageObj &&
                 messageObj.message &&
-                isValidMessage(messageObj.message)
+                isValidMessage(messageObj.message as unknown as ChatMessage)
             ) {
-                messagesContent += this.formatMessage(messageObj.message);
+                messagesContent += this.formatMessage(
+                    messageObj.message as unknown as ChatMessage
+                );
             }
         }
         return messagesContent;
@@ -868,31 +903,6 @@ Last Updated: ${updateTimeStr}\n\n
         return messageContent + "\n\n";
     }
 
-    async writeToFile(filePath: string, content: string): Promise<void> {
-        try {
-            const file = this.app.vault.getAbstractFileByPath(filePath); // Use filePath instead of fileName
-
-            if (file instanceof TFile) {
-                // Update existing file
-                await this.app.vault.modify(file, content);
-            } else if (file instanceof TFolder) {
-                // Optional: Handle the case where the path is a folder
-                throw new Error(
-                    `Cannot write to '${filePath}'; it is a folder.`
-                );
-            } else {
-                // Create a new file
-                await this.app.vault.create(filePath, content);
-            }
-        } catch (error: CustomError) {
-            this.logger.error(
-                `Error creating or modifying file '${filePath}'`,
-                error.message
-            );
-            throw error; // Propagate the error
-        }
-    }
-
     extractMessageUIDsFromNote(content: string): string[] {
         const uidRegex = /<!-- UID: (.*?) -->/g;
         const uids = [];
@@ -901,59 +911,6 @@ Last Updated: ${updateTimeStr}\n\n
             uids.push(match[1]);
         }
         return uids;
-    }
-
-    async writeImportReport(zipFileName: string): Promise<void> {
-        const now = new Date();
-        let prefix = formatTimestamp(now.getTime() / 1000, "prefix");
-
-        let logFileName = `${prefix} - import report.md`;
-        const logFolderPath = `${this.settings.archiveFolder}/Reports`;
-
-        const folderResult = await ensureFolderExists(
-            logFolderPath,
-            this.app.vault
-        );
-        if (!folderResult.success) {
-            this.logger.error(
-                `Failed to create or access log folder: ${logFolderPath}`,
-                folderResult.error
-            );
-            new Notice("Failed to create log file. Check console for details.");
-            return;
-        }
-
-        let logFilePath = `${logFolderPath}/${logFileName}`;
-
-        let counter = 1;
-        while (await this.app.vault.adapter.exists(logFilePath)) {
-            logFileName = `${prefix}-${counter} - import report.md`;
-            logFilePath = `${logFolderPath}/${logFileName}`;
-            counter++;
-        }
-
-        const currentDate = `${formatTimestamp(
-            now.getTime() / 1000,
-            "date"
-        )} ${formatTimestamp(now.getTime() / 1000, "time")}`;
-
-        const logContent = `---
-importdate: ${currentDate}
-zipFile: ${zipFileName}
-totalSuccessfulImports: ${this.importReport.created.length}
-totalUpdatedImports: ${this.importReport.updated.length}
-totalSkippedImports: ${this.importReport.skipped.length}
----
-
-${this.importReport.generateReportContent()}
-`;
-
-        try {
-            await this.writeToFile(logFilePath, logContent);
-        } catch (error: CustomError) {
-            this.logger.error(`Failed to write import log`, error.message);
-            new Notice("Failed to create log file. Check console for details.");
-        }
     }
 
     async resetCatalogs() {
@@ -1000,12 +957,16 @@ ${this.importReport.generateReportContent()}
         input.type = "file";
         input.accept = ".zip";
         input.onchange = (e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-                this.handleZipFile(file);
+            const target = e.target as HTMLInputElement; // Assert target as HTMLInputElement
+            if (target && target.files) {
+                // Check if target is defined and has files
+                const file = target.files[0]; // Safely access files
+                if (file) {
+                    this.handleZipFile(file);
+                }
             }
         };
-        // Reset the input value to allow selecting the same file again
+
         input.value = "";
         input.click();
     }
@@ -1023,13 +984,19 @@ ${this.importReport.generateReportContent()}
             }
 
             return zip;
-        } catch (error: CustomError) {
+        } catch (error: unknown) {
             if (error instanceof NexusAiChatImporterError) {
                 throw error;
+            } else if (error instanceof Error) {
+                // Add this type check
+                throw new NexusAiChatImporterError(
+                    "Error validating zip file",
+                    error.message // Safely access message if error is indeed an Error
+                );
             } else {
                 throw new NexusAiChatImporterError(
                     "Error validating zip file",
-                    error.message
+                    "An unknown error occurred" // Fallback for when error is neither
                 );
             }
         }

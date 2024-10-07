@@ -2,7 +2,7 @@
 
 import { Plugin } from "obsidian";
 import { showDialog } from "../components/dialogs";
-import { Logger } from "../logger";
+import { Logger } from "../utils/logger";
 
 const logger = new Logger();
 
