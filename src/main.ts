@@ -956,13 +956,13 @@ Last Updated: ${updateTimeStr}\n\n
         const input = document.createElement("input");
         input.type = "file";
         input.accept = ".zip";
-        input.onchange = (e) => {
-            const target = e.target as HTMLInputElement; // Assert target as HTMLInputElement
+        input.multiple = true; // Allow multiple files
+        input.onchange = async (e) => {
+            const target = e.target as HTMLInputElement;
             if (target && target.files) {
-                // Check if target is defined and has files
-                const file = target.files[0]; // Safely access files
-                if (file) {
-                    this.handleZipFile(file);
+                const files = Array.from(target.files); // Convert FileList to an array
+                for (const file of files) {
+                    await this.handleZipFile(file); // Process each file sequentially
                 }
             }
         };
@@ -970,6 +970,7 @@ Last Updated: ${updateTimeStr}\n\n
         input.value = "";
         input.click();
     }
+
     async validateZipFile(file: File): Promise<JSZip> {
         try {
             const zip = new JSZip();
