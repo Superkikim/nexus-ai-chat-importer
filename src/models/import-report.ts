@@ -284,13 +284,13 @@ totalSkippedImports: ${this.skipped.length}
         const reportContent = this.generateReportContent(); // Add this line to generate report content
 
         const logContent = `---
-    importdate: ${currentDate}
-    zipFile: ${zipFileName}
-    totalSuccessfulImports: ${this.created.length}
-    totalUpdatedImports: ${this.updated.length}
-    totalSkippedImports: ${this.skipped.length}
-    ---\n
-    ${reportContent}`;
+importdate: ${currentDate}
+zipFile: ${zipFileName}
+totalSuccessfulImports: ${this.created.length}
+totalUpdatedImports: ${this.updated.length}
+totalSkippedImports: ${this.skipped.length}
+---\n
+${reportContent}`;
 
         try {
             await writeToFile(logFilePath, logContent, this.app);
