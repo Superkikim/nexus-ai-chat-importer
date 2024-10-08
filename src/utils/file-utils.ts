@@ -1,41 +1,9 @@
 // utils/file-utils.ts
 
 import { TFile, TFolder, App } from "obsidian";
-import { formatTimestamp } from "./date-utils";
 import { Logger } from "./logger";
 
 const logger = new Logger();
-
-export function addPrefix(
-    filename: string,
-    timeStamp: number,
-    dateFormat: "prefix" | "date" | "time" // Specify the accepted literal types
-): string {
-    const timeStampStr = formatTimestamp(timeStamp, dateFormat); // Use the specified format
-    if (timeStampStr) {
-        filename = `${timeStampStr} - ${filename}`;
-    }
-    return filename; // Return the filename with prefix if applicable
-}
-
-export async function generateUniqueFileName(
-    filePath: string,
-    vaultAdapter: any
-): Promise<string> {
-    let uniqueFileName = filePath;
-
-    // Extract the base name and extension
-    const baseName = filePath.replace(/\.md$/, ""); // Remove the .md extension for unique name generation
-    let counter = 1;
-
-    // Check for existence and generate unique names
-    while (await vaultAdapter.exists(uniqueFileName)) {
-        // Create a new name with counter appended
-        uniqueFileName = `${baseName} (${counter++}).md`; // Append the counter and keep .md
-    }
-
-    return uniqueFileName; // Return the unique file name
-}
 
 export async function doesFilePathExist(
     filePath: string,

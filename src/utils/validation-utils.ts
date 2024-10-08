@@ -10,8 +10,13 @@ export function isValidMessage(message: ChatMessage): boolean {
     return (
         message &&
         typeof message === "object" &&
-        message.content &&
+        typeof message.id === "string" && // Check for id
+        message.author && // Check for author
+        typeof message.author === "object" &&
+        typeof message.author.role === "string" && // Check role
+        message.content && // Check for content
         typeof message.content === "object" &&
+        typeof message.content.content_type === "string" && // Check content type
         Array.isArray(message.content.parts) &&
         message.content.parts.length > 0 &&
         message.content.parts.some(

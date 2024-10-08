@@ -8,15 +8,22 @@ export interface PluginSettings {
 }
 
 export interface ChatMessage {
-    message(message: any): unknown;
     id: string;
     author: {
-        role: "user" | "assistant";
+        role: "user" | "assistant" | "system"; // Ensure all roles are represented
+        name?: string | null; // Optional
+        metadata: Record<string, unknown>; // Reflected from JSON structure
     };
+    create_time: number | null; // Nullable
+    update_time: number | null; // Nullable
     content: {
-        parts: string[];
+        content_type: string; // Add content_type in your ChatMessage
+        parts: string[]; // Parts array containing message text
     };
-    create_time: number;
+    status: "finished_successfully" | "in_progress"; // Add status
+    end_turn?: boolean; // Optional
+    weight?: number; // Optional
+    recipient: string; // Required
 }
 
 export interface Chat {
@@ -70,3 +77,8 @@ export interface ConfirmationDialogOptions {
     message?: string; // Optional additional message
     note?: string; // Optional note about deletion
 }
+
+export interface MappingEntry {
+    id: string;
+    message: ChatMessage; // This should reference the updated ChatMessage interface
+    parent: string |

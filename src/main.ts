@@ -87,9 +87,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private conversationCounters = {
         totalExistingConversations: 0,
         totalNewConversationsToImport: 0,
-        totalExistingConversationsToUpdate: 0,
+        potentialUpdates: 0,
         totalNewConversationsSuccessfullyImported: 0,
-        totalConversationsActuallyUpdated: 0,
+        confirmedUpdates: 0,
         totalConversationsProcessed: 0,
     };
 
@@ -240,9 +240,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         // Clear any runtime data that shouldn't persist
         this.conversationCounters.totalNewConversationsToImport = 0;
-        this.conversationCounters.totalExistingConversationsToUpdate = 0;
+        this.conversationCounters.potentialUpdates = 0;
         this.conversationCounters.totalNewConversationsSuccessfullyImported = 0;
-        this.conversationCounters.totalConversationsActuallyUpdated = 0;
+        this.conversationCounters.confirmedUpdates = 0;
         this.messageCounters.totalNonEmptyMessagesToImport = 0;
         this.messageCounters.totalNonEmptyMessagesToAdd = 0;
         this.messageCounters.totalNonEmptyMessagesAdded = 0;
@@ -343,9 +343,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             totalExistingConversations: Object.keys(this.conversationCatalog)
                 .length,
             totalNewConversationsToImport: 0,
-            totalExistingConversationsToUpdate: 0,
+            potentialUpdates: 0,
             totalNewConversationsSuccessfullyImported: 0,
-            totalConversationsActuallyUpdated: 0,
+            confirmedUpdates: 0,
             totalConversationsProcessed: 0,
         };
 
@@ -447,64 +447,124 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         totalMessageCount: number
     ): Promise<void> {
         try {
+            this.logger.info(`Attempting to update note at path: ${filePath}`);
+
             const file = this.app.vault.getAbstractFileByPath(filePath);
             if (file instanceof TFile) {
+                this.logger.info(`Found file: ${filePath}. Reading content...`);
+
                 let content = await this.app.vault.read(file);
                 let originalContent = content;
 
-                content = this.updateMetadata(content, chat.update_time);
+                // Log raw timestamps
+                this.logger.info(
+                    `Raw create_time: ${chat.create_time}, update_time: ${chat.update_time}`
+                );
 
+                // Check if timestamps are valid; if not, set them to the current time
+                const createTime =
+                    chat.create_time || Math.floor(Date.now() / 1000);
+                const updateTime =
+                    chat.update_time || Math.floor(Date.now() / 1000);
+
+                // Update metadata with new update_time
+                content = this.updateMetadata(content, updateTime);
+                this.logger.info(
+                    `Updated metadata with new update time: ${updateTime}`
+                );
+
+                // Extract existing message IDs from the note
                 const existingMessageIds =
                     this.extractMessageUIDsFromNote(content);
+                this.logger.info(
+                    `Extracted existing message IDs: ${existingMessageIds.join(
+                        ", "
+                    )}`
+                );
+
+                // Get new messages that are not already in the note
                 const newMessages = this.getNewMessages(
                     chat,
                     existingMessageIds
                 );
+                this.logger.info(
+                    `Retrieved new messages: ${newMessages.length} new messages found`
+                );
 
+                // Log the new messages for debugging
                 if (newMessages.length > 0) {
-                    content += "\n\n" + this.formatNewMessages(newMessages);
-                    this.conversationCounters
-                        .totalConversationsActuallyUpdated++;
-                    this.messageCounters.totalNonEmptyMessagesAdded +=
-                        newMessages.length;
-                }
-
-                if (content !== originalContent) {
-                    await writeToFile(filePath, content, this.app);
-                    this.importReport.addUpdated(
-                        chat.title || "Untitled",
-                        filePath,
-                        `${formatTimestamp(
-                            chat.create_time,
-                            "date"
-                        )} ${formatTimestamp(chat.create_time, "time")}`,
-                        `${formatTimestamp(
-                            chat.update_time,
-                            "date"
-                        )} ${formatTimestamp(chat.update_time, "time")}`,
-                        totalMessageCount
+                    this.logger.info(
+                        `New message IDs: ${newMessages
+                            .map((msg) => msg.id)
+                            .join(", ")}`
                     );
                 } else {
-                    this.importReport.addSkipped(
-                        chat.title || "Untitled",
-                        filePath,
-                        `${formatTimestamp(
-                            chat.create_time,
-                            "date"
-                        )} ${formatTimestamp(chat.create_time, "time")}`,
-                        `${formatTimestamp(
-                            chat.update_time,
-                            "date"
-                        )} ${formatTimestamp(chat.update_time, "time")}`,
-                        totalMessageCount,
-                        "No changes needed"
+                    this.logger.info("No new messages to add.");
+                }
+
+                // Only add messages if there are new ones
+                if (newMessages.length > 0) {
+                    content += "\n\n" + this.formatNewMessages(newMessages);
+                    this.logger.info(`Appending new messages to content.`);
+
+                    // Increment counters for updates
+                    this.conversationCounters.confirmedUpdates++;
+                    this.messageCounters.totalNonEmptyMessagesAdded +=
+                        newMessages.length;
+
+                    // If content has changed, write it back to the file
+                    if (content !== originalContent) {
+                        this.logger.info(
+                            `Content has changed. Writing updates back to file...`
+                        );
+                        await writeToFile(filePath, content, this.app);
+                        // Record that the note was updated
+                        this.importReport.addUpdated(
+                            chat.title || "Untitled",
+                            filePath,
+                            `${formatTimestamp(
+                                createTime,
+                                "date"
+                            )} ${formatTimestamp(createTime, "time")}`,
+                            `${formatTimestamp(
+                                updateTime,
+                                "date"
+                            )} ${formatTimestamp(updateTime, "time")}`,
+                            totalMessageCount
+                        );
+                        this.logger.info(
+                            `File updated successfully: ${filePath}`
+                        );
+                    } else {
+                        this.logger.info(
+                            "No changes were made to the content after the updates."
+                        );
+                        this.importReport.addSkipped(
+                            chat.title || "Untitled",
+                            filePath,
+                            `${formatTimestamp(
+                                createTime,
+                                "date"
+                            )} ${formatTimestamp(createTime, "time")}`,
+                            `${formatTimestamp(
+                                updateTime,
+                                "date"
+                            )} ${formatTimestamp(updateTime, "time")}`,
+                            totalMessageCount,
+                            "No changes needed"
+                        );
+                    }
+                } else {
+                    this.logger.info(
+                        "No new messages found to add to the note."
                     );
                 }
+            } else {
+                this.logger.warn(`No file found at path: ${filePath}`);
             }
         } catch (error: unknown) {
             // Error handling logic
             if (isCustomError(error)) {
-                // Check if it's a CustomError
                 this.logger.error("Error updating note", error.message);
             } else if (error instanceof Error) {
                 this.logger.error("General error updating note", error.message);
@@ -684,8 +744,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         chat: Chat,
         existingRecord: ConversationCatalogEntry
     ): Promise<void> {
-        const totalMessageCount = Object.values(chat.mapping).filter((msg) =>
-            isValidMessage(msg as ChatMessage)
+        const totalMessageCount = Object.values(chat.mapping).filter(
+            (msg) => isValidMessage(msg.message as ChatMessage) // Ensure we use msg.message correctly
         ).length;
 
         if (existingRecord.updateTime >= chat.update_time) {
@@ -698,7 +758,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 "No Updates"
             );
         } else {
-            this.conversationCounters.totalExistingConversationsToUpdate++;
+            this.conversationCounters.potentialUpdates++;
             await this.updateExistingNote(
                 chat,
                 existingRecord.path,
@@ -736,13 +796,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private updateImportReport(zipFileName: string): void {
         const totalExistingConversations = Object.keys(
             this.conversationCatalog
-        ).length; // Calculate the count here
+        ).length;
 
         this.importReport.addSummary(
             zipFileName,
             this.conversationCounters.totalConversationsProcessed,
             this.conversationCounters.totalNewConversationsSuccessfullyImported,
-            this.conversationCounters.totalConversationsActuallyUpdated,
+            this.conversationCounters.confirmedUpdates,
             this.messageCounters.totalNonEmptyMessagesAdded
         );
     }
@@ -833,11 +893,11 @@ Last Updated: ${updateTimeStr}\n\n
             const messageObj = chat.mapping[messageId];
             if (
                 messageObj &&
-                messageObj.message &&
-                isValidMessage(messageObj.message as unknown as ChatMessage)
+                messageObj.message && // Check this is present
+                isValidMessage(messageObj.message as ChatMessage) // Ensure valid call
             ) {
                 messagesContent += this.formatMessage(
-                    messageObj.message as unknown as ChatMessage
+                    messageObj.message as ChatMessage
                 );
             }
         }
@@ -961,8 +1021,15 @@ Last Updated: ${updateTimeStr}\n\n
             const target = e.target as HTMLInputElement;
             if (target && target.files) {
                 const files = Array.from(target.files); // Convert FileList to an array
+
+                // Sort files by last modified date (descending order)
+                files.sort((a, b) => {
+                    return a.lastModified - b.lastModified; // Sort by last modified timestamp
+                });
+
+                // Process each file sequentially in sorted order
                 for (const file of files) {
-                    await this.handleZipFile(file); // Process each file sequentially
+                    await this.handleZipFile(file); // Process each file
                 }
             }
         };
