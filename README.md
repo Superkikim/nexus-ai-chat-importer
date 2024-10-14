@@ -1,13 +1,24 @@
 # Nexus AI Chat Importer Plugin for Obsidian
 
-![Version](https://img.shields.io/badge/version-1.0.2-blue)
+![Version](https://img.shields.io/badge/version-2.0.0--alpha.3-blue)
 
 ## About
 
 Master branch: [1.0.2 (Stable Release)](https://github.com/Superkikim/nexus-ai-chat-importer/tree/master)
-dev-modular branch: [2.0.0-alpha.1](https://github.com/Superkikim/nexus-ai-chat-importer/tree/dev-modular) - Refactoring in progress
+dev-modular branch: [2.0.0-alpha.3](https://github.com/Superkikim/nexus-ai-chat-importer/tree/refactor/2.0.0-alpha.3) - Refactoring in progress
 
 The Nexus AI Chat Importer Plugin simplifies the process of importing ChatGPT conversations from export files into Obsidian.
+
+## Current Development Status
+
+We are currently in the process of refactoring the plugin to improve its structure and maintainability. The current version on the dev-modular branch is 2.0.0-alpha.3.
+
+### Refactoring Goals
+
+-   Alpha 3 (Current): Restructure the codebase while maintaining 100% feature parity with the stable 1.0.2 release.
+-   Alpha 4 (Planned): Introduce new features and improvements based on the refactored structure.
+
+Please note that the dev-modular branch is not stable and is not recommended for production use.
 
 ## Overview
 
@@ -27,18 +38,16 @@ The Nexus AI Chat Importer Plugin for Obsidian allows you to seamlessly import y
 
 ## Installation
 
-1. Download the contents of the `dist` folder from the repository.
-2. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
-3. Create a new folder called `nexus-ai-chat-importer`.
-4. Copy the downloaded files into the `nexus-ai-chat-importer` folder.
-5. Open Obsidian and go to Settings > Community Plugins.
-6. Disable Safe Mode if it's enabled.
-7. Refresh the list of plugins.
-8. Find "Nexus AI Chat Importer" in the list and enable it by toggling the switch.
+**Note: During the refactoring process, installation from the dev-modular branch is not recommended for regular users.**
 
-Note: You may need to restart Obsidian after installing the plugin for it to appear.
+For developers interested in contributing or testing the refactoring process:
 
-For detailed installation instructions, please refer to the [README](https://github.com/Superkikim/nexus-ai-chat-importer/blob/v1.0.2/README.md#installation) file included in this release.
+1. Clone the repository and checkout the dev-modular branch.
+2. Run `npm install` to install dependencies.
+3. Use `npm run build` to compile the plugin.
+4. Copy the compiled files to your Obsidian plugins folder.
+
+For regular users, please use the stable 1.0.2 release from the master branch.
 
 ## Configuration
 
@@ -48,43 +57,11 @@ For detailed installation instructions, please refer to the [README](https://git
 
 ## Usage
 
-### Exporting ChatGPT Data
-
-1. Log in to ChatGPT (chat.openai.com)
-2. Click on your user icon and select "Settings & Beta"
-3. Go to "Data Controls" and click on "Export Data"
-4. Click "Export" and wait for an email with the download link
-5. Download the ZIP file containing your ChatGPT data
-
-### Importing into Obsidian
-
-1. In Obsidian, open the Command Palette (Cmd/Ctrl + P)
-2. Search for and select "Nexus AI Chat Importer: Select export archive"
-3. Choose the ZIP file you downloaded from ChatGPT
-4. The plugin will process the file and import your conversations
-
-### Import Results
-
--   New conversations will be created as individual Markdown files
--   Existing conversations will be updated with new messages (if any)
--   An import report will be generated in the archive folder, detailing the results
-
-### Resetting the Import Catalog
-
-1. Open the Command Palette (Cmd/Ctrl + P)
-2. Search for and select "Reset Nexus AI Chat Importer Catalogs: Reset Catalogs"
-3. Confirm the action when prompted
+(Usage instructions remain the same as in the previous version)
 
 ## Understanding the Import Report
 
-The import report provides a summary of the import process, including:
-
--   Total number of existing conversations
--   Number of new conversations imported
--   Number of conversations updated
--   Number of new messages added
-
-It also includes detailed tables for created, updated, and skipped notes.
+(Import report details remain the same as in the previous version)
 
 ## Troubleshooting
 
@@ -94,8 +71,16 @@ It also includes detailed tables for created, updated, and skipped notes.
 
 ## Important Notes
 
--   This version introduces new metadata parameters required for certain features. Users are advised to re-import their conversations to ensure full functionality.
--   The plugin has been officially renamed to "Nexus AI Chat Importer" to better reflect its functionality.
--   For users upgrading from previous versions, it's recommended to delete old data and re-import conversations with this new version for optimal performance and feature compatibility.
+-   The plugin is currently undergoing a major refactoring. Users are advised to use the stable 1.0.2 release for production environments.
+-   Developers interested in the refactoring process can follow the dev-modular branch, but should be aware that it may contain unstable code.
+-   Once the refactoring is complete and new features are added in alpha 4, we will provide update instructions for users of previous versions.
 
-For more detailed information about the latest release, please refer to the [Release Notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/v1.0.2/v1.0.2_RELEASE_NOTES.md).
+For more detailed information about the latest stable release, please refer to the [Release Notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/v1.0.2/v1.0.2_RELEASE_NOTES.md).
+
+## Contributing
+
+We welcome contributions to the Nexus AI Chat Importer plugin! If you're interested in helping with the refactoring process or have ideas for new features, please check out our [Contributing Guidelines](CONTRIBUTING.md) (create this file if it doesn't exist).
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
