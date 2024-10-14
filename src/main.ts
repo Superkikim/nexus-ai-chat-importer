@@ -21,7 +21,7 @@ import {
     ConversationCatalogEntry,
     CustomError,
     ConfirmationDialogOptions,
-} from "./types";
+} from "./models/types";
 
 import {
     formatTimestamp,
@@ -38,11 +38,11 @@ import {
     getProvider,
 } from "./utils";
 
-import { Logger } from "./logger";
+import { Logger } from "./utils/logger";
 
-import { showDialog } from "./dialogs";
+import { showDialog } from "./utils/dialogs";
 
-import { Upgrader } from "./upgrade";
+import { Upgrader } from "./utils/upgrade";
 
 // Constants
 const DEFAULT_SETTINGS: PluginSettings = {
