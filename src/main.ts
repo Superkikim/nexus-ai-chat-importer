@@ -4,7 +4,6 @@ import {
     PluginSettingTab,
     Setting,
     TFile,
-    TFolder,
     Modal,
     Notice,
     App,
@@ -44,9 +43,10 @@ import {
     writeToFile,
     doesFilePathExist,
     generateUniqueFileName,
+    generateFileName,
 } from "./utils/file-utils";
 
-import { generateFileName, formatTitle } from "./utils/string-utils";
+import { formatTitle } from "./utils/string-utils";
 
 // Constants
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -745,7 +745,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         existingRecord: ConversationCatalogEntry
     ): Promise<void> {
         const totalMessageCount = Object.values(chat.mapping).filter(
-            (msg) => isValidMessage(msg.message as ChatMessage) // Ensure we use msg.message correctly
+            (msg) =>
+                isValidMessage(msg as ChatMessage) &&
+                msg.content.parts.length > 0
         ).length;
 
         if (existingRecord.updateTime >= chat.update_time) {
@@ -893,11 +895,11 @@ Last Updated: ${updateTimeStr}\n\n
             const messageObj = chat.mapping[messageId];
             if (
                 messageObj &&
-                messageObj.message && // Check this is present
-                isValidMessage(messageObj.message as ChatMessage) // Ensure valid call
+                messageObj.content && // Check for content instead of message
+                isValidMessage(messageObj as ChatMessage) // Ensure valid call
             ) {
                 messagesContent += this.formatMessage(
-                    messageObj.message as ChatMessage
+                    messageObj as ChatMessage
                 );
             }
         }

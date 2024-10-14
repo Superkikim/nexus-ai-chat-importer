@@ -1,6 +1,7 @@
 // src/utils/conversationProcessor.ts
 
 import { Chat, ChatMessage, ConversationCatalogEntry } from "../types"; // Adjust path according to your project structure
+import { isValidMessage } from "./validation-utils";
 
 export interface NewConversation {
     id: string;
