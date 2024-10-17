@@ -1,58 +1,49 @@
 // src/models/providers/ChatGPT/JsonModel.ts
 
 interface Message {
-    id: string;
-    author: {
-        role: string;
-        name: string | null;
-        metadata: Record<string, any>;
-    };
-    create_time: number | null;
-    update_time: number | null;
-    content: {
-        content_type: string;
-        parts: string[];
-    };
-    status: string;
-    end_turn: boolean | null;
-    weight: number;
-    metadata: Record<string, any>;
-    recipient: string;
+    uuid: string;
+    role: string; // "user" or "assistant"
+    content: Array<{ type: string; text: string }>;
+    created_at: string;
+    updated_at: string;
+    attachments: any[];
+    files: any[];
 }
 
 interface Conversation {
     title: string;
     create_time: number;
     update_time: number;
-    mapping: Record<
-        string,
-        {
-            id: string;
-            message: Message | null;
-            parent: string | null;
-            children: string[];
-        }
-    >;
+    mapping: Record<string, Message>;
     moderation_results: any[];
     current_node: string;
-    conversation_id: string;
+    conversation_id?: string; // Optional
+    id?: string; // Optional
 }
 
 export class ChatGPTJsonModel {
-    private conversations: Conversation[];
+    private conversation: Conversation;
 
     constructor(jsonData: any) {
-        this.conversations = jsonData as Conversation[];
+        this.conversation = jsonData as Conversation;
+
+        // Normalize the identifiers
+        if (this.conversation.conversation_id) {
+            this.conversation.id = this.conversation.conversation_id; // Use conversation_id as the main ID
+        }
     }
 
-    // Method to validate conversations structure if needed
+    // Unified property for conversation ID
+    get conversationId(): string {
+        return this.conversation.id || null;
+    }
+
     validate(): boolean {
-        // Implement validation logic if required
-        return true; // Placeholder for actual validation
+        // Ensure at least one ID is present
+        return !!this.conversationId;
     }
 
-    // Additional methods to extract necessary information
-    getConversations(): Conversation[] {
-        return this.conversations;
+    getConversation(): Conversation {
+        return this.conversation;
     }
 }

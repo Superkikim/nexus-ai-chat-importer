@@ -1,13 +1,17 @@
 {
-  "compilerOptions": {
-    "target": "ES2018",
-    "module": "commonjs",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*.ts"]
+    "compilerOptions": {
+        "target": "ES2018",
+        "module": "commonjs",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "types": ["node"], // Added for Node.js type definitions
+        "typeRoots": [
+            "./node_modules/@types" // Optional, specify where to look for type definitions
+        ]
+    },
+    "include": ["src/**/*.ts"]
 }
