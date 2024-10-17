@@ -1,0 +1,10 @@
+provider: ChatGPT
+file_type: zip
+filename_regex: '^[a-f0-9]{64}-\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}-\\d{2}\\.zip$'
+required_files:
+    - user.json
+    - conversations.json
+    - message_feedback.json
+    - model_comparisons.json
+    - chat.html
+conversation_file: conversations.json
