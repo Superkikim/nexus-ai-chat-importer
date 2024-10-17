@@ -1,23 +1,30 @@
 // src/models/providers/Claude/JsonModel.ts
 
 interface ChatMessage {
-    uuid: string;
-    text: string;
-    sender: string; // "human" or "assistant"
-    created_at: string;
-    updated_at: string;
-    attachments: any[]; // You can further define the structure based on your needs
-    files: any[]; // Same as attachments
+    uuid: string; // Unique identifier for the message
+    text: string; // Text content of the message
+    sender: string; // "human" or "assistant" (role of the sender)
+    created_at: string; // Timestamp of when the message was created
+    updated_at: string; // Timestamp of the last update to the message
+    attachments: any[]; // Attachments associated with the message
+    files: any[]; // Files sent with the message
 }
 
 interface Conversation {
-    uuid: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-    chat_messages: ChatMessage[];
+    uuid: string; // Unique identifier for the conversation
+    name: string; // Name/title of the conversation
+    created_at: string; // Creation time of the conversation
+    updated_at: string; // Last updated time of the conversation
+    chat_messages: ChatMessage[]; // Array of messages in the conversation
 }
 
+/**
+ * Represents a model for a Claude conversation.
+ * The model maps the expected structure of a Claude conversation.
+ * - `uuid` is used as the primary identifier for messages.
+ * - The `conversation_model` is currently unspecified; consider adapting
+ *   this to represent specific models if available.
+ */
 export class ClaudeJsonModel {
     private conversations: Conversation[];
 
@@ -25,13 +32,10 @@ export class ClaudeJsonModel {
         this.conversations = jsonData as Conversation[];
     }
 
-    // Method to validate conversations structure if needed
     validate(): boolean {
-        // Implement validation logic if required
-        return true; // Placeholder for actual validation
+        return Array.isArray(this.conversations); // Basic validation to check if it's an array
     }
 
-    // Additional methods to extract necessary information
     getConversations(): Conversation[] {
         return this.conversations;
     }
