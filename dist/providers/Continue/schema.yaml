@@ -1,0 +1,9 @@
+conversation_schema:
+    required_fields:
+        conversation_id: "sessionId"
+        chat_messages: "history.message"
+    message_schema:
+        message_id: "message.id"
+        role: "role"
+        message_content: "content"
+        message_model: "promptLogs.modelTitle"

@@ -15,6 +15,7 @@ const prod = (process.argv[2] === "production");
 async function copyFiles() {
     const filesToCopy = ["manifest.json", "styles.css"];
 
+    // Copy individual files
     for (const file of filesToCopy) {
         const srcPath = path.join(process.cwd(), file);
         const destPath = path.join(process.cwd(), "dist", file);
@@ -41,6 +42,18 @@ async function copyFiles() {
         } else {
             console.warn(`${file} does not exist, skipping.`);
         }
+    }
+
+    // Copy providers folder
+    const srcProvidersPath = path.join(process.cwd(), "src/providers");
+    const destProvidersPath = path.join(process.cwd(), "dist", "providers");
+
+    // Check if the providers folder exists
+    if (await fs.pathExists(srcProvidersPath)) {
+        await fs.copy(srcProvidersPath, destProvidersPath);
+        console.log(`Copied providers folder to dist/`);
+    } else {
+        console.warn(`Providers folder does not exist, skipping.`);
     }
 }
 
