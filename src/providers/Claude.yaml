@@ -1,0 +1,32 @@
+provider:
+    name: Claude
+    file_format:
+        type: zip
+        filename_regex: '^data-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.zip$'
+        required_files:
+            - users.json
+            - conversations.json
+    conversation:
+        file: conversations.json
+        schema:
+            required_fields:
+                conversation_id: uuid
+                conversation_model: Unspecified
+                create_time:
+                    field: created_at
+                    format: iso
+                update_time:
+                    field: updated_at
+                    format: iso
+                chat_messages: chat_messages
+            message_schema:
+                message_id: uuid
+                role: sender
+                message_content: text
+                created_at:
+                    field: created_at
+                    format: iso
+                updated_at:
+                    field: updated_at
+                    format: iso
+                message_model: Unspecified

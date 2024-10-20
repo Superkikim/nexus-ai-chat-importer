@@ -1,7 +1,0 @@
-provider: Claude
-file_type: zip
-filename_regex: '^data-\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}-\\d{2}\\.zip$'
-required_files:
-    - users.json
-    - conversations.json
-conversation_file: conversations.json

@@ -1,0 +1,35 @@
+provider:
+    name: ChatGPT
+    file_format:
+        type: zip
+        filename_regex: '^[a-f0-9]{64}-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.zip$'
+        required_files:
+            - user.json
+            - conversations.json
+            - message_feedback.json
+            - model_comparisons.json
+            - chat.html
+    conversation:
+        file: conversations.json
+        schema:
+            required_fields:
+                conversation_id: conversation_id
+                conversation_model: Unspecified
+                create_time:
+                    field: create_time
+                    format: unix
+                update_time:
+                    field: update_time
+                    format: unix
+                chat_messages: mapping
+            message_schema:
+                message_id: id
+                role: author.role
+                message_content: content.parts
+                created_at:
+                    field: create_time
+                    format: unix
+                updated_at:
+                    field: update_time
+                    format: unix
+                message_model: model_slug
