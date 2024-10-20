@@ -39,6 +39,8 @@
     "dependencies": {
         "crypto": "^1.0.1",
         "jszip": "^3.7.1",
-        "lodash": "^4.17.21"
+        "lodash": "^4.17.21",
+        "yaml": "^1.0.0"
+
     }
 }

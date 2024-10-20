@@ -1,0 +1,29 @@
+provider:
+    name: Continue
+    file_format:
+        type: json
+        filename_regex: '^[a-f0-9]{64}\.json$'
+    conversation:
+        file: null # Pas de fichier spécifique, le JSON est le fichier de conversation
+        schema:
+            required_fields:
+                conversation_id: sessionId
+                conversation_model: null
+                create_time:
+                    field: null
+                    format: null
+                update_time:
+                    field: null
+                    format: null
+                chat_messages: history.message
+            message_schema:
+                message_id: message.id
+                role: role
+                message_content: content
+                created_at:
+                    field: null
+                    format: null
+                updated_at:
+                    field: null
+                    format: null
+                message_model: promptLogs.modelTitle

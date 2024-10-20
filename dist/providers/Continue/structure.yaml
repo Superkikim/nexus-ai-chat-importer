@@ -1,3 +1,0 @@
-provider: Continue
-file_type: json
-filename_regex: '^[a-f0-9]{64}\\.json$'
