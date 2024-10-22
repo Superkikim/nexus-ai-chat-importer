@@ -33,7 +33,7 @@
 ## About
 
 Master branch: [1.0.2 (Stable Release)](https://github.com/Superkikim/nexus-ai-chat-importer/tree/master)  
-dev branch: [refactor/2.0.0-alpha.2](https://github.com/Superkikim/nexus-ai-chat-importer/tree/refactor/2.0.0.alpha.3) - Refactoring in progress
+dev branch: [refactor/2.0.0-alpha.3](https://github.com/Superkikim/nexus-ai-chat-importer/tree/refactor/2.0.0.alpha.3) - Refactoring in progress
 
 The Nexus AI Chat Importer Plugin simplifies the process of importing ChatGPT conversations from export files into Obsidian.
 
