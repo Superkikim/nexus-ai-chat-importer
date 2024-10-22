@@ -3,21 +3,32 @@
 ![Version](https://img.shields.io/badge/version-1.0.2-blue)
 
 ## Table of Contents
-1. [About](#about)
-2. [Overview](#overview)
-3. [Features](#features)
-4. [Installation](#installation)
-5. [Configuration](#configuration)
-6. [Usage](#usage)
-   6.1 [Exporting ChatGPT Data](#exporting-chatgpt-data)
-   6.2 [Importing into Obsidian](#importing-into-obsidian)
-   6.3 [Import Results](#import-results)
-   6.4 [Resetting the Import Catalog](#resetting-the-import-catalog)
-7. [Understanding the Import Report](#understanding-the-import-report)
-8. [More Features](#more-features)
-   8.1 [Opening Conversation in its Original Webapp](#opening-conversation-in-its-original-webapp)
-9. [Troubleshooting](#troubleshooting)
-10. [Important Notes](#important-notes)
+<ol>
+  <li><a href="#about">About</a></li>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#features">Features</a></li>
+  <li><a href="#installation">Installation</a></li>
+  <li><a href="#configuration">Configuration</a></li>
+  <li>
+    <a href="#usage">Usage</a>
+    <ol>
+      <li><a href="#exporting-chatgpt-data">Exporting ChatGPT Data</a></li>
+      <li><a href="#importing-into-obsidian">Importing into Obsidian</a></li>
+      <li><a href="#import-results">Import Results</a></li>
+      <li><a href="#resetting-the-import-catalog">Resetting the Import Catalog</a></li>
+    </ol>
+  </li>
+  <li><a href="#understanding-the-import-report">Understanding the Import Report</a></li>
+  <li>
+    <a href="#more-features">More Features</a>
+    <ol>
+      <li><a href="#opening-conversation-in-its-original-webapp">Opening Conversation in its Original Webapp</a></li>
+    </ol>
+  </li>
+  <li><a href="#troubleshooting">Troubleshooting</a></li>
+  <li><a href="#important-notes">Important Notes</a></li>
+</ol>
+
 
 ## About
 
