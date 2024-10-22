@@ -2,9 +2,26 @@
 
 ![Version](https://img.shields.io/badge/version-1.0.2-blue)
 
+## Table of Contents
+1. [About](#about)
+2. [Overview](#overview)
+3. [Features](#features)
+4. [Installation](#installation)
+5. [Configuration](#configuration)
+6. [Usage](#usage)
+   6.1 [Exporting ChatGPT Data](#exporting-chatgpt-data)
+   6.2 [Importing into Obsidian](#importing-into-obsidian)
+   6.3 [Import Results](#import-results)
+   6.4 [Resetting the Import Catalog](#resetting-the-import-catalog)
+7. [Understanding the Import Report](#understanding-the-import-report)
+8. [More Features](#more-features)
+   8.1 [Opening Conversation in its Original Webapp](#opening-conversation-in-its-original-webapp)
+9. [Troubleshooting](#troubleshooting)
+10. [Important Notes](#important-notes)
+
 ## About
 
-Master branch: [1.0.2 (Stable Release)](https://github.com/Superkikim/nexus-ai-chat-importer/tree/master)
+Master branch: [1.0.2 (Stable Release)](https://github.com/Superkikim/nexus-ai-chat-importer/tree/master)  
 dev-modular branch: [2.0.0-alpha.1](https://github.com/Superkikim/nexus-ai-chat-importer/tree/dev-modular) - Refactoring in progress
 
 The Nexus AI Chat Importer Plugin simplifies the process of importing ChatGPT conversations from export files into Obsidian.
@@ -20,9 +37,7 @@ The Nexus AI Chat Importer Plugin for Obsidian allows you to seamlessly import y
 -   Create individual Markdown files for each conversation
 -   Update existing conversations with new messages
 -   Detailed import reports for tracking the import process
--   Click on the conversation title to open the chat in the original web app
 -   One-time upgrade check to ensure users are up-to-date
--   Open the original ChatGPT conversation directly from Obsidian with a single click
 -   Improved import reports with more accurate and detailed information
 
 ## Installation
@@ -86,11 +101,21 @@ The import report provides a summary of the import process, including:
 
 It also includes detailed tables for created, updated, and skipped notes.
 
+## More Features
+
+### Opening Conversation in its Original Webapp
+
+By clicking the note title, you will be directed to the original conversation webapp directly in your default browser. Be aware that:
+
+1. The conversation must still exist in your account history.
+2. You need to be authenticated in your browser.
+3. You may require an active subscription to access your chat history.
+
 ## Troubleshooting
 
--   If the import fails, check the console log for error messages
--   Ensure you have write permissions for your Obsidian vault
--   Verify that the ZIP file is a valid ChatGPT export
+-   If the import fails, check the console log for error messages.
+-   Ensure you have write permissions for your Obsidian vault.
+-   Verify that the ZIP file is a valid ChatGPT export.
 
 ## Important Notes
 
