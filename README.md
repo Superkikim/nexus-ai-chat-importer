@@ -1,8 +1,9 @@
 # Nexus AI Chat Importer Plugin for Obsidian
 
-![Version](https://img.shields.io/badge/version-1.0.2-blue)
+![Version](https://img.shields.io/badge/version-1.0.3-blue)
 
 ## Table of Contents
+
 <ol>
   <li><a href="#about">About</a></li>
   <li><a href="#overview">Overview</a></li>
@@ -28,7 +29,6 @@
   <li><a href="#troubleshooting">Troubleshooting</a></li>
   <li><a href="#important-notes">Important Notes</a></li>
 </ol>
-
 
 ## About
 
