@@ -115,7 +115,11 @@ export function isValidMessage(message: ChatMessage): boolean {
         Array.isArray(message.content.parts) &&
         message.content.parts.length > 0 &&
         message.content.parts.some(
-            (part) => typeof part === "string" && part.trim() !== ""
+            (part) =>
+                (typeof part === "string" && part.trim() !== "") ||
+                (typeof part === "object" &&
+                    part.content_type === "audio_transcription" &&
+                    part.text)
         )
     );
 }

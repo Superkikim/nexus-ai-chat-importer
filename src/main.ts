@@ -729,15 +729,20 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     }
 
     getNewMessages(chat: Chat, existingMessageIds: string[]): ChatMessage[] {
-        return Object.values(chat.mapping)
-            .filter(
-                (message) =>
+        console.log("getNewMessages processing chat:", chat.id);
+        const messages = Object.values(chat.mapping)
+            .filter((message) => {
+                const keep =
                     message &&
                     message.id &&
                     !existingMessageIds.includes(message.id) &&
-                    isValidMessage(message.message)
-            )
+                    isValidMessage(message.message);
+                console.log("Message ID:", message?.id, "Keep?:", keep);
+                return keep;
+            })
             .map((message) => message.message);
+        console.log("getNewMessages found:", messages.length, "messages");
+        return messages;
     }
 
     formatNewMessages(messages: ChatMessage[]): string {
@@ -808,9 +813,9 @@ Last Updated: ${updateTimeStr}\n\n
     }
 
     formatMessage(message: ChatMessage): string {
-        if (!message || typeof message !== "object") {
-            this.logger.error("Invalid message object:", message);
-            return ""; // Return empty string for invalid messages
+        if (!message) {
+            this.logger.error("Message is null or undefined:", message);
+            return "";
         }
 
         const messageTime =
@@ -840,16 +845,37 @@ Last Updated: ${updateTimeStr}\n\n
         if (
             message.content &&
             typeof message.content === "object" &&
-            Array.isArray(message.content.parts) &&
-            message.content.parts.length > 0
+            Array.isArray(message.content.parts)
         ) {
+            if (message.content.content_type === "multimodal_text") {
+                console.log("Processing multimodal message:", message.id);
+            }
             const messageText = message.content.parts
-                .filter((part) => typeof part === "string")
+                .filter(
+                    (part) =>
+                        typeof part === "string" ||
+                        (typeof part === "object" &&
+                            (part.content_type === "audio_transcription" ||
+                                part.text))
+                )
+                .map((part) => {
+                    if (typeof part === "string") return part;
+                    return part.text || "";
+                })
                 .join("\n");
-            messageContent += messageText
-                .split("\n")
-                .map((line) => `${quoteChar} ${line}`)
-                .join("\n");
+
+            if (messageText) {
+                messageContent += messageText
+                    .split("\n")
+                    .map((line) => `${quoteChar} ${line}`)
+                    .join("\n");
+            } else {
+                this.logger.warn(
+                    "Message content has no text parts:",
+                    message.content
+                );
+                messageContent += `${quoteChar} [No text content]`;
+            }
         } else {
             this.logger.warn(
                 "Message content missing or invalid:",
@@ -863,6 +889,7 @@ Last Updated: ${updateTimeStr}\n\n
         if (authorName === "ChatGPT") {
             messageContent += "\n---\n";
         }
+
         return messageContent + "\n\n";
     }
 
