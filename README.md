@@ -2,6 +2,10 @@
 
 ![Version](https://img.shields.io/badge/version-1.0.3-blue)
 
+## Overview
+
+Version 1.0.3 of the Nexus AI Chat Importer Plugin for Obsidian introduces a major new feature: support for importing advanced voice mode conversations. This update significantly enhances the plugin’s capabilities while maintaining its stability and performance.
+
 ## Table of Contents
 
 <ol>
@@ -32,14 +36,14 @@
 
 ## About
 
-Master branch: [1.0.2 (Stable Release)](https://github.com/Superkikim/nexus-ai-chat-importer/tree/master)  
+Master branch: [1.0.3 (Stable Release)](https://github.com/Superkikim/nexus-ai-chat-importer/tree/master)  
 dev branch: [refactor/2.0.0-alpha.3](https://github.com/Superkikim/nexus-ai-chat-importer/tree/refactor/2.0.0.alpha.3) - Refactoring in progress
 
 The Nexus AI Chat Importer Plugin simplifies the process of importing ChatGPT conversations from export files into Obsidian.
 
 ## Overview
 
-The Nexus AI Chat Importer Plugin for Obsidian allows you to seamlessly import your AI chat conversations from export files into your Obsidian vault. This plugin organizes your ChatGPT conversations into readable Markdown files, making them easily accessible and searchable within Obsidian.
+The plugin allows you to seamlessly import your AI chat conversations from export files into your Obsidian vault. It organizes your ChatGPT conversations into readable Markdown files, making them easily accessible and searchable within Obsidian.
 
 ## Features
 
@@ -53,24 +57,32 @@ The Nexus AI Chat Importer Plugin for Obsidian allows you to seamlessly import y
 
 ## Installation
 
-1. Download the contents of the `dist` folder from the repository.
-2. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
-3. Create a new folder called `nexus-ai-chat-importer`.
-4. Copy the downloaded files into the `nexus-ai-chat-importer` folder.
-5. Open Obsidian and go to Settings > Community Plugins.
-6. Disable Safe Mode if it's enabled.
-7. Refresh the list of plugins.
-8. Find "Nexus AI Chat Importer" in the list and enable it by toggling the switch.
-
-Note: You may need to restart Obsidian after installing the plugin for it to appear.
-
-For detailed installation instructions, please refer to the [README](https://github.com/Superkikim/nexus-ai-chat-importer/blob/v1.0.2/README.md#installation) file included in this release.
+1. Enable Community Plugins in Obsidian settings.
+2. Browse the Community Plugins list and search for "Nexus AI Chat Importer".
+3. Click "Install" to install the plugin.
+4. Enable the plugin in the Plugins settings.
 
 ## Configuration
 
 1. Go to Settings > Nexus AI Chat Importer
 2. Set the "Nexus AI Chat Importer Folder" to specify where imported conversations will be stored
-3. Optionally, enable "Add Date Prefix to Filenames" and choose a date format
+
+## Usage
+
+### Exporting ChatGPT Data
+
+1. Log in to your ChatGPT account.
+2. Click your user icon (usually, a circle with your initials)
+3. Navigate to the "Settings" then "Data controls" section.
+4. Click the "Export" button next to "Export data". You will soon receive an email with a download link
+
+### Importing into Obsidian
+
+1. Open the Nexus AI Chat Importer plugin in Obsidian.
+2. Click the "Import" button or call the .
+3. Select the exported JSON file.
+4. Choose the destination folder for the imported conversations.
+5. Click "Import" to start the import process.
 
 ## Usage
 
@@ -84,10 +96,9 @@ For detailed installation instructions, please refer to the [README](https://git
 
 ### Importing into Obsidian
 
-1. In Obsidian, open the Command Palette (Cmd/Ctrl + P)
-2. Search for and select "Nexus AI Chat Importer: Select export archive"
-3. Choose the ZIP file you downloaded from ChatGPT
-4. The plugin will process the file and import your conversations
+1. In Obsidian, open the Command Palette (Cmd/Ctrl + P), search for and select "Nexus AI Chat Importer: Select export archive", or click the "Nexus AI Chat Importer" icon in the left sidebar
+2. Choose the ZIP file you downloaded from ChatGPT
+3. The plugin will process the file and import your conversations
 
 ### Import Results
 
@@ -96,6 +107,8 @@ For detailed installation instructions, please refer to the [README](https://git
 -   An import report will be generated in the archive folder, detailing the results
 
 ### Resetting the Import Catalog
+
+If you encounter issues with the import process or want to start fresh, you can reset the import catalog. This will clear the list of imported conversations, allowing you to import the same data again.
 
 1. Open the Command Palette (Cmd/Ctrl + P)
 2. Search for and select "Reset Nexus AI Chat Importer Catalogs: Reset Catalogs"
