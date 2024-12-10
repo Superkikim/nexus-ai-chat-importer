@@ -1,10 +1,10 @@
 # Nexus AI Chat Importer Plugin for Obsidian
 
-![Version](https://img.shields.io/badge/version-1.0.3-blue)
+![Version](https://img.shields.io/badge/version-1.0.4-blue)
 
 ## Overview
 
-Version 1.0.3 of the Nexus AI Chat Importer Plugin for Obsidian introduces a major new feature: support for importing advanced voice mode conversations. This update significantly enhances the plugin’s capabilities while maintaining its stability and performance.
+Version 1.0.4 of the Nexus AI Chat Importer Plugin for Obsidian introduces a major new feature: support for importing advanced voice mode conversations. This update significantly enhances the plugin’s capabilities while maintaining its stability and performance.
 
 ## Table of Contents
 

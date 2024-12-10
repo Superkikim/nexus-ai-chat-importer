@@ -736,7 +736,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     message &&
                     message.id &&
                     !existingMessageIds.includes(message.id) &&
-                    isValidMessage(message.message);
+                    isValidMessage(message.message) &&
+                    message.message.author?.role !== "tool"; // Exclude messages with role "tool"
                 console.log("Message ID:", message?.id, "Keep?:", keep);
                 return keep;
             })
