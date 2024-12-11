@@ -557,9 +557,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     // Helper methods
     private async extractChatsFromZip(zip: JSZip): Promise<Chat[]> {
-        const conversationsJson = await zip
-            .file("conversations.json")
-            .async("string");
+        const conversationsFile = zip.file("conversations.json");
+        if (!conversationsFile) {
+            throw new Error("conversations.json file not found in zip.");
+        }
+
+        const conversationsJson = await conversationsFile.async("string");
         return JSON.parse(conversationsJson);
     }
 
@@ -735,12 +738,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     message &&
                     message.id &&
                     !existingMessageIds.includes(message.id) &&
-                    isValidMessage(message.message) &&
-                    (message.message.author?.role !== "tool" ||
-                        message.message.author?.role === "assistant");
-                return keep;
+                    isValidMessage(message) &&
+                    message.author?.role !== "tool" &&
+                    message.author?.role !== "assistant"; // Only keep if not "tool" or "assistant"
+                return keep; // Keep the current message based on the filter
             })
-            .map((message) => message.message);
+            .map((message) => message); // Access the message directly
         return messages;
     }
 
@@ -831,7 +834,6 @@ Last Updated: ${updateTimeStr}\n\n
             typeof message.author === "object" &&
             "role" in message.author
         ) {
-            console.log(`Role is ${message.author.role}`);
             if (message.author.role === "user") {
                 authorName = "User";
                 quoteChar = ">";
@@ -856,8 +858,15 @@ Last Updated: ${updateTimeStr}\n\n
 
         const headingLevel = authorName === "User" ? "###" : "####";
         let messageContent = `${headingLevel} ${authorName}, on ${messageTime};\n`;
+        let documentContent = ""; // Declare documentContent here
 
-        if (
+        if (message.recipient && message.recipient.includes("textdoc")) {
+            const contentParts = JSON.parse(message.content.parts.join("")); // Ensure parts is joined correctly
+            const documentName = contentParts.name; // Extract name
+            documentContent = contentParts.content; // Set documentContent as the extracted content
+
+            messageContent += `##### Document name: ${documentName}\n`; // Add document name to messageContent
+        } else if (
             message.content &&
             typeof message.content === "object" &&
             Array.isArray(message.content.parts)
@@ -883,14 +892,8 @@ Last Updated: ${updateTimeStr}\n\n
                 message.recipient &&
                 message.recipient.includes("textdoc")
             ) {
-                messageText = message.content.parts
-                    .map((part) => {
-                        if (typeof part === "string") return part;
-                        return JSON.stringify(part, null, 2); // Convert JSON to readable text
-                    })
-                    .join("\n");
+                messageText = documentContent; // Use documentContent directly
             }
-
             if (messageText) {
                 messageContent += messageText
                     .split("\n")

@@ -7,16 +7,23 @@ export interface PluginSettings {
     hasCompletedUpgrade: boolean; // New property added
 }
 
+export interface Author {
+    role: "user" | "assistant" | "tool";
+}
+
+export interface MessageContent {
+    parts:
+        | string
+        | {
+              content_type: string;
+          };
+    content_type?: string;
+}
+
 export interface ChatMessage {
-    message(message: any): unknown;
     id: string;
-    author: {
-        role: "user" | "assistant" | "tool";
-    };
-    content: {
-        parts: string[];
-        content_type: string;
-    };
+    author: Author; // Using the Author interface
+    content: MessageContent; // Using the MessageContent interface
     create_time: number;
     recipient?: string;
 }
@@ -61,8 +68,6 @@ interface Timestamps {
 }
 
 export interface Chat extends Timestamps {
-    id: string;
-    title: string;
     mapping: Record<string, ChatMessage>;
 }
 
