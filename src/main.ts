@@ -729,7 +729,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     }
 
     getNewMessages(chat: Chat, existingMessageIds: string[]): ChatMessage[] {
-        console.log("getNewMessages processing chat:", chat.id);
         const messages = Object.values(chat.mapping)
             .filter((message) => {
                 const keep =
@@ -738,12 +737,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     !existingMessageIds.includes(message.id) &&
                     isValidMessage(message.message) &&
                     (message.message.author?.role !== "tool" ||
-                        message.message.author?.role === "assistant"); // Include documents, exclude tools
-                console.log("Message ID:", message?.id, "Keep?:", keep);
+                        message.message.author?.role === "assistant");
                 return keep;
             })
             .map((message) => message.message);
-        console.log("getNewMessages found:", messages.length, "messages");
         return messages;
     }
 
@@ -826,12 +823,30 @@ Last Updated: ${updateTimeStr}\n\n
             formatTimestamp(message.create_time || Date.now() / 1000, "time");
 
         let authorName = "Unknown";
+        let isDocument = false;
+        let quoteChar = ">";
+
         if (
             message.author &&
             typeof message.author === "object" &&
             "role" in message.author
         ) {
-            authorName = message.author.role === "user" ? "User" : "ChatGPT";
+            console.log(`Role is ${message.author.role}`);
+            if (message.author.role === "user") {
+                authorName = "User";
+                quoteChar = ">";
+            } else if (message.author.role === "assistant") {
+                if (
+                    message.recipient &&
+                    message.recipient.includes("textdoc")
+                ) {
+                    authorName = "Document";
+                    isDocument = true;
+                } else {
+                    authorName = "ChatGPT";
+                }
+                quoteChar = ">>";
+            }
         } else {
             this.logger.warn(
                 "Author information missing or invalid:",
@@ -840,8 +855,6 @@ Last Updated: ${updateTimeStr}\n\n
         }
 
         const headingLevel = authorName === "User" ? "###" : "####";
-        const quoteChar = authorName === "User" ? ">" : ">>";
-
         let messageContent = `${headingLevel} ${authorName}, on ${messageTime};\n`;
 
         if (
@@ -849,10 +862,7 @@ Last Updated: ${updateTimeStr}\n\n
             typeof message.content === "object" &&
             Array.isArray(message.content.parts)
         ) {
-            if (message.content.content_type === "multimodal_text") {
-                console.log("Processing multimodal message:", message.id);
-            }
-            const messageText = message.content.parts
+            let messageText = message.content.parts
                 .filter(
                     (part) =>
                         typeof part === "string" ||
@@ -865,6 +875,21 @@ Last Updated: ${updateTimeStr}\n\n
                     return part.text || "";
                 })
                 .join("\n");
+
+            if (message.content.content_type === "code") {
+                messageText = `\`\`\`\n${messageText}\n\`\`\``;
+            } else if (
+                message.content.content_type === "text" &&
+                message.recipient &&
+                message.recipient.includes("textdoc")
+            ) {
+                messageText = message.content.parts
+                    .map((part) => {
+                        if (typeof part === "string") return part;
+                        return JSON.stringify(part, null, 2); // Convert JSON to readable text
+                    })
+                    .join("\n");
+            }
 
             if (messageText) {
                 messageContent += messageText

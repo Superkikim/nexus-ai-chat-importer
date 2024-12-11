@@ -2,22 +2,23 @@
 export interface PluginSettings {
     archiveFolder: string;
     addDatePrefix: boolean;
-    dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
+    dateFormat: "YYYY-MM-DD" | "YYYYMMDD";
     hasShownUpgradeNotice: boolean; // Keep this as it is
     hasCompletedUpgrade: boolean; // New property added
 }
-
 
 export interface ChatMessage {
     message(message: any): unknown;
     id: string;
     author: {
-        role: 'user' | 'assistant';
+        role: "user" | "assistant" | "tool";
     };
     content: {
         parts: string[];
+        content_type: string;
     };
     create_time: number;
+    recipient?: string;
 }
 
 export interface Chat {
@@ -44,9 +45,9 @@ export interface ReportEntry {
 
 export interface ConversationCatalogEntry {
     conversationId: string; // Unique ID
-    provider: string;       // Source provider
-    updateTime: number;     // Last update timestamp
-    path: string;           // Path to the conversation file
+    provider: string; // Source provider
+    updateTime: number; // Last update timestamp
+    path: string; // Path to the conversation file
 }
 
 export interface CustomError {
