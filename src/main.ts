@@ -861,9 +861,17 @@ Last Updated: ${updateTimeStr}\n\n
         let documentContent = ""; // Declare documentContent here
 
         if (message.recipient && message.recipient.includes("textdoc")) {
+            console.log("Message contains a text document");
+            console.log(
+                `content parts contains the following: ${message.content.parts}`
+            );
             const contentParts = JSON.parse(message.content.parts.join("")); // Ensure parts is joined correctly
             const documentName = contentParts.name; // Extract name
+            console.log(`Document name is ${documentName}`);
             documentContent = contentParts.content; // Set documentContent as the extracted content
+            console.log(
+                `Document contains ${documentContent.length} caracters`
+            );
 
             messageContent += `##### Document name: ${documentName}\n`; // Add document name to messageContent
         } else if (
