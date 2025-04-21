@@ -11,6 +11,7 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
+const ios = (process.argv[2] === "ios");
 
 async function copyFiles() {
     const filesToCopy = ["manifest.json", "styles.css"];
@@ -77,7 +78,7 @@ async function build() {
         outfile: "dist/main.js",
     });
 
-    if (prod) {
+    if (prod || ios) {
         await context.rebuild();
         await copyFiles();
         context.dispose();
