@@ -9,7 +9,8 @@
         "version": "node version-bump.mjs && git add manifest.json versions.json",
         "lint": "eslint . --ext .ts,.js",
         "lint:fix": "eslint . --ext .ts,.js --fix",
-        "format": "prettier --write \"**/*.{ts,js,json,md}\""
+        "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+        "ios-build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs ios"
     },
     "keywords": [],
     "author": "",
