@@ -93,6 +93,10 @@ You will soon receive an email with a download link
 2. Select the "AI Chat Importer - import new file" option (chat icon with a + sign)
 3. Select the archive file you have previously downloaded from the chat provider platform
 
+### Multi-device usage
+-   The plugin is designed to work seamlessly across multiple devices and platforms.
+-   You can use it on your desktop computer or iOS device however, it is imperative to ensure any type of synching in place has been completed prior to importing new files.
+
 ### Import Results
 
 -   A tree of years/months will be created in the destination folder you selected in the configuration step
@@ -106,7 +110,7 @@ You will soon receive an email with a download link
 If you encounter issues with the import process or want to start fresh, you can reset the import catalog. This will clear the list of imported conversations, allowing you to import the same data again.
 
 1. Open the Command Palette (Cmd/Ctrl + P)
-2. Search for and select "Reset Nexus AI Chat Importer Catalogs: Reset Catalogs"
+2. Search for and select "Nexus AI Chat Importer Catalogs: Reset Catalogs"
 3. Confirm the action when prompted
 
 ## Understanding the Import Report
@@ -124,7 +128,9 @@ It also includes detailed tables for created, updated, and skipped notes.
 
 ### Opening Conversation in its Original Webapp
 
-By clicking the note title, you will be directed to the original conversation webapp directly in your default browser. Be aware that:
+By clicking the note title, you will be directed to the original conversation webapp directly in your default browser. This feature works only once indexing is completed.
+
+Beware:
 
 1. The conversation must still exist in your account history.
 2. You need to be authenticated in your browser.
