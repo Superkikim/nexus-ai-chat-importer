@@ -4,7 +4,6 @@
     "version": "1.0.3",
     "author": "Superkikim",
     "authorUrl": "https://github.com/Superkikim",
-    "isDesktopOnly": true,
     "minAppVersion": "0.15.0",
     "description": "Import conversations from ChatGPT export files."
 }
