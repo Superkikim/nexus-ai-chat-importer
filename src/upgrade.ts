@@ -44,9 +44,9 @@ export class Upgrader {
             "information",
             `Upgrade to version ${currentVersion}`,
             [
-                "Fixed Advanced voice mode messages not imported" +
+                "This version adds support for iOS" +
                     "\n\n" +
-                    "⚠️ IF YOU HAVE version 1.0.1b: Due to a name change, old conversation records imported with version 1.0.1b and earlier cannot be accessed. Please delete any old data and re-import your conversations with the new version." +
+                    "⚠️ IF YOU HAVE a version previous to 1.0.2: Due to a name change, old conversation records imported with versions prior to 1.0.2 cannot be accessed. Please delete any old data and re-import your conversations with the new version." +
                     "\n\n" +
                     "Next versions will include an upgrade feature if required.",
             ],
