@@ -1021,18 +1021,53 @@ ${this.importReport.generateReportContent()}
 
     // UI-related methods
     selectZipFile() {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".zip";
-        input.onchange = (e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-                this.handleZipFile(file);
-            }
-        };
-        // Reset the input value to allow selecting the same file again
-        input.value = "";
-        input.click();
+        showDialog(
+            this.app,
+            "information",
+            "Import Settings",
+            ["Importing ChatGPT conversations"],
+            "Only ChatGPT exports are supported currently",
+            { button1: "Continue" }
+        ).then(() => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".zip";
+            input.multiple = true;
+            input.onchange = async (e) => {
+                // Make this async
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) {
+                    // Sort files by timestamp
+                    const sortedFiles = files.sort((a, b) => {
+                        const timestampRegex =
+                            /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
+                        const getTimestamp = (filename: string) => {
+                            const match = filename.match(timestampRegex);
+                            if (!match) {
+                                this.logger.warn(
+                                    `No timestamp found in filename: ${filename}`
+                                );
+                                return "0";
+                            }
+                            return match[1];
+                        };
+
+                        return getTimestamp(a.name).localeCompare(
+                            getTimestamp(b.name)
+                        );
+                    });
+
+                    // Process files sequentially
+                    for (const file of sortedFiles) {
+                        this.logger.info(`Processing file: ${file.name}`);
+                        await this.handleZipFile(file); // Wait for each file to complete
+                        this.logger.info(`Completed processing: ${file.name}`);
+                    }
+                }
+            };
+            input.value = "";
+            input.click();
+        });
     }
     async validateZipFile(file: File): Promise<JSZip> {
         try {

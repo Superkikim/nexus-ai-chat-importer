@@ -1,14 +1,15 @@
 {
     "name": "nexus-ai-chat-importer",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "This plugin allows to import ChatGPT conversation from the export files downloaded from your account",
     "main": "main.js",
     "scripts": {
-    "type-check": "tsc --noEmit --skipLibCheck",
-    "build-only": "node esbuild.config.mjs production",
-    "build": "npm run build-only",
-    "build-with-check": "npm run type-check && npm run build-only",
-    "ios-build": "node esbuild.config.mjs ios"
+        "dev": "node esbuild.config.mjs",
+        "type-check": "tsc --noEmit --skipLibCheck",
+        "build-only": "node esbuild.config.mjs production",
+        "build": "npm run build-only",
+        "build-with-check": "npm run type-check && npm run build-only",
+        "ios-build": "node esbuild.config.mjs ios"
     },
     "keywords": [],
     "author": "",
