@@ -47,11 +47,11 @@ export class MessageFormatter {
             }
             
             const messageText = message.content.parts
-                .filter(part => 
+                .filter((part: any) => 
                     typeof part === "string" || 
                     (typeof part === "object" && (part.content_type === "audio_transcription" || part.text))
                 )
-                .map(part => {
+                .map((part: any) => {
                     if (typeof part === "string") return part;
                     return part.text || "";
                 })
