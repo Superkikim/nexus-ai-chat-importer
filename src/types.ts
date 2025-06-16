@@ -3,21 +3,27 @@ export interface PluginSettings {
     archiveFolder: string;
     addDatePrefix: boolean;
     dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
-    hasShownUpgradeNotice: boolean; // Keep this as it is
-    hasCompletedUpgrade: boolean; // New property added
+    hasShownUpgradeNotice: boolean;
+    hasCompletedUpgrade: boolean;
 }
 
-
 export interface ChatMessage {
-    message(message: any): unknown;
     id: string;
     author: {
         role: 'user' | 'assistant';
     };
     content: {
         parts: string[];
+        content_type?: string;
     };
     create_time: number;
+}
+
+export interface ChatMapping {
+    id: string;
+    message?: ChatMessage;
+    parent?: string;
+    children?: string[];
 }
 
 export interface Chat {
@@ -25,7 +31,7 @@ export interface Chat {
     title: string;
     create_time: number;
     update_time: number;
-    mapping: Record<string, ChatMessage>;
+    mapping: Record<string, ChatMapping>;
 }
 
 export interface ConversationRecord {
@@ -43,36 +49,21 @@ export interface ReportEntry {
 }
 
 export interface ConversationCatalogEntry {
-    conversationId: string; // Unique ID
-    provider: string;       // Source provider
-    updateTime: number;     // Last update timestamp
-    path: string;           // Path to the conversation file
-}
-
-export interface CustomError {
-    message: string; // A string representing the error message
-    name?: string; // An optional string for the error name (like 'CustomError')
-}
-
-interface Timestamps {
+    conversationId: string;
+    provider: string;
+    updateTime: number;
+    path: string;
     create_time: number;
     update_time: number;
 }
 
-export interface Chat extends Timestamps {
-    id: string;
-    title: string;
-    mapping: Record<string, ChatMessage>;
-}
-
-export interface ConversationCatalogEntry extends Timestamps {
-    conversationId: string;
-    provider: string;
-    path: string;
+export interface CustomError {
+    message: string;
+    name?: string;
 }
 
 export interface ConfirmationDialogOptions {
-    url: string; // The URL to display in the dialog
-    message?: string; // Optional additional message
-    note?: string; // Optional note about deletion
+    url: string;
+    message?: string;
+    note?: string;
 }
