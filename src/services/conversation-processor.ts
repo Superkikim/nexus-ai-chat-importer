@@ -3,6 +3,7 @@ import { TFile } from "obsidian";
 import { Chat, ConversationCatalogEntry, ChatMessage, ChatMapping } from "../types";
 import { ImportReport } from "../models/import-report";
 import { MessageFormatter } from "../formatters/message-formatter";
+import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
 import { 
     formatTimestamp, 
@@ -18,6 +19,7 @@ import type NexusAiChatImporterPlugin from "../main";
 export class ConversationProcessor {
     private messageFormatter: MessageFormatter;
     private fileService: FileService;
+    private noteFormatter: NoteFormatter;
     private counters = {
         totalExistingConversations: 0,
         totalNewConversationsToImport: 0,
@@ -33,6 +35,7 @@ export class ConversationProcessor {
     constructor(private plugin: NexusAiChatImporterPlugin) {
         this.messageFormatter = new MessageFormatter(plugin.logger);
         this.fileService = new FileService(plugin);
+        this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id);
     }
 
     async processChats(chats: Chat[], importReport: ImportReport): Promise<ImportReport> {
@@ -165,7 +168,14 @@ export class ConversationProcessor {
         importReport: ImportReport
     ): Promise<void> {
         try {
-            const content = this.generateMarkdownContent(chat);
+            // Ensure the folder exists (in case it was deleted)
+            const folderPath = filePath.substring(0, filePath.lastIndexOf('/'));
+            const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
+            if (!folderResult.success) {
+                throw new Error(folderResult.error || "Failed to ensure folder exists.");
+            }
+
+            const content = this.noteFormatter.generateMarkdownContent(chat);
             await this.fileService.writeToFile(filePath, content);
 
             const messageCount = Object.values(chat.mapping)
@@ -201,45 +211,6 @@ export class ConversationProcessor {
             );
             throw error;
         }
-    }
-
-    private generateMarkdownContent(chat: Chat): string {
-        const formattedTitle = formatTitle(chat.title);
-        const create_time_str = `${formatTimestamp(chat.create_time, "date")} at ${formatTimestamp(chat.create_time, "time")}`;
-        const update_time_str = `${formatTimestamp(chat.update_time, "date")} at ${formatTimestamp(chat.update_time, "time")}`;
-
-        let content = this.generateHeader(formattedTitle, chat.id, create_time_str, update_time_str);
-        content += this.generateMessagesContent(chat);
-
-        return content;
-    }
-
-    private generateHeader(title: string, conversationId: string, createTimeStr: string, updateTimeStr: string): string {
-        return `---
-nexus: ${this.plugin.manifest.id}
-provider: chatgpt
-aliases: "${title}"
-conversation_id: ${conversationId}
-create_time: ${createTimeStr}
-update_time: ${updateTimeStr}
----
-
-# Title: ${title}
-
-Created: ${createTimeStr}
-Last Updated: ${updateTimeStr}\n\n
-`;
-    }
-
-    private generateMessagesContent(chat: Chat): string {
-        let messagesContent = "";
-        for (const messageId in chat.mapping) {
-            const messageObj = chat.mapping[messageId];
-            if (messageObj?.message && isValidMessage(messageObj.message)) {
-                messagesContent += this.messageFormatter.formatMessage(messageObj.message);
-            }
-        }
-        return messagesContent;
     }
 
     private updateMetadata(content: string, updateTime: number): string {
