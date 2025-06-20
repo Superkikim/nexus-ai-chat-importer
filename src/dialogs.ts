@@ -1,26 +1,29 @@
 // src/dialogs.ts
 import { Modal, App } from "obsidian";
 
-// Function to show the modal with improved styling
+// Function to show the modal with improved spacing
 function displayModal(app: App, title: string, paragraphs: string[], note?: string): Modal {
     const modal = new Modal(app);
     modal.contentEl.addClass("nexus-ai-chat-importer-modal");
 
-    // Title with proper styling
+    // Title with reduced top spacing
     const titleEl = modal.contentEl.createEl("h2", { 
         text: title,
         cls: "modal-title"
     });
 
-    // Content container with proper spacing
+    // Content container
     const contentContainer = modal.contentEl.createDiv({ cls: "modal-content" });
 
-    // Render each paragraph with enhanced formatting
-    paragraphs.forEach((paragraph) => {
+    // Process paragraphs with automatic spacing
+    paragraphs.forEach((paragraph, paragraphIndex) => {
+        // Add double line breaks to ensure sections are separated
+        const paragraphWithSpacing = paragraph + '\n\n';
+        
         const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
         
-        // Split into logical sections (double line breaks create new sections)
-        const sections = paragraph.split('\n\n').filter(section => section.trim() !== '');
+        // Split into sections (double line breaks create new sections)
+        const sections = paragraphWithSpacing.split('\n\n').filter(section => section.trim() !== '');
         
         sections.forEach((section, sectionIndex) => {
             const sectionDiv = paragraphDiv.createDiv({ cls: "modal-section" });
@@ -28,41 +31,47 @@ function displayModal(app: App, title: string, paragraphs: string[], note?: stri
             // Process each line within the section
             const lines = section.split('\n').filter(line => line.trim() !== '');
             
-            lines.forEach((line, lineIndex) => {
+            lines.forEach((line) => {
                 const lineDiv = sectionDiv.createDiv({ cls: "modal-line" });
                 
                 // Convert markdown formatting to HTML
                 let htmlContent = line
                     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>')
-                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')  // Bold text
-                    .replace(/\*([^*]+)\*/g, '<em>$1</em>');  // Italic text
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
                 
                 // Check for special formatting
                 if (line.trim().endsWith(':') && line.trim().length < 30) {
-                    // Section headers like "Resources:"
                     lineDiv.innerHTML = `<strong class="section-header">${htmlContent}</strong>`;
                 } else if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
-                    // List items
                     lineDiv.innerHTML = htmlContent;
                     lineDiv.addClass('modal-list-item');
                 } else {
-                    // Regular content
                     lineDiv.innerHTML = htmlContent;
                 }
             });
             
-            // Add extra spacing between sections (except after the last one)
+            // Add spacing between sections within paragraph
             if (sectionIndex < sections.length - 1) {
                 paragraphDiv.createDiv({ cls: "modal-section-break" });
             }
         });
     });
 
-    // Note section with emphasis
+    // Handle note as separate section with spacing
     if (note) {
+        // Add spacing before note
+        contentContainer.createDiv({ cls: "modal-major-break" });
+        
         const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
-        const noteLabel = noteDiv.createEl("strong", { text: "NOTE: " });
-        noteDiv.createSpan({ text: note });
+        
+        // Process note content with same formatting
+        let noteContent = note
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>')
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        
+        noteDiv.innerHTML = noteContent;
     }
 
     return modal;
