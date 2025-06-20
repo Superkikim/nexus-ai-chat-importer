@@ -62,6 +62,14 @@ export interface CustomError {
     name?: string;
 }
 
+export function isCustomError(error: unknown): error is CustomError {
+    return (
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error
+    );
+}
+
 export interface ConfirmationDialogOptions {
     url: string;
     message?: string;
