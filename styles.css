@@ -21,20 +21,36 @@
 }
 
 .nexus-ai-chat-importer-modal .modal-paragraph {
-    margin-bottom: 1.2em;
+    margin-bottom: 1.5em;
 }
 
-.nexus-ai-chat-importer-modal .modal-paragraph p {
-    margin: 0;
+.nexus-ai-chat-importer-modal .modal-line {
+    margin-bottom: 0.8em;
     color: var(--text-normal);
 }
 
-.nexus-ai-chat-importer-modal .modal-paragraph strong {
+.nexus-ai-chat-importer-modal .modal-line:last-child {
+    margin-bottom: 0;
+}
+
+.nexus-ai-chat-importer-modal .modal-line.modal-list-item {
+    padding-left: 1em;
+    margin-bottom: 0.5em;
+}
+
+.nexus-ai-chat-importer-modal .modal-paragraph p {
+    margin: 0 0 0.8em 0;
+    color: var(--text-normal);
+}
+
+.nexus-ai-chat-importer-modal .modal-paragraph strong,
+.nexus-ai-chat-importer-modal .modal-line strong {
     color: var(--text-accent);
     font-weight: 600;
 }
 
-.nexus-ai-chat-importer-modal .modal-paragraph em {
+.nexus-ai-chat-importer-modal .modal-paragraph em,
+.nexus-ai-chat-importer-modal .modal-line em {
     color: var(--text-muted);
     font-style: italic;
 }
@@ -114,14 +130,10 @@
     transform: translateY(-1px);
 }
 
-/* Improved typography */
+/* Improved typography and spacing */
 .nexus-ai-chat-importer-modal .modal-paragraph {
     font-size: 1em;
     color: var(--text-normal);
-}
-
-.nexus-ai-chat-importer-modal .modal-paragraph br {
-    margin-bottom: 0.5em;
 }
 
 /* Legacy support for old class names */
