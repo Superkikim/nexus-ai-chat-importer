@@ -16,14 +16,17 @@ export class Upgrader {
     async checkForUpgrade() {
         try {
             const currentVersion = this.plugin.manifest.version;
-            const lastVersion = (await this.plugin.loadData("lastVersion")) || "0.0.0";
-            const hasCompletedUpgrade = (await this.plugin.loadData("hasCompletedUpgrade")) || false;
+            const data = await this.plugin.loadData();
+            const lastVersion = data?.lastVersion || "0.0.0";
+            const hasCompletedUpgrade = data?.hasCompletedUpgrade || false;
 
             // Perform the upgrade only if it hasn't been completed
             if (currentVersion !== lastVersion && !hasCompletedUpgrade) {
                 await this.performUpgrade(currentVersion, lastVersion);
-                await this.plugin.saveData("lastVersion", currentVersion);
-                await this.plugin.saveData("hasCompletedUpgrade", true);
+                const data = await this.plugin.loadData() || {};
+                data.lastVersion = currentVersion;
+                data.hasCompletedUpgrade = true;
+                await this.plugin.saveData(data);
             }
         } catch (error) {
             logger.error("Error during upgrade check:", error);
