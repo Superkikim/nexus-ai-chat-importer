@@ -18,15 +18,6 @@ export class ImportService {
     }
 
     async selectZipFile() {
-        await showDialog(
-            this.plugin.app,
-            "information",
-            "Import Settings",
-            ["Importing ChatGPT conversations"],
-            "Only ChatGPT exports are supported currently",
-            { button1: "Continue" }
-        );
-
         const input = document.createElement("input");
         input.type = "file";
         input.accept = ".zip";
@@ -92,7 +83,7 @@ export class ImportService {
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
         } catch (error: unknown) {
-            const message = isCustomError(error)
+            const message = error instanceof NexusAiChatImporterError
                 ? error.message
                 : error instanceof Error
                 ? error.message
@@ -144,9 +135,9 @@ export class ImportService {
                 this.conversationProcessor.getCounters()
             );
         } catch (error: unknown) {
-            if (isCustomError(error)) {
+            if (error instanceof NexusAiChatImporterError) {
                 this.plugin.logger.error("Error processing conversations", error.message);
-            } else if (error instanceof Error) {
+            } else if (typeof error === 'object' && error instanceof Error) {
                 this.plugin.logger.error("General error processing conversations", error.message);
             } else {
                 this.plugin.logger.error("Unknown error processing conversations", "An unknown error occurred");
