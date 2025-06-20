@@ -1,10 +1,10 @@
 {
     "name": "nexus-ai-chat-importer",
-    "version": "1.0.5",
+    "version": "1.0.7",
     "description": "This plugin allows to import ChatGPT conversation from the export files downloaded from your account",
     "main": "main.js",
     "scripts": {
-        "dev": "node esbuild.config.mjs",
+        "dev": "node esbuild.config.mjs && cp styles.css build/styles.css && chokidar \"styles.css\" -c \"cp styles.css build/styles.css\"",
         "type-check": "tsc --noEmit --skipLibCheck",
         "build-only": "node esbuild.config.mjs production",
         "build": "npm run build-only",
@@ -20,6 +20,7 @@
         "@typescript-eslint/eslint-plugin": "5.29.0",
         "@typescript-eslint/parser": "5.29.0",
         "builtin-modules": "3.3.0",
+        "chokidar-cli": "^3.0.0",
         "copyfiles": "^2.3.0",
         "esbuild": "0.17.3",
         "eslint": "^8.0.1",
