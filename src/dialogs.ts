@@ -1,5 +1,5 @@
 // src/dialogs.ts
-import { Modal, App, MarkdownRenderer } from "obsidian";
+import { Modal, App } from "obsidian";
 
 // Function to show the modal with improved styling
 function displayModal(app: App, title: string, paragraphs: string[], note?: string): Modal {
@@ -15,21 +15,30 @@ function displayModal(app: App, title: string, paragraphs: string[], note?: stri
     // Content container with proper spacing
     const contentContainer = modal.contentEl.createDiv({ cls: "modal-content" });
 
-    // Render each paragraph with basic HTML parsing for links
+    // Render each paragraph with enhanced formatting
     paragraphs.forEach((paragraph) => {
         const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
         
-        // Simple link detection and conversion
+        // Handle different types of content
         if (paragraph.includes('[') && paragraph.includes(']') && paragraph.includes('(')) {
-            // Convert markdown links to HTML manually
-            const htmlContent = paragraph.replace(
-                /\[([^\]]+)\]\(([^)]+)\)/g, 
-                '<a href="$2" class="external-link" target="_blank">$1</a>'
-            );
+            // Convert markdown links to HTML with better formatting
+            let htmlContent = paragraph
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>')
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')  // Bold text
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>');  // Italic text
+            
+            // Handle line breaks
+            htmlContent = htmlContent.replace(/\n/g, '<br>');
+            
             paragraphDiv.innerHTML = htmlContent;
         } else {
-            // Simple text
-            paragraphDiv.createEl("p", { text: paragraph });
+            // Handle plain text with line breaks
+            const textWithBreaks = paragraph.replace(/\n/g, '<br>');
+            if (textWithBreaks.includes('<br>')) {
+                paragraphDiv.innerHTML = textWithBreaks;
+            } else {
+                paragraphDiv.createEl("p", { text: paragraph });
+            }
         }
     });
 
