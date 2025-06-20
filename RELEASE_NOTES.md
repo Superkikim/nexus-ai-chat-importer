@@ -6,7 +6,9 @@
 
 ## Overview
 
-Version 1.0.5 introduces support for multiple file imports, allowing users to process multiple export files in a single operation while maintaining data consistency.
+Version 1.0.7 is mainly a modular refactor of source code. 
+
+It adds however the link to the webapp chat rather than only provide the link embedded in the inline title.
 
 ## New Features
 
