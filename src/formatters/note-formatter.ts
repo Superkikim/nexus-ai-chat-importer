@@ -35,7 +35,8 @@ update_time: ${updateTimeStr}
 # Title: ${title}
 
 Created: ${createTimeStr}
-Last Updated: ${updateTimeStr}\n\n
+Last Updated: ${updateTimeStr}
+Chat URL: https://chat.openai.com/c/${conversationId}\n\n
 `;
     }
 
