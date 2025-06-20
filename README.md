@@ -1,6 +1,6 @@
 # Nexus AI Chat Importer Plugin for Obsidian
 
-![Version](https://img.shields.io/badge/version-1.0.5-blue)
+![Version](https://img.shields.io/badge/version-1.0.7-blue)
 
 ## Overview
 
@@ -36,7 +36,7 @@ Version 1.0.5 of the Nexus AI Chat Importer Plugin for Obsidian introduces suppo
 
 ## About
 
-Master branch: [1.0.5 (Stable Release)](https://github.com/Superkikim/nexus-ai-chat-importer/tree/master)  
+Master branch: [1.0.7 (Stable Release)](https://github.com/Superkikim/nexus-ai-chat-importer/tree/master)
 
 The Nexus AI Chat Importer Plugin simplifies the process of importing ChatGPT conversations from export files into Obsidian.
 
@@ -52,9 +52,11 @@ The plugin allows you to seamlessly import your AI chat conversations from expor
 -   Create individual Markdown files for each conversation
 -   Update existing conversations with new messages
 -   Detailed import reports for tracking the import process
--   One-time upgrade check to ensure users are up-to-date
+-   One-time upgrade check with dynamic release notes integration
+-   Direct links to original chat conversations in both title and header
 -   Improved import reports with more accurate and detailed information
 -   iOS support for managing conversations on mobile devices
+-   Modular architecture preparing for multiple provider support
 
 ## Installation
 
@@ -152,7 +154,7 @@ Beware:
 -   The plugin has been officially renamed to "Nexus AI Chat Importer" to better reflect its functionality.
 -   For users upgrading from previous versions, it's recommended to delete old data and re-import conversations with this new version for optimal performance and feature compatibility.
 
-For more detailed information about the latest release, please refer to the [Release Notes](v1.0.5_RELEASE_NOTES.md).
+For more detailed information about the latest release, please refer to the [Release Notes](v1.0.7_RELEASE_NOTES.md).
 
 ## Contributors
 
