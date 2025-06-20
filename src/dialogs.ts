@@ -19,27 +19,34 @@ function displayModal(app: App, title: string, paragraphs: string[], note?: stri
     paragraphs.forEach((paragraph) => {
         const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
         
-        // Handle different types of content
-        if (paragraph.includes('[') && paragraph.includes(']') && paragraph.includes('(')) {
-            // Convert markdown links to HTML with better formatting
-            let htmlContent = paragraph
-                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>')
-                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')  // Bold text
-                .replace(/\*([^*]+)\*/g, '<em>$1</em>');  // Italic text
-            
-            // Handle line breaks
-            htmlContent = htmlContent.replace(/\n/g, '<br>');
-            
-            paragraphDiv.innerHTML = htmlContent;
-        } else {
-            // Handle plain text with line breaks
-            const textWithBreaks = paragraph.replace(/\n/g, '<br>');
-            if (textWithBreaks.includes('<br>')) {
-                paragraphDiv.innerHTML = textWithBreaks;
+        // Split paragraph into lines for better spacing
+        const lines = paragraph.split('\n').filter(line => line.trim() !== '');
+        
+        lines.forEach((line, index) => {
+            if (line.includes('[') && line.includes(']') && line.includes('(')) {
+                // Convert markdown links to HTML with better formatting
+                let htmlContent = line
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')  // Bold text
+                    .replace(/\*([^*]+)\*/g, '<em>$1</em>');  // Italic text
+                
+                const lineDiv = paragraphDiv.createDiv({ cls: "modal-line" });
+                lineDiv.innerHTML = htmlContent;
             } else {
-                paragraphDiv.createEl("p", { text: paragraph });
+                // Handle plain text lines
+                const lineDiv = paragraphDiv.createDiv({ cls: "modal-line" });
+                
+                // Check for special formatting (like "Resources:")
+                if (line.trim().endsWith(':') && line.trim().length < 20) {
+                    lineDiv.innerHTML = `<strong>${line}</strong>`;
+                } else if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
+                    lineDiv.innerHTML = line;
+                    lineDiv.addClass('modal-list-item');
+                } else {
+                    lineDiv.textContent = line;
+                }
             }
-        }
+        });
     });
 
     // Note section with emphasis
