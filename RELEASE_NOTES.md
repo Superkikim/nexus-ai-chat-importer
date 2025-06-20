@@ -12,19 +12,19 @@ It adds however the link to the webapp chat rather than only provide the link em
 
 ## New Features
 
-1. **Multiple File Import**: Users can now select multiple ZIP files for import in a single operation.
-2. **Sequential Processing**: Files are automatically processed in chronological order based on their timestamps to ensure data consistency.
+No new feature in this version.
 
 ## Enhancements
 
-1. **Import Dialog**: Added an informational dialog preparing for future provider support.
-2. **Improved Logging**: Enhanced logging for better tracking of file processing sequence.
+1. **Direct link to webapp chat**: A link the chat has been added in addition to the inline title embedded
+
+2. **Improved Upgrade notification**: Upgrade notification will now parse details from github directly
+
 3. **General Optimizations**: Continued code cleanup and optimization to ensure high performance and maintainable architecture.
 
 ## Changes
 
-1. **Import Process**: Modified to handle multiple files while maintaining sequential processing.
-2. **File Handling**: Added timestamp-based sorting for consistent import order.
+1. **Refactoring**: Source code has been refactored to prepare for supporting multiple providers. First to come will be Claude.
 
 ## Upgrading
 
@@ -32,8 +32,8 @@ Users of version 1.0.2 and later can simply update the plugin to take advantage 
 
 ## Installation
 
-For detailed installation instructions, please refer to the [README](https://github.com/Superkikim/nexus-ai-chat-importer/blob/1.0.5/README.md#installation).
+For detailed installation instructions, please refer to the [README](https://github.com/Superkikim/nexus-ai-chat-importer/blob/1.0.7/README.md#installation).
 
 Thank you for using Nexus AI Chat Importer. We remain committed to improving your experience in managing AI chat conversations in Obsidian.
 
-**Full Changelog**: https://github.com/Superkikim/nexus-ai-chat-importer/commits/1.0.5
+**Full Changelog**: https://github.com/Superkikim/nexus-ai-chat-importer/commits/1.0.7
