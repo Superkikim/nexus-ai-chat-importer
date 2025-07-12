@@ -1,12 +1,12 @@
 // src/formatters/message-formatter.ts
-import { ChatMessage } from "../types";
+import { StandardMessage, StandardAttachment } from "../types/standard-types";
 import { formatTimestamp } from "../utils";
 import { Logger } from "../logger";
 
 export class MessageFormatter {
     constructor(private logger: Logger) {}
 
-    formatMessages(messages: ChatMessage[]): string {
+    formatMessages(messages: StandardMessage[]): string {
         return messages
             .filter(message => message !== undefined)
             .map(message => this.formatMessage(message))
@@ -14,69 +14,93 @@ export class MessageFormatter {
             .join("\n\n");
     }
 
-    formatMessage(message: ChatMessage): string {
+    formatMessage(message: StandardMessage): string {
         if (!message) {
             this.logger.error("Message is null or undefined:", message);
             return "";
         }
 
         const messageTime = 
-            formatTimestamp(message.create_time || Date.now() / 1000, "date") +
+            formatTimestamp(message.timestamp, "date") +
             " at " +
-            formatTimestamp(message.create_time || Date.now() / 1000, "time");
+            formatTimestamp(message.timestamp, "time");
 
-        let authorName = "Unknown";
-        if (message.author && typeof message.author === "object" && "role" in message.author) {
-            authorName = message.author.role === "user" ? "User" : "ChatGPT";
-        } else {
-            this.logger.warn("Author information missing or invalid:", message.author);
-        }
-
-        const headingLevel = authorName === "User" ? "###" : "####";
-        const quoteChar = authorName === "User" ? ">" : ">>";
+        const authorName = message.role === "user" ? "User" : "Assistant";
+        const headingLevel = message.role === "user" ? "###" : "####";
+        const quoteChar = message.role === "user" ? ">" : ">>";
 
         let messageContent = `${headingLevel} ${authorName}, on ${messageTime};\n`;
 
-        if (
-            message.content &&
-            typeof message.content === "object" &&
-            Array.isArray(message.content.parts)
-        ) {
-            if (message.content.content_type === "multimodal_text") {
-                console.log("Processing multimodal message:", message.id);
-            }
-            
-            const messageText = message.content.parts
-                .filter((part: any) => 
-                    typeof part === "string" || 
-                    (typeof part === "object" && (part.content_type === "audio_transcription" || part.text))
-                )
-                .map((part: any) => {
-                    if (typeof part === "string") return part;
-                    return part.text || "";
-                })
+        // Format main message content
+        if (message.content) {
+            messageContent += message.content
+                .split("\n")
+                .map(line => `${quoteChar} ${line}`)
                 .join("\n");
-
-            if (messageText) {
-                messageContent += messageText
-                    .split("\n")
-                    .map(line => `${quoteChar} ${line}`)
-                    .join("\n");
-            } else {
-                this.logger.warn("Message content has no text parts:", message.content);
-                messageContent += `${quoteChar} [No text content]`;
-            }
         } else {
-            this.logger.warn("Message content missing or invalid:", message.content);
+            this.logger.warn("Message content missing:", message.id);
             messageContent += `${quoteChar} [No content]`;
         }
 
-        messageContent += `\n<!-- UID: ${message.id || "unknown"} -->\n`;
+        // Format attachments if any
+        if (message.attachments && message.attachments.length > 0) {
+            messageContent += "\n\n" + this.formatAttachments(message.attachments, quoteChar);
+        }
 
-        if (authorName === "ChatGPT") {
+        // Add UID for update tracking
+        messageContent += `\n<!-- UID: ${message.id} -->\n`;
+
+        // Add separator for assistant messages
+        if (message.role === "assistant") {
             messageContent += "\n---\n";
         }
 
         return messageContent + "\n\n";
+    }
+
+    private formatAttachments(attachments: StandardAttachment[], quoteChar: string): string {
+        return attachments.map(attachment => {
+            let content = `${quoteChar} **📎 Attachment:** ${attachment.fileName}`;
+            
+            if (attachment.fileType) {
+                content += ` (${attachment.fileType})`;
+            }
+            
+            if (attachment.fileSize) {
+                content += ` - ${this.formatFileSize(attachment.fileSize)}`;
+            }
+
+            // Add URL if available
+            if (attachment.url) {
+                content += `\n${quoteChar} **Link:** ${attachment.url}`;
+            }
+
+            // Add extracted content (transcriptions, OCR, code, etc.)
+            if (attachment.extractedContent) {
+                content += `\n${quoteChar} **Content:**\n`;
+                content += attachment.extractedContent
+                    .split("\n")
+                    .map(line => `${quoteChar} ${line}`)
+                    .join("\n");
+            }
+
+            // Add raw content for text files
+            if (attachment.content && !attachment.extractedContent) {
+                content += `\n${quoteChar} **Content:**\n`;
+                content += attachment.content
+                    .split("\n")
+                    .map(line => `${quoteChar} ${line}`)
+                    .join("\n");
+            }
+
+            return content;
+        }).join("\n\n");
+    }
+
+    private formatFileSize(bytes: number): string {
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        if (bytes === 0) return '0 Bytes';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
     }
 }
