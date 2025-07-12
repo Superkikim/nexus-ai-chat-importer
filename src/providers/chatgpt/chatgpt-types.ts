@@ -1,5 +1,19 @@
 // src/providers/chatgpt/chatgpt-types.ts
 
+/**
+ * ChatGPT attachment/file structure based on schema analysis
+ */
+export interface ChatGPTAttachment {
+    file_name: string;
+    file_size?: number;
+    file_type?: string;
+    extracted_content?: string; // For processed content (OCR, transcriptions, etc.)
+}
+
+export interface ChatGPTFile {
+    file_name: string;
+}
+
 export interface ChatMessage {
     id: string;
     author: {
@@ -10,6 +24,19 @@ export interface ChatMessage {
         content_type?: string;
     };
     create_time: number;
+    attachments?: ChatGPTAttachment[]; // Added attachment support
+    files?: ChatGPTFile[]; // Added file reference support
+    metadata?: {
+        attachments?: Array<{
+            id: string;
+            name: string;
+            size: number;
+            mime_type?: string;
+            width?: number;
+            height?: number;
+        }>;
+        [key: string]: any;
+    };
 }
 
 export interface ChatMapping {

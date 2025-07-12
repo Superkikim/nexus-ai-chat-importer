@@ -57,5 +57,48 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
                         })
                 );
         }
+
+        // Attachment settings section
+        containerEl.createEl("h3", { text: "Attachment Settings" });
+
+        new Setting(containerEl)
+            .setName("Import attachments")
+            .setDesc("Save attachment files to disk and link them in conversations")
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.importAttachments)
+                    .onChange(async (value) => {
+                        this.plugin.settings.importAttachments = value;
+                        await this.plugin.saveSettings();
+                        this.display();
+                    })
+            );
+
+        if (this.plugin.settings.importAttachments) {
+            new Setting(containerEl)
+                .setName("Attachment folder")
+                .setDesc("Choose a folder to store attachment files (recommended: exclude from sync for large files)")
+                .addText((text) =>
+                    text
+                        .setPlaceholder("Enter attachment folder path")
+                        .setValue(this.plugin.settings.attachmentFolder)
+                        .onChange(async (value) => {
+                            this.plugin.settings.attachmentFolder = value;
+                            await this.plugin.saveSettings();
+                        })
+                );
+            
+            // Add helpful note about sync exclusion
+            const noteEl = containerEl.createDiv({ cls: "setting-item-description" });
+            noteEl.createEl("strong", { text: "💡 Tip: " });
+            noteEl.appendText("Consider excluding the attachment folder from sync to avoid uploading large files.");
+            noteEl.createEl("br");
+            noteEl.createEl("strong", { text: "🎯 Organization: " });
+            noteEl.appendText("Attachments will be organized by providers automatically.");
+            noteEl.style.marginTop = "10px";
+            noteEl.style.padding = "10px";
+            noteEl.style.backgroundColor = "var(--background-secondary)";
+            noteEl.style.borderRadius = "4px";
+        }
     }
 }

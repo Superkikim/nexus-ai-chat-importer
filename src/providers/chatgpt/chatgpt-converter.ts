@@ -1,6 +1,6 @@
 // src/providers/chatgpt/chatgpt-converter.ts
-import { Chat, ChatMessage } from "./chatgpt-types";
-import { StandardConversation, StandardMessage } from "../../types/standard";
+import { Chat, ChatMessage, ChatGPTAttachment } from "./chatgpt-types";
+import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
 import { isValidMessage } from "../../utils";
 
 export class ChatGPTConverter {
@@ -48,9 +48,69 @@ export class ChatGPTConverter {
             role: chatMessage.author.role === "user" ? "user" : "assistant",
             content: this.extractContent(chatMessage),
             timestamp: chatMessage.create_time,
-            // Note: ChatGPT doesn't have attachments in current implementation
-            // This will be added in Step 3
-            attachments: []
+            attachments: this.convertAttachments(chatMessage)
+        };
+    }
+
+    /**
+     * Convert ChatGPT attachments to StandardAttachments
+     */
+    private static convertAttachments(chatMessage: ChatMessage): StandardAttachment[] {
+        const attachments: StandardAttachment[] = [];
+
+        // Process attachments from metadata (new format)
+        if (chatMessage.metadata?.attachments && Array.isArray(chatMessage.metadata.attachments)) {
+            for (const attachment of chatMessage.metadata.attachments) {
+                attachments.push({
+                    fileName: attachment.name,
+                    fileSize: attachment.size,
+                    fileType: attachment.mime_type,
+                    fileId: attachment.id // ChatGPT file ID for ZIP lookup
+                });
+            }
+        }
+
+        // Process legacy attachments array if present
+        if (chatMessage.attachments && Array.isArray(chatMessage.attachments)) {
+            for (const attachment of chatMessage.attachments) {
+                // Only add if not already processed from metadata
+                const alreadyExists = attachments.some(att => att.fileName === attachment.file_name);
+                if (!alreadyExists) {
+                    attachments.push({
+                        fileName: attachment.file_name,
+                        fileSize: attachment.file_size,
+                        fileType: attachment.file_type,
+                        extractedContent: attachment.extracted_content
+                    });
+                }
+            }
+        }
+
+        // Process files array if present (simpler structure)
+        if (chatMessage.files && Array.isArray(chatMessage.files)) {
+            for (const file of chatMessage.files) {
+                // Only add if not already processed from attachments array
+                const alreadyExists = attachments.some(att => att.fileName === file.file_name);
+                if (!alreadyExists) {
+                    attachments.push({
+                        fileName: file.file_name
+                    });
+                }
+            }
+        }
+
+        return attachments;
+    }
+
+    /**
+     * Convert single ChatGPT attachment to StandardAttachment
+     */
+    private static convertSingleAttachment(attachment: ChatGPTAttachment): StandardAttachment {
+        return {
+            fileName: attachment.file_name,
+            fileSize: attachment.file_size,
+            fileType: attachment.file_type,
+            extractedContent: attachment.extracted_content
         };
     }
 

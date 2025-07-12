@@ -7,7 +7,10 @@ import { ImportReport } from "../models/import-report";
 import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
+import { AttachmentService } from "./attachment-service";
 import { ChatGPTConverter } from "../providers/chatgpt/chatgpt-converter";
+import { ChatGPTAttachmentExtractor } from "../providers/chatgpt/chatgpt-attachment-extractor";
+import JSZip from "jszip";
 import { 
     formatTimestamp, 
     formatTitle, 
@@ -23,6 +26,7 @@ export class ConversationProcessor {
     private messageFormatter: MessageFormatter;
     private fileService: FileService;
     private noteFormatter: NoteFormatter;
+    private chatgptAttachmentExtractor: ChatGPTAttachmentExtractor;
     private counters = {
         totalExistingConversations: 0,
         totalNewConversationsToImport: 0,
@@ -39,15 +43,16 @@ export class ConversationProcessor {
         this.messageFormatter = new MessageFormatter(plugin.logger);
         this.fileService = new FileService(plugin);
         this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id);
+        this.chatgptAttachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
     }
 
-    async processChats(chats: Chat[], importReport: ImportReport): Promise<ImportReport> {
+    async processChats(chats: Chat[], importReport: ImportReport, zip?: JSZip): Promise<ImportReport> {
         const storage = this.plugin.getStorageService();
         const existingConversations = storage.getConversationCatalog();
         this.counters.totalExistingConversations = Object.keys(existingConversations).length;
 
         for (const chat of chats) {
-            await this.processSingleChat(chat, existingConversations, importReport);
+            await this.processSingleChat(chat, existingConversations, importReport, zip);
         }
 
         return importReport;
@@ -56,14 +61,15 @@ export class ConversationProcessor {
     private async processSingleChat(
         chat: Chat,
         existingConversations: Record<string, ConversationCatalogEntry>,
-        importReport: ImportReport
+        importReport: ImportReport,
+        zip?: JSZip
     ): Promise<void> {
         try {
             if (existingConversations[chat.id]) {
-                await this.handleExistingChat(chat, existingConversations[chat.id], importReport);
+                await this.handleExistingChat(chat, existingConversations[chat.id], importReport, zip);
             } else {
                 const filePath = await this.generateFilePath(chat);
-                await this.handleNewChat(chat, filePath, existingConversations, importReport);
+                await this.handleNewChat(chat, filePath, existingConversations, importReport, zip);
                 this.updateConversationCatalogEntry(chat, filePath);
             }
             this.counters.totalConversationsProcessed++;
@@ -76,7 +82,8 @@ export class ConversationProcessor {
     private async handleExistingChat(
         chat: Chat,
         existingRecord: ConversationCatalogEntry,
-        importReport: ImportReport
+        importReport: ImportReport,
+        zip?: JSZip
     ): Promise<void> {
         const totalMessageCount = Object.values(chat.mapping)
             .filter(msg => isValidMessage(msg.message)).length;
@@ -87,7 +94,7 @@ export class ConversationProcessor {
         if (!fileExists) {
             // File was deleted, recreate it
             this.plugin.logger.info(`File ${existingRecord.path} was deleted, recreating...`);
-            await this.handleNewChat(chat, existingRecord.path, {}, importReport);
+            await this.handleNewChat(chat, existingRecord.path, {}, importReport, zip);
             return;
         }
 
@@ -102,7 +109,7 @@ export class ConversationProcessor {
             );
         } else {
             this.counters.totalExistingConversationsToUpdate++;
-            await this.updateExistingNote(chat, existingRecord.path, totalMessageCount, importReport);
+            await this.updateExistingNote(chat, existingRecord.path, totalMessageCount, importReport, zip);
         }
     }
 
@@ -110,17 +117,19 @@ export class ConversationProcessor {
         chat: Chat,
         filePath: string,
         existingConversations: Record<string, ConversationCatalogEntry>,
-        importReport: ImportReport
+        importReport: ImportReport,
+        zip?: JSZip
     ): Promise<void> {
         this.counters.totalNewConversationsToImport++;
-        await this.createNewNote(chat, filePath, existingConversations, importReport);
+        await this.createNewNote(chat, filePath, existingConversations, importReport, zip);
     }
 
     private async updateExistingNote(
         chat: Chat,
         filePath: string,
         totalMessageCount: number,
-        importReport: ImportReport
+        importReport: ImportReport,
+        zip?: JSZip
     ): Promise<void> {
         try {
             const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
@@ -134,7 +143,18 @@ export class ConversationProcessor {
 
                 if (newMessages.length > 0) {
                     // Convert ChatGPT messages to standard format
-                    const standardMessages = ChatGPTConverter.convertMessages(newMessages);
+                    let standardMessages = ChatGPTConverter.convertMessages(newMessages);
+                    
+                    // Process attachments if ZIP provided and settings enabled
+                    if (zip && this.plugin.settings.importAttachments) {
+                        standardMessages = await this.processMessageAttachments(
+                            standardMessages, 
+                            chat.id, 
+                            "chatgpt", 
+                            zip
+                        );
+                    }
+                    
                     content += "\n\n" + this.messageFormatter.formatMessages(standardMessages);
                     this.counters.totalConversationsActuallyUpdated++;
                     this.counters.totalNonEmptyMessagesAdded += newMessages.length;
@@ -169,7 +189,8 @@ export class ConversationProcessor {
         chat: Chat,
         filePath: string,
         existingConversations: Record<string, ConversationCatalogEntry>,
-        importReport: ImportReport
+        importReport: ImportReport,
+        zip?: JSZip
     ): Promise<void> {
         try {
             // Ensure the folder exists (in case it was deleted)
@@ -180,7 +201,18 @@ export class ConversationProcessor {
             }
 
             // Convert ChatGPT format to standard format
-            const standardConversation = ChatGPTConverter.convertChat(chat);
+            let standardConversation = ChatGPTConverter.convertChat(chat);
+            
+            // Process attachments if ZIP provided and settings enabled
+            if (zip && this.plugin.settings.importAttachments) {
+                standardConversation.messages = await this.processMessageAttachments(
+                    standardConversation.messages,
+                    chat.id,
+                    "chatgpt",
+                    zip
+                );
+            }
+            
             const content = this.noteFormatter.generateMarkdownContent(standardConversation);
             
             await this.fileService.writeToFile(filePath, content);
@@ -218,6 +250,37 @@ export class ConversationProcessor {
             );
             throw error;
         }
+    }
+
+    /**
+     * Process attachments for messages using ChatGPT-specific extractor
+     */
+    private async processMessageAttachments(
+        messages: StandardMessage[],
+        conversationId: string,
+        provider: string,
+        zip: JSZip
+    ): Promise<StandardMessage[]> {
+        const processedMessages: StandardMessage[] = [];
+        
+        for (const message of messages) {
+            if (message.attachments && message.attachments.length > 0 && provider === "chatgpt") {
+                const processedAttachments = await this.chatgptAttachmentExtractor.extractAttachments(
+                    zip,
+                    conversationId,
+                    message.attachments
+                );
+                
+                processedMessages.push({
+                    ...message,
+                    attachments: processedAttachments
+                });
+            } else {
+                processedMessages.push(message);
+            }
+        }
+        
+        return processedMessages;
     }
 
     private updateMetadata(content: string, updateTime: number): string {

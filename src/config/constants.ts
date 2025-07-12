@@ -1,5 +1,5 @@
 // src/config/constants.ts
-import { PluginSettings } from "../types";
+import { PluginSettings } from "../types/plugin";
 
 export const DEFAULT_SETTINGS: PluginSettings = {
     archiveFolder: "Nexus AI Chat Imports",
@@ -7,6 +7,10 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     dateFormat: "YYYY-MM-DD",
     hasShownUpgradeNotice: false,
     hasCompletedUpgrade: false,
+    
+    // New attachment defaults
+    importAttachments: false,
+    attachmentFolder: "Nexus AI Chat Imports/Attachments",
 };
 
 export const GITHUB = {
