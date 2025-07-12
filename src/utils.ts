@@ -118,11 +118,28 @@ export function isValidMessage(message: any): boolean {
         Array.isArray(message.content.parts) &&
         message.content.parts.length > 0 &&
         message.content.parts.some(
-            (part) =>
-                (typeof part === "string" && part.trim() !== "") ||
-                (typeof part === "object" &&
-                    part.content_type === "audio_transcription" &&
-                    part.text)
+            (part) => {
+                // Handle simple string parts
+                if (typeof part === "string" && part.trim() !== "") {
+                    return true;
+                }
+                // Handle object parts with content_type
+                if (typeof part === "object" && part !== null) {
+                    // Audio transcription parts
+                    if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
+                        return true;
+                    }
+                    // Text parts with content_type
+                    if (part.content_type === "text" && part.text && part.text.trim() !== "") {
+                        return true;
+                    }
+                    // Multimodal text parts
+                    if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
+                        return true;
+                    }
+                }
+                return false;
+            }
         )
     );
 }
