@@ -1,9 +1,12 @@
-// utils.ts
-import { moment, App } from "obsidian";
+// src/utils.ts
+import { moment, App, TFile } from "obsidian";
 import { Logger } from "./logger";
 import { requestUrl } from "obsidian";
 
 const logger = new Logger();
+
+// Cache for file metadata to avoid repeated metadataCache calls
+const metadataCache = new Map<string, any>();
 
 export function formatTimestamp(
     // REQUIRE REFACTORING TO SUPPORT OTHER DATE FORMATS THAN UNIXTIME
@@ -106,7 +109,7 @@ export async function getFileHash(file: File): Promise<string> {
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export function isValidMessage(message: ChatMessage): boolean {
+export function isValidMessage(message: any): boolean {
     return (
         message &&
         typeof message === "object" &&
@@ -115,11 +118,28 @@ export function isValidMessage(message: ChatMessage): boolean {
         Array.isArray(message.content.parts) &&
         message.content.parts.length > 0 &&
         message.content.parts.some(
-            (part) =>
-                (typeof part === "string" && part.trim() !== "") ||
-                (typeof part === "object" &&
-                    part.content_type === "audio_transcription" &&
-                    part.text)
+            (part) => {
+                // Handle simple string parts
+                if (typeof part === "string" && part.trim() !== "") {
+                    return true;
+                }
+                // Handle object parts with content_type
+                if (typeof part === "object" && part !== null) {
+                    // Audio transcription parts
+                    if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
+                        return true;
+                    }
+                    // Text parts with content_type
+                    if (part.content_type === "text" && part.text && part.text.trim() !== "") {
+                        return true;
+                    }
+                    // Multimodal text parts
+                    if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
+                        return true;
+                    }
+                }
+                return false;
+            }
         )
     );
 }
@@ -142,7 +162,7 @@ export async function ensureFolderExists(
         if (!currentFolder) {
             try {
                 await vault.createFolder(currentPath);
-            } catch (error: CustomError) {
+            } catch (error: any) {
                 if (error.message !== "Folder already exists.") {
                     logger.error(
                         `Failed to create folder: ${currentPath}`,
@@ -155,26 +175,10 @@ export async function ensureFolderExists(
                 }
                 // If folder already exists, continue silently
             }
-        } else if (!(currentFolder instanceof TFolder)) {
-            return {
-                success: false,
-                error: `Path exists but is not a folder: ${currentPath}`,
-            };
         }
     }
     return { success: true };
 }
-
-/* export async function checkConversationLink(conversationId: string): Promise<boolean> {
-    const url = `https://chatgpt.com/c/${conversationId}`;
-    try {
-        const response = await fetch(url, { method: "HEAD" });        
-        return response.ok; // Returns true for status codes 200-299
-    } catch (error) {
-        logger.error(`Error fetching ${url}:`, error);
-        return false; // Return false in case of error (e.g., network issues)
-    }
-} */
 
 export async function checkConversationLink(
     conversationId: string
@@ -204,32 +208,81 @@ export function old_getConversationId(app: App): string | undefined {
 }
 
 export function getConversationId(file: TFile): string | undefined {
-    const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter; // Use the passed file
+    // Check cache first
+    const cacheKey = `${file.path}:${file.stat.mtime}`;
+    let frontmatter = metadataCache.get(cacheKey);
+    
+    if (!frontmatter) {
+        frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
+        metadataCache.set(cacheKey, frontmatter);
+        
+        // Clean cache if it gets too large (keep last 100 entries)
+        if (metadataCache.size > 100) {
+            const entries = Array.from(metadataCache.entries());
+            metadataCache.clear();
+            entries.slice(-50).forEach(([key, value]) => {
+                metadataCache.set(key, value);
+            });
+        }
+    }
+    
     return frontmatter?.conversation_id; // Return the conversation_id from frontmatter
 }
 
 export function getProvider(file: TFile): string | undefined {
-    const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter; // Use the passed file
+    const cacheKey = `${file.path}:${file.stat.mtime}`;
+    let frontmatter = metadataCache.get(cacheKey);
+    
+    if (!frontmatter) {
+        frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
+        metadataCache.set(cacheKey, frontmatter);
+        
+        // Clean cache if it gets too large
+        if (metadataCache.size > 100) {
+            const entries = Array.from(metadataCache.entries());
+            metadataCache.clear();
+            entries.slice(-50).forEach(([key, value]) => {
+                metadataCache.set(key, value);
+            });
+        }
+    }
+    
     return frontmatter?.provider; // Return the provider from frontmatter
 }
 
 export function isNexusRelated(file: TFile): boolean {
-    const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter; // Use the passed file
+    const cacheKey = `${file.path}:${file.stat.mtime}`;
+    let frontmatter = metadataCache.get(cacheKey);
+    
+    if (!frontmatter) {
+        frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
+        metadataCache.set(cacheKey, frontmatter);
+        
+        // Clean cache if it gets too large
+        if (metadataCache.size > 100) {
+            const entries = Array.from(metadataCache.entries());
+            metadataCache.clear();
+            entries.slice(-50).forEach(([key, value]) => {
+                metadataCache.set(key, value);
+            });
+        }
+    }
+    
     return frontmatter?.nexus === "nexus-ai-chat-importer"; // Return true if the nexus matches
 }
 
-// Utility function to check if any currently active files are nexus-related
-export function checkAnyNexusFilesActive(app: App): boolean {
-    const leaves = app.workspace.getLeavesOfType("markdown");
-    for (const leaf of leaves) {
-        const file = leaf.view.file;
-        if (file) {
-            const frontmatter =
-                app.metadataCache.getFileCache(file)?.frontmatter;
-            if (frontmatter && frontmatter.nexus) {
-                return true;
-            }
-        }
-    }
-    return false;
+// Note: Removed checkAnyNexusFilesActive function - this was causing performance issues
+// The new event handler system maintains state instead of scanning all files
+
+interface CustomError {
+    message: string;
+    name?: string;
+}
+
+interface ChatMessage {
+    id: string;
+    content?: {
+        parts: any[];
+        content_type?: string;
+    };
 }

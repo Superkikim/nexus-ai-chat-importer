@@ -1,7 +1,7 @@
 // src/main.ts
 import { Plugin, App, PluginManifest } from "obsidian";
 import { DEFAULT_SETTINGS } from "./config/constants";
-import { PluginSettings } from "./types";
+import { PluginSettings } from "./types/plugin";
 import { NexusAiChatImporterPluginSettingTab } from "./ui/settings-tab";
 import { CommandRegistry } from "./commands/command-registry";
 import { EventHandlers } from "./events/event-handlers";
@@ -11,7 +11,7 @@ import { Upgrader } from "./upgrade";
 import { Logger } from "./logger";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
-    settings: PluginSettings;
+    settings!: PluginSettings;
     logger: Logger = new Logger();
     
     private storageService: StorageService;
