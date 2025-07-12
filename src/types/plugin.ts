@@ -5,6 +5,12 @@ export interface PluginSettings {
     dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
     hasShownUpgradeNotice: boolean;
     hasCompletedUpgrade: boolean;
+    
+    // Attachment settings
+    importAttachments: boolean;
+    attachmentFolder: string;
+    skipMissingAttachments: boolean; // Skip instead of creating notes
+    showAttachmentDetails: boolean; // Show detailed status in import report
 }
 
 export interface ConversationRecord {
@@ -47,4 +53,14 @@ export interface ConfirmationDialogOptions {
     url: string;
     message?: string;
     note?: string;
+}
+
+/**
+ * Attachment processing statistics for reports
+ */
+export interface AttachmentStats {
+    total: number;
+    found: number;
+    missing: number;
+    failed: number;
 }

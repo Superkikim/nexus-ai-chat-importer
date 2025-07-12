@@ -8,9 +8,11 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     hasShownUpgradeNotice: false,
     hasCompletedUpgrade: false,
     
-    // New attachment defaults
-    importAttachments: false,
+    // Attachment defaults with "best effort" approach
+    importAttachments: true,  // Enable by default
     attachmentFolder: "Nexus AI Chat Imports/Attachments",
+    skipMissingAttachments: false, // Show notes for missing attachments by default
+    showAttachmentDetails: true,   // Show detailed status in reports
 };
 
 export const GITHUB = {
