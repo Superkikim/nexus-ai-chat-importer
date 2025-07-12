@@ -1,7 +1,7 @@
 {
     "id": "nexus-ai-chat-importer",
     "name": "Nexus AI Chat Importer",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "author": "Superkikim",
     "authorUrl": "https://github.com/Superkikim",
     "minAppVersion": "0.15.0",
