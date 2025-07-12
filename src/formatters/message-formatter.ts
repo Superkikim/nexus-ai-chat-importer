@@ -1,5 +1,5 @@
 // src/formatters/message-formatter.ts
-import { StandardMessage, StandardAttachment } from "../types/standard-types";
+import { StandardMessage, StandardAttachment } from "../types/standard";
 import { formatTimestamp } from "../utils";
 import { Logger } from "../logger";
 
@@ -70,9 +70,13 @@ export class MessageFormatter {
                 content += ` - ${this.formatFileSize(attachment.fileSize)}`;
             }
 
-            // Add URL if available
+            // Smart linking: embed images, link everything else
             if (attachment.url) {
-                content += `\n${quoteChar} **Link:** ${attachment.url}`;
+                if (this.isImageFile(attachment)) {
+                    content += `\n${quoteChar} ![[${attachment.url}]]`; // Embed images
+                } else {
+                    content += `\n${quoteChar} [[${attachment.url}]]`; // Link documents
+                }
             }
 
             // Add extracted content (transcriptions, OCR, code, etc.)
@@ -95,6 +99,21 @@ export class MessageFormatter {
 
             return content;
         }).join("\n\n");
+    }
+
+    /**
+     * Check if attachment is an image file for embedding
+     */
+    private isImageFile(attachment: StandardAttachment): boolean {
+        // Check MIME type first (most reliable)
+        if (attachment.fileType?.startsWith('image/')) {
+            return true;
+        }
+        
+        // Fall back to file extension
+        const fileName = attachment.fileName.toLowerCase();
+        const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.tiff'];
+        return imageExtensions.some(ext => fileName.endsWith(ext));
     }
 
     private formatFileSize(bytes: number): string {

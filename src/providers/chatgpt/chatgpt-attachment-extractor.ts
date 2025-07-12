@@ -16,13 +16,22 @@ export class ChatGPTAttachmentExtractor {
         conversationId: string,
         attachments: StandardAttachment[]
     ): Promise<StandardAttachment[]> {
+        console.log('ChatGPTAttachmentExtractor - Starting extraction:', {
+            conversationId,
+            attachmentCount: attachments.length,
+            importEnabled: this.plugin.settings.importAttachments,
+            attachmentFolder: this.plugin.settings.attachmentFolder
+        });
+
         if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+            console.log('ChatGPTAttachmentExtractor - Skipping extraction (disabled or no attachments)');
             return attachments;
         }
 
         const processedAttachments: StandardAttachment[] = [];
 
         for (const attachment of attachments) {
+            console.log('ChatGPTAttachmentExtractor - Processing attachment:', attachment);
             try {
                 const localPath = await this.extractSingleAttachment(zip, conversationId, attachment);
                 
@@ -30,12 +39,15 @@ export class ChatGPTAttachmentExtractor {
                     ...attachment,
                     url: localPath // Set the local file path as URL for linking
                 });
+                console.log('ChatGPTAttachmentExtractor - Successfully processed attachment with path:', localPath);
             } catch (error) {
+                console.error('ChatGPTAttachmentExtractor - Failed to extract attachment:', error);
                 this.logger.error(`Failed to extract ChatGPT attachment: ${attachment.fileName}`, error);
                 processedAttachments.push(attachment); // Keep original if failed
             }
         }
 
+        console.log('ChatGPTAttachmentExtractor - Finished extraction, processed attachments:', processedAttachments);
         return processedAttachments;
     }
 
@@ -77,33 +89,54 @@ export class ChatGPTAttachmentExtractor {
      * Pattern: file-{ID}-{original-name} or just file-{ID}.{ext}
      */
     private findChatGPTFileById(zip: JSZip, attachment: StandardAttachment): JSZip.JSZipObject | null {
+        console.log('ChatGPTAttachmentExtractor - Looking for file:', {
+            fileName: attachment.fileName,
+            fileId: attachment.fileId
+        });
+
         if (!attachment.fileId) {
+            console.log('ChatGPTAttachmentExtractor - No file ID provided');
             return null;
         }
 
+        // List all files in ZIP for debugging
+        const zipFiles = Object.keys(zip.files);
+        console.log('ChatGPTAttachmentExtractor - Available files in ZIP:', zipFiles.slice(0, 10), '... (showing first 10)');
+
         // Try exact filename match first
         let zipFile = zip.file(attachment.fileName);
-        if (zipFile) return zipFile;
+        if (zipFile) {
+            console.log('ChatGPTAttachmentExtractor - Found exact filename match');
+            return zipFile;
+        }
 
         // Try file ID pattern: file-{ID}-{name}
         const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
+        console.log('ChatGPTAttachmentExtractor - Trying file ID pattern:', fileIdPattern);
         zipFile = zip.file(fileIdPattern);
-        if (zipFile) return zipFile;
+        if (zipFile) {
+            console.log('ChatGPTAttachmentExtractor - Found file ID pattern match');
+            return zipFile;
+        }
 
         // Search through all files for pattern matching
+        console.log('ChatGPTAttachmentExtractor - Searching all files for patterns...');
         for (const [path, file] of Object.entries(zip.files)) {
             if (!file.dir) {
                 // Check if file path contains the file ID
                 if (path.includes(attachment.fileId)) {
+                    console.log('ChatGPTAttachmentExtractor - Found file by ID in path:', path);
                     return file;
                 }
                 // Check if filename matches at the end of path
                 if (path.endsWith(attachment.fileName)) {
+                    console.log('ChatGPTAttachmentExtractor - Found file by filename at end of path:', path);
                     return file;
                 }
             }
         }
 
+        console.log('ChatGPTAttachmentExtractor - File not found in ZIP');
         return null;
     }
 

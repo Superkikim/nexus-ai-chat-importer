@@ -122,7 +122,6 @@ export class StorageService {
         this.importedArchives = {};
         this.conversationCatalog = {};
         this.conversationsByPath.clear();
-        this.plugin.settings = Object.assign({}, DEFAULT_SETTINGS);
         this.isDirty = false;
         
         // Clear any pending saves

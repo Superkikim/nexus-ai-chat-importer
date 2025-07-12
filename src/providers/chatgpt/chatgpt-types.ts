@@ -17,7 +17,7 @@ export interface ChatGPTFile {
 export interface ChatMessage {
     id: string;
     author: {
-        role: 'user' | 'assistant';
+        role: 'user' | 'assistant' | 'system';
     };
     content: {
         parts: string[];
