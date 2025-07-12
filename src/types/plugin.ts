@@ -1,37 +1,10 @@
-// types.ts
+// src/types/plugin.ts
 export interface PluginSettings {
     archiveFolder: string;
     addDatePrefix: boolean;
     dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
     hasShownUpgradeNotice: boolean;
     hasCompletedUpgrade: boolean;
-}
-
-export interface ChatMessage {
-    id: string;
-    author: {
-        role: 'user' | 'assistant';
-    };
-    content: {
-        parts: string[];
-        content_type?: string;
-    };
-    create_time: number;
-}
-
-export interface ChatMapping {
-    id: string;
-    message?: ChatMessage;
-    parent?: string;
-    children?: string[];
-}
-
-export interface Chat {
-    id: string;
-    title: string;
-    create_time: number;
-    update_time: number;
-    mapping: Record<string, ChatMapping>;
 }
 
 export interface ConversationRecord {

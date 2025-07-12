@@ -3,7 +3,7 @@ import { TFile, MarkdownView } from "obsidian";
 import { getConversationId, getProvider, checkAnyNexusFilesActive } from "../utils";
 import { showDialog } from "../dialogs";
 import type NexusAiChatImporterPlugin from "../main";
-import { ConversationCatalogEntry } from "../types";
+import { ConversationCatalogEntry } from "../types/plugin";
 
 export class EventHandlers {
     private clickListenerActive = false;

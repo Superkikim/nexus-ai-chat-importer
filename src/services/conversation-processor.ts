@@ -1,10 +1,13 @@
 // src/services/conversation-processor.ts
 import { TFile } from "obsidian";
-import { Chat, ConversationCatalogEntry, ChatMessage, ChatMapping } from "../types";
+import { Chat, ChatMessage } from "../providers/chatgpt/chatgpt-types";
+import { ConversationCatalogEntry } from "../types/plugin";
+import { StandardConversation, StandardMessage } from "../types/standard";
 import { ImportReport } from "../models/import-report";
 import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
+import { ChatGPTConverter } from "../providers/chatgpt/chatgpt-converter";
 import { 
     formatTimestamp, 
     formatTitle, 
@@ -128,10 +131,11 @@ export class ConversationProcessor {
                 content = this.updateMetadata(content, chat.update_time);
                 const existingMessageIds = this.extractMessageUIDsFromNote(content);
                 const newMessages = this.getNewMessages(chat, existingMessageIds);
-                console.log("New messages type check:", Array.isArray(newMessages), newMessages);
 
                 if (newMessages.length > 0) {
-                    content += "\n\n" + this.messageFormatter.formatMessages(newMessages);
+                    // Convert ChatGPT messages to standard format
+                    const standardMessages = ChatGPTConverter.convertMessages(newMessages);
+                    content += "\n\n" + this.messageFormatter.formatMessages(standardMessages);
                     this.counters.totalConversationsActuallyUpdated++;
                     this.counters.totalNonEmptyMessagesAdded += newMessages.length;
                 }
@@ -175,7 +179,10 @@ export class ConversationProcessor {
                 throw new Error(folderResult.error || "Failed to ensure folder exists.");
             }
 
-            const content = this.noteFormatter.generateMarkdownContent(chat);
+            // Convert ChatGPT format to standard format
+            const standardConversation = ChatGPTConverter.convertChat(chat);
+            const content = this.noteFormatter.generateMarkdownContent(standardConversation);
+            
             await this.fileService.writeToFile(filePath, content);
 
             const messageCount = Object.values(chat.mapping)
