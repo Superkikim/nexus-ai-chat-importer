@@ -1,5 +1,5 @@
 // src/services/storage-service.ts
-import { ConversationCatalogEntry } from "../types";
+import { ConversationCatalogEntry } from "../types/plugin";
 import { DEFAULT_SETTINGS } from "../config/constants";
 import type NexusAiChatImporterPlugin from "../main";
 
