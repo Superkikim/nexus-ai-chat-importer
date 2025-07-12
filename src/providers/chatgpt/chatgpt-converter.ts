@@ -71,15 +71,66 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Extract content from ChatGPT message parts
+     * Extract content from ChatGPT message parts - FIXED FOR CONVERSATION MODE
      */
     private static extractContent(chatMessage: ChatMessage): string {
         if (!chatMessage.content?.parts || !Array.isArray(chatMessage.content.parts)) {
             return "";
         }
         
-        return chatMessage.content.parts
-            .filter(part => typeof part === "string" && part.trim() !== "")
-            .join("\n");
+        const contentParts: string[] = [];
+        
+        for (const part of chatMessage.content.parts) {
+            let textContent = "";
+            
+            if (typeof part === "string" && part.trim() !== "") {
+                // Simple string part
+                textContent = part;
+            } else if (typeof part === "object" && part !== null) {
+                // Handle different content types
+                if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
+                    textContent = part.text;
+                } else if (part.content_type === "text" && part.text && part.text.trim() !== "") {
+                    textContent = part.text;
+                } else if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
+                    textContent = part.text;
+                }
+                // Note: audio_asset_pointer and other non-text content types are ignored for now
+                // These could be handled as attachments in the future
+            }
+            
+            // Clean up ChatGPT control characters and formatting artifacts
+            if (textContent) {
+                textContent = this.cleanChatGPTArtifacts(textContent);
+                if (textContent.trim() !== "") {
+                    contentParts.push(textContent);
+                }
+            }
+        }
+        
+        return contentParts.join("\n");
+    }
+
+    /**
+     * Clean ChatGPT artifacts, citations, and control characters
+     * Phase 1: Remove all artifacts without trying to preserve links
+     * TODO: Later add proper citation/link extraction
+     */
+    private static cleanChatGPTArtifacts(text: string): string {
+        return text
+            // Remove citation patterns: cite + identifier
+            .replace(/cite[a-zA-Z0-9_\-]+/g, "")
+            // Remove link patterns: link + identifier  
+            .replace(/link[a-zA-Z0-9_\-]+/g, "")
+            // Remove turn patterns: turn + number + search + number
+            .replace(/turn\d+search\d+/g, "")
+            // Remove any remaining Unicode control characters (Private Use Area E000-F8FF)
+            .replace(/[\uE000-\uF8FF]/g, "")
+            // Clean up multiple consecutive spaces
+            .replace(/ {2,}/g, " ")
+            // Clean up multiple consecutive newlines
+            .replace(/\n{3,}/g, "\n\n")
+            // Trim whitespace
+            .trim();
     }
 }
