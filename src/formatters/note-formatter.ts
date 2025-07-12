@@ -1,8 +1,9 @@
 // src/formatters/note-formatter.ts
-import { Chat } from "../types";
-import { formatTimestamp, formatTitle, isValidMessage } from "../utils";
+import { StandardConversation } from "../types/standard-types";
+import { formatTimestamp, formatTitle } from "../utils";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
+import { URL_GENERATORS } from "../types/standard-types";
 
 export class NoteFormatter {
     private messageFormatter: MessageFormatter;
@@ -11,43 +12,63 @@ export class NoteFormatter {
         this.messageFormatter = new MessageFormatter(logger);
     }
 
-    generateMarkdownContent(chat: Chat): string {
-        const formattedTitle = formatTitle(chat.title);
-        const create_time_str = `${formatTimestamp(chat.create_time, "date")} at ${formatTimestamp(chat.create_time, "time")}`;
-        const update_time_str = `${formatTimestamp(chat.update_time, "date")} at ${formatTimestamp(chat.update_time, "time")}`;
+    generateMarkdownContent(conversation: StandardConversation): string {
+        const formattedTitle = formatTitle(conversation.title);
+        const createTimeStr = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
+        const updateTimeStr = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
 
-        let content = this.generateHeader(formattedTitle, chat.id, create_time_str, update_time_str);
-        content += this.generateMessagesContent(chat);
+        let content = this.generateHeader(formattedTitle, conversation.id, createTimeStr, updateTimeStr, conversation);
+        content += this.generateMessagesContent(conversation);
 
         return content;
     }
 
-    private generateHeader(title: string, conversationId: string, createTimeStr: string, updateTimeStr: string): string {
-        return `---
+    private generateHeader(
+        title: string, 
+        conversationId: string, 
+        createTimeStr: string, 
+        updateTimeStr: string,
+        conversation: StandardConversation
+    ): string {
+        // Generate chat URL
+        let chatUrl = conversation.chatUrl;
+        if (!chatUrl && URL_GENERATORS[conversation.provider]) {
+            chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(conversationId);
+        }
+
+        // Build frontmatter
+        let frontmatter = `---
 nexus: ${this.pluginId}
-provider: chatgpt
+provider: ${conversation.provider}
 aliases: "${title}"
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
-update_time: ${updateTimeStr}
----
+update_time: ${updateTimeStr}`;
 
-# Title: ${title}
+        // Add provider-specific metadata
+        if (conversation.metadata) {
+            Object.entries(conversation.metadata).forEach(([key, value]) => {
+                frontmatter += `\n${key}: ${value}`;
+            });
+        }
 
-Created: ${createTimeStr}
-Last Updated: ${updateTimeStr}
-Chat URL: https://chat.openai.com/c/${conversationId}\n\n
-`;
+        frontmatter += `\n---\n\n`;
+
+        // Build header content
+        let header = `# Title: ${title}\n\n`;
+        header += `Created: ${createTimeStr}\n`;
+        header += `Last Updated: ${updateTimeStr}\n`;
+        
+        if (chatUrl) {
+            header += `Chat URL: ${chatUrl}\n`;
+        }
+        
+        header += '\n\n';
+
+        return frontmatter + header;
     }
 
-    private generateMessagesContent(chat: Chat): string {
-        let messagesContent = "";
-        for (const messageId in chat.mapping) {
-            const messageObj = chat.mapping[messageId];
-            if (messageObj?.message && isValidMessage(messageObj.message)) {
-                messagesContent += this.messageFormatter.formatMessage(messageObj.message);
-            }
-        }
-        return messagesContent;
+    private generateMessagesContent(conversation: StandardConversation): string {
+        return this.messageFormatter.formatMessages(conversation.messages);
     }
 }
