@@ -4,7 +4,7 @@
 
 ## Overview
 
-Version 1.0.5 of the Nexus AI Chat Importer Plugin for Obsidian introduces support for multiple file imports, allowing batch processing of conversation exports while maintaining data consistency.
+Version 1.0.7 of the Nexus AI Chat Importer Plugin for Obsidian introduces support for multiple file imports, allowing batch processing of conversation exports while maintaining data consistency.
 
 ## ☕ Support My Work
 
