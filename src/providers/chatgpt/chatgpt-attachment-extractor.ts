@@ -1,6 +1,6 @@
 // src/providers/chatgpt/chatgpt-attachment-extractor.ts
 import JSZip from "jszip";
-import { StandardAttachment } from "../../types/standard";
+import { StandardAttachment, AttachmentStatus } from "../../types/standard";
 import { ensureFolderExists } from "../../utils";
 import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
@@ -9,65 +9,134 @@ export class ChatGPTAttachmentExtractor {
     constructor(private plugin: NexusAiChatImporterPlugin, private logger: Logger) {}
 
     /**
-     * Extract and save ChatGPT attachments, return updated attachments with local links
+     * Extract and save ChatGPT attachments using "best effort" strategy
+     * - If file exists in ZIP: extract and link
+     * - If file missing: create informative note
      */
     async extractAttachments(
         zip: JSZip,
         conversationId: string,
         attachments: StandardAttachment[]
     ): Promise<StandardAttachment[]> {
-        console.log('ChatGPTAttachmentExtractor - Starting extraction:', {
+        this.logger.info('ChatGPT Attachment Extractor - Starting best effort extraction', {
             conversationId,
             attachmentCount: attachments.length,
-            importEnabled: this.plugin.settings.importAttachments,
-            attachmentFolder: this.plugin.settings.attachmentFolder
+            importEnabled: this.plugin.settings.importAttachments
         });
 
         if (!this.plugin.settings.importAttachments || attachments.length === 0) {
-            console.log('ChatGPTAttachmentExtractor - Skipping extraction (disabled or no attachments)');
-            return attachments;
+            this.logger.info('ChatGPT Attachment Extractor - Skipping extraction (disabled or no attachments)');
+            return attachments.map(att => ({ ...att, status: { processed: false, found: false } }));
         }
 
         const processedAttachments: StandardAttachment[] = [];
 
         for (const attachment of attachments) {
-            console.log('ChatGPTAttachmentExtractor - Processing attachment:', attachment);
+            this.logger.info('ChatGPT Attachment Extractor - Processing attachment', attachment);
             try {
-                const localPath = await this.extractSingleAttachment(zip, conversationId, attachment);
-                
+                const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
+                processedAttachments.push(result);
+            } catch (error) {
+                this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName}`, error);
+                // Even if processing fails, return attachment with error status
                 processedAttachments.push({
                     ...attachment,
-                    url: localPath // Set the local file path as URL for linking
+                    status: {
+                        processed: false,
+                        found: false,
+                        reason: 'extraction_failed',
+                        note: `Processing failed: ${error.message}`
+                    }
                 });
-                console.log('ChatGPTAttachmentExtractor - Successfully processed attachment with path:', localPath);
-            } catch (error) {
-                console.error('ChatGPTAttachmentExtractor - Failed to extract attachment:', error);
-                this.logger.error(`Failed to extract ChatGPT attachment: ${attachment.fileName}`, error);
-                processedAttachments.push(attachment); // Keep original if failed
             }
         }
 
-        console.log('ChatGPTAttachmentExtractor - Finished extraction, processed attachments:', processedAttachments);
+        this.logger.info('ChatGPT Attachment Extractor - Finished best effort extraction', {
+            total: attachments.length,
+            found: processedAttachments.filter(a => a.status?.found).length,
+            missing: processedAttachments.filter(a => !a.status?.found).length
+        });
+
         return processedAttachments;
     }
 
     /**
-     * Extract single attachment using ChatGPT file ID mapping
+     * Process single attachment with best effort strategy
+     */
+    private async processAttachmentBestEffort(
+        zip: JSZip,
+        conversationId: string,
+        attachment: StandardAttachment
+    ): Promise<StandardAttachment> {
+        // Try to find file in ZIP
+        const zipFile = this.findChatGPTFileById(zip, attachment);
+        
+        if (!zipFile) {
+            // File not found - create informative status
+            this.logger.warn(`ChatGPT attachment not found in ZIP: ${attachment.fileName}`);
+            return {
+                ...attachment,
+                status: {
+                    processed: true,
+                    found: false,
+                    reason: 'missing_from_export',
+                    note: 'This file was referenced in the conversation but not included in the ChatGPT export. ' +
+                          'This can happen with older conversations or certain file types.'
+                }
+            };
+        }
+
+        // File found - try to extract it
+        try {
+            const localPath = await this.extractSingleAttachment(zip, conversationId, attachment, zipFile);
+            
+            if (localPath) {
+                this.logger.info(`Successfully extracted ChatGPT attachment: ${localPath}`);
+                return {
+                    ...attachment,
+                    url: localPath,
+                    status: {
+                        processed: true,
+                        found: true,
+                        localPath: localPath
+                    }
+                };
+            } else {
+                return {
+                    ...attachment,
+                    status: {
+                        processed: true,
+                        found: false,
+                        reason: 'extraction_failed',
+                        note: 'File was found in export but could not be extracted to disk.'
+                    }
+                };
+            }
+        } catch (error) {
+            this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName}`, error);
+            return {
+                ...attachment,
+                status: {
+                    processed: true,
+                    found: true, // File exists but extraction failed
+                    reason: 'extraction_failed',
+                    note: `Extraction failed: ${error.message}`
+                }
+            };
+        }
+    }
+
+    /**
+     * Extract single attachment to disk with conflict resolution
      */
     private async extractSingleAttachment(
         zip: JSZip,
         conversationId: string,
-        attachment: StandardAttachment
+        attachment: StandardAttachment,
+        zipFile: JSZip.JSZipObject
     ): Promise<string | null> {
-        // Find file in ZIP using ChatGPT's file ID pattern
-        const zipFile = this.findChatGPTFileById(zip, attachment);
-        if (!zipFile) {
-            this.logger.warn(`ChatGPT attachment not found in ZIP: ${attachment.fileName} (ID: ${attachment.fileId})`);
-            return null;
-        }
-
         // Generate target path for saving
-        const targetPath = this.generateLocalPath(conversationId, attachment);
+        let targetPath = this.generateLocalPath(conversationId, attachment);
 
         // Ensure folder exists
         const folderPath = targetPath.substring(0, targetPath.lastIndexOf('/'));
@@ -76,81 +145,119 @@ export class ChatGPTAttachmentExtractor {
             throw new Error(`Failed to create ChatGPT attachment folder: ${folderResult.error}`);
         }
 
+        // Handle file conflicts by adding suffix if needed
+        targetPath = await this.resolveFileConflict(targetPath);
+
         // Extract and save file
         const fileContent = await zipFile.async("uint8array");
         await this.plugin.app.vault.adapter.writeBinary(targetPath, fileContent);
 
-        this.logger.info(`Saved ChatGPT attachment: ${targetPath}`);
         return targetPath;
     }
 
     /**
-     * Find file in ZIP using ChatGPT's file ID
-     * Pattern: file-{ID}-{original-name} or just file-{ID}.{ext}
+     * Resolve file conflicts by adding numeric suffix
+     */
+    private async resolveFileConflict(originalPath: string): Promise<string> {
+        let finalPath = originalPath;
+        let counter = 1;
+
+        while (await this.plugin.app.vault.adapter.exists(finalPath)) {
+            // File exists, try with suffix
+            const lastDot = originalPath.lastIndexOf('.');
+            if (lastDot === -1) {
+                finalPath = `${originalPath}_${counter}`;
+            } else {
+                const nameWithoutExt = originalPath.substring(0, lastDot);
+                const extension = originalPath.substring(lastDot);
+                finalPath = `${nameWithoutExt}_${counter}${extension}`;
+            }
+            counter++;
+        }
+
+        if (finalPath !== originalPath) {
+            this.logger.info(`Resolved file conflict: ${originalPath} -> ${finalPath}`);
+        }
+
+        return finalPath;
+    }
+
+    /**
+     * Find file in ZIP using ChatGPT's file ID with enhanced search
      */
     private findChatGPTFileById(zip: JSZip, attachment: StandardAttachment): JSZip.JSZipObject | null {
-        console.log('ChatGPTAttachmentExtractor - Looking for file:', {
+        this.logger.info('ChatGPT Attachment Extractor - Looking for file', {
             fileName: attachment.fileName,
             fileId: attachment.fileId
         });
 
-        if (!attachment.fileId) {
-            console.log('ChatGPTAttachmentExtractor - No file ID provided');
-            return null;
-        }
-
-        // List all files in ZIP for debugging
-        const zipFiles = Object.keys(zip.files);
-        console.log('ChatGPTAttachmentExtractor - Available files in ZIP:', zipFiles.slice(0, 10), '... (showing first 10)');
-
-        // Try exact filename match first
+        // Strategy 1: Try exact filename match first
         let zipFile = zip.file(attachment.fileName);
         if (zipFile) {
-            console.log('ChatGPTAttachmentExtractor - Found exact filename match');
+            this.logger.info('ChatGPT Attachment Extractor - Found exact filename match');
             return zipFile;
         }
 
-        // Try file ID pattern: file-{ID}-{name}
-        const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
-        console.log('ChatGPTAttachmentExtractor - Trying file ID pattern:', fileIdPattern);
-        zipFile = zip.file(fileIdPattern);
-        if (zipFile) {
-            console.log('ChatGPTAttachmentExtractor - Found file ID pattern match');
-            return zipFile;
+        // Strategy 2: If we have a file ID, try file ID patterns
+        if (attachment.fileId) {
+            // Pattern: file-{ID}-{name}
+            const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
+            zipFile = zip.file(fileIdPattern);
+            if (zipFile) {
+                this.logger.info('ChatGPT Attachment Extractor - Found file ID pattern match');
+                return zipFile;
+            }
+
+            // Pattern: file-{ID}.{ext}
+            const extension = this.getFileExtension(attachment.fileName);
+            if (extension) {
+                const fileIdExtPattern = `${attachment.fileId}.${extension}`;
+                zipFile = zip.file(fileIdExtPattern);
+                if (zipFile) {
+                    this.logger.info('ChatGPT Attachment Extractor - Found file ID extension match');
+                    return zipFile;
+                }
+            }
         }
 
-        // Search through all files for pattern matching
-        console.log('ChatGPTAttachmentExtractor - Searching all files for patterns...');
+        // Strategy 3: Search through all files for pattern matching
+        this.logger.info('ChatGPT Attachment Extractor - Searching all files for patterns...');
         for (const [path, file] of Object.entries(zip.files)) {
             if (!file.dir) {
                 // Check if file path contains the file ID
-                if (path.includes(attachment.fileId)) {
-                    console.log('ChatGPTAttachmentExtractor - Found file by ID in path:', path);
+                if (attachment.fileId && path.includes(attachment.fileId)) {
+                    this.logger.info('ChatGPT Attachment Extractor - Found file by ID in path:', path);
                     return file;
                 }
                 // Check if filename matches at the end of path
                 if (path.endsWith(attachment.fileName)) {
-                    console.log('ChatGPTAttachmentExtractor - Found file by filename at end of path:', path);
+                    this.logger.info('ChatGPT Attachment Extractor - Found file by filename at end of path:', path);
+                    return file;
+                }
+                // Check for similar names (case-insensitive)
+                if (path.toLowerCase().includes(attachment.fileName.toLowerCase())) {
+                    this.logger.info('ChatGPT Attachment Extractor - Found file by similar name:', path);
                     return file;
                 }
             }
         }
 
-        console.log('ChatGPTAttachmentExtractor - File not found in ZIP');
+        this.logger.info('ChatGPT Attachment Extractor - File not found in ZIP');
         return null;
     }
 
     /**
-     * Generate local path for ChatGPT attachment
+     * Generate local path for ChatGPT attachment - simplified structure
      */
     private generateLocalPath(conversationId: string, attachment: StandardAttachment): string {
         const baseFolder = this.plugin.settings.attachmentFolder;
         const category = this.categorizeFile(attachment);
         
-        // Clean filename for filesystem
+        // Clean filename for filesystem - keep original name since it should be unique
         const safeFileName = this.sanitizeFileName(attachment.fileName);
         
-        return `${baseFolder}/chatgpt/${conversationId}/${category}/${safeFileName}`;
+        // Simple structure: attachments/chatgpt/images/filename.jpg
+        return `${baseFolder}/chatgpt/${category}/${safeFileName}`;
     }
 
     /**
@@ -190,12 +297,33 @@ export class ChatGPTAttachmentExtractor {
     }
 
     /**
-     * Sanitize filename for filesystem compatibility
+     * Sanitize filename and handle potential conflicts
      */
     private sanitizeFileName(fileName: string): string {
-        return fileName
+        let cleanName = fileName
             .replace(/[<>:"\/\\|?*]/g, '_')
             .replace(/\s+/g, '_')
             .trim();
+            
+        // If filename conflicts might occur, we could add a timestamp prefix
+        // but for now, ChatGPT file IDs should make names unique enough
+        return cleanName;
+    }
+
+    /**
+     * Get attachment processing statistics
+     */
+    getStatistics(attachments: StandardAttachment[]): {
+        total: number;
+        found: number;
+        missing: number;
+        failed: number;
+    } {
+        return {
+            total: attachments.length,
+            found: attachments.filter(a => a.status?.found && a.status?.processed).length,
+            missing: attachments.filter(a => !a.status?.found && a.status?.reason === 'missing_from_export').length,
+            failed: attachments.filter(a => a.status?.reason === 'extraction_failed').length
+        };
     }
 }

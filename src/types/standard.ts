@@ -1,7 +1,7 @@
-// src/types/standard-types.ts
+// src/types/standard.ts
 
 /**
- * Provider-agnostic attachment interface
+ * Provider-agnostic attachment interface with status tracking
  */
 export interface StandardAttachment {
     fileName: string;
@@ -10,6 +10,21 @@ export interface StandardAttachment {
     content?: string; // For text files, code, etc.
     extractedContent?: string; // For processed content (OCR, transcriptions)
     url?: string; // For linked attachments
+    fileId?: string; // Provider-specific file ID (for ZIP lookup)
+    
+    // New: Attachment processing status
+    status?: AttachmentStatus;
+}
+
+/**
+ * Attachment processing status
+ */
+export interface AttachmentStatus {
+    processed: boolean;
+    found: boolean;
+    localPath?: string;
+    reason?: 'missing_from_export' | 'corrupted' | 'unsupported_format' | 'extraction_failed';
+    note?: string;
 }
 
 /**

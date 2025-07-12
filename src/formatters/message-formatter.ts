@@ -60,45 +60,89 @@ export class MessageFormatter {
 
     private formatAttachments(attachments: StandardAttachment[], quoteChar: string): string {
         return attachments.map(attachment => {
-            let content = `${quoteChar} **📎 Attachment:** ${attachment.fileName}`;
-            
-            if (attachment.fileType) {
-                content += ` (${attachment.fileType})`;
-            }
-            
-            if (attachment.fileSize) {
-                content += ` - ${this.formatFileSize(attachment.fileSize)}`;
-            }
-
-            // Smart linking: embed images, link everything else
-            if (attachment.url) {
-                if (this.isImageFile(attachment)) {
-                    content += `\n${quoteChar} ![[${attachment.url}]]`; // Embed images
-                } else {
-                    content += `\n${quoteChar} [[${attachment.url}]]`; // Link documents
-                }
-            }
-
-            // Add extracted content (transcriptions, OCR, code, etc.)
-            if (attachment.extractedContent) {
-                content += `\n${quoteChar} **Content:**\n`;
-                content += attachment.extractedContent
-                    .split("\n")
-                    .map(line => `${quoteChar} ${line}`)
-                    .join("\n");
-            }
-
-            // Add raw content for text files
-            if (attachment.content && !attachment.extractedContent) {
-                content += `\n${quoteChar} **Content:**\n`;
-                content += attachment.content
-                    .split("\n")
-                    .map(line => `${quoteChar} ${line}`)
-                    .join("\n");
-            }
-
-            return content;
+            return this.formatSingleAttachment(attachment, quoteChar);
         }).join("\n\n");
+    }
+
+    /**
+     * Format single attachment with status-aware display
+     */
+    private formatSingleAttachment(attachment: StandardAttachment, quoteChar: string): string {
+        let content = "";
+
+        // Status-aware header with appropriate icon
+        if (attachment.status?.found) {
+            content = `${quoteChar} **📎 Attachment:** ${attachment.fileName}`;
+        } else if (attachment.status?.processed) {
+            content = `${quoteChar} **📎 Missing Attachment:** ${attachment.fileName}`;
+        } else {
+            content = `${quoteChar} **📎 Attachment:** ${attachment.fileName}`;
+        }
+        
+        // Add file metadata
+        if (attachment.fileType) {
+            content += ` (${attachment.fileType})`;
+        }
+        
+        if (attachment.fileSize) {
+            content += ` - ${this.formatFileSize(attachment.fileSize)}`;
+        }
+
+        // Handle successful extraction
+        if (attachment.status?.found && attachment.url) {
+            if (this.isImageFile(attachment)) {
+                content += `\n${quoteChar} ![[${attachment.url}]]`; // Embed images
+            } else {
+                content += `\n${quoteChar} [[${attachment.url}]]`; // Link documents
+            }
+        }
+
+        // Handle missing/failed attachments with informative notes
+        if (attachment.status && !attachment.status.found) {
+            content += `\n${quoteChar} **Status:** ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
+            
+            if (attachment.status.note) {
+                content += `\n${quoteChar} **Note:** ${attachment.status.note}`;
+            }
+        }
+
+        // Add extracted content (transcriptions, OCR, code, etc.) - always show if available
+        if (attachment.extractedContent) {
+            content += `\n${quoteChar} **Content:**\n`;
+            content += attachment.extractedContent
+                .split("\n")
+                .map(line => `${quoteChar} ${line}`)
+                .join("\n");
+        }
+
+        // Add raw content for text files - always show if available
+        if (attachment.content && !attachment.extractedContent) {
+            content += `\n${quoteChar} **Content:**\n`;
+            content += attachment.content
+                .split("\n")
+                .map(line => `${quoteChar} ${line}`)
+                .join("\n");
+        }
+
+        return content;
+    }
+
+    /**
+     * Get user-friendly status message
+     */
+    private getStatusMessage(reason?: string): string {
+        switch (reason) {
+            case 'missing_from_export':
+                return 'Not included in export';
+            case 'extraction_failed':
+                return 'Extraction failed';
+            case 'corrupted':
+                return 'File appears corrupted';
+            case 'unsupported_format':
+                return 'Unsupported file format';
+            default:
+                return 'Processing issue';
+        }
     }
 
     /**
