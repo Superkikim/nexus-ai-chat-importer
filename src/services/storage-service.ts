@@ -99,7 +99,7 @@ export class StorageService {
                 const entry: ConversationCatalogEntry = {
                     conversationId: frontmatter.conversation_id,
                     provider: frontmatter.provider || 'unknown',
-                    path: file.path,
+                    path: file.path, // ← FIX: AJOUTÉ LE PATH MANQUANT !
                     updateTime: this.parseUpdateTime(frontmatter.update_time),
                     create_time: this.parseCreateTime(frontmatter.create_time),
                     update_time: this.parseUpdateTime(frontmatter.update_time)
