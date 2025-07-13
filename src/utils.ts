@@ -5,9 +5,6 @@ import { requestUrl } from "obsidian";
 
 const logger = new Logger();
 
-// Cache for file metadata to avoid repeated metadataCache calls
-const metadataCache = new Map<string, any>();
-
 export function formatTimestamp(
     // REQUIRE REFACTORING TO SUPPORT OTHER DATE FORMATS THAN UNIXTIME
     unixTime: number,
@@ -207,72 +204,13 @@ export function old_getConversationId(app: App): string | undefined {
     return undefined; // Return undefined if there is no active file
 }
 
-export function getConversationId(file: TFile): string | undefined {
-    // Check cache first
-    const cacheKey = `${file.path}:${file.stat.mtime}`;
-    let frontmatter = metadataCache.get(cacheKey);
-    
-    if (!frontmatter) {
-        frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
-        metadataCache.set(cacheKey, frontmatter);
-        
-        // Clean cache if it gets too large (keep last 100 entries)
-        if (metadataCache.size > 100) {
-            const entries = Array.from(metadataCache.entries());
-            metadataCache.clear();
-            entries.slice(-50).forEach(([key, value]) => {
-                metadataCache.set(key, value);
-            });
-        }
-    }
-    
-    return frontmatter?.conversation_id; // Return the conversation_id from frontmatter
-}
-
-export function getProvider(file: TFile): string | undefined {
-    const cacheKey = `${file.path}:${file.stat.mtime}`;
-    let frontmatter = metadataCache.get(cacheKey);
-    
-    if (!frontmatter) {
-        frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
-        metadataCache.set(cacheKey, frontmatter);
-        
-        // Clean cache if it gets too large
-        if (metadataCache.size > 100) {
-            const entries = Array.from(metadataCache.entries());
-            metadataCache.clear();
-            entries.slice(-50).forEach(([key, value]) => {
-                metadataCache.set(key, value);
-            });
-        }
-    }
-    
-    return frontmatter?.provider; // Return the provider from frontmatter
-}
+// REMOVED: getConversationId() - no longer needed (click handler removed)
+// REMOVED: getProvider() - no longer needed (click handler removed)
 
 export function isNexusRelated(file: TFile): boolean {
-    const cacheKey = `${file.path}:${file.stat.mtime}`;
-    let frontmatter = metadataCache.get(cacheKey);
-    
-    if (!frontmatter) {
-        frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
-        metadataCache.set(cacheKey, frontmatter);
-        
-        // Clean cache if it gets too large
-        if (metadataCache.size > 100) {
-            const entries = Array.from(metadataCache.entries());
-            metadataCache.clear();
-            entries.slice(-50).forEach(([key, value]) => {
-                metadataCache.set(key, value);
-            });
-        }
-    }
-    
+    const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
     return frontmatter?.nexus === "nexus-ai-chat-importer"; // Return true if the nexus matches
 }
-
-// Note: Removed checkAnyNexusFilesActive function - this was causing performance issues
-// The new event handler system maintains state instead of scanning all files
 
 interface CustomError {
     message: string;
