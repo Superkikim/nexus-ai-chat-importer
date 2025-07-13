@@ -8,7 +8,7 @@ import { EventHandlers } from "./events/event-handlers";
 import { ImportService } from "./services/import-service";
 import { StorageService } from "./services/storage-service";
 import { FileService } from "./services/file-service";
-import { Upgrader } from "./upgrade";
+import { IncrementalUpgradeManager } from "./upgrade/incremental-upgrade-manager";
 import { Logger } from "./logger";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
@@ -20,6 +20,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private fileService: FileService;
     private commandRegistry: CommandRegistry;
     private eventHandlers: EventHandlers;
+    private upgradeManager: IncrementalUpgradeManager;
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
@@ -29,6 +30,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         this.fileService = new FileService(this);
         this.commandRegistry = new CommandRegistry(this);
         this.eventHandlers = new EventHandlers(this);
+        this.upgradeManager = new IncrementalUpgradeManager(this);
     }
 
     async onload() {
@@ -49,8 +51,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             ribbonIconEl.addClass("nexus-ai-chat-ribbon");
             
             console.debug("[NEXUS-DEBUG] Components registered, starting upgrade check");
-            const upgrader = new Upgrader(this);
-            await upgrader.checkForUpgrade();
+            await this.upgradeManager.checkAndPerformUpgrade();
             
             console.debug("[NEXUS-DEBUG] Plugin.onload() - Completed successfully");
         } catch (error) {
@@ -93,7 +94,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             });
         } catch (error) {
             this.logger.error("saveSettings failed:", error);
-            throw error;
         }
     }
 
@@ -117,5 +117,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     getFileService(): FileService {
         return this.fileService;
+    }
+
+    getUpgradeManager(): IncrementalUpgradeManager {
+        return this.upgradeManager;
     }
 }
