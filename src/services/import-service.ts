@@ -2,7 +2,7 @@
 import { Notice } from "obsidian";
 import JSZip from "jszip";
 import { Chat, CustomError } from "../types";
-import { getFileHash, isCustomError } from "../utils";
+import { getFileHash } from "../utils";
 import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
 import { ConversationProcessor } from "./conversation-processor";
@@ -61,16 +61,16 @@ export class ImportService {
             if (storage.isArchiveImported(fileHash)) {
                 const shouldReimport = await showDialog(
                     this.plugin.app,
-                    "confirmation",
+                    "confirmation", 
                     "Already processed",
                     [
                         `File ${file.name} has already been imported.`,
-                        `Do you want to reprocess it ?`
+                        `Do you want to reprocess it?`,
+                        `**Note:** This will not alter existing notes.`  // Move to main content
                     ],
-                    "NOTE: This will not alter existing notes",
+                    undefined,  // Remove the red note box
                     { button1: "Let's do this", button2: "Forget it" }
                 );
-
                 if (!shouldReimport) {
                     new Notice("Import cancelled.");
                     return;
