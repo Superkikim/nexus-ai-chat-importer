@@ -186,6 +186,7 @@ export class ConversationProcessor {
                     let standardMessages = ChatGPTConverter.convertMessages(newMessages);
                     
                     // Process attachments if ZIP provided and settings enabled
+                    let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
                     if (zip && this.plugin.settings.importAttachments) {
                         standardMessages = await this.processMessageAttachments(
                             standardMessages, 
@@ -193,6 +194,9 @@ export class ConversationProcessor {
                             "chatgpt", 
                             zip
                         );
+                        
+                        // Calculate attachment stats for new messages
+                        attachmentStats = this.calculateAttachmentStats(standardMessages);
                     }
                     
                     content += "\n\n" + this.messageFormatter.formatMessages(standardMessages);
@@ -202,12 +206,18 @@ export class ConversationProcessor {
 
                 if (content !== originalContent) {
                     await this.fileService.writeToFile(filePath, content);
+                    
+                    // Calculate attachment stats for the update
+                    const attachmentStats = newMessages.length > 0 ? 
+                        this.calculateAttachmentStatsFromMessages(newMessages, zip) : undefined;
+                    
                     importReport.addUpdated(
                         chat.title || "Untitled",
                         filePath,
                         `${formatTimestamp(chat.create_time, "date")} ${formatTimestamp(chat.create_time, "time")}`,
                         `${formatTimestamp(chat.update_time, "date")} ${formatTimestamp(chat.update_time, "time")}`,
-                        totalMessageCount
+                        newMessages.length,
+                        attachmentStats
                     );
                 } else {
                     importReport.addSkipped(
@@ -244,6 +254,7 @@ export class ConversationProcessor {
             let standardConversation = ChatGPTConverter.convertChat(chat);
                         
             // Process attachments if ZIP provided and settings enabled
+            let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
             if (zip && this.plugin.settings.importAttachments) {
                 standardConversation.messages = await this.processMessageAttachments(
                     standardConversation.messages,
@@ -251,6 +262,9 @@ export class ConversationProcessor {
                     "chatgpt",
                     zip
                 );
+                
+                // Calculate attachment stats
+                attachmentStats = this.calculateAttachmentStats(standardConversation.messages);
             }
             
             const content = this.noteFormatter.generateMarkdownContent(standardConversation);
@@ -265,7 +279,8 @@ export class ConversationProcessor {
                 filePath,
                 `${formatTimestamp(chat.create_time, "date")} ${formatTimestamp(chat.create_time, "time")}`,
                 `${formatTimestamp(chat.update_time, "date")} ${formatTimestamp(chat.update_time, "time")}`,
-                messageCount
+                messageCount,
+                attachmentStats
             );
             
             this.counters.totalNewConversationsSuccessfullyImported++;
@@ -407,5 +422,49 @@ export class ConversationProcessor {
 
     getCounters() {
         return this.counters;
+    }
+
+    /**
+     * Calculate attachment statistics from processed messages
+     */
+    private calculateAttachmentStats(messages: StandardMessage[]): { total: number; found: number; missing: number; failed: number } {
+        const stats = { total: 0, found: 0, missing: 0, failed: 0 };
+        
+        for (const message of messages) {
+            if (message.attachments) {
+                for (const attachment of message.attachments) {
+                    stats.total++;
+                    if (attachment.status?.found) {
+                        stats.found++;
+                    } else if (attachment.status?.reason === 'missing_from_export') {
+                        stats.missing++;
+                    } else if (attachment.status?.reason === 'extraction_failed') {
+                        stats.failed++;
+                    }
+                }
+            }
+        }
+        
+        return stats;
+    }
+
+    /**
+     * Calculate attachment stats from raw ChatGPT messages (for updates)
+     */
+    private async calculateAttachmentStatsFromMessages(messages: any[], zip?: JSZip): Promise<{ total: number; found: number; missing: number; failed: number } | undefined> {
+        if (!zip || !this.plugin.settings.importAttachments) {
+            return undefined;
+        }
+        
+        // Convert to standard messages and process attachments
+        const standardMessages = ChatGPTConverter.convertMessages(messages);
+        const processedMessages = await this.processMessageAttachments(
+            standardMessages, 
+            "temp", // We don't need the conversation ID for stats calculation
+            "chatgpt", 
+            zip
+        );
+        
+        return this.calculateAttachmentStats(processedMessages);
     }
 }
