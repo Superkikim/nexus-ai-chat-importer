@@ -49,6 +49,14 @@ export class FileService {
         }
     }
 
+    /**
+     * Get file extension from filename (provider-agnostic utility)
+     */
+    getFileExtension(fileName: string): string {
+        const lastDot = fileName.lastIndexOf('.');
+        return lastDot === -1 ? '' : fileName.substring(lastDot + 1).toLowerCase();
+    }
+
     // TODO: Future enhancement - delete conversation attachments
     // async deleteConversationAttachments(conversationId: string): Promise<void> {
     //     // Implementation for deleting attachments when conversation is deleted
