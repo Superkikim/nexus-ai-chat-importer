@@ -66,7 +66,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             const data = await this.loadData();
             this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
-            this.storageService.loadCatalogs(data);
+        //    this.storageService.loadCatalogs(data);
         } catch (error) {
             this.logger.error("loadSettings failed:", error);
             throw error;

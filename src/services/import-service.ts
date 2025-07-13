@@ -64,9 +64,9 @@ export class ImportService {
                     [
                         `File ${file.name} has already been imported.`,
                         `Do you want to reprocess it?`,
-                        `**Note:** This will not alter existing notes.`  // Move to main content
+                        `**Note:** This will not alter existing notes.`
                     ],
-                    undefined,  // Remove the red note box
+                    undefined,
                     { button1: "Let's do this", button2: "Forget it" }
                 );
                 if (!shouldReimport) {
@@ -188,9 +188,13 @@ class ReportWriter {
             counter++;
         }
 
+        // Enhanced frontmatter with both dates
         const currentDate = `${formatTimestamp(Date.now() / 1000, "date")} ${formatTimestamp(Date.now() / 1000, "time")}`;
+        const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
+        
         const logContent = `---
 importdate: ${currentDate}
+archivedate: ${archiveDate}
 zipFile: ${zipFileName}
 provider: ${provider}
 totalSuccessfulImports: ${report.getCreatedCount()}
@@ -216,19 +220,35 @@ ${report.generateReportContent()}
             case 'chatgpt':
                 const { ChatGPTReportNamingStrategy } = require("../providers/chatgpt/chatgpt-report-naming");
                 const strategy = new ChatGPTReportNamingStrategy();
-                const chatgptPrefix = strategy.extractReportPrefix(zipFileName);
+                const reportPrefix = strategy.extractReportPrefix(zipFileName);
                 return {
                     folderPath: `${baseFolder}/Reports/${strategy.getProviderName()}`,
-                    baseFileName: `${chatgptPrefix} - import report.md`
+                    baseFileName: `${reportPrefix} - import report.md`
                 };
             default:
                 // Fallback for unknown providers
                 const now = new Date();
-                const fallbackPrefix = now.toISOString().split('T')[0].replace(/-/g, '.');
+                const importDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+                const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
+                const fallbackPrefix = `imported-${importDate}-archive-${archiveDate}`;
                 return {
                     folderPath: `${baseFolder}/Reports`,
                     baseFileName: `${fallbackPrefix} - import report.md`
                 };
         }
+    }
+
+    private extractArchiveDateFromFilename(zipFileName: string): string {
+        const dateRegex = /(\d{4})-(\d{2})-(\d{2})/;
+        const match = zipFileName.match(dateRegex);
+        
+        if (match) {
+            const [, year, month, day] = match;
+            return `${year}.${month}.${day}`;
+        }
+        
+        // Fallback: use current date
+        const now = new Date();
+        return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
     }
 }

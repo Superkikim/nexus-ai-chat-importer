@@ -11,21 +11,28 @@ export class ChatGPTReportNamingStrategy implements ReportNamingStrategy {
      * - "conversations-2025-04-25-14-40-42.zip"
      */
     extractReportPrefix(zipFileName: string): string {
-        // Try to extract date in format YYYY-MM-DD from filename
+        // Get current import date
+        const now = new Date();
+        const importYear = now.getFullYear();
+        const importMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const importDay = String(now.getDate()).padStart(2, '0');
+        const importDate = `${importYear}.${importMonth}.${importDay}`;
+        
+        // Try to extract archive date in format YYYY-MM-DD from filename
         const dateRegex = /(\d{4})-(\d{2})-(\d{2})/;
         const match = zipFileName.match(dateRegex);
         
+        let archiveDate: string;
         if (match) {
             const [, year, month, day] = match;
-            return `${year}.${month}.${day}`;
+            archiveDate = `${year}.${month}.${day}`;
+        } else {
+            // Fallback: use current date if no date found in filename
+            archiveDate = importDate;
         }
         
-        // Fallback: use current date if no date found in filename
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        return `${year}.${month}.${day}`;
+        // Format: imported-YYYY.MM.DD-archive-YYYY.MM.DD
+        return `imported-${importDate}-archive-${archiveDate}`;
     }
     
     /**
