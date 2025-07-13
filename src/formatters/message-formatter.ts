@@ -38,8 +38,7 @@ export class MessageFormatter {
                 .map(line => `${quoteChar} ${line}`)
                 .join("\n");
         } else {
-            this.logger.warn("Message content missing:", message.id);
-            messageContent += `${quoteChar} [No content]`;
+            messageContent += `${quoteChar} [No content found]`;
         }
 
         // Format attachments if any

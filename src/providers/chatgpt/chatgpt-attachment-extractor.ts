@@ -73,7 +73,6 @@ export class ChatGPTAttachmentExtractor {
         
         if (!zipFile) {
             // File not found - create informative status
-            this.logger.warn(`ChatGPT attachment not found in ZIP: ${attachment.fileName}`);
             return {
                 ...attachment,
                 status: {
