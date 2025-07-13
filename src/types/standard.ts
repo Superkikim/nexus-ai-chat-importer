@@ -1,6 +1,17 @@
 // src/types/standard.ts
 
 /**
+ * Attachment processing status
+ */
+export interface AttachmentStatus {
+    processed: boolean;
+    found: boolean;
+    localPath?: string;
+    reason?: 'missing_from_export' | 'corrupted' | 'unsupported_format' | 'extraction_failed';
+    note?: string;
+}
+
+/**
  * Provider-agnostic attachment interface with status tracking
  */
 export interface StandardAttachment {
@@ -12,19 +23,8 @@ export interface StandardAttachment {
     url?: string; // For linked attachments
     fileId?: string; // Provider-specific file ID (for ZIP lookup)
     
-    // New: Attachment processing status
+    // Attachment processing status
     status?: AttachmentStatus;
-}
-
-/**
- * Attachment processing status
- */
-export interface AttachmentStatus {
-    processed: boolean;
-    found: boolean;
-    localPath?: string;
-    reason?: 'missing_from_export' | 'corrupted' | 'unsupported_format' | 'extraction_failed';
-    note?: string;
 }
 
 /**

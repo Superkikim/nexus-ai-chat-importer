@@ -1,9 +1,10 @@
 // src/providers/chatgpt/chatgpt-attachment-extractor.ts
 import JSZip from "jszip";
-import { StandardAttachment, AttachmentStatus } from "../../types/standard";
+import { StandardAttachment } from "../../types/standard";
 import { ensureFolderExists } from "../../utils";
 import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
+
 
 export class ChatGPTAttachmentExtractor {
     constructor(private plugin: NexusAiChatImporterPlugin, private logger: Logger) {}
@@ -113,15 +114,16 @@ export class ChatGPTAttachmentExtractor {
                     }
                 };
             }
-        } catch (error) {
+        } catch (error: unknown) {
             this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName}`, error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             return {
                 ...attachment,
                 status: {
                     processed: true,
                     found: true, // File exists but extraction failed
                     reason: 'extraction_failed',
-                    note: `Extraction failed: ${error.message}`
+                    note: `Extraction failed: ${errorMessage}`
                 }
             };
         }
@@ -245,13 +247,18 @@ export class ChatGPTAttachmentExtractor {
     }
 
     /**
-     * Find file in ZIP - ENHANCED FOR DALL-E SUPPORT
+     * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH
      */
     private async findChatGPTFileById(zip: JSZip, attachment: StandardAttachment): Promise<JSZip.JSZipObject | null> {
         this.logger.info('ChatGPT Attachment Extractor - Looking for file', {
             fileName: attachment.fileName,
             fileId: attachment.fileId
         });
+
+        if (!attachment.fileId) {
+            this.logger.warn('No fileId provided for attachment:', attachment.fileName);
+            return null;
+        }
 
         // Strategy 1: Try exact filename match first
         let zipFile = zip.file(attachment.fileName);
@@ -260,150 +267,44 @@ export class ChatGPTAttachmentExtractor {
             return zipFile;
         }
 
-        // Strategy 2: If we have a file ID, try DALL-E specific patterns
-        if (attachment.fileId) {
-            
-            // DALL-E Strategy: Check dalle-generations/ folder first
-            if (attachment.fileName.startsWith('dalle_')) {
-                const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
-                if (dalleFiles.length > 0) {
-                    this.logger.info('ChatGPT Attachment Extractor - Found DALL-E file in dalle-generations/');
-                    return dalleFiles[0]; // Return first match
-                }
-            }
-            
-            // Regular file ID patterns
-            const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
-            zipFile = zip.file(fileIdPattern);
-            if (zipFile) {
-                this.logger.info('ChatGPT Attachment Extractor - Found file ID pattern match');
-                return zipFile;
-            }
-
-            // Pattern: file-{ID}.{ext}
-            const extension = this.getFileExtension(attachment.fileName);
-            if (extension) {
-                const fileIdExtPattern = `${attachment.fileId}.${extension}`;
-                zipFile = zip.file(fileIdExtPattern);
-                if (zipFile) {
-                    this.logger.info('ChatGPT Attachment Extractor - Found file ID extension match');
-                    return zipFile;
-                }
-            }
+        // Strategy 2: Comprehensive search by file ID in entire ZIP
+        this.logger.info('ChatGPT Attachment Extractor - Searching entire ZIP for file ID...');
+        const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
+        if (foundFile) {
+            this.logger.info(`ChatGPT Attachment Extractor - Found file: ${foundFile.name}`);
+            return foundFile;
         }
 
-        // Strategy 3: Comprehensive search through all files
-        this.logger.info('ChatGPT Attachment Extractor - Performing comprehensive search...');
-        return await this.comprehensiveFileSearch(zip, attachment);
-    }
-
-    /**
-     * Comprehensive search through all ZIP files with multiple strategies
-     */
-    private async comprehensiveFileSearch(zip: JSZip, attachment: StandardAttachment): Promise<JSZip.JSZipObject | null> {
-        const searchStrategies = [];
-        
-        // Prepare search terms
-        if (attachment.fileId) {
-            // Clean file ID variants
-            const cleanId = attachment.fileId.replace(/^(file_|file-)/i, '');
-            searchStrategies.push(
-                attachment.fileId,           // full ID
-                cleanId,                     // clean ID
-                attachment.fileId.toLowerCase(),
-                cleanId.toLowerCase()
-            );
-        }
-        
-        // Search through all files
-        for (const [path, file] of Object.entries(zip.files)) {
-            if (file.dir) continue;
-            
-            const pathLower = path.toLowerCase();
-            const fileName = path.split('/').pop() || '';
-            
-            // Strategy 1: File ID in path
-            for (const searchTerm of searchStrategies) {
-                if (pathLower.includes(searchTerm.toLowerCase())) {
-                    this.logger.info(`ChatGPT Attachment Extractor - Found file by ID search: ${path}`);
-                    return file;
-                }
-            }
-            
-            // Strategy 2: Exact filename at end of path
-            if (pathLower.endsWith(attachment.fileName.toLowerCase())) {
-                this.logger.info(`ChatGPT Attachment Extractor - Found file by filename: ${path}`);
-                return file;
-            }
-            
-            // Strategy 3: Similar filename (fuzzy match)
-            if (this.isSimilarFilename(fileName, attachment.fileName)) {
-                this.logger.info(`ChatGPT Attachment Extractor - Found file by similar name: ${path}`);
-                return file;
-            }
-        }
-        
         this.logger.info('ChatGPT Attachment Extractor - File not found in ZIP after comprehensive search');
         return null;
     }
 
     /**
-     * Check if two filenames are similar (for fuzzy matching)
+     * Search entire ZIP for file by exact ID
      */
-    private isSimilarFilename(zipFileName: string, targetFileName: string): boolean {
-        const normalize = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const zipNorm = normalize(zipFileName);
-        const targetNorm = normalize(targetFileName);
+    private async searchZipByFileId(zip: JSZip, fileId: string): Promise<JSZip.JSZipObject | null> {
+        this.logger.info(`Searching ZIP for exact file ID: ${fileId}`);
         
-        // Similar if one contains the other, or if they're very close
-        if (zipNorm.includes(targetNorm) || targetNorm.includes(zipNorm)) {
-            return true;
-        }
-        
-        // Check for partial matches (at least 50% similarity for longer names)
-        if (targetNorm.length > 10) {
-            const similarity = this.calculateSimilarity(zipNorm, targetNorm);
-            return similarity > 0.5;
-        }
-        
-        return false;
-    }
-
-    /**
-     * Calculate simple string similarity
-     */
-    private calculateSimilarity(str1: string, str2: string): number {
-        const longer = str1.length > str2.length ? str1 : str2;
-        const shorter = str1.length > str2.length ? str2 : str1;
-        
-        if (longer.length === 0) return 1.0;
-        
-        let matches = 0;
-        for (let i = 0; i < shorter.length; i++) {
-            if (longer.includes(shorter[i])) matches++;
-        }
-        
-        return matches / longer.length;
-    }
-
-    /**
-     * Search specifically in dalle-generations/ folder
-     */
-    private async searchDalleGenerations(zip: JSZip, fileId: string): Promise<JSZip.JSZipObject[]> {
-        const matches: JSZip.JSZipObject[] = [];
-        
+        // Search through all files in ZIP for exact match
         for (const [path, file] of Object.entries(zip.files)) {
-            if (!file.dir && path.toLowerCase().includes('dalle')) {
-                // Check various patterns for DALL-E files
-                if (path.includes(fileId) || 
-                    path.includes(fileId.replace('file_', '')) ||
-                    path.includes(fileId.replace('file-', ''))) {
-                    matches.push(file);
-                }
+            if (file.dir) continue;
+            
+            // Check if path contains the exact file ID
+            if (path.includes(fileId)) {
+                this.logger.info(`Found file: ${path}`);
+                return file;
             }
         }
         
-        return matches;
+        return null;
+    }
+
+    /**
+     * Generate all possible search terms for a file ID - SIMPLIFIED
+     */
+    private generateSearchTerms(fileId: string): string[] {
+        // Just use the exact file ID from the JSON
+        return [fileId];
     }
 
     /**
@@ -449,11 +350,17 @@ export class ChatGPTAttachmentExtractor {
     }
 
     /**
-     * Get file extension from filename
+     * Sanitize filename and handle potential conflicts
      */
-    private getFileExtension(fileName: string): string {
-        const lastDot = fileName.lastIndexOf('.');
-        return lastDot === -1 ? '' : fileName.substring(lastDot + 1).toLowerCase();
+    private sanitizeFileName(fileName: string): string {
+        let cleanName = fileName
+            .replace(/[<>:"\/\\|?*]/g, '_')
+            .replace(/\s+/g, '_')
+            .trim();
+            
+        // If filename conflicts might occur, we could add a timestamp prefix
+        // but for now, ChatGPT file IDs should make names unique enough
+        return cleanName;
     }
 
     /**
