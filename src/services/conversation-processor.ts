@@ -143,7 +143,6 @@ export class ConversationProcessor {
         
         if (!fileExists) {
             // File was deleted, recreate it
-            this.plugin.logger.info(`File ${existingRecord.path} was deleted, recreating...`);
             await this.handleNewChatGPTChat(chat, existingRecord.path, {}, importReport, zip);
             return;
         }

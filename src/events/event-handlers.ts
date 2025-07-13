@@ -14,8 +14,6 @@ export class EventHandlers {
                 }
             })
         );
-
-        this.plugin.logger.info("Event handlers registered");
     }
 
     cleanup() {
