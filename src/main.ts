@@ -7,6 +7,7 @@ import { CommandRegistry } from "./commands/command-registry";
 import { EventHandlers } from "./events/event-handlers";
 import { ImportService } from "./services/import-service";
 import { StorageService } from "./services/storage-service";
+import { FileService } from "./services/file-service";
 import { Upgrader } from "./upgrade";
 import { Logger } from "./logger";
 
@@ -16,6 +17,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     
     private storageService: StorageService;
     private importService: ImportService;
+    private fileService: FileService;
     private commandRegistry: CommandRegistry;
     private eventHandlers: EventHandlers;
 
@@ -23,6 +25,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         super(app, manifest);
         this.storageService = new StorageService(this);
         this.importService = new ImportService(this);
+        this.fileService = new FileService(this);
         this.commandRegistry = new CommandRegistry(this);
         this.eventHandlers = new EventHandlers(this);
     }
@@ -80,5 +83,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     getImportService(): ImportService {
         return this.importService;
+    }
+
+    getFileService(): FileService {
+        return this.fileService;
     }
 }

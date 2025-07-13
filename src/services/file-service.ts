@@ -1,5 +1,6 @@
 // src/services/file-service.ts
 import { TFile, TFolder } from "obsidian";
+import { ConversationCatalogEntry } from "../types/plugin";
 import type NexusAiChatImporterPlugin from "../main";
 
 export class FileService {
@@ -21,4 +22,35 @@ export class FileService {
             throw error;
         }
     }
+
+    async handleConversationFileDeletion(file: TFile): Promise<void> {
+        try {
+            // Check if this is a Nexus conversation file
+            const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+            
+            if (!frontmatter?.conversation_id || frontmatter?.nexus !== this.plugin.manifest.id) {
+                return; // Not a Nexus conversation file
+            }
+
+            // Remove from conversation catalog
+            const storage = this.plugin.getStorageService();
+            const catalog = storage.getConversationCatalog();
+            
+            for (const [id, record] of Object.entries(catalog) as [string, ConversationCatalogEntry][]) {
+                if (record.conversationId === frontmatter.conversation_id) {
+                    storage.deleteFromConversationCatalog(id);
+                    await this.plugin.saveSettings();
+                    this.plugin.logger.info(`Removed conversation ${frontmatter.conversation_id} from catalog`);
+                    break;
+                }
+            }
+        } catch (error) {
+            this.plugin.logger.error("Error handling conversation file deletion:", error);
+        }
+    }
+
+    // TODO: Future enhancement - delete conversation attachments
+    // async deleteConversationAttachments(conversationId: string): Promise<void> {
+    //     // Implementation for deleting attachments when conversation is deleted
+    // }
 }
