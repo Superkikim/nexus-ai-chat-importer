@@ -53,12 +53,12 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Convert ChatGPT attachments to StandardAttachments - NOW WITH DALL-E SUPPORT
+     * Convert ChatGPT attachments to StandardAttachments - FIXED: No more fake DALL-E
      */
     private static convertAttachments(chatMessage: ChatMessage): StandardAttachment[] {
         const attachments: StandardAttachment[] = [];
 
-        // Process attachments from metadata (new format)
+        // Process attachments from metadata (new format) - THIS IS THE MAIN SOURCE
         if (chatMessage.metadata?.attachments && Array.isArray(chatMessage.metadata.attachments)) {
             for (const attachment of chatMessage.metadata.attachments) {
                 const standardAttachment = {
@@ -102,46 +102,34 @@ export class ChatGPTConverter {
             }
         }
 
-        // *** NEW: Process DALL-E generated images ***
-        if (chatMessage.content?.parts && Array.isArray(chatMessage.content.parts)) {
-            for (const part of chatMessage.content.parts) {
-                if (typeof part === "object" && part !== null && 
-                    (part as ContentPart).content_type === "image_asset_pointer" && 
-                    (part as ContentPart).asset_pointer) {
-                    
-                    const dalleAttachment = this.convertDalleImage(part as ContentPart);
-                    if (dalleAttachment) {
-                        attachments.push(dalleAttachment);
-                    }
-                }
-            }
-        }
+        // *** REMOVED: Don't process image_asset_pointer here - they're already in metadata.attachments ***
+        // The metadata.attachments array contains the real file info, including user uploads
+        // Only tool messages with actual DALL-E generation should create separate DALL-E messages
 
         return attachments;
     }
 
     /**
-     * Convert DALL-E image asset pointer to StandardAttachment
+     * Convert DALL-E image asset pointer to StandardAttachment - ONLY for real DALL-E
      */
     private static convertDalleImage(imagePart: ContentPart): StandardAttachment | null {
         if (!imagePart.asset_pointer) return null;
 
+        // CHECK: Only process if it's actually DALL-E generated
+        if (!imagePart.metadata?.dalle || imagePart.metadata.dalle === null) {
+            return null; // Not a DALL-E image, skip it
+        }
+
         // Extract file ID from asset pointer
-        // Examples: 
-        // "sediment://file_00000000797851f6b6d36db4894cab3b"
-        // "file-service://file-2CCzBDHWNCL434hx9TvkMu"
         let fileId = imagePart.asset_pointer;
         
         // Extract just the file identifier
         if (fileId.includes('://')) {
             fileId = fileId.split('://')[1];
         }
-        if (fileId.startsWith('file_') || fileId.startsWith('file-')) {
-            // Keep as is - this will be used for ZIP lookup
-        }
 
         // Generate descriptive filename
-        const genId = imagePart.metadata?.dalle?.gen_id || 'unknown';
+        const genId = imagePart.metadata.dalle.gen_id || 'unknown';
         const width = imagePart.width || 1024;
         const height = imagePart.height || 1024;
         const fileName = `dalle_${genId}_${width}x${height}.png`;
@@ -151,7 +139,7 @@ export class ChatGPTConverter {
             fileSize: imagePart.size_bytes,
             fileType: "image/png", // DALL-E generates PNG by default
             fileId: fileId, // For ZIP lookup in dalle-generations/
-            extractedContent: imagePart.metadata?.dalle?.prompt // Include the generation prompt
+            extractedContent: imagePart.metadata.dalle.prompt // Include the generation prompt
         };
     }
 
@@ -178,8 +166,8 @@ export class ChatGPTConverter {
             if (!message) continue;
 
             // Handle different message types
-            if (message.author?.role === "tool" && this.hasImageAssetPointer(message)) {
-                // Create Assistant (DALL-E) message for generated images
+            if (message.author?.role === "tool" && this.hasRealDalleImage(message)) {
+                // Create Assistant (DALL-E) message ONLY for real DALL-E generations
                 const dalleMessage = this.createDalleAssistantMessage(message);
                 if (dalleMessage) {
                     messages.push(dalleMessage);
@@ -195,22 +183,26 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Check if message contains DALL-E image asset pointer
+     * Check if message contains REAL DALL-E image (not user upload)
      */
-    private static hasImageAssetPointer(message: ChatMessage): boolean {
+    private static hasRealDalleImage(message: ChatMessage): boolean {
         if (!message.content?.parts || !Array.isArray(message.content.parts)) {
             return false;
         }
         
-        return message.content.parts.some(part => 
-            typeof part === "object" && part !== null && 
-            (part as ContentPart).content_type === "image_asset_pointer" && 
-            (part as ContentPart).asset_pointer
-        );
+        return message.content.parts.some(part => {
+            if (typeof part !== "object" || part === null) return false;
+            
+            const contentPart = part as ContentPart;
+            return contentPart.content_type === "image_asset_pointer" && 
+                   contentPart.asset_pointer &&
+                   contentPart.metadata?.dalle && 
+                   contentPart.metadata.dalle !== null; // REAL DALL-E check
+        });
     }
 
     /**
-     * Create Assistant (DALL-E) message from tool message
+     * Create Assistant (DALL-E) message from tool message - ONLY for real DALL-E
      */
     private static createDalleAssistantMessage(toolMessage: ChatMessage): StandardMessage | null {
         if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
@@ -220,13 +212,17 @@ export class ChatGPTConverter {
         const attachments: StandardAttachment[] = [];
         
         for (const part of toolMessage.content.parts) {
-            if (typeof part === "object" && part !== null && 
-                (part as ContentPart).content_type === "image_asset_pointer" && 
-                (part as ContentPart).asset_pointer) {
-                
-                const dalleAttachment = this.convertDalleImage(part as ContentPart);
-                if (dalleAttachment) {
-                    attachments.push(dalleAttachment);
+            if (typeof part === "object" && part !== null) {
+                const contentPart = part as ContentPart;
+                if (contentPart.content_type === "image_asset_pointer" && 
+                    contentPart.asset_pointer &&
+                    contentPart.metadata?.dalle &&
+                    contentPart.metadata.dalle !== null) { // Only real DALL-E
+                    
+                    const dalleAttachment = this.convertDalleImage(contentPart);
+                    if (dalleAttachment) {
+                        attachments.push(dalleAttachment);
+                    }
                 }
             }
         }
@@ -308,8 +304,7 @@ export class ChatGPTConverter {
                         textContent = part.text;
                     }
                 }
-                // Skip image_asset_pointer content types - they become attachments
-                // Note: audio_asset_pointer and other non-text content types are ignored for now
+                // Skip image_asset_pointer content types - they become attachments via metadata
             }
             
             // Clean up ChatGPT control characters and formatting artifacts
@@ -326,8 +321,6 @@ export class ChatGPTConverter {
 
     /**
      * Clean ChatGPT artifacts, citations, and control characters
-     * Phase 1: Remove all artifacts without trying to preserve links
-     * TODO: Later add proper citation/link extraction
      */
     private static cleanChatGPTArtifacts(text: string): string {
         return text
