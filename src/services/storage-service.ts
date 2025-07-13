@@ -13,26 +13,77 @@ export class StorageService {
     constructor(private plugin: NexusAiChatImporterPlugin) {}
 
     loadCatalogs(data: any) {
-        this.importedArchives = data?.importedArchives || {};
-        this.conversationCatalog = data?.conversationCatalog || {};
-        this.rebuildIndex();
-        this.isDirty = false;
+        this.plugin.logger.info("=== STORAGE SERVICE - LOAD CATALOGS START ===");
+
+        try {
+            this.importedArchives = data?.importedArchives || {};
+            this.conversationCatalog = data?.conversationCatalog || {};
+            this.isDirty = false;
+
+            this.plugin.logger.info(`Imported archives: ${Object.keys(this.importedArchives).length}`);
+            this.plugin.logger.info(`Conversation catalog: ${Object.keys(this.conversationCatalog).length}`);
+            this.plugin.logger.info("=== STORAGE SERVICE - LOAD CATALOGS COMPLETED ===");
+        } catch (error) {
+            this.plugin.logger.error("loadCatalogs failed:", error);
+            throw error;
+        }
     }
 
     private rebuildIndex() {
-        // Build path index for faster lookups
-        this.conversationsByPath.clear();
-        for (const [id, entry] of Object.entries(this.conversationCatalog)) {
-            this.conversationsByPath.set(entry.path, id);
+        const rebuildStart = performance.now();
+        this.plugin.logger.info("=== REBUILDING PATH INDEX ===");
+        
+        try {
+            // Clear existing index
+            const clearStart = performance.now();
+            this.conversationsByPath.clear();
+            const clearEnd = performance.now();
+            this.plugin.logger.info(`Index cleared in ${clearEnd - clearStart}ms`);
+            
+            // Rebuild index
+            const buildStart = performance.now();
+            let processedCount = 0;
+            const totalCount = Object.keys(this.conversationCatalog).length;
+            
+            for (const [id, entry] of Object.entries(this.conversationCatalog)) {
+                this.conversationsByPath.set(entry.path, id);
+                processedCount++;
+                
+                // Log progress every 1000 entries
+                if (processedCount % 1000 === 0) {
+                    this.plugin.logger.info(`Index rebuild progress: ${processedCount}/${totalCount} (${((processedCount/totalCount)*100).toFixed(1)}%)`);
+                }
+            }
+            
+            const buildEnd = performance.now();
+            this.plugin.logger.info(`Index rebuilt with ${processedCount} entries in ${buildEnd - buildStart}ms`);
+            
+            const rebuildEnd = performance.now();
+            this.plugin.logger.info(`=== INDEX REBUILD COMPLETED in ${rebuildEnd - rebuildStart}ms ===`);
+            
+        } catch (error) {
+            const rebuildEnd = performance.now();
+            this.plugin.logger.error(`rebuildIndex failed after ${rebuildEnd - rebuildStart}ms:`, error);
+            throw error;
         }
     }
 
     async saveData(data: any) {
+        const saveStart = performance.now();
+        
         try {
+            const stats = this.getStats();
+            this.plugin.logger.info(`Saving data with stats:`, stats);
+            
             await this.plugin.saveData(data);
             this.isDirty = false;
+            
+            const saveEnd = performance.now();
+            this.plugin.logger.info(`Data saved in ${saveEnd - saveStart}ms`);
+            
         } catch (error) {
-            this.plugin.logger.error("Error saving settings", error);
+            const saveEnd = performance.now();
+            this.plugin.logger.error(`saveData failed after ${saveEnd - saveStart}ms:`, error);
         }
     }
 
@@ -44,7 +95,10 @@ export class StorageService {
         
         this.saveTimeout = window.setTimeout(async () => {
             if (this.isDirty) {
+                const saveStart = performance.now();
                 await this.plugin.saveSettings();
+                const saveEnd = performance.now();
+                this.plugin.logger.info(`Debounced save completed in ${saveEnd - saveStart}ms`);
             }
         }, 1000); // Save after 1 second of inactivity
     }
@@ -59,13 +113,27 @@ export class StorageService {
 
     // Fast lookup by path
     getConversationByPath(path: string): ConversationCatalogEntry | undefined {
+        const lookupStart = performance.now();
         const id = this.conversationsByPath.get(path);
-        return id ? this.conversationCatalog[id] : undefined;
+        const result = id ? this.conversationCatalog[id] : undefined;
+        const lookupEnd = performance.now();
+        
+        // Only log slow lookups
+        if (lookupEnd - lookupStart > 1) {
+            this.plugin.logger.info(`Slow path lookup took ${lookupEnd - lookupStart}ms for: ${path}`);
+        }
+        
+        return result;
     }
 
     // Get all conversations for a specific provider
     getConversationsByProvider(provider: string): ConversationCatalogEntry[] {
-        return Object.values(this.conversationCatalog).filter(entry => entry.provider === provider);
+        const filterStart = performance.now();
+        const results = Object.values(this.conversationCatalog).filter(entry => entry.provider === provider);
+        const filterEnd = performance.now();
+        
+        this.plugin.logger.info(`Provider filter (${provider}) took ${filterEnd - filterStart}ms, found ${results.length} conversations`);
+        return results;
     }
 
     isArchiveImported(fileHash: string): boolean {
@@ -82,6 +150,8 @@ export class StorageService {
     }
 
     updateConversationCatalog(id: string, entry: ConversationCatalogEntry) {
+        const updateStart = performance.now();
+        
         // Remove old path index if updating existing entry
         const oldEntry = this.conversationCatalog[id];
         if (oldEntry && oldEntry.path !== entry.path) {
@@ -92,9 +162,16 @@ export class StorageService {
         this.conversationsByPath.set(entry.path, id);
         this.isDirty = true;
         this.debouncedSave();
+        
+        const updateEnd = performance.now();
+        if (updateEnd - updateStart > 1) {
+            this.plugin.logger.info(`Slow catalog update took ${updateEnd - updateStart}ms for: ${id}`);
+        }
     }
 
     deleteFromConversationCatalog(id: string) {
+        const deleteStart = performance.now();
+        
         const entry = this.conversationCatalog[id];
         if (entry) {
             this.conversationsByPath.delete(entry.path);
@@ -102,10 +179,19 @@ export class StorageService {
             this.isDirty = true;
             this.debouncedSave();
         }
+        
+        const deleteEnd = performance.now();
+        if (deleteEnd - deleteStart > 1) {
+            this.plugin.logger.info(`Slow catalog delete took ${deleteEnd - deleteStart}ms for: ${id}`);
+        }
     }
 
     // Bulk operations for better performance during imports
     batchUpdateConversations(updates: Array<{id: string, entry: ConversationCatalogEntry}>) {
+        const batchStart = performance.now();
+        this.plugin.logger.info(`Starting batch update of ${updates.length} conversations`);
+        
+        let processedCount = 0;
         for (const {id, entry} of updates) {
             const oldEntry = this.conversationCatalog[id];
             if (oldEntry && oldEntry.path !== entry.path) {
@@ -113,40 +199,74 @@ export class StorageService {
             }
             this.conversationCatalog[id] = entry;
             this.conversationsByPath.set(entry.path, id);
+            
+            processedCount++;
+            if (processedCount % 100 === 0) {
+                this.plugin.logger.info(`Batch update progress: ${processedCount}/${updates.length}`);
+            }
         }
+        
         this.isDirty = true;
         this.debouncedSave();
+        
+        const batchEnd = performance.now();
+        this.plugin.logger.info(`Batch update completed in ${batchEnd - batchStart}ms`);
     }
 
     async resetCatalogs() {
-        this.importedArchives = {};
-        this.conversationCatalog = {};
-        this.conversationsByPath.clear();
-        this.isDirty = false;
+        const resetStart = performance.now();
+        this.plugin.logger.info("=== RESETTING CATALOGS ===");
         
-        // Clear any pending saves
-        if (this.saveTimeout) {
-            clearTimeout(this.saveTimeout);
-            this.saveTimeout = null;
+        try {
+            // Step 1: Clear data structures
+            const clearStart = performance.now();
+            this.importedArchives = {};
+            this.conversationCatalog = {};
+            this.conversationsByPath.clear();
+            const clearEnd = performance.now();
+            this.plugin.logger.info(`Data structures cleared in ${clearEnd - clearStart}ms`);
+            
+            // Step 2: Cancel pending saves
+            this.isDirty = false;
+            if (this.saveTimeout) {
+                clearTimeout(this.saveTimeout);
+                this.saveTimeout = null;
+            }
+            
+            // Step 3: Save empty data
+            const saveStart = performance.now();
+            await this.plugin.saveData({
+                settings: this.plugin.settings  // Keep settings, only clear catalogs
+            });
+            const saveEnd = performance.now();
+            this.plugin.logger.info(`Empty data saved in ${saveEnd - saveStart}ms`);
+            
+            const resetEnd = performance.now();
+            this.plugin.logger.info(`=== CATALOGS RESET COMPLETED in ${resetEnd - resetStart}ms ===`);
+            
+        } catch (error) {
+            const resetEnd = performance.now();
+            this.plugin.logger.error(`resetCatalogs failed after ${resetEnd - resetStart}ms:`, error);
         }
-        
-        await this.plugin.saveData({
-            settings: this.plugin.settings  // Keep settings, only clear catalogs
-        });
     }
 
     // Statistics for debugging performance
     getStats() {
-        return {
+        const stats = {
             totalArchives: Object.keys(this.importedArchives).length,
             totalConversations: Object.keys(this.conversationCatalog).length,
             indexSize: this.conversationsByPath.size,
-            isDirty: this.isDirty
+            isDirty: this.isDirty,
+            hasPendingSave: this.saveTimeout !== null
         };
+        
+        return stats;
     }
 
     // Force immediate save (use sparingly)
     async forceSave() {
+        const forceStart = performance.now();
+        
         if (this.saveTimeout) {
             clearTimeout(this.saveTimeout);
             this.saveTimeout = null;
@@ -154,5 +274,8 @@ export class StorageService {
         if (this.isDirty) {
             await this.plugin.saveSettings();
         }
+        
+        const forceEnd = performance.now();
+        this.plugin.logger.info(`Force save completed in ${forceEnd - forceStart}ms`);
     }
 }
