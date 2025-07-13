@@ -292,30 +292,98 @@ export class ChatGPTAttachmentExtractor {
             }
         }
 
-        // Strategy 3: Search through all files for pattern matching
-        this.logger.info('ChatGPT Attachment Extractor - Searching all files for patterns...');
+        // Strategy 3: Comprehensive search through all files
+        this.logger.info('ChatGPT Attachment Extractor - Performing comprehensive search...');
+        return await this.comprehensiveFileSearch(zip, attachment);
+    }
+
+    /**
+     * Comprehensive search through all ZIP files with multiple strategies
+     */
+    private async comprehensiveFileSearch(zip: JSZip, attachment: StandardAttachment): Promise<JSZip.JSZipObject | null> {
+        const searchStrategies = [];
+        
+        // Prepare search terms
+        if (attachment.fileId) {
+            // Clean file ID variants
+            const cleanId = attachment.fileId.replace(/^(file_|file-)/i, '');
+            searchStrategies.push(
+                attachment.fileId,           // full ID
+                cleanId,                     // clean ID
+                attachment.fileId.toLowerCase(),
+                cleanId.toLowerCase()
+            );
+        }
+        
+        // Search through all files
         for (const [path, file] of Object.entries(zip.files)) {
-            if (!file.dir) {
-                // Check if file path contains the file ID
-                if (attachment.fileId && path.includes(attachment.fileId)) {
-                    this.logger.info('ChatGPT Attachment Extractor - Found file by ID in path:', path);
-                    return file;
-                }
-                // Check if filename matches at the end of path
-                if (path.endsWith(attachment.fileName)) {
-                    this.logger.info('ChatGPT Attachment Extractor - Found file by filename at end of path:', path);
-                    return file;
-                }
-                // Check for similar names (case-insensitive)
-                if (path.toLowerCase().includes(attachment.fileName.toLowerCase())) {
-                    this.logger.info('ChatGPT Attachment Extractor - Found file by similar name:', path);
+            if (file.dir) continue;
+            
+            const pathLower = path.toLowerCase();
+            const fileName = path.split('/').pop() || '';
+            
+            // Strategy 1: File ID in path
+            for (const searchTerm of searchStrategies) {
+                if (pathLower.includes(searchTerm.toLowerCase())) {
+                    this.logger.info(`ChatGPT Attachment Extractor - Found file by ID search: ${path}`);
                     return file;
                 }
             }
+            
+            // Strategy 2: Exact filename at end of path
+            if (pathLower.endsWith(attachment.fileName.toLowerCase())) {
+                this.logger.info(`ChatGPT Attachment Extractor - Found file by filename: ${path}`);
+                return file;
+            }
+            
+            // Strategy 3: Similar filename (fuzzy match)
+            if (this.isSimilarFilename(fileName, attachment.fileName)) {
+                this.logger.info(`ChatGPT Attachment Extractor - Found file by similar name: ${path}`);
+                return file;
+            }
         }
-
-        this.logger.info('ChatGPT Attachment Extractor - File not found in ZIP');
+        
+        this.logger.info('ChatGPT Attachment Extractor - File not found in ZIP after comprehensive search');
         return null;
+    }
+
+    /**
+     * Check if two filenames are similar (for fuzzy matching)
+     */
+    private isSimilarFilename(zipFileName: string, targetFileName: string): boolean {
+        const normalize = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const zipNorm = normalize(zipFileName);
+        const targetNorm = normalize(targetFileName);
+        
+        // Similar if one contains the other, or if they're very close
+        if (zipNorm.includes(targetNorm) || targetNorm.includes(zipNorm)) {
+            return true;
+        }
+        
+        // Check for partial matches (at least 50% similarity for longer names)
+        if (targetNorm.length > 10) {
+            const similarity = this.calculateSimilarity(zipNorm, targetNorm);
+            return similarity > 0.5;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Calculate simple string similarity
+     */
+    private calculateSimilarity(str1: string, str2: string): number {
+        const longer = str1.length > str2.length ? str1 : str2;
+        const shorter = str1.length > str2.length ? str2 : str1;
+        
+        if (longer.length === 0) return 1.0;
+        
+        let matches = 0;
+        for (let i = 0; i < shorter.length; i++) {
+            if (longer.includes(shorter[i])) matches++;
+        }
+        
+        return matches / longer.length;
     }
 
     /**
