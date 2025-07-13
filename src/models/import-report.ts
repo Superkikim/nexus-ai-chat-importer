@@ -7,6 +7,7 @@ interface ReportEntry {
     createDate: string;
     updateDate: string;
     messageCount?: number;
+    newMessageCount?: number; // For updates
     reason?: string;
     errorMessage?: string;
     attachmentStats?: AttachmentStats;
@@ -34,14 +35,13 @@ export class ImportReport {
             ? `\n- **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)`
             : "";
 
-        // Clean summary based on your working 1.0.5 version
         this.summary = `## Summary
-- Processed ZIP file: ${zipFileName}
-- ${this.created.length > 0 ? `[[#Created notes]]` : "Created notes"}: ${counters.totalNewConversationsSuccessfullyImported} out of ${counters.totalConversationsProcessed} conversations
-- ${this.updated.length > 0 ? `[[#Updated notes]]` : "Updated notes"}: ${counters.totalConversationsActuallyUpdated} with a total of ${counters.totalNonEmptyMessagesAdded} new messages
+- **ZIP File**: ${zipFileName}
+- **Created**: ${counters.totalNewConversationsSuccessfullyImported} new conversations
+- **Updated**: ${counters.totalConversationsActuallyUpdated} conversations with ${counters.totalNonEmptyMessagesAdded} new messages
 - **Skipped**: ${this.skipped.length} conversations (no changes)
-- ${this.failed.length > 0 ? `[[#Failed imports]]` : "Failed imports"}: ${this.failed.length}
-- ${this.globalErrors.length > 0 ? `[[#Global errors]]` : "Global errors"}: ${this.globalErrors.length}${attachmentSummary}`;
+- **Failed**: ${this.failed.length} conversations
+- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
     }
 
     private getTotalAttachmentStats(): AttachmentStats {
@@ -61,8 +61,8 @@ export class ImportReport {
         this.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats });
     }
 
-    addUpdated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, attachmentStats?: AttachmentStats) {
-        this.updated.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats });
+    addUpdated(title: string, filePath: string, createDate: string, updateDate: string, newMessageCount: number, attachmentStats?: AttachmentStats) {
+        this.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats });
     }
 
     addSkipped(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, reason: string, attachmentStats?: AttachmentStats) {
@@ -78,103 +78,104 @@ export class ImportReport {
     }
 
     generateReportContent(): string {
-        let content = "# Nexus AI Chat Importer report\n\n";
+        let content = "# Nexus AI Chat Importer Report\n\n";
 
         if (this.summary) {
             content += this.summary + "\n\n";
         }
 
-        // Your original legend from 1.0.5
-        content += "## Legend\n";
-        content += "✨ Created | 🔄 Updated | 🚫 Failed | ⚠️ Global Errors\n\n";
-
-        // Only show tables for things users care about
+        // Show tables for important sections only
         if (this.created.length > 0) {
-            content += this.generateTable("Created notes", this.created, "✨", 
-                ["Title", "Updated", "Messages", "Attachments"]);
+            content += this.generateCreatedTable();
         }
         
         if (this.updated.length > 0) {
-            content += this.generateTable("Updated notes", this.updated, "🔄", 
-                ["Title", "Updated", "Added messages", "Attachments"]);
+            content += this.generateUpdatedTable();
         }
         
-        // Only show failures if they exist
+        // Only show failures and errors if they exist
         if (this.failed.length > 0) {
-            content += this.generateTable("Failed imports", this.failed, "🚫", 
-                ["Title", "Updated", "Error"]);
+            content += this.generateFailedTable();
         }
         
-        // Only show global errors if they exist
         if (this.globalErrors.length > 0) {
-            content += this.generateErrorTable("Global errors", this.globalErrors, "⚠️");
+            content += this.generateErrorTable();
         }
 
         return content;
     }
 
-    // Based on your working 1.0.5 table generation but with attachment support
-    private generateTable(title: string, entries: ReportEntry[], emoji: string, headers: string[]): string {
-        let table = `## ${title}\n\n`;
+    private generateCreatedTable(): string {
+        let table = `## ✨ Created Notes\n\n`;
+        table += "| Title | Created | Messages | Attachments |\n";
+        table += "|:---|:---:|:---:|:---:|\n";
         
-        // Check if we should show attachments column
-        const hasAttachments = entries.some(entry => entry.attachmentStats && entry.attachmentStats.total > 0);
-        const finalHeaders = hasAttachments && headers.includes("Attachments") ? headers : headers.filter(h => h !== "Attachments");
-        
-        table += "| " + finalHeaders.join(" | ") + " |\n";
-        table += "|:---:".repeat(finalHeaders.length) + "|\n";
-        
-        entries.forEach((entry) => {
+        this.created.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
-            const row = [emoji]; // Start with emoji like your 1.0.5 version
+            const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
+            const attachmentStatus = this.formatAttachmentStatus(entry.attachmentStats);
             
-            finalHeaders.forEach((header) => {
-                switch (header) {
-                    case "Title":
-                        row.push(`[[${entry.filePath}\\|${sanitizedTitle}]]`);
-                        break;
-                    case "Updated":
-                        row.push(entry.updateDate || "-");
-                        break;
-                    case "Messages":
-                        row.push(entry.messageCount?.toString() || "-");
-                        break;
-                    case "Added messages":
-                        row.push(entry.messageCount?.toString() || "-");
-                        break;
-                    case "Error":
-                        row.push(entry.errorMessage || "-");
-                        break;
-                    case "Attachments":
-                        if (entry.attachmentStats && entry.attachmentStats.total > 0) {
-                            const stats = entry.attachmentStats;
-                            const status = stats.found === stats.total ? "✅" : 
-                                          stats.found === 0 ? "❌" : "⚠️";
-                            row.push(`${status} ${stats.found}/${stats.total}`);
-                        } else {
-                            row.push("0"); // Show "0" instead of "-"
-                        }
-                        break;
-                    default:
-                        row.push("-");
-                }
-            });
-            
-            table += `| ${row.join(" | ")} |\n`;
+            table += `| ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${attachmentStatus} |\n`;
         });
         
         return table + "\n\n";
     }
 
-    // Your original error table from 1.0.5
-    private generateErrorTable(title: string, entries: { message: string; details: string }[], emoji: string): string {
-        let table = `## ${title}\n\n`;
-        table += "| | Error | Details |\n";
-        table += "|---|:---|:---|\n";
-        entries.forEach((entry) => {
-            table += `| ${emoji} | ${entry.message} | ${entry.details} |\n`;
+    private generateUpdatedTable(): string {
+        let table = `## 🔄 Updated Notes\n\n`;
+        table += "| Title | Updated | New Messages | New Attachments |\n";
+        table += "|:---|:---:|:---:|:---:|\n";
+        
+        this.updated.forEach((entry) => {
+            const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
+            const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
+            const attachmentStatus = this.formatAttachmentStatus(entry.attachmentStats);
+            
+            table += `| ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${attachmentStatus} |\n`;
         });
+        
         return table + "\n\n";
+    }
+
+    private generateFailedTable(): string {
+        let table = `## 🚫 Failed Imports\n\n`;
+        table += "| Title | Date | Error |\n";
+        table += "|:---|:---:|:---|\n";
+        
+        this.failed.forEach((entry) => {
+            const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
+            table += `| ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |\n`;
+        });
+        
+        return table + "\n\n";
+    }
+
+    private generateErrorTable(): string {
+        let table = `## ⚠️ Global Errors\n\n`;
+        table += "| Error | Details |\n";
+        table += "|:---|:---|\n";
+        
+        this.globalErrors.forEach((entry) => {
+            table += `| ${entry.message} | ${entry.details} |\n`;
+        });
+        
+        return table + "\n\n";
+    }
+
+    private formatAttachmentStatus(stats?: AttachmentStats): string {
+        if (!stats || stats.total === 0) {
+            return "0";
+        }
+
+        const { total, found, missing, failed } = stats;
+        
+        if (found === total) {
+            return `✅ ${found}`;
+        } else if (found === 0) {
+            return `❌ 0/${total}`;
+        } else {
+            return `⚠️ ${found}/${total}`;
+        }
     }
 
     hasErrors(): boolean {
