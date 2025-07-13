@@ -1,6 +1,8 @@
 // src/upgrade/incremental-upgrade-manager.ts
 import { Notice } from "obsidian";
 import { VersionUpgrade, UpgradeContext } from "./upgrade-interface";
+import { VersionUtils } from "./utils/version-utils";
+import { showDialog } from "../dialogs";
 import { Logger } from "../logger";
 import { GITHUB } from "../config/constants";
 import type NexusAiChatImporterPlugin from "../main";
@@ -42,7 +44,6 @@ export class IncrementalUpgradeManager {
 
         // Sort by version for incremental execution
         this.availableUpgrades.sort((a, b) => {
-            const { VersionUtils } = require("./utils/version-utils");
             return VersionUtils.compareVersions(a.version, b.version);
         });
 
@@ -233,7 +234,6 @@ export class IncrementalUpgradeManager {
         data.upgradeDate = new Date().toISOString();
         
         // Version tracking
-        const { VersionUtils } = require("./utils/version-utils");
         if (VersionUtils.compareVersions(version, "1.1.0") >= 0) {
             data.versionTrackingEnabled = true;
         }
@@ -247,18 +247,23 @@ export class IncrementalUpgradeManager {
      */
     private async showUpgradeDialog(currentVersion: string, lastVersion: string): Promise<void> {
         try {
-            const { showDialog } = require("../dialogs");
-            const { VersionUtils } = require("./utils/version-utils");
+            const overview = await this.fetchReleaseOverview(currentVersion);
+            const message = overview || `Nexus AI Chat Importer has been upgraded to version ${currentVersion}.`;
             
-            const message = `Nexus AI Chat Importer has been upgraded to version ${currentVersion}.`;
             const paragraphs = [message + this.getDocLinks(currentVersion)];
+            
+            // Add upgrade warning for very old versions
+            let note = undefined;
+            if (this.shouldShowUpgradeWarning(lastVersion)) {
+                note = this.getUpgradeWarning();
+            }
             
             await showDialog(
                 this.plugin.app,
                 "information",
                 `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
                 paragraphs,
-                undefined,
+                note,
                 { button1: "Got it!" }
             );
 
@@ -269,10 +274,44 @@ export class IncrementalUpgradeManager {
     }
 
     /**
+     * Fetch release overview from GitHub
+     */
+    private async fetchReleaseOverview(version: string): Promise<string | null> {
+        try {
+            const { requestUrl } = require("obsidian");
+            const response = await requestUrl({
+                url: `${GITHUB.RAW_BASE}/${version}/RELEASE_NOTES.md`,
+                method: 'GET'
+            });
+            
+            const overviewRegex = /## Overview\s+(.*?)(?=##|$)/s;
+            const match = response.text.match(overviewRegex);
+            return match ? match[1].trim() : null;
+        } catch (error) {
+            logger.warn("Could not fetch release overview:", error);
+            return null;
+        }
+    }
+
+    /**
      * Get documentation links
      */
     private getDocLinks(version: string): string {
         return `\n\n**Resources:**\n• [Full Release Notes](${GITHUB.REPO_BASE}/blob/${version}/RELEASE_NOTES.md)\n• [Documentation](${GITHUB.REPO_BASE}/blob/${version}/README.md)`;
+    }
+
+    /**
+     * Check if should show upgrade warning for very old versions
+     */
+    private shouldShowUpgradeWarning(lastVersion: string): boolean {
+        return VersionUtils.compareVersions(lastVersion, "1.0.2") < 0;
+    }
+
+    /**
+     * Get upgrade warning for very old versions
+     */
+    private getUpgradeWarning(): string {
+        return `⚠️ **Important for users upgrading from versions prior to v1.0.2:**\n\nVersion 1.0.2 introduced new metadata parameters required for certain features. For optimal performance and feature compatibility, it's recommended to delete old data and re-import conversations with this new version.`;
     }
 
     /**
