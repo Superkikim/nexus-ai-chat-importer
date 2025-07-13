@@ -171,24 +171,22 @@ export class ChatGPTConverter {
      * Extract messages from ChatGPT mapping structure
      */
     private static extractMessagesFromMapping(chat: Chat): StandardMessage[] {
-        // First pass: extract all attachments from tool messages and associate them
-        const attachmentsByParent = this.extractAttachmentsFromToolMessages(chat);
-        
         const messages: StandardMessage[] = [];
         
         for (const messageObj of Object.values(chat.mapping)) {
-            if (messageObj?.message && this.shouldIncludeMessage(messageObj.message)) {
-                const standardMessage = this.convertMessage(messageObj.message);
-                
-                // Add attachments from associated tool messages
-                const toolAttachments = attachmentsByParent.get(messageObj.id) || [];
-                if (standardMessage.attachments) {
-                    standardMessage.attachments.push(...toolAttachments);
-                } else {
-                    standardMessage.attachments = toolAttachments;
+            const message = messageObj?.message;
+            if (!message) continue;
+
+            // Handle different message types
+            if (message.author?.role === "tool" && this.hasImageAssetPointer(message)) {
+                // Create Assistant (DALL-E) message for generated images
+                const dalleMessage = this.createDalleAssistantMessage(message);
+                if (dalleMessage) {
+                    messages.push(dalleMessage);
                 }
-                
-                messages.push(standardMessage);
+            } else if (this.shouldIncludeMessage(message)) {
+                // Regular user/assistant messages
+                messages.push(this.convertMessage(message));
             }
         }
         
@@ -197,40 +195,53 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Extract attachments from tool messages and map them to their parent messages
+     * Check if message contains DALL-E image asset pointer
      */
-    private static extractAttachmentsFromToolMessages(chat: Chat): Map<string, StandardAttachment[]> {
-        const attachmentsByParent = new Map<string, StandardAttachment[]>();
-        
-        for (const messageObj of Object.values(chat.mapping)) {
-            const message = messageObj?.message;
-            if (!message || message.author?.role !== "tool") continue;
-            
-            const attachments: StandardAttachment[] = [];
-            
-            // Extract DALL-E images from tool messages
-            if (message.content?.parts && Array.isArray(message.content.parts)) {
-                for (const part of message.content.parts) {
-                    if (typeof part === "object" && part !== null && 
-                        (part as ContentPart).content_type === "image_asset_pointer" && 
-                        (part as ContentPart).asset_pointer) {
-                        
-                        const dalleAttachment = this.convertDalleImage(part as ContentPart);
-                        if (dalleAttachment) {
-                            attachments.push(dalleAttachment);
-                        }
-                    }
-                }
-            }
-            
-            // Associate attachments with parent message
-            if (attachments.length > 0 && messageObj.parent) {
-                const existing = attachmentsByParent.get(messageObj.parent) || [];
-                attachmentsByParent.set(messageObj.parent, [...existing, ...attachments]);
-            }
+    private static hasImageAssetPointer(message: ChatMessage): boolean {
+        if (!message.content?.parts || !Array.isArray(message.content.parts)) {
+            return false;
         }
         
-        return attachmentsByParent;
+        return message.content.parts.some(part => 
+            typeof part === "object" && part !== null && 
+            (part as ContentPart).content_type === "image_asset_pointer" && 
+            (part as ContentPart).asset_pointer
+        );
+    }
+
+    /**
+     * Create Assistant (DALL-E) message from tool message
+     */
+    private static createDalleAssistantMessage(toolMessage: ChatMessage): StandardMessage | null {
+        if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
+            return null;
+        }
+
+        const attachments: StandardAttachment[] = [];
+        
+        for (const part of toolMessage.content.parts) {
+            if (typeof part === "object" && part !== null && 
+                (part as ContentPart).content_type === "image_asset_pointer" && 
+                (part as ContentPart).asset_pointer) {
+                
+                const dalleAttachment = this.convertDalleImage(part as ContentPart);
+                if (dalleAttachment) {
+                    attachments.push(dalleAttachment);
+                }
+            }
+        }
+
+        if (attachments.length === 0) {
+            return null;
+        }
+
+        return {
+            id: toolMessage.id,
+            role: "assistant",
+            content: "Image générée par DALL-E",
+            timestamp: toolMessage.create_time,
+            attachments: attachments
+        };
     }
 
     /**

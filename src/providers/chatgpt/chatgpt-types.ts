@@ -17,10 +17,9 @@ export interface ChatGPTFile {
 export interface ChatMessage {
     id: string;
     author: {
-        role: 'user' | 'assistant' | 'system';
-    };
+        role: 'user' | 'assistant' | 'system' | 'tool';    };
     content: {
-        parts: string[];
+        parts: (string | any)[];
         content_type?: string;
     };
     create_time: number;
@@ -76,4 +75,27 @@ export interface Chat {
     is_do_not_remember?: boolean;
     memory_scope?: string;
     sugar_item_id?: string | null;
+}
+
+/**
+ * ChatGPT content part (for messages with multiple parts/attachments)
+ */
+export interface ContentPart {
+    content_type?: string;
+    asset_pointer?: string;
+    text?: string;
+    size_bytes?: number;
+    width?: number;
+    height?: number;
+    metadata?: {
+        dalle?: {
+            gen_id?: string;
+            prompt?: string;
+            seed?: number | null;
+            parent_gen_id?: string | null;
+            edit_op?: string | null;
+        };
+        [key: string]: any;
+    };
+    [key: string]: any;
 }
