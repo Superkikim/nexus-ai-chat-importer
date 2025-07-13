@@ -2,6 +2,7 @@
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
 import { UpgradeProgressModal } from "../utils/progress-modal";
 import { showDialog } from "../../dialogs";
+import { TFile } from "obsidian";
 
 /**
  * Delete old conversation catalog (automatic operation)
@@ -76,7 +77,7 @@ class CleanMetadataOperation extends UpgradeOperation {
     async canRun(context: UpgradeContext): Promise<boolean> {
         // Check if there are Nexus conversation files
         const files = context.plugin.app.vault.getMarkdownFiles();
-        const nexusFiles = files.filter(file => {
+        const nexusFiles = files.filter((file: TFile) => {
             const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
             return frontmatter?.nexus === context.plugin.manifest.id;
         });
@@ -87,7 +88,7 @@ class CleanMetadataOperation extends UpgradeOperation {
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
             const files = context.plugin.app.vault.getMarkdownFiles();
-            const nexusFiles = files.filter(file => {
+            const nexusFiles = files.filter((file: TFile) => {
                 const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
                 return frontmatter?.nexus === context.plugin.manifest.id;
             });
@@ -204,7 +205,7 @@ class CleanMetadataOperation extends UpgradeOperation {
     async verify(context: UpgradeContext): Promise<boolean> {
         // Sample verification - check a few files
         const files = context.plugin.app.vault.getMarkdownFiles();
-        const nexusFiles = files.filter(file => {
+        const nexusFiles = files.filter((file: TFile) => {
             const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
             return frontmatter?.nexus === context.plugin.manifest.id;
         }).slice(0, 5); // Check first 5 files

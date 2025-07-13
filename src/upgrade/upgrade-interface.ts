@@ -1,5 +1,10 @@
 // src/upgrade/upgrade-interface.ts
 import type NexusAiChatImporterPlugin from "../main";
+import { VersionUtils } from "./utils/version-utils";
+import { showDialog } from "../dialogs";
+import { Logger } from "../logger";
+
+const logger = new Logger();
 
 export interface OperationResult {
     success: boolean;
@@ -49,7 +54,6 @@ export abstract class VersionUpgrade {
      * Check if this upgrade should run for the version range
      */
     shouldRun(fromVersion: string, toVersion: string): boolean {
-        const { VersionUtils } = require("../utils/version-utils");
         // Run if target version >= this upgrade version and user is upgrading to/past it
         return VersionUtils.compareVersions(toVersion, this.version) >= 0 &&
                VersionUtils.compareVersions(fromVersion, this.version) < 0;
@@ -117,8 +121,6 @@ export abstract class VersionUpgrade {
         success: boolean;
         results: Array<{operationId: string; result: OperationResult}>;
     }> {
-        const { showDialog } = require("../../dialogs");
-        
         // Filter operations that can run and aren't completed
         const availableOperations = [];
         for (const operation of this.manualOperations) {
@@ -255,8 +257,6 @@ export abstract class VersionUpgrade {
         
         await context.plugin.saveData(data);
         
-        const { Logger } = require("../../logger");
-        const logger = new Logger();
         logger.info(`Marked operation ${operationId} (v${this.version}) as completed`);
     }
 }
