@@ -31,8 +31,9 @@ venv/
 .venv/
 __pycache__/
 
-# Optional build files (uncomment if you don't want to include build files in the repo)
-# dist/
+# Removing build from sync
+dist/
+*.js.map
 
 # Environment files (if you use them)
 .env
