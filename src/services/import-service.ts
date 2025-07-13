@@ -126,15 +126,9 @@ export class ImportService {
     }
 
     private async processConversations(zip: JSZip, file: File): Promise<void> {
-        console.log('ImportService - Processing conversations with ZIP:', {
-            hasZip: !!zip,
-            fileName: file.name,
-            importAttachmentsEnabled: this.plugin.settings.importAttachments
-        });
         
         try {
             const chats = await this.extractChatsFromZip(zip);
-            console.log('ImportService - Extracted chats, calling processor with ZIP:', !!zip);
             const report = await this.conversationProcessor.processChats(chats, this.importReport, zip);
             this.importReport = report;
             this.importReport.addSummary(

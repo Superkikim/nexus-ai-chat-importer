@@ -58,19 +58,8 @@ export class ChatGPTConverter {
     private static convertAttachments(chatMessage: ChatMessage): StandardAttachment[] {
         const attachments: StandardAttachment[] = [];
 
-        // Debug logging
-        console.log('ChatGPT Converter - Processing message attachments:', {
-            hasMetadataAttachments: chatMessage.metadata?.attachments ? true : false,
-            metadataAttachmentsCount: chatMessage.metadata?.attachments?.length || 0,
-            hasLegacyAttachments: chatMessage.attachments ? true : false,
-            legacyAttachmentsCount: chatMessage.attachments?.length || 0,
-            hasFiles: chatMessage.files ? true : false,
-            filesCount: chatMessage.files?.length || 0
-        });
-
         // Process attachments from metadata (new format)
         if (chatMessage.metadata?.attachments && Array.isArray(chatMessage.metadata.attachments)) {
-            console.log('ChatGPT Converter - Processing metadata attachments:', chatMessage.metadata.attachments);
             for (const attachment of chatMessage.metadata.attachments) {
                 const standardAttachment = {
                     fileName: attachment.name,
@@ -78,19 +67,12 @@ export class ChatGPTConverter {
                     fileType: attachment.mime_type,
                     fileId: attachment.id // ChatGPT file ID for ZIP lookup
                 };
-                console.log('ChatGPT Converter - Added attachment:', {
-                    fileName: standardAttachment.fileName,
-                    fileSize: standardAttachment.fileSize,
-                    fileType: standardAttachment.fileType,
-                    fileId: standardAttachment.fileId
-                });
                 attachments.push(standardAttachment);
             }
         }
 
         // Process legacy attachments array if present
         if (chatMessage.attachments && Array.isArray(chatMessage.attachments)) {
-            console.log('ChatGPT Converter - Processing legacy attachments:', chatMessage.attachments);
             for (const attachment of chatMessage.attachments) {
                 // Only add if not already processed from metadata
                 const alreadyExists = attachments.some(att => att.fileName === attachment.file_name);
@@ -101,7 +83,6 @@ export class ChatGPTConverter {
                         fileType: attachment.file_type,
                         extractedContent: attachment.extracted_content
                     };
-                    console.log('ChatGPT Converter - Added legacy attachment:', standardAttachment);
                     attachments.push(standardAttachment);
                 }
             }
@@ -109,7 +90,6 @@ export class ChatGPTConverter {
 
         // Process files array if present (simpler structure)
         if (chatMessage.files && Array.isArray(chatMessage.files)) {
-            console.log('ChatGPT Converter - Processing files array:', chatMessage.files);
             for (const file of chatMessage.files) {
                 // Only add if not already processed from attachments array
                 const alreadyExists = attachments.some(att => att.fileName === file.file_name);
@@ -117,13 +97,11 @@ export class ChatGPTConverter {
                     const standardAttachment = {
                         fileName: file.file_name
                     };
-                    console.log('ChatGPT Converter - Added file:', standardAttachment);
                     attachments.push(standardAttachment);
                 }
             }
         }
 
-        console.log('ChatGPT Converter - Final attachments array:', attachments);
         return attachments;
     }
 
@@ -172,13 +150,15 @@ export class ChatGPTConverter {
                 // Simple string part
                 textContent = part;
             } else if (typeof part === "object" && part !== null) {
-                // Handle different content types
-                if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
-                    textContent = part.text;
-                } else if (part.content_type === "text" && part.text && part.text.trim() !== "") {
-                    textContent = part.text;
-                } else if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
-                    textContent = part.text;
+                // Handle different content types with proper type checking
+                if ('content_type' in part && 'text' in part && typeof part.text === 'string') {
+                    if (part.content_type === "audio_transcription" && part.text.trim() !== "") {
+                        textContent = part.text;
+                    } else if (part.content_type === "text" && part.text.trim() !== "") {
+                        textContent = part.text;
+                    } else if (part.content_type === "multimodal_text" && part.text.trim() !== "") {
+                        textContent = part.text;
+                    }
                 }
                 // Note: audio_asset_pointer and other non-text content types are ignored for now
                 // These could be handled as attachments in the future

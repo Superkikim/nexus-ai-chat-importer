@@ -202,29 +202,15 @@ export class ConversationProcessor {
 
             // Convert ChatGPT format to standard format
             let standardConversation = ChatGPTConverter.convertChat(chat);
-            
-            console.log('ConversationProcessor - After conversion, checking for attachments:', {
-                conversationId: chat.id,
-                messageCount: standardConversation.messages.length,
-                messagesWithAttachments: standardConversation.messages.filter(m => m.attachments && m.attachments.length > 0).length,
-                hasZip: !!zip,
-                importAttachmentsEnabled: this.plugin.settings.importAttachments
-            });
-            
+                        
             // Process attachments if ZIP provided and settings enabled
             if (zip && this.plugin.settings.importAttachments) {
-                console.log('ConversationProcessor - Processing attachments for new conversation');
                 standardConversation.messages = await this.processMessageAttachments(
                     standardConversation.messages,
                     chat.id,
                     "chatgpt",
                     zip
                 );
-            } else {
-                console.log('ConversationProcessor - Skipping attachment processing:', {
-                    hasZip: !!zip,
-                    importEnabled: this.plugin.settings.importAttachments
-                });
             }
             
             const content = this.noteFormatter.generateMarkdownContent(standardConversation);
@@ -275,26 +261,13 @@ export class ConversationProcessor {
         provider: string,
         zip: JSZip
     ): Promise<StandardMessage[]> {
-        console.log('ConversationProcessor - Processing attachments:', {
-            messageCount: messages.length,
-            conversationId,
-            provider,
-            hasZip: !!zip,
-            importAttachmentsEnabled: this.plugin.settings.importAttachments
-        });
 
         const processedMessages: StandardMessage[] = [];
         
         for (const message of messages) {
             if (message.attachments && message.attachments.length > 0) {
-                console.log('ConversationProcessor - Message has attachments:', {
-                    messageId: message.id,
-                    attachmentCount: message.attachments.length,
-                    attachments: message.attachments
-                });
 
                 if (provider === "chatgpt") {
-                    console.log('ConversationProcessor - Using ChatGPT attachment extractor');
                     const processedAttachments = await this.chatgptAttachmentExtractor.extractAttachments(
                         zip,
                         conversationId,
@@ -306,7 +279,6 @@ export class ConversationProcessor {
                         attachments: processedAttachments
                     });
                 } else {
-                    console.log('ConversationProcessor - Provider not ChatGPT, skipping extraction');
                     processedMessages.push(message);
                 }
             } else {
@@ -314,7 +286,6 @@ export class ConversationProcessor {
             }
         }
         
-        console.log('ConversationProcessor - Finished processing attachments');
         return processedMessages;
     }
 
