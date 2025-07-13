@@ -7,29 +7,19 @@ enum LogLevel {
 
 export class Logger {
     private logToConsole(level: LogLevel, message: string, details?: any) {
-        const timestamp = new Date().toISOString();
-        const logMethod =
-            level === LogLevel.ERROR
-                ? console.error
-                : level === LogLevel.WARN
-                ? console.warn
-                : console.log;
-
-        logMethod(
-            `[${timestamp}] [Nexus AI Chat Importer] [${LogLevel[level]}] ${message}`,
-            details
-        );
+        // SOLUTION BRUTALE : console.log direct
+        console.log(`[Nexus AI Chat Importer] [${LogLevel[level]}] ${message}`);
     }
 
     info(message: string, details?: any) {
-        this.logToConsole(LogLevel.INFO, message, details);
+        console.log(`[Nexus AI Chat Importer] [INFO] ${message}`);
     }
 
     warn(message: string, details?: any) {
-        this.logToConsole(LogLevel.WARN, message, details);
+        console.warn(`[Nexus AI Chat Importer] [WARN] ${message}`);
     }
 
     error(message: string, details?: any) {
-        this.logToConsole(LogLevel.ERROR, message, details);
+        console.error(`[Nexus AI Chat Importer] [ERROR] ${message}`);
     }
 }

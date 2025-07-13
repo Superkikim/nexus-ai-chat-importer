@@ -3,7 +3,7 @@ import { Notice } from "obsidian";
 import { BaseMigration, MigrationContext, MigrationResult } from "./migrations/migration-interface";
 import { UpgradeRegistry } from "./upgrade-registry";
 import { VersionUtils } from "./utils/version-utils";
-import { ProgressModal } from "./utils/progress-modal";
+import { UpgradeProgressModal } from "./utils/progress-modal";
 import { showDialog } from "../dialogs";
 import { Logger } from "../logger";
 import { GITHUB } from "../config/constants";
@@ -276,6 +276,11 @@ export class UpgradeManager {
         data.lastVersion = version;
         data.hasCompletedUpgrade = true;
         data.upgradeDate = new Date().toISOString();
+        
+        // IMPORTANT: From v1.1.0 onwards, always track version properly
+        if (VersionUtils.compareVersions(version, "1.1.0") >= 0) {
+            data.versionTrackingEnabled = true;
+        }
         
         await this.plugin.saveData(data);
         logger.info(`Marked upgrade to ${version} as complete`);

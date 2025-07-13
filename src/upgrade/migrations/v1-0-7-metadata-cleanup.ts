@@ -1,7 +1,7 @@
 // src/upgrade/migrations/v1-0-7-metadata-cleanup.ts
 import { BaseMigration, MigrationContext, MigrationResult } from "./migration-interface";
 import { VersionUtils } from "../utils/version-utils";
-import { ProgressModal } from "../utils/progress-modal";
+import { UpgradeProgressModal } from "../utils/progress-modal";
 import { showDialog } from "../../dialogs";
 import { Logger } from "../../logger";
 
@@ -15,11 +15,8 @@ export class MetadataCleanupMigration extends BaseMigration {
     readonly toVersion = "1.1.0";
 
     shouldRun(fromVersion: string, toVersion: string): boolean {
-        // Run if user was on 1.0.7-1.0.8 and is upgrading to 1.1.0+
-        const wasInMetadataVersions = VersionUtils.isInRange(fromVersion, "1.0.7", "1.0.8");
-        const isUpgradingToClean = VersionUtils.compareVersions(toVersion, "1.1.0") >= 0;
-        
-        return wasInMetadataVersions && isUpgradingToClean;
+        // Run if there are Nexus conversation files (will be checked in canRun)
+        return true; // Will be filtered by canRun() which checks for actual files
     }
 
     async canRun(context: MigrationContext): Promise<boolean> {
@@ -35,17 +32,24 @@ export class MetadataCleanupMigration extends BaseMigration {
     }
 
     async requestUserConfirmation(context: MigrationContext): Promise<boolean> {
+        // Check if already done (run-once)
+        const hasAlreadyDoneCleanup = context.pluginData?.hasCompletedMetadataCleanup;
+        if (hasAlreadyDoneCleanup) {
+            logger.info("Metadata cleanup already completed, skipping");
+            return false;
+        }
+
         const shouldCleanup = await showDialog(
             context.plugin.app,
             "confirmation",
             "Metadata Cleanup Available",
             [
-                "Version 1.1.0 uses cleaner frontmatter for conversation notes.",
-                "Would you like to remove unnecessary metadata from existing notes?",
+                "Previous versions may have added unnecessary metadata to conversation notes.",
+                "Would you like to remove these extra fields for cleaner frontmatter?",
                 "**What will be cleaned:**",
-                "• Remove technical metadata (gizmo_id, is_archived, memory_scope, etc.)",
-                "• Keep essential data (conversation_id, provider, dates, aliases)",
-                "• Progress will be shown during cleanup"
+                "• Remove technical metadata (gizmo_id, is_archived, etc.)",
+                "• Keep essential data (conversation_id, provider, dates)",
+                "• This will only run once"
             ],
             "⚠️ **This operation cannot be undone.** Make sure you have a backup of your vault before proceeding.",
             { button1: "Clean Metadata", button2: "Skip Cleanup" }
@@ -103,7 +107,6 @@ export class MetadataCleanupMigration extends BaseMigration {
                         if (content !== cleanedContent) {
                             await context.plugin.app.vault.modify(file, cleanedContent);
                             cleaned++;
-                            logger.info(`Cleaned metadata for: ${file.path}`);
                         } else {
                             skipped++;
                         }
