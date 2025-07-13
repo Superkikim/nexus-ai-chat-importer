@@ -27,9 +27,7 @@ export class ImportService {
             if (files.length > 0) {
                 const sortedFiles = this.sortFilesByTimestamp(files);
                 for (const file of sortedFiles) {
-                    this.plugin.logger.info(`Processing file: ${file.name}`);
                     await this.handleZipFile(file);
-                    this.plugin.logger.info(`Completed processing: ${file.name}`);
                 }
             }
         };
