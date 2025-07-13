@@ -1,5 +1,5 @@
 // src/providers/chatgpt/chatgpt-converter.ts
-import { Chat, ChatMessage, ChatGPTAttachment } from "./chatgpt-types";
+import { Chat, ChatMessage, ChatGPTAttachment, ContentPart } from "./chatgpt-types";
 import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
 import { isValidMessage } from "../../utils";
 
@@ -106,10 +106,10 @@ export class ChatGPTConverter {
         if (chatMessage.content?.parts && Array.isArray(chatMessage.content.parts)) {
             for (const part of chatMessage.content.parts) {
                 if (typeof part === "object" && part !== null && 
-                    part.content_type === "image_asset_pointer" && 
-                    part.asset_pointer) {
+                    (part as ContentPart).content_type === "image_asset_pointer" && 
+                    (part as ContentPart).asset_pointer) {
                     
-                    const dalleAttachment = this.convertDalleImage(part);
+                    const dalleAttachment = this.convertDalleImage(part as ContentPart);
                     if (dalleAttachment) {
                         attachments.push(dalleAttachment);
                     }
@@ -123,7 +123,7 @@ export class ChatGPTConverter {
     /**
      * Convert DALL-E image asset pointer to StandardAttachment
      */
-    private static convertDalleImage(imagePart: any): StandardAttachment | null {
+    private static convertDalleImage(imagePart: ContentPart): StandardAttachment | null {
         if (!imagePart.asset_pointer) return null;
 
         // Extract file ID from asset pointer
@@ -171,16 +171,103 @@ export class ChatGPTConverter {
      * Extract messages from ChatGPT mapping structure
      */
     private static extractMessagesFromMapping(chat: Chat): StandardMessage[] {
+        // First pass: extract all attachments from tool messages and associate them
+        const attachmentsByParent = this.extractAttachmentsFromToolMessages(chat);
+        
         const messages: StandardMessage[] = [];
         
         for (const messageObj of Object.values(chat.mapping)) {
-            if (messageObj?.message && isValidMessage(messageObj.message)) {
-                messages.push(this.convertMessage(messageObj.message));
+            if (messageObj?.message && this.shouldIncludeMessage(messageObj.message)) {
+                const standardMessage = this.convertMessage(messageObj.message);
+                
+                // Add attachments from associated tool messages
+                const toolAttachments = attachmentsByParent.get(messageObj.id) || [];
+                if (standardMessage.attachments) {
+                    standardMessage.attachments.push(...toolAttachments);
+                } else {
+                    standardMessage.attachments = toolAttachments;
+                }
+                
+                messages.push(standardMessage);
             }
         }
         
         // Sort by timestamp to maintain order
         return messages.sort((a, b) => a.timestamp - b.timestamp);
+    }
+
+    /**
+     * Extract attachments from tool messages and map them to their parent messages
+     */
+    private static extractAttachmentsFromToolMessages(chat: Chat): Map<string, StandardAttachment[]> {
+        const attachmentsByParent = new Map<string, StandardAttachment[]>();
+        
+        for (const messageObj of Object.values(chat.mapping)) {
+            const message = messageObj?.message;
+            if (!message || message.author?.role !== "tool") continue;
+            
+            const attachments: StandardAttachment[] = [];
+            
+            // Extract DALL-E images from tool messages
+            if (message.content?.parts && Array.isArray(message.content.parts)) {
+                for (const part of message.content.parts) {
+                    if (typeof part === "object" && part !== null && 
+                        (part as ContentPart).content_type === "image_asset_pointer" && 
+                        (part as ContentPart).asset_pointer) {
+                        
+                        const dalleAttachment = this.convertDalleImage(part as ContentPart);
+                        if (dalleAttachment) {
+                            attachments.push(dalleAttachment);
+                        }
+                    }
+                }
+            }
+            
+            // Associate attachments with parent message
+            if (attachments.length > 0 && messageObj.parent) {
+                const existing = attachmentsByParent.get(messageObj.parent) || [];
+                attachmentsByParent.set(messageObj.parent, [...existing, ...attachments]);
+            }
+        }
+        
+        return attachmentsByParent;
+    }
+
+    /**
+     * Determine if a message should be included in the conversation
+     */
+    private static shouldIncludeMessage(message: ChatMessage): boolean {
+        // Skip tool messages (internal ChatGPT processing)
+        if (message.author?.role === "tool") {
+            return false;
+        }
+        
+        // Skip empty assistant messages
+        if (message.author?.role === "assistant" && 
+            message.content?.parts && 
+            Array.isArray(message.content.parts) &&
+            message.content.parts.every(part => 
+                typeof part === "string" && part.trim() === ""
+            )) {
+            return false;
+        }
+        
+        // Skip assistant messages that are just DALL-E JSON prompts
+        if (message.author?.role === "assistant" && 
+            message.content?.parts && 
+            Array.isArray(message.content.parts) &&
+            message.content.parts.length === 1 &&
+            typeof message.content.parts[0] === "string") {
+            
+            const content = message.content.parts[0].trim();
+            // Check if it's a JSON prompt (starts with { and contains "prompt")
+            if (content.startsWith('{') && content.includes('"prompt"')) {
+                return false;
+            }
+        }
+        
+        // Use existing validation for other checks
+        return isValidMessage(message);
     }
 
     /**
