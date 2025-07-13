@@ -65,7 +65,6 @@ export class ConversationProcessor {
      * Get provider name for current processing session
      */
     getCurrentProvider(): string {
-        // This will be set during processing - for now default to unknown
         return this.currentProvider || 'unknown';
     }
 
@@ -98,11 +97,13 @@ export class ConversationProcessor {
     private async processChatGPTConversations(chats: Chat[], importReport: ImportReport, zip?: JSZip): Promise<ImportReport> {
         this.currentProvider = 'chatgpt';
         const storage = this.plugin.getStorageService();
-        const existingConversations = storage.getConversationCatalog();
-        this.counters.totalExistingConversations = Object.keys(existingConversations).length;
+        
+        // NEW: Scan existing conversations from vault instead of loading catalog
+        const existingConversationsMap = await storage.scanExistingConversations();
+        this.counters.totalExistingConversations = existingConversationsMap.size;
 
         for (const chat of chats) {
-            await this.processSingleChatGPTChat(chat, existingConversations, importReport, zip);
+            await this.processSingleChatGPTChat(chat, existingConversationsMap, importReport, zip);
         }
 
         return importReport;
@@ -110,17 +111,19 @@ export class ConversationProcessor {
 
     private async processSingleChatGPTChat(
         chat: Chat,
-        existingConversations: Record<string, ConversationCatalogEntry>,
+        existingConversations: Map<string, ConversationCatalogEntry>, // NEW: Map instead of Record
         importReport: ImportReport,
         zip?: JSZip
     ): Promise<void> {
         try {
-            if (existingConversations[chat.id]) {
-                await this.handleExistingChatGPTChat(chat, existingConversations[chat.id], importReport, zip);
+            const existingEntry = existingConversations.get(chat.id); // NEW: Use .get() instead of []
+            
+            if (existingEntry) {
+                await this.handleExistingChatGPTChat(chat, existingEntry, importReport, zip);
             } else {
                 const filePath = await this.generateFilePath(chat);
-                await this.handleNewChatGPTChat(chat, filePath, existingConversations, importReport, zip);
-                this.updateConversationCatalogEntry(chat, filePath);
+                await this.handleNewChatGPTChat(chat, filePath, importReport, zip);
+                // REMOVED: updateConversationCatalogEntry() - no longer needed
             }
             this.counters.totalConversationsProcessed++;
         } catch (error: any) {
@@ -143,7 +146,7 @@ export class ConversationProcessor {
         
         if (!fileExists) {
             // File was deleted, recreate it
-            await this.handleNewChatGPTChat(chat, existingRecord.path, {}, importReport, zip);
+            await this.handleNewChatGPTChat(chat, existingRecord.path, importReport, zip);
             return;
         }
 
@@ -165,12 +168,11 @@ export class ConversationProcessor {
     private async handleNewChatGPTChat(
         chat: Chat,
         filePath: string,
-        existingConversations: Record<string, ConversationCatalogEntry>,
         importReport: ImportReport,
         zip?: JSZip
     ): Promise<void> {
         this.counters.totalNewConversationsToImport++;
-        await this.createNewChatGPTNote(chat, filePath, existingConversations, importReport, zip);
+        await this.createNewChatGPTNote(chat, filePath, importReport, zip);
     }
 
     private async updateExistingChatGPTNote(
@@ -244,7 +246,6 @@ export class ConversationProcessor {
     private async createNewChatGPTNote(
         chat: Chat,
         filePath: string,
-        existingConversations: Record<string, ConversationCatalogEntry>,
         importReport: ImportReport,
         zip?: JSZip
     ): Promise<void> {
@@ -292,14 +293,7 @@ export class ConversationProcessor {
             this.counters.totalNewConversationsSuccessfullyImported++;
             this.counters.totalNonEmptyMessagesToImport += messageCount;
 
-            existingConversations[chat.id] = {
-                conversationId: chat.id,
-                path: filePath,
-                updateTime: chat.update_time,
-                provider: "chatgpt",
-                create_time: chat.create_time,
-                update_time: chat.update_time
-            };
+            // REMOVED: No longer updating conversation catalog - vault-based now
         } catch (error: any) {
             this.plugin.logger.error("Error creating new note", error.message);
             importReport.addFailed(
@@ -414,17 +408,7 @@ export class ConversationProcessor {
         return filePath;
     }
 
-    private updateConversationCatalogEntry(chat: Chat, filePath: string): void {
-        const storage = this.plugin.getStorageService();
-        storage.updateConversationCatalog(chat.id, {
-            conversationId: chat.id,
-            path: filePath,
-            updateTime: chat.update_time,
-            provider: "chatgpt",
-            create_time: chat.create_time,
-            update_time: chat.update_time
-        });
-    }
+    // REMOVED: updateConversationCatalogEntry() - no longer needed with vault-based approach
 
     getCounters() {
         return this.counters;

@@ -36,23 +36,17 @@ export class NoteFormatter {
             chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(conversationId);
         }
 
-        // Build frontmatter
+        // Build frontmatter - CLEAN VERSION (back to 1.0.5 format)
         let frontmatter = `---
 nexus: ${this.pluginId}
 provider: ${conversation.provider}
 aliases: "${title}"
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
-update_time: ${updateTimeStr}`;
+update_time: ${updateTimeStr}
+---
 
-        // Add provider-specific metadata
-        if (conversation.metadata) {
-            Object.entries(conversation.metadata).forEach(([key, value]) => {
-                frontmatter += `\n${key}: ${value}`;
-            });
-        }
-
-        frontmatter += `\n---\n\n`;
+`;
 
         // Build header content
         let header = `# Title: ${title}\n\n`;
