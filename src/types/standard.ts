@@ -70,3 +70,31 @@ export const URL_GENERATORS: Record<string, UrlGenerator> = {
         generateChatUrl: (id: string) => `https://claude.ai/chat/${id}`
     }
 };
+
+/**
+ * Provider-specific report naming strategy
+ */
+export interface ReportNamingStrategy {
+    /**
+     * Extract report prefix from archive filename
+     * @param zipFileName - Name of the imported ZIP file
+     * @returns prefix for report naming (e.g., "2025.04.25")
+     */
+    extractReportPrefix(zipFileName: string): string;
+    
+    /**
+     * Get provider name for folder organization
+     * @returns provider name (e.g., "chatgpt", "claude")
+     */
+    getProviderName(): string;
+}
+
+/**
+ * Report generation info returned by providers
+ */
+export interface ReportGenerationInfo {
+    provider: string;
+    prefix: string;
+    folderPath: string;  // e.g., "Reports/chatgpt"
+    baseFileName: string; // e.g., "2025.04.25 - import report.md"
+}

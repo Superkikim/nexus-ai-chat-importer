@@ -1,6 +1,7 @@
 // src/services/import-service.ts
 import { Notice } from "obsidian";
 import JSZip from "jszip";
+import { CustomError } from "../types/plugin";
 import { getFileHash } from "../utils";
 import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
@@ -158,40 +159,42 @@ export class ImportService {
 
     private async writeImportReport(zipFileName: string): Promise<void> {
         const reportWriter = new ReportWriter(this.plugin);
-        await reportWriter.writeReport(this.importReport, zipFileName);
+        const currentProvider = this.conversationProcessor.getCurrentProvider();
+        await reportWriter.writeReport(this.importReport, zipFileName, currentProvider);
     }
 }
 
 class ReportWriter {
     constructor(private plugin: NexusAiChatImporterPlugin) {}
 
-    async writeReport(report: ImportReport, zipFileName: string): Promise<void> {
+    async writeReport(report: ImportReport, zipFileName: string, provider: string): Promise<void> {
         const { ensureFolderExists, formatTimestamp } = await import("../utils");
         
-        const now = new Date();
-        const prefix = formatTimestamp(now.getTime() / 1000, "prefix");
-        let logFileName = `${prefix} - import report.md`;
-        const logFolderPath = `${this.plugin.settings.archiveFolder}/Reports`;
-
-        const folderResult = await ensureFolderExists(logFolderPath, this.plugin.app.vault);
+        // Get provider-specific naming strategy
+        const reportInfo = this.getReportGenerationInfo(zipFileName, provider);
+        
+        // Ensure provider subfolder exists
+        const folderResult = await ensureFolderExists(reportInfo.folderPath, this.plugin.app.vault);
         if (!folderResult.success) {
-            this.plugin.logger.error(`Failed to create or access log folder: ${logFolderPath}`, folderResult.error);
+            this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
             new Notice("Failed to create log file. Check console for details.");
             return;
         }
 
-        let logFilePath = `${logFolderPath}/${logFileName}`;
-        let counter = 1;
+        // Generate unique filename with counter if needed
+        let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
+        let counter = 2;
         while (await this.plugin.app.vault.adapter.exists(logFilePath)) {
-            logFileName = `${prefix}-${counter} - import report.md`;
-            logFilePath = `${logFolderPath}/${logFileName}`;
+            const baseName = reportInfo.baseFileName.replace(' - import report.md', '');
+            logFilePath = `${reportInfo.folderPath}/${baseName}-${counter} - import report.md`;
             counter++;
         }
 
-        const currentDate = `${formatTimestamp(now.getTime() / 1000, "date")} ${formatTimestamp(now.getTime() / 1000, "time")}`;
+        const currentDate = `${formatTimestamp(Date.now() / 1000, "date")} ${formatTimestamp(Date.now() / 1000, "time")}`;
         const logContent = `---
 importdate: ${currentDate}
 zipFile: ${zipFileName}
+provider: ${provider}
 totalSuccessfulImports: ${report.getCreatedCount()}
 totalUpdatedImports: ${report.getUpdatedCount()}
 totalSkippedImports: ${report.getSkippedCount()}
@@ -205,6 +208,29 @@ ${report.generateReportContent()}
         } catch (error: any) {
             this.plugin.logger.error(`Failed to write import log`, error.message);
             new Notice("Failed to create log file. Check console for details.");
+        }
+    }
+
+    private getReportGenerationInfo(zipFileName: string, provider: string): { folderPath: string, baseFileName: string } {
+        const baseFolder = this.plugin.settings.archiveFolder;
+        
+        switch (provider) {
+            case 'chatgpt':
+                const { ChatGPTReportNamingStrategy } = require("../providers/chatgpt/chatgpt-report-naming");
+                const strategy = new ChatGPTReportNamingStrategy();
+                const chatgptPrefix = strategy.extractReportPrefix(zipFileName);
+                return {
+                    folderPath: `${baseFolder}/Reports/${strategy.getProviderName()}`,
+                    baseFileName: `${chatgptPrefix} - import report.md`
+                };
+            default:
+                // Fallback for unknown providers
+                const now = new Date();
+                const fallbackPrefix = now.toISOString().split('T')[0].replace(/-/g, '.');
+                return {
+                    folderPath: `${baseFolder}/Reports`,
+                    baseFileName: `${fallbackPrefix} - import report.md`
+                };
         }
     }
 }

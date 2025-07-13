@@ -6,7 +6,6 @@ import { ImportReport } from "../models/import-report";
 import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
-import { AttachmentService } from "./attachment-service";
 import { ChatGPTConverter } from "../providers/chatgpt/chatgpt-converter";
 import { ChatGPTAttachmentExtractor } from "../providers/chatgpt/chatgpt-attachment-extractor";
 import { Chat } from "../providers/chatgpt/chatgpt-types";
@@ -63,6 +62,16 @@ export class ConversationProcessor {
     }
 
     /**
+     * Get provider name for current processing session
+     */
+    getCurrentProvider(): string {
+        // This will be set during processing - for now default to unknown
+        return this.currentProvider || 'unknown';
+    }
+
+    private currentProvider: string = 'unknown';
+
+    /**
      * Detect provider from conversation data structure
      */
     private detectProvider(rawConversations: any[]): string {
@@ -87,6 +96,7 @@ export class ConversationProcessor {
      * Process ChatGPT conversations specifically
      */
     private async processChatGPTConversations(chats: Chat[], importReport: ImportReport, zip?: JSZip): Promise<ImportReport> {
+        this.currentProvider = 'chatgpt';
         const storage = this.plugin.getStorageService();
         const existingConversations = storage.getConversationCatalog();
         this.counters.totalExistingConversations = Object.keys(existingConversations).length;
@@ -181,12 +191,13 @@ export class ConversationProcessor {
                 const existingMessageIds = this.extractMessageUIDsFromNote(content);
                 const newMessages = this.getNewChatGPTMessages(chat, existingMessageIds);
 
+                let attachmentStats: { total: number; found: number; missing: number; failed: number } | undefined = undefined;
+
                 if (newMessages.length > 0) {
                     // Convert ChatGPT messages to standard format
                     let standardMessages = ChatGPTConverter.convertMessages(newMessages);
                     
                     // Process attachments if ZIP provided and settings enabled
-                    let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
                     if (zip && this.plugin.settings.importAttachments) {
                         standardMessages = await this.processMessageAttachments(
                             standardMessages, 
@@ -194,10 +205,10 @@ export class ConversationProcessor {
                             "chatgpt", 
                             zip
                         );
-                        
-                        // Calculate attachment stats for new messages
-                        attachmentStats = this.calculateAttachmentStats(standardMessages);
                     }
+                    
+                    // Always calculate attachment stats (even if not processed)
+                    attachmentStats = this.calculateAttachmentStats(standardMessages);
                     
                     content += "\n\n" + this.messageFormatter.formatMessages(standardMessages);
                     this.counters.totalConversationsActuallyUpdated++;
@@ -206,10 +217,6 @@ export class ConversationProcessor {
 
                 if (content !== originalContent) {
                     await this.fileService.writeToFile(filePath, content);
-                    
-                    // Calculate attachment stats for the update
-                    const attachmentStats = newMessages.length > 0 ? 
-                        this.calculateAttachmentStatsFromMessages(newMessages, zip) : undefined;
                     
                     importReport.addUpdated(
                         chat.title || "Untitled",
@@ -446,25 +453,5 @@ export class ConversationProcessor {
         }
         
         return stats;
-    }
-
-    /**
-     * Calculate attachment stats from raw ChatGPT messages (for updates)
-     */
-    private async calculateAttachmentStatsFromMessages(messages: any[], zip?: JSZip): Promise<{ total: number; found: number; missing: number; failed: number } | undefined> {
-        if (!zip || !this.plugin.settings.importAttachments) {
-            return undefined;
-        }
-        
-        // Convert to standard messages and process attachments
-        const standardMessages = ChatGPTConverter.convertMessages(messages);
-        const processedMessages = await this.processMessageAttachments(
-            standardMessages, 
-            "temp", // We don't need the conversation ID for stats calculation
-            "chatgpt", 
-            zip
-        );
-        
-        return this.calculateAttachmentStats(processedMessages);
     }
 }
