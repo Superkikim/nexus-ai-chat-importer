@@ -1,6 +1,5 @@
 // src/services/conversation-processor.ts
 import { TFile } from "obsidian";
-import { Chat, ChatMessage } from "../providers/chatgpt/chatgpt-types";
 import { ConversationCatalogEntry } from "../types/plugin";
 import { StandardConversation, StandardMessage } from "../types/standard";
 import { ImportReport } from "../models/import-report";
@@ -10,6 +9,7 @@ import { FileService } from "./file-service";
 import { AttachmentService } from "./attachment-service";
 import { ChatGPTConverter } from "../providers/chatgpt/chatgpt-converter";
 import { ChatGPTAttachmentExtractor } from "../providers/chatgpt/chatgpt-attachment-extractor";
+import { Chat } from "../providers/chatgpt/chatgpt-types";
 import JSZip from "jszip";
 import { 
     formatTimestamp, 
@@ -46,19 +46,59 @@ export class ConversationProcessor {
         this.chatgptAttachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
     }
 
-    async processChats(chats: Chat[], importReport: ImportReport, zip?: JSZip): Promise<ImportReport> {
+    /**
+     * Process raw conversations (provider agnostic entry point)
+     */
+    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip): Promise<ImportReport> {
+        // Detect provider from raw data structure
+        const provider = this.detectProvider(rawConversations);
+        
+        switch (provider) {
+            case 'chatgpt':
+                return this.processChatGPTConversations(rawConversations as Chat[], importReport, zip);
+            default:
+                importReport.addError("Unknown provider", `Could not detect conversation provider from data structure`);
+                return importReport;
+        }
+    }
+
+    /**
+     * Detect provider from conversation data structure
+     */
+    private detectProvider(rawConversations: any[]): string {
+        if (rawConversations.length === 0) return 'unknown';
+        
+        const sample = rawConversations[0];
+        
+        // ChatGPT detection: has mapping property and typical structure
+        if (sample.mapping && sample.create_time && sample.update_time && sample.title) {
+            return 'chatgpt';
+        }
+        
+        // Future: Add Claude detection, etc.
+        // if (sample.messages && sample.account && sample.uuid) {
+        //     return 'claude';
+        // }
+        
+        return 'unknown';
+    }
+
+    /**
+     * Process ChatGPT conversations specifically
+     */
+    private async processChatGPTConversations(chats: Chat[], importReport: ImportReport, zip?: JSZip): Promise<ImportReport> {
         const storage = this.plugin.getStorageService();
         const existingConversations = storage.getConversationCatalog();
         this.counters.totalExistingConversations = Object.keys(existingConversations).length;
 
         for (const chat of chats) {
-            await this.processSingleChat(chat, existingConversations, importReport, zip);
+            await this.processSingleChatGPTChat(chat, existingConversations, importReport, zip);
         }
 
         return importReport;
     }
 
-    private async processSingleChat(
+    private async processSingleChatGPTChat(
         chat: Chat,
         existingConversations: Record<string, ConversationCatalogEntry>,
         importReport: ImportReport,
@@ -66,10 +106,10 @@ export class ConversationProcessor {
     ): Promise<void> {
         try {
             if (existingConversations[chat.id]) {
-                await this.handleExistingChat(chat, existingConversations[chat.id], importReport, zip);
+                await this.handleExistingChatGPTChat(chat, existingConversations[chat.id], importReport, zip);
             } else {
                 const filePath = await this.generateFilePath(chat);
-                await this.handleNewChat(chat, filePath, existingConversations, importReport, zip);
+                await this.handleNewChatGPTChat(chat, filePath, existingConversations, importReport, zip);
                 this.updateConversationCatalogEntry(chat, filePath);
             }
             this.counters.totalConversationsProcessed++;
@@ -79,7 +119,7 @@ export class ConversationProcessor {
         }
     }
 
-    private async handleExistingChat(
+    private async handleExistingChatGPTChat(
         chat: Chat,
         existingRecord: ConversationCatalogEntry,
         importReport: ImportReport,
@@ -94,7 +134,7 @@ export class ConversationProcessor {
         if (!fileExists) {
             // File was deleted, recreate it
             this.plugin.logger.info(`File ${existingRecord.path} was deleted, recreating...`);
-            await this.handleNewChat(chat, existingRecord.path, {}, importReport, zip);
+            await this.handleNewChatGPTChat(chat, existingRecord.path, {}, importReport, zip);
             return;
         }
 
@@ -109,11 +149,11 @@ export class ConversationProcessor {
             );
         } else {
             this.counters.totalExistingConversationsToUpdate++;
-            await this.updateExistingNote(chat, existingRecord.path, totalMessageCount, importReport, zip);
+            await this.updateExistingChatGPTNote(chat, existingRecord.path, totalMessageCount, importReport, zip);
         }
     }
 
-    private async handleNewChat(
+    private async handleNewChatGPTChat(
         chat: Chat,
         filePath: string,
         existingConversations: Record<string, ConversationCatalogEntry>,
@@ -121,10 +161,10 @@ export class ConversationProcessor {
         zip?: JSZip
     ): Promise<void> {
         this.counters.totalNewConversationsToImport++;
-        await this.createNewNote(chat, filePath, existingConversations, importReport, zip);
+        await this.createNewChatGPTNote(chat, filePath, existingConversations, importReport, zip);
     }
 
-    private async updateExistingNote(
+    private async updateExistingChatGPTNote(
         chat: Chat,
         filePath: string,
         totalMessageCount: number,
@@ -139,7 +179,7 @@ export class ConversationProcessor {
 
                 content = this.updateMetadata(content, chat.update_time);
                 const existingMessageIds = this.extractMessageUIDsFromNote(content);
-                const newMessages = this.getNewMessages(chat, existingMessageIds);
+                const newMessages = this.getNewChatGPTMessages(chat, existingMessageIds);
 
                 if (newMessages.length > 0) {
                     // Convert ChatGPT messages to standard format
@@ -185,7 +225,7 @@ export class ConversationProcessor {
         }
     }
 
-    private async createNewNote(
+    private async createNewChatGPTNote(
         chat: Chat,
         filePath: string,
         existingConversations: Record<string, ConversationCatalogEntry>,
@@ -253,7 +293,7 @@ export class ConversationProcessor {
     }
 
     /**
-     * Process attachments for messages using ChatGPT-specific extractor
+     * Process attachments for messages using provider-specific extractor
      */
     private async processMessageAttachments(
         messages: StandardMessage[],
@@ -296,8 +336,8 @@ export class ConversationProcessor {
         return content;
     }
 
-    private getNewMessages(chat: Chat, existingMessageIds: string[]): ChatMessage[] {
-        const newMessages: ChatMessage[] = [];
+    private getNewChatGPTMessages(chat: Chat, existingMessageIds: string[]): any[] {
+        const newMessages: any[] = [];
         
         for (const messageObj of Object.values(chat.mapping)) {
             if (messageObj?.id && 

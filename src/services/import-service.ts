@@ -1,7 +1,6 @@
 // src/services/import-service.ts
 import { Notice } from "obsidian";
 import JSZip from "jszip";
-import { Chat, CustomError } from "../types";
 import { getFileHash } from "../utils";
 import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
@@ -27,7 +26,9 @@ export class ImportService {
             if (files.length > 0) {
                 const sortedFiles = this.sortFilesByTimestamp(files);
                 for (const file of sortedFiles) {
+                    this.plugin.logger.info(`Processing file: ${file.name}`);
                     await this.handleZipFile(file);
+                    this.plugin.logger.info(`Completed processing: ${file.name}`);
                 }
             }
         };
@@ -126,8 +127,11 @@ export class ImportService {
     private async processConversations(zip: JSZip, file: File): Promise<void> {
         
         try {
-            const chats = await this.extractChatsFromZip(zip);
-            const report = await this.conversationProcessor.processChats(chats, this.importReport, zip);
+            // Extract raw conversation data (provider agnostic)
+            const rawConversations = await this.extractRawConversationsFromZip(zip);
+            
+            // Process through conversation processor (handles provider detection/conversion)
+            const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip);
             this.importReport = report;
             this.importReport.addSummary(
                 file.name,
@@ -143,7 +147,11 @@ export class ImportService {
             }
         }
     }
-    private async extractChatsFromZip(zip: JSZip): Promise<Chat[]> {
+
+    /**
+     * Extract raw conversation data without knowing provider specifics
+     */
+    private async extractRawConversationsFromZip(zip: JSZip): Promise<any[]> {
         const conversationsJson = await zip.file("conversations.json")!.async("string");
         return JSON.parse(conversationsJson);
     }
