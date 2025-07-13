@@ -18,13 +18,21 @@ export class ChatGPTAttachmentExtractor {
         conversationId: string,
         attachments: StandardAttachment[]
     ): Promise<StandardAttachment[]> {
+        this.logger.info('ChatGPT Attachment Extractor - Starting best effort extraction', {
+            conversationId,
+            attachmentCount: attachments.length,
+            importEnabled: this.plugin.settings.importAttachments
+        });
+
         if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+            this.logger.info('ChatGPT Attachment Extractor - Skipping extraction (disabled or no attachments)');
             return attachments.map(att => ({ ...att, status: { processed: false, found: false } }));
         }
 
         const processedAttachments: StandardAttachment[] = [];
 
         for (const attachment of attachments) {
+            this.logger.info('ChatGPT Attachment Extractor - Processing attachment', attachment);
             try {
                 const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
                 processedAttachments.push(result);
@@ -43,6 +51,12 @@ export class ChatGPTAttachmentExtractor {
             }
         }
 
+        this.logger.info('ChatGPT Attachment Extractor - Finished best effort extraction', {
+            total: attachments.length,
+            found: processedAttachments.filter(a => a.status?.found).length,
+            missing: processedAttachments.filter(a => !a.status?.found).length
+        });
+
         return processedAttachments;
     }
 
@@ -55,7 +69,7 @@ export class ChatGPTAttachmentExtractor {
         attachment: StandardAttachment
     ): Promise<StandardAttachment> {
         // Try to find file in ZIP
-        const zipFile = this.findChatGPTFileById(zip, attachment);
+        const zipFile = await this.findChatGPTFileById(zip, attachment);
         
         if (!zipFile) {
             // File not found - create informative status
@@ -73,16 +87,19 @@ export class ChatGPTAttachmentExtractor {
 
         // File found - try to extract it
         try {
-            const localPath = await this.extractSingleAttachment(zip, conversationId, attachment, zipFile);
+            const extractResult = await this.extractSingleAttachment(zip, conversationId, attachment, zipFile);
             
-            if (localPath) {
+            if (extractResult) {
+                this.logger.info(`Successfully extracted ChatGPT attachment: ${extractResult.localPath}`);
                 return {
                     ...attachment,
-                    url: localPath,
+                    fileName: extractResult.finalFileName, // Update with actual extracted filename
+                    fileType: extractResult.actualFileType, // Update with detected file type
+                    url: extractResult.localPath,
                     status: {
                         processed: true,
                         found: true,
-                        localPath: localPath
+                        localPath: extractResult.localPath
                     }
                 };
             } else {
@@ -97,6 +114,7 @@ export class ChatGPTAttachmentExtractor {
                 };
             }
         } catch (error) {
+            this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName}`, error);
             return {
                 ...attachment,
                 status: {
@@ -110,16 +128,35 @@ export class ChatGPTAttachmentExtractor {
     }
 
     /**
-     * Extract single attachment to disk with conflict resolution
+     * Extract single attachment to disk with conflict resolution and format detection
      */
     private async extractSingleAttachment(
         zip: JSZip,
         conversationId: string,
         attachment: StandardAttachment,
         zipFile: JSZip.JSZipObject
-    ): Promise<string | null> {
+    ): Promise<{localPath: string, finalFileName: string, actualFileType: string} | null> {
+        
+        // Get file content for format detection
+        const fileContent = await zipFile.async("uint8array");
+        
+        // Detect actual file format (especially for .dat files)
+        const formatInfo = this.detectFileFormat(fileContent);
+        
+        // Update filename with correct extension if needed
+        let finalFileName = attachment.fileName;
+        if (zipFile.name.endsWith('.dat') && formatInfo.extension) {
+            // Replace .dat with correct extension
+            const baseName = attachment.fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, '');
+            finalFileName = `${baseName}.${formatInfo.extension}`;
+        }
+        
         // Generate target path for saving
-        let targetPath = this.generateLocalPath(conversationId, attachment);
+        let targetPath = this.generateLocalPath(conversationId, {
+            ...attachment,
+            fileName: finalFileName,
+            fileType: formatInfo.mimeType || attachment.fileType
+        });
 
         // Ensure folder exists
         const folderPath = targetPath.substring(0, targetPath.lastIndexOf('/'));
@@ -131,11 +168,53 @@ export class ChatGPTAttachmentExtractor {
         // Handle file conflicts by adding suffix if needed
         targetPath = await this.resolveFileConflict(targetPath);
 
-        // Extract and save file
-        const fileContent = await zipFile.async("uint8array");
+        // Save file
         await this.plugin.app.vault.adapter.writeBinary(targetPath, fileContent);
 
-        return targetPath;
+        return {
+            localPath: targetPath,
+            finalFileName: finalFileName,
+            actualFileType: formatInfo.mimeType || attachment.fileType || 'application/octet-stream'
+        };
+    }
+
+    /**
+     * Detect file format from magic bytes (especially for .dat files)
+     */
+    private detectFileFormat(fileContent: Uint8Array): {extension: string | null, mimeType: string | null} {
+        if (fileContent.length < 4) {
+            return {extension: null, mimeType: null};
+        }
+
+        // Check magic bytes
+        const header = Array.from(fileContent.slice(0, 12)).map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        // PNG: 89 50 4E 47 0D 0A 1A 0A
+        if (header.startsWith('89504e47')) {
+            return {extension: 'png', mimeType: 'image/png'};
+        }
+        
+        // JPEG: FF D8 FF
+        if (header.startsWith('ffd8ff')) {
+            return {extension: 'jpg', mimeType: 'image/jpeg'};
+        }
+        
+        // GIF: 47 49 46 38
+        if (header.startsWith('47494638')) {
+            return {extension: 'gif', mimeType: 'image/gif'};
+        }
+        
+        // WebP: 52 49 46 46 [4 bytes] 57 45 42 50
+        if (header.startsWith('52494646') && header.substring(16, 24) === '57454250') {
+            return {extension: 'webp', mimeType: 'image/webp'};
+        }
+        
+        // RIFF (could be WebP or other formats)
+        if (header.startsWith('52494646')) {
+            return {extension: 'webp', mimeType: 'image/webp'}; // Assume WebP for RIFF in DALL-E context
+        }
+
+        return {extension: null, mimeType: null};
     }
 
     /**
@@ -158,25 +237,46 @@ export class ChatGPTAttachmentExtractor {
             counter++;
         }
 
+        if (finalPath !== originalPath) {
+            this.logger.info(`Resolved file conflict: ${originalPath} -> ${finalPath}`);
+        }
+
         return finalPath;
     }
 
     /**
-     * Find file in ZIP using ChatGPT's file ID with enhanced search
+     * Find file in ZIP - ENHANCED FOR DALL-E SUPPORT
      */
-    private findChatGPTFileById(zip: JSZip, attachment: StandardAttachment): JSZip.JSZipObject | null {
+    private async findChatGPTFileById(zip: JSZip, attachment: StandardAttachment): Promise<JSZip.JSZipObject | null> {
+        this.logger.info('ChatGPT Attachment Extractor - Looking for file', {
+            fileName: attachment.fileName,
+            fileId: attachment.fileId
+        });
+
         // Strategy 1: Try exact filename match first
         let zipFile = zip.file(attachment.fileName);
         if (zipFile) {
+            this.logger.info('ChatGPT Attachment Extractor - Found exact filename match');
             return zipFile;
         }
 
-        // Strategy 2: If we have a file ID, try file ID patterns
+        // Strategy 2: If we have a file ID, try DALL-E specific patterns
         if (attachment.fileId) {
-            // Pattern: file-{ID}-{name}
+            
+            // DALL-E Strategy: Check dalle-generations/ folder first
+            if (attachment.fileName.startsWith('dalle_')) {
+                const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
+                if (dalleFiles.length > 0) {
+                    this.logger.info('ChatGPT Attachment Extractor - Found DALL-E file in dalle-generations/');
+                    return dalleFiles[0]; // Return first match
+                }
+            }
+            
+            // Regular file ID patterns
             const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
             zipFile = zip.file(fileIdPattern);
             if (zipFile) {
+                this.logger.info('ChatGPT Attachment Extractor - Found file ID pattern match');
                 return zipFile;
             }
 
@@ -186,30 +286,56 @@ export class ChatGPTAttachmentExtractor {
                 const fileIdExtPattern = `${attachment.fileId}.${extension}`;
                 zipFile = zip.file(fileIdExtPattern);
                 if (zipFile) {
+                    this.logger.info('ChatGPT Attachment Extractor - Found file ID extension match');
                     return zipFile;
                 }
             }
         }
 
         // Strategy 3: Search through all files for pattern matching
+        this.logger.info('ChatGPT Attachment Extractor - Searching all files for patterns...');
         for (const [path, file] of Object.entries(zip.files)) {
             if (!file.dir) {
                 // Check if file path contains the file ID
                 if (attachment.fileId && path.includes(attachment.fileId)) {
+                    this.logger.info('ChatGPT Attachment Extractor - Found file by ID in path:', path);
                     return file;
                 }
                 // Check if filename matches at the end of path
                 if (path.endsWith(attachment.fileName)) {
+                    this.logger.info('ChatGPT Attachment Extractor - Found file by filename at end of path:', path);
                     return file;
                 }
                 // Check for similar names (case-insensitive)
                 if (path.toLowerCase().includes(attachment.fileName.toLowerCase())) {
+                    this.logger.info('ChatGPT Attachment Extractor - Found file by similar name:', path);
                     return file;
                 }
             }
         }
 
+        this.logger.info('ChatGPT Attachment Extractor - File not found in ZIP');
         return null;
+    }
+
+    /**
+     * Search specifically in dalle-generations/ folder
+     */
+    private async searchDalleGenerations(zip: JSZip, fileId: string): Promise<JSZip.JSZipObject[]> {
+        const matches: JSZip.JSZipObject[] = [];
+        
+        for (const [path, file] of Object.entries(zip.files)) {
+            if (!file.dir && path.toLowerCase().includes('dalle')) {
+                // Check various patterns for DALL-E files
+                if (path.includes(fileId) || 
+                    path.includes(fileId.replace('file_', '')) ||
+                    path.includes(fileId.replace('file-', ''))) {
+                    matches.push(file);
+                }
+            }
+        }
+        
+        return matches;
     }
 
     /**

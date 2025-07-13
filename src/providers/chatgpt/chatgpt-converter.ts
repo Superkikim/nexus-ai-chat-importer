@@ -53,7 +53,7 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Convert ChatGPT attachments to StandardAttachments
+     * Convert ChatGPT attachments to StandardAttachments - NOW WITH DALL-E SUPPORT
      */
     private static convertAttachments(chatMessage: ChatMessage): StandardAttachment[] {
         const attachments: StandardAttachment[] = [];
@@ -102,7 +102,57 @@ export class ChatGPTConverter {
             }
         }
 
+        // *** NEW: Process DALL-E generated images ***
+        if (chatMessage.content?.parts && Array.isArray(chatMessage.content.parts)) {
+            for (const part of chatMessage.content.parts) {
+                if (typeof part === "object" && part !== null && 
+                    part.content_type === "image_asset_pointer" && 
+                    part.asset_pointer) {
+                    
+                    const dalleAttachment = this.convertDalleImage(part);
+                    if (dalleAttachment) {
+                        attachments.push(dalleAttachment);
+                    }
+                }
+            }
+        }
+
         return attachments;
+    }
+
+    /**
+     * Convert DALL-E image asset pointer to StandardAttachment
+     */
+    private static convertDalleImage(imagePart: any): StandardAttachment | null {
+        if (!imagePart.asset_pointer) return null;
+
+        // Extract file ID from asset pointer
+        // Examples: 
+        // "sediment://file_00000000797851f6b6d36db4894cab3b"
+        // "file-service://file-2CCzBDHWNCL434hx9TvkMu"
+        let fileId = imagePart.asset_pointer;
+        
+        // Extract just the file identifier
+        if (fileId.includes('://')) {
+            fileId = fileId.split('://')[1];
+        }
+        if (fileId.startsWith('file_') || fileId.startsWith('file-')) {
+            // Keep as is - this will be used for ZIP lookup
+        }
+
+        // Generate descriptive filename
+        const genId = imagePart.metadata?.dalle?.gen_id || 'unknown';
+        const width = imagePart.width || 1024;
+        const height = imagePart.height || 1024;
+        const fileName = `dalle_${genId}_${width}x${height}.png`;
+
+        return {
+            fileName: fileName,
+            fileSize: imagePart.size_bytes,
+            fileType: "image/png", // DALL-E generates PNG by default
+            fileId: fileId, // For ZIP lookup in dalle-generations/
+            extractedContent: imagePart.metadata?.dalle?.prompt // Include the generation prompt
+        };
     }
 
     /**
@@ -160,8 +210,8 @@ export class ChatGPTConverter {
                         textContent = part.text;
                     }
                 }
+                // Skip image_asset_pointer content types - they become attachments
                 // Note: audio_asset_pointer and other non-text content types are ignored for now
-                // These could be handled as attachments in the future
             }
             
             // Clean up ChatGPT control characters and formatting artifacts
