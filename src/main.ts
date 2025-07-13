@@ -66,7 +66,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             const data = await this.loadData();
             this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
-        //    this.storageService.loadCatalogs(data);
+            
+            // NEW: Load only small data (archive hashes) - no large catalog
+            await this.storageService.loadData();
+            
+            this.logger.info("Settings loaded successfully (vault-based conversation tracking)");
         } catch (error) {
             this.logger.error("loadSettings failed:", error);
             throw error;
@@ -77,8 +81,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             await this.storageService.saveData({
                 settings: this.settings,
-                importedArchives: this.storageService.getImportedArchives(),
-                conversationCatalog: this.storageService.getConversationCatalog()
+                importedArchives: this.storageService.getImportedArchives()
+                // REMOVED: conversationCatalog (now vault-based)
             });
         } catch (error) {
             this.logger.error("saveSettings failed:", error);
@@ -90,6 +94,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             await this.storageService.resetCatalogs();
             await this.loadSettings();
+            this.logger.info("Catalogs reset successfully");
         } catch (error) {
             this.logger.error("resetCatalogs failed:", error);
         }
