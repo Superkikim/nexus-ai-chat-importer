@@ -11,17 +11,22 @@ export class StorageService {
 
     async loadData() {
         try {
+            console.debug("[NEXUS-DEBUG] StorageService.loadData() - Starting");
             const data = await this.plugin.loadData();
             this.importedArchives = data?.importedArchives || {};
             this.isDirty = false;
             
             // Migration: If old catalog exists, we ignore it (migration handled in upgrade.ts)
             if (data?.conversationCatalog) {
+                const catalogSize = Object.keys(data.conversationCatalog).length;
+                console.debug(`[NEXUS-DEBUG] Legacy catalog detected: ${catalogSize} entries`);
                 this.plugin.logger.info("Legacy conversation catalog detected - will be migrated in upgrade process");
             }
             
+            console.debug(`[NEXUS-DEBUG] StorageService.loadData() - Completed (${Object.keys(this.importedArchives).length} archives)`);
             this.plugin.logger.info("Storage data loaded successfully (archive hashes only)");
         } catch (error) {
+            console.error("[NEXUS-DEBUG] StorageService.loadData() - FAILED", error);
             this.plugin.logger.error("loadData failed:", error);
             throw error;
         }
@@ -78,8 +83,13 @@ export class StorageService {
      * This replaces the persistent conversation catalog
      */
     async scanExistingConversations(): Promise<Map<string, ConversationCatalogEntry>> {
+        console.debug("[NEXUS-DEBUG] StorageService.scanExistingConversations() - Starting");
+        const startTime = Date.now();
+        
         const conversations = new Map<string, ConversationCatalogEntry>();
         const files = this.plugin.app.vault.getMarkdownFiles();
+        
+        console.debug(`[NEXUS-DEBUG] Scanning ${files.length} markdown files`);
         
         for (const file of files) {
             const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
@@ -99,6 +109,8 @@ export class StorageService {
             }
         }
         
+        const duration = Date.now() - startTime;
+        console.debug(`[NEXUS-DEBUG] Scan completed: ${conversations.size} conversations found in ${duration}ms`);
         this.plugin.logger.info(`Scanned vault: found ${conversations.size} existing Nexus conversations`);
         return conversations;
     }

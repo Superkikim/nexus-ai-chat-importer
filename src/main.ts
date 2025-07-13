@@ -33,7 +33,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     async onload() {
         try {
+            console.debug("[NEXUS-DEBUG] Plugin.onload() - Starting");
             await this.loadSettings();
+            console.debug("[NEXUS-DEBUG] Settings loaded, registering components");
+            
             this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
             this.commandRegistry.registerCommands();
             this.eventHandlers.registerEvents();
@@ -45,9 +48,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
             ribbonIconEl.addClass("nexus-ai-chat-ribbon");
             
+            console.debug("[NEXUS-DEBUG] Components registered, starting upgrade check");
             const upgrader = new Upgrader(this);
             await upgrader.checkForUpgrade();
+            
+            console.debug("[NEXUS-DEBUG] Plugin.onload() - Completed successfully");
         } catch (error) {
+            console.error("[NEXUS-DEBUG] Plugin.onload() - FAILED", error);
             this.logger.error("Plugin loading failed:", error);
             throw error;
         }
