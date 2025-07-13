@@ -12,16 +12,16 @@ export class StorageService {
 
     constructor(private plugin: NexusAiChatImporterPlugin) {}
 
-    loadCatalogs(data: any) {
-        try {
-            this.importedArchives = data?.importedArchives || {};
-            this.conversationCatalog = data?.conversationCatalog || {};
-            this.isDirty = false;
-        } catch (error) {
-            this.plugin.logger.error("loadCatalogs failed:", error);
-            throw error;
-        }
-    }
+    // loadCatalogs(data: any) {
+    //     try {
+    //         this.importedArchives = data?.importedArchives || {};
+    //         this.conversationCatalog = data?.conversationCatalog || {};
+    //         this.isDirty = false;
+    //     } catch (error) {
+    //         this.plugin.logger.error("loadCatalogs failed:", error);
+    //         throw error;
+    //     }
+    // }
 
     async saveData(data: any) {
         try {
