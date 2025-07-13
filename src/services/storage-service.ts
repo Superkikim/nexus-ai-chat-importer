@@ -130,7 +130,9 @@ export class StorageService {
             this.saveTimeout = null;
         }
         
-        await this.plugin.saveData({});
+        await this.plugin.saveData({
+            settings: this.plugin.settings  // Keep settings, only clear catalogs
+        });
     }
 
     // Statistics for debugging performance
