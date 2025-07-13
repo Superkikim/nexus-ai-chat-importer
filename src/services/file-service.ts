@@ -40,7 +40,6 @@ export class FileService {
                 if (record.conversationId === frontmatter.conversation_id) {
                     storage.deleteFromConversationCatalog(id);
                     await this.plugin.saveSettings();
-                    this.plugin.logger.info(`Removed conversation ${frontmatter.conversation_id} from catalog`);
                     break;
                 }
             }
