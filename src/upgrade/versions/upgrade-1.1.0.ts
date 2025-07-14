@@ -15,11 +15,15 @@ class DeleteCatalogOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            // Check if catalog exists and has data
-            const catalog = context.pluginData?.conversationCatalog;
+            // Operation loads its own data - manager stays version-agnostic
+            const data = await context.plugin.loadData();
+            const catalog = data?.conversationCatalog;
             const hasData = catalog && typeof catalog === 'object' && Object.keys(catalog).length > 0;
             
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: hasData=${hasData}`);
+            console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: catalog exists=${!!catalog}, hasData=${hasData}`);
+            if (catalog) {
+                console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: catalog size=${Object.keys(catalog).length}`);
+            }
             return hasData;
         } catch (error) {
             console.error(`[NEXUS-DEBUG] DeleteCatalog.canRun failed:`, error);
@@ -31,7 +35,9 @@ class DeleteCatalogOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] DeleteCatalog.execute starting`);
             
-            const catalog = context.pluginData?.conversationCatalog || {};
+            // Operation loads its own data - not relying on context.pluginData
+            const data = await context.plugin.loadData();
+            const catalog = data?.conversationCatalog || {};
             const catalogSize = Object.keys(catalog).length;
 
             if (catalogSize === 0) {
@@ -44,9 +50,9 @@ class DeleteCatalogOperation extends UpgradeOperation {
 
             // Create cleaned data without catalog
             const cleanedData = {
-                settings: context.pluginData.settings || context.plugin.settings,
-                importedArchives: context.pluginData.importedArchives || {},
-                upgradeHistory: context.pluginData.upgradeHistory || {
+                settings: data.settings || context.plugin.settings,
+                importedArchives: data.importedArchives || {},
+                upgradeHistory: data.upgradeHistory || {
                     completedUpgrades: {},
                     completedOperations: {}
                 },

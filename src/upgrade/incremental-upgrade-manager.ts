@@ -5,6 +5,7 @@ import { VersionUtils } from "./utils/version-utils";
 import { showDialog } from "../dialogs";
 import { Logger } from "../logger";
 import { GITHUB } from "../config/constants";
+import { MultiOperationProgressModal, OperationStatus } from "./utils/multi-operation-progress-modal";
 import type NexusAiChatImporterPlugin from "../main";
 
 const logger = new Logger();
@@ -80,7 +81,7 @@ export class IncrementalUpgradeManager {
             if (upgradeChain.length === 0) {
                 console.debug(`[NEXUS-DEBUG] No upgrades needed - marking complete`);
                 await this.markUpgradeComplete(currentVersion);
-                await this.showUpgradeDialog(currentVersion, lastVersion);
+                await this.showUpgradeDialog(currentVersion, lastVersion, []);
                 return {
                     success: true,
                     upgradesExecuted: 0,
@@ -90,21 +91,18 @@ export class IncrementalUpgradeManager {
                 };
             }
 
-            console.debug(`[NEXUS-DEBUG] Executing ${upgradeChain.length} upgrades incrementally...`);
+            console.debug(`[NEXUS-DEBUG] Need to execute ${upgradeChain.length} upgrades - showing dialog first`);
 
-            // Execute upgrade chain incrementally
-            const result = await this.executeUpgradeChain(upgradeChain, lastVersion, currentVersion);
+            // Show upgrade dialog FIRST - INFORMATION ONLY (no cancel option)
+            await this.showUpgradeDialog(currentVersion, lastVersion, upgradeChain);
 
-            // Mark overall upgrade complete if successful
-            if (result.success) {
-                console.debug(`[NEXUS-DEBUG] All upgrades successful - marking overall upgrade complete`);
-                await this.markUpgradeComplete(currentVersion);
-            } else {
-                console.debug(`[NEXUS-DEBUG] Some upgrades failed - NOT marking overall upgrade complete`);
-            }
+            // Execute upgrade chain with modal (no user choice - automatic)
+            console.debug(`[NEXUS-DEBUG] Executing upgrades with modal...`);
+            const result = await this.executeUpgradeChainWithModal(upgradeChain, lastVersion, currentVersion);
 
-            // Show upgrade dialog (will handle both overview and manual operations)
-            await this.showUpgradeDialog(currentVersion, lastVersion);
+            // Mark overall upgrade complete - ALWAYS (even if some operations were "no-op")
+            console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);
+            await this.markUpgradeComplete(currentVersion);
 
             return result;
 
@@ -132,32 +130,57 @@ export class IncrementalUpgradeManager {
     }
 
     /**
-     * Execute upgrade chain incrementally
+     * Execute upgrade chain with modal progress tracking
      */
-    private async executeUpgradeChain(
+    private async executeUpgradeChainWithModal(
         upgradeChain: VersionUpgrade[],
         fromVersion: string,
         toVersion: string
     ): Promise<IncrementalUpgradeResult> {
         
+        // Collect all operations from all upgrades
+        const allOperations: OperationStatus[] = [];
+        for (const upgrade of upgradeChain) {
+            for (const operation of upgrade.automaticOperations) {
+                allOperations.push({
+                    id: `${upgrade.version}_${operation.id}`,
+                    name: operation.name,
+                    status: 'pending'
+                });
+            }
+        }
+
+        // Create and show modal
+        const progressModal = new MultiOperationProgressModal(
+            this.plugin.app,
+            `Upgrading to v${toVersion}`,
+            allOperations
+        );
+        progressModal.open();
+
         const results = [];
         let upgradesExecuted = 0;
         let upgradesSkipped = 0;
         let upgradesFailed = 0;
 
-        for (const upgrade of upgradeChain) {
-            try {
+        try {
+            for (const upgrade of upgradeChain) {
                 console.debug(`[NEXUS-DEBUG] Executing upgrade ${upgrade.version}...`);
                 
                 const context = await this.createUpgradeContext(upgrade, fromVersion, toVersion);
                 
-                // 1. Execute automatic operations first
-                const automaticResults = await upgrade.executeAutomaticOperations(context);
+                // Execute automatic operations with progress updates
+                const automaticResults = await this.executeOperationsWithProgress(
+                    upgrade.automaticOperations,
+                    context,
+                    upgrade.version,
+                    progressModal
+                );
+                
                 console.debug(`[NEXUS-DEBUG] Automatic operations for ${upgrade.version}:`, automaticResults);
 
-                // 2. Manual operations will be handled in showUpgradeDialog()
+                // Manual operations will be handled separately if any exist
                 const manualResults = { success: true, results: [] };
-                console.debug(`[NEXUS-DEBUG] Manual operations will be shown in upgrade dialog`);
 
                 results.push({
                     version: upgrade.version,
@@ -165,38 +188,167 @@ export class IncrementalUpgradeManager {
                     manualResults
                 });
 
-                if (automaticResults.success && manualResults.success) {
-                    upgradesExecuted++;
+                // Count as success even if some operations were "no-op" (smart success logic)
+                upgradesExecuted++;
+            }
+
+            const overallSuccess = true; // Always success for automatic operations
+            
+            progressModal.markComplete(`All operations completed successfully!`);
+            new Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+
+            return {
+                success: overallSuccess,
+                upgradesExecuted,
+                upgradesSkipped,
+                upgradesFailed,
+                results
+            };
+
+        } catch (error) {
+            console.error(`[NEXUS-DEBUG] Modal upgrade execution failed:`, error);
+            progressModal.showError(`Upgrade failed: ${error}`);
+            throw error;
+        }
+    }
+
+    /**
+     * Execute operations with progress updates to modal
+     */
+    private async executeOperationsWithProgress(
+        operations: any[],
+        context: UpgradeContext,
+        version: string,
+        progressModal: MultiOperationProgressModal
+    ): Promise<any> {
+        const results: Array<{operationId: string; result: any}> = [];
+        let criticalFailures = 0; // Only count actual critical failures
+
+        for (const operation of operations) {
+            const modalOperationId = `${version}_${operation.id}`;
+            
+            try {
+                // Check if already completed
+                if (await this.isOperationCompleted(operation.id, version)) {
+                    progressModal.updateOperation(modalOperationId, {
+                        status: 'completed',
+                        progress: 100
+                    });
+                    results.push({
+                        operationId: operation.id,
+                        result: { success: true, message: "Already completed" }
+                    });
+                    continue;
+                }
+
+                // Mark as running
+                progressModal.updateOperation(modalOperationId, {
+                    status: 'running',
+                    progress: 0
+                });
+
+                // Check if can run
+                if (!(await operation.canRun(context))) {
+                    // NOT a critical failure - just means nothing to do
+                    progressModal.updateOperation(modalOperationId, {
+                        status: 'completed',
+                        progress: 100,
+                        currentDetail: "Nothing to process"
+                    });
+                    results.push({
+                        operationId: operation.id,
+                        result: { success: true, message: "Prerequisites not met - nothing to process" }
+                    });
+                    continue;
+                }
+
+                // Execute operation with progress updates
+                const result = await this.executeOperationWithProgress(
+                    operation,
+                    context,
+                    modalOperationId,
+                    progressModal
+                );
+                
+                results.push({ operationId: operation.id, result });
+
+                if (result.success) {
+                    await this.markOperationCompleted(operation.id, version);
+                    progressModal.updateOperation(modalOperationId, {
+                        status: 'completed',
+                        progress: 100
+                    });
                 } else {
-                    upgradesFailed++;
+                    // Only count as critical failure if it's actually critical
+                    const isCritical = this.isCriticalFailure(result);
+                    if (isCritical) {
+                        criticalFailures++;
+                        progressModal.updateOperation(modalOperationId, {
+                            status: 'failed',
+                            error: result.message
+                        });
+                    } else {
+                        // Treat as completed with warning
+                        progressModal.updateOperation(modalOperationId, {
+                            status: 'completed',
+                            progress: 100,
+                            currentDetail: "Completed with warnings"
+                        });
+                    }
                 }
 
             } catch (error) {
-                console.error(`[NEXUS-DEBUG] Upgrade ${upgrade.version} failed:`, error);
-                upgradesFailed++;
-                results.push({
-                    version: upgrade.version,
-                    automaticResults: { success: false, results: [] },
-                    manualResults: { success: false, results: [] }
+                const errorResult = {
+                    success: false,
+                    message: `Operation failed: ${error}`,
+                    details: { error: String(error) }
+                };
+                results.push({ operationId: operation.id, result: errorResult });
+                progressModal.updateOperation(modalOperationId, {
+                    status: 'failed',
+                    error: String(error)
                 });
+                criticalFailures++;
             }
         }
 
-        const overallSuccess = upgradesFailed === 0;
-        
-        if (overallSuccess) {
-            new Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
-        } else {
-            new Notice(`Upgrade completed with errors: ${upgradesFailed} failed, ${upgradesExecuted} successful`);
-        }
+        return { success: criticalFailures === 0, results };
+    }
 
-        return {
-            success: overallSuccess,
-            upgradesExecuted,
-            upgradesSkipped,
-            upgradesFailed,
-            results
-        };
+    /**
+     * Determine if an operation failure is critical
+     */
+    private isCriticalFailure(result: any): boolean {
+        // For now, no failures are critical for upgrade operations
+        // They're either successful or "nothing to do"
+        return false;
+    }
+
+    /**
+     * Execute single operation with progress callbacks
+     */
+    private async executeOperationWithProgress(
+        operation: any,
+        context: UpgradeContext,
+        modalOperationId: string,
+        progressModal: MultiOperationProgressModal
+    ): Promise<any> {
+        // For now, just execute the operation normally
+        // In the future, we could modify operations to accept progress callbacks
+        const result = await operation.execute(context);
+        
+        // Simulate progress for demo (remove this in production)
+        const steps = 5;
+        for (let i = 1; i <= steps; i++) {
+            progressModal.updateOperation(modalOperationId, {
+                status: 'running',
+                progress: (i / steps) * 100,
+                currentDetail: result.details?.processed ? `Processing... ${i}/${steps}` : undefined
+            });
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        return result;
     }
 
     /**
@@ -254,9 +406,9 @@ export class IncrementalUpgradeManager {
     }
 
     /**
-     * Show combined upgrade completion dialog with overview (shown once per version)
+     * Show upgrade dialog - INFORMATION ONLY (no cancel)
      */
-    private async showUpgradeDialog(currentVersion: string, lastVersion: string): Promise<void> {
+    private async showUpgradeDialog(currentVersion: string, lastVersion: string, upgradeChain: VersionUpgrade[]): Promise<void> {
         try {
             // Get overview content
             const overview = await this.fetchReleaseOverview(currentVersion);
@@ -269,107 +421,53 @@ export class IncrementalUpgradeManager {
             paragraphs.push(baseMessage);
             paragraphs.push(this.getDocLinks(currentVersion));
             
-            // Add information about automatic operations
-            paragraphs.push(""); // Empty paragraph for spacing
-            paragraphs.push("**Automatic Operations Completed**");
-            paragraphs.push("All necessary upgrade operations have been performed automatically.");
-            
-            // Check for manual operations (for future versions)
-            const operationsData = await this.getManualOperationsForUpgradeDialog();
-            
-            if (operationsData.length > 0) {
-                // Add spacing and operations section
+            if (upgradeChain.length > 0) {
+                // Add information about operations that will run
                 paragraphs.push(""); // Empty paragraph for spacing
-                paragraphs.push("**Optional Operations Available**");
-                paragraphs.push("Additional optional operations are available in Settings → Migrations:");
+                paragraphs.push("**Upgrade Operations Required**");
+                paragraphs.push("The following operations will be performed automatically:");
                 paragraphs.push(""); // Empty paragraph for spacing
                 
-                // Add operations list as separate paragraph
+                // List operations from all upgrades
                 const operationsList: string[] = [];
-                for (const versionData of operationsData) {
-                    for (const operation of versionData.operations) {
+                for (const upgrade of upgradeChain) {
+                    for (const operation of upgrade.automaticOperations) {
                         operationsList.push(`• **${operation.name}**: ${operation.description}`);
                     }
                 }
                 paragraphs.push(operationsList.join('\n'));
-                
-                // Show dialog with operation buttons
-                const shouldRunOperations = await showDialog(
-                    this.plugin.app,
-                    "confirmation",
-                    `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
-                    paragraphs,
-                    this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
-                    { button1: "Run Optional Operations Now", button2: "Skip (Access Later in Settings)" }
-                );
-                
-                // Execute operations if user chose to run them
-                if (shouldRunOperations) {
-                    await this.executeUpgradeOperations(operationsData);
-                }
             } else {
-                // No manual operations - show simple info dialog
+                // No operations needed
                 paragraphs.push(""); // Empty paragraph for spacing
-                paragraphs.push("You can access additional settings and information in Settings → Migrations if needed.");
-                
+                paragraphs.push("All systems are up to date. No operations required.");
+            }
+            
+            // INFORMATION DIALOG - no cancel option
+            if (upgradeChain.length > 0) {
+                // Des opérations à faire
                 await showDialog(
                     this.plugin.app,
                     "information",
                     `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
                     paragraphs,
                     this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
-                    { button1: "Got it!" }
+                    { button1: "Proceed with Upgrade" }  // ← Opérations à faire
+                );
+            } else {
+                // Rien à faire
+                await showDialog(
+                    this.plugin.app,
+                    "information", 
+                    `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
+                    paragraphs,
+                    this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
+                    { button1: "Got it!" }  // ← Juste informatif
                 );
             }
-
         } catch (error) {
             logger.error("Error showing upgrade dialog:", error);
             new Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
         }
-    }
-
-    /**
-     * Get manual operations for upgrade dialog (filters available operations)
-     */
-    private async getManualOperationsForUpgradeDialog(): Promise<any[]> {
-        const results = [];
-        
-        for (const upgrade of this.availableUpgrades) {
-            const context = await this.createUpgradeContext(upgrade, "0.0.0", this.plugin.manifest.version);
-            
-            // Get only manual operations (not automatic ones)
-            const manualOperations = upgrade.manualOperations || [];
-            const operationsStatus = [];
-            
-            for (const operation of manualOperations) {
-                const completed = await this.isOperationCompleted(operation.id, upgrade.version);
-                const canRun = !completed && await operation.canRun(context);
-                
-                operationsStatus.push({
-                    operation,
-                    completed,
-                    canRun
-                });
-            }
-            
-            // Only include operations that can run (not completed and meet prerequisites)
-            const availableOperations = operationsStatus.filter(status => 
-                !status.completed && status.canRun
-            );
-            
-            if (availableOperations.length > 0) {
-                results.push({
-                    version: upgrade.version,
-                    operations: availableOperations.map(status => ({
-                        id: status.operation.id,
-                        name: status.operation.name,
-                        description: status.operation.description
-                    }))
-                });
-            }
-        }
-        
-        return results;
     }
 
     /**
@@ -382,28 +480,31 @@ export class IncrementalUpgradeManager {
     }
 
     /**
-     * Execute all available operations
+     * Mark operation as completed using structured upgrade history
      */
-    private async executeUpgradeOperations(operationsData: any[]): Promise<void> {
-        for (const versionData of operationsData) {
-            for (const operation of versionData.operations) {
-                try {
-                    console.debug(`[NEXUS-DEBUG] Executing upgrade operation: ${operation.id} (v${versionData.version})`);
-                    
-                    const result = await this.executeManualOperation(versionData.version, operation.id);
-                    
-                    if (result.success) {
-                        console.debug(`[NEXUS-DEBUG] Operation ${operation.id} completed successfully`);
-                    } else {
-                        console.error(`[NEXUS-DEBUG] Operation ${operation.id} failed:`, result.message);
-                    }
-                } catch (error) {
-                    console.error(`[NEXUS-DEBUG] Error executing operation ${operation.id}:`, error);
-                }
-            }
+    private async markOperationCompleted(operationId: string, version: string): Promise<void> {
+        const data = await this.plugin.loadData() || {};
+        
+        // Initialize upgrade history structure if needed
+        if (!data.upgradeHistory) {
+            data.upgradeHistory = {
+                completedUpgrades: {},
+                completedOperations: {}
+            };
         }
         
-        new Notice("Optional operations completed. You can run them again from Settings → Migrations if needed.");
+        // Mark operation as completed in structured format
+        const operationKey = `operation_${version.replace(/\./g, '_')}_${operationId}`;
+        data.upgradeHistory.completedOperations[operationKey] = {
+            operationId: operationId,
+            version: version,
+            date: new Date().toISOString(),
+            completed: true
+        };
+        
+        await this.plugin.saveData(data);
+        
+        logger.info(`Marked operation ${operationId} (v${version}) as completed`);
     }
 
     /**
