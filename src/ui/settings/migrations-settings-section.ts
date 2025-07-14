@@ -46,11 +46,11 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
         const operationsData = await upgradeManager.getManualOperationsForSettings();
         const pluginData = await this.plugin.loadData();
         
-        // Update operation status based on persistent flags
+        // Update operation status based on persistent flags in upgrade history
         for (const versionData of operationsData) {
             for (const operation of versionData.operations) {
-                const flagKey = `operation_${versionData.version.replace(/\./g, '_')}_${operation.id}`;
-                const isCompleted = !!pluginData[flagKey];
+                const operationKey = `operation_${versionData.version.replace(/\./g, '_')}_${operation.id}`;
+                const isCompleted = pluginData?.upgradeHistory?.completedOperations?.[operationKey]?.completed || false;
                 
                 operation.completed = isCompleted;
                 operation.canRun = !isCompleted && operation.canRun;
@@ -130,15 +130,14 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
             if (result.success) {
                 // Update UI to show completed state
                 buttonEl.setButtonText("✅ Completed");
-                buttonEl.buttonEl.removeClass("mod-cta").addClass("mod-muted");
                 buttonEl.setTooltip("This operation has been completed");
                 
-                // Show success message
-                this.showOperationResult(
-                    buttonEl.buttonEl.closest('.setting-item'), 
-                    result.message, 
-                    'success'
-                );
+                // Fix CSS class manipulation
+                const buttonElement = buttonEl.buttonEl || buttonEl;
+                if (buttonElement && buttonElement.removeClass) {
+                    buttonElement.removeClass("mod-cta");
+                    buttonElement.addClass("mod-muted");
+                }
                 
                 // Update operation status
                 operation.completed = true;

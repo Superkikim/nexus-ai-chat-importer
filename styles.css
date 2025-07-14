@@ -38,9 +38,11 @@
     margin-bottom: 0.5em;
 }
 
+/* Improved paragraph handling */
 .nexus-ai-chat-importer-modal .modal-paragraph p {
     margin: 0 0 0.8em 0;
     color: var(--text-normal);
+    white-space: pre-line; /* Preserves line breaks */
 }
 
 .nexus-ai-chat-importer-modal .modal-paragraph strong,
@@ -55,6 +57,64 @@
     font-style: italic;
 }
 
+/* Section separators */
+.nexus-ai-chat-importer-modal .modal-section-separator {
+    border-top: 1px solid var(--background-modifier-border);
+    margin: 2em 0 1.5em 0;
+    padding-top: 1.5em;
+}
+
+.nexus-ai-chat-importer-modal .modal-section-header {
+    color: var(--text-accent);
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-bottom: 1em;
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 0.5em;
+}
+
+/* Improved list styling */
+.nexus-ai-chat-importer-modal .modal-content ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.5em 0;
+}
+
+.nexus-ai-chat-importer-modal .modal-content ul li {
+    margin: 0.25em 0;
+    padding-left: 1.5em;
+    position: relative;
+    line-height: 1.5;
+}
+
+.nexus-ai-chat-importer-modal .modal-content ul li:before {
+    content: "•";
+    color: var(--text-accent);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+/* Operation list styling */
+.nexus-ai-chat-importer-modal .operations-list {
+    background: var(--background-secondary);
+    border-radius: var(--radius-m);
+    padding: 1em;
+    margin: 1em 0;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.nexus-ai-chat-importer-modal .operations-list ul li {
+    margin: 0.5em 0;
+    color: var(--text-normal);
+}
+
+.nexus-ai-chat-importer-modal .operations-list ul li:before {
+    content: "⚙️";
+    margin-right: 0.5em;
+}
+
+/* Enhanced note styling */
 .nexus-ai-chat-importer-modal .modal-note {
     background: var(--background-modifier-error-hover);
     border: 1px solid var(--background-modifier-error);
@@ -72,6 +132,36 @@
     font-weight: 600;
 }
 
+/* Upgrade dialog specific styles */
+.nexus-ai-chat-importer-modal .upgrade-overview {
+    margin-bottom: 1.5em;
+}
+
+.nexus-ai-chat-importer-modal .upgrade-resources {
+    margin: 1.5em 0;
+}
+
+.nexus-ai-chat-importer-modal .upgrade-operations {
+    margin-top: 1.5em;
+    padding-top: 1.5em;
+    border-top: 2px solid var(--background-modifier-border);
+}
+
+.nexus-ai-chat-importer-modal .upgrade-operations-header {
+    color: var(--text-accent);
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-bottom: 0.5em;
+}
+
+.nexus-ai-chat-importer-modal .upgrade-operations-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-bottom: 1em;
+    line-height: 1.4;
+}
+
+/* Button container improvements */
 .nexus-ai-chat-importer-modal .modal-button-container {
     display: flex;
     justify-content: flex-end;
@@ -130,10 +220,15 @@
     transform: translateY(-1px);
 }
 
-/* Improved typography and spacing */
+/* Text formatting improvements */
 .nexus-ai-chat-importer-modal .modal-paragraph {
     font-size: 1em;
     color: var(--text-normal);
+}
+
+/* Line break preservation */
+.nexus-ai-chat-importer-modal .preserve-breaks {
+    white-space: pre-line;
 }
 
 /* Legacy support for old class names */
@@ -148,25 +243,4 @@
     font-weight: bold;
     text-transform: uppercase;
     color: var(--text-accent);
-}
-
-/* Special styling for resources section */
-.nexus-ai-chat-importer-modal .modal-paragraph ul {
-    list-style: none;
-    padding-left: 0;
-    margin: 0.5em 0;
-}
-
-.nexus-ai-chat-importer-modal .modal-paragraph ul li {
-    margin: 0.25em 0;
-    padding-left: 1.5em;
-    position: relative;
-}
-
-.nexus-ai-chat-importer-modal .modal-paragraph ul li:before {
-    content: "•";
-    color: var(--text-accent);
-    font-weight: bold;
-    position: absolute;
-    left: 0;
 }

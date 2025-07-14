@@ -61,11 +61,11 @@ export class IncrementalUpgradeManager {
 
             console.debug(`[NEXUS-DEBUG] Incremental upgrade check: ${lastVersion} → ${currentVersion}`);
 
-            // Check if already completed upgrade to this version
-            const upgradeCompleteFlag = `upgrade_completed_${currentVersion.replace(/\./g, '_')}`;
-            const hasCompletedThisUpgrade = !!data?.[upgradeCompleteFlag];
+            // Check if already completed upgrade to this version using new structure
+            const versionKey = currentVersion.replace(/\./g, '_');
+            const hasCompletedThisUpgrade = data?.upgradeHistory?.completedUpgrades?.[versionKey]?.completed;
 
-            console.debug(`[NEXUS-DEBUG] Upgrade flag '${upgradeCompleteFlag}': ${hasCompletedThisUpgrade}`);
+            console.debug(`[NEXUS-DEBUG] Upgrade history check for '${versionKey}': ${hasCompletedThisUpgrade}`);
 
             if (hasCompletedThisUpgrade) {
                 console.debug(`[NEXUS-DEBUG] Upgrade already completed - SKIPPING ALL`);
@@ -103,7 +103,7 @@ export class IncrementalUpgradeManager {
                 console.debug(`[NEXUS-DEBUG] Some upgrades failed - NOT marking overall upgrade complete`);
             }
 
-            // Show upgrade dialog
+            // Show upgrade dialog (will handle both overview and manual operations)
             await this.showUpgradeDialog(currentVersion, lastVersion);
 
             return result;
@@ -155,9 +155,9 @@ export class IncrementalUpgradeManager {
                 const automaticResults = await upgrade.executeAutomaticOperations(context);
                 console.debug(`[NEXUS-DEBUG] Automatic operations for ${upgrade.version}:`, automaticResults);
 
-                // 2. Show manual operations dialog
-                const manualResults = await upgrade.showManualOperationsDialog(context);
-                console.debug(`[NEXUS-DEBUG] Manual operations for ${upgrade.version}:`, manualResults);
+                // 2. Manual operations will be handled in showUpgradeDialog()
+                const manualResults = { success: true, results: [] };
+                console.debug(`[NEXUS-DEBUG] Manual operations will be shown in upgrade dialog`);
 
                 results.push({
                     version: upgrade.version,
@@ -223,12 +223,23 @@ export class IncrementalUpgradeManager {
     private async markUpgradeComplete(version: string): Promise<void> {
         const data = await this.plugin.loadData() || {};
         
-        // Version-specific flag (main check)
-        const upgradeCompleteFlag = `upgrade_completed_${version.replace(/\./g, '_')}`;
-        data[upgradeCompleteFlag] = true;
-        data[`${upgradeCompleteFlag}_date`] = new Date().toISOString();
+        // Initialize upgrade history structure if needed
+        if (!data.upgradeHistory) {
+            data.upgradeHistory = {
+                completedUpgrades: {},
+                completedOperations: {}
+            };
+        }
         
-        // Legacy fields for compatibility
+        // Mark upgrade as completed in structured format
+        const versionKey = version.replace(/\./g, '_');
+        data.upgradeHistory.completedUpgrades[versionKey] = {
+            version: version,
+            date: new Date().toISOString(),
+            completed: true
+        };
+        
+        // Legacy fields for compatibility (can be removed in future versions)
         data.lastVersion = version;
         data.hasCompletedUpgrade = true;
         data.upgradeDate = new Date().toISOString();
@@ -243,34 +254,181 @@ export class IncrementalUpgradeManager {
     }
 
     /**
-     * Show upgrade completion dialog
+     * Show combined upgrade completion dialog with overview (shown once per version)
      */
     private async showUpgradeDialog(currentVersion: string, lastVersion: string): Promise<void> {
         try {
+            // Get overview content
             const overview = await this.fetchReleaseOverview(currentVersion);
-            const message = overview || `Nexus AI Chat Importer has been upgraded to version ${currentVersion}.`;
+            const baseMessage = overview || `Nexus AI Chat Importer has been upgraded to version ${currentVersion}.`;
             
-            const paragraphs = [message + this.getDocLinks(currentVersion)];
+            // Build paragraphs array with proper spacing
+            const paragraphs: string[] = [];
             
-            // Add upgrade warning for very old versions
-            let note = undefined;
-            if (this.shouldShowUpgradeWarning(lastVersion)) {
-                note = this.getUpgradeWarning();
+            // Overview section
+            paragraphs.push(baseMessage);
+            paragraphs.push(this.getDocLinks(currentVersion));
+            
+            // Add information about automatic operations
+            paragraphs.push(""); // Empty paragraph for spacing
+            paragraphs.push("**Automatic Operations Completed**");
+            paragraphs.push("All necessary upgrade operations have been performed automatically.");
+            
+            // Check for manual operations (for future versions)
+            const operationsData = await this.getManualOperationsForUpgradeDialog();
+            
+            if (operationsData.length > 0) {
+                // Add spacing and operations section
+                paragraphs.push(""); // Empty paragraph for spacing
+                paragraphs.push("**Optional Operations Available**");
+                paragraphs.push("Additional optional operations are available in Settings → Migrations:");
+                paragraphs.push(""); // Empty paragraph for spacing
+                
+                // Add operations list as separate paragraph
+                const operationsList: string[] = [];
+                for (const versionData of operationsData) {
+                    for (const operation of versionData.operations) {
+                        operationsList.push(`• **${operation.name}**: ${operation.description}`);
+                    }
+                }
+                paragraphs.push(operationsList.join('\n'));
+                
+                // Show dialog with operation buttons
+                const shouldRunOperations = await showDialog(
+                    this.plugin.app,
+                    "confirmation",
+                    `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
+                    paragraphs,
+                    this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
+                    { button1: "Run Optional Operations Now", button2: "Skip (Access Later in Settings)" }
+                );
+                
+                // Execute operations if user chose to run them
+                if (shouldRunOperations) {
+                    await this.executeUpgradeOperations(operationsData);
+                }
+            } else {
+                // No manual operations - show simple info dialog
+                paragraphs.push(""); // Empty paragraph for spacing
+                paragraphs.push("You can access additional settings and information in Settings → Migrations if needed.");
+                
+                await showDialog(
+                    this.plugin.app,
+                    "information",
+                    `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
+                    paragraphs,
+                    this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
+                    { button1: "Got it!" }
+                );
             }
-            
-            await showDialog(
-                this.plugin.app,
-                "information",
-                `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
-                paragraphs,
-                note,
-                { button1: "Got it!" }
-            );
 
         } catch (error) {
             logger.error("Error showing upgrade dialog:", error);
             new Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
         }
+    }
+
+    /**
+     * Get manual operations for upgrade dialog (filters available operations)
+     */
+    private async getManualOperationsForUpgradeDialog(): Promise<any[]> {
+        const results = [];
+        
+        for (const upgrade of this.availableUpgrades) {
+            const context = await this.createUpgradeContext(upgrade, "0.0.0", this.plugin.manifest.version);
+            
+            // Get only manual operations (not automatic ones)
+            const manualOperations = upgrade.manualOperations || [];
+            const operationsStatus = [];
+            
+            for (const operation of manualOperations) {
+                const completed = await this.isOperationCompleted(operation.id, upgrade.version);
+                const canRun = !completed && await operation.canRun(context);
+                
+                operationsStatus.push({
+                    operation,
+                    completed,
+                    canRun
+                });
+            }
+            
+            // Only include operations that can run (not completed and meet prerequisites)
+            const availableOperations = operationsStatus.filter(status => 
+                !status.completed && status.canRun
+            );
+            
+            if (availableOperations.length > 0) {
+                results.push({
+                    version: upgrade.version,
+                    operations: availableOperations.map(status => ({
+                        id: status.operation.id,
+                        name: status.operation.name,
+                        description: status.operation.description
+                    }))
+                });
+            }
+        }
+        
+        return results;
+    }
+
+    /**
+     * Check if operation was completed using new upgrade history structure
+     */
+    private async isOperationCompleted(operationId: string, version: string): Promise<boolean> {
+        const data = await this.plugin.loadData();
+        const operationKey = `operation_${version.replace(/\./g, '_')}_${operationId}`;
+        return data?.upgradeHistory?.completedOperations?.[operationKey]?.completed || false;
+    }
+
+    /**
+     * Execute all available operations
+     */
+    private async executeUpgradeOperations(operationsData: any[]): Promise<void> {
+        for (const versionData of operationsData) {
+            for (const operation of versionData.operations) {
+                try {
+                    console.debug(`[NEXUS-DEBUG] Executing upgrade operation: ${operation.id} (v${versionData.version})`);
+                    
+                    const result = await this.executeManualOperation(versionData.version, operation.id);
+                    
+                    if (result.success) {
+                        console.debug(`[NEXUS-DEBUG] Operation ${operation.id} completed successfully`);
+                    } else {
+                        console.error(`[NEXUS-DEBUG] Operation ${operation.id} failed:`, result.message);
+                    }
+                } catch (error) {
+                    console.error(`[NEXUS-DEBUG] Error executing operation ${operation.id}:`, error);
+                }
+            }
+        }
+        
+        new Notice("Optional operations completed. You can run them again from Settings → Migrations if needed.");
+    }
+
+    /**
+     * Get documentation links
+     */
+    private getDocLinks(version: string): string {
+        return `**Resources:**
+• [Full Release Notes](${GITHUB.REPO_BASE}/blob/${version}/RELEASE_NOTES.md)
+• [Documentation](${GITHUB.REPO_BASE}/blob/${version}/README.md)`;
+    }
+
+    /**
+     * Check if should show upgrade warning for very old versions
+     */
+    private shouldShowUpgradeWarning(lastVersion: string): boolean {
+        return VersionUtils.compareVersions(lastVersion, "1.0.2") < 0;
+    }
+
+    /**
+     * Get upgrade warning for very old versions
+     */
+    private getUpgradeWarning(): string {
+        return `⚠️ **Important for users upgrading from versions prior to v1.0.2:**
+
+Version 1.0.2 introduced new metadata parameters required for certain features. For optimal performance and feature compatibility, it's recommended to delete old data and re-import conversations with this new version.`;
     }
 
     /**
@@ -291,27 +449,6 @@ export class IncrementalUpgradeManager {
             logger.warn("Could not fetch release overview:", error);
             return null;
         }
-    }
-
-    /**
-     * Get documentation links
-     */
-    private getDocLinks(version: string): string {
-        return `\n\n**Resources:**\n• [Full Release Notes](${GITHUB.REPO_BASE}/blob/${version}/RELEASE_NOTES.md)\n• [Documentation](${GITHUB.REPO_BASE}/blob/${version}/README.md)`;
-    }
-
-    /**
-     * Check if should show upgrade warning for very old versions
-     */
-    private shouldShowUpgradeWarning(lastVersion: string): boolean {
-        return VersionUtils.compareVersions(lastVersion, "1.0.2") < 0;
-    }
-
-    /**
-     * Get upgrade warning for very old versions
-     */
-    private getUpgradeWarning(): string {
-        return `⚠️ **Important for users upgrading from versions prior to v1.0.2:**\n\nVersion 1.0.2 introduced new metadata parameters required for certain features. For optimal performance and feature compatibility, it's recommended to delete old data and re-import conversations with this new version.`;
     }
 
     /**
