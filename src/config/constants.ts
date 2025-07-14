@@ -8,11 +8,15 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     hasShownUpgradeNotice: false,
     hasCompletedUpgrade: false,
     
+    // Version tracking - will be set from manifest in main.ts
+    currentVersion: "0.0.0",
+    previousVersion: "0.0.0",
+    
     // Attachment defaults with "best effort" approach
-    importAttachments: true,  // Enable by default
+    importAttachments: true,
     attachmentFolder: "Nexus AI Chat Imports/Attachments",
-    skipMissingAttachments: false, // Show notes for missing attachments by default
-    showAttachmentDetails: true,   // Show detailed status in reports
+    skipMissingAttachments: false,
+    showAttachmentDetails: true,
 };
 
 export const GITHUB = {

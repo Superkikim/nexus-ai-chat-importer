@@ -75,7 +75,25 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const data = await this.loadData();
             this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
             
-            // NEW: Load only small data (archive hashes) - no large catalog
+            // Initialize version tracking from manifest
+            const currentVersion = this.manifest.version;
+            const storedCurrentVersion = this.settings.currentVersion;
+            
+            if (storedCurrentVersion === "0.0.0" || !storedCurrentVersion) {
+                // First install - set both to current version
+                this.settings.currentVersion = currentVersion;
+                this.settings.previousVersion = currentVersion;
+                this.logger.info(`First install detected - version set to ${currentVersion}`);
+                await this.saveSettings();
+            } else if (storedCurrentVersion !== currentVersion) {
+                // Version upgrade detected
+                this.settings.previousVersion = storedCurrentVersion;
+                this.settings.currentVersion = currentVersion;
+                this.logger.info(`Version updated: ${storedCurrentVersion} → ${currentVersion}`);
+                await this.saveSettings();
+            }
+            
+            // Load storage data (archive hashes)
             await this.storageService.loadData();
             
             this.logger.info("Settings loaded successfully (vault-based conversation tracking)");
@@ -90,7 +108,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             await this.storageService.saveData({
                 settings: this.settings,
                 importedArchives: this.storageService.getImportedArchives()
-                // REMOVED: conversationCatalog (now vault-based)
             });
         } catch (error) {
             this.logger.error("saveSettings failed:", error);

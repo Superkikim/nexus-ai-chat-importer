@@ -6,11 +6,15 @@ export interface PluginSettings {
     hasShownUpgradeNotice: boolean;
     hasCompletedUpgrade: boolean;
     
+    // Version tracking for migrations
+    currentVersion: string;
+    previousVersion: string;
+    
     // Attachment settings
     importAttachments: boolean;
     attachmentFolder: string;
-    skipMissingAttachments: boolean; // Skip instead of creating notes
-    showAttachmentDetails: boolean; // Show detailed status in import report
+    skipMissingAttachments: boolean;
+    showAttachmentDetails: boolean;
 }
 
 export interface ConversationRecord {
@@ -55,9 +59,6 @@ export interface ConfirmationDialogOptions {
     note?: string;
 }
 
-/**
- * Attachment processing statistics for reports
- */
 export interface AttachmentStats {
     total: number;
     found: number;

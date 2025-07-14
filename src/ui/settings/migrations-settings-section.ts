@@ -21,7 +21,8 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
                 return;
             }
 
-            const operationsData = await upgradeManager.getManualOperationsForSettings();
+            // Get operation status with persistent flags
+            const operationsData = await this.getOperationsWithPersistentStatus(upgradeManager);
             
             if (operationsData.length === 0) {
                 this.showNoMigrationsMessage(containerEl);
@@ -36,6 +37,27 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
             console.error("[NEXUS-DEBUG] Error loading migrations:", error);
             this.showErrorMessage(containerEl, error);
         }
+    }
+
+    /**
+     * Get operations status with persistent flags from plugin data
+     */
+    private async getOperationsWithPersistentStatus(upgradeManager: any): Promise<any[]> {
+        const operationsData = await upgradeManager.getManualOperationsForSettings();
+        const pluginData = await this.plugin.loadData();
+        
+        // Update operation status based on persistent flags
+        for (const versionData of operationsData) {
+            for (const operation of versionData.operations) {
+                const flagKey = `operation_${versionData.version.replace(/\./g, '_')}_${operation.id}`;
+                const isCompleted = !!pluginData[flagKey];
+                
+                operation.completed = isCompleted;
+                operation.canRun = !isCompleted && operation.canRun;
+            }
+        }
+        
+        return operationsData;
     }
 
     private async renderVersionOperations(
@@ -68,9 +90,9 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
             .addButton(button => {
                 if (operation.completed) {
                     button
-                        .setButtonText("Completed")
+                        .setButtonText("✅ Completed")
                         .setDisabled(true)
-                        .setTooltip("This operation has already been completed");
+                        .setTooltip("This operation has been completed");
                     button.buttonEl.addClass("mod-muted");
                 } else if (!operation.canRun) {
                     button
@@ -106,15 +128,22 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
             console.debug(`[NEXUS-DEBUG] Operation result:`, result);
 
             if (result.success) {
-                buttonEl.setButtonText("Completed");
+                // Update UI to show completed state
+                buttonEl.setButtonText("✅ Completed");
                 buttonEl.buttonEl.removeClass("mod-cta").addClass("mod-muted");
+                buttonEl.setTooltip("This operation has been completed");
+                
+                // Show success message
                 this.showOperationResult(
                     buttonEl.buttonEl.closest('.setting-item'), 
                     result.message, 
                     'success'
                 );
+                
+                // Update operation status
                 operation.completed = true;
                 operation.canRun = false;
+                
             } else {
                 buttonEl.setButtonText(originalText).setDisabled(false);
                 this.showOperationResult(
