@@ -14,13 +14,6 @@ export class CommandRegistry {
             },
         });
 
-        this.plugin.addCommand({
-            id: "reset-nexus-ai-chat-importer-catalogs",
-            name: "Reset catalogs",
-            callback: () => {
-                this.showResetConfirmation();
-            },
-        });
     }
 
     private showResetConfirmation() {
