@@ -95,8 +95,6 @@ class DeleteCatalogOperation extends UpgradeOperation {
     }
 }
 
-// src/upgrade/versions/upgrade-1.1.0.ts - CleanMetadataOperation only
-
 /**
  * Clean metadata from conversation notes and add plugin_version (automatic operation)
  */
@@ -312,10 +310,35 @@ class CleanMetadataOperation extends UpgradeOperation {
         cleanName = cleanName
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-            .replace(/[<>:"\/\\|?*\n\r]+/g, "") // Remove invalid characters
+            .replace(/[<>:"\/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
+            .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
             .trim();
 
-        return cleanName || "Untitled";
+        // CRITICAL: Remove special characters from the beginning
+        // This fixes issues like ".htaccess" becoming problematic alias
+        cleanName = cleanName.replace(/^[^\w\d\s]+/, ""); // Remove non-alphanumeric at start
+        
+        // Clean up any remaining problematic patterns
+        cleanName = cleanName
+            .replace(/\s+/g, " ") // Normalize spaces
+            .trim();
+
+        // Ensure we have a valid alias
+        if (!cleanName || cleanName.length === 0) {
+            cleanName = "Untitled";
+        }
+
+        // Ensure alias doesn't start with a dot (can cause issues in frontmatter)
+        if (cleanName.startsWith(".")) {
+            cleanName = cleanName.substring(1);
+        }
+
+        // Final safety check
+        if (!cleanName || cleanName.length === 0) {
+            cleanName = "Untitled";
+        }
+
+        return cleanName;
     }
 
     async verify(context: UpgradeContext): Promise<boolean> {

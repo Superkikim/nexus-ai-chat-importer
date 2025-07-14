@@ -107,15 +107,15 @@ export class ImportReport {
 
     private generateCreatedTable(): string {
         let table = `## ✨ Created Notes\n\n`;
-        table += "| Title | Created | Messages | Attachments |\n";
-        table += "|:---|:---:|:---:|:---:|\n";
+        table += "| | Title | Created | Messages | Attachments |\n";
+        table += "|:---:|:---|:---:|:---:|:---:|\n";
         
         this.created.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const attachmentStatus = this.formatAttachmentStatus(entry.attachmentStats);
             
-            table += `| ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${attachmentStatus} |\n`;
+            table += `| ✨ | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${attachmentStatus} |\n`;
         });
         
         return table + "\n\n";
@@ -123,15 +123,15 @@ export class ImportReport {
 
     private generateUpdatedTable(): string {
         let table = `## 🔄 Updated Notes\n\n`;
-        table += "| Title | Updated | New Messages | New Attachments |\n";
-        table += "|:---|:---:|:---:|:---:|\n";
+        table += "| | Title | Updated | New Messages | New Attachments |\n";
+        table += "|:---:|:---|:---:|:---:|:---:|\n";
         
         this.updated.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const attachmentStatus = this.formatAttachmentStatus(entry.attachmentStats);
             
-            table += `| ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${attachmentStatus} |\n`;
+            table += `| 🔄 | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${attachmentStatus} |\n`;
         });
         
         return table + "\n\n";
@@ -139,12 +139,12 @@ export class ImportReport {
 
     private generateFailedTable(): string {
         let table = `## 🚫 Failed Imports\n\n`;
-        table += "| Title | Date | Error |\n";
-        table += "|:---|:---:|:---|\n";
+        table += "| | Title | Date | Error |\n";
+        table += "|:---:|:---|:---:|:---|\n";
         
         this.failed.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
-            table += `| ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |\n`;
+            table += `| 🚫 | ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |\n`;
         });
         
         return table + "\n\n";
@@ -152,11 +152,11 @@ export class ImportReport {
 
     private generateErrorTable(): string {
         let table = `## ⚠️ Global Errors\n\n`;
-        table += "| Error | Details |\n";
-        table += "|:---|:---|\n";
+        table += "| | Error | Details |\n";
+        table += "|:---:|:---|:---|\n";
         
         this.globalErrors.forEach((entry) => {
-            table += `| ${entry.message} | ${entry.details} |\n`;
+            table += `| ⚠️ | ${entry.message} | ${entry.details} |\n`;
         });
         
         return table + "\n\n";
