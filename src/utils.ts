@@ -36,10 +36,36 @@ export function formatTitle(title: string): string {
 export function generateFileName(title: string): string {
     let fileName = formatTitle(title)
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[<>:"\/\\|?*\n\r]+/g, "");
+        .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+        .replace(/[<>:"\/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
+        .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
+        .trim();
 
-    return fileName; // Return the sanitized filename based on title
+    // CRITICAL: Remove special characters from the beginning
+    // This fixes issues like ".htaccess" becoming an invisible file
+    fileName = fileName.replace(/^[^\w\d\s]+/, ""); // Remove non-alphanumeric at start
+    
+    // Clean up any remaining problematic patterns
+    fileName = fileName
+        .replace(/\s+/g, " ") // Normalize spaces
+        .trim();
+
+    // Ensure we have a valid filename
+    if (!fileName || fileName.length === 0) {
+        fileName = "Untitled";
+    }
+
+    // Ensure filename doesn't start with a dot (hidden files)
+    if (fileName.startsWith(".")) {
+        fileName = fileName.substring(1);
+    }
+
+    // Final safety check - if still empty after cleaning
+    if (!fileName || fileName.length === 0) {
+        fileName = "Untitled";
+    }
+
+    return fileName;
 }
 
 export function addPrefix(
