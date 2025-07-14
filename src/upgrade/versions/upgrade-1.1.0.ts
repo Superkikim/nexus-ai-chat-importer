@@ -95,6 +95,8 @@ class DeleteCatalogOperation extends UpgradeOperation {
     }
 }
 
+// src/upgrade/versions/upgrade-1.1.0.ts - CleanMetadataOperation only
+
 /**
  * Clean metadata from conversation notes and add plugin_version (automatic operation)
  */
@@ -106,20 +108,28 @@ class CleanMetadataOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            // Check if there are Nexus conversation files
-            const files = context.plugin.app.vault.getMarkdownFiles();
-            const nexusFiles = files.filter((file: TFile) => {
-                try {
-                    const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
-                    return frontmatter?.nexus === context.plugin.manifest.id;
-                } catch (error) {
-                    console.warn(`[NEXUS-DEBUG] Error checking file ${file.path}:`, error);
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+            
+            // Filter files in archive folder but EXCLUDE Reports and Attachments
+            const conversationFiles = allFiles.filter(file => {
+                // Must be in archive folder
+                if (!file.path.startsWith(archiveFolder)) return false;
+                
+                // EXCLUDE Reports and Attachments folders
+                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (relativePath.startsWith('Reports/') || 
+                    relativePath.startsWith('Attachments/') ||
+                    relativePath.startsWith('reports/') ||
+                    relativePath.startsWith('attachments/')) {
                     return false;
                 }
+                
+                return true;
             });
 
-            const canRun = nexusFiles.length > 0;
-            console.debug(`[NEXUS-DEBUG] CleanMetadata.canRun: found ${nexusFiles.length} files, canRun=${canRun}`);
+            const canRun = conversationFiles.length > 0;
+            console.debug(`[NEXUS-DEBUG] CleanMetadata.canRun: found ${conversationFiles.length} conversation files, canRun=${canRun}`);
             return canRun;
         } catch (error) {
             console.error(`[NEXUS-DEBUG] CleanMetadata.canRun failed:`, error);
@@ -131,26 +141,34 @@ class CleanMetadataOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] CleanMetadata.execute starting`);
             
-            const files = context.plugin.app.vault.getMarkdownFiles();
-            const nexusFiles = files.filter((file: TFile) => {
-                try {
-                    const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
-                    return frontmatter?.nexus === context.plugin.manifest.id;
-                } catch (error) {
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+            
+            // Filter conversation files (exclude Reports/Attachments)
+            const conversationFiles = allFiles.filter(file => {
+                if (!file.path.startsWith(archiveFolder)) return false;
+                
+                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (relativePath.startsWith('Reports/') || 
+                    relativePath.startsWith('Attachments/') ||
+                    relativePath.startsWith('reports/') ||
+                    relativePath.startsWith('attachments/')) {
                     return false;
                 }
+                
+                return true;
             });
 
-            if (nexusFiles.length === 0) {
-                console.debug(`[NEXUS-DEBUG] CleanMetadata: No files to clean`);
+            if (conversationFiles.length === 0) {
+                console.debug(`[NEXUS-DEBUG] CleanMetadata: No conversation files to clean`);
                 return {
                     success: true,
-                    message: "No Nexus conversation files found to clean",
+                    message: "No conversation files found to clean",
                     details: { processed: 0, cleaned: 0, errors: 0 }
                 };
             }
 
-            console.debug(`[NEXUS-DEBUG] CleanMetadata: Processing ${nexusFiles.length} files`);
+            console.debug(`[NEXUS-DEBUG] CleanMetadata: Processing ${conversationFiles.length} conversation files`);
 
             let processed = 0;
             let cleaned = 0;
@@ -158,15 +176,15 @@ class CleanMetadataOperation extends UpgradeOperation {
 
             // Process files in smaller batches to avoid blocking
             const batchSize = 10;
-            for (let i = 0; i < nexusFiles.length; i += batchSize) {
-                const batch = nexusFiles.slice(i, i + batchSize);
+            for (let i = 0; i < conversationFiles.length; i += batchSize) {
+                const batch = conversationFiles.slice(i, i + batchSize);
                 
                 for (const file of batch) {
                     processed++;
 
                     try {
                         const content = await context.plugin.app.vault.read(file);
-                        const cleanedContent = this.cleanFrontmatter(content, context.toVersion);
+                        const cleanedContent = this.cleanFrontmatterRobust(content, context.toVersion, file.basename);
 
                         if (content !== cleanedContent) {
                             await context.plugin.app.vault.modify(file, cleanedContent);
@@ -180,7 +198,7 @@ class CleanMetadataOperation extends UpgradeOperation {
                 }
 
                 // Small delay between batches to prevent blocking
-                if (i + batchSize < nexusFiles.length) {
+                if (i + batchSize < conversationFiles.length) {
                     await new Promise(resolve => setTimeout(resolve, 10));
                 }
             }
@@ -204,82 +222,146 @@ class CleanMetadataOperation extends UpgradeOperation {
     }
 
     /**
-     * Clean frontmatter to keep only essential fields AND add plugin_version
+     * Clean frontmatter with robust parsing and safe alias generation
      */
-    private cleanFrontmatter(content: string, pluginVersion: string): string {
-        const frontmatterRegex = /^---\n([\s\S]*?)\n---/;
-        const match = content.match(frontmatterRegex);
-
-        if (!match) return content;
-
-        const frontmatterContent = match[1];
-        const restOfContent = content.substring(match[0].length);
-
-        // Parse existing frontmatter into key-value pairs
-        const frontmatterLines = frontmatterContent.split('\n');
-        const frontmatterData: Record<string, string> = {};
+    private cleanFrontmatterRobust(content: string, pluginVersion: string, fileName: string): string {
+        // Try to extract frontmatter manually (more robust than metadataCache)
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
         
-        for (const line of frontmatterLines) {
+        if (!frontmatterMatch) {
+            // No frontmatter found - check if this looks like a Nexus file
+            if (content.includes('nexus:') || content.includes('conversation_id:')) {
+                console.warn(`[NEXUS-DEBUG] File ${fileName} appears to be Nexus but has malformed frontmatter`);
+            }
+            return content;
+        }
+
+        const frontmatterContent = frontmatterMatch[1];
+        const restOfContent = content.substring(frontmatterMatch[0].length);
+
+        // Parse frontmatter lines manually (more robust than YAML parsing)
+        const frontmatterData: Record<string, string> = {};
+        const lines = frontmatterContent.split('\n');
+        
+        for (const line of lines) {
             const colonIndex = line.indexOf(':');
             if (colonIndex > 0) {
                 const key = line.substring(0, colonIndex).trim();
-                const value = line.substring(colonIndex + 1).trim();
+                let value = line.substring(colonIndex + 1).trim();
+                
+                // Remove quotes if present
+                if ((value.startsWith('"') && value.endsWith('"')) || 
+                    (value.startsWith("'") && value.endsWith("'"))) {
+                    value = value.slice(1, -1);
+                }
+                
                 frontmatterData[key] = value;
             }
         }
 
-        // Build new frontmatter in correct order
+        // Check if this is a Nexus conversation file
+        const nexusId = 'nexus-ai-chat-importer'; // Hard-coded for safety
+        if (frontmatterData.nexus !== nexusId) {
+            // Not a Nexus file, skip
+            return content;
+        }
+
+        // Generate safe alias from filename (more robust than title parsing)
+        const safeAlias = this.generateSafeAlias(fileName);
+
+        // Build new frontmatter in correct order with robust values
         const newFrontmatter: string[] = [];
         
         // Required fields in specific order
-        if (frontmatterData.nexus) newFrontmatter.push(`nexus: ${frontmatterData.nexus}`);
-        
-        // Add plugin_version right after nexus
+        newFrontmatter.push(`nexus: ${nexusId}`);
         newFrontmatter.push(`plugin_version: "${pluginVersion}"`);
         
-        if (frontmatterData.provider) newFrontmatter.push(`provider: ${frontmatterData.provider}`);
-        if (frontmatterData.aliases) newFrontmatter.push(`aliases: ${frontmatterData.aliases}`);
-        if (frontmatterData.conversation_id) newFrontmatter.push(`conversation_id: ${frontmatterData.conversation_id}`);
-        if (frontmatterData.create_time) newFrontmatter.push(`create_time: ${frontmatterData.create_time}`);
-        if (frontmatterData.update_time) newFrontmatter.push(`update_time: ${frontmatterData.update_time}`);
+        if (frontmatterData.provider) {
+            newFrontmatter.push(`provider: ${frontmatterData.provider}`);
+        }
+        
+        // Use safe alias instead of potentially problematic title
+        newFrontmatter.push(`aliases: "${safeAlias}"`);
+        
+        if (frontmatterData.conversation_id) {
+            newFrontmatter.push(`conversation_id: ${frontmatterData.conversation_id}`);
+        }
+        if (frontmatterData.create_time) {
+            newFrontmatter.push(`create_time: ${frontmatterData.create_time}`);
+        }
+        if (frontmatterData.update_time) {
+            newFrontmatter.push(`update_time: ${frontmatterData.update_time}`);
+        }
 
         // Reconstruct content
         const cleanedFrontmatter = newFrontmatter.join('\n');
         return `---\n${cleanedFrontmatter}\n---${restOfContent}`;
     }
 
+    /**
+     * Generate safe alias from filename (reuse the robust filename logic)
+     */
+    private generateSafeAlias(fileName: string): string {
+        // Remove date prefix if present (YYYYMMDD - or YYYY-MM-DD -)
+        let cleanName = fileName.replace(/^\d{8}\s*-\s*/, '').replace(/^\d{4}-\d{2}-\d{2}\s*-\s*/, '');
+        
+        // Remove file extension
+        cleanName = cleanName.replace(/\.md$/, '');
+        
+        // Apply same sanitization as generateFileName but preserve readability
+        cleanName = cleanName
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+            .replace(/[<>:"\/\\|?*\n\r]+/g, "") // Remove invalid characters
+            .trim();
+
+        return cleanName || "Untitled";
+    }
+
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            // Sample verification - check a few files
-            const files = context.plugin.app.vault.getMarkdownFiles();
-            const nexusFiles = files.filter((file: TFile) => {
-                try {
-                    const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
-                    return frontmatter?.nexus === context.plugin.manifest.id;
-                } catch (error) {
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+            
+            // Check conversation files (sample verification)
+            const conversationFiles = allFiles.filter(file => {
+                if (!file.path.startsWith(archiveFolder)) return false;
+                
+                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (relativePath.startsWith('Reports/') || 
+                    relativePath.startsWith('Attachments/') ||
+                    relativePath.startsWith('reports/') ||
+                    relativePath.startsWith('attachments/')) {
                     return false;
                 }
+                
+                return true;
             }).slice(0, 5); // Check first 5 files
 
-            for (const file of nexusFiles) {
+            for (const file of conversationFiles) {
                 try {
-                    const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
-                    if (!frontmatter) continue;
+                    const content = await context.plugin.app.vault.read(file);
+                    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+                    
+                    if (!frontmatterMatch) continue;
 
-                    // Check if plugin_version was added
-                    if (!frontmatter.plugin_version) {
+                    // Check manually if plugin_version was added
+                    const frontmatterContent = frontmatterMatch[1];
+                    if (!frontmatterContent.includes('plugin_version:')) {
                         console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Missing plugin_version in ${file.path}`);
                         return false;
                     }
 
                     // Check if forbidden metadata still exists
                     const forbiddenFields = [
-                        'conversation_template_id', 'gizmo_id', 'gizmo_type',
-                        'default_model_slug', 'is_archived', 'is_starred',
-                        'current_node', 'memory_scope'
+                        'conversation_template_id:', 'gizmo_id:', 'gizmo_type:',
+                        'default_model_slug:', 'is_archived:', 'is_starred:',
+                        'current_node:', 'memory_scope:'
                     ];
 
-                    const hasUnwantedFields = forbiddenFields.some(field => frontmatter.hasOwnProperty(field));
+                    const hasUnwantedFields = forbiddenFields.some(field => 
+                        frontmatterContent.includes(field)
+                    );
                     if (hasUnwantedFields) {
                         console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Found unwanted fields in ${file.path}`);
                         return false;
