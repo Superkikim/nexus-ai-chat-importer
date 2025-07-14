@@ -272,7 +272,7 @@ class CleanMetadataOperation extends UpgradeOperation {
         
         // Required fields in specific order
         newFrontmatter.push(`nexus: ${nexusId}`);
-        newFrontmatter.push(`plugin_version: "${pluginVersion}"`);
+        newFrontmatter.push(`plugin_version: "1.0.x"`);
         
         if (frontmatterData.provider) {
             newFrontmatter.push(`provider: ${frontmatterData.provider}`);
