@@ -35,6 +35,10 @@ class DeleteCatalogOperation extends UpgradeOperation {
             const cleanedData = {
                 settings: context.pluginData.settings,
                 importedArchives: context.pluginData.importedArchives || {},
+                upgradeHistory: context.pluginData.upgradeHistory || {
+                    completedUpgrades: {},
+                    completedOperations: {}
+                },
                 lastVersion: context.toVersion,
                 // Remove conversationCatalog - key change
                 catalogDeletionDate: new Date().toISOString(),
@@ -66,13 +70,13 @@ class DeleteCatalogOperation extends UpgradeOperation {
 }
 
 /**
- * Clean metadata from conversation notes (manual operation)
+ * Clean metadata from conversation notes (automatic operation)
  */
 class CleanMetadataOperation extends UpgradeOperation {
     readonly id = "clean-metadata";
     readonly name = "Clean Metadata";
     readonly description = "Remove unnecessary metadata from conversation notes";
-    readonly type = "manual" as const;
+    readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         // Check if there are Nexus conversation files
@@ -242,10 +246,12 @@ export class Upgrade110 extends VersionUpgrade {
     readonly version = "1.1.0";
     
     readonly automaticOperations = [
-        new DeleteCatalogOperation()
+        new DeleteCatalogOperation(),
+        new CleanMetadataOperation()  // Moved from manual to automatic
     ];
     
     readonly manualOperations = [
-        new CleanMetadataOperation()
+        // No manual operations for 1.1.0 - all operations are automatic
+        // Future versions can add manual operations here for truly optional tasks
     ];
 }

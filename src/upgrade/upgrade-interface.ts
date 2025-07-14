@@ -237,23 +237,36 @@ export abstract class VersionUpgrade {
     }
 
     /**
-     * Check if operation was completed
+     * Check if operation was completed using structured upgrade history
      */
     private async isOperationCompleted(operationId: string, context: UpgradeContext): Promise<boolean> {
         const data = await context.plugin.loadData();
-        const flagKey = `operation_${this.version.replace(/\./g, '_')}_${operationId}`;
-        return !!data[flagKey];
+        const operationKey = `operation_${this.version.replace(/\./g, '_')}_${operationId}`;
+        return data?.upgradeHistory?.completedOperations?.[operationKey]?.completed || false;
     }
 
     /**
-     * Mark operation as completed
+     * Mark operation as completed using structured upgrade history
      */
     private async markOperationCompleted(operationId: string, context: UpgradeContext): Promise<void> {
         const data = await context.plugin.loadData() || {};
-        const flagKey = `operation_${this.version.replace(/\./g, '_')}_${operationId}`;
         
-        data[flagKey] = true;
-        data[`${flagKey}_date`] = new Date().toISOString();
+        // Initialize upgrade history structure if needed
+        if (!data.upgradeHistory) {
+            data.upgradeHistory = {
+                completedUpgrades: {},
+                completedOperations: {}
+            };
+        }
+        
+        // Mark operation as completed in structured format
+        const operationKey = `operation_${this.version.replace(/\./g, '_')}_${operationId}`;
+        data.upgradeHistory.completedOperations[operationKey] = {
+            operationId: operationId,
+            version: this.version,
+            date: new Date().toISOString(),
+            completed: true
+        };
         
         await context.plugin.saveData(data);
         

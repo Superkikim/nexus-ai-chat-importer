@@ -105,10 +105,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     async saveSettings() {
         try {
-            await this.storageService.saveData({
+            // Load existing data to preserve upgrade history
+            const existingData = await this.loadData() || {};
+            
+            // Merge with new data, preserving upgrade history structure
+            const mergedData = {
+                ...existingData, // Preserve existing data
                 settings: this.settings,
-                importedArchives: this.storageService.getImportedArchives()
-            });
+                importedArchives: this.storageService.getImportedArchives(),
+                upgradeHistory: existingData.upgradeHistory || {
+                    completedUpgrades: {},
+                    completedOperations: {}
+                }
+            };
+            
+            await this.storageService.saveData(mergedData);
         } catch (error) {
             this.logger.error("saveSettings failed:", error);
         }
