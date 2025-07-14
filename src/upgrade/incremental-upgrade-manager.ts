@@ -74,6 +74,23 @@ export class IncrementalUpgradeManager {
                 return null;
             }
 
+            // FRESH INSTALL DETECTION - Skip upgrades if this is a new installation
+            const isFreshInstall = await this.detectFreshInstall();
+            console.debug(`[NEXUS-DEBUG] Fresh install detection: ${isFreshInstall}`);
+
+            if (isFreshInstall) {
+                console.debug(`[NEXUS-DEBUG] Fresh install detected - marking as complete without upgrades`);
+                await this.markUpgradeComplete(currentVersion);
+                logger.info(`Fresh installation detected - marked as up-to-date v${currentVersion}`);
+                return {
+                    success: true,
+                    upgradesExecuted: 0,
+                    upgradesSkipped: 0,
+                    upgradesFailed: 0,
+                    results: []
+                };
+            }
+
             // Get upgrade chain: all upgrades between lastVersion and currentVersion
             const upgradeChain = this.getUpgradeChain(lastVersion, currentVersion);
             console.debug(`[NEXUS-DEBUG] Upgrade chain:`, upgradeChain.map(u => u.version));
@@ -117,6 +134,58 @@ export class IncrementalUpgradeManager {
                 upgradesFailed: 1,
                 results: []
             };
+        }
+    }
+
+    /**
+     * Detect if this is a fresh installation with no existing data
+     */
+    private async detectFreshInstall(): Promise<boolean> {
+        try {
+            // Check 1: No plugin data or very minimal data
+            const data = await this.plugin.loadData();
+            const hasLegacyData = !!(data?.conversationCatalog && Object.keys(data.conversationCatalog).length > 0);
+            const hasImportedArchives = !!(data?.importedArchives && Object.keys(data.importedArchives).length > 0);
+            
+            // Check 2: No existing conversations in vault
+            const archiveFolder = this.plugin.settings.archiveFolder;
+            const allFiles = this.plugin.app.vault.getMarkdownFiles();
+            
+            const existingConversations = allFiles.filter(file => {
+                if (!file.path.startsWith(archiveFolder)) return false;
+                
+                // Exclude Reports and Attachments folders
+                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (relativePath.startsWith('Reports/') || 
+                    relativePath.startsWith('Attachments/') ||
+                    relativePath.startsWith('reports/') ||
+                    relativePath.startsWith('attachments/')) {
+                    return false;
+                }
+                
+                // Check if it's a Nexus conversation file
+                const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+                return frontmatter?.nexus === this.plugin.manifest.id;
+            });
+
+            const hasExistingConversations = existingConversations.length > 0;
+
+            // Fresh install criteria: no legacy data AND no imported archives AND no existing conversations
+            const isFreshInstall = !hasLegacyData && !hasImportedArchives && !hasExistingConversations;
+
+            console.debug(`[NEXUS-DEBUG] Fresh install detection:`, {
+                hasLegacyData,
+                hasImportedArchives,
+                hasExistingConversations,
+                isFreshInstall
+            });
+
+            return isFreshInstall;
+
+        } catch (error) {
+            console.error(`[NEXUS-DEBUG] Error detecting fresh install:`, error);
+            // If we can't determine, assume it's not fresh (safer to run upgrades)
+            return false;
         }
     }
 
