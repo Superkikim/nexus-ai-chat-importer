@@ -75,18 +75,32 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const data = await this.loadData();
             this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
             
-            // Initialize version tracking from manifest
+            // Initialize version tracking - FIXED LOGIC
             const currentVersion = this.manifest.version;
             const storedCurrentVersion = this.settings.currentVersion;
             
-            if (storedCurrentVersion === "0.0.0" || !storedCurrentVersion) {
-                // First install - set both to current version
-                this.settings.currentVersion = currentVersion;
-                this.settings.previousVersion = currentVersion;
-                this.logger.info(`First install detected - version set to ${currentVersion}`);
+            if (!storedCurrentVersion || storedCurrentVersion === "0.0.0") {
+                // FIRST TIME EVER with version tracking
+                
+                // Check if this is existing installation by scanning for conversations
+                const hasExistingConversations = await this.hasExistingNexusConversations();
+                
+                if (hasExistingConversations) {
+                    // Existing user upgrading to version tracking for first time
+                    this.settings.previousVersion = "1.0.8"; // Last version before tracking
+                    this.settings.currentVersion = currentVersion;
+                    this.logger.info(`Version tracking initialized: assumed upgrade from 1.0.8 → ${currentVersion}`);
+                } else {
+                    // Fresh install
+                    this.settings.previousVersion = currentVersion;
+                    this.settings.currentVersion = currentVersion;
+                    this.logger.info(`Fresh install detected - version set to ${currentVersion}`);
+                }
+                
                 await this.saveSettings();
+                
             } else if (storedCurrentVersion !== currentVersion) {
-                // Version upgrade detected
+                // NORMAL UPGRADE - move current to previous, set new current
                 this.settings.previousVersion = storedCurrentVersion;
                 this.settings.currentVersion = currentVersion;
                 this.logger.info(`Version updated: ${storedCurrentVersion} → ${currentVersion}`);
@@ -100,6 +114,22 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         } catch (error) {
             this.logger.error("loadSettings failed:", error);
             throw error;
+        }
+    }
+
+    /**
+     * Check if vault contains existing Nexus conversations
+     */
+    private async hasExistingNexusConversations(): Promise<boolean> {
+        try {
+            const files = this.app.vault.getMarkdownFiles();
+            return files.some(file => {
+                const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+                return frontmatter?.nexus === this.manifest.id;
+            });
+        } catch (error) {
+            this.logger.warn("Error checking for existing conversations:", error);
+            return false;
         }
     }
 

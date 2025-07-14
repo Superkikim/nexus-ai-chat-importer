@@ -8,7 +8,7 @@ import { URL_GENERATORS } from "../types/standard";
 export class NoteFormatter {
     private messageFormatter: MessageFormatter;
 
-    constructor(private logger: Logger, private pluginId: string) {
+    constructor(private logger: Logger, private pluginId: string, private pluginVersion: string) {
         this.messageFormatter = new MessageFormatter(logger);
     }
 
@@ -36,9 +36,10 @@ export class NoteFormatter {
             chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(conversationId);
         }
 
-        // Build frontmatter - CLEAN VERSION (back to 1.0.5 format)
+        // Build frontmatter with plugin_version after nexus
         let frontmatter = `---
 nexus: ${this.pluginId}
+plugin_version: "${this.pluginVersion}"
 provider: ${conversation.provider}
 aliases: "${title}"
 conversation_id: ${conversationId}

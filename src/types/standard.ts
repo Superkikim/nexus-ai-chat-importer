@@ -50,6 +50,7 @@ export interface StandardConversation {
     messages: StandardMessage[];
     chatUrl?: string; // Provider-specific URL
     metadata?: Record<string, any>; // Provider-specific extra data
+    plugin_version?: string; // Version of plugin that created/last modified this conversation
 }
 
 /**

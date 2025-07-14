@@ -39,10 +39,10 @@ export class ConversationProcessor {
     };
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
-        this.messageFormatter = new MessageFormatter(plugin.logger);
-        this.fileService = new FileService(plugin);
-        this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id);
-        this.chatgptAttachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
+            this.messageFormatter = new MessageFormatter(plugin.logger);
+            this.fileService = new FileService(plugin);
+            this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id, plugin.manifest.version);
+            this.chatgptAttachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
     }
 
     /**
