@@ -1,17 +1,12 @@
-// src/ui/migrations-settings-tab.ts
+// src/ui/settings/migrations-settings-section.ts
 import { Setting } from "obsidian";
-import type NexusAiChatImporterPlugin from "../main";
+import { BaseSettingsSection } from "./base-settings-section";
 
-export class MigrationsSettingsRenderer {
-    
-    static async renderMigrationsSection(
-        containerEl: HTMLElement, 
-        plugin: NexusAiChatImporterPlugin
-    ): Promise<void> {
-        
-        // Migrations section header
-        containerEl.createEl("h2", { text: "Migrations" });
-        
+export class MigrationsSettingsSection extends BaseSettingsSection {
+    readonly title = "Migrations";
+    readonly order = 30;
+
+    async render(containerEl: HTMLElement): Promise<void> {
         const migrationsDesc = containerEl.createDiv({ cls: "setting-item-description" });
         migrationsDesc.style.marginBottom = "20px";
         migrationsDesc.innerHTML = `
@@ -20,20 +15,12 @@ export class MigrationsSettingsRenderer {
         `;
 
         try {
-            // Get upgrade manager from plugin
-            const upgrader = (plugin as any).upgrader;
-            if (!upgrader?.getUpgradeManager) {
-                this.showNoMigrationsMessage(containerEl);
-                return;
-            }
-
-            const upgradeManager = upgrader.getUpgradeManager();
+            const upgradeManager = this.plugin.getUpgradeManager();
             if (!upgradeManager?.getManualOperationsForSettings) {
                 this.showNoMigrationsMessage(containerEl);
                 return;
             }
 
-            // Get manual operations status
             const operationsData = await upgradeManager.getManualOperationsForSettings();
             
             if (operationsData.length === 0) {
@@ -41,9 +28,8 @@ export class MigrationsSettingsRenderer {
                 return;
             }
 
-            // Render operations by version
             for (const versionData of operationsData) {
-                await this.renderVersionOperations(containerEl, versionData, plugin, upgradeManager);
+                await this.renderVersionOperations(containerEl, versionData, upgradeManager);
             }
 
         } catch (error) {
@@ -52,17 +38,11 @@ export class MigrationsSettingsRenderer {
         }
     }
 
-    /**
-     * Render operations for a specific version
-     */
-    private static async renderVersionOperations(
+    private async renderVersionOperations(
         containerEl: HTMLElement,
         versionData: any,
-        plugin: NexusAiChatImporterPlugin,
         upgradeManager: any
     ): Promise<void> {
-        
-        // Version header
         const versionHeader = containerEl.createEl("h3", { 
             text: `Version ${versionData.version}`,
             cls: "migrations-version-header"
@@ -71,23 +51,17 @@ export class MigrationsSettingsRenderer {
         versionHeader.style.marginBottom = "15px";
         versionHeader.style.color = "var(--text-accent)";
 
-        // Render each operation
         for (const operation of versionData.operations) {
-            await this.renderOperation(containerEl, operation, versionData.version, plugin, upgradeManager);
+            await this.renderOperation(containerEl, operation, versionData.version, upgradeManager);
         }
     }
 
-    /**
-     * Render single operation setting
-     */
-    private static async renderOperation(
+    private async renderOperation(
         containerEl: HTMLElement,
         operation: any,
         version: string,
-        plugin: NexusAiChatImporterPlugin,
         upgradeManager: any
     ): Promise<void> {
-        
         new Setting(containerEl)
             .setName(operation.name)
             .setDesc(operation.description + (operation.completed ? " ✅ Completed" : ""))
@@ -97,6 +71,7 @@ export class MigrationsSettingsRenderer {
                         .setButtonText("Completed")
                         .setDisabled(true)
                         .setTooltip("This operation has already been completed");
+                    button.buttonEl.addClass("mod-muted");
                 } else if (!operation.canRun) {
                     button
                         .setButtonText("Cannot Run")
@@ -107,103 +82,68 @@ export class MigrationsSettingsRenderer {
                         .setButtonText("Run")
                         .setTooltip(`Execute ${operation.name}`)
                         .onClick(async () => {
-                            await this.executeOperation(button, operation, version, plugin, upgradeManager);
+                            await this.executeOperation(button, operation, version, upgradeManager);
                         });
-                }
-                
-                // Style the button based on status
-                if (operation.completed) {
-                    button.buttonEl.addClass("mod-muted");
-                } else if (operation.canRun) {
                     button.buttonEl.addClass("mod-cta");
                 }
             });
     }
 
-    /**
-     * Execute operation when button clicked
-     */
-    private static async executeOperation(
-        buttonEl: any,
-        operation: any,
-        version: string,
-        plugin: NexusAiChatImporterPlugin,
+    private async executeOperation(
+        buttonEl: any, 
+        operation: any, 
+        version: string, 
         upgradeManager: any
     ): Promise<void> {
-        
-        // Update button to show progress
         const originalText = buttonEl.buttonEl.textContent;
-        buttonEl.setButtonText("Running...");
-        buttonEl.setDisabled(true);
+        buttonEl.setButtonText("Running...").setDisabled(true);
 
         try {
             console.debug(`[NEXUS-DEBUG] Executing manual operation: ${operation.id} (v${version})`);
             
-            // Execute operation
             const result = await upgradeManager.executeManualOperation(version, operation.id);
             
             console.debug(`[NEXUS-DEBUG] Operation result:`, result);
 
-            // Update UI based on result
             if (result.success) {
                 buttonEl.setButtonText("Completed");
-                buttonEl.buttonEl.removeClass("mod-cta");
-                buttonEl.buttonEl.addClass("mod-muted");
-                
-                // Show success message
+                buttonEl.buttonEl.removeClass("mod-cta").addClass("mod-muted");
                 this.showOperationResult(
-                    buttonEl.buttonEl.closest('.setting-item'),
-                    result.message,
+                    buttonEl.buttonEl.closest('.setting-item'), 
+                    result.message, 
                     'success'
                 );
-                
-                // Update operation status
                 operation.completed = true;
                 operation.canRun = false;
-                
             } else {
-                buttonEl.setButtonText(originalText);
-                buttonEl.setDisabled(false);
-                
-                // Show error message
+                buttonEl.setButtonText(originalText).setDisabled(false);
                 this.showOperationResult(
-                    buttonEl.buttonEl.closest('.setting-item'),
-                    result.message,
+                    buttonEl.buttonEl.closest('.setting-item'), 
+                    result.message, 
                     'error'
                 );
             }
-
         } catch (error) {
             console.error(`[NEXUS-DEBUG] Operation execution failed:`, error);
-            
-            buttonEl.setButtonText(originalText);
-            buttonEl.setDisabled(false);
-            
+            buttonEl.setButtonText(originalText).setDisabled(false);
             this.showOperationResult(
-                buttonEl.buttonEl.closest('.setting-item'),
-                `Operation failed: ${error}`,
+                buttonEl.buttonEl.closest('.setting-item'), 
+                `Operation failed: ${error}`, 
                 'error'
             );
         }
     }
 
-    /**
-     * Show operation result message
-     */
-    private static showOperationResult(
-        settingEl: HTMLElement | null,
-        message: string,
+    private showOperationResult(
+        settingEl: HTMLElement | null, 
+        message: string, 
         type: 'success' | 'error'
     ): void {
         if (!settingEl) return;
 
-        // Remove existing result messages
         const existingMsg = settingEl.querySelector('.operation-result');
-        if (existingMsg) {
-            existingMsg.remove();
-        }
+        if (existingMsg) existingMsg.remove();
 
-        // Create new result message
         const resultEl = document.createElement('div');
         resultEl.className = 'operation-result';
         resultEl.textContent = message;
@@ -218,8 +158,6 @@ export class MigrationsSettingsRenderer {
         `;
 
         settingEl.appendChild(resultEl);
-
-        // Auto-remove after 5 seconds
         setTimeout(() => {
             if (resultEl.parentNode) {
                 resultEl.remove();
@@ -227,10 +165,7 @@ export class MigrationsSettingsRenderer {
         }, 5000);
     }
 
-    /**
-     * Show message when no migrations available
-     */
-    private static showNoMigrationsMessage(containerEl: HTMLElement): void {
+    private showNoMigrationsMessage(containerEl: HTMLElement): void {
         const noMigrationsEl = containerEl.createDiv({ cls: "setting-item-description" });
         noMigrationsEl.style.marginTop = "15px";
         noMigrationsEl.style.padding = "15px";
@@ -245,10 +180,7 @@ export class MigrationsSettingsRenderer {
         `;
     }
 
-    /**
-     * Show error message
-     */
-    private static showErrorMessage(containerEl: HTMLElement, error: any): void {
+    private showErrorMessage(containerEl: HTMLElement, error: any): void {
         const errorEl = containerEl.createDiv({ cls: "setting-item-description" });
         errorEl.style.marginTop = "15px";
         errorEl.style.padding = "15px";
