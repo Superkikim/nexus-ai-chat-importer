@@ -32,7 +32,6 @@ venv/
 __pycache__/
 
 # Removing build from sync
-dist/
 *.js.map
 
 # Environment files (if you use them)
