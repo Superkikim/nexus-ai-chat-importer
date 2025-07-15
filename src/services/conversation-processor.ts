@@ -46,7 +46,7 @@ export class ConversationProcessor {
     }
 
     /**
-     * Process raw conversations (provider agnostic entry point) - FIXED: Added isReprocess parameter
+     * Process raw conversations (provider agnostic entry point)
      */
     async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false): Promise<ImportReport> {
         // Detect provider from raw data structure
@@ -92,13 +92,13 @@ export class ConversationProcessor {
     }
 
     /**
-     * Process ChatGPT conversations specifically - FIXED: Added isReprocess parameter
+     * Process ChatGPT conversations specifically
      */
     private async processChatGPTConversations(chats: Chat[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false): Promise<ImportReport> {
         this.currentProvider = 'chatgpt';
         const storage = this.plugin.getStorageService();
         
-        // NEW: Scan existing conversations from vault instead of loading catalog
+        // Scan existing conversations from vault instead of loading catalog
         const existingConversationsMap = await storage.scanExistingConversations();
         this.counters.totalExistingConversations = existingConversationsMap.size;
 
@@ -207,7 +207,6 @@ export class ConversationProcessor {
 
                 // REPROCESS LOGIC: If forced update, recreate the entire note with attachment support
                 if (forceUpdate) {
-                    
                     // Convert entire chat to standard format with attachments
                     let standardConversation = ChatGPTConverter.convertChat(chat);
                     
@@ -341,7 +340,6 @@ export class ConversationProcessor {
             this.counters.totalNewConversationsSuccessfullyImported++;
             this.counters.totalNonEmptyMessagesToImport += messageCount;
 
-            // REMOVED: No longer updating conversation catalog - vault-based now
         } catch (error: any) {
             this.plugin.logger.error("Error creating new note", error.message);
             importReport.addFailed(
@@ -364,12 +362,10 @@ export class ConversationProcessor {
         provider: string,
         zip: JSZip
     ): Promise<StandardMessage[]> {
-
         const processedMessages: StandardMessage[] = [];
         
         for (const message of messages) {
             if (message.attachments && message.attachments.length > 0) {
-
                 if (provider === "chatgpt") {
                     const processedAttachments = await this.chatgptAttachmentExtractor.extractAttachments(
                         zip,

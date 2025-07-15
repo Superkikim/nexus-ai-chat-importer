@@ -56,21 +56,12 @@ export class ImportService {
         try {
             const fileHash = await getFileHash(file);
 
-            // HYBRID DETECTION: Check by fileHash (1.1.0+) OR fileName (1.0.x fallback)
+            // Check if already imported (hybrid detection for 1.0.x → 1.1.0 compatibility)
             const foundByHash = storage.isArchiveImported(fileHash);
             const foundByName = storage.isArchiveImported(file.name);
             const isReprocess = foundByHash || foundByName;
 
-            // DEBUG: Log detection results
-            this.plugin.logger.info(`[REPROCESS DEBUG] File: ${file.name}`);
-            this.plugin.logger.info(`[REPROCESS DEBUG] Hash: ${fileHash}`);
-            this.plugin.logger.info(`[REPROCESS DEBUG] Found by hash: ${foundByHash}`);
-            this.plugin.logger.info(`[REPROCESS DEBUG] Found by name: ${foundByName}`);
-            this.plugin.logger.info(`[REPROCESS DEBUG] Is reprocess: ${isReprocess}`);
-
             if (isReprocess) {
-                this.plugin.logger.info(`[REPROCESS DEBUG] Showing reprocess dialog for: ${file.name}`);
-                
                 const shouldReimport = await showDialog(
                     this.plugin.app,
                     "confirmation", 
@@ -84,22 +75,15 @@ export class ImportService {
                     { button1: "Let's do this", button2: "Forget it" }
                 );
                 
-                this.plugin.logger.info(`[REPROCESS DEBUG] User choice - shouldReimport: ${shouldReimport}`);
-                
                 if (!shouldReimport) {
                     new Notice("Import cancelled.");
                     return;
                 }
-            } else {
-                this.plugin.logger.info(`[REPROCESS DEBUG] Not a reprocess - proceeding with normal import`);
             }
 
             const zip = await this.validateZipFile(file);
-            
-            this.plugin.logger.info(`[REPROCESS DEBUG] Calling processConversations with isReprocess: ${isReprocess}`);
             await this.processConversations(zip, file, isReprocess);
             
-            this.plugin.logger.info(`[REPROCESS DEBUG] Adding archive to storage - Hash: ${fileHash}, Name: ${file.name}`);
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
         } catch (error: unknown) {
@@ -146,7 +130,6 @@ export class ImportService {
     }
 
     private async processConversations(zip: JSZip, file: File, isReprocess: boolean): Promise<void> {
-        
         try {
             // Extract raw conversation data (provider agnostic)
             const rawConversations = await this.extractRawConversationsFromZip(zip);

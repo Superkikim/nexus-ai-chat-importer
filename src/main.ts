@@ -35,9 +35,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     async onload() {
         try {
-            console.debug("[NEXUS-DEBUG] Plugin.onload() - Starting");
             await this.loadSettings();
-            console.debug("[NEXUS-DEBUG] Settings loaded, registering components");
             
             this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
             this.commandRegistry.registerCommands();
@@ -50,12 +48,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
             ribbonIconEl.addClass("nexus-ai-chat-ribbon");
             
-            console.debug("[NEXUS-DEBUG] Components registered, starting upgrade check");
             await this.upgradeManager.checkAndPerformUpgrade();
-            
-            console.debug("[NEXUS-DEBUG] Plugin.onload() - Completed successfully");
         } catch (error) {
-            console.error("[NEXUS-DEBUG] Plugin.onload() - FAILED", error);
             this.logger.error("Plugin loading failed:", error);
             throw error;
         }
@@ -75,42 +69,36 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const data = await this.loadData();
             this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
             
-            // Initialize version tracking - FIXED LOGIC
+            // Initialize version tracking
             const currentVersion = this.manifest.version;
             const storedCurrentVersion = this.settings.currentVersion;
             
             if (!storedCurrentVersion || storedCurrentVersion === "0.0.0") {
-                // FIRST TIME EVER with version tracking
-                
-                // Check if this is existing installation by scanning for conversations
+                // First time with version tracking
                 const hasExistingConversations = await this.hasExistingNexusConversations();
                 
                 if (hasExistingConversations) {
                     // Existing user upgrading to version tracking for first time
-                    this.settings.previousVersion = "1.0.8"; // Last version before tracking
+                    this.settings.previousVersion = "1.0.x";
                     this.settings.currentVersion = currentVersion;
-                    this.logger.info(`Version tracking initialized: assumed upgrade from 1.0.8 → ${currentVersion}`);
                 } else {
                     // Fresh install
                     this.settings.previousVersion = currentVersion;
                     this.settings.currentVersion = currentVersion;
-                    this.logger.info(`Fresh install detected - version set to ${currentVersion}`);
                 }
                 
                 await this.saveSettings();
                 
             } else if (storedCurrentVersion !== currentVersion) {
-                // NORMAL UPGRADE - move current to previous, set new current
+                // Normal upgrade
                 this.settings.previousVersion = storedCurrentVersion;
                 this.settings.currentVersion = currentVersion;
-                this.logger.info(`Version updated: ${storedCurrentVersion} → ${currentVersion}`);
                 await this.saveSettings();
             }
             
-            // Load storage data (archive hashes)
+            // Load storage data
             await this.storageService.loadData();
             
-            this.logger.info("Settings loaded successfully (vault-based conversation tracking)");
         } catch (error) {
             this.logger.error("loadSettings failed:", error);
             throw error;
@@ -138,12 +126,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             // Load existing data to preserve upgrade history and other data
             const existingData = await this.loadData() || {};
             
-            console.debug("[NEXUS-DEBUG] saveSettings: existingData keys:", Object.keys(existingData));
-            console.debug("[NEXUS-DEBUG] saveSettings: existingData.importedArchives exists:", !!existingData.importedArchives);
-            console.debug("[NEXUS-DEBUG] saveSettings: storageService.getImportedArchives() keys:", Object.keys(this.storageService.getImportedArchives()).length);
-            
-            // CRITICAL FIX: Preserve existingData.importedArchives if it exists and has data
-            // Only use storageService data if existingData is empty
+            // Preserve existingData.importedArchives if it exists and has data
             let finalImportedArchives = this.storageService.getImportedArchives();
             
             if (existingData.importedArchives && Object.keys(existingData.importedArchives).length > 0) {
@@ -151,29 +134,23 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 const existingArchives = existingData.importedArchives;
                 const storageArchives = this.storageService.getImportedArchives();
                 
-                console.debug("[NEXUS-DEBUG] saveSettings: Merging archives - existing:", Object.keys(existingArchives).length, "storage:", Object.keys(storageArchives).length);
-                
                 // Merge: storage takes priority for conflicts
                 finalImportedArchives = {
                     ...existingArchives,
                     ...storageArchives
                 };
-                
-                console.debug("[NEXUS-DEBUG] saveSettings: Final merged archives:", Object.keys(finalImportedArchives).length);
             }
             
             // Merge with new data, preserving upgrade history structure
             const mergedData = {
-                ...existingData, // Preserve existing data
+                ...existingData,
                 settings: this.settings,
-                importedArchives: finalImportedArchives, // Use merged/preserved archives
+                importedArchives: finalImportedArchives,
                 upgradeHistory: existingData.upgradeHistory || {
                     completedUpgrades: {},
                     completedOperations: {}
                 }
             };
-            
-            console.debug("[NEXUS-DEBUG] saveSettings: Final mergedData.importedArchives keys:", Object.keys(mergedData.importedArchives).length);
             
             await this.storageService.saveData(mergedData);
         } catch (error) {
@@ -185,7 +162,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             await this.storageService.resetCatalogs();
             await this.loadSettings();
-            this.logger.info("Catalogs reset successfully");
         } catch (error) {
             this.logger.error("resetCatalogs failed:", error);
         }
