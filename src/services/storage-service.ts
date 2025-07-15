@@ -12,7 +12,6 @@ export class StorageService {
 
     async loadData() {
         try {
-            console.debug("[NEXUS-DEBUG] StorageService.loadData() - Starting");
             const data = await this.plugin.loadData();
             this.importedArchives = data?.importedArchives || {};
             this.isDirty = false;
@@ -20,14 +19,11 @@ export class StorageService {
             // Migration: If old catalog exists, we ignore it (migration handled in upgrade.ts)
             if (data?.conversationCatalog) {
                 const catalogSize = Object.keys(data.conversationCatalog).length;
-                console.debug(`[NEXUS-DEBUG] Legacy catalog detected: ${catalogSize} entries`);
                 this.plugin.logger.info("Legacy conversation catalog detected - will be migrated in upgrade process");
             }
             
-            console.debug(`[NEXUS-DEBUG] StorageService.loadData() - Completed (${Object.keys(this.importedArchives).length} archives)`);
-            this.plugin.logger.info("Storage data loaded successfully (archive hashes)");
+            this.plugin.logger.info("Storage data loaded successfully");
         } catch (error) {
-            console.error("[NEXUS-DEBUG] StorageService.loadData() - FAILED", error);
             this.plugin.logger.error("loadData failed:", error);
             throw error;
         }
@@ -107,7 +103,6 @@ export class StorageService {
      * 3. Fallback to manual parsing for problematic files
      */
     async scanExistingConversations(): Promise<Map<string, ConversationCatalogEntry>> {
-        console.debug("[NEXUS-DEBUG] StorageService.scanExistingConversations() - Starting (HYBRID)");
         const startTime = Date.now();
         
         // Step 1: Wait for cache to be clean (with timeout)
@@ -131,8 +126,6 @@ export class StorageService {
             
             return true;
         });
-        
-        console.debug(`[NEXUS-DEBUG] Scanning ${conversationFiles.length} conversation files`);
         
         let processed = 0;
         let foundViaCache = 0;
@@ -165,7 +158,7 @@ export class StorageService {
                     
                 } catch (error) {
                     errors++;
-                    console.warn(`[NEXUS-DEBUG] Error parsing conversation file ${file.path}:`, error);
+                    console.warn(`Error parsing conversation file ${file.path}:`, error);
                 }
             }
             
@@ -292,7 +285,7 @@ export class StorageService {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] Error manually parsing ${file.path}:`, error);
+            console.error(`Error manually parsing ${file.path}:`, error);
             return null;
         }
     }
@@ -307,13 +300,13 @@ export class StorageService {
             let dateStr = timeStr.replace(' at ', ' ');
             const date = new Date(dateStr);
             if (isNaN(date.getTime())) {
-                console.warn(`[NEXUS-DEBUG] Could not parse date: ${timeStr}`);
+                console.warn(`Could not parse date: ${timeStr}`);
                 return 0;
             }
             
             return Math.floor(date.getTime() / 1000);
         } catch (error) {
-            console.warn(`[NEXUS-DEBUG] Date parsing error for "${timeStr}":`, error);
+            console.warn(`Date parsing error for "${timeStr}":`, error);
             return 0;
         }
     }
@@ -373,8 +366,8 @@ export class StorageService {
             totalArchives: Object.keys(this.importedArchives).length,
             isDirty: this.isDirty,
             hasPendingSave: this.saveTimeout !== null,
-            catalogMethod: 'vault-based-hybrid', // Indicate hybrid approach
-            trackingMethod: 'hybrid-hash-filename' // NEW: Indicate hybrid tracking
+            catalogMethod: 'vault-based-hybrid',
+            trackingMethod: 'hybrid-hash-filename'
         };
     }
 
