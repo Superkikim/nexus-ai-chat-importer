@@ -1,6 +1,6 @@
 // src/providers/chatgpt/chatgpt-converter.ts
-import { Chat, ChatMessage, ChatGPTAttachment, ContentPart } from "./chatgpt-types";
-import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
+import { Chat, ChatMessage } from "./chatgpt-types";
+import { StandardConversation, StandardMessage } from "../../types/standard";
 import { isValidMessage } from "../../utils";
 
 export class ChatGPTConverter {
@@ -11,11 +11,11 @@ export class ChatGPTConverter {
         const messages = this.extractMessagesFromMapping(chat);
         
         return {
-            id: chat.id,
-            title: chat.title,
+            id: chat.id || "",
+            title: chat.title || "Untitled",
             provider: "chatgpt",
-            createTime: chat.create_time,
-            updateTime: chat.update_time,
+            createTime: chat.create_time || 0,
+            updateTime: chat.update_time || 0,
             messages: messages,
             metadata: {
                 conversation_template_id: chat.conversation_template_id,
@@ -44,114 +44,11 @@ export class ChatGPTConverter {
      */
     private static convertMessage(chatMessage: ChatMessage): StandardMessage {
         return {
-            id: chatMessage.id,
-            role: chatMessage.author.role === "user" ? "user" : "assistant",
+            id: chatMessage.id || "",
+            role: chatMessage.author?.role === "user" ? "user" : "assistant",
             content: this.extractContent(chatMessage),
-            timestamp: chatMessage.create_time,
-            attachments: this.convertAttachments(chatMessage)
-        };
-    }
-
-    /**
-     * Convert ChatGPT attachments to StandardAttachments - FIXED: No more fake DALL-E
-     */
-    private static convertAttachments(chatMessage: ChatMessage): StandardAttachment[] {
-        const attachments: StandardAttachment[] = [];
-
-        // Process attachments from metadata (new format) - THIS IS THE MAIN SOURCE
-        if (chatMessage.metadata?.attachments && Array.isArray(chatMessage.metadata.attachments)) {
-            for (const attachment of chatMessage.metadata.attachments) {
-                const standardAttachment = {
-                    fileName: attachment.name,
-                    fileSize: attachment.size,
-                    fileType: attachment.mime_type,
-                    fileId: attachment.id // ChatGPT file ID for ZIP lookup
-                };
-                attachments.push(standardAttachment);
-            }
-        }
-
-        // Process legacy attachments array if present
-        if (chatMessage.attachments && Array.isArray(chatMessage.attachments)) {
-            for (const attachment of chatMessage.attachments) {
-                // Only add if not already processed from metadata
-                const alreadyExists = attachments.some(att => att.fileName === attachment.file_name);
-                if (!alreadyExists) {
-                    const standardAttachment = {
-                        fileName: attachment.file_name,
-                        fileSize: attachment.file_size,
-                        fileType: attachment.file_type,
-                        extractedContent: attachment.extracted_content
-                    };
-                    attachments.push(standardAttachment);
-                }
-            }
-        }
-
-        // Process files array if present (simpler structure)
-        if (chatMessage.files && Array.isArray(chatMessage.files)) {
-            for (const file of chatMessage.files) {
-                // Only add if not already processed from attachments array
-                const alreadyExists = attachments.some(att => att.fileName === file.file_name);
-                if (!alreadyExists) {
-                    const standardAttachment = {
-                        fileName: file.file_name
-                    };
-                    attachments.push(standardAttachment);
-                }
-            }
-        }
-
-        // *** REMOVED: Don't process image_asset_pointer here - they're already in metadata.attachments ***
-        // The metadata.attachments array contains the real file info, including user uploads
-        // Only tool messages with actual DALL-E generation should create separate DALL-E messages
-
-        return attachments;
-    }
-
-    /**
-     * Convert DALL-E image asset pointer to StandardAttachment - ONLY for real DALL-E
-     */
-    private static convertDalleImage(imagePart: ContentPart): StandardAttachment | null {
-        if (!imagePart.asset_pointer) return null;
-
-        // CHECK: Only process if it's actually DALL-E generated
-        if (!imagePart.metadata?.dalle || imagePart.metadata.dalle === null) {
-            return null; // Not a DALL-E image, skip it
-        }
-
-        // Extract file ID from asset pointer
-        let fileId = imagePart.asset_pointer;
-        
-        // Extract just the file identifier
-        if (fileId.includes('://')) {
-            fileId = fileId.split('://')[1];
-        }
-
-        // Generate descriptive filename
-        const genId = imagePart.metadata.dalle.gen_id || 'unknown';
-        const width = imagePart.width || 1024;
-        const height = imagePart.height || 1024;
-        const fileName = `dalle_${genId}_${width}x${height}.png`;
-
-        return {
-            fileName: fileName,
-            fileSize: imagePart.size_bytes,
-            fileType: "image/png", // DALL-E generates PNG by default
-            fileId: fileId, // For ZIP lookup in dalle-generations/
-            extractedContent: imagePart.metadata.dalle.prompt // Include the generation prompt
-        };
-    }
-
-    /**
-     * Convert single ChatGPT attachment to StandardAttachment
-     */
-    private static convertSingleAttachment(attachment: ChatGPTAttachment): StandardAttachment {
-        return {
-            fileName: attachment.file_name,
-            fileSize: attachment.file_size,
-            fileType: attachment.file_type,
-            extractedContent: attachment.extracted_content
+            timestamp: chatMessage.create_time || 0,
+            attachments: []
         };
     }
 
@@ -165,7 +62,7 @@ export class ChatGPTConverter {
             const message = messageObj?.message;
             if (!message) continue;
 
-            // Handle different message types
+            // Handle different message types with ENHANCED filtering
             if (message.author?.role === "tool" && this.hasRealDalleImage(message)) {
                 // Create Assistant (DALL-E) message ONLY for real DALL-E generations
                 const dalleMessage = this.createDalleAssistantMessage(message);
@@ -173,13 +70,129 @@ export class ChatGPTConverter {
                     messages.push(dalleMessage);
                 }
             } else if (this.shouldIncludeMessage(message)) {
-                // Regular user/assistant messages
+                // Regular user/assistant messages - ENHANCED filtering
                 messages.push(this.convertMessage(message));
             }
         }
         
         // Sort by timestamp to maintain order
         return messages.sort((a, b) => a.timestamp - b.timestamp);
+    }
+
+    /**
+     * Determine if a message should be included in the conversation - ENHANCED VERSION
+     */
+    private static shouldIncludeMessage(message: ChatMessage): boolean {
+        // Safety check
+        if (!message || !message.author) {
+            return false;
+        }
+        
+        // ===== STRICT EXCLUSIONS =====
+        
+        // 1. Skip ALL system messages (always internal ChatGPT stuff)
+        if (message.author.role === "system") {
+            return false;
+        }
+        
+        // 2. Skip ALL tool messages (browsing, code execution, etc.)
+        if (message.author.role === "tool") {
+            return false;
+        }
+        
+        // 3. Skip hidden messages (user profile, system instructions)
+        if (message.metadata?.is_visually_hidden_from_conversation === true) {
+            return false;
+        }
+        
+        // 4. Skip user system messages (user_editable_context)
+        if (message.metadata?.is_user_system_message === true) {
+            return false;
+        }
+        
+        // 5. Skip user_editable_context content type
+        if (message.content?.content_type === "user_editable_context") {
+            return false;
+        }
+        
+        // ===== ASSISTANT MESSAGE FILTERING =====
+        
+        if (message.author.role === "assistant") {
+            // Skip empty assistant messages
+            if (message.content?.parts && 
+                Array.isArray(message.content.parts) &&
+                message.content.parts.every(part => 
+                    typeof part === "string" && part.trim() === ""
+                )) {
+                return false;
+            }
+            
+            // Skip assistant messages that are just DALL-E JSON prompts
+            if (message.content?.parts && 
+                Array.isArray(message.content.parts) &&
+                message.content.parts.length === 1 &&
+                typeof message.content.parts[0] === "string") {
+                
+                const content = message.content.parts[0].trim();
+                // Check if it's a JSON prompt (starts with { and contains "prompt")
+                if (content.startsWith('{') && content.includes('"prompt"')) {
+                    return false;
+                }
+            }
+            
+            // Skip code execution assistant messages (these are intermediate outputs)
+            if (message.content?.content_type === "code") {
+                return false;
+            }
+            
+            // Skip system error messages
+            if (message.content?.content_type === "system_error") {
+                return false;
+            }
+            
+            // Skip execution output messages  
+            if (message.content?.content_type === "execution_output") {
+                return false;
+            }
+            
+            // Keep multimodal_text messages ONLY if they have actual text content
+            if (message.content?.content_type === "multimodal_text") {
+                // Check if parts contain actual text (not just objects)
+                if (message.content?.parts && Array.isArray(message.content.parts)) {
+                    const hasTextContent = message.content.parts.some(part => {
+                        if (typeof part === "string" && part.trim() !== "") {
+                            return true;
+                        }
+                        if (typeof part === "object" && part !== null && 'text' in part) {
+                            return typeof part.text === "string" && part.text.trim() !== "";
+                        }
+                        return false;
+                    });
+                    
+                    if (!hasTextContent) {
+                        return false; // Skip multimodal messages without text
+                    }
+                }
+            }
+        }
+        
+        // ===== USER MESSAGE FILTERING =====
+        
+        if (message.author.role === "user") {
+            // User messages should generally be kept, but exclude special content types
+            const excludedContentTypes = [
+                "user_editable_context" // Already covered above but double-check
+            ];
+            
+            if (message.content?.content_type && excludedContentTypes.includes(message.content.content_type)) {
+                return false;
+            }
+        }
+        
+        // ===== FINAL VALIDATION =====
+        
+        // Use existing validation for basic message structure
+        return isValidMessage(message);
     }
 
     /**
@@ -193,7 +206,7 @@ export class ChatGPTConverter {
         return message.content.parts.some(part => {
             if (typeof part !== "object" || part === null) return false;
             
-            const contentPart = part as ContentPart;
+            const contentPart = part as any;
             return contentPart.content_type === "image_asset_pointer" && 
                    contentPart.asset_pointer &&
                    contentPart.metadata?.dalle && 
@@ -202,27 +215,44 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Create Assistant (DALL-E) message from tool message - ONLY for real DALL-E
+     * Create Assistant (DALL-E) message from tool message
      */
     private static createDalleAssistantMessage(toolMessage: ChatMessage): StandardMessage | null {
         if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
             return null;
         }
 
-        const attachments: StandardAttachment[] = [];
+        const attachments: any[] = [];
         
         for (const part of toolMessage.content.parts) {
             if (typeof part === "object" && part !== null) {
-                const contentPart = part as ContentPart;
+                const contentPart = part as any;
                 if (contentPart.content_type === "image_asset_pointer" && 
                     contentPart.asset_pointer &&
                     contentPart.metadata?.dalle &&
-                    contentPart.metadata.dalle !== null) { // Only real DALL-E
+                    contentPart.metadata.dalle !== null) {
                     
-                    const dalleAttachment = this.convertDalleImage(contentPart);
-                    if (dalleAttachment) {
-                        attachments.push(dalleAttachment);
+                    // Extract file ID from asset pointer
+                    let fileId = contentPart.asset_pointer;
+                    if (fileId.includes('://')) {
+                        fileId = fileId.split('://')[1];
                     }
+
+                    // Generate descriptive filename
+                    const genId = contentPart.metadata.dalle.gen_id || 'unknown';
+                    const width = contentPart.width || 1024;
+                    const height = contentPart.height || 1024;
+                    const fileName = `dalle_${genId}_${width}x${height}.png`;
+
+                    const dalleAttachment = {
+                        fileName: fileName,
+                        fileSize: contentPart.size_bytes,
+                        fileType: "image/png",
+                        fileId: fileId,
+                        extractedContent: contentPart.metadata.dalle.prompt
+                    };
+                    
+                    attachments.push(dalleAttachment);
                 }
             }
         }
@@ -232,53 +262,16 @@ export class ChatGPTConverter {
         }
 
         return {
-            id: toolMessage.id,
+            id: toolMessage.id || "",
             role: "assistant",
             content: "Image générée par DALL-E",
-            timestamp: toolMessage.create_time,
+            timestamp: toolMessage.create_time || 0,
             attachments: attachments
         };
     }
 
     /**
-     * Determine if a message should be included in the conversation
-     */
-    private static shouldIncludeMessage(message: ChatMessage): boolean {
-        // Skip tool messages (internal ChatGPT processing)
-        if (message.author?.role === "tool") {
-            return false;
-        }
-        
-        // Skip empty assistant messages
-        if (message.author?.role === "assistant" && 
-            message.content?.parts && 
-            Array.isArray(message.content.parts) &&
-            message.content.parts.every(part => 
-                typeof part === "string" && part.trim() === ""
-            )) {
-            return false;
-        }
-        
-        // Skip assistant messages that are just DALL-E JSON prompts
-        if (message.author?.role === "assistant" && 
-            message.content?.parts && 
-            Array.isArray(message.content.parts) &&
-            message.content.parts.length === 1 &&
-            typeof message.content.parts[0] === "string") {
-            
-            const content = message.content.parts[0].trim();
-            // Check if it's a JSON prompt (starts with { and contains "prompt")
-            if (content.startsWith('{') && content.includes('"prompt"')) {
-                return false;
-            }
-        }
-        
-        // Use existing validation for other checks
-        return isValidMessage(message);
-    }
-
-    /**
-     * Extract content from ChatGPT message parts - FIXED FOR CONVERSATION MODE
+     * Extract content from ChatGPT message parts
      */
     private static extractContent(chatMessage: ChatMessage): string {
         if (!chatMessage.content?.parts || !Array.isArray(chatMessage.content.parts)) {
