@@ -55,8 +55,9 @@ export class ImportService {
 
         try {
             const fileHash = await getFileHash(file);
+            const isReprocess = storage.isArchiveImported(file.name); // NEW: Use filename for detection
 
-            if (storage.isArchiveImported(fileHash)) {
+            if (isReprocess) {
                 const shouldReimport = await showDialog(
                     this.plugin.app,
                     "confirmation", 
@@ -64,7 +65,7 @@ export class ImportService {
                     [
                         `File ${file.name} has already been imported.`,
                         `Do you want to reprocess it?`,
-                        `**Note:** This will not alter existing notes.`
+                        `**Note:** This will recreate notes from before v1.1.0 to add attachment support.`
                     ],
                     undefined,
                     { button1: "Let's do this", button2: "Forget it" }
@@ -76,7 +77,7 @@ export class ImportService {
             }
 
             const zip = await this.validateZipFile(file);
-            await this.processConversations(zip, file);
+            await this.processConversations(zip, file, isReprocess); // NEW: Pass reprocess flag
             
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
@@ -123,14 +124,14 @@ export class ImportService {
         }
     }
 
-    private async processConversations(zip: JSZip, file: File): Promise<void> {
+    private async processConversations(zip: JSZip, file: File, isReprocess: boolean): Promise<void> {
         
         try {
             // Extract raw conversation data (provider agnostic)
             const rawConversations = await this.extractRawConversationsFromZip(zip);
             
             // Process through conversation processor (handles provider detection/conversion)
-            const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip);
+            const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess); // NEW: Pass reprocess flag
             this.importReport = report;
             this.importReport.addSummary(
                 file.name,

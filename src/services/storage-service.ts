@@ -25,7 +25,7 @@ export class StorageService {
             }
             
             console.debug(`[NEXUS-DEBUG] StorageService.loadData() - Completed (${Object.keys(this.importedArchives).length} archives)`);
-            this.plugin.logger.info("Storage data loaded successfully (archive hashes only)");
+            this.plugin.logger.info("Storage data loaded successfully (archive hashes)");
         } catch (error) {
             console.error("[NEXUS-DEBUG] StorageService.loadData() - FAILED", error);
             this.plugin.logger.error("loadData failed:", error);
@@ -55,15 +55,26 @@ export class StorageService {
     }
 
     // ========================================
-    // ARCHIVE HASH TRACKING (Keep - Small Data)
+    // ARCHIVE TRACKING - HYBRID DETECTION (1.0.8 + 1.1.0)
     // ========================================
     
     getImportedArchives() {
         return this.importedArchives;
     }
 
-    isArchiveImported(fileHash: string): boolean {
-        return !!this.importedArchives[fileHash];
+    /**
+     * HYBRID detection: Works with both 1.0.8 (filename as key) and 1.1.0 (hash as key)
+     */
+    isArchiveImported(key: string): boolean {
+        // Method 1: Direct key lookup (works for both hash and filename keys)
+        if (this.importedArchives[key]) {
+            return true;
+        }
+        
+        // Method 2: Search by filename in values (for 1.0.8 → 1.1.0 migration)
+        return Object.values(this.importedArchives).some(archive => 
+            archive.fileName === key
+        );
     }
 
     addImportedArchive(fileHash: string, fileName: string) {
@@ -352,7 +363,8 @@ export class StorageService {
             totalArchives: Object.keys(this.importedArchives).length,
             isDirty: this.isDirty,
             hasPendingSave: this.saveTimeout !== null,
-            catalogMethod: 'vault-based-hybrid' // Indicate hybrid approach
+            catalogMethod: 'vault-based-hybrid', // Indicate hybrid approach
+            trackingMethod: 'hybrid-hash-filename' // NEW: Indicate hybrid tracking
         };
     }
 
