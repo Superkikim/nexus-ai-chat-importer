@@ -55,7 +55,7 @@ export class StorageService {
     }
 
     // ========================================
-    // ARCHIVE TRACKING - HYBRID DETECTION (1.0.8 + 1.1.0)
+    // ARCHIVE TRACKING - HYBRID DETECTION (1.0.x + 1.1.0)
     // ========================================
     
     getImportedArchives() {
@@ -63,7 +63,8 @@ export class StorageService {
     }
 
     /**
-     * HYBRID detection: Works with both 1.0.8 (filename as key) and 1.1.0 (hash as key)
+     * HYBRID detection: Works with both 1.0.x (filename as key) and 1.1.0 (hash as key)
+     * FIXED: Handle both old format (string values) and new format (object values)
      */
     isArchiveImported(key: string): boolean {
         // Method 1: Direct key lookup (works for both hash and filename keys)
@@ -71,10 +72,19 @@ export class StorageService {
             return true;
         }
         
-        // Method 2: Search by filename in values (for 1.0.8 → 1.1.0 migration)
-        return Object.values(this.importedArchives).some(archive => 
-            archive.fileName === key
-        );
+        // Method 2: Search by filename in values (for 1.0.x → 1.1.0 migration)
+        // CRITICAL FIX: Handle both old format (string) and new format (object)
+        return Object.values(this.importedArchives).some(archive => {
+            // New format 1.1.0: archive = {fileName: "file.zip", date: "2024-01-01"}
+            if (typeof archive === 'object' && archive !== null && archive.fileName) {
+                return archive.fileName === key;
+            }
+            
+            // Old format 1.0.x: archive = "2024-01-01" (string date)
+            // In this case, we can't match by filename since we don't have it
+            // But the key might be the filename itself, which we already checked in Method 1
+            return false;
+        });
     }
 
     addImportedArchive(fileHash: string, fileName: string) {
