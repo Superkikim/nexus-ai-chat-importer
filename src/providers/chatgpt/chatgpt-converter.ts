@@ -33,20 +33,20 @@ export class ChatGPTConverter {
     /**
      * Convert array of ChatGPT ChatMessages to StandardMessages
      */
-    static convertMessages(chatMessages: ChatMessage[]): StandardMessage[] {
+    static convertMessages(chatMessages: ChatMessage[], conversationId?: string): StandardMessage[] {
         return chatMessages
             .filter(msg => isValidMessage(msg))
-            .map(msg => this.convertMessage(msg));
+            .map(msg => this.convertMessage(msg, conversationId));
     }
 
     /**
      * Convert single ChatGPT ChatMessage to StandardMessage
      */
-    private static convertMessage(chatMessage: ChatMessage): StandardMessage {
+    private static convertMessage(chatMessage: ChatMessage, conversationId?: string): StandardMessage {
         return {
             id: chatMessage.id || "",
             role: chatMessage.author?.role === "user" ? "user" : "assistant",
-            content: this.extractContent(chatMessage),
+            content: this.extractContent(chatMessage, conversationId),
             timestamp: chatMessage.create_time || 0,
             attachments: []
         };
@@ -58,6 +58,7 @@ export class ChatGPTConverter {
     private static extractMessagesFromMapping(chat: Chat): StandardMessage[] {
         const messages: StandardMessage[] = [];
         const dallePrompts = new Map<string, string>(); // Map tool message ID to prompt
+        const conversationId = chat.id; // Pass conversation ID for smart linking
         
         // PHASE 1: Extract DALL-E prompts from JSON messages
         for (const messageObj of Object.values(chat.mapping)) {
@@ -97,7 +98,7 @@ export class ChatGPTConverter {
             } 
             // Handle regular messages (but skip DALL-E JSON prompts)
             else if (this.shouldIncludeMessage(message)) {
-                messages.push(this.convertMessage(message));
+                messages.push(this.convertMessage(message, conversationId));
             }
         }
         
@@ -326,7 +327,7 @@ export class ChatGPTConverter {
     /**
      * Extract content from ChatGPT message parts
      */
-    private static extractContent(chatMessage: ChatMessage): string {
+    private static extractContent(chatMessage: ChatMessage, conversationId?: string): string {
         if (!chatMessage.content?.parts || !Array.isArray(chatMessage.content.parts)) {
             return "";
         }
@@ -355,7 +356,7 @@ export class ChatGPTConverter {
             
             // Clean up ChatGPT control characters and formatting artifacts
             if (textContent) {
-                textContent = this.cleanChatGPTArtifacts(textContent);
+                textContent = this.cleanChatGPTArtifacts(textContent, conversationId);
                 if (textContent.trim() !== "") {
                     contentParts.push(textContent);
                 }
@@ -366,13 +367,21 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Clean ChatGPT artifacts, citations, and control characters
+     * Clean ChatGPT artifacts, citations, and control characters - SMART LINKING
      */
-    private static cleanChatGPTArtifacts(text: string): string {
+    private static cleanChatGPTArtifacts(text: string, conversationId?: string): string {
+        const chatUrl = conversationId ? `https://chat.openai.com/c/${conversationId}` : "https://chat.openai.com";
+        
         return text
-            // Remove sandbox download links while preserving filename
-            .replace(/📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g, "📄 $1 - File not available in archive")
-            .replace(/\[([^\]]+)\]\(sandbox:\/[^)]+\)/g, "$1 - File not available in archive. Visit the original conversation to access it")
+            // SMART: Replace sandbox links with actual links to original conversation
+            // Pattern 1: 📄 [filename](sandbox://...)
+            .replace(/📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g, `📄 [$1](${chatUrl}) *(visit original conversation to download)*`)
+            // Pattern 2: 📄 Text - File not available (already processed text)
+            .replace(/📄 ([^-\n]+) - File not available in archive/g, `📄 [$1](${chatUrl}) *(visit original conversation to download)*`)
+            // Pattern 3: [filename](sandbox://...)
+            .replace(/\[([^\]]+)\]\(sandbox:\/[^)]+\)/g, `[$1](${chatUrl}) *(visit original conversation to download)*`)
+            // Pattern 4: Text - File not available in archive. Visit... (already processed text)
+            .replace(/([^-\n]+) - File not available in archive\. Visit the original conversation to access it/g, `[$1](${chatUrl}) *(visit original conversation to download)*`)
             // Remove citation patterns: cite + identifier
             .replace(/cite[a-zA-Z0-9_\-]+/g, "")
             // Remove link patterns: link + identifier  
