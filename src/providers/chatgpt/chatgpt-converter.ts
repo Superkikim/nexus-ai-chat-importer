@@ -53,30 +53,90 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Extract messages from ChatGPT mapping structure
+     * Extract messages from ChatGPT mapping structure with DALL-E prompt association
      */
     private static extractMessagesFromMapping(chat: Chat): StandardMessage[] {
         const messages: StandardMessage[] = [];
+        const dallePrompts = new Map<string, string>(); // Map tool message ID to prompt
         
+        // PHASE 1: Extract DALL-E prompts from JSON messages
+        for (const messageObj of Object.values(chat.mapping)) {
+            const message = messageObj?.message;
+            if (!message || message.author?.role !== "assistant") continue;
+
+            // Check if this is a DALL-E JSON prompt message
+            if (this.isDallePromptMessage(message)) {
+                const prompt = this.extractPromptFromJson(message);
+                if (prompt) {
+                    // Find the corresponding tool message (usually the next child)
+                    const children = messageObj.children || [];
+                    for (const childId of children) {
+                        const childObj = chat.mapping[childId];
+                        if (childObj?.message?.author?.role === "tool" && 
+                            this.hasRealDalleImage(childObj.message)) {
+                            dallePrompts.set(childId, prompt);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // PHASE 2: Process messages with prompt association
         for (const messageObj of Object.values(chat.mapping)) {
             const message = messageObj?.message;
             if (!message) continue;
 
-            // Handle different message types with ENHANCED filtering
+            // Handle DALL-E tool messages with associated prompts
             if (message.author?.role === "tool" && this.hasRealDalleImage(message)) {
-                // Create Assistant (DALL-E) message ONLY for real DALL-E generations
-                const dalleMessage = this.createDalleAssistantMessage(message);
+                const prompt = dallePrompts.get(messageObj.id || "");
+                const dalleMessage = this.createDalleAssistantMessage(message, prompt);
                 if (dalleMessage) {
                     messages.push(dalleMessage);
                 }
-            } else if (this.shouldIncludeMessage(message)) {
-                // Regular user/assistant messages - ENHANCED filtering
+            } 
+            // Handle regular messages (but skip DALL-E JSON prompts)
+            else if (this.shouldIncludeMessage(message)) {
                 messages.push(this.convertMessage(message));
             }
         }
         
         // Sort by timestamp to maintain order
         return messages.sort((a, b) => a.timestamp - b.timestamp);
+    }
+
+    /**
+     * Check if message is a DALL-E JSON prompt message
+     */
+    private static isDallePromptMessage(message: ChatMessage): boolean {
+        if (message.author?.role !== "assistant") return false;
+        
+        if (message.content?.parts && 
+            Array.isArray(message.content.parts) &&
+            message.content.parts.length === 1 &&
+            typeof message.content.parts[0] === "string") {
+            
+            const content = message.content.parts[0].trim();
+            return content.startsWith('{') && content.includes('"prompt"');
+        }
+        
+        return false;
+    }
+
+    /**
+     * Extract prompt from DALL-E JSON message
+     */
+    private static extractPromptFromJson(message: ChatMessage): string | null {
+        try {
+            if (message.content?.parts && message.content.parts[0]) {
+                const jsonStr = message.content.parts[0] as string;
+                const parsed = JSON.parse(jsonStr);
+                return parsed.prompt || null;
+            }
+        } catch (error) {
+            // Invalid JSON, ignore
+        }
+        return null;
     }
 
     /**
@@ -127,17 +187,9 @@ export class ChatGPTConverter {
                 return false;
             }
             
-            // Skip assistant messages that are just DALL-E JSON prompts
-            if (message.content?.parts && 
-                Array.isArray(message.content.parts) &&
-                message.content.parts.length === 1 &&
-                typeof message.content.parts[0] === "string") {
-                
-                const content = message.content.parts[0].trim();
-                // Check if it's a JSON prompt (starts with { and contains "prompt")
-                if (content.startsWith('{') && content.includes('"prompt"')) {
-                    return false;
-                }
+            // Skip DALL-E JSON prompt messages (handled separately)
+            if (this.isDallePromptMessage(message)) {
+                return false;
             }
             
             // Skip code execution assistant messages (these are intermediate outputs)
@@ -215,9 +267,9 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Create Assistant (DALL-E) message from tool message
+     * Create Assistant (DALL-E) message from tool message with associated prompt
      */
-    private static createDalleAssistantMessage(toolMessage: ChatMessage): StandardMessage | null {
+    private static createDalleAssistantMessage(toolMessage: ChatMessage, associatedPrompt?: string): StandardMessage | null {
         if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
             return null;
         }
@@ -249,7 +301,8 @@ export class ChatGPTConverter {
                         fileSize: contentPart.size_bytes,
                         fileType: "image/png",
                         fileId: fileId,
-                        extractedContent: contentPart.metadata.dalle.prompt
+                        // Use associated prompt from JSON message, fallback to metadata
+                        extractedContent: associatedPrompt || contentPart.metadata.dalle.prompt
                     };
                     
                     attachments.push(dalleAttachment);

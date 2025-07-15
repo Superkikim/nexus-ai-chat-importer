@@ -57,12 +57,19 @@ export class IncrementalUpgradeManager {
     async checkAndPerformUpgrade(): Promise<IncrementalUpgradeResult | null> {
         try {
             const currentVersion = this.plugin.manifest.version;
-            const data = await this.plugin.loadData();
-            const lastVersion = data?.lastVersion || "0.0.0";
+            const previousVersion = this.plugin.settings.previousVersion; // ← Use settings instead of data
+            
+            console.debug(`[NEXUS-DEBUG] Incremental upgrade check: ${previousVersion} → ${currentVersion}`);
 
-            console.debug(`[NEXUS-DEBUG] Incremental upgrade check: ${lastVersion} → ${currentVersion}`);
+            // Skip if no version change
+            if (previousVersion === currentVersion) {
+                console.debug(`[NEXUS-DEBUG] No version change - SKIPPING ALL`);
+                logger.info(`No version change (${currentVersion}), skipping upgrade checks`);
+                return null;
+            }
 
             // Check if already completed upgrade to this version using new structure
+            const data = await this.plugin.loadData();
             const versionKey = currentVersion.replace(/\./g, '_');
             const hasCompletedThisUpgrade = data?.upgradeHistory?.completedUpgrades?.[versionKey]?.completed;
 
@@ -91,14 +98,14 @@ export class IncrementalUpgradeManager {
                 };
             }
 
-            // Get upgrade chain: all upgrades between lastVersion and currentVersion
-            const upgradeChain = this.getUpgradeChain(lastVersion, currentVersion);
+            // Get upgrade chain: all upgrades between previousVersion and currentVersion
+            const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
             console.debug(`[NEXUS-DEBUG] Upgrade chain:`, upgradeChain.map(u => u.version));
 
             if (upgradeChain.length === 0) {
                 console.debug(`[NEXUS-DEBUG] No upgrades needed - marking complete`);
                 await this.markUpgradeComplete(currentVersion);
-                await this.showUpgradeDialog(currentVersion, lastVersion, []);
+                await this.showUpgradeDialog(currentVersion, previousVersion, []);
                 return {
                     success: true,
                     upgradesExecuted: 0,
@@ -111,11 +118,11 @@ export class IncrementalUpgradeManager {
             console.debug(`[NEXUS-DEBUG] Need to execute ${upgradeChain.length} upgrades - showing dialog first`);
 
             // Show upgrade dialog FIRST - INFORMATION ONLY (no cancel option)
-            await this.showUpgradeDialog(currentVersion, lastVersion, upgradeChain);
+            await this.showUpgradeDialog(currentVersion, previousVersion, upgradeChain);
 
             // Execute upgrade chain with modal (no user choice - automatic)
             console.debug(`[NEXUS-DEBUG] Executing upgrades with modal...`);
-            const result = await this.executeUpgradeChainWithModal(upgradeChain, lastVersion, currentVersion);
+            const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
 
             // Mark overall upgrade complete - ALWAYS (even if some operations were "no-op")
             console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);

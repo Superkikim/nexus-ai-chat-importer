@@ -89,10 +89,16 @@ export class MessageFormatter {
 
         // Handle successful extraction
         if (attachment.status?.found && attachment.url) {
-            if (this.isImageFile(attachment)) {
-                content += `\n${quoteChar} ![[${attachment.url}]]`; // Embed images
+            // Skip sandbox:// URLs - they don't work in Obsidian
+            if (!attachment.url.startsWith('sandbox://')) {
+                if (this.isImageFile(attachment)) {
+                    content += `\n${quoteChar} ![[${attachment.url}]]`; // Embed images
+                } else {
+                    content += `\n${quoteChar} [[${attachment.url}]]`; // Link documents
+                }
             } else {
-                content += `\n${quoteChar} [[${attachment.url}]]`; // Link documents
+                // Sandbox URL - explain to user
+                content += `\n${quoteChar} **Status:** ⚠️ File not available in archive. Visit the original conversation to access it`;
             }
         }
 
@@ -105,8 +111,12 @@ export class MessageFormatter {
             }
         }
 
-        // Add extracted content (transcriptions, OCR, code, etc.) - always show if available
-        if (attachment.extractedContent) {
+        // Add DALL-E prompt in codebox (special case for DALL-E images)
+        if (attachment.extractedContent && this.isDalleImage(attachment)) {
+            content += `\n${quoteChar} **Prompt:**\n${quoteChar} \`\`\`\n${quoteChar} ${attachment.extractedContent}\n${quoteChar} \`\`\``;
+        }
+        // Add extracted content for other types (transcriptions, OCR, code, etc.)
+        else if (attachment.extractedContent) {
             content += `\n${quoteChar} **Content:**\n`;
             content += attachment.extractedContent
                 .split("\n")
@@ -124,6 +134,16 @@ export class MessageFormatter {
         }
 
         return content;
+    }
+
+    /**
+     * Check if attachment is a DALL-E generated image
+     */
+    private isDalleImage(attachment: StandardAttachment): boolean {
+        // Check if filename follows DALL-E pattern: dalle_genId_widthxheight.png
+        return attachment.fileName.startsWith('dalle_') && 
+               attachment.fileName.includes('_') && 
+               attachment.fileType === 'image/png';
     }
 
     /**
