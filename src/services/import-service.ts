@@ -55,9 +55,22 @@ export class ImportService {
 
         try {
             const fileHash = await getFileHash(file);
-            const isReprocess = storage.isArchiveImported(file.name); // NEW: Use filename for detection
+
+            // HYBRID DETECTION: Check by fileHash (1.1.0+) OR fileName (1.0.x fallback)
+            const foundByHash = storage.isArchiveImported(fileHash);
+            const foundByName = storage.isArchiveImported(file.name);
+            const isReprocess = foundByHash || foundByName;
+
+            // DEBUG: Log detection results
+            this.plugin.logger.info(`[REPROCESS DEBUG] File: ${file.name}`);
+            this.plugin.logger.info(`[REPROCESS DEBUG] Hash: ${fileHash}`);
+            this.plugin.logger.info(`[REPROCESS DEBUG] Found by hash: ${foundByHash}`);
+            this.plugin.logger.info(`[REPROCESS DEBUG] Found by name: ${foundByName}`);
+            this.plugin.logger.info(`[REPROCESS DEBUG] Is reprocess: ${isReprocess}`);
 
             if (isReprocess) {
+                this.plugin.logger.info(`[REPROCESS DEBUG] Showing reprocess dialog for: ${file.name}`);
+                
                 const shouldReimport = await showDialog(
                     this.plugin.app,
                     "confirmation", 
@@ -70,15 +83,23 @@ export class ImportService {
                     undefined,
                     { button1: "Let's do this", button2: "Forget it" }
                 );
+                
+                this.plugin.logger.info(`[REPROCESS DEBUG] User choice - shouldReimport: ${shouldReimport}`);
+                
                 if (!shouldReimport) {
                     new Notice("Import cancelled.");
                     return;
                 }
+            } else {
+                this.plugin.logger.info(`[REPROCESS DEBUG] Not a reprocess - proceeding with normal import`);
             }
 
             const zip = await this.validateZipFile(file);
-            await this.processConversations(zip, file, isReprocess); // NEW: Pass reprocess flag
             
+            this.plugin.logger.info(`[REPROCESS DEBUG] Calling processConversations with isReprocess: ${isReprocess}`);
+            await this.processConversations(zip, file, isReprocess);
+            
+            this.plugin.logger.info(`[REPROCESS DEBUG] Adding archive to storage - Hash: ${fileHash}, Name: ${file.name}`);
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
         } catch (error: unknown) {
@@ -131,7 +152,7 @@ export class ImportService {
             const rawConversations = await this.extractRawConversationsFromZip(zip);
             
             // Process through conversation processor (handles provider detection/conversion)
-            const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess); // NEW: Pass reprocess flag
+            const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess);
             this.importReport = report;
             this.importReport.addSummary(
                 file.name,

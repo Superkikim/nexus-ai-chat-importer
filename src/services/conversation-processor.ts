@@ -46,15 +46,15 @@ export class ConversationProcessor {
     }
 
     /**
-     * Process raw conversations (provider agnostic entry point)
+     * Process raw conversations (provider agnostic entry point) - FIXED: Added isReprocess parameter
      */
-    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip): Promise<ImportReport> {
+    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false): Promise<ImportReport> {
         // Detect provider from raw data structure
         const provider = this.detectProvider(rawConversations);
         
         switch (provider) {
             case 'chatgpt':
-                return this.processChatGPTConversations(rawConversations as Chat[], importReport, zip);
+                return this.processChatGPTConversations(rawConversations as Chat[], importReport, zip, isReprocess);
             default:
                 importReport.addError("Unknown provider", `Could not detect conversation provider from data structure`);
                 return importReport;
@@ -92,9 +92,9 @@ export class ConversationProcessor {
     }
 
     /**
-     * Process ChatGPT conversations specifically
+     * Process ChatGPT conversations specifically - FIXED: Added isReprocess parameter
      */
-    private async processChatGPTConversations(chats: Chat[], importReport: ImportReport, zip?: JSZip): Promise<ImportReport> {
+    private async processChatGPTConversations(chats: Chat[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false): Promise<ImportReport> {
         this.currentProvider = 'chatgpt';
         const storage = this.plugin.getStorageService();
         
@@ -103,7 +103,7 @@ export class ConversationProcessor {
         this.counters.totalExistingConversations = existingConversationsMap.size;
 
         for (const chat of chats) {
-            await this.processSingleChatGPTChat(chat, existingConversationsMap, importReport, zip);
+            await this.processSingleChatGPTChat(chat, existingConversationsMap, importReport, zip, isReprocess);
         }
 
         return importReport;
@@ -111,19 +111,19 @@ export class ConversationProcessor {
 
     private async processSingleChatGPTChat(
         chat: Chat,
-        existingConversations: Map<string, ConversationCatalogEntry>, // NEW: Map instead of Record
+        existingConversations: Map<string, ConversationCatalogEntry>,
         importReport: ImportReport,
-        zip?: JSZip
+        zip?: JSZip,
+        isReprocess: boolean = false
     ): Promise<void> {
         try {
-            const existingEntry = existingConversations.get(chat.id); // NEW: Use .get() instead of []
+            const existingEntry = existingConversations.get(chat.id);
             
             if (existingEntry) {
-                await this.handleExistingChatGPTChat(chat, existingEntry, importReport, zip);
+                await this.handleExistingChatGPTChat(chat, existingEntry, importReport, zip, isReprocess);
             } else {
                 const filePath = await this.generateFilePath(chat);
                 await this.handleNewChatGPTChat(chat, filePath, importReport, zip);
-                // REMOVED: updateConversationCatalogEntry() - no longer needed
             }
             this.counters.totalConversationsProcessed++;
         } catch (error: any) {
@@ -136,7 +136,8 @@ export class ConversationProcessor {
         chat: Chat,
         existingRecord: ConversationCatalogEntry,
         importReport: ImportReport,
-        zip?: JSZip
+        zip?: JSZip,
+        isReprocess: boolean = false
     ): Promise<void> {
         const totalMessageCount = Object.values(chat.mapping)
             .filter(msg => isValidMessage(msg.message)).length;
@@ -150,6 +151,15 @@ export class ConversationProcessor {
             return;
         }
 
+        // REPROCESS LOGIC: Force update if this is a reprocess operation
+        if (isReprocess) {
+            this.plugin.logger.info(`Reprocessing conversation: ${chat.title || "Untitled"}`);
+            this.counters.totalExistingConversationsToUpdate++;
+            await this.updateExistingChatGPTNote(chat, existingRecord.path, totalMessageCount, importReport, zip, true); // Force update
+            return;
+        }
+
+        // Normal logic: Check timestamps
         if (existingRecord.updateTime >= chat.update_time) {
             importReport.addSkipped(
                 chat.title || "Untitled",
@@ -180,7 +190,8 @@ export class ConversationProcessor {
         filePath: string,
         totalMessageCount: number,
         importReport: ImportReport,
-        zip?: JSZip
+        zip?: JSZip,
+        forceUpdate: boolean = false
     ): Promise<void> {
         try {
             const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
@@ -194,6 +205,43 @@ export class ConversationProcessor {
 
                 let attachmentStats: { total: number; found: number; missing: number; failed: number } | undefined = undefined;
 
+                // REPROCESS LOGIC: If forced update, recreate the entire note with attachment support
+                if (forceUpdate) {
+                    
+                    // Convert entire chat to standard format with attachments
+                    let standardConversation = ChatGPTConverter.convertChat(chat);
+                    
+                    // Process attachments if ZIP provided and settings enabled
+                    if (zip && this.plugin.settings.importAttachments) {
+                        standardConversation.messages = await this.processMessageAttachments(
+                            standardConversation.messages,
+                            chat.id,
+                            "chatgpt",
+                            zip
+                        );
+                        
+                        // Calculate attachment stats
+                        attachmentStats = this.calculateAttachmentStats(standardConversation.messages);
+                    }
+                    
+                    // Regenerate entire content
+                    const newContent = this.noteFormatter.generateMarkdownContent(standardConversation);
+                    await this.fileService.writeToFile(filePath, newContent);
+                    
+                    importReport.addUpdated(
+                        chat.title || "Untitled",
+                        filePath,
+                        `${formatTimestamp(chat.create_time, "date")} ${formatTimestamp(chat.create_time, "time")}`,
+                        `${formatTimestamp(chat.update_time, "date")} ${formatTimestamp(chat.update_time, "time")}`,
+                        totalMessageCount,
+                        attachmentStats
+                    );
+                    
+                    this.counters.totalConversationsActuallyUpdated++;
+                    return;
+                }
+
+                // Normal update logic (existing messages)
                 if (newMessages.length > 0) {
                     // Convert ChatGPT messages to standard format
                     let standardMessages = ChatGPTConverter.convertMessages(newMessages);
@@ -407,8 +455,6 @@ export class ConversationProcessor {
 
         return filePath;
     }
-
-    // REMOVED: updateConversationCatalogEntry() - no longer needed with vault-based approach
 
     getCounters() {
         return this.counters;
