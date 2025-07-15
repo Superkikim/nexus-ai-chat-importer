@@ -370,6 +370,9 @@ export class ChatGPTConverter {
      */
     private static cleanChatGPTArtifacts(text: string): string {
         return text
+            // Remove sandbox download links while preserving filename
+            .replace(/📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g, "📄 $1 - File not available in archive")
+            .replace(/\[([^\]]+)\]\(sandbox:\/[^)]+\)/g, "$1 - File not available in archive. Visit the original conversation to access it")
             // Remove citation patterns: cite + identifier
             .replace(/cite[a-zA-Z0-9_\-]+/g, "")
             // Remove link patterns: link + identifier  
