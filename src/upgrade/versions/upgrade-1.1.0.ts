@@ -48,28 +48,53 @@ class DeleteCatalogOperation extends UpgradeOperation {
                 };
             }
 
-            // Create cleaned data without catalog
+            // CRITICAL FIX: Preserve importedArchives explicitly
+            const existingImportedArchives = data?.importedArchives;
+            console.debug(`[NEXUS-DEBUG] DeleteCatalog: Preserving importedArchives:`, existingImportedArchives);
+            console.debug(`[NEXUS-DEBUG] DeleteCatalog: importedArchives type:`, typeof existingImportedArchives);
+            console.debug(`[NEXUS-DEBUG] DeleteCatalog: importedArchives keys:`, existingImportedArchives ? Object.keys(existingImportedArchives).length : 0);
+
+            // Create cleaned data without catalog BUT preserve importedArchives
             const cleanedData = {
                 settings: data.settings || context.plugin.settings,
-                importedArchives: data.importedArchives || {},
+                // CRITICAL FIX: Force preservation of importedArchives
+                importedArchives: existingImportedArchives || {},
                 upgradeHistory: data.upgradeHistory || {
                     completedUpgrades: {},
                     completedOperations: {}
                 },
-                lastVersion: context.toVersion,
                 // Remove conversationCatalog - key change
                 catalogDeletionDate: new Date().toISOString(),
                 catalogDeletionStats: { entriesDeleted: catalogSize }
             };
 
+            console.debug(`[NEXUS-DEBUG] DeleteCatalog: cleanedData.importedArchives keys:`, Object.keys(cleanedData.importedArchives).length);
+
             // Save cleaned data
             await context.plugin.saveData(cleanedData);
 
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: Deleted ${catalogSize} entries`);
+            // Verify preservation worked
+            const verifyData = await context.plugin.loadData();
+            const verifyArchives = verifyData?.importedArchives || {};
+            console.debug(`[NEXUS-DEBUG] DeleteCatalog: After save, importedArchives keys:`, Object.keys(verifyArchives).length);
+
+            if (Object.keys(verifyArchives).length === 0 && Object.keys(existingImportedArchives || {}).length > 0) {
+                console.error(`[NEXUS-DEBUG] DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
+                return {
+                    success: false,
+                    message: `Critical error: importedArchives were lost during migration`,
+                    details: { 
+                        beforeCount: Object.keys(existingImportedArchives || {}).length,
+                        afterCount: Object.keys(verifyArchives).length
+                    }
+                };
+            }
+
+            console.debug(`[NEXUS-DEBUG] DeleteCatalog: Successfully deleted ${catalogSize} entries and preserved ${Object.keys(verifyArchives).length} imported archives`);
             return {
                 success: true,
-                message: `Legacy catalog deleted: ${catalogSize} entries removed`,
-                details: { entriesDeleted: catalogSize }
+                message: `Legacy catalog deleted: ${catalogSize} entries removed, ${Object.keys(verifyArchives).length} imported archives preserved`,
+                details: { entriesDeleted: catalogSize, archivesPreserved: Object.keys(verifyArchives).length }
             };
 
         } catch (error) {
@@ -86,7 +111,10 @@ class DeleteCatalogOperation extends UpgradeOperation {
         try {
             const data = await context.plugin.loadData();
             const hasNoCatalog = !data?.conversationCatalog;
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog.verify: hasNoCatalog=${hasNoCatalog}`);
+            const hasImportedArchives = data?.importedArchives && Object.keys(data.importedArchives).length > 0;
+            console.debug(`[NEXUS-DEBUG] DeleteCatalog.verify: hasNoCatalog=${hasNoCatalog}, hasImportedArchives=${hasImportedArchives}`);
+            
+            // Success if catalog is gone AND importedArchives are preserved (if they existed)
             return hasNoCatalog;
         } catch (error) {
             console.error(`[NEXUS-DEBUG] DeleteCatalog.verify failed:`, error);

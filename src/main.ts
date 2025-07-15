@@ -135,19 +135,45 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     async saveSettings() {
         try {
-            // Load existing data to preserve upgrade history
+            // Load existing data to preserve upgrade history and other data
             const existingData = await this.loadData() || {};
+            
+            console.debug("[NEXUS-DEBUG] saveSettings: existingData keys:", Object.keys(existingData));
+            console.debug("[NEXUS-DEBUG] saveSettings: existingData.importedArchives exists:", !!existingData.importedArchives);
+            console.debug("[NEXUS-DEBUG] saveSettings: storageService.getImportedArchives() keys:", Object.keys(this.storageService.getImportedArchives()).length);
+            
+            // CRITICAL FIX: Preserve existingData.importedArchives if it exists and has data
+            // Only use storageService data if existingData is empty
+            let finalImportedArchives = this.storageService.getImportedArchives();
+            
+            if (existingData.importedArchives && Object.keys(existingData.importedArchives).length > 0) {
+                // Existing data has archives - preserve them and merge with storage
+                const existingArchives = existingData.importedArchives;
+                const storageArchives = this.storageService.getImportedArchives();
+                
+                console.debug("[NEXUS-DEBUG] saveSettings: Merging archives - existing:", Object.keys(existingArchives).length, "storage:", Object.keys(storageArchives).length);
+                
+                // Merge: storage takes priority for conflicts
+                finalImportedArchives = {
+                    ...existingArchives,
+                    ...storageArchives
+                };
+                
+                console.debug("[NEXUS-DEBUG] saveSettings: Final merged archives:", Object.keys(finalImportedArchives).length);
+            }
             
             // Merge with new data, preserving upgrade history structure
             const mergedData = {
                 ...existingData, // Preserve existing data
                 settings: this.settings,
-                importedArchives: this.storageService.getImportedArchives(),
+                importedArchives: finalImportedArchives, // Use merged/preserved archives
                 upgradeHistory: existingData.upgradeHistory || {
                     completedUpgrades: {},
                     completedOperations: {}
                 }
             };
+            
+            console.debug("[NEXUS-DEBUG] saveSettings: Final mergedData.importedArchives keys:", Object.keys(mergedData.importedArchives).length);
             
             await this.storageService.saveData(mergedData);
         } catch (error) {
