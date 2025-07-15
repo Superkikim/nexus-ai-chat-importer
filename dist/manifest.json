@@ -1,0 +1,9 @@
+{
+    "id": "nexus-ai-chat-importer",
+    "name": "Nexus AI Chat Importer",
+    "version": "1.1.0",
+    "author": "Superkikim",
+    "authorUrl": "https://github.com/Superkikim",
+    "minAppVersion": "0.15.0",
+    "description": "Import conversations from ChatGPT export files."
+}

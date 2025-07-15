@@ -1,0 +1,246 @@
+/* Enhanced styles for Nexus AI Chat Importer modals */
+.nexus-ai-chat-importer-modal {
+    min-width: 450px;
+    max-width: 650px;
+    border-radius: var(--radius-m);
+    box-shadow: var(--shadow-l);
+}
+
+.nexus-ai-chat-importer-modal .modal-title {
+    color: var(--text-accent);
+    border-bottom: 2px solid var(--text-accent);
+    padding-bottom: 0.75em;
+    margin-bottom: 1.5em;
+    font-weight: 600;
+    font-size: 1.4em;
+}
+
+.nexus-ai-chat-importer-modal .modal-content {
+    margin-bottom: 2em;
+    line-height: 1.6;
+}
+
+.nexus-ai-chat-importer-modal .modal-paragraph {
+    margin-bottom: 1.5em;
+}
+
+.nexus-ai-chat-importer-modal .modal-line {
+    margin-bottom: 0.8em;
+    color: var(--text-normal);
+}
+
+.nexus-ai-chat-importer-modal .modal-line:last-child {
+    margin-bottom: 0;
+}
+
+.nexus-ai-chat-importer-modal .modal-line.modal-list-item {
+    padding-left: 1em;
+    margin-bottom: 0.5em;
+}
+
+/* Improved paragraph handling */
+.nexus-ai-chat-importer-modal .modal-paragraph p {
+    margin: 0 0 0.8em 0;
+    color: var(--text-normal);
+    white-space: pre-line; /* Preserves line breaks */
+}
+
+.nexus-ai-chat-importer-modal .modal-paragraph strong,
+.nexus-ai-chat-importer-modal .modal-line strong {
+    color: var(--text-accent);
+    font-weight: 600;
+}
+
+.nexus-ai-chat-importer-modal .modal-paragraph em,
+.nexus-ai-chat-importer-modal .modal-line em {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Section separators */
+.nexus-ai-chat-importer-modal .modal-section-separator {
+    border-top: 1px solid var(--background-modifier-border);
+    margin: 2em 0 1.5em 0;
+    padding-top: 1.5em;
+}
+
+.nexus-ai-chat-importer-modal .modal-section-header {
+    color: var(--text-accent);
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-bottom: 1em;
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 0.5em;
+}
+
+/* Improved list styling */
+.nexus-ai-chat-importer-modal .modal-content ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.5em 0;
+}
+
+.nexus-ai-chat-importer-modal .modal-content ul li {
+    margin: 0.25em 0;
+    padding-left: 1.5em;
+    position: relative;
+    line-height: 1.5;
+}
+
+.nexus-ai-chat-importer-modal .modal-content ul li:before {
+    content: "•";
+    color: var(--text-accent);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+/* Operation list styling */
+.nexus-ai-chat-importer-modal .operations-list {
+    background: var(--background-secondary);
+    border-radius: var(--radius-m);
+    padding: 1em;
+    margin: 1em 0;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.nexus-ai-chat-importer-modal .operations-list ul li {
+    margin: 0.5em 0;
+    color: var(--text-normal);
+}
+
+.nexus-ai-chat-importer-modal .operations-list ul li:before {
+    content: "⚙️";
+    margin-right: 0.5em;
+}
+
+/* Enhanced note styling */
+.nexus-ai-chat-importer-modal .modal-note {
+    background: var(--background-modifier-error-hover);
+    border: 1px solid var(--background-modifier-error);
+    color: var(--text-error);
+    padding: 1em 1.25em;
+    border-radius: var(--radius-m);
+    border-left: 4px solid var(--text-error);
+    margin-top: 1.5em;
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+.nexus-ai-chat-importer-modal .modal-note strong {
+    color: var(--text-error);
+    font-weight: 600;
+}
+
+/* Upgrade dialog specific styles */
+.nexus-ai-chat-importer-modal .upgrade-overview {
+    margin-bottom: 1.5em;
+}
+
+.nexus-ai-chat-importer-modal .upgrade-resources {
+    margin: 1.5em 0;
+}
+
+.nexus-ai-chat-importer-modal .upgrade-operations {
+    margin-top: 1.5em;
+    padding-top: 1.5em;
+    border-top: 2px solid var(--background-modifier-border);
+}
+
+.nexus-ai-chat-importer-modal .upgrade-operations-header {
+    color: var(--text-accent);
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-bottom: 0.5em;
+}
+
+.nexus-ai-chat-importer-modal .upgrade-operations-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-bottom: 1em;
+    line-height: 1.4;
+}
+
+/* Button container improvements */
+.nexus-ai-chat-importer-modal .modal-button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75em;
+    margin-top: 2em;
+    padding-top: 1.5em;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.nexus-ai-chat-importer-modal .external-link {
+    color: var(--text-accent);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px dotted var(--text-accent);
+    transition: all 0.2s ease;
+}
+
+.nexus-ai-chat-importer-modal .external-link:hover {
+    color: var(--text-accent-hover);
+    border-bottom: 1px solid var(--text-accent-hover);
+    text-decoration: none;
+}
+
+/* Enhanced button styling */
+.nexus-ai-chat-importer-modal button {
+    padding: 0.75em 1.5em;
+    border-radius: var(--radius-m);
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    min-width: 100px;
+}
+
+.nexus-ai-chat-importer-modal button.mod-cta {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.nexus-ai-chat-importer-modal button.mod-cta:hover {
+    background: var(--interactive-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nexus-ai-chat-importer-modal button.mod-muted {
+    background: var(--background-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--background-modifier-border);
+}
+
+.nexus-ai-chat-importer-modal button.mod-muted:hover {
+    background: var(--background-modifier-hover);
+    color: var(--text-normal);
+    transform: translateY(-1px);
+}
+
+/* Text formatting improvements */
+.nexus-ai-chat-importer-modal .modal-paragraph {
+    font-size: 1em;
+    color: var(--text-normal);
+}
+
+/* Line break preservation */
+.nexus-ai-chat-importer-modal .preserve-breaks {
+    white-space: pre-line;
+}
+
+/* Legacy support for old class names */
+.nexus-ai-chat-importer-modal .button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75em;
+    margin-top: 1.5em;
+}
+
+.nexus-ai-chat-importer-modal .note {
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--text-accent);
+}
