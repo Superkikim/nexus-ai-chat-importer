@@ -87,9 +87,19 @@ export class ClaudeConverter {
             if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
                 const artifactId = block.input.id || 'unknown';
                 const content = block.input.content || '';
+                const command = block.input.command || 'create';
 
-                // Keep the artifact with the longest content (most complete)
-                if (!artifactMap.has(artifactId) || content.length > (artifactMap.get(artifactId).content || '').length) {
+                // Skip empty updates (content: 0) - they're just UI updates without content
+                if (command === 'update' && content.length === 0) {
+                    continue;
+                }
+
+                // Priority order: create > rewrite > update (with content) > view
+                const currentArtifact = artifactMap.get(artifactId);
+                const shouldReplace = !currentArtifact ||
+                    this.shouldReplaceArtifact(currentArtifact, block.input);
+
+                if (shouldReplace) {
                     artifactMap.set(artifactId, block.input);
                 }
             }
@@ -195,9 +205,9 @@ export class ClaudeConverter {
         const artifactId = artifactInput.id || 'unknown';
         const content = artifactInput.content || '';
 
-        // Auto-detect language if marked as "text" but content suggests otherwise
-        if (language.toLowerCase() === 'text' && content) {
-            const detectedLanguage = this.detectLanguageFromContent(content);
+        // Auto-detect language if marked as "text" or undefined but content suggests otherwise
+        if ((language.toLowerCase() === 'text' || !language || language === 'undefined') && content) {
+            const detectedLanguage = this.detectLanguageFromContent(content, artifactInput.type);
             if (detectedLanguage !== 'text') {
                 language = detectedLanguage;
             }
@@ -312,22 +322,82 @@ format: ${language}
     }
 
     /**
-     * Auto-detect language from content when marked as "text"
+     * Determine if we should replace the current artifact with a new one
+     * Priority: create > rewrite > update (with content) > view
      */
-    private static detectLanguageFromContent(content: string): string {
+    private static shouldReplaceArtifact(current: any, candidate: any): boolean {
+        const currentCommand = current.command || 'create';
+        const candidateCommand = candidate.command || 'create';
+        const currentContent = (current.content || '').length;
+        const candidateContent = (candidate.content || '').length;
+
+        // Command priority scores
+        const commandPriority = {
+            'create': 4,
+            'rewrite': 3,
+            'update': 2,
+            'view': 1
+        };
+
+        const currentPriority = commandPriority[currentCommand] || 1;
+        const candidatePriority = commandPriority[candidateCommand] || 1;
+
+        // Higher priority command wins
+        if (candidatePriority > currentPriority) {
+            return true;
+        }
+
+        // Same priority: longer content wins
+        if (candidatePriority === currentPriority) {
+            return candidateContent > currentContent;
+        }
+
+        return false;
+    }
+
+    /**
+     * Auto-detect language from content and artifact type
+     */
+    private static detectLanguageFromContent(content: string, artifactType?: string): string {
         if (!content || content.trim().length === 0) return 'text';
+
+        // First check artifact type for hints
+        if (artifactType) {
+            if (artifactType.includes('react') || artifactType.includes('jsx')) return 'jsx';
+            if (artifactType.includes('vue')) return 'vue';
+            if (artifactType.includes('svelte')) return 'svelte';
+            if (artifactType.includes('html')) return 'html';
+            if (artifactType.includes('css')) return 'css';
+            if (artifactType.includes('json')) return 'json';
+            if (artifactType.includes('xml')) return 'xml';
+            if (artifactType.includes('svg')) return 'xml';
+        }
 
         const trimmedContent = content.trim();
 
-        // Check for common patterns
+        // Check for specific file type patterns
         if (trimmedContent.startsWith('<?php')) return 'php';
         if (trimmedContent.startsWith('#!/bin/bash') || trimmedContent.startsWith('#!/bin/sh')) return 'bash';
         if (trimmedContent.startsWith('<!DOCTYPE html') || trimmedContent.includes('<html')) return 'html';
+
+        // Check for React/JSX patterns
+        if (trimmedContent.includes('import React') || trimmedContent.includes('from "react"') ||
+            trimmedContent.includes('useState') || trimmedContent.includes('useEffect') ||
+            trimmedContent.includes('className=') || trimmedContent.includes('jsx')) {
+            return 'jsx';
+        }
+
+        // Check for JSON
         if (trimmedContent.startsWith('{') && trimmedContent.endsWith('}')) {
             try {
                 JSON.parse(trimmedContent);
                 return 'json';
             } catch {}
+        }
+
+        // Check for SVG/XML
+        if (trimmedContent.startsWith('<svg') || trimmedContent.includes('xmlns')) {
+            return 'xml';
         }
 
         // Check for markdown patterns

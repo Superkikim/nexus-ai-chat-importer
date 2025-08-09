@@ -4296,6 +4296,9 @@ var MessageFormatter = class {
    */
   formatSingleAttachment(attachment, quoteChar) {
     var _a, _b, _c;
+    if (attachment.extractedContent && attachment.extractedContent.includes("nexus-attachment-box")) {
+      return attachment.extractedContent;
+    }
     let content = `<div class="nexus-attachment-box">
 
 `;
@@ -5760,7 +5763,13 @@ var ClaudeConverter = class {
       if (block.type === "tool_use" && block.name === "artifacts" && block.input) {
         const artifactId = block.input.id || "unknown";
         const content = block.input.content || "";
-        if (!artifactMap.has(artifactId) || content.length > (artifactMap.get(artifactId).content || "").length) {
+        const command = block.input.command || "create";
+        if (command === "update" && content.length === 0) {
+          continue;
+        }
+        const currentArtifact = artifactMap.get(artifactId);
+        const shouldReplace = !currentArtifact || this.shouldReplaceArtifact(currentArtifact, block.input);
+        if (shouldReplace) {
           artifactMap.set(artifactId, block.input);
         }
       }
@@ -5851,8 +5860,8 @@ ${code}
     const command = artifactInput.command || "create";
     const artifactId = artifactInput.id || "unknown";
     const content = artifactInput.content || "";
-    if (language.toLowerCase() === "text" && content) {
-      const detectedLanguage = this.detectLanguageFromContent(content);
+    if ((language.toLowerCase() === "text" || !language || language === "undefined") && content) {
+      const detectedLanguage = this.detectLanguageFromContent(content, artifactInput.type);
       if (detectedLanguage !== "text") {
         language = detectedLanguage;
       }
@@ -5957,11 +5966,54 @@ ${content}
     return filePath;
   }
   /**
-   * Auto-detect language from content when marked as "text"
+   * Determine if we should replace the current artifact with a new one
+   * Priority: create > rewrite > update (with content) > view
    */
-  static detectLanguageFromContent(content) {
+  static shouldReplaceArtifact(current, candidate) {
+    const currentCommand = current.command || "create";
+    const candidateCommand = candidate.command || "create";
+    const currentContent = (current.content || "").length;
+    const candidateContent = (candidate.content || "").length;
+    const commandPriority = {
+      "create": 4,
+      "rewrite": 3,
+      "update": 2,
+      "view": 1
+    };
+    const currentPriority = commandPriority[currentCommand] || 1;
+    const candidatePriority = commandPriority[candidateCommand] || 1;
+    if (candidatePriority > currentPriority) {
+      return true;
+    }
+    if (candidatePriority === currentPriority) {
+      return candidateContent > currentContent;
+    }
+    return false;
+  }
+  /**
+   * Auto-detect language from content and artifact type
+   */
+  static detectLanguageFromContent(content, artifactType) {
     if (!content || content.trim().length === 0)
       return "text";
+    if (artifactType) {
+      if (artifactType.includes("react") || artifactType.includes("jsx"))
+        return "jsx";
+      if (artifactType.includes("vue"))
+        return "vue";
+      if (artifactType.includes("svelte"))
+        return "svelte";
+      if (artifactType.includes("html"))
+        return "html";
+      if (artifactType.includes("css"))
+        return "css";
+      if (artifactType.includes("json"))
+        return "json";
+      if (artifactType.includes("xml"))
+        return "xml";
+      if (artifactType.includes("svg"))
+        return "xml";
+    }
     const trimmedContent = content.trim();
     if (trimmedContent.startsWith("<?php"))
       return "php";
@@ -5969,12 +6021,18 @@ ${content}
       return "bash";
     if (trimmedContent.startsWith("<!DOCTYPE html") || trimmedContent.includes("<html"))
       return "html";
+    if (trimmedContent.includes("import React") || trimmedContent.includes('from "react"') || trimmedContent.includes("useState") || trimmedContent.includes("useEffect") || trimmedContent.includes("className=") || trimmedContent.includes("jsx")) {
+      return "jsx";
+    }
     if (trimmedContent.startsWith("{") && trimmedContent.endsWith("}")) {
       try {
         JSON.parse(trimmedContent);
         return "json";
       } catch (e) {
       }
+    }
+    if (trimmedContent.startsWith("<svg") || trimmedContent.includes("xmlns")) {
+      return "xml";
     }
     if (trimmedContent.includes("# ") || trimmedContent.includes("## ") || trimmedContent.includes("**") || trimmedContent.includes("```")) {
       return "markdown";
