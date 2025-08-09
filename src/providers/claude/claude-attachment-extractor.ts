@@ -254,10 +254,10 @@ export class ClaudeAttachmentExtractor {
     }
 
     /**
-     * Save attachment to vault with new provider-based structure
+     * Save attachment to vault using attachmentFolder setting
      */
     private async saveAttachmentToVault(fileName: string, data: string, isBase64: boolean, category: string = "files"): Promise<string> {
-        const attachmentFolder = `${this.plugin.settings.archiveFolder}/claude/attachments/${category}`;
+        const attachmentFolder = `${this.plugin.settings.attachmentFolder}/claude/${category}`;
 
         // Ensure folder exists
         const { ensureFolderExists } = await import("../../utils");

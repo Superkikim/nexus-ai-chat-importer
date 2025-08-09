@@ -5326,12 +5326,12 @@ var ChatGPTAttachmentExtractor = class {
     return null;
   }
   /**
-   * Generate local path for ChatGPT attachment - provider-based structure
+   * Generate local path for ChatGPT attachment using attachmentFolder setting
    */
   generateLocalPath(conversationId, attachment) {
     const category = this.categorizeFile(attachment);
     const safeFileName = this.sanitizeFileName(attachment.fileName);
-    return `${this.plugin.settings.archiveFolder}/chatgpt/attachments/${category}/${safeFileName}`;
+    return `${this.plugin.settings.attachmentFolder}/chatgpt/${category}/${safeFileName}`;
   }
   /**
    * Categorize file based on MIME type or extension
@@ -6009,10 +6009,10 @@ ${textContent}
     return extension ? `claude_${shortConversationId}_${timestamp}_${baseName}.${extension}` : `claude_${shortConversationId}_${timestamp}_${baseName}`;
   }
   /**
-   * Save attachment to vault with new provider-based structure
+   * Save attachment to vault using attachmentFolder setting
    */
   async saveAttachmentToVault(fileName, data, isBase64, category = "files") {
-    const attachmentFolder = `${this.plugin.settings.archiveFolder}/claude/attachments/${category}`;
+    const attachmentFolder = `${this.plugin.settings.attachmentFolder}/claude/${category}`;
     const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
     const folderResult = await ensureFolderExists2(attachmentFolder, this.plugin.app.vault);
     if (!folderResult.success) {
