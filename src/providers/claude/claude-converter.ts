@@ -75,12 +75,27 @@ export class ClaudeConverter {
     private static async processContentBlocks(contentBlocks: ClaudeContentBlock[], conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<{ text: string; attachments: StandardAttachment[] }> {
         const textParts: string[] = [];
         const attachments: StandardAttachment[] = [];
-        
+        const artifactMap = new Map<string, any>(); // Track artifacts by ID to handle duplicates
+
         // Handle empty or null content blocks
         if (!contentBlocks || contentBlocks.length === 0) {
             return { text: "", attachments: [] };
         }
-        
+
+        // First pass: collect all artifacts and keep the most complete version
+        for (const block of contentBlocks) {
+            if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
+                const artifactId = block.input.id || 'unknown';
+                const content = block.input.content || '';
+
+                // Keep the artifact with the longest content (most complete)
+                if (!artifactMap.has(artifactId) || content.length > (artifactMap.get(artifactId).content || '').length) {
+                    artifactMap.set(artifactId, block.input);
+                }
+            }
+        }
+
+        // Second pass: process all content blocks
         for (const block of contentBlocks) {
             switch (block.type) {
                 case 'text':
@@ -88,16 +103,20 @@ export class ClaudeConverter {
                         textParts.push(block.text);
                     }
                     break;
-                    
+
                 case 'thinking':
                     // Filter out thinking blocks - not useful for users
                     break;
-                    
+
                 case 'tool_use':
                     // Special handling for artifacts
                     if (block.name === 'artifacts' && block.input) {
-                        const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle, conversationCreateTime);
-                        textParts.push(artifact);
+                        const artifactId = block.input.id || 'unknown';
+                        // Only process if this is the most complete version of this artifact
+                        if (artifactMap.get(artifactId) === block.input) {
+                            const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle, conversationCreateTime);
+                            textParts.push(artifact);
+                        }
                     } else if (block.name === 'web_search') {
                         // Filter out web_search tools - not useful for users
                         break;
@@ -107,13 +126,13 @@ export class ClaudeConverter {
                         textParts.push(`**[Tool: ${block.name}]**\n\`\`\`\n${code}\n\`\`\``);
                     }
                     break;
-                    
+
                 case 'tool_result':
                     // Filter out all tool results - not useful for users
                     break;
             }
         }
-        
+
         return {
             text: textParts.join('\n\n'),
             attachments
@@ -237,8 +256,12 @@ export class ClaudeConverter {
             const createDate = new Date(conversationCreateTime * 1000);
             const year = createDate.getFullYear();
             const month = String(createDate.getMonth() + 1).padStart(2, '0');
-            const safeTitle = conversationTitle.replace(/[^a-zA-Z0-9\-_]/g, '_');
-            conversationLink = `[[../../Conversations/claude/${year}/${month}/${safeTitle}|${conversationTitle}]]`;
+            const { generateFileName } = await import("../../utils");
+            const safeTitle = generateFileName(conversationTitle);
+
+            // Use absolute path from vault root
+            const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${safeTitle}`;
+            conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
         }
 
         // Create markdown content with enhanced frontmatter
