@@ -5780,21 +5780,45 @@ var ClaudeConverter = class {
         }
       }
     }
-    const processedArtifacts = /* @__PURE__ */ new Set();
-    console.log(`Claude converter: Processing ${artifactVersionsMap.size} unique artifacts`);
-    for (const [artifactId, versions] of artifactVersionsMap.entries()) {
-      console.log(`Claude converter: Processing artifact ${artifactId} with ${versions.length} versions`);
-      if (versions.length > 0) {
-        const artifactSummary = await this.saveAllArtifactVersions(
-          artifactId,
-          versions,
-          conversationId,
-          conversationTitle,
-          conversationCreateTime
-        );
-        textParts.push(artifactSummary);
-        processedArtifacts.add(artifactId);
+    const versionCounters = /* @__PURE__ */ new Map();
+    const artifactSummaries = /* @__PURE__ */ new Map();
+    for (const block of contentBlocks) {
+      if (block.type === "tool_use" && block.name === "artifacts" && block.input) {
+        const artifactId = block.input.id || "unknown";
+        const content = block.input.content || "";
+        const command = block.input.command || "create";
+        const versionUuid = block.input.version_uuid;
+        if (command === "update" && content.length === 0 || command === "view") {
+          continue;
+        }
+        const isSignificant = command === "create" || command === "rewrite" || command === "update" && content.length > 100;
+        if (isSignificant && versionUuid) {
+          const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
+          versionCounters.set(artifactId, currentVersion);
+          console.log(`Saving ${artifactId} v${currentVersion} (${content.length} chars)`);
+          try {
+            await this.saveSingleArtifactVersion(
+              artifactId,
+              block.input,
+              currentVersion,
+              conversationId,
+              conversationTitle,
+              conversationCreateTime
+            );
+            artifactSummaries.set(artifactId, {
+              title: block.input.title || artifactId,
+              totalVersions: currentVersion,
+              latestVersion: currentVersion
+            });
+          } catch (error) {
+            console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+          }
+        }
       }
+    }
+    for (const [artifactId, info] of artifactSummaries.entries()) {
+      const summary = this.createArtifactSummary(artifactId, info, conversationId);
+      textParts.push(summary);
     }
     for (const block of contentBlocks) {
       switch (block.type) {
@@ -5870,7 +5894,59 @@ ${code}
     }
   }
   /**
-   * Save ALL versions of an artifact (create separate file for each version)
+   * Save a single artifact version
+   */
+  static async saveSingleArtifactVersion(artifactId, artifactData, versionNumber, conversationId, conversationTitle, conversationCreateTime) {
+    if (!this.plugin) {
+      throw new Error("Plugin not available");
+    }
+    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
+    if (!folderResult.success) {
+      throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
+    }
+    const fileName = `${artifactId}_v${versionNumber}.md`;
+    const filePath = `${conversationFolder}/${fileName}`;
+    const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
+    if (shouldSkip) {
+      console.log(`Skipping existing ${fileName}`);
+      return;
+    }
+    await this.saveIndividualArtifactVersion(
+      artifactData,
+      filePath,
+      versionNumber,
+      artifactData.content || "",
+      conversationId,
+      conversationTitle,
+      conversationCreateTime
+    );
+  }
+  /**
+   * Create artifact summary for conversation
+   */
+  static createArtifactSummary(artifactId, info, conversationId) {
+    const title = info.title || artifactId;
+    const totalVersions = info.totalVersions || 1;
+    const latestVersion = info.latestVersion || 1;
+    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+    const latestFile = `${conversationFolder}/${artifactId}_v${latestVersion}`;
+    let summary = `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}**`;
+    if (totalVersions > 1) {
+      summary += ` (${totalVersions} versions)`;
+    }
+    summary += `
+
+\u{1F4CE} **[[${latestFile}|View Latest Version]]**`;
+    if (totalVersions > 1) {
+      summary += ` | **[[${conversationFolder}/|All Versions]]**`;
+    }
+    summary += `</div>`;
+    return summary;
+  }
+  /**
+   * Save ALL versions of an artifact (legacy method)
    */
   static async saveAllArtifactVersions(artifactId, versions, conversationId, conversationTitle, conversationCreateTime) {
     var _a, _b, _c;
