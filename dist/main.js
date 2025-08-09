@@ -5635,8 +5635,11 @@ var ChatGPTAdapter = class {
 
 // src/providers/claude/claude-converter.ts
 var ClaudeConverter = class {
-  static convertChat(chat) {
-    const messages = this.convertMessages(chat.chat_messages, chat.uuid);
+  static setPlugin(plugin) {
+    this.plugin = plugin;
+  }
+  static async convertChat(chat) {
+    const messages = await this.convertMessages(chat.chat_messages, chat.uuid);
     return {
       id: chat.uuid,
       title: chat.name || "Untitled",
@@ -5649,7 +5652,7 @@ var ClaudeConverter = class {
       summary: chat.summary || ""
     };
   }
-  static convertMessages(messages, conversationId) {
+  static async convertMessages(messages, conversationId) {
     const standardMessages = [];
     if (!messages || messages.length === 0) {
       return standardMessages;
@@ -5658,7 +5661,7 @@ var ClaudeConverter = class {
       if (!this.shouldIncludeMessage(message)) {
         continue;
       }
-      const { text, attachments } = this.processContentBlocks(message.content);
+      const { text, attachments } = await this.processContentBlocks(message.content, conversationId);
       const fileAttachments = this.processFileAttachments(message.files);
       const standardMessage = {
         id: message.uuid,
@@ -5680,7 +5683,7 @@ var ClaudeConverter = class {
     }
     return false;
   }
-  static processContentBlocks(contentBlocks) {
+  static async processContentBlocks(contentBlocks, conversationId) {
     const textParts = [];
     const attachments = [];
     if (!contentBlocks || contentBlocks.length === 0) {
@@ -5701,7 +5704,7 @@ ${block.thinking}`);
           break;
         case "tool_use":
           if (block.name === "artifacts" && block.input) {
-            const artifact = this.formatArtifact(block.input);
+            const artifact = await this.formatArtifact(block.input, conversationId);
             textParts.push(artifact);
           } else if (block.name && block.input) {
             const code = block.input.code || JSON.stringify(block.input, null, 2);
@@ -5770,13 +5773,14 @@ ${results}
     }
   }
   /**
-   * Format Claude artifacts with proper syntax highlighting and metadata
+   * Format Claude artifacts and save to attachments/artifacts/ folder
    */
-  static formatArtifact(artifactInput) {
+  static async formatArtifact(artifactInput, conversationId) {
     const title = artifactInput.title || "Untitled Artifact";
     const language = artifactInput.language || "text";
-    const content = artifactInput.content || "";
     const command = artifactInput.command || "create";
+    const artifactId = artifactInput.id || "unknown";
+    const content = artifactInput.content || "";
     let formattedContent = `**\u{1F3A8} Artifact: ${title}**
 
 `;
@@ -5788,9 +5792,24 @@ ${results}
     formattedContent += `> **Language:** ${language}
 `;
     formattedContent += `> **Type:** ${artifactInput.type || "code"}
+`;
+    formattedContent += `> **ID:** ${artifactId}
 
 `;
-    if (content) {
+    if (content && this.plugin) {
+      try {
+        const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
+        formattedContent += `\u{1F4CE} **[View Artifact](${filePath})**
+
+`;
+      } catch (error) {
+        formattedContent += `\`\`\`${language}
+${content}
+\`\`\`
+
+`;
+      }
+    } else if (content) {
       formattedContent += `\`\`\`${language}
 ${content}
 \`\`\`
@@ -5798,6 +5817,56 @@ ${content}
 `;
     }
     return formattedContent;
+  }
+  /**
+   * Save artifact content to file in attachments/artifacts/ folder
+   */
+  static async saveArtifactToFile(artifactId, title, language, content) {
+    const extension = this.getExtensionFromLanguage(language);
+    const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, "_");
+    const fileName = `${safeTitle}_${artifactId}.${extension}`;
+    const artifactFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts`;
+    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+    const folderResult = await ensureFolderExists2(artifactFolder, this.plugin.app.vault);
+    if (!folderResult.success) {
+      throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
+    }
+    const filePath = `${artifactFolder}/${fileName}`;
+    await this.plugin.app.vault.create(filePath, content);
+    return filePath;
+  }
+  /**
+   * Get file extension from language
+   */
+  static getExtensionFromLanguage(language) {
+    switch (language.toLowerCase()) {
+      case "python":
+        return "py";
+      case "javascript":
+        return "js";
+      case "typescript":
+        return "ts";
+      case "html":
+        return "html";
+      case "css":
+        return "css";
+      case "markdown":
+        return "md";
+      case "json":
+        return "json";
+      case "yaml":
+        return "yml";
+      case "xml":
+        return "xml";
+      case "sql":
+        return "sql";
+      case "bash":
+        return "sh";
+      case "shell":
+        return "sh";
+      default:
+        return "txt";
+    }
   }
 };
 
@@ -5859,7 +5928,7 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
    */
   createFileNotFoundPlaceholder(attachment) {
     const fileName = attachment.fileName;
-    const fileType = this.getFileTypeFromName(fileName);
+    const fileType = this.getFileTypeFromExtension(fileName);
     let placeholder = `\u{1F4CE} **Attachment: ${fileName}**
 
 `;
@@ -5885,6 +5954,31 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
       ...attachment,
       extractedContent: placeholder
     };
+  }
+  /**
+   * Get file type from extension
+   */
+  getFileTypeFromExtension(fileName) {
+    var _a;
+    const extension = (_a = fileName.split(".").pop()) == null ? void 0 : _a.toLowerCase();
+    switch (extension) {
+      case "png":
+      case "jpg":
+      case "jpeg":
+      case "gif":
+      case "webp":
+        return `image/${extension}`;
+      case "pdf":
+        return "application/pdf";
+      case "txt":
+        return "text/plain";
+      case "md":
+        return "text/markdown";
+      case "json":
+        return "application/json";
+      default:
+        return "application/octet-stream";
+    }
   }
   /**
    * Find a file in the ZIP archive
@@ -6085,11 +6179,13 @@ var ClaudeAdapter = class {
   getUpdateTime(chat) {
     return chat.updated_at ? Math.floor(new Date(chat.updated_at).getTime() / 1e3) : 0;
   }
-  convertChat(chat) {
-    return ClaudeConverter.convertChat(chat);
+  async convertChat(chat) {
+    ClaudeConverter.setPlugin(this.plugin);
+    return await ClaudeConverter.convertChat(chat);
   }
-  convertMessages(messages, conversationId) {
-    return ClaudeConverter.convertMessages(messages, conversationId);
+  async convertMessages(messages, conversationId) {
+    ClaudeConverter.setPlugin(this.plugin);
+    return await ClaudeConverter.convertMessages(messages, conversationId);
   }
   getProviderName() {
     return "claude";

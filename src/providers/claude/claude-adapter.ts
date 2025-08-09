@@ -43,12 +43,16 @@ export class ClaudeAdapter implements ProviderAdapter<ClaudeConversation> {
         return chat.updated_at ? Math.floor(new Date(chat.updated_at).getTime() / 1000) : 0;
     }
 
-    convertChat(chat: ClaudeConversation): StandardConversation {
-        return ClaudeConverter.convertChat(chat);
+    async convertChat(chat: ClaudeConversation): Promise<StandardConversation> {
+        // Set plugin instance for artifact saving
+        ClaudeConverter.setPlugin(this.plugin);
+        return await ClaudeConverter.convertChat(chat);
     }
 
-    convertMessages(messages: ClaudeMessage[], conversationId?: string): StandardMessage[] {
-        return ClaudeConverter.convertMessages(messages, conversationId);
+    async convertMessages(messages: ClaudeMessage[], conversationId?: string): Promise<StandardMessage[]> {
+        // Set plugin instance for artifact saving
+        ClaudeConverter.setPlugin(this.plugin);
+        return await ClaudeConverter.convertMessages(messages, conversationId);
     }
 
     getProviderName(): string {
