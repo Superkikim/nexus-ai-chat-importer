@@ -14,8 +14,8 @@ export interface ProviderAdapter<TChat = any> {
   getUpdateTime(chat: TChat): number; // unix seconds
 
   // Conversion
-  convertChat(chat: TChat): StandardConversation;
-  convertMessages(messages: any[], conversationId?: string): StandardMessage[];
+  convertChat(chat: TChat): StandardConversation | Promise<StandardConversation>;
+  convertMessages(messages: any[], conversationId?: string): StandardMessage[] | Promise<StandardMessage[]>;
 
   // Determine which provider name to set in StandardConversation
   getProviderName(): string; // e.g., 'chatgpt', 'claude'
