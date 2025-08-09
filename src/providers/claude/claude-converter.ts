@@ -11,7 +11,7 @@ export class ClaudeConverter {
     }
 
     static async convertChat(chat: ClaudeConversation): Promise<StandardConversation> {
-        const messages = await this.convertMessages(chat.chat_messages, chat.uuid);
+        const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name);
 
         return {
             id: chat.uuid,
@@ -26,20 +26,20 @@ export class ClaudeConverter {
         };
     }
 
-    static async convertMessages(messages: ClaudeMessage[], conversationId?: string): Promise<StandardMessage[]> {
+    static async convertMessages(messages: ClaudeMessage[], conversationId?: string, conversationTitle?: string): Promise<StandardMessage[]> {
         const standardMessages: StandardMessage[] = [];
-        
+
         if (!messages || messages.length === 0) {
             return standardMessages;
         }
-        
+
         for (const message of messages) {
             if (!this.shouldIncludeMessage(message)) {
                 continue;
             }
 
             // Process content blocks to create message text and attachments
-            const { text, attachments } = await this.processContentBlocks(message.content, conversationId);
+            const { text, attachments } = await this.processContentBlocks(message.content, conversationId, conversationTitle);
             
             // Add file attachments
             const fileAttachments = this.processFileAttachments(message.files);
@@ -71,7 +71,7 @@ export class ClaudeConverter {
         return false;
     }
 
-    private static async processContentBlocks(contentBlocks: ClaudeContentBlock[], conversationId?: string): Promise<{ text: string; attachments: StandardAttachment[] }> {
+    private static async processContentBlocks(contentBlocks: ClaudeContentBlock[], conversationId?: string, conversationTitle?: string): Promise<{ text: string; attachments: StandardAttachment[] }> {
         const textParts: string[] = [];
         const attachments: StandardAttachment[] = [];
         
@@ -89,32 +89,26 @@ export class ClaudeConverter {
                     break;
                     
                 case 'thinking':
-                    // Include thinking blocks as they contain Claude's reasoning
-                    if (block.thinking) {
-                        textParts.push(`**[Thinking]**\n${block.thinking}`);
-                    }
+                    // Filter out thinking blocks - not useful for users
                     break;
                     
                 case 'tool_use':
                     // Special handling for artifacts
                     if (block.name === 'artifacts' && block.input) {
-                        const artifact = await this.formatArtifact(block.input, conversationId);
+                        const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle);
                         textParts.push(artifact);
+                    } else if (block.name === 'web_search') {
+                        // Filter out web_search tools - not useful for users
+                        break;
                     } else if (block.name && block.input) {
-                        // Other tools
+                        // Other tools (keep for now, can be filtered later if needed)
                         const code = block.input.code || JSON.stringify(block.input, null, 2);
                         textParts.push(`**[Tool: ${block.name}]**\n\`\`\`\n${code}\n\`\`\``);
                     }
                     break;
                     
                 case 'tool_result':
-                    // Filter out simple "OK" tool results
-                    if (block.content && Array.isArray(block.content)) {
-                        const results = block.content.map(c => c.text).join('\n').trim();
-                        if (results && results !== 'OK') {
-                            textParts.push(`**[Tool Result]**\n\`\`\`\n${results}\n\`\`\``);
-                        }
-                    }
+                    // Filter out all tool results - not useful for users
                     break;
             }
         }
@@ -172,9 +166,9 @@ export class ClaudeConverter {
     }
 
     /**
-     * Format Claude artifacts with inline content or links
+     * Format Claude artifacts as links to separate files only
      */
-    private static async formatArtifact(artifactInput: any, conversationId?: string): Promise<string> {
+    private static async formatArtifact(artifactInput: any, conversationId?: string, conversationTitle?: string): Promise<string> {
         const title = artifactInput.title || 'Untitled Artifact';
         const language = artifactInput.language || 'text';
         const command = artifactInput.command || 'create';
@@ -192,32 +186,13 @@ export class ClaudeConverter {
         formattedContent += `> **Type:** ${artifactInput.type || 'code'}\n`;
         formattedContent += `> **ID:** ${artifactId}\n\n`;
 
-        if (content) {
-            if (language.toLowerCase() === 'markdown') {
-                // For markdown artifacts, include content directly
-                formattedContent += content + '\n\n';
-
-                // Also save as separate file
-                if (this.plugin) {
-                    try {
-                        const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
-                        formattedContent += `📎 **[View as separate file](${filePath})**\n\n`;
-                    } catch (error) {
-                        // Ignore save errors for inline content
-                    }
-                }
-            } else {
-                // For non-markdown, use code blocks and save to file
-                formattedContent += `\`\`\`${language}\n${content}\n\`\`\`\n\n`;
-
-                if (this.plugin) {
-                    try {
-                        const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
-                        formattedContent += `📎 **[View Artifact](${filePath})**\n\n`;
-                    } catch (error) {
-                        // Content is already inline, no need for fallback
-                    }
-                }
+        // Save artifact to file and link to it
+        if (content && this.plugin) {
+            try {
+                const filePath = await this.saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle);
+                formattedContent += `📎 **[View Artifact](${filePath})**\n\n`;
+            } catch (error) {
+                formattedContent += `❌ **Error saving artifact:** ${error instanceof Error ? error.message : 'Unknown error'}\n\n`;
             }
         }
 
@@ -228,7 +203,7 @@ export class ClaudeConverter {
     /**
      * Save artifact as markdown note in attachments/artifacts/ folder
      */
-    private static async saveArtifactToFile(artifactId: string, title: string, language: string, content: string): Promise<string> {
+    private static async saveArtifactToFile(artifactId: string, title: string, language: string, content: string, conversationId?: string, conversationTitle?: string): Promise<string> {
         const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, '_');
         const fileName = `${safeTitle}_${artifactId}.md`;
 
@@ -243,27 +218,42 @@ export class ClaudeConverter {
 
         const filePath = `${artifactFolder}/${fileName}`;
 
-        // Create markdown content with metadata and code block
-        const markdownContent = `---
-title: ${title}
-type: Claude Artifact
-language: ${language}
-artifact_id: ${artifactId}
-created: ${new Date().toISOString()}
+        // Generate conversation link if conversationId and title are provided
+        const conversationLink = conversationId && conversationTitle ?
+            `[[${conversationTitle}]]` :
+            '';
+
+        // Create markdown content with enhanced frontmatter
+        let markdownContent = `---
+nexus: nexus-ai-chat-importer
+plugin_version: ${this.plugin.manifest.version}
+provider: claude
+aliases: ["${title}", "${artifactId}"]
+conversation_id: ${conversationId || 'unknown'}
+format: ${language}
 ---
 
 # ${title}
 
 **Type:** Claude Artifact
 **Language:** ${language}
-**ID:** ${artifactId}
+**ID:** ${artifactId}`;
 
-## Content
+        if (conversationLink) {
+            markdownContent += `
+**Conversation:** ${conversationLink}`;
+        }
 
-\`\`\`${language}
-${content}
-\`\`\`
-`;
+        markdownContent += `\n\n## Content\n\n`;
+
+        // Add content based on language
+        if (language.toLowerCase() === 'markdown') {
+            // For markdown, include content directly
+            markdownContent += content;
+        } else {
+            // For other languages, use code blocks
+            markdownContent += `\`\`\`${language}\n${content}\n\`\`\``;
+        }
 
         // Save the artifact as markdown
         await this.plugin.app.vault.create(filePath, markdownContent);

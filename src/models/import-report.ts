@@ -121,7 +121,10 @@ export class ImportReport {
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const providerSpecificValue = entry.providerSpecificCount || 0;
 
-            table += `| ✨ | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificValue} |\n`;
+            // Add green checkmark for artifacts/attachments when > 0
+            const providerSpecificDisplay = providerSpecificValue > 0 ? `✅ ${providerSpecificValue}` : providerSpecificValue;
+
+            table += `| ✨ | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |\n`;
         });
 
         return table + "\n\n";
@@ -137,7 +140,10 @@ export class ImportReport {
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const providerSpecificValue = entry.providerSpecificCount || 0;
 
-            table += `| 🔄 | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificValue} |\n`;
+            // Add green checkmark for artifacts/attachments when > 0
+            const providerSpecificDisplay = providerSpecificValue > 0 ? `✅ ${providerSpecificValue}` : providerSpecificValue;
+
+            table += `| 🔄 | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |\n`;
         });
 
         return table + "\n\n";
