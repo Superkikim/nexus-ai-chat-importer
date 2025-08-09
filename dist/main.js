@@ -5755,7 +5755,7 @@ var ClaudeConverter = class {
   static async processContentBlocks(contentBlocks, conversationId, conversationTitle, conversationCreateTime) {
     const textParts = [];
     const attachments = [];
-    const artifactMap = /* @__PURE__ */ new Map();
+    const artifactVersionsMap = /* @__PURE__ */ new Map();
     if (!contentBlocks || contentBlocks.length === 0) {
       return { text: "", attachments: [] };
     }
@@ -5764,14 +5764,31 @@ var ClaudeConverter = class {
         const artifactId = block.input.id || "unknown";
         const content = block.input.content || "";
         const command = block.input.command || "create";
-        if (command === "update" && content.length === 0) {
+        const versionUuid = block.input.version_uuid;
+        if (command === "update" && content.length === 0 || command === "view") {
           continue;
         }
-        const currentArtifact = artifactMap.get(artifactId);
-        const shouldReplace = !currentArtifact || this.shouldReplaceArtifact(currentArtifact, block.input);
-        if (shouldReplace) {
-          artifactMap.set(artifactId, block.input);
+        const isSignificant = command === "create" || command === "rewrite" || command === "update" && content.length > 100;
+        if (isSignificant && versionUuid) {
+          if (!artifactVersionsMap.has(artifactId)) {
+            artifactVersionsMap.set(artifactId, []);
+          }
+          artifactVersionsMap.get(artifactId).push(block.input);
         }
+      }
+    }
+    const processedArtifacts = /* @__PURE__ */ new Set();
+    for (const [artifactId, versions] of artifactVersionsMap.entries()) {
+      if (versions.length > 0) {
+        const artifactSummary = await this.saveArtifactVersions(
+          artifactId,
+          versions,
+          conversationId,
+          conversationTitle,
+          conversationCreateTime
+        );
+        textParts.push(artifactSummary);
+        processedArtifacts.add(artifactId);
       }
     }
     for (const block of contentBlocks) {
@@ -5784,12 +5801,8 @@ var ClaudeConverter = class {
         case "thinking":
           break;
         case "tool_use":
-          if (block.name === "artifacts" && block.input) {
-            const artifactId = block.input.id || "unknown";
-            if (artifactMap.get(artifactId) === block.input) {
-              const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle, conversationCreateTime);
-              textParts.push(artifact);
-            }
+          if (block.name === "artifacts") {
+            break;
           } else if (block.name === "web_search") {
             break;
           } else if (block.name && block.input) {
@@ -5852,7 +5865,63 @@ ${code}
     }
   }
   /**
-   * Format Claude artifacts as links to separate files only
+   * Save all versions of an artifact and return summary for conversation
+   */
+  static async saveArtifactVersions(artifactId, versions, conversationId, conversationTitle, conversationCreateTime) {
+    var _a;
+    if (!this.plugin || versions.length === 0) {
+      return `**\u{1F3A8} Artifact: ${((_a = versions[0]) == null ? void 0 : _a.title) || artifactId}** (Error: Could not save)`;
+    }
+    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
+    if (!folderResult.success) {
+      throw new Error(`Failed to create conversation artifacts folder: ${folderResult.error}`);
+    }
+    const savedVersions = [];
+    let latestVersion = "";
+    for (let i = 0; i < versions.length; i++) {
+      const version = versions[i];
+      const versionNumber = i + 1;
+      const fileName = `${artifactId}_v${versionNumber}.md`;
+      const filePath = `${conversationFolder}/${fileName}`;
+      try {
+        const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
+        if (shouldSkip) {
+          savedVersions.push(filePath);
+          latestVersion = filePath;
+          continue;
+        }
+        await this.saveArtifactVersion(version, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime);
+        savedVersions.push(filePath);
+        latestVersion = filePath;
+      } catch (error) {
+        console.error(`Failed to save artifact version ${versionNumber}:`, error);
+      }
+    }
+    return this.formatArtifactSummary(versions[0], savedVersions, latestVersion, conversationFolder);
+  }
+  /**
+   * Format artifact summary for conversation display
+   */
+  static formatArtifactSummary(firstVersion, savedVersions, latestVersion, conversationFolder) {
+    const title = firstVersion.title || "Untitled Artifact";
+    const versionCount = savedVersions.length;
+    let formattedContent = `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}**`;
+    if (versionCount > 1) {
+      formattedContent += ` (${versionCount} versions)`;
+    }
+    formattedContent += `
+
+\u{1F4CE} **[View Latest Version](${latestVersion})**`;
+    if (versionCount > 1) {
+      formattedContent += ` | **[All Versions](${conversationFolder}/)**`;
+    }
+    formattedContent += `</div>`;
+    return formattedContent;
+  }
+  /**
+   * Format Claude artifacts as links to separate files only (legacy method for single artifacts)
    */
   static async formatArtifact(artifactInput, conversationId, conversationTitle, conversationCreateTime) {
     const title = artifactInput.title || "Untitled Artifact";
@@ -5905,7 +5974,81 @@ ${code}
     return formattedContent;
   }
   /**
-   * Save artifact as markdown note in attachments/artifacts/ folder
+   * Save a single artifact version
+   */
+  static async saveArtifactVersion(artifactInput, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime) {
+    const title = artifactInput.title || "Untitled Artifact";
+    let language = artifactInput.language || "text";
+    const command = artifactInput.command || "create";
+    const artifactId = artifactInput.id || "unknown";
+    const content = artifactInput.content || "";
+    const versionUuid = artifactInput.version_uuid;
+    if ((language.toLowerCase() === "text" || !language || language === "undefined") && content) {
+      const detectedLanguage = this.detectLanguageFromContent(content, artifactInput.type);
+      if (detectedLanguage !== "text") {
+        language = detectedLanguage;
+      }
+    }
+    let conversationLink = "";
+    if (conversationId && conversationTitle && conversationCreateTime) {
+      const createDate = new Date(conversationCreateTime * 1e3);
+      const year = createDate.getFullYear();
+      const month = String(createDate.getMonth() + 1).padStart(2, "0");
+      const { generateConversationFileName: generateConversationFileName2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+      const fileName = generateConversationFileName2(
+        conversationTitle,
+        conversationCreateTime,
+        this.plugin.settings.addDatePrefix,
+        this.plugin.settings.dateFormat
+      );
+      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
+      conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
+    }
+    let markdownContent = `---
+nexus: nexus-ai-chat-importer
+plugin_version: ${this.plugin.manifest.version}
+provider: claude
+artifact_id: ${artifactId}
+version_uuid: ${versionUuid}
+version_number: ${versionNumber}
+command: ${command}
+conversation_id: ${conversationId || "unknown"}
+format: ${language}
+aliases: ["${title}", "${artifactId}_v${versionNumber}"]
+---
+
+# ${title} (Version ${versionNumber})
+
+**Type:** Claude Artifact
+**Language:** ${language}`;
+    if (artifactInput.language !== language) {
+      markdownContent += ` (detected from content, original: ${artifactInput.language})`;
+    }
+    markdownContent += `
+**Command:** ${command}
+**Version:** ${versionNumber}
+**ID:** ${artifactId}
+**UUID:** ${versionUuid}`;
+    if (conversationLink) {
+      markdownContent += `
+**Conversation:** ${conversationLink}`;
+    }
+    markdownContent += `
+
+## Content
+
+`;
+    if (language.toLowerCase() === "markdown") {
+      markdownContent += content;
+    } else {
+      markdownContent += `\`\`\`${language}
+${content}
+\`\`\``;
+    }
+    await this.plugin.app.vault.create(filePath, markdownContent);
+  }
+  /**
+   * Save artifact as markdown note in attachments/artifacts/ folder (legacy method)
    */
   static async saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle, conversationCreateTime) {
     const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, "_");
@@ -5964,6 +6107,24 @@ ${content}
     }
     await this.plugin.app.vault.create(filePath, markdownContent);
     return filePath;
+  }
+  /**
+   * Check if we should skip saving this artifact version (already exists)
+   */
+  static async shouldSkipArtifactVersion(filePath, versionUuid) {
+    try {
+      const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+      if (!existingFile) {
+        return false;
+      }
+      const existingContent = await this.plugin.app.vault.read(existingFile);
+      if (existingContent.includes(`version_uuid: ${versionUuid}`)) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      return false;
+    }
   }
   /**
    * Determine if we should replace the current artifact with a new one
@@ -6087,20 +6248,21 @@ ${content}
     }
   }
   /**
-   * Count artifacts in a conversation
+   * Count unique artifacts in a conversation (by artifact ID, not versions)
    */
   static countArtifacts(chat) {
-    let artifactCount = 0;
+    var _a;
+    const uniqueArtifacts = /* @__PURE__ */ new Set();
     for (const message of chat.chat_messages) {
       if (message.content) {
         for (const block of message.content) {
-          if (block.type === "tool_use" && block.name === "artifacts") {
-            artifactCount++;
+          if (block.type === "tool_use" && block.name === "artifacts" && ((_a = block.input) == null ? void 0 : _a.id)) {
+            uniqueArtifacts.add(block.input.id);
           }
         }
       }
     }
-    return artifactCount;
+    return uniqueArtifacts.size;
   }
 };
 
