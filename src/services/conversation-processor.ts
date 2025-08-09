@@ -14,7 +14,8 @@ import {
     generateFileName,
     ensureFolderExists,
     doesFilePathExist,
-    generateUniqueFileName
+    generateUniqueFileName,
+    generateConversationFileName
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 
@@ -439,18 +440,12 @@ export class ConversationProcessor {
             throw new Error(folderResult.error || "Failed to ensure folder exists.");
         }
 
-        let fileName = generateFileName(chatTitle) + ".md";
-
-        if (this.plugin.settings.addDatePrefix) {
-            const day = String(date.getDate()).padStart(2, "0");
-            let prefix = "";
-            if (this.plugin.settings.dateFormat === "YYYY-MM-DD") {
-                prefix = `${year}-${month}-${day}`;
-            } else if (this.plugin.settings.dateFormat === "YYYYMMDD") {
-                prefix = `${year}${month}${day}`;
-            }
-            fileName = `${prefix} - ${fileName}`;
-        }
+        let fileName = generateConversationFileName(
+            chatTitle,
+            createTime,
+            this.plugin.settings.addDatePrefix,
+            this.plugin.settings.dateFormat
+        ) + ".md";
 
         let filePath = `${folderPath}/${fileName}`;
         if (await doesFilePathExist(filePath, this.plugin.app.vault)) {

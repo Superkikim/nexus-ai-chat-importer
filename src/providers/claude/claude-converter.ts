@@ -256,11 +256,20 @@ export class ClaudeConverter {
             const createDate = new Date(conversationCreateTime * 1000);
             const year = createDate.getFullYear();
             const month = String(createDate.getMonth() + 1).padStart(2, '0');
-            const { generateFileName } = await import("../../utils");
-            const safeTitle = generateFileName(conversationTitle);
 
-            // Use absolute path from vault root
-            const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${safeTitle}`;
+            // Import utilities
+            const { generateConversationFileName } = await import("../../utils");
+
+            // Generate the exact filename that would be used for the conversation
+            const fileName = generateConversationFileName(
+                conversationTitle,
+                conversationCreateTime,
+                this.plugin.settings.addDatePrefix,
+                this.plugin.settings.dateFormat
+            );
+
+            // Use absolute path from vault root (without .md extension for links)
+            const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
             conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
         }
 
