@@ -101,10 +101,13 @@ export class ClaudeConverter {
                                     (command === 'update' && content.length > 100);
 
                 if (isSignificant && versionUuid) {
+                    console.log(`Claude converter: Found significant artifact version - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, UUID: ${versionUuid}`);
                     if (!artifactVersionsMap.has(artifactId)) {
                         artifactVersionsMap.set(artifactId, []);
                     }
                     artifactVersionsMap.get(artifactId)!.push(block.input);
+                } else {
+                    console.log(`Claude converter: Skipped artifact - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, Significant: ${isSignificant}, Has UUID: ${!!versionUuid}`);
                 }
             }
         }
@@ -112,7 +115,9 @@ export class ClaudeConverter {
         // Second pass: save all artifact versions and process content blocks
         const processedArtifacts = new Set<string>(); // Track which artifacts we've already processed in this conversation
 
+        console.log(`Claude converter: Processing ${artifactVersionsMap.size} unique artifacts`);
         for (const [artifactId, versions] of artifactVersionsMap.entries()) {
+            console.log(`Claude converter: Processing artifact ${artifactId} with ${versions.length} versions`);
             if (versions.length > 0) {
                 // Save all versions and get the summary for the conversation
                 const artifactSummary = await this.saveArtifactVersions(
