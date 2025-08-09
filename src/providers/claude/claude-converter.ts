@@ -1,11 +1,18 @@
 // src/providers/claude/claude-converter.ts
 import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
 import { ClaudeConversation, ClaudeMessage, ClaudeContentBlock } from "./claude-types";
+import type NexusAiChatImporterPlugin from "../../main";
 
 export class ClaudeConverter {
-    static convertChat(chat: ClaudeConversation): StandardConversation {
-        const messages = this.convertMessages(chat.chat_messages, chat.uuid);
-        
+    private static plugin: NexusAiChatImporterPlugin;
+
+    static setPlugin(plugin: NexusAiChatImporterPlugin) {
+        this.plugin = plugin;
+    }
+
+    static async convertChat(chat: ClaudeConversation): Promise<StandardConversation> {
+        const messages = await this.convertMessages(chat.chat_messages, chat.uuid);
+
         return {
             id: chat.uuid,
             title: chat.name || "Untitled",
@@ -19,7 +26,7 @@ export class ClaudeConverter {
         };
     }
 
-    static convertMessages(messages: ClaudeMessage[], conversationId?: string): StandardMessage[] {
+    static async convertMessages(messages: ClaudeMessage[], conversationId?: string): Promise<StandardMessage[]> {
         const standardMessages: StandardMessage[] = [];
         
         if (!messages || messages.length === 0) {
@@ -32,7 +39,7 @@ export class ClaudeConverter {
             }
 
             // Process content blocks to create message text and attachments
-            const { text, attachments } = this.processContentBlocks(message.content);
+            const { text, attachments } = await this.processContentBlocks(message.content, conversationId);
             
             // Add file attachments
             const fileAttachments = this.processFileAttachments(message.files);
@@ -64,7 +71,7 @@ export class ClaudeConverter {
         return false;
     }
 
-    private static processContentBlocks(contentBlocks: ClaudeContentBlock[]): { text: string; attachments: StandardAttachment[] } {
+    private static async processContentBlocks(contentBlocks: ClaudeContentBlock[], conversationId?: string): Promise<{ text: string; attachments: StandardAttachment[] }> {
         const textParts: string[] = [];
         const attachments: StandardAttachment[] = [];
         
@@ -91,7 +98,7 @@ export class ClaudeConverter {
                 case 'tool_use':
                     // Special handling for artifacts
                     if (block.name === 'artifacts' && block.input) {
-                        const artifact = this.formatArtifact(block.input);
+                        const artifact = await this.formatArtifact(block.input, conversationId);
                         textParts.push(artifact);
                     } else if (block.name && block.input) {
                         // Other tools
@@ -163,13 +170,14 @@ export class ClaudeConverter {
     }
 
     /**
-     * Format Claude artifacts with proper syntax highlighting and metadata
+     * Format Claude artifacts and save to attachments/artifacts/ folder
      */
-    private static formatArtifact(artifactInput: any): string {
+    private static async formatArtifact(artifactInput: any, conversationId?: string): Promise<string> {
         const title = artifactInput.title || 'Untitled Artifact';
         const language = artifactInput.language || 'text';
-        const content = artifactInput.content || '';
         const command = artifactInput.command || 'create';
+        const artifactId = artifactInput.id || 'unknown';
+        const content = artifactInput.content || '';
 
         let formattedContent = `**🎨 Artifact: ${title}**\n\n`;
 
@@ -179,13 +187,69 @@ export class ClaudeConverter {
 
         // Add metadata
         formattedContent += `> **Language:** ${language}\n`;
-        formattedContent += `> **Type:** ${artifactInput.type || 'code'}\n\n`;
+        formattedContent += `> **Type:** ${artifactInput.type || 'code'}\n`;
+        formattedContent += `> **ID:** ${artifactId}\n\n`;
 
-        // Add content with proper syntax highlighting
-        if (content) {
+        // Save artifact to attachments/artifacts/ folder
+        if (content && this.plugin) {
+            try {
+                const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
+                formattedContent += `📎 **[View Artifact](${filePath})**\n\n`;
+            } catch (error) {
+                // Fallback to inline content if saving fails
+                formattedContent += `\`\`\`${language}\n${content}\n\`\`\`\n\n`;
+            }
+        } else if (content) {
+            // Fallback to inline content if no plugin
             formattedContent += `\`\`\`${language}\n${content}\n\`\`\`\n\n`;
         }
 
         return formattedContent;
+    }
+
+    /**
+     * Save artifact content to file in attachments/artifacts/ folder
+     */
+    private static async saveArtifactToFile(artifactId: string, title: string, language: string, content: string): Promise<string> {
+        const extension = this.getExtensionFromLanguage(language);
+        const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, '_');
+        const fileName = `${safeTitle}_${artifactId}.${extension}`;
+
+        const artifactFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts`;
+
+        // Ensure folder exists
+        const { ensureFolderExists } = await import("../../utils");
+        const folderResult = await ensureFolderExists(artifactFolder, this.plugin.app.vault);
+        if (!folderResult.success) {
+            throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
+        }
+
+        const filePath = `${artifactFolder}/${fileName}`;
+
+        // Save the artifact content
+        await this.plugin.app.vault.create(filePath, content);
+
+        return filePath;
+    }
+
+    /**
+     * Get file extension from language
+     */
+    private static getExtensionFromLanguage(language: string): string {
+        switch (language.toLowerCase()) {
+            case 'python': return 'py';
+            case 'javascript': return 'js';
+            case 'typescript': return 'ts';
+            case 'html': return 'html';
+            case 'css': return 'css';
+            case 'markdown': return 'md';
+            case 'json': return 'json';
+            case 'yaml': return 'yml';
+            case 'xml': return 'xml';
+            case 'sql': return 'sql';
+            case 'bash': return 'sh';
+            case 'shell': return 'sh';
+            default: return 'txt';
+        }
     }
 }

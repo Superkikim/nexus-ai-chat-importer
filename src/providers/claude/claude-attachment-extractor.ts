@@ -80,7 +80,7 @@ export class ClaudeAttachmentExtractor {
      */
     private createFileNotFoundPlaceholder(attachment: StandardAttachment): StandardAttachment {
         const fileName = attachment.fileName;
-        const fileType = this.getFileTypeFromName(fileName);
+        const fileType = this.getFileTypeFromExtension(fileName);
 
         let placeholder = `📎 **Attachment: ${fileName}**\n\n`;
 
@@ -101,6 +101,32 @@ export class ClaudeAttachmentExtractor {
             ...attachment,
             extractedContent: placeholder
         };
+    }
+
+    /**
+     * Get file type from extension
+     */
+    private getFileTypeFromExtension(fileName: string): string {
+        const extension = fileName.split('.').pop()?.toLowerCase();
+
+        switch (extension) {
+            case 'png':
+            case 'jpg':
+            case 'jpeg':
+            case 'gif':
+            case 'webp':
+                return `image/${extension}`;
+            case 'pdf':
+                return 'application/pdf';
+            case 'txt':
+                return 'text/plain';
+            case 'md':
+                return 'text/markdown';
+            case 'json':
+                return 'application/json';
+            default:
+                return 'application/octet-stream';
+        }
     }
 
     /**
