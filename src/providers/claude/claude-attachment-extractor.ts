@@ -81,8 +81,13 @@ export class ClaudeAttachmentExtractor {
     private createFileNotFoundPlaceholder(attachment: StandardAttachment, conversationId: string): StandardAttachment {
         const fileName = attachment.fileName;
         const conversationUrl = `https://claude.ai/chat/${conversationId}`;
+        const fileType = this.getFileTypeFromExtension(fileName);
 
-        const placeholder = `📎 **Attachment:** ${fileName} (not included in archive. [Click to open original conversation](${conversationUrl}))`;
+        const placeholder = `<div class="nexus-attachment-box">
+
+📎 **Attachment:** ${fileName} (${fileType}) - (not included in archive. [Click to open original conversation](${conversationUrl}))
+
+</div>`;
 
         return {
             ...attachment,

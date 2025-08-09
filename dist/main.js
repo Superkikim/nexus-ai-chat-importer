@@ -5691,7 +5691,8 @@ var ClaudeConverter = class {
     this.plugin = plugin;
   }
   static async convertChat(chat) {
-    const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name);
+    const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0;
+    const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name, createTime);
     return {
       id: chat.uuid,
       title: chat.name || "Untitled",
@@ -5704,7 +5705,7 @@ var ClaudeConverter = class {
       summary: chat.summary || ""
     };
   }
-  static async convertMessages(messages, conversationId, conversationTitle) {
+  static async convertMessages(messages, conversationId, conversationTitle, conversationCreateTime) {
     const standardMessages = [];
     if (!messages || messages.length === 0) {
       return standardMessages;
@@ -5713,7 +5714,7 @@ var ClaudeConverter = class {
       if (!this.shouldIncludeMessage(message)) {
         continue;
       }
-      const { text, attachments } = await this.processContentBlocks(message.content, conversationId, conversationTitle);
+      const { text, attachments } = await this.processContentBlocks(message.content, conversationId, conversationTitle, conversationCreateTime);
       const fileAttachments = this.processFileAttachments(message.files);
       const standardMessage = {
         id: message.uuid,
@@ -5735,7 +5736,7 @@ var ClaudeConverter = class {
     }
     return false;
   }
-  static async processContentBlocks(contentBlocks, conversationId, conversationTitle) {
+  static async processContentBlocks(contentBlocks, conversationId, conversationTitle, conversationCreateTime) {
     const textParts = [];
     const attachments = [];
     if (!contentBlocks || contentBlocks.length === 0) {
@@ -5752,7 +5753,7 @@ var ClaudeConverter = class {
           break;
         case "tool_use":
           if (block.name === "artifacts" && block.input) {
-            const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle);
+            const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle, conversationCreateTime);
             textParts.push(artifact);
           } else if (block.name === "web_search") {
             break;
@@ -5818,12 +5819,18 @@ ${code}
   /**
    * Format Claude artifacts as links to separate files only
    */
-  static async formatArtifact(artifactInput, conversationId, conversationTitle) {
+  static async formatArtifact(artifactInput, conversationId, conversationTitle, conversationCreateTime) {
     const title = artifactInput.title || "Untitled Artifact";
-    const language = artifactInput.language || "text";
+    let language = artifactInput.language || "text";
     const command = artifactInput.command || "create";
     const artifactId = artifactInput.id || "unknown";
     const content = artifactInput.content || "";
+    if (language.toLowerCase() === "text" && content) {
+      const detectedLanguage = this.detectLanguageFromContent(content);
+      if (detectedLanguage !== "text") {
+        language = detectedLanguage;
+      }
+    }
     let formattedContent = `<div class="nexus-artifact-box">
 
 **\u{1F3A8} Artifact: ${title}**
@@ -5834,7 +5841,11 @@ ${code}
 
 `;
     }
-    formattedContent += `> **Language:** ${language}
+    formattedContent += `> **Language:** ${language}`;
+    if (artifactInput.language !== language) {
+      formattedContent += ` (detected from content, original: ${artifactInput.language})`;
+    }
+    formattedContent += `
 `;
     formattedContent += `> **Type:** ${artifactInput.type || "code"}
 `;
@@ -5843,7 +5854,7 @@ ${code}
 `;
     if (content && this.plugin) {
       try {
-        const filePath = await this.saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle);
+        const filePath = await this.saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle, conversationCreateTime);
         formattedContent += `\u{1F4CE} **[View Artifact](${filePath})**
 
 `;
@@ -5861,7 +5872,7 @@ ${code}
   /**
    * Save artifact as markdown note in attachments/artifacts/ folder
    */
-  static async saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle) {
+  static async saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle, conversationCreateTime) {
     const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, "_");
     const fileName = `${safeTitle}_${artifactId}.md`;
     const artifactFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts`;
@@ -5871,7 +5882,14 @@ ${code}
       throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
     }
     const filePath = `${artifactFolder}/${fileName}`;
-    const conversationLink = conversationId && conversationTitle ? `[[${conversationTitle}]]` : "";
+    let conversationLink = "";
+    if (conversationId && conversationTitle && conversationCreateTime) {
+      const createDate = new Date(conversationCreateTime * 1e3);
+      const year = createDate.getFullYear();
+      const month = String(createDate.getMonth() + 1).padStart(2, "0");
+      const safeTitle2 = conversationTitle.replace(/[^a-zA-Z0-9\-_]/g, "_");
+      conversationLink = `[[../../Conversations/claude/${year}/${month}/${safeTitle2}|${conversationTitle}]]`;
+    }
     let markdownContent = `---
 nexus: nexus-ai-chat-importer
 plugin_version: ${this.plugin.manifest.version}
@@ -5906,6 +5924,43 @@ ${content}
     return filePath;
   }
   /**
+   * Auto-detect language from content when marked as "text"
+   */
+  static detectLanguageFromContent(content) {
+    if (!content || content.trim().length === 0)
+      return "text";
+    const trimmedContent = content.trim();
+    if (trimmedContent.startsWith("<?php"))
+      return "php";
+    if (trimmedContent.startsWith("#!/bin/bash") || trimmedContent.startsWith("#!/bin/sh"))
+      return "bash";
+    if (trimmedContent.startsWith("<!DOCTYPE html") || trimmedContent.includes("<html"))
+      return "html";
+    if (trimmedContent.startsWith("{") && trimmedContent.endsWith("}")) {
+      try {
+        JSON.parse(trimmedContent);
+        return "json";
+      } catch (e) {
+      }
+    }
+    if (trimmedContent.includes("# ") || trimmedContent.includes("## ") || trimmedContent.includes("**") || trimmedContent.includes("```")) {
+      return "markdown";
+    }
+    if (trimmedContent.includes("def ") || trimmedContent.includes("import ") || trimmedContent.includes("from ") || trimmedContent.includes("class ")) {
+      return "python";
+    }
+    if (trimmedContent.includes("function ") || trimmedContent.includes("const ") || trimmedContent.includes("let ") || trimmedContent.includes("var ") || trimmedContent.includes("=>")) {
+      return "javascript";
+    }
+    if (trimmedContent.includes("{") && trimmedContent.includes(":") && trimmedContent.includes(";") && trimmedContent.includes("}")) {
+      return "css";
+    }
+    if (trimmedContent.toUpperCase().includes("SELECT ") || trimmedContent.toUpperCase().includes("INSERT ") || trimmedContent.toUpperCase().includes("UPDATE ") || trimmedContent.toUpperCase().includes("CREATE TABLE")) {
+      return "sql";
+    }
+    return "text";
+  }
+  /**
    * Get file extension from language
    */
   static getExtensionFromLanguage(language) {
@@ -5934,6 +5989,8 @@ ${content}
         return "sh";
       case "shell":
         return "sh";
+      case "php":
+        return "php";
       default:
         return "txt";
     }
@@ -6015,7 +6072,12 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
   createFileNotFoundPlaceholder(attachment, conversationId) {
     const fileName = attachment.fileName;
     const conversationUrl = `https://claude.ai/chat/${conversationId}`;
-    const placeholder = `\u{1F4CE} **Attachment:** ${fileName} (not included in archive. [Click to open original conversation](${conversationUrl}))`;
+    const fileType = this.getFileTypeFromExtension(fileName);
+    const placeholder = `<div class="nexus-attachment-box">
+
+\u{1F4CE} **Attachment:** ${fileName} (${fileType}) - (not included in archive. [Click to open original conversation](${conversationUrl}))
+
+</div>`;
     return {
       ...attachment,
       extractedContent: placeholder
@@ -6255,9 +6317,9 @@ var ClaudeAdapter = class {
     ClaudeConverter.setPlugin(this.plugin);
     return await ClaudeConverter.convertChat(chat);
   }
-  async convertMessages(messages, conversationId, conversationTitle) {
+  async convertMessages(messages, conversationId, conversationTitle, conversationCreateTime) {
     ClaudeConverter.setPlugin(this.plugin);
-    return await ClaudeConverter.convertMessages(messages, conversationId, conversationTitle);
+    return await ClaudeConverter.convertMessages(messages, conversationId, conversationTitle, conversationCreateTime);
   }
   getProviderName() {
     return "claude";

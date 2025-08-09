@@ -49,10 +49,10 @@ export class ClaudeAdapter implements ProviderAdapter<ClaudeConversation> {
         return await ClaudeConverter.convertChat(chat);
     }
 
-    async convertMessages(messages: ClaudeMessage[], conversationId?: string, conversationTitle?: string): Promise<StandardMessage[]> {
+    async convertMessages(messages: ClaudeMessage[], conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<StandardMessage[]> {
         // Set plugin instance for artifact saving
         ClaudeConverter.setPlugin(this.plugin);
-        return await ClaudeConverter.convertMessages(messages, conversationId, conversationTitle);
+        return await ClaudeConverter.convertMessages(messages, conversationId, conversationTitle, conversationCreateTime);
     }
 
     getProviderName(): string {
