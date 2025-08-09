@@ -136,7 +136,7 @@ export class ConversationProcessor {
         const updateTime = adapter.getUpdateTime(chat);
 
         // Count messages using provider-specific logic
-        const totalMessageCount = this.countMessages(adapter, chat);
+        const totalMessageCount = await this.countMessages(adapter, chat);
 
         // Check if the file actually exists
         const fileExists = await this.plugin.app.vault.adapter.exists(existingRecord.path);
@@ -185,10 +185,10 @@ export class ConversationProcessor {
     /**
      * Count messages in a chat using provider-specific logic
      */
-    private countMessages(adapter: any, chat: any): number {
+    private async countMessages(adapter: any, chat: any): Promise<number> {
         // Try to get a standard conversation and count its messages
         try {
-            const standardConversation = adapter.convertChat(chat);
+            const standardConversation = await adapter.convertChat(chat);
             return standardConversation.messages?.length || 0;
         } catch (error) {
             // Fallback: try common patterns
@@ -232,7 +232,7 @@ export class ConversationProcessor {
                 // REPROCESS LOGIC: If forced update, recreate the entire note with attachment support
                 if (forceUpdate) {
                     // Convert entire chat to standard format with attachments
-                    let standardConversation = adapter.convertChat(chat);
+                    let standardConversation = await adapter.convertChat(chat);
 
                     // Process attachments if ZIP provided and settings enabled
                     if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
@@ -266,7 +266,7 @@ export class ConversationProcessor {
                 // Normal update logic (existing messages)
                 if (newMessages.length > 0) {
                     // Convert messages to standard format
-                    let standardMessages = adapter.convertMessages(newMessages, adapter.getId(chat));
+                    let standardMessages = await adapter.convertMessages(newMessages, adapter.getId(chat));
 
                     // Process attachments if ZIP provided and settings enabled
                     if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
@@ -328,7 +328,7 @@ export class ConversationProcessor {
             }
 
             // Convert to standard format
-            let standardConversation = adapter.convertChat(chat);
+            let standardConversation = await adapter.convertChat(chat);
 
             // Process attachments if ZIP provided and settings enabled
             let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };

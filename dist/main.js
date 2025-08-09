@@ -4565,7 +4565,7 @@ var ConversationProcessor = class {
     const chatTitle = adapter.getTitle(chat);
     const createTime = adapter.getCreateTime(chat);
     const updateTime = adapter.getUpdateTime(chat);
-    const totalMessageCount = this.countMessages(adapter, chat);
+    const totalMessageCount = await this.countMessages(adapter, chat);
     const fileExists = await this.plugin.app.vault.adapter.exists(existingRecord.path);
     if (!fileExists) {
       await this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip);
@@ -4598,10 +4598,10 @@ var ConversationProcessor = class {
   /**
    * Count messages in a chat using provider-specific logic
    */
-  countMessages(adapter, chat) {
+  async countMessages(adapter, chat) {
     var _a;
     try {
-      const standardConversation = adapter.convertChat(chat);
+      const standardConversation = await adapter.convertChat(chat);
       return ((_a = standardConversation.messages) == null ? void 0 : _a.length) || 0;
     } catch (error) {
       if (chat.mapping) {
@@ -4626,7 +4626,7 @@ var ConversationProcessor = class {
         const newMessages = adapter.getNewMessages(chat, existingMessageIds);
         let attachmentStats = void 0;
         if (forceUpdate) {
-          let standardConversation = adapter.convertChat(chat);
+          let standardConversation = await adapter.convertChat(chat);
           if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
             standardConversation.messages = await adapter.processMessageAttachments(
               standardConversation.messages,
@@ -4649,7 +4649,7 @@ var ConversationProcessor = class {
           return;
         }
         if (newMessages.length > 0) {
-          let standardMessages = adapter.convertMessages(newMessages, adapter.getId(chat));
+          let standardMessages = await adapter.convertMessages(newMessages, adapter.getId(chat));
           if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
             standardMessages = await adapter.processMessageAttachments(
               standardMessages,
@@ -4694,7 +4694,7 @@ var ConversationProcessor = class {
       if (!folderResult.success) {
         throw new Error(folderResult.error || "Failed to ensure folder exists.");
       }
-      let standardConversation = adapter.convertChat(chat);
+      let standardConversation = await adapter.convertChat(chat);
       let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
       if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
         standardConversation.messages = await adapter.processMessageAttachments(
