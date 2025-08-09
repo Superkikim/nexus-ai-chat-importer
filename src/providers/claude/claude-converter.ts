@@ -119,8 +119,8 @@ export class ClaudeConverter {
         for (const [artifactId, versions] of artifactVersionsMap.entries()) {
             console.log(`Claude converter: Processing artifact ${artifactId} with ${versions.length} versions`);
             if (versions.length > 0) {
-                // Save all versions and get the summary for the conversation
-                const artifactSummary = await this.saveArtifactVersions(
+                // Save ALL versions (not just the latest) and get the summary for the conversation
+                const artifactSummary = await this.saveAllArtifactVersions(
                     artifactId,
                     versions,
                     conversationId,
@@ -218,7 +218,107 @@ export class ClaudeConverter {
     }
 
     /**
-     * Save all versions of an artifact and return summary for conversation
+     * Save ALL versions of an artifact (create separate file for each version)
+     */
+    private static async saveAllArtifactVersions(
+        artifactId: string,
+        versions: any[],
+        conversationId?: string,
+        conversationTitle?: string,
+        conversationCreateTime?: number
+    ): Promise<string> {
+        if (!this.plugin) {
+            console.error('Claude converter: Plugin not available for artifact saving');
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${versions[0]?.title || artifactId}** (Error: Plugin not available)</div>`;
+        }
+
+        if (versions.length === 0) {
+            console.error('Claude converter: No versions provided for artifact', artifactId);
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${artifactId}** (Error: No versions found)</div>`;
+        }
+
+        const { ensureFolderExists } = await import("../../utils");
+
+        // Create conversation-specific artifact folder
+        const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+        const folderResult = await ensureFolderExists(conversationFolder, this.plugin.app.vault);
+        if (!folderResult.success) {
+            console.error('Claude converter: Failed to create artifacts folder', folderResult.error);
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${versions[0]?.title || artifactId}** (Error: Could not create folder)</div>`;
+        }
+
+        const savedVersions: string[] = [];
+        let latestVersion = '';
+        let currentContent = ''; // Track cumulative content for updates
+
+        // Save each version as a separate file
+        for (let i = 0; i < versions.length; i++) {
+            const version = versions[i];
+            const versionNumber = i + 1;
+            const fileName = `${artifactId}_v${versionNumber}.md`;
+            const filePath = `${conversationFolder}/${fileName}`;
+
+            try {
+                // Check if this version already exists (for updates/reimports)
+                const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
+                if (shouldSkip) {
+                    console.log(`Skipping existing artifact version: ${filePath}`);
+                    savedVersions.push(filePath);
+                    latestVersion = filePath;
+                    // Update current content for next iterations
+                    if (version.command === 'create' || version.command === 'rewrite') {
+                        currentContent = version.content || '';
+                    }
+                    continue;
+                }
+
+                // Determine the content for this version
+                let versionContent = '';
+                if (version.command === 'create' || version.command === 'rewrite') {
+                    // Complete content provided
+                    versionContent = version.content || '';
+                    currentContent = versionContent; // Update our tracking
+                } else if (version.command === 'update') {
+                    // For updates, we should apply the update to the previous content
+                    // But Claude actually provides the full updated content in most cases
+                    if (version.content && version.content.length > 0) {
+                        versionContent = version.content;
+                        currentContent = versionContent;
+                    } else {
+                        // Empty update - use previous content
+                        versionContent = currentContent;
+                    }
+                }
+
+                console.log(`Saving artifact version ${versionNumber}: ${filePath} (${versionContent.length} chars)`);
+                await this.saveIndividualArtifactVersion(
+                    version,
+                    filePath,
+                    versionNumber,
+                    versionContent,
+                    conversationId,
+                    conversationTitle,
+                    conversationCreateTime
+                );
+                savedVersions.push(filePath);
+                latestVersion = filePath;
+            } catch (error) {
+                console.error(`Failed to save artifact version ${versionNumber} to ${filePath}:`, error);
+                // Continue with other versions even if one fails
+            }
+        }
+
+        // Return formatted summary for conversation
+        if (savedVersions.length === 0) {
+            console.error('Claude converter: No versions were saved for artifact', artifactId);
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${versions[0]?.title || artifactId}** (Error: No versions could be saved)</div>`;
+        }
+
+        return this.formatArtifactSummary(versions[0], savedVersions, latestVersion, conversationFolder);
+    }
+
+    /**
+     * Save all versions of an artifact and return summary for conversation (legacy method)
      */
     private static async saveArtifactVersions(
         artifactId: string,
@@ -364,7 +464,111 @@ export class ClaudeConverter {
     }
 
     /**
-     * Save a single artifact version
+     * Save a single artifact version with specific content
+     */
+    private static async saveIndividualArtifactVersion(
+        artifactInput: any,
+        filePath: string,
+        versionNumber: number,
+        versionContent: string,
+        conversationId?: string,
+        conversationTitle?: string,
+        conversationCreateTime?: number
+    ): Promise<void> {
+        const title = artifactInput.title || 'Untitled Artifact';
+        let language = artifactInput.language || 'text';
+        const command = artifactInput.command || 'create';
+        const artifactId = artifactInput.id || 'unknown';
+        const versionUuid = artifactInput.version_uuid;
+
+        // Auto-detect language if marked as "text" or undefined but content suggests otherwise
+        if ((language.toLowerCase() === 'text' || !language || language === 'undefined') && versionContent) {
+            const detectedLanguage = this.detectLanguageFromContent(versionContent, artifactInput.type);
+            if (detectedLanguage !== 'text') {
+                language = detectedLanguage;
+            }
+        }
+
+        // Generate conversation link with proper path if conversationId and title are provided
+        let conversationLink = '';
+        if (conversationId && conversationTitle && conversationCreateTime) {
+            const createDate = new Date(conversationCreateTime * 1000);
+            const year = createDate.getFullYear();
+            const month = String(createDate.getMonth() + 1).padStart(2, '0');
+
+            // Import utilities
+            const { generateConversationFileName } = await import("../../utils");
+
+            // Generate the exact filename that would be used for the conversation
+            const fileName = generateConversationFileName(
+                conversationTitle,
+                conversationCreateTime,
+                this.plugin.settings.addDatePrefix,
+                this.plugin.settings.dateFormat
+            );
+
+            // Use absolute path from vault root (without .md extension for links)
+            const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
+            conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
+        }
+
+        // Create markdown content with enhanced frontmatter
+        let markdownContent = `---
+nexus: nexus-ai-chat-importer
+plugin_version: ${this.plugin.manifest.version}
+provider: claude
+artifact_id: ${artifactId}
+version_uuid: ${versionUuid}
+version_number: ${versionNumber}
+command: ${command}
+conversation_id: ${conversationId || 'unknown'}
+format: ${language}
+aliases: ["${title}", "${artifactId}_v${versionNumber}"]
+---
+
+# ${title} (Version ${versionNumber})
+
+**Type:** Claude Artifact
+**Language:** ${language}`;
+
+        if (artifactInput.language !== language) {
+            markdownContent += ` (detected from content, original: ${artifactInput.language})`;
+        }
+
+        markdownContent += `
+**Command:** ${command}
+**Version:** ${versionNumber}
+**ID:** ${artifactId}
+**UUID:** ${versionUuid}`;
+
+        if (conversationLink) {
+            markdownContent += `
+**Conversation:** ${conversationLink}`;
+        }
+
+        markdownContent += `\n\n## Content\n\n`;
+
+        // Add content based on language
+        if (language.toLowerCase() === 'markdown') {
+            // For markdown, include content directly
+            markdownContent += versionContent;
+        } else {
+            // For other languages, use code blocks
+            markdownContent += `\`\`\`${language}\n${versionContent}\n\`\`\``;
+        }
+
+        // Save the artifact as markdown
+        try {
+            await this.plugin.app.vault.create(filePath, markdownContent);
+            console.log(`Successfully saved artifact version: ${filePath}`);
+        } catch (error) {
+            console.error(`Failed to create artifact file ${filePath}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Save a single artifact version (legacy method)
      */
     private static async saveArtifactVersion(
         artifactInput: any,
