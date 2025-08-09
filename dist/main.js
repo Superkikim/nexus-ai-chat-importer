@@ -5770,15 +5770,20 @@ var ClaudeConverter = class {
         }
         const isSignificant = command === "create" || command === "rewrite" || command === "update" && content.length > 100;
         if (isSignificant && versionUuid) {
+          console.log(`Claude converter: Found significant artifact version - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, UUID: ${versionUuid}`);
           if (!artifactVersionsMap.has(artifactId)) {
             artifactVersionsMap.set(artifactId, []);
           }
           artifactVersionsMap.get(artifactId).push(block.input);
+        } else {
+          console.log(`Claude converter: Skipped artifact - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, Significant: ${isSignificant}, Has UUID: ${!!versionUuid}`);
         }
       }
     }
     const processedArtifacts = /* @__PURE__ */ new Set();
+    console.log(`Claude converter: Processing ${artifactVersionsMap.size} unique artifacts`);
     for (const [artifactId, versions] of artifactVersionsMap.entries()) {
+      console.log(`Claude converter: Processing artifact ${artifactId} with ${versions.length} versions`);
       if (versions.length > 0) {
         const artifactSummary = await this.saveArtifactVersions(
           artifactId,
