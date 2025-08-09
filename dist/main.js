@@ -4154,7 +4154,8 @@ var ImportReport = class {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
-      table += `| \u2728 | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificValue} |
+      const providerSpecificDisplay = providerSpecificValue > 0 ? `\u2705 ${providerSpecificValue}` : providerSpecificValue;
+      table += `| \u2728 | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |
 `;
     });
     return table + "\n\n";
@@ -4170,7 +4171,8 @@ var ImportReport = class {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
-      table += `| \u{1F504} | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificValue} |
+      const providerSpecificDisplay = providerSpecificValue > 0 ? `\u2705 ${providerSpecificValue}` : providerSpecificValue;
+      table += `| \u{1F504} | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |
 `;
     });
     return table + "\n\n";
@@ -5689,7 +5691,7 @@ var ClaudeConverter = class {
     this.plugin = plugin;
   }
   static async convertChat(chat) {
-    const messages = await this.convertMessages(chat.chat_messages, chat.uuid);
+    const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name);
     return {
       id: chat.uuid,
       title: chat.name || "Untitled",
@@ -5702,7 +5704,7 @@ var ClaudeConverter = class {
       summary: chat.summary || ""
     };
   }
-  static async convertMessages(messages, conversationId) {
+  static async convertMessages(messages, conversationId, conversationTitle) {
     const standardMessages = [];
     if (!messages || messages.length === 0) {
       return standardMessages;
@@ -5711,7 +5713,7 @@ var ClaudeConverter = class {
       if (!this.shouldIncludeMessage(message)) {
         continue;
       }
-      const { text, attachments } = await this.processContentBlocks(message.content, conversationId);
+      const { text, attachments } = await this.processContentBlocks(message.content, conversationId, conversationTitle);
       const fileAttachments = this.processFileAttachments(message.files);
       const standardMessage = {
         id: message.uuid,
@@ -5733,7 +5735,7 @@ var ClaudeConverter = class {
     }
     return false;
   }
-  static async processContentBlocks(contentBlocks, conversationId) {
+  static async processContentBlocks(contentBlocks, conversationId, conversationTitle) {
     const textParts = [];
     const attachments = [];
     if (!contentBlocks || contentBlocks.length === 0) {
@@ -5747,15 +5749,13 @@ var ClaudeConverter = class {
           }
           break;
         case "thinking":
-          if (block.thinking) {
-            textParts.push(`**[Thinking]**
-${block.thinking}`);
-          }
           break;
         case "tool_use":
           if (block.name === "artifacts" && block.input) {
-            const artifact = await this.formatArtifact(block.input, conversationId);
+            const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle);
             textParts.push(artifact);
+          } else if (block.name === "web_search") {
+            break;
           } else if (block.name && block.input) {
             const code = block.input.code || JSON.stringify(block.input, null, 2);
             textParts.push(`**[Tool: ${block.name}]**
@@ -5765,15 +5765,6 @@ ${code}
           }
           break;
         case "tool_result":
-          if (block.content && Array.isArray(block.content)) {
-            const results = block.content.map((c) => c.text).join("\n").trim();
-            if (results && results !== "OK") {
-              textParts.push(`**[Tool Result]**
-\`\`\`
-${results}
-\`\`\``);
-            }
-          }
           break;
       }
     }
@@ -5825,9 +5816,9 @@ ${results}
     }
   }
   /**
-   * Format Claude artifacts with inline content or links
+   * Format Claude artifacts as links to separate files only
    */
-  static async formatArtifact(artifactInput, conversationId) {
+  static async formatArtifact(artifactInput, conversationId, conversationTitle) {
     const title = artifactInput.title || "Untitled Artifact";
     const language = artifactInput.language || "text";
     const command = artifactInput.command || "create";
@@ -5850,33 +5841,16 @@ ${results}
     formattedContent += `> **ID:** ${artifactId}
 
 `;
-    if (content) {
-      if (language.toLowerCase() === "markdown") {
-        formattedContent += content + "\n\n";
-        if (this.plugin) {
-          try {
-            const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
-            formattedContent += `\u{1F4CE} **[View as separate file](${filePath})**
+    if (content && this.plugin) {
+      try {
+        const filePath = await this.saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle);
+        formattedContent += `\u{1F4CE} **[View Artifact](${filePath})**
 
 `;
-          } catch (error) {
-          }
-        }
-      } else {
-        formattedContent += `\`\`\`${language}
-${content}
-\`\`\`
+      } catch (error) {
+        formattedContent += `\u274C **Error saving artifact:** ${error instanceof Error ? error.message : "Unknown error"}
 
 `;
-        if (this.plugin) {
-          try {
-            const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
-            formattedContent += `\u{1F4CE} **[View Artifact](${filePath})**
-
-`;
-          } catch (error) {
-          }
-        }
       }
     }
     formattedContent += `</div>
@@ -5887,7 +5861,7 @@ ${content}
   /**
    * Save artifact as markdown note in attachments/artifacts/ folder
    */
-  static async saveArtifactToFile(artifactId, title, language, content) {
+  static async saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle) {
     const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, "_");
     const fileName = `${safeTitle}_${artifactId}.md`;
     const artifactFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts`;
@@ -5897,26 +5871,37 @@ ${content}
       throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
     }
     const filePath = `${artifactFolder}/${fileName}`;
-    const markdownContent = `---
-title: ${title}
-type: Claude Artifact
-language: ${language}
-artifact_id: ${artifactId}
-created: ${new Date().toISOString()}
+    const conversationLink = conversationId && conversationTitle ? `[[${conversationTitle}]]` : "";
+    let markdownContent = `---
+nexus: nexus-ai-chat-importer
+plugin_version: ${this.plugin.manifest.version}
+provider: claude
+aliases: ["${title}", "${artifactId}"]
+conversation_id: ${conversationId || "unknown"}
+format: ${language}
 ---
 
 # ${title}
 
 **Type:** Claude Artifact
 **Language:** ${language}
-**ID:** ${artifactId}
+**ID:** ${artifactId}`;
+    if (conversationLink) {
+      markdownContent += `
+**Conversation:** ${conversationLink}`;
+    }
+    markdownContent += `
 
 ## Content
 
-\`\`\`${language}
-${content}
-\`\`\`
 `;
+    if (language.toLowerCase() === "markdown") {
+      markdownContent += content;
+    } else {
+      markdownContent += `\`\`\`${language}
+${content}
+\`\`\``;
+    }
     await this.plugin.app.vault.create(filePath, markdownContent);
     return filePath;
   }
@@ -6270,9 +6255,9 @@ var ClaudeAdapter = class {
     ClaudeConverter.setPlugin(this.plugin);
     return await ClaudeConverter.convertChat(chat);
   }
-  async convertMessages(messages, conversationId) {
+  async convertMessages(messages, conversationId, conversationTitle) {
     ClaudeConverter.setPlugin(this.plugin);
-    return await ClaudeConverter.convertMessages(messages, conversationId);
+    return await ClaudeConverter.convertMessages(messages, conversationId, conversationTitle);
   }
   getProviderName() {
     return "claude";
