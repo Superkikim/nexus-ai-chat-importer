@@ -6164,11 +6164,7 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     const fileName = attachment.fileName;
     const conversationUrl = `https://claude.ai/chat/${conversationId}`;
     const fileType = this.getFileTypeFromExtension(fileName);
-    const placeholder = `<div class="nexus-attachment-box">
-
-\u{1F4CE} **Attachment:** ${fileName} (${fileType}) - (not included in archive. [Click to open original conversation](${conversationUrl}))
-
-</div>`;
+    const placeholder = `<div class="nexus-attachment-box">\u{1F4CE} **Attachment:** ${fileName} (${fileType}) - (not included in archive. [Click to open original conversation](${conversationUrl}))</div>`;
     return {
       ...attachment,
       extractedContent: placeholder
