@@ -111,6 +111,10 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
         return this.reportNamingStrategy;
     }
 
+    getProviderName(): string {
+        return "chatgpt";
+    }
+
     /**
      * Check if message contains REAL DALL-E image (not user upload)
      */
