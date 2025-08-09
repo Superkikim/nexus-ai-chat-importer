@@ -270,17 +270,16 @@ export class ChatGPTAttachmentExtractor {
     }
 
     /**
-     * Generate local path for ChatGPT attachment - simplified structure
+     * Generate local path for ChatGPT attachment - provider-based structure
      */
     private generateLocalPath(conversationId: string, attachment: StandardAttachment): string {
-        const baseFolder = this.plugin.settings.attachmentFolder;
         const category = this.categorizeFile(attachment);
-        
+
         // Clean filename for filesystem - keep original name since it should be unique
         const safeFileName = this.sanitizeFileName(attachment.fileName);
-        
-        // Simple structure: attachments/chatgpt/images/filename.jpg
-        return `${baseFolder}/chatgpt/${category}/${safeFileName}`;
+
+        // New structure: <archiveFolder>/chatgpt/attachments/<category>/filename.jpg
+        return `${this.plugin.settings.archiveFolder}/chatgpt/attachments/${category}/${safeFileName}`;
     }
 
     /**

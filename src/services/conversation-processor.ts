@@ -405,11 +405,14 @@ export class ConversationProcessor {
     private async generateFilePathForChat(adapter: any, chat: any): Promise<string> {
         const createTime = adapter.getCreateTime(chat);
         const chatTitle = adapter.getTitle(chat);
+        const providerName = adapter.getProviderName();
 
         const date = new Date(createTime * 1000);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
-        const folderPath = `${this.plugin.settings.archiveFolder}/${year}/${month}`;
+
+        // New structure: <archiveFolder>/<provider>/<year>/<month>/
+        const folderPath = `${this.plugin.settings.archiveFolder}/${providerName}/${year}/${month}`;
 
         const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
         if (!folderResult.success) {

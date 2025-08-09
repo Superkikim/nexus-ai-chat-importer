@@ -113,12 +113,23 @@ export class ImportService {
             const content = await zip.loadAsync(file);
             const fileNames = Object.keys(content.files);
 
-            // TODO: Make this provider-aware when adding Claude support
-            // Currently only supports ChatGPT's conversations.json format
-            if (!fileNames.includes("conversations.json")) {
+            // Check for supported provider formats
+            const hasConversationsJson = fileNames.includes("conversations.json");
+            const hasUsersJson = fileNames.includes("users.json");
+            const hasProjectsJson = fileNames.includes("projects.json");
+
+            // ChatGPT format: conversations.json
+            const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
+
+            // Claude format: conversations.json + users.json + projects.json
+            const isClaudeFormat = hasConversationsJson && hasUsersJson && hasProjectsJson;
+
+            if (!isChatGPTFormat && !isClaudeFormat) {
                 throw new NexusAiChatImporterError(
                     "Invalid ZIP structure",
-                    "File 'conversations.json' not found in the zip file"
+                    "This ZIP file doesn't match any supported chat export format. " +
+                    "Expected either ChatGPT format (conversations.json) or " +
+                    "Claude format (conversations.json + users.json + projects.json)."
                 );
             }
 
