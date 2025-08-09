@@ -2772,6 +2772,7 @@ __export(utils_exports, {
   ensureFolderExists: () => ensureFolderExists,
   formatTimestamp: () => formatTimestamp,
   formatTitle: () => formatTitle,
+  generateConversationFileName: () => generateConversationFileName,
   generateFileName: () => generateFileName,
   generateUniqueFileName: () => generateUniqueFileName,
   generateYearMonthFolder: () => generateYearMonthFolder,
@@ -2851,6 +2852,23 @@ async function getFileHash(file) {
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function generateConversationFileName(chatTitle, createTime, addDatePrefix, dateFormat) {
+  const date = new Date(createTime * 1e3);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  let fileName = generateFileName(chatTitle);
+  if (addDatePrefix) {
+    const day = String(date.getDate()).padStart(2, "0");
+    let prefix = "";
+    if (dateFormat === "YYYY-MM-DD") {
+      prefix = `${year}-${month}-${day}`;
+    } else if (dateFormat === "YYYYMMDD") {
+      prefix = `${year}${month}${day}`;
+    }
+    fileName = `${prefix} - ${fileName}`;
+  }
+  return fileName;
 }
 function isValidMessage(message) {
   return message && typeof message === "object" && message.content && typeof message.content === "object" && Array.isArray(message.content.parts) && message.content.parts.length > 0 && message.content.parts.some(
@@ -4797,17 +4815,12 @@ var ConversationProcessor = class {
     if (!folderResult.success) {
       throw new Error(folderResult.error || "Failed to ensure folder exists.");
     }
-    let fileName = generateFileName(chatTitle) + ".md";
-    if (this.plugin.settings.addDatePrefix) {
-      const day = String(date.getDate()).padStart(2, "0");
-      let prefix = "";
-      if (this.plugin.settings.dateFormat === "YYYY-MM-DD") {
-        prefix = `${year}-${month}-${day}`;
-      } else if (this.plugin.settings.dateFormat === "YYYYMMDD") {
-        prefix = `${year}${month}${day}`;
-      }
-      fileName = `${prefix} - ${fileName}`;
-    }
+    let fileName = generateConversationFileName(
+      chatTitle,
+      createTime,
+      this.plugin.settings.addDatePrefix,
+      this.plugin.settings.dateFormat
+    ) + ".md";
     let filePath = `${folderPath}/${fileName}`;
     if (await doesFilePathExist(filePath, this.plugin.app.vault)) {
       filePath = await generateUniqueFileName(filePath, this.plugin.app.vault.adapter);
@@ -5900,9 +5913,14 @@ ${code}
       const createDate = new Date(conversationCreateTime * 1e3);
       const year = createDate.getFullYear();
       const month = String(createDate.getMonth() + 1).padStart(2, "0");
-      const { generateFileName: generateFileName2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-      const safeTitle2 = generateFileName2(conversationTitle);
-      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${safeTitle2}`;
+      const { generateConversationFileName: generateConversationFileName2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+      const fileName2 = generateConversationFileName2(
+        conversationTitle,
+        conversationCreateTime,
+        this.plugin.settings.addDatePrefix,
+        this.plugin.settings.dateFormat
+      );
+      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName2}`;
       conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
     }
     let markdownContent = `---

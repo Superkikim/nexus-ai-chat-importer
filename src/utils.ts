@@ -132,6 +132,36 @@ export async function getFileHash(file: File): Promise<string> {
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/**
+ * Generate the exact filename that would be used for a conversation
+ * This matches the logic in ConversationProcessor.generateFilePathForChat
+ */
+export function generateConversationFileName(
+    chatTitle: string,
+    createTime: number,
+    addDatePrefix: boolean,
+    dateFormat: string
+): string {
+    const date = new Date(createTime * 1000);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+
+    let fileName = generateFileName(chatTitle);
+
+    if (addDatePrefix) {
+        const day = String(date.getDate()).padStart(2, "0");
+        let prefix = "";
+        if (dateFormat === "YYYY-MM-DD") {
+            prefix = `${year}-${month}-${day}`;
+        } else if (dateFormat === "YYYYMMDD") {
+            prefix = `${year}${month}${day}`;
+        }
+        fileName = `${prefix} - ${fileName}`;
+    }
+
+    return fileName;
+}
+
 export function isValidMessage(message: any): boolean {
     return (
         message &&
