@@ -5739,8 +5739,18 @@ var ClaudeConverter = class {
   static async processContentBlocks(contentBlocks, conversationId, conversationTitle, conversationCreateTime) {
     const textParts = [];
     const attachments = [];
+    const artifactMap = /* @__PURE__ */ new Map();
     if (!contentBlocks || contentBlocks.length === 0) {
       return { text: "", attachments: [] };
+    }
+    for (const block of contentBlocks) {
+      if (block.type === "tool_use" && block.name === "artifacts" && block.input) {
+        const artifactId = block.input.id || "unknown";
+        const content = block.input.content || "";
+        if (!artifactMap.has(artifactId) || content.length > (artifactMap.get(artifactId).content || "").length) {
+          artifactMap.set(artifactId, block.input);
+        }
+      }
     }
     for (const block of contentBlocks) {
       switch (block.type) {
@@ -5753,8 +5763,11 @@ var ClaudeConverter = class {
           break;
         case "tool_use":
           if (block.name === "artifacts" && block.input) {
-            const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle, conversationCreateTime);
-            textParts.push(artifact);
+            const artifactId = block.input.id || "unknown";
+            if (artifactMap.get(artifactId) === block.input) {
+              const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle, conversationCreateTime);
+              textParts.push(artifact);
+            }
           } else if (block.name === "web_search") {
             break;
           } else if (block.name && block.input) {
@@ -5887,8 +5900,10 @@ ${code}
       const createDate = new Date(conversationCreateTime * 1e3);
       const year = createDate.getFullYear();
       const month = String(createDate.getMonth() + 1).padStart(2, "0");
-      const safeTitle2 = conversationTitle.replace(/[^a-zA-Z0-9\-_]/g, "_");
-      conversationLink = `[[../../Conversations/claude/${year}/${month}/${safeTitle2}|${conversationTitle}]]`;
+      const { generateFileName: generateFileName2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+      const safeTitle2 = generateFileName2(conversationTitle);
+      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${safeTitle2}`;
+      conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
     }
     let markdownContent = `---
 nexus: nexus-ai-chat-importer
