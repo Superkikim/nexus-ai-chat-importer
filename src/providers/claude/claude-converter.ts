@@ -132,7 +132,7 @@ export class ClaudeConverter {
                 // Only process significant versions
                 const isSignificant = command === 'create' ||
                                     command === 'rewrite' ||
-                                    (command === 'update' && content.length > 100);
+                                    (command === 'update' && content.length > 0);
 
                 if (isSignificant && versionUuid) {
                     // Increment version number for this artifact ID
