@@ -41,4 +41,22 @@ export class ChatGPTReportNamingStrategy implements ReportNamingStrategy {
     getProviderName(): string {
         return "chatgpt";
     }
+
+    getProviderSpecificColumn(): { header: string; getValue: (adapter: any, chat: any) => number } {
+        return {
+            header: "Attachments",
+            getValue: (adapter: any, chat: any) => {
+                // Count attachments in ChatGPT conversation
+                let attachmentCount = 0;
+                if (chat.mapping) {
+                    Object.values(chat.mapping).forEach((node: any) => {
+                        if (node.message?.metadata?.attachments) {
+                            attachmentCount += node.message.metadata.attachments.length;
+                        }
+                    });
+                }
+                return attachmentCount;
+            }
+        };
+    }
 }

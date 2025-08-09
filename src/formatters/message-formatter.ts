@@ -64,75 +64,70 @@ export class MessageFormatter {
     }
 
     /**
-     * Format single attachment with status-aware display
+     * Format single attachment with status-aware display and CSS box styling
      */
     private formatSingleAttachment(attachment: StandardAttachment, quoteChar: string): string {
-        let content = "";
+        let content = `<div class="nexus-attachment-box">\n\n`;
 
         // Status-aware header with appropriate icon
         if (attachment.status?.found) {
-            content = `${quoteChar} **📎 Attachment:** ${attachment.fileName}`;
+            content += `**📎 Attachment:** ${attachment.fileName}`;
         } else if (attachment.status?.processed) {
-            content = `${quoteChar} **📎 Missing Attachment:** ${attachment.fileName}`;
+            content += `**📎 Missing Attachment:** ${attachment.fileName}`;
         } else {
-            content = `${quoteChar} **📎 Attachment:** ${attachment.fileName}`;
+            content += `**📎 Attachment:** ${attachment.fileName}`;
         }
-        
+
         // Add file metadata
         if (attachment.fileType) {
             content += ` (${attachment.fileType})`;
         }
-        
+
         if (attachment.fileSize) {
             content += ` - ${this.formatFileSize(attachment.fileSize)}`;
         }
+
+        content += '\n\n';
 
         // Handle successful extraction
         if (attachment.status?.found && attachment.url) {
             // Skip sandbox:// URLs - they don't work in Obsidian
             if (!attachment.url.startsWith('sandbox://')) {
                 if (this.isImageFile(attachment)) {
-                    content += `\n${quoteChar} ![[${attachment.url}]]`; // Embed images
+                    content += `![[${attachment.url}]]\n\n`; // Embed images
                 } else {
-                    content += `\n${quoteChar} [[${attachment.url}]]`; // Link documents
+                    content += `[[${attachment.url}]]\n\n`; // Link documents
                 }
             } else {
                 // Sandbox URL - explain to user
-                content += `\n${quoteChar} **Status:** ⚠️ File not available in archive. Visit the original conversation to access it`;
+                content += `**Status:** ⚠️ File not available in archive. Visit the original conversation to access it\n\n`;
             }
         }
 
         // Handle missing/failed attachments with informative notes
         if (attachment.status && !attachment.status.found) {
-            content += `\n${quoteChar} **Status:** ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
-            
+            content += `**Status:** ⚠️ ${this.getStatusMessage(attachment.status.reason)}\n\n`;
+
             if (attachment.status.note) {
-                content += `\n${quoteChar} **Note:** ${attachment.status.note}`;
+                content += `**Note:** ${attachment.status.note}\n\n`;
             }
         }
 
         // Add DALL-E prompt in codebox (special case for DALL-E images)
         if (attachment.extractedContent && this.isDalleImage(attachment)) {
-            content += `\n${quoteChar} **Prompt:**\n${quoteChar} \`\`\`\n${quoteChar} ${attachment.extractedContent}\n${quoteChar} \`\`\``;
+            content += `**Prompt:**\n\`\`\`\n${attachment.extractedContent}\n\`\`\`\n\n`;
         }
         // Add extracted content for other types (transcriptions, OCR, code, etc.)
         else if (attachment.extractedContent) {
-            content += `\n${quoteChar} **Content:**\n`;
-            content += attachment.extractedContent
-                .split("\n")
-                .map(line => `${quoteChar} ${line}`)
-                .join("\n");
+            content += `**Content:**\n${attachment.extractedContent}\n\n`;
         }
 
         // Add raw content for text files - always show if available
         if (attachment.content && !attachment.extractedContent) {
-            content += `\n${quoteChar} **Content:**\n`;
-            content += attachment.content
-                .split("\n")
-                .map(line => `${quoteChar} ${line}`)
-                .join("\n");
+            content += `**Content:**\n${attachment.content}\n\n`;
         }
 
+        content += `</div>`;
         return content;
     }
 

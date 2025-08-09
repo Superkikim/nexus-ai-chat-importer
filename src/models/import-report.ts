@@ -8,6 +8,7 @@ interface ReportEntry {
     updateDate: string;
     messageCount?: number;
     newMessageCount?: number; // For updates
+    providerSpecificCount?: number; // For provider-specific column (artifacts, attachments, etc.)
     reason?: string;
     errorMessage?: string;
     attachmentStats?: AttachmentStats;
@@ -27,6 +28,11 @@ export class ImportReport {
     private failed: ReportEntry[] = [];
     private globalErrors: { message: string; details: string }[] = [];
     private summary: string = "";
+    private providerSpecificColumnHeader: string = "Attachments";
+
+    setProviderSpecificColumnHeader(header: string) {
+        this.providerSpecificColumnHeader = header;
+    }
 
     addSummary(zipFileName: string, counters: ProcessingCounters) {
         // Calculate total attachment stats
@@ -57,16 +63,16 @@ export class ImportReport {
         return total;
     }
 
-    addCreated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, attachmentStats?: AttachmentStats) {
-        this.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats });
+    addCreated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+        this.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount });
     }
 
-    addUpdated(title: string, filePath: string, createDate: string, updateDate: string, newMessageCount: number, attachmentStats?: AttachmentStats) {
-        this.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats });
+    addUpdated(title: string, filePath: string, createDate: string, updateDate: string, newMessageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+        this.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount });
     }
 
-    addSkipped(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, reason: string, attachmentStats?: AttachmentStats) {
-        this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats });
+    addSkipped(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, reason: string, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+        this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount });
     }
 
     addFailed(title: string, filePath: string, createDate: string, updateDate: string, errorMessage: string) {
@@ -107,33 +113,33 @@ export class ImportReport {
 
     private generateCreatedTable(): string {
         let table = `## ✨ Created Notes\n\n`;
-        table += "| | Title | Created | Messages | Attachments |\n";
+        table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
-        
+
         this.created.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
-            const attachmentStatus = this.formatAttachmentStatus(entry.attachmentStats);
-            
-            table += `| ✨ | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${attachmentStatus} |\n`;
+            const providerSpecificValue = entry.providerSpecificCount || 0;
+
+            table += `| ✨ | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificValue} |\n`;
         });
-        
+
         return table + "\n\n";
     }
 
     private generateUpdatedTable(): string {
         let table = `## 🔄 Updated Notes\n\n`;
-        table += "| | Title | Updated | New Messages | New Attachments |\n";
+        table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
-        
+
         this.updated.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
-            const attachmentStatus = this.formatAttachmentStatus(entry.attachmentStats);
-            
-            table += `| 🔄 | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${attachmentStatus} |\n`;
+            const providerSpecificValue = entry.providerSpecificCount || 0;
+
+            table += `| 🔄 | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificValue} |\n`;
         });
-        
+
         return table + "\n\n";
     }
 

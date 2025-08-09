@@ -4080,6 +4080,10 @@ var ImportReport = class {
     this.failed = [];
     this.globalErrors = [];
     this.summary = "";
+    this.providerSpecificColumnHeader = "Attachments";
+  }
+  setProviderSpecificColumnHeader(header) {
+    this.providerSpecificColumnHeader = header;
   }
   addSummary(zipFileName, counters) {
     const totalAttachments = this.getTotalAttachmentStats();
@@ -4105,14 +4109,14 @@ var ImportReport = class {
     });
     return total;
   }
-  addCreated(title, filePath, createDate, updateDate, messageCount, attachmentStats) {
-    this.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats });
+  addCreated(title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount) {
+    this.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount });
   }
-  addUpdated(title, filePath, createDate, updateDate, newMessageCount, attachmentStats) {
-    this.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats });
+  addUpdated(title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount) {
+    this.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount });
   }
-  addSkipped(title, filePath, createDate, updateDate, messageCount, reason, attachmentStats) {
-    this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats });
+  addSkipped(title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount) {
+    this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount });
   }
   addFailed(title, filePath, createDate, updateDate, errorMessage) {
     this.failed.push({ title, filePath, createDate, updateDate, errorMessage });
@@ -4143,13 +4147,14 @@ var ImportReport = class {
     let table = `## \u2728 Created Notes
 
 `;
-    table += "| | Title | Created | Messages | Attachments |\n";
+    table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |
+`;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
     this.created.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
-      const attachmentStatus = this.formatAttachmentStatus(entry.attachmentStats);
-      table += `| \u2728 | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${attachmentStatus} |
+      const providerSpecificValue = entry.providerSpecificCount || 0;
+      table += `| \u2728 | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificValue} |
 `;
     });
     return table + "\n\n";
@@ -4158,13 +4163,14 @@ var ImportReport = class {
     let table = `## \u{1F504} Updated Notes
 
 `;
-    table += "| | Title | Updated | New Messages | New Attachments |\n";
+    table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |
+`;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
     this.updated.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
-      const attachmentStatus = this.formatAttachmentStatus(entry.attachmentStats);
-      table += `| \u{1F504} | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${attachmentStatus} |
+      const providerSpecificValue = entry.providerSpecificCount || 0;
+      table += `| \u{1F504} | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificValue} |
 `;
     });
     return table + "\n\n";
@@ -4266,17 +4272,19 @@ var MessageFormatter = class {
     }).join("\n\n");
   }
   /**
-   * Format single attachment with status-aware display
+   * Format single attachment with status-aware display and CSS box styling
    */
   formatSingleAttachment(attachment, quoteChar) {
     var _a, _b, _c;
-    let content = "";
+    let content = `<div class="nexus-attachment-box">
+
+`;
     if ((_a = attachment.status) == null ? void 0 : _a.found) {
-      content = `${quoteChar} **\u{1F4CE} Attachment:** ${attachment.fileName}`;
+      content += `**\u{1F4CE} Attachment:** ${attachment.fileName}`;
     } else if ((_b = attachment.status) == null ? void 0 : _b.processed) {
-      content = `${quoteChar} **\u{1F4CE} Missing Attachment:** ${attachment.fileName}`;
+      content += `**\u{1F4CE} Missing Attachment:** ${attachment.fileName}`;
     } else {
-      content = `${quoteChar} **\u{1F4CE} Attachment:** ${attachment.fileName}`;
+      content += `**\u{1F4CE} Attachment:** ${attachment.fileName}`;
     }
     if (attachment.fileType) {
       content += ` (${attachment.fileType})`;
@@ -4284,46 +4292,54 @@ var MessageFormatter = class {
     if (attachment.fileSize) {
       content += ` - ${this.formatFileSize(attachment.fileSize)}`;
     }
+    content += "\n\n";
     if (((_c = attachment.status) == null ? void 0 : _c.found) && attachment.url) {
       if (!attachment.url.startsWith("sandbox://")) {
         if (this.isImageFile(attachment)) {
-          content += `
-${quoteChar} ![[${attachment.url}]]`;
+          content += `![[${attachment.url}]]
+
+`;
         } else {
-          content += `
-${quoteChar} [[${attachment.url}]]`;
+          content += `[[${attachment.url}]]
+
+`;
         }
       } else {
-        content += `
-${quoteChar} **Status:** \u26A0\uFE0F File not available in archive. Visit the original conversation to access it`;
+        content += `**Status:** \u26A0\uFE0F File not available in archive. Visit the original conversation to access it
+
+`;
       }
     }
     if (attachment.status && !attachment.status.found) {
-      content += `
-${quoteChar} **Status:** \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
+      content += `**Status:** \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}
+
+`;
       if (attachment.status.note) {
-        content += `
-${quoteChar} **Note:** ${attachment.status.note}`;
+        content += `**Note:** ${attachment.status.note}
+
+`;
       }
     }
     if (attachment.extractedContent && this.isDalleImage(attachment)) {
-      content += `
-${quoteChar} **Prompt:**
-${quoteChar} \`\`\`
-${quoteChar} ${attachment.extractedContent}
-${quoteChar} \`\`\``;
-    } else if (attachment.extractedContent) {
-      content += `
-${quoteChar} **Content:**
+      content += `**Prompt:**
+\`\`\`
+${attachment.extractedContent}
+\`\`\`
+
 `;
-      content += attachment.extractedContent.split("\n").map((line) => `${quoteChar} ${line}`).join("\n");
+    } else if (attachment.extractedContent) {
+      content += `**Content:**
+${attachment.extractedContent}
+
+`;
     }
     if (attachment.content && !attachment.extractedContent) {
-      content += `
-${quoteChar} **Content:**
+      content += `**Content:**
+${attachment.content}
+
 `;
-      content += attachment.content.split("\n").map((line) => `${quoteChar} ${line}`).join("\n");
     }
+    content += `</div>`;
     return content;
   }
   /**
@@ -4613,6 +4629,20 @@ var ConversationProcessor = class {
       return 0;
     }
   }
+  /**
+   * Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
+   */
+  getProviderSpecificCount(adapter, chat) {
+    try {
+      const strategy = adapter.getReportNamingStrategy();
+      if (strategy && strategy.getProviderSpecificColumn) {
+        const columnInfo = strategy.getProviderSpecificColumn();
+        return columnInfo.getValue(adapter, chat);
+      }
+    } catch (error) {
+    }
+    return 0;
+  }
   async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
@@ -4711,13 +4741,15 @@ var ConversationProcessor = class {
       const createTime = adapter.getCreateTime(chat);
       const updateTime = adapter.getUpdateTime(chat);
       const chatTitle = adapter.getTitle(chat);
+      const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
       importReport.addCreated(
         chatTitle,
         filePath,
         `${formatTimestamp(createTime, "date")} ${formatTimestamp(createTime, "time")}`,
         `${formatTimestamp(updateTime, "date")} ${formatTimestamp(updateTime, "time")}`,
         messageCount,
-        attachmentStats
+        attachmentStats,
+        providerSpecificCount
       );
       this.counters.totalNewConversationsSuccessfullyImported++;
       this.counters.totalNonEmptyMessagesToImport += messageCount;
@@ -5426,6 +5458,23 @@ var ChatGPTReportNamingStrategy = class {
   getProviderName() {
     return "chatgpt";
   }
+  getProviderSpecificColumn() {
+    return {
+      header: "Attachments",
+      getValue: (adapter, chat) => {
+        let attachmentCount = 0;
+        if (chat.mapping) {
+          Object.values(chat.mapping).forEach((node) => {
+            var _a, _b;
+            if ((_b = (_a = node.message) == null ? void 0 : _a.metadata) == null ? void 0 : _b.attachments) {
+              attachmentCount += node.message.metadata.attachments.length;
+            }
+          });
+        }
+        return attachmentCount;
+      }
+    };
+  }
 };
 
 // src/providers/chatgpt/chatgpt-adapter.ts
@@ -5717,11 +5766,13 @@ ${code}
           break;
         case "tool_result":
           if (block.content && Array.isArray(block.content)) {
-            const results = block.content.map((c) => c.text).join("\n");
-            textParts.push(`**[Tool Result]**
+            const results = block.content.map((c) => c.text).join("\n").trim();
+            if (results && results !== "OK") {
+              textParts.push(`**[Tool Result]**
 \`\`\`
 ${results}
 \`\`\``);
+            }
           }
           break;
       }
@@ -5774,7 +5825,7 @@ ${results}
     }
   }
   /**
-   * Format Claude artifacts and save to attachments/artifacts/ folder
+   * Format Claude artifacts with inline content or links
    */
   static async formatArtifact(artifactInput, conversationId) {
     const title = artifactInput.title || "Untitled Artifact";
@@ -5782,7 +5833,9 @@ ${results}
     const command = artifactInput.command || "create";
     const artifactId = artifactInput.id || "unknown";
     const content = artifactInput.content || "";
-    let formattedContent = `**\u{1F3A8} Artifact: ${title}**
+    let formattedContent = `<div class="nexus-artifact-box">
+
+**\u{1F3A8} Artifact: ${title}**
 
 `;
     if (command === "edit") {
@@ -5797,26 +5850,38 @@ ${results}
     formattedContent += `> **ID:** ${artifactId}
 
 `;
-    if (content && this.plugin) {
-      try {
-        const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
-        formattedContent += `\u{1F4CE} **[View Artifact](${filePath})**
+    if (content) {
+      if (language.toLowerCase() === "markdown") {
+        formattedContent += content + "\n\n";
+        if (this.plugin) {
+          try {
+            const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
+            formattedContent += `\u{1F4CE} **[View as separate file](${filePath})**
 
 `;
-      } catch (error) {
+          } catch (error) {
+          }
+        }
+      } else {
         formattedContent += `\`\`\`${language}
 ${content}
 \`\`\`
 
 `;
-      }
-    } else if (content) {
-      formattedContent += `\`\`\`${language}
-${content}
-\`\`\`
+        if (this.plugin) {
+          try {
+            const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
+            formattedContent += `\u{1F4CE} **[View Artifact](${filePath})**
 
 `;
+          } catch (error) {
+          }
+        }
+      }
     }
+    formattedContent += `</div>
+
+`;
     return formattedContent;
   }
   /**
@@ -5949,7 +6014,7 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     const fileName = attachment.fileName;
     const zipFile = this.findFileInZip(zip, fileName);
     if (!zipFile) {
-      return this.createFileNotFoundPlaceholder(attachment);
+      return this.createFileNotFoundPlaceholder(attachment, conversationId);
     }
     if (this.isImageFile(fileName)) {
       return await this.processImageAttachment(zipFile, attachment, conversationId);
@@ -5962,9 +6027,10 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
   /**
    * Create simple placeholder for missing files (normal for Claude)
    */
-  createFileNotFoundPlaceholder(attachment) {
+  createFileNotFoundPlaceholder(attachment, conversationId) {
     const fileName = attachment.fileName;
-    const placeholder = `\u{1F4CE} **Attachment:** ${fileName} (not included in archive. [Click to open original conversation](https://claude.ai))`;
+    const conversationUrl = `https://claude.ai/chat/${conversationId}`;
+    const placeholder = `\u{1F4CE} **Attachment:** ${fileName} (not included in archive. [Click to open original conversation](${conversationUrl}))`;
     return {
       ...attachment,
       extractedContent: placeholder
@@ -6166,6 +6232,12 @@ var ClaudeReportNamingStrategy = class {
     const now = new Date();
     const currentDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
     return `claude-${currentDate}-${baseName}`;
+  }
+  getProviderSpecificColumn() {
+    return {
+      header: "Artifacts",
+      getValue: (adapter, chat) => adapter.countArtifacts ? adapter.countArtifacts(chat) : 0
+    };
   }
 };
 
@@ -6410,6 +6482,12 @@ var ReportWriter = class {
   async writeReport(report, zipFileName, provider) {
     const { ensureFolderExists: ensureFolderExists2, formatTimestamp: formatTimestamp2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
     const reportInfo = this.getReportGenerationInfo(zipFileName, provider);
+    const adapter = this.providerRegistry.getAdapter(provider);
+    if (adapter) {
+      const strategy = adapter.getReportNamingStrategy();
+      const columnInfo = strategy.getProviderSpecificColumn();
+      report.setProviderSpecificColumnHeader(columnInfo.header);
+    }
     const folderResult = await ensureFolderExists2(reportInfo.folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);

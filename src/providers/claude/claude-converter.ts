@@ -108,10 +108,12 @@ export class ClaudeConverter {
                     break;
                     
                 case 'tool_result':
-                    // Format tool results
+                    // Filter out simple "OK" tool results
                     if (block.content && Array.isArray(block.content)) {
-                        const results = block.content.map(c => c.text).join('\n');
-                        textParts.push(`**[Tool Result]**\n\`\`\`\n${results}\n\`\`\``);
+                        const results = block.content.map(c => c.text).join('\n').trim();
+                        if (results && results !== 'OK') {
+                            textParts.push(`**[Tool Result]**\n\`\`\`\n${results}\n\`\`\``);
+                        }
                     }
                     break;
             }
@@ -170,7 +172,7 @@ export class ClaudeConverter {
     }
 
     /**
-     * Format Claude artifacts and save to attachments/artifacts/ folder
+     * Format Claude artifacts with inline content or links
      */
     private static async formatArtifact(artifactInput: any, conversationId?: string): Promise<string> {
         const title = artifactInput.title || 'Untitled Artifact';
@@ -179,7 +181,7 @@ export class ClaudeConverter {
         const artifactId = artifactInput.id || 'unknown';
         const content = artifactInput.content || '';
 
-        let formattedContent = `**🎨 Artifact: ${title}**\n\n`;
+        let formattedContent = `<div class="nexus-artifact-box">\n\n**🎨 Artifact: ${title}**\n\n`;
 
         if (command === 'edit') {
             formattedContent += `*[Artifact edited]*\n\n`;
@@ -190,20 +192,36 @@ export class ClaudeConverter {
         formattedContent += `> **Type:** ${artifactInput.type || 'code'}\n`;
         formattedContent += `> **ID:** ${artifactId}\n\n`;
 
-        // Save artifact to attachments/artifacts/ folder
-        if (content && this.plugin) {
-            try {
-                const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
-                formattedContent += `📎 **[View Artifact](${filePath})**\n\n`;
-            } catch (error) {
-                // Fallback to inline content if saving fails
+        if (content) {
+            if (language.toLowerCase() === 'markdown') {
+                // For markdown artifacts, include content directly
+                formattedContent += content + '\n\n';
+
+                // Also save as separate file
+                if (this.plugin) {
+                    try {
+                        const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
+                        formattedContent += `📎 **[View as separate file](${filePath})**\n\n`;
+                    } catch (error) {
+                        // Ignore save errors for inline content
+                    }
+                }
+            } else {
+                // For non-markdown, use code blocks and save to file
                 formattedContent += `\`\`\`${language}\n${content}\n\`\`\`\n\n`;
+
+                if (this.plugin) {
+                    try {
+                        const filePath = await this.saveArtifactToFile(artifactId, title, language, content);
+                        formattedContent += `📎 **[View Artifact](${filePath})**\n\n`;
+                    } catch (error) {
+                        // Content is already inline, no need for fallback
+                    }
+                }
             }
-        } else if (content) {
-            // Fallback to inline content if no plugin
-            formattedContent += `\`\`\`${language}\n${content}\n\`\`\`\n\n`;
         }
 
+        formattedContent += `</div>\n\n`;
         return formattedContent;
     }
 
