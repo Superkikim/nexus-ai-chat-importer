@@ -75,37 +75,59 @@ export class ClaudeConverter {
     private static async processContentBlocks(contentBlocks: ClaudeContentBlock[], conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<{ text: string; attachments: StandardAttachment[] }> {
         const textParts: string[] = [];
         const attachments: StandardAttachment[] = [];
-        const artifactMap = new Map<string, any>(); // Track artifacts by ID to handle duplicates
+        const artifactVersionsMap = new Map<string, any[]>(); // Track all versions by artifact ID
 
         // Handle empty or null content blocks
         if (!contentBlocks || contentBlocks.length === 0) {
             return { text: "", attachments: [] };
         }
 
-        // First pass: collect all artifacts and keep the most complete version
+        // First pass: collect ALL significant artifact versions
         for (const block of contentBlocks) {
             if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
                 const artifactId = block.input.id || 'unknown';
                 const content = block.input.content || '';
                 const command = block.input.command || 'create';
+                const versionUuid = block.input.version_uuid;
 
-                // Skip empty updates (content: 0) - they're just UI updates without content
-                if (command === 'update' && content.length === 0) {
+                // Skip empty updates and view commands - they're just UI updates without content
+                if ((command === 'update' && content.length === 0) || command === 'view') {
                     continue;
                 }
 
-                // Priority order: create > rewrite > update (with content) > view
-                const currentArtifact = artifactMap.get(artifactId);
-                const shouldReplace = !currentArtifact ||
-                    this.shouldReplaceArtifact(currentArtifact, block.input);
+                // Only keep significant versions (create, rewrite, or substantial updates)
+                const isSignificant = command === 'create' ||
+                                    command === 'rewrite' ||
+                                    (command === 'update' && content.length > 100);
 
-                if (shouldReplace) {
-                    artifactMap.set(artifactId, block.input);
+                if (isSignificant && versionUuid) {
+                    if (!artifactVersionsMap.has(artifactId)) {
+                        artifactVersionsMap.set(artifactId, []);
+                    }
+                    artifactVersionsMap.get(artifactId)!.push(block.input);
                 }
             }
         }
 
-        // Second pass: process all content blocks
+        // Second pass: save all artifact versions and process content blocks
+        const processedArtifacts = new Set<string>(); // Track which artifacts we've already processed in this conversation
+
+        for (const [artifactId, versions] of artifactVersionsMap.entries()) {
+            if (versions.length > 0) {
+                // Save all versions and get the summary for the conversation
+                const artifactSummary = await this.saveArtifactVersions(
+                    artifactId,
+                    versions,
+                    conversationId,
+                    conversationTitle,
+                    conversationCreateTime
+                );
+                textParts.push(artifactSummary);
+                processedArtifacts.add(artifactId);
+            }
+        }
+
+        // Third pass: process non-artifact content blocks
         for (const block of contentBlocks) {
             switch (block.type) {
                 case 'text':
@@ -119,14 +141,9 @@ export class ClaudeConverter {
                     break;
 
                 case 'tool_use':
-                    // Special handling for artifacts
-                    if (block.name === 'artifacts' && block.input) {
-                        const artifactId = block.input.id || 'unknown';
-                        // Only process if this is the most complete version of this artifact
-                        if (artifactMap.get(artifactId) === block.input) {
-                            const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle, conversationCreateTime);
-                            textParts.push(artifact);
-                        }
+                    // Skip artifacts (already processed above)
+                    if (block.name === 'artifacts') {
+                        break;
                     } else if (block.name === 'web_search') {
                         // Filter out web_search tools - not useful for users
                         break;
@@ -196,7 +213,84 @@ export class ClaudeConverter {
     }
 
     /**
-     * Format Claude artifacts as links to separate files only
+     * Save all versions of an artifact and return summary for conversation
+     */
+    private static async saveArtifactVersions(
+        artifactId: string,
+        versions: any[],
+        conversationId?: string,
+        conversationTitle?: string,
+        conversationCreateTime?: number
+    ): Promise<string> {
+        if (!this.plugin || versions.length === 0) {
+            return `**🎨 Artifact: ${versions[0]?.title || artifactId}** (Error: Could not save)`;
+        }
+
+        const { ensureFolderExists } = await import("../../utils");
+
+        // Create conversation-specific artifact folder
+        const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+        const folderResult = await ensureFolderExists(conversationFolder, this.plugin.app.vault);
+        if (!folderResult.success) {
+            throw new Error(`Failed to create conversation artifacts folder: ${folderResult.error}`);
+        }
+
+        const savedVersions: string[] = [];
+        let latestVersion = '';
+
+        // Save each significant version
+        for (let i = 0; i < versions.length; i++) {
+            const version = versions[i];
+            const versionNumber = i + 1;
+            const fileName = `${artifactId}_v${versionNumber}.md`;
+            const filePath = `${conversationFolder}/${fileName}`;
+
+            try {
+                // Check if this version already exists (for updates/reimports)
+                const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
+                if (shouldSkip) {
+                    savedVersions.push(filePath);
+                    latestVersion = filePath;
+                    continue;
+                }
+
+                await this.saveArtifactVersion(version, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime);
+                savedVersions.push(filePath);
+                latestVersion = filePath;
+            } catch (error) {
+                console.error(`Failed to save artifact version ${versionNumber}:`, error);
+            }
+        }
+
+        // Return formatted summary for conversation
+        return this.formatArtifactSummary(versions[0], savedVersions, latestVersion, conversationFolder);
+    }
+
+    /**
+     * Format artifact summary for conversation display
+     */
+    private static formatArtifactSummary(firstVersion: any, savedVersions: string[], latestVersion: string, conversationFolder: string): string {
+        const title = firstVersion.title || 'Untitled Artifact';
+        const versionCount = savedVersions.length;
+
+        let formattedContent = `<div class="nexus-artifact-box">**🎨 Artifact: ${title}**`;
+
+        if (versionCount > 1) {
+            formattedContent += ` (${versionCount} versions)`;
+        }
+
+        formattedContent += `\n\n📎 **[View Latest Version](${latestVersion})**`;
+
+        if (versionCount > 1) {
+            formattedContent += ` | **[All Versions](${conversationFolder}/)**`;
+        }
+
+        formattedContent += `</div>`;
+        return formattedContent;
+    }
+
+    /**
+     * Format Claude artifacts as links to separate files only (legacy method for single artifacts)
      */
     private static async formatArtifact(artifactInput: any, conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<string> {
         const title = artifactInput.title || 'Untitled Artifact';
@@ -243,7 +337,105 @@ export class ClaudeConverter {
     }
 
     /**
-     * Save artifact as markdown note in attachments/artifacts/ folder
+     * Save a single artifact version
+     */
+    private static async saveArtifactVersion(
+        artifactInput: any,
+        filePath: string,
+        versionNumber: number,
+        conversationId?: string,
+        conversationTitle?: string,
+        conversationCreateTime?: number
+    ): Promise<void> {
+        const title = artifactInput.title || 'Untitled Artifact';
+        let language = artifactInput.language || 'text';
+        const command = artifactInput.command || 'create';
+        const artifactId = artifactInput.id || 'unknown';
+        const content = artifactInput.content || '';
+        const versionUuid = artifactInput.version_uuid;
+
+        // Auto-detect language if marked as "text" or undefined but content suggests otherwise
+        if ((language.toLowerCase() === 'text' || !language || language === 'undefined') && content) {
+            const detectedLanguage = this.detectLanguageFromContent(content, artifactInput.type);
+            if (detectedLanguage !== 'text') {
+                language = detectedLanguage;
+            }
+        }
+
+        // Generate conversation link with proper path if conversationId and title are provided
+        let conversationLink = '';
+        if (conversationId && conversationTitle && conversationCreateTime) {
+            const createDate = new Date(conversationCreateTime * 1000);
+            const year = createDate.getFullYear();
+            const month = String(createDate.getMonth() + 1).padStart(2, '0');
+
+            // Import utilities
+            const { generateConversationFileName } = await import("../../utils");
+
+            // Generate the exact filename that would be used for the conversation
+            const fileName = generateConversationFileName(
+                conversationTitle,
+                conversationCreateTime,
+                this.plugin.settings.addDatePrefix,
+                this.plugin.settings.dateFormat
+            );
+
+            // Use absolute path from vault root (without .md extension for links)
+            const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
+            conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
+        }
+
+        // Create markdown content with enhanced frontmatter
+        let markdownContent = `---
+nexus: nexus-ai-chat-importer
+plugin_version: ${this.plugin.manifest.version}
+provider: claude
+artifact_id: ${artifactId}
+version_uuid: ${versionUuid}
+version_number: ${versionNumber}
+command: ${command}
+conversation_id: ${conversationId || 'unknown'}
+format: ${language}
+aliases: ["${title}", "${artifactId}_v${versionNumber}"]
+---
+
+# ${title} (Version ${versionNumber})
+
+**Type:** Claude Artifact
+**Language:** ${language}`;
+
+        if (artifactInput.language !== language) {
+            markdownContent += ` (detected from content, original: ${artifactInput.language})`;
+        }
+
+        markdownContent += `
+**Command:** ${command}
+**Version:** ${versionNumber}
+**ID:** ${artifactId}
+**UUID:** ${versionUuid}`;
+
+        if (conversationLink) {
+            markdownContent += `
+**Conversation:** ${conversationLink}`;
+        }
+
+        markdownContent += `\n\n## Content\n\n`;
+
+        // Add content based on language
+        if (language.toLowerCase() === 'markdown') {
+            // For markdown, include content directly
+            markdownContent += content;
+        } else {
+            // For other languages, use code blocks
+            markdownContent += `\`\`\`${language}\n${content}\n\`\`\``;
+        }
+
+        // Save the artifact as markdown
+        await this.plugin.app.vault.create(filePath, markdownContent);
+    }
+
+    /**
+     * Save artifact as markdown note in attachments/artifacts/ folder (legacy method)
      */
     private static async saveArtifactToFile(artifactId: string, title: string, language: string, content: string, conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<string> {
         const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, '_');
@@ -319,6 +511,32 @@ format: ${language}
         await this.plugin.app.vault.create(filePath, markdownContent);
 
         return filePath;
+    }
+
+    /**
+     * Check if we should skip saving this artifact version (already exists)
+     */
+    private static async shouldSkipArtifactVersion(filePath: string, versionUuid: string): Promise<boolean> {
+        try {
+            const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
+            if (!existingFile) {
+                return false; // File doesn't exist, don't skip
+            }
+
+            const existingContent = await this.plugin.app.vault.read(existingFile as any);
+
+            // Check if the version_uuid matches (same version)
+            if (existingContent.includes(`version_uuid: ${versionUuid}`)) {
+                return true; // Same version, skip
+            }
+
+            // Different version_uuid but same file path - this shouldn't happen in normal cases
+            // but could happen if there are conflicts. Let's update the file.
+            return false;
+        } catch (error) {
+            // If we can't read the file, don't skip (try to create/update)
+            return false;
+        }
     }
 
     /**
@@ -459,21 +677,21 @@ format: ${language}
     }
 
     /**
-     * Count artifacts in a conversation
+     * Count unique artifacts in a conversation (by artifact ID, not versions)
      */
     static countArtifacts(chat: ClaudeConversation): number {
-        let artifactCount = 0;
+        const uniqueArtifacts = new Set<string>();
 
         for (const message of chat.chat_messages) {
             if (message.content) {
                 for (const block of message.content) {
-                    if (block.type === 'tool_use' && block.name === 'artifacts') {
-                        artifactCount++;
+                    if (block.type === 'tool_use' && block.name === 'artifacts' && block.input?.id) {
+                        uniqueArtifacts.add(block.input.id);
                     }
                 }
             }
         }
 
-        return artifactCount;
+        return uniqueArtifacts.size;
     }
 }
