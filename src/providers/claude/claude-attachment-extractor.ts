@@ -76,26 +76,12 @@ export class ClaudeAttachmentExtractor {
     }
 
     /**
-     * Create informative placeholder for missing files (normal for Claude)
+     * Create simple placeholder for missing files (normal for Claude)
      */
     private createFileNotFoundPlaceholder(attachment: StandardAttachment): StandardAttachment {
         const fileName = attachment.fileName;
-        const fileType = this.getFileTypeFromExtension(fileName);
 
-        let placeholder = `📎 **Attachment: ${fileName}**\n\n`;
-
-        if (fileType.startsWith('image/')) {
-            placeholder += `🖼️ *Image file referenced in conversation*\n\n`;
-        } else if (fileType === 'application/pdf') {
-            placeholder += `📄 *PDF document referenced in conversation*\n\n`;
-        } else if (fileType.startsWith('text/')) {
-            placeholder += `📝 *Text file referenced in conversation*\n\n`;
-        } else {
-            placeholder += `📁 *File referenced in conversation*\n\n`;
-        }
-
-        placeholder += `> **Note:** Claude exports typically don't include the actual files, only references. ` +
-                      `The original file "${fileName}" was uploaded during this conversation but is not available in the export.`;
+        const placeholder = `📎 **Attachment:** ${fileName} (not included in archive. [Click to open original conversation](https://claude.ai))`;
 
         return {
             ...attachment,

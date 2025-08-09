@@ -238,7 +238,7 @@ ${report.generateReportContent()}
     }
 
     private getReportGenerationInfo(zipFileName: string, provider: string): { folderPath: string, baseFileName: string } {
-        const baseFolder = this.plugin.settings.archiveFolder;
+        const reportFolder = this.plugin.settings.reportFolder;
 
         // Try to get provider-specific naming strategy
         const adapter = this.providerRegistry.getAdapter(provider);
@@ -246,7 +246,7 @@ ${report.generateReportContent()}
             const strategy = adapter.getReportNamingStrategy();
             const reportPrefix = strategy.extractReportPrefix(zipFileName);
             return {
-                folderPath: `${baseFolder}/Reports/${strategy.getProviderName()}`,
+                folderPath: `${reportFolder}/${strategy.getProviderName()}`,
                 baseFileName: `${reportPrefix} - import report.md`
             };
         }
@@ -257,7 +257,7 @@ ${report.generateReportContent()}
         const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
         const fallbackPrefix = `imported-${importDate}-archive-${archiveDate}`;
         return {
-            folderPath: `${baseFolder}/Reports`,
+            folderPath: `${reportFolder}`,
             baseFileName: `${fallbackPrefix} - import report.md`
         };
     }

@@ -3665,7 +3665,7 @@ var import_obsidian15 = require("obsidian");
 
 // src/config/constants.ts
 var DEFAULT_SETTINGS = {
-  archiveFolder: "Nexus AI Chat Imports",
+  archiveFolder: "Nexus/Conversations",
   addDatePrefix: false,
   dateFormat: "YYYY-MM-DD",
   hasShownUpgradeNotice: false,
@@ -3675,7 +3675,8 @@ var DEFAULT_SETTINGS = {
   previousVersion: "0.0.0",
   // Attachment defaults with "best effort" approach
   importAttachments: true,
-  attachmentFolder: "Nexus AI Chat Imports/Attachments",
+  attachmentFolder: "Nexus/Attachments",
+  reportFolder: "Nexus/Reports",
   skipMissingAttachments: false,
   showAttachmentDetails: true
 };
@@ -4706,7 +4707,7 @@ var ConversationProcessor = class {
       }
       const content = this.noteFormatter.generateMarkdownContent(standardConversation);
       await this.fileService.writeToFile(filePath, content);
-      const messageCount = this.countMessages(adapter, chat);
+      const messageCount = await this.countMessages(adapter, chat);
       const createTime = adapter.getCreateTime(chat);
       const updateTime = adapter.getUpdateTime(chat);
       const chatTitle = adapter.getTitle(chat);
@@ -5819,12 +5820,11 @@ ${content}
     return formattedContent;
   }
   /**
-   * Save artifact content to file in attachments/artifacts/ folder
+   * Save artifact as markdown note in attachments/artifacts/ folder
    */
   static async saveArtifactToFile(artifactId, title, language, content) {
-    const extension = this.getExtensionFromLanguage(language);
     const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, "_");
-    const fileName = `${safeTitle}_${artifactId}.${extension}`;
+    const fileName = `${safeTitle}_${artifactId}.md`;
     const artifactFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts`;
     const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
     const folderResult = await ensureFolderExists2(artifactFolder, this.plugin.app.vault);
@@ -5832,7 +5832,27 @@ ${content}
       throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
     }
     const filePath = `${artifactFolder}/${fileName}`;
-    await this.plugin.app.vault.create(filePath, content);
+    const markdownContent = `---
+title: ${title}
+type: Claude Artifact
+language: ${language}
+artifact_id: ${artifactId}
+created: ${new Date().toISOString()}
+---
+
+# ${title}
+
+**Type:** Claude Artifact
+**Language:** ${language}
+**ID:** ${artifactId}
+
+## Content
+
+\`\`\`${language}
+${content}
+\`\`\`
+`;
+    await this.plugin.app.vault.create(filePath, markdownContent);
     return filePath;
   }
   /**
@@ -5867,6 +5887,22 @@ ${content}
       default:
         return "txt";
     }
+  }
+  /**
+   * Count artifacts in a conversation
+   */
+  static countArtifacts(chat) {
+    let artifactCount = 0;
+    for (const message of chat.chat_messages) {
+      if (message.content) {
+        for (const block of message.content) {
+          if (block.type === "tool_use" && block.name === "artifacts") {
+            artifactCount++;
+          }
+        }
+      }
+    }
+    return artifactCount;
   }
 };
 
@@ -5924,32 +5960,11 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     }
   }
   /**
-   * Create informative placeholder for missing files (normal for Claude)
+   * Create simple placeholder for missing files (normal for Claude)
    */
   createFileNotFoundPlaceholder(attachment) {
     const fileName = attachment.fileName;
-    const fileType = this.getFileTypeFromExtension(fileName);
-    let placeholder = `\u{1F4CE} **Attachment: ${fileName}**
-
-`;
-    if (fileType.startsWith("image/")) {
-      placeholder += `\u{1F5BC}\uFE0F *Image file referenced in conversation*
-
-`;
-    } else if (fileType === "application/pdf") {
-      placeholder += `\u{1F4C4} *PDF document referenced in conversation*
-
-`;
-    } else if (fileType.startsWith("text/")) {
-      placeholder += `\u{1F4DD} *Text file referenced in conversation*
-
-`;
-    } else {
-      placeholder += `\u{1F4C1} *File referenced in conversation*
-
-`;
-    }
-    placeholder += `> **Note:** Claude exports typically don't include the actual files, only references. The original file "${fileName}" was uploaded during this conversation but is not available in the export.`;
+    const placeholder = `\u{1F4CE} **Attachment:** ${fileName} (not included in archive. [Click to open original conversation](https://claude.ai))`;
     return {
       ...attachment,
       extractedContent: placeholder
@@ -6226,6 +6241,9 @@ var ClaudeAdapter = class {
   getProviderName() {
     return "claude";
   }
+  countArtifacts(chat) {
+    return ClaudeConverter.countArtifacts(chat);
+  }
   shouldIncludeMessage(message) {
     if (message.sender === "human" || message.sender === "assistant") {
       if (!message.text && (!message.content || message.content.length === 0)) {
@@ -6427,13 +6445,13 @@ ${report.generateReportContent()}
     }
   }
   getReportGenerationInfo(zipFileName, provider) {
-    const baseFolder = this.plugin.settings.archiveFolder;
+    const reportFolder = this.plugin.settings.reportFolder;
     const adapter = this.providerRegistry.getAdapter(provider);
     if (adapter) {
       const strategy = adapter.getReportNamingStrategy();
       const reportPrefix = strategy.extractReportPrefix(zipFileName);
       return {
-        folderPath: `${baseFolder}/Reports/${strategy.getProviderName()}`,
+        folderPath: `${reportFolder}/${strategy.getProviderName()}`,
         baseFileName: `${reportPrefix} - import report.md`
       };
     }
@@ -6442,7 +6460,7 @@ ${report.generateReportContent()}
     const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
     const fallbackPrefix = `imported-${importDate}-archive-${archiveDate}`;
     return {
-      folderPath: `${baseFolder}/Reports`,
+      folderPath: `${reportFolder}`,
       baseFileName: `${fallbackPrefix} - import report.md`
     };
   }

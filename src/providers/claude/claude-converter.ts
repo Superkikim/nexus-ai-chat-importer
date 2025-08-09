@@ -208,12 +208,11 @@ export class ClaudeConverter {
     }
 
     /**
-     * Save artifact content to file in attachments/artifacts/ folder
+     * Save artifact as markdown note in attachments/artifacts/ folder
      */
     private static async saveArtifactToFile(artifactId: string, title: string, language: string, content: string): Promise<string> {
-        const extension = this.getExtensionFromLanguage(language);
         const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, '_');
-        const fileName = `${safeTitle}_${artifactId}.${extension}`;
+        const fileName = `${safeTitle}_${artifactId}.md`;
 
         const artifactFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts`;
 
@@ -226,8 +225,30 @@ export class ClaudeConverter {
 
         const filePath = `${artifactFolder}/${fileName}`;
 
-        // Save the artifact content
-        await this.plugin.app.vault.create(filePath, content);
+        // Create markdown content with metadata and code block
+        const markdownContent = `---
+title: ${title}
+type: Claude Artifact
+language: ${language}
+artifact_id: ${artifactId}
+created: ${new Date().toISOString()}
+---
+
+# ${title}
+
+**Type:** Claude Artifact
+**Language:** ${language}
+**ID:** ${artifactId}
+
+## Content
+
+\`\`\`${language}
+${content}
+\`\`\`
+`;
+
+        // Save the artifact as markdown
+        await this.plugin.app.vault.create(filePath, markdownContent);
 
         return filePath;
     }
@@ -251,5 +272,24 @@ export class ClaudeConverter {
             case 'shell': return 'sh';
             default: return 'txt';
         }
+    }
+
+    /**
+     * Count artifacts in a conversation
+     */
+    static countArtifacts(chat: ClaudeConversation): number {
+        let artifactCount = 0;
+
+        for (const message of chat.chat_messages) {
+            if (message.content) {
+                for (const block of message.content) {
+                    if (block.type === 'tool_use' && block.name === 'artifacts') {
+                        artifactCount++;
+                    }
+                }
+            }
+        }
+
+        return artifactCount;
     }
 }
