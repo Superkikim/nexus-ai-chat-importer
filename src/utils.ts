@@ -141,7 +141,7 @@ export function isValidMessage(message: any): boolean {
         Array.isArray(message.content.parts) &&
         message.content.parts.length > 0 &&
         message.content.parts.some(
-            (part) => {
+            (part: any) => {
                 // Handle simple string parts
                 if (typeof part === "string" && part.trim() !== "") {
                     return true;
@@ -204,9 +204,23 @@ export async function ensureFolderExists(
 }
 
 export async function checkConversationLink(
-    conversationId: string
+    conversationId: string,
+    provider: string = 'chatgpt'
 ): Promise<boolean> {
-    const url = `https://chatgpt.com/c/${conversationId}`;
+    // Generate provider-specific URL
+    let url: string;
+    switch (provider) {
+        case 'chatgpt':
+            url = `https://chatgpt.com/c/${conversationId}`;
+            break;
+        case 'claude':
+            url = `https://claude.ai/chat/${conversationId}`;
+            break;
+        default:
+            logger.error(`Unknown provider for link checking: ${provider}`);
+            return false;
+    }
+
     try {
         const response = await requestUrl({
             url: url,
@@ -233,7 +247,7 @@ export function old_getConversationId(app: App): string | undefined {
 // REMOVED: getConversationId() - no longer needed (click handler removed)
 // REMOVED: getProvider() - no longer needed (click handler removed)
 
-export function isNexusRelated(file: TFile): boolean {
+export function isNexusRelated(file: TFile, app: App): boolean {
     const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
     return frontmatter?.nexus === "nexus-ai-chat-importer"; // Return true if the nexus matches
 }

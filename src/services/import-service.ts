@@ -7,14 +7,18 @@ import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
 import { ConversationProcessor } from "./conversation-processor";
 import { NexusAiChatImporterError } from "../models/errors";
+import { createProviderRegistry } from "../providers/provider-registry";
+import { ProviderRegistry } from "../providers/provider-adapter";
 import type NexusAiChatImporterPlugin from "../main";
 
 export class ImportService {
     private importReport: ImportReport = new ImportReport();
     private conversationProcessor: ConversationProcessor;
+    private providerRegistry: ProviderRegistry;
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
-        this.conversationProcessor = new ConversationProcessor(plugin);
+        this.providerRegistry = createProviderRegistry(plugin);
+        this.conversationProcessor = new ConversationProcessor(plugin, this.providerRegistry);
     }
 
     async selectZipFile() {
@@ -109,6 +113,8 @@ export class ImportService {
             const content = await zip.loadAsync(file);
             const fileNames = Object.keys(content.files);
 
+            // TODO: Make this provider-aware when adding Claude support
+            // Currently only supports ChatGPT's conversations.json format
             if (!fileNames.includes("conversations.json")) {
                 throw new NexusAiChatImporterError(
                     "Invalid ZIP structure",
@@ -154,21 +160,23 @@ export class ImportService {
 
     /**
      * Extract raw conversation data without knowing provider specifics
+     * TODO: Make this provider-aware when adding Claude support
      */
     private async extractRawConversationsFromZip(zip: JSZip): Promise<any[]> {
+        // Currently only supports ChatGPT's conversations.json format
         const conversationsJson = await zip.file("conversations.json")!.async("string");
         return JSON.parse(conversationsJson);
     }
 
     private async writeImportReport(zipFileName: string): Promise<void> {
-        const reportWriter = new ReportWriter(this.plugin);
+        const reportWriter = new ReportWriter(this.plugin, this.providerRegistry);
         const currentProvider = this.conversationProcessor.getCurrentProvider();
         await reportWriter.writeReport(this.importReport, zipFileName, currentProvider);
     }
 }
 
 class ReportWriter {
-    constructor(private plugin: NexusAiChatImporterPlugin) {}
+    constructor(private plugin: NexusAiChatImporterPlugin, private providerRegistry: ProviderRegistry) {}
 
     async writeReport(report: ImportReport, zipFileName: string, provider: string): Promise<void> {
         const { ensureFolderExists, formatTimestamp } = await import("../utils");
@@ -220,27 +228,27 @@ ${report.generateReportContent()}
 
     private getReportGenerationInfo(zipFileName: string, provider: string): { folderPath: string, baseFileName: string } {
         const baseFolder = this.plugin.settings.archiveFolder;
-        
-        switch (provider) {
-            case 'chatgpt':
-                const { ChatGPTReportNamingStrategy } = require("../providers/chatgpt/chatgpt-report-naming");
-                const strategy = new ChatGPTReportNamingStrategy();
-                const reportPrefix = strategy.extractReportPrefix(zipFileName);
-                return {
-                    folderPath: `${baseFolder}/Reports/${strategy.getProviderName()}`,
-                    baseFileName: `${reportPrefix} - import report.md`
-                };
-            default:
-                // Fallback for unknown providers
-                const now = new Date();
-                const importDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-                const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
-                const fallbackPrefix = `imported-${importDate}-archive-${archiveDate}`;
-                return {
-                    folderPath: `${baseFolder}/Reports`,
-                    baseFileName: `${fallbackPrefix} - import report.md`
-                };
+
+        // Try to get provider-specific naming strategy
+        const adapter = this.providerRegistry.getAdapter(provider);
+        if (adapter) {
+            const strategy = adapter.getReportNamingStrategy();
+            const reportPrefix = strategy.extractReportPrefix(zipFileName);
+            return {
+                folderPath: `${baseFolder}/Reports/${strategy.getProviderName()}`,
+                baseFileName: `${reportPrefix} - import report.md`
+            };
         }
+
+        // Fallback for unknown providers
+        const now = new Date();
+        const importDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+        const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
+        const fallbackPrefix = `imported-${importDate}-archive-${archiveDate}`;
+        return {
+            folderPath: `${baseFolder}/Reports`,
+            baseFileName: `${fallbackPrefix} - import report.md`
+        };
     }
 
     private extractArchiveDateFromFilename(zipFileName: string): string {
