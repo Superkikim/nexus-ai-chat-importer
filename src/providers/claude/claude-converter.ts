@@ -11,7 +11,8 @@ export class ClaudeConverter {
     }
 
     static async convertChat(chat: ClaudeConversation): Promise<StandardConversation> {
-        const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name);
+        const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1000) : 0;
+        const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name, createTime);
 
         return {
             id: chat.uuid,
@@ -26,7 +27,7 @@ export class ClaudeConverter {
         };
     }
 
-    static async convertMessages(messages: ClaudeMessage[], conversationId?: string, conversationTitle?: string): Promise<StandardMessage[]> {
+    static async convertMessages(messages: ClaudeMessage[], conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<StandardMessage[]> {
         const standardMessages: StandardMessage[] = [];
 
         if (!messages || messages.length === 0) {
@@ -39,7 +40,7 @@ export class ClaudeConverter {
             }
 
             // Process content blocks to create message text and attachments
-            const { text, attachments } = await this.processContentBlocks(message.content, conversationId, conversationTitle);
+            const { text, attachments } = await this.processContentBlocks(message.content, conversationId, conversationTitle, conversationCreateTime);
             
             // Add file attachments
             const fileAttachments = this.processFileAttachments(message.files);
@@ -71,7 +72,7 @@ export class ClaudeConverter {
         return false;
     }
 
-    private static async processContentBlocks(contentBlocks: ClaudeContentBlock[], conversationId?: string, conversationTitle?: string): Promise<{ text: string; attachments: StandardAttachment[] }> {
+    private static async processContentBlocks(contentBlocks: ClaudeContentBlock[], conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<{ text: string; attachments: StandardAttachment[] }> {
         const textParts: string[] = [];
         const attachments: StandardAttachment[] = [];
         
@@ -95,7 +96,7 @@ export class ClaudeConverter {
                 case 'tool_use':
                     // Special handling for artifacts
                     if (block.name === 'artifacts' && block.input) {
-                        const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle);
+                        const artifact = await this.formatArtifact(block.input, conversationId, conversationTitle, conversationCreateTime);
                         textParts.push(artifact);
                     } else if (block.name === 'web_search') {
                         // Filter out web_search tools - not useful for users
@@ -168,12 +169,20 @@ export class ClaudeConverter {
     /**
      * Format Claude artifacts as links to separate files only
      */
-    private static async formatArtifact(artifactInput: any, conversationId?: string, conversationTitle?: string): Promise<string> {
+    private static async formatArtifact(artifactInput: any, conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<string> {
         const title = artifactInput.title || 'Untitled Artifact';
-        const language = artifactInput.language || 'text';
+        let language = artifactInput.language || 'text';
         const command = artifactInput.command || 'create';
         const artifactId = artifactInput.id || 'unknown';
         const content = artifactInput.content || '';
+
+        // Auto-detect language if marked as "text" but content suggests otherwise
+        if (language.toLowerCase() === 'text' && content) {
+            const detectedLanguage = this.detectLanguageFromContent(content);
+            if (detectedLanguage !== 'text') {
+                language = detectedLanguage;
+            }
+        }
 
         let formattedContent = `<div class="nexus-artifact-box">\n\n**🎨 Artifact: ${title}**\n\n`;
 
@@ -181,15 +190,19 @@ export class ClaudeConverter {
             formattedContent += `*[Artifact edited]*\n\n`;
         }
 
-        // Add metadata
-        formattedContent += `> **Language:** ${language}\n`;
+        // Add metadata with detected language
+        formattedContent += `> **Language:** ${language}`;
+        if (artifactInput.language !== language) {
+            formattedContent += ` (detected from content, original: ${artifactInput.language})`;
+        }
+        formattedContent += `\n`;
         formattedContent += `> **Type:** ${artifactInput.type || 'code'}\n`;
         formattedContent += `> **ID:** ${artifactId}\n\n`;
 
         // Save artifact to file and link to it
         if (content && this.plugin) {
             try {
-                const filePath = await this.saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle);
+                const filePath = await this.saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle, conversationCreateTime);
                 formattedContent += `📎 **[View Artifact](${filePath})**\n\n`;
             } catch (error) {
                 formattedContent += `❌ **Error saving artifact:** ${error instanceof Error ? error.message : 'Unknown error'}\n\n`;
@@ -203,7 +216,7 @@ export class ClaudeConverter {
     /**
      * Save artifact as markdown note in attachments/artifacts/ folder
      */
-    private static async saveArtifactToFile(artifactId: string, title: string, language: string, content: string, conversationId?: string, conversationTitle?: string): Promise<string> {
+    private static async saveArtifactToFile(artifactId: string, title: string, language: string, content: string, conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<string> {
         const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, '_');
         const fileName = `${safeTitle}_${artifactId}.md`;
 
@@ -218,10 +231,15 @@ export class ClaudeConverter {
 
         const filePath = `${artifactFolder}/${fileName}`;
 
-        // Generate conversation link if conversationId and title are provided
-        const conversationLink = conversationId && conversationTitle ?
-            `[[${conversationTitle}]]` :
-            '';
+        // Generate conversation link with proper path if conversationId and title are provided
+        let conversationLink = '';
+        if (conversationId && conversationTitle && conversationCreateTime) {
+            const createDate = new Date(conversationCreateTime * 1000);
+            const year = createDate.getFullYear();
+            const month = String(createDate.getMonth() + 1).padStart(2, '0');
+            const safeTitle = conversationTitle.replace(/[^a-zA-Z0-9\-_]/g, '_');
+            conversationLink = `[[../../Conversations/claude/${year}/${month}/${safeTitle}|${conversationTitle}]]`;
+        }
 
         // Create markdown content with enhanced frontmatter
         let markdownContent = `---
@@ -262,6 +280,61 @@ format: ${language}
     }
 
     /**
+     * Auto-detect language from content when marked as "text"
+     */
+    private static detectLanguageFromContent(content: string): string {
+        if (!content || content.trim().length === 0) return 'text';
+
+        const trimmedContent = content.trim();
+
+        // Check for common patterns
+        if (trimmedContent.startsWith('<?php')) return 'php';
+        if (trimmedContent.startsWith('#!/bin/bash') || trimmedContent.startsWith('#!/bin/sh')) return 'bash';
+        if (trimmedContent.startsWith('<!DOCTYPE html') || trimmedContent.includes('<html')) return 'html';
+        if (trimmedContent.startsWith('{') && trimmedContent.endsWith('}')) {
+            try {
+                JSON.parse(trimmedContent);
+                return 'json';
+            } catch {}
+        }
+
+        // Check for markdown patterns
+        if (trimmedContent.includes('# ') || trimmedContent.includes('## ') ||
+            trimmedContent.includes('**') || trimmedContent.includes('```')) {
+            return 'markdown';
+        }
+
+        // Check for Python patterns
+        if (trimmedContent.includes('def ') || trimmedContent.includes('import ') ||
+            trimmedContent.includes('from ') || trimmedContent.includes('class ')) {
+            return 'python';
+        }
+
+        // Check for JavaScript patterns
+        if (trimmedContent.includes('function ') || trimmedContent.includes('const ') ||
+            trimmedContent.includes('let ') || trimmedContent.includes('var ') ||
+            trimmedContent.includes('=>')) {
+            return 'javascript';
+        }
+
+        // Check for CSS patterns
+        if (trimmedContent.includes('{') && trimmedContent.includes(':') &&
+            trimmedContent.includes(';') && trimmedContent.includes('}')) {
+            return 'css';
+        }
+
+        // Check for SQL patterns
+        if (trimmedContent.toUpperCase().includes('SELECT ') ||
+            trimmedContent.toUpperCase().includes('INSERT ') ||
+            trimmedContent.toUpperCase().includes('UPDATE ') ||
+            trimmedContent.toUpperCase().includes('CREATE TABLE')) {
+            return 'sql';
+        }
+
+        return 'text';
+    }
+
+    /**
      * Get file extension from language
      */
     private static getExtensionFromLanguage(language: string): string {
@@ -278,6 +351,7 @@ format: ${language}
             case 'sql': return 'sql';
             case 'bash': return 'sh';
             case 'shell': return 'sh';
+            case 'php': return 'php';
             default: return 'txt';
         }
     }
