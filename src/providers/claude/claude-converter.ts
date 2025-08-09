@@ -222,8 +222,14 @@ export class ClaudeConverter {
         conversationTitle?: string,
         conversationCreateTime?: number
     ): Promise<string> {
-        if (!this.plugin || versions.length === 0) {
-            return `**🎨 Artifact: ${versions[0]?.title || artifactId}** (Error: Could not save)`;
+        if (!this.plugin) {
+            console.error('Claude converter: Plugin not available for artifact saving');
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${versions[0]?.title || artifactId}** (Error: Plugin not available)</div>`;
+        }
+
+        if (versions.length === 0) {
+            console.error('Claude converter: No versions provided for artifact', artifactId);
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${artifactId}** (Error: No versions found)</div>`;
         }
 
         const { ensureFolderExists } = await import("../../utils");
@@ -232,7 +238,8 @@ export class ClaudeConverter {
         const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
         const folderResult = await ensureFolderExists(conversationFolder, this.plugin.app.vault);
         if (!folderResult.success) {
-            throw new Error(`Failed to create conversation artifacts folder: ${folderResult.error}`);
+            console.error('Claude converter: Failed to create artifacts folder', folderResult.error);
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${versions[0]?.title || artifactId}** (Error: Could not create folder)</div>`;
         }
 
         const savedVersions: string[] = [];
@@ -249,20 +256,28 @@ export class ClaudeConverter {
                 // Check if this version already exists (for updates/reimports)
                 const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
                 if (shouldSkip) {
+                    console.log(`Skipping existing artifact version: ${filePath}`);
                     savedVersions.push(filePath);
                     latestVersion = filePath;
                     continue;
                 }
 
+                console.log(`Saving artifact version ${versionNumber}: ${filePath}`);
                 await this.saveArtifactVersion(version, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime);
                 savedVersions.push(filePath);
                 latestVersion = filePath;
             } catch (error) {
-                console.error(`Failed to save artifact version ${versionNumber}:`, error);
+                console.error(`Failed to save artifact version ${versionNumber} to ${filePath}:`, error);
+                // Continue with other versions even if one fails
             }
         }
 
         // Return formatted summary for conversation
+        if (savedVersions.length === 0) {
+            console.error('Claude converter: No versions were saved for artifact', artifactId);
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${versions[0]?.title || artifactId}** (Error: No versions could be saved)</div>`;
+        }
+
         return this.formatArtifactSummary(versions[0], savedVersions, latestVersion, conversationFolder);
     }
 
@@ -270,8 +285,13 @@ export class ClaudeConverter {
      * Format artifact summary for conversation display
      */
     private static formatArtifactSummary(firstVersion: any, savedVersions: string[], latestVersion: string, conversationFolder: string): string {
-        const title = firstVersion.title || 'Untitled Artifact';
+        const title = firstVersion?.title || 'Untitled Artifact';
         const versionCount = savedVersions.length;
+
+        if (!latestVersion) {
+            console.error('Claude converter: No latest version available for artifact summary');
+            return `<div class="nexus-artifact-box">**🎨 Artifact: ${title}** (Error: No accessible version)</div>`;
+        }
 
         let formattedContent = `<div class="nexus-artifact-box">**🎨 Artifact: ${title}**`;
 
@@ -279,10 +299,12 @@ export class ClaudeConverter {
             formattedContent += ` (${versionCount} versions)`;
         }
 
-        formattedContent += `\n\n📎 **[View Latest Version](${latestVersion})**`;
+        // Use vault-relative paths for Obsidian links (remove .md extension for links)
+        const latestVersionLink = latestVersion.replace(/\.md$/, '');
+        formattedContent += `\n\n📎 **[[${latestVersionLink}|View Latest Version]]**`;
 
         if (versionCount > 1) {
-            formattedContent += ` | **[All Versions](${conversationFolder}/)**`;
+            formattedContent += ` | **[[${conversationFolder}/|All Versions]]**`;
         }
 
         formattedContent += `</div>`;
@@ -431,7 +453,13 @@ aliases: ["${title}", "${artifactId}_v${versionNumber}"]
         }
 
         // Save the artifact as markdown
-        await this.plugin.app.vault.create(filePath, markdownContent);
+        try {
+            await this.plugin.app.vault.create(filePath, markdownContent);
+            console.log(`Successfully saved artifact version: ${filePath}`);
+        } catch (error) {
+            console.error(`Failed to create artifact file ${filePath}:`, error);
+            throw error;
+        }
     }
 
     /**
