@@ -82,12 +82,21 @@ export interface ReportNamingStrategy {
      * @returns prefix for report naming (e.g., "2025.04.25")
      */
     extractReportPrefix(zipFileName: string): string;
-    
+
     /**
      * Get provider name for folder organization
      * @returns provider name (e.g., "chatgpt", "claude")
      */
     getProviderName(): string;
+
+    /**
+     * Get provider-specific column info for reports
+     * @returns column header and value extractor
+     */
+    getProviderSpecificColumn(): {
+        header: string;
+        getValue: (adapter: any, chat: any) => number;
+    };
 }
 
 /**

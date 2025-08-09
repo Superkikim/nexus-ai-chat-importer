@@ -62,7 +62,7 @@ export class ClaudeAttachmentExtractor {
 
         if (!zipFile) {
             // This is the normal case for Claude - files are not included in export
-            return this.createFileNotFoundPlaceholder(attachment);
+            return this.createFileNotFoundPlaceholder(attachment, conversationId);
         }
 
         // If file is found (rare), extract it
@@ -78,10 +78,11 @@ export class ClaudeAttachmentExtractor {
     /**
      * Create simple placeholder for missing files (normal for Claude)
      */
-    private createFileNotFoundPlaceholder(attachment: StandardAttachment): StandardAttachment {
+    private createFileNotFoundPlaceholder(attachment: StandardAttachment, conversationId: string): StandardAttachment {
         const fileName = attachment.fileName;
+        const conversationUrl = `https://claude.ai/chat/${conversationId}`;
 
-        const placeholder = `📎 **Attachment:** ${fileName} (not included in archive. [Click to open original conversation](https://claude.ai))`;
+        const placeholder = `📎 **Attachment:** ${fileName} (not included in archive. [Click to open original conversation](${conversationUrl}))`;
 
         return {
             ...attachment,

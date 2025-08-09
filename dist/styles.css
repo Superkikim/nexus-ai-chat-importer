@@ -1,4 +1,23 @@
 /* Enhanced styles for Nexus AI Chat Importer modals */
+
+/* Nexus AI Chat Importer - Artifact and Attachment Boxes */
+.nexus-artifact-box {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nexus-attachment-box {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 12px;
+    margin: 8px 0;
+    border-left: 4px solid var(--interactive-accent);
+}
 .nexus-ai-chat-importer-modal {
     min-width: 450px;
     max-width: 650px;

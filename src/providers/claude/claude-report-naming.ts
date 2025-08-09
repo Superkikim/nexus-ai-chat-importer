@@ -40,5 +40,10 @@ export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
         return `claude-${currentDate}-${baseName}`;
     }
 
-
+    getProviderSpecificColumn(): { header: string; getValue: (adapter: any, chat: any) => number } {
+        return {
+            header: "Artifacts",
+            getValue: (adapter: any, chat: any) => adapter.countArtifacts ? adapter.countArtifacts(chat) : 0
+        };
+    }
 }

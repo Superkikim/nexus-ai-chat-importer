@@ -204,6 +204,22 @@ export class ConversationProcessor {
         }
     }
 
+    /**
+     * Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
+     */
+    private getProviderSpecificCount(adapter: any, chat: any): number {
+        try {
+            const strategy = adapter.getReportNamingStrategy();
+            if (strategy && strategy.getProviderSpecificColumn) {
+                const columnInfo = strategy.getProviderSpecificColumn();
+                return columnInfo.getValue(adapter, chat);
+            }
+        } catch (error) {
+            // Fallback to 0 if provider doesn't support specific counting
+        }
+        return 0;
+    }
+
     private async updateExistingNote(
         adapter: any,
         chat: any,
@@ -352,13 +368,17 @@ export class ConversationProcessor {
             const updateTime = adapter.getUpdateTime(chat);
             const chatTitle = adapter.getTitle(chat);
 
+            // Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
+            const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
+
             importReport.addCreated(
                 chatTitle,
                 filePath,
                 `${formatTimestamp(createTime, "date")} ${formatTimestamp(createTime, "time")}`,
                 `${formatTimestamp(updateTime, "date")} ${formatTimestamp(updateTime, "time")}`,
                 messageCount,
-                attachmentStats
+                attachmentStats,
+                providerSpecificCount
             );
 
             this.counters.totalNewConversationsSuccessfullyImported++;

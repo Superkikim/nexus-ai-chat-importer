@@ -191,10 +191,16 @@ class ReportWriter {
 
     async writeReport(report: ImportReport, zipFileName: string, provider: string): Promise<void> {
         const { ensureFolderExists, formatTimestamp } = await import("../utils");
-        
-        // Get provider-specific naming strategy
+
+        // Get provider-specific naming strategy and set column header
         const reportInfo = this.getReportGenerationInfo(zipFileName, provider);
-        
+        const adapter = this.providerRegistry.getAdapter(provider);
+        if (adapter) {
+            const strategy = adapter.getReportNamingStrategy();
+            const columnInfo = strategy.getProviderSpecificColumn();
+            report.setProviderSpecificColumnHeader(columnInfo.header);
+        }
+
         // Ensure provider subfolder exists
         const folderResult = await ensureFolderExists(reportInfo.folderPath, this.plugin.app.vault);
         if (!folderResult.success) {
