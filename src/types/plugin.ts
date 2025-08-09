@@ -13,6 +13,7 @@ export interface PluginSettings {
     // Attachment settings
     importAttachments: boolean;
     attachmentFolder: string;
+    reportFolder: string;
     skipMissingAttachments: boolean;
     showAttachmentDetails: boolean;
 }

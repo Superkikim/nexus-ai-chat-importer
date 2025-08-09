@@ -347,7 +347,7 @@ export class ConversationProcessor {
 
             await this.fileService.writeToFile(filePath, content);
 
-            const messageCount = this.countMessages(adapter, chat);
+            const messageCount = await this.countMessages(adapter, chat);
             const createTime = adapter.getCreateTime(chat);
             const updateTime = adapter.getUpdateTime(chat);
             const chatTitle = adapter.getTitle(chat);

@@ -108,6 +108,10 @@ export class ClaudeAdapter implements ProviderAdapter<ClaudeConversation> {
         return "claude";
     }
 
+    countArtifacts(chat: ClaudeConversation): number {
+        return ClaudeConverter.countArtifacts(chat);
+    }
+
     private shouldIncludeMessage(message: ClaudeMessage): boolean {
         // Include all human and assistant messages
         if (message.sender === 'human' || message.sender === 'assistant') {
