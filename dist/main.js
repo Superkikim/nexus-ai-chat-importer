@@ -5791,7 +5791,7 @@ var ClaudeConverter = class {
         if (command === "update" && content.length === 0 || command === "view") {
           continue;
         }
-        const isSignificant = command === "create" || command === "rewrite" || command === "update" && content.length > 100;
+        const isSignificant = command === "create" || command === "rewrite" || command === "update" && content.length > 0;
         if (isSignificant && versionUuid) {
           const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
           versionCounters.set(artifactId, currentVersion);
