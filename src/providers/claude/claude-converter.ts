@@ -34,13 +34,24 @@ export class ClaudeConverter {
             return standardMessages;
         }
 
+        // Global version counters for the entire conversation
+        const versionCounters = new Map<string, number>();
+        const artifactSummaries = new Map<string, any>();
+
         for (const message of messages) {
             if (!this.shouldIncludeMessage(message)) {
                 continue;
             }
 
             // Process content blocks to create message text and attachments
-            const { text, attachments } = await this.processContentBlocks(message.content, conversationId, conversationTitle, conversationCreateTime);
+            const { text, attachments } = await this.processContentBlocks(
+                message.content,
+                conversationId,
+                conversationTitle,
+                conversationCreateTime,
+                versionCounters,
+                artifactSummaries
+            );
             
             // Add file attachments
             const fileAttachments = this.processFileAttachments(message.files);
@@ -72,7 +83,14 @@ export class ClaudeConverter {
         return false;
     }
 
-    private static async processContentBlocks(contentBlocks: ClaudeContentBlock[], conversationId?: string, conversationTitle?: string, conversationCreateTime?: number): Promise<{ text: string; attachments: StandardAttachment[] }> {
+    private static async processContentBlocks(
+        contentBlocks: ClaudeContentBlock[],
+        conversationId?: string,
+        conversationTitle?: string,
+        conversationCreateTime?: number,
+        versionCounters?: Map<string, number>,
+        artifactSummaries?: Map<string, any>
+    ): Promise<{ text: string; attachments: StandardAttachment[] }> {
         const textParts: string[] = [];
         const attachments: StandardAttachment[] = [];
         const artifactVersionsMap = new Map<string, any[]>(); // Track all versions by artifact ID
@@ -113,8 +131,9 @@ export class ClaudeConverter {
         }
 
         // Second pass: save artifacts chronologically with proper versioning
-        const versionCounters = new Map<string, number>();
-        const artifactSummaries = new Map<string, any>();
+        // Use provided counters or create new ones (for backward compatibility)
+        if (!versionCounters) versionCounters = new Map<string, number>();
+        if (!artifactSummaries) artifactSummaries = new Map<string, any>();
 
         // Process all artifacts in chronological order
         for (const block of contentBlocks) {

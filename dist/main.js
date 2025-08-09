@@ -5726,11 +5726,20 @@ var ClaudeConverter = class {
     if (!messages || messages.length === 0) {
       return standardMessages;
     }
+    const versionCounters = /* @__PURE__ */ new Map();
+    const artifactSummaries = /* @__PURE__ */ new Map();
     for (const message of messages) {
       if (!this.shouldIncludeMessage(message)) {
         continue;
       }
-      const { text, attachments } = await this.processContentBlocks(message.content, conversationId, conversationTitle, conversationCreateTime);
+      const { text, attachments } = await this.processContentBlocks(
+        message.content,
+        conversationId,
+        conversationTitle,
+        conversationCreateTime,
+        versionCounters,
+        artifactSummaries
+      );
       const fileAttachments = this.processFileAttachments(message.files);
       const standardMessage = {
         id: message.uuid,
@@ -5752,7 +5761,7 @@ var ClaudeConverter = class {
     }
     return false;
   }
-  static async processContentBlocks(contentBlocks, conversationId, conversationTitle, conversationCreateTime) {
+  static async processContentBlocks(contentBlocks, conversationId, conversationTitle, conversationCreateTime, versionCounters, artifactSummaries) {
     const textParts = [];
     const attachments = [];
     const artifactVersionsMap = /* @__PURE__ */ new Map();
@@ -5780,8 +5789,10 @@ var ClaudeConverter = class {
         }
       }
     }
-    const versionCounters = /* @__PURE__ */ new Map();
-    const artifactSummaries = /* @__PURE__ */ new Map();
+    if (!versionCounters)
+      versionCounters = /* @__PURE__ */ new Map();
+    if (!artifactSummaries)
+      artifactSummaries = /* @__PURE__ */ new Map();
     for (const block of contentBlocks) {
       if (block.type === "tool_use" && block.name === "artifacts" && block.input) {
         const artifactId = block.input.id || "unknown";
