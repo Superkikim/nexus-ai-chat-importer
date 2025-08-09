@@ -67,6 +67,12 @@ export class MessageFormatter {
      * Format single attachment with status-aware display and CSS box styling
      */
     private formatSingleAttachment(attachment: StandardAttachment, quoteChar: string): string {
+        // For Claude attachments, extractedContent already contains the full formatted content with div
+        if (attachment.extractedContent && attachment.extractedContent.includes('nexus-attachment-box')) {
+            return attachment.extractedContent;
+        }
+
+        // For other providers (ChatGPT), create the div wrapper
         let content = `<div class="nexus-attachment-box">\n\n`;
 
         // Status-aware header with appropriate icon
