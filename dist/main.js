@@ -5162,7 +5162,27 @@ var ChatGPTConverter = class {
     for (const part of chatMessage.content.parts) {
       let textContent = "";
       if (typeof part === "string" && part.trim() !== "") {
-        textContent = part;
+        if (part.trim().startsWith("{") && part.trim().endsWith("}")) {
+          try {
+            const parsed = JSON.parse(part);
+            if (parsed.type && parsed.content && typeof parsed.content === "string") {
+              const codeType = parsed.type;
+              const codeContent = parsed.content;
+              if (codeContent.trim() !== "") {
+                const language = codeType.includes("/") ? codeType.split("/")[1] : codeType;
+                textContent = `\`\`\`${language}
+${codeContent}
+\`\`\``;
+              }
+            } else {
+              textContent = part;
+            }
+          } catch (e) {
+            textContent = part;
+          }
+        } else {
+          textContent = part;
+        }
       } else if (typeof part === "object" && part !== null) {
         if ("type" in part && "content" in part && typeof part.content === "string") {
           const codeType = part.type;
