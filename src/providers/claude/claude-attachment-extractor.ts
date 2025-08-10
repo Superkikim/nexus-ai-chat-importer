@@ -83,7 +83,7 @@ export class ClaudeAttachmentExtractor {
         const conversationUrl = `https://claude.ai/chat/${conversationId}`;
         const fileType = this.getFileTypeFromExtension(fileName);
 
-        const placeholder = `<div class="nexus-attachment-box">📎 **Attachment:** ${fileName} (${fileType}) - (not included in archive. <a href="${conversationUrl}" target="_blank">Click to open original conversation</a>)</div>`;
+        const placeholder = `>[!note] 📎 **Attachment:** ${fileName} (${fileType}) - (not included in archive. <a href="${conversationUrl}" target="_blank">Click to open original conversation</a>)`;
 
         return {
             ...attachment,

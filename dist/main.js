@@ -5841,8 +5841,9 @@ var ClaudeConverter = class {
                   conversationCreateTime
                 );
                 const title = block.input.title || artifactId;
-                const versionFile = `${artifactId}_v${currentVersion}`;
-                const specificLink = `<div class="nexus-artifact-box">\u{1F4CE} **[[${versionFile}|Artifact: ${title} v${currentVersion}]]**</div>`;
+                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+                const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
+                const specificLink = `>[!note] [[${versionFile}|Artifact: ${title} v${currentVersion}]]`;
                 textParts.push(specificLink);
               } catch (error) {
                 console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
@@ -6629,7 +6630,7 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     const fileName = attachment.fileName;
     const conversationUrl = `https://claude.ai/chat/${conversationId}`;
     const fileType = this.getFileTypeFromExtension(fileName);
-    const placeholder = `<div class="nexus-attachment-box">\u{1F4CE} **Attachment:** ${fileName} (${fileType}) - (not included in archive. <a href="${conversationUrl}" target="_blank">Click to open original conversation</a>)</div>`;
+    const placeholder = `>[!note] \u{1F4CE} **Attachment:** ${fileName} (${fileType}) - (not included in archive. <a href="${conversationUrl}" target="_blank">Click to open original conversation</a>)`;
     return {
       ...attachment,
       extractedContent: placeholder
