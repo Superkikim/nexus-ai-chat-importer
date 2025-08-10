@@ -420,9 +420,9 @@ class FixReportLinksOperation extends UpgradeOperation {
             console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: STARTING`);
             const reportFolder = context.plugin.settings.reportFolder;
 
-            // Get ALL report files (any file in report folder with import_ in name)
+            // Get ALL files in Reports/chatgpt/ folder (SED-LIKE approach)
             const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file =>
-                file.path.startsWith(reportFolder) && file.name.includes('import_')
+                file.path.startsWith(`${reportFolder}/chatgpt/`)
             );
 
             console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
@@ -444,9 +444,9 @@ class FixReportLinksOperation extends UpgradeOperation {
             let fixedFiles = 0;
             let errors = 0;
 
-            // Get all report files
+            // Get ALL files in Reports/chatgpt/ folder (SED-LIKE approach)
             const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file =>
-                file.path.startsWith(reportFolder) && file.name.includes('import_')
+                file.path.startsWith(`${reportFolder}/chatgpt/`)
             );
 
             console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${reportFiles.length} report files`);

@@ -4009,7 +4009,7 @@ ${cleanContent}`;
           console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: STARTING`);
           const reportFolder = context.plugin.settings.reportFolder;
           const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
-            (file) => file.path.startsWith(reportFolder) && file.name.includes("import_")
+            (file) => file.path.startsWith(`${reportFolder}/chatgpt/`)
           );
           console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
           return reportFiles.length > 0;
@@ -4025,7 +4025,7 @@ ${cleanContent}`;
           let fixedFiles = 0;
           let errors = 0;
           const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
-            (file) => file.path.startsWith(reportFolder) && file.name.includes("import_")
+            (file) => file.path.startsWith(`${reportFolder}/chatgpt/`)
           );
           console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${reportFiles.length} report files`);
           for (const file of reportFiles) {
