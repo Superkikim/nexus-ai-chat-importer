@@ -34,23 +34,47 @@ export class ClaudeConverter {
             return standardMessages;
         }
 
-        // Global version counters for the entire conversation
-        const versionCounters = new Map<string, number>();
-        const artifactSummaries = new Map<string, any>();
+        // PHASE 1: Collect ALL artifacts from entire conversation
+        const allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number}> = [];
 
+        for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
+            const message = messages[msgIndex];
+            if (message.content) {
+                for (let blockIndex = 0; blockIndex < message.content.length; blockIndex++) {
+                    const block = message.content[blockIndex];
+                    if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
+                        const command = block.input.command || 'create';
+                        const versionUuid = block.input.version_uuid;
+
+                        // Skip view commands only
+                        if (command !== 'view' && versionUuid) {
+                            allArtifacts.push({
+                                artifact: block.input,
+                                messageIndex: msgIndex,
+                                blockIndex: blockIndex
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // PHASE 2: Process ALL artifacts and create files
+        const artifactVersionMap = await this.processAllArtifacts(allArtifacts, conversationId, conversationTitle, conversationCreateTime);
+
+        // PHASE 3: Process messages and replace artifacts with links
         for (const message of messages) {
             if (!this.shouldIncludeMessage(message)) {
                 continue;
             }
 
             // Process content blocks to create message text and attachments
-            const { text, attachments } = await this.processContentBlocks(
+            const { text, attachments } = await this.processContentBlocksForDisplay(
                 message.content,
+                artifactVersionMap,
                 conversationId,
                 conversationTitle,
-                conversationCreateTime,
-                versionCounters,
-                artifactSummaries
+                conversationCreateTime
             );
             
             // Add file attachments
@@ -81,6 +105,155 @@ export class ClaudeConverter {
         }
         
         return false;
+    }
+
+    /**
+     * Process ALL artifacts from entire conversation and create files
+     */
+    private static async processAllArtifacts(
+        allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number}>,
+        conversationId?: string,
+        conversationTitle?: string,
+        conversationCreateTime?: number
+    ): Promise<Map<string, {versionNumber: number, title: string}>> {
+
+        const artifactVersionMap = new Map<string, {versionNumber: number, title: string}>();
+        const versionCounters = new Map<string, number>();
+        const artifactContents = new Map<string, string>();
+
+        console.log(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
+
+        for (const {artifact} of allArtifacts) {
+            const artifactId = artifact.id || 'unknown';
+            const command = artifact.command || 'create';
+
+            // Increment version number for this artifact ID
+            const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
+            versionCounters.set(artifactId, currentVersion);
+
+            let finalContent = '';
+
+            if (command === 'create' || command === 'rewrite') {
+                // Complete content provided - RESET cumulative content
+                finalContent = artifact.content || '';
+                artifactContents.set(artifactId, finalContent);
+            } else if (command === 'update') {
+                // Apply update to PREVIOUS content
+                const previousContent = artifactContents.get(artifactId) || '';
+
+                if (artifact.old_str && artifact.new_str) {
+                    // sed-like replacement on previous content
+                    finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
+                } else if (artifact.content && artifact.content.length > 0) {
+                    // Complete updated content provided
+                    finalContent = artifact.content;
+                } else {
+                    // Empty update - keep previous content
+                    finalContent = previousContent;
+                }
+
+                // Update cumulative content for next version
+                artifactContents.set(artifactId, finalContent);
+            }
+
+            console.log(`Saving ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
+
+            try {
+                // Save this specific version
+                await this.saveSingleArtifactVersionWithContent(
+                    artifactId,
+                    artifact,
+                    currentVersion,
+                    finalContent,
+                    conversationId,
+                    conversationTitle,
+                    conversationCreateTime
+                );
+
+                // Track version info for linking
+                artifactVersionMap.set(artifact.version_uuid, {
+                    versionNumber: currentVersion,
+                    title: artifact.title || artifactId
+                });
+
+            } catch (error) {
+                console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+            }
+        }
+
+        return artifactVersionMap;
+    }
+
+    /**
+     * Process content blocks for display (with artifact links)
+     */
+    private static async processContentBlocksForDisplay(
+        contentBlocks: ClaudeContentBlock[],
+        artifactVersionMap: Map<string, {versionNumber: number, title: string}>,
+        conversationId?: string,
+        conversationTitle?: string,
+        conversationCreateTime?: number
+    ): Promise<{ text: string; attachments: StandardAttachment[] }> {
+        const textParts: string[] = [];
+        const attachments: StandardAttachment[] = [];
+
+        // Handle empty or null content blocks
+        if (!contentBlocks || contentBlocks.length === 0) {
+            return { text: "", attachments: [] };
+        }
+
+        // Process content blocks for display
+        for (const block of contentBlocks) {
+            switch (block.type) {
+                case 'text':
+                    if (block.text) {
+                        textParts.push(block.text);
+                    }
+                    break;
+
+                case 'thinking':
+                    // Filter out thinking blocks - not useful for users
+                    break;
+
+                case 'tool_use':
+                    // Create specific artifact links
+                    if (block.name === 'artifacts' && block.input) {
+                        const command = block.input.command || 'create';
+                        const versionUuid = block.input.version_uuid;
+
+                        // Skip view commands
+                        if (command === 'view') {
+                            break;
+                        }
+
+                        if (versionUuid && artifactVersionMap.has(versionUuid)) {
+                            const versionInfo = artifactVersionMap.get(versionUuid)!;
+                            const artifactId = block.input.id || 'unknown';
+                            const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+                            const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
+                            const specificLink = `>[!note] [[${versionFile}|Artifact: ${versionInfo.title} v${versionInfo.versionNumber}]]`;
+                            textParts.push(specificLink);
+                        }
+                    } else if (block.name === 'web_search') {
+                        // Filter out web_search tools - not useful for users
+                        break;
+                    } else if (block.name && block.input) {
+                        // Other tools (keep for now, can be filtered later if needed)
+                        const code = block.input.code || JSON.stringify(block.input, null, 2);
+                        textParts.push(`**[Tool: ${block.name}]**\n\`\`\`\n${code}\n\`\`\``);
+                    }
+                    break;
+
+                case 'tool_result':
+                    // Filter out all tool results - not useful for users
+                    break;
+            }
+        }
+
+        return {
+            text: textParts.join('\n\n'),
+            attachments: attachments
+        };
     }
 
     private static async processContentBlocks(
