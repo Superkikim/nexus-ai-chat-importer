@@ -1,10 +1,15 @@
 # Nexus AI Chat Importer Plugin for Obsidian
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.2.0--dev-orange)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)
+![GitHub all releases](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total)
+![GitHub](https://img.shields.io/github/license/superkikim/nexus-ai-chat-importer)
+![Obsidian Plugin](https://img.shields.io/badge/Obsidian-Plugin-purple)
+![Platform](https://img.shields.io/badge/Platform-Desktop%20%7C%20Mobile-blue)
 
 ## Overview
 
-Import your AI chat conversations from ChatGPT exports into Obsidian as organized Markdown files. Conversations are imported with their attachments (images, documents) when present in the archive.
+Import your AI chat conversations from **ChatGPT** and **Claude** exports into Obsidian as organized Markdown files. Conversations are imported with their attachments and artifacts when present in the archive.
 
 ## ☕ Support My Work
 
@@ -22,17 +27,14 @@ If this plugin helps you, consider supporting its development:
 
 ## Features
 
-- **ChatGPT Import**: Import conversations from ChatGPT exports
-- **Claude Import**: Import conversations from Claude exports with full artifact versioning
-- **Organized Structure**: Conversations are organized by provider, year, and month
-- **Attachment Handling**: Extracts and saves attachments (images, files) from conversations
-- **Advanced Artifact Support**:
-  - Complete version history for Claude artifacts (v1, v2, v3...)
-  - Proper handling of create/update/rewrite commands
-  - Cumulative content tracking with sed-like replacements
-  - Individual files for each significant version
-- **Smart Reimport**: Updates existing conversations with new messages without duplication
+- **Multi-Provider Support**: Import from ChatGPT and Claude exports
+- **Smart Organization**: Conversations organized by provider, year, and month
+- **Attachment Handling**: Extracts and saves images, documents, and DALL-E creations
+- **Claude Artifact Versioning**: Each artifact modification creates a new version file (v1, v2, v3...)
+- **Update-Safe Imports**: Re-import conversations to add new messages without duplication
+- **Comprehensive Reports**: Detailed import summaries with statistics and links
 - **Flexible Settings**: Customize folder structure, date formats, and import behavior
+- **Cross-Platform**: Works on desktop and mobile Obsidian
 
 ## Installation
 
@@ -62,24 +64,31 @@ Go to Settings > Nexus AI Chat Importer:
 
 ## Usage
 
-### Export Your ChatGPT Data
+### Export Your Data
 
+#### ChatGPT
 1. Log in to ChatGPT
 2. Go to Settings > Data controls
 3. Click “Export data”
 4. Download the ZIP file when ready
 
+#### Claude
+1. Log in to Claude
+2. Go to Settings > Export data
+3. Download your conversation archive
+
 ### Import into Obsidian
 
 1. Click the import button in the ribbon (chat icon with +) or use Command Palette
-2. Select your ChatGPT export ZIP file(s)
+2. Select your ChatGPT or Claude export ZIP file(s)
 3. Files are processed automatically
 
 ### What Gets Imported
 
 - **Conversations**: Each chat becomes a Markdown file organized by date (Year/Month)
 - **Attachments**: Images, documents, and DALL-E generated content (if present in the archive)
-- **Organization**: Files stored in `Attachments/chatgpt/images/` and `Attachments/chatgpt/documents/`
+- **Claude Artifacts**: Code, documents, and other artifacts saved as individual versioned files
+- **Organization**: Files stored in provider-specific folders (`Attachments/chatgpt/`, `Attachments/claude/`)
 
 ### Adding Attachments to Existing Notes
 
@@ -91,7 +100,7 @@ If you want to add attachments to conversations imported before v1.1.0:
 
 ### Import Reports
 
-After each import, a report is generated in `Reports/chatgpt/` showing:
+After each import, a report is generated in `Reports/{provider}/` showing:
 
 - Number of conversations created/updated
 - Attachment statistics (✅ found, ⚠️ partial, ❌ missing)
