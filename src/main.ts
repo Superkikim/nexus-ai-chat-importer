@@ -10,6 +10,8 @@ import { StorageService } from "./services/storage-service";
 import { FileService } from "./services/file-service";
 import { IncrementalUpgradeManager } from "./upgrade/incremental-upgrade-manager";
 import { Logger } from "./logger";
+import { ProviderSelectionDialog } from "./dialogs/provider-selection-dialog";
+import { createProviderRegistry } from "./providers/provider-registry";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
@@ -44,7 +46,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const ribbonIconEl = this.addRibbonIcon(
                 "message-square-plus",
                 "Nexus AI Chat Importer - Import new file",
-                () => this.importService.selectZipFile()
+                () => this.showProviderSelectionDialog()
             );
             ribbonIconEl.addClass("nexus-ai-chat-ribbon");
             
@@ -181,5 +183,59 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     getUpgradeManager(): IncrementalUpgradeManager {
         return this.upgradeManager;
+    }
+
+    /**
+     * Show provider selection dialog and then file selection
+     */
+    showProviderSelectionDialog(): void {
+        const providerRegistry = createProviderRegistry(this);
+
+        new ProviderSelectionDialog(
+            this.app,
+            providerRegistry,
+            (selectedProvider: string) => {
+                this.selectZipFilesForProvider(selectedProvider);
+            }
+        ).open();
+    }
+
+    /**
+     * Select ZIP files for a specific provider
+     */
+    private selectZipFilesForProvider(provider: string): void {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".zip";
+        input.multiple = true;
+        input.onchange = async (e) => {
+            const files = Array.from((e.target as HTMLInputElement).files || []);
+            if (files.length > 0) {
+                // Sort files by timestamp and process with forced provider
+                const sortedFiles = this.sortFilesByTimestamp(files);
+                for (const file of sortedFiles) {
+                    await this.importService.handleZipFile(file, provider);
+                }
+            }
+        };
+        input.click();
+    }
+
+    /**
+     * Sort files by timestamp (same logic as ImportService)
+     */
+    private sortFilesByTimestamp(files: File[]): File[] {
+        return files.sort((a, b) => {
+            const timestampRegex = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
+            const getTimestamp = (filename: string) => {
+                const match = filename.match(timestampRegex);
+                if (!match) {
+                    this.logger.warn(`No timestamp found in filename: ${filename}`);
+                    return "0";
+                }
+                return match[1];
+            };
+            return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
+        });
     }
 }

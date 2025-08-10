@@ -8,9 +8,10 @@ export class CommandRegistry {
     registerCommands() {
         this.plugin.addCommand({
             id: "nexus-ai-chat-importer-select-zip",
-            name: "Select ZIP file to process",
+            name: "Import AI conversations",
             callback: () => {
-                this.plugin.getImportService().selectZipFile();
+                // Use the new provider selection workflow
+                this.plugin.showProviderSelectionDialog();
             },
         });
 
