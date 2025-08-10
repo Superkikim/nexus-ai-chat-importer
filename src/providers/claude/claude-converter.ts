@@ -6,6 +6,15 @@ import type NexusAiChatImporterPlugin from "../../main";
 export class ClaudeConverter {
     private static plugin: NexusAiChatImporterPlugin;
 
+    // Nexus custom callouts with icons
+    private static readonly CALLOUTS = {
+        USER: 'nexus_user',      // 👤 User messages
+        AGENT: 'nexus_agent',    // 🤖 Assistant/Agent messages
+        ATTACHMENT: 'nexus_attachment', // 📎 Attachments
+        ARTIFACT: 'nexus_artifact',     // 🛠️ Claude artifacts
+        PROMPT: 'nexus_prompt'          // 💭 System prompts
+    };
+
     static setPlugin(plugin: NexusAiChatImporterPlugin) {
         this.plugin = plugin;
     }
@@ -241,7 +250,7 @@ export class ClaudeConverter {
                             const artifactId = block.input.id || 'unknown';
                             const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
                             const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
-                            const specificLink = `>[!note] [[${versionFile}|Artifact: ${versionInfo.title} v${versionInfo.versionNumber}]]`;
+                            const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}\n> [[${versionFile}|View Code]]`;
                             textParts.push(specificLink);
                         }
                     } else if (block.name === 'web_search') {
@@ -394,12 +403,12 @@ export class ClaudeConverter {
                                 const title = block.input.title || artifactId;
                                 const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
                                 const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
-                                const specificLink = `>[!note] [[${versionFile}|Artifact: ${title} v${currentVersion}]]`;
+                                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}\n> [[${versionFile}|View Code]]`;
                                 textParts.push(specificLink);
 
                             } catch (error) {
                                 console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
-                                textParts.push(`<div class="nexus-artifact-box">❌ **Artifact: ${block.input.title || artifactId} v${currentVersion}** (Error saving)</div>`);
+                                textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${block.input.title || artifactId}** v${currentVersion}\n> ❌ Error saving artifact`);
                             }
                         }
                     } else if (block.name === 'web_search') {

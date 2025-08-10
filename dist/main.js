@@ -4252,7 +4252,7 @@ var import_obsidian11 = require("obsidian");
 
 // src/formatters/message-formatter.ts
 init_utils();
-var MessageFormatter = class {
+var _MessageFormatter = class {
   constructor(logger4) {
     this.logger = logger4;
   }
@@ -4266,17 +4266,16 @@ var MessageFormatter = class {
     }
     const messageTime = formatTimestamp(message.timestamp, "date") + " at " + formatTimestamp(message.timestamp, "time");
     const authorName = message.role === "user" ? "User" : "Assistant";
-    const headingLevel = message.role === "user" ? "###" : "####";
-    const quoteChar = message.role === "user" ? ">" : ">>";
-    let messageContent = `${headingLevel} ${authorName}, on ${messageTime};
+    const calloutType = message.role === "user" ? _MessageFormatter.CALLOUTS.USER : _MessageFormatter.CALLOUTS.AGENT;
+    let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}
 `;
     if (message.content) {
-      messageContent += message.content.split("\n").map((line) => `${quoteChar} ${line}`).join("\n");
+      messageContent += `> ${message.content.split("\n").join("\n> ")}`;
     } else {
-      messageContent += `${quoteChar} [No content found]`;
+      messageContent += `> [No content found]`;
     }
     if (message.attachments && message.attachments.length > 0) {
-      messageContent += "\n\n" + this.formatAttachments(message.attachments, quoteChar);
+      messageContent += "\n\n" + this.formatAttachments(message.attachments);
     }
     messageContent += `
 <!-- UID: ${message.id} -->
@@ -4286,28 +4285,24 @@ var MessageFormatter = class {
     }
     return messageContent + "\n\n";
   }
-  formatAttachments(attachments, quoteChar) {
+  formatAttachments(attachments) {
     return attachments.map((attachment) => {
-      return this.formatSingleAttachment(attachment, quoteChar);
+      return this.formatSingleAttachment(attachment);
     }).join("\n\n");
   }
   /**
-   * Format single attachment with status-aware display and CSS box styling
+   * Format single attachment with Nexus callout styling
    */
-  formatSingleAttachment(attachment, quoteChar) {
-    var _a, _b, _c;
-    if (attachment.extractedContent && attachment.extractedContent.includes("nexus-attachment-box")) {
+  formatSingleAttachment(attachment) {
+    var _a, _b;
+    if (attachment.extractedContent && attachment.extractedContent.includes("nexus_attachment")) {
       return attachment.extractedContent;
     }
-    let content = `<div class="nexus-attachment-box">
-
-`;
+    let content = `>[!${_MessageFormatter.CALLOUTS.ATTACHMENT}] `;
     if ((_a = attachment.status) == null ? void 0 : _a.found) {
-      content += `**\u{1F4CE} Attachment:** ${attachment.fileName}`;
-    } else if ((_b = attachment.status) == null ? void 0 : _b.processed) {
-      content += `**\u{1F4CE} Missing Attachment:** ${attachment.fileName}`;
+      content += `**${attachment.fileName}**`;
     } else {
-      content += `**\u{1F4CE} Attachment:** ${attachment.fileName}`;
+      content += `**${attachment.fileName}** *(missing)*`;
     }
     if (attachment.fileType) {
       content += ` (${attachment.fileType})`;
@@ -4315,54 +4310,33 @@ var MessageFormatter = class {
     if (attachment.fileSize) {
       content += ` - ${this.formatFileSize(attachment.fileSize)}`;
     }
-    content += "\n\n";
-    if (((_c = attachment.status) == null ? void 0 : _c.found) && attachment.url) {
+    content += "\n";
+    if (((_b = attachment.status) == null ? void 0 : _b.found) && attachment.url) {
       if (!attachment.url.startsWith("sandbox://")) {
         if (this.isImageFile(attachment)) {
-          content += `![[${attachment.url}]]
-
-`;
+          content += `> ![[${attachment.url}]]`;
         } else {
-          content += `[[${attachment.url}]]
-
-`;
+          content += `> [[${attachment.url}]]`;
         }
       } else {
-        content += `**Status:** \u26A0\uFE0F File not available in archive. Visit the original conversation to access it
-
-`;
+        content += `> \u26A0\uFE0F File not available in archive. Visit the original conversation to access it`;
       }
-    }
-    if (attachment.status && !attachment.status.found) {
-      content += `**Status:** \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}
-
-`;
+    } else if (attachment.status && !attachment.status.found) {
+      content += `> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
       if (attachment.status.note) {
-        content += `**Note:** ${attachment.status.note}
-
-`;
+        content += `
+> **Note:** ${attachment.status.note}`;
       }
-    }
-    if (attachment.extractedContent && this.isDalleImage(attachment)) {
-      content += `**Prompt:**
-\`\`\`
-${attachment.extractedContent}
-\`\`\`
-
-`;
+    } else if (attachment.extractedContent && this.isDalleImage(attachment)) {
+      content += `> **Prompt:**
+> \`\`\`
+> ${attachment.extractedContent}
+> \`\`\``;
     } else if (attachment.extractedContent) {
-      content += `**Content:**
-${attachment.extractedContent}
-
-`;
+      content += `> ${attachment.extractedContent}`;
+    } else if (attachment.content && !attachment.extractedContent) {
+      content += `> ${attachment.content}`;
     }
-    if (attachment.content && !attachment.extractedContent) {
-      content += `**Content:**
-${attachment.content}
-
-`;
-    }
-    content += `</div>`;
     return content;
   }
   /**
@@ -4407,6 +4381,20 @@ ${attachment.content}
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + " " + sizes[i];
   }
+};
+var MessageFormatter = _MessageFormatter;
+// Nexus custom callouts with icons
+MessageFormatter.CALLOUTS = {
+  USER: "nexus_user",
+  // 👤 User messages
+  AGENT: "nexus_agent",
+  // 🤖 Assistant/Agent messages
+  ATTACHMENT: "nexus_attachment",
+  // 📎 Attachments
+  ARTIFACT: "nexus_artifact",
+  // 🛠️ Claude artifacts
+  PROMPT: "nexus_prompt"
+  // 💭 System prompts
 };
 
 // src/formatters/note-formatter.ts
@@ -5944,7 +5932,8 @@ var ClaudeConverter = class {
               const artifactId = block.input.id || "unknown";
               const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
               const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
-              const specificLink = `>[!note] [[${versionFile}|Artifact: ${versionInfo.title} v${versionInfo.versionNumber}]]`;
+              const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}
+> [[${versionFile}|View Code]]`;
               textParts.push(specificLink);
             }
           } else if (block.name === "web_search") {
@@ -6048,11 +6037,13 @@ ${code}
                 const title = block.input.title || artifactId;
                 const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
                 const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
-                const specificLink = `>[!note] [[${versionFile}|Artifact: ${title} v${currentVersion}]]`;
+                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}
+> [[${versionFile}|View Code]]`;
                 textParts.push(specificLink);
               } catch (error) {
                 console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
-                textParts.push(`<div class="nexus-artifact-box">\u274C **Artifact: ${block.input.title || artifactId} v${currentVersion}** (Error saving)</div>`);
+                textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${block.input.title || artifactId}** v${currentVersion}
+> \u274C Error saving artifact`);
               }
             }
           } else if (block.name === "web_search") {
@@ -6781,6 +6772,19 @@ ${content}
     return uniqueArtifacts.size;
   }
 };
+// Nexus custom callouts with icons
+ClaudeConverter.CALLOUTS = {
+  USER: "nexus_user",
+  // 👤 User messages
+  AGENT: "nexus_agent",
+  // 🤖 Assistant/Agent messages
+  ATTACHMENT: "nexus_attachment",
+  // 📎 Attachments
+  ARTIFACT: "nexus_artifact",
+  // 🛠️ Claude artifacts
+  PROMPT: "nexus_prompt"
+  // 💭 System prompts
+};
 
 // src/providers/claude/claude-attachment-extractor.ts
 var ClaudeAttachmentExtractor = class {
@@ -6842,7 +6846,8 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     const fileName = attachment.fileName;
     const conversationUrl = `https://claude.ai/chat/${conversationId}`;
     const fileType = this.getFileTypeFromExtension(fileName);
-    const placeholder = `>[!note] \u{1F4CE} **Attachment:** ${fileName} (${fileType}) - (not included in archive. <a href="${conversationUrl}" target="_blank">Click to open original conversation</a>)`;
+    const placeholder = `>[!nexus_attachment] **${fileName}** (${fileType})
+> \u26A0\uFE0F Not included in archive. [Open original conversation](${conversationUrl})`;
     return {
       ...attachment,
       extractedContent: placeholder
