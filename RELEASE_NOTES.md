@@ -72,9 +72,9 @@
 - **Performance**: Large conversation imports are significantly faster
 
 #### **For Existing Users**
-- **Automatic upgrade**: Existing conversations remain functional
+- **Automatic upgrade**: Existing ChatGPT conversations remain functional
 - **UI improvements**: New imports will use the enhanced callout system
-- **Reimport recommended**: Consider reimporting Claude conversations to benefit from new features
+- **NEW: Claude support**: You can now import Claude conversations for the first time!
 - **Settings preserved**: All your existing settings are maintained
 
 #### **File Structure Changes**

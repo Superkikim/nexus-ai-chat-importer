@@ -43,12 +43,14 @@ export class ChatGPTConverter {
      * Convert single ChatGPT ChatMessage to StandardMessage
      */
     private static convertMessage(chatMessage: ChatMessage, conversationId?: string): StandardMessage {
+        const contentResult = this.extractContent(chatMessage, conversationId);
+
         return {
             id: chatMessage.id || "",
             role: chatMessage.author?.role === "user" ? "user" : "assistant",
-            content: this.extractContent(chatMessage, conversationId),
+            content: contentResult.content,
             timestamp: chatMessage.create_time || 0,
-            attachments: []
+            attachments: contentResult.attachments || []
         };
     }
 
@@ -340,14 +342,15 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Extract content from ChatGPT message parts
+     * Extract content and attachments from ChatGPT message parts
      */
-    private static extractContent(chatMessage: ChatMessage, conversationId?: string): string {
+    private static extractContent(chatMessage: ChatMessage, conversationId?: string): {content: string, attachments?: StandardAttachment[]} {
         if (!chatMessage.content?.parts || !Array.isArray(chatMessage.content.parts)) {
-            return "";
+            return { content: "" };
         }
-        
+
         const contentParts: string[] = [];
+        const attachments: StandardAttachment[] = [];
         
         for (const part of chatMessage.content.parts) {
             let textContent = "";
@@ -400,7 +403,13 @@ export class ChatGPTConverter {
                         textContent = part.text;
                     }
                 }
-                // Skip image_asset_pointer content types - they become attachments via metadata
+                // Handle image_asset_pointer content types as attachments
+                else if ('content_type' in part && part.content_type === 'image_asset_pointer' && 'asset_pointer' in part) {
+                    const attachment = this.extractImageAttachment(part, conversationId);
+                    if (attachment) {
+                        attachments.push(attachment);
+                    }
+                }
             }
             
             // Clean up ChatGPT control characters and formatting artifacts
@@ -411,8 +420,56 @@ export class ChatGPTConverter {
                 }
             }
         }
-        
-        return contentParts.join("\n");
+
+        const finalContent = contentParts.join("\n");
+
+        // Extract attachments from message metadata if available
+        if (chatMessage.attachments) {
+            for (const att of chatMessage.attachments) {
+                attachments.push({
+                    fileName: att.file_name,
+                    fileType: att.file_type || 'application/octet-stream',
+                    fileSize: att.file_size,
+                    extractedContent: att.extracted_content
+                });
+            }
+        }
+
+        return {
+            content: finalContent,
+            attachments: attachments.length > 0 ? attachments : undefined
+        };
+    }
+
+    /**
+     * Extract image attachment from content part
+     */
+    private static extractImageAttachment(part: any, conversationId?: string): StandardAttachment | null {
+        if (!part.asset_pointer) return null;
+
+        // Extract file ID from asset pointer
+        let fileId = part.asset_pointer;
+        if (fileId.includes('://')) {
+            fileId = fileId.split('://')[1];
+        }
+
+        // Generate filename based on metadata
+        let fileName = `image_${fileId}`;
+        if (part.width && part.height) {
+            fileName = `image_${fileId}_${part.width}x${part.height}`;
+        }
+
+        // Determine file extension from metadata or default to png
+        const fileType = part.metadata?.mime_type || 'image/png';
+        const extension = fileType.split('/')[1] || 'png';
+        fileName += `.${extension}`;
+
+        return {
+            fileName,
+            fileType,
+            fileSize: part.size_bytes,
+            fileId
+        };
     }
 
     // Pre-compiled regex patterns for performance

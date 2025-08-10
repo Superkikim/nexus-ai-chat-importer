@@ -4922,12 +4922,13 @@ var ChatGPTConverter = class {
    */
   static convertMessage(chatMessage, conversationId) {
     var _a;
+    const contentResult = this.extractContent(chatMessage, conversationId);
     return {
       id: chatMessage.id || "",
       role: ((_a = chatMessage.author) == null ? void 0 : _a.role) === "user" ? "user" : "assistant",
-      content: this.extractContent(chatMessage, conversationId),
+      content: contentResult.content,
       timestamp: chatMessage.create_time || 0,
-      attachments: []
+      attachments: contentResult.attachments || []
     };
   }
   /**
@@ -5138,14 +5139,15 @@ var ChatGPTConverter = class {
     };
   }
   /**
-   * Extract content from ChatGPT message parts
+   * Extract content and attachments from ChatGPT message parts
    */
   static extractContent(chatMessage, conversationId) {
     var _a;
     if (!((_a = chatMessage.content) == null ? void 0 : _a.parts) || !Array.isArray(chatMessage.content.parts)) {
-      return "";
+      return { content: "" };
     }
     const contentParts = [];
+    const attachments = [];
     for (const part of chatMessage.content.parts) {
       let textContent = "";
       if (typeof part === "string" && part.trim() !== "") {
@@ -5188,6 +5190,11 @@ ${codeContent}
           } else if (part.content_type === "multimodal_text" && part.text.trim() !== "") {
             textContent = part.text;
           }
+        } else if ("content_type" in part && part.content_type === "image_asset_pointer" && "asset_pointer" in part) {
+          const attachment = this.extractImageAttachment(part, conversationId);
+          if (attachment) {
+            attachments.push(attachment);
+          }
         }
       }
       if (textContent) {
@@ -5197,7 +5204,46 @@ ${codeContent}
         }
       }
     }
-    return contentParts.join("\n");
+    const finalContent = contentParts.join("\n");
+    if (chatMessage.attachments) {
+      for (const att of chatMessage.attachments) {
+        attachments.push({
+          fileName: att.file_name,
+          fileType: att.file_type || "application/octet-stream",
+          fileSize: att.file_size,
+          extractedContent: att.extracted_content
+        });
+      }
+    }
+    return {
+      content: finalContent,
+      attachments: attachments.length > 0 ? attachments : void 0
+    };
+  }
+  /**
+   * Extract image attachment from content part
+   */
+  static extractImageAttachment(part, conversationId) {
+    var _a;
+    if (!part.asset_pointer)
+      return null;
+    let fileId = part.asset_pointer;
+    if (fileId.includes("://")) {
+      fileId = fileId.split("://")[1];
+    }
+    let fileName = `image_${fileId}`;
+    if (part.width && part.height) {
+      fileName = `image_${fileId}_${part.width}x${part.height}`;
+    }
+    const fileType = ((_a = part.metadata) == null ? void 0 : _a.mime_type) || "image/png";
+    const extension = fileType.split("/")[1] || "png";
+    fileName += `.${extension}`;
+    return {
+      fileName,
+      fileType,
+      fileSize: part.size_bytes,
+      fileId
+    };
   }
   /**
    * Clean ChatGPT artifacts, citations, and control characters - SMART LINKING
