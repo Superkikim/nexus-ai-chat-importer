@@ -77,6 +77,8 @@ Go to Settings > Nexus AI Chat Importer:
 2. Go to Settings > Export data
 3. Download your conversation archive
 
+⚠️ **Note on Claude Projects**: Currently, Claude exports don't include project association data for conversations. This limitation has been reported to Anthropic. Until they provide a solution, project-based organization is not supported. Individual conversations are imported regardless of their project association.
+
 ### Import into Obsidian
 
 1. Click the import button in the ribbon (chat icon with +) or use Command Palette
