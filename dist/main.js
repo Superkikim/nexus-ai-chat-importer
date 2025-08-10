@@ -2943,18 +2943,18 @@ async function checkConversationLink(conversationId, provider = "chatgpt") {
     return false;
   }
 }
-function old_getConversationId(app) {
+function old_getConversationId(app2) {
   var _a;
-  const activeFile = app.workspace.getActiveFile();
+  const activeFile = app2.workspace.getActiveFile();
   if (activeFile) {
-    const frontmatter = (_a = app.metadataCache.getFileCache(activeFile)) == null ? void 0 : _a.frontmatter;
+    const frontmatter = (_a = app2.metadataCache.getFileCache(activeFile)) == null ? void 0 : _a.frontmatter;
     return frontmatter == null ? void 0 : frontmatter.conversation_id;
   }
   return void 0;
 }
-function isNexusRelated(file, app) {
+function isNexusRelated(file, app2) {
   var _a;
-  const frontmatter = (_a = app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+  const frontmatter = (_a = app2.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
   return (frontmatter == null ? void 0 : frontmatter.nexus) === "nexus-ai-chat-importer";
 }
 var import_obsidian7, import_obsidian8, logger;
@@ -2969,8 +2969,8 @@ var init_utils = __esm({
 });
 
 // src/dialogs.ts
-function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian9.Modal(app);
+function displayModal(app2, title, paragraphs, note) {
+  const modal = new import_obsidian9.Modal(app2);
   modal.contentEl.addClass("nexus-ai-chat-importer-modal");
   const titleEl = modal.contentEl.createEl("h2", {
     text: title,
@@ -3045,18 +3045,70 @@ function addButtons(modal, type, resolve, customLabels) {
     });
   }
 }
-async function showDialog(app, type, title, paragraphs, note, customLabels) {
+async function showDialog(app2, type, title, paragraphs, note, customLabels) {
   return new Promise((resolve) => {
-    const modal = displayModal(app, title, paragraphs, note);
+    const modal = displayModal(app2, title, paragraphs, note);
     addButtons(modal, type, resolve, customLabels);
     modal.open();
   });
 }
-var import_obsidian9;
+async function showUpgradeDialog(options) {
+  return new Promise((resolve) => {
+    const modal = new BeautifulUpgradeDialog(options, resolve);
+    modal.open();
+  });
+}
+var import_obsidian9, BeautifulUpgradeDialog;
 var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
     import_obsidian9 = require("obsidian");
+    BeautifulUpgradeDialog = class extends import_obsidian9.Modal {
+      constructor(options, resolve) {
+        super(app);
+        this.options = options;
+        this.resolve = resolve;
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass("nexus-upgrade-dialog");
+        const container = contentEl.createDiv("nexus-upgrade-container");
+        const header = container.createDiv("nexus-upgrade-header");
+        const headerIcon = header.createDiv("nexus-upgrade-icon");
+        headerIcon.innerHTML = "\u{1F680}";
+        const headerTitle = header.createDiv("nexus-upgrade-title");
+        headerTitle.textContent = this.options.title;
+        const content = container.createDiv("nexus-upgrade-content");
+        content.innerHTML = this.options.message;
+        const supportSection = container.createDiv("nexus-support-section");
+        supportSection.innerHTML = `
+            <div class="nexus-support-text">
+                I build this plugin in my free time, as a labor of love. If you find it valuable, say THANK YOU or\u2026
+            </div>
+            <div class="nexus-coffee-div">
+                <a href="https://ko-fi.com/superkikim" target="_blank">
+                    <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45">
+                </a>
+            </div>
+        `;
+        const buttonsContainer = container.createDiv("nexus-upgrade-buttons");
+        this.options.buttons.forEach((button) => {
+          const btn = buttonsContainer.createEl("button", {
+            text: button.text,
+            cls: button.primary ? "nexus-btn-primary" : "nexus-btn-secondary"
+          });
+          btn.addEventListener("click", () => {
+            this.close();
+            this.resolve(button.value);
+          });
+        });
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
   }
 });
 
@@ -3790,8 +3842,10 @@ var init_upgrade_1_2_0 = __esm({
           // Assistant messages with indentation
           /<div class="nexus-attachment-box">/,
           // Old attachment divs
-          /<div class="nexus-artifact-box">/
+          /<div class="nexus-artifact-box">/,
           // Old artifact divs
+          />\[!note\] 📎 \*\*Attachment:\*\*/
+          // Old note callouts for attachments
         ];
         return oldPatterns.some((pattern) => pattern.test(content));
       }
@@ -3923,7 +3977,7 @@ ${cleanContent}`;
       }
       async execute(context) {
         try {
-          const result = await showDialog({
+          const result = await showUpgradeDialog({
             title: "Migration to v1.2.0 Complete!",
             message: `\u{1F389} **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
 
@@ -3940,13 +3994,13 @@ ${cleanContent}`;
 
 **\u{1F4A1} To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.`,
             buttons: [
-              { text: "Keep Current (Recommended)", value: "keep" },
+              { text: "Keep Current (Recommended)", value: "keep", primary: true },
               { text: "Learn About Full Reimport", value: "learn" },
               { text: "Cancel", value: "cancel" }
             ]
           });
           if (result === "learn") {
-            await showDialog({
+            await showUpgradeDialog({
               title: "About Full Reimport",
               message: `**Why Reimport Instead of Migration?**
 
@@ -3965,7 +4019,7 @@ ${cleanContent}`;
 3. Backup recommended before reimporting
 
 **Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.`,
-              buttons: [{ text: "Got it", value: "ok" }]
+              buttons: [{ text: "Got it", value: "ok", primary: true }]
             });
             return {
               success: true,
@@ -4334,8 +4388,8 @@ var MigrationsSettingsSection = class extends BaseSettingsSection {
 
 // src/ui/settings-tab.ts
 var NexusAiChatImporterPluginSettingTab = class extends import_obsidian4.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
+  constructor(app2, plugin) {
+    super(app2, plugin);
     this.plugin = plugin;
     this.sections = [];
     this.initializeSections();
@@ -8133,8 +8187,8 @@ init_logger();
 // src/upgrade/utils/multi-operation-progress-modal.ts
 var import_obsidian13 = require("obsidian");
 var MultiOperationProgressModal = class extends import_obsidian13.Modal {
-  constructor(app, title, operations) {
-    super(app);
+  constructor(app2, title, operations) {
+    super(app2);
     this.canClose = false;
     this.title = title;
     this.operations = [...operations];
@@ -8856,8 +8910,8 @@ init_logger();
 // src/dialogs/provider-selection-dialog.ts
 var import_obsidian15 = require("obsidian");
 var ProviderSelectionDialog = class extends import_obsidian15.Modal {
-  constructor(app, providerRegistry, onProviderSelected) {
-    super(app);
+  constructor(app2, providerRegistry, onProviderSelected) {
+    super(app2);
     this.selectedProvider = null;
     this.onProviderSelected = onProviderSelected;
     this.providers = this.getAvailableProviders(providerRegistry);
@@ -8923,8 +8977,8 @@ Expected files: ${formats}`;
 
 // src/main.ts
 var NexusAiChatImporterPlugin = class extends import_obsidian16.Plugin {
-  constructor(app, manifest) {
-    super(app, manifest);
+  constructor(app2, manifest) {
+    super(app2, manifest);
     this.logger = new Logger();
     this.storageService = new StorageService(this);
     this.importService = new ImportService(this);

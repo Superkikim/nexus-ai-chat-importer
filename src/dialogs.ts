@@ -124,11 +124,11 @@ function addButtons(
 
 // Main function to show confirmation or information dialog
 export async function showDialog(
-    app: App, 
-    type: "information" | "confirmation", 
-    title: string, 
-    paragraphs: string[], 
-    note?: string, 
+    app: App,
+    type: "information" | "confirmation",
+    title: string,
+    paragraphs: string[],
+    note?: string,
     customLabels?: { button1?: string; button2?: string }
 ): Promise<boolean> {
     return new Promise((resolve) => {
@@ -136,4 +136,95 @@ export async function showDialog(
         addButtons(modal, type, resolve, customLabels);
         modal.open();
     });
+}
+
+/**
+ * Beautiful upgrade dialog with enhanced styling (like Excalidraw)
+ */
+export async function showUpgradeDialog(options: {
+    title: string;
+    message: string;
+    buttons: Array<{ text: string; value: string; primary?: boolean }>;
+}): Promise<string> {
+    return new Promise((resolve) => {
+        const modal = new BeautifulUpgradeDialog(options, resolve);
+        modal.open();
+    });
+}
+
+class BeautifulUpgradeDialog extends Modal {
+    private resolve: (value: string) => void;
+    private options: {
+        title: string;
+        message: string;
+        buttons: Array<{ text: string; value: string; primary?: boolean }>;
+    };
+
+    constructor(
+        options: {
+            title: string;
+            message: string;
+            buttons: Array<{ text: string; value: string; primary?: boolean }>;
+        },
+        resolve: (value: string) => void
+    ) {
+        super(app);
+        this.options = options;
+        this.resolve = resolve;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+
+        // Add custom CSS class for styling
+        contentEl.addClass('nexus-upgrade-dialog');
+
+        // Create main container
+        const container = contentEl.createDiv('nexus-upgrade-container');
+
+        // Header with icon and title
+        const header = container.createDiv('nexus-upgrade-header');
+        const headerIcon = header.createDiv('nexus-upgrade-icon');
+        headerIcon.innerHTML = '🚀';
+        const headerTitle = header.createDiv('nexus-upgrade-title');
+        headerTitle.textContent = this.options.title;
+
+        // Content area with rich formatting
+        const content = container.createDiv('nexus-upgrade-content');
+        content.innerHTML = this.options.message;
+
+        // Ko-fi support section (like Excalidraw)
+        const supportSection = container.createDiv('nexus-support-section');
+        supportSection.innerHTML = `
+            <div class="nexus-support-text">
+                I build this plugin in my free time, as a labor of love. If you find it valuable, say THANK YOU or…
+            </div>
+            <div class="nexus-coffee-div">
+                <a href="https://ko-fi.com/superkikim" target="_blank">
+                    <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45">
+                </a>
+            </div>
+        `;
+
+        // Buttons container
+        const buttonsContainer = container.createDiv('nexus-upgrade-buttons');
+
+        this.options.buttons.forEach(button => {
+            const btn = buttonsContainer.createEl('button', {
+                text: button.text,
+                cls: button.primary ? 'nexus-btn-primary' : 'nexus-btn-secondary'
+            });
+
+            btn.addEventListener('click', () => {
+                this.close();
+                this.resolve(button.value);
+            });
+        });
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
 }

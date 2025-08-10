@@ -1,7 +1,7 @@
 // src/upgrade/versions/upgrade-1.2.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
 import { TFile } from "obsidian";
-import { showDialog } from "../../dialogs";
+import { showUpgradeDialog } from "../../dialogs";
 
 /**
  * Convert indentations to callouts (automatic operation)
@@ -145,7 +145,8 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
             /^### User, on .* at .*;\n>/m,           // User messages with indentation
             /^#### Assistant, on .* at .*;\n>>/m,    // Assistant messages with indentation
             /<div class="nexus-attachment-box">/,    // Old attachment divs
-            /<div class="nexus-artifact-box">/       // Old artifact divs
+            /<div class="nexus-artifact-box">/,      // Old artifact divs
+            />\[!note\] 📎 \*\*Attachment:\*\*/      // Old note callouts for attachments
         ];
 
         return oldPatterns.some(pattern => pattern.test(content));
@@ -314,7 +315,7 @@ class OfferReimportOperation extends UpgradeOperation {
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            const result = await showDialog({
+            const result = await showUpgradeDialog({
                 title: "Migration to v1.2.0 Complete!",
                 message: `🎉 **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
 
@@ -331,14 +332,14 @@ class OfferReimportOperation extends UpgradeOperation {
 
 **💡 To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.`,
                 buttons: [
-                    { text: "Keep Current (Recommended)", value: "keep" },
+                    { text: "Keep Current (Recommended)", value: "keep", primary: true },
                     { text: "Learn About Full Reimport", value: "learn" },
                     { text: "Cancel", value: "cancel" }
                 ]
             });
 
             if (result === "learn") {
-                await showDialog({
+                await showUpgradeDialog({
                     title: "About Full Reimport",
                     message: `**Why Reimport Instead of Migration?**
 
@@ -357,7 +358,7 @@ class OfferReimportOperation extends UpgradeOperation {
 3. Backup recommended before reimporting
 
 **Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.`,
-                    buttons: [{ text: "Got it", value: "ok" }]
+                    buttons: [{ text: "Got it", value: "ok", primary: true }]
                 });
 
                 return {

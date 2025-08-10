@@ -41,6 +41,130 @@
     margin-top: 0.25em;
 }
 
+/* Beautiful Upgrade Dialog Styling (inspired by Excalidraw) */
+.nexus-upgrade-dialog {
+    max-width: 600px;
+    width: 90vw;
+}
+
+.nexus-upgrade-container {
+    padding: 20px;
+    font-family: var(--font-interface);
+}
+
+.nexus-upgrade-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.nexus-upgrade-icon {
+    font-size: 2em;
+    margin-right: 15px;
+    line-height: 1;
+}
+
+.nexus-upgrade-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: var(--text-normal);
+    margin: 0;
+}
+
+.nexus-upgrade-content {
+    margin-bottom: 25px;
+    line-height: 1.6;
+    color: var(--text-normal);
+}
+
+.nexus-upgrade-content strong {
+    color: var(--text-accent);
+    font-weight: 600;
+}
+
+.nexus-upgrade-content ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.nexus-upgrade-content li {
+    margin: 5px 0;
+}
+
+.nexus-support-section {
+    background: var(--background-secondary);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.nexus-support-text {
+    margin-bottom: 15px;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.5;
+}
+
+.nexus-coffee-div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.nexus-coffee-div a {
+    transition: transform 0.2s ease;
+}
+
+.nexus-coffee-div a:hover {
+    transform: scale(1.05);
+}
+
+.nexus-upgrade-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.nexus-btn-primary {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nexus-btn-primary:hover {
+    background: var(--interactive-accent-hover);
+    transform: translateY(-1px);
+}
+
+.nexus-btn-secondary {
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nexus-btn-secondary:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--background-modifier-border-hover);
+    transform: translateY(-1px);
+}
+
 /* Legacy support for existing boxes (will be phased out) */
 .nexus-artifact-box {
     background-color: var(--background-secondary);
