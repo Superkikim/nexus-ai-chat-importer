@@ -209,8 +209,7 @@ export class ClaudeConverter {
 
                                 // Create specific link for THIS version
                                 const title = block.input.title || artifactId;
-                                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-                                const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
+                                const versionFile = `${artifactId}_v${currentVersion}`;
                                 const specificLink = `<div class="nexus-artifact-box">📎 **[[${versionFile}|Artifact: ${title} v${currentVersion}]]**</div>`;
                                 textParts.push(specificLink);
 

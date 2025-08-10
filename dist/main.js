@@ -5841,8 +5841,7 @@ var ClaudeConverter = class {
                   conversationCreateTime
                 );
                 const title = block.input.title || artifactId;
-                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-                const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
+                const versionFile = `${artifactId}_v${currentVersion}`;
                 const specificLink = `<div class="nexus-artifact-box">\u{1F4CE} **[[${versionFile}|Artifact: ${title} v${currentVersion}]]**</div>`;
                 textParts.push(specificLink);
               } catch (error) {
