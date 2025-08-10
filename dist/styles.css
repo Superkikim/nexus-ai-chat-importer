@@ -1,6 +1,37 @@
 /* Enhanced styles for Nexus AI Chat Importer modals */
 
-/* Nexus AI Chat Importer - Artifact and Attachment Boxes */
+/* Nexus AI Chat Importer - Custom Callouts */
+/* User Messages */
+.callout[data-callout="nexus_user"] {
+    --callout-color: 59, 130, 246; /* Blue */
+    --callout-icon: lucide-user;
+}
+
+/* Agent/Assistant Messages */
+.callout[data-callout="nexus_agent"] {
+    --callout-color: 16, 185, 129; /* Green */
+    --callout-icon: lucide-bot;
+}
+
+/* Attachments */
+.callout[data-callout="nexus_attachment"] {
+    --callout-color: 245, 158, 11; /* Amber */
+    --callout-icon: lucide-paperclip;
+}
+
+/* Artifacts */
+.callout[data-callout="nexus_artifact"] {
+    --callout-color: 168, 85, 247; /* Purple */
+    --callout-icon: lucide-code;
+}
+
+/* System Prompts */
+.callout[data-callout="nexus_prompt"] {
+    --callout-color: 239, 68, 68; /* Red */
+    --callout-icon: lucide-message-square;
+}
+
+/* Legacy support for existing boxes (will be phased out) */
 .nexus-artifact-box {
     background-color: var(--background-secondary);
     border: 1px solid var(--background-modifier-border);

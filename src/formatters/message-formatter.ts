@@ -4,6 +4,15 @@ import { formatTimestamp } from "../utils";
 import { Logger } from "../logger";
 
 export class MessageFormatter {
+    // Nexus custom callouts with icons
+    private static readonly CALLOUTS = {
+        USER: 'nexus_user',         // 👤 User messages
+        AGENT: 'nexus_agent',       // 🤖 Assistant/Agent messages
+        ATTACHMENT: 'nexus_attachment', // 📎 Attachments
+        ARTIFACT: 'nexus_artifact',     // 🛠️ Claude artifacts
+        PROMPT: 'nexus_prompt'          // 💭 System prompts
+    };
+
     constructor(private logger: Logger) {}
 
     formatMessages(messages: StandardMessage[]): string {
@@ -20,30 +29,28 @@ export class MessageFormatter {
             return "";
         }
 
-        const messageTime = 
+        const messageTime =
             formatTimestamp(message.timestamp, "date") +
             " at " +
             formatTimestamp(message.timestamp, "time");
 
         const authorName = message.role === "user" ? "User" : "Assistant";
-        const headingLevel = message.role === "user" ? "###" : "####";
-        const quoteChar = message.role === "user" ? ">" : ">>";
+        const calloutType = message.role === "user" ? MessageFormatter.CALLOUTS.USER : MessageFormatter.CALLOUTS.AGENT;
 
-        let messageContent = `${headingLevel} ${authorName}, on ${messageTime};\n`;
+        // Create callout with timestamp and content
+        let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}\n`;
 
         // Format main message content
         if (message.content) {
-            messageContent += message.content
-                .split("\n")
-                .map(line => `${quoteChar} ${line}`)
-                .join("\n");
+            // Add content inside the callout (no need for quote chars)
+            messageContent += `> ${message.content.split("\n").join("\n> ")}`;
         } else {
-            messageContent += `${quoteChar} [No content found]`;
+            messageContent += `> [No content found]`;
         }
 
         // Format attachments if any
         if (message.attachments && message.attachments.length > 0) {
-            messageContent += "\n\n" + this.formatAttachments(message.attachments, quoteChar);
+            messageContent += "\n\n" + this.formatAttachments(message.attachments);
         }
 
         // Add UID for update tracking
@@ -57,31 +64,29 @@ export class MessageFormatter {
         return messageContent + "\n\n";
     }
 
-    private formatAttachments(attachments: StandardAttachment[], quoteChar: string): string {
+    private formatAttachments(attachments: StandardAttachment[]): string {
         return attachments.map(attachment => {
-            return this.formatSingleAttachment(attachment, quoteChar);
+            return this.formatSingleAttachment(attachment);
         }).join("\n\n");
     }
 
     /**
-     * Format single attachment with status-aware display and CSS box styling
+     * Format single attachment with Nexus callout styling
      */
-    private formatSingleAttachment(attachment: StandardAttachment, quoteChar: string): string {
-        // For Claude attachments, extractedContent already contains the full formatted content with div
-        if (attachment.extractedContent && attachment.extractedContent.includes('nexus-attachment-box')) {
+    private formatSingleAttachment(attachment: StandardAttachment): string {
+        // For Claude attachments, check if already formatted as callout
+        if (attachment.extractedContent && attachment.extractedContent.includes('nexus_attachment')) {
             return attachment.extractedContent;
         }
 
-        // For other providers (ChatGPT), create the div wrapper
-        let content = `<div class="nexus-attachment-box">\n\n`;
+        // Create attachment callout
+        let content = `>[!${MessageFormatter.CALLOUTS.ATTACHMENT}] `;
 
-        // Status-aware header with appropriate icon
+        // Status-aware header
         if (attachment.status?.found) {
-            content += `**📎 Attachment:** ${attachment.fileName}`;
-        } else if (attachment.status?.processed) {
-            content += `**📎 Missing Attachment:** ${attachment.fileName}`;
+            content += `**${attachment.fileName}**`;
         } else {
-            content += `**📎 Attachment:** ${attachment.fileName}`;
+            content += `**${attachment.fileName}** *(missing)*`;
         }
 
         // Add file metadata
@@ -93,47 +98,46 @@ export class MessageFormatter {
             content += ` - ${this.formatFileSize(attachment.fileSize)}`;
         }
 
-        content += '\n\n';
+        content += '\n';
 
         // Handle successful extraction
         if (attachment.status?.found && attachment.url) {
             // Skip sandbox:// URLs - they don't work in Obsidian
             if (!attachment.url.startsWith('sandbox://')) {
                 if (this.isImageFile(attachment)) {
-                    content += `![[${attachment.url}]]\n\n`; // Embed images
+                    content += `> ![[${attachment.url}]]`; // Embed images
                 } else {
-                    content += `[[${attachment.url}]]\n\n`; // Link documents
+                    content += `> [[${attachment.url}]]`; // Link documents
                 }
             } else {
                 // Sandbox URL - explain to user
-                content += `**Status:** ⚠️ File not available in archive. Visit the original conversation to access it\n\n`;
+                content += `> ⚠️ File not available in archive. Visit the original conversation to access it`;
             }
         }
 
         // Handle missing/failed attachments with informative notes
-        if (attachment.status && !attachment.status.found) {
-            content += `**Status:** ⚠️ ${this.getStatusMessage(attachment.status.reason)}\n\n`;
+        else if (attachment.status && !attachment.status.found) {
+            content += `> ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
 
             if (attachment.status.note) {
-                content += `**Note:** ${attachment.status.note}\n\n`;
+                content += `\n> **Note:** ${attachment.status.note}`;
             }
         }
 
         // Add DALL-E prompt in codebox (special case for DALL-E images)
-        if (attachment.extractedContent && this.isDalleImage(attachment)) {
-            content += `**Prompt:**\n\`\`\`\n${attachment.extractedContent}\n\`\`\`\n\n`;
+        else if (attachment.extractedContent && this.isDalleImage(attachment)) {
+            content += `> **Prompt:**\n> \`\`\`\n> ${attachment.extractedContent}\n> \`\`\``;
         }
         // Add extracted content for other types (transcriptions, OCR, code, etc.)
         else if (attachment.extractedContent) {
-            content += `**Content:**\n${attachment.extractedContent}\n\n`;
+            content += `> ${attachment.extractedContent}`;
         }
 
         // Add raw content for text files - always show if available
-        if (attachment.content && !attachment.extractedContent) {
-            content += `**Content:**\n${attachment.content}\n\n`;
+        else if (attachment.content && !attachment.extractedContent) {
+            content += `> ${attachment.content}`;
         }
 
-        content += `</div>`;
         return content;
     }
 
