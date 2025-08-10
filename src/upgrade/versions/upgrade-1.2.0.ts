@@ -417,28 +417,54 @@ class FixReportLinksOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: STARTING`);
             const reportFolder = context.plugin.settings.reportFolder;
             console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Looking for reports in ${reportFolder}`);
 
+            // Check if report folder exists
+            const reportFolderExists = await context.plugin.app.vault.adapter.exists(reportFolder);
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Report folder exists: ${reportFolderExists}`);
+
+            if (!reportFolderExists) {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Report folder doesn't exist, returning false`);
+                return false;
+            }
+
             // Check if we have report files with old conversation links
-            const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file =>
-                file.path.startsWith(reportFolder) && file.name.includes('import_')
-            );
+            const allMarkdownFiles = context.plugin.app.vault.getMarkdownFiles();
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Total markdown files in vault: ${allMarkdownFiles.length}`);
+
+            const reportFiles = allMarkdownFiles.filter(file => {
+                const startsWithReportFolder = file.path.startsWith(reportFolder);
+                const includesImport = file.name.includes('import_');
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: File ${file.path} - startsWithReportFolder: ${startsWithReportFolder}, includesImport: ${includesImport}`);
+                return startsWithReportFolder && includesImport;
+            });
 
             console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
             reportFiles.forEach(file => console.debug(`[NEXUS-DEBUG] Report file: ${file.path}`));
 
+            if (reportFiles.length === 0) {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No report files found, returning false`);
+                return false;
+            }
+
             // Sample a few files to see if they contain old conversation links
             for (const file of reportFiles.slice(0, 3)) {
                 try {
+                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Reading content of ${file.path}`);
                     const content = await context.plugin.app.vault.read(file);
-                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Checking ${file.path} for old links`);
+                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Content length: ${content.length} chars`);
+                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: First 200 chars:`, content.substring(0, 200));
 
                     // Check for old conversation links (year/month pattern without chatgpt prefix)
                     // Look for Obsidian links: [[2024/01/conversation|Title]]
                     const oldLinkMatches = content.match(/\[\[\d{4}\/\d{2}\//g);
+                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Regex result:`, oldLinkMatches);
+
                     if (oldLinkMatches) {
                         console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${oldLinkMatches.length} old links in ${file.path}:`, oldLinkMatches);
+                        console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: RETURNING TRUE`);
                         return true;
                     } else {
                         console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found in ${file.path}`);
@@ -448,10 +474,10 @@ class FixReportLinksOperation extends UpgradeOperation {
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found, returning false`);
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found in any file, returning false`);
             return false;
         } catch (error) {
-            console.error(`FixReportLinks.canRun failed:`, error);
+            console.error(`[NEXUS-DEBUG] FixReportLinks.canRun failed:`, error);
             return false;
         }
     }
@@ -602,9 +628,9 @@ export class NexusUpgradeModal extends Modal {
 
     async createForm() {
         // Fetch release notes from GitHub
-        let message = `🎉 **Upgrade to v1.2.0 successful!**
+        let message = `🎉 **Upgrade to v1.2.0**
 
-Your conversations have been reorganized with provider structure and modern callouts.
+Your conversations will be reorganized with provider structure and modern callouts.
 
 **💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
 
