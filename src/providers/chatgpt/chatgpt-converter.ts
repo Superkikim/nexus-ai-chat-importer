@@ -2,8 +2,21 @@
 import { Chat, ChatMessage } from "./chatgpt-types";
 import { StandardConversation, StandardMessage } from "../../types/standard";
 import { isValidMessage } from "../../utils";
+import { ChatGPTCodeExtractor } from "./chatgpt-code-extractor";
+import type NexusAiChatImporterPlugin from "../../main";
 
 export class ChatGPTConverter {
+    private static codeExtractor: ChatGPTCodeExtractor | null = null;
+
+    /**
+     * Initialize code extractor (called from adapter)
+     */
+    static initializeCodeExtractor(plugin: NexusAiChatImporterPlugin): void {
+        if (!this.codeExtractor) {
+            this.codeExtractor = new ChatGPTCodeExtractor(plugin, plugin.logger);
+        }
+    }
+
     /**
      * Convert ChatGPT Chat to StandardConversation
      */
@@ -43,12 +56,14 @@ export class ChatGPTConverter {
      * Convert single ChatGPT ChatMessage to StandardMessage
      */
     private static convertMessage(chatMessage: ChatMessage, conversationId?: string): StandardMessage {
+        const contentResult = this.extractContent(chatMessage, conversationId);
+
         return {
             id: chatMessage.id || "",
             role: chatMessage.author?.role === "user" ? "user" : "assistant",
-            content: this.extractContent(chatMessage, conversationId),
+            content: contentResult.content,
             timestamp: chatMessage.create_time || 0,
-            attachments: []
+            attachments: contentResult.attachments || []
         };
     }
 
@@ -345,9 +360,9 @@ export class ChatGPTConverter {
     }
 
     /**
-     * Extract content from ChatGPT message parts
+     * Extract content from ChatGPT message parts with smart code extraction
      */
-    private static extractContent(chatMessage: ChatMessage, conversationId?: string): string {
+    private static extractContent(chatMessage: ChatMessage, conversationId?: string): {content: string, attachments?: StandardAttachment[]} {
         if (!chatMessage.content?.parts || !Array.isArray(chatMessage.content.parts)) {
             return "";
         }
@@ -417,7 +432,21 @@ export class ChatGPTConverter {
             }
         }
         
-        return contentParts.join("\n");
+        const finalContent = contentParts.join("\n");
+
+        // Apply smart code extraction if available and content looks like code architecture
+        if (this.codeExtractor && conversationId && finalContent.length > 500) {
+            const extractionResult = this.codeExtractor.extractCodeFiles(finalContent, conversationId);
+
+            if (extractionResult.virtualAttachments.length > 0) {
+                return {
+                    content: extractionResult.cleanContent,
+                    attachments: extractionResult.virtualAttachments
+                };
+            }
+        }
+
+        return { content: finalContent };
     }
 
     // Pre-compiled regex patterns for performance

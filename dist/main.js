@@ -4892,7 +4892,201 @@ var DefaultProviderRegistry = class {
 
 // src/providers/chatgpt/chatgpt-converter.ts
 init_utils();
+
+// src/providers/chatgpt/chatgpt-code-extractor.ts
+var _ChatGPTCodeExtractor = class {
+  constructor(plugin, logger4) {
+    this.plugin = plugin;
+    this.logger = logger4;
+  }
+  /**
+   * Main extraction method - detects if content has extractable code files
+   */
+  extractCodeFiles(content, conversationId) {
+    if (!this.looksLikeCodeDocument(content)) {
+      return { cleanContent: content, virtualAttachments: [] };
+    }
+    this.logger.info("ChatGPT Code Extractor: Analyzing content for code files");
+    const detectedFiles = this.detectFileHeaders(content);
+    if (detectedFiles.length === 0) {
+      this.logger.info("ChatGPT Code Extractor: No code files detected");
+      return { cleanContent: content, virtualAttachments: [] };
+    }
+    this.logger.info(`ChatGPT Code Extractor: Found ${detectedFiles.length} potential code files`);
+    const codeFiles = this.extractCodeBlocks(content, detectedFiles);
+    if (codeFiles.length === 0) {
+      this.logger.info("ChatGPT Code Extractor: No valid code blocks extracted");
+      return { cleanContent: content, virtualAttachments: [] };
+    }
+    const virtualAttachments = this.createVirtualAttachments(codeFiles, conversationId);
+    const cleanContent = this.generateCleanContent(content, codeFiles);
+    this.logger.info(`ChatGPT Code Extractor: Successfully extracted ${virtualAttachments.length} code files`);
+    return { cleanContent, virtualAttachments };
+  }
+  /**
+   * Quick heuristic to check if content might contain code files
+   */
+  looksLikeCodeDocument(content) {
+    const codeIndicators = [
+      /##\s+src\//i,
+      // ## src/
+      /##\s+[^/\n]*\.(ts|js|py|java)/i,
+      // ## file.ext
+      /```(ts|js|py|java|cpp)/i,
+      // ```language
+      /import\s+.*from/i,
+      // import statements
+      /export\s+(class|function|interface)/i,
+      // export statements
+      /class\s+\w+/i,
+      // class definitions
+      /function\s+\w+/i
+      // function definitions
+    ];
+    return codeIndicators.some((pattern) => pattern.test(content));
+  }
+  /**
+   * Detect file headers in the content
+   */
+  detectFileHeaders(content) {
+    const files = [];
+    for (const pattern of _ChatGPTCodeExtractor.FILE_PATTERNS) {
+      let match;
+      const regex = new RegExp(pattern.source, pattern.flags);
+      while ((match = regex.exec(content)) !== null) {
+        const fullPath = match[1].trim();
+        const fileName = fullPath.split("/").pop() || fullPath;
+        files.push({
+          fileName,
+          filePath: fullPath,
+          position: match.index
+        });
+      }
+    }
+    return files.sort((a, b) => a.position - b.position);
+  }
+  /**
+   * Extract code blocks following each file header
+   */
+  extractCodeBlocks(content, fileHeaders) {
+    const codeFiles = [];
+    for (let i = 0; i < fileHeaders.length; i++) {
+      const file = fileHeaders[i];
+      const nextFile = fileHeaders[i + 1];
+      const searchStart = file.position;
+      const searchEnd = nextFile ? nextFile.position : content.length;
+      const section = content.slice(searchStart, searchEnd);
+      const codeBlockMatch = section.match(/```(\w+)?\n([\s\S]*?)\n```/);
+      if (codeBlockMatch) {
+        const language = codeBlockMatch[1] || this.getLanguageFromExtension(file.fileName);
+        const codeContent = codeBlockMatch[2].trim();
+        if (codeContent.length > 0) {
+          codeFiles.push({
+            fileName: file.fileName,
+            filePath: file.filePath,
+            language,
+            startIndex: searchStart,
+            endIndex: searchStart + section.indexOf(codeBlockMatch[0]) + codeBlockMatch[0].length,
+            content: codeContent
+          });
+        }
+      }
+    }
+    return codeFiles;
+  }
+  /**
+   * Get programming language from file extension
+   */
+  getLanguageFromExtension(fileName) {
+    var _a;
+    const extension = (_a = fileName.split(".").pop()) == null ? void 0 : _a.toLowerCase();
+    return extension ? _ChatGPTCodeExtractor.LANGUAGE_MAP[extension] || "text" : "text";
+  }
+  /**
+   * Create virtual attachments for code files
+   */
+  createVirtualAttachments(codeFiles, conversationId) {
+    return codeFiles.map((file) => {
+      const sanitizedName = file.filePath.replace(/[/\\]/g, "_").replace(/[<>:"?*|]/g, "_");
+      return {
+        fileName: sanitizedName,
+        fileType: `text/${file.language}`,
+        fileId: `virtual_${conversationId}_${sanitizedName}`,
+        url: `virtual://code/${conversationId}/${sanitizedName}`,
+        status: {
+          processed: true,
+          found: true,
+          virtual: true,
+          virtualContent: file.content
+        }
+      };
+    });
+  }
+  /**
+   * Generate clean content with file links instead of embedded code
+   */
+  generateCleanContent(content, codeFiles) {
+    let cleanContent = content;
+    const sortedFiles = [...codeFiles].sort((a, b) => b.startIndex - a.startIndex);
+    for (const file of sortedFiles) {
+      const before = cleanContent.slice(0, file.startIndex);
+      const after = cleanContent.slice(file.endIndex);
+      const fileReference = `
+
+\u{1F4C4} **${file.filePath}** - [[Attachments/chatgpt/code/${file.fileName}|View Code]]
+`;
+      cleanContent = before + fileReference + after;
+    }
+    return cleanContent;
+  }
+};
+var ChatGPTCodeExtractor = _ChatGPTCodeExtractor;
+// File patterns to detect in markdown content
+ChatGPTCodeExtractor.FILE_PATTERNS = [
+  // ## src/file.ext or ## path/file.ext
+  /^##\s+([^\n]+\.(ts|js|jsx|tsx|py|java|cpp|c|h|hpp|css|html|json|yaml|yml|xml|sql|sh|bat|md|txt))$/gm,
+  // ### file.ext
+  /^###\s+([^\n]+\.(ts|js|jsx|tsx|py|java|cpp|c|h|hpp|css|html|json|yaml|yml|xml|sql|sh|bat|md|txt))$/gm,
+  // # file.ext (less common but possible)
+  /^#\s+([^\n]+\.(ts|js|jsx|tsx|py|java|cpp|c|h|hpp|css|html|json|yaml|yml|xml|sql|sh|bat|md|txt))$/gm,
+  // `file.ext` (inline file references)
+  /^`([^`\n]+\.(ts|js|jsx|tsx|py|java|cpp|c|h|hpp|css|html|json|yaml|yml|xml|sql|sh|bat|md|txt))`$/gm
+];
+// Language mapping from file extensions
+ChatGPTCodeExtractor.LANGUAGE_MAP = {
+  "ts": "typescript",
+  "tsx": "typescript",
+  "js": "javascript",
+  "jsx": "javascript",
+  "py": "python",
+  "java": "java",
+  "cpp": "cpp",
+  "c": "c",
+  "h": "c",
+  "hpp": "cpp",
+  "css": "css",
+  "html": "html",
+  "json": "json",
+  "yaml": "yaml",
+  "yml": "yaml",
+  "xml": "xml",
+  "sql": "sql",
+  "sh": "bash",
+  "bat": "batch",
+  "md": "markdown",
+  "txt": "text"
+};
+
+// src/providers/chatgpt/chatgpt-converter.ts
 var ChatGPTConverter = class {
+  /**
+   * Initialize code extractor (called from adapter)
+   */
+  static initializeCodeExtractor(plugin) {
+    if (!this.codeExtractor) {
+      this.codeExtractor = new ChatGPTCodeExtractor(plugin, plugin.logger);
+    }
+  }
   /**
    * Convert ChatGPT Chat to StandardConversation
    */
@@ -4928,12 +5122,13 @@ var ChatGPTConverter = class {
    */
   static convertMessage(chatMessage, conversationId) {
     var _a;
+    const contentResult = this.extractContent(chatMessage, conversationId);
     return {
       id: chatMessage.id || "",
       role: ((_a = chatMessage.author) == null ? void 0 : _a.role) === "user" ? "user" : "assistant",
-      content: this.extractContent(chatMessage, conversationId),
+      content: contentResult.content,
       timestamp: chatMessage.create_time || 0,
-      attachments: []
+      attachments: contentResult.attachments || []
     };
   }
   /**
@@ -5151,7 +5346,7 @@ var ChatGPTConverter = class {
     };
   }
   /**
-   * Extract content from ChatGPT message parts
+   * Extract content from ChatGPT message parts with smart code extraction
    */
   static extractContent(chatMessage, conversationId) {
     var _a;
@@ -5210,7 +5405,17 @@ ${codeContent}
         }
       }
     }
-    return contentParts.join("\n");
+    const finalContent = contentParts.join("\n");
+    if (this.codeExtractor && conversationId && finalContent.length > 500) {
+      const extractionResult = this.codeExtractor.extractCodeFiles(finalContent, conversationId);
+      if (extractionResult.virtualAttachments.length > 0) {
+        return {
+          content: extractionResult.cleanContent,
+          attachments: extractionResult.virtualAttachments
+        };
+      }
+    }
+    return { content: finalContent };
   }
   /**
    * Clean ChatGPT artifacts, citations, and control characters - SMART LINKING
@@ -5226,6 +5431,7 @@ ${codeContent}
     return cleanText.trim();
   }
 };
+ChatGPTConverter.codeExtractor = null;
 // Pre-compiled regex patterns for performance
 ChatGPTConverter.CLEANUP_PATTERNS = [
   // SMART: Replace sandbox links with actual links to original conversation
@@ -5260,14 +5466,20 @@ var ChatGPTAttachmentExtractor = class {
    * - If file missing: create informative note
    */
   async extractAttachments(zip, conversationId, attachments) {
+    var _a, _b;
     if (!this.plugin.settings.importAttachments || attachments.length === 0) {
       return attachments.map((att) => ({ ...att, status: { processed: false, found: false } }));
     }
     const processedAttachments = [];
     for (const attachment of attachments) {
       try {
-        const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
-        processedAttachments.push(result);
+        if (((_a = attachment.status) == null ? void 0 : _a.virtual) && ((_b = attachment.status) == null ? void 0 : _b.virtualContent)) {
+          const result = await this.processVirtualAttachment(conversationId, attachment);
+          processedAttachments.push(result);
+        } else {
+          const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
+          processedAttachments.push(result);
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName}`, errorMessage);
@@ -5497,6 +5709,35 @@ var ChatGPTAttachmentExtractor = class {
     return cleanName;
   }
   /**
+   * Process virtual attachment (code file generated from content)
+   */
+  async processVirtualAttachment(conversationId, attachment) {
+    var _a;
+    const virtualContent = (_a = attachment.status) == null ? void 0 : _a.virtualContent;
+    if (!virtualContent) {
+      throw new Error("Virtual attachment missing content");
+    }
+    const codeFolder = `${this.plugin.settings.attachmentFolder}/chatgpt/code/${conversationId}`;
+    const targetPath = `${codeFolder}/${attachment.fileName}`;
+    const folderResult = await ensureFolderExists(codeFolder, this.plugin.app.vault);
+    if (!folderResult.success) {
+      throw new Error(`Failed to create code folder: ${folderResult.error}`);
+    }
+    const finalPath = await this.resolveFileConflict(targetPath);
+    await this.plugin.app.vault.adapter.write(finalPath, virtualContent);
+    this.logger.info(`Saved virtual code file: ${finalPath}`);
+    return {
+      ...attachment,
+      url: finalPath,
+      status: {
+        processed: true,
+        found: true,
+        virtual: true,
+        localPath: finalPath
+      }
+    };
+  }
+  /**
    * Clear ZIP file cache (call between different ZIP files)
    */
   clearCache() {
@@ -5582,6 +5823,7 @@ var ChatGPTAdapter = class {
     this.plugin = plugin;
     this.attachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
     this.reportNamingStrategy = new ChatGPTReportNamingStrategy();
+    ChatGPTConverter.initializeCodeExtractor(plugin);
   }
   detect(rawConversations) {
     if (rawConversations.length === 0)
