@@ -4109,8 +4109,8 @@ var ImportReport = class {
 - **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)` : "";
     this.summary = `## Summary
 - **ZIP File**: ${zipFileName}
-- **Created**: ${counters.totalNewConversationsSuccessfullyImported} new conversations
-- **Updated**: ${counters.totalConversationsActuallyUpdated} conversations with ${counters.totalNonEmptyMessagesAdded} new messages
+- **Created**: ${this.created.length} new conversations
+- **Updated**: ${this.updated.length} conversations with ${counters.totalNonEmptyMessagesAdded} new messages
 - **Skipped**: ${this.skipped.length} conversations (no changes)
 - **Failed**: ${this.failed.length} conversations
 - **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
@@ -4294,7 +4294,7 @@ var _MessageFormatter = class {
    * Format single attachment with Nexus callout styling
    */
   formatSingleAttachment(attachment) {
-    var _a, _b;
+    var _a, _b, _c;
     if (attachment.extractedContent && attachment.extractedContent.includes("nexus_attachment")) {
       return attachment.extractedContent;
     }
@@ -4326,6 +4326,11 @@ var _MessageFormatter = class {
       if (attachment.status.note) {
         content += `
 > **Note:** ${attachment.status.note}`;
+      }
+      if (attachment.status.reason === "missing_from_export") {
+        const conversationUrl = ((_c = attachment.url) == null ? void 0 : _c.includes("chatgpt.com")) ? attachment.url : "https://chatgpt.com/";
+        content += `
+> [Open original conversation](${conversationUrl})`;
       }
     } else if (attachment.extractedContent && this.isDalleImage(attachment)) {
       content += `> ${this.isImageFile(attachment) ? "![[" + attachment.url + "]]" : "[[" + attachment.url + "]]"}`;
@@ -6056,6 +6061,9 @@ ${code}
         case "thinking":
           break;
         case "tool_use":
+          if (block.name === "repl" || block.name === "str_replace_editor" || block.name === "bash") {
+            break;
+          }
           if (block.name === "artifacts" && block.input) {
             const artifactId = block.input.id || "unknown";
             const command = block.input.command || "create";
@@ -7330,6 +7338,9 @@ var ImportService = class {
   async processConversations(zip, file, isReprocess, forcedProvider) {
     try {
       const rawConversations = await this.extractRawConversationsFromZip(zip);
+      if (forcedProvider) {
+        this.validateProviderMatch(rawConversations, forcedProvider);
+      }
       const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess, forcedProvider);
       this.importReport = report;
       this.importReport.addSummary(
@@ -7353,6 +7364,28 @@ var ImportService = class {
   async extractRawConversationsFromZip(zip) {
     const conversationsJson = await zip.file("conversations.json").async("string");
     return JSON.parse(conversationsJson);
+  }
+  /**
+   * Validate that the forced provider matches the actual content structure
+   */
+  validateProviderMatch(rawConversations, forcedProvider) {
+    if (rawConversations.length === 0)
+      return;
+    const firstConversation = rawConversations[0];
+    const isChatGPT = firstConversation.mapping !== void 0;
+    const isClaude = firstConversation.chat_messages !== void 0 || firstConversation.name !== void 0 || firstConversation.summary !== void 0;
+    if (forcedProvider === "chatgpt" && !isChatGPT) {
+      throw new NexusAiChatImporterError(
+        "Provider Mismatch",
+        "You selected ChatGPT but this archive appears to be from Claude. The structure doesn't match ChatGPT exports."
+      );
+    }
+    if (forcedProvider === "claude" && !isClaude) {
+      throw new NexusAiChatImporterError(
+        "Provider Mismatch",
+        "You selected Claude but this archive appears to be from ChatGPT. The structure doesn't match Claude exports."
+      );
+    }
   }
   async writeImportReport(zipFileName) {
     const reportWriter = new ReportWriter(this.plugin, this.providerRegistry);

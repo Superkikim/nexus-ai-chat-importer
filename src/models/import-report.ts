@@ -43,8 +43,8 @@ export class ImportReport {
 
         this.summary = `## Summary
 - **ZIP File**: ${zipFileName}
-- **Created**: ${counters.totalNewConversationsSuccessfullyImported} new conversations
-- **Updated**: ${counters.totalConversationsActuallyUpdated} conversations with ${counters.totalNonEmptyMessagesAdded} new messages
+- **Created**: ${this.created.length} new conversations
+- **Updated**: ${this.updated.length} conversations with ${counters.totalNonEmptyMessagesAdded} new messages
 - **Skipped**: ${this.skipped.length} conversations (no changes)
 - **Failed**: ${this.failed.length} conversations
 - **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;

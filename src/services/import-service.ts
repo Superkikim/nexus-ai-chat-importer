@@ -161,7 +161,12 @@ export class ImportService {
         try {
             // Extract raw conversation data (provider agnostic)
             const rawConversations = await this.extractRawConversationsFromZip(zip);
-            
+
+            // Validate provider if forced
+            if (forcedProvider) {
+                this.validateProviderMatch(rawConversations, forcedProvider);
+            }
+
             // Process through conversation processor (handles provider detection/conversion)
             const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess, forcedProvider);
             this.importReport = report;
@@ -188,6 +193,37 @@ export class ImportService {
         // Currently only supports ChatGPT's conversations.json format
         const conversationsJson = await zip.file("conversations.json")!.async("string");
         return JSON.parse(conversationsJson);
+    }
+
+    /**
+     * Validate that the forced provider matches the actual content structure
+     */
+    private validateProviderMatch(rawConversations: any[], forcedProvider: string): void {
+        if (rawConversations.length === 0) return;
+
+        const firstConversation = rawConversations[0];
+
+        // Check for ChatGPT structure
+        const isChatGPT = firstConversation.mapping !== undefined;
+
+        // Check for Claude structure
+        const isClaude = firstConversation.chat_messages !== undefined ||
+                        firstConversation.name !== undefined ||
+                        firstConversation.summary !== undefined;
+
+        if (forcedProvider === 'chatgpt' && !isChatGPT) {
+            throw new NexusAiChatImporterError(
+                "Provider Mismatch",
+                "You selected ChatGPT but this archive appears to be from Claude. The structure doesn't match ChatGPT exports."
+            );
+        }
+
+        if (forcedProvider === 'claude' && !isClaude) {
+            throw new NexusAiChatImporterError(
+                "Provider Mismatch",
+                "You selected Claude but this archive appears to be from ChatGPT. The structure doesn't match Claude exports."
+            );
+        }
     }
 
     private async writeImportReport(zipFileName: string): Promise<void> {
