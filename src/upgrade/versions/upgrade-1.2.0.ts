@@ -435,7 +435,8 @@ class FixReportLinksOperation extends UpgradeOperation {
                     console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Checking ${file.path} for old links`);
 
                     // Check for old conversation links (year/month pattern without chatgpt prefix)
-                    const oldLinkMatches = content.match(/\]\(\d{4}\/\d{2}\//g);
+                    // Look for Obsidian links: [[2024/01/conversation|Title]]
+                    const oldLinkMatches = content.match(/\[\[\d{4}\/\d{2}\//g);
                     if (oldLinkMatches) {
                         console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${oldLinkMatches.length} old links in ${file.path}:`, oldLinkMatches);
                         return true;
@@ -479,8 +480,8 @@ class FixReportLinksOperation extends UpgradeOperation {
                     let hasChanges = false;
 
                     // Fix conversation links: add chatgpt prefix to year/month paths
-                    // Pattern: ](2024/01/conversation.md) → ](chatgpt/2024/01/conversation.md)
-                    const linkPattern = /\]\((\d{4}\/\d{2}\/[^)]+\.md)\)/g;
+                    // Pattern: [[2024/01/conversation|Title]] → [[chatgpt/2024/01/conversation|Title]]
+                    const linkPattern = /\[\[(\d{4}\/\d{2}\/[^|\]]+)/g;
 
                     // Find all matches first for logging
                     const matches = content.match(linkPattern);
@@ -492,7 +493,7 @@ class FixReportLinksOperation extends UpgradeOperation {
 
                     updatedContent = updatedContent.replace(linkPattern, (match, path) => {
                         hasChanges = true;
-                        const newLink = `](chatgpt/${path})`;
+                        const newLink = `[[chatgpt/${path}`;
                         console.debug(`[NEXUS-DEBUG] FixReportLinks: Replacing ${match} with ${newLink}`);
                         return newLink;
                     });
@@ -547,7 +548,7 @@ class FixReportLinksOperation extends UpgradeOperation {
                     const content = await context.plugin.app.vault.read(file);
 
                     // Check for remaining old conversation links
-                    const oldLinks = content.match(/\]\(\d{4}\/\d{2}\//g);
+                    const oldLinks = content.match(/\[\[\d{4}\/\d{2}\//g);
                     if (oldLinks) {
                         console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Found ${oldLinks.length} remaining old links in ${file.path}:`, oldLinks);
                         return false;

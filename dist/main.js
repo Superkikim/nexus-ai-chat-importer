@@ -4017,7 +4017,7 @@ ${cleanContent}`;
             try {
               const content = await context.plugin.app.vault.read(file);
               console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Checking ${file.path} for old links`);
-              const oldLinkMatches = content.match(/\]\(\d{4}\/\d{2}\//g);
+              const oldLinkMatches = content.match(/\[\[\d{4}\/\d{2}\//g);
               if (oldLinkMatches) {
                 console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${oldLinkMatches.length} old links in ${file.path}:`, oldLinkMatches);
                 return true;
@@ -4051,7 +4051,7 @@ ${cleanContent}`;
               const content = await context.plugin.app.vault.read(file);
               let updatedContent = content;
               let hasChanges = false;
-              const linkPattern = /\]\((\d{4}\/\d{2}\/[^)]+\.md)\)/g;
+              const linkPattern = /\[\[(\d{4}\/\d{2}\/[^|\]]+)/g;
               const matches = content.match(linkPattern);
               if (matches) {
                 console.debug(`[NEXUS-DEBUG] FixReportLinks: Found ${matches.length} links to fix in ${file.path}:`, matches);
@@ -4060,7 +4060,7 @@ ${cleanContent}`;
               }
               updatedContent = updatedContent.replace(linkPattern, (match, path) => {
                 hasChanges = true;
-                const newLink = `](chatgpt/${path})`;
+                const newLink = `[[chatgpt/${path}`;
                 console.debug(`[NEXUS-DEBUG] FixReportLinks: Replacing ${match} with ${newLink}`);
                 return newLink;
               });
@@ -4102,7 +4102,7 @@ ${cleanContent}`;
           for (const file of reportFiles.slice(0, 5)) {
             try {
               const content = await context.plugin.app.vault.read(file);
-              const oldLinks = content.match(/\]\(\d{4}\/\d{2}\//g);
+              const oldLinks = content.match(/\[\[\d{4}\/\d{2}\//g);
               if (oldLinks) {
                 console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Found ${oldLinks.length} remaining old links in ${file.path}:`, oldLinks);
                 return false;
