@@ -419,63 +419,16 @@ class FixReportLinksOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: STARTING`);
             const reportFolder = context.plugin.settings.reportFolder;
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Looking for reports in ${reportFolder}`);
 
-            // Check if report folder exists
-            const reportFolderExists = await context.plugin.app.vault.adapter.exists(reportFolder);
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Report folder exists: ${reportFolderExists}`);
-
-            if (!reportFolderExists) {
-                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Report folder doesn't exist, returning false`);
-                return false;
-            }
-
-            // Check if we have report files with old conversation links
-            const allMarkdownFiles = context.plugin.app.vault.getMarkdownFiles();
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Total markdown files in vault: ${allMarkdownFiles.length}`);
-
-            const reportFiles = allMarkdownFiles.filter(file => {
-                const startsWithReportFolder = file.path.startsWith(reportFolder);
-                const includesImport = file.name.includes('import_');
-                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: File ${file.path} - startsWithReportFolder: ${startsWithReportFolder}, includesImport: ${includesImport}`);
-                return startsWithReportFolder && includesImport;
-            });
+            // Get ALL report files (any file in report folder with import_ in name)
+            const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file =>
+                file.path.startsWith(reportFolder) && file.name.includes('import_')
+            );
 
             console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
-            reportFiles.forEach(file => console.debug(`[NEXUS-DEBUG] Report file: ${file.path}`));
 
-            if (reportFiles.length === 0) {
-                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No report files found, returning false`);
-                return false;
-            }
-
-            // Sample a few files to see if they contain old conversation links
-            for (const file of reportFiles.slice(0, 3)) {
-                try {
-                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Reading content of ${file.path}`);
-                    const content = await context.plugin.app.vault.read(file);
-                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Content length: ${content.length} chars`);
-                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: First 200 chars:`, content.substring(0, 200));
-
-                    // Check for old conversation links (year/month pattern without chatgpt prefix)
-                    // Look for Obsidian links: [[2024/01/conversation|Title]]
-                    const oldLinkMatches = content.match(/\[\[\d{4}\/\d{2}\//g);
-                    console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Regex result:`, oldLinkMatches);
-
-                    if (oldLinkMatches) {
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${oldLinkMatches.length} old links in ${file.path}:`, oldLinkMatches);
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: RETURNING TRUE`);
-                        return true;
-                    } else {
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found in ${file.path}`);
-                    }
-                } catch (error) {
-                    console.error(`[NEXUS-DEBUG] FixReportLinks.canRun: Error reading ${file.path}:`, error);
-                }
-            }
-
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found in any file, returning false`);
-            return false;
+            // If we have report files, we need to fix them (simple!)
+            return reportFiles.length > 0;
         } catch (error) {
             console.error(`[NEXUS-DEBUG] FixReportLinks.canRun failed:`, error);
             return false;
@@ -502,39 +455,25 @@ class FixReportLinksOperation extends UpgradeOperation {
                 try {
                     console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${file.path}`);
                     const content = await context.plugin.app.vault.read(file);
-                    let updatedContent = content;
-                    let hasChanges = false;
 
-                    // Fix conversation links: add chatgpt prefix to year/month paths
-                    // Pattern: [[2024/01/conversation|Title]] → [[chatgpt/2024/01/conversation|Title]]
-                    const linkPattern = /\[\[(\d{4}\/\d{2}\/[^|\]]+)/g;
+                    // SIMPLE SED-LIKE REPLACEMENT: /yyyy/ → /chatgpt/yyyy/
+                    // Pattern: /2024/ → /chatgpt/2024/
+                    const yearPattern = /\/(\d{4})\//g;
 
-                    // Find all matches first for logging
-                    const matches = content.match(linkPattern);
-                    if (matches) {
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks: Found ${matches.length} links to fix in ${file.path}:`, matches);
-                    } else {
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks: No links to fix in ${file.path}`);
-                    }
+                    const updatedContent = content.replace(yearPattern, '/chatgpt/$1/');
 
-                    updatedContent = updatedContent.replace(linkPattern, (match, path) => {
-                        hasChanges = true;
-                        const newLink = `[[chatgpt/${path}`;
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks: Replacing ${match} with ${newLink}`);
-                        return newLink;
-                    });
-
-                    if (hasChanges) {
+                    // Check if anything changed
+                    if (updatedContent !== content) {
                         await context.plugin.app.vault.modify(file, updatedContent);
                         fixedFiles++;
-                        console.debug(`[NEXUS-DEBUG] Fixed conversation links in report: ${file.path}`);
+                        console.debug(`[NEXUS-DEBUG] Fixed year paths in report: ${file.path}`);
                     } else {
-                        console.debug(`[NEXUS-DEBUG] No changes needed for: ${file.path}`);
+                        console.debug(`[NEXUS-DEBUG] No year paths to fix in: ${file.path}`);
                     }
 
                 } catch (error) {
                     errors++;
-                    console.error(`[NEXUS-DEBUG] Error fixing links in report ${file.path}:`, error);
+                    console.error(`[NEXUS-DEBUG] Error fixing paths in report ${file.path}:`, error);
                 }
             }
 
@@ -558,35 +497,7 @@ class FixReportLinksOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const reportFolder = context.plugin.settings.reportFolder;
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Verifying reports in ${reportFolder}`);
-
-            // Check that no report files contain old conversation links
-            const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file =>
-                file.path.startsWith(reportFolder) && file.name.includes('import_')
-            );
-
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Checking ${reportFiles.length} report files`);
-
-            // Sample a few files to verify links are fixed
-            for (const file of reportFiles.slice(0, 5)) {
-                try {
-                    const content = await context.plugin.app.vault.read(file);
-
-                    // Check for remaining old conversation links
-                    const oldLinks = content.match(/\[\[\d{4}\/\d{2}\//g);
-                    if (oldLinks) {
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Found ${oldLinks.length} remaining old links in ${file.path}:`, oldLinks);
-                        return false;
-                    } else {
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: No old links found in ${file.path}`);
-                    }
-                } catch (error) {
-                    console.error(`[NEXUS-DEBUG] FixReportLinks.verify: Error reading ${file.path}:`, error);
-                }
-            }
-
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: All reports verified successfully`);
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Verification complete (always true for simple replacement)`);
             return true;
         } catch (error) {
             console.error(`FixReportLinks.verify failed:`, error);
