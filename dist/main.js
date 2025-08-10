@@ -3679,7 +3679,7 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian14, ConvertToCalloutsOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian14, ConvertToCalloutsOperation, MoveYearFoldersOperation, FixReportLinksOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
@@ -3996,6 +3996,103 @@ ${cleanContent}`;
         }
       }
     };
+    FixReportLinksOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "fix-report-links";
+        this.name = "Fix Report Links";
+        this.description = "Update conversation links in reports after folder reorganization";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        try {
+          const reportFolder = context.plugin.settings.reportFolder;
+          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
+            (file) => file.path.startsWith(reportFolder) && file.name.includes("import_")
+          );
+          for (const file of reportFiles.slice(0, 3)) {
+            try {
+              const content = await context.plugin.app.vault.read(file);
+              if (content.match(/\]\(\d{4}\/\d{2}\//)) {
+                return true;
+              }
+            } catch (error) {
+            }
+          }
+          return false;
+        } catch (error) {
+          console.error(`FixReportLinks.canRun failed:`, error);
+          return false;
+        }
+      }
+      async execute(context) {
+        try {
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.execute starting`);
+          const reportFolder = context.plugin.settings.reportFolder;
+          let fixedFiles = 0;
+          let errors = 0;
+          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
+            (file) => file.path.startsWith(reportFolder) && file.name.includes("import_")
+          );
+          console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${reportFiles.length} report files`);
+          for (const file of reportFiles) {
+            try {
+              const content = await context.plugin.app.vault.read(file);
+              let updatedContent = content;
+              let hasChanges = false;
+              const linkPattern = /\]\((\d{4}\/\d{2}\/[^)]+\.md)\)/g;
+              updatedContent = updatedContent.replace(linkPattern, (match, path) => {
+                hasChanges = true;
+                return `](chatgpt/${path})`;
+              });
+              if (hasChanges) {
+                await context.plugin.app.vault.modify(file, updatedContent);
+                fixedFiles++;
+                console.debug(`[NEXUS-DEBUG] Fixed conversation links in report: ${file.path}`);
+              }
+            } catch (error) {
+              errors++;
+              console.error(`[NEXUS-DEBUG] Error fixing links in report ${file.path}:`, error);
+            }
+          }
+          console.debug(`[NEXUS-DEBUG] FixReportLinks: Completed - fixed:${fixedFiles}, errors:${errors}`);
+          return {
+            success: errors === 0,
+            message: `Report link correction completed: ${fixedFiles} reports updated, ${errors} errors`,
+            details: { fixedFiles, errors }
+          };
+        } catch (error) {
+          console.error(`[NEXUS-DEBUG] FixReportLinks.execute failed:`, error);
+          return {
+            success: false,
+            message: `Report link correction failed: ${error}`,
+            details: { error: String(error) }
+          };
+        }
+      }
+      async verify(context) {
+        try {
+          const reportFolder = context.plugin.settings.reportFolder;
+          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
+            (file) => file.path.startsWith(reportFolder) && file.name.includes("import_")
+          );
+          for (const file of reportFiles.slice(0, 5)) {
+            try {
+              const content = await context.plugin.app.vault.read(file);
+              if (content.match(/\]\(\d{4}\/\d{2}\//)) {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Found old links in ${file.path}`);
+                return false;
+              }
+            } catch (error) {
+            }
+          }
+          return true;
+        } catch (error) {
+          console.error(`FixReportLinks.verify failed:`, error);
+          return false;
+        }
+      }
+    };
     NexusUpgradeModal = class extends import_obsidian14.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
@@ -4017,6 +4114,7 @@ ${cleanContent}`;
 
 **\u2705 What was migrated:**
 \u2022 **Conversation organization**: Year folders moved to chatgpt provider structure
+\u2022 **Report links updated**: All conversation links in import reports now work correctly
 \u2022 **Modern callouts**: Beautiful user/assistant message design with color coding
 \u2022 **Visual improvements**: Enhanced Reading View experience with proper spacing
 \u2022 **Future-ready**: Prepared for multi-provider support (Claude, etc.)
@@ -4098,6 +4196,7 @@ I spend about $100/month for A.I. services, not counting my time and other expen
         this.version = "1.2.0";
         this.automaticOperations = [
           new MoveYearFoldersOperation(),
+          new FixReportLinksOperation(),
           new ConvertToCalloutsOperation()
         ];
         this.manualOperations = [
