@@ -2943,18 +2943,18 @@ async function checkConversationLink(conversationId, provider = "chatgpt") {
     return false;
   }
 }
-function old_getConversationId(app2) {
+function old_getConversationId(app) {
   var _a;
-  const activeFile = app2.workspace.getActiveFile();
+  const activeFile = app.workspace.getActiveFile();
   if (activeFile) {
-    const frontmatter = (_a = app2.metadataCache.getFileCache(activeFile)) == null ? void 0 : _a.frontmatter;
+    const frontmatter = (_a = app.metadataCache.getFileCache(activeFile)) == null ? void 0 : _a.frontmatter;
     return frontmatter == null ? void 0 : frontmatter.conversation_id;
   }
   return void 0;
 }
-function isNexusRelated(file, app2) {
+function isNexusRelated(file, app) {
   var _a;
-  const frontmatter = (_a = app2.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+  const frontmatter = (_a = app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
   return (frontmatter == null ? void 0 : frontmatter.nexus) === "nexus-ai-chat-importer";
 }
 var import_obsidian7, import_obsidian8, logger;
@@ -2969,8 +2969,8 @@ var init_utils = __esm({
 });
 
 // src/dialogs.ts
-function displayModal(app2, title, paragraphs, note) {
-  const modal = new import_obsidian9.Modal(app2);
+function displayModal(app, title, paragraphs, note) {
+  const modal = new import_obsidian9.Modal(app);
   modal.contentEl.addClass("nexus-ai-chat-importer-modal");
   const titleEl = modal.contentEl.createEl("h2", {
     text: title,
@@ -3045,16 +3045,16 @@ function addButtons(modal, type, resolve, customLabels) {
     });
   }
 }
-async function showDialog(app2, type, title, paragraphs, note, customLabels) {
+async function showDialog(app, type, title, paragraphs, note, customLabels) {
   return new Promise((resolve) => {
-    const modal = displayModal(app2, title, paragraphs, note);
+    const modal = displayModal(app, title, paragraphs, note);
     addButtons(modal, type, resolve, customLabels);
     modal.open();
   });
 }
-async function showUpgradeDialog(options) {
+async function showUpgradeDialog(app, options) {
   return new Promise((resolve) => {
-    const modal = new BeautifulUpgradeDialog(options, resolve);
+    const modal = new BeautifulUpgradeDialog(app, options, resolve);
     modal.open();
   });
 }
@@ -3064,7 +3064,7 @@ var init_dialogs = __esm({
     "use strict";
     import_obsidian9 = require("obsidian");
     BeautifulUpgradeDialog = class extends import_obsidian9.Modal {
-      constructor(options, resolve) {
+      constructor(app, options, resolve) {
         super(app);
         this.options = options;
         this.resolve = resolve;
@@ -3977,7 +3977,7 @@ ${cleanContent}`;
       }
       async execute(context) {
         try {
-          const result = await showUpgradeDialog({
+          const result = await showUpgradeDialog(context.plugin.app, {
             title: "Migration to v1.2.0 Complete!",
             message: `\u{1F389} **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
 
@@ -4000,7 +4000,7 @@ ${cleanContent}`;
             ]
           });
           if (result === "learn") {
-            await showUpgradeDialog({
+            await showUpgradeDialog(context.plugin.app, {
               title: "About Full Reimport",
               message: `**Why Reimport Instead of Migration?**
 
@@ -4388,8 +4388,8 @@ var MigrationsSettingsSection = class extends BaseSettingsSection {
 
 // src/ui/settings-tab.ts
 var NexusAiChatImporterPluginSettingTab = class extends import_obsidian4.PluginSettingTab {
-  constructor(app2, plugin) {
-    super(app2, plugin);
+  constructor(app, plugin) {
+    super(app, plugin);
     this.plugin = plugin;
     this.sections = [];
     this.initializeSections();
@@ -8187,8 +8187,8 @@ init_logger();
 // src/upgrade/utils/multi-operation-progress-modal.ts
 var import_obsidian13 = require("obsidian");
 var MultiOperationProgressModal = class extends import_obsidian13.Modal {
-  constructor(app2, title, operations) {
-    super(app2);
+  constructor(app, title, operations) {
+    super(app);
     this.canClose = false;
     this.title = title;
     this.operations = [...operations];
@@ -8910,8 +8910,8 @@ init_logger();
 // src/dialogs/provider-selection-dialog.ts
 var import_obsidian15 = require("obsidian");
 var ProviderSelectionDialog = class extends import_obsidian15.Modal {
-  constructor(app2, providerRegistry, onProviderSelected) {
-    super(app2);
+  constructor(app, providerRegistry, onProviderSelected) {
+    super(app);
     this.selectedProvider = null;
     this.onProviderSelected = onProviderSelected;
     this.providers = this.getAvailableProviders(providerRegistry);
@@ -8977,8 +8977,8 @@ Expected files: ${formats}`;
 
 // src/main.ts
 var NexusAiChatImporterPlugin = class extends import_obsidian16.Plugin {
-  constructor(app2, manifest) {
-    super(app2, manifest);
+  constructor(app, manifest) {
+    super(app, manifest);
     this.logger = new Logger();
     this.storageService = new StorageService(this);
     this.importService = new ImportService(this);

@@ -315,7 +315,7 @@ class OfferReimportOperation extends UpgradeOperation {
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            const result = await showUpgradeDialog({
+            const result = await showUpgradeDialog(context.plugin.app, {
                 title: "Migration to v1.2.0 Complete!",
                 message: `🎉 **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
 
@@ -339,7 +339,7 @@ class OfferReimportOperation extends UpgradeOperation {
             });
 
             if (result === "learn") {
-                await showUpgradeDialog({
+                await showUpgradeDialog(context.plugin.app, {
                     title: "About Full Reimport",
                     message: `**Why Reimport Instead of Migration?**
 

@@ -141,13 +141,16 @@ export async function showDialog(
 /**
  * Beautiful upgrade dialog with enhanced styling (like Excalidraw)
  */
-export async function showUpgradeDialog(options: {
-    title: string;
-    message: string;
-    buttons: Array<{ text: string; value: string; primary?: boolean }>;
-}): Promise<string> {
+export async function showUpgradeDialog(
+    app: App,
+    options: {
+        title: string;
+        message: string;
+        buttons: Array<{ text: string; value: string; primary?: boolean }>;
+    }
+): Promise<string> {
     return new Promise((resolve) => {
-        const modal = new BeautifulUpgradeDialog(options, resolve);
+        const modal = new BeautifulUpgradeDialog(app, options, resolve);
         modal.open();
     });
 }
@@ -161,6 +164,7 @@ class BeautifulUpgradeDialog extends Modal {
     };
 
     constructor(
+        app: App,
         options: {
             title: string;
             message: string;
