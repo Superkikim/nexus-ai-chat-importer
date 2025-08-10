@@ -118,18 +118,18 @@ export class ImportService {
             const hasUsersJson = fileNames.includes("users.json");
             const hasProjectsJson = fileNames.includes("projects.json");
 
-            // ChatGPT format: conversations.json
+            // ChatGPT format: conversations.json only
             const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
 
-            // Claude format: conversations.json + users.json + projects.json
-            const isClaudeFormat = hasConversationsJson && hasUsersJson && hasProjectsJson;
+            // Claude format: conversations.json + users.json (projects.json optional for legacy)
+            const isClaudeFormat = hasConversationsJson && hasUsersJson;
 
             if (!isChatGPTFormat && !isClaudeFormat) {
                 throw new NexusAiChatImporterError(
                     "Invalid ZIP structure",
                     "This ZIP file doesn't match any supported chat export format. " +
                     "Expected either ChatGPT format (conversations.json) or " +
-                    "Claude format (conversations.json + users.json + projects.json)."
+                    "Claude format (conversations.json + users.json)."
                 );
             }
 
