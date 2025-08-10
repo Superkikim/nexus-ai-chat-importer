@@ -351,6 +351,17 @@ export class ChatGPTConverter {
                         textContent = part.text;
                     }
                 }
+                // Handle code blocks with type and content structure
+                else if ('type' in part && 'content' in part && typeof part.content === 'string') {
+                    const codeType = part.type as string;
+                    const codeContent = part.content as string;
+
+                    if (codeContent.trim() !== "") {
+                        // Extract language from type (e.g., "code/markdown" -> "markdown")
+                        const language = codeType.includes('/') ? codeType.split('/')[1] : codeType;
+                        textContent = `\`\`\`${language}\n${codeContent}\n\`\`\``;
+                    }
+                }
                 // Skip image_asset_pointer content types - they become attachments via metadata
             }
             
