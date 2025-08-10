@@ -4328,16 +4328,22 @@ var _MessageFormatter = class {
 > **Note:** ${attachment.status.note}`;
       }
     } else if (attachment.extractedContent && this.isDalleImage(attachment)) {
-      content += `> **Prompt:**
-> \`\`\`
-> ${attachment.extractedContent}
-> \`\`\``;
+      content += `> ${this.isImageFile(attachment) ? "![[" + attachment.url + "]]" : "[[" + attachment.url + "]]"}`;
     } else if (attachment.extractedContent) {
       content += `> ${attachment.extractedContent}`;
     } else if (attachment.content && !attachment.extractedContent) {
       content += `> ${attachment.content}`;
     }
-    return content;
+    let dallePrompt = "";
+    if (attachment.extractedContent && this.isDalleImage(attachment)) {
+      dallePrompt = `
+
+>[!${_MessageFormatter.CALLOUTS.PROMPT}] **DALL-E Prompt**
+> \`\`\`
+> ${attachment.extractedContent}
+> \`\`\``;
+    }
+    return content + dallePrompt;
   }
   /**
    * Check if attachment is a DALL-E generated image

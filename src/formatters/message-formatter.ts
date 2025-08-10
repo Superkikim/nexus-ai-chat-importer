@@ -124,9 +124,9 @@ export class MessageFormatter {
             }
         }
 
-        // Add DALL-E prompt in codebox (special case for DALL-E images)
+        // Add DALL-E prompt as separate callout (special case for DALL-E images)
         else if (attachment.extractedContent && this.isDalleImage(attachment)) {
-            content += `> **Prompt:**\n> \`\`\`\n> ${attachment.extractedContent}\n> \`\`\``;
+            content += `> ${this.isImageFile(attachment) ? '![[' + attachment.url + ']]' : '[[' + attachment.url + ']]'}`;
         }
         // Add extracted content for other types (transcriptions, OCR, code, etc.)
         else if (attachment.extractedContent) {
@@ -138,7 +138,13 @@ export class MessageFormatter {
             content += `> ${attachment.content}`;
         }
 
-        return content;
+        // Add DALL-E prompt as separate callout after the attachment
+        let dallePrompt = '';
+        if (attachment.extractedContent && this.isDalleImage(attachment)) {
+            dallePrompt = `\n\n>[!${MessageFormatter.CALLOUTS.PROMPT}] **DALL-E Prompt**\n> \`\`\`\n> ${attachment.extractedContent}\n> \`\`\``;
+        }
+
+        return content + dallePrompt;
     }
 
     /**
