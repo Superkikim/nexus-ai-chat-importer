@@ -7,37 +7,36 @@ export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
     }
 
     extractReportPrefix(zipFileName: string): string {
-        // Claude export files typically follow pattern: data-YYYY-MM-DD-HH-MM-SS-batch-NNNN.zip
-        // Example: data-2025-07-25-17-40-50-batch-0000.zip
-        
-        // Remove .zip extension
-        const baseName = zipFileName.replace(/\.zip$/i, '');
-        
-        // Try to extract date from Claude format
-        const claudePattern = /^data-(\d{4}-\d{2}-\d{2})-(\d{2}-\d{2}-\d{2})-batch-(\d{4})$/;
-        const match = baseName.match(claudePattern);
-        
-        if (match) {
-            const [, date, time, batch] = match;
-            // Convert to more readable format: claude-2025.07.25-17.40.50-batch0000
-            const formattedDate = date.replace(/-/g, '.');
-            const formattedTime = time.replace(/-/g, '.');
-            return `claude-${formattedDate}-${formattedTime}-batch${batch}`;
-        }
-        
-        // Fallback: try to extract any date pattern
-        const datePattern = /(\d{4}[-.]?\d{2}[-.]?\d{2})/;
-        const dateMatch = baseName.match(datePattern);
-        
-        if (dateMatch) {
-            const dateStr = dateMatch[1].replace(/[-]/g, '.');
-            return `claude-${dateStr}`;
-        }
-        
-        // Final fallback: use current date with original filename
+        // Get current import date
         const now = new Date();
-        const currentDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-        return `claude-${currentDate}-${baseName}`;
+        const importYear = now.getFullYear();
+        const importMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const importDay = String(now.getDate()).padStart(2, '0');
+        const importDate = `${importYear}.${importMonth}.${importDay}`;
+
+        // Try to extract archive date from Claude filename patterns
+        // Pattern 1: data-YYYY-MM-DD-HH-MM-SS-batch-NNNN.zip
+        const claudeBatchPattern = /data-(\d{4})-(\d{2})-(\d{2})-\d{2}-\d{2}-\d{2}-batch-\d{4}/;
+        const batchMatch = zipFileName.match(claudeBatchPattern);
+
+        if (batchMatch) {
+            const [, year, month, day] = batchMatch;
+            const archiveDate = `${year}.${month}.${day}`;
+            return `imported-${importDate}-archive-${archiveDate}`;
+        }
+
+        // Pattern 2: Legacy Claude format (no batch suffix)
+        const legacyPattern = /(\d{4})-(\d{2})-(\d{2})/;
+        const legacyMatch = zipFileName.match(legacyPattern);
+
+        if (legacyMatch) {
+            const [, year, month, day] = legacyMatch;
+            const archiveDate = `${year}.${month}.${day}`;
+            return `imported-${importDate}-archive-${archiveDate}`;
+        }
+
+        // Fallback: use current date if no date found in filename
+        return `imported-${importDate}-archive-${importDate}`;
     }
 
     getProviderSpecificColumn(): { header: string; getValue: (adapter: any, chat: any) => number } {

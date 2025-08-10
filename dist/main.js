@@ -6933,24 +6933,26 @@ var ClaudeReportNamingStrategy = class {
     return "claude";
   }
   extractReportPrefix(zipFileName) {
-    const baseName = zipFileName.replace(/\.zip$/i, "");
-    const claudePattern = /^data-(\d{4}-\d{2}-\d{2})-(\d{2}-\d{2}-\d{2})-batch-(\d{4})$/;
-    const match = baseName.match(claudePattern);
-    if (match) {
-      const [, date, time, batch] = match;
-      const formattedDate = date.replace(/-/g, ".");
-      const formattedTime = time.replace(/-/g, ".");
-      return `claude-${formattedDate}-${formattedTime}-batch${batch}`;
-    }
-    const datePattern = /(\d{4}[-.]?\d{2}[-.]?\d{2})/;
-    const dateMatch = baseName.match(datePattern);
-    if (dateMatch) {
-      const dateStr = dateMatch[1].replace(/[-]/g, ".");
-      return `claude-${dateStr}`;
-    }
     const now = new Date();
-    const currentDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
-    return `claude-${currentDate}-${baseName}`;
+    const importYear = now.getFullYear();
+    const importMonth = String(now.getMonth() + 1).padStart(2, "0");
+    const importDay = String(now.getDate()).padStart(2, "0");
+    const importDate = `${importYear}.${importMonth}.${importDay}`;
+    const claudeBatchPattern = /data-(\d{4})-(\d{2})-(\d{2})-\d{2}-\d{2}-\d{2}-batch-\d{4}/;
+    const batchMatch = zipFileName.match(claudeBatchPattern);
+    if (batchMatch) {
+      const [, year, month, day] = batchMatch;
+      const archiveDate = `${year}.${month}.${day}`;
+      return `imported-${importDate}-archive-${archiveDate}`;
+    }
+    const legacyPattern = /(\d{4})-(\d{2})-(\d{2})/;
+    const legacyMatch = zipFileName.match(legacyPattern);
+    if (legacyMatch) {
+      const [, year, month, day] = legacyMatch;
+      const archiveDate = `${year}.${month}.${day}`;
+      return `imported-${importDate}-archive-${archiveDate}`;
+    }
+    return `imported-${importDate}-archive-${importDate}`;
   }
   getProviderSpecificColumn() {
     return {
