@@ -28,7 +28,7 @@
 /* System Prompts */
 .callout[data-callout="nexus_prompt"] {
     --callout-color: 239, 68, 68; /* Red */
-    --callout-icon: lucide-message-square;
+    --callout-icon: lucide-wand-2;
 }
 
 /* Legacy support for existing boxes (will be phased out) */
