@@ -1,15 +1,15 @@
 # Nexus AI Chat Importer Plugin for Obsidian
 
-![Version](https://img.shields.io/badge/version-1.2.0--dev-orange)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)
-![GitHub all releases](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total)
-![GitHub](https://img.shields.io/github/license/superkikim/nexus-ai-chat-importer)
-![Obsidian Plugin](https://img.shields.io/badge/Obsidian-Plugin-purple)
-![Platform](https://img.shields.io/badge/Platform-Desktop%20%7C%20Mobile-blue)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.2.0)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest)
+[![GitHub all releases](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total)](https://github.com/Superkikim/nexus-ai-chat-importer/releases)
+[![GitHub](https://img.shields.io/github/license/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/LICENSE)
+[![Obsidian Plugin](https://img.shields.io/badge/Obsidian-Plugin-purple)](https://obsidian.md/)
+[![Platform](https://img.shields.io/badge/Platform-Desktop%20%7C%20Mobile-blue)](https://obsidian.md/)
 
 ## Overview
 
-Import your AI chat conversations from **ChatGPT** and **Claude** exports into Obsidian as organized Markdown files. Conversations are imported with their attachments and artifacts when present in the archive.
+Import your AI chat conversations from **ChatGPT** and **Claude** exports into Obsidian as beautifully formatted Markdown files. Features modern callout-based UI, complete attachment support, and Claude artifact versioning for a professional note-taking experience.
 
 ## ☕ Support My Work
 
