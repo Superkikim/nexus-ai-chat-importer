@@ -3932,7 +3932,9 @@ ${cleanContent}`;
             if (relativePath.startsWith("ChatGPT/") || relativePath.startsWith("Claude/") || relativePath.startsWith("chatgpt/") || relativePath.startsWith("claude/")) {
               return false;
             }
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+            const reportFolderName = context.plugin.settings.reportFolder.split("/").pop() || "Reports";
+            const attachmentFolderName = context.plugin.settings.attachmentFolder.split("/").pop() || "Attachments";
+            if (relativePath.startsWith(`${reportFolderName}/`) || relativePath.startsWith(`${attachmentFolderName}/`) || relativePath.toLowerCase().startsWith("reports/") || relativePath.toLowerCase().startsWith("attachments/")) {
               return false;
             }
             const pathParts = relativePath.split("/");
@@ -3960,7 +3962,9 @@ ${cleanContent}`;
             if (!file.path.startsWith(archiveFolder))
               return false;
             const relativePath = file.path.substring(archiveFolder.length + 1);
-            if (relativePath.startsWith("ChatGPT/") || relativePath.startsWith("Claude/") || relativePath.startsWith("chatgpt/") || relativePath.startsWith("claude/") || relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+            const reportFolderName = context.plugin.settings.reportFolder.split("/").pop() || "Reports";
+            const attachmentFolderName = context.plugin.settings.attachmentFolder.split("/").pop() || "Attachments";
+            if (relativePath.startsWith("ChatGPT/") || relativePath.startsWith("Claude/") || relativePath.startsWith("chatgpt/") || relativePath.startsWith("claude/") || relativePath.startsWith(`${reportFolderName}/`) || relativePath.startsWith(`${attachmentFolderName}/`) || relativePath.toLowerCase().startsWith("reports/") || relativePath.toLowerCase().startsWith("attachments/")) {
               return false;
             }
             const pathParts = relativePath.split("/");
@@ -6662,11 +6666,11 @@ ${code}
     if (!folderResult.success) {
       throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
     }
-    const fileName = `${artifactId}_v${versionNumber}.md`;
+    const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
+    const fileName = `${safeArtifactId}_v${versionNumber}.md`;
     const filePath = `${conversationFolder}/${fileName}`;
     const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
     if (shouldSkip) {
-      console.log(`Skipping existing ${fileName}`);
       return;
     }
     await this.saveIndividualArtifactVersion(
@@ -6693,11 +6697,11 @@ ${code}
     if (!folderResult.success) {
       throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
     }
-    const fileName = `${artifactId}_v${versionNumber}.md`;
+    const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
+    const fileName = `${safeArtifactId}_v${versionNumber}.md`;
     const filePath = `${conversationFolder}/${fileName}`;
     const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
     if (shouldSkip) {
-      console.log(`Skipping existing ${fileName}`);
       return;
     }
     await this.saveIndividualArtifactVersion(
@@ -6834,17 +6838,16 @@ ${code}
     for (let i = 0; i < versions.length; i++) {
       const version = versions[i];
       const versionNumber = i + 1;
-      const fileName = `${artifactId}_v${versionNumber}.md`;
+      const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
+      const fileName = `${safeArtifactId}_v${versionNumber}.md`;
       const filePath = `${conversationFolder}/${fileName}`;
       try {
         const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
         if (shouldSkip) {
-          console.log(`Skipping existing artifact version: ${filePath}`);
           savedVersions.push(filePath);
           latestVersion = filePath;
           continue;
         }
-        console.log(`Saving artifact version ${versionNumber}: ${filePath}`);
         await this.saveArtifactVersion(version, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime);
         savedVersions.push(filePath);
         latestVersion = filePath;
@@ -7010,7 +7013,6 @@ ${versionContent}
     }
     try {
       await this.plugin.app.vault.create(filePath, markdownContent);
-      console.log(`Successfully saved artifact version: ${filePath}`);
     } catch (error) {
       console.error(`Failed to create artifact file ${filePath}:`, error);
       throw error;
@@ -7090,7 +7092,6 @@ ${content}
     }
     try {
       await this.plugin.app.vault.create(filePath, markdownContent);
-      console.log(`Successfully saved artifact version: ${filePath}`);
     } catch (error) {
       console.error(`Failed to create artifact file ${filePath}:`, error);
       throw error;

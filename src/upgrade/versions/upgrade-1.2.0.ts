@@ -327,11 +327,14 @@ class MoveToProviderFolderOperation extends UpgradeOperation {
                     return false;
                 }
 
-                // Skip Reports and Attachments
-                if (relativePath.startsWith('Reports/') ||
-                    relativePath.startsWith('Attachments/') ||
-                    relativePath.startsWith('reports/') ||
-                    relativePath.startsWith('attachments/')) {
+                // Skip Reports and Attachments (use settings)
+                const reportFolderName = context.plugin.settings.reportFolder.split('/').pop() || 'Reports';
+                const attachmentFolderName = context.plugin.settings.attachmentFolder.split('/').pop() || 'Attachments';
+
+                if (relativePath.startsWith(`${reportFolderName}/`) ||
+                    relativePath.startsWith(`${attachmentFolderName}/`) ||
+                    relativePath.toLowerCase().startsWith('reports/') ||
+                    relativePath.toLowerCase().startsWith('attachments/')) {
                     return false;
                 }
 
@@ -371,14 +374,17 @@ class MoveToProviderFolderOperation extends UpgradeOperation {
                 const relativePath = file.path.substring(archiveFolder.length + 1);
 
                 // Skip if already in provider subfolder or special folders
+                const reportFolderName = context.plugin.settings.reportFolder.split('/').pop() || 'Reports';
+                const attachmentFolderName = context.plugin.settings.attachmentFolder.split('/').pop() || 'Attachments';
+
                 if (relativePath.startsWith('ChatGPT/') ||
                     relativePath.startsWith('Claude/') ||
                     relativePath.startsWith('chatgpt/') ||
                     relativePath.startsWith('claude/') ||
-                    relativePath.startsWith('Reports/') ||
-                    relativePath.startsWith('Attachments/') ||
-                    relativePath.startsWith('reports/') ||
-                    relativePath.startsWith('attachments/')) {
+                    relativePath.startsWith(`${reportFolderName}/`) ||
+                    relativePath.startsWith(`${attachmentFolderName}/`) ||
+                    relativePath.toLowerCase().startsWith('reports/') ||
+                    relativePath.toLowerCase().startsWith('attachments/')) {
                     return false;
                 }
 

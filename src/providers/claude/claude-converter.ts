@@ -531,13 +531,14 @@ export class ClaudeConverter {
             throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
         }
 
-        const fileName = `${artifactId}_v${versionNumber}.md`;
+        // Sanitize artifactId to avoid filesystem issues
+        const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, '_');
+        const fileName = `${safeArtifactId}_v${versionNumber}.md`;
         const filePath = `${conversationFolder}/${fileName}`;
 
         // Check if already exists
         const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
         if (shouldSkip) {
-            console.log(`Skipping existing ${fileName}`);
             return;
         }
 
@@ -577,13 +578,14 @@ export class ClaudeConverter {
             throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
         }
 
-        const fileName = `${artifactId}_v${versionNumber}.md`;
+        // Sanitize artifactId to avoid filesystem issues
+        const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, '_');
+        const fileName = `${safeArtifactId}_v${versionNumber}.md`;
         const filePath = `${conversationFolder}/${fileName}`;
 
         // Check if already exists
         const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
         if (shouldSkip) {
-            console.log(`Skipping existing ${fileName}`);
             return;
         }
 
@@ -764,20 +766,19 @@ export class ClaudeConverter {
         for (let i = 0; i < versions.length; i++) {
             const version = versions[i];
             const versionNumber = i + 1;
-            const fileName = `${artifactId}_v${versionNumber}.md`;
+            // Sanitize artifactId to avoid filesystem issues
+            const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, '_');
+            const fileName = `${safeArtifactId}_v${versionNumber}.md`;
             const filePath = `${conversationFolder}/${fileName}`;
 
             try {
                 // Check if this version already exists (for updates/reimports)
                 const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
                 if (shouldSkip) {
-                    console.log(`Skipping existing artifact version: ${filePath}`);
                     savedVersions.push(filePath);
                     latestVersion = filePath;
                     continue;
                 }
-
-                console.log(`Saving artifact version ${versionNumber}: ${filePath}`);
                 await this.saveArtifactVersion(version, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime);
                 savedVersions.push(filePath);
                 latestVersion = filePath;
@@ -973,7 +974,6 @@ aliases: ["${title}", "${artifactId}_v${versionNumber}"]
         // Save the artifact as markdown
         try {
             await this.plugin.app.vault.create(filePath, markdownContent);
-            console.log(`Successfully saved artifact version: ${filePath}`);
         } catch (error) {
             console.error(`Failed to create artifact file ${filePath}:`, error);
             throw error;
@@ -1077,7 +1077,6 @@ aliases: ["${title}", "${artifactId}_v${versionNumber}"]
         // Save the artifact as markdown
         try {
             await this.plugin.app.vault.create(filePath, markdownContent);
-            console.log(`Successfully saved artifact version: ${filePath}`);
         } catch (error) {
             console.error(`Failed to create artifact file ${filePath}:`, error);
             throw error;
