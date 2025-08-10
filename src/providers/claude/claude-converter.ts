@@ -130,95 +130,13 @@ export class ClaudeConverter {
             }
         }
 
-        // Second pass: collect ALL artifacts first, then process them properly
+        // Second pass: process artifacts in messages and create specific links
         // Use provided counters or create new ones (for backward compatibility)
         if (!versionCounters) versionCounters = new Map<string, number>();
         if (!artifactSummaries) artifactSummaries = new Map<string, any>();
 
-        // Collect all artifacts from all content blocks
-        const allArtifacts: any[] = [];
-        for (const block of contentBlocks) {
-            if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
-                const artifactId = block.input.id || 'unknown';
-                const command = block.input.command || 'create';
-                const versionUuid = block.input.version_uuid;
-
-                // Skip view commands only
-                if (command === 'view') {
-                    continue;
-                }
-
-                // Process ALL versions (including empty updates - they might have old_str/new_str)
-                if (versionUuid) {
-                    allArtifacts.push(block.input);
-                }
-            }
-        }
-
-        // Process artifacts by ID with cumulative content
+        // Global artifact content tracking for cumulative updates
         const artifactContents = new Map<string, string>();
-
-        for (const artifact of allArtifacts) {
-            const artifactId = artifact.id || 'unknown';
-            const command = artifact.command || 'create';
-
-            // Increment version number for this artifact ID
-            const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
-            versionCounters.set(artifactId, currentVersion);
-
-            let finalContent = '';
-
-            if (command === 'create' || command === 'rewrite') {
-                // Complete content provided
-                finalContent = artifact.content || '';
-                artifactContents.set(artifactId, finalContent);
-            } else if (command === 'update') {
-                // Apply update to previous content
-                const previousContent = artifactContents.get(artifactId) || '';
-
-                if (artifact.old_str && artifact.new_str) {
-                    // sed-like replacement
-                    finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
-                } else if (artifact.content && artifact.content.length > 0) {
-                    // Complete updated content provided
-                    finalContent = artifact.content;
-                } else {
-                    // Empty update - keep previous content
-                    finalContent = previousContent;
-                }
-
-                artifactContents.set(artifactId, finalContent);
-            }
-
-            console.log(`Saving ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
-
-            try {
-                await this.saveSingleArtifactVersionWithContent(
-                    artifactId,
-                    artifact,
-                    currentVersion,
-                    finalContent,
-                    conversationId,
-                    conversationTitle,
-                    conversationCreateTime
-                );
-
-                // Track for summary (update with latest version info)
-                artifactSummaries.set(artifactId, {
-                    title: artifact.title || artifactId,
-                    totalVersions: currentVersion,
-                    latestVersion: currentVersion
-                });
-            } catch (error) {
-                console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
-            }
-        }
-
-        // Add summaries to conversation
-        for (const [artifactId, info] of artifactSummaries.entries()) {
-            const summary = this.createArtifactSummary(artifactId, info, conversationId);
-            textParts.push(summary);
-        }
 
         // Third pass: process non-artifact content blocks
         for (const block of contentBlocks) {
@@ -234,9 +152,73 @@ export class ClaudeConverter {
                     break;
 
                 case 'tool_use':
-                    // Skip artifacts (already processed above)
-                    if (block.name === 'artifacts') {
-                        break;
+                    // Process artifacts and create specific version links
+                    if (block.name === 'artifacts' && block.input) {
+                        const artifactId = block.input.id || 'unknown';
+                        const command = block.input.command || 'create';
+                        const versionUuid = block.input.version_uuid;
+
+                        // Skip view commands
+                        if (command === 'view') {
+                            break;
+                        }
+
+                        if (versionUuid) {
+                            // Increment version number for this artifact ID
+                            const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
+                            versionCounters.set(artifactId, currentVersion);
+
+                            let finalContent = '';
+
+                            if (command === 'create' || command === 'rewrite') {
+                                // Complete content provided - RESET cumulative content
+                                finalContent = block.input.content || '';
+                                artifactContents.set(artifactId, finalContent);
+                            } else if (command === 'update') {
+                                // Apply update to PREVIOUS content
+                                const previousContent = artifactContents.get(artifactId) || '';
+
+                                if (block.input.old_str && block.input.new_str) {
+                                    // sed-like replacement on previous content
+                                    finalContent = previousContent.replace(block.input.old_str, block.input.new_str);
+                                } else if (block.input.content && block.input.content.length > 0) {
+                                    // Complete updated content provided
+                                    finalContent = block.input.content;
+                                } else {
+                                    // Empty update - keep previous content
+                                    finalContent = previousContent;
+                                }
+
+                                // Update cumulative content for next version
+                                artifactContents.set(artifactId, finalContent);
+                            }
+
+                            console.log(`Processing ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
+
+                            try {
+                                // Save this specific version
+                                await this.saveSingleArtifactVersionWithContent(
+                                    artifactId,
+                                    block.input,
+                                    currentVersion,
+                                    finalContent,
+                                    conversationId,
+                                    conversationTitle,
+                                    conversationCreateTime
+                                );
+
+                                // Create specific link for THIS version
+                                const title = block.input.title || artifactId;
+                                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+                                const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
+                                const specificLink = `<div class="nexus-artifact-box">📎 **[[${versionFile}|Artifact: ${title} v${currentVersion}]]**</div>`;
+                                textParts.push(specificLink);
+
+                            } catch (error) {
+                                console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+                                textParts.push(`<div class="nexus-artifact-box">❌ **Artifact: ${block.input.title || artifactId} v${currentVersion}** (Error saving)</div>`);
+                            }
+                        }
                     } else if (block.name === 'web_search') {
                         // Filter out web_search tools - not useful for users
                         break;
