@@ -99,8 +99,9 @@ export class ClaudeConverter {
 
             standardMessages.push(standardMessage);
         }
-        
-        return standardMessages;
+
+        // Sort messages by timestamp to maintain chronological order
+        return this.sortMessagesByTimestamp(standardMessages);
     }
 
     private static shouldIncludeMessage(message: ClaudeMessage): boolean {
@@ -114,6 +115,31 @@ export class ClaudeConverter {
         }
         
         return false;
+    }
+
+    /**
+     * Sort messages by timestamp (same logic as ChatGPT converter)
+     */
+    private static sortMessagesByTimestamp(messages: StandardMessage[]): StandardMessage[] {
+        // Sort by timestamp to maintain order (optimized for mostly-sorted data)
+        if (messages.length <= 1) return messages;
+
+        // Use insertion sort for small arrays or mostly sorted data (common case)
+        if (messages.length < 50) {
+            for (let i = 1; i < messages.length; i++) {
+                const current = messages[i];
+                let j = i - 1;
+                while (j >= 0 && messages[j].timestamp > current.timestamp) {
+                    messages[j + 1] = messages[j];
+                    j--;
+                }
+                messages[j + 1] = current;
+            }
+            return messages;
+        }
+
+        // Use native sort for larger arrays
+        return messages.sort((a, b) => a.timestamp - b.timestamp);
     }
 
     /**
@@ -250,7 +276,7 @@ export class ClaudeConverter {
                             const artifactId = block.input.id || 'unknown';
                             const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
                             const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
-                            const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}\n> [[${versionFile}|View Code]]`;
+                            const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}\n> 🎨 [[${versionFile}|View Artifact]]`;
                             textParts.push(specificLink);
                         }
                     } else if (block.name === 'web_search') {
@@ -403,7 +429,7 @@ export class ClaudeConverter {
                                 const title = block.input.title || artifactId;
                                 const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
                                 const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
-                                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}\n> [[${versionFile}|View Code]]`;
+                                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}\n> 🎨 [[${versionFile}|View Artifact]]`;
                                 textParts.push(specificLink);
 
                             } catch (error) {

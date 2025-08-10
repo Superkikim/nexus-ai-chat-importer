@@ -5836,7 +5836,7 @@ var ClaudeConverter = class {
       };
       standardMessages.push(standardMessage);
     }
-    return standardMessages;
+    return this.sortMessagesByTimestamp(standardMessages);
   }
   static shouldIncludeMessage(message) {
     if (message.sender === "human" || message.sender === "assistant") {
@@ -5846,6 +5846,26 @@ var ClaudeConverter = class {
       return true;
     }
     return false;
+  }
+  /**
+   * Sort messages by timestamp (same logic as ChatGPT converter)
+   */
+  static sortMessagesByTimestamp(messages) {
+    if (messages.length <= 1)
+      return messages;
+    if (messages.length < 50) {
+      for (let i = 1; i < messages.length; i++) {
+        const current = messages[i];
+        let j = i - 1;
+        while (j >= 0 && messages[j].timestamp > current.timestamp) {
+          messages[j + 1] = messages[j];
+          j--;
+        }
+        messages[j + 1] = current;
+      }
+      return messages;
+    }
+    return messages.sort((a, b) => a.timestamp - b.timestamp);
   }
   /**
    * Process ALL artifacts from entire conversation and create files
@@ -5933,7 +5953,7 @@ var ClaudeConverter = class {
               const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
               const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
               const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}
-> [[${versionFile}|View Code]]`;
+> \u{1F3A8} [[${versionFile}|View Artifact]]`;
               textParts.push(specificLink);
             }
           } else if (block.name === "web_search") {
@@ -6038,7 +6058,7 @@ ${code}
                 const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
                 const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
                 const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}
-> [[${versionFile}|View Code]]`;
+> \u{1F3A8} [[${versionFile}|View Artifact]]`;
                 textParts.push(specificLink);
               } catch (error) {
                 console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
