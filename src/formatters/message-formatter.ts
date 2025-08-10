@@ -122,6 +122,15 @@ export class MessageFormatter {
             if (attachment.status.note) {
                 content += `\n> **Note:** ${attachment.status.note}`;
             }
+
+            // Add link to original conversation for missing attachments
+            if (attachment.status.reason === 'missing_from_export') {
+                // Try to extract conversation URL from attachment or use generic ChatGPT link
+                const conversationUrl = attachment.url?.includes('chatgpt.com')
+                    ? attachment.url
+                    : 'https://chatgpt.com/';
+                content += `\n> [Open original conversation](${conversationUrl})`;
+            }
         }
 
         // Add DALL-E prompt as separate callout (special case for DALL-E images)

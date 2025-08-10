@@ -31,6 +31,16 @@
     --callout-icon: lucide-wand-2;
 }
 
+/* Fix excessive spacing in editor mode */
+.markdown-source-view .callout[data-callout^="nexus_"] {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.markdown-source-view .callout[data-callout^="nexus_"] + .callout[data-callout^="nexus_"] {
+    margin-top: 0.25em;
+}
+
 /* Legacy support for existing boxes (will be phased out) */
 .nexus-artifact-box {
     background-color: var(--background-secondary);

@@ -364,7 +364,13 @@ export class ClaudeConverter {
                     break;
 
                 case 'tool_use':
-                    // Process artifacts and create specific version links
+                    // Filter out internal tool usage (like [Tool: repl]) - not valuable for users
+                    if (block.name === 'repl' || block.name === 'str_replace_editor' || block.name === 'bash') {
+                        // Skip internal tool usage
+                        break;
+                    }
+
+                    // Handle artifacts specifically
                     if (block.name === 'artifacts' && block.input) {
                         const artifactId = block.input.id || 'unknown';
                         const command = block.input.command || 'create';

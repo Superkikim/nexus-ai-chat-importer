@@ -82,6 +82,30 @@ Go to Settings > Nexus AI Chat Importer:
 1. Click the import button in the ribbon (chat icon with +) or use Command Palette
 2. Select your ChatGPT or Claude export ZIP file(s)
 3. Files are processed automatically
+4. Review the import report for detailed results and any issues
+
+### ⚠️ **Important Performance Considerations**
+
+#### **Large Archives Impact**
+- **Processing Time**: Archives with hundreds or thousands of conversations can take several minutes to process
+- **System Resources**: Large imports may temporarily impact your computer's performance and memory usage
+- **Obsidian Indexing**: After import, Obsidian will need time to index all new files, which may slow down search and linking
+
+#### **Best Practices for Archive Management**
+
+🔒 **Archive Safety**
+- **Keep your exported archives secure** even after successful import - they serve as your backup
+- **Store archives in a safe location** separate from your Obsidian vault for redundancy
+
+📦 **Regular Maintenance**
+- **Export conversations regularly** (monthly/quarterly) rather than waiting for massive archives
+- **Delete old conversations** from the web apps after successful export to keep future archives manageable
+- **Smaller, frequent imports** are faster and less resource-intensive than large, infrequent ones
+
+💡 **Pro Tips**
+- **Close other applications** during large imports to free up system resources
+- **Import during off-hours** when you don't need to actively use Obsidian
+- **Monitor the import report** for any failed conversations that may need manual attention
 
 ### What Gets Imported
 
