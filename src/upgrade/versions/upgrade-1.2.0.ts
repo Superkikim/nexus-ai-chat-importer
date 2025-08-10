@@ -315,22 +315,24 @@ class OfferReimportOperation extends UpgradeOperation {
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
             const result = await showDialog({
-                title: "Complete v1.2.0 Feature Upgrade",
-                message: `Your conversations have been updated with modern callouts!
+                title: "Migration to v1.2.0 Complete!",
+                message: `🎉 **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
 
-**Current Status:** Visual improvements applied ✅
-**Optional:** Full reimport for complete v1.2.0 features
+**✅ What was migrated:**
+• Modern callout design (user/assistant messages)
+• Improved visual presentation
+• Better Reading View experience
 
-**Full reimport includes:**
-• Missing attachment links with conversation URLs
-• Perfect chronological message ordering
-• Enhanced DALL-E prompt display
-• Latest performance optimizations
+**⚠️ What was NOT migrated:**
+• Missing attachment links and references
+• Enhanced chronological ordering
+• DALL-E prompt improvements
+• Performance optimizations
 
-**Note:** Full reimport will replace existing conversations with fresh imports from your original ZIP files.`,
+**💡 To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.`,
                 buttons: [
                     { text: "Keep Current (Recommended)", value: "keep" },
-                    { text: "Learn About Reimport", value: "learn" },
+                    { text: "Learn About Full Reimport", value: "learn" },
                     { text: "Cancel", value: "cancel" }
                 ]
             });
@@ -338,14 +340,23 @@ class OfferReimportOperation extends UpgradeOperation {
             if (result === "learn") {
                 await showDialog({
                     title: "About Full Reimport",
-                    message: `**Full Reimport Process:**
+                    message: `**Why Reimport Instead of Migration?**
 
-1. **Manual Process:** You'll need to reimport your ChatGPT ZIP files manually
-2. **Overwrites:** Existing conversations will be replaced (backup recommended)
-3. **Benefits:** All v1.2.0 features including missing attachments and perfect ordering
-4. **When:** Do this when you have time and access to your original ZIP files
+**Attachments & Links:** Original ZIP files contain attachment metadata that can't be recreated from existing notes. Migration only updates presentation.
 
-**Recommendation:** The visual callout upgrade is sufficient for most users. Consider full reimport only if you need the additional features.`,
+**Full Reimport Benefits:**
+• 📎 Missing attachment links with conversation URLs
+• ⏰ Perfect chronological message ordering
+• 🎨 Enhanced DALL-E prompt callouts
+• ⚡ Latest performance optimizations
+• 🔧 All v1.2.0 technical improvements
+
+**Process:**
+1. Use the plugin's import feature with your original ZIP files
+2. Existing conversations will be replaced with enhanced versions
+3. Backup recommended before reimporting
+
+**Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.`,
                     buttons: [{ text: "Got it", value: "ok" }]
                 });
 

@@ -3924,36 +3924,47 @@ ${cleanContent}`;
       async execute(context) {
         try {
           const result = await showDialog({
-            title: "Complete v1.2.0 Feature Upgrade",
-            message: `Your conversations have been updated with modern callouts!
+            title: "Migration to v1.2.0 Complete!",
+            message: `\u{1F389} **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
 
-**Current Status:** Visual improvements applied \u2705
-**Optional:** Full reimport for complete v1.2.0 features
+**\u2705 What was migrated:**
+\u2022 Modern callout design (user/assistant messages)
+\u2022 Improved visual presentation
+\u2022 Better Reading View experience
 
-**Full reimport includes:**
-\u2022 Missing attachment links with conversation URLs
-\u2022 Perfect chronological message ordering
-\u2022 Enhanced DALL-E prompt display
-\u2022 Latest performance optimizations
+**\u26A0\uFE0F What was NOT migrated:**
+\u2022 Missing attachment links and references
+\u2022 Enhanced chronological ordering
+\u2022 DALL-E prompt improvements
+\u2022 Performance optimizations
 
-**Note:** Full reimport will replace existing conversations with fresh imports from your original ZIP files.`,
+**\u{1F4A1} To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.`,
             buttons: [
               { text: "Keep Current (Recommended)", value: "keep" },
-              { text: "Learn About Reimport", value: "learn" },
+              { text: "Learn About Full Reimport", value: "learn" },
               { text: "Cancel", value: "cancel" }
             ]
           });
           if (result === "learn") {
             await showDialog({
               title: "About Full Reimport",
-              message: `**Full Reimport Process:**
+              message: `**Why Reimport Instead of Migration?**
 
-1. **Manual Process:** You'll need to reimport your ChatGPT ZIP files manually
-2. **Overwrites:** Existing conversations will be replaced (backup recommended)
-3. **Benefits:** All v1.2.0 features including missing attachments and perfect ordering
-4. **When:** Do this when you have time and access to your original ZIP files
+**Attachments & Links:** Original ZIP files contain attachment metadata that can't be recreated from existing notes. Migration only updates presentation.
 
-**Recommendation:** The visual callout upgrade is sufficient for most users. Consider full reimport only if you need the additional features.`,
+**Full Reimport Benefits:**
+\u2022 \u{1F4CE} Missing attachment links with conversation URLs
+\u2022 \u23F0 Perfect chronological message ordering
+\u2022 \u{1F3A8} Enhanced DALL-E prompt callouts
+\u2022 \u26A1 Latest performance optimizations
+\u2022 \u{1F527} All v1.2.0 technical improvements
+
+**Process:**
+1. Use the plugin's import feature with your original ZIP files
+2. Existing conversations will be replaced with enhanced versions
+3. Backup recommended before reimporting
+
+**Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.`,
               buttons: [{ text: "Got it", value: "ok" }]
             });
             return {
