@@ -4007,18 +4007,28 @@ ${cleanContent}`;
       async canRun(context) {
         try {
           const reportFolder = context.plugin.settings.reportFolder;
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Looking for reports in ${reportFolder}`);
           const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
             (file) => file.path.startsWith(reportFolder) && file.name.includes("import_")
           );
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
+          reportFiles.forEach((file) => console.debug(`[NEXUS-DEBUG] Report file: ${file.path}`));
           for (const file of reportFiles.slice(0, 3)) {
             try {
               const content = await context.plugin.app.vault.read(file);
-              if (content.match(/\]\(\d{4}\/\d{2}\//)) {
+              console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Checking ${file.path} for old links`);
+              const oldLinkMatches = content.match(/\]\(\d{4}\/\d{2}\//g);
+              if (oldLinkMatches) {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${oldLinkMatches.length} old links in ${file.path}:`, oldLinkMatches);
                 return true;
+              } else {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found in ${file.path}`);
               }
             } catch (error) {
+              console.error(`[NEXUS-DEBUG] FixReportLinks.canRun: Error reading ${file.path}:`, error);
             }
           }
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found, returning false`);
           return false;
         } catch (error) {
           console.error(`FixReportLinks.canRun failed:`, error);
@@ -4037,18 +4047,29 @@ ${cleanContent}`;
           console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${reportFiles.length} report files`);
           for (const file of reportFiles) {
             try {
+              console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${file.path}`);
               const content = await context.plugin.app.vault.read(file);
               let updatedContent = content;
               let hasChanges = false;
               const linkPattern = /\]\((\d{4}\/\d{2}\/[^)]+\.md)\)/g;
+              const matches = content.match(linkPattern);
+              if (matches) {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks: Found ${matches.length} links to fix in ${file.path}:`, matches);
+              } else {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks: No links to fix in ${file.path}`);
+              }
               updatedContent = updatedContent.replace(linkPattern, (match, path) => {
                 hasChanges = true;
-                return `](chatgpt/${path})`;
+                const newLink = `](chatgpt/${path})`;
+                console.debug(`[NEXUS-DEBUG] FixReportLinks: Replacing ${match} with ${newLink}`);
+                return newLink;
               });
               if (hasChanges) {
                 await context.plugin.app.vault.modify(file, updatedContent);
                 fixedFiles++;
                 console.debug(`[NEXUS-DEBUG] Fixed conversation links in report: ${file.path}`);
+              } else {
+                console.debug(`[NEXUS-DEBUG] No changes needed for: ${file.path}`);
               }
             } catch (error) {
               errors++;
@@ -4073,19 +4094,26 @@ ${cleanContent}`;
       async verify(context) {
         try {
           const reportFolder = context.plugin.settings.reportFolder;
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Verifying reports in ${reportFolder}`);
           const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
             (file) => file.path.startsWith(reportFolder) && file.name.includes("import_")
           );
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Checking ${reportFiles.length} report files`);
           for (const file of reportFiles.slice(0, 5)) {
             try {
               const content = await context.plugin.app.vault.read(file);
-              if (content.match(/\]\(\d{4}\/\d{2}\//)) {
-                console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Found old links in ${file.path}`);
+              const oldLinks = content.match(/\]\(\d{4}\/\d{2}\//g);
+              if (oldLinks) {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Found ${oldLinks.length} remaining old links in ${file.path}:`, oldLinks);
                 return false;
+              } else {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: No old links found in ${file.path}`);
               }
             } catch (error) {
+              console.error(`[NEXUS-DEBUG] FixReportLinks.verify: Error reading ${file.path}:`, error);
             }
           }
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: All reports verified successfully`);
           return true;
         } catch (error) {
           console.error(`FixReportLinks.verify failed:`, error);
