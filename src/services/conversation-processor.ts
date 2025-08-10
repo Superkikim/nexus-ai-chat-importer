@@ -46,12 +46,15 @@ export class ConversationProcessor {
     /**
      * Process raw conversations (provider agnostic entry point)
      */
-    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false): Promise<ImportReport> {
-        // Detect provider from raw data structure
-        const provider = this.providerRegistry.detectProvider(rawConversations);
+    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false, forcedProvider?: string): Promise<ImportReport> {
+        // Use forced provider or detect from raw data structure
+        const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
 
         if (provider === 'unknown') {
-            importReport.addError("Unknown provider", `Could not detect conversation provider from data structure`);
+            const errorMsg = forcedProvider
+                ? `Forced provider '${forcedProvider}' is not available or registered`
+                : `Could not detect conversation provider from data structure`;
+            importReport.addError("Unknown provider", errorMsg);
             return importReport;
         }
 

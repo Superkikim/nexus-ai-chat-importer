@@ -53,7 +53,7 @@ export class ImportService {
         });
     }
 
-    async handleZipFile(file: File) {
+    async handleZipFile(file: File, forcedProvider?: string) {
         this.importReport = new ImportReport();
         const storage = this.plugin.getStorageService();
 
@@ -85,8 +85,8 @@ export class ImportService {
                 }
             }
 
-            const zip = await this.validateZipFile(file);
-            await this.processConversations(zip, file, isReprocess);
+            const zip = await this.validateZipFile(file, forcedProvider);
+            await this.processConversations(zip, file, isReprocess, forcedProvider);
             
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
@@ -107,30 +107,41 @@ export class ImportService {
         }
     }
 
-    private async validateZipFile(file: File): Promise<JSZip> {
+    private async validateZipFile(file: File, forcedProvider?: string): Promise<JSZip> {
         try {
             const zip = new JSZip();
             const content = await zip.loadAsync(file);
             const fileNames = Object.keys(content.files);
 
-            // Check for supported provider formats
-            const hasConversationsJson = fileNames.includes("conversations.json");
-            const hasUsersJson = fileNames.includes("users.json");
-            const hasProjectsJson = fileNames.includes("projects.json");
+            // If provider is forced, skip format validation
+            if (forcedProvider) {
+                // Basic validation: must have conversations.json
+                if (!fileNames.includes("conversations.json")) {
+                    throw new NexusAiChatImporterError(
+                        "Invalid ZIP structure",
+                        `Missing required file: conversations.json for ${forcedProvider} provider.`
+                    );
+                }
+            } else {
+                // Auto-detection mode (legacy behavior)
+                const hasConversationsJson = fileNames.includes("conversations.json");
+                const hasUsersJson = fileNames.includes("users.json");
+                const hasProjectsJson = fileNames.includes("projects.json");
 
-            // ChatGPT format: conversations.json only
-            const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
+                // ChatGPT format: conversations.json only
+                const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
 
-            // Claude format: conversations.json + users.json (projects.json optional for legacy)
-            const isClaudeFormat = hasConversationsJson && hasUsersJson;
+                // Claude format: conversations.json + users.json (projects.json optional for legacy)
+                const isClaudeFormat = hasConversationsJson && hasUsersJson;
 
-            if (!isChatGPTFormat && !isClaudeFormat) {
-                throw new NexusAiChatImporterError(
-                    "Invalid ZIP structure",
-                    "This ZIP file doesn't match any supported chat export format. " +
-                    "Expected either ChatGPT format (conversations.json) or " +
-                    "Claude format (conversations.json + users.json)."
-                );
+                if (!isChatGPTFormat && !isClaudeFormat) {
+                    throw new NexusAiChatImporterError(
+                        "Invalid ZIP structure",
+                        "This ZIP file doesn't match any supported chat export format. " +
+                        "Expected either ChatGPT format (conversations.json) or " +
+                        "Claude format (conversations.json + users.json)."
+                    );
+                }
             }
 
             return zip;
@@ -146,13 +157,13 @@ export class ImportService {
         }
     }
 
-    private async processConversations(zip: JSZip, file: File, isReprocess: boolean): Promise<void> {
+    private async processConversations(zip: JSZip, file: File, isReprocess: boolean, forcedProvider?: string): Promise<void> {
         try {
             // Extract raw conversation data (provider agnostic)
             const rawConversations = await this.extractRawConversationsFromZip(zip);
             
             // Process through conversation processor (handles provider detection/conversion)
-            const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess);
+            const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess, forcedProvider);
             this.importReport = report;
             this.importReport.addSummary(
                 file.name,

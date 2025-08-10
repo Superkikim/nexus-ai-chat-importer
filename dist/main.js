@@ -3679,7 +3679,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian15 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 
 // src/config/constants.ts
 var DEFAULT_SETTINGS = {
@@ -4041,9 +4041,9 @@ var CommandRegistry = class {
   registerCommands() {
     this.plugin.addCommand({
       id: "nexus-ai-chat-importer-select-zip",
-      name: "Select ZIP file to process",
+      name: "Import AI conversations",
       callback: () => {
-        this.plugin.getImportService().selectZipFile();
+        this.plugin.showProviderSelectionDialog();
       }
     });
   }
@@ -4552,10 +4552,11 @@ var ConversationProcessor = class {
   /**
    * Process raw conversations (provider agnostic entry point)
    */
-  async processRawConversations(rawConversations, importReport, zip, isReprocess = false) {
-    const provider = this.providerRegistry.detectProvider(rawConversations);
+  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider) {
+    const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
     if (provider === "unknown") {
-      importReport.addError("Unknown provider", `Could not detect conversation provider from data structure`);
+      const errorMsg = forcedProvider ? `Forced provider '${forcedProvider}' is not available or registered` : `Could not detect conversation provider from data structure`;
+      importReport.addError("Unknown provider", errorMsg);
       return importReport;
     }
     return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess);
@@ -7094,7 +7095,7 @@ var ImportService = class {
       return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
     });
   }
-  async handleZipFile(file) {
+  async handleZipFile(file, forcedProvider) {
     this.importReport = new ImportReport();
     const storage = this.plugin.getStorageService();
     try {
@@ -7120,8 +7121,8 @@ var ImportService = class {
           return;
         }
       }
-      const zip = await this.validateZipFile(file);
-      await this.processConversations(zip, file, isReprocess);
+      const zip = await this.validateZipFile(file, forcedProvider);
+      await this.processConversations(zip, file, isReprocess, forcedProvider);
       storage.addImportedArchive(fileHash, file.name);
       await this.plugin.saveSettings();
     } catch (error) {
@@ -7134,21 +7135,30 @@ var ImportService = class {
       );
     }
   }
-  async validateZipFile(file) {
+  async validateZipFile(file, forcedProvider) {
     try {
       const zip = new import_jszip.default();
       const content = await zip.loadAsync(file);
       const fileNames = Object.keys(content.files);
-      const hasConversationsJson = fileNames.includes("conversations.json");
-      const hasUsersJson = fileNames.includes("users.json");
-      const hasProjectsJson = fileNames.includes("projects.json");
-      const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
-      const isClaudeFormat = hasConversationsJson && hasUsersJson;
-      if (!isChatGPTFormat && !isClaudeFormat) {
-        throw new NexusAiChatImporterError(
-          "Invalid ZIP structure",
-          "This ZIP file doesn't match any supported chat export format. Expected either ChatGPT format (conversations.json) or Claude format (conversations.json + users.json)."
-        );
+      if (forcedProvider) {
+        if (!fileNames.includes("conversations.json")) {
+          throw new NexusAiChatImporterError(
+            "Invalid ZIP structure",
+            `Missing required file: conversations.json for ${forcedProvider} provider.`
+          );
+        }
+      } else {
+        const hasConversationsJson = fileNames.includes("conversations.json");
+        const hasUsersJson = fileNames.includes("users.json");
+        const hasProjectsJson = fileNames.includes("projects.json");
+        const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
+        const isClaudeFormat = hasConversationsJson && hasUsersJson;
+        if (!isChatGPTFormat && !isClaudeFormat) {
+          throw new NexusAiChatImporterError(
+            "Invalid ZIP structure",
+            "This ZIP file doesn't match any supported chat export format. Expected either ChatGPT format (conversations.json) or Claude format (conversations.json + users.json)."
+          );
+        }
       }
       return zip;
     } catch (error) {
@@ -7162,10 +7172,10 @@ var ImportService = class {
       }
     }
   }
-  async processConversations(zip, file, isReprocess) {
+  async processConversations(zip, file, isReprocess, forcedProvider) {
     try {
       const rawConversations = await this.extractRawConversationsFromZip(zip);
-      const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess);
+      const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess, forcedProvider);
       this.importReport = report;
       this.importReport.addSummary(
         file.name,
@@ -8319,7 +8329,77 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 
 // src/main.ts
 init_logger();
-var NexusAiChatImporterPlugin = class extends import_obsidian15.Plugin {
+
+// src/dialogs/provider-selection-dialog.ts
+var import_obsidian15 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian15.Modal {
+  constructor(app, providerRegistry, onProviderSelected) {
+    super(app);
+    this.selectedProvider = null;
+    this.onProviderSelected = onProviderSelected;
+    this.providers = this.getAvailableProviders(providerRegistry);
+  }
+  getAvailableProviders(registry) {
+    const providers = [];
+    if (registry.getAdapter("chatgpt")) {
+      providers.push({
+        id: "chatgpt",
+        name: "ChatGPT",
+        description: "OpenAI ChatGPT conversation exports",
+        fileFormats: ["conversations.json only"]
+      });
+    }
+    if (registry.getAdapter("claude")) {
+      providers.push({
+        id: "claude",
+        name: "Claude",
+        description: "Anthropic Claude conversation exports",
+        fileFormats: ["conversations.json + users.json", "projects.json (optional)"]
+      });
+    }
+    return providers;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: "Select AI Provider" });
+    const description = contentEl.createEl("p");
+    description.innerHTML = `
+            Choose the AI provider that generated your conversation export file(s).<br>
+            This ensures proper processing and organization of your conversations.
+        `;
+    description.style.marginBottom = "20px";
+    description.style.color = "var(--text-muted)";
+    this.providers.forEach((provider) => {
+      new import_obsidian15.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+        button.setButtonText("Select").setCta().onClick(() => {
+          this.selectedProvider = provider.id;
+          this.close();
+          this.onProviderSelected(provider.id);
+        });
+      });
+    });
+    const buttonContainer = contentEl.createDiv();
+    buttonContainer.style.textAlign = "center";
+    buttonContainer.style.marginTop = "20px";
+    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelButton.style.marginRight = "10px";
+    cancelButton.onclick = () => this.close();
+  }
+  createProviderDescription(provider) {
+    const formats = provider.fileFormats.join(", ");
+    return `${provider.description}
+
+Expected files: ${formats}`;
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
+// src/main.ts
+var NexusAiChatImporterPlugin = class extends import_obsidian16.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -8339,7 +8419,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian15.Plugin {
       const ribbonIconEl = this.addRibbonIcon(
         "message-square-plus",
         "Nexus AI Chat Importer - Import new file",
-        () => this.importService.selectZipFile()
+        () => this.showProviderSelectionDialog()
       );
       ribbonIconEl.addClass("nexus-ai-chat-ribbon");
       await this.upgradeManager.checkAndPerformUpgrade();
@@ -8444,6 +8524,55 @@ var NexusAiChatImporterPlugin = class extends import_obsidian15.Plugin {
   }
   getUpgradeManager() {
     return this.upgradeManager;
+  }
+  /**
+   * Show provider selection dialog and then file selection
+   */
+  showProviderSelectionDialog() {
+    const providerRegistry = createProviderRegistry(this);
+    new ProviderSelectionDialog(
+      this.app,
+      providerRegistry,
+      (selectedProvider) => {
+        this.selectZipFilesForProvider(selectedProvider);
+      }
+    ).open();
+  }
+  /**
+   * Select ZIP files for a specific provider
+   */
+  selectZipFilesForProvider(provider) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".zip";
+    input.multiple = true;
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length > 0) {
+        const sortedFiles = this.sortFilesByTimestamp(files);
+        for (const file of sortedFiles) {
+          await this.importService.handleZipFile(file, provider);
+        }
+      }
+    };
+    input.click();
+  }
+  /**
+   * Sort files by timestamp (same logic as ImportService)
+   */
+  sortFilesByTimestamp(files) {
+    return files.sort((a, b) => {
+      const timestampRegex = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
+      const getTimestamp = (filename) => {
+        const match = filename.match(timestampRegex);
+        if (!match) {
+          this.logger.warn(`No timestamp found in filename: ${filename}`);
+          return "0";
+        }
+        return match[1];
+      };
+      return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
+    });
   }
 };
 /*! Bundled license information:
