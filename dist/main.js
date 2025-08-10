@@ -5726,19 +5726,37 @@ var ClaudeConverter = class {
     if (!messages || messages.length === 0) {
       return standardMessages;
     }
-    const versionCounters = /* @__PURE__ */ new Map();
-    const artifactSummaries = /* @__PURE__ */ new Map();
+    const allArtifacts = [];
+    for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
+      const message = messages[msgIndex];
+      if (message.content) {
+        for (let blockIndex = 0; blockIndex < message.content.length; blockIndex++) {
+          const block = message.content[blockIndex];
+          if (block.type === "tool_use" && block.name === "artifacts" && block.input) {
+            const command = block.input.command || "create";
+            const versionUuid = block.input.version_uuid;
+            if (command !== "view" && versionUuid) {
+              allArtifacts.push({
+                artifact: block.input,
+                messageIndex: msgIndex,
+                blockIndex
+              });
+            }
+          }
+        }
+      }
+    }
+    const artifactVersionMap = await this.processAllArtifacts(allArtifacts, conversationId, conversationTitle, conversationCreateTime);
     for (const message of messages) {
       if (!this.shouldIncludeMessage(message)) {
         continue;
       }
-      const { text, attachments } = await this.processContentBlocks(
+      const { text, attachments } = await this.processContentBlocksForDisplay(
         message.content,
+        artifactVersionMap,
         conversationId,
         conversationTitle,
-        conversationCreateTime,
-        versionCounters,
-        artifactSummaries
+        conversationCreateTime
       );
       const fileAttachments = this.processFileAttachments(message.files);
       const standardMessage = {
@@ -5760,6 +5778,107 @@ var ClaudeConverter = class {
       return true;
     }
     return false;
+  }
+  /**
+   * Process ALL artifacts from entire conversation and create files
+   */
+  static async processAllArtifacts(allArtifacts, conversationId, conversationTitle, conversationCreateTime) {
+    const artifactVersionMap = /* @__PURE__ */ new Map();
+    const versionCounters = /* @__PURE__ */ new Map();
+    const artifactContents = /* @__PURE__ */ new Map();
+    console.log(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
+    for (const { artifact } of allArtifacts) {
+      const artifactId = artifact.id || "unknown";
+      const command = artifact.command || "create";
+      const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
+      versionCounters.set(artifactId, currentVersion);
+      let finalContent = "";
+      if (command === "create" || command === "rewrite") {
+        finalContent = artifact.content || "";
+        artifactContents.set(artifactId, finalContent);
+      } else if (command === "update") {
+        const previousContent = artifactContents.get(artifactId) || "";
+        if (artifact.old_str && artifact.new_str) {
+          finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
+        } else if (artifact.content && artifact.content.length > 0) {
+          finalContent = artifact.content;
+        } else {
+          finalContent = previousContent;
+        }
+        artifactContents.set(artifactId, finalContent);
+      }
+      console.log(`Saving ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
+      try {
+        await this.saveSingleArtifactVersionWithContent(
+          artifactId,
+          artifact,
+          currentVersion,
+          finalContent,
+          conversationId,
+          conversationTitle,
+          conversationCreateTime
+        );
+        artifactVersionMap.set(artifact.version_uuid, {
+          versionNumber: currentVersion,
+          title: artifact.title || artifactId
+        });
+      } catch (error) {
+        console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+      }
+    }
+    return artifactVersionMap;
+  }
+  /**
+   * Process content blocks for display (with artifact links)
+   */
+  static async processContentBlocksForDisplay(contentBlocks, artifactVersionMap, conversationId, conversationTitle, conversationCreateTime) {
+    const textParts = [];
+    const attachments = [];
+    if (!contentBlocks || contentBlocks.length === 0) {
+      return { text: "", attachments: [] };
+    }
+    for (const block of contentBlocks) {
+      switch (block.type) {
+        case "text":
+          if (block.text) {
+            textParts.push(block.text);
+          }
+          break;
+        case "thinking":
+          break;
+        case "tool_use":
+          if (block.name === "artifacts" && block.input) {
+            const command = block.input.command || "create";
+            const versionUuid = block.input.version_uuid;
+            if (command === "view") {
+              break;
+            }
+            if (versionUuid && artifactVersionMap.has(versionUuid)) {
+              const versionInfo = artifactVersionMap.get(versionUuid);
+              const artifactId = block.input.id || "unknown";
+              const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+              const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
+              const specificLink = `>[!note] [[${versionFile}|Artifact: ${versionInfo.title} v${versionInfo.versionNumber}]]`;
+              textParts.push(specificLink);
+            }
+          } else if (block.name === "web_search") {
+            break;
+          } else if (block.name && block.input) {
+            const code = block.input.code || JSON.stringify(block.input, null, 2);
+            textParts.push(`**[Tool: ${block.name}]**
+\`\`\`
+${code}
+\`\`\``);
+          }
+          break;
+        case "tool_result":
+          break;
+      }
+    }
+    return {
+      text: textParts.join("\n\n"),
+      attachments
+    };
   }
   static async processContentBlocks(contentBlocks, conversationId, conversationTitle, conversationCreateTime, versionCounters, artifactSummaries) {
     const textParts = [];
