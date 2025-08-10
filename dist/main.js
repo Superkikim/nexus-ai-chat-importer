@@ -4944,7 +4944,8 @@ var ChatGPTConverter = class {
     const messages = [];
     const dallePrompts = /* @__PURE__ */ new Map();
     const conversationId = chat.id;
-    for (const messageObj of Object.values(chat.mapping)) {
+    const mappingValues = Object.values(chat.mapping);
+    for (const messageObj of mappingValues) {
       const message = messageObj == null ? void 0 : messageObj.message;
       if (!message || ((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
         continue;
@@ -4962,7 +4963,7 @@ var ChatGPTConverter = class {
         }
       }
     }
-    for (const messageObj of Object.values(chat.mapping)) {
+    for (const messageObj of mappingValues) {
       const message = messageObj == null ? void 0 : messageObj.message;
       if (!message)
         continue;
@@ -4975,6 +4976,20 @@ var ChatGPTConverter = class {
       } else if (this.shouldIncludeMessage(message)) {
         messages.push(this.convertMessage(message, conversationId));
       }
+    }
+    if (messages.length <= 1)
+      return messages;
+    if (messages.length < 50) {
+      for (let i = 1; i < messages.length; i++) {
+        const current = messages[i];
+        let j = i - 1;
+        while (j >= 0 && messages[j].timestamp > current.timestamp) {
+          messages[j + 1] = messages[j];
+          j--;
+        }
+        messages[j + 1] = current;
+      }
+      return messages;
     }
     return messages.sort((a, b) => a.timestamp - b.timestamp);
   }
@@ -5181,17 +5196,43 @@ ${codeContent}
    * Clean ChatGPT artifacts, citations, and control characters - SMART LINKING
    */
   static cleanChatGPTArtifacts(text, conversationId) {
+    if (!text || typeof text !== "string")
+      return "";
     const chatUrl = conversationId ? `https://chat.openai.com/c/${conversationId}` : "https://chat.openai.com";
-    return text.replace(/📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g, `\u{1F4C4} [$1](${chatUrl}) *(visit original conversation to download)*`).replace(/📄 ([^-\n]+) - File not available in archive/g, `\u{1F4C4} [$1](${chatUrl}) *(visit original conversation to download)*`).replace(/\[([^\]]+)\]\(sandbox:\/[^)]+\)/g, `[$1](${chatUrl}) *(visit original conversation to download)*`).replace(/([^-\n]+) - File not available in archive\. Visit the original conversation to access it/g, `[$1](${chatUrl}) *(visit original conversation to download)*`).replace(/cite[a-zA-Z0-9_\-]+/g, "").replace(/link[a-zA-Z0-9_\-]+/g, "").replace(/turn\d+search\d+/g, "").replace(/[\uE000-\uF8FF]/g, "").replace(/ {2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+    let cleanText = text;
+    for (const { pattern, replacement } of this.CLEANUP_PATTERNS) {
+      cleanText = cleanText.replace(pattern, replacement(chatUrl));
+    }
+    return cleanText.trim();
   }
 };
+// Pre-compiled regex patterns for performance
+ChatGPTConverter.CLEANUP_PATTERNS = [
+  // SMART: Replace sandbox links with actual links to original conversation
+  { pattern: /📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g, replacement: (chatUrl) => `\u{1F4C4} [$1](${chatUrl}) *(visit original conversation to download)*` },
+  { pattern: /📄 ([^-\n]+) - File not available in archive/g, replacement: (chatUrl) => `\u{1F4C4} [$1](${chatUrl}) *(visit original conversation to download)*` },
+  { pattern: /\[([^\]]+)\]\(sandbox:\/[^)]+\)/g, replacement: (chatUrl) => `[$1](${chatUrl}) *(visit original conversation to download)*` },
+  { pattern: /([^-\n]+) - File not available in archive\. Visit the original conversation to access it/g, replacement: (chatUrl) => `[$1](${chatUrl}) *(visit original conversation to download)*` },
+  // Remove patterns (static replacements)
+  { pattern: /cite[a-zA-Z0-9_\-]+/g, replacement: () => "" },
+  { pattern: /link[a-zA-Z0-9_\-]+/g, replacement: () => "" },
+  { pattern: /turn\d+search\d+/g, replacement: () => "" },
+  { pattern: /[\uE000-\uF8FF]/g, replacement: () => "" },
+  // Unicode control characters
+  { pattern: / {2,}/g, replacement: () => " " },
+  // Multiple spaces
+  { pattern: /\n{3,}/g, replacement: () => "\n\n" }
+  // Multiple newlines
+];
 
 // src/providers/chatgpt/chatgpt-attachment-extractor.ts
 init_utils();
 var ChatGPTAttachmentExtractor = class {
+  // Cache for ZIP file lookups
   constructor(plugin, logger4) {
     this.plugin = plugin;
     this.logger = logger4;
+    this.zipFileCache = /* @__PURE__ */ new Map();
   }
   /**
    * Extract and save ChatGPT attachments using "best effort" strategy
@@ -5356,22 +5397,25 @@ var ChatGPTAttachmentExtractor = class {
     return finalPath;
   }
   /**
-   * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH
+   * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH + CACHING
    */
   async findChatGPTFileById(zip, attachment) {
     if (!attachment.fileId) {
       this.logger.warn("No fileId provided for attachment:", attachment.fileName);
       return null;
     }
+    const cacheKey = `${attachment.fileId}_${attachment.fileName}`;
+    if (this.zipFileCache.has(cacheKey)) {
+      return this.zipFileCache.get(cacheKey);
+    }
     let zipFile = zip.file(attachment.fileName);
     if (zipFile) {
+      this.zipFileCache.set(cacheKey, zipFile);
       return zipFile;
     }
     const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
-    if (foundFile) {
-      return foundFile;
-    }
-    return null;
+    this.zipFileCache.set(cacheKey, foundFile);
+    return foundFile;
   }
   /**
    * Search entire ZIP for file by exact ID
@@ -5431,6 +5475,12 @@ var ChatGPTAttachmentExtractor = class {
   sanitizeFileName(fileName) {
     let cleanName = fileName.replace(/[<>:"\/\\|?*]/g, "_").replace(/\s+/g, "_").trim();
     return cleanName;
+  }
+  /**
+   * Clear ZIP file cache (call between different ZIP files)
+   */
+  clearCache() {
+    this.zipFileCache.clear();
   }
   /**
    * Get attachment processing statistics

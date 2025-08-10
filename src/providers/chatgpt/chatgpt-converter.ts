@@ -60,8 +60,11 @@ export class ChatGPTConverter {
         const dallePrompts = new Map<string, string>(); // Map tool message ID to prompt
         const conversationId = chat.id; // Pass conversation ID for smart linking
         
-        // PHASE 1: Extract DALL-E prompts from JSON messages
-        for (const messageObj of Object.values(chat.mapping)) {
+        // SINGLE PASS: Extract prompts and process messages in one go
+        const mappingValues = Object.values(chat.mapping); // Cache the values array
+
+        // First pass: Extract DALL-E prompts (quick scan)
+        for (const messageObj of mappingValues) {
             const message = messageObj?.message;
             if (!message || message.author?.role !== "assistant") continue;
 
@@ -73,7 +76,7 @@ export class ChatGPTConverter {
                     const children = messageObj.children || [];
                     for (const childId of children) {
                         const childObj = chat.mapping[childId];
-                        if (childObj?.message?.author?.role === "tool" && 
+                        if (childObj?.message?.author?.role === "tool" &&
                             this.hasRealDalleImage(childObj.message)) {
                             dallePrompts.set(childId, prompt);
                             break;
@@ -83,8 +86,8 @@ export class ChatGPTConverter {
             }
         }
 
-        // PHASE 2: Process messages with prompt association
-        for (const messageObj of Object.values(chat.mapping)) {
+        // Second pass: Process all messages (reuse cached array)
+        for (const messageObj of mappingValues) {
             const message = messageObj?.message;
             if (!message) continue;
 
@@ -95,14 +98,31 @@ export class ChatGPTConverter {
                 if (dalleMessage) {
                     messages.push(dalleMessage);
                 }
-            } 
+            }
             // Handle regular messages (but skip DALL-E JSON prompts)
             else if (this.shouldIncludeMessage(message)) {
                 messages.push(this.convertMessage(message, conversationId));
             }
         }
         
-        // Sort by timestamp to maintain order
+        // Sort by timestamp to maintain order (optimized for mostly-sorted data)
+        if (messages.length <= 1) return messages;
+
+        // Use insertion sort for small arrays or mostly sorted data (common case)
+        if (messages.length < 50) {
+            for (let i = 1; i < messages.length; i++) {
+                const current = messages[i];
+                let j = i - 1;
+                while (j >= 0 && messages[j].timestamp > current.timestamp) {
+                    messages[j + 1] = messages[j];
+                    j--;
+                }
+                messages[j + 1] = current;
+            }
+            return messages;
+        }
+
+        // Use native sort for larger arrays
         return messages.sort((a, b) => a.timestamp - b.timestamp);
     }
 
@@ -377,35 +397,37 @@ export class ChatGPTConverter {
         return contentParts.join("\n");
     }
 
+    // Pre-compiled regex patterns for performance
+    private static readonly CLEANUP_PATTERNS = [
+        // SMART: Replace sandbox links with actual links to original conversation
+        { pattern: /📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g, replacement: (chatUrl: string) => `📄 [$1](${chatUrl}) *(visit original conversation to download)*` },
+        { pattern: /📄 ([^-\n]+) - File not available in archive/g, replacement: (chatUrl: string) => `📄 [$1](${chatUrl}) *(visit original conversation to download)*` },
+        { pattern: /\[([^\]]+)\]\(sandbox:\/[^)]+\)/g, replacement: (chatUrl: string) => `[$1](${chatUrl}) *(visit original conversation to download)*` },
+        { pattern: /([^-\n]+) - File not available in archive\. Visit the original conversation to access it/g, replacement: (chatUrl: string) => `[$1](${chatUrl}) *(visit original conversation to download)*` },
+        // Remove patterns (static replacements)
+        { pattern: /cite[a-zA-Z0-9_\-]+/g, replacement: () => "" },
+        { pattern: /link[a-zA-Z0-9_\-]+/g, replacement: () => "" },
+        { pattern: /turn\d+search\d+/g, replacement: () => "" },
+        { pattern: /[\uE000-\uF8FF]/g, replacement: () => "" }, // Unicode control characters
+        { pattern: / {2,}/g, replacement: () => " " }, // Multiple spaces
+        { pattern: /\n{3,}/g, replacement: () => "\n\n" } // Multiple newlines
+    ];
+
     /**
      * Clean ChatGPT artifacts, citations, and control characters - SMART LINKING
      */
     private static cleanChatGPTArtifacts(text: string, conversationId?: string): string {
+        if (!text || typeof text !== 'string') return '';
+
         const chatUrl = conversationId ? `https://chat.openai.com/c/${conversationId}` : "https://chat.openai.com";
-        
-        return text
-            // SMART: Replace sandbox links with actual links to original conversation
-            // Pattern 1: 📄 [filename](sandbox://...)
-            .replace(/📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g, `📄 [$1](${chatUrl}) *(visit original conversation to download)*`)
-            // Pattern 2: 📄 Text - File not available (already processed text)
-            .replace(/📄 ([^-\n]+) - File not available in archive/g, `📄 [$1](${chatUrl}) *(visit original conversation to download)*`)
-            // Pattern 3: [filename](sandbox://...)
-            .replace(/\[([^\]]+)\]\(sandbox:\/[^)]+\)/g, `[$1](${chatUrl}) *(visit original conversation to download)*`)
-            // Pattern 4: Text - File not available in archive. Visit... (already processed text)
-            .replace(/([^-\n]+) - File not available in archive\. Visit the original conversation to access it/g, `[$1](${chatUrl}) *(visit original conversation to download)*`)
-            // Remove citation patterns: cite + identifier
-            .replace(/cite[a-zA-Z0-9_\-]+/g, "")
-            // Remove link patterns: link + identifier  
-            .replace(/link[a-zA-Z0-9_\-]+/g, "")
-            // Remove turn patterns: turn + number + search + number
-            .replace(/turn\d+search\d+/g, "")
-            // Remove any remaining Unicode control characters (Private Use Area E000-F8FF)
-            .replace(/[\uE000-\uF8FF]/g, "")
-            // Clean up multiple consecutive spaces
-            .replace(/ {2,}/g, " ")
-            // Clean up multiple consecutive newlines
-            .replace(/\n{3,}/g, "\n\n")
-            // Trim whitespace
-            .trim();
+
+        let cleanText = text;
+
+        // Apply all cleanup patterns efficiently
+        for (const { pattern, replacement } of this.CLEANUP_PATTERNS) {
+            cleanText = cleanText.replace(pattern, replacement(chatUrl));
+        }
+
+        return cleanText.trim();
     }
 }
