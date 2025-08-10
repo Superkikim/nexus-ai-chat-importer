@@ -4006,20 +4006,40 @@ ${cleanContent}`;
       }
       async canRun(context) {
         try {
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: STARTING`);
           const reportFolder = context.plugin.settings.reportFolder;
           console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Looking for reports in ${reportFolder}`);
-          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
-            (file) => file.path.startsWith(reportFolder) && file.name.includes("import_")
-          );
+          const reportFolderExists = await context.plugin.app.vault.adapter.exists(reportFolder);
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Report folder exists: ${reportFolderExists}`);
+          if (!reportFolderExists) {
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Report folder doesn't exist, returning false`);
+            return false;
+          }
+          const allMarkdownFiles = context.plugin.app.vault.getMarkdownFiles();
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Total markdown files in vault: ${allMarkdownFiles.length}`);
+          const reportFiles = allMarkdownFiles.filter((file) => {
+            const startsWithReportFolder = file.path.startsWith(reportFolder);
+            const includesImport = file.name.includes("import_");
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: File ${file.path} - startsWithReportFolder: ${startsWithReportFolder}, includesImport: ${includesImport}`);
+            return startsWithReportFolder && includesImport;
+          });
           console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
           reportFiles.forEach((file) => console.debug(`[NEXUS-DEBUG] Report file: ${file.path}`));
+          if (reportFiles.length === 0) {
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No report files found, returning false`);
+            return false;
+          }
           for (const file of reportFiles.slice(0, 3)) {
             try {
+              console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Reading content of ${file.path}`);
               const content = await context.plugin.app.vault.read(file);
-              console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Checking ${file.path} for old links`);
+              console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Content length: ${content.length} chars`);
+              console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: First 200 chars:`, content.substring(0, 200));
               const oldLinkMatches = content.match(/\[\[\d{4}\/\d{2}\//g);
+              console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Regex result:`, oldLinkMatches);
               if (oldLinkMatches) {
                 console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${oldLinkMatches.length} old links in ${file.path}:`, oldLinkMatches);
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: RETURNING TRUE`);
                 return true;
               } else {
                 console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found in ${file.path}`);
@@ -4028,10 +4048,10 @@ ${cleanContent}`;
               console.error(`[NEXUS-DEBUG] FixReportLinks.canRun: Error reading ${file.path}:`, error);
             }
           }
-          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found, returning false`);
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found in any file, returning false`);
           return false;
         } catch (error) {
-          console.error(`FixReportLinks.canRun failed:`, error);
+          console.error(`[NEXUS-DEBUG] FixReportLinks.canRun failed:`, error);
           return false;
         }
       }
@@ -4138,9 +4158,9 @@ ${cleanContent}`;
         this.contentEl.empty();
       }
       async createForm() {
-        let message = `\u{1F389} **Upgrade to v1.2.0 successful!**
+        let message = `\u{1F389} **Upgrade to v1.2.0**
 
-Your conversations have been reorganized with provider structure and modern callouts.
+Your conversations will be reorganized with provider structure and modern callouts.
 
 **\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
 
