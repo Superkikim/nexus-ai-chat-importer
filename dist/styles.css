@@ -41,78 +41,21 @@
     margin-top: 0.25em;
 }
 
-/* Beautiful Upgrade Dialog Styling (inspired by Excalidraw) */
-.nexus-upgrade-dialog {
-    max-width: 600px;
-    width: 90vw;
+/* Nexus Upgrade Modal Styling (like Excalidraw) */
+.nexus-upgrade-modal .modal-content {
+    padding-right: 5px;
+    margin-right: -5px;
+    user-select: text;
 }
 
-.nexus-upgrade-container {
-    padding: 20px;
-    font-family: var(--font-interface);
-}
-
-.nexus-upgrade-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.nexus-upgrade-icon {
-    font-size: 2em;
-    margin-right: 15px;
-    line-height: 1;
-}
-
-.nexus-upgrade-title {
-    font-size: 1.5em;
-    font-weight: 600;
-    color: var(--text-normal);
-    margin: 0;
-}
-
-.nexus-upgrade-content {
-    margin-bottom: 25px;
-    line-height: 1.6;
-    color: var(--text-normal);
-}
-
-.nexus-upgrade-content strong {
-    color: var(--text-accent);
-    font-weight: 600;
-}
-
-.nexus-upgrade-content ul {
-    margin: 10px 0;
-    padding-left: 20px;
-}
-
-.nexus-upgrade-content li {
-    margin: 5px 0;
-}
-
-.nexus-support-section {
-    background: var(--background-secondary);
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-    text-align: center;
-    border: 1px solid var(--background-modifier-border);
-}
-
-.nexus-support-text {
-    margin-bottom: 15px;
-    color: var(--text-muted);
-    font-style: italic;
-    line-height: 1.5;
+.nexus-upgrade-modal .modal {
+    max-height: 80%;
+    max-width: 42em;
 }
 
 .nexus-coffee-div {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    text-align: center;
+    margin-bottom: 10px;
 }
 
 .nexus-coffee-div a {
@@ -127,9 +70,6 @@
     display: flex;
     gap: 12px;
     justify-content: flex-end;
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1px solid var(--background-modifier-border);
 }
 
 .nexus-btn-primary {

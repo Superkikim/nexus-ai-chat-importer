@@ -1,7 +1,7 @@
 // src/upgrade/versions/upgrade-1.2.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
-import { TFile } from "obsidian";
-import { showUpgradeDialog } from "../../dialogs";
+import { TFile, Modal, MarkdownRenderer } from "obsidian";
+import NexusAiChatImporterPlugin from "../../main";
 
 /**
  * Convert indentations to callouts (automatic operation)
@@ -300,6 +300,97 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 }
 
 /**
+ * Beautiful upgrade modal (like Excalidraw)
+ */
+class NexusUpgradeModal extends Modal {
+    private plugin: NexusAiChatImporterPlugin;
+    private version: string;
+    private resolve: (value: string) => void;
+
+    constructor(app: App, plugin: NexusAiChatImporterPlugin, version: string, resolve: (value: string) => void) {
+        super(app);
+        this.plugin = plugin;
+        this.version = version;
+        this.resolve = resolve;
+    }
+
+    onOpen(): void {
+        const { containerEl, contentEl, titleEl } = this;
+
+        // Add Excalidraw-style CSS class
+        containerEl.classList.add('nexus-upgrade-modal');
+
+        // Set title like Excalidraw
+        titleEl.setText(`🚀 Nexus AI Chat Importer ${this.version}`);
+
+        this.createForm();
+    }
+
+    async onClose() {
+        this.contentEl.empty();
+    }
+
+    async createForm() {
+        const message = `🎉 **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
+
+**✅ What was migrated:**
+• Modern callout design (user/assistant messages)
+• Improved visual presentation
+• Better Reading View experience
+
+**⚠️ What was NOT migrated:**
+• Missing attachment links and references
+• Enhanced chronological ordering
+• DALL-E prompt improvements
+• Performance optimizations
+
+**💡 To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.
+
+---
+
+I build this plugin in my free time, as a labor of love. If you find it valuable, say THANK YOU or…
+
+<div class="nexus-coffee-div"><a href="https://ko-fi.com/superkikim" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45"></a></div>`;
+
+        // Render markdown content like Excalidraw
+        await MarkdownRenderer.render(
+            this.app,
+            message,
+            this.contentEl,
+            "",
+            this.plugin,
+        );
+
+        // Add buttons like Excalidraw
+        this.contentEl.createEl("div", { cls: "nexus-upgrade-buttons" }, (el) => {
+            el.style.textAlign = "right";
+            el.style.marginTop = "20px";
+            el.style.paddingTop = "15px";
+            el.style.borderTop = "1px solid var(--background-modifier-border)";
+
+            const btnLearn = el.createEl("button", {
+                text: "Learn About Full Reimport",
+                cls: "nexus-btn-secondary"
+            });
+            btnLearn.style.marginRight = "10px";
+            btnLearn.onclick = () => {
+                this.close();
+                this.resolve("learn");
+            };
+
+            const btnKeep = el.createEl("button", {
+                text: "Keep Current (Recommended)",
+                cls: "nexus-btn-primary"
+            });
+            btnKeep.onclick = () => {
+                this.close();
+                this.resolve("keep");
+            };
+        });
+    }
+}
+
+/**
  * Offer full reimport for complete v1.2.0 features (manual operation)
  */
 class OfferReimportOperation extends UpgradeOperation {
@@ -315,33 +406,12 @@ class OfferReimportOperation extends UpgradeOperation {
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            const result = await showUpgradeDialog(context.plugin.app, {
-                title: "Migration to v1.2.0 Complete!",
-                message: `🎉 **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
-
-**✅ What was migrated:**
-• Modern callout design (user/assistant messages)
-• Improved visual presentation
-• Better Reading View experience
-
-**⚠️ What was NOT migrated:**
-• Missing attachment links and references
-• Enhanced chronological ordering
-• DALL-E prompt improvements
-• Performance optimizations
-
-**💡 To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.`,
-                buttons: [
-                    { text: "Keep Current (Recommended)", value: "keep", primary: true },
-                    { text: "Learn About Full Reimport", value: "learn" },
-                    { text: "Cancel", value: "cancel" }
-                ]
+            const result = await new Promise<string>((resolve) => {
+                new NexusUpgradeModal(context.plugin.app, context.plugin, "1.2.0", resolve).open();
             });
 
             if (result === "learn") {
-                await showUpgradeDialog(context.plugin.app, {
-                    title: "About Full Reimport",
-                    message: `**Why Reimport Instead of Migration?**
+                const learnMessage = `**Why Reimport Instead of Migration?**
 
 **Attachments & Links:** Original ZIP files contain attachment metadata that can't be recreated from existing notes. Migration only updates presentation.
 
@@ -357,8 +427,44 @@ class OfferReimportOperation extends UpgradeOperation {
 2. Existing conversations will be replaced with enhanced versions
 3. Backup recommended before reimporting
 
-**Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.`,
-                    buttons: [{ text: "Got it", value: "ok", primary: true }]
+**Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.
+
+---
+
+<div class="nexus-coffee-div"><a href="https://ko-fi.com/superkikim" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45"></a></div>`;
+
+                await new Promise<void>((resolve) => {
+                    const modal = new Modal(context.plugin.app);
+                    modal.containerEl.classList.add('nexus-upgrade-modal');
+                    modal.titleEl.setText("About Full Reimport");
+
+                    modal.onOpen = async () => {
+                        await MarkdownRenderer.render(
+                            context.plugin.app,
+                            learnMessage,
+                            modal.contentEl,
+                            "",
+                            context.plugin,
+                        );
+
+                        modal.contentEl.createEl("div", { cls: "nexus-upgrade-buttons" }, (el) => {
+                            el.style.textAlign = "right";
+                            el.style.marginTop = "20px";
+                            el.style.paddingTop = "15px";
+                            el.style.borderTop = "1px solid var(--background-modifier-border)";
+
+                            const btnOk = el.createEl("button", {
+                                text: "Got it",
+                                cls: "nexus-btn-primary"
+                            });
+                            btnOk.onclick = () => {
+                                modal.close();
+                                resolve();
+                            };
+                        });
+                    };
+
+                    modal.open();
                 });
 
                 return {
