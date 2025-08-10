@@ -130,56 +130,87 @@ export class ClaudeConverter {
             }
         }
 
-        // Second pass: save artifacts chronologically with proper versioning
+        // Second pass: collect ALL artifacts first, then process them properly
         // Use provided counters or create new ones (for backward compatibility)
         if (!versionCounters) versionCounters = new Map<string, number>();
         if (!artifactSummaries) artifactSummaries = new Map<string, any>();
 
-        // Process all artifacts in chronological order
+        // Collect all artifacts from all content blocks
+        const allArtifacts: any[] = [];
         for (const block of contentBlocks) {
             if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
                 const artifactId = block.input.id || 'unknown';
-                const content = block.input.content || '';
                 const command = block.input.command || 'create';
                 const versionUuid = block.input.version_uuid;
 
-                // Skip empty updates and view commands
-                if ((command === 'update' && content.length === 0) || command === 'view') {
+                // Skip view commands only
+                if (command === 'view') {
                     continue;
                 }
 
-                // Only process significant versions
-                const isSignificant = command === 'create' ||
-                                    command === 'rewrite' ||
-                                    (command === 'update' && content.length > 0);
-
-                if (isSignificant && versionUuid) {
-                    // Increment version number for this artifact ID
-                    const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
-                    versionCounters.set(artifactId, currentVersion);
-
-                    console.log(`Saving ${artifactId} v${currentVersion} (${content.length} chars)`);
-
-                    try {
-                        await this.saveSingleArtifactVersion(
-                            artifactId,
-                            block.input,
-                            currentVersion,
-                            conversationId,
-                            conversationTitle,
-                            conversationCreateTime
-                        );
-
-                        // Track for summary (update with latest version info)
-                        artifactSummaries.set(artifactId, {
-                            title: block.input.title || artifactId,
-                            totalVersions: currentVersion,
-                            latestVersion: currentVersion
-                        });
-                    } catch (error) {
-                        console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
-                    }
+                // Process ALL versions (including empty updates - they might have old_str/new_str)
+                if (versionUuid) {
+                    allArtifacts.push(block.input);
                 }
+            }
+        }
+
+        // Process artifacts by ID with cumulative content
+        const artifactContents = new Map<string, string>();
+
+        for (const artifact of allArtifacts) {
+            const artifactId = artifact.id || 'unknown';
+            const command = artifact.command || 'create';
+
+            // Increment version number for this artifact ID
+            const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
+            versionCounters.set(artifactId, currentVersion);
+
+            let finalContent = '';
+
+            if (command === 'create' || command === 'rewrite') {
+                // Complete content provided
+                finalContent = artifact.content || '';
+                artifactContents.set(artifactId, finalContent);
+            } else if (command === 'update') {
+                // Apply update to previous content
+                const previousContent = artifactContents.get(artifactId) || '';
+
+                if (artifact.old_str && artifact.new_str) {
+                    // sed-like replacement
+                    finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
+                } else if (artifact.content && artifact.content.length > 0) {
+                    // Complete updated content provided
+                    finalContent = artifact.content;
+                } else {
+                    // Empty update - keep previous content
+                    finalContent = previousContent;
+                }
+
+                artifactContents.set(artifactId, finalContent);
+            }
+
+            console.log(`Saving ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
+
+            try {
+                await this.saveSingleArtifactVersionWithContent(
+                    artifactId,
+                    artifact,
+                    currentVersion,
+                    finalContent,
+                    conversationId,
+                    conversationTitle,
+                    conversationCreateTime
+                );
+
+                // Track for summary (update with latest version info)
+                artifactSummaries.set(artifactId, {
+                    title: artifact.title || artifactId,
+                    totalVersions: currentVersion,
+                    latestVersion: currentVersion
+                });
+            } catch (error) {
+                console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
             }
         }
 
@@ -275,7 +306,53 @@ export class ClaudeConverter {
     }
 
     /**
-     * Save a single artifact version
+     * Save a single artifact version with computed content
+     */
+    private static async saveSingleArtifactVersionWithContent(
+        artifactId: string,
+        artifactData: any,
+        versionNumber: number,
+        finalContent: string,
+        conversationId?: string,
+        conversationTitle?: string,
+        conversationCreateTime?: number
+    ): Promise<void> {
+        if (!this.plugin) {
+            throw new Error('Plugin not available');
+        }
+
+        const { ensureFolderExists } = await import("../../utils");
+
+        // Create conversation-specific artifact folder
+        const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+        const folderResult = await ensureFolderExists(conversationFolder, this.plugin.app.vault);
+        if (!folderResult.success) {
+            throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
+        }
+
+        const fileName = `${artifactId}_v${versionNumber}.md`;
+        const filePath = `${conversationFolder}/${fileName}`;
+
+        // Check if already exists
+        const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
+        if (shouldSkip) {
+            console.log(`Skipping existing ${fileName}`);
+            return;
+        }
+
+        await this.saveIndividualArtifactVersion(
+            artifactData,
+            filePath,
+            versionNumber,
+            finalContent,
+            conversationId,
+            conversationTitle,
+            conversationCreateTime
+        );
+    }
+
+    /**
+     * Save a single artifact version (legacy method)
      */
     private static async saveSingleArtifactVersion(
         artifactId: string,
