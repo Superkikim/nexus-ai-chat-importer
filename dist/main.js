@@ -3676,6 +3676,7 @@ ${cleanedFrontmatter}
 // src/upgrade/versions/upgrade-1.2.0.ts
 var upgrade_1_2_0_exports = {};
 __export(upgrade_1_2_0_exports, {
+  NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
 var import_obsidian14, ConvertToCalloutsOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
@@ -3994,76 +3995,16 @@ I build this plugin in my free time, as a labor of love. If you find it valuable
       }
       async execute(context) {
         try {
-          const result = await new Promise((resolve) => {
-            new NexusUpgradeModal(context.plugin.app, context.plugin, "1.2.0", resolve).open();
-          });
-          if (result === "learn") {
-            const learnMessage = `**Why Reimport Instead of Migration?**
-
-**Attachments & Links:** Original ZIP files contain attachment metadata that can't be recreated from existing notes. Migration only updates presentation.
-
-**Full Reimport Benefits:**
-\u2022 \u{1F4CE} Missing attachment links with conversation URLs
-\u2022 \u23F0 Perfect chronological message ordering
-\u2022 \u{1F3A8} Enhanced DALL-E prompt callouts
-\u2022 \u26A1 Latest performance optimizations
-\u2022 \u{1F527} All v1.2.0 technical improvements
-
-**Process:**
-1. Use the plugin's import feature with your original ZIP files
-2. Existing conversations will be replaced with enhanced versions
-3. Backup recommended before reimporting
-
-**Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.
-
----
-
-<div class="nexus-coffee-div"><a href="https://ko-fi.com/superkikim" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45"></a></div>`;
-            await new Promise((resolve) => {
-              const modal = new import_obsidian14.Modal(context.plugin.app);
-              modal.containerEl.classList.add("nexus-upgrade-modal");
-              modal.titleEl.setText("About Full Reimport");
-              modal.onOpen = async () => {
-                await import_obsidian14.MarkdownRenderer.render(
-                  context.plugin.app,
-                  learnMessage,
-                  modal.contentEl,
-                  "",
-                  context.plugin
-                );
-                modal.contentEl.createEl("div", { cls: "nexus-upgrade-buttons" }, (el) => {
-                  el.style.textAlign = "right";
-                  el.style.marginTop = "20px";
-                  el.style.paddingTop = "15px";
-                  el.style.borderTop = "1px solid var(--background-modifier-border)";
-                  const btnOk = el.createEl("button", {
-                    text: "Got it",
-                    cls: "nexus-btn-primary"
-                  });
-                  btnOk.onclick = () => {
-                    modal.close();
-                    resolve();
-                  };
-                });
-              };
-              modal.open();
-            });
-            return {
-              success: true,
-              message: "Information provided about reimport options",
-              details: { action: "info_provided" }
-            };
-          }
           return {
             success: true,
-            message: result === "keep" ? "Keeping current conversations with callout improvements" : "Operation cancelled",
-            details: { action: result }
+            message: "Upgrade information provided to user",
+            details: { action: "info_displayed" }
           };
         } catch (error) {
           console.error(`OfferReimport.execute failed:`, error);
           return {
             success: false,
-            message: `Failed to show reimport dialog: ${error}`,
+            message: `Failed to complete reimport operation: ${error}`,
             details: { error: String(error) }
           };
         }
@@ -8796,15 +8737,22 @@ var IncrementalUpgradeManager = class {
         paragraphs.push("All systems are up to date. No operations required.");
       }
       if (upgradeChain.length > 0) {
-        await showDialog(
-          this.plugin.app,
-          "information",
-          `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
-          paragraphs,
-          this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : void 0,
-          { button1: "Proceed with Upgrade" }
-          // ← Opérations à faire
-        );
+        const isV120Upgrade = upgradeChain.some((upgrade) => upgrade.version === "1.2.0");
+        if (isV120Upgrade) {
+          const { NexusUpgradeModal: NexusUpgradeModal2 } = (init_upgrade_1_2_0(), __toCommonJS(upgrade_1_2_0_exports));
+          await new Promise((resolve) => {
+            new NexusUpgradeModal2(this.plugin.app, this.plugin, "1.2.0", () => resolve()).open();
+          });
+        } else {
+          await showDialog(
+            this.plugin.app,
+            "information",
+            `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
+            paragraphs,
+            this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : void 0,
+            { button1: "Proceed with Upgrade" }
+          );
+        }
       } else {
         await showDialog(
           this.plugin.app,
