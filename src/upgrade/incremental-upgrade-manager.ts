@@ -529,7 +529,7 @@ export class IncrementalUpgradeManager {
                     // Use beautiful upgrade modal for v1.2.0
                     const { NexusUpgradeModal } = require("./versions/upgrade-1.2.0");
                     await new Promise<void>((resolve) => {
-                        new NexusUpgradeModal(this.plugin.app, this.plugin, "1.2.0", () => resolve()).open();
+                        new NexusUpgradeModal(this.plugin.app, this.plugin, "1.2.0", resolve).open();
                     });
                 } else {
                     // Use standard dialog for other upgrades

@@ -3947,9 +3947,13 @@ ${cleanContent}`;
 
 ---
 
-I build this plugin in my free time, as a labor of love. If you find it valuable, say THANK YOU or\u2026
+## \u2615 Support My Work
 
-<div class="nexus-coffee-div"><a href="https://ko-fi.com/superkikim" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45"></a></div>`;
+I spend about $100/month for A.I. services, not counting my time and other expenses. If this plugin makes your life easier, consider supporting its development:
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+
+*Your support helps me continue building useful tools and explore new ways of making your life easier.*`;
         await import_obsidian14.MarkdownRenderer.render(
           this.app,
           message,
@@ -3962,22 +3966,13 @@ I build this plugin in my free time, as a labor of love. If you find it valuable
           el.style.marginTop = "20px";
           el.style.paddingTop = "15px";
           el.style.borderTop = "1px solid var(--background-modifier-border)";
-          const btnLearn = el.createEl("button", {
-            text: "Learn About Full Reimport",
-            cls: "nexus-btn-secondary"
-          });
-          btnLearn.style.marginRight = "10px";
-          btnLearn.onclick = () => {
-            this.close();
-            this.resolve("learn");
-          };
-          const btnKeep = el.createEl("button", {
-            text: "Keep Current (Recommended)",
+          const btnOk = el.createEl("button", {
+            text: "Got it, thanks!",
             cls: "nexus-btn-primary"
           });
-          btnKeep.onclick = () => {
+          btnOk.onclick = () => {
             this.close();
-            this.resolve("keep");
+            this.resolve("ok");
           };
         });
       }
@@ -8741,7 +8736,7 @@ var IncrementalUpgradeManager = class {
         if (isV120Upgrade) {
           const { NexusUpgradeModal: NexusUpgradeModal2 } = (init_upgrade_1_2_0(), __toCommonJS(upgrade_1_2_0_exports));
           await new Promise((resolve) => {
-            new NexusUpgradeModal2(this.plugin.app, this.plugin, "1.2.0", () => resolve()).open();
+            new NexusUpgradeModal2(this.plugin.app, this.plugin, "1.2.0", resolve).open();
           });
         } else {
           await showDialog(
