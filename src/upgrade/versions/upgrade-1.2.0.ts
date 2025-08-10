@@ -300,6 +300,155 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 }
 
 /**
+ * Move attachments and reports to provider structure (automatic operation)
+ */
+class MoveAttachmentsAndReportsOperation extends UpgradeOperation {
+    readonly id = "move-attachments-reports";
+    readonly name = "Organize Attachments & Reports";
+    readonly description = "Move existing attachments and reports to ChatGPT provider structure";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        try {
+            const attachmentFolder = context.plugin.settings.attachmentFolder;
+            const reportFolder = context.plugin.settings.reportFolder;
+
+            // Check for old attachment structure: Attachments/chatgpt/ → Attachments/ChatGPT/
+            const attachmentFiles = context.plugin.app.vault.getFiles().filter(file => {
+                return file.path.startsWith(attachmentFolder) &&
+                       file.path.includes('/chatgpt/') &&
+                       !file.path.includes('/ChatGPT/');
+            });
+
+            // Check for old report structure: Reports/chatgpt_import_*.md → Reports/ChatGPT/
+            const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file => {
+                return file.path.startsWith(reportFolder) &&
+                       (file.name.startsWith('chatgpt_import_') || file.name.includes('chatgpt')) &&
+                       !file.path.includes('/ChatGPT/');
+            });
+
+            return attachmentFiles.length > 0 || reportFiles.length > 0;
+        } catch (error) {
+            console.error(`MoveAttachmentsAndReports.canRun failed:`, error);
+            return false;
+        }
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        try {
+            console.debug(`[NEXUS-DEBUG] MoveAttachmentsAndReports.execute starting`);
+
+            const attachmentFolder = context.plugin.settings.attachmentFolder;
+            const reportFolder = context.plugin.settings.reportFolder;
+
+            let movedAttachments = 0;
+            let movedReports = 0;
+            let errors = 0;
+
+            // 1. Move attachments: Attachments/chatgpt/ → Attachments/ChatGPT/
+            const attachmentFiles = context.plugin.app.vault.getFiles().filter(file => {
+                return file.path.startsWith(attachmentFolder) &&
+                       file.path.includes('/chatgpt/') &&
+                       !file.path.includes('/ChatGPT/');
+            });
+
+            for (const file of attachmentFiles) {
+                try {
+                    const newPath = file.path.replace('/chatgpt/', '/ChatGPT/');
+
+                    // Ensure target directory exists
+                    const targetDir = newPath.substring(0, newPath.lastIndexOf('/'));
+                    await context.plugin.app.vault.adapter.mkdir(targetDir);
+
+                    // Move the file
+                    await context.plugin.app.vault.adapter.rename(file.path, newPath);
+                    movedAttachments++;
+
+                    console.debug(`[NEXUS-DEBUG] Moved attachment: ${file.path} → ${newPath}`);
+
+                } catch (error) {
+                    errors++;
+                    console.error(`[NEXUS-DEBUG] Error moving attachment ${file.path}:`, error);
+                }
+            }
+
+            // 2. Move reports: Reports/chatgpt_import_*.md → Reports/ChatGPT/
+            const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file => {
+                return file.path.startsWith(reportFolder) &&
+                       (file.name.startsWith('chatgpt_import_') || file.name.includes('chatgpt')) &&
+                       !file.path.includes('/ChatGPT/');
+            });
+
+            for (const file of reportFiles) {
+                try {
+                    // Create ChatGPT subfolder in reports
+                    const chatgptReportFolder = `${reportFolder}/ChatGPT`;
+                    await context.plugin.app.vault.adapter.mkdir(chatgptReportFolder);
+
+                    const newPath = `${chatgptReportFolder}/${file.name}`;
+
+                    // Move the file
+                    await context.plugin.app.vault.adapter.rename(file.path, newPath);
+                    movedReports++;
+
+                    console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} → ${newPath}`);
+
+                } catch (error) {
+                    errors++;
+                    console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+                }
+            }
+
+            console.debug(`[NEXUS-DEBUG] MoveAttachmentsAndReports: Completed - attachments:${movedAttachments}, reports:${movedReports}, errors:${errors}`);
+
+            return {
+                success: errors === 0,
+                message: `Attachments & reports organized: ${movedAttachments} attachments, ${movedReports} reports moved, ${errors} errors`,
+                details: { movedAttachments, movedReports, errors }
+            };
+
+        } catch (error) {
+            console.error(`[NEXUS-DEBUG] MoveAttachmentsAndReports.execute failed:`, error);
+            return {
+                success: false,
+                message: `Attachments & reports organization failed: ${error}`,
+                details: { error: String(error) }
+            };
+        }
+    }
+
+    async verify(context: UpgradeContext): Promise<boolean> {
+        try {
+            const attachmentFolder = context.plugin.settings.attachmentFolder;
+            const reportFolder = context.plugin.settings.reportFolder;
+
+            // Check that no old structure remains
+            const remainingOldAttachments = context.plugin.app.vault.getFiles().filter(file => {
+                return file.path.startsWith(attachmentFolder) &&
+                       file.path.includes('/chatgpt/') &&
+                       !file.path.includes('/ChatGPT/');
+            });
+
+            const remainingOldReports = context.plugin.app.vault.getMarkdownFiles().filter(file => {
+                return file.path.startsWith(reportFolder) &&
+                       (file.name.startsWith('chatgpt_import_') || file.name.includes('chatgpt')) &&
+                       !file.path.includes('/ChatGPT/');
+            });
+
+            if (remainingOldAttachments.length > 0 || remainingOldReports.length > 0) {
+                console.debug(`[NEXUS-DEBUG] MoveAttachmentsAndReports.verify: Still ${remainingOldAttachments.length} attachments and ${remainingOldReports.length} reports in old structure`);
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`MoveAttachmentsAndReports.verify failed:`, error);
+            return false;
+        }
+    }
+}
+
+/**
  * Move existing conversations to provider subfolder (automatic operation)
  */
 class MoveToProviderFolderOperation extends UpgradeOperation {
@@ -528,13 +677,13 @@ export class NexusUpgradeModal extends Modal {
     }
 
     async createForm() {
-        const message = `🎉 **Upgrade to v1.2.0 successful!** Your conversations have been enhanced and reorganized.
+        const message = `🎉 **Upgrade to v1.2.0 successful!** Your ChatGPT data has been completely reorganized and enhanced.
 
 **✅ What was migrated:**
-• **Organization**: Conversations moved to ChatGPT subfolder for better structure
-• **Modern callouts**: Beautiful user/assistant message design
-• **Visual improvements**: Enhanced Reading View experience
-• **Future-ready**: Prepared for multi-provider support
+• **Complete reorganization**: Conversations, attachments, and reports moved to ChatGPT provider structure
+• **Modern callouts**: Beautiful user/assistant message design with color coding
+• **Visual improvements**: Enhanced Reading View experience with proper spacing
+• **Future-ready**: Prepared for multi-provider support (Claude, etc.)
 
 **⚠️ What was NOT migrated:**
 • Missing attachment links and references
@@ -629,6 +778,7 @@ export class Upgrade120 extends VersionUpgrade {
     readonly version = "1.2.0";
 
     readonly automaticOperations = [
+        new MoveAttachmentsAndReportsOperation(),
         new MoveToProviderFolderOperation(),
         new ConvertToCalloutsOperation()
     ];
