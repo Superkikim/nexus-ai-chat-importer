@@ -20,6 +20,20 @@ If this plugin helps you, consider supporting its development:
 
 *Your support helps me continue building useful tools and explore new ways of making your life easier.*
 
+## Features
+
+- **ChatGPT Import**: Import conversations from ChatGPT exports
+- **Claude Import**: Import conversations from Claude exports with full artifact versioning
+- **Organized Structure**: Conversations are organized by provider, year, and month
+- **Attachment Handling**: Extracts and saves attachments (images, files) from conversations
+- **Advanced Artifact Support**:
+  - Complete version history for Claude artifacts (v1, v2, v3...)
+  - Proper handling of create/update/rewrite commands
+  - Cumulative content tracking with sed-like replacements
+  - Individual files for each significant version
+- **Smart Reimport**: Updates existing conversations with new messages without duplication
+- **Flexible Settings**: Customize folder structure, date formats, and import behavior
+
 ## Installation
 
 1. Enable Community Plugins in Obsidian settings
