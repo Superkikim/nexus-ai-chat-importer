@@ -22,7 +22,7 @@
 /* Artifacts */
 .callout[data-callout="nexus_artifact"] {
     --callout-color: 168, 85, 247; /* Purple */
-    --callout-icon: lucide-code;
+    --callout-icon: lucide-sparkles;
 }
 
 /* System Prompts */
