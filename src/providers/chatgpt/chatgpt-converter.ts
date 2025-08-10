@@ -358,8 +358,31 @@ export class ChatGPTConverter {
             let textContent = "";
             
             if (typeof part === "string" && part.trim() !== "") {
-                // Simple string part
-                textContent = part;
+                // FIXED: Check if string contains JSON with type/content structure
+                if (part.trim().startsWith('{') && part.trim().endsWith('}')) {
+                    try {
+                        const parsed = JSON.parse(part);
+                        if (parsed.type && parsed.content && typeof parsed.content === 'string') {
+                            const codeType = parsed.type;
+                            const codeContent = parsed.content;
+
+                            if (codeContent.trim() !== "") {
+                                // Extract language from type (e.g., "code/markdown" -> "markdown")
+                                const language = codeType.includes('/') ? codeType.split('/')[1] : codeType;
+                                textContent = `\`\`\`${language}\n${codeContent}\n\`\`\``;
+                            }
+                        } else {
+                            // JSON without type/content, treat as normal text
+                            textContent = part;
+                        }
+                    } catch (e) {
+                        // Not valid JSON, treat as normal text
+                        textContent = part;
+                    }
+                } else {
+                    // Normal string
+                    textContent = part;
+                }
             } else if (typeof part === "object" && part !== null) {
                 // Handle code blocks with type and content structure (ChatGPT artifacts)
                 if ('type' in part && 'content' in part && typeof part.content === 'string') {
