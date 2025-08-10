@@ -16,9 +16,6 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
     constructor(private plugin: NexusAiChatImporterPlugin) {
         this.attachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
         this.reportNamingStrategy = new ChatGPTReportNamingStrategy();
-
-        // Initialize code extractor in converter
-        ChatGPTConverter.initializeCodeExtractor(plugin);
     }
 
     detect(rawConversations: any[]): boolean {

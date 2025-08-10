@@ -9,8 +9,6 @@ export interface AttachmentStatus {
     localPath?: string;
     reason?: 'missing_from_export' | 'corrupted' | 'unsupported_format' | 'extraction_failed';
     note?: string;
-    virtual?: boolean;        // True for code files extracted from content
-    virtualContent?: string;  // Content for virtual files
 }
 
 /**

@@ -29,15 +29,8 @@ export class ChatGPTAttachmentExtractor {
 
         for (const attachment of attachments) {
             try {
-                // Handle virtual attachments (code files)
-                if (attachment.status?.virtual && attachment.status?.virtualContent) {
-                    const result = await this.processVirtualAttachment(conversationId, attachment);
-                    processedAttachments.push(result);
-                } else {
-                    // Handle regular attachments
-                    const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
-                    processedAttachments.push(result);
-                }
+                const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
+                processedAttachments.push(result);
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
                 this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName}`, errorMessage);
@@ -339,48 +332,6 @@ export class ChatGPTAttachmentExtractor {
         // If filename conflicts might occur, we could add a timestamp prefix
         // but for now, ChatGPT file IDs should make names unique enough
         return cleanName;
-    }
-
-    /**
-     * Process virtual attachment (code file generated from content)
-     */
-    private async processVirtualAttachment(
-        conversationId: string,
-        attachment: StandardAttachment
-    ): Promise<StandardAttachment> {
-        const virtualContent = attachment.status?.virtualContent;
-        if (!virtualContent) {
-            throw new Error('Virtual attachment missing content');
-        }
-
-        // Create target path for code file
-        const codeFolder = `${this.plugin.settings.attachmentFolder}/chatgpt/code/${conversationId}`;
-        const targetPath = `${codeFolder}/${attachment.fileName}`;
-
-        // Ensure folder exists
-        const folderResult = await ensureFolderExists(codeFolder, this.plugin.app.vault);
-        if (!folderResult.success) {
-            throw new Error(`Failed to create code folder: ${folderResult.error}`);
-        }
-
-        // Handle file conflicts
-        const finalPath = await this.resolveFileConflict(targetPath);
-
-        // Save virtual content as text file
-        await this.plugin.app.vault.adapter.write(finalPath, virtualContent);
-
-        this.logger.info(`Saved virtual code file: ${finalPath}`);
-
-        return {
-            ...attachment,
-            url: finalPath,
-            status: {
-                processed: true,
-                found: true,
-                virtual: true,
-                localPath: finalPath
-            }
-        };
     }
 
     /**
