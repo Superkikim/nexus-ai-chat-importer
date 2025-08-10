@@ -1,4 +1,52 @@
-# Release Notes for Nexus AI Chat Importer v1.1.0
+# Release Notes for Nexus AI Chat Importer
+
+## Version 1.2.0 - Advanced Claude Artifact Versioning (In Development)
+
+### 🎯 Major Features
+
+#### **Complete Claude Artifact Versioning System**
+- **Individual version files**: Each artifact version now gets its own file (e.g., `script_v1.md`, `script_v2.md`)
+- **Proper command handling**:
+  - `create`: Initial version with complete content
+  - `rewrite`: New complete version (resets content)
+  - `update`: Applies sed-like replacements (`old_str` → `new_str`) to previous version
+- **Cumulative content tracking**: Updates build upon previous versions correctly
+- **Chronological processing**: Artifacts processed in conversation order for accurate versioning
+
+#### **Smart Conversation-Level Processing**
+- **Architecture rewrite**: Moved from message-by-message to conversation-level artifact processing
+- **Persistent content tracking**: Artifact content properly accumulates across entire conversation
+- **Version-specific links**: Each artifact reference links to its specific version (not "latest")
+
+#### **Enhanced Link System**
+- **Specific version links**: `Artifact: script_name v2` instead of generic "Latest Version"
+- **Note callouts**: Using `>[!note]` format for better Obsidian integration
+- **Proper path handling**: Correct vault-relative paths for all artifact links
+
+### 🔧 Technical Improvements
+
+#### **Robust Update Handling**
+- **Empty update filtering**: Skips UI-only updates with no content changes
+- **Replacement logic**: Proper `old_str`/`new_str` replacement for incremental updates
+- **Content validation**: Ensures all versions have meaningful content differences
+
+#### **Reimport Compatibility**
+- **Version UUID tracking**: Prevents duplicate versions on conversation updates
+- **Incremental updates**: New artifact versions added without affecting existing ones
+- **Consistent numbering**: Version numbers remain stable across reimports
+
+### 🐛 Bug Fixes
+- **Fixed attachment links**: External Claude conversation links now properly clickable
+- **Corrected div rendering**: Obsidian reading mode compatibility for attachment boxes
+- **Resolved version conflicts**: Eliminated "File already exists" errors during processing
+
+### 📋 Breaking Changes
+- **Artifact structure**: New versioned file structure may require reimporting existing Claude conversations
+- **Link format**: Artifact links now point to specific versions rather than generic references
+
+---
+
+## Version 1.1.0 - Attachment Support
 
 ![Version](https://img.shields.io/badge/version-1.1.0-blue)
 
