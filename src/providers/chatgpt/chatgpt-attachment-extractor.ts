@@ -7,6 +7,8 @@ import type NexusAiChatImporterPlugin from "../../main";
 
 
 export class ChatGPTAttachmentExtractor {
+    private zipFileCache = new Map<string, JSZip.JSZipObject | null>(); // Cache for ZIP file lookups
+
     constructor(private plugin: NexusAiChatImporterPlugin, private logger: Logger) {}
 
     /**
@@ -229,7 +231,7 @@ export class ChatGPTAttachmentExtractor {
     }
 
     /**
-     * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH
+     * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH + CACHING
      */
     private async findChatGPTFileById(zip: JSZip, attachment: StandardAttachment): Promise<JSZip.JSZipObject | null> {
         if (!attachment.fileId) {
@@ -237,19 +239,26 @@ export class ChatGPTAttachmentExtractor {
             return null;
         }
 
+        // Check cache first
+        const cacheKey = `${attachment.fileId}_${attachment.fileName}`;
+        if (this.zipFileCache.has(cacheKey)) {
+            return this.zipFileCache.get(cacheKey)!;
+        }
+
         // Strategy 1: Try exact filename match first
         let zipFile = zip.file(attachment.fileName);
         if (zipFile) {
+            this.zipFileCache.set(cacheKey, zipFile);
             return zipFile;
         }
 
         // Strategy 2: Comprehensive search by file ID in entire ZIP
         const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
-        if (foundFile) {
-            return foundFile;
-        }
 
-        return null;
+        // Cache result (even if null)
+        this.zipFileCache.set(cacheKey, foundFile);
+
+        return foundFile;
     }
 
     /**
@@ -323,6 +332,13 @@ export class ChatGPTAttachmentExtractor {
         // If filename conflicts might occur, we could add a timestamp prefix
         // but for now, ChatGPT file IDs should make names unique enough
         return cleanName;
+    }
+
+    /**
+     * Clear ZIP file cache (call between different ZIP files)
+     */
+    clearCache(): void {
+        this.zipFileCache.clear();
     }
 
     /**
