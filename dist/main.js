@@ -5157,6 +5157,15 @@ var ChatGPTConverter = class {
           } else if (part.content_type === "multimodal_text" && part.text.trim() !== "") {
             textContent = part.text;
           }
+        } else if ("type" in part && "content" in part && typeof part.content === "string") {
+          const codeType = part.type;
+          const codeContent = part.content;
+          if (codeContent.trim() !== "") {
+            const language = codeType.includes("/") ? codeType.split("/")[1] : codeType;
+            textContent = `\`\`\`${language}
+${codeContent}
+\`\`\``;
+          }
         }
       }
       if (textContent) {
@@ -5787,6 +5796,7 @@ var ClaudeConverter = class {
     const artifactVersionMap = /* @__PURE__ */ new Map();
     const versionCounters = /* @__PURE__ */ new Map();
     const artifactContents = /* @__PURE__ */ new Map();
+    const artifactLanguages = /* @__PURE__ */ new Map();
     console.log(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
     for (const { artifact } of allArtifacts) {
       const artifactId = artifact.id || "unknown";
@@ -5797,6 +5807,8 @@ var ClaudeConverter = class {
       if (command === "create" || command === "rewrite") {
         finalContent = artifact.content || "";
         artifactContents.set(artifactId, finalContent);
+        const detectedLanguage = this.detectLanguageFromContent(finalContent, artifact.type);
+        artifactLanguages.set(artifactId, detectedLanguage);
       } else if (command === "update") {
         const previousContent = artifactContents.get(artifactId) || "";
         if (artifact.old_str && artifact.new_str) {
@@ -5810,6 +5822,8 @@ var ClaudeConverter = class {
       }
       console.log(`Saving ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
       try {
+        const storedLanguage = artifactLanguages.get(artifactId);
+        const languageToUse = storedLanguage || this.detectLanguageFromContent(finalContent, artifact.type);
         await this.saveSingleArtifactVersionWithContent(
           artifactId,
           artifact,
@@ -5817,7 +5831,8 @@ var ClaudeConverter = class {
           finalContent,
           conversationId,
           conversationTitle,
-          conversationCreateTime
+          conversationCreateTime,
+          languageToUse
         );
         artifactVersionMap.set(artifact.version_uuid, {
           versionNumber: currentVersion,
@@ -6034,7 +6049,7 @@ ${code}
   /**
    * Save a single artifact version with computed content
    */
-  static async saveSingleArtifactVersionWithContent(artifactId, artifactData, versionNumber, finalContent, conversationId, conversationTitle, conversationCreateTime) {
+  static async saveSingleArtifactVersionWithContent(artifactId, artifactData, versionNumber, finalContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage) {
     if (!this.plugin) {
       throw new Error("Plugin not available");
     }
@@ -6058,7 +6073,8 @@ ${code}
       finalContent,
       conversationId,
       conversationTitle,
-      conversationCreateTime
+      conversationCreateTime,
+      forcedLanguage
     );
   }
   /**
@@ -6088,7 +6104,9 @@ ${code}
       artifactData.content || "",
       conversationId,
       conversationTitle,
-      conversationCreateTime
+      conversationCreateTime,
+      void 0
+      // No forced language for legacy method
     );
   }
   /**
@@ -6172,7 +6190,9 @@ ${code}
           versionContent,
           conversationId,
           conversationTitle,
-          conversationCreateTime
+          conversationCreateTime,
+          void 0
+          // No forced language for legacy method
         );
         savedVersions.push(filePath);
         latestVersion = filePath;
@@ -6315,13 +6335,15 @@ ${code}
   /**
    * Save a single artifact version with specific content
    */
-  static async saveIndividualArtifactVersion(artifactInput, filePath, versionNumber, versionContent, conversationId, conversationTitle, conversationCreateTime) {
+  static async saveIndividualArtifactVersion(artifactInput, filePath, versionNumber, versionContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage) {
     const title = artifactInput.title || "Untitled Artifact";
     let language = artifactInput.language || "text";
     const command = artifactInput.command || "create";
     const artifactId = artifactInput.id || "unknown";
     const versionUuid = artifactInput.version_uuid;
-    if ((language.toLowerCase() === "text" || !language || language === "undefined") && versionContent) {
+    if (forcedLanguage) {
+      language = forcedLanguage;
+    } else if ((language.toLowerCase() === "text" || !language || language === "undefined") && versionContent) {
       const detectedLanguage = this.detectLanguageFromContent(versionContent, artifactInput.type);
       if (detectedLanguage !== "text") {
         language = detectedLanguage;

@@ -120,6 +120,7 @@ export class ClaudeConverter {
         const artifactVersionMap = new Map<string, {versionNumber: number, title: string}>();
         const versionCounters = new Map<string, number>();
         const artifactContents = new Map<string, string>();
+        const artifactLanguages = new Map<string, string>(); // Track language per artifact ID
 
         console.log(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
 
@@ -137,6 +138,10 @@ export class ClaudeConverter {
                 // Complete content provided - RESET cumulative content
                 finalContent = artifact.content || '';
                 artifactContents.set(artifactId, finalContent);
+
+                // For create/rewrite: detect and store the language
+                const detectedLanguage = this.detectLanguageFromContent(finalContent, artifact.type);
+                artifactLanguages.set(artifactId, detectedLanguage);
             } else if (command === 'update') {
                 // Apply update to PREVIOUS content
                 const previousContent = artifactContents.get(artifactId) || '';
@@ -159,6 +164,10 @@ export class ClaudeConverter {
             console.log(`Saving ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
 
             try {
+                // Get stored language (from create/rewrite) or detect for this version
+                const storedLanguage = artifactLanguages.get(artifactId);
+                const languageToUse = storedLanguage || this.detectLanguageFromContent(finalContent, artifact.type);
+
                 // Save this specific version
                 await this.saveSingleArtifactVersionWithContent(
                     artifactId,
@@ -167,7 +176,8 @@ export class ClaudeConverter {
                     finalContent,
                     conversationId,
                     conversationTitle,
-                    conversationCreateTime
+                    conversationCreateTime,
+                    languageToUse
                 );
 
                 // Track version info for linking
@@ -470,7 +480,8 @@ export class ClaudeConverter {
         finalContent: string,
         conversationId?: string,
         conversationTitle?: string,
-        conversationCreateTime?: number
+        conversationCreateTime?: number,
+        forcedLanguage?: string
     ): Promise<void> {
         if (!this.plugin) {
             throw new Error('Plugin not available');
@@ -502,7 +513,8 @@ export class ClaudeConverter {
             finalContent,
             conversationId,
             conversationTitle,
-            conversationCreateTime
+            conversationCreateTime,
+            forcedLanguage
         );
     }
 
@@ -547,7 +559,8 @@ export class ClaudeConverter {
             artifactData.content || '',
             conversationId,
             conversationTitle,
-            conversationCreateTime
+            conversationCreateTime,
+            undefined // No forced language for legacy method
         );
     }
 
@@ -659,7 +672,8 @@ export class ClaudeConverter {
                     versionContent,
                     conversationId,
                     conversationTitle,
-                    conversationCreateTime
+                    conversationCreateTime,
+                    undefined // No forced language for legacy method
                 );
                 savedVersions.push(filePath);
                 latestVersion = filePath;
@@ -834,7 +848,8 @@ export class ClaudeConverter {
         versionContent: string,
         conversationId?: string,
         conversationTitle?: string,
-        conversationCreateTime?: number
+        conversationCreateTime?: number,
+        forcedLanguage?: string
     ): Promise<void> {
         const title = artifactInput.title || 'Untitled Artifact';
         let language = artifactInput.language || 'text';
@@ -842,8 +857,10 @@ export class ClaudeConverter {
         const artifactId = artifactInput.id || 'unknown';
         const versionUuid = artifactInput.version_uuid;
 
-        // Auto-detect language if marked as "text" or undefined but content suggests otherwise
-        if ((language.toLowerCase() === 'text' || !language || language === 'undefined') && versionContent) {
+        // Use forced language (from create/rewrite) or auto-detect
+        if (forcedLanguage) {
+            language = forcedLanguage;
+        } else if ((language.toLowerCase() === 'text' || !language || language === 'undefined') && versionContent) {
             const detectedLanguage = this.detectLanguageFromContent(versionContent, artifactInput.type);
             if (detectedLanguage !== 'text') {
                 language = detectedLanguage;
