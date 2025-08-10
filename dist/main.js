@@ -4110,32 +4110,28 @@ ${cleanContent}`;
         this.contentEl.empty();
       }
       async createForm() {
-        const message = `\u{1F389} **Upgrade to v1.2.0 successful!** Your conversations have been reorganized and enhanced.
+        let message = `\u{1F389} **Upgrade to v1.2.0 successful!**
 
-**\u2705 What was migrated:**
-\u2022 **Conversation organization**: Year folders moved to chatgpt provider structure
-\u2022 **Report links updated**: All conversation links in import reports now work correctly
-\u2022 **Modern callouts**: Beautiful user/assistant message design with color coding
-\u2022 **Visual improvements**: Enhanced Reading View experience with proper spacing
-\u2022 **Future-ready**: Prepared for multi-provider support (Claude, etc.)
+Your conversations have been reorganized with provider structure and modern callouts.
 
-**\u26A0\uFE0F What was NOT migrated:**
-\u2022 Missing attachment links and references
-\u2022 Enhanced chronological ordering
-\u2022 DALL-E prompt improvements
-\u2022 Performance optimizations
-
-**\u{1F4A1} To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.
+**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
 
 ---
 
 ## \u2615 Support My Work
 
-I spend about $100/month for A.I. services, not counting my time and other expenses. If this plugin makes your life easier, consider supporting its development:
-
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
-
-*Your support helps me continue building useful tools and explore new ways of making your life easier.*`;
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)`;
+        try {
+          const response = await fetch("https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.2.0");
+          if (response.ok) {
+            const release = await response.json();
+            if (release.body) {
+              message = release.body;
+            }
+          }
+        } catch (error) {
+          console.debug("[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback");
+        }
         await import_obsidian14.MarkdownRenderer.render(
           this.app,
           message,
@@ -4149,7 +4145,7 @@ I spend about $100/month for A.I. services, not counting my time and other expen
           el.style.paddingTop = "15px";
           el.style.borderTop = "1px solid var(--background-modifier-border)";
           const btnOk = el.createEl("button", {
-            text: "Got it, thanks!",
+            text: "Proceed",
             cls: "nexus-btn-primary"
           });
           btnOk.onclick = () => {
@@ -9090,14 +9086,7 @@ var ProviderSelectionDialog = class extends import_obsidian16.Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: "Select AI Provider" });
-    const description = contentEl.createEl("p");
-    description.innerHTML = `
-            Choose the AI provider that generated your conversation export file(s).<br>
-            This ensures proper processing and organization of your conversations.
-        `;
-    description.style.marginBottom = "20px";
-    description.style.color = "var(--text-muted)";
+    contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
       new import_obsidian16.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
@@ -9115,10 +9104,7 @@ var ProviderSelectionDialog = class extends import_obsidian16.Modal {
     cancelButton.onclick = () => this.close();
   }
   createProviderDescription(provider) {
-    const formats = provider.fileFormats.join(", ");
-    return `${provider.description}
-
-Expected files: ${formats}`;
+    return provider.description;
   }
   onClose() {
     const { contentEl } = this;

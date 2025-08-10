@@ -56,16 +56,7 @@ export class ProviderSelectionDialog extends Modal {
         contentEl.empty();
 
         // Title
-        contentEl.createEl("h2", { text: "Select AI Provider" });
-        
-        // Description
-        const description = contentEl.createEl("p");
-        description.innerHTML = `
-            Choose the AI provider that generated your conversation export file(s).<br>
-            This ensures proper processing and organization of your conversations.
-        `;
-        description.style.marginBottom = "20px";
-        description.style.color = "var(--text-muted)";
+        contentEl.createEl("h2", { text: "Select Archive Provider" });
 
         // Provider selection
         this.providers.forEach(provider => {
@@ -95,8 +86,7 @@ export class ProviderSelectionDialog extends Modal {
     }
 
     private createProviderDescription(provider: ProviderInfo): string {
-        const formats = provider.fileFormats.join(", ");
-        return `${provider.description}\n\nExpected files: ${formats}`;
+        return provider.description;
     }
 
     onClose() {
