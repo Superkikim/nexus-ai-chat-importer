@@ -4973,19 +4973,12 @@ var ChatGPTConverter = class {
     }
     if (messages.length <= 1)
       return messages;
-    if (messages.length < 50) {
-      for (let i = 1; i < messages.length; i++) {
-        const current = messages[i];
-        let j = i - 1;
-        while (j >= 0 && messages[j].timestamp > current.timestamp) {
-          messages[j + 1] = messages[j];
-          j--;
-        }
-        messages[j + 1] = current;
+    return messages.sort((a, b) => {
+      if (a.timestamp !== b.timestamp) {
+        return a.timestamp - b.timestamp;
       }
-      return messages;
-    }
-    return messages.sort((a, b) => a.timestamp - b.timestamp);
+      return a.id.localeCompare(b.id);
+    });
   }
   /**
    * Check if message is a DALL-E JSON prompt message
@@ -5854,24 +5847,17 @@ var ClaudeConverter = class {
     return false;
   }
   /**
-   * Sort messages by timestamp (same logic as ChatGPT converter)
+   * Sort messages by timestamp with UUID as secondary sort for chronological order
    */
   static sortMessagesByTimestamp(messages) {
     if (messages.length <= 1)
       return messages;
-    if (messages.length < 50) {
-      for (let i = 1; i < messages.length; i++) {
-        const current = messages[i];
-        let j = i - 1;
-        while (j >= 0 && messages[j].timestamp > current.timestamp) {
-          messages[j + 1] = messages[j];
-          j--;
-        }
-        messages[j + 1] = current;
+    return messages.sort((a, b) => {
+      if (a.timestamp !== b.timestamp) {
+        return a.timestamp - b.timestamp;
       }
-      return messages;
-    }
-    return messages.sort((a, b) => a.timestamp - b.timestamp);
+      return a.id.localeCompare(b.id);
+    });
   }
   /**
    * Process ALL artifacts from entire conversation and create files
