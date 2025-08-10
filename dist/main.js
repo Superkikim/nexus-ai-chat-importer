@@ -5793,65 +5793,7 @@ var ClaudeConverter = class {
       versionCounters = /* @__PURE__ */ new Map();
     if (!artifactSummaries)
       artifactSummaries = /* @__PURE__ */ new Map();
-    const allArtifacts = [];
-    for (const block of contentBlocks) {
-      if (block.type === "tool_use" && block.name === "artifacts" && block.input) {
-        const artifactId = block.input.id || "unknown";
-        const command = block.input.command || "create";
-        const versionUuid = block.input.version_uuid;
-        if (command === "view") {
-          continue;
-        }
-        if (versionUuid) {
-          allArtifacts.push(block.input);
-        }
-      }
-    }
     const artifactContents = /* @__PURE__ */ new Map();
-    for (const artifact of allArtifacts) {
-      const artifactId = artifact.id || "unknown";
-      const command = artifact.command || "create";
-      const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
-      versionCounters.set(artifactId, currentVersion);
-      let finalContent = "";
-      if (command === "create" || command === "rewrite") {
-        finalContent = artifact.content || "";
-        artifactContents.set(artifactId, finalContent);
-      } else if (command === "update") {
-        const previousContent = artifactContents.get(artifactId) || "";
-        if (artifact.old_str && artifact.new_str) {
-          finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
-        } else if (artifact.content && artifact.content.length > 0) {
-          finalContent = artifact.content;
-        } else {
-          finalContent = previousContent;
-        }
-        artifactContents.set(artifactId, finalContent);
-      }
-      console.log(`Saving ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
-      try {
-        await this.saveSingleArtifactVersionWithContent(
-          artifactId,
-          artifact,
-          currentVersion,
-          finalContent,
-          conversationId,
-          conversationTitle,
-          conversationCreateTime
-        );
-        artifactSummaries.set(artifactId, {
-          title: artifact.title || artifactId,
-          totalVersions: currentVersion,
-          latestVersion: currentVersion
-        });
-      } catch (error) {
-        console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
-      }
-    }
-    for (const [artifactId, info] of artifactSummaries.entries()) {
-      const summary = this.createArtifactSummary(artifactId, info, conversationId);
-      textParts.push(summary);
-    }
     for (const block of contentBlocks) {
       switch (block.type) {
         case "text":
@@ -5862,8 +5804,52 @@ var ClaudeConverter = class {
         case "thinking":
           break;
         case "tool_use":
-          if (block.name === "artifacts") {
-            break;
+          if (block.name === "artifacts" && block.input) {
+            const artifactId = block.input.id || "unknown";
+            const command = block.input.command || "create";
+            const versionUuid = block.input.version_uuid;
+            if (command === "view") {
+              break;
+            }
+            if (versionUuid) {
+              const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
+              versionCounters.set(artifactId, currentVersion);
+              let finalContent = "";
+              if (command === "create" || command === "rewrite") {
+                finalContent = block.input.content || "";
+                artifactContents.set(artifactId, finalContent);
+              } else if (command === "update") {
+                const previousContent = artifactContents.get(artifactId) || "";
+                if (block.input.old_str && block.input.new_str) {
+                  finalContent = previousContent.replace(block.input.old_str, block.input.new_str);
+                } else if (block.input.content && block.input.content.length > 0) {
+                  finalContent = block.input.content;
+                } else {
+                  finalContent = previousContent;
+                }
+                artifactContents.set(artifactId, finalContent);
+              }
+              console.log(`Processing ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
+              try {
+                await this.saveSingleArtifactVersionWithContent(
+                  artifactId,
+                  block.input,
+                  currentVersion,
+                  finalContent,
+                  conversationId,
+                  conversationTitle,
+                  conversationCreateTime
+                );
+                const title = block.input.title || artifactId;
+                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+                const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
+                const specificLink = `<div class="nexus-artifact-box">\u{1F4CE} **[[${versionFile}|Artifact: ${title} v${currentVersion}]]**</div>`;
+                textParts.push(specificLink);
+              } catch (error) {
+                console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+                textParts.push(`<div class="nexus-artifact-box">\u274C **Artifact: ${block.input.title || artifactId} v${currentVersion}** (Error saving)</div>`);
+              }
+            }
           } else if (block.name === "web_search") {
             break;
           } else if (block.name && block.input) {
