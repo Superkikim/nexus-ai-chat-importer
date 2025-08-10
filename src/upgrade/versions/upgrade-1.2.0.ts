@@ -570,32 +570,32 @@ export class NexusUpgradeModal extends Modal {
     }
 
     async createForm() {
-        const message = `🎉 **Upgrade to v1.2.0 successful!** Your conversations have been reorganized and enhanced.
+        // Fetch release notes from GitHub
+        let message = `🎉 **Upgrade to v1.2.0 successful!**
 
-**✅ What was migrated:**
-• **Conversation organization**: Year folders moved to chatgpt provider structure
-• **Report links updated**: All conversation links in import reports now work correctly
-• **Modern callouts**: Beautiful user/assistant message design with color coding
-• **Visual improvements**: Enhanced Reading View experience with proper spacing
-• **Future-ready**: Prepared for multi-provider support (Claude, etc.)
+Your conversations have been reorganized with provider structure and modern callouts.
 
-**⚠️ What was NOT migrated:**
-• Missing attachment links and references
-• Enhanced chronological ordering
-• DALL-E prompt improvements
-• Performance optimizations
-
-**💡 To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.
+**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
 
 ---
 
 ## ☕ Support My Work
 
-I spend about $100/month for A.I. services, not counting my time and other expenses. If this plugin makes your life easier, consider supporting its development:
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)`;
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
-
-*Your support helps me continue building useful tools and explore new ways of making your life easier.*`;
+        try {
+            // Try to fetch release notes from GitHub
+            const response = await fetch('https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.2.0');
+            if (response.ok) {
+                const release = await response.json();
+                if (release.body) {
+                    message = release.body;
+                }
+            }
+        } catch (error) {
+            // Use fallback message if GitHub fetch fails
+            console.debug('[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback');
+        }
 
         // Render markdown content
         await MarkdownRenderer.render(
@@ -614,7 +614,7 @@ I spend about $100/month for A.I. services, not counting my time and other expen
             el.style.borderTop = "1px solid var(--background-modifier-border)";
 
             const btnOk = el.createEl("button", {
-                text: "Got it, thanks!",
+                text: "Proceed",
                 cls: "nexus-btn-primary"
             });
             btnOk.onclick = () => {
