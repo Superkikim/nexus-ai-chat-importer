@@ -37,10 +37,12 @@ export class IncrementalUpgradeManager {
     private registerUpgrades(): void {
         // Import and register upgrades
         const { Upgrade110 } = require("./versions/upgrade-1.1.0");
-        
+        const { Upgrade120 } = require("./versions/upgrade-1.2.0");
+
         this.availableUpgrades = [
             new Upgrade110(),
-            // Future: new Upgrade111(), new Upgrade120(), etc.
+            new Upgrade120(),
+            // Future: new Upgrade121(), new Upgrade130(), etc.
         ];
 
         // Sort by version for incremental execution
