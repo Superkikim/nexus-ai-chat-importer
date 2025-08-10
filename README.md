@@ -83,6 +83,7 @@ Go to Settings > Nexus AI Chat Importer:
 2. Select your ChatGPT or Claude export ZIP file(s)
 3. Files are processed automatically
 4. Review the import report for detailed results and any issues
+5. **Switch to Reading View** for optimal display of conversations with beautiful callouts
 
 ### ⚠️ **Important Performance Considerations**
 
@@ -106,6 +107,20 @@ Go to Settings > Nexus AI Chat Importer:
 - **Close other applications** during large imports to free up system resources
 - **Import during off-hours** when you don't need to actively use Obsidian
 - **Monitor the import report** for any failed conversations that may need manual attention
+
+### 🎨 **Optimal Display Experience**
+
+#### **Reading View Recommended**
+- **Beautiful callouts**: Conversations display with color-coded callouts for users, assistants, attachments, and artifacts
+- **Clean formatting**: Proper spacing and visual hierarchy optimized for reading
+- **Interactive elements**: All links and embedded content work seamlessly
+
+#### **Editor View Considerations**
+- **Functional but basic**: All content is accessible but callouts appear as raw markdown
+- **Editing friendly**: Easy to modify conversation content when needed
+- **Reduced visual appeal**: Less colorful and structured than Reading View
+
+💡 **Recommendation**: Use **Reading View** (Ctrl/Cmd + E) for the best conversation browsing experience!
 
 ### What Gets Imported
 
