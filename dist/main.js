@@ -3052,63 +3052,11 @@ async function showDialog(app, type, title, paragraphs, note, customLabels) {
     modal.open();
   });
 }
-async function showUpgradeDialog(app, options) {
-  return new Promise((resolve) => {
-    const modal = new BeautifulUpgradeDialog(app, options, resolve);
-    modal.open();
-  });
-}
-var import_obsidian9, BeautifulUpgradeDialog;
+var import_obsidian9;
 var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
     import_obsidian9 = require("obsidian");
-    BeautifulUpgradeDialog = class extends import_obsidian9.Modal {
-      constructor(app, options, resolve) {
-        super(app);
-        this.options = options;
-        this.resolve = resolve;
-      }
-      onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-        contentEl.addClass("nexus-upgrade-dialog");
-        const container = contentEl.createDiv("nexus-upgrade-container");
-        const header = container.createDiv("nexus-upgrade-header");
-        const headerIcon = header.createDiv("nexus-upgrade-icon");
-        headerIcon.innerHTML = "\u{1F680}";
-        const headerTitle = header.createDiv("nexus-upgrade-title");
-        headerTitle.textContent = this.options.title;
-        const content = container.createDiv("nexus-upgrade-content");
-        content.innerHTML = this.options.message;
-        const supportSection = container.createDiv("nexus-support-section");
-        supportSection.innerHTML = `
-            <div class="nexus-support-text">
-                I build this plugin in my free time, as a labor of love. If you find it valuable, say THANK YOU or\u2026
-            </div>
-            <div class="nexus-coffee-div">
-                <a href="https://ko-fi.com/superkikim" target="_blank">
-                    <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45">
-                </a>
-            </div>
-        `;
-        const buttonsContainer = container.createDiv("nexus-upgrade-buttons");
-        this.options.buttons.forEach((button) => {
-          const btn = buttonsContainer.createEl("button", {
-            text: button.text,
-            cls: button.primary ? "nexus-btn-primary" : "nexus-btn-secondary"
-          });
-          btn.addEventListener("click", () => {
-            this.close();
-            this.resolve(button.value);
-          });
-        });
-      }
-      onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
-      }
-    };
   }
 });
 
@@ -3730,12 +3678,12 @@ var upgrade_1_2_0_exports = {};
 __export(upgrade_1_2_0_exports, {
   Upgrade120: () => Upgrade120
 });
-var ConvertToCalloutsOperation, OfferReimportOperation, Upgrade120;
+var import_obsidian14, ConvertToCalloutsOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    init_dialogs();
+    import_obsidian14 = require("obsidian");
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -3964,6 +3912,75 @@ ${cleanContent}`;
         }
       }
     };
+    NexusUpgradeModal = class extends import_obsidian14.Modal {
+      constructor(app, plugin, version, resolve) {
+        super(app);
+        this.plugin = plugin;
+        this.version = version;
+        this.resolve = resolve;
+      }
+      onOpen() {
+        const { containerEl, contentEl, titleEl } = this;
+        containerEl.classList.add("nexus-upgrade-modal");
+        titleEl.setText(`\u{1F680} Nexus AI Chat Importer ${this.version}`);
+        this.createForm();
+      }
+      async onClose() {
+        this.contentEl.empty();
+      }
+      async createForm() {
+        const message = `\u{1F389} **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
+
+**\u2705 What was migrated:**
+\u2022 Modern callout design (user/assistant messages)
+\u2022 Improved visual presentation
+\u2022 Better Reading View experience
+
+**\u26A0\uFE0F What was NOT migrated:**
+\u2022 Missing attachment links and references
+\u2022 Enhanced chronological ordering
+\u2022 DALL-E prompt improvements
+\u2022 Performance optimizations
+
+**\u{1F4A1} To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.
+
+---
+
+I build this plugin in my free time, as a labor of love. If you find it valuable, say THANK YOU or\u2026
+
+<div class="nexus-coffee-div"><a href="https://ko-fi.com/superkikim" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45"></a></div>`;
+        await import_obsidian14.MarkdownRenderer.render(
+          this.app,
+          message,
+          this.contentEl,
+          "",
+          this.plugin
+        );
+        this.contentEl.createEl("div", { cls: "nexus-upgrade-buttons" }, (el) => {
+          el.style.textAlign = "right";
+          el.style.marginTop = "20px";
+          el.style.paddingTop = "15px";
+          el.style.borderTop = "1px solid var(--background-modifier-border)";
+          const btnLearn = el.createEl("button", {
+            text: "Learn About Full Reimport",
+            cls: "nexus-btn-secondary"
+          });
+          btnLearn.style.marginRight = "10px";
+          btnLearn.onclick = () => {
+            this.close();
+            this.resolve("learn");
+          };
+          const btnKeep = el.createEl("button", {
+            text: "Keep Current (Recommended)",
+            cls: "nexus-btn-primary"
+          });
+          btnKeep.onclick = () => {
+            this.close();
+            this.resolve("keep");
+          };
+        });
+      }
+    };
     OfferReimportOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -3977,32 +3994,11 @@ ${cleanContent}`;
       }
       async execute(context) {
         try {
-          const result = await showUpgradeDialog(context.plugin.app, {
-            title: "Migration to v1.2.0 Complete!",
-            message: `\u{1F389} **Visual upgrade successful!** Your conversations now use beautiful modern callouts.
-
-**\u2705 What was migrated:**
-\u2022 Modern callout design (user/assistant messages)
-\u2022 Improved visual presentation
-\u2022 Better Reading View experience
-
-**\u26A0\uFE0F What was NOT migrated:**
-\u2022 Missing attachment links and references
-\u2022 Enhanced chronological ordering
-\u2022 DALL-E prompt improvements
-\u2022 Performance optimizations
-
-**\u{1F4A1} To get ALL v1.2.0 features:** You need to reimport your original ChatGPT ZIP files. This will replace existing conversations with fully-featured versions.`,
-            buttons: [
-              { text: "Keep Current (Recommended)", value: "keep", primary: true },
-              { text: "Learn About Full Reimport", value: "learn" },
-              { text: "Cancel", value: "cancel" }
-            ]
+          const result = await new Promise((resolve) => {
+            new NexusUpgradeModal(context.plugin.app, context.plugin, "1.2.0", resolve).open();
           });
           if (result === "learn") {
-            await showUpgradeDialog(context.plugin.app, {
-              title: "About Full Reimport",
-              message: `**Why Reimport Instead of Migration?**
+            const learnMessage = `**Why Reimport Instead of Migration?**
 
 **Attachments & Links:** Original ZIP files contain attachment metadata that can't be recreated from existing notes. Migration only updates presentation.
 
@@ -4018,8 +4014,39 @@ ${cleanContent}`;
 2. Existing conversations will be replaced with enhanced versions
 3. Backup recommended before reimporting
 
-**Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.`,
-              buttons: [{ text: "Got it", value: "ok", primary: true }]
+**Recommendation:** Visual callouts are sufficient for most users. Reimport only if you need attachment links or perfect chronological order.
+
+---
+
+<div class="nexus-coffee-div"><a href="https://ko-fi.com/superkikim" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45"></a></div>`;
+            await new Promise((resolve) => {
+              const modal = new import_obsidian14.Modal(context.plugin.app);
+              modal.containerEl.classList.add("nexus-upgrade-modal");
+              modal.titleEl.setText("About Full Reimport");
+              modal.onOpen = async () => {
+                await import_obsidian14.MarkdownRenderer.render(
+                  context.plugin.app,
+                  learnMessage,
+                  modal.contentEl,
+                  "",
+                  context.plugin
+                );
+                modal.contentEl.createEl("div", { cls: "nexus-upgrade-buttons" }, (el) => {
+                  el.style.textAlign = "right";
+                  el.style.marginTop = "20px";
+                  el.style.paddingTop = "15px";
+                  el.style.borderTop = "1px solid var(--background-modifier-border)";
+                  const btnOk = el.createEl("button", {
+                    text: "Got it",
+                    cls: "nexus-btn-primary"
+                  });
+                  btnOk.onclick = () => {
+                    modal.close();
+                    resolve();
+                  };
+                });
+              };
+              modal.open();
             });
             return {
               success: true,
@@ -4066,7 +4093,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian16 = require("obsidian");
+var import_obsidian17 = require("obsidian");
 
 // src/config/constants.ts
 var DEFAULT_SETTINGS = {
@@ -8179,7 +8206,7 @@ var StorageService = class {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian14 = require("obsidian");
+var import_obsidian15 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
@@ -8488,7 +8515,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian14.Notice("Upgrade failed - see console for details");
+      new import_obsidian15.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -8586,7 +8613,7 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian14.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      new import_obsidian15.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -8791,7 +8818,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian14.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian15.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -8908,8 +8935,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian15 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian15.Modal {
+var import_obsidian16 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian16.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -8948,7 +8975,7 @@ var ProviderSelectionDialog = class extends import_obsidian15.Modal {
     description.style.marginBottom = "20px";
     description.style.color = "var(--text-muted)";
     this.providers.forEach((provider) => {
-      new import_obsidian15.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian16.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -8976,7 +9003,7 @@ Expected files: ${formats}`;
 };
 
 // src/main.ts
-var NexusAiChatImporterPlugin = class extends import_obsidian16.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian17.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
