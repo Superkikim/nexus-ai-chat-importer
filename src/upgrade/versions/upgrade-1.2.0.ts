@@ -313,18 +313,29 @@ class MoveAttachmentsAndReportsOperation extends UpgradeOperation {
             const attachmentFolder = context.plugin.settings.attachmentFolder;
             const reportFolder = context.plugin.settings.reportFolder;
 
-            // Check for old attachment structure: Attachments/chatgpt/ → Attachments/ChatGPT/
+            // Get provider names from existing conversations
+            const providerNames = await this.getExistingProviderNames(context);
+
+            // Check for old attachment structure that needs provider organization
             const attachmentFiles = context.plugin.app.vault.getFiles().filter(file => {
-                return file.path.startsWith(attachmentFolder) &&
-                       file.path.includes('/chatgpt/') &&
-                       !file.path.includes('/ChatGPT/');
+                if (!file.path.startsWith(attachmentFolder)) return false;
+
+                // Check if file is in old structure (provider name in lowercase)
+                return providerNames.some(provider =>
+                    file.path.includes(`/${provider}/`) &&
+                    !file.path.includes(`/${this.capitalizeProvider(provider)}/`)
+                );
             });
 
-            // Check for old report structure: Reports/chatgpt_import_*.md → Reports/ChatGPT/
+            // Check for old report structure that needs provider organization
             const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file => {
-                return file.path.startsWith(reportFolder) &&
-                       (file.name.startsWith('chatgpt_import_') || file.name.includes('chatgpt')) &&
-                       !file.path.includes('/ChatGPT/');
+                if (!file.path.startsWith(reportFolder)) return false;
+
+                // Check if file is in old structure (provider name in filename)
+                return providerNames.some(provider =>
+                    file.name.includes(`${provider}_import_`) &&
+                    !file.path.includes(`/${this.capitalizeProvider(provider)}/`)
+                );
             });
 
             return attachmentFiles.length > 0 || reportFiles.length > 0;
@@ -345,57 +356,67 @@ class MoveAttachmentsAndReportsOperation extends UpgradeOperation {
             let movedReports = 0;
             let errors = 0;
 
-            // 1. Move attachments: Attachments/chatgpt/ → Attachments/ChatGPT/
-            const attachmentFiles = context.plugin.app.vault.getFiles().filter(file => {
-                return file.path.startsWith(attachmentFolder) &&
-                       file.path.includes('/chatgpt/') &&
-                       !file.path.includes('/ChatGPT/');
-            });
+            // 1. Move attachments using actual provider names
+            const providerNames = await this.getExistingProviderNames(context);
 
-            for (const file of attachmentFiles) {
-                try {
-                    const newPath = file.path.replace('/chatgpt/', '/ChatGPT/');
+            for (const provider of providerNames) {
+                const capitalizedProvider = this.capitalizeProvider(provider);
 
-                    // Ensure target directory exists
-                    const targetDir = newPath.substring(0, newPath.lastIndexOf('/'));
-                    await context.plugin.app.vault.adapter.mkdir(targetDir);
+                const attachmentFiles = context.plugin.app.vault.getFiles().filter(file => {
+                    return file.path.startsWith(attachmentFolder) &&
+                           file.path.includes(`/${provider}/`) &&
+                           !file.path.includes(`/${capitalizedProvider}/`);
+                });
 
-                    // Move the file
-                    await context.plugin.app.vault.adapter.rename(file.path, newPath);
-                    movedAttachments++;
+                for (const file of attachmentFiles) {
+                    try {
+                        const newPath = file.path.replace(`/${provider}/`, `/${capitalizedProvider}/`);
 
-                    console.debug(`[NEXUS-DEBUG] Moved attachment: ${file.path} → ${newPath}`);
+                        // Ensure target directory exists
+                        const targetDir = newPath.substring(0, newPath.lastIndexOf('/'));
+                        await context.plugin.app.vault.adapter.mkdir(targetDir);
 
-                } catch (error) {
-                    errors++;
-                    console.error(`[NEXUS-DEBUG] Error moving attachment ${file.path}:`, error);
+                        // Move the file
+                        await context.plugin.app.vault.adapter.rename(file.path, newPath);
+                        movedAttachments++;
+
+                        console.debug(`[NEXUS-DEBUG] Moved attachment: ${file.path} → ${newPath}`);
+
+                    } catch (error) {
+                        errors++;
+                        console.error(`[NEXUS-DEBUG] Error moving attachment ${file.path}:`, error);
+                    }
                 }
             }
 
-            // 2. Move reports: Reports/chatgpt_import_*.md → Reports/ChatGPT/
-            const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file => {
-                return file.path.startsWith(reportFolder) &&
-                       (file.name.startsWith('chatgpt_import_') || file.name.includes('chatgpt')) &&
-                       !file.path.includes('/ChatGPT/');
-            });
+            // 2. Move reports using actual provider names
+            for (const provider of providerNames) {
+                const capitalizedProvider = this.capitalizeProvider(provider);
 
-            for (const file of reportFiles) {
-                try {
-                    // Create ChatGPT subfolder in reports
-                    const chatgptReportFolder = `${reportFolder}/ChatGPT`;
-                    await context.plugin.app.vault.adapter.mkdir(chatgptReportFolder);
+                const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file => {
+                    return file.path.startsWith(reportFolder) &&
+                           file.name.includes(`${provider}_import_`) &&
+                           !file.path.includes(`/${capitalizedProvider}/`);
+                });
 
-                    const newPath = `${chatgptReportFolder}/${file.name}`;
+                for (const file of reportFiles) {
+                    try {
+                        // Create provider subfolder in reports
+                        const providerReportFolder = `${reportFolder}/${capitalizedProvider}`;
+                        await context.plugin.app.vault.adapter.mkdir(providerReportFolder);
 
-                    // Move the file
-                    await context.plugin.app.vault.adapter.rename(file.path, newPath);
-                    movedReports++;
+                        const newPath = `${providerReportFolder}/${file.name}`;
 
-                    console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} → ${newPath}`);
+                        // Move the file
+                        await context.plugin.app.vault.adapter.rename(file.path, newPath);
+                        movedReports++;
 
-                } catch (error) {
-                    errors++;
-                    console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+                        console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} → ${newPath}`);
+
+                    } catch (error) {
+                        errors++;
+                        console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+                    }
                 }
             }
 
@@ -421,29 +442,78 @@ class MoveAttachmentsAndReportsOperation extends UpgradeOperation {
         try {
             const attachmentFolder = context.plugin.settings.attachmentFolder;
             const reportFolder = context.plugin.settings.reportFolder;
+            const providerNames = await this.getExistingProviderNames(context);
 
-            // Check that no old structure remains
-            const remainingOldAttachments = context.plugin.app.vault.getFiles().filter(file => {
-                return file.path.startsWith(attachmentFolder) &&
-                       file.path.includes('/chatgpt/') &&
-                       !file.path.includes('/ChatGPT/');
-            });
+            // Check that no old structure remains for any provider
+            for (const provider of providerNames) {
+                const capitalizedProvider = this.capitalizeProvider(provider);
 
-            const remainingOldReports = context.plugin.app.vault.getMarkdownFiles().filter(file => {
-                return file.path.startsWith(reportFolder) &&
-                       (file.name.startsWith('chatgpt_import_') || file.name.includes('chatgpt')) &&
-                       !file.path.includes('/ChatGPT/');
-            });
+                const remainingOldAttachments = context.plugin.app.vault.getFiles().filter(file => {
+                    return file.path.startsWith(attachmentFolder) &&
+                           file.path.includes(`/${provider}/`) &&
+                           !file.path.includes(`/${capitalizedProvider}/`);
+                });
 
-            if (remainingOldAttachments.length > 0 || remainingOldReports.length > 0) {
-                console.debug(`[NEXUS-DEBUG] MoveAttachmentsAndReports.verify: Still ${remainingOldAttachments.length} attachments and ${remainingOldReports.length} reports in old structure`);
-                return false;
+                const remainingOldReports = context.plugin.app.vault.getMarkdownFiles().filter(file => {
+                    return file.path.startsWith(reportFolder) &&
+                           file.name.includes(`${provider}_import_`) &&
+                           !file.path.includes(`/${capitalizedProvider}/`);
+                });
+
+                if (remainingOldAttachments.length > 0 || remainingOldReports.length > 0) {
+                    console.debug(`[NEXUS-DEBUG] MoveAttachmentsAndReports.verify: Still ${remainingOldAttachments.length} attachments and ${remainingOldReports.length} reports in old structure for ${provider}`);
+                    return false;
+                }
             }
 
             return true;
         } catch (error) {
             console.error(`MoveAttachmentsAndReports.verify failed:`, error);
             return false;
+        }
+    }
+
+    /**
+     * Get existing provider names from conversations
+     */
+    private async getExistingProviderNames(context: UpgradeContext): Promise<string[]> {
+        try {
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+
+            const providerNames = new Set<string>();
+
+            // Sample first 10 conversation files to get provider names
+            const conversationFiles = allFiles.filter(file =>
+                file.path.startsWith(archiveFolder)
+            ).slice(0, 10);
+
+            for (const file of conversationFiles) {
+                try {
+                    const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+                    if (frontmatter?.provider && frontmatter.nexus === context.plugin.manifest.id) {
+                        providerNames.add(frontmatter.provider);
+                    }
+                } catch (error) {
+                    // Continue with next file
+                }
+            }
+
+            return Array.from(providerNames);
+        } catch (error) {
+            console.error(`Error getting provider names:`, error);
+            return ['chatgpt']; // Fallback for v1.1.0 migrations
+        }
+    }
+
+    /**
+     * Capitalize provider name for folder structure
+     */
+    private capitalizeProvider(provider: string): string {
+        switch (provider.toLowerCase()) {
+            case 'chatgpt': return 'ChatGPT';
+            case 'claude': return 'Claude';
+            default: return provider.charAt(0).toUpperCase() + provider.slice(1);
         }
     }
 }
@@ -558,8 +628,13 @@ class MoveToProviderFolderOperation extends UpgradeOperation {
 
             for (const file of oldStructureFiles) {
                 try {
+                    // Get provider from file frontmatter
+                    const frontmatter = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+                    const provider = frontmatter?.provider || 'chatgpt'; // Fallback for v1.1.0
+                    const capitalizedProvider = this.capitalizeProvider(provider);
+
                     const relativePath = file.path.substring(archiveFolder.length + 1);
-                    const newPath = `${archiveFolder}/ChatGPT/${relativePath}`;
+                    const newPath = `${archiveFolder}/${capitalizedProvider}/${relativePath}`;
 
                     // Ensure target directory exists
                     const targetDir = newPath.substring(0, newPath.lastIndexOf('/'));
@@ -641,6 +716,17 @@ class MoveToProviderFolderOperation extends UpgradeOperation {
         } catch (error) {
             console.error(`MoveToProviderFolder.verify failed:`, error);
             return false;
+        }
+    }
+
+    /**
+     * Capitalize provider name for folder structure
+     */
+    private capitalizeProvider(provider: string): string {
+        switch (provider.toLowerCase()) {
+            case 'chatgpt': return 'ChatGPT';
+            case 'claude': return 'Claude';
+            default: return provider.charAt(0).toUpperCase() + provider.slice(1);
         }
     }
 }
