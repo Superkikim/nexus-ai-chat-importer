@@ -13,7 +13,7 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 
 ## ☕ Support My Work
 
-I spend about $100/month for A.I. services, not counting my time and other expanses. If this plugin makes your life easier, consider supporting its development:
+I spend about $100/month for A.I. services, not counting my time and other expenses. If this plugin makes your life easier, consider supporting its development:
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
 
