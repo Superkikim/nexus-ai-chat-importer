@@ -419,16 +419,40 @@ class FixReportLinksOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: STARTING`);
             const reportFolder = context.plugin.settings.reportFolder;
+            const archiveFolder = context.plugin.settings.archiveFolder;
 
-            // Get ALL files in Reports/chatgpt/ folder (SED-LIKE approach)
+            // Get ALL files in Reports/chatgpt/ folder
             const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file =>
                 file.path.startsWith(`${reportFolder}/chatgpt/`)
             );
 
             console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
 
-            // If we have report files, we need to fix them (simple!)
-            return reportFiles.length > 0;
+            if (reportFiles.length === 0) {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No report files, returning false`);
+                return false;
+            }
+
+            // Check if any report contains old links that need fixing
+            for (const file of reportFiles.slice(0, 3)) {
+                try {
+                    const content = await context.plugin.app.vault.read(file);
+
+                    // Look for links like: [[Nexus AI Chat Imports/2024/12/...]] or [[archiveFolder/2024/12/...]]
+                    const archiveFolderName = archiveFolder.split('/').pop() || 'Nexus AI Chat Imports';
+                    const oldLinkPattern = new RegExp(`\\[\\[${archiveFolderName}/\\d{4}/\\d{2}/`, 'g');
+
+                    if (content.match(oldLinkPattern)) {
+                        console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found old links in ${file.path}, returning true`);
+                        return true;
+                    }
+                } catch (error) {
+                    console.error(`[NEXUS-DEBUG] FixReportLinks.canRun: Error reading ${file.path}:`, error);
+                }
+            }
+
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found, returning false`);
+            return false;
         } catch (error) {
             console.error(`[NEXUS-DEBUG] FixReportLinks.canRun failed:`, error);
             return false;
@@ -456,11 +480,14 @@ class FixReportLinksOperation extends UpgradeOperation {
                     console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${file.path}`);
                     const content = await context.plugin.app.vault.read(file);
 
-                    // SIMPLE SED-LIKE REPLACEMENT: /yyyy/ → /chatgpt/yyyy/
-                    // Pattern: /2024/ → /chatgpt/2024/
-                    const yearPattern = /\/(\d{4})\//g;
+                    // Fix links: [[archiveFolder/2024/12/...]] → [[archiveFolder/chatgpt/2024/12/...]]
+                    const archiveFolder = context.plugin.settings.archiveFolder;
+                    const archiveFolderName = archiveFolder.split('/').pop() || 'Nexus AI Chat Imports';
 
-                    const updatedContent = content.replace(yearPattern, '/chatgpt/$1/');
+                    // Pattern: [[Nexus AI Chat Imports/2024/12/...]] → [[Nexus AI Chat Imports/chatgpt/2024/12/...]]
+                    const linkPattern = new RegExp(`(\\[\\[${archiveFolderName}/)(\d{4}/\d{2}/)`, 'g');
+
+                    const updatedContent = content.replace(linkPattern, '$1chatgpt/$2');
 
                     // Check if anything changed
                     if (updatedContent !== content) {

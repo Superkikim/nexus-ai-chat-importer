@@ -4008,11 +4008,30 @@ ${cleanContent}`;
         try {
           console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: STARTING`);
           const reportFolder = context.plugin.settings.reportFolder;
+          const archiveFolder = context.plugin.settings.archiveFolder;
           const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(
             (file) => file.path.startsWith(`${reportFolder}/chatgpt/`)
           );
           console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
-          return reportFiles.length > 0;
+          if (reportFiles.length === 0) {
+            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No report files, returning false`);
+            return false;
+          }
+          for (const file of reportFiles.slice(0, 3)) {
+            try {
+              const content = await context.plugin.app.vault.read(file);
+              const archiveFolderName = archiveFolder.split("/").pop() || "Nexus AI Chat Imports";
+              const oldLinkPattern = new RegExp(`\\[\\[${archiveFolderName}/\\d{4}/\\d{2}/`, "g");
+              if (content.match(oldLinkPattern)) {
+                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found old links in ${file.path}, returning true`);
+                return true;
+              }
+            } catch (error) {
+              console.error(`[NEXUS-DEBUG] FixReportLinks.canRun: Error reading ${file.path}:`, error);
+            }
+          }
+          console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found, returning false`);
+          return false;
         } catch (error) {
           console.error(`[NEXUS-DEBUG] FixReportLinks.canRun failed:`, error);
           return false;
@@ -4032,8 +4051,10 @@ ${cleanContent}`;
             try {
               console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${file.path}`);
               const content = await context.plugin.app.vault.read(file);
-              const yearPattern = /\/(\d{4})\//g;
-              const updatedContent = content.replace(yearPattern, "/chatgpt/$1/");
+              const archiveFolder = context.plugin.settings.archiveFolder;
+              const archiveFolderName = archiveFolder.split("/").pop() || "Nexus AI Chat Imports";
+              const linkPattern = new RegExp(`(\\[\\[${archiveFolderName}/)(d{4}/d{2}/)`, "g");
+              const updatedContent = content.replace(linkPattern, "$1chatgpt/$2");
               if (updatedContent !== content) {
                 await context.plugin.app.vault.modify(file, updatedContent);
                 fixedFiles++;
