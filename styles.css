@@ -53,16 +53,17 @@
     max-width: 42em;
 }
 
-.nexus-coffee-div {
-    text-align: center;
-    margin-bottom: 10px;
+/* Ko-fi support styling */
+.nexus-upgrade-modal h2 {
+    margin-top: 2em;
+    margin-bottom: 1em;
 }
 
-.nexus-coffee-div a {
+.nexus-upgrade-modal p img[alt*="Ko-fi"] {
     transition: transform 0.2s ease;
 }
 
-.nexus-coffee-div a:hover {
+.nexus-upgrade-modal p img[alt*="Ko-fi"]:hover {
     transform: scale(1.05);
 }
 
