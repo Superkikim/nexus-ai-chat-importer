@@ -5149,15 +5149,7 @@ var ChatGPTConverter = class {
       if (typeof part === "string" && part.trim() !== "") {
         textContent = part;
       } else if (typeof part === "object" && part !== null) {
-        if ("content_type" in part && "text" in part && typeof part.text === "string") {
-          if (part.content_type === "audio_transcription" && part.text.trim() !== "") {
-            textContent = part.text;
-          } else if (part.content_type === "text" && part.text.trim() !== "") {
-            textContent = part.text;
-          } else if (part.content_type === "multimodal_text" && part.text.trim() !== "") {
-            textContent = part.text;
-          }
-        } else if ("type" in part && "content" in part && typeof part.content === "string") {
+        if ("type" in part && "content" in part && typeof part.content === "string") {
           const codeType = part.type;
           const codeContent = part.content;
           if (codeContent.trim() !== "") {
@@ -5165,6 +5157,14 @@ var ChatGPTConverter = class {
             textContent = `\`\`\`${language}
 ${codeContent}
 \`\`\``;
+          }
+        } else if ("content_type" in part && "text" in part && typeof part.text === "string") {
+          if (part.content_type === "audio_transcription" && part.text.trim() !== "") {
+            textContent = part.text;
+          } else if (part.content_type === "text" && part.text.trim() !== "") {
+            textContent = part.text;
+          } else if (part.content_type === "multimodal_text" && part.text.trim() !== "") {
+            textContent = part.text;
           }
         }
       }

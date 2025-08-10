@@ -341,18 +341,8 @@ export class ChatGPTConverter {
                 // Simple string part
                 textContent = part;
             } else if (typeof part === "object" && part !== null) {
-                // Handle different content types with proper type checking
-                if ('content_type' in part && 'text' in part && typeof part.text === 'string') {
-                    if (part.content_type === "audio_transcription" && part.text.trim() !== "") {
-                        textContent = part.text;
-                    } else if (part.content_type === "text" && part.text.trim() !== "") {
-                        textContent = part.text;
-                    } else if (part.content_type === "multimodal_text" && part.text.trim() !== "") {
-                        textContent = part.text;
-                    }
-                }
-                // Handle code blocks with type and content structure
-                else if ('type' in part && 'content' in part && typeof part.content === 'string') {
+                // Handle code blocks with type and content structure (ChatGPT artifacts)
+                if ('type' in part && 'content' in part && typeof part.content === 'string') {
                     const codeType = part.type as string;
                     const codeContent = part.content as string;
 
@@ -360,6 +350,16 @@ export class ChatGPTConverter {
                         // Extract language from type (e.g., "code/markdown" -> "markdown")
                         const language = codeType.includes('/') ? codeType.split('/')[1] : codeType;
                         textContent = `\`\`\`${language}\n${codeContent}\n\`\`\``;
+                    }
+                }
+                // Handle different content types with proper type checking
+                else if ('content_type' in part && 'text' in part && typeof part.text === 'string') {
+                    if (part.content_type === "audio_transcription" && part.text.trim() !== "") {
+                        textContent = part.text;
+                    } else if (part.content_type === "text" && part.text.trim() !== "") {
+                        textContent = part.text;
+                    } else if (part.content_type === "multimodal_text" && part.text.trim() !== "") {
+                        textContent = part.text;
                     }
                 }
                 // Skip image_asset_pointer content types - they become attachments via metadata
