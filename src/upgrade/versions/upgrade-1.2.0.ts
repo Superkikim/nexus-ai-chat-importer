@@ -1,6 +1,6 @@
 // src/upgrade/versions/upgrade-1.2.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
-import { App, TFile, Modal, MarkdownRenderer } from "obsidian";
+import { App, Modal, MarkdownRenderer } from "obsidian";
 import NexusAiChatImporterPlugin from "../../main";
 
 /**
@@ -506,7 +506,7 @@ export class NexusUpgradeModal extends Modal {
 
         // Set title like Excalidraw
         titleEl.setText(`🚀 Nexus AI Chat Importer ${this.version}`);
-
+        this.modalEl.querySelector('.modal-close-button')?.remove();
         this.createForm();
     }
 
@@ -518,7 +518,7 @@ export class NexusUpgradeModal extends Modal {
         // Fetch release notes from GitHub
         let message = `🎉 **Upgrade to v1.2.0**
 
-Your conversations will be reorganized with provider structure and modern callouts.
+Your conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated. 
 
 **💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
 

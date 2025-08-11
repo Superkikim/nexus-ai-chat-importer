@@ -30,9 +30,14 @@ export class ClaudeConverter {
             updateTime: chat.updated_at ? Math.floor(new Date(chat.updated_at).getTime() / 1000) : 0,
             messages: messages,
             provider: "claude",
-            conversationUrl: `https://claude.ai/chat/${chat.uuid}`,
-            model: chat.model || "claude-3",
-            summary: chat.summary || ""
+            chatUrl: `https://claude.ai/chat/${chat.uuid}`,
+            metadata: {
+                model: chat.model || "claude-3",
+                summary: chat.summary || "",
+                is_starred: chat.is_starred,
+                current_leaf_message_uuid: chat.current_leaf_message_uuid,
+                project_uuid: chat.project_uuid
+            }
         };
     }
 
@@ -1196,15 +1201,15 @@ format: ${language}
         const candidateContent = (candidate.content || '').length;
 
         // Command priority scores
-        const commandPriority = {
+        const commandPriority: Record<string, number> = {
             'create': 4,
             'rewrite': 3,
             'update': 2,
             'view': 1
         };
 
-        const currentPriority = commandPriority[currentCommand] || 1;
-        const candidatePriority = commandPriority[candidateCommand] || 1;
+        const currentPriority = commandPriority[currentCommand as string] || 1;
+        const candidatePriority = commandPriority[candidateCommand as string] || 1;
 
         // Higher priority command wins
         if (candidatePriority > currentPriority) {
