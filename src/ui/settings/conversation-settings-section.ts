@@ -16,6 +16,8 @@ export class ConversationSettingsSection extends BaseSettingsSection {
                     .setValue(this.plugin.settings.archiveFolder)
                     .onChange(async (value) => {
                         this.plugin.settings.archiveFolder = value;
+                        // Keep reports under the archive folder
+                        this.plugin.settings.reportFolder = `${value}/Reports`;
                         await this.plugin.saveSettings();
                     })
             );

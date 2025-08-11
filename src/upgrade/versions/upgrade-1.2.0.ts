@@ -1,6 +1,6 @@
 // src/upgrade/versions/upgrade-1.2.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
-import { TFile, Modal, MarkdownRenderer } from "obsidian";
+import { App, TFile, Modal, MarkdownRenderer } from "obsidian";
 import NexusAiChatImporterPlugin from "../../main";
 
 /**
@@ -16,19 +16,19 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
         try {
             const archiveFolder = context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
-            
+
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
                 if (!file.path.startsWith(archiveFolder)) return false;
-                
+
                 const relativePath = file.path.substring(archiveFolder.length + 1);
-                if (relativePath.startsWith('Reports/') || 
+                if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
                     relativePath.startsWith('attachments/')) {
                     return false;
                 }
-                
+
                 return true;
             });
 
@@ -36,7 +36,7 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
             for (const file of conversationFiles.slice(0, 10)) { // Sample first 10 files
                 try {
                     const content = await context.plugin.app.vault.read(file);
-                    
+
                     // Check for v1.1.0 format markers
                     if (this.hasOldIndentationFormat(content)) {
                         return true;
@@ -45,7 +45,7 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
                     console.error(`Error checking file ${file.path}:`, error);
                 }
             }
-            
+
             return false;
         } catch (error) {
             console.error(`ConvertToCallouts.canRun failed:`, error);
@@ -56,22 +56,22 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
             console.debug(`[NEXUS-DEBUG] ConvertToCallouts.execute starting`);
-            
+
             const archiveFolder = context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
-            
+
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
                 if (!file.path.startsWith(archiveFolder)) return false;
-                
+
                 const relativePath = file.path.substring(archiveFolder.length + 1);
-                if (relativePath.startsWith('Reports/') || 
+                if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
                     relativePath.startsWith('attachments/')) {
                     return false;
                 }
-                
+
                 return true;
             });
 
@@ -85,18 +85,18 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
             const batchSize = 10;
             for (let i = 0; i < conversationFiles.length; i += batchSize) {
                 const batch = conversationFiles.slice(i, i + batchSize);
-                
+
                 for (const file of batch) {
                     processed++;
 
                     try {
                         const content = await context.plugin.app.vault.read(file);
-                        
+
                         // Only process files with old format
                         if (!this.hasOldIndentationFormat(content)) {
                             continue;
                         }
-                        
+
                         const convertedContent = this.convertIndentationsToCallouts(content);
 
                         if (content !== convertedContent) {
@@ -253,26 +253,26 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
         try {
             const archiveFolder = context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
-            
+
             // Check conversation files (sample verification)
             const conversationFiles = allFiles.filter(file => {
                 if (!file.path.startsWith(archiveFolder)) return false;
-                
+
                 const relativePath = file.path.substring(archiveFolder.length + 1);
-                if (relativePath.startsWith('Reports/') || 
+                if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
                     relativePath.startsWith('attachments/')) {
                     return false;
                 }
-                
+
                 return true;
             }).slice(0, 5); // Check first 5 files
 
             for (const file of conversationFiles) {
                 try {
                     const content = await context.plugin.app.vault.read(file);
-                    
+
                     // Check if still has old format
                     if (this.hasOldIndentationFormat(content)) {
                         console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Still has old format in ${file.path}`);
@@ -298,6 +298,82 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
         }
     }
 }
+
+/**
+ * Force update report links to include provider segment (automatic operation)
+ * Only pattern considered: ${reportFolder}/chatgpt/
+ */
+class UpdateReportLinksOperation extends UpgradeOperation {
+    readonly id = "update-report-links";
+    readonly name = "Update Report Links";
+    readonly description = "Insert 'chatgpt/' before year in report links inside reports";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        // Force run when this migration executes
+        return true;
+    }
+
+    private escapeRegExp(str: string): string {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        try {
+            const reportFolder = context.plugin.settings.reportFolder;
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const escapedArchive = this.escapeRegExp(archiveFolder);
+
+            let processed = 0;
+            let updated = 0;
+            let errors = 0;
+
+            // Only consider ${reportFolder}/chatgpt/
+            const reportPrefix = `${reportFolder}/chatgpt/`;
+            const reportFiles = context.plugin.app.vault
+                .getMarkdownFiles()
+                .filter(f => f.path.startsWith(reportPrefix));
+
+            // Regex: [[<archiveFolder>/YYYY/MM/ ...]] -> insert chatgpt/
+            const linkPattern = new RegExp(`(\\[\\[${escapedArchive}/)(\\d{4}/\\d{2}/)`, 'g');
+
+            for (const file of reportFiles) {
+                try {
+                    processed++;
+                    const content = await context.plugin.app.vault.read(file);
+                    const replaced = content.replace(linkPattern, '$1chatgpt/$2');
+                    if (replaced !== content) {
+                        await context.plugin.app.vault.modify(file, replaced);
+                        updated++;
+                    }
+                } catch (e) {
+                    errors++;
+                    console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation error in ${file.path}:`, e);
+                }
+            }
+
+            console.debug(`[NEXUS-DEBUG] UpdateReportLinksOperation: processed=${processed}, updated=${updated}, errors=${errors}`);
+            return {
+                success: errors === 0,
+                message: `Report links updated: ${updated} files changed, ${errors} errors`,
+                details: { processed, updated, errors }
+            };
+        } catch (error) {
+            console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation.execute failed:`, error);
+            return {
+                success: false,
+                message: `Report link update failed: ${error}`,
+                details: { error: String(error) }
+            };
+        }
+    }
+
+    async verify(context: UpgradeContext): Promise<boolean> {
+        // Simple operation; treat as successful if execute returned success
+        return true;
+    }
+}
+
 
 /**
  * Move year folders to chatgpt provider structure (automatic operation)
@@ -406,132 +482,6 @@ class MoveYearFoldersOperation extends UpgradeOperation {
     }
 }
 
-/**
- * Fix conversation links in reports after folder migration (automatic operation)
- */
-class FixReportLinksOperation extends UpgradeOperation {
-    readonly id = "fix-report-links";
-    readonly name = "Fix Report Links";
-    readonly description = "Update conversation links in reports after folder reorganization";
-    readonly type = "automatic" as const;
-
-    async canRun(context: UpgradeContext): Promise<boolean> {
-        try {
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: STARTING`);
-            const reportFolder = context.plugin.settings.reportFolder;
-            const archiveFolder = context.plugin.settings.archiveFolder;
-
-            // Get ALL files in Reports/chatgpt/ folder
-            const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file =>
-                file.path.startsWith(`${reportFolder}/chatgpt/`)
-            );
-
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found ${reportFiles.length} report files`);
-
-            if (reportFiles.length === 0) {
-                console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No report files, returning false`);
-                return false;
-            }
-
-            // Check if any report contains old links that need fixing
-            for (const file of reportFiles.slice(0, 3)) {
-                try {
-                    const content = await context.plugin.app.vault.read(file);
-
-                    // Look for links like: [[Nexus AI Chat Imports/2024/12/...]] or [[archiveFolder/2024/12/...]]
-                    const archiveFolderName = archiveFolder.split('/').pop() || 'Nexus AI Chat Imports';
-                    const oldLinkPattern = new RegExp(`\\[\\[${archiveFolderName}/\\d{4}/\\d{2}/`, 'g');
-
-                    if (content.match(oldLinkPattern)) {
-                        console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: Found old links in ${file.path}, returning true`);
-                        return true;
-                    }
-                } catch (error) {
-                    console.error(`[NEXUS-DEBUG] FixReportLinks.canRun: Error reading ${file.path}:`, error);
-                }
-            }
-
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.canRun: No old links found, returning false`);
-            return false;
-        } catch (error) {
-            console.error(`[NEXUS-DEBUG] FixReportLinks.canRun failed:`, error);
-            return false;
-        }
-    }
-
-    async execute(context: UpgradeContext): Promise<OperationResult> {
-        try {
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.execute starting`);
-
-            const reportFolder = context.plugin.settings.reportFolder;
-
-            let fixedFiles = 0;
-            let errors = 0;
-
-            // Get ALL files in Reports/chatgpt/ folder (SED-LIKE approach)
-            const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter(file =>
-                file.path.startsWith(`${reportFolder}/chatgpt/`)
-            );
-
-            console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${reportFiles.length} report files`);
-
-            for (const file of reportFiles) {
-                try {
-                    console.debug(`[NEXUS-DEBUG] FixReportLinks: Processing ${file.path}`);
-                    const content = await context.plugin.app.vault.read(file);
-
-                    // Fix links: [[archiveFolder/2024/12/...]] → [[archiveFolder/chatgpt/2024/12/...]]
-                    const archiveFolder = context.plugin.settings.archiveFolder;
-                    const archiveFolderName = archiveFolder.split('/').pop() || 'Nexus AI Chat Imports';
-
-                    // Pattern: [[Nexus AI Chat Imports/2024/12/...]] → [[Nexus AI Chat Imports/chatgpt/2024/12/...]]
-                    const linkPattern = new RegExp(`(\\[\\[${archiveFolderName}/)(\d{4}/\d{2}/)`, 'g');
-
-                    const updatedContent = content.replace(linkPattern, '$1chatgpt/$2');
-
-                    // Check if anything changed
-                    if (updatedContent !== content) {
-                        await context.plugin.app.vault.modify(file, updatedContent);
-                        fixedFiles++;
-                        console.debug(`[NEXUS-DEBUG] Fixed year paths in report: ${file.path}`);
-                    } else {
-                        console.debug(`[NEXUS-DEBUG] No year paths to fix in: ${file.path}`);
-                    }
-
-                } catch (error) {
-                    errors++;
-                    console.error(`[NEXUS-DEBUG] Error fixing paths in report ${file.path}:`, error);
-                }
-            }
-
-            console.debug(`[NEXUS-DEBUG] FixReportLinks: Completed - fixed:${fixedFiles}, errors:${errors}`);
-
-            return {
-                success: errors === 0,
-                message: `Report link correction completed: ${fixedFiles} reports updated, ${errors} errors`,
-                details: { fixedFiles, errors }
-            };
-
-        } catch (error) {
-            console.error(`[NEXUS-DEBUG] FixReportLinks.execute failed:`, error);
-            return {
-                success: false,
-                message: `Report link correction failed: ${error}`,
-                details: { error: String(error) }
-            };
-        }
-    }
-
-    async verify(context: UpgradeContext): Promise<boolean> {
-        try {
-            console.debug(`[NEXUS-DEBUG] FixReportLinks.verify: Verification complete (always true for simple replacement)`);
-            return true;
-        } catch (error) {
-            console.error(`FixReportLinks.verify failed:`, error);
-            return false;
-        }
-    }
-}
 
 /**
  * Beautiful upgrade modal (like Excalidraw)
@@ -668,7 +618,7 @@ export class Upgrade120 extends VersionUpgrade {
 
     readonly automaticOperations = [
         new MoveYearFoldersOperation(),
-        new FixReportLinksOperation(),
+        new UpdateReportLinksOperation(),
         new ConvertToCalloutsOperation()
     ];
 
