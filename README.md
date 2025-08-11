@@ -1,8 +1,6 @@
 # Nexus AI Chat Importer
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.2.0)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest)
-[![GitHub all releases](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total)](https://github.com/Superkikim/nexus-ai-chat-importer/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.2.0) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![GitHub all releases](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total)](https://github.com/Superkikim/nexus-ai-chat-importer/releases)
 
 ## Overview
 
