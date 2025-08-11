@@ -3679,12 +3679,12 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian14, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian15, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian14 = require("obsidian");
+    import_obsidian15 = require("obsidian");
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -4145,7 +4145,7 @@ ${cleanContent}`;
         }
       }
     };
-    NexusUpgradeModal = class extends import_obsidian14.Modal {
+    NexusUpgradeModal = class extends import_obsidian15.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -4186,7 +4186,7 @@ Your conversations will be reorganized with provider structure and modern callou
         } catch (error) {
           console.debug("[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback");
         }
-        await import_obsidian14.MarkdownRenderer.render(
+        await import_obsidian15.MarkdownRenderer.render(
           this.app,
           message,
           this.contentEl,
@@ -4264,7 +4264,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian17 = require("obsidian");
+var import_obsidian18 = require("obsidian");
 
 // src/config/constants.ts
 var DEFAULT_SETTINGS = {
@@ -4673,7 +4673,7 @@ var EventHandlers = class {
 };
 
 // src/services/import-service.ts
-var import_obsidian12 = require("obsidian");
+var import_obsidian13 = require("obsidian");
 var import_jszip = __toESM(require_jszip_min());
 init_utils();
 init_dialogs();
@@ -5140,14 +5140,14 @@ var ConversationProcessor = class {
   /**
    * Process raw conversations (provider agnostic entry point)
    */
-  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider) {
+  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider, progressCallback) {
     const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
     if (provider === "unknown") {
       const errorMsg = forcedProvider ? `Forced provider '${forcedProvider}' is not available or registered` : `Could not detect conversation provider from data structure`;
       importReport.addError("Unknown provider", errorMsg);
       return importReport;
     }
-    return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess);
+    return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess, progressCallback);
   }
   /**
    * Get provider name for current processing session
@@ -5158,7 +5158,7 @@ var ConversationProcessor = class {
   /**
    * Process conversations using the detected provider
    */
-  async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false) {
+  async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false, progressCallback) {
     this.currentProvider = provider;
     const adapter = this.providerRegistry.getAdapter(provider);
     if (!adapter) {
@@ -5168,8 +5168,17 @@ var ConversationProcessor = class {
     const storage = this.plugin.getStorageService();
     const existingConversationsMap = await storage.scanExistingConversations();
     this.counters.totalExistingConversations = existingConversationsMap.size;
+    let processedCount = 0;
     for (const chat of rawConversations) {
       await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
+      processedCount++;
+      progressCallback == null ? void 0 : progressCallback({
+        phase: "processing",
+        title: "Processing conversations...",
+        detail: `Processing conversation ${processedCount} of ${rawConversations.length}`,
+        current: processedCount,
+        total: rawConversations.length
+      });
     }
     return importReport;
   }
@@ -7809,6 +7818,171 @@ function createProviderRegistry(plugin) {
   return registry;
 }
 
+// src/ui/import-progress-modal.ts
+var import_obsidian12 = require("obsidian");
+var ImportProgressModal = class extends import_obsidian12.Modal {
+  constructor(app, fileName) {
+    super(app);
+    this.totalConversations = 0;
+    this.currentConversation = 0;
+    this.isComplete = false;
+    this.fileName = fileName;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.addClass("nexus-import-progress-modal");
+    this.modalTitleEl = contentEl.createEl("h2", {
+      text: `Importing ${this.fileName}`,
+      cls: "modal-title"
+    });
+    const contentContainer = contentEl.createDiv({ cls: "modal-content" });
+    this.phaseEl = contentContainer.createEl("div", { cls: "import-phase" });
+    this.phaseEl.style.cssText = `
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 600;
+            color: var(--text-accent);
+            font-size: 1.1em;
+        `;
+    this.conversationCountEl = contentContainer.createEl("div", { cls: "conversation-counter" });
+    this.conversationCountEl.style.cssText = `
+            text-align: center;
+            margin: 5px 0 15px 0;
+            font-weight: 500;
+            color: var(--text-normal);
+            font-size: 0.9em;
+        `;
+    const progressContainer = contentContainer.createDiv({ cls: "progress-container" });
+    progressContainer.style.cssText = `
+            background: var(--background-secondary);
+            border-radius: 8px;
+            padding: 4px;
+            margin: 20px 0;
+            border: 1px solid var(--background-modifier-border);
+        `;
+    this.progressBarEl = progressContainer.createDiv({ cls: "progress-bar" });
+    this.progressBarEl.style.cssText = `
+            height: 20px;
+            background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+        `;
+    this.statusEl = contentContainer.createEl("div", { cls: "status-text" });
+    this.statusEl.style.cssText = `
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 500;
+            color: var(--text-normal);
+        `;
+    this.detailEl = contentContainer.createEl("div", { cls: "detail-text" });
+    this.detailEl.style.cssText = `
+            text-align: center;
+            margin: 5px 0;
+            font-size: 0.85em;
+            color: var(--text-muted);
+            min-height: 1.2em;
+        `;
+    this.updateProgress({
+      phase: "validation",
+      title: "Preparing import...",
+      detail: "Validating ZIP file structure"
+    });
+  }
+  /**
+   * Update progress with step information
+   */
+  updateProgress(step) {
+    const phaseLabels = {
+      "validation": "\u{1F50D} Validation",
+      "scanning": "\u{1F4CB} Scanning",
+      "processing": "\u2699\uFE0F Processing",
+      "writing": "\u{1F4BE} Writing",
+      "complete": "\u2705 Complete",
+      "error": "\u274C Error"
+    };
+    this.phaseEl.textContent = phaseLabels[step.phase] || step.phase;
+    if (step.total !== void 0) {
+      this.totalConversations = step.total;
+    }
+    if (step.current !== void 0) {
+      this.currentConversation = step.current;
+    }
+    if (this.totalConversations > 0) {
+      this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} conversations`;
+    } else {
+      this.conversationCountEl.textContent = "";
+    }
+    let percentage = 0;
+    if (step.percentage !== void 0) {
+      percentage = step.percentage;
+    } else if (this.totalConversations > 0 && step.phase === "processing") {
+      percentage = Math.round(this.currentConversation / this.totalConversations * 100);
+    } else {
+      const phaseProgress = {
+        "validation": 10,
+        "scanning": 20,
+        "processing": 80,
+        "writing": 95,
+        "complete": 100,
+        "error": 0
+      };
+      percentage = phaseProgress[step.phase] || 0;
+    }
+    percentage = Math.min(100, Math.max(0, percentage));
+    this.progressBarEl.style.width = `${percentage}%`;
+    this.statusEl.textContent = step.title;
+    this.detailEl.textContent = step.detail || "";
+    if (step.phase === "complete") {
+      this.showComplete(step.title);
+    } else if (step.phase === "error") {
+      this.showError(step.title);
+    }
+  }
+  /**
+   * Show completion state
+   */
+  showComplete(message = "Import completed successfully") {
+    this.isComplete = true;
+    this.progressBarEl.style.width = "100%";
+    this.progressBarEl.style.background = "var(--text-success)";
+    this.statusEl.textContent = message;
+    this.detailEl.textContent = "You can close this dialog";
+    this.closeAfterDelay(3e3);
+  }
+  /**
+   * Show error state
+   */
+  showError(message = "An error occurred during import") {
+    this.progressBarEl.style.background = "var(--text-error)";
+    this.statusEl.textContent = message;
+    this.detailEl.textContent = "Check the console for more details";
+  }
+  /**
+   * Close after delay
+   */
+  closeAfterDelay(delay = 2e3) {
+    setTimeout(() => {
+      if (this.isComplete) {
+        this.close();
+      }
+    }, delay);
+  }
+  /**
+   * Get progress callback function
+   */
+  getProgressCallback() {
+    return (step) => {
+      this.updateProgress(step);
+    };
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
 // src/services/import-service.ts
 var ImportService = class {
   constructor(plugin) {
@@ -7850,12 +8024,21 @@ var ImportService = class {
   async handleZipFile(file, forcedProvider) {
     this.importReport = new ImportReport();
     const storage = this.plugin.getStorageService();
+    const progressModal = new ImportProgressModal(this.plugin.app, file.name);
+    const progressCallback = progressModal.getProgressCallback();
+    progressModal.open();
     try {
+      progressCallback({
+        phase: "validation",
+        title: "Validating file...",
+        detail: "Checking file hash and import history"
+      });
       const fileHash = await getFileHash(file);
       const foundByHash = storage.isArchiveImported(fileHash);
       const foundByName = storage.isArchiveImported(file.name);
       const isReprocess = foundByHash || foundByName;
       if (isReprocess) {
+        progressModal.close();
         const shouldReimport = await showDialog(
           this.plugin.app,
           "confirmation",
@@ -7869,22 +8052,41 @@ var ImportService = class {
           { button1: "Let's do this", button2: "Forget it" }
         );
         if (!shouldReimport) {
-          new import_obsidian12.Notice("Import cancelled.");
+          new import_obsidian13.Notice("Import cancelled.");
           return;
         }
+        progressModal.open();
       }
+      progressCallback({
+        phase: "validation",
+        title: "Validating ZIP structure...",
+        detail: "Checking file format and contents"
+      });
       const zip = await this.validateZipFile(file, forcedProvider);
-      await this.processConversations(zip, file, isReprocess, forcedProvider);
+      await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback);
       storage.addImportedArchive(fileHash, file.name);
       await this.plugin.saveSettings();
+      progressCallback({
+        phase: "complete",
+        title: "Import completed successfully!",
+        detail: `Processed ${this.conversationProcessor.getCounters().totalNewConversationsToImport + this.conversationProcessor.getCounters().totalExistingConversationsToUpdate} conversations`
+      });
     } catch (error) {
       const message = error instanceof NexusAiChatImporterError ? error.message : error instanceof Error ? error.message : "An unknown error occurred";
       this.plugin.logger.error("Error handling zip file", { message });
+      progressCallback({
+        phase: "error",
+        title: "Import failed",
+        detail: message
+      });
+      setTimeout(() => progressModal.close(), 5e3);
     } finally {
       await this.writeImportReport(file.name);
-      new import_obsidian12.Notice(
-        this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
-      );
+      if (!progressModal.isComplete) {
+        new import_obsidian13.Notice(
+          this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
+        );
+      }
     }
   }
   async validateZipFile(file, forcedProvider) {
@@ -7924,18 +8126,48 @@ var ImportService = class {
       }
     }
   }
-  async processConversations(zip, file, isReprocess, forcedProvider) {
+  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback) {
     try {
+      progressCallback == null ? void 0 : progressCallback({
+        phase: "scanning",
+        title: "Extracting conversations...",
+        detail: "Reading conversation data from ZIP file"
+      });
       const rawConversations = await this.extractRawConversationsFromZip(zip);
+      progressCallback == null ? void 0 : progressCallback({
+        phase: "scanning",
+        title: "Scanning existing conversations...",
+        detail: "Checking vault for existing conversations",
+        total: rawConversations.length
+      });
       if (forcedProvider) {
         this.validateProviderMatch(rawConversations, forcedProvider);
       }
-      const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess, forcedProvider);
+      progressCallback == null ? void 0 : progressCallback({
+        phase: "processing",
+        title: "Processing conversations...",
+        detail: "Converting and importing conversations",
+        current: 0,
+        total: rawConversations.length
+      });
+      const report = await this.conversationProcessor.processRawConversations(
+        rawConversations,
+        this.importReport,
+        zip,
+        isReprocess,
+        forcedProvider,
+        progressCallback
+      );
       this.importReport = report;
       this.importReport.addSummary(
         file.name,
         this.conversationProcessor.getCounters()
       );
+      progressCallback == null ? void 0 : progressCallback({
+        phase: "writing",
+        title: "Finalizing import...",
+        detail: "Saving settings and generating report"
+      });
     } catch (error) {
       if (error instanceof NexusAiChatImporterError) {
         this.plugin.logger.error("Error processing conversations", error.message);
@@ -7999,7 +8231,7 @@ var ReportWriter = class {
     const folderResult = await ensureFolderExists2(reportInfo.folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
-      new import_obsidian12.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian13.Notice("Failed to create log file. Check console for details.");
       return;
     }
     let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
@@ -8027,7 +8259,7 @@ ${report.generateReportContent()}
       await this.plugin.app.vault.create(logFilePath, logContent);
     } catch (error) {
       this.plugin.logger.error(`Failed to write import log`, error.message);
-      new import_obsidian12.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian13.Notice("Failed to create log file. Check console for details.");
     }
   }
   getReportGenerationInfo(zipFileName, provider) {
@@ -8381,14 +8613,14 @@ var StorageService = class {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian15 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
-var import_obsidian13 = require("obsidian");
-var MultiOperationProgressModal = class extends import_obsidian13.Modal {
+var import_obsidian14 = require("obsidian");
+var MultiOperationProgressModal = class extends import_obsidian14.Modal {
   constructor(app, title, operations) {
     super(app);
     this.canClose = false;
@@ -8690,7 +8922,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian15.Notice("Upgrade failed - see console for details");
+      new import_obsidian16.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -8788,7 +9020,7 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian15.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      new import_obsidian16.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -9000,7 +9232,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian15.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian16.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -9117,8 +9349,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian16 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian16.Modal {
+var import_obsidian17 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian17.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -9150,7 +9382,7 @@ var ProviderSelectionDialog = class extends import_obsidian16.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian16.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian17.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -9175,7 +9407,7 @@ var ProviderSelectionDialog = class extends import_obsidian16.Modal {
 };
 
 // src/main.ts
-var NexusAiChatImporterPlugin = class extends import_obsidian17.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian18.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
