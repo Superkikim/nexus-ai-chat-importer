@@ -70,15 +70,20 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             const data = await this.loadData();
             this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
-            
+
+            // Always compute reports under archive folder to ensure consistency
+            this.settings.reportFolder = `${this.settings.archiveFolder}/Reports`;
+            // attachmentFolder honors user's saved settings; DEFAULT_SETTINGS only applies on true first install
+            // (No extra handling needed here; the merge above preserves user settings if they exist)
+
             // Initialize version tracking
             const currentVersion = this.manifest.version;
             const storedCurrentVersion = this.settings.currentVersion;
-            
+
             if (!storedCurrentVersion || storedCurrentVersion === "0.0.0") {
                 // First time with version tracking
                 const hasExistingConversations = await this.hasExistingNexusConversations();
-                
+
                 if (hasExistingConversations) {
                     // Existing user upgrading to version tracking for first time
                     this.settings.previousVersion = "1.0.x";
@@ -88,16 +93,16 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     this.settings.previousVersion = currentVersion;
                     this.settings.currentVersion = currentVersion;
                 }
-                
+
                 await this.saveSettings();
-                
+
             } else if (storedCurrentVersion !== currentVersion) {
                 // Normal upgrade
                 this.settings.previousVersion = storedCurrentVersion;
                 this.settings.currentVersion = currentVersion;
                 await this.saveSettings();
             }
-            
+
             // Load storage data
             await this.storageService.loadData();
             

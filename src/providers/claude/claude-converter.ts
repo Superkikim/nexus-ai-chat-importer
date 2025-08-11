@@ -190,8 +190,6 @@ export class ClaudeConverter {
                 artifactContents.set(artifactId, finalContent);
             }
 
-            console.log(`Saving ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
-
             try {
                 // Get stored language (from create/rewrite) or detect for this version
                 const storedLanguage = artifactLanguages.get(artifactId);
@@ -701,7 +699,6 @@ export class ClaudeConverter {
                     }
                 }
 
-                console.log(`Saving artifact version ${versionNumber}: ${filePath} (${versionContent.length} chars)`);
                 await this.saveIndividualArtifactVersion(
                     version,
                     filePath,
