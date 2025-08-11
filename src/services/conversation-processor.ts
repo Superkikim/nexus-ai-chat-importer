@@ -7,6 +7,7 @@ import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
 import { ProviderRegistry } from "../providers/provider-adapter";
+import { ImportProgressCallback } from "../ui/import-progress-modal";
 import JSZip from "jszip";
 import {
     formatTimestamp,
@@ -46,7 +47,7 @@ export class ConversationProcessor {
     /**
      * Process raw conversations (provider agnostic entry point)
      */
-    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false, forcedProvider?: string): Promise<ImportReport> {
+    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false, forcedProvider?: string, progressCallback?: ImportProgressCallback): Promise<ImportReport> {
         // Use forced provider or detect from raw data structure
         const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
 
@@ -58,7 +59,7 @@ export class ConversationProcessor {
             return importReport;
         }
 
-        return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess);
+        return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess, progressCallback);
     }
 
     /**
@@ -78,7 +79,8 @@ export class ConversationProcessor {
         rawConversations: any[],
         importReport: ImportReport,
         zip?: JSZip,
-        isReprocess: boolean = false
+        isReprocess: boolean = false,
+        progressCallback?: ImportProgressCallback
     ): Promise<ImportReport> {
         this.currentProvider = provider;
         const adapter = this.providerRegistry.getAdapter(provider);
@@ -94,8 +96,18 @@ export class ConversationProcessor {
         const existingConversationsMap = await storage.scanExistingConversations();
         this.counters.totalExistingConversations = existingConversationsMap.size;
 
+        let processedCount = 0;
         for (const chat of rawConversations) {
             await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
+
+            processedCount++;
+            progressCallback?.({
+                phase: 'processing',
+                title: 'Processing conversations...',
+                detail: `Processing conversation ${processedCount} of ${rawConversations.length}`,
+                current: processedCount,
+                total: rawConversations.length
+            });
         }
 
         return importReport;

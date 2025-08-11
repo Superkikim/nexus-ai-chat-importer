@@ -41,6 +41,69 @@
     margin-top: 0.25em;
 }
 
+/* Import Progress Modal Styling */
+.nexus-import-progress-modal .modal-content {
+    padding: 20px;
+    min-width: 400px;
+    max-width: 500px;
+}
+
+.nexus-import-progress-modal .modal-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-normal);
+    font-size: 1.3em;
+}
+
+.nexus-import-progress-modal .import-phase {
+    font-size: 1.1em;
+    font-weight: 600;
+    text-align: center;
+    margin: 15px 0 10px 0;
+    color: var(--text-accent);
+}
+
+.nexus-import-progress-modal .conversation-counter {
+    text-align: center;
+    font-size: 0.9em;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.nexus-import-progress-modal .progress-container {
+    background: var(--background-secondary);
+    border-radius: 8px;
+    padding: 4px;
+    margin: 20px 0;
+    border: 1px solid var(--background-modifier-border);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nexus-import-progress-modal .progress-bar {
+    height: 20px;
+    background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.nexus-import-progress-modal .status-text {
+    text-align: center;
+    font-weight: 500;
+    color: var(--text-normal);
+    margin: 15px 0 5px 0;
+}
+
+.nexus-import-progress-modal .detail-text {
+    text-align: center;
+    font-size: 0.85em;
+    color: var(--text-muted);
+    min-height: 1.2em;
+    margin-bottom: 10px;
+}
+
 /* Nexus Upgrade Modal Styling (like Excalidraw) */
 .nexus-upgrade-modal .modal-content {
     padding-right: 5px;

@@ -9,6 +9,7 @@ import { ConversationProcessor } from "./conversation-processor";
 import { NexusAiChatImporterError } from "../models/errors";
 import { createProviderRegistry } from "../providers/provider-registry";
 import { ProviderRegistry } from "../providers/provider-adapter";
+import { ImportProgressModal, ImportProgressCallback } from "../ui/import-progress-modal";
 import type NexusAiChatImporterPlugin from "../main";
 
 export class ImportService {
@@ -57,7 +58,18 @@ export class ImportService {
         this.importReport = new ImportReport();
         const storage = this.plugin.getStorageService();
 
+        // Create and show progress modal
+        const progressModal = new ImportProgressModal(this.plugin.app, file.name);
+        const progressCallback = progressModal.getProgressCallback();
+        progressModal.open();
+
         try {
+            progressCallback({
+                phase: 'validation',
+                title: 'Validating file...',
+                detail: 'Checking file hash and import history'
+            });
+
             const fileHash = await getFileHash(file);
 
             // Check if already imported (hybrid detection for 1.0.x → 1.1.0 compatibility)
@@ -66,9 +78,11 @@ export class ImportService {
             const isReprocess = foundByHash || foundByName;
 
             if (isReprocess) {
+                progressModal.close(); // Close progress modal for user dialog
+
                 const shouldReimport = await showDialog(
                     this.plugin.app,
-                    "confirmation", 
+                    "confirmation",
                     "Already processed",
                     [
                         `File ${file.name} has already been imported.`,
@@ -78,32 +92,63 @@ export class ImportService {
                     undefined,
                     { button1: "Let's do this", button2: "Forget it" }
                 );
-                
+
                 if (!shouldReimport) {
                     new Notice("Import cancelled.");
                     return;
                 }
+
+                // Reopen progress modal for continued processing
+                progressModal.open();
             }
 
+            progressCallback({
+                phase: 'validation',
+                title: 'Validating ZIP structure...',
+                detail: 'Checking file format and contents'
+            });
+
             const zip = await this.validateZipFile(file, forcedProvider);
-            await this.processConversations(zip, file, isReprocess, forcedProvider);
-            
+
+            await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback);
+
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
+
+            progressCallback({
+                phase: 'complete',
+                title: 'Import completed successfully!',
+                detail: `Processed ${this.conversationProcessor.getCounters().totalNewConversationsToImport + this.conversationProcessor.getCounters().totalExistingConversationsToUpdate} conversations`
+            });
+
         } catch (error: unknown) {
             const message = error instanceof NexusAiChatImporterError
                 ? error.message
                 : error instanceof Error
                 ? error.message
                 : "An unknown error occurred";
+
             this.plugin.logger.error("Error handling zip file", { message });
+
+            progressCallback({
+                phase: 'error',
+                title: 'Import failed',
+                detail: message
+            });
+
+            // Keep modal open for error state
+            setTimeout(() => progressModal.close(), 5000);
         } finally {
             await this.writeImportReport(file.name);
-            new Notice(
-                this.importReport.hasErrors()
-                    ? "An error occurred during import. Please check the log file for details."
-                    : "Import completed. Log file created in the archive folder."
-            );
+
+            // Only show notice if modal was closed due to error or completion
+            if (!progressModal.isComplete) {
+                new Notice(
+                    this.importReport.hasErrors()
+                        ? "An error occurred during import. Please check the log file for details."
+                        : "Import completed. Log file created in the archive folder."
+                );
+            }
         }
     }
 
@@ -157,23 +202,58 @@ export class ImportService {
         }
     }
 
-    private async processConversations(zip: JSZip, file: File, isReprocess: boolean, forcedProvider?: string): Promise<void> {
+    private async processConversations(zip: JSZip, file: File, isReprocess: boolean, forcedProvider?: string, progressCallback?: ImportProgressCallback): Promise<void> {
         try {
+            progressCallback?.({
+                phase: 'scanning',
+                title: 'Extracting conversations...',
+                detail: 'Reading conversation data from ZIP file'
+            });
+
             // Extract raw conversation data (provider agnostic)
             const rawConversations = await this.extractRawConversationsFromZip(zip);
+
+            progressCallback?.({
+                phase: 'scanning',
+                title: 'Scanning existing conversations...',
+                detail: 'Checking vault for existing conversations',
+                total: rawConversations.length
+            });
 
             // Validate provider if forced
             if (forcedProvider) {
                 this.validateProviderMatch(rawConversations, forcedProvider);
             }
 
+            progressCallback?.({
+                phase: 'processing',
+                title: 'Processing conversations...',
+                detail: 'Converting and importing conversations',
+                current: 0,
+                total: rawConversations.length
+            });
+
             // Process through conversation processor (handles provider detection/conversion)
-            const report = await this.conversationProcessor.processRawConversations(rawConversations, this.importReport, zip, isReprocess, forcedProvider);
+            const report = await this.conversationProcessor.processRawConversations(
+                rawConversations,
+                this.importReport,
+                zip,
+                isReprocess,
+                forcedProvider,
+                progressCallback
+            );
+
             this.importReport = report;
             this.importReport.addSummary(
                 file.name,
                 this.conversationProcessor.getCounters()
             );
+
+            progressCallback?.({
+                phase: 'writing',
+                title: 'Finalizing import...',
+                detail: 'Saving settings and generating report'
+            });
         } catch (error: unknown) {
             if (error instanceof NexusAiChatImporterError) {
                 this.plugin.logger.error("Error processing conversations", error.message);
