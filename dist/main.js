@@ -3679,7 +3679,7 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian14, ConvertToCalloutsOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian14, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
@@ -3913,6 +3913,86 @@ ${cleanContent}`;
         }
       }
     };
+    MoveReportsToProviderOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "move-reports-to-provider";
+        this.name = "Organize Reports by Provider";
+        this.description = "Move reports from root Reports/ folder to Reports/chatgpt/";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        try {
+          const reportFolder = context.plugin.settings.reportFolder;
+          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
+            if (!f.path.startsWith(reportFolder + "/"))
+              return false;
+            const relativePath = f.path.substring(reportFolder.length + 1);
+            if (relativePath.includes("/"))
+              return false;
+            return f.name.includes("import report") || f.name.includes("import_");
+          });
+          console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun: found ${reportFiles.length} reports in root folder`);
+          return reportFiles.length > 0;
+        } catch (error) {
+          console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun failed:`, error);
+          return false;
+        }
+      }
+      async execute(context) {
+        try {
+          const reportFolder = context.plugin.settings.reportFolder;
+          let processed = 0;
+          let moved = 0;
+          let errors = 0;
+          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
+            if (!f.path.startsWith(reportFolder + "/"))
+              return false;
+            const relativePath = f.path.substring(reportFolder.length + 1);
+            if (relativePath.includes("/"))
+              return false;
+            return f.name.includes("import report") || f.name.includes("import_");
+          });
+          const chatgptReportFolder = `${reportFolder}/chatgpt`;
+          try {
+            await context.plugin.app.vault.adapter.mkdir(chatgptReportFolder);
+          } catch (e) {
+          }
+          for (const file of reportFiles) {
+            try {
+              processed++;
+              const newPath = `${chatgptReportFolder}/${file.name}`;
+              if (await context.plugin.app.vault.adapter.exists(newPath)) {
+                console.debug(`[NEXUS-DEBUG] Target already exists, skipping: ${newPath}`);
+                continue;
+              }
+              await context.plugin.app.vault.adapter.rename(file.path, newPath);
+              moved++;
+              console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} \u2192 ${newPath}`);
+            } catch (error) {
+              errors++;
+              console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+            }
+          }
+          console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation: processed=${processed}, moved=${moved}, errors=${errors}`);
+          return {
+            success: errors === 0,
+            message: `Reports organized: ${moved} files moved to provider structure, ${errors} errors`,
+            details: { processed, moved, errors }
+          };
+        } catch (error) {
+          console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.execute failed:`, error);
+          return {
+            success: false,
+            message: `Report organization failed: ${error}`,
+            details: { error: String(error) }
+          };
+        }
+      }
+      async verify(_context) {
+        return true;
+      }
+    };
     UpdateReportLinksOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -3921,7 +4001,7 @@ ${cleanContent}`;
         this.description = "Insert 'chatgpt/' before year in report links inside reports";
         this.type = "automatic";
       }
-      async canRun(context) {
+      async canRun(_context) {
         return true;
       }
       escapeRegExp(str) {
@@ -3935,8 +4015,19 @@ ${cleanContent}`;
           let processed = 0;
           let updated = 0;
           let errors = 0;
-          const reportPrefix = `${reportFolder}/chatgpt/`;
-          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => f.path.startsWith(reportPrefix));
+          const reportPrefixChatgpt = `${reportFolder}/chatgpt/`;
+          const reportPrefixRoot = `${reportFolder}/`;
+          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
+            if (f.path.startsWith(reportPrefixChatgpt))
+              return true;
+            if (f.path.startsWith(reportPrefixRoot)) {
+              const relativePath = f.path.substring(reportPrefixRoot.length);
+              if (!relativePath.includes("/") && (f.name.includes("import report") || f.name.includes("import_"))) {
+                return true;
+              }
+            }
+            return false;
+          });
           const linkPattern = new RegExp(`(\\[\\[${escapedArchive}/)(\\d{4}/\\d{2}/)`, "g");
           for (const file of reportFiles) {
             try {
@@ -3967,7 +4058,7 @@ ${cleanContent}`;
           };
         }
       }
-      async verify(context) {
+      async verify(_context) {
         return true;
       }
     };
@@ -4063,7 +4154,7 @@ ${cleanContent}`;
       }
       onOpen() {
         var _a;
-        const { containerEl, contentEl, titleEl } = this;
+        const { containerEl, titleEl } = this;
         containerEl.classList.add("nexus-upgrade-modal");
         titleEl.setText(`\u{1F680} Nexus AI Chat Importer ${this.version}`);
         (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
@@ -4126,10 +4217,10 @@ Your conversations will be reorganized with provider structure and modern callou
         this.description = "Optionally reimport conversations to get all v1.2.0 features (attachments, chronological order, etc.)";
         this.type = "manual";
       }
-      async canRun(context) {
+      async canRun(_context) {
         return true;
       }
-      async execute(context) {
+      async execute(_context) {
         try {
           return {
             success: true,
@@ -4145,7 +4236,7 @@ Your conversations will be reorganized with provider structure and modern callou
           };
         }
       }
-      async verify(context) {
+      async verify(_context) {
         return true;
       }
     };
@@ -4155,6 +4246,7 @@ Your conversations will be reorganized with provider structure and modern callou
         this.version = "1.2.0";
         this.automaticOperations = [
           new MoveYearFoldersOperation(),
+          new MoveReportsToProviderOperation(),
           new UpdateReportLinksOperation(),
           new ConvertToCalloutsOperation()
         ];

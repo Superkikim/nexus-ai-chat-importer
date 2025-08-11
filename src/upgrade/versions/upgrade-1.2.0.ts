@@ -300,6 +300,110 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 }
 
 /**
+ * Move reports from root Reports/ folder to Reports/chatgpt/ (automatic operation)
+ * For users upgrading directly from pre-1.1.0 versions
+ */
+class MoveReportsToProviderOperation extends UpgradeOperation {
+    readonly id = "move-reports-to-provider";
+    readonly name = "Organize Reports by Provider";
+    readonly description = "Move reports from root Reports/ folder to Reports/chatgpt/";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        try {
+            const reportFolder = context.plugin.settings.reportFolder;
+
+            // Check if there are any report files in the root Reports/ folder
+            const reportFiles = context.plugin.app.vault
+                .getMarkdownFiles()
+                .filter(f => {
+                    // Must be in root report folder (not in provider subfolder)
+                    if (!f.path.startsWith(reportFolder + '/')) return false;
+
+                    // Must not already be in a provider subfolder
+                    const relativePath = f.path.substring(reportFolder.length + 1);
+                    if (relativePath.includes('/')) return false; // Already in subfolder
+
+                    // Must be an import report file
+                    return f.name.includes('import report') || f.name.includes('import_');
+                });
+
+            console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun: found ${reportFiles.length} reports in root folder`);
+            return reportFiles.length > 0;
+        } catch (error) {
+            console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun failed:`, error);
+            return false;
+        }
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        try {
+            const reportFolder = context.plugin.settings.reportFolder;
+            let processed = 0;
+            let moved = 0;
+            let errors = 0;
+
+            // Find report files in root folder
+            const reportFiles = context.plugin.app.vault
+                .getMarkdownFiles()
+                .filter(f => {
+                    if (!f.path.startsWith(reportFolder + '/')) return false;
+                    const relativePath = f.path.substring(reportFolder.length + 1);
+                    if (relativePath.includes('/')) return false;
+                    return f.name.includes('import report') || f.name.includes('import_');
+                });
+
+            // Ensure chatgpt subfolder exists
+            const chatgptReportFolder = `${reportFolder}/chatgpt`;
+            try {
+                await context.plugin.app.vault.adapter.mkdir(chatgptReportFolder);
+            } catch (e) {
+                // Folder might already exist, that's fine
+            }
+
+            for (const file of reportFiles) {
+                try {
+                    processed++;
+                    const newPath = `${chatgptReportFolder}/${file.name}`;
+
+                    // Check if target already exists
+                    if (await context.plugin.app.vault.adapter.exists(newPath)) {
+                        console.debug(`[NEXUS-DEBUG] Target already exists, skipping: ${newPath}`);
+                        continue;
+                    }
+
+                    await context.plugin.app.vault.adapter.rename(file.path, newPath);
+                    moved++;
+                    console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} → ${newPath}`);
+                } catch (error) {
+                    errors++;
+                    console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+                }
+            }
+
+            console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation: processed=${processed}, moved=${moved}, errors=${errors}`);
+            return {
+                success: errors === 0,
+                message: `Reports organized: ${moved} files moved to provider structure, ${errors} errors`,
+                details: { processed, moved, errors }
+            };
+        } catch (error) {
+            console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.execute failed:`, error);
+            return {
+                success: false,
+                message: `Report organization failed: ${error}`,
+                details: { error: String(error) }
+            };
+        }
+    }
+
+    async verify(_context: UpgradeContext): Promise<boolean> {
+        // Simple operation; treat as successful if execute returned success
+        return true;
+    }
+}
+
+/**
  * Force update report links to include provider segment (automatic operation)
  * Only pattern considered: ${reportFolder}/chatgpt/
  */
@@ -309,7 +413,7 @@ class UpdateReportLinksOperation extends UpgradeOperation {
     readonly description = "Insert 'chatgpt/' before year in report links inside reports";
     readonly type = "automatic" as const;
 
-    async canRun(context: UpgradeContext): Promise<boolean> {
+    async canRun(_context: UpgradeContext): Promise<boolean> {
         // Force run when this migration executes
         return true;
     }
@@ -328,11 +432,27 @@ class UpdateReportLinksOperation extends UpgradeOperation {
             let updated = 0;
             let errors = 0;
 
-            // Only consider ${reportFolder}/chatgpt/
-            const reportPrefix = `${reportFolder}/chatgpt/`;
+            // Consider both ${reportFolder}/chatgpt/ and ${reportFolder}/ (fallback for pre-1.1.0)
+            const reportPrefixChatgpt = `${reportFolder}/chatgpt/`;
+            const reportPrefixRoot = `${reportFolder}/`;
+
             const reportFiles = context.plugin.app.vault
                 .getMarkdownFiles()
-                .filter(f => f.path.startsWith(reportPrefix));
+                .filter(f => {
+                    // Include files in chatgpt subfolder
+                    if (f.path.startsWith(reportPrefixChatgpt)) return true;
+
+                    // Include files in root report folder (but not in other subfolders)
+                    if (f.path.startsWith(reportPrefixRoot)) {
+                        const relativePath = f.path.substring(reportPrefixRoot.length);
+                        // Must be directly in root folder (no slashes = no subfolders)
+                        if (!relativePath.includes('/') && (f.name.includes('import report') || f.name.includes('import_'))) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                });
 
             // Regex: [[<archiveFolder>/YYYY/MM/ ...]] -> insert chatgpt/
             const linkPattern = new RegExp(`(\\[\\[${escapedArchive}/)(\\d{4}/\\d{2}/)`, 'g');
@@ -368,7 +488,7 @@ class UpdateReportLinksOperation extends UpgradeOperation {
         }
     }
 
-    async verify(context: UpgradeContext): Promise<boolean> {
+    async verify(_context: UpgradeContext): Promise<boolean> {
         // Simple operation; treat as successful if execute returned success
         return true;
     }
@@ -499,7 +619,7 @@ export class NexusUpgradeModal extends Modal {
     }
 
     onOpen(): void {
-        const { containerEl, contentEl, titleEl } = this;
+        const { containerEl, titleEl } = this;
 
         // Add Excalidraw-style CSS class
         containerEl.classList.add('nexus-upgrade-modal');
@@ -579,12 +699,12 @@ class OfferReimportOperation extends UpgradeOperation {
     readonly description = "Optionally reimport conversations to get all v1.2.0 features (attachments, chronological order, etc.)";
     readonly type = "manual" as const;
 
-    async canRun(context: UpgradeContext): Promise<boolean> {
+    async canRun(_context: UpgradeContext): Promise<boolean> {
         // Always offer this option after callout conversion
         return true;
     }
 
-    async execute(context: UpgradeContext): Promise<OperationResult> {
+    async execute(_context: UpgradeContext): Promise<OperationResult> {
         try {
             // The beautiful dialog is now shown BEFORE operations execute
             // This operation just provides information about the upgrade completion
@@ -604,7 +724,7 @@ class OfferReimportOperation extends UpgradeOperation {
         }
     }
 
-    async verify(context: UpgradeContext): Promise<boolean> {
+    async verify(_context: UpgradeContext): Promise<boolean> {
         // This operation always succeeds if it runs
         return true;
     }
@@ -618,6 +738,7 @@ export class Upgrade120 extends VersionUpgrade {
 
     readonly automaticOperations = [
         new MoveYearFoldersOperation(),
+        new MoveReportsToProviderOperation(),
         new UpdateReportLinksOperation(),
         new ConvertToCalloutsOperation()
     ];
