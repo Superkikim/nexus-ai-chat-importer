@@ -67,7 +67,7 @@ Select ChatGPT or Claude. You can select multiple files - they'll be processed c
 - **Claude**: `Archive Folder/claude/YYYY/MM/conversation-title.md`
 
 ### Attachments
-- **Images/Files**: `Attachment Folder/provider/YYYY/MM/`
+- **Images/Files**: `Attachment Folder/provider/`
 - **Claude Artifacts**: `Attachment Folder/claude/artifacts/conversation_id/artifact_v1.md`
 
 ### Reports
@@ -90,7 +90,6 @@ Currently, Claude exports don't include project association data. This limitatio
 ### Performance
 - Large archives (1000+ conversations) may take several minutes to process
 - Obsidian may become temporarily unresponsive during indexing
-- Consider importing in smaller batches if you experience issues
 
 ## 🐛 Troubleshooting
 
