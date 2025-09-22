@@ -1,5 +1,5 @@
 // src/main.ts
-import { Plugin, App, PluginManifest } from "obsidian";
+import { Plugin, App, PluginManifest, Notice } from "obsidian";
 import { DEFAULT_SETTINGS } from "./config/constants";
 import { PluginSettings } from "./types/plugin";
 import { NexusAiChatImporterPluginSettingTab } from "./ui/settings-tab";
@@ -11,7 +11,11 @@ import { FileService } from "./services/file-service";
 import { IncrementalUpgradeManager } from "./upgrade/incremental-upgrade-manager";
 import { Logger } from "./logger";
 import { ProviderSelectionDialog } from "./dialogs/provider-selection-dialog";
+import { EnhancedFileSelectionDialog } from "./dialogs/enhanced-file-selection-dialog";
+import { ConversationSelectionDialog } from "./dialogs/conversation-selection-dialog";
 import { createProviderRegistry } from "./providers/provider-registry";
+import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
+import { ConversationMetadataExtractor } from "./services/conversation-metadata-extractor";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
@@ -200,30 +204,111 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.app,
             providerRegistry,
             (selectedProvider: string) => {
-                this.selectZipFilesForProvider(selectedProvider);
+                this.showEnhancedFileSelectionDialog(selectedProvider);
             }
         ).open();
     }
 
     /**
-     * Select ZIP files for a specific provider
+     * Show enhanced file selection dialog with import mode choice
      */
-    private selectZipFilesForProvider(provider: string): void {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".zip";
-        input.multiple = true;
-        input.onchange = async (e) => {
-            const files = Array.from((e.target as HTMLInputElement).files || []);
-            if (files.length > 0) {
-                // Sort files by timestamp and process with forced provider
-                const sortedFiles = this.sortFilesByTimestamp(files);
-                for (const file of sortedFiles) {
-                    await this.importService.handleZipFile(file, provider);
-                }
+    private showEnhancedFileSelectionDialog(provider: string): void {
+        new EnhancedFileSelectionDialog(
+            this.app,
+            provider,
+            (result: FileSelectionResult) => {
+                this.handleFileSelectionResult(result);
+            },
+            this
+        ).open();
+    }
+
+    /**
+     * Handle the result from enhanced file selection dialog
+     */
+    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
+        const { files, mode, provider } = result;
+
+        if (files.length === 0) {
+            return;
+        }
+
+        // Sort files by timestamp
+        const sortedFiles = this.sortFilesByTimestamp(files);
+
+        if (mode === 'all') {
+            // Import all conversations (existing workflow)
+            for (const file of sortedFiles) {
+                await this.importService.handleZipFile(file, provider);
             }
-        };
-        input.click();
+        } else {
+            // Selective import - show conversation selection dialog
+            await this.handleSelectiveImport(sortedFiles, provider);
+        }
+    }
+
+    /**
+     * Handle selective import workflow
+     */
+    private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
+        try {
+            // For now, handle only the first file (can be extended for multiple files)
+            const file = files[0];
+
+            new Notice("Analyzing conversations...");
+
+            // Create metadata extractor
+            const providerRegistry = createProviderRegistry(this);
+            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+
+            // Load ZIP and extract metadata
+            const JSZip = (await import('jszip')).default;
+            const zip = new JSZip();
+            const zipContent = await zip.loadAsync(file);
+
+            // Extract conversation metadata
+            const conversations = await metadataExtractor.extractMetadataFromZip(zipContent, provider);
+
+            if (conversations.length === 0) {
+                new Notice("No conversations found in the selected file.");
+                return;
+            }
+
+            // Show conversation selection dialog
+            new ConversationSelectionDialog(
+                this.app,
+                conversations,
+                (result: ConversationSelectionResult) => {
+                    this.handleConversationSelectionResult(result, file, provider);
+                },
+                this
+            ).open();
+
+        } catch (error) {
+            this.logger.error("Error in selective import:", error);
+            new Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+
+    /**
+     * Handle the result from conversation selection dialog
+     */
+    private async handleConversationSelectionResult(
+        result: ConversationSelectionResult,
+        file: File,
+        provider: string
+    ): Promise<void> {
+        if (result.selectedIds.length === 0) {
+            new Notice("No conversations selected for import.");
+            return;
+        }
+
+        new Notice(`Importing ${result.selectedIds.length} selected conversations...`);
+
+        // Import only selected conversations
+        await this.importService.handleZipFile(file, provider, result.selectedIds);
+
+        new Notice(`Import completed. Imported ${result.selectedIds.length} of ${result.totalAvailable} conversations.`);
     }
 
     /**

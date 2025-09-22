@@ -18,13 +18,17 @@ export class ImportProgressModal extends Modal {
     private fileName: string;
     private totalConversations: number = 0;
     private currentConversation: number = 0;
-    
+    private isSelectiveImport: boolean = false;
+    private selectedCount: number = 0;
+    private totalAvailable: number = 0;
+
     private modalTitleEl: HTMLElement;
     private phaseEl: HTMLElement;
     private progressBarEl: HTMLElement;
     private statusEl: HTMLElement;
     private detailEl: HTMLElement;
     private conversationCountEl: HTMLElement;
+    private importModeEl: HTMLElement;
     public isComplete: boolean = false;
 
     constructor(app: App, fileName: string) {
@@ -52,6 +56,20 @@ export class ImportProgressModal extends Modal {
             font-weight: 600;
             color: var(--text-accent);
             font-size: 1.1em;
+        `;
+
+        // Import mode indicator
+        this.importModeEl = contentContainer.createEl("div", { cls: "import-mode" });
+        this.importModeEl.style.cssText = `
+            text-align: center;
+            margin: 5px 0 10px 0;
+            font-weight: 500;
+            color: var(--text-accent);
+            font-size: 0.85em;
+            padding: 4px 8px;
+            background: var(--background-secondary);
+            border-radius: 4px;
+            display: none;
         `;
 
         // Conversation counter
@@ -138,7 +156,11 @@ export class ImportProgressModal extends Modal {
 
         // Update conversation counter display
         if (this.totalConversations > 0) {
-            this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} conversations`;
+            if (this.isSelectiveImport) {
+                this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} selected conversations`;
+            } else {
+                this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} conversations`;
+            }
         } else {
             this.conversationCountEl.textContent = '';
         }
@@ -209,6 +231,19 @@ export class ImportProgressModal extends Modal {
                 this.close();
             }
         }, delay);
+    }
+
+    /**
+     * Set selective import mode
+     */
+    setSelectiveImportMode(selectedCount: number, totalAvailable: number) {
+        this.isSelectiveImport = true;
+        this.selectedCount = selectedCount;
+        this.totalAvailable = totalAvailable;
+
+        // Show import mode indicator
+        this.importModeEl.style.display = 'block';
+        this.importModeEl.textContent = `📋 Selective Import: ${selectedCount} of ${totalAvailable} conversations`;
     }
 
     /**

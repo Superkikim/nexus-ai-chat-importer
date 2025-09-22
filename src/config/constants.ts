@@ -18,6 +18,12 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     reportFolder: "", // Will be computed as <archiveFolder>/Reports on load
     skipMissingAttachments: false,
     showAttachmentDetails: true,
+
+    // Conversation selection defaults
+    defaultImportMode: "all",
+    rememberLastImportMode: false,
+    conversationPageSize: 20,
+    autoSelectAllOnOpen: false,
 };
 
 export const GITHUB = {

@@ -54,7 +54,7 @@ export class ImportService {
         });
     }
 
-    async handleZipFile(file: File, forcedProvider?: string) {
+    async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[]) {
         this.importReport = new ImportReport();
         const storage = this.plugin.getStorageService();
 
@@ -62,6 +62,12 @@ export class ImportService {
         const progressModal = new ImportProgressModal(this.plugin.app, file.name);
         const progressCallback = progressModal.getProgressCallback();
         progressModal.open();
+
+        // Set selective import mode if applicable
+        if (selectedConversationIds && selectedConversationIds.length > 0) {
+            // We'll set this after we know the total available count
+            // This will be updated in processConversations
+        }
 
         try {
             progressCallback({
@@ -110,7 +116,7 @@ export class ImportService {
 
             const zip = await this.validateZipFile(file, forcedProvider);
 
-            await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback);
+            await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
 
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
@@ -202,7 +208,7 @@ export class ImportService {
         }
     }
 
-    private async processConversations(zip: JSZip, file: File, isReprocess: boolean, forcedProvider?: string, progressCallback?: ImportProgressCallback): Promise<void> {
+    private async processConversations(zip: JSZip, file: File, isReprocess: boolean, forcedProvider?: string, progressCallback?: ImportProgressCallback, selectedConversationIds?: string[], progressModal?: ImportProgressModal): Promise<void> {
         try {
             progressCallback?.({
                 phase: 'scanning',
@@ -211,7 +217,25 @@ export class ImportService {
             });
 
             // Extract raw conversation data (provider agnostic)
-            const rawConversations = await this.extractRawConversationsFromZip(zip);
+            let rawConversations = await this.extractRawConversationsFromZip(zip);
+
+            // Filter conversations if specific IDs are selected
+            if (selectedConversationIds && selectedConversationIds.length > 0) {
+                const originalCount = rawConversations.length;
+                rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
+
+                // Set selective import mode in progress modal
+                if (progressModal) {
+                    progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
+                }
+
+                progressCallback?.({
+                    phase: 'scanning',
+                    title: 'Filtering conversations...',
+                    detail: `Selected ${rawConversations.length} of ${originalCount} conversations for import`,
+                    total: rawConversations.length
+                });
+            }
 
             progressCallback?.({
                 phase: 'scanning',
@@ -267,12 +291,54 @@ export class ImportService {
 
     /**
      * Extract raw conversation data without knowing provider specifics
-     * TODO: Make this provider-aware when adding Claude support
      */
     private async extractRawConversationsFromZip(zip: JSZip): Promise<any[]> {
-        // Currently only supports ChatGPT's conversations.json format
-        const conversationsJson = await zip.file("conversations.json")!.async("string");
-        return JSON.parse(conversationsJson);
+        const conversationsFile = zip.file("conversations.json");
+        if (!conversationsFile) {
+            throw new NexusAiChatImporterError(
+                "Missing conversations.json",
+                "The ZIP file does not contain a conversations.json file"
+            );
+        }
+
+        const conversationsJson = await conversationsFile.async("string");
+        const parsedData = JSON.parse(conversationsJson);
+
+        // Handle different data structures
+        if (Array.isArray(parsedData)) {
+            // Direct array of conversations (ChatGPT format)
+            return parsedData;
+        } else if (parsedData.conversations && Array.isArray(parsedData.conversations)) {
+            // Nested structure (Claude format)
+            return parsedData.conversations;
+        } else {
+            throw new NexusAiChatImporterError(
+                "Invalid conversations.json structure",
+                "The conversations.json file does not contain a valid conversation array"
+            );
+        }
+    }
+
+    /**
+     * Filter conversations by selected IDs
+     */
+    private filterConversationsByIds(rawConversations: any[], selectedIds: string[], forcedProvider?: string): any[] {
+        const selectedIdsSet = new Set(selectedIds);
+
+        return rawConversations.filter(conversation => {
+            let conversationId: string;
+
+            // Get conversation ID based on provider format
+            if (forcedProvider === 'claude' || (conversation.uuid && conversation.name)) {
+                // Claude format
+                conversationId = conversation.uuid || "";
+            } else {
+                // ChatGPT format (default)
+                conversationId = conversation.id || "";
+            }
+
+            return selectedIdsSet.has(conversationId);
+        });
     }
 
     /**

@@ -16,6 +16,12 @@ export interface PluginSettings {
     reportFolder: string;
     skipMissingAttachments: boolean;
     showAttachmentDetails: boolean;
+
+    // Conversation selection settings
+    defaultImportMode: 'all' | 'selective';
+    rememberLastImportMode: boolean;
+    conversationPageSize: number;
+    autoSelectAllOnOpen: boolean;
 }
 
 export interface ConversationRecord {

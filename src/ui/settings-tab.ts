@@ -3,6 +3,7 @@ import { App, PluginSettingTab } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { BaseSettingsSection } from "./settings/base-settings-section";
 import { ConversationSettingsSection } from "./settings/conversation-settings-section";
+import { ConversationSelectionSettingsSection } from "./settings/conversation-selection-settings-section";
 import { AttachmentSettingsSection } from "./settings/attachment-settings-section";
 import { MigrationsSettingsSection } from "./settings/migrations-settings-section";
 
@@ -17,6 +18,7 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
     private initializeSections(): void {
         this.sections = [
             new ConversationSettingsSection(this.plugin),
+            new ConversationSelectionSettingsSection(this.plugin),
             new AttachmentSettingsSection(this.plugin),
             new MigrationsSettingsSection(this.plugin)
         ].sort((a, b) => a.order - b.order);
