@@ -138,6 +138,11 @@ export class ConversationSelectionDialog extends Modal {
         sortSelect.style.padding = "8px 12px";
         sortSelect.style.border = "1px solid var(--background-modifier-border)";
         sortSelect.style.borderRadius = "4px";
+        sortSelect.style.fontSize = "14px";
+        sortSelect.style.lineHeight = "1.4";
+        sortSelect.style.minHeight = "36px";
+        sortSelect.style.backgroundColor = "var(--background-primary)";
+        sortSelect.style.color = "var(--text-normal)";
 
         const sortOptions = [
             { value: 'updateTime-desc', text: 'Last Updated (Newest)' },
@@ -520,6 +525,19 @@ export class ConversationSelectionDialog extends Modal {
             }
             .nexus-conversation-selection-dialog tr:hover {
                 background-color: var(--background-modifier-hover);
+            }
+            .nexus-conversation-selection-dialog select {
+                font-size: 14px;
+                line-height: 1.4;
+                height: auto;
+                min-height: 36px;
+                background-color: var(--background-primary);
+                color: var(--text-normal);
+                font-family: var(--font-interface);
+            }
+            .nexus-conversation-selection-dialog select option {
+                padding: 4px 8px;
+                line-height: 1.4;
             }
         `;
         document.head.appendChild(style);
