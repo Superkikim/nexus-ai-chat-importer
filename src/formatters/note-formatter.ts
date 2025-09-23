@@ -1,6 +1,6 @@
 // src/formatters/note-formatter.ts
 import { StandardConversation } from "../types/standard";
-import { formatTimestamp, formatTitle } from "../utils";
+import { formatTimestamp, generateSafeAlias } from "../utils";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
 import { URL_GENERATORS } from "../types/standard";
@@ -13,11 +13,11 @@ export class NoteFormatter {
     }
 
     generateMarkdownContent(conversation: StandardConversation): string {
-        const formattedTitle = formatTitle(conversation.title);
+        const safeTitle = generateSafeAlias(conversation.title);
         const createTimeStr = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
         const updateTimeStr = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
 
-        let content = this.generateHeader(formattedTitle, conversation.id, createTimeStr, updateTimeStr, conversation);
+        let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, conversation);
         content += this.generateMessagesContent(conversation);
 
         return content;
@@ -49,15 +49,15 @@ update_time: ${updateTimeStr}
 
 `;
 
-        // Build header content
-        let header = `# Title: ${title}\n\n`;
+        // Build header content - use original title for display, safe title for frontmatter
+        let header = `# Title: ${conversation.title}\n\n`;
         header += `Created: ${createTimeStr}\n`;
         header += `Last Updated: ${updateTimeStr}\n`;
-        
+
         if (chatUrl) {
             header += `Chat URL: ${chatUrl}\n`;
         }
-        
+
         header += '\n\n';
 
         return frontmatter + header;

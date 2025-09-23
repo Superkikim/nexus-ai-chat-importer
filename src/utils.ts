@@ -162,6 +162,52 @@ export function generateConversationFileName(
     return fileName;
 }
 
+/**
+ * Generate safe alias for frontmatter use
+ * Sanitizes titles to be safe for YAML frontmatter while preserving readability
+ */
+export function generateSafeAlias(title: string): string {
+    if (!title || typeof title !== 'string') {
+        return "Untitled";
+    }
+
+    // Start with the title and apply sanitization
+    let cleanName = title
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+        .replace(/[<>:"\/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
+        .replace(/["'`]/g, "") // Remove quotes that could break YAML strings
+        .replace(/[\[\]{}]/g, "") // Remove YAML structural characters
+        .replace(/:/g, "-") // Replace colons (YAML key separator) with hyphens
+        .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
+        .trim();
+
+    // Remove special characters from the beginning
+    cleanName = cleanName.replace(/^[^\w\d\s]+/, "");
+
+    // Clean up any remaining problematic patterns
+    cleanName = cleanName
+        .replace(/\s+/g, " ") // Normalize spaces
+        .trim();
+
+    // Ensure we have a valid alias
+    if (!cleanName || cleanName.length === 0) {
+        cleanName = "Untitled";
+    }
+
+    // Ensure alias doesn't start with a dot (can cause issues in frontmatter)
+    if (cleanName.startsWith(".")) {
+        cleanName = cleanName.substring(1);
+    }
+
+    // Final safety check
+    if (!cleanName || cleanName.length === 0) {
+        cleanName = "Untitled";
+    }
+
+    return cleanName;
+}
+
 export function isValidMessage(message: any): boolean {
     return (
         message &&
