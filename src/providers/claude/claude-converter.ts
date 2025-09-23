@@ -928,6 +928,11 @@ export class ClaudeConverter {
             conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
         }
 
+        // Import generateSafeAlias for frontmatter safety
+        const { generateSafeAlias } = await import("../../utils");
+        const safeTitle = generateSafeAlias(title);
+        const safeArtifactAlias = generateSafeAlias(`${artifactId}_v${versionNumber}`);
+
         // Create markdown content with enhanced frontmatter
         let markdownContent = `---
 nexus: nexus-ai-chat-importer
@@ -939,7 +944,7 @@ version_number: ${versionNumber}
 command: ${command}
 conversation_id: ${conversationId || 'unknown'}
 format: ${language}
-aliases: ["${title}", "${artifactId}_v${versionNumber}"]
+aliases: [${safeTitle}, ${safeArtifactAlias}]
 ---
 
 # ${title} (Version ${versionNumber})
@@ -1031,6 +1036,11 @@ aliases: ["${title}", "${artifactId}_v${versionNumber}"]
             conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
         }
 
+        // Import generateSafeAlias for frontmatter safety
+        const { generateSafeAlias } = await import("../../utils");
+        const safeTitle = generateSafeAlias(title);
+        const safeArtifactAlias = generateSafeAlias(`${artifactId}_v${versionNumber}`);
+
         // Create markdown content with enhanced frontmatter
         let markdownContent = `---
 nexus: nexus-ai-chat-importer
@@ -1042,7 +1052,7 @@ version_number: ${versionNumber}
 command: ${command}
 conversation_id: ${conversationId || 'unknown'}
 format: ${language}
-aliases: ["${title}", "${artifactId}_v${versionNumber}"]
+aliases: [${safeTitle}, ${safeArtifactAlias}]
 ---
 
 # ${title} (Version ${versionNumber})
@@ -1126,12 +1136,17 @@ aliases: ["${title}", "${artifactId}_v${versionNumber}"]
             conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
         }
 
+        // Import generateSafeAlias for frontmatter safety
+        const { generateSafeAlias } = await import("../../utils");
+        const safeTitle = generateSafeAlias(title);
+        const safeArtifactId = generateSafeAlias(artifactId);
+
         // Create markdown content with enhanced frontmatter
         let markdownContent = `---
 nexus: nexus-ai-chat-importer
 plugin_version: ${this.plugin.manifest.version}
 provider: claude
-aliases: ["${title}", "${artifactId}"]
+aliases: [${safeTitle}, ${safeArtifactId}]
 conversation_id: ${conversationId || 'unknown'}
 format: ${language}
 ---

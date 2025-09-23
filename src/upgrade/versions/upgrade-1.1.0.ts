@@ -307,7 +307,7 @@ class CleanMetadataOperation extends UpgradeOperation {
         }
         
         // Use safe alias instead of potentially problematic title
-        newFrontmatter.push(`aliases: "${safeAlias}"`);
+        newFrontmatter.push(`aliases: ${safeAlias}`);
         
         if (frontmatterData.conversation_id) {
             newFrontmatter.push(`conversation_id: ${frontmatterData.conversation_id}`);

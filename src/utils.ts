@@ -165,25 +165,23 @@ export function generateConversationFileName(
 /**
  * Generate safe alias for frontmatter use
  * Sanitizes titles to be safe for YAML frontmatter while preserving readability
+ * Returns either a safe unquoted string or a properly quoted string when necessary
  */
 export function generateSafeAlias(title: string): string {
     if (!title || typeof title !== 'string') {
         return "Untitled";
     }
 
-    // Start with the title and apply sanitization
+    // Start with the title and apply minimal sanitization
     let cleanName = title
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-        .replace(/[<>:"\/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
-        .replace(/["'`]/g, "") // Remove quotes that could break YAML strings
-        .replace(/[\[\]{}]/g, "") // Remove YAML structural characters
-        .replace(/:/g, "-") // Replace colons (YAML key separator) with hyphens
+        .replace(/[<>\/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters (keep quotes and colons)
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
 
     // Remove special characters from the beginning
-    cleanName = cleanName.replace(/^[^\w\d\s]+/, "");
+    cleanName = cleanName.replace(/^[^\w\d\s"']+/, "");
 
     // Clean up any remaining problematic patterns
     cleanName = cleanName
@@ -203,6 +201,24 @@ export function generateSafeAlias(title: string): string {
     // Final safety check
     if (!cleanName || cleanName.length === 0) {
         cleanName = "Untitled";
+    }
+
+    // Check if we need quotes (YAML reserved words or values that could be misinterpreted)
+    const needsQuotes = /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(cleanName) ||
+                       cleanName.includes('"') ||
+                       cleanName.startsWith('#') ||
+                       cleanName.startsWith('&') ||
+                       cleanName.startsWith('*') ||
+                       cleanName.startsWith('!') ||
+                       cleanName.startsWith('|') ||
+                       cleanName.startsWith('>') ||
+                       cleanName.startsWith('%') ||
+                       cleanName.startsWith('@') ||
+                       cleanName.startsWith('`');
+
+    if (needsQuotes) {
+        // Use single quotes and escape any single quotes in the content
+        return `'${cleanName.replace(/'/g, "''")}'`;
     }
 
     return cleanName;

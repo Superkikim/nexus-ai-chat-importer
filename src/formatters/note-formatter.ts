@@ -41,7 +41,7 @@ export class NoteFormatter {
 nexus: ${this.pluginId}
 plugin_version: "${this.pluginVersion}"
 provider: ${conversation.provider}
-aliases: "${title}"
+aliases: ${title}
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
