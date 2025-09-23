@@ -6,6 +6,11 @@ import { ClaudeConversation, ClaudeExportData } from "../providers/claude/claude
 import { isValidMessage } from "../utils";
 
 /**
+ * Conversation existence status for import preview
+ */
+export type ConversationExistenceStatus = 'new' | 'updated' | 'unchanged' | 'unknown';
+
+/**
  * Lightweight conversation metadata for preview purposes
  */
 export interface ConversationMetadata {
@@ -17,6 +22,15 @@ export interface ConversationMetadata {
     provider: string;
     isStarred?: boolean;
     isArchived?: boolean;
+
+    // Multi-file import support
+    sourceFile?: string; // Original ZIP filename
+    sourceFileIndex?: number; // Index in file array for processing order
+
+    // Existence status for import preview
+    existenceStatus?: ConversationExistenceStatus;
+    existingUpdateTime?: number; // Update time of existing conversation (if any)
+    hasNewerContent?: boolean; // True if ZIP version is newer than existing
 }
 
 /**
@@ -29,24 +43,61 @@ export class ConversationMetadataExtractor {
     /**
      * Extract conversation metadata from ZIP file
      */
-    async extractMetadataFromZip(zip: JSZip, forcedProvider?: string): Promise<ConversationMetadata[]> {
+    async extractMetadataFromZip(
+        zip: JSZip,
+        forcedProvider?: string,
+        sourceFileName?: string,
+        sourceFileIndex?: number,
+        existingConversations?: Map<string, any>
+    ): Promise<ConversationMetadata[]> {
         try {
             // Extract raw conversation data
             const rawConversations = await this.extractRawConversationsFromZip(zip);
-            
+
             if (rawConversations.length === 0) {
                 return [];
             }
 
             // Detect provider if not forced
             const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
-            
+
             if (provider === 'unknown') {
                 throw new Error('Could not detect conversation provider from data structure');
             }
 
             // Extract metadata based on provider
-            return this.extractMetadataByProvider(rawConversations, provider);
+            const metadata = this.extractMetadataByProvider(rawConversations, provider);
+
+            // Add source file information and existence status
+            return metadata.map(conv => {
+                const enhanced: ConversationMetadata = {
+                    ...conv,
+                    sourceFile: sourceFileName,
+                    sourceFileIndex: sourceFileIndex
+                };
+
+                // Check existence status if existing conversations provided
+                if (existingConversations) {
+                    const existing = existingConversations.get(conv.id);
+                    if (existing) {
+                        enhanced.existingUpdateTime = existing.updateTime;
+                        if (conv.updateTime > existing.updateTime) {
+                            enhanced.existenceStatus = 'updated';
+                            enhanced.hasNewerContent = true;
+                        } else {
+                            enhanced.existenceStatus = 'unchanged';
+                            enhanced.hasNewerContent = false;
+                        }
+                    } else {
+                        enhanced.existenceStatus = 'new';
+                        enhanced.hasNewerContent = true;
+                    }
+                } else {
+                    enhanced.existenceStatus = 'unknown';
+                }
+
+                return enhanced;
+            });
         } catch (error) {
             throw new Error(`Failed to extract conversation metadata: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -194,6 +245,43 @@ export class ConversationMetadataExtractor {
 
         // Include both human and assistant messages
         return message.sender === 'human' || message.sender === 'assistant';
+    }
+
+    /**
+     * Extract metadata from multiple ZIP files (for multi-file selective import)
+     */
+    async extractMetadataFromMultipleZips(
+        files: File[],
+        forcedProvider?: string,
+        existingConversations?: Map<string, any>
+    ): Promise<ConversationMetadata[]> {
+        const allMetadata: ConversationMetadata[] = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            try {
+                // Load ZIP
+                const JSZip = (await import('jszip')).default;
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(file);
+
+                // Extract metadata with source tracking
+                const metadata = await this.extractMetadataFromZip(
+                    zipContent,
+                    forcedProvider,
+                    file.name,
+                    i,
+                    existingConversations
+                );
+
+                allMetadata.push(...metadata);
+            } catch (error) {
+                console.error(`Error extracting metadata from ${file.name}:`, error);
+                // Continue with other files even if one fails
+            }
+        }
+
+        return allMetadata;
     }
 
     /**

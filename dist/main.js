@@ -9541,7 +9541,10 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
         field: "updateTime",
         direction: "desc"
       },
-      filter: {},
+      filter: {
+        existenceStatus: "all"
+        // Default to show all conversations
+      },
       isLoading: false
     };
     if ((_b = plugin == null ? void 0 : plugin.settings) == null ? void 0 : _b.autoSelectAllOnOpen) {
@@ -9637,6 +9640,39 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
       this.applyFiltersAndSort();
       this.renderConversationList();
     });
+    const statusContainer = section.createDiv();
+    statusContainer.style.marginTop = "10px";
+    const statusLabel = statusContainer.createEl("label");
+    statusLabel.textContent = "Filter by status: ";
+    statusLabel.style.marginRight = "8px";
+    statusLabel.style.fontSize = "14px";
+    const statusSelect = statusContainer.createEl("select");
+    statusSelect.style.padding = "8px 12px";
+    statusSelect.style.border = "1px solid var(--background-modifier-border)";
+    statusSelect.style.borderRadius = "4px";
+    statusSelect.style.fontSize = "14px";
+    statusSelect.style.backgroundColor = "var(--background-primary)";
+    statusSelect.style.color = "var(--text-normal)";
+    const statusOptions = [
+      { value: "all", text: "All Conversations" },
+      { value: "new", text: "New (Not in vault)" },
+      { value: "updated", text: "Updated (Newer than vault)" },
+      { value: "unchanged", text: "Unchanged (Same as vault)" }
+    ];
+    statusOptions.forEach((option) => {
+      const optionEl = statusSelect.createEl("option");
+      optionEl.value = option.value;
+      optionEl.textContent = option.text;
+    });
+    statusSelect.value = this.state.filter.existenceStatus || "all";
+    statusSelect.addEventListener("change", (e) => {
+      const target = e.target;
+      this.state.filter.existenceStatus = target.value;
+      this.applyFiltersAndSort();
+      this.renderConversationList();
+      this.updateSummary();
+      this.updatePagination();
+    });
   }
   createBulkActionsSection(container) {
     const section = container.createDiv("bulk-actions-section");
@@ -9659,6 +9695,34 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
       this.state.selectedIds.clear();
       this.renderConversationList();
       this.updateSummary();
+    });
+    const quickFiltersContainer = section.createDiv();
+    quickFiltersContainer.style.marginLeft = "20px";
+    quickFiltersContainer.style.display = "flex";
+    quickFiltersContainer.style.gap = "8px";
+    const quickFilters = [
+      { text: "New Only", status: "new" },
+      { text: "Updated Only", status: "updated" },
+      { text: "All", status: "all" }
+    ];
+    quickFilters.forEach((filter) => {
+      const btn = quickFiltersContainer.createEl("button", { text: filter.text });
+      btn.style.padding = "4px 8px";
+      btn.style.fontSize = "0.9em";
+      btn.style.border = "1px solid var(--background-modifier-border)";
+      btn.style.borderRadius = "4px";
+      btn.style.backgroundColor = "var(--background-primary)";
+      btn.addEventListener("click", () => {
+        this.state.filter.existenceStatus = filter.status;
+        this.applyFiltersAndSort();
+        this.renderConversationList();
+        this.updateSummary();
+        this.updatePagination();
+        const statusSelect = this.contentEl.querySelector("select[value]");
+        if (statusSelect) {
+          statusSelect.value = filter.status;
+        }
+      });
     });
     const pageSizeContainer = section.createDiv();
     pageSizeContainer.style.marginLeft = "auto";
@@ -9760,6 +9824,11 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
         (conv) => conv.title.toLowerCase().includes(searchTerm)
       );
     }
+    if (this.state.filter.existenceStatus && this.state.filter.existenceStatus !== "all") {
+      filtered = filtered.filter(
+        (conv) => conv.existenceStatus === this.state.filter.existenceStatus
+      );
+    }
     filtered.sort((a, b) => {
       const { field, direction } = this.state.sort;
       let aVal = a[field];
@@ -9814,8 +9883,20 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
       });
       const titleCell = row.createEl("td");
       titleCell.style.padding = "8px";
-      titleCell.textContent = conversation.title;
       titleCell.style.fontWeight = "500";
+      const statusIndicator = this.createStatusIndicator(conversation);
+      if (statusIndicator) {
+        titleCell.appendChild(statusIndicator);
+        titleCell.appendChild(document.createTextNode(" "));
+      }
+      titleCell.appendChild(document.createTextNode(conversation.title));
+      if (conversation.sourceFile) {
+        const sourceInfo = titleCell.createEl("div");
+        sourceInfo.style.fontSize = "0.8em";
+        sourceInfo.style.color = "var(--text-muted)";
+        sourceInfo.style.marginTop = "2px";
+        sourceInfo.textContent = `From: ${conversation.sourceFile}`;
+      }
       const createdCell = row.createEl("td");
       createdCell.style.padding = "8px";
       createdCell.style.fontSize = "0.9em";
@@ -9830,6 +9911,38 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
       messagesCell.textContent = conversation.messageCount.toString();
     });
     this.renderPaginationControls();
+  }
+  createStatusIndicator(conversation) {
+    if (!conversation.existenceStatus || conversation.existenceStatus === "unknown") {
+      return null;
+    }
+    const indicator = document.createElement("span");
+    indicator.style.fontSize = "0.8em";
+    indicator.style.padding = "2px 6px";
+    indicator.style.borderRadius = "3px";
+    indicator.style.fontWeight = "bold";
+    indicator.style.marginRight = "4px";
+    switch (conversation.existenceStatus) {
+      case "new":
+        indicator.textContent = "NEW";
+        indicator.style.backgroundColor = "var(--color-green)";
+        indicator.style.color = "white";
+        indicator.title = "This conversation is not in your vault";
+        break;
+      case "updated":
+        indicator.textContent = "UPDATED";
+        indicator.style.backgroundColor = "var(--color-orange)";
+        indicator.style.color = "white";
+        indicator.title = `This conversation has newer content than your vault (${this.formatDate(conversation.existingUpdateTime || 0)} \u2192 ${this.formatDate(conversation.updateTime)})`;
+        break;
+      case "unchanged":
+        indicator.textContent = "SAME";
+        indicator.style.backgroundColor = "var(--background-modifier-border)";
+        indicator.style.color = "var(--text-muted)";
+        indicator.title = "This conversation is the same as in your vault";
+        break;
+    }
+    return indicator;
   }
   renderPaginationControls() {
     const pageInfo = this.contentEl.querySelector("#page-info");
@@ -9869,10 +9982,28 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
       return;
     const selectedCount = this.state.selectedIds.size;
     const totalCount = this.state.filteredConversations.length;
+    const statusCounts = {
+      new: 0,
+      updated: 0,
+      unchanged: 0,
+      unknown: 0
+    };
+    this.state.filteredConversations.forEach((conv) => {
+      const status = conv.existenceStatus || "unknown";
+      statusCounts[status]++;
+    });
+    const statusParts = [];
+    if (statusCounts.new > 0)
+      statusParts.push(`${statusCounts.new} new`);
+    if (statusCounts.updated > 0)
+      statusParts.push(`${statusCounts.updated} updated`);
+    if (statusCounts.unchanged > 0)
+      statusParts.push(`${statusCounts.unchanged} unchanged`);
+    const statusText = statusParts.length > 0 ? ` (${statusParts.join(", ")})` : "";
     summary.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected
+                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected${statusText}
                 </div>
                 <div style="font-size: 0.9em; color: var(--text-muted);">
                     ${this.state.allConversations.length} total conversations in archive
@@ -9949,7 +10080,7 @@ var ConversationMetadataExtractor = class {
   /**
    * Extract conversation metadata from ZIP file
    */
-  async extractMetadataFromZip(zip, forcedProvider) {
+  async extractMetadataFromZip(zip, forcedProvider, sourceFileName, sourceFileIndex, existingConversations) {
     try {
       const rawConversations = await this.extractRawConversationsFromZip(zip);
       if (rawConversations.length === 0) {
@@ -9959,7 +10090,33 @@ var ConversationMetadataExtractor = class {
       if (provider === "unknown") {
         throw new Error("Could not detect conversation provider from data structure");
       }
-      return this.extractMetadataByProvider(rawConversations, provider);
+      const metadata = this.extractMetadataByProvider(rawConversations, provider);
+      return metadata.map((conv) => {
+        const enhanced = {
+          ...conv,
+          sourceFile: sourceFileName,
+          sourceFileIndex
+        };
+        if (existingConversations) {
+          const existing = existingConversations.get(conv.id);
+          if (existing) {
+            enhanced.existingUpdateTime = existing.updateTime;
+            if (conv.updateTime > existing.updateTime) {
+              enhanced.existenceStatus = "updated";
+              enhanced.hasNewerContent = true;
+            } else {
+              enhanced.existenceStatus = "unchanged";
+              enhanced.hasNewerContent = false;
+            }
+          } else {
+            enhanced.existenceStatus = "new";
+            enhanced.hasNewerContent = true;
+          }
+        } else {
+          enhanced.existenceStatus = "unknown";
+        }
+        return enhanced;
+      });
     } catch (error) {
       throw new Error(`Failed to extract conversation metadata: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -10083,6 +10240,31 @@ var ConversationMetadataExtractor = class {
       return false;
     }
     return message.sender === "human" || message.sender === "assistant";
+  }
+  /**
+   * Extract metadata from multiple ZIP files (for multi-file selective import)
+   */
+  async extractMetadataFromMultipleZips(files, forcedProvider, existingConversations) {
+    const allMetadata = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        const JSZip2 = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
+        const zip = new JSZip2();
+        const zipContent = await zip.loadAsync(file);
+        const metadata = await this.extractMetadataFromZip(
+          zipContent,
+          forcedProvider,
+          file.name,
+          i,
+          existingConversations
+        );
+        allMetadata.push(...metadata);
+      } catch (error) {
+        console.error(`Error extracting metadata from ${file.name}:`, error);
+      }
+    }
+    return allMetadata;
   }
   /**
    * Get total conversation count from ZIP without extracting all metadata
@@ -10273,23 +10455,25 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
-      const file = files[0];
-      new import_obsidian21.Notice("Analyzing conversations...");
+      new import_obsidian21.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
-      const JSZip2 = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
-      const zip = new JSZip2();
-      const zipContent = await zip.loadAsync(file);
-      const conversations = await metadataExtractor.extractMetadataFromZip(zipContent, provider);
+      const storage = this.getStorageService();
+      const existingConversations = await storage.scanExistingConversations();
+      const conversations = await metadataExtractor.extractMetadataFromMultipleZips(
+        files,
+        provider,
+        existingConversations
+      );
       if (conversations.length === 0) {
-        new import_obsidian21.Notice("No conversations found in the selected file.");
+        new import_obsidian21.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
         this.app,
         conversations,
         (result) => {
-          this.handleConversationSelectionResult(result, file, provider);
+          this.handleConversationSelectionResult(result, files, provider);
         },
         this
       ).open();
@@ -10301,14 +10485,50 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
   /**
    * Handle the result from conversation selection dialog
    */
-  async handleConversationSelectionResult(result, file, provider) {
+  async handleConversationSelectionResult(result, files, provider) {
     if (result.selectedIds.length === 0) {
       new import_obsidian21.Notice("No conversations selected for import.");
       return;
     }
-    new import_obsidian21.Notice(`Importing ${result.selectedIds.length} selected conversations...`);
-    await this.importService.handleZipFile(file, provider, result.selectedIds);
+    new import_obsidian21.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    const conversationsByFile = await this.groupConversationsByFile(result, files);
+    for (const file of files) {
+      const conversationsForFile = conversationsByFile.get(file.name);
+      if (conversationsForFile && conversationsForFile.length > 0) {
+        await this.importService.handleZipFile(file, provider, conversationsForFile);
+      }
+    }
     new import_obsidian21.Notice(`Import completed. Imported ${result.selectedIds.length} of ${result.totalAvailable} conversations.`);
+  }
+  /**
+   * Group selected conversations by their source file for multi-file import
+   */
+  async groupConversationsByFile(result, files) {
+    const conversationsByFile = /* @__PURE__ */ new Map();
+    try {
+      const providerRegistry = createProviderRegistry(this);
+      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+      const storage = this.getStorageService();
+      const existingConversations = await storage.scanExistingConversations();
+      const allConversations = await metadataExtractor.extractMetadataFromMultipleZips(
+        files,
+        void 0,
+        // Let it auto-detect provider
+        existingConversations
+      );
+      const selectedIdsSet = new Set(result.selectedIds);
+      for (const conversation of allConversations) {
+        if (selectedIdsSet.has(conversation.id) && conversation.sourceFile) {
+          const fileConversations = conversationsByFile.get(conversation.sourceFile) || [];
+          fileConversations.push(conversation.id);
+          conversationsByFile.set(conversation.sourceFile, fileConversations);
+        }
+      }
+    } catch (error) {
+      this.logger.error("Error grouping conversations by file:", error);
+      conversationsByFile.set(files[0].name, result.selectedIds);
+    }
+    return conversationsByFile;
   }
   /**
    * Sort files by timestamp (same logic as ImportService)

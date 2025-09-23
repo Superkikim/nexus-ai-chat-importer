@@ -42,7 +42,9 @@ export class ConversationSelectionDialog extends Modal {
                 field: 'updateTime',
                 direction: 'desc'
             },
-            filter: {},
+            filter: {
+                existenceStatus: 'all' // Default to show all conversations
+            },
             isLoading: false
         };
 
@@ -172,6 +174,46 @@ export class ConversationSelectionDialog extends Modal {
             this.applyFiltersAndSort();
             this.renderConversationList();
         });
+
+        // Existence status filter
+        const statusContainer = section.createDiv();
+        statusContainer.style.marginTop = "10px";
+
+        const statusLabel = statusContainer.createEl("label");
+        statusLabel.textContent = "Filter by status: ";
+        statusLabel.style.marginRight = "8px";
+        statusLabel.style.fontSize = "14px";
+
+        const statusSelect = statusContainer.createEl("select");
+        statusSelect.style.padding = "8px 12px";
+        statusSelect.style.border = "1px solid var(--background-modifier-border)";
+        statusSelect.style.borderRadius = "4px";
+        statusSelect.style.fontSize = "14px";
+        statusSelect.style.backgroundColor = "var(--background-primary)";
+        statusSelect.style.color = "var(--text-normal)";
+
+        const statusOptions = [
+            { value: 'all', text: 'All Conversations' },
+            { value: 'new', text: 'New (Not in vault)' },
+            { value: 'updated', text: 'Updated (Newer than vault)' },
+            { value: 'unchanged', text: 'Unchanged (Same as vault)' }
+        ];
+
+        statusOptions.forEach(option => {
+            const optionEl = statusSelect.createEl("option");
+            optionEl.value = option.value;
+            optionEl.textContent = option.text;
+        });
+
+        statusSelect.value = this.state.filter.existenceStatus || 'all';
+        statusSelect.addEventListener('change', (e) => {
+            const target = e.target as HTMLSelectElement;
+            this.state.filter.existenceStatus = target.value as FilterOptions['existenceStatus'];
+            this.applyFiltersAndSort();
+            this.renderConversationList();
+            this.updateSummary();
+            this.updatePagination();
+        });
     }
 
     private createBulkActionsSection(container: HTMLElement) {
@@ -199,6 +241,40 @@ export class ConversationSelectionDialog extends Modal {
             this.state.selectedIds.clear();
             this.renderConversationList();
             this.updateSummary();
+        });
+
+        // Quick filter buttons
+        const quickFiltersContainer = section.createDiv();
+        quickFiltersContainer.style.marginLeft = "20px";
+        quickFiltersContainer.style.display = "flex";
+        quickFiltersContainer.style.gap = "8px";
+
+        const quickFilters = [
+            { text: "New Only", status: 'new' as const },
+            { text: "Updated Only", status: 'updated' as const },
+            { text: "All", status: 'all' as const }
+        ];
+
+        quickFilters.forEach(filter => {
+            const btn = quickFiltersContainer.createEl("button", { text: filter.text });
+            btn.style.padding = "4px 8px";
+            btn.style.fontSize = "0.9em";
+            btn.style.border = "1px solid var(--background-modifier-border)";
+            btn.style.borderRadius = "4px";
+            btn.style.backgroundColor = "var(--background-primary)";
+            btn.addEventListener('click', () => {
+                this.state.filter.existenceStatus = filter.status;
+                this.applyFiltersAndSort();
+                this.renderConversationList();
+                this.updateSummary();
+                this.updatePagination();
+
+                // Update the status dropdown to match
+                const statusSelect = this.contentEl.querySelector('select[value]') as HTMLSelectElement;
+                if (statusSelect) {
+                    statusSelect.value = filter.status;
+                }
+            });
         });
 
         // Page size selector
@@ -324,8 +400,15 @@ export class ConversationSelectionDialog extends Modal {
         // Apply search filter
         if (this.state.filter.searchTerm) {
             const searchTerm = this.state.filter.searchTerm.toLowerCase();
-            filtered = filtered.filter(conv => 
+            filtered = filtered.filter(conv =>
                 conv.title.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Apply existence status filter
+        if (this.state.filter.existenceStatus && this.state.filter.existenceStatus !== 'all') {
+            filtered = filtered.filter(conv =>
+                conv.existenceStatus === this.state.filter.existenceStatus
             );
         }
 
@@ -392,11 +475,28 @@ export class ConversationSelectionDialog extends Modal {
                 this.updateSummary();
             });
 
-            // Title cell
+            // Title cell with status indicator
             const titleCell = row.createEl("td");
             titleCell.style.padding = "8px";
-            titleCell.textContent = conversation.title;
             titleCell.style.fontWeight = "500";
+
+            // Add status indicator
+            const statusIndicator = this.createStatusIndicator(conversation);
+            if (statusIndicator) {
+                titleCell.appendChild(statusIndicator);
+                titleCell.appendChild(document.createTextNode(" "));
+            }
+
+            titleCell.appendChild(document.createTextNode(conversation.title));
+
+            // Add source file info for multi-file imports
+            if (conversation.sourceFile) {
+                const sourceInfo = titleCell.createEl("div");
+                sourceInfo.style.fontSize = "0.8em";
+                sourceInfo.style.color = "var(--text-muted)";
+                sourceInfo.style.marginTop = "2px";
+                sourceInfo.textContent = `From: ${conversation.sourceFile}`;
+            }
 
             // Created cell
             const createdCell = row.createEl("td");
@@ -418,6 +518,42 @@ export class ConversationSelectionDialog extends Modal {
         });
 
         this.renderPaginationControls();
+    }
+
+    private createStatusIndicator(conversation: ConversationMetadata): HTMLElement | null {
+        if (!conversation.existenceStatus || conversation.existenceStatus === 'unknown') {
+            return null;
+        }
+
+        const indicator = document.createElement("span");
+        indicator.style.fontSize = "0.8em";
+        indicator.style.padding = "2px 6px";
+        indicator.style.borderRadius = "3px";
+        indicator.style.fontWeight = "bold";
+        indicator.style.marginRight = "4px";
+
+        switch (conversation.existenceStatus) {
+            case 'new':
+                indicator.textContent = "NEW";
+                indicator.style.backgroundColor = "var(--color-green)";
+                indicator.style.color = "white";
+                indicator.title = "This conversation is not in your vault";
+                break;
+            case 'updated':
+                indicator.textContent = "UPDATED";
+                indicator.style.backgroundColor = "var(--color-orange)";
+                indicator.style.color = "white";
+                indicator.title = `This conversation has newer content than your vault (${this.formatDate(conversation.existingUpdateTime || 0)} → ${this.formatDate(conversation.updateTime)})`;
+                break;
+            case 'unchanged':
+                indicator.textContent = "SAME";
+                indicator.style.backgroundColor = "var(--background-modifier-border)";
+                indicator.style.color = "var(--text-muted)";
+                indicator.title = "This conversation is the same as in your vault";
+                break;
+        }
+
+        return indicator;
     }
 
     private renderPaginationControls() {
@@ -471,10 +607,31 @@ export class ConversationSelectionDialog extends Modal {
         const selectedCount = this.state.selectedIds.size;
         const totalCount = this.state.filteredConversations.length;
 
+        // Calculate status counts
+        const statusCounts = {
+            new: 0,
+            updated: 0,
+            unchanged: 0,
+            unknown: 0
+        };
+
+        this.state.filteredConversations.forEach(conv => {
+            const status = conv.existenceStatus || 'unknown';
+            statusCounts[status]++;
+        });
+
+        // Build status breakdown text
+        const statusParts = [];
+        if (statusCounts.new > 0) statusParts.push(`${statusCounts.new} new`);
+        if (statusCounts.updated > 0) statusParts.push(`${statusCounts.updated} updated`);
+        if (statusCounts.unchanged > 0) statusParts.push(`${statusCounts.unchanged} unchanged`);
+
+        const statusText = statusParts.length > 0 ? ` (${statusParts.join(', ')})` : '';
+
         summary.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected
+                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected${statusText}
                 </div>
                 <div style="font-size: 0.9em; color: var(--text-muted);">
                     ${this.state.allConversations.length} total conversations in archive

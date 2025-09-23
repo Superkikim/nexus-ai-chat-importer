@@ -54,6 +54,7 @@ export interface FilterOptions {
     maxMessages?: number;
     showStarred?: boolean;
     showArchived?: boolean;
+    existenceStatus?: 'all' | 'new' | 'updated' | 'unchanged'; // New filter for existence status
 }
 
 /**

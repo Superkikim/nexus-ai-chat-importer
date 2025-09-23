@@ -252,34 +252,34 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
-            // For now, handle only the first file (can be extended for multiple files)
-            const file = files[0];
-
-            new Notice("Analyzing conversations...");
+            new Notice(`Analyzing conversations from ${files.length} file(s)...`);
 
             // Create metadata extractor
             const providerRegistry = createProviderRegistry(this);
             const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
 
-            // Load ZIP and extract metadata
-            const JSZip = (await import('jszip')).default;
-            const zip = new JSZip();
-            const zipContent = await zip.loadAsync(file);
+            // Get existing conversations for status checking
+            const storage = this.getStorageService();
+            const existingConversations = await storage.scanExistingConversations();
 
-            // Extract conversation metadata
-            const conversations = await metadataExtractor.extractMetadataFromZip(zipContent, provider);
+            // Extract metadata from all ZIP files
+            const conversations = await metadataExtractor.extractMetadataFromMultipleZips(
+                files,
+                provider,
+                existingConversations
+            );
 
             if (conversations.length === 0) {
-                new Notice("No conversations found in the selected file.");
+                new Notice("No conversations found in the selected files.");
                 return;
             }
 
-            // Show conversation selection dialog
+            // Show conversation selection dialog with enhanced metadata
             new ConversationSelectionDialog(
                 this.app,
                 conversations,
                 (result: ConversationSelectionResult) => {
-                    this.handleConversationSelectionResult(result, file, provider);
+                    this.handleConversationSelectionResult(result, files, provider);
                 },
                 this
             ).open();
@@ -295,7 +295,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleConversationSelectionResult(
         result: ConversationSelectionResult,
-        file: File,
+        files: File[],
         provider: string
     ): Promise<void> {
         if (result.selectedIds.length === 0) {
@@ -303,12 +303,62 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             return;
         }
 
-        new Notice(`Importing ${result.selectedIds.length} selected conversations...`);
+        new Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
 
-        // Import only selected conversations
-        await this.importService.handleZipFile(file, provider, result.selectedIds);
+        // Group selected conversations by source file for efficient processing
+        const conversationsByFile = await this.groupConversationsByFile(result, files);
+
+        // Process files sequentially in original order
+        for (const file of files) {
+            const conversationsForFile = conversationsByFile.get(file.name);
+            if (conversationsForFile && conversationsForFile.length > 0) {
+                await this.importService.handleZipFile(file, provider, conversationsForFile);
+            }
+        }
 
         new Notice(`Import completed. Imported ${result.selectedIds.length} of ${result.totalAvailable} conversations.`);
+    }
+
+    /**
+     * Group selected conversations by their source file for multi-file import
+     */
+    private async groupConversationsByFile(
+        result: ConversationSelectionResult,
+        files: File[]
+    ): Promise<Map<string, string[]>> {
+        const conversationsByFile = new Map<string, string[]>();
+
+        // We need to re-extract metadata to get source file information
+        // This is necessary because the selection result only contains IDs
+        try {
+            const providerRegistry = createProviderRegistry(this);
+            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+            const storage = this.getStorageService();
+            const existingConversations = await storage.scanExistingConversations();
+
+            // Re-extract metadata with source file tracking
+            const allConversations = await metadataExtractor.extractMetadataFromMultipleZips(
+                files,
+                undefined, // Let it auto-detect provider
+                existingConversations
+            );
+
+            // Group selected conversations by source file
+            const selectedIdsSet = new Set(result.selectedIds);
+            for (const conversation of allConversations) {
+                if (selectedIdsSet.has(conversation.id) && conversation.sourceFile) {
+                    const fileConversations = conversationsByFile.get(conversation.sourceFile) || [];
+                    fileConversations.push(conversation.id);
+                    conversationsByFile.set(conversation.sourceFile, fileConversations);
+                }
+            }
+        } catch (error) {
+            this.logger.error("Error grouping conversations by file:", error);
+            // Fallback: assign all conversations to first file
+            conversationsByFile.set(files[0].name, result.selectedIds);
+        }
+
+        return conversationsByFile;
     }
 
     /**
