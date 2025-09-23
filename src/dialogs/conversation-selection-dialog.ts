@@ -1,28 +1,31 @@
 // src/dialogs/conversation-selection-dialog.ts
 import { App, Modal, Setting } from "obsidian";
-import { ConversationMetadata } from "../services/conversation-metadata-extractor";
-import { 
-    ConversationSelectionResult, 
-    ConversationSelectionState, 
-    PaginationSettings, 
-    SortOptions, 
-    FilterOptions 
+import { ConversationMetadata, DeduplicationInfo } from "../services/conversation-metadata-extractor";
+import {
+    ConversationSelectionResult,
+    ConversationSelectionState,
+    PaginationSettings,
+    SortOptions,
+    FilterOptions
 } from "../types/conversation-selection";
 
 export class ConversationSelectionDialog extends Modal {
     private state: ConversationSelectionState;
     private onSelectionComplete: (result: ConversationSelectionResult) => void;
     private plugin?: any; // Plugin instance to access settings
+    private deduplicationInfo?: DeduplicationInfo; // Information about deduplication
 
     constructor(
         app: App,
         conversations: ConversationMetadata[],
         onSelectionComplete: (result: ConversationSelectionResult) => void,
-        plugin?: any
+        plugin?: any,
+        deduplicationInfo?: DeduplicationInfo
     ) {
         super(app);
         this.onSelectionComplete = onSelectionComplete;
         this.plugin = plugin;
+        this.deduplicationInfo = deduplicationInfo;
 
         // Get page size from settings or use default
         const pageSize = plugin?.settings?.conversationPageSize || 20;
@@ -628,15 +631,28 @@ export class ConversationSelectionDialog extends Modal {
 
         const statusText = statusParts.length > 0 ? ` (${statusParts.join(', ')})` : '';
 
+        // Build deduplication info text
+        let deduplicationText = '';
+        if (this.deduplicationInfo && this.deduplicationInfo.duplicatesRemoved > 0) {
+            deduplicationText = `
+                <div style="font-size: 0.9em; color: var(--text-accent); margin-top: 8px; padding: 8px; background-color: var(--background-modifier-border); border-radius: 4px;">
+                    📋 <strong>${this.deduplicationInfo.totalConversationsFound}</strong> conversations found,
+                    <strong>${this.deduplicationInfo.duplicatesRemoved}</strong> duplicates removed.
+                    Only latest versions shown.
+                </div>
+            `;
+        }
+
         summary.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected${statusText}
                 </div>
                 <div style="font-size: 0.9em; color: var(--text-muted);">
-                    ${this.state.allConversations.length} total conversations in archive
+                    ${this.state.allConversations.length} unique conversations available
                 </div>
             </div>
+            ${deduplicationText}
         `;
 
         // Update import button state

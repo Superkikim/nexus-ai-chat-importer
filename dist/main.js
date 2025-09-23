@@ -9520,12 +9520,13 @@ var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
 // src/dialogs/conversation-selection-dialog.ts
 var import_obsidian20 = require("obsidian");
 var ConversationSelectionDialog = class extends import_obsidian20.Modal {
-  // Plugin instance to access settings
-  constructor(app, conversations, onSelectionComplete, plugin) {
+  // Information about deduplication
+  constructor(app, conversations, onSelectionComplete, plugin, deduplicationInfo) {
     var _a, _b;
     super(app);
     this.onSelectionComplete = onSelectionComplete;
     this.plugin = plugin;
+    this.deduplicationInfo = deduplicationInfo;
     const pageSize = ((_a = plugin == null ? void 0 : plugin.settings) == null ? void 0 : _a.conversationPageSize) || 20;
     this.state = {
       allConversations: conversations,
@@ -10000,15 +10001,26 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
     if (statusCounts.unchanged > 0)
       statusParts.push(`${statusCounts.unchanged} unchanged`);
     const statusText = statusParts.length > 0 ? ` (${statusParts.join(", ")})` : "";
+    let deduplicationText = "";
+    if (this.deduplicationInfo && this.deduplicationInfo.duplicatesRemoved > 0) {
+      deduplicationText = `
+                <div style="font-size: 0.9em; color: var(--text-accent); margin-top: 8px; padding: 8px; background-color: var(--background-modifier-border); border-radius: 4px;">
+                    \u{1F4CB} <strong>${this.deduplicationInfo.totalConversationsFound}</strong> conversations found,
+                    <strong>${this.deduplicationInfo.duplicatesRemoved}</strong> duplicates removed.
+                    Only latest versions shown.
+                </div>
+            `;
+    }
     summary.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected${statusText}
                 </div>
                 <div style="font-size: 0.9em; color: var(--text-muted);">
-                    ${this.state.allConversations.length} total conversations in archive
+                    ${this.state.allConversations.length} unique conversations available
                 </div>
             </div>
+            ${deduplicationText}
         `;
     const importButton = this.contentEl.querySelector("#import-selected-button");
     if (importButton) {
@@ -10265,13 +10277,24 @@ var ConversationMetadataExtractor = class {
         console.error(`Error extracting metadata from ${file.name}:`, error);
       }
     }
-    return this.deduplicateConversations(allMetadata);
+    const deduplicationResult = this.deduplicateConversationsWithInfo(allMetadata, files.length > 1);
+    return {
+      conversations: deduplicationResult.conversations,
+      deduplicationInfo: deduplicationResult.deduplicationInfo
+    };
   }
   /**
    * Deduplicate conversations by ID, keeping only the latest version (highest updateTime)
    * Maintains source file tracking for the kept version
    */
   deduplicateConversations(conversations) {
+    const result = this.deduplicateConversationsWithInfo(conversations, false);
+    return result.conversations;
+  }
+  /**
+   * Deduplicate conversations with detailed information for user display
+   */
+  deduplicateConversationsWithInfo(conversations, hasMultipleFiles) {
     const conversationMap = /* @__PURE__ */ new Map();
     let duplicatesFound = 0;
     for (const conversation of conversations) {
@@ -10292,10 +10315,19 @@ var ConversationMetadataExtractor = class {
       }
     }
     const deduplicatedConversations = Array.from(conversationMap.values());
+    const deduplicationInfo = {
+      totalConversationsFound: conversations.length,
+      uniqueConversationsKept: deduplicatedConversations.length,
+      duplicatesRemoved: duplicatesFound,
+      hasMultipleFiles
+    };
     if (duplicatesFound > 0) {
       console.log(`Deduplication: Found ${duplicatesFound} duplicate conversations across ZIP files. Reduced from ${conversations.length} to ${deduplicatedConversations.length} unique conversations.`);
     }
-    return deduplicatedConversations;
+    return {
+      conversations: deduplicatedConversations,
+      deduplicationInfo
+    };
   }
   /**
    * Get total conversation count from ZIP without extracting all metadata
@@ -10491,22 +10523,23 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
-      const conversations = await metadataExtractor.extractMetadataFromMultipleZips(
+      const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
         files,
         provider,
         existingConversations
       );
-      if (conversations.length === 0) {
+      if (extractionResult.conversations.length === 0) {
         new import_obsidian21.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
         this.app,
-        conversations,
+        extractionResult.conversations,
         (result) => {
           this.handleConversationSelectionResult(result, files, provider);
         },
-        this
+        this,
+        extractionResult.deduplicationInfo
       ).open();
     } catch (error) {
       this.logger.error("Error in selective import:", error);
@@ -10541,14 +10574,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
-      const allConversations = await metadataExtractor.extractMetadataFromMultipleZips(
+      const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
         files,
         void 0,
         // Let it auto-detect provider
         existingConversations
       );
       const selectedIdsSet = new Set(result.selectedIds);
-      for (const conversation of allConversations) {
+      for (const conversation of extractionResult.conversations) {
         if (selectedIdsSet.has(conversation.id) && conversation.sourceFile) {
           const fileConversations = conversationsByFile.get(conversation.sourceFile) || [];
           fileConversations.push(conversation.id);

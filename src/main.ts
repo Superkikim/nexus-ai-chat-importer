@@ -263,13 +263,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const existingConversations = await storage.scanExistingConversations();
 
             // Extract metadata from all ZIP files
-            const conversations = await metadataExtractor.extractMetadataFromMultipleZips(
+            const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
                 files,
                 provider,
                 existingConversations
             );
 
-            if (conversations.length === 0) {
+            if (extractionResult.conversations.length === 0) {
                 new Notice("No conversations found in the selected files.");
                 return;
             }
@@ -277,11 +277,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             // Show conversation selection dialog with enhanced metadata
             new ConversationSelectionDialog(
                 this.app,
-                conversations,
+                extractionResult.conversations,
                 (result: ConversationSelectionResult) => {
                     this.handleConversationSelectionResult(result, files, provider);
                 },
-                this
+                this,
+                extractionResult.deduplicationInfo
             ).open();
 
         } catch (error) {
@@ -337,7 +338,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const existingConversations = await storage.scanExistingConversations();
 
             // Re-extract metadata with source file tracking
-            const allConversations = await metadataExtractor.extractMetadataFromMultipleZips(
+            const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
                 files,
                 undefined, // Let it auto-detect provider
                 existingConversations
@@ -345,7 +346,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Group selected conversations by source file
             const selectedIdsSet = new Set(result.selectedIds);
-            for (const conversation of allConversations) {
+            for (const conversation of extractionResult.conversations) {
                 if (selectedIdsSet.has(conversation.id) && conversation.sourceFile) {
                     const fileConversations = conversationsByFile.get(conversation.sourceFile) || [];
                     fileConversations.push(conversation.id);

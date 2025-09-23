@@ -11,6 +11,16 @@ import { isValidMessage } from "../utils";
 export type ConversationExistenceStatus = 'new' | 'updated' | 'unchanged' | 'unknown';
 
 /**
+ * Deduplication information for user display
+ */
+export interface DeduplicationInfo {
+    totalConversationsFound: number;
+    uniqueConversationsKept: number;
+    duplicatesRemoved: number;
+    hasMultipleFiles: boolean;
+}
+
+/**
  * Lightweight conversation metadata for preview purposes
  */
 export interface ConversationMetadata {
@@ -31,6 +41,14 @@ export interface ConversationMetadata {
     existenceStatus?: ConversationExistenceStatus;
     existingUpdateTime?: number; // Update time of existing conversation (if any)
     hasNewerContent?: boolean; // True if ZIP version is newer than existing
+}
+
+/**
+ * Result of metadata extraction with deduplication info
+ */
+export interface MetadataExtractionResult {
+    conversations: ConversationMetadata[];
+    deduplicationInfo?: DeduplicationInfo;
 }
 
 /**
@@ -255,7 +273,7 @@ export class ConversationMetadataExtractor {
         files: File[],
         forcedProvider?: string,
         existingConversations?: Map<string, any>
-    ): Promise<ConversationMetadata[]> {
+    ): Promise<MetadataExtractionResult> {
         const allMetadata: ConversationMetadata[] = [];
 
         for (let i = 0; i < files.length; i++) {
@@ -283,7 +301,12 @@ export class ConversationMetadataExtractor {
         }
 
         // Deduplicate conversations by ID, keeping only the latest version
-        return this.deduplicateConversations(allMetadata);
+        const deduplicationResult = this.deduplicateConversationsWithInfo(allMetadata, files.length > 1);
+
+        return {
+            conversations: deduplicationResult.conversations,
+            deduplicationInfo: deduplicationResult.deduplicationInfo
+        };
     }
 
     /**
@@ -291,6 +314,17 @@ export class ConversationMetadataExtractor {
      * Maintains source file tracking for the kept version
      */
     private deduplicateConversations(conversations: ConversationMetadata[]): ConversationMetadata[] {
+        const result = this.deduplicateConversationsWithInfo(conversations, false);
+        return result.conversations;
+    }
+
+    /**
+     * Deduplicate conversations with detailed information for user display
+     */
+    private deduplicateConversationsWithInfo(
+        conversations: ConversationMetadata[],
+        hasMultipleFiles: boolean
+    ): { conversations: ConversationMetadata[], deduplicationInfo: DeduplicationInfo } {
         const conversationMap = new Map<string, ConversationMetadata>();
         let duplicatesFound = 0;
 
@@ -322,13 +356,23 @@ export class ConversationMetadataExtractor {
 
         const deduplicatedConversations = Array.from(conversationMap.values());
 
+        const deduplicationInfo: DeduplicationInfo = {
+            totalConversationsFound: conversations.length,
+            uniqueConversationsKept: deduplicatedConversations.length,
+            duplicatesRemoved: duplicatesFound,
+            hasMultipleFiles
+        };
+
         // Log deduplication results for debugging
         if (duplicatesFound > 0) {
             console.log(`Deduplication: Found ${duplicatesFound} duplicate conversations across ZIP files. ` +
                        `Reduced from ${conversations.length} to ${deduplicatedConversations.length} unique conversations.`);
         }
 
-        return deduplicatedConversations;
+        return {
+            conversations: deduplicatedConversations,
+            deduplicationInfo
+        };
     }
 
     /**
