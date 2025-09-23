@@ -10243,6 +10243,7 @@ var ConversationMetadataExtractor = class {
   }
   /**
    * Extract metadata from multiple ZIP files (for multi-file selective import)
+   * Deduplicates conversations by ID, keeping only the latest version
    */
   async extractMetadataFromMultipleZips(files, forcedProvider, existingConversations) {
     const allMetadata = [];
@@ -10264,7 +10265,37 @@ var ConversationMetadataExtractor = class {
         console.error(`Error extracting metadata from ${file.name}:`, error);
       }
     }
-    return allMetadata;
+    return this.deduplicateConversations(allMetadata);
+  }
+  /**
+   * Deduplicate conversations by ID, keeping only the latest version (highest updateTime)
+   * Maintains source file tracking for the kept version
+   */
+  deduplicateConversations(conversations) {
+    const conversationMap = /* @__PURE__ */ new Map();
+    let duplicatesFound = 0;
+    for (const conversation of conversations) {
+      const existingConversation = conversationMap.get(conversation.id);
+      if (!existingConversation) {
+        conversationMap.set(conversation.id, conversation);
+      } else {
+        duplicatesFound++;
+        if (conversation.updateTime > existingConversation.updateTime) {
+          conversationMap.set(conversation.id, conversation);
+        } else if (conversation.updateTime === existingConversation.updateTime) {
+          const currentFileIndex = conversation.sourceFileIndex || 0;
+          const existingFileIndex = existingConversation.sourceFileIndex || 0;
+          if (currentFileIndex > existingFileIndex) {
+            conversationMap.set(conversation.id, conversation);
+          }
+        }
+      }
+    }
+    const deduplicatedConversations = Array.from(conversationMap.values());
+    if (duplicatesFound > 0) {
+      console.log(`Deduplication: Found ${duplicatesFound} duplicate conversations across ZIP files. Reduced from ${conversations.length} to ${deduplicatedConversations.length} unique conversations.`);
+    }
+    return deduplicatedConversations;
   }
   /**
    * Get total conversation count from ZIP without extracting all metadata

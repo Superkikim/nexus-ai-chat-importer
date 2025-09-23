@@ -249,6 +249,7 @@ export class ConversationMetadataExtractor {
 
     /**
      * Extract metadata from multiple ZIP files (for multi-file selective import)
+     * Deduplicates conversations by ID, keeping only the latest version
      */
     async extractMetadataFromMultipleZips(
         files: File[],
@@ -281,7 +282,53 @@ export class ConversationMetadataExtractor {
             }
         }
 
-        return allMetadata;
+        // Deduplicate conversations by ID, keeping only the latest version
+        return this.deduplicateConversations(allMetadata);
+    }
+
+    /**
+     * Deduplicate conversations by ID, keeping only the latest version (highest updateTime)
+     * Maintains source file tracking for the kept version
+     */
+    private deduplicateConversations(conversations: ConversationMetadata[]): ConversationMetadata[] {
+        const conversationMap = new Map<string, ConversationMetadata>();
+        let duplicatesFound = 0;
+
+        for (const conversation of conversations) {
+            const existingConversation = conversationMap.get(conversation.id);
+
+            if (!existingConversation) {
+                // First occurrence of this conversation ID
+                conversationMap.set(conversation.id, conversation);
+            } else {
+                // Duplicate found - keep the one with the latest updateTime
+                duplicatesFound++;
+
+                if (conversation.updateTime > existingConversation.updateTime) {
+                    // Current conversation is newer, replace the existing one
+                    conversationMap.set(conversation.id, conversation);
+                } else if (conversation.updateTime === existingConversation.updateTime) {
+                    // Same updateTime - prefer the one from the later file (higher sourceFileIndex)
+                    const currentFileIndex = conversation.sourceFileIndex || 0;
+                    const existingFileIndex = existingConversation.sourceFileIndex || 0;
+
+                    if (currentFileIndex > existingFileIndex) {
+                        conversationMap.set(conversation.id, conversation);
+                    }
+                }
+                // If existing conversation is newer or same age from later file, keep it (no action needed)
+            }
+        }
+
+        const deduplicatedConversations = Array.from(conversationMap.values());
+
+        // Log deduplication results for debugging
+        if (duplicatesFound > 0) {
+            console.log(`Deduplication: Found ${duplicatesFound} duplicate conversations across ZIP files. ` +
+                       `Reduced from ${conversations.length} to ${deduplicatedConversations.length} unique conversations.`);
+        }
+
+        return deduplicatedConversations;
     }
 
     /**
