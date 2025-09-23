@@ -6906,38 +6906,6 @@ ${code}
     );
   }
   /**
-   * Save a single artifact version (legacy method)
-   */
-  static async saveSingleArtifactVersion(artifactId, artifactData, versionNumber, conversationId, conversationTitle, conversationCreateTime) {
-    if (!this.plugin) {
-      throw new Error("Plugin not available");
-    }
-    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
-    if (!folderResult.success) {
-      throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
-    }
-    const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
-    const fileName = `${safeArtifactId}_v${versionNumber}.md`;
-    const filePath = `${conversationFolder}/${fileName}`;
-    const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
-    if (shouldSkip) {
-      return;
-    }
-    await this.saveIndividualArtifactVersion(
-      artifactData,
-      filePath,
-      versionNumber,
-      artifactData.content || "",
-      conversationId,
-      conversationTitle,
-      conversationCreateTime,
-      void 0
-      // No forced language for legacy method
-    );
-  }
-  /**
    * Create artifact summary for conversation
    */
   static createArtifactSummary(artifactId, info, conversationId) {
@@ -6958,128 +6926,6 @@ ${code}
     }
     summary += `</div>`;
     return summary;
-  }
-  /**
-   * Save ALL versions of an artifact (legacy method)
-   */
-  static async saveAllArtifactVersions(artifactId, versions, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c;
-    if (!this.plugin) {
-      console.error("Claude converter: Plugin not available for artifact saving");
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_a = versions[0]) == null ? void 0 : _a.title) || artifactId}** (Error: Plugin not available)</div>`;
-    }
-    if (versions.length === 0) {
-      console.error("Claude converter: No versions provided for artifact", artifactId);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${artifactId}** (Error: No versions found)</div>`;
-    }
-    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
-    if (!folderResult.success) {
-      console.error("Claude converter: Failed to create artifacts folder", folderResult.error);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_b = versions[0]) == null ? void 0 : _b.title) || artifactId}** (Error: Could not create folder)</div>`;
-    }
-    const savedVersions = [];
-    let latestVersion = "";
-    let currentContent = "";
-    for (let i = 0; i < versions.length; i++) {
-      const version = versions[i];
-      const versionNumber = i + 1;
-      const fileName = `${artifactId}_v${versionNumber}.md`;
-      const filePath = `${conversationFolder}/${fileName}`;
-      try {
-        const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
-        if (shouldSkip) {
-          console.log(`Skipping existing artifact version: ${filePath}`);
-          savedVersions.push(filePath);
-          latestVersion = filePath;
-          if (version.command === "create" || version.command === "rewrite") {
-            currentContent = version.content || "";
-          }
-          continue;
-        }
-        let versionContent = "";
-        if (version.command === "create" || version.command === "rewrite") {
-          versionContent = version.content || "";
-          currentContent = versionContent;
-        } else if (version.command === "update") {
-          if (version.content && version.content.length > 0) {
-            versionContent = version.content;
-            currentContent = versionContent;
-          } else {
-            versionContent = currentContent;
-          }
-        }
-        await this.saveIndividualArtifactVersion(
-          version,
-          filePath,
-          versionNumber,
-          versionContent,
-          conversationId,
-          conversationTitle,
-          conversationCreateTime,
-          void 0
-          // No forced language for legacy method
-        );
-        savedVersions.push(filePath);
-        latestVersion = filePath;
-      } catch (error) {
-        console.error(`Failed to save artifact version ${versionNumber} to ${filePath}:`, error);
-      }
-    }
-    if (savedVersions.length === 0) {
-      console.error("Claude converter: No versions were saved for artifact", artifactId);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_c = versions[0]) == null ? void 0 : _c.title) || artifactId}** (Error: No versions could be saved)</div>`;
-    }
-    return this.formatArtifactSummary(versions[0], savedVersions, latestVersion, conversationFolder);
-  }
-  /**
-   * Save all versions of an artifact and return summary for conversation (legacy method)
-   */
-  static async saveArtifactVersions(artifactId, versions, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c;
-    if (!this.plugin) {
-      console.error("Claude converter: Plugin not available for artifact saving");
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_a = versions[0]) == null ? void 0 : _a.title) || artifactId}** (Error: Plugin not available)</div>`;
-    }
-    if (versions.length === 0) {
-      console.error("Claude converter: No versions provided for artifact", artifactId);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${artifactId}** (Error: No versions found)</div>`;
-    }
-    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
-    if (!folderResult.success) {
-      console.error("Claude converter: Failed to create artifacts folder", folderResult.error);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_b = versions[0]) == null ? void 0 : _b.title) || artifactId}** (Error: Could not create folder)</div>`;
-    }
-    const savedVersions = [];
-    let latestVersion = "";
-    for (let i = 0; i < versions.length; i++) {
-      const version = versions[i];
-      const versionNumber = i + 1;
-      const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
-      const fileName = `${safeArtifactId}_v${versionNumber}.md`;
-      const filePath = `${conversationFolder}/${fileName}`;
-      try {
-        const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
-        if (shouldSkip) {
-          savedVersions.push(filePath);
-          latestVersion = filePath;
-          continue;
-        }
-        await this.saveArtifactVersion(version, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime);
-        savedVersions.push(filePath);
-        latestVersion = filePath;
-      } catch (error) {
-        console.error(`Failed to save artifact version ${versionNumber} to ${filePath}:`, error);
-      }
-    }
-    if (savedVersions.length === 0) {
-      console.error("Claude converter: No versions were saved for artifact", artifactId);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_c = versions[0]) == null ? void 0 : _c.title) || artifactId}** (Error: No versions could be saved)</div>`;
-    }
-    return this.formatArtifactSummary(versions[0], savedVersions, latestVersion, conversationFolder);
   }
   /**
    * Format artifact summary for conversation display
@@ -7103,59 +6949,6 @@ ${code}
       formattedContent += ` | **[[${conversationFolder}/|All Versions]]**`;
     }
     formattedContent += `</div>`;
-    return formattedContent;
-  }
-  /**
-   * Format Claude artifacts as links to separate files only (legacy method for single artifacts)
-   */
-  static async formatArtifact(artifactInput, conversationId, conversationTitle, conversationCreateTime) {
-    const title = artifactInput.title || "Untitled Artifact";
-    let language = artifactInput.language || "text";
-    const command = artifactInput.command || "create";
-    const artifactId = artifactInput.id || "unknown";
-    const content = artifactInput.content || "";
-    if ((language.toLowerCase() === "text" || !language || language === "undefined") && content) {
-      const detectedLanguage = this.detectLanguageFromContent(content, artifactInput.type);
-      if (detectedLanguage !== "text") {
-        language = detectedLanguage;
-      }
-    }
-    let formattedContent = `<div class="nexus-artifact-box">
-
-**\u{1F3A8} Artifact: ${title}**
-
-`;
-    if (command === "edit") {
-      formattedContent += `*[Artifact edited]*
-
-`;
-    }
-    formattedContent += `> **Language:** ${language}`;
-    if (artifactInput.language !== language) {
-      formattedContent += ` (detected from content, original: ${artifactInput.language})`;
-    }
-    formattedContent += `
-`;
-    formattedContent += `> **Type:** ${artifactInput.type || "code"}
-`;
-    formattedContent += `> **ID:** ${artifactId}
-
-`;
-    if (content && this.plugin) {
-      try {
-        const filePath = await this.saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle, conversationCreateTime);
-        formattedContent += `\u{1F4CE} **[View Artifact](${filePath})**
-
-`;
-      } catch (error) {
-        formattedContent += `\u274C **Error saving artifact:** ${error instanceof Error ? error.message : "Unknown error"}
-
-`;
-      }
-    }
-    formattedContent += `</div>
-
-`;
     return formattedContent;
   }
   /**
@@ -7190,8 +6983,8 @@ ${code}
       const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
       conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
     }
-    const safeTitleV1 = generateSafeAlias(title);
-    const safeArtifactAliasV1 = generateSafeAlias(`${artifactId}_v${versionNumber}`);
+    const safeArtifactTitle = generateSafeAlias(title);
+    const safeArtifactAlias = generateSafeAlias(`${artifactId}_v${versionNumber}`);
     let markdownContent = `---
 nexus: nexus-ai-chat-importer
 plugin_version: ${this.plugin.manifest.version}
@@ -7202,7 +6995,7 @@ version_number: ${versionNumber}
 command: ${command}
 conversation_id: ${conversationId || "unknown"}
 format: ${language}
-aliases: [${safeTitleV1}, ${safeArtifactAliasV1}]
+aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
 ---
 
 # ${title} (Version ${versionNumber})
@@ -7239,150 +7032,6 @@ ${versionContent}
       console.error(`Failed to create artifact file ${filePath}:`, error);
       throw error;
     }
-  }
-  /**
-   * Save a single artifact version (legacy method)
-   */
-  static async saveArtifactVersion(artifactInput, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime) {
-    const title = artifactInput.title || "Untitled Artifact";
-    let language = artifactInput.language || "text";
-    const command = artifactInput.command || "create";
-    const artifactId = artifactInput.id || "unknown";
-    const content = artifactInput.content || "";
-    const versionUuid = artifactInput.version_uuid;
-    if ((language.toLowerCase() === "text" || !language || language === "undefined") && content) {
-      const detectedLanguage = this.detectLanguageFromContent(content, artifactInput.type);
-      if (detectedLanguage !== "text") {
-        language = detectedLanguage;
-      }
-    }
-    let conversationLink = "";
-    if (conversationId && conversationTitle && conversationCreateTime) {
-      const createDate = new Date(conversationCreateTime * 1e3);
-      const year = createDate.getFullYear();
-      const month = String(createDate.getMonth() + 1).padStart(2, "0");
-      const { generateConversationFileName: generateConversationFileName2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-      const fileName = generateConversationFileName2(
-        conversationTitle,
-        conversationCreateTime,
-        this.plugin.settings.addDatePrefix,
-        this.plugin.settings.dateFormat
-      );
-      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
-      conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
-    }
-    const safeTitleV2 = generateSafeAlias(title);
-    const safeArtifactAliasV2 = generateSafeAlias(`${artifactId}_v${versionNumber}`);
-    let markdownContent = `---
-nexus: nexus-ai-chat-importer
-plugin_version: ${this.plugin.manifest.version}
-provider: claude
-artifact_id: ${artifactId}
-version_uuid: ${versionUuid}
-version_number: ${versionNumber}
-command: ${command}
-conversation_id: ${conversationId || "unknown"}
-format: ${language}
-aliases: [${safeTitleV2}, ${safeArtifactAliasV2}]
----
-
-# ${title} (Version ${versionNumber})
-
-**Type:** Claude Artifact
-**Language:** ${language}`;
-    if (artifactInput.language !== language) {
-      markdownContent += ` (detected from content, original: ${artifactInput.language})`;
-    }
-    markdownContent += `
-**Command:** ${command}
-**Version:** ${versionNumber}
-**ID:** ${artifactId}
-**UUID:** ${versionUuid}`;
-    if (conversationLink) {
-      markdownContent += `
-**Conversation:** ${conversationLink}`;
-    }
-    markdownContent += `
-
-## Content
-
-`;
-    if (language.toLowerCase() === "markdown") {
-      markdownContent += content;
-    } else {
-      markdownContent += `\`\`\`${language}
-${content}
-\`\`\``;
-    }
-    try {
-      await this.plugin.app.vault.create(filePath, markdownContent);
-    } catch (error) {
-      console.error(`Failed to create artifact file ${filePath}:`, error);
-      throw error;
-    }
-  }
-  /**
-   * Save artifact as markdown note in attachments/artifacts/ folder (legacy method)
-   */
-  static async saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle, conversationCreateTime) {
-    const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, "_");
-    const fileName = `${safeTitle}_${artifactId}.md`;
-    const artifactFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts`;
-    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const folderResult = await ensureFolderExists2(artifactFolder, this.plugin.app.vault);
-    if (!folderResult.success) {
-      throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
-    }
-    const filePath = `${artifactFolder}/${fileName}`;
-    let conversationLink = "";
-    if (conversationId && conversationTitle && conversationCreateTime) {
-      const createDate = new Date(conversationCreateTime * 1e3);
-      const year = createDate.getFullYear();
-      const month = String(createDate.getMonth() + 1).padStart(2, "0");
-      const { generateConversationFileName: generateConversationFileName2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-      const fileName2 = generateConversationFileName2(
-        conversationTitle,
-        conversationCreateTime,
-        this.plugin.settings.addDatePrefix,
-        this.plugin.settings.dateFormat
-      );
-      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName2}`;
-      conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
-    }
-    const safeTitleLegacy = generateSafeAlias(title);
-    const safeArtifactIdLegacy = generateSafeAlias(artifactId);
-    let markdownContent = `---
-nexus: nexus-ai-chat-importer
-plugin_version: ${this.plugin.manifest.version}
-provider: claude
-aliases: [${safeTitleLegacy}, ${safeArtifactIdLegacy}]
-conversation_id: ${conversationId || "unknown"}
-format: ${language}
----
-
-# ${title}
-
-**Type:** Claude Artifact
-**Language:** ${language}
-**ID:** ${artifactId}`;
-    if (conversationLink) {
-      markdownContent += `
-**Conversation:** ${conversationLink}`;
-    }
-    markdownContent += `
-
-## Content
-
-`;
-    if (language.toLowerCase() === "markdown") {
-      markdownContent += content;
-    } else {
-      markdownContent += `\`\`\`${language}
-${content}
-\`\`\``;
-    }
-    await this.plugin.app.vault.create(filePath, markdownContent);
-    return filePath;
   }
   /**
    * Check if we should skip saving this artifact version (already exists)
