@@ -338,19 +338,35 @@ export class ConversationMetadataExtractor {
                 // Duplicate found - keep the one with the latest updateTime
                 duplicatesFound++;
 
+                let conversationToKeep: ConversationMetadata;
+
                 if (conversation.updateTime > existingConversation.updateTime) {
                     // Current conversation is newer, replace the existing one
-                    conversationMap.set(conversation.id, conversation);
+                    conversationToKeep = conversation;
                 } else if (conversation.updateTime === existingConversation.updateTime) {
                     // Same updateTime - prefer the one from the later file (higher sourceFileIndex)
                     const currentFileIndex = conversation.sourceFileIndex || 0;
                     const existingFileIndex = existingConversation.sourceFileIndex || 0;
 
                     if (currentFileIndex > existingFileIndex) {
-                        conversationMap.set(conversation.id, conversation);
+                        conversationToKeep = conversation;
+                    } else {
+                        conversationToKeep = existingConversation;
                     }
+                } else {
+                    // Existing conversation is newer, keep it
+                    conversationToKeep = existingConversation;
                 }
-                // If existing conversation is newer or same age from later file, keep it (no action needed)
+
+                // Ensure the kept conversation has the correct existence status
+                // The existence status should be based on the latest version's comparison with vault
+                conversationToKeep = this.ensureCorrectExistenceStatus(
+                    conversationToKeep,
+                    conversation,
+                    existingConversation
+                );
+
+                conversationMap.set(conversation.id, conversationToKeep);
             }
         }
 
@@ -372,6 +388,56 @@ export class ConversationMetadataExtractor {
         return {
             conversations: deduplicatedConversations,
             deduplicationInfo
+        };
+    }
+
+    /**
+     * Ensure the kept conversation has the correct existence status after deduplication
+     */
+    private ensureCorrectExistenceStatus(
+        keptConversation: ConversationMetadata,
+        currentConversation: ConversationMetadata,
+        existingConversation: ConversationMetadata
+    ): ConversationMetadata {
+        // If we don't have vault comparison data, return as-is
+        if (!keptConversation.existingUpdateTime && !currentConversation.existingUpdateTime && !existingConversation.existingUpdateTime) {
+            return keptConversation;
+        }
+
+        // Find the conversation that has vault comparison data (existingUpdateTime)
+        const conversationWithVaultData = [keptConversation, currentConversation, existingConversation]
+            .find(conv => conv.existingUpdateTime !== undefined);
+
+        if (!conversationWithVaultData) {
+            return keptConversation;
+        }
+
+        // Recalculate existence status based on the kept conversation's updateTime vs vault
+        const vaultUpdateTime = conversationWithVaultData.existingUpdateTime!;
+        const keptUpdateTime = keptConversation.updateTime;
+
+        let correctedStatus: ConversationExistenceStatus;
+        let hasNewerContent: boolean;
+
+        if (vaultUpdateTime === undefined) {
+            // Conversation doesn't exist in vault
+            correctedStatus = 'new';
+            hasNewerContent = true;
+        } else if (keptUpdateTime > vaultUpdateTime) {
+            // Kept conversation is newer than vault version
+            correctedStatus = 'updated';
+            hasNewerContent = true;
+        } else {
+            // Kept conversation is same as vault version (or older, but that shouldn't happen)
+            correctedStatus = 'unchanged';
+            hasNewerContent = false;
+        }
+
+        return {
+            ...keptConversation,
+            existenceStatus: correctedStatus,
+            existingUpdateTime: vaultUpdateTime,
+            hasNewerContent
         };
     }
 

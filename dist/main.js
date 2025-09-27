@@ -10303,15 +10303,26 @@ var ConversationMetadataExtractor = class {
         conversationMap.set(conversation.id, conversation);
       } else {
         duplicatesFound++;
+        let conversationToKeep;
         if (conversation.updateTime > existingConversation.updateTime) {
-          conversationMap.set(conversation.id, conversation);
+          conversationToKeep = conversation;
         } else if (conversation.updateTime === existingConversation.updateTime) {
           const currentFileIndex = conversation.sourceFileIndex || 0;
           const existingFileIndex = existingConversation.sourceFileIndex || 0;
           if (currentFileIndex > existingFileIndex) {
-            conversationMap.set(conversation.id, conversation);
+            conversationToKeep = conversation;
+          } else {
+            conversationToKeep = existingConversation;
           }
+        } else {
+          conversationToKeep = existingConversation;
         }
+        conversationToKeep = this.ensureCorrectExistenceStatus(
+          conversationToKeep,
+          conversation,
+          existingConversation
+        );
+        conversationMap.set(conversation.id, conversationToKeep);
       }
     }
     const deduplicatedConversations = Array.from(conversationMap.values());
@@ -10327,6 +10338,38 @@ var ConversationMetadataExtractor = class {
     return {
       conversations: deduplicatedConversations,
       deduplicationInfo
+    };
+  }
+  /**
+   * Ensure the kept conversation has the correct existence status after deduplication
+   */
+  ensureCorrectExistenceStatus(keptConversation, currentConversation, existingConversation) {
+    if (!keptConversation.existingUpdateTime && !currentConversation.existingUpdateTime && !existingConversation.existingUpdateTime) {
+      return keptConversation;
+    }
+    const conversationWithVaultData = [keptConversation, currentConversation, existingConversation].find((conv) => conv.existingUpdateTime !== void 0);
+    if (!conversationWithVaultData) {
+      return keptConversation;
+    }
+    const vaultUpdateTime = conversationWithVaultData.existingUpdateTime;
+    const keptUpdateTime = keptConversation.updateTime;
+    let correctedStatus;
+    let hasNewerContent;
+    if (vaultUpdateTime === void 0) {
+      correctedStatus = "new";
+      hasNewerContent = true;
+    } else if (keptUpdateTime > vaultUpdateTime) {
+      correctedStatus = "updated";
+      hasNewerContent = true;
+    } else {
+      correctedStatus = "unchanged";
+      hasNewerContent = false;
+    }
+    return {
+      ...keptConversation,
+      existenceStatus: correctedStatus,
+      existingUpdateTime: vaultUpdateTime,
+      hasNewerContent
     };
   }
   /**
