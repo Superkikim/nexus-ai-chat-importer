@@ -10255,10 +10255,15 @@ var ConversationMetadataExtractor = class {
   }
   /**
    * Extract metadata from multiple ZIP files (for multi-file selective import)
-   * Deduplicates conversations by ID, keeping only the latest version
+   * Follows the same logic as the working import process:
+   * 1. Process files chronologically
+   * 2. Build map of best versions per conversation ID
+   * 3. Compare with vault and filter out unchanged conversations
+   * 4. Only return NEW and UPDATED conversations for selection
    */
   async extractMetadataFromMultipleZips(files, forcedProvider, existingConversations) {
-    const allMetadata = [];
+    const conversationMap = /* @__PURE__ */ new Map();
+    const allConversationsFound = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
@@ -10270,107 +10275,90 @@ var ConversationMetadataExtractor = class {
           forcedProvider,
           file.name,
           i,
-          existingConversations
+          void 0
+          // Don't compare with vault yet
         );
-        allMetadata.push(...metadata);
+        allConversationsFound.push(...metadata);
+        for (const conversation of metadata) {
+          const existing = conversationMap.get(conversation.id);
+          if (!existing) {
+            conversationMap.set(conversation.id, conversation);
+          } else {
+            if (conversation.updateTime > existing.updateTime) {
+              conversationMap.set(conversation.id, conversation);
+            } else if (conversation.updateTime === existing.updateTime) {
+              const currentFileIndex = conversation.sourceFileIndex || 0;
+              const existingFileIndex = existing.sourceFileIndex || 0;
+              if (currentFileIndex > existingFileIndex) {
+                conversationMap.set(conversation.id, conversation);
+              }
+            }
+          }
+        }
       } catch (error) {
         console.error(`Error extracting metadata from ${file.name}:`, error);
       }
     }
-    const deduplicationResult = this.deduplicateConversationsWithInfo(allMetadata, files.length > 1);
-    return {
-      conversations: deduplicationResult.conversations,
-      deduplicationInfo: deduplicationResult.deduplicationInfo
-    };
-  }
-  /**
-   * Deduplicate conversations by ID, keeping only the latest version (highest updateTime)
-   * Maintains source file tracking for the kept version
-   */
-  deduplicateConversations(conversations) {
-    const result = this.deduplicateConversationsWithInfo(conversations, false);
-    return result.conversations;
-  }
-  /**
-   * Deduplicate conversations with detailed information for user display
-   */
-  deduplicateConversationsWithInfo(conversations, hasMultipleFiles) {
-    const conversationMap = /* @__PURE__ */ new Map();
-    let duplicatesFound = 0;
-    for (const conversation of conversations) {
-      const existingConversation = conversationMap.get(conversation.id);
-      if (!existingConversation) {
-        conversationMap.set(conversation.id, conversation);
-      } else {
-        duplicatesFound++;
-        let conversationToKeep;
-        if (conversation.updateTime > existingConversation.updateTime) {
-          conversationToKeep = conversation;
-        } else if (conversation.updateTime === existingConversation.updateTime) {
-          const currentFileIndex = conversation.sourceFileIndex || 0;
-          const existingFileIndex = existingConversation.sourceFileIndex || 0;
-          if (currentFileIndex > existingFileIndex) {
-            conversationToKeep = conversation;
-          } else {
-            conversationToKeep = existingConversation;
-          }
-        } else {
-          conversationToKeep = existingConversation;
-        }
-        conversationToKeep = this.ensureCorrectExistenceStatus(
-          conversationToKeep,
-          conversation,
-          existingConversation
-        );
-        conversationMap.set(conversation.id, conversationToKeep);
-      }
-    }
-    const deduplicatedConversations = Array.from(conversationMap.values());
+    const conversationsForSelection = this.filterConversationsForSelection(
+      Array.from(conversationMap.values()),
+      existingConversations
+    );
     const deduplicationInfo = {
-      totalConversationsFound: conversations.length,
-      uniqueConversationsKept: deduplicatedConversations.length,
-      duplicatesRemoved: duplicatesFound,
-      hasMultipleFiles
+      totalConversationsFound: allConversationsFound.length,
+      uniqueConversationsKept: conversationMap.size,
+      duplicatesRemoved: allConversationsFound.length - conversationMap.size,
+      hasMultipleFiles: files.length > 1
     };
-    if (duplicatesFound > 0) {
-      console.log(`Deduplication: Found ${duplicatesFound} duplicate conversations across ZIP files. Reduced from ${conversations.length} to ${deduplicatedConversations.length} unique conversations.`);
+    if (deduplicationInfo.duplicatesRemoved > 0) {
+      console.log(`Analysis: Found ${deduplicationInfo.totalConversationsFound} conversations across ${files.length} files. After deduplication: ${deduplicationInfo.uniqueConversationsKept} unique conversations. For selection: ${conversationsForSelection.length} conversations (NEW + UPDATED only).`);
     }
     return {
-      conversations: deduplicatedConversations,
+      conversations: conversationsForSelection,
       deduplicationInfo
     };
   }
   /**
-   * Ensure the kept conversation has the correct existence status after deduplication
+   * @deprecated - Old deduplication methods, replaced by new chronological approach
+   * Kept for compatibility but no longer used in the main flow
+   */
+  deduplicateConversations(conversations) {
+    return conversations;
+  }
+  /**
+   * Filter conversations for selection dialog (same logic as working import process)
+   * Only returns NEW and UPDATED conversations - filters out UNCHANGED completely
+   */
+  filterConversationsForSelection(bestVersions, existingConversations) {
+    const conversationsForSelection = [];
+    for (const conversation of bestVersions) {
+      if (!existingConversations) {
+        conversation.existenceStatus = "new";
+        conversation.hasNewerContent = true;
+        conversationsForSelection.push(conversation);
+        continue;
+      }
+      const vaultConversation = existingConversations.get(conversation.id);
+      if (!vaultConversation) {
+        conversation.existenceStatus = "new";
+        conversation.hasNewerContent = true;
+        conversationsForSelection.push(conversation);
+      } else {
+        conversation.existingUpdateTime = vaultConversation.updateTime;
+        if (conversation.updateTime > vaultConversation.updateTime) {
+          conversation.existenceStatus = "updated";
+          conversation.hasNewerContent = true;
+          conversationsForSelection.push(conversation);
+        } else {
+        }
+      }
+    }
+    return conversationsForSelection;
+  }
+  /**
+   * @deprecated - Old deduplication logic, replaced by new chronological approach
    */
   ensureCorrectExistenceStatus(keptConversation, currentConversation, existingConversation) {
-    if (!keptConversation.existingUpdateTime && !currentConversation.existingUpdateTime && !existingConversation.existingUpdateTime) {
-      return keptConversation;
-    }
-    const conversationWithVaultData = [keptConversation, currentConversation, existingConversation].find((conv) => conv.existingUpdateTime !== void 0);
-    if (!conversationWithVaultData) {
-      return keptConversation;
-    }
-    const vaultUpdateTime = conversationWithVaultData.existingUpdateTime;
-    const keptUpdateTime = keptConversation.updateTime;
-    let correctedStatus;
-    let hasNewerContent;
-    if (vaultUpdateTime === void 0) {
-      correctedStatus = "new";
-      hasNewerContent = true;
-    } else if (keptUpdateTime > vaultUpdateTime) {
-      correctedStatus = "updated";
-      hasNewerContent = true;
-    } else {
-      correctedStatus = "unchanged";
-      hasNewerContent = false;
-    }
-    return {
-      ...keptConversation,
-      existenceStatus: correctedStatus,
-      existingUpdateTime: vaultUpdateTime,
-      hasNewerContent
-    };
+    return keptConversation;
   }
   /**
    * Get total conversation count from ZIP without extracting all metadata
