@@ -1,6 +1,6 @@
 // src/dialogs/conversation-selection-dialog.ts
 import { App, Modal, Setting } from "obsidian";
-import { ConversationMetadata, DeduplicationInfo } from "../services/conversation-metadata-extractor";
+import { ConversationMetadata, AnalysisInfo } from "../services/conversation-metadata-extractor";
 import {
     ConversationSelectionResult,
     ConversationSelectionState,
@@ -13,19 +13,19 @@ export class ConversationSelectionDialog extends Modal {
     private state: ConversationSelectionState;
     private onSelectionComplete: (result: ConversationSelectionResult) => void;
     private plugin?: any; // Plugin instance to access settings
-    private deduplicationInfo?: DeduplicationInfo; // Information about deduplication
+    private analysisInfo?: AnalysisInfo; // Information about analysis and filtering
 
     constructor(
         app: App,
         conversations: ConversationMetadata[],
         onSelectionComplete: (result: ConversationSelectionResult) => void,
         plugin?: any,
-        deduplicationInfo?: DeduplicationInfo
+        analysisInfo?: AnalysisInfo
     ) {
         super(app);
         this.onSelectionComplete = onSelectionComplete;
         this.plugin = plugin;
-        this.deduplicationInfo = deduplicationInfo;
+        this.analysisInfo = analysisInfo;
 
         // Get page size from settings or use default
         const pageSize = plugin?.settings?.conversationPageSize || 20;
@@ -610,7 +610,7 @@ export class ConversationSelectionDialog extends Modal {
         const selectedCount = this.state.selectedIds.size;
         const totalCount = this.state.filteredConversations.length;
 
-        // Calculate status counts
+        // Calculate status counts from filtered conversations (what's currently shown)
         const statusCounts = {
             new: 0,
             updated: 0,
@@ -623,37 +623,8 @@ export class ConversationSelectionDialog extends Modal {
             statusCounts[status]++;
         });
 
-        // Build status breakdown text
-        const statusParts = [];
-        if (statusCounts.new > 0) statusParts.push(`${statusCounts.new} new`);
-        if (statusCounts.updated > 0) statusParts.push(`${statusCounts.updated} updated`);
-        if (statusCounts.unchanged > 0) statusParts.push(`${statusCounts.unchanged} unchanged`);
-
-        const statusText = statusParts.length > 0 ? ` (${statusParts.join(', ')})` : '';
-
-        // Build deduplication info text
-        let deduplicationText = '';
-        if (this.deduplicationInfo && this.deduplicationInfo.duplicatesRemoved > 0) {
-            deduplicationText = `
-                <div style="font-size: 0.9em; color: var(--text-accent); margin-top: 8px; padding: 8px; background-color: var(--background-modifier-border); border-radius: 4px;">
-                    📋 <strong>${this.deduplicationInfo.totalConversationsFound}</strong> conversations found,
-                    <strong>${this.deduplicationInfo.duplicatesRemoved}</strong> duplicates removed.
-                    Only latest versions shown.
-                </div>
-            `;
-        }
-
-        summary.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected${statusText}
-                </div>
-                <div style="font-size: 0.9em; color: var(--text-muted);">
-                    ${this.state.allConversations.length} unique conversations available
-                </div>
-            </div>
-            ${deduplicationText}
-        `;
+        // Build the comprehensive summary
+        summary.innerHTML = this.buildComprehensiveSummary(selectedCount, totalCount, statusCounts);
 
         // Update import button state
         const importButton = this.contentEl.querySelector('#import-selected-button') as HTMLButtonElement;
@@ -661,6 +632,57 @@ export class ConversationSelectionDialog extends Modal {
             importButton.disabled = selectedCount === 0;
             importButton.textContent = selectedCount > 0 ? `Import ${selectedCount} Selected` : 'Import Selected';
         }
+    }
+
+    private buildComprehensiveSummary(selectedCount: number, totalCount: number, statusCounts: any): string {
+        // Main selection info
+        const selectionInfo = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="font-size: 1.1em;">
+                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected for import
+                </div>
+            </div>
+        `;
+
+        // Analysis breakdown - comprehensive view
+        let analysisBreakdown = '';
+        if (this.analysisInfo) {
+            const info = this.analysisInfo;
+
+            analysisBreakdown = `
+                <div style="background-color: var(--background-modifier-border); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: var(--text-accent);">📊 Analysis Results</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; font-size: 0.9em;">
+                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
+                            <div style="font-weight: 600; color: var(--color-green);">${info.conversationsNew}</div>
+                            <div style="color: var(--text-muted); font-size: 0.8em;">New conversations</div>
+                        </div>
+                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
+                            <div style="font-weight: 600; color: var(--color-orange);">${info.conversationsUpdated}</div>
+                            <div style="color: var(--text-muted); font-size: 0.8em;">Updated conversations</div>
+                        </div>
+                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
+                            <div style="font-weight: 600; color: var(--text-muted);">${info.conversationsIgnored}</div>
+                            <div style="color: var(--text-muted); font-size: 0.8em;">Ignored (unchanged)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Deduplication info (if applicable)
+        let deduplicationInfo = '';
+        if (this.analysisInfo && this.analysisInfo.duplicatesRemoved > 0) {
+            deduplicationInfo = `
+                <div style="font-size: 0.85em; color: var(--text-muted); padding: 8px; background-color: var(--background-secondary); border-radius: 4px;">
+                    📋 Found <strong>${this.analysisInfo.totalConversationsFound}</strong> conversations across files,
+                    removed <strong>${this.analysisInfo.duplicatesRemoved}</strong> duplicates.
+                    Showing only latest versions and conversations that need importing.
+                </div>
+            `;
+        }
+
+        return selectionInfo + analysisBreakdown + deduplicationInfo;
     }
 
     private handleImportSelected() {

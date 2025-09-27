@@ -11,13 +11,18 @@ import { isValidMessage } from "../utils";
 export type ConversationExistenceStatus = 'new' | 'updated' | 'unchanged' | 'unknown';
 
 /**
- * Deduplication information for user display
+ * Analysis information for user display
  */
-export interface DeduplicationInfo {
+export interface AnalysisInfo {
     totalConversationsFound: number;
     uniqueConversationsKept: number;
     duplicatesRemoved: number;
     hasMultipleFiles: boolean;
+
+    // Detailed breakdown for selection
+    conversationsNew: number;
+    conversationsUpdated: number;
+    conversationsIgnored: number; // unchanged conversations filtered out
 }
 
 /**
@@ -44,11 +49,11 @@ export interface ConversationMetadata {
 }
 
 /**
- * Result of metadata extraction with deduplication info
+ * Result of metadata extraction with analysis info
  */
 export interface MetadataExtractionResult {
     conversations: ConversationMetadata[];
-    deduplicationInfo?: DeduplicationInfo;
+    analysisInfo?: AnalysisInfo;
 }
 
 /**
@@ -333,29 +338,32 @@ export class ConversationMetadataExtractor {
         }
 
         // Step 3: Compare best versions with vault and filter (same logic as working import)
-        const conversationsForSelection = this.filterConversationsForSelection(
+        const filterResult = this.filterConversationsForSelection(
             Array.from(conversationMap.values()),
             existingConversations
         );
 
-        // Step 4: Build deduplication info
-        const deduplicationInfo: DeduplicationInfo = {
+        // Step 4: Build analysis info with detailed breakdown
+        const analysisInfo: AnalysisInfo = {
             totalConversationsFound: allConversationsFound.length,
             uniqueConversationsKept: conversationMap.size,
             duplicatesRemoved: allConversationsFound.length - conversationMap.size,
-            hasMultipleFiles: files.length > 1
+            hasMultipleFiles: files.length > 1,
+            conversationsNew: filterResult.newCount,
+            conversationsUpdated: filterResult.updatedCount,
+            conversationsIgnored: filterResult.ignoredCount
         };
 
         // Log results for debugging
-        if (deduplicationInfo.duplicatesRemoved > 0) {
-            console.log(`Analysis: Found ${deduplicationInfo.totalConversationsFound} conversations across ${files.length} files. ` +
-                       `After deduplication: ${deduplicationInfo.uniqueConversationsKept} unique conversations. ` +
-                       `For selection: ${conversationsForSelection.length} conversations (NEW + UPDATED only).`);
-        }
+        console.log(`Analysis: Found ${analysisInfo.totalConversationsFound} conversations across ${files.length} files. ` +
+                   `After deduplication: ${analysisInfo.uniqueConversationsKept} unique conversations. ` +
+                   `For selection: ${filterResult.conversations.length} conversations ` +
+                   `(${analysisInfo.conversationsNew} new, ${analysisInfo.conversationsUpdated} updated). ` +
+                   `Ignored: ${analysisInfo.conversationsIgnored} unchanged.`);
 
         return {
-            conversations: conversationsForSelection,
-            deduplicationInfo: deduplicationInfo
+            conversations: filterResult.conversations,
+            analysisInfo: analysisInfo
         };
     }
 
@@ -375,8 +383,11 @@ export class ConversationMetadataExtractor {
     private filterConversationsForSelection(
         bestVersions: ConversationMetadata[],
         existingConversations?: Map<string, any>
-    ): ConversationMetadata[] {
+    ): { conversations: ConversationMetadata[], newCount: number, updatedCount: number, ignoredCount: number } {
         const conversationsForSelection: ConversationMetadata[] = [];
+        let newCount = 0;
+        let updatedCount = 0;
+        let ignoredCount = 0;
 
         for (const conversation of bestVersions) {
             if (!existingConversations) {
@@ -384,6 +395,7 @@ export class ConversationMetadataExtractor {
                 conversation.existenceStatus = 'new';
                 conversation.hasNewerContent = true;
                 conversationsForSelection.push(conversation);
+                newCount++;
                 continue;
             }
 
@@ -394,6 +406,7 @@ export class ConversationMetadataExtractor {
                 conversation.existenceStatus = 'new';
                 conversation.hasNewerContent = true;
                 conversationsForSelection.push(conversation);
+                newCount++;
             } else {
                 // Si présente dans le vault → comparer updateTime
                 conversation.existingUpdateTime = vaultConversation.updateTime;
@@ -403,15 +416,22 @@ export class ConversationMetadataExtractor {
                     conversation.existenceStatus = 'updated';
                     conversation.hasNewerContent = true;
                     conversationsForSelection.push(conversation);
+                    updatedCount++;
                 } else {
                     // ZIP identique ou plus ancien que vault → UNCHANGED (IGNORER)
                     // Ne pas ajouter à conversationsForSelection
                     // Cette conversation ne sera pas proposée dans la sélection
+                    ignoredCount++;
                 }
             }
         }
 
-        return conversationsForSelection;
+        return {
+            conversations: conversationsForSelection,
+            newCount,
+            updatedCount,
+            ignoredCount
+        };
     }
 
     /**

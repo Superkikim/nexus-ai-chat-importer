@@ -9520,13 +9520,13 @@ var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
 // src/dialogs/conversation-selection-dialog.ts
 var import_obsidian20 = require("obsidian");
 var ConversationSelectionDialog = class extends import_obsidian20.Modal {
-  // Information about deduplication
-  constructor(app, conversations, onSelectionComplete, plugin, deduplicationInfo) {
+  // Information about analysis and filtering
+  constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
     super(app);
     this.onSelectionComplete = onSelectionComplete;
     this.plugin = plugin;
-    this.deduplicationInfo = deduplicationInfo;
+    this.analysisInfo = analysisInfo;
     const pageSize = ((_a = plugin == null ? void 0 : plugin.settings) == null ? void 0 : _a.conversationPageSize) || 20;
     this.state = {
       allConversations: conversations,
@@ -9993,40 +9993,55 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
       const status = conv.existenceStatus || "unknown";
       statusCounts[status]++;
     });
-    const statusParts = [];
-    if (statusCounts.new > 0)
-      statusParts.push(`${statusCounts.new} new`);
-    if (statusCounts.updated > 0)
-      statusParts.push(`${statusCounts.updated} updated`);
-    if (statusCounts.unchanged > 0)
-      statusParts.push(`${statusCounts.unchanged} unchanged`);
-    const statusText = statusParts.length > 0 ? ` (${statusParts.join(", ")})` : "";
-    let deduplicationText = "";
-    if (this.deduplicationInfo && this.deduplicationInfo.duplicatesRemoved > 0) {
-      deduplicationText = `
-                <div style="font-size: 0.9em; color: var(--text-accent); margin-top: 8px; padding: 8px; background-color: var(--background-modifier-border); border-radius: 4px;">
-                    \u{1F4CB} <strong>${this.deduplicationInfo.totalConversationsFound}</strong> conversations found,
-                    <strong>${this.deduplicationInfo.duplicatesRemoved}</strong> duplicates removed.
-                    Only latest versions shown.
-                </div>
-            `;
-    }
-    summary.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected${statusText}
-                </div>
-                <div style="font-size: 0.9em; color: var(--text-muted);">
-                    ${this.state.allConversations.length} unique conversations available
-                </div>
-            </div>
-            ${deduplicationText}
-        `;
+    summary.innerHTML = this.buildComprehensiveSummary(selectedCount, totalCount, statusCounts);
     const importButton = this.contentEl.querySelector("#import-selected-button");
     if (importButton) {
       importButton.disabled = selectedCount === 0;
       importButton.textContent = selectedCount > 0 ? `Import ${selectedCount} Selected` : "Import Selected";
     }
+  }
+  buildComprehensiveSummary(selectedCount, totalCount, statusCounts) {
+    const selectionInfo = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="font-size: 1.1em;">
+                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected for import
+                </div>
+            </div>
+        `;
+    let analysisBreakdown = "";
+    if (this.analysisInfo) {
+      const info = this.analysisInfo;
+      analysisBreakdown = `
+                <div style="background-color: var(--background-modifier-border); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: var(--text-accent);">\u{1F4CA} Analysis Results</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; font-size: 0.9em;">
+                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
+                            <div style="font-weight: 600; color: var(--color-green);">${info.conversationsNew}</div>
+                            <div style="color: var(--text-muted); font-size: 0.8em;">New conversations</div>
+                        </div>
+                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
+                            <div style="font-weight: 600; color: var(--color-orange);">${info.conversationsUpdated}</div>
+                            <div style="color: var(--text-muted); font-size: 0.8em;">Updated conversations</div>
+                        </div>
+                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
+                            <div style="font-weight: 600; color: var(--text-muted);">${info.conversationsIgnored}</div>
+                            <div style="color: var(--text-muted); font-size: 0.8em;">Ignored (unchanged)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+    }
+    let deduplicationInfo = "";
+    if (this.analysisInfo && this.analysisInfo.duplicatesRemoved > 0) {
+      deduplicationInfo = `
+                <div style="font-size: 0.85em; color: var(--text-muted); padding: 8px; background-color: var(--background-secondary); border-radius: 4px;">
+                    \u{1F4CB} Found <strong>${this.analysisInfo.totalConversationsFound}</strong> conversations across files,
+                    removed <strong>${this.analysisInfo.duplicatesRemoved}</strong> duplicates.
+                    Showing only latest versions and conversations that need importing.
+                </div>
+            `;
+    }
+    return selectionInfo + analysisBreakdown + deduplicationInfo;
   }
   handleImportSelected() {
     const selectedIds = Array.from(this.state.selectedIds);
@@ -10299,22 +10314,23 @@ var ConversationMetadataExtractor = class {
         console.error(`Error extracting metadata from ${file.name}:`, error);
       }
     }
-    const conversationsForSelection = this.filterConversationsForSelection(
+    const filterResult = this.filterConversationsForSelection(
       Array.from(conversationMap.values()),
       existingConversations
     );
-    const deduplicationInfo = {
+    const analysisInfo = {
       totalConversationsFound: allConversationsFound.length,
       uniqueConversationsKept: conversationMap.size,
       duplicatesRemoved: allConversationsFound.length - conversationMap.size,
-      hasMultipleFiles: files.length > 1
+      hasMultipleFiles: files.length > 1,
+      conversationsNew: filterResult.newCount,
+      conversationsUpdated: filterResult.updatedCount,
+      conversationsIgnored: filterResult.ignoredCount
     };
-    if (deduplicationInfo.duplicatesRemoved > 0) {
-      console.log(`Analysis: Found ${deduplicationInfo.totalConversationsFound} conversations across ${files.length} files. After deduplication: ${deduplicationInfo.uniqueConversationsKept} unique conversations. For selection: ${conversationsForSelection.length} conversations (NEW + UPDATED only).`);
-    }
+    console.log(`Analysis: Found ${analysisInfo.totalConversationsFound} conversations across ${files.length} files. After deduplication: ${analysisInfo.uniqueConversationsKept} unique conversations. For selection: ${filterResult.conversations.length} conversations (${analysisInfo.conversationsNew} new, ${analysisInfo.conversationsUpdated} updated). Ignored: ${analysisInfo.conversationsIgnored} unchanged.`);
     return {
-      conversations: conversationsForSelection,
-      deduplicationInfo
+      conversations: filterResult.conversations,
+      analysisInfo
     };
   }
   /**
@@ -10330,11 +10346,15 @@ var ConversationMetadataExtractor = class {
    */
   filterConversationsForSelection(bestVersions, existingConversations) {
     const conversationsForSelection = [];
+    let newCount = 0;
+    let updatedCount = 0;
+    let ignoredCount = 0;
     for (const conversation of bestVersions) {
       if (!existingConversations) {
         conversation.existenceStatus = "new";
         conversation.hasNewerContent = true;
         conversationsForSelection.push(conversation);
+        newCount++;
         continue;
       }
       const vaultConversation = existingConversations.get(conversation.id);
@@ -10342,17 +10362,25 @@ var ConversationMetadataExtractor = class {
         conversation.existenceStatus = "new";
         conversation.hasNewerContent = true;
         conversationsForSelection.push(conversation);
+        newCount++;
       } else {
         conversation.existingUpdateTime = vaultConversation.updateTime;
         if (conversation.updateTime > vaultConversation.updateTime) {
           conversation.existenceStatus = "updated";
           conversation.hasNewerContent = true;
           conversationsForSelection.push(conversation);
+          updatedCount++;
         } else {
+          ignoredCount++;
         }
       }
     }
-    return conversationsForSelection;
+    return {
+      conversations: conversationsForSelection,
+      newCount,
+      updatedCount,
+      ignoredCount
+    };
   }
   /**
    * @deprecated - Old deduplication logic, replaced by new chronological approach
@@ -10570,7 +10598,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
           this.handleConversationSelectionResult(result, files, provider);
         },
         this,
-        extractionResult.deduplicationInfo
+        extractionResult.analysisInfo
       ).open();
     } catch (error) {
       this.logger.error("Error in selective import:", error);

@@ -282,7 +282,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     this.handleConversationSelectionResult(result, files, provider);
                 },
                 this,
-                extractionResult.deduplicationInfo
+                extractionResult.analysisInfo
             ).open();
 
         } catch (error) {
