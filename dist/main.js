@@ -10359,6 +10359,15 @@ var ConversationMetadataExtractor = class {
       }
       const vaultConversation = existingConversations.get(conversation.id);
       if (!vaultConversation) {
+        console.log(`\u{1F50D} TIMESTAMP COMPARISON - NEW:`, {
+          conversationId: conversation.id,
+          title: conversation.title.substring(0, 50) + "...",
+          zipUpdateTime: conversation.updateTime,
+          vaultUpdateTime: "N/A (not in vault)",
+          zipDate: new Date(conversation.updateTime * 1e3).toISOString(),
+          provider: conversation.provider,
+          messageCount: conversation.messageCount
+        });
         conversation.existenceStatus = "new";
         conversation.hasNewerContent = true;
         conversationsForSelection.push(conversation);
@@ -10366,11 +10375,35 @@ var ConversationMetadataExtractor = class {
       } else {
         conversation.existingUpdateTime = vaultConversation.updateTime;
         if (conversation.updateTime > vaultConversation.updateTime) {
+          console.log(`\u{1F50D} TIMESTAMP COMPARISON - UPDATED:`, {
+            conversationId: conversation.id,
+            title: conversation.title.substring(0, 50) + "...",
+            zipUpdateTime: conversation.updateTime,
+            vaultUpdateTime: vaultConversation.updateTime,
+            difference: conversation.updateTime - vaultConversation.updateTime,
+            zipDate: new Date(conversation.updateTime * 1e3).toISOString(),
+            vaultDate: new Date(vaultConversation.updateTime * 1e3).toISOString(),
+            provider: conversation.provider,
+            messageCount: conversation.messageCount,
+            vaultPath: vaultConversation.path
+          });
           conversation.existenceStatus = "updated";
           conversation.hasNewerContent = true;
           conversationsForSelection.push(conversation);
           updatedCount++;
         } else {
+          console.log(`\u{1F50D} TIMESTAMP COMPARISON - IGNORED:`, {
+            conversationId: conversation.id,
+            title: conversation.title.substring(0, 50) + "...",
+            zipUpdateTime: conversation.updateTime,
+            vaultUpdateTime: vaultConversation.updateTime,
+            difference: conversation.updateTime - vaultConversation.updateTime,
+            zipDate: new Date(conversation.updateTime * 1e3).toISOString(),
+            vaultDate: new Date(vaultConversation.updateTime * 1e3).toISOString(),
+            provider: conversation.provider,
+            messageCount: conversation.messageCount,
+            vaultPath: vaultConversation.path
+          });
           ignoredCount++;
         }
       }

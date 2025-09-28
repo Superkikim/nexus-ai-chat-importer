@@ -403,6 +403,16 @@ export class ConversationMetadataExtractor {
 
             if (!vaultConversation) {
                 // Si absente du vault → NEW (toujours proposer)
+                console.log(`🔍 TIMESTAMP COMPARISON - NEW:`, {
+                    conversationId: conversation.id,
+                    title: conversation.title.substring(0, 50) + '...',
+                    zipUpdateTime: conversation.updateTime,
+                    vaultUpdateTime: 'N/A (not in vault)',
+                    zipDate: new Date(conversation.updateTime * 1000).toISOString(),
+                    provider: conversation.provider,
+                    messageCount: conversation.messageCount
+                });
+
                 conversation.existenceStatus = 'new';
                 conversation.hasNewerContent = true;
                 conversationsForSelection.push(conversation);
@@ -413,12 +423,38 @@ export class ConversationMetadataExtractor {
 
                 if (conversation.updateTime > vaultConversation.updateTime) {
                     // ZIP plus récent que vault → UPDATED (proposer)
+                    console.log(`🔍 TIMESTAMP COMPARISON - UPDATED:`, {
+                        conversationId: conversation.id,
+                        title: conversation.title.substring(0, 50) + '...',
+                        zipUpdateTime: conversation.updateTime,
+                        vaultUpdateTime: vaultConversation.updateTime,
+                        difference: conversation.updateTime - vaultConversation.updateTime,
+                        zipDate: new Date(conversation.updateTime * 1000).toISOString(),
+                        vaultDate: new Date(vaultConversation.updateTime * 1000).toISOString(),
+                        provider: conversation.provider,
+                        messageCount: conversation.messageCount,
+                        vaultPath: vaultConversation.path
+                    });
+
                     conversation.existenceStatus = 'updated';
                     conversation.hasNewerContent = true;
                     conversationsForSelection.push(conversation);
                     updatedCount++;
                 } else {
                     // ZIP identique ou plus ancien que vault → UNCHANGED (IGNORER)
+                    console.log(`🔍 TIMESTAMP COMPARISON - IGNORED:`, {
+                        conversationId: conversation.id,
+                        title: conversation.title.substring(0, 50) + '...',
+                        zipUpdateTime: conversation.updateTime,
+                        vaultUpdateTime: vaultConversation.updateTime,
+                        difference: conversation.updateTime - vaultConversation.updateTime,
+                        zipDate: new Date(conversation.updateTime * 1000).toISOString(),
+                        vaultDate: new Date(vaultConversation.updateTime * 1000).toISOString(),
+                        provider: conversation.provider,
+                        messageCount: conversation.messageCount,
+                        vaultPath: vaultConversation.path
+                    });
+
                     // Ne pas ajouter à conversationsForSelection
                     // Cette conversation ne sera pas proposée dans la sélection
                     ignoredCount++;
