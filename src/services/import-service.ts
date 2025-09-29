@@ -57,6 +57,7 @@ export class ImportService {
     async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[]) {
         this.importReport = new ImportReport();
         const storage = this.plugin.getStorageService();
+        let processingStarted = false;
 
         // Create and show progress modal
         const progressModal = new ImportProgressModal(this.plugin.app, file.name);
@@ -116,6 +117,7 @@ export class ImportService {
 
             const zip = await this.validateZipFile(file, forcedProvider);
 
+            processingStarted = true;
             await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
 
             storage.addImportedArchive(fileHash, file.name);
@@ -145,15 +147,18 @@ export class ImportService {
             // Keep modal open for error state
             setTimeout(() => progressModal.close(), 5000);
         } finally {
-            await this.writeImportReport(file.name);
+            // Only write report if processing actually started
+            if (processingStarted) {
+                await this.writeImportReport(file.name);
 
-            // Only show notice if modal was closed due to error or completion
-            if (!progressModal.isComplete) {
-                new Notice(
-                    this.importReport.hasErrors()
-                        ? "An error occurred during import. Please check the log file for details."
-                        : "Import completed. Log file created in the archive folder."
-                );
+                // Only show notice if modal was closed due to error or completion
+                if (!progressModal.isComplete) {
+                    new Notice(
+                        this.importReport.hasErrors()
+                            ? "An error occurred during import. Please check the log file for details."
+                            : "Import completed. Log file created in the archive folder."
+                    );
+                }
             }
         }
     }
