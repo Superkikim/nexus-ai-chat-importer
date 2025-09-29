@@ -17,7 +17,7 @@ export function formatTimestamp(
         case "date":
             return date.format("L");
         case "time":
-            return date.format("LT");
+            return date.format("LTS"); // Changed from LT to LTS to include seconds
     }
 }
 
