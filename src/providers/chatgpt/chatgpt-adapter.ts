@@ -86,15 +86,16 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
         zip: JSZip
     ): Promise<StandardMessage[]> {
         const processedMessages: StandardMessage[] = [];
-        
+
         for (const message of messages) {
             if (message.attachments && message.attachments.length > 0) {
                 const processedAttachments = await this.attachmentExtractor.extractAttachments(
                     zip,
                     conversationId,
-                    message.attachments
+                    message.attachments,
+                    message.id // Pass message ID for better logging
                 );
-                
+
                 processedMessages.push({
                     ...message,
                     attachments: processedAttachments
@@ -103,7 +104,7 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
                 processedMessages.push(message);
             }
         }
-        
+
         return processedMessages;
     }
 

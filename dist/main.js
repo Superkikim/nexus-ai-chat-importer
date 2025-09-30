@@ -6190,18 +6190,19 @@ var ChatGPTAttachmentExtractor = class {
    * - If file exists in ZIP: extract and link
    * - If file missing: create informative note
    */
-  async extractAttachments(zip, conversationId, attachments) {
+  async extractAttachments(zip, conversationId, attachments, messageId) {
     if (!this.plugin.settings.importAttachments || attachments.length === 0) {
       return attachments.map((att) => ({ ...att, status: { processed: false, found: false } }));
     }
     const processedAttachments = [];
     for (const attachment of attachments) {
       try {
-        const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
+        const result = await this.processAttachmentBestEffort(zip, conversationId, attachment, messageId);
         processedAttachments.push(result);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName}`, errorMessage);
+        const context = messageId ? `conversation: ${conversationId}, message: ${messageId}` : `conversation: ${conversationId}`;
+        this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
         processedAttachments.push({
           ...attachment,
           status: {
@@ -6218,8 +6219,8 @@ var ChatGPTAttachmentExtractor = class {
   /**
    * Process single attachment with best effort strategy
    */
-  async processAttachmentBestEffort(zip, conversationId, attachment) {
-    const zipFile = await this.findChatGPTFileById(zip, attachment);
+  async processAttachmentBestEffort(zip, conversationId, attachment, messageId) {
+    const zipFile = await this.findChatGPTFileById(zip, attachment, conversationId, messageId);
     if (!zipFile) {
       return {
         ...attachment,
@@ -6260,7 +6261,8 @@ var ChatGPTAttachmentExtractor = class {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName}`, errorMessage);
+      const context = messageId ? `conversation: ${conversationId}, message: ${messageId}` : `conversation: ${conversationId}`;
+      this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
       return {
         ...attachment,
         status: {
@@ -6350,9 +6352,15 @@ var ChatGPTAttachmentExtractor = class {
   /**
    * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH + CACHING
    */
-  async findChatGPTFileById(zip, attachment) {
+  async findChatGPTFileById(zip, attachment, conversationId, messageId) {
     if (!attachment.fileId) {
-      this.logger.warn("No fileId provided for attachment:", attachment.fileName);
+      const context = conversationId && messageId ? `conversation: ${conversationId}, message: ${messageId}` : conversationId ? `conversation: ${conversationId}` : "unknown context";
+      this.logger.warn(`No fileId provided for attachment: ${attachment.fileName} (${context})`);
+      const zipFile2 = zip.file(attachment.fileName);
+      if (zipFile2) {
+        this.logger.info(`Found attachment by filename fallback: ${attachment.fileName} (${context})`);
+        return zipFile2;
+      }
       return null;
     }
     const cacheKey = `${attachment.fileId}_${attachment.fileName}`;
@@ -6568,7 +6576,9 @@ var ChatGPTAdapter = class {
         const processedAttachments = await this.attachmentExtractor.extractAttachments(
           zip,
           conversationId,
-          message.attachments
+          message.attachments,
+          message.id
+          // Pass message ID for better logging
         );
         processedMessages.push({
           ...message,

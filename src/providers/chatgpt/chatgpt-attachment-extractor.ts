@@ -19,7 +19,8 @@ export class ChatGPTAttachmentExtractor {
     async extractAttachments(
         zip: JSZip,
         conversationId: string,
-        attachments: StandardAttachment[]
+        attachments: StandardAttachment[],
+        messageId?: string
     ): Promise<StandardAttachment[]> {
         if (!this.plugin.settings.importAttachments || attachments.length === 0) {
             return attachments.map(att => ({ ...att, status: { processed: false, found: false } }));
@@ -29,11 +30,14 @@ export class ChatGPTAttachmentExtractor {
 
         for (const attachment of attachments) {
             try {
-                const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
+                const result = await this.processAttachmentBestEffort(zip, conversationId, attachment, messageId);
                 processedAttachments.push(result);
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName}`, errorMessage);
+                const context = messageId
+                    ? `conversation: ${conversationId}, message: ${messageId}`
+                    : `conversation: ${conversationId}`;
+                this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
                 // Even if processing fails, return attachment with error status
                 processedAttachments.push({
                     ...attachment,
@@ -56,11 +60,12 @@ export class ChatGPTAttachmentExtractor {
     private async processAttachmentBestEffort(
         zip: JSZip,
         conversationId: string,
-        attachment: StandardAttachment
+        attachment: StandardAttachment,
+        messageId?: string
     ): Promise<StandardAttachment> {
         // Try to find file in ZIP
-        const zipFile = await this.findChatGPTFileById(zip, attachment);
-        
+        const zipFile = await this.findChatGPTFileById(zip, attachment, conversationId, messageId);
+
         if (!zipFile) {
             // File not found - create informative status
             return {
@@ -78,7 +83,7 @@ export class ChatGPTAttachmentExtractor {
         // File found - try to extract it
         try {
             const extractResult = await this.extractSingleAttachment(zip, conversationId, attachment, zipFile);
-            
+
             if (extractResult) {
                 return {
                     ...attachment,
@@ -104,7 +109,10 @@ export class ChatGPTAttachmentExtractor {
             }
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName}`, errorMessage);
+            const context = messageId
+                ? `conversation: ${conversationId}, message: ${messageId}`
+                : `conversation: ${conversationId}`;
+            this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
             return {
                 ...attachment,
                 status: {
@@ -233,9 +241,27 @@ export class ChatGPTAttachmentExtractor {
     /**
      * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH + CACHING
      */
-    private async findChatGPTFileById(zip: JSZip, attachment: StandardAttachment): Promise<JSZip.JSZipObject | null> {
+    private async findChatGPTFileById(
+        zip: JSZip,
+        attachment: StandardAttachment,
+        conversationId?: string,
+        messageId?: string
+    ): Promise<JSZip.JSZipObject | null> {
         if (!attachment.fileId) {
-            this.logger.warn('No fileId provided for attachment:', attachment.fileName);
+            const context = conversationId && messageId
+                ? `conversation: ${conversationId}, message: ${messageId}`
+                : conversationId
+                ? `conversation: ${conversationId}`
+                : 'unknown context';
+            this.logger.warn(`No fileId provided for attachment: ${attachment.fileName} (${context})`);
+
+            // Fallback: try to find by filename only
+            const zipFile = zip.file(attachment.fileName);
+            if (zipFile) {
+                this.logger.info(`Found attachment by filename fallback: ${attachment.fileName} (${context})`);
+                return zipFile;
+            }
+
             return null;
         }
 
