@@ -14,20 +14,28 @@ export class NoteFormatter {
 
     generateMarkdownContent(conversation: StandardConversation): string {
         const safeTitle = generateSafeAlias(conversation.title);
-        const createTimeStr = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
-        const updateTimeStr = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
 
-        let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, conversation);
+        // Generate ISO 8601 timestamps for frontmatter (v1.3.0+)
+        const createTimeStr = new Date(conversation.createTime * 1000).toISOString();
+        const updateTimeStr = new Date(conversation.updateTime * 1000).toISOString();
+
+        // Generate user-friendly timestamps for note body
+        const createTimeDisplay = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
+        const updateTimeDisplay = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
+
+        let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation);
         content += this.generateMessagesContent(conversation);
 
         return content;
     }
 
     private generateHeader(
-        title: string, 
-        conversationId: string, 
-        createTimeStr: string, 
+        title: string,
+        conversationId: string,
+        createTimeStr: string,
         updateTimeStr: string,
+        createTimeDisplay: string,
+        updateTimeDisplay: string,
         conversation: StandardConversation
     ): string {
         // Generate chat URL
@@ -37,6 +45,7 @@ export class NoteFormatter {
         }
 
         // Build frontmatter with plugin_version after nexus
+        // Timestamps in ISO 8601 format (v1.3.0+)
         let frontmatter = `---
 nexus: ${this.pluginId}
 plugin_version: "${this.pluginVersion}"
@@ -50,9 +59,10 @@ update_time: ${updateTimeStr}
 `;
 
         // Build header content - use original title for display, safe title for frontmatter
+        // Display timestamps in user-friendly format
         let header = `# Title: ${conversation.title}\n\n`;
-        header += `Created: ${createTimeStr}\n`;
-        header += `Last Updated: ${updateTimeStr}\n`;
+        header += `Created: ${createTimeDisplay}\n`;
+        header += `Last Updated: ${updateTimeDisplay}\n`;
 
         if (chatUrl) {
             header += `Chat URL: ${chatUrl}\n`;

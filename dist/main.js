@@ -4286,17 +4286,17 @@ var upgrade_1_3_0_exports = {};
 __export(upgrade_1_3_0_exports, {
   Upgrade130: () => Upgrade130
 });
-var FixTimestampPrecisionOperation, Upgrade130;
+var ConvertToISO8601TimestampsOperation, Upgrade130;
 var init_upgrade_1_3_0 = __esm({
   "src/upgrade/versions/upgrade-1.3.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    FixTimestampPrecisionOperation = class extends UpgradeOperation {
+    ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
-        this.id = "fix-timestamp-precision";
-        this.name = "Fix Timestamp Precision";
-        this.description = "Add seconds (:00) to all existing create_time and update_time frontmatter entries to resolve comparison issues";
+        this.id = "convert-to-iso8601-timestamps";
+        this.name = "Convert Timestamps to ISO 8601";
+        this.description = "Convert all create_time and update_time frontmatter entries from US format to ISO 8601 format";
         this.type = "automatic";
       }
       async canRun(context) {
@@ -4315,7 +4315,10 @@ var init_upgrade_1_3_0 = __esm({
           for (const file of conversationFiles.slice(0, 10)) {
             try {
               const content = await context.plugin.app.vault.read(file);
-              if (this.hasTimestampsWithoutSeconds(content)) {
+              if (!this.isNexusFile(content)) {
+                continue;
+              }
+              if (this.hasUSFormatTimestamps(content)) {
                 return true;
               }
             } catch (error) {
@@ -4324,13 +4327,13 @@ var init_upgrade_1_3_0 = __esm({
           }
           return false;
         } catch (error) {
-          console.error(`FixTimestampPrecision.canRun failed:`, error);
+          console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
           return false;
         }
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] FixTimestampPrecision.execute starting`);
+          console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute starting`);
           const archiveFolder = context.plugin.settings.archiveFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
@@ -4343,9 +4346,10 @@ var init_upgrade_1_3_0 = __esm({
             return true;
           });
           let processed = 0;
-          let fixed = 0;
+          let converted = 0;
+          let skipped = 0;
           let errors = 0;
-          console.debug(`[NEXUS-DEBUG] FixTimestampPrecision: Processing ${conversationFiles.length} files`);
+          console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Processing ${conversationFiles.length} files`);
           const batchSize = 10;
           for (let i = 0; i < conversationFiles.length; i += batchSize) {
             const batch = conversationFiles.slice(i, i + batchSize);
@@ -4353,70 +4357,86 @@ var init_upgrade_1_3_0 = __esm({
               processed++;
               try {
                 const content = await context.plugin.app.vault.read(file);
-                if (!this.hasTimestampsWithoutSeconds(content)) {
+                if (!this.isNexusFile(content)) {
+                  skipped++;
                   continue;
                 }
-                const fixedContent = this.fixTimestampPrecision(content);
-                if (content !== fixedContent) {
-                  const finalContent = this.updatePluginVersion(fixedContent, "1.3.0");
+                if (!this.hasUSFormatTimestamps(content)) {
+                  continue;
+                }
+                const convertedContent = this.convertTimestampsToISO8601(content);
+                if (content !== convertedContent) {
+                  const finalContent = this.updatePluginVersion(convertedContent, "1.3.0");
                   await context.plugin.app.vault.modify(file, finalContent);
-                  fixed++;
+                  converted++;
                 }
               } catch (error) {
                 errors++;
-                console.error(`[NEXUS-DEBUG] Error fixing timestamps in ${file.path}:`, error);
+                console.error(`[NEXUS-DEBUG] Error converting timestamps in ${file.path}:`, error);
               }
             }
             if (i + batchSize < conversationFiles.length) {
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          console.debug(`[NEXUS-DEBUG] FixTimestampPrecision: Completed - processed:${processed}, fixed:${fixed}, errors:${errors}`);
+          console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Completed - processed:${processed}, converted:${converted}, skipped:${skipped}, errors:${errors}`);
           return {
             success: errors === 0,
-            message: `Timestamp precision fix completed: ${fixed} files updated, ${errors} errors`,
-            details: { processed, fixed, errors }
+            message: `Timestamp conversion completed: ${converted} files updated, ${skipped} skipped (non-Nexus), ${errors} errors`,
+            details: { processed, converted, skipped, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] FixTimestampPrecision.execute failed:`, error);
+          console.error(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute failed:`, error);
           return {
             success: false,
-            message: `Timestamp precision fix failed: ${error}`,
+            message: `Timestamp conversion failed: ${error}`,
             details: { error: String(error) }
           };
         }
       }
       /**
-       * Check if content has timestamps without seconds (US format only)
-       * Pattern: create_time: MM/DD/YYYY at H:MM AM/PM (missing :SS)
+       * Check if file belongs to Nexus plugin
        */
-      hasTimestampsWithoutSeconds(content) {
-        const lines = content.split("\n");
-        for (const line of lines) {
-          if (line.match(/^(create|update)_time:/)) {
-            if (line.match(/\d{1,2}:\d{2}\s+(AM|PM)$/)) {
-              if (!line.match(/\d{1,2}:\d{2}:\d{2}\s+(AM|PM)$/)) {
-                return true;
-              }
-            }
-          }
-        }
-        return false;
+      isNexusFile(content) {
+        return content.includes("nexus: nexus-ai-chat-importer");
       }
       /**
-       * Fix timestamp precision by adding :00 seconds to timestamps without seconds
+       * Check if content has US format timestamps (need conversion to ISO 8601)
+       * Pattern: create_time: MM/DD/YYYY at H:MM:SS AM/PM
        */
-      fixTimestampPrecision(content) {
-        return content.replace(
-          /^((?:create|update)_time: .+?\s+)(\d{1,2}:\d{2})(\s+(?:AM|PM))$/gm,
-          (match, prefix, time, suffix) => {
-            const timeParts = time.split(":");
-            if (timeParts.length === 2) {
-              return `${prefix}${time}:00${suffix}`;
-            }
-            return match;
+      hasUSFormatTimestamps(content) {
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch)
+          return false;
+        const frontmatter = frontmatterMatch[1];
+        return /^(create|update)_time: \d{1,2}\/\d{1,2}\/\d{4} at \d{1,2}:\d{2}(:\d{2})? (AM|PM)$/m.test(frontmatter);
+      }
+      /**
+       * Convert US format timestamps to ISO 8601 in frontmatter only
+       * Converts: MM/DD/YYYY at H:MM:SS AM/PM → YYYY-MM-DDTHH:MM:SSZ
+       */
+      convertTimestampsToISO8601(content) {
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch)
+          return content;
+        let frontmatter = frontmatterMatch[1];
+        const restOfContent = content.substring(frontmatterMatch[0].length);
+        frontmatter = frontmatter.replace(
+          /^(create|update)_time: (\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}):(\d{2})(?::(\d{2}))? (AM|PM)$/gm,
+          (match, field, month, day, year, hour, minute, second, ampm) => {
+            let h = parseInt(hour);
+            if (ampm === "PM" && h !== 12)
+              h += 12;
+            if (ampm === "AM" && h === 12)
+              h = 0;
+            const sec = second || "00";
+            const isoDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${h.toString().padStart(2, "0")}:${minute}:${sec}Z`;
+            return `${field}_time: ${isoDate}`;
           }
         );
+        return `---
+${frontmatter}
+---${restOfContent}`;
       }
       /**
        * Update plugin_version in frontmatter
@@ -4443,12 +4463,15 @@ var init_upgrade_1_3_0 = __esm({
           for (const file of conversationFiles) {
             try {
               const content = await context.plugin.app.vault.read(file);
-              if (this.hasTimestampsWithoutSeconds(content)) {
-                console.debug(`[NEXUS-DEBUG] FixTimestampPrecision.verify: Still has timestamps without seconds in ${file.path}`);
+              if (!this.isNexusFile(content)) {
+                continue;
+              }
+              if (this.hasUSFormatTimestamps(content)) {
+                console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Still has US format timestamps in ${file.path}`);
                 return false;
               }
               if (!content.includes('plugin_version: "1.3.0"')) {
-                console.debug(`[NEXUS-DEBUG] FixTimestampPrecision.verify: Missing v1.3.0 in ${file.path}`);
+                console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Missing v1.3.0 in ${file.path}`);
                 return false;
               }
             } catch (error) {
@@ -4458,7 +4481,7 @@ var init_upgrade_1_3_0 = __esm({
           }
           return true;
         } catch (error) {
-          console.error(`FixTimestampPrecision.verify failed:`, error);
+          console.error(`ConvertToISO8601Timestamps.verify failed:`, error);
           return false;
         }
       }
@@ -4468,7 +4491,7 @@ var init_upgrade_1_3_0 = __esm({
         super(...arguments);
         this.version = "1.3.0";
         this.automaticOperations = [
-          new FixTimestampPrecisionOperation()
+          new ConvertToISO8601TimestampsOperation()
         ];
         this.manualOperations = [
           // No manual operations for this version
@@ -5315,13 +5338,15 @@ var NoteFormatter = class {
   }
   generateMarkdownContent(conversation) {
     const safeTitle = generateSafeAlias(conversation.title);
-    const createTimeStr = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
-    const updateTimeStr = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
-    let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, conversation);
+    const createTimeStr = new Date(conversation.createTime * 1e3).toISOString();
+    const updateTimeStr = new Date(conversation.updateTime * 1e3).toISOString();
+    const createTimeDisplay = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
+    const updateTimeDisplay = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
+    let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation);
     content += this.generateMessagesContent(conversation);
     return content;
   }
-  generateHeader(title, conversationId, createTimeStr, updateTimeStr, conversation) {
+  generateHeader(title, conversationId, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation) {
     let chatUrl = conversation.chatUrl;
     if (!chatUrl && URL_GENERATORS[conversation.provider]) {
       chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(conversationId);
@@ -5340,9 +5365,9 @@ update_time: ${updateTimeStr}
     let header = `# Title: ${conversation.title}
 
 `;
-    header += `Created: ${createTimeStr}
+    header += `Created: ${createTimeDisplay}
 `;
-    header += `Last Updated: ${updateTimeStr}
+    header += `Last Updated: ${updateTimeDisplay}
 `;
     if (chatUrl) {
       header += `Chat URL: ${chatUrl}
@@ -8551,20 +8576,19 @@ var StorageService = class {
   }
   /**
    * Parse time string from frontmatter (handle multiple formats)
-   * Supports both old format (without seconds) and new format (with seconds)
-   * Uses moment.js with explicit US format to ensure consistency with formatting
+   * Supports ISO 8601 (v1.3.0+) with fallback to US format (v1.2.0)
    * Examples:
-   * - Old: "01/15/2024 at 2:30 PM"
-   * - New: "01/15/2024 at 2:30:00 PM"
+   * - ISO 8601 (v1.3.0+): "2025-10-04T22:30:45Z" or "2025-10-04T22:30:45.000Z"
+   * - US format with seconds (v1.2.0): "01/15/2024 at 2:30:00 PM"
    */
   parseTimeString(timeStr) {
     if (!timeStr)
       return 0;
     try {
       const { moment: moment2 } = require("obsidian");
-      let date = moment2(timeStr, "MM/DD/YYYY [at] h:mm:ss A", true);
+      let date = moment2(timeStr, moment2.ISO_8601, true);
       if (!date.isValid()) {
-        date = moment2(timeStr, "MM/DD/YYYY [at] h:mm A", true);
+        date = moment2(timeStr, "MM/DD/YYYY [at] h:mm:ss A", true);
       }
       if (!date.isValid()) {
         console.warn(`Could not parse date: ${timeStr}`);

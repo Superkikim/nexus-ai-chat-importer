@@ -292,11 +292,10 @@ export class StorageService {
 
     /**
      * Parse time string from frontmatter (handle multiple formats)
-     * Supports both old format (without seconds) and new format (with seconds)
-     * Uses moment.js with explicit US format to ensure consistency with formatting
+     * Supports ISO 8601 (v1.3.0+) with fallback to US format (v1.2.0)
      * Examples:
-     * - Old: "01/15/2024 at 2:30 PM"
-     * - New: "01/15/2024 at 2:30:00 PM"
+     * - ISO 8601 (v1.3.0+): "2025-10-04T22:30:45Z" or "2025-10-04T22:30:45.000Z"
+     * - US format with seconds (v1.2.0): "01/15/2024 at 2:30:00 PM"
      */
     private parseTimeString(timeStr: string): number {
         if (!timeStr) return 0;
@@ -305,12 +304,12 @@ export class StorageService {
             // Import moment from obsidian (same instance used for formatting)
             const { moment } = require("obsidian");
 
-            // Try parsing with seconds first (new format)
-            let date = moment(timeStr, "MM/DD/YYYY [at] h:mm:ss A", true);
+            // Try ISO 8601 first (v1.3.0+)
+            let date = moment(timeStr, moment.ISO_8601, true);
 
             if (!date.isValid()) {
-                // Fallback to format without seconds (old format)
-                date = moment(timeStr, "MM/DD/YYYY [at] h:mm A", true);
+                // Fallback: US format with seconds (v1.2.0 - in case migration failed)
+                date = moment(timeStr, "MM/DD/YYYY [at] h:mm:ss A", true);
             }
 
             if (!date.isValid()) {

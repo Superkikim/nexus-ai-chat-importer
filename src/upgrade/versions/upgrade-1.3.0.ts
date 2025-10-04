@@ -3,14 +3,14 @@ import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } fro
 import type NexusAiChatImporterPlugin from "../../main";
 
 /**
- * Fix timestamp precision by adding seconds to all existing frontmatter timestamps
- * This resolves the issue where timestamps lose seconds precision when stored in frontmatter,
- * causing false positive "updated" conversations in the selection dialog.
+ * Convert timestamps to ISO 8601 format in all existing frontmatter
+ * This resolves locale-dependent parsing issues and provides a universal timestamp format.
+ * Migration converts US format (MM/DD/YYYY at H:MM:SS AM/PM) to ISO 8601 (YYYY-MM-DDTHH:MM:SSZ)
  */
-class FixTimestampPrecisionOperation extends UpgradeOperation {
-    readonly id = "fix-timestamp-precision";
-    readonly name = "Fix Timestamp Precision";
-    readonly description = "Add seconds (:00) to all existing create_time and update_time frontmatter entries to resolve comparison issues";
+class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
+    readonly id = "convert-to-iso8601-timestamps";
+    readonly name = "Convert Timestamps to ISO 8601";
+    readonly description = "Convert all create_time and update_time frontmatter entries from US format to ISO 8601 format";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
@@ -33,13 +33,18 @@ class FixTimestampPrecisionOperation extends UpgradeOperation {
                 return true;
             });
 
-            // Check if any files have timestamps without seconds
+            // Check if any files have US format timestamps (need conversion to ISO 8601)
             for (const file of conversationFiles.slice(0, 10)) { // Sample first 10 files
                 try {
                     const content = await context.plugin.app.vault.read(file);
 
-                    // Check for timestamps without seconds (US format only as confirmed by testing)
-                    if (this.hasTimestampsWithoutSeconds(content)) {
+                    // Only check files that belong to this plugin
+                    if (!this.isNexusFile(content)) {
+                        continue;
+                    }
+
+                    // Check for US format timestamps
+                    if (this.hasUSFormatTimestamps(content)) {
                         return true;
                     }
                 } catch (error) {
@@ -49,14 +54,14 @@ class FixTimestampPrecisionOperation extends UpgradeOperation {
 
             return false;
         } catch (error) {
-            console.error(`FixTimestampPrecision.canRun failed:`, error);
+            console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
             return false;
         }
     }
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            console.debug(`[NEXUS-DEBUG] FixTimestampPrecision.execute starting`);
+            console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute starting`);
 
             const archiveFolder = context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
@@ -77,10 +82,11 @@ class FixTimestampPrecisionOperation extends UpgradeOperation {
             });
 
             let processed = 0;
-            let fixed = 0;
+            let converted = 0;
+            let skipped = 0;
             let errors = 0;
 
-            console.debug(`[NEXUS-DEBUG] FixTimestampPrecision: Processing ${conversationFiles.length} files`);
+            console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Processing ${conversationFiles.length} files`);
 
             // Process files in smaller batches to avoid blocking
             const batchSize = 10;
@@ -93,23 +99,29 @@ class FixTimestampPrecisionOperation extends UpgradeOperation {
                     try {
                         const content = await context.plugin.app.vault.read(file);
 
-                        // Only process files with timestamps without seconds
-                        if (!this.hasTimestampsWithoutSeconds(content)) {
+                        // Only process Nexus plugin files
+                        if (!this.isNexusFile(content)) {
+                            skipped++;
                             continue;
                         }
 
-                        const fixedContent = this.fixTimestampPrecision(content);
+                        // Only process files with US format timestamps
+                        if (!this.hasUSFormatTimestamps(content)) {
+                            continue;
+                        }
 
-                        if (content !== fixedContent) {
+                        const convertedContent = this.convertTimestampsToISO8601(content);
+
+                        if (content !== convertedContent) {
                             // Update plugin_version to 1.3.0
-                            const finalContent = this.updatePluginVersion(fixedContent, "1.3.0");
+                            const finalContent = this.updatePluginVersion(convertedContent, "1.3.0");
                             await context.plugin.app.vault.modify(file, finalContent);
-                            fixed++;
+                            converted++;
                         }
 
                     } catch (error) {
                         errors++;
-                        console.error(`[NEXUS-DEBUG] Error fixing timestamps in ${file.path}:`, error);
+                        console.error(`[NEXUS-DEBUG] Error converting timestamps in ${file.path}:`, error);
                     }
                 }
 
@@ -119,66 +131,81 @@ class FixTimestampPrecisionOperation extends UpgradeOperation {
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] FixTimestampPrecision: Completed - processed:${processed}, fixed:${fixed}, errors:${errors}`);
+            console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Completed - processed:${processed}, converted:${converted}, skipped:${skipped}, errors:${errors}`);
 
             return {
                 success: errors === 0,
-                message: `Timestamp precision fix completed: ${fixed} files updated, ${errors} errors`,
-                details: { processed, fixed, errors }
+                message: `Timestamp conversion completed: ${converted} files updated, ${skipped} skipped (non-Nexus), ${errors} errors`,
+                details: { processed, converted, skipped, errors }
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] FixTimestampPrecision.execute failed:`, error);
+            console.error(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute failed:`, error);
             return {
                 success: false,
-                message: `Timestamp precision fix failed: ${error}`,
+                message: `Timestamp conversion failed: ${error}`,
                 details: { error: String(error) }
             };
         }
     }
 
     /**
-     * Check if content has timestamps without seconds (US format only)
-     * Pattern: create_time: MM/DD/YYYY at H:MM AM/PM (missing :SS)
+     * Check if file belongs to Nexus plugin
      */
-    private hasTimestampsWithoutSeconds(content: string): boolean {
-        // Simple approach: look for timestamps that match HH:MM pattern followed by AM/PM
-        // but exclude those that already have HH:MM:SS pattern
-        const lines = content.split('\n');
-
-        for (const line of lines) {
-            if (line.match(/^(create|update)_time:/)) {
-                // Check if this line has time without seconds: HH:MM AM/PM
-                if (line.match(/\d{1,2}:\d{2}\s+(AM|PM)$/)) {
-                    // Make sure it's not HH:MM:SS AM/PM
-                    if (!line.match(/\d{1,2}:\d{2}:\d{2}\s+(AM|PM)$/)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+    private isNexusFile(content: string): boolean {
+        return content.includes('nexus: nexus-ai-chat-importer');
     }
 
     /**
-     * Fix timestamp precision by adding :00 seconds to timestamps without seconds
+     * Check if content has US format timestamps (need conversion to ISO 8601)
+     * Pattern: create_time: MM/DD/YYYY at H:MM:SS AM/PM
      */
-    private fixTimestampPrecision(content: string): string {
-        // Pattern specifically for US format (as confirmed by testing)
-        // Matches: create_time: 01/15/2024 at 2:30 PM
-        // Replaces with: create_time: 01/15/2024 at 2:30:00 PM
-        // Use word boundary to ensure we capture the complete time pattern
-        return content.replace(
-            /^((?:create|update)_time: .+?\s+)(\d{1,2}:\d{2})(\s+(?:AM|PM))$/gm,
-            (match, prefix, time, suffix) => {
-                // Only add seconds if the time part has exactly 2 parts (HH:MM, not HH:MM:SS)
-                const timeParts = time.split(':');
-                if (timeParts.length === 2) {
-                    return `${prefix}${time}:00${suffix}`;
-                }
-                return match; // Already has seconds or invalid format
+    private hasUSFormatTimestamps(content: string): boolean {
+        // Extract frontmatter only
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch) return false;
+
+        const frontmatter = frontmatterMatch[1];
+
+        // Check for US format timestamps in frontmatter
+        // Pattern: MM/DD/YYYY at H:MM:SS AM/PM or MM/DD/YYYY at H:MM AM/PM
+        return /^(create|update)_time: \d{1,2}\/\d{1,2}\/\d{4} at \d{1,2}:\d{2}(:\d{2})? (AM|PM)$/m.test(frontmatter);
+    }
+
+    /**
+     * Convert US format timestamps to ISO 8601 in frontmatter only
+     * Converts: MM/DD/YYYY at H:MM:SS AM/PM → YYYY-MM-DDTHH:MM:SSZ
+     */
+    private convertTimestampsToISO8601(content: string): string {
+        // Extract frontmatter
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch) return content;
+
+        let frontmatter = frontmatterMatch[1];
+        const restOfContent = content.substring(frontmatterMatch[0].length);
+
+        // Convert timestamps in frontmatter only
+        // Pattern: create_time: 10/04/2025 at 10:30:45 PM
+        frontmatter = frontmatter.replace(
+            /^(create|update)_time: (\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}):(\d{2})(?::(\d{2}))? (AM|PM)$/gm,
+            (match, field, month, day, year, hour, minute, second, ampm) => {
+                // Convert to 24-hour format
+                let h = parseInt(hour);
+                if (ampm === 'PM' && h !== 12) h += 12;
+                if (ampm === 'AM' && h === 12) h = 0;
+
+                // Default seconds to 00 if not present
+                const sec = second || '00';
+
+                // Build ISO 8601 string
+                const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${h.toString().padStart(2, '0')}:${minute}:${sec}Z`;
+
+                return `${field}_time: ${isoDate}`;
             }
         );
+
+        // Reconstruct file
+        return `---\n${frontmatter}\n---${restOfContent}`;
     }
 
     /**
@@ -215,15 +242,20 @@ class FixTimestampPrecisionOperation extends UpgradeOperation {
                 try {
                     const content = await context.plugin.app.vault.read(file);
 
-                    // Check if still has timestamps without seconds
-                    if (this.hasTimestampsWithoutSeconds(content)) {
-                        console.debug(`[NEXUS-DEBUG] FixTimestampPrecision.verify: Still has timestamps without seconds in ${file.path}`);
+                    // Skip non-Nexus files
+                    if (!this.isNexusFile(content)) {
+                        continue;
+                    }
+
+                    // Check if still has US format timestamps
+                    if (this.hasUSFormatTimestamps(content)) {
+                        console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Still has US format timestamps in ${file.path}`);
                         return false;
                     }
 
                     // Check if plugin_version was updated
                     if (!content.includes('plugin_version: "1.3.0"')) {
-                        console.debug(`[NEXUS-DEBUG] FixTimestampPrecision.verify: Missing v1.3.0 in ${file.path}`);
+                        console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Missing v1.3.0 in ${file.path}`);
                         return false;
                     }
 
@@ -235,7 +267,7 @@ class FixTimestampPrecisionOperation extends UpgradeOperation {
 
             return true;
         } catch (error) {
-            console.error(`FixTimestampPrecision.verify failed:`, error);
+            console.error(`ConvertToISO8601Timestamps.verify failed:`, error);
             return false;
         }
     }
@@ -248,7 +280,7 @@ export class Upgrade130 extends VersionUpgrade {
     readonly version = "1.3.0";
 
     readonly automaticOperations = [
-        new FixTimestampPrecisionOperation()
+        new ConvertToISO8601TimestampsOperation()
     ];
 
     readonly manualOperations = [
