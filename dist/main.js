@@ -2875,6 +2875,7 @@ function generateSafeAlias(title) {
   if (!title || typeof title !== "string") {
     return "Untitled";
   }
+  const startsWithYamlSpecial = title.startsWith("#") || title.startsWith("&") || title.startsWith("*") || title.startsWith("!") || title.startsWith("|") || title.startsWith(">") || title.startsWith("%") || title.startsWith("@") || title.startsWith("`");
   let cleanName = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>\/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
   cleanName = cleanName.replace(/^[^\w\d\s"']+/, "");
   cleanName = cleanName.replace(/\s+/g, " ").trim();
@@ -2887,7 +2888,15 @@ function generateSafeAlias(title) {
   if (!cleanName || cleanName.length === 0) {
     cleanName = "Untitled";
   }
-  const needsQuotes = /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(cleanName) || cleanName.includes('"') || cleanName.startsWith("#") || cleanName.startsWith("&") || cleanName.startsWith("*") || cleanName.startsWith("!") || cleanName.startsWith("|") || cleanName.startsWith(">") || cleanName.startsWith("%") || cleanName.startsWith("@") || cleanName.startsWith("`");
+  const needsQuotes = (
+    // YAML reserved words
+    /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(cleanName) || // Contains quotes
+    cleanName.includes('"') || // Contains colon (CRITICAL: prevents YAML key-value interpretation)
+    cleanName.includes(":") || // Contains square brackets or curly braces (YAML flow collections)
+    cleanName.includes("[") || cleanName.includes("]") || cleanName.includes("{") || cleanName.includes("}") || // Started with YAML special characters (before sanitization)
+    startsWithYamlSpecial || // Contains newlines or tabs (safety check)
+    cleanName.includes("\n") || cleanName.includes("\r") || cleanName.includes("	")
+  );
   if (needsQuotes) {
     return `'${cleanName.replace(/'/g, "''")}'`;
   }

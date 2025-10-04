@@ -172,6 +172,18 @@ export function generateSafeAlias(title: string): string {
         return "Untitled";
     }
 
+    // Check if starts with YAML special characters BEFORE any sanitization
+    const startsWithYamlSpecial =
+        title.startsWith('#') ||
+        title.startsWith('&') ||
+        title.startsWith('*') ||
+        title.startsWith('!') ||
+        title.startsWith('|') ||
+        title.startsWith('>') ||
+        title.startsWith('%') ||
+        title.startsWith('@') ||
+        title.startsWith('`');
+
     // Start with the title and apply minimal sanitization
     let cleanName = title
         .normalize("NFD")
@@ -180,7 +192,8 @@ export function generateSafeAlias(title: string): string {
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
 
-    // Remove special characters from the beginning
+    // Remove special characters from the beginning (for filesystem safety)
+    // But we'll remember if we had YAML special chars for quoting decision
     cleanName = cleanName.replace(/^[^\w\d\s"']+/, "");
 
     // Clean up any remaining problematic patterns
@@ -204,17 +217,29 @@ export function generateSafeAlias(title: string): string {
     }
 
     // Check if we need quotes (YAML reserved words or values that could be misinterpreted)
-    const needsQuotes = /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(cleanName) ||
-                       cleanName.includes('"') ||
-                       cleanName.startsWith('#') ||
-                       cleanName.startsWith('&') ||
-                       cleanName.startsWith('*') ||
-                       cleanName.startsWith('!') ||
-                       cleanName.startsWith('|') ||
-                       cleanName.startsWith('>') ||
-                       cleanName.startsWith('%') ||
-                       cleanName.startsWith('@') ||
-                       cleanName.startsWith('`');
+    const needsQuotes =
+        // YAML reserved words
+        /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(cleanName) ||
+
+        // Contains quotes
+        cleanName.includes('"') ||
+
+        // Contains colon (CRITICAL: prevents YAML key-value interpretation)
+        cleanName.includes(':') ||
+
+        // Contains square brackets or curly braces (YAML flow collections)
+        cleanName.includes('[') ||
+        cleanName.includes(']') ||
+        cleanName.includes('{') ||
+        cleanName.includes('}') ||
+
+        // Started with YAML special characters (before sanitization)
+        startsWithYamlSpecial ||
+
+        // Contains newlines or tabs (safety check)
+        cleanName.includes('\n') ||
+        cleanName.includes('\r') ||
+        cleanName.includes('\t');
 
     if (needsQuotes) {
         // Use single quotes and escape any single quotes in the content
