@@ -1,6 +1,7 @@
 // src/upgrade/versions/upgrade-1.3.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
 import type NexusAiChatImporterPlugin from "../../main";
+import { generateSafeAlias } from "../../utils";
 
 /**
  * Convert timestamps to ISO 8601 format in all existing frontmatter
@@ -93,6 +94,16 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
             for (let i = 0; i < conversationFiles.length; i += batchSize) {
                 const batch = conversationFiles.slice(i, i + batchSize);
 
+                // Update progress if callback provided
+                if (context.progressCallback) {
+                    const percentage = Math.round((i / conversationFiles.length) * 100);
+                    context.progressCallback({
+                        status: 'running',
+                        progress: percentage,
+                        currentDetail: `Converting timestamps: ${i}/${conversationFiles.length} files`
+                    });
+                }
+
                 for (const file of batch) {
                     processed++;
 
@@ -129,6 +140,15 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                 if (i + batchSize < conversationFiles.length) {
                     await new Promise(resolve => setTimeout(resolve, 10));
                 }
+            }
+
+            // Final progress update
+            if (context.progressCallback) {
+                context.progressCallback({
+                    status: 'running',
+                    progress: 100,
+                    currentDetail: `Completed: ${converted} timestamps converted`
+                });
             }
 
             console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Completed - processed:${processed}, converted:${converted}, skipped:${skipped}, errors:${errors}`);
@@ -274,13 +294,323 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 }
 
 /**
+ * Fix frontmatter aliases with YAML special characters
+ * This resolves Issue #17 - titles with colons, brackets, braces, etc.
+ */
+class FixFrontmatterAliasesOperation extends UpgradeOperation {
+    readonly id = "fix-frontmatter-aliases";
+    readonly name = "Fix Frontmatter Aliases";
+    readonly description = "Fix aliases containing YAML special characters (colons, brackets, braces, etc.)";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        try {
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+
+            // Filter conversation files (exclude Reports/Attachments)
+            const conversationFiles = allFiles.filter(file => {
+                if (!file.path.startsWith(archiveFolder)) return false;
+
+                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (relativePath.startsWith('Reports/') ||
+                    relativePath.startsWith('Attachments/') ||
+                    relativePath.startsWith('reports/') ||
+                    relativePath.startsWith('attachments/')) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            // Check if any files have problematic aliases
+            for (const file of conversationFiles.slice(0, 10)) { // Sample first 10 files
+                try {
+                    const content = await context.plugin.app.vault.read(file);
+
+                    // Only check files that belong to this plugin
+                    if (!this.isNexusFile(content)) {
+                        continue;
+                    }
+
+                    // Check for problematic aliases
+                    if (this.hasProblematicAlias(content)) {
+                        return true;
+                    }
+                } catch (error) {
+                    console.error(`Error checking file ${file.path}:`, error);
+                }
+            }
+
+            return false;
+        } catch (error) {
+            console.error(`FixFrontmatterAliases.canRun failed:`, error);
+            return false;
+        }
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        try {
+            console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases.execute starting`);
+
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+
+            // Filter conversation files (exclude Reports/Attachments)
+            const conversationFiles = allFiles.filter(file => {
+                if (!file.path.startsWith(archiveFolder)) return false;
+
+                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (relativePath.startsWith('Reports/') ||
+                    relativePath.startsWith('Attachments/') ||
+                    relativePath.startsWith('reports/') ||
+                    relativePath.startsWith('attachments/')) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            let processed = 0;
+            let fixed = 0;
+            let skipped = 0;
+            let errors = 0;
+
+            console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases: Processing ${conversationFiles.length} files`);
+
+            // Process files in smaller batches to avoid blocking
+            const batchSize = 10;
+            for (let i = 0; i < conversationFiles.length; i += batchSize) {
+                const batch = conversationFiles.slice(i, i + batchSize);
+
+                // Update progress if callback provided
+                if (context.progressCallback) {
+                    const percentage = Math.round((i / conversationFiles.length) * 100);
+                    context.progressCallback({
+                        status: 'running',
+                        progress: percentage,
+                        currentDetail: `Checking aliases: ${i}/${conversationFiles.length} files`
+                    });
+                }
+
+                for (const file of batch) {
+                    processed++;
+
+                    try {
+                        const content = await context.plugin.app.vault.read(file);
+
+                        // Only process Nexus plugin files
+                        if (!this.isNexusFile(content)) {
+                            skipped++;
+                            continue;
+                        }
+
+                        // Only process files with problematic aliases
+                        if (!this.hasProblematicAlias(content)) {
+                            continue;
+                        }
+
+                        const fixedContent = this.fixAliases(content);
+
+                        if (content !== fixedContent) {
+                            await context.plugin.app.vault.modify(file, fixedContent);
+                            fixed++;
+                        }
+
+                    } catch (error) {
+                        errors++;
+                        console.error(`[NEXUS-DEBUG] Error fixing aliases in ${file.path}:`, error);
+                    }
+                }
+
+                // Small delay between batches to prevent blocking
+                if (i + batchSize < conversationFiles.length) {
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+            }
+
+            // Final progress update
+            if (context.progressCallback) {
+                context.progressCallback({
+                    status: 'running',
+                    progress: 100,
+                    currentDetail: `Completed: ${fixed} aliases fixed`
+                });
+            }
+
+            console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases: Completed - processed:${processed}, fixed:${fixed}, skipped:${skipped}, errors:${errors}`);
+
+            return {
+                success: errors === 0,
+                message: `Alias fix completed: ${fixed} files updated, ${skipped} skipped (non-Nexus), ${errors} errors`,
+                details: { processed, fixed, skipped, errors }
+            };
+
+        } catch (error) {
+            console.error(`[NEXUS-DEBUG] FixFrontmatterAliases.execute failed:`, error);
+            return {
+                success: false,
+                message: `Alias fix failed: ${error}`,
+                details: { error: String(error) }
+            };
+        }
+    }
+
+    /**
+     * Check if file belongs to Nexus plugin
+     */
+    private isNexusFile(content: string): boolean {
+        return content.includes('nexus: nexus-ai-chat-importer');
+    }
+
+    /**
+     * Check if content has problematic aliases (YAML special characters without proper quoting)
+     */
+    private hasProblematicAlias(content: string): boolean {
+        // Extract frontmatter only
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch) return false;
+
+        const frontmatter = frontmatterMatch[1];
+
+        // Check for aliases line
+        const aliasMatch = frontmatter.match(/^aliases: (.+)$/m);
+        if (!aliasMatch) return false;
+
+        const aliasValue = aliasMatch[1];
+
+        // Check if alias contains YAML special characters but is not properly quoted
+        // Problematic patterns:
+        // - Contains colon but not quoted: "aliases: My Title: Subtitle"
+        // - Contains brackets/braces but not quoted: "aliases: My [Title]"
+        // - Starts with special char but not quoted: "aliases: #hashtag"
+
+        // If already properly quoted with single quotes, it's fine
+        if (aliasValue.startsWith("'") && aliasValue.endsWith("'")) {
+            return false;
+        }
+
+        // If already properly quoted with double quotes (old format), needs fixing
+        if (aliasValue.startsWith('"') && aliasValue.endsWith('"')) {
+            return true;
+        }
+
+        // Check for YAML special characters that need quoting
+        const needsQuoting =
+            aliasValue.includes(':') ||
+            aliasValue.includes('[') ||
+            aliasValue.includes(']') ||
+            aliasValue.includes('{') ||
+            aliasValue.includes('}') ||
+            aliasValue.includes('"') ||
+            /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(aliasValue) ||
+            aliasValue.startsWith('#') ||
+            aliasValue.startsWith('&') ||
+            aliasValue.startsWith('*') ||
+            aliasValue.startsWith('!') ||
+            aliasValue.startsWith('|') ||
+            aliasValue.startsWith('>') ||
+            aliasValue.startsWith('%') ||
+            aliasValue.startsWith('@') ||
+            aliasValue.startsWith('`');
+
+        return needsQuoting;
+    }
+
+    /**
+     * Fix aliases in frontmatter using generateSafeAlias
+     */
+    private fixAliases(content: string): string {
+        // Extract frontmatter
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch) return content;
+
+        let frontmatter = frontmatterMatch[1];
+        const restOfContent = content.substring(frontmatterMatch[0].length);
+
+        // Find and fix aliases line
+        frontmatter = frontmatter.replace(
+            /^aliases: (.+)$/m,
+            (match, aliasValue) => {
+                // Remove existing quotes if any
+                let cleanAlias = aliasValue.trim();
+                if ((cleanAlias.startsWith('"') && cleanAlias.endsWith('"')) ||
+                    (cleanAlias.startsWith("'") && cleanAlias.endsWith("'"))) {
+                    cleanAlias = cleanAlias.slice(1, -1);
+                }
+
+                // Unescape any escaped quotes
+                cleanAlias = cleanAlias.replace(/''/g, "'");
+
+                // Generate safe alias
+                const safeAlias = generateSafeAlias(cleanAlias);
+
+                return `aliases: ${safeAlias}`;
+            }
+        );
+
+        // Reconstruct file
+        return `---\n${frontmatter}\n---${restOfContent}`;
+    }
+
+    async verify(context: UpgradeContext): Promise<boolean> {
+        try {
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+
+            // Check conversation files (sample verification)
+            const conversationFiles = allFiles.filter(file => {
+                if (!file.path.startsWith(archiveFolder)) return false;
+
+                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (relativePath.startsWith('Reports/') ||
+                    relativePath.startsWith('Attachments/') ||
+                    relativePath.startsWith('reports/') ||
+                    relativePath.startsWith('attachments/')) {
+                    return false;
+                }
+
+                return true;
+            }).slice(0, 5); // Check first 5 files
+
+            for (const file of conversationFiles) {
+                try {
+                    const content = await context.plugin.app.vault.read(file);
+
+                    // Skip non-Nexus files
+                    if (!this.isNexusFile(content)) {
+                        continue;
+                    }
+
+                    // Check if still has problematic aliases
+                    if (this.hasProblematicAlias(content)) {
+                        console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases.verify: Still has problematic alias in ${file.path}`);
+                        return false;
+                    }
+
+                } catch (error) {
+                    console.error(`Error verifying file ${file.path}:`, error);
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`FixFrontmatterAliases.verify failed:`, error);
+            return false;
+        }
+    }
+}
+
+/**
  * Version 1.3.0 Upgrade Definition
  */
 export class Upgrade130 extends VersionUpgrade {
     readonly version = "1.3.0";
 
     readonly automaticOperations = [
-        new ConvertToISO8601TimestampsOperation()
+        new ConvertToISO8601TimestampsOperation(),
+        new FixFrontmatterAliasesOperation()
     ];
 
     readonly manualOperations = [
