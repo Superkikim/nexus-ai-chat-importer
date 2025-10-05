@@ -154,18 +154,24 @@ export class ConversationSelectionDialog extends Modal {
 
         // Filter by status dropdown
         const statusLabel = section.createEl("label");
-        statusLabel.textContent = "Filter:";
+        statusLabel.textContent = "Status:";
         statusLabel.style.marginRight = "4px";
         statusLabel.style.fontSize = "14px";
         statusLabel.style.whiteSpace = "nowrap";
 
         const statusSelect = section.createEl("select");
         statusSelect.style.padding = "8px 12px";
+        statusSelect.style.paddingRight = "28px";
         statusSelect.style.border = "1px solid var(--background-modifier-border)";
         statusSelect.style.borderRadius = "4px";
         statusSelect.style.fontSize = "14px";
         statusSelect.style.backgroundColor = "var(--background-primary)";
         statusSelect.style.color = "var(--text-normal)";
+        statusSelect.style.appearance = "none";
+        statusSelect.style.backgroundImage = "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3e%3cpath fill=%27%23666%27 d=%27M6 8L0 0h12z%27/%3e%3c/svg%3e')";
+        statusSelect.style.backgroundRepeat = "no-repeat";
+        statusSelect.style.backgroundPosition = "right 8px center";
+        statusSelect.style.backgroundSize = "10px";
 
         const statusOptions = [
             { value: 'all', text: 'All' },
@@ -199,11 +205,17 @@ export class ConversationSelectionDialog extends Modal {
 
         const pageSizeSelect = section.createEl("select");
         pageSizeSelect.style.padding = "8px 12px";
+        pageSizeSelect.style.paddingRight = "28px";
         pageSizeSelect.style.border = "1px solid var(--background-modifier-border)";
         pageSizeSelect.style.borderRadius = "4px";
         pageSizeSelect.style.fontSize = "14px";
         pageSizeSelect.style.backgroundColor = "var(--background-primary)";
         pageSizeSelect.style.color = "var(--text-normal)";
+        pageSizeSelect.style.appearance = "none";
+        pageSizeSelect.style.backgroundImage = "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3e%3cpath fill=%27%23666%27 d=%27M6 8L0 0h12z%27/%3e%3c/svg%3e')";
+        pageSizeSelect.style.backgroundRepeat = "no-repeat";
+        pageSizeSelect.style.backgroundPosition = "right 8px center";
+        pageSizeSelect.style.backgroundSize = "10px";
 
         const pageSizeOptions = [10, 20, 50, 100];
         pageSizeOptions.forEach(size => {
@@ -641,20 +653,26 @@ export class ConversationSelectionDialog extends Modal {
                 padding: 0 !important;
             }
 
+            /* Modal title spacing */
+            .modal.nexus-conversation-selection-dialog .modal-title {
+                padding: 16px 24px !important;
+                margin: 0 !important;
+            }
+
             .modal.nexus-conversation-selection-dialog .modal-content {
                 max-width: 100% !important;
                 width: 100% !important;
-                max-height: 90vh;
+                max-height: 85vh;
                 overflow-y: visible;
                 overflow-x: visible;
                 display: flex;
                 flex-direction: column;
-                padding: 24px;
+                padding: 20px 24px 24px 24px;
             }
 
             /* Table container with independent scroll */
             .nexus-conversation-selection-dialog .nexus-table-container {
-                max-height: 500px;
+                max-height: 450px;
                 overflow-y: auto;
                 overflow-x: auto;
                 border: 1px solid var(--background-modifier-border);
