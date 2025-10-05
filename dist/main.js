@@ -10849,14 +10849,18 @@ var ConversationMetadataExtractor = class {
         newCount++;
       } else {
         conversation.existingUpdateTime = vaultConversation.updateTime;
-        if (conversation.updateTime > vaultConversation.updateTime) {
+        const { moment: moment2 } = require("obsidian");
+        const zipUpdateTimeISO = new Date(conversation.updateTime * 1e3).toISOString();
+        const normalizedZipUpdateTime = moment2(zipUpdateTimeISO, moment2.ISO_8601, true).unix();
+        if (normalizedZipUpdateTime > vaultConversation.updateTime) {
           console.log(`\u{1F50D} TIMESTAMP COMPARISON - UPDATED:`, {
             conversationId: conversation.id,
             title: conversation.title.substring(0, 50) + "...",
-            zipUpdateTime: conversation.updateTime,
+            zipUpdateTimeRaw: conversation.updateTime,
+            zipUpdateTimeNormalized: normalizedZipUpdateTime,
             vaultUpdateTime: vaultConversation.updateTime,
-            difference: conversation.updateTime - vaultConversation.updateTime,
-            zipDate: new Date(conversation.updateTime * 1e3).toISOString(),
+            difference: normalizedZipUpdateTime - vaultConversation.updateTime,
+            zipDate: new Date(normalizedZipUpdateTime * 1e3).toISOString(),
             vaultDate: new Date(vaultConversation.updateTime * 1e3).toISOString(),
             provider: conversation.provider,
             messageCount: conversation.messageCount,
@@ -10870,10 +10874,11 @@ var ConversationMetadataExtractor = class {
           console.log(`\u{1F50D} TIMESTAMP COMPARISON - IGNORED:`, {
             conversationId: conversation.id,
             title: conversation.title.substring(0, 50) + "...",
-            zipUpdateTime: conversation.updateTime,
+            zipUpdateTimeRaw: conversation.updateTime,
+            zipUpdateTimeNormalized: normalizedZipUpdateTime,
             vaultUpdateTime: vaultConversation.updateTime,
-            difference: conversation.updateTime - vaultConversation.updateTime,
-            zipDate: new Date(conversation.updateTime * 1e3).toISOString(),
+            difference: normalizedZipUpdateTime - vaultConversation.updateTime,
+            zipDate: new Date(normalizedZipUpdateTime * 1e3).toISOString(),
             vaultDate: new Date(vaultConversation.updateTime * 1e3).toISOString(),
             provider: conversation.provider,
             messageCount: conversation.messageCount,

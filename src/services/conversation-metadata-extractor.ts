@@ -421,15 +421,26 @@ export class ConversationMetadataExtractor {
                 // Si présente dans le vault → comparer updateTime
                 conversation.existingUpdateTime = vaultConversation.updateTime;
 
-                if (conversation.updateTime > vaultConversation.updateTime) {
+                // Normalize ZIP timestamp to match vault format (ISO 8601 → unix without milliseconds)
+                // This ensures we compare apples to apples:
+                // 1. ZIP has float with milliseconds: 1742761058.385406
+                // 2. Convert to ISO 8601: "2025-10-04T22:30:45.385Z"
+                // 3. Parse back to unix (loses milliseconds): 1742761058
+                // This is the SAME process used when writing frontmatter, so comparison is consistent
+                const { moment } = require("obsidian");
+                const zipUpdateTimeISO = new Date(conversation.updateTime * 1000).toISOString();
+                const normalizedZipUpdateTime = moment(zipUpdateTimeISO, moment.ISO_8601, true).unix();
+
+                if (normalizedZipUpdateTime > vaultConversation.updateTime) {
                     // ZIP plus récent que vault → UPDATED (proposer)
                     console.log(`🔍 TIMESTAMP COMPARISON - UPDATED:`, {
                         conversationId: conversation.id,
                         title: conversation.title.substring(0, 50) + '...',
-                        zipUpdateTime: conversation.updateTime,
+                        zipUpdateTimeRaw: conversation.updateTime,
+                        zipUpdateTimeNormalized: normalizedZipUpdateTime,
                         vaultUpdateTime: vaultConversation.updateTime,
-                        difference: conversation.updateTime - vaultConversation.updateTime,
-                        zipDate: new Date(conversation.updateTime * 1000).toISOString(),
+                        difference: normalizedZipUpdateTime - vaultConversation.updateTime,
+                        zipDate: new Date(normalizedZipUpdateTime * 1000).toISOString(),
                         vaultDate: new Date(vaultConversation.updateTime * 1000).toISOString(),
                         provider: conversation.provider,
                         messageCount: conversation.messageCount,
@@ -445,10 +456,11 @@ export class ConversationMetadataExtractor {
                     console.log(`🔍 TIMESTAMP COMPARISON - IGNORED:`, {
                         conversationId: conversation.id,
                         title: conversation.title.substring(0, 50) + '...',
-                        zipUpdateTime: conversation.updateTime,
+                        zipUpdateTimeRaw: conversation.updateTime,
+                        zipUpdateTimeNormalized: normalizedZipUpdateTime,
                         vaultUpdateTime: vaultConversation.updateTime,
-                        difference: conversation.updateTime - vaultConversation.updateTime,
-                        zipDate: new Date(conversation.updateTime * 1000).toISOString(),
+                        difference: normalizedZipUpdateTime - vaultConversation.updateTime,
+                        zipDate: new Date(normalizedZipUpdateTime * 1000).toISOString(),
                         vaultDate: new Date(vaultConversation.updateTime * 1000).toISOString(),
                         provider: conversation.provider,
                         messageCount: conversation.messageCount,
