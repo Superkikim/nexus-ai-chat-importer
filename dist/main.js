@@ -8445,39 +8445,46 @@ var ImportService = class {
     try {
       progressCallback({
         phase: "validation",
-        title: "Validating file...",
-        detail: "Checking file hash and import history"
-      });
-      const fileHash = await getFileHash(file);
-      const foundByHash = storage.isArchiveImported(fileHash);
-      const foundByName = storage.isArchiveImported(file.name);
-      const isReprocess = foundByHash || foundByName;
-      if (isReprocess) {
-        progressModal.close();
-        const shouldReimport = await showDialog(
-          this.plugin.app,
-          "confirmation",
-          "Already processed",
-          [
-            `File ${file.name} has already been imported.`,
-            `Do you want to reprocess it?`,
-            `**Note:** This will recreate notes from before v1.1.0 to add attachment support.`
-          ],
-          void 0,
-          { button1: "Let's do this", button2: "Forget it" }
-        );
-        if (!shouldReimport) {
-          new import_obsidian14.Notice("Import cancelled.");
-          return;
-        }
-        progressModal.open();
-      }
-      progressCallback({
-        phase: "validation",
         title: "Validating ZIP structure...",
         detail: "Checking file format and contents"
       });
       const zip = await this.validateZipFile(file, forcedProvider);
+      let isReprocess = false;
+      let fileHash = "";
+      if (!isSharedReport) {
+        progressCallback({
+          phase: "validation",
+          title: "Validating file...",
+          detail: "Checking file hash and import history"
+        });
+        fileHash = await getFileHash(file);
+        const foundByHash = storage.isArchiveImported(fileHash);
+        const foundByName = storage.isArchiveImported(file.name);
+        isReprocess = foundByHash || foundByName;
+        if (isReprocess) {
+          progressModal.close();
+          const shouldReimport = await showDialog(
+            this.plugin.app,
+            "confirmation",
+            "Already processed",
+            [
+              `File ${file.name} has already been imported.`,
+              `Do you want to reprocess it?`,
+              `**Note:** This will recreate notes from before v1.1.0 to add attachment support.`
+            ],
+            void 0,
+            { button1: "Let's do this", button2: "Skip this file" }
+          );
+          if (!shouldReimport) {
+            new import_obsidian14.Notice(`Skipping ${file.name} (already imported).`);
+            progressModal.close();
+            return;
+          }
+          progressModal.open();
+        }
+      } else {
+        fileHash = await getFileHash(file);
+      }
       processingStarted = true;
       await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
       storage.addImportedArchive(fileHash, file.name);
@@ -11722,11 +11729,19 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
       for (const file of files) {
         const conversationsForFile = conversationsByFile.get(file.name);
         if (conversationsForFile && conversationsForFile.length > 0) {
-          await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+          try {
+            await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+          } catch (error) {
+            this.logger.error(`Error processing file ${file.name}:`, error);
+          }
         }
       }
       const reportPath = await this.writeConsolidatedReport(operationReport, provider);
-      this.showImportCompletionDialog(operationReport, reportPath);
+      if (reportPath) {
+        this.showImportCompletionDialog(operationReport, reportPath);
+      } else {
+        new import_obsidian22.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      }
     } catch (error) {
       this.logger.error("Error in import all:", error);
       new import_obsidian22.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
@@ -11779,16 +11794,25 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
       if (conversationsForFile && conversationsForFile.length > 0) {
-        await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+        try {
+          await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+        } catch (error) {
+          this.logger.error(`Error processing file ${file.name}:`, error);
+        }
       }
     }
     const reportPath = await this.writeConsolidatedReport(operationReport, provider);
-    this.showImportCompletionDialog(operationReport, reportPath);
+    if (reportPath) {
+      this.showImportCompletionDialog(operationReport, reportPath);
+    } else {
+      new import_obsidian22.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+    }
   }
   /**
    * Write consolidated report for multi-file import
    */
   async writeConsolidatedReport(report, provider) {
+    this.logger.info("Writing consolidated report...");
     const { ensureFolderExists: ensureFolderExists2, formatTimestamp: formatTimestamp2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
     const reportFolder = this.settings.reportFolder;
     const providerRegistry = createProviderRegistry(this);
@@ -11832,6 +11856,7 @@ ${report.generateReportContent()}
 `;
     try {
       await this.app.vault.create(logFilePath, logContent);
+      this.logger.info(`Consolidated report written to: ${logFilePath}`);
       return logFilePath;
     } catch (error) {
       this.logger.error(`Failed to write import log`, error.message);

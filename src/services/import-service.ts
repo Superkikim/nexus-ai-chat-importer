@@ -79,53 +79,64 @@ export class ImportService {
         try {
             progressCallback({
                 phase: 'validation',
-                title: 'Validating file...',
-                detail: 'Checking file hash and import history'
-            });
-
-            const fileHash = await getFileHash(file);
-
-            // Check if already imported (hybrid detection for 1.0.x → 1.1.0 compatibility)
-            const foundByHash = storage.isArchiveImported(fileHash);
-            const foundByName = storage.isArchiveImported(file.name);
-            const isReprocess = foundByHash || foundByName;
-
-            if (isReprocess) {
-                progressModal.close(); // Close progress modal for user dialog
-
-                const shouldReimport = await showDialog(
-                    this.plugin.app,
-                    "confirmation",
-                    "Already processed",
-                    [
-                        `File ${file.name} has already been imported.`,
-                        `Do you want to reprocess it?`,
-                        `**Note:** This will recreate notes from before v1.1.0 to add attachment support.`
-                    ],
-                    undefined,
-                    { button1: "Let's do this", button2: "Forget it" }
-                );
-
-                if (!shouldReimport) {
-                    new Notice("Import cancelled.");
-                    return;
-                }
-
-                // Reopen progress modal for continued processing
-                progressModal.open();
-            }
-
-            progressCallback({
-                phase: 'validation',
                 title: 'Validating ZIP structure...',
                 detail: 'Checking file format and contents'
             });
 
             const zip = await this.validateZipFile(file, forcedProvider);
 
+            // When using shared report (new workflow), skip the "already imported" check
+            // because the analysis already determined what needs to be imported
+            let isReprocess = false;
+            let fileHash = "";
+
+            if (!isSharedReport) {
+                // Legacy workflow: check if file was already imported
+                progressCallback({
+                    phase: 'validation',
+                    title: 'Validating file...',
+                    detail: 'Checking file hash and import history'
+                });
+
+                fileHash = await getFileHash(file);
+                const foundByHash = storage.isArchiveImported(fileHash);
+                const foundByName = storage.isArchiveImported(file.name);
+                isReprocess = foundByHash || foundByName;
+
+                if (isReprocess) {
+                    progressModal.close(); // Close progress modal for user dialog
+
+                    const shouldReimport = await showDialog(
+                        this.plugin.app,
+                        "confirmation",
+                        "Already processed",
+                        [
+                            `File ${file.name} has already been imported.`,
+                            `Do you want to reprocess it?`,
+                            `**Note:** This will recreate notes from before v1.1.0 to add attachment support.`
+                        ],
+                        undefined,
+                        { button1: "Let's do this", button2: "Skip this file" }
+                    );
+
+                    if (!shouldReimport) {
+                        new Notice(`Skipping ${file.name} (already imported).`);
+                        progressModal.close();
+                        return; // Skip this file, but don't cancel the whole operation
+                    }
+
+                    // Reopen progress modal for continued processing
+                    progressModal.open();
+                }
+            } else {
+                // New workflow: always compute hash for tracking, but don't check/prompt
+                fileHash = await getFileHash(file);
+            }
+
             processingStarted = true;
             await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
 
+            // Track imported archive
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
 

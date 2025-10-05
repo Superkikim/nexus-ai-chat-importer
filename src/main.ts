@@ -297,15 +297,25 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             for (const file of files) {
                 const conversationsForFile = conversationsByFile.get(file.name);
                 if (conversationsForFile && conversationsForFile.length > 0) {
-                    await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                    try {
+                        await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                    } catch (error) {
+                        this.logger.error(`Error processing file ${file.name}:`, error);
+                        // Continue with other files even if one fails
+                    }
                 }
             }
 
-            // Write the consolidated report
+            // Write the consolidated report (always, even if some files failed)
             const reportPath = await this.writeConsolidatedReport(operationReport, provider);
 
             // Show completion dialog
-            this.showImportCompletionDialog(operationReport, reportPath);
+            if (reportPath) {
+                this.showImportCompletionDialog(operationReport, reportPath);
+            } else {
+                // Fallback if report writing failed
+                new Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+            }
 
         } catch (error) {
             this.logger.error("Error in import all:", error);
@@ -382,21 +392,33 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         for (const file of files) {
             const conversationsForFile = conversationsByFile.get(file.name);
             if (conversationsForFile && conversationsForFile.length > 0) {
-                await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                try {
+                    await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                } catch (error) {
+                    this.logger.error(`Error processing file ${file.name}:`, error);
+                    // Continue with other files even if one fails
+                }
             }
         }
 
-        // Write the consolidated report
+        // Write the consolidated report (always, even if some files failed)
         const reportPath = await this.writeConsolidatedReport(operationReport, provider);
 
         // Show completion dialog
-        this.showImportCompletionDialog(operationReport, reportPath);
+        if (reportPath) {
+            this.showImportCompletionDialog(operationReport, reportPath);
+        } else {
+            // Fallback if report writing failed
+            new Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        }
     }
 
     /**
      * Write consolidated report for multi-file import
      */
     private async writeConsolidatedReport(report: ImportReport, provider: string): Promise<string> {
+        this.logger.info("Writing consolidated report...");
+
         const { ensureFolderExists, formatTimestamp } = await import("./utils");
 
         // Get provider-specific folder
@@ -454,6 +476,7 @@ ${report.generateReportContent()}
 
         try {
             await this.app.vault.create(logFilePath, logContent);
+            this.logger.info(`Consolidated report written to: ${logFilePath}`);
             return logFilePath;
         } catch (error: any) {
             this.logger.error(`Failed to write import log`, error.message);
