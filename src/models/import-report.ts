@@ -171,27 +171,45 @@ export class ImportReport {
         this.globalErrors.push({ message, details });
     }
 
-    generateReportContent(): string {
+    generateReportContent(
+        allFiles?: File[],
+        processedFiles?: string[],
+        skippedFiles?: string[],
+        analysisInfo?: any
+    ): string {
         let content = "# Nexus AI Chat Importer Report\n\n";
 
         // Generate global summary
-        content += this.generateGlobalSummary() + "\n\n";
+        content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo) + "\n\n";
+
+        // Show skipped files section if any
+        if (skippedFiles && skippedFiles.length > 0) {
+            content += this.generateSkippedFilesSection(skippedFiles) + "\n\n";
+        }
 
         // Generate section for each file
         const fileNames = Array.from(this.fileSections.keys());
 
-        if (fileNames.length === 1) {
+        if (fileNames.length === 0) {
+            // No files were processed
+            content += "## Result\n\n";
+            content += "No conversations were imported. All conversations are already up to date.\n\n";
+        } else if (fileNames.length === 1) {
             // Single file import - use simplified format
             const section = this.fileSections.get(fileNames[0])!;
             content += this.generateFileContent(section, false);
         } else {
             // Multi-file import - chaptered by file
+            content += "---\n\n";
+            content += "## Processed Files\n\n";
             fileNames.forEach((fileName, index) => {
                 const section = this.fileSections.get(fileName)!;
-                content += `---\n\n`;
-                content += `## File ${index + 1}: ${fileName}\n\n`;
+                content += `### File ${index + 1}: ${fileName}\n\n`;
                 content += this.generateFileSummary(section) + "\n\n";
                 content += this.generateFileContent(section, true);
+                if (index < fileNames.length - 1) {
+                    content += "\n";
+                }
             });
         }
 
@@ -204,7 +222,21 @@ export class ImportReport {
         return content;
     }
 
-    private generateGlobalSummary(): string {
+    private generateSkippedFilesSection(skippedFiles: string[]): string {
+        let section = "## Skipped Files (Already Up to Date)\n\n";
+        section += "The following files were analyzed but not processed because all their conversations are already up to date:\n\n";
+        skippedFiles.forEach(fileName => {
+            section += `- ${fileName}\n`;
+        });
+        return section;
+    }
+
+    private generateGlobalSummary(
+        allFiles?: File[],
+        processedFiles?: string[],
+        skippedFiles?: string[],
+        analysisInfo?: any
+    ): string {
         const stats = this.getGlobalStats();
         const totalAttachments = this.getTotalAttachmentStats();
         const attachmentSummary = totalAttachments.total > 0
@@ -212,17 +244,36 @@ export class ImportReport {
             : "";
 
         const fileCount = this.fileSections.size;
-        const fileText = fileCount === 1 ? "1 file" : `${fileCount} files`;
+        const totalFilesAnalyzed = allFiles ? allFiles.length : fileCount;
+        const filesSkipped = skippedFiles ? skippedFiles.length : 0;
 
-        return `## Summary
+        let summary = `## Summary\n\n`;
 
-- **Files Processed**: ${fileText}
-- **Total Conversations**: ${stats.totalProcessed}
-- **Created**: ${stats.created} new conversations
-- **Updated**: ${stats.updated} conversations with ${stats.newMessages} new messages
-- **Skipped**: ${stats.skipped} conversations (no changes)
-- **Failed**: ${stats.failed} conversations
-- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+        // Analysis info if available
+        if (analysisInfo) {
+            summary += `### Analysis\n`;
+            summary += `- **Files Analyzed**: ${totalFilesAnalyzed}\n`;
+            summary += `- **Total Conversations Found**: ${analysisInfo.conversationsTotal || 0}\n`;
+            summary += `- **Unique Conversations**: ${analysisInfo.conversationsUnique || 0}\n`;
+            summary += `- **New**: ${analysisInfo.conversationsNew || 0}\n`;
+            summary += `- **Updated**: ${analysisInfo.conversationsUpdated || 0}\n`;
+            summary += `- **Unchanged**: ${analysisInfo.conversationsUnchanged || 0}\n\n`;
+        }
+
+        // Import results
+        summary += `### Import Results\n`;
+        summary += `- **Files Processed**: ${fileCount}\n`;
+        if (filesSkipped > 0) {
+            summary += `- **Files Skipped**: ${filesSkipped} (already up to date)\n`;
+        }
+        summary += `- **Conversations Imported**: ${stats.created + stats.updated}\n`;
+        summary += `- **Created**: ${stats.created} new conversations\n`;
+        summary += `- **Updated**: ${stats.updated} conversations with ${stats.newMessages} new messages\n`;
+        summary += `- **Skipped**: ${stats.skipped} conversations (no changes)\n`;
+        summary += `- **Failed**: ${stats.failed} conversations\n`;
+        summary += `- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+
+        return summary;
     }
 
     private generateFileSummary(section: FileSection): string {
@@ -399,5 +450,12 @@ export class ImportReport {
             attachmentsMissing: attachmentStats.missing,
             attachmentsFailed: attachmentStats.failed
         };
+    }
+
+    /**
+     * Get list of processed file names
+     */
+    getProcessedFileNames(): string[] {
+        return Array.from(this.fileSections.keys());
     }
 }

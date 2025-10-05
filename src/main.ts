@@ -269,8 +269,20 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 existingConversations
             );
 
+            // Create shared report for the entire operation
+            const operationReport = new ImportReport();
+
             if (extractionResult.conversations.length === 0) {
-                new Notice("No new or updated conversations found in the selected files.");
+                // No conversations to import, but still generate report and show dialog
+                new Notice("No new or updated conversations found. All conversations are already up to date.");
+
+                // Write report showing what was analyzed
+                const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
+
+                // Show completion dialog with 0 imports
+                if (reportPath) {
+                    this.showImportCompletionDialog(operationReport, reportPath);
+                }
                 return;
             }
 
@@ -278,9 +290,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const allIds = extractionResult.conversations.map(c => c.id);
 
             new Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
-
-            // Create shared report for the entire operation
-            const operationReport = new ImportReport();
 
             // Group conversations by file and import
             const conversationsByFile = new Map<string, string[]>();
@@ -307,7 +316,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             }
 
             // Write the consolidated report (always, even if some files failed)
-            const reportPath = await this.writeConsolidatedReport(operationReport, provider);
+            const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
 
             // Show completion dialog
             if (reportPath) {
@@ -355,7 +364,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this.app,
                 extractionResult.conversations,
                 (result: ConversationSelectionResult) => {
-                    this.handleConversationSelectionResult(result, files, provider);
+                    this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo);
                 },
                 this,
                 extractionResult.analysisInfo
@@ -373,17 +382,24 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private async handleConversationSelectionResult(
         result: ConversationSelectionResult,
         files: File[],
-        provider: string
+        provider: string,
+        analysisInfo?: any
     ): Promise<void> {
+        // Create shared report for the entire operation
+        const operationReport = new ImportReport();
+
         if (result.selectedIds.length === 0) {
             new Notice("No conversations selected for import.");
+
+            // Still write report and show dialog
+            const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
+            if (reportPath) {
+                this.showImportCompletionDialog(operationReport, reportPath);
+            }
             return;
         }
 
         new Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
-
-        // Create shared report for the entire operation
-        const operationReport = new ImportReport();
 
         // Group selected conversations by source file for efficient processing
         const conversationsByFile = await this.groupConversationsByFile(result, files);
@@ -402,7 +418,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         // Write the consolidated report (always, even if some files failed)
-        const reportPath = await this.writeConsolidatedReport(operationReport, provider);
+        const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
 
         // Show completion dialog
         if (reportPath) {
@@ -416,7 +432,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     /**
      * Write consolidated report for multi-file import
      */
-    private async writeConsolidatedReport(report: ImportReport, provider: string): Promise<string> {
+    private async writeConsolidatedReport(
+        report: ImportReport,
+        provider: string,
+        files: File[],
+        analysisInfo?: any
+    ): Promise<string> {
         this.logger.info("Writing consolidated report...");
 
         const { ensureFolderExists, formatTimestamp } = await import("./utils");
@@ -460,10 +481,28 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         const currentDate = `${formatTimestamp(Date.now() / 1000, "date")} ${formatTimestamp(Date.now() / 1000, "time")}`;
         const stats = report.getCompletionStats();
 
+        // Determine which files were processed vs skipped
+        const processedFiles: string[] = [];
+        const skippedFiles: string[] = [];
+
+        if (stats.totalFiles > 0) {
+            // Files that were actually processed (have entries in report)
+            report.getProcessedFileNames().forEach(name => processedFiles.push(name));
+        }
+
+        // All files that weren't processed are considered skipped
+        files.forEach(file => {
+            if (!processedFiles.includes(file.name)) {
+                skippedFiles.push(file.name);
+            }
+        });
+
         const logContent = `---
 importdate: ${currentDate}
 provider: ${provider}
-totalFiles: ${stats.totalFiles}
+totalFilesAnalyzed: ${files.length}
+totalFilesProcessed: ${processedFiles.length}
+totalFilesSkipped: ${skippedFiles.length}
 totalConversations: ${stats.totalConversations}
 totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
@@ -471,7 +510,7 @@ totalSkipped: ${stats.skipped}
 totalFailed: ${stats.failed}
 ---
 
-${report.generateReportContent()}
+${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo)}
 `;
 
         try {

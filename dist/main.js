@@ -5348,24 +5348,32 @@ var ImportReport = class {
   addError(message, details) {
     this.globalErrors.push({ message, details });
   }
-  generateReportContent() {
+  generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo) {
     let content = "# Nexus AI Chat Importer Report\n\n";
-    content += this.generateGlobalSummary() + "\n\n";
+    content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo) + "\n\n";
+    if (skippedFiles && skippedFiles.length > 0) {
+      content += this.generateSkippedFilesSection(skippedFiles) + "\n\n";
+    }
     const fileNames = Array.from(this.fileSections.keys());
-    if (fileNames.length === 1) {
+    if (fileNames.length === 0) {
+      content += "## Result\n\n";
+      content += "No conversations were imported. All conversations are already up to date.\n\n";
+    } else if (fileNames.length === 1) {
       const section = this.fileSections.get(fileNames[0]);
       content += this.generateFileContent(section, false);
     } else {
+      content += "---\n\n";
+      content += "## Processed Files\n\n";
       fileNames.forEach((fileName, index) => {
         const section = this.fileSections.get(fileName);
-        content += `---
-
-`;
-        content += `## File ${index + 1}: ${fileName}
+        content += `### File ${index + 1}: ${fileName}
 
 `;
         content += this.generateFileSummary(section) + "\n\n";
         content += this.generateFileContent(section, true);
+        if (index < fileNames.length - 1) {
+          content += "\n";
+        }
       });
     }
     if (this.globalErrors.length > 0) {
@@ -5376,22 +5384,63 @@ var ImportReport = class {
     }
     return content;
   }
-  generateGlobalSummary() {
+  generateSkippedFilesSection(skippedFiles) {
+    let section = "## Skipped Files (Already Up to Date)\n\n";
+    section += "The following files were analyzed but not processed because all their conversations are already up to date:\n\n";
+    skippedFiles.forEach((fileName) => {
+      section += `- ${fileName}
+`;
+    });
+    return section;
+  }
+  generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo) {
     const stats = this.getGlobalStats();
     const totalAttachments = this.getTotalAttachmentStats();
     const attachmentSummary = totalAttachments.total > 0 ? `
 - **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)` : "";
     const fileCount = this.fileSections.size;
-    const fileText = fileCount === 1 ? "1 file" : `${fileCount} files`;
-    return `## Summary
+    const totalFilesAnalyzed = allFiles ? allFiles.length : fileCount;
+    const filesSkipped = skippedFiles ? skippedFiles.length : 0;
+    let summary = `## Summary
 
-- **Files Processed**: ${fileText}
-- **Total Conversations**: ${stats.totalProcessed}
-- **Created**: ${stats.created} new conversations
-- **Updated**: ${stats.updated} conversations with ${stats.newMessages} new messages
-- **Skipped**: ${stats.skipped} conversations (no changes)
-- **Failed**: ${stats.failed} conversations
-- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+`;
+    if (analysisInfo) {
+      summary += `### Analysis
+`;
+      summary += `- **Files Analyzed**: ${totalFilesAnalyzed}
+`;
+      summary += `- **Total Conversations Found**: ${analysisInfo.conversationsTotal || 0}
+`;
+      summary += `- **Unique Conversations**: ${analysisInfo.conversationsUnique || 0}
+`;
+      summary += `- **New**: ${analysisInfo.conversationsNew || 0}
+`;
+      summary += `- **Updated**: ${analysisInfo.conversationsUpdated || 0}
+`;
+      summary += `- **Unchanged**: ${analysisInfo.conversationsUnchanged || 0}
+
+`;
+    }
+    summary += `### Import Results
+`;
+    summary += `- **Files Processed**: ${fileCount}
+`;
+    if (filesSkipped > 0) {
+      summary += `- **Files Skipped**: ${filesSkipped} (already up to date)
+`;
+    }
+    summary += `- **Conversations Imported**: ${stats.created + stats.updated}
+`;
+    summary += `- **Created**: ${stats.created} new conversations
+`;
+    summary += `- **Updated**: ${stats.updated} conversations with ${stats.newMessages} new messages
+`;
+    summary += `- **Skipped**: ${stats.skipped} conversations (no changes)
+`;
+    summary += `- **Failed**: ${stats.failed} conversations
+`;
+    summary += `- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+    return summary;
   }
   generateFileSummary(section) {
     const attachmentStats = this.getFileSectionAttachmentStats(section);
@@ -5546,6 +5595,12 @@ var ImportReport = class {
       attachmentsMissing: attachmentStats.missing,
       attachmentsFailed: attachmentStats.failed
     };
+  }
+  /**
+   * Get list of processed file names
+   */
+  getProcessedFileNames() {
+    return Array.from(this.fileSections.keys());
   }
 };
 
@@ -11710,13 +11765,17 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
         provider,
         existingConversations
       );
+      const operationReport = new ImportReport();
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian22.Notice("No new or updated conversations found in the selected files.");
+        new import_obsidian22.Notice("No new or updated conversations found. All conversations are already up to date.");
+        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
+        if (reportPath2) {
+          this.showImportCompletionDialog(operationReport, reportPath2);
+        }
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
       new import_obsidian22.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
-      const operationReport = new ImportReport();
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -11736,7 +11795,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
           }
         }
       }
-      const reportPath = await this.writeConsolidatedReport(operationReport, provider);
+      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
@@ -11770,7 +11829,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
         this.app,
         extractionResult.conversations,
         (result) => {
-          this.handleConversationSelectionResult(result, files, provider);
+          this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo);
         },
         this,
         extractionResult.analysisInfo
@@ -11783,13 +11842,17 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
   /**
    * Handle the result from conversation selection dialog
    */
-  async handleConversationSelectionResult(result, files, provider) {
+  async handleConversationSelectionResult(result, files, provider, analysisInfo) {
+    const operationReport = new ImportReport();
     if (result.selectedIds.length === 0) {
       new import_obsidian22.Notice("No conversations selected for import.");
+      const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
+      if (reportPath2) {
+        this.showImportCompletionDialog(operationReport, reportPath2);
+      }
       return;
     }
     new import_obsidian22.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
-    const operationReport = new ImportReport();
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
@@ -11801,7 +11864,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
         }
       }
     }
-    const reportPath = await this.writeConsolidatedReport(operationReport, provider);
+    const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
@@ -11811,7 +11874,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
   /**
    * Write consolidated report for multi-file import
    */
-  async writeConsolidatedReport(report, provider) {
+  async writeConsolidatedReport(report, provider, files, analysisInfo) {
     this.logger.info("Writing consolidated report...");
     const { ensureFolderExists: ensureFolderExists2, formatTimestamp: formatTimestamp2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
     const reportFolder = this.settings.reportFolder;
@@ -11841,10 +11904,22 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
     }
     const currentDate = `${formatTimestamp2(Date.now() / 1e3, "date")} ${formatTimestamp2(Date.now() / 1e3, "time")}`;
     const stats = report.getCompletionStats();
+    const processedFiles = [];
+    const skippedFiles = [];
+    if (stats.totalFiles > 0) {
+      report.getProcessedFileNames().forEach((name) => processedFiles.push(name));
+    }
+    files.forEach((file) => {
+      if (!processedFiles.includes(file.name)) {
+        skippedFiles.push(file.name);
+      }
+    });
     const logContent = `---
 importdate: ${currentDate}
 provider: ${provider}
-totalFiles: ${stats.totalFiles}
+totalFilesAnalyzed: ${files.length}
+totalFilesProcessed: ${processedFiles.length}
+totalFilesSkipped: ${skippedFiles.length}
 totalConversations: ${stats.totalConversations}
 totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
@@ -11852,7 +11927,7 @@ totalSkipped: ${stats.skipped}
 totalFailed: ${stats.failed}
 ---
 
-${report.generateReportContent()}
+${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo)}
 `;
     try {
       await this.app.vault.create(logFilePath, logContent);
