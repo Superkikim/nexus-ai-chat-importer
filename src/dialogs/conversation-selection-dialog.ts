@@ -62,8 +62,11 @@ export class ConversationSelectionDialog extends Modal {
     }
 
     onOpen() {
-        const { contentEl } = this;
+        const { contentEl, modalEl } = this;
         contentEl.empty();
+
+        // Add class to both modal and content for proper styling
+        modalEl.addClass('nexus-conversation-selection-dialog');
         contentEl.addClass('nexus-conversation-selection-dialog');
 
         // Title
@@ -697,20 +700,23 @@ export class ConversationSelectionDialog extends Modal {
     private addCustomStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            /* Modal sizing - wider and responsive */
-            .nexus-conversation-selection-dialog .modal {
-                max-width: 1400px !important;
-                width: 95vw !important;
+            /* Modal sizing - CRITICAL: Override Obsidian's default constraints */
+            .modal.nexus-conversation-selection-dialog {
+                max-width: min(1400px, 95vw) !important;
+                width: min(1400px, 95vw) !important;
+                height: auto !important;
+                padding: 0 !important;
             }
 
-            .nexus-conversation-selection-dialog .modal-content {
-                max-width: 100%;
-                width: 100%;
+            .modal.nexus-conversation-selection-dialog .modal-content {
+                max-width: 100% !important;
+                width: 100% !important;
                 max-height: 90vh;
                 overflow-y: visible;
+                overflow-x: visible;
                 display: flex;
                 flex-direction: column;
-                padding: 20px;
+                padding: 24px;
             }
 
             /* Table container with independent scroll */
