@@ -60,24 +60,27 @@ export class EnhancedFileSelectionDialog extends Modal {
         sectionTitle.style.marginBottom = "12px";
         sectionTitle.style.fontSize = "1em";
 
-        // Two boxes side by side
+        // Two options side by side - clean and readable
         const optionsContainer = section.createDiv('import-options-container');
         optionsContainer.style.display = "grid";
         optionsContainer.style.gridTemplateColumns = "1fr 1fr";
         optionsContainer.style.gap = "12px";
 
-        // Import All option box
+        // Import All option
         const allOption = optionsContainer.createDiv('import-option-box');
-        allOption.style.padding = "16px";
-        allOption.style.border = "2px solid var(--background-modifier-border)";
-        allOption.style.borderRadius = "8px";
+        allOption.style.padding = "14px 16px";
+        allOption.style.border = "1px solid var(--background-modifier-border)";
+        allOption.style.borderRadius = "6px";
         allOption.style.cursor = "pointer";
         allOption.style.transition = "all 0.2s";
-        allOption.style.backgroundColor = this.importMode === 'all'
-            ? "var(--interactive-accent-hover)"
-            : "var(--background-primary)";
+        allOption.style.display = "flex";
+        allOption.style.alignItems = "center";
+        allOption.style.gap = "10px";
+        allOption.style.backgroundColor = "var(--background-primary)";
+
         if (this.importMode === 'all') {
             allOption.style.borderColor = "var(--interactive-accent)";
+            allOption.style.borderWidth = "2px";
         }
 
         const allRadio = allOption.createEl("input", { type: "radio" });
@@ -85,22 +88,25 @@ export class EnhancedFileSelectionDialog extends Modal {
         allRadio.value = "all";
         allRadio.checked = this.importMode === 'all';
         allRadio.id = "import-all";
-        allRadio.style.marginBottom = "8px";
         allRadio.addEventListener('change', () => {
             this.importMode = 'all';
             this.updateImportModeDescription();
             this.updateImportModeBoxes();
         });
 
-        const allLabel = allOption.createEl("label");
+        const allContent = allOption.createDiv();
+        allContent.style.flex = "1";
+
+        const allLabel = allContent.createEl("label");
         allLabel.htmlFor = "import-all";
         allLabel.style.display = "block";
-        allLabel.style.fontWeight = "600";
-        allLabel.style.marginBottom = "6px";
+        allLabel.style.fontWeight = "500";
+        allLabel.style.marginBottom = "4px";
         allLabel.style.cursor = "pointer";
+        allLabel.style.color = "var(--text-normal)";
         allLabel.textContent = "Import All";
 
-        const allDesc = allOption.createDiv();
+        const allDesc = allContent.createDiv();
         allDesc.style.fontSize = "0.85em";
         allDesc.style.color = "var(--text-muted)";
         allDesc.textContent = "Import all conversations (faster)";
@@ -112,18 +118,21 @@ export class EnhancedFileSelectionDialog extends Modal {
             this.updateImportModeBoxes();
         });
 
-        // Select Specific option box
+        // Select Specific option
         const selectOption = optionsContainer.createDiv('import-option-box');
-        selectOption.style.padding = "16px";
-        selectOption.style.border = "2px solid var(--background-modifier-border)";
-        selectOption.style.borderRadius = "8px";
+        selectOption.style.padding = "14px 16px";
+        selectOption.style.border = "1px solid var(--background-modifier-border)";
+        selectOption.style.borderRadius = "6px";
         selectOption.style.cursor = "pointer";
         selectOption.style.transition = "all 0.2s";
-        selectOption.style.backgroundColor = this.importMode === 'selective'
-            ? "var(--interactive-accent-hover)"
-            : "var(--background-primary)";
+        selectOption.style.display = "flex";
+        selectOption.style.alignItems = "center";
+        selectOption.style.gap = "10px";
+        selectOption.style.backgroundColor = "var(--background-primary)";
+
         if (this.importMode === 'selective') {
             selectOption.style.borderColor = "var(--interactive-accent)";
+            selectOption.style.borderWidth = "2px";
         }
 
         const selectRadio = selectOption.createEl("input", { type: "radio" });
@@ -131,22 +140,25 @@ export class EnhancedFileSelectionDialog extends Modal {
         selectRadio.value = "selective";
         selectRadio.checked = this.importMode === 'selective';
         selectRadio.id = "import-selective";
-        selectRadio.style.marginBottom = "8px";
         selectRadio.addEventListener('change', () => {
             this.importMode = 'selective';
             this.updateImportModeDescription();
             this.updateImportModeBoxes();
         });
 
-        const selectLabel = selectOption.createEl("label");
+        const selectContent = selectOption.createDiv();
+        selectContent.style.flex = "1";
+
+        const selectLabel = selectContent.createEl("label");
         selectLabel.htmlFor = "import-selective";
         selectLabel.style.display = "block";
-        selectLabel.style.fontWeight = "600";
-        selectLabel.style.marginBottom = "6px";
+        selectLabel.style.fontWeight = "500";
+        selectLabel.style.marginBottom = "4px";
         selectLabel.style.cursor = "pointer";
+        selectLabel.style.color = "var(--text-normal)";
         selectLabel.textContent = "Select Specific";
 
-        const selectDesc = selectOption.createDiv();
+        const selectDesc = selectContent.createDiv();
         selectDesc.style.fontSize = "0.85em";
         selectDesc.style.color = "var(--text-muted)";
         selectDesc.textContent = "Preview and choose conversations";
@@ -166,11 +178,11 @@ export class EnhancedFileSelectionDialog extends Modal {
                              (index === 1 && this.importMode === 'selective');
 
             if (isSelected) {
-                box.style.backgroundColor = "var(--interactive-accent-hover)";
                 box.style.borderColor = "var(--interactive-accent)";
+                box.style.borderWidth = "2px";
             } else {
-                box.style.backgroundColor = "var(--background-primary)";
                 box.style.borderColor = "var(--background-modifier-border)";
+                box.style.borderWidth = "1px";
             }
         });
     }
@@ -438,8 +450,7 @@ export class EnhancedFileSelectionDialog extends Modal {
 
             /* Import mode boxes hover effect */
             .nexus-file-selection-dialog .import-option-box:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                background-color: var(--background-modifier-hover);
             }
 
             /* Drop zone hover effect */

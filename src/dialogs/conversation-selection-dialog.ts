@@ -167,11 +167,7 @@ export class ConversationSelectionDialog extends Modal {
         statusSelect.style.fontSize = "14px";
         statusSelect.style.backgroundColor = "var(--background-primary)";
         statusSelect.style.color = "var(--text-normal)";
-        statusSelect.style.appearance = "none";
-        statusSelect.style.backgroundImage = "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3e%3cpath fill=%27%23666%27 d=%27M6 8L0 0h12z%27/%3e%3c/svg%3e')";
-        statusSelect.style.backgroundRepeat = "no-repeat";
-        statusSelect.style.backgroundPosition = "right 8px center";
-        statusSelect.style.backgroundSize = "10px";
+        statusSelect.classList.add('nexus-custom-select');
 
         const statusOptions = [
             { value: 'all', text: 'All' },
@@ -211,11 +207,7 @@ export class ConversationSelectionDialog extends Modal {
         pageSizeSelect.style.fontSize = "14px";
         pageSizeSelect.style.backgroundColor = "var(--background-primary)";
         pageSizeSelect.style.color = "var(--text-normal)";
-        pageSizeSelect.style.appearance = "none";
-        pageSizeSelect.style.backgroundImage = "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3e%3cpath fill=%27%23666%27 d=%27M6 8L0 0h12z%27/%3e%3c/svg%3e')";
-        pageSizeSelect.style.backgroundRepeat = "no-repeat";
-        pageSizeSelect.style.backgroundPosition = "right 8px center";
-        pageSizeSelect.style.backgroundSize = "10px";
+        pageSizeSelect.classList.add('nexus-custom-select');
 
         const pageSizeOptions = [10, 20, 50, 100];
         pageSizeOptions.forEach(size => {
@@ -259,12 +251,12 @@ export class ConversationSelectionDialog extends Modal {
         headerRow.style.zIndex = "10";
 
         const headers = [
-            { text: "", width: "50px", sortField: null }, // Checkbox
-            { text: "Title", width: "40%", sortField: 'title' as const },
-            { text: "Created", width: "150px", sortField: 'createTime' as const },
-            { text: "Updated", width: "150px", sortField: 'updateTime' as const },
-            { text: "Messages", width: "100px", sortField: 'messageCount' as const },
-            { text: "Status", width: "120px", sortField: null }
+            { text: "", width: "40px", sortField: null }, // Checkbox - plus compact
+            { text: "Title", width: "45%", sortField: 'title' as const }, // Plus d'espace
+            { text: "Created", width: "110px", sortField: 'createTime' as const }, // Réduit
+            { text: "Updated", width: "110px", sortField: 'updateTime' as const }, // Réduit
+            { text: "Messages", width: "80px", sortField: 'messageCount' as const }, // Réduit
+            { text: "Status", width: "100px", sortField: null } // Réduit
         ];
 
         headers.forEach(header => {
@@ -647,8 +639,8 @@ export class ConversationSelectionDialog extends Modal {
         style.textContent = `
             /* Modal sizing - CRITICAL: Override Obsidian's default constraints */
             .modal.nexus-conversation-selection-dialog {
-                max-width: min(1400px, 95vw) !important;
-                width: min(1400px, 95vw) !important;
+                max-width: min(1000px, 90vw) !important;
+                width: min(1000px, 90vw) !important;
                 height: auto !important;
                 padding: 0 !important;
             }
@@ -794,11 +786,27 @@ export class ConversationSelectionDialog extends Modal {
                 border: 1px solid var(--background-modifier-border);
                 border-radius: 4px;
                 padding: 8px 12px;
+                cursor: pointer;
             }
 
             .nexus-conversation-selection-dialog select option {
                 padding: 4px 8px;
                 line-height: 1.4;
+            }
+
+            /* Custom select dropdowns with theme-aware arrows */
+            .nexus-conversation-selection-dialog .nexus-custom-select {
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                padding-right: 32px;
+                background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+                                  linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+                background-position: calc(100% - 14px) calc(50% - 2px),
+                                     calc(100% - 10px) calc(50% - 2px);
+                background-size: 4px 4px,
+                                 4px 4px;
+                background-repeat: no-repeat;
             }
 
             /* Buttons */

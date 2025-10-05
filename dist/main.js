@@ -9748,34 +9748,40 @@ var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
     optionsContainer.style.gridTemplateColumns = "1fr 1fr";
     optionsContainer.style.gap = "12px";
     const allOption = optionsContainer.createDiv("import-option-box");
-    allOption.style.padding = "16px";
-    allOption.style.border = "2px solid var(--background-modifier-border)";
-    allOption.style.borderRadius = "8px";
+    allOption.style.padding = "14px 16px";
+    allOption.style.border = "1px solid var(--background-modifier-border)";
+    allOption.style.borderRadius = "6px";
     allOption.style.cursor = "pointer";
     allOption.style.transition = "all 0.2s";
-    allOption.style.backgroundColor = this.importMode === "all" ? "var(--interactive-accent-hover)" : "var(--background-primary)";
+    allOption.style.display = "flex";
+    allOption.style.alignItems = "center";
+    allOption.style.gap = "10px";
+    allOption.style.backgroundColor = "var(--background-primary)";
     if (this.importMode === "all") {
       allOption.style.borderColor = "var(--interactive-accent)";
+      allOption.style.borderWidth = "2px";
     }
     const allRadio = allOption.createEl("input", { type: "radio" });
     allRadio.name = "importMode";
     allRadio.value = "all";
     allRadio.checked = this.importMode === "all";
     allRadio.id = "import-all";
-    allRadio.style.marginBottom = "8px";
     allRadio.addEventListener("change", () => {
       this.importMode = "all";
       this.updateImportModeDescription();
       this.updateImportModeBoxes();
     });
-    const allLabel = allOption.createEl("label");
+    const allContent = allOption.createDiv();
+    allContent.style.flex = "1";
+    const allLabel = allContent.createEl("label");
     allLabel.htmlFor = "import-all";
     allLabel.style.display = "block";
-    allLabel.style.fontWeight = "600";
-    allLabel.style.marginBottom = "6px";
+    allLabel.style.fontWeight = "500";
+    allLabel.style.marginBottom = "4px";
     allLabel.style.cursor = "pointer";
+    allLabel.style.color = "var(--text-normal)";
     allLabel.textContent = "Import All";
-    const allDesc = allOption.createDiv();
+    const allDesc = allContent.createDiv();
     allDesc.style.fontSize = "0.85em";
     allDesc.style.color = "var(--text-muted)";
     allDesc.textContent = "Import all conversations (faster)";
@@ -9786,34 +9792,40 @@ var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
       this.updateImportModeBoxes();
     });
     const selectOption = optionsContainer.createDiv("import-option-box");
-    selectOption.style.padding = "16px";
-    selectOption.style.border = "2px solid var(--background-modifier-border)";
-    selectOption.style.borderRadius = "8px";
+    selectOption.style.padding = "14px 16px";
+    selectOption.style.border = "1px solid var(--background-modifier-border)";
+    selectOption.style.borderRadius = "6px";
     selectOption.style.cursor = "pointer";
     selectOption.style.transition = "all 0.2s";
-    selectOption.style.backgroundColor = this.importMode === "selective" ? "var(--interactive-accent-hover)" : "var(--background-primary)";
+    selectOption.style.display = "flex";
+    selectOption.style.alignItems = "center";
+    selectOption.style.gap = "10px";
+    selectOption.style.backgroundColor = "var(--background-primary)";
     if (this.importMode === "selective") {
       selectOption.style.borderColor = "var(--interactive-accent)";
+      selectOption.style.borderWidth = "2px";
     }
     const selectRadio = selectOption.createEl("input", { type: "radio" });
     selectRadio.name = "importMode";
     selectRadio.value = "selective";
     selectRadio.checked = this.importMode === "selective";
     selectRadio.id = "import-selective";
-    selectRadio.style.marginBottom = "8px";
     selectRadio.addEventListener("change", () => {
       this.importMode = "selective";
       this.updateImportModeDescription();
       this.updateImportModeBoxes();
     });
-    const selectLabel = selectOption.createEl("label");
+    const selectContent = selectOption.createDiv();
+    selectContent.style.flex = "1";
+    const selectLabel = selectContent.createEl("label");
     selectLabel.htmlFor = "import-selective";
     selectLabel.style.display = "block";
-    selectLabel.style.fontWeight = "600";
-    selectLabel.style.marginBottom = "6px";
+    selectLabel.style.fontWeight = "500";
+    selectLabel.style.marginBottom = "4px";
     selectLabel.style.cursor = "pointer";
+    selectLabel.style.color = "var(--text-normal)";
     selectLabel.textContent = "Select Specific";
-    const selectDesc = selectOption.createDiv();
+    const selectDesc = selectContent.createDiv();
     selectDesc.style.fontSize = "0.85em";
     selectDesc.style.color = "var(--text-muted)";
     selectDesc.textContent = "Preview and choose conversations";
@@ -9829,11 +9841,11 @@ var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
     boxes.forEach((box, index) => {
       const isSelected = index === 0 && this.importMode === "all" || index === 1 && this.importMode === "selective";
       if (isSelected) {
-        box.style.backgroundColor = "var(--interactive-accent-hover)";
         box.style.borderColor = "var(--interactive-accent)";
+        box.style.borderWidth = "2px";
       } else {
-        box.style.backgroundColor = "var(--background-primary)";
         box.style.borderColor = "var(--background-modifier-border)";
+        box.style.borderWidth = "1px";
       }
     });
   }
@@ -10057,8 +10069,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
 
             /* Import mode boxes hover effect */
             .nexus-file-selection-dialog .import-option-box:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                background-color: var(--background-modifier-hover);
             }
 
             /* Drop zone hover effect */
@@ -10212,11 +10223,7 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
     statusSelect.style.fontSize = "14px";
     statusSelect.style.backgroundColor = "var(--background-primary)";
     statusSelect.style.color = "var(--text-normal)";
-    statusSelect.style.appearance = "none";
-    statusSelect.style.backgroundImage = "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3e%3cpath fill=%27%23666%27 d=%27M6 8L0 0h12z%27/%3e%3c/svg%3e')";
-    statusSelect.style.backgroundRepeat = "no-repeat";
-    statusSelect.style.backgroundPosition = "right 8px center";
-    statusSelect.style.backgroundSize = "10px";
+    statusSelect.classList.add("nexus-custom-select");
     const statusOptions = [
       { value: "all", text: "All" },
       { value: "new", text: "New" },
@@ -10250,11 +10257,7 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
     pageSizeSelect.style.fontSize = "14px";
     pageSizeSelect.style.backgroundColor = "var(--background-primary)";
     pageSizeSelect.style.color = "var(--text-normal)";
-    pageSizeSelect.style.appearance = "none";
-    pageSizeSelect.style.backgroundImage = "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27%3e%3cpath fill=%27%23666%27 d=%27M6 8L0 0h12z%27/%3e%3c/svg%3e')";
-    pageSizeSelect.style.backgroundRepeat = "no-repeat";
-    pageSizeSelect.style.backgroundPosition = "right 8px center";
-    pageSizeSelect.style.backgroundSize = "10px";
+    pageSizeSelect.classList.add("nexus-custom-select");
     const pageSizeOptions = [10, 20, 50, 100];
     pageSizeOptions.forEach((size) => {
       const optionEl = pageSizeSelect.createEl("option");
@@ -10286,13 +10289,18 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
     headerRow.style.top = "0";
     headerRow.style.zIndex = "10";
     const headers = [
-      { text: "", width: "50px", sortField: null },
-      // Checkbox
-      { text: "Title", width: "40%", sortField: "title" },
-      { text: "Created", width: "150px", sortField: "createTime" },
-      { text: "Updated", width: "150px", sortField: "updateTime" },
-      { text: "Messages", width: "100px", sortField: "messageCount" },
-      { text: "Status", width: "120px", sortField: null }
+      { text: "", width: "40px", sortField: null },
+      // Checkbox - plus compact
+      { text: "Title", width: "45%", sortField: "title" },
+      // Plus d'espace
+      { text: "Created", width: "110px", sortField: "createTime" },
+      // Réduit
+      { text: "Updated", width: "110px", sortField: "updateTime" },
+      // Réduit
+      { text: "Messages", width: "80px", sortField: "messageCount" },
+      // Réduit
+      { text: "Status", width: "100px", sortField: null }
+      // Réduit
     ];
     headers.forEach((header) => {
       const th = headerRow.createEl("th");
@@ -10591,8 +10599,8 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
     style.textContent = `
             /* Modal sizing - CRITICAL: Override Obsidian's default constraints */
             .modal.nexus-conversation-selection-dialog {
-                max-width: min(1400px, 95vw) !important;
-                width: min(1400px, 95vw) !important;
+                max-width: min(1000px, 90vw) !important;
+                width: min(1000px, 90vw) !important;
                 height: auto !important;
                 padding: 0 !important;
             }
@@ -10738,11 +10746,27 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
                 border: 1px solid var(--background-modifier-border);
                 border-radius: 4px;
                 padding: 8px 12px;
+                cursor: pointer;
             }
 
             .nexus-conversation-selection-dialog select option {
                 padding: 4px 8px;
                 line-height: 1.4;
+            }
+
+            /* Custom select dropdowns with theme-aware arrows */
+            .nexus-conversation-selection-dialog .nexus-custom-select {
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                padding-right: 32px;
+                background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+                                  linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+                background-position: calc(100% - 14px) calc(50% - 2px),
+                                     calc(100% - 10px) calc(50% - 2px);
+                background-size: 4px 4px,
+                                 4px 4px;
+                background-repeat: no-repeat;
             }
 
             /* Buttons */
