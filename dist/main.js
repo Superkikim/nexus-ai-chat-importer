@@ -4757,6 +4757,15 @@ ${frontmatter}
               details: []
             };
           }
+          const existingDestination = context.plugin.app.vault.getAbstractFileByPath(newReportsPath);
+          if (existingDestination) {
+            context.logger.info(`Reports folder already exists at ${newReportsPath}, skipping migration`);
+            return {
+              success: true,
+              message: `Reports folder already at correct location: ${newReportsPath}`,
+              details: [`Folder already exists at destination, no migration needed`]
+            };
+          }
           const fileCount = this.countFilesRecursively(oldReportsFolder);
           context.logger.info(`Found ${fileCount} files in Reports folder`);
           (_a = context.updateProgress) == null ? void 0 : _a.call(context, {
@@ -4784,6 +4793,7 @@ ${frontmatter}
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           context.logger.error(`Failed to move Reports folder:`, error);
+          results.push(`Error: ${errorMsg}`);
           return {
             success: false,
             message: `Failed to move Reports folder: ${errorMsg}`,
