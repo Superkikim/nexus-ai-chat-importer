@@ -77,8 +77,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const data = await this.loadData();
             this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
 
-            // Always compute reports under archive folder to ensure consistency
-            this.settings.reportFolder = `${this.settings.archiveFolder}/Reports`;
+            // Compute Reports folder at the same level as archive folder (not inside it)
+            // Extract parent folder from archiveFolder (e.g., "Nexus/Conversations" -> "Nexus")
+            const archiveFolderParts = this.settings.archiveFolder.split('/');
+            const parentFolder = archiveFolderParts.slice(0, -1).join('/');
+            this.settings.reportFolder = parentFolder ? `${parentFolder}/Reports` : 'Reports';
+
             // attachmentFolder honors user's saved settings; DEFAULT_SETTINGS only applies on true first install
             // (No extra handling needed here; the merge above preserves user settings if they exist)
 

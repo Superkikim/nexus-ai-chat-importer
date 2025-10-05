@@ -2,6 +2,7 @@
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
 import type NexusAiChatImporterPlugin from "../../main";
 import { generateSafeAlias } from "../../utils";
+import { TFolder } from "obsidian";
 
 /**
  * Convert timestamps to ISO 8601 format in all existing frontmatter
@@ -603,12 +604,172 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
 }
 
 /**
+ * Move Reports folder from inside Conversations folder to same level
+ * Bug fix: Reports folder was incorrectly created inside archiveFolder (e.g., Nexus/Conversations/Reports)
+ * Should be at same level as Conversations (e.g., Nexus/Reports)
+ */
+class MoveReportsFolderOperation extends UpgradeOperation {
+    readonly id = "move-reports-folder";
+    readonly name = "Move Reports Folder";
+    readonly description = "Move Reports folder from inside Conversations to the same level";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        try {
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const oldReportsPath = `${archiveFolder}/Reports`;
+
+            // Check if old Reports folder exists
+            const oldReportsFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
+
+            if (oldReportsFolder && oldReportsFolder instanceof TFolder) {
+                // Check if it has any files
+                const files = oldReportsFolder.children;
+                return files.length > 0;
+            }
+
+            return false;
+        } catch (error) {
+            console.error(`MoveReportsFolder.canRun failed:`, error);
+            return false;
+        }
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        const results: string[] = [];
+        let filesProcessed = 0;
+        let filesFailed = 0;
+
+        try {
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const oldReportsPath = `${archiveFolder}/Reports`;
+
+            // Calculate new Reports path (same level as Conversations)
+            const archiveFolderParts = archiveFolder.split('/');
+            const parentFolder = archiveFolderParts.slice(0, -1).join('/');
+            const newReportsPath = parentFolder ? `${parentFolder}/Reports` : 'Reports';
+
+            context.logger.info(`Moving Reports folder from ${oldReportsPath} to ${newReportsPath}`);
+
+            const oldReportsFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
+
+            if (!oldReportsFolder || !(oldReportsFolder instanceof TFolder)) {
+                return {
+                    success: true,
+                    message: "No Reports folder to move",
+                    details: []
+                };
+            }
+
+            // Ensure new Reports folder exists
+            const { ensureFolderExists } = await import("../../utils");
+            await ensureFolderExists(context.plugin.app, newReportsPath);
+
+            // Get all files in old Reports folder (recursively)
+            const filesToMove = this.getAllFilesRecursively(oldReportsFolder);
+
+            context.logger.info(`Found ${filesToMove.length} files to move`);
+
+            // Move each file
+            for (const file of filesToMove) {
+                try {
+                    // Calculate relative path from old Reports folder
+                    const relativePath = file.path.substring(oldReportsPath.length + 1);
+                    const newPath = `${newReportsPath}/${relativePath}`;
+
+                    // Ensure parent folder exists
+                    const newParentPath = newPath.substring(0, newPath.lastIndexOf('/'));
+                    await ensureFolderExists(context.plugin.app, newParentPath);
+
+                    // Move file
+                    await context.plugin.app.vault.rename(file, newPath);
+
+                    filesProcessed++;
+                    results.push(`Moved: ${file.path} → ${newPath}`);
+
+                    context.updateProgress?.({
+                        phase: 'processing',
+                        title: 'Moving Reports folder...',
+                        detail: `Moving file ${filesProcessed} of ${filesToMove.length}`,
+                        current: filesProcessed,
+                        total: filesToMove.length
+                    });
+                } catch (error) {
+                    filesFailed++;
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    results.push(`Failed to move ${file.path}: ${errorMsg}`);
+                    context.logger.error(`Failed to move ${file.path}:`, error);
+                }
+            }
+
+            // Delete old Reports folder if empty
+            try {
+                const oldFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
+                if (oldFolder && oldFolder instanceof TFolder && oldFolder.children.length === 0) {
+                    await context.plugin.app.vault.delete(oldFolder);
+                    results.push(`Deleted empty old Reports folder: ${oldReportsPath}`);
+                }
+            } catch (error) {
+                context.logger.warn(`Could not delete old Reports folder:`, error);
+            }
+
+            return {
+                success: filesFailed === 0,
+                message: `Moved ${filesProcessed} files from ${oldReportsPath} to ${newReportsPath}`,
+                details: results
+            };
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            return {
+                success: false,
+                message: `Failed to move Reports folder: ${errorMsg}`,
+                details: results
+            };
+        }
+    }
+
+    async verify(context: UpgradeContext): Promise<boolean> {
+        try {
+            const archiveFolder = context.plugin.settings.archiveFolder;
+            const oldReportsPath = `${archiveFolder}/Reports`;
+
+            // Verify old Reports folder is empty or doesn't exist
+            const oldReportsFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
+
+            if (oldReportsFolder && oldReportsFolder instanceof TFolder) {
+                return oldReportsFolder.children.length === 0;
+            }
+
+            return true; // Folder doesn't exist = success
+        } catch (error) {
+            console.error(`MoveReportsFolder.verify failed:`, error);
+            return false;
+        }
+    }
+
+    private getAllFilesRecursively(folder: TFolder): any[] {
+        const files: any[] = [];
+
+        for (const child of folder.children) {
+            if (child instanceof TFolder) {
+                files.push(...this.getAllFilesRecursively(child));
+            } else {
+                files.push(child);
+            }
+        }
+
+        return files;
+    }
+}
+
+/**
  * Version 1.3.0 Upgrade Definition
  */
 export class Upgrade130 extends VersionUpgrade {
     readonly version = "1.3.0";
 
     readonly automaticOperations = [
+        new MoveReportsFolderOperation(),
         new ConvertToISO8601TimestampsOperation(),
         new FixFrontmatterAliasesOperation()
     ];
