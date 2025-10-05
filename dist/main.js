@@ -10230,9 +10230,7 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
     const section = container.createDiv("conversation-list-section");
     section.style.marginBottom = "20px";
     const tableContainer = section.createDiv("table-container");
-    tableContainer.style.border = "1px solid var(--background-modifier-border)";
-    tableContainer.style.borderRadius = "8px";
-    tableContainer.style.overflow = "hidden";
+    tableContainer.classList.add("nexus-table-container");
     const table = tableContainer.createEl("table");
     table.id = "conversation-table";
     table.style.width = "100%";
@@ -10240,20 +10238,31 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
     const thead = table.createEl("thead");
     const headerRow = thead.createEl("tr");
     headerRow.style.backgroundColor = "var(--background-secondary)";
+    headerRow.style.position = "sticky";
+    headerRow.style.top = "0";
+    headerRow.style.zIndex = "10";
     const headers = [
-      { text: "", width: "40px" },
-      // Checkbox
-      { text: "Title", width: "auto" },
-      { text: "Created", width: "120px" },
-      { text: "Updated", width: "120px" },
-      { text: "Messages", width: "80px" }
+      { text: "", width: "50px" },
+      // Checkbox - plus large
+      { text: "Title", width: "40%" },
+      // Title - flexible
+      { text: "Created", width: "150px" },
+      // Date - plus large
+      { text: "Updated", width: "150px" },
+      // Date - plus large
+      { text: "Messages", width: "100px" },
+      // Messages - plus large
+      { text: "Status", width: "120px" }
+      // Status
     ];
     headers.forEach((header) => {
       const th = headerRow.createEl("th");
       th.textContent = header.text;
       th.style.padding = "12px 8px";
       th.style.textAlign = "left";
-      th.style.borderBottom = "1px solid var(--background-modifier-border)";
+      th.style.borderBottom = "2px solid var(--background-modifier-border)";
+      th.style.fontWeight = "600";
+      th.style.backgroundColor = "var(--background-secondary)";
       if (header.width !== "auto") {
         th.style.width = header.width;
       }
@@ -10343,10 +10352,7 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
     const pageConversations = this.state.filteredConversations.slice(startIndex, endIndex);
     pageConversations.forEach((conversation) => {
       const row = tbody.createEl("tr");
-      row.style.borderBottom = "1px solid var(--background-modifier-border)";
       const checkboxCell = row.createEl("td");
-      checkboxCell.style.padding = "8px";
-      checkboxCell.style.textAlign = "center";
       const checkbox = checkboxCell.createEl("input", { type: "checkbox" });
       checkbox.checked = this.state.selectedIds.has(conversation.id);
       checkbox.addEventListener("change", () => {
@@ -10358,67 +10364,56 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
         this.updateSummary();
       });
       const titleCell = row.createEl("td");
-      titleCell.style.padding = "8px";
       titleCell.style.fontWeight = "500";
-      const statusIndicator = this.createStatusIndicator(conversation);
-      if (statusIndicator) {
-        titleCell.appendChild(statusIndicator);
-        titleCell.appendChild(document.createTextNode(" "));
-      }
-      titleCell.appendChild(document.createTextNode(conversation.title));
+      titleCell.textContent = conversation.title;
       if (conversation.sourceFile) {
         const sourceInfo = titleCell.createEl("div");
         sourceInfo.style.fontSize = "0.8em";
         sourceInfo.style.color = "var(--text-muted)";
-        sourceInfo.style.marginTop = "2px";
-        sourceInfo.textContent = `From: ${conversation.sourceFile}`;
+        sourceInfo.style.marginTop = "4px";
+        sourceInfo.textContent = `\u{1F4C1} ${conversation.sourceFile}`;
       }
       const createdCell = row.createEl("td");
-      createdCell.style.padding = "8px";
       createdCell.style.fontSize = "0.9em";
       createdCell.textContent = this.formatDate(conversation.createTime);
       const updatedCell = row.createEl("td");
-      updatedCell.style.padding = "8px";
       updatedCell.style.fontSize = "0.9em";
       updatedCell.textContent = this.formatDate(conversation.updateTime);
       const messagesCell = row.createEl("td");
-      messagesCell.style.padding = "8px";
       messagesCell.style.textAlign = "center";
       messagesCell.textContent = conversation.messageCount.toString();
+      const statusCell = row.createEl("td");
+      statusCell.style.textAlign = "center";
+      const statusBadge = this.createStatusBadge(conversation);
+      statusCell.appendChild(statusBadge);
     });
     this.renderPaginationControls();
   }
-  createStatusIndicator(conversation) {
-    if (!conversation.existenceStatus || conversation.existenceStatus === "unknown") {
-      return null;
-    }
-    const indicator = document.createElement("span");
-    indicator.style.fontSize = "0.8em";
-    indicator.style.padding = "2px 6px";
-    indicator.style.borderRadius = "3px";
-    indicator.style.fontWeight = "bold";
-    indicator.style.marginRight = "4px";
+  createStatusBadge(conversation) {
+    const badge = document.createElement("span");
+    badge.classList.add("status-badge");
     switch (conversation.existenceStatus) {
       case "new":
-        indicator.textContent = "NEW";
-        indicator.style.backgroundColor = "var(--color-green)";
-        indicator.style.color = "white";
-        indicator.title = "This conversation is not in your vault";
+        badge.textContent = "New";
+        badge.classList.add("status-new");
+        badge.title = "This conversation is not in your vault";
         break;
       case "updated":
-        indicator.textContent = "UPDATED";
-        indicator.style.backgroundColor = "var(--color-orange)";
-        indicator.style.color = "white";
-        indicator.title = `This conversation has newer content than your vault (${this.formatDate(conversation.existingUpdateTime || 0)} \u2192 ${this.formatDate(conversation.updateTime)})`;
+        badge.textContent = "Updated";
+        badge.classList.add("status-updated");
+        badge.title = `This conversation has newer content than your vault (${this.formatDate(conversation.existingUpdateTime || 0)} \u2192 ${this.formatDate(conversation.updateTime)})`;
         break;
       case "unchanged":
-        indicator.textContent = "SAME";
-        indicator.style.backgroundColor = "var(--background-modifier-border)";
-        indicator.style.color = "var(--text-muted)";
-        indicator.title = "This conversation is the same as in your vault";
+        badge.textContent = "Unchanged";
+        badge.classList.add("status-unchanged");
+        badge.title = "This conversation is the same as in your vault";
+        break;
+      default:
+        badge.textContent = "Unknown";
+        badge.classList.add("status-unchanged");
         break;
     }
-    return indicator;
+    return badge;
   }
   renderPaginationControls() {
     const pageInfo = this.contentEl.querySelector("#page-info");
@@ -10540,17 +10535,117 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
   addCustomStyles() {
     const style = document.createElement("style");
     style.textContent = `
-            .nexus-conversation-selection-dialog .modal-content {
-                max-width: 900px;
-                max-height: 80vh;
-                overflow-y: auto;
+            /* Modal sizing - wider and responsive */
+            .nexus-conversation-selection-dialog .modal {
+                max-width: 1400px !important;
+                width: 95vw !important;
             }
+
+            .nexus-conversation-selection-dialog .modal-content {
+                max-width: 100%;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: visible;
+                display: flex;
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            /* Table container with independent scroll */
+            .nexus-conversation-selection-dialog .nexus-table-container {
+                max-height: 500px;
+                overflow-y: auto;
+                overflow-x: auto;
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Table styling */
             .nexus-conversation-selection-dialog table {
                 font-size: 0.9em;
+                width: 100%;
+                min-width: 900px;
+                border-collapse: collapse;
             }
-            .nexus-conversation-selection-dialog tr:hover {
+
+            /* Table header - sticky */
+            .nexus-conversation-selection-dialog thead {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            .nexus-conversation-selection-dialog th {
+                background-color: var(--background-secondary);
+                font-weight: 600;
+                white-space: nowrap;
+                position: sticky;
+                top: 0;
+            }
+
+            /* Table cells */
+            .nexus-conversation-selection-dialog td {
+                padding: 10px 8px;
+                border-bottom: 1px solid var(--background-modifier-border);
+                vertical-align: middle;
+            }
+
+            /* Title column - allow wrapping */
+            .nexus-conversation-selection-dialog th:nth-child(2),
+            .nexus-conversation-selection-dialog td:nth-child(2) {
+                max-width: 500px;
+                white-space: normal;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            /* Other columns - no wrapping */
+            .nexus-conversation-selection-dialog th:not(:nth-child(2)),
+            .nexus-conversation-selection-dialog td:not(:nth-child(2)) {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Row hover effect */
+            .nexus-conversation-selection-dialog tbody tr:hover {
                 background-color: var(--background-modifier-hover);
+                cursor: pointer;
             }
+
+            /* Checkbox column */
+            .nexus-conversation-selection-dialog td:first-child {
+                text-align: center;
+            }
+
+            /* Status badges */
+            .nexus-conversation-selection-dialog .status-badge {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 0.85em;
+                font-weight: 500;
+                text-align: center;
+            }
+
+            .nexus-conversation-selection-dialog .status-new {
+                background-color: var(--interactive-accent);
+                color: var(--text-on-accent);
+            }
+
+            .nexus-conversation-selection-dialog .status-updated {
+                background-color: var(--text-warning);
+                color: var(--text-on-accent);
+            }
+
+            .nexus-conversation-selection-dialog .status-unchanged {
+                background-color: var(--background-modifier-border);
+                color: var(--text-muted);
+            }
+
+            /* Select dropdowns */
             .nexus-conversation-selection-dialog select {
                 font-size: 14px;
                 line-height: 1.4;
@@ -10559,10 +10654,61 @@ var ConversationSelectionDialog = class extends import_obsidian20.Modal {
                 background-color: var(--background-primary);
                 color: var(--text-normal);
                 font-family: var(--font-interface);
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+                padding: 8px 12px;
             }
+
             .nexus-conversation-selection-dialog select option {
                 padding: 4px 8px;
                 line-height: 1.4;
+            }
+
+            /* Buttons */
+            .nexus-conversation-selection-dialog button {
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .nexus-conversation-selection-dialog button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Summary section */
+            .nexus-conversation-selection-dialog .summary-section {
+                background-color: var(--background-secondary);
+                padding: 12px 16px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+
+            /* Controls section */
+            .nexus-conversation-selection-dialog .controls-section {
+                background-color: var(--background-primary);
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid var(--background-modifier-border);
+            }
+
+            /* Scrollbar styling for table container */
+            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-track {
+                background: var(--background-secondary);
+                border-radius: 5px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-thumb {
+                background: var(--background-modifier-border);
+                border-radius: 5px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-thumb:hover {
+                background: var(--text-muted);
             }
         `;
     document.head.appendChild(style);
