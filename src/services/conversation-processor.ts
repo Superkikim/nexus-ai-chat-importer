@@ -123,6 +123,22 @@ export class ConversationProcessor {
     ): Promise<void> {
         try {
             const chatId = adapter.getId(chat);
+
+            // Validate conversation has required fields
+            if (!chatId || chatId.trim() === '') {
+                const chatTitle = adapter.getTitle(chat) || 'Untitled';
+                console.warn(`Skipping conversation with missing ID: ${chatTitle}`);
+                importReport.addFailed(
+                    chatTitle,
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    0,
+                    "Missing conversation ID"
+                );
+                return;
+            }
+
             const existingEntry = existingConversations.get(chatId);
 
             if (existingEntry) {

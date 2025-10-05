@@ -5955,6 +5955,19 @@ var ConversationProcessor = class {
   async processSingleChat(adapter, chat, existingConversations, importReport, zip, isReprocess = false) {
     try {
       const chatId = adapter.getId(chat);
+      if (!chatId || chatId.trim() === "") {
+        const chatTitle = adapter.getTitle(chat) || "Untitled";
+        console.warn(`Skipping conversation with missing ID: ${chatTitle}`);
+        importReport.addFailed(
+          chatTitle,
+          "N/A",
+          "N/A",
+          "N/A",
+          0,
+          "Missing conversation ID"
+        );
+        return;
+      }
       const existingEntry = existingConversations.get(chatId);
       if (existingEntry) {
         await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess);
@@ -8663,11 +8676,16 @@ var ImportService = class {
     } catch (error) {
       if (error instanceof NexusAiChatImporterError) {
         this.plugin.logger.error("Error processing conversations", error.message);
+        console.error("Full NexusAiChatImporterError:", error);
       } else if (typeof error === "object" && error instanceof Error) {
         this.plugin.logger.error("General error processing conversations", error.message);
+        console.error("Full Error:", error);
+        console.error("Stack trace:", error.stack);
       } else {
         this.plugin.logger.error("Unknown error processing conversations", "An unknown error occurred");
+        console.error("Unknown error:", error);
       }
+      throw error;
     }
   }
   /**
@@ -11137,11 +11155,21 @@ var ConversationMetadataExtractor = class {
    * Extract metadata from ChatGPT conversations
    */
   extractChatGPTMetadata(conversations) {
-    return conversations.map((chat) => ({
-      id: chat.id || "",
+    return conversations.filter((chat) => {
+      if (!chat.id || chat.id.trim() === "") {
+        console.warn("Skipping ChatGPT conversation with missing ID:", chat.title || "Untitled");
+        return false;
+      }
+      if (!chat.create_time || !chat.update_time) {
+        console.warn("Skipping ChatGPT conversation with missing timestamps:", chat.id, chat.title || "Untitled");
+        return false;
+      }
+      return true;
+    }).map((chat) => ({
+      id: chat.id,
       title: chat.title || "Untitled",
-      createTime: chat.create_time || 0,
-      updateTime: chat.update_time || 0,
+      createTime: chat.create_time,
+      updateTime: chat.update_time,
       messageCount: this.countChatGPTMessages(chat),
       provider: "chatgpt",
       isStarred: chat.is_starred || false,
@@ -11152,11 +11180,21 @@ var ConversationMetadataExtractor = class {
    * Extract metadata from Claude conversations
    */
   extractClaudeMetadata(conversations) {
-    return conversations.map((chat) => ({
-      id: chat.uuid || "",
+    return conversations.filter((chat) => {
+      if (!chat.uuid || chat.uuid.trim() === "") {
+        console.warn("Skipping Claude conversation with missing UUID:", chat.name || "Untitled");
+        return false;
+      }
+      if (!chat.created_at || !chat.updated_at) {
+        console.warn("Skipping Claude conversation with missing timestamps:", chat.uuid, chat.name || "Untitled");
+        return false;
+      }
+      return true;
+    }).map((chat) => ({
+      id: chat.uuid,
       title: chat.name || "Untitled",
-      createTime: chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0,
-      updateTime: chat.updated_at ? Math.floor(new Date(chat.updated_at).getTime() / 1e3) : 0,
+      createTime: Math.floor(new Date(chat.created_at).getTime() / 1e3),
+      updateTime: Math.floor(new Date(chat.updated_at).getTime() / 1e3),
       messageCount: this.countClaudeMessages(chat),
       provider: "claude",
       isStarred: chat.is_starred || false,
@@ -11930,11 +11968,14 @@ totalFailed: ${stats.failed}
 ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo)}
 `;
     try {
+      this.logger.info(`Creating report file at: ${logFilePath}`);
       await this.app.vault.create(logFilePath, logContent);
       this.logger.info(`Consolidated report written to: ${logFilePath}`);
       return logFilePath;
     } catch (error) {
-      this.logger.error(`Failed to write import log`, error.message);
+      this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
+      console.error("Full error:", error);
+      console.error("Log content length:", logContent.length);
       new import_obsidian22.Notice("Failed to create log file. Check console for details.");
       return "";
     }

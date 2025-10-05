@@ -514,11 +514,14 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
 `;
 
         try {
+            this.logger.info(`Creating report file at: ${logFilePath}`);
             await this.app.vault.create(logFilePath, logContent);
             this.logger.info(`Consolidated report written to: ${logFilePath}`);
             return logFilePath;
         } catch (error: any) {
-            this.logger.error(`Failed to write import log`, error.message);
+            this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
+            console.error("Full error:", error);
+            console.error("Log content length:", logContent.length);
             new Notice("Failed to create log file. Check console for details.");
             return "";
         }

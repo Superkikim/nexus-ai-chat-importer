@@ -303,11 +303,17 @@ export class ImportService {
         } catch (error: unknown) {
             if (error instanceof NexusAiChatImporterError) {
                 this.plugin.logger.error("Error processing conversations", error.message);
+                console.error("Full NexusAiChatImporterError:", error);
             } else if (typeof error === 'object' && error instanceof Error) {
                 this.plugin.logger.error("General error processing conversations", error.message);
+                console.error("Full Error:", error);
+                console.error("Stack trace:", error.stack);
             } else {
                 this.plugin.logger.error("Unknown error processing conversations", "An unknown error occurred");
+                console.error("Unknown error:", error);
             }
+            // Re-throw the error so it can be caught by the caller
+            throw error;
         }
     }
 

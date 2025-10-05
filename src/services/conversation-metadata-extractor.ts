@@ -168,32 +168,58 @@ export class ConversationMetadataExtractor {
      * Extract metadata from ChatGPT conversations
      */
     private extractChatGPTMetadata(conversations: Chat[]): ConversationMetadata[] {
-        return conversations.map(chat => ({
-            id: chat.id || "",
-            title: chat.title || "Untitled",
-            createTime: chat.create_time || 0,
-            updateTime: chat.update_time || 0,
-            messageCount: this.countChatGPTMessages(chat),
-            provider: "chatgpt",
-            isStarred: chat.is_starred || false,
-            isArchived: chat.is_archived || false
-        }));
+        return conversations
+            .filter(chat => {
+                // Filter out invalid conversations (missing ID or timestamps)
+                if (!chat.id || chat.id.trim() === '') {
+                    console.warn('Skipping ChatGPT conversation with missing ID:', chat.title || 'Untitled');
+                    return false;
+                }
+                if (!chat.create_time || !chat.update_time) {
+                    console.warn('Skipping ChatGPT conversation with missing timestamps:', chat.id, chat.title || 'Untitled');
+                    return false;
+                }
+                return true;
+            })
+            .map(chat => ({
+                id: chat.id,
+                title: chat.title || "Untitled",
+                createTime: chat.create_time,
+                updateTime: chat.update_time,
+                messageCount: this.countChatGPTMessages(chat),
+                provider: "chatgpt",
+                isStarred: chat.is_starred || false,
+                isArchived: chat.is_archived || false
+            }));
     }
 
     /**
      * Extract metadata from Claude conversations
      */
     private extractClaudeMetadata(conversations: ClaudeConversation[]): ConversationMetadata[] {
-        return conversations.map(chat => ({
-            id: chat.uuid || "",
-            title: chat.name || "Untitled",
-            createTime: chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1000) : 0,
-            updateTime: chat.updated_at ? Math.floor(new Date(chat.updated_at).getTime() / 1000) : 0,
-            messageCount: this.countClaudeMessages(chat),
-            provider: "claude",
-            isStarred: chat.is_starred || false,
-            isArchived: false // Claude doesn't have archived status
-        }));
+        return conversations
+            .filter(chat => {
+                // Filter out invalid conversations (missing ID or timestamps)
+                if (!chat.uuid || chat.uuid.trim() === '') {
+                    console.warn('Skipping Claude conversation with missing UUID:', chat.name || 'Untitled');
+                    return false;
+                }
+                if (!chat.created_at || !chat.updated_at) {
+                    console.warn('Skipping Claude conversation with missing timestamps:', chat.uuid, chat.name || 'Untitled');
+                    return false;
+                }
+                return true;
+            })
+            .map(chat => ({
+                id: chat.uuid,
+                title: chat.name || "Untitled",
+                createTime: Math.floor(new Date(chat.created_at).getTime() / 1000),
+                updateTime: Math.floor(new Date(chat.updated_at).getTime() / 1000),
+                messageCount: this.countClaudeMessages(chat),
+                provider: "claude",
+                isStarred: chat.is_starred || false,
+                isArchived: false // Claude doesn't have archived status
+            }));
     }
 
     /**
