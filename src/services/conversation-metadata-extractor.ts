@@ -395,7 +395,7 @@ export class ConversationMetadataExtractor {
         };
 
         // Log results for debugging
-        console.log(`Analysis: Found ${analysisInfo.totalConversationsFound} conversations across ${files.length} files. ` +
+        this.plugin.logger.debug(`Analysis: Found ${analysisInfo.totalConversationsFound} conversations across ${files.length} files. ` +
                    `After deduplication: ${analysisInfo.uniqueConversationsKept} unique conversations. ` +
                    `For selection: ${filterResult.conversations.length} conversations ` +
                    `(${analysisInfo.conversationsNew} new, ${analysisInfo.conversationsUpdated} updated). ` +
@@ -443,7 +443,7 @@ export class ConversationMetadataExtractor {
 
             if (!vaultConversation) {
                 // Si absente du vault → NEW (toujours proposer)
-                console.log(`🔍 TIMESTAMP COMPARISON - NEW:`, {
+                this.plugin.logger.debug(`TIMESTAMP COMPARISON - NEW: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
                     conversationId: conversation.id,
                     title: conversation.title.substring(0, 50) + '...',
                     zipUpdateTime: conversation.updateTime,
@@ -473,7 +473,7 @@ export class ConversationMetadataExtractor {
 
                 if (normalizedZipUpdateTime > vaultConversation.updateTime) {
                     // ZIP plus récent que vault → UPDATED (proposer)
-                    console.log(`🔍 TIMESTAMP COMPARISON - UPDATED:`, {
+                    this.plugin.logger.debug(`TIMESTAMP COMPARISON - UPDATED: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
                         conversationId: conversation.id,
                         title: conversation.title.substring(0, 50) + '...',
                         zipUpdateTimeRaw: conversation.updateTime,
@@ -493,7 +493,7 @@ export class ConversationMetadataExtractor {
                     updatedCount++;
                 } else {
                     // ZIP identique ou plus ancien que vault → UNCHANGED (IGNORER)
-                    console.log(`🔍 TIMESTAMP COMPARISON - IGNORED:`, {
+                    this.plugin.logger.debug(`TIMESTAMP COMPARISON - IGNORED: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
                         conversationId: conversation.id,
                         title: conversation.title.substring(0, 50) + '...',
                         zipUpdateTimeRaw: conversation.updateTime,

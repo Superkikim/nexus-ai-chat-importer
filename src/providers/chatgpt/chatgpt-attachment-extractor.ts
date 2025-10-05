@@ -258,7 +258,7 @@ export class ChatGPTAttachmentExtractor {
             // Fallback: try to find by filename only
             const zipFile = zip.file(attachment.fileName);
             if (zipFile) {
-                this.logger.info(`Found attachment by filename fallback: ${attachment.fileName} (${context})`);
+                this.logger.debug(`Found attachment by filename fallback: ${attachment.fileName} (${context})`);
                 return zipFile;
             }
 
