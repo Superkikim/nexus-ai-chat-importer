@@ -12,6 +12,7 @@ interface ReportEntry {
     reason?: string;
     errorMessage?: string;
     attachmentStats?: AttachmentStats;
+    sourceFile?: string; // Track which ZIP file this entry came from
 }
 
 interface ProcessingCounters {
@@ -21,38 +22,92 @@ interface ProcessingCounters {
     totalNonEmptyMessagesAdded: number;
 }
 
+interface FileSection {
+    fileName: string;
+    created: ReportEntry[];
+    updated: ReportEntry[];
+    skipped: ReportEntry[];
+    failed: ReportEntry[];
+    counters: ProcessingCounters;
+}
+
 export class ImportReport {
-    private created: ReportEntry[] = [];
-    private updated: ReportEntry[] = [];
-    private skipped: ReportEntry[] = [];
-    private failed: ReportEntry[] = [];
+    private fileSections: Map<string, FileSection> = new Map();
+    private currentFileName: string = "";
     private globalErrors: { message: string; details: string }[] = [];
-    private summary: string = "";
     private providerSpecificColumnHeader: string = "Attachments";
+    private operationStartTime: number = Date.now();
+
+    /**
+     * Start a new file section for multi-file imports
+     */
+    startFileSection(fileName: string) {
+        this.currentFileName = fileName;
+        if (!this.fileSections.has(fileName)) {
+            this.fileSections.set(fileName, {
+                fileName,
+                created: [],
+                updated: [],
+                skipped: [],
+                failed: [],
+                counters: {
+                    totalConversationsProcessed: 0,
+                    totalNewConversationsSuccessfullyImported: 0,
+                    totalConversationsActuallyUpdated: 0,
+                    totalNonEmptyMessagesAdded: 0
+                }
+            });
+        }
+    }
+
+    /**
+     * Set counters for the current file section
+     */
+    setFileCounters(counters: ProcessingCounters) {
+        const section = this.getCurrentSection();
+        if (section) {
+            section.counters = counters;
+        }
+    }
+
+    private getCurrentSection(): FileSection | undefined {
+        return this.fileSections.get(this.currentFileName);
+    }
 
     setProviderSpecificColumnHeader(header: string) {
         this.providerSpecificColumnHeader = header;
     }
 
+    /**
+     * Legacy method for backward compatibility (single file imports)
+     */
     addSummary(zipFileName: string, counters: ProcessingCounters) {
-        // Calculate total attachment stats
-        const totalAttachments = this.getTotalAttachmentStats();
-        const attachmentSummary = totalAttachments.total > 0 
-            ? `\n- **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)`
-            : "";
-
-        this.summary = `## Summary
-- **ZIP File**: ${zipFileName}
-- **Created**: ${this.created.length} new conversations
-- **Updated**: ${this.updated.length} conversations with ${counters.totalNonEmptyMessagesAdded} new messages
-- **Skipped**: ${this.skipped.length} conversations (no changes)
-- **Failed**: ${this.failed.length} conversations
-- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+        // For single file imports, just start a section and set counters
+        this.startFileSection(zipFileName);
+        this.setFileCounters(counters);
     }
 
     private getTotalAttachmentStats(): AttachmentStats {
         const total = { total: 0, found: 0, missing: 0, failed: 0 };
-        [...this.created, ...this.updated].forEach(entry => {
+
+        this.fileSections.forEach(section => {
+            [...section.created, ...section.updated].forEach(entry => {
+                if (entry.attachmentStats) {
+                    total.total += entry.attachmentStats.total;
+                    total.found += entry.attachmentStats.found;
+                    total.missing += entry.attachmentStats.missing;
+                    total.failed += entry.attachmentStats.failed;
+                }
+            });
+        });
+
+        return total;
+    }
+
+    private getFileSectionAttachmentStats(section: FileSection): AttachmentStats {
+        const total = { total: 0, found: 0, missing: 0, failed: 0 };
+
+        [...section.created, ...section.updated].forEach(entry => {
             if (entry.attachmentStats) {
                 total.total += entry.attachmentStats.total;
                 total.found += entry.attachmentStats.found;
@@ -60,23 +115,56 @@ export class ImportReport {
                 total.failed += entry.attachmentStats.failed;
             }
         });
+
         return total;
     }
 
+    private getGlobalStats() {
+        let created = 0;
+        let updated = 0;
+        let skipped = 0;
+        let failed = 0;
+        let totalProcessed = 0;
+        let newMessages = 0;
+
+        this.fileSections.forEach(section => {
+            created += section.created.length;
+            updated += section.updated.length;
+            skipped += section.skipped.length;
+            failed += section.failed.length;
+            totalProcessed += section.counters.totalConversationsProcessed;
+            newMessages += section.counters.totalNonEmptyMessagesAdded;
+        });
+
+        return { created, updated, skipped, failed, totalProcessed, newMessages };
+    }
+
     addCreated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
-        this.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount });
+        const section = this.getCurrentSection();
+        if (section) {
+            section.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+        }
     }
 
     addUpdated(title: string, filePath: string, createDate: string, updateDate: string, newMessageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
-        this.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount });
+        const section = this.getCurrentSection();
+        if (section) {
+            section.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+        }
     }
 
     addSkipped(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, reason: string, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
-        this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount });
+        const section = this.getCurrentSection();
+        if (section) {
+            section.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+        }
     }
 
     addFailed(title: string, filePath: string, createDate: string, updateDate: string, errorMessage: string) {
-        this.failed.push({ title, filePath, createDate, updateDate, errorMessage });
+        const section = this.getCurrentSection();
+        if (section) {
+            section.failed.push({ title, filePath, createDate, updateDate, errorMessage, sourceFile: this.currentFileName });
+        }
     }
 
     addError(message: string, details: string) {
@@ -86,37 +174,95 @@ export class ImportReport {
     generateReportContent(): string {
         let content = "# Nexus AI Chat Importer Report\n\n";
 
-        if (this.summary) {
-            content += this.summary + "\n\n";
+        // Generate global summary
+        content += this.generateGlobalSummary() + "\n\n";
+
+        // Generate section for each file
+        const fileNames = Array.from(this.fileSections.keys());
+
+        if (fileNames.length === 1) {
+            // Single file import - use simplified format
+            const section = this.fileSections.get(fileNames[0])!;
+            content += this.generateFileContent(section, false);
+        } else {
+            // Multi-file import - chaptered by file
+            fileNames.forEach((fileName, index) => {
+                const section = this.fileSections.get(fileName)!;
+                content += `---\n\n`;
+                content += `## File ${index + 1}: ${fileName}\n\n`;
+                content += this.generateFileSummary(section) + "\n\n";
+                content += this.generateFileContent(section, true);
+            });
         }
 
-        // Show tables for important sections only
-        if (this.created.length > 0) {
-            content += this.generateCreatedTable();
-        }
-        
-        if (this.updated.length > 0) {
-            content += this.generateUpdatedTable();
-        }
-        
-        // Only show failures and errors if they exist
-        if (this.failed.length > 0) {
-            content += this.generateFailedTable();
-        }
-        
+        // Global errors at the end
         if (this.globalErrors.length > 0) {
+            content += `---\n\n`;
             content += this.generateErrorTable();
         }
 
         return content;
     }
 
-    private generateCreatedTable(): string {
-        let table = `## ✨ Created Notes\n\n`;
+    private generateGlobalSummary(): string {
+        const stats = this.getGlobalStats();
+        const totalAttachments = this.getTotalAttachmentStats();
+        const attachmentSummary = totalAttachments.total > 0
+            ? `\n- **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)`
+            : "";
+
+        const fileCount = this.fileSections.size;
+        const fileText = fileCount === 1 ? "1 file" : `${fileCount} files`;
+
+        return `## Summary
+
+- **Files Processed**: ${fileText}
+- **Total Conversations**: ${stats.totalProcessed}
+- **Created**: ${stats.created} new conversations
+- **Updated**: ${stats.updated} conversations with ${stats.newMessages} new messages
+- **Skipped**: ${stats.skipped} conversations (no changes)
+- **Failed**: ${stats.failed} conversations
+- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+    }
+
+    private generateFileSummary(section: FileSection): string {
+        const attachmentStats = this.getFileSectionAttachmentStats(section);
+        const attachmentSummary = attachmentStats.total > 0
+            ? `\n- **Attachments**: ${attachmentStats.found}/${attachmentStats.total} extracted`
+            : "";
+
+        return `### Statistics
+- **Created**: ${section.created.length}
+- **Updated**: ${section.updated.length} (${section.counters.totalNonEmptyMessagesAdded} new messages)
+- **Skipped**: ${section.skipped.length}
+- **Failed**: ${section.failed.length}${attachmentSummary}`;
+    }
+
+    private generateFileContent(section: FileSection, isMultiFile: boolean): string {
+        let content = "";
+
+        if (section.created.length > 0) {
+            content += this.generateCreatedTable(section.created, isMultiFile);
+        }
+
+        if (section.updated.length > 0) {
+            content += this.generateUpdatedTable(section.updated, isMultiFile);
+        }
+
+        if (section.failed.length > 0) {
+            content += this.generateFailedTable(section.failed, isMultiFile);
+        }
+
+        return content;
+    }
+
+    private generateCreatedTable(entries: ReportEntry[], isMultiFile: boolean): string {
+        const header = isMultiFile ? "### ✨ Created Notes" : "## ✨ Created Notes";
+        let table = `${header}\n\n`;
         table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
 
-        this.created.forEach((entry) => {
+        entries.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const providerSpecificValue = entry.providerSpecificCount || 0;
@@ -130,12 +276,13 @@ export class ImportReport {
         return table + "\n\n";
     }
 
-    private generateUpdatedTable(): string {
-        let table = `## 🔄 Updated Notes\n\n`;
+    private generateUpdatedTable(entries: ReportEntry[], isMultiFile: boolean): string {
+        const header = isMultiFile ? "### 🔄 Updated Notes" : "## 🔄 Updated Notes";
+        let table = `${header}\n\n`;
         table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
 
-        this.updated.forEach((entry) => {
+        entries.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const providerSpecificValue = entry.providerSpecificCount || 0;
@@ -149,16 +296,17 @@ export class ImportReport {
         return table + "\n\n";
     }
 
-    private generateFailedTable(): string {
-        let table = `## 🚫 Failed Imports\n\n`;
+    private generateFailedTable(entries: ReportEntry[], isMultiFile: boolean): string {
+        const header = isMultiFile ? "### 🚫 Failed Imports" : "## 🚫 Failed Imports";
+        let table = `${header}\n\n`;
         table += "| | Title | Date | Error |\n";
         table += "|:---:|:---|:---:|:---|\n";
-        
-        this.failed.forEach((entry) => {
+
+        entries.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             table += `| 🚫 | ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |\n`;
         });
-        
+
         return table + "\n\n";
     }
 
@@ -191,18 +339,65 @@ export class ImportReport {
     }
 
     hasErrors(): boolean {
-        return this.failed.length > 0 || this.globalErrors.length > 0;
+        let hasFailed = false;
+        this.fileSections.forEach(section => {
+            if (section.failed.length > 0) {
+                hasFailed = true;
+            }
+        });
+        return hasFailed || this.globalErrors.length > 0;
     }
 
     getCreatedCount(): number {
-        return this.created.length;
+        let count = 0;
+        this.fileSections.forEach(section => {
+            count += section.created.length;
+        });
+        return count;
     }
 
     getUpdatedCount(): number {
-        return this.updated.length;
+        let count = 0;
+        this.fileSections.forEach(section => {
+            count += section.updated.length;
+        });
+        return count;
     }
 
     getSkippedCount(): number {
-        return this.skipped.length;
+        let count = 0;
+        this.fileSections.forEach(section => {
+            count += section.skipped.length;
+        });
+        return count;
+    }
+
+    getFailedCount(): number {
+        let count = 0;
+        this.fileSections.forEach(section => {
+            count += section.failed.length;
+        });
+        return count;
+    }
+
+    /**
+     * Get statistics for the completion dialog
+     */
+    getCompletionStats() {
+        const globalStats = this.getGlobalStats();
+        const attachmentStats = this.getTotalAttachmentStats();
+
+        return {
+            totalFiles: this.fileSections.size,
+            totalConversations: globalStats.totalProcessed,
+            created: globalStats.created,
+            updated: globalStats.updated,
+            skipped: globalStats.skipped,
+            failed: globalStats.failed,
+            attachmentsFound: attachmentStats.found,
+            attachmentsTotal: attachmentStats.total,
+            attachmentsMissing: attachmentStats.missing,
+            attachmentsFailed: attachmentStats.failed
+        };
     }
 }

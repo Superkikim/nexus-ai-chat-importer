@@ -4737,7 +4737,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian21 = require("obsidian");
+var import_obsidian22 = require("obsidian");
 
 // src/config/constants.ts
 var DEFAULT_SETTINGS = {
@@ -5229,32 +5229,72 @@ init_dialogs();
 // src/models/import-report.ts
 var ImportReport = class {
   constructor() {
-    this.created = [];
-    this.updated = [];
-    this.skipped = [];
-    this.failed = [];
+    this.fileSections = /* @__PURE__ */ new Map();
+    this.currentFileName = "";
     this.globalErrors = [];
-    this.summary = "";
     this.providerSpecificColumnHeader = "Attachments";
+    this.operationStartTime = Date.now();
+  }
+  /**
+   * Start a new file section for multi-file imports
+   */
+  startFileSection(fileName) {
+    this.currentFileName = fileName;
+    if (!this.fileSections.has(fileName)) {
+      this.fileSections.set(fileName, {
+        fileName,
+        created: [],
+        updated: [],
+        skipped: [],
+        failed: [],
+        counters: {
+          totalConversationsProcessed: 0,
+          totalNewConversationsSuccessfullyImported: 0,
+          totalConversationsActuallyUpdated: 0,
+          totalNonEmptyMessagesAdded: 0
+        }
+      });
+    }
+  }
+  /**
+   * Set counters for the current file section
+   */
+  setFileCounters(counters) {
+    const section = this.getCurrentSection();
+    if (section) {
+      section.counters = counters;
+    }
+  }
+  getCurrentSection() {
+    return this.fileSections.get(this.currentFileName);
   }
   setProviderSpecificColumnHeader(header) {
     this.providerSpecificColumnHeader = header;
   }
+  /**
+   * Legacy method for backward compatibility (single file imports)
+   */
   addSummary(zipFileName, counters) {
-    const totalAttachments = this.getTotalAttachmentStats();
-    const attachmentSummary = totalAttachments.total > 0 ? `
-- **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)` : "";
-    this.summary = `## Summary
-- **ZIP File**: ${zipFileName}
-- **Created**: ${this.created.length} new conversations
-- **Updated**: ${this.updated.length} conversations with ${counters.totalNonEmptyMessagesAdded} new messages
-- **Skipped**: ${this.skipped.length} conversations (no changes)
-- **Failed**: ${this.failed.length} conversations
-- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+    this.startFileSection(zipFileName);
+    this.setFileCounters(counters);
   }
   getTotalAttachmentStats() {
     const total = { total: 0, found: 0, missing: 0, failed: 0 };
-    [...this.created, ...this.updated].forEach((entry) => {
+    this.fileSections.forEach((section) => {
+      [...section.created, ...section.updated].forEach((entry) => {
+        if (entry.attachmentStats) {
+          total.total += entry.attachmentStats.total;
+          total.found += entry.attachmentStats.found;
+          total.missing += entry.attachmentStats.missing;
+          total.failed += entry.attachmentStats.failed;
+        }
+      });
+    });
+    return total;
+  }
+  getFileSectionAttachmentStats(section) {
+    const total = { total: 0, found: 0, missing: 0, failed: 0 };
+    [...section.created, ...section.updated].forEach((entry) => {
       if (entry.attachmentStats) {
         total.total += entry.attachmentStats.total;
         total.found += entry.attachmentStats.found;
@@ -5264,48 +5304,127 @@ var ImportReport = class {
     });
     return total;
   }
+  getGlobalStats() {
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+    let totalProcessed = 0;
+    let newMessages = 0;
+    this.fileSections.forEach((section) => {
+      created += section.created.length;
+      updated += section.updated.length;
+      skipped += section.skipped.length;
+      failed += section.failed.length;
+      totalProcessed += section.counters.totalConversationsProcessed;
+      newMessages += section.counters.totalNonEmptyMessagesAdded;
+    });
+    return { created, updated, skipped, failed, totalProcessed, newMessages };
+  }
   addCreated(title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount) {
-    this.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount });
+    const section = this.getCurrentSection();
+    if (section) {
+      section.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+    }
   }
   addUpdated(title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount) {
-    this.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount });
+    const section = this.getCurrentSection();
+    if (section) {
+      section.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+    }
   }
   addSkipped(title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount) {
-    this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount });
+    const section = this.getCurrentSection();
+    if (section) {
+      section.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+    }
   }
   addFailed(title, filePath, createDate, updateDate, errorMessage) {
-    this.failed.push({ title, filePath, createDate, updateDate, errorMessage });
+    const section = this.getCurrentSection();
+    if (section) {
+      section.failed.push({ title, filePath, createDate, updateDate, errorMessage, sourceFile: this.currentFileName });
+    }
   }
   addError(message, details) {
     this.globalErrors.push({ message, details });
   }
   generateReportContent() {
     let content = "# Nexus AI Chat Importer Report\n\n";
-    if (this.summary) {
-      content += this.summary + "\n\n";
-    }
-    if (this.created.length > 0) {
-      content += this.generateCreatedTable();
-    }
-    if (this.updated.length > 0) {
-      content += this.generateUpdatedTable();
-    }
-    if (this.failed.length > 0) {
-      content += this.generateFailedTable();
+    content += this.generateGlobalSummary() + "\n\n";
+    const fileNames = Array.from(this.fileSections.keys());
+    if (fileNames.length === 1) {
+      const section = this.fileSections.get(fileNames[0]);
+      content += this.generateFileContent(section, false);
+    } else {
+      fileNames.forEach((fileName, index) => {
+        const section = this.fileSections.get(fileName);
+        content += `---
+
+`;
+        content += `## File ${index + 1}: ${fileName}
+
+`;
+        content += this.generateFileSummary(section) + "\n\n";
+        content += this.generateFileContent(section, true);
+      });
     }
     if (this.globalErrors.length > 0) {
+      content += `---
+
+`;
       content += this.generateErrorTable();
     }
     return content;
   }
-  generateCreatedTable() {
-    let table = `## \u2728 Created Notes
+  generateGlobalSummary() {
+    const stats = this.getGlobalStats();
+    const totalAttachments = this.getTotalAttachmentStats();
+    const attachmentSummary = totalAttachments.total > 0 ? `
+- **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)` : "";
+    const fileCount = this.fileSections.size;
+    const fileText = fileCount === 1 ? "1 file" : `${fileCount} files`;
+    return `## Summary
+
+- **Files Processed**: ${fileText}
+- **Total Conversations**: ${stats.totalProcessed}
+- **Created**: ${stats.created} new conversations
+- **Updated**: ${stats.updated} conversations with ${stats.newMessages} new messages
+- **Skipped**: ${stats.skipped} conversations (no changes)
+- **Failed**: ${stats.failed} conversations
+- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+  }
+  generateFileSummary(section) {
+    const attachmentStats = this.getFileSectionAttachmentStats(section);
+    const attachmentSummary = attachmentStats.total > 0 ? `
+- **Attachments**: ${attachmentStats.found}/${attachmentStats.total} extracted` : "";
+    return `### Statistics
+- **Created**: ${section.created.length}
+- **Updated**: ${section.updated.length} (${section.counters.totalNonEmptyMessagesAdded} new messages)
+- **Skipped**: ${section.skipped.length}
+- **Failed**: ${section.failed.length}${attachmentSummary}`;
+  }
+  generateFileContent(section, isMultiFile) {
+    let content = "";
+    if (section.created.length > 0) {
+      content += this.generateCreatedTable(section.created, isMultiFile);
+    }
+    if (section.updated.length > 0) {
+      content += this.generateUpdatedTable(section.updated, isMultiFile);
+    }
+    if (section.failed.length > 0) {
+      content += this.generateFailedTable(section.failed, isMultiFile);
+    }
+    return content;
+  }
+  generateCreatedTable(entries, isMultiFile) {
+    const header = isMultiFile ? "### \u2728 Created Notes" : "## \u2728 Created Notes";
+    let table = `${header}
 
 `;
     table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
-    this.created.forEach((entry) => {
+    entries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
@@ -5315,14 +5434,15 @@ var ImportReport = class {
     });
     return table + "\n\n";
   }
-  generateUpdatedTable() {
-    let table = `## \u{1F504} Updated Notes
+  generateUpdatedTable(entries, isMultiFile) {
+    const header = isMultiFile ? "### \u{1F504} Updated Notes" : "## \u{1F504} Updated Notes";
+    let table = `${header}
 
 `;
     table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
-    this.updated.forEach((entry) => {
+    entries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
@@ -5332,13 +5452,14 @@ var ImportReport = class {
     });
     return table + "\n\n";
   }
-  generateFailedTable() {
-    let table = `## \u{1F6AB} Failed Imports
+  generateFailedTable(entries, isMultiFile) {
+    const header = isMultiFile ? "### \u{1F6AB} Failed Imports" : "## \u{1F6AB} Failed Imports";
+    let table = `${header}
 
 `;
     table += "| | Title | Date | Error |\n";
     table += "|:---:|:---|:---:|:---|\n";
-    this.failed.forEach((entry) => {
+    entries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       table += `| \u{1F6AB} | ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |
 `;
@@ -5371,16 +5492,60 @@ var ImportReport = class {
     }
   }
   hasErrors() {
-    return this.failed.length > 0 || this.globalErrors.length > 0;
+    let hasFailed = false;
+    this.fileSections.forEach((section) => {
+      if (section.failed.length > 0) {
+        hasFailed = true;
+      }
+    });
+    return hasFailed || this.globalErrors.length > 0;
   }
   getCreatedCount() {
-    return this.created.length;
+    let count = 0;
+    this.fileSections.forEach((section) => {
+      count += section.created.length;
+    });
+    return count;
   }
   getUpdatedCount() {
-    return this.updated.length;
+    let count = 0;
+    this.fileSections.forEach((section) => {
+      count += section.updated.length;
+    });
+    return count;
   }
   getSkippedCount() {
-    return this.skipped.length;
+    let count = 0;
+    this.fileSections.forEach((section) => {
+      count += section.skipped.length;
+    });
+    return count;
+  }
+  getFailedCount() {
+    let count = 0;
+    this.fileSections.forEach((section) => {
+      count += section.failed.length;
+    });
+    return count;
+  }
+  /**
+   * Get statistics for the completion dialog
+   */
+  getCompletionStats() {
+    const globalStats = this.getGlobalStats();
+    const attachmentStats = this.getTotalAttachmentStats();
+    return {
+      totalFiles: this.fileSections.size,
+      totalConversations: globalStats.totalProcessed,
+      created: globalStats.created,
+      updated: globalStats.updated,
+      skipped: globalStats.skipped,
+      failed: globalStats.failed,
+      attachmentsFound: attachmentStats.found,
+      attachmentsTotal: attachmentStats.total,
+      attachmentsMissing: attachmentStats.missing,
+      attachmentsFailed: attachmentStats.failed
+    };
   }
 };
 
@@ -8266,8 +8431,10 @@ var ImportService = class {
       return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
     });
   }
-  async handleZipFile(file, forcedProvider, selectedConversationIds) {
-    this.importReport = new ImportReport();
+  async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport) {
+    const isSharedReport = !!sharedReport;
+    this.importReport = sharedReport || new ImportReport();
+    this.importReport.startFileSection(file.name);
     const storage = this.plugin.getStorageService();
     let processingStarted = false;
     const progressModal = new ImportProgressModal(this.plugin.app, file.name);
@@ -8330,7 +8497,7 @@ var ImportService = class {
       });
       setTimeout(() => progressModal.close(), 5e3);
     } finally {
-      if (processingStarted) {
+      if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
         if (!progressModal.isComplete) {
           new import_obsidian14.Notice(
@@ -8423,8 +8590,7 @@ var ImportService = class {
         progressCallback
       );
       this.importReport = report;
-      this.importReport.addSummary(
-        file.name,
+      this.importReport.setFileCounters(
         this.conversationProcessor.getCounters()
       );
       progressCallback == null ? void 0 : progressCallback({
@@ -11165,8 +11331,196 @@ var ConversationMetadataExtractor = class {
   }
 };
 
+// src/dialogs/import-completion-dialog.ts
+var import_obsidian21 = require("obsidian");
+var ImportCompletionDialog = class extends import_obsidian21.Modal {
+  constructor(app, stats, reportFilePath) {
+    super(app);
+    this.stats = stats;
+    this.reportFilePath = reportFilePath;
+  }
+  onOpen() {
+    const { contentEl, modalEl, titleEl } = this;
+    contentEl.empty();
+    modalEl.addClass("nexus-import-completion-dialog");
+    contentEl.addClass("nexus-import-completion-dialog");
+    titleEl.setText("Import Completed");
+    const successMsg = contentEl.createDiv("success-message");
+    successMsg.style.textAlign = "center";
+    successMsg.style.marginBottom = "20px";
+    successMsg.style.fontSize = "1.1em";
+    successMsg.style.color = "var(--color-green)";
+    successMsg.innerHTML = "\u2705 Successfully imported conversations";
+    this.createStatsSection(contentEl);
+    if (this.stats.attachmentsTotal > 0) {
+      this.createAttachmentsSection(contentEl);
+    }
+    this.createReportSection(contentEl);
+    this.createActionButtons(contentEl);
+    this.addCustomStyles();
+  }
+  createStatsSection(container) {
+    const section = container.createDiv("stats-section");
+    section.style.marginBottom = "20px";
+    section.style.display = "grid";
+    section.style.gridTemplateColumns = "repeat(3, 1fr)";
+    section.style.gap = "12px";
+    this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), "Files Processed");
+    this.createStatCartouche(section, "\u{1F4AC}", this.stats.totalConversations.toString(), "Total Conversations");
+    this.createStatCartouche(section, "\u2728", this.stats.created.toString(), "New", "var(--color-green)");
+    this.createStatCartouche(section, "\u{1F504}", this.stats.updated.toString(), "Updated", "var(--color-orange)");
+    this.createStatCartouche(section, "\u23ED\uFE0F", this.stats.skipped.toString(), "Skipped", "var(--text-muted)");
+    if (this.stats.failed > 0) {
+      this.createStatCartouche(section, "\u274C", this.stats.failed.toString(), "Failed", "var(--color-red)");
+    }
+  }
+  createStatCartouche(container, icon, value, label, color) {
+    const cartouche = container.createDiv("stat-cartouche");
+    cartouche.style.textAlign = "center";
+    cartouche.style.padding = "12px";
+    cartouche.style.backgroundColor = "var(--background-primary)";
+    cartouche.style.borderRadius = "8px";
+    cartouche.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+    const iconEl = cartouche.createDiv();
+    iconEl.textContent = icon;
+    iconEl.style.fontSize = "1.5em";
+    iconEl.style.marginBottom = "4px";
+    const valueEl = cartouche.createDiv();
+    valueEl.textContent = value;
+    valueEl.style.fontWeight = "600";
+    valueEl.style.fontSize = "1.4em";
+    valueEl.style.color = color || "var(--text-accent)";
+    valueEl.style.marginBottom = "4px";
+    const labelEl = cartouche.createDiv();
+    labelEl.textContent = label;
+    labelEl.style.fontSize = "0.85em";
+    labelEl.style.color = "var(--text-muted)";
+  }
+  createAttachmentsSection(container) {
+    const section = container.createDiv("attachments-section");
+    section.style.marginBottom = "20px";
+    section.style.padding = "12px";
+    section.style.backgroundColor = "var(--background-secondary)";
+    section.style.borderRadius = "6px";
+    section.style.textAlign = "center";
+    const percentage = Math.round(this.stats.attachmentsFound / this.stats.attachmentsTotal * 100);
+    const icon = percentage === 100 ? "\u2705" : percentage > 50 ? "\u26A0\uFE0F" : "\u274C";
+    const color = percentage === 100 ? "var(--color-green)" : percentage > 50 ? "var(--color-orange)" : "var(--color-red)";
+    const attachmentText = section.createDiv();
+    attachmentText.innerHTML = `${icon} <strong>Attachments:</strong> ${this.stats.attachmentsFound}/${this.stats.attachmentsTotal} extracted (${percentage}%)`;
+    attachmentText.style.color = color;
+    if (this.stats.attachmentsMissing > 0 || this.stats.attachmentsFailed > 0) {
+      const details = section.createDiv();
+      details.style.fontSize = "0.85em";
+      details.style.color = "var(--text-muted)";
+      details.style.marginTop = "4px";
+      details.textContent = `${this.stats.attachmentsMissing} missing, ${this.stats.attachmentsFailed} failed`;
+    }
+  }
+  createReportSection(container) {
+    const section = container.createDiv("report-section");
+    section.style.marginBottom = "20px";
+    section.style.padding = "12px";
+    section.style.backgroundColor = "var(--background-secondary)";
+    section.style.borderRadius = "6px";
+    const label = section.createDiv();
+    label.textContent = "\u{1F4C4} Detailed report:";
+    label.style.fontSize = "0.9em";
+    label.style.color = "var(--text-muted)";
+    label.style.marginBottom = "6px";
+    const link = section.createEl("a");
+    link.textContent = this.reportFilePath;
+    link.style.color = "var(--text-accent)";
+    link.style.textDecoration = "none";
+    link.style.cursor = "pointer";
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.openReport();
+    });
+    link.addEventListener("mouseenter", () => {
+      link.style.textDecoration = "underline";
+    });
+    link.addEventListener("mouseleave", () => {
+      link.style.textDecoration = "none";
+    });
+  }
+  createActionButtons(container) {
+    const buttonContainer = container.createDiv("action-buttons");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.gap = "10px";
+    buttonContainer.style.marginTop = "20px";
+    const viewReportBtn = buttonContainer.createEl("button", { text: "View Report" });
+    viewReportBtn.style.padding = "8px 16px";
+    viewReportBtn.addEventListener("click", () => {
+      this.openReport();
+      this.close();
+    });
+    const okBtn = buttonContainer.createEl("button", { text: "OK" });
+    okBtn.classList.add("mod-cta");
+    okBtn.style.padding = "8px 16px";
+    okBtn.addEventListener("click", () => this.close());
+  }
+  async openReport() {
+    try {
+      const file = this.app.vault.getAbstractFileByPath(this.reportFilePath);
+      if (file) {
+        await this.app.workspace.getLeaf(false).openFile(file);
+      }
+    } catch (error) {
+      console.error("Failed to open report:", error);
+    }
+  }
+  addCustomStyles() {
+    const style = document.createElement("style");
+    style.textContent = `
+            /* Modal sizing */
+            .modal.nexus-import-completion-dialog {
+                max-width: min(700px, 90vw) !important;
+                width: min(700px, 90vw) !important;
+            }
+
+            /* Modal title spacing */
+            .modal.nexus-import-completion-dialog .modal-title {
+                padding: 16px 24px !important;
+                margin: 0 !important;
+            }
+
+            .modal.nexus-import-completion-dialog .modal-content {
+                padding: 20px 24px 24px 24px;
+            }
+
+            /* Stat cartouches hover effect */
+            .nexus-import-completion-dialog .stat-cartouche {
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+
+            .nexus-import-completion-dialog .stat-cartouche:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            /* Button hover effects */
+            .nexus-import-completion-dialog button {
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .nexus-import-completion-dialog button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+        `;
+    document.head.appendChild(style);
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
 // src/main.ts
-var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -11329,19 +11683,17 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
     }
     const sortedFiles = this.sortFilesByTimestamp(files);
     if (mode === "all") {
-      for (const file of sortedFiles) {
-        await this.importService.handleZipFile(file, provider);
-      }
+      await this.handleImportAll(sortedFiles, provider);
     } else {
       await this.handleSelectiveImport(sortedFiles, provider);
     }
   }
   /**
-   * Handle selective import workflow
+   * Handle "Import All" mode with analysis and auto-selection
    */
-  async handleSelectiveImport(files, provider) {
+  async handleImportAll(files, provider) {
     try {
-      new import_obsidian21.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian22.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
       const storage = this.getStorageService();
@@ -11352,7 +11704,51 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian21.Notice("No conversations found in the selected files.");
+        new import_obsidian22.Notice("No new or updated conversations found in the selected files.");
+        return;
+      }
+      const allIds = extractionResult.conversations.map((c) => c.id);
+      new import_obsidian22.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+      const operationReport = new ImportReport();
+      const conversationsByFile = /* @__PURE__ */ new Map();
+      extractionResult.conversations.forEach((conv) => {
+        if (conv.sourceFile) {
+          if (!conversationsByFile.has(conv.sourceFile)) {
+            conversationsByFile.set(conv.sourceFile, []);
+          }
+          conversationsByFile.get(conv.sourceFile).push(conv.id);
+        }
+      });
+      for (const file of files) {
+        const conversationsForFile = conversationsByFile.get(file.name);
+        if (conversationsForFile && conversationsForFile.length > 0) {
+          await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+        }
+      }
+      const reportPath = await this.writeConsolidatedReport(operationReport, provider);
+      this.showImportCompletionDialog(operationReport, reportPath);
+    } catch (error) {
+      this.logger.error("Error in import all:", error);
+      new import_obsidian22.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  /**
+   * Handle selective import workflow
+   */
+  async handleSelectiveImport(files, provider) {
+    try {
+      new import_obsidian22.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      const providerRegistry = createProviderRegistry(this);
+      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+      const storage = this.getStorageService();
+      const existingConversations = await storage.scanExistingConversations();
+      const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
+        files,
+        provider,
+        existingConversations
+      );
+      if (extractionResult.conversations.length === 0) {
+        new import_obsidian22.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
@@ -11366,7 +11762,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
       ).open();
     } catch (error) {
       this.logger.error("Error in selective import:", error);
-      new import_obsidian21.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian22.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -11374,18 +11770,85 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
    */
   async handleConversationSelectionResult(result, files, provider) {
     if (result.selectedIds.length === 0) {
-      new import_obsidian21.Notice("No conversations selected for import.");
+      new import_obsidian22.Notice("No conversations selected for import.");
       return;
     }
-    new import_obsidian21.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian22.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    const operationReport = new ImportReport();
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
       if (conversationsForFile && conversationsForFile.length > 0) {
-        await this.importService.handleZipFile(file, provider, conversationsForFile);
+        await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
       }
     }
-    new import_obsidian21.Notice(`Import completed. Imported ${result.selectedIds.length} of ${result.totalAvailable} conversations.`);
+    const reportPath = await this.writeConsolidatedReport(operationReport, provider);
+    this.showImportCompletionDialog(operationReport, reportPath);
+  }
+  /**
+   * Write consolidated report for multi-file import
+   */
+  async writeConsolidatedReport(report, provider) {
+    const { ensureFolderExists: ensureFolderExists2, formatTimestamp: formatTimestamp2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+    const reportFolder = this.settings.reportFolder;
+    const providerRegistry = createProviderRegistry(this);
+    const adapter = providerRegistry.getAdapter(provider);
+    let providerName = provider;
+    if (adapter) {
+      const strategy = adapter.getReportNamingStrategy();
+      providerName = strategy.getProviderName();
+      const columnInfo = strategy.getProviderSpecificColumn();
+      report.setProviderSpecificColumnHeader(columnInfo.header);
+    }
+    const folderPath = `${reportFolder}/${providerName}`;
+    const folderResult = await ensureFolderExists2(folderPath, this.app.vault);
+    if (!folderResult.success) {
+      this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
+      new import_obsidian22.Notice("Failed to create log file. Check console for details.");
+      return "";
+    }
+    const timestamp = formatTimestamp2(Date.now() / 1e3, "date");
+    const timeStr = formatTimestamp2(Date.now() / 1e3, "time").replace(/:/g, "-");
+    let logFilePath = `${folderPath}/${timestamp} ${timeStr} - import report.md`;
+    let counter = 2;
+    while (await this.app.vault.adapter.exists(logFilePath)) {
+      logFilePath = `${folderPath}/${timestamp} ${timeStr}-${counter} - import report.md`;
+      counter++;
+    }
+    const currentDate = `${formatTimestamp2(Date.now() / 1e3, "date")} ${formatTimestamp2(Date.now() / 1e3, "time")}`;
+    const stats = report.getCompletionStats();
+    const logContent = `---
+importdate: ${currentDate}
+provider: ${provider}
+totalFiles: ${stats.totalFiles}
+totalConversations: ${stats.totalConversations}
+totalCreated: ${stats.created}
+totalUpdated: ${stats.updated}
+totalSkipped: ${stats.skipped}
+totalFailed: ${stats.failed}
+---
+
+${report.generateReportContent()}
+`;
+    try {
+      await this.app.vault.create(logFilePath, logContent);
+      return logFilePath;
+    } catch (error) {
+      this.logger.error(`Failed to write import log`, error.message);
+      new import_obsidian22.Notice("Failed to create log file. Check console for details.");
+      return "";
+    }
+  }
+  /**
+   * Show import completion dialog
+   */
+  showImportCompletionDialog(report, reportPath) {
+    const stats = report.getCompletionStats();
+    new ImportCompletionDialog(
+      this.app,
+      stats,
+      reportPath
+    ).open();
   }
   /**
    * Group selected conversations by their source file for multi-file import

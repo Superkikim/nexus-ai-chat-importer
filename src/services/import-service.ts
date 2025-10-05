@@ -54,8 +54,14 @@ export class ImportService {
         });
     }
 
-    async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[]) {
-        this.importReport = new ImportReport();
+    async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[], sharedReport?: ImportReport) {
+        // Use shared report if provided, otherwise create a new one
+        const isSharedReport = !!sharedReport;
+        this.importReport = sharedReport || new ImportReport();
+
+        // Start a new file section in the report
+        this.importReport.startFileSection(file.name);
+
         const storage = this.plugin.getStorageService();
         let processingStarted = false;
 
@@ -147,8 +153,9 @@ export class ImportService {
             // Keep modal open for error state
             setTimeout(() => progressModal.close(), 5000);
         } finally {
-            // Only write report if processing actually started
-            if (processingStarted) {
+            // Only write report if processing actually started AND this is NOT a shared report
+            // (shared reports are written by the caller after all files are processed)
+            if (processingStarted && !isSharedReport) {
                 await this.writeImportReport(file.name);
 
                 // Only show notice if modal was closed due to error or completion
@@ -273,8 +280,7 @@ export class ImportService {
             );
 
             this.importReport = report;
-            this.importReport.addSummary(
-                file.name,
+            this.importReport.setFileCounters(
                 this.conversationProcessor.getCounters()
             );
 

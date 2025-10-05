@@ -16,6 +16,8 @@ import { ConversationSelectionDialog } from "./dialogs/conversation-selection-di
 import { createProviderRegistry } from "./providers/provider-registry";
 import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
 import { ConversationMetadataExtractor } from "./services/conversation-metadata-extractor";
+import { ImportReport } from "./models/import-report";
+import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
@@ -237,13 +239,77 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         const sortedFiles = this.sortFilesByTimestamp(files);
 
         if (mode === 'all') {
-            // Import all conversations (existing workflow)
-            for (const file of sortedFiles) {
-                await this.importService.handleZipFile(file, provider);
-            }
+            // Import all conversations with analysis (new optimized workflow)
+            await this.handleImportAll(sortedFiles, provider);
         } else {
             // Selective import - show conversation selection dialog
             await this.handleSelectiveImport(sortedFiles, provider);
+        }
+    }
+
+    /**
+     * Handle "Import All" mode with analysis and auto-selection
+     */
+    private async handleImportAll(files: File[], provider: string): Promise<void> {
+        try {
+            new Notice(`Analyzing conversations from ${files.length} file(s)...`);
+
+            // Create metadata extractor
+            const providerRegistry = createProviderRegistry(this);
+            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+
+            // Get existing conversations for status checking
+            const storage = this.getStorageService();
+            const existingConversations = await storage.scanExistingConversations();
+
+            // Extract metadata from all ZIP files (same as selective mode)
+            const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
+                files,
+                provider,
+                existingConversations
+            );
+
+            if (extractionResult.conversations.length === 0) {
+                new Notice("No new or updated conversations found in the selected files.");
+                return;
+            }
+
+            // Auto-select ALL conversations (NEW + UPDATED)
+            const allIds = extractionResult.conversations.map(c => c.id);
+
+            new Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+
+            // Create shared report for the entire operation
+            const operationReport = new ImportReport();
+
+            // Group conversations by file and import
+            const conversationsByFile = new Map<string, string[]>();
+            extractionResult.conversations.forEach(conv => {
+                if (conv.sourceFile) {
+                    if (!conversationsByFile.has(conv.sourceFile)) {
+                        conversationsByFile.set(conv.sourceFile, []);
+                    }
+                    conversationsByFile.get(conv.sourceFile)!.push(conv.id);
+                }
+            });
+
+            // Process files sequentially with shared report
+            for (const file of files) {
+                const conversationsForFile = conversationsByFile.get(file.name);
+                if (conversationsForFile && conversationsForFile.length > 0) {
+                    await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                }
+            }
+
+            // Write the consolidated report
+            const reportPath = await this.writeConsolidatedReport(operationReport, provider);
+
+            // Show completion dialog
+            this.showImportCompletionDialog(operationReport, reportPath);
+
+        } catch (error) {
+            this.logger.error("Error in import all:", error);
+            new Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -306,18 +372,107 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         new Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
 
+        // Create shared report for the entire operation
+        const operationReport = new ImportReport();
+
         // Group selected conversations by source file for efficient processing
         const conversationsByFile = await this.groupConversationsByFile(result, files);
 
-        // Process files sequentially in original order
+        // Process files sequentially in original order with shared report
         for (const file of files) {
             const conversationsForFile = conversationsByFile.get(file.name);
             if (conversationsForFile && conversationsForFile.length > 0) {
-                await this.importService.handleZipFile(file, provider, conversationsForFile);
+                await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
             }
         }
 
-        new Notice(`Import completed. Imported ${result.selectedIds.length} of ${result.totalAvailable} conversations.`);
+        // Write the consolidated report
+        const reportPath = await this.writeConsolidatedReport(operationReport, provider);
+
+        // Show completion dialog
+        this.showImportCompletionDialog(operationReport, reportPath);
+    }
+
+    /**
+     * Write consolidated report for multi-file import
+     */
+    private async writeConsolidatedReport(report: ImportReport, provider: string): Promise<string> {
+        const { ensureFolderExists, formatTimestamp } = await import("./utils");
+
+        // Get provider-specific folder
+        const reportFolder = this.settings.reportFolder;
+        const providerRegistry = createProviderRegistry(this);
+        const adapter = providerRegistry.getAdapter(provider);
+
+        let providerName = provider;
+        if (adapter) {
+            const strategy = adapter.getReportNamingStrategy();
+            providerName = strategy.getProviderName();
+            const columnInfo = strategy.getProviderSpecificColumn();
+            report.setProviderSpecificColumnHeader(columnInfo.header);
+        }
+
+        const folderPath = `${reportFolder}/${providerName}`;
+
+        // Ensure provider subfolder exists
+        const folderResult = await ensureFolderExists(folderPath, this.app.vault);
+        if (!folderResult.success) {
+            this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
+            new Notice("Failed to create log file. Check console for details.");
+            return "";
+        }
+
+        // Generate filename with timestamp
+        const timestamp = formatTimestamp(Date.now() / 1000, "date");
+        const timeStr = formatTimestamp(Date.now() / 1000, "time").replace(/:/g, "-");
+        let logFilePath = `${folderPath}/${timestamp} ${timeStr} - import report.md`;
+
+        // Handle duplicates
+        let counter = 2;
+        while (await this.app.vault.adapter.exists(logFilePath)) {
+            logFilePath = `${folderPath}/${timestamp} ${timeStr}-${counter} - import report.md`;
+            counter++;
+        }
+
+        // Generate frontmatter
+        const currentDate = `${formatTimestamp(Date.now() / 1000, "date")} ${formatTimestamp(Date.now() / 1000, "time")}`;
+        const stats = report.getCompletionStats();
+
+        const logContent = `---
+importdate: ${currentDate}
+provider: ${provider}
+totalFiles: ${stats.totalFiles}
+totalConversations: ${stats.totalConversations}
+totalCreated: ${stats.created}
+totalUpdated: ${stats.updated}
+totalSkipped: ${stats.skipped}
+totalFailed: ${stats.failed}
+---
+
+${report.generateReportContent()}
+`;
+
+        try {
+            await this.app.vault.create(logFilePath, logContent);
+            return logFilePath;
+        } catch (error: any) {
+            this.logger.error(`Failed to write import log`, error.message);
+            new Notice("Failed to create log file. Check console for details.");
+            return "";
+        }
+    }
+
+    /**
+     * Show import completion dialog
+     */
+    private showImportCompletionDialog(report: ImportReport, reportPath: string): void {
+        const stats = report.getCompletionStats();
+
+        new ImportCompletionDialog(
+            this.app,
+            stats,
+            reportPath
+        ).open();
     }
 
     /**
