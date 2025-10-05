@@ -62,27 +62,23 @@ export class ConversationSelectionDialog extends Modal {
     }
 
     onOpen() {
-        const { contentEl, modalEl } = this;
+        const { contentEl, modalEl, titleEl } = this;
         contentEl.empty();
 
         // Add class to both modal and content for proper styling
         modalEl.addClass('nexus-conversation-selection-dialog');
         contentEl.addClass('nexus-conversation-selection-dialog');
 
-        // Title
-        const title = contentEl.createEl("h2", { text: "Select Conversations to Import" });
-        title.style.marginBottom = "20px";
+        // Set title in modal title bar (not in content)
+        titleEl.setText("Select Conversations to Import");
 
-        // Summary
+        // Summary (4 cartouches)
         this.createSummarySection(contentEl);
 
-        // Controls (search, filters, sort)
+        // Controls (single line: Select All, Select None, Search, Show)
         this.createControlsSection(contentEl);
 
-        // Bulk actions
-        this.createBulkActionsSection(contentEl);
-
-        // Conversation list
+        // Conversation list with sortable headers
         this.createConversationListSection(contentEl);
 
         // Pagination
@@ -102,13 +98,11 @@ export class ConversationSelectionDialog extends Modal {
 
     private createSummarySection(container: HTMLElement) {
         const section = container.createDiv('summary-section');
+        section.id = 'conversation-summary';
         section.style.marginBottom = "20px";
-        section.style.padding = "15px";
-        section.style.backgroundColor = "var(--background-secondary)";
-        section.style.borderRadius = "8px";
-
-        const summary = section.createDiv();
-        summary.id = 'conversation-summary';
+        section.style.display = "grid";
+        section.style.gridTemplateColumns = "repeat(4, 1fr)";
+        section.style.gap = "12px";
         // Content will be updated by updateSummary()
     }
 
@@ -116,18 +110,36 @@ export class ConversationSelectionDialog extends Modal {
         const section = container.createDiv('controls-section');
         section.style.marginBottom = "20px";
         section.style.display = "flex";
-        section.style.gap = "15px";
+        section.style.gap = "12px";
         section.style.alignItems = "center";
-        section.style.flexWrap = "wrap";
+
+        // Select All button
+        const selectAllBtn = section.createEl("button", { text: "Select All" });
+        selectAllBtn.style.padding = "8px 16px";
+        selectAllBtn.style.whiteSpace = "nowrap";
+        selectAllBtn.addEventListener('click', () => {
+            this.state.filteredConversations.forEach(conv => {
+                this.state.selectedIds.add(conv.id);
+            });
+            this.renderConversationList();
+            this.updateSummary();
+        });
+
+        // Select None button
+        const selectNoneBtn = section.createEl("button", { text: "Select None" });
+        selectNoneBtn.style.padding = "8px 16px";
+        selectNoneBtn.style.whiteSpace = "nowrap";
+        selectNoneBtn.addEventListener('click', () => {
+            this.state.selectedIds.clear();
+            this.renderConversationList();
+            this.updateSummary();
+        });
 
         // Search input
-        const searchContainer = section.createDiv();
-        searchContainer.style.flex = "1";
-        searchContainer.style.minWidth = "200px";
-
-        const searchInput = searchContainer.createEl("input", { type: "text" });
+        const searchInput = section.createEl("input", { type: "text" });
         searchInput.placeholder = "Search conversations...";
-        searchInput.style.width = "100%";
+        searchInput.style.flex = "1";
+        searchInput.style.minWidth = "200px";
         searchInput.style.padding = "8px 12px";
         searchInput.style.border = "1px solid var(--background-modifier-border)";
         searchInput.style.borderRadius = "4px";
@@ -140,57 +152,14 @@ export class ConversationSelectionDialog extends Modal {
             this.updatePagination();
         });
 
-        // Sort dropdown
-        const sortContainer = section.createDiv();
-        const sortSelect = sortContainer.createEl("select");
-        sortSelect.style.padding = "8px 12px";
-        sortSelect.style.border = "1px solid var(--background-modifier-border)";
-        sortSelect.style.borderRadius = "4px";
-        sortSelect.style.fontSize = "14px";
-        sortSelect.style.lineHeight = "1.4";
-        sortSelect.style.minHeight = "36px";
-        sortSelect.style.backgroundColor = "var(--background-primary)";
-        sortSelect.style.color = "var(--text-normal)";
-
-        const sortOptions = [
-            { value: 'updateTime-desc', text: 'Last Updated (Newest)' },
-            { value: 'updateTime-asc', text: 'Last Updated (Oldest)' },
-            { value: 'createTime-desc', text: 'Created (Newest)' },
-            { value: 'createTime-asc', text: 'Created (Oldest)' },
-            { value: 'title-asc', text: 'Title (A-Z)' },
-            { value: 'title-desc', text: 'Title (Z-A)' },
-            { value: 'messageCount-desc', text: 'Message Count (High)' },
-            { value: 'messageCount-asc', text: 'Message Count (Low)' }
-        ];
-
-        sortOptions.forEach(option => {
-            const optionEl = sortSelect.createEl("option");
-            optionEl.value = option.value;
-            optionEl.textContent = option.text;
-        });
-
-        sortSelect.value = `${this.state.sort.field}-${this.state.sort.direction}`;
-        sortSelect.addEventListener('change', (e) => {
-            const target = e.target as HTMLSelectElement;
-            const [field, direction] = target.value.split('-');
-            this.state.sort = {
-                field: field as SortOptions['field'],
-                direction: direction as SortOptions['direction']
-            };
-            this.applyFiltersAndSort();
-            this.renderConversationList();
-        });
-
-        // Existence status filter
-        const statusContainer = section.createDiv();
-        statusContainer.style.marginTop = "10px";
-
-        const statusLabel = statusContainer.createEl("label");
-        statusLabel.textContent = "Filter by status: ";
-        statusLabel.style.marginRight = "8px";
+        // Filter by status dropdown
+        const statusLabel = section.createEl("label");
+        statusLabel.textContent = "Filter:";
+        statusLabel.style.marginRight = "4px";
         statusLabel.style.fontSize = "14px";
+        statusLabel.style.whiteSpace = "nowrap";
 
-        const statusSelect = statusContainer.createEl("select");
+        const statusSelect = section.createEl("select");
         statusSelect.style.padding = "8px 12px";
         statusSelect.style.border = "1px solid var(--background-modifier-border)";
         statusSelect.style.borderRadius = "4px";
@@ -199,10 +168,10 @@ export class ConversationSelectionDialog extends Modal {
         statusSelect.style.color = "var(--text-normal)";
 
         const statusOptions = [
-            { value: 'all', text: 'All Conversations' },
-            { value: 'new', text: 'New (Not in vault)' },
-            { value: 'updated', text: 'Updated (Newer than vault)' },
-            { value: 'unchanged', text: 'Unchanged (Same as vault)' }
+            { value: 'all', text: 'All' },
+            { value: 'new', text: 'New' },
+            { value: 'updated', text: 'Updated' },
+            { value: 'unchanged', text: 'Unchanged' }
         ];
 
         statusOptions.forEach(option => {
@@ -220,91 +189,30 @@ export class ConversationSelectionDialog extends Modal {
             this.updateSummary();
             this.updatePagination();
         });
-    }
 
-    private createBulkActionsSection(container: HTMLElement) {
-        const section = container.createDiv('bulk-actions-section');
-        section.style.marginBottom = "15px";
-        section.style.display = "flex";
-        section.style.gap = "10px";
-        section.style.alignItems = "center";
-
-        // Select All button
-        const selectAllBtn = section.createEl("button", { text: "Select All" });
-        selectAllBtn.style.padding = "6px 12px";
-        selectAllBtn.addEventListener('click', () => {
-            this.state.filteredConversations.forEach(conv => {
-                this.state.selectedIds.add(conv.id);
-            });
-            this.renderConversationList();
-            this.updateSummary();
-        });
-
-        // Select None button
-        const selectNoneBtn = section.createEl("button", { text: "Select None" });
-        selectNoneBtn.style.padding = "6px 12px";
-        selectNoneBtn.addEventListener('click', () => {
-            this.state.selectedIds.clear();
-            this.renderConversationList();
-            this.updateSummary();
-        });
-
-        // Quick filter buttons
-        const quickFiltersContainer = section.createDiv();
-        quickFiltersContainer.style.marginLeft = "20px";
-        quickFiltersContainer.style.display = "flex";
-        quickFiltersContainer.style.gap = "8px";
-
-        const quickFilters = [
-            { text: "New Only", status: 'new' as const },
-            { text: "Updated Only", status: 'updated' as const },
-            { text: "All", status: 'all' as const }
-        ];
-
-        quickFilters.forEach(filter => {
-            const btn = quickFiltersContainer.createEl("button", { text: filter.text });
-            btn.style.padding = "4px 8px";
-            btn.style.fontSize = "0.9em";
-            btn.style.border = "1px solid var(--background-modifier-border)";
-            btn.style.borderRadius = "4px";
-            btn.style.backgroundColor = "var(--background-primary)";
-            btn.addEventListener('click', () => {
-                this.state.filter.existenceStatus = filter.status;
-                this.applyFiltersAndSort();
-                this.renderConversationList();
-                this.updateSummary();
-                this.updatePagination();
-
-                // Update the status dropdown to match
-                const statusSelect = this.contentEl.querySelector('select[value]') as HTMLSelectElement;
-                if (statusSelect) {
-                    statusSelect.value = filter.status;
-                }
-            });
-        });
-
-        // Page size selector
-        const pageSizeContainer = section.createDiv();
-        pageSizeContainer.style.marginLeft = "auto";
-        pageSizeContainer.style.display = "flex";
-        pageSizeContainer.style.alignItems = "center";
-        pageSizeContainer.style.gap = "8px";
-
-        const pageSizeLabel = pageSizeContainer.createEl("span");
+        // Page size dropdown
+        const pageSizeLabel = section.createEl("label");
         pageSizeLabel.textContent = "Show:";
-        pageSizeLabel.style.fontSize = "0.9em";
+        pageSizeLabel.style.marginRight = "4px";
+        pageSizeLabel.style.fontSize = "14px";
+        pageSizeLabel.style.whiteSpace = "nowrap";
 
-        const pageSizeSelect = pageSizeContainer.createEl("select");
-        pageSizeSelect.style.padding = "4px 8px";
-        [10, 20, 50, 100].forEach(size => {
-            const option = pageSizeSelect.createEl("option");
-            option.value = size.toString();
-            option.textContent = size.toString();
-            if (size === this.state.pagination.pageSize) {
-                option.selected = true;
-            }
+        const pageSizeSelect = section.createEl("select");
+        pageSizeSelect.style.padding = "8px 12px";
+        pageSizeSelect.style.border = "1px solid var(--background-modifier-border)";
+        pageSizeSelect.style.borderRadius = "4px";
+        pageSizeSelect.style.fontSize = "14px";
+        pageSizeSelect.style.backgroundColor = "var(--background-primary)";
+        pageSizeSelect.style.color = "var(--text-normal)";
+
+        const pageSizeOptions = [10, 20, 50, 100];
+        pageSizeOptions.forEach(size => {
+            const optionEl = pageSizeSelect.createEl("option");
+            optionEl.value = size.toString();
+            optionEl.textContent = size.toString();
         });
 
+        pageSizeSelect.value = this.state.pagination.pageSize.toString();
         pageSizeSelect.addEventListener('change', (e) => {
             const target = e.target as HTMLSelectElement;
             this.state.pagination.pageSize = parseInt(target.value);
@@ -313,6 +221,8 @@ export class ConversationSelectionDialog extends Modal {
             this.renderConversationList();
         });
     }
+
+
 
     private createConversationListSection(container: HTMLElement) {
         const section = container.createDiv('conversation-list-section');
@@ -337,24 +247,64 @@ export class ConversationSelectionDialog extends Modal {
         headerRow.style.zIndex = "10";
 
         const headers = [
-            { text: "", width: "50px" }, // Checkbox - plus large
-            { text: "Title", width: "40%" }, // Title - flexible
-            { text: "Created", width: "150px" }, // Date - plus large
-            { text: "Updated", width: "150px" }, // Date - plus large
-            { text: "Messages", width: "100px" }, // Messages - plus large
-            { text: "Status", width: "120px" } // Status
+            { text: "", width: "50px", sortField: null }, // Checkbox
+            { text: "Title", width: "40%", sortField: 'title' as const },
+            { text: "Created", width: "150px", sortField: 'createTime' as const },
+            { text: "Updated", width: "150px", sortField: 'updateTime' as const },
+            { text: "Messages", width: "100px", sortField: 'messageCount' as const },
+            { text: "Status", width: "120px", sortField: null }
         ];
 
         headers.forEach(header => {
             const th = headerRow.createEl("th");
-            th.textContent = header.text;
             th.style.padding = "12px 8px";
             th.style.textAlign = "left";
             th.style.borderBottom = "2px solid var(--background-modifier-border)";
             th.style.fontWeight = "600";
             th.style.backgroundColor = "var(--background-secondary)";
+            th.style.userSelect = "none";
             if (header.width !== "auto") {
                 th.style.width = header.width;
+            }
+
+            // Make sortable headers clickable
+            if (header.sortField) {
+                th.style.cursor = "pointer";
+                th.classList.add('sortable-header');
+
+                // Create header content with sort indicator
+                const headerContent = th.createSpan();
+                headerContent.textContent = header.text;
+
+                const sortIndicator = th.createSpan();
+                sortIndicator.classList.add('sort-indicator');
+                sortIndicator.style.marginLeft = "6px";
+                sortIndicator.style.fontSize = "0.8em";
+                sortIndicator.style.opacity = "0.5";
+
+                // Show current sort state
+                if (this.state.sort.field === header.sortField) {
+                    sortIndicator.textContent = this.state.sort.direction === 'asc' ? '▲' : '▼';
+                    sortIndicator.style.opacity = "1";
+                } else {
+                    sortIndicator.textContent = '▼';
+                }
+
+                // Click handler for sorting
+                th.addEventListener('click', () => {
+                    if (this.state.sort.field === header.sortField) {
+                        // Toggle direction
+                        this.state.sort.direction = this.state.sort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        // New field, default to desc
+                        this.state.sort.field = header.sortField!;
+                        this.state.sort.direction = 'desc';
+                    }
+                    this.applyFiltersAndSort();
+                    this.renderConversationList();
+                });
+            } else {
+                th.textContent = header.text;
             }
         });
 
@@ -625,54 +575,37 @@ export class ConversationSelectionDialog extends Modal {
     }
 
     private buildComprehensiveSummary(selectedCount: number, totalCount: number, statusCounts: any): string {
-        // Main selection info
-        const selectionInfo = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div style="font-size: 1.1em;">
-                    <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> conversations selected for import
-                </div>
-            </div>
-        `;
-
-        // Analysis breakdown - comprehensive view
-        let analysisBreakdown = '';
+        // 4 cartouches compacts
         if (this.analysisInfo) {
             const info = this.analysisInfo;
+            const uniqueCount = info.uniqueConversationsKept;
 
-            analysisBreakdown = `
-                <div style="background-color: var(--background-modifier-border); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
-                    <div style="font-weight: 600; margin-bottom: 8px; color: var(--text-accent);">📊 Analysis Results</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; font-size: 0.9em;">
-                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
-                            <div style="font-weight: 600; color: var(--color-green);">${info.conversationsNew}</div>
-                            <div style="color: var(--text-muted); font-size: 0.8em;">New conversations</div>
-                        </div>
-                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
-                            <div style="font-weight: 600; color: var(--color-orange);">${info.conversationsUpdated}</div>
-                            <div style="color: var(--text-muted); font-size: 0.8em;">Updated conversations</div>
-                        </div>
-                        <div style="text-align: center; padding: 8px; background-color: var(--background-primary); border-radius: 4px;">
-                            <div style="font-weight: 600; color: var(--text-muted);">${info.conversationsIgnored}</div>
-                            <div style="color: var(--text-muted); font-size: 0.8em;">Ignored (unchanged)</div>
-                        </div>
-                    </div>
+            return `
+                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <div style="font-weight: 600; font-size: 1.4em; color: var(--text-accent);">${uniqueCount}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Unique Conversations</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <div style="font-weight: 600; font-size: 1.4em; color: var(--color-green);">${info.conversationsNew}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">New</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <div style="font-weight: 600; font-size: 1.4em; color: var(--color-orange);">${info.conversationsUpdated}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Updated</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <div style="font-weight: 600; font-size: 1.4em; color: var(--text-muted);">${info.conversationsIgnored}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Unchanged</div>
                 </div>
             `;
         }
 
-        // Deduplication info (if applicable)
-        let deduplicationInfo = '';
-        if (this.analysisInfo && this.analysisInfo.duplicatesRemoved > 0) {
-            deduplicationInfo = `
-                <div style="font-size: 0.85em; color: var(--text-muted); padding: 8px; background-color: var(--background-secondary); border-radius: 4px;">
-                    📋 Found <strong>${this.analysisInfo.totalConversationsFound}</strong> conversations across files,
-                    removed <strong>${this.analysisInfo.duplicatesRemoved}</strong> duplicates.
-                    Showing only latest versions and conversations that need importing.
-                </div>
-            `;
-        }
-
-        return selectionInfo + analysisBreakdown + deduplicationInfo;
+        // Fallback si pas d'analysisInfo
+        return `
+            <div style="text-align: center; padding: 12px;">
+                <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> selected
+            </div>
+        `;
     }
 
     private handleImportSelected() {
@@ -751,6 +684,24 @@ export class ConversationSelectionDialog extends Modal {
                 white-space: nowrap;
                 position: sticky;
                 top: 0;
+            }
+
+            /* Sortable headers */
+            .nexus-conversation-selection-dialog th.sortable-header {
+                cursor: pointer;
+                user-select: none;
+                transition: background-color 0.2s;
+            }
+
+            .nexus-conversation-selection-dialog th.sortable-header:hover {
+                background-color: var(--background-modifier-hover);
+            }
+
+            .nexus-conversation-selection-dialog .sort-indicator {
+                display: inline-block;
+                margin-left: 6px;
+                font-size: 0.8em;
+                transition: opacity 0.2s;
             }
 
             /* Table cells */

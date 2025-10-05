@@ -25,15 +25,15 @@ export class EnhancedFileSelectionDialog extends Modal {
     }
 
     onOpen() {
-        const { contentEl } = this;
+        const { contentEl, modalEl, titleEl } = this;
         contentEl.empty();
+
+        // Add class to both modal and content
+        modalEl.addClass('nexus-file-selection-dialog');
         contentEl.addClass('nexus-file-selection-dialog');
 
-        // Title
-        const title = contentEl.createEl("h2", { 
-            text: `Import ${this.provider.charAt(0).toUpperCase() + this.provider.slice(1)} Conversations` 
-        });
-        title.style.marginBottom = "20px";
+        // Set title in modal title bar
+        titleEl.setText(`Import ${this.provider.charAt(0).toUpperCase() + this.provider.slice(1)} Conversations`);
 
         // Import mode selection
         this.createImportModeSection(contentEl);
@@ -171,7 +171,15 @@ export class EnhancedFileSelectionDialog extends Modal {
         const sectionTitle = section.createEl("h3", { text: "Selected Files" });
         sectionTitle.style.marginBottom = "15px";
 
-        const fileList = section.createDiv('file-list');
+        // Scrollable container for file list
+        const fileListContainer = section.createDiv('file-list-container');
+        fileListContainer.style.maxHeight = "300px";
+        fileListContainer.style.overflowY = "auto";
+        fileListContainer.style.border = "1px solid var(--background-modifier-border)";
+        fileListContainer.style.borderRadius = "6px";
+        fileListContainer.style.padding = "8px";
+
+        const fileList = fileListContainer.createDiv('file-list');
         fileList.id = 'file-list';
     }
 
@@ -340,15 +348,53 @@ export class EnhancedFileSelectionDialog extends Modal {
     }
 
     private addCustomStyles() {
-        // Add any additional custom styles if needed
         const style = document.createElement('style');
         style.textContent = `
-            .nexus-file-selection-dialog .modal-content {
-                max-width: 600px;
+            /* Modal sizing - wider and responsive */
+            .modal.nexus-file-selection-dialog {
+                max-width: min(800px, 90vw) !important;
+                width: min(800px, 90vw) !important;
+                height: auto !important;
+                padding: 0 !important;
             }
+
+            .modal.nexus-file-selection-dialog .modal-content {
+                max-width: 100% !important;
+                width: 100% !important;
+                max-height: 90vh;
+                overflow-y: visible;
+                display: flex;
+                flex-direction: column;
+                padding: 24px;
+            }
+
+            /* Drop zone hover effect */
             .nexus-file-selection-dialog .drop-zone:hover {
                 border-color: var(--interactive-accent);
                 background-color: var(--background-modifier-hover);
+            }
+
+            /* File list container with custom scrollbar */
+            .nexus-file-selection-dialog .file-list-container {
+                scrollbar-width: thin;
+                scrollbar-color: var(--background-modifier-border) transparent;
+            }
+
+            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar {
+                width: 10px;
+            }
+
+            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-thumb {
+                background-color: var(--background-modifier-border);
+                border-radius: 5px;
+            }
+
+            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-thumb:hover {
+                background-color: var(--text-muted);
             }
         `;
         document.head.appendChild(style);
