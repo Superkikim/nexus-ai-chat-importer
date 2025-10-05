@@ -190,7 +190,14 @@ export class ConversationMetadataExtractor {
                 provider: "chatgpt",
                 isStarred: chat.is_starred || false,
                 isArchived: chat.is_archived || false
-            }));
+            }))
+            .filter(metadata => {
+                // Filter out empty conversations (0 messages)
+                if (metadata.messageCount === 0) {
+                    return false;
+                }
+                return true;
+            });
     }
 
     /**
@@ -219,7 +226,14 @@ export class ConversationMetadataExtractor {
                 provider: "claude",
                 isStarred: chat.is_starred || false,
                 isArchived: false // Claude doesn't have archived status
-            }));
+            }))
+            .filter(metadata => {
+                // Filter out empty conversations (0 messages)
+                if (metadata.messageCount === 0) {
+                    return false;
+                }
+                return true;
+            });
     }
 
     /**

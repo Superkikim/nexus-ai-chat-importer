@@ -11174,7 +11174,12 @@ var ConversationMetadataExtractor = class {
       provider: "chatgpt",
       isStarred: chat.is_starred || false,
       isArchived: chat.is_archived || false
-    }));
+    })).filter((metadata) => {
+      if (metadata.messageCount === 0) {
+        return false;
+      }
+      return true;
+    });
   }
   /**
    * Extract metadata from Claude conversations
@@ -11200,7 +11205,12 @@ var ConversationMetadataExtractor = class {
       isStarred: chat.is_starred || false,
       isArchived: false
       // Claude doesn't have archived status
-    }));
+    })).filter((metadata) => {
+      if (metadata.messageCount === 0) {
+        return false;
+      }
+      return true;
+    });
   }
   /**
    * Count messages in ChatGPT conversation (lightweight version)
