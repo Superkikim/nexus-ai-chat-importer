@@ -637,8 +637,6 @@ class MoveReportsFolderOperation extends UpgradeOperation {
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         const results: string[] = [];
-        let filesProcessed = 0;
-        let filesFailed = 0;
 
         try {
             const archiveFolder = context.plugin.settings.archiveFolder;
@@ -661,65 +659,40 @@ class MoveReportsFolderOperation extends UpgradeOperation {
                 };
             }
 
-            // Ensure new Reports folder exists
-            const { ensureFolderExists } = await import("../../utils");
-            await ensureFolderExists(context.plugin.app, newReportsPath);
+            // Count files for progress reporting
+            const fileCount = this.countFilesRecursively(oldReportsFolder);
+            context.logger.info(`Found ${fileCount} files in Reports folder`);
 
-            // Get all files in old Reports folder (recursively)
-            const filesToMove = this.getAllFilesRecursively(oldReportsFolder);
+            context.updateProgress?.({
+                phase: 'processing',
+                title: 'Moving Reports folder...',
+                detail: `Moving ${fileCount} files from ${oldReportsPath} to ${newReportsPath}`,
+                current: 0,
+                total: 1
+            });
 
-            context.logger.info(`Found ${filesToMove.length} files to move`);
+            // Move the entire folder in one operation!
+            await context.plugin.app.vault.rename(oldReportsFolder, newReportsPath);
 
-            // Move each file
-            for (const file of filesToMove) {
-                try {
-                    // Calculate relative path from old Reports folder
-                    const relativePath = file.path.substring(oldReportsPath.length + 1);
-                    const newPath = `${newReportsPath}/${relativePath}`;
+            results.push(`Successfully moved Reports folder from ${oldReportsPath} to ${newReportsPath}`);
+            results.push(`Moved ${fileCount} files and preserved folder structure`);
 
-                    // Ensure parent folder exists
-                    const newParentPath = newPath.substring(0, newPath.lastIndexOf('/'));
-                    await ensureFolderExists(context.plugin.app, newParentPath);
-
-                    // Move file
-                    await context.plugin.app.vault.rename(file, newPath);
-
-                    filesProcessed++;
-                    results.push(`Moved: ${file.path} → ${newPath}`);
-
-                    context.updateProgress?.({
-                        phase: 'processing',
-                        title: 'Moving Reports folder...',
-                        detail: `Moving file ${filesProcessed} of ${filesToMove.length}`,
-                        current: filesProcessed,
-                        total: filesToMove.length
-                    });
-                } catch (error) {
-                    filesFailed++;
-                    const errorMsg = error instanceof Error ? error.message : String(error);
-                    results.push(`Failed to move ${file.path}: ${errorMsg}`);
-                    context.logger.error(`Failed to move ${file.path}:`, error);
-                }
-            }
-
-            // Delete old Reports folder if empty
-            try {
-                const oldFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
-                if (oldFolder && oldFolder instanceof TFolder && oldFolder.children.length === 0) {
-                    await context.plugin.app.vault.delete(oldFolder);
-                    results.push(`Deleted empty old Reports folder: ${oldReportsPath}`);
-                }
-            } catch (error) {
-                context.logger.warn(`Could not delete old Reports folder:`, error);
-            }
+            context.updateProgress?.({
+                phase: 'processing',
+                title: 'Moving Reports folder...',
+                detail: 'Move completed successfully',
+                current: 1,
+                total: 1
+            });
 
             return {
-                success: filesFailed === 0,
-                message: `Moved ${filesProcessed} files from ${oldReportsPath} to ${newReportsPath}`,
+                success: true,
+                message: `Moved Reports folder with ${fileCount} files from ${oldReportsPath} to ${newReportsPath}`,
                 details: results
             };
         } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
+            context.logger.error(`Failed to move Reports folder:`, error);
             return {
                 success: false,
                 message: `Failed to move Reports folder: ${errorMsg}`,
@@ -747,18 +720,18 @@ class MoveReportsFolderOperation extends UpgradeOperation {
         }
     }
 
-    private getAllFilesRecursively(folder: TFolder): any[] {
-        const files: any[] = [];
+    private countFilesRecursively(folder: TFolder): number {
+        let count = 0;
 
         for (const child of folder.children) {
             if (child instanceof TFolder) {
-                files.push(...this.getAllFilesRecursively(child));
+                count += this.countFilesRecursively(child);
             } else {
-                files.push(child);
+                count++;
             }
         }
 
-        return files;
+        return count;
     }
 }
 

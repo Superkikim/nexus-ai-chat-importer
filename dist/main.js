@@ -4740,10 +4740,8 @@ ${frontmatter}
         }
       }
       async execute(context) {
-        var _a;
+        var _a, _b;
         const results = [];
-        let filesProcessed = 0;
-        let filesFailed = 0;
         try {
           const archiveFolder = context.plugin.settings.archiveFolder;
           const oldReportsPath = `${archiveFolder}/Reports`;
@@ -4759,49 +4757,33 @@ ${frontmatter}
               details: []
             };
           }
-          const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-          await ensureFolderExists2(context.plugin.app, newReportsPath);
-          const filesToMove = this.getAllFilesRecursively(oldReportsFolder);
-          context.logger.info(`Found ${filesToMove.length} files to move`);
-          for (const file of filesToMove) {
-            try {
-              const relativePath = file.path.substring(oldReportsPath.length + 1);
-              const newPath = `${newReportsPath}/${relativePath}`;
-              const newParentPath = newPath.substring(0, newPath.lastIndexOf("/"));
-              await ensureFolderExists2(context.plugin.app, newParentPath);
-              await context.plugin.app.vault.rename(file, newPath);
-              filesProcessed++;
-              results.push(`Moved: ${file.path} \u2192 ${newPath}`);
-              (_a = context.updateProgress) == null ? void 0 : _a.call(context, {
-                phase: "processing",
-                title: "Moving Reports folder...",
-                detail: `Moving file ${filesProcessed} of ${filesToMove.length}`,
-                current: filesProcessed,
-                total: filesToMove.length
-              });
-            } catch (error) {
-              filesFailed++;
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              results.push(`Failed to move ${file.path}: ${errorMsg}`);
-              context.logger.error(`Failed to move ${file.path}:`, error);
-            }
-          }
-          try {
-            const oldFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
-            if (oldFolder && oldFolder instanceof import_obsidian17.TFolder && oldFolder.children.length === 0) {
-              await context.plugin.app.vault.delete(oldFolder);
-              results.push(`Deleted empty old Reports folder: ${oldReportsPath}`);
-            }
-          } catch (error) {
-            context.logger.warn(`Could not delete old Reports folder:`, error);
-          }
+          const fileCount = this.countFilesRecursively(oldReportsFolder);
+          context.logger.info(`Found ${fileCount} files in Reports folder`);
+          (_a = context.updateProgress) == null ? void 0 : _a.call(context, {
+            phase: "processing",
+            title: "Moving Reports folder...",
+            detail: `Moving ${fileCount} files from ${oldReportsPath} to ${newReportsPath}`,
+            current: 0,
+            total: 1
+          });
+          await context.plugin.app.vault.rename(oldReportsFolder, newReportsPath);
+          results.push(`Successfully moved Reports folder from ${oldReportsPath} to ${newReportsPath}`);
+          results.push(`Moved ${fileCount} files and preserved folder structure`);
+          (_b = context.updateProgress) == null ? void 0 : _b.call(context, {
+            phase: "processing",
+            title: "Moving Reports folder...",
+            detail: "Move completed successfully",
+            current: 1,
+            total: 1
+          });
           return {
-            success: filesFailed === 0,
-            message: `Moved ${filesProcessed} files from ${oldReportsPath} to ${newReportsPath}`,
+            success: true,
+            message: `Moved Reports folder with ${fileCount} files from ${oldReportsPath} to ${newReportsPath}`,
             details: results
           };
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
+          context.logger.error(`Failed to move Reports folder:`, error);
           return {
             success: false,
             message: `Failed to move Reports folder: ${errorMsg}`,
@@ -4823,16 +4805,16 @@ ${frontmatter}
           return false;
         }
       }
-      getAllFilesRecursively(folder) {
-        const files = [];
+      countFilesRecursively(folder) {
+        let count = 0;
         for (const child of folder.children) {
           if (child instanceof import_obsidian17.TFolder) {
-            files.push(...this.getAllFilesRecursively(child));
+            count += this.countFilesRecursively(child);
           } else {
-            files.push(child);
+            count++;
           }
         }
-        return files;
+        return count;
       }
     };
     Upgrade130 = class extends VersionUpgrade {
