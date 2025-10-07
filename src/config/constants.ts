@@ -2,28 +2,31 @@
 import { PluginSettings } from "../types/plugin";
 
 export const DEFAULT_SETTINGS: PluginSettings = {
-    archiveFolder: "Nexus/Conversations", // Default only for first install; preserved if user already set
+    // ========================================
+    // 📁 FOLDER STRUCTURE
+    // ========================================
+    conversationFolder: "Nexus/Conversations",
+    reportFolder: "Nexus/Reports",
+    attachmentFolder: "Nexus/Attachments",
+
+    // ========================================
+    // 🎨 DISPLAY OPTIONS
+    // ========================================
     addDatePrefix: false,
     dateFormat: "YYYY-MM-DD",
+
+    // ========================================
+    // 🔧 INTERNAL SETTINGS
+    // ========================================
+    lastConversationsPerPage: 50,
+
+    // ========================================
+    // 🔄 MIGRATION FLAGS
+    // ========================================
     hasShownUpgradeNotice: false,
     hasCompletedUpgrade: false,
-
-    // Version tracking - will be set from manifest in main.ts
     currentVersion: "0.0.0",
     previousVersion: "0.0.0",
-
-    // Attachment defaults
-    importAttachments: true,
-    attachmentFolder: "Nexus_attachments", // Default only for first install; preserved if user already set
-    reportFolder: "", // Will be computed as <archiveFolder>/Reports on load
-    skipMissingAttachments: false,
-    showAttachmentDetails: true,
-
-    // Conversation selection defaults
-    defaultImportMode: "all",
-    rememberLastImportMode: false,
-    conversationPageSize: 20,
-    autoSelectAllOnOpen: false,
 };
 
 export const GITHUB = {

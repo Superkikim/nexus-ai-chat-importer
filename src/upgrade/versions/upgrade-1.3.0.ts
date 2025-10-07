@@ -604,129 +604,78 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
 }
 
 /**
- * Move Reports folder from inside Conversations folder to same level
- * Bug fix: Reports folder was incorrectly created inside archiveFolder (e.g., Nexus/Conversations/Reports)
- * Should be at same level as Conversations (e.g., Nexus/Reports)
+ * Migrate to new folder settings structure
+ * - Rename archiveFolder → conversationFolder
+ * - Create reportFolder setting
+ * - Remove deprecated settings
+ * - No file movement (user can do it manually via settings UI)
  */
-class MoveReportsFolderOperation extends UpgradeOperation {
-    readonly id = "move-reports-folder";
-    readonly name = "Move Reports Folder";
-    readonly description = "Move Reports folder from inside Conversations to the same level";
+class MigrateToSeparateFoldersOperation extends UpgradeOperation {
+    readonly id = "migrate-to-separate-folders";
+    readonly name = "Update Folder Settings";
+    readonly description = "Separate Reports and Attachments from Conversations folder";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
-        try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
-            const oldReportsPath = `${archiveFolder}/Reports`;
-
-            // Check if old Reports folder exists
-            const oldReportsFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
-
-            if (oldReportsFolder && oldReportsFolder instanceof TFolder) {
-                // Check if it has any files
-                const files = oldReportsFolder.children;
-                return files.length > 0;
-            }
-
-            return false;
-        } catch (error) {
-            console.error(`MoveReportsFolder.canRun failed:`, error);
-            return false;
-        }
+        // Run if old archiveFolder setting exists
+        return !!context.plugin.settings.archiveFolder;
     }
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         const results: string[] = [];
 
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
-            const oldReportsPath = `${archiveFolder}/Reports`;
+            const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
 
-            context.logger.debug(`[MoveReportsFolder] Archive folder: ${archiveFolder}`);
-            context.logger.debug(`[MoveReportsFolder] Old Reports path: ${oldReportsPath}`);
+            context.logger.debug(`[MigrateToSeparateFolders] Old archiveFolder: ${oldArchiveFolder}`);
 
-            // Calculate new Reports path (same level as Conversations)
-            const archiveFolderParts = archiveFolder.split('/');
-            const parentFolder = archiveFolderParts.slice(0, -1).join('/');
-            const newReportsPath = parentFolder ? `${parentFolder}/Reports` : 'Reports';
+            // Migrate settings
+            context.plugin.settings.conversationFolder = oldArchiveFolder;
+            context.plugin.settings.reportFolder = `${oldArchiveFolder}/Reports`;
 
-            context.logger.debug(`[MoveReportsFolder] New Reports path: ${newReportsPath}`);
-            context.logger.debug(`[MoveReportsFolder] Checking if old folder exists...`);
-
-            const oldReportsFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
-
-            if (!oldReportsFolder) {
-                context.logger.debug(`[MoveReportsFolder] Old Reports folder does not exist`);
-                return {
-                    success: true,
-                    message: "No Reports folder to move",
-                    details: []
-                };
+            // Migrate attachmentFolder (keep existing or set default)
+            if (!context.plugin.settings.attachmentFolder) {
+                context.plugin.settings.attachmentFolder = "Nexus/Attachments";
             }
 
-            if (!(oldReportsFolder instanceof TFolder)) {
-                context.logger.debug(`[MoveReportsFolder] Path exists but is not a folder`);
-                return {
-                    success: true,
-                    message: "Reports path exists but is not a folder",
-                    details: []
-                };
+            // Migrate conversationPageSize to lastConversationsPerPage
+            if (context.plugin.settings.conversationPageSize) {
+                context.plugin.settings.lastConversationsPerPage = context.plugin.settings.conversationPageSize;
+            } else {
+                context.plugin.settings.lastConversationsPerPage = 50;
             }
 
-            context.logger.debug(`[MoveReportsFolder] Old folder exists, checking destination...`);
+            // Remove deprecated settings
+            delete context.plugin.settings.archiveFolder;
+            delete context.plugin.settings.importAttachments;
+            delete context.plugin.settings.skipMissingAttachments;
+            delete context.plugin.settings.showAttachmentDetails;
+            delete context.plugin.settings.defaultImportMode;
+            delete context.plugin.settings.rememberLastImportMode;
+            delete context.plugin.settings.conversationPageSize;
+            delete context.plugin.settings.autoSelectAllOnOpen;
 
-            // Check if destination already exists
-            const existingDestination = context.plugin.app.vault.getAbstractFileByPath(newReportsPath);
-            if (existingDestination) {
-                context.logger.debug(`[MoveReportsFolder] Destination already exists, skipping migration`);
-                return {
-                    success: true,
-                    message: `Reports folder already at correct location: ${newReportsPath}`,
-                    details: [`Folder already exists at destination, no migration needed`]
-                };
-            }
+            await context.plugin.saveSettings();
 
-            context.logger.debug(`[MoveReportsFolder] Destination does not exist, proceeding with move...`);
+            results.push(`✅ Conversation folder: ${context.plugin.settings.conversationFolder}`);
+            results.push(`✅ Report folder: ${context.plugin.settings.reportFolder}`);
+            results.push(`✅ Attachment folder: ${context.plugin.settings.attachmentFolder}`);
+            results.push(`ℹ️  Note: Existing files were NOT moved. You can move them manually in settings if needed.`);
 
-            context.updateProgress?.({
-                phase: 'processing',
-                title: 'Moving Reports folder...',
-                detail: `Moving from ${oldReportsPath} to ${newReportsPath}`,
-                current: 0,
-                total: 1
-            });
-
-            context.logger.debug(`[MoveReportsFolder] Calling vault.rename()...`);
-
-            // Move the entire folder in one operation!
-            await context.plugin.app.vault.rename(oldReportsFolder, newReportsPath);
-
-            context.logger.debug(`[MoveReportsFolder] vault.rename() completed successfully`);
-
-            results.push(`Successfully moved Reports folder from ${oldReportsPath} to ${newReportsPath}`);
-
-            context.updateProgress?.({
-                phase: 'processing',
-                title: 'Moving Reports folder...',
-                detail: 'Move completed successfully',
-                current: 1,
-                total: 1
-            });
+            context.logger.debug(`[MigrateToSeparateFolders] Migration completed successfully`);
 
             return {
                 success: true,
-                message: `Moved Reports folder from ${oldReportsPath} to ${newReportsPath}`,
+                message: "Folder settings updated successfully",
                 details: results
             };
         } catch (error: unknown) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            const errorStack = error instanceof Error ? error.stack : undefined;
-            context.logger.error(`[MoveReportsFolder] Failed to move Reports folder:`, error);
-            context.logger.debug(`[MoveReportsFolder] Error stack:`, errorStack);
+            context.logger.error(`[MigrateToSeparateFolders] Failed:`, error);
             results.push(`Error: ${errorMsg}`);
             return {
                 success: false,
-                message: `Failed to move Reports folder: ${errorMsg}`,
+                message: `Failed to update folder settings: ${errorMsg}`,
                 details: results
             };
         }
@@ -734,24 +683,18 @@ class MoveReportsFolderOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
-            const oldReportsPath = `${archiveFolder}/Reports`;
-
-            // Verify old Reports folder is empty or doesn't exist
-            const oldReportsFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportsPath);
-
-            if (oldReportsFolder && oldReportsFolder instanceof TFolder) {
-                return oldReportsFolder.children.length === 0;
-            }
-
-            return true; // Folder doesn't exist = success
+            // Verify new settings exist
+            return !!(
+                context.plugin.settings.conversationFolder &&
+                context.plugin.settings.reportFolder &&
+                context.plugin.settings.attachmentFolder &&
+                !context.plugin.settings.archiveFolder  // Old setting should be gone
+            );
         } catch (error) {
-            console.error(`MoveReportsFolder.verify failed:`, error);
+            console.error(`MigrateToSeparateFolders.verify failed:`, error);
             return false;
         }
     }
-
-
 }
 
 /**
@@ -761,7 +704,7 @@ export class Upgrade130 extends VersionUpgrade {
     readonly version = "1.3.0";
 
     readonly automaticOperations = [
-        new MoveReportsFolderOperation(),
+        new MigrateToSeparateFoldersOperation(),
         new ConvertToISO8601TimestampsOperation(),
         new FixFrontmatterAliasesOperation()
     ];

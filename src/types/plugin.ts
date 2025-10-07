@@ -1,27 +1,42 @@
 // src/types/plugin.ts
 export interface PluginSettings {
-    archiveFolder: string;
+    // ========================================
+    // 📁 FOLDER STRUCTURE
+    // ========================================
+    conversationFolder: string;
+    reportFolder: string;
+    attachmentFolder: string;
+
+    // ========================================
+    // 🎨 DISPLAY OPTIONS
+    // ========================================
     addDatePrefix: boolean;
     dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
+
+    // ========================================
+    // 🔧 INTERNAL SETTINGS (not shown in UI)
+    // ========================================
+    lastConversationsPerPage: number;
+
+    // ========================================
+    // 🔄 MIGRATION FLAGS
+    // ========================================
     hasShownUpgradeNotice: boolean;
     hasCompletedUpgrade: boolean;
-    
-    // Version tracking for migrations
     currentVersion: string;
     previousVersion: string;
-    
-    // Attachment settings
-    importAttachments: boolean;
-    attachmentFolder: string;
-    reportFolder: string;
-    skipMissingAttachments: boolean;
-    showAttachmentDetails: boolean;
 
-    // Conversation selection settings
-    defaultImportMode: 'all' | 'selective';
-    rememberLastImportMode: boolean;
-    conversationPageSize: number;
-    autoSelectAllOnOpen: boolean;
+    // ========================================
+    // 🗑️ DEPRECATED (will be removed in migration)
+    // ========================================
+    archiveFolder?: string;  // Renamed to conversationFolder
+    importAttachments?: boolean;  // Always true now
+    skipMissingAttachments?: boolean;  // Always handle attachments
+    showAttachmentDetails?: boolean;  // Removed
+    defaultImportMode?: 'all' | 'selective';  // Removed
+    rememberLastImportMode?: boolean;  // Removed
+    conversationPageSize?: number;  // Replaced by lastConversationsPerPage
+    autoSelectAllOnOpen?: boolean;  // Removed
 }
 
 export interface ConversationRecord {
