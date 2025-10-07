@@ -5072,27 +5072,40 @@ var FolderMigrationDialog = class extends import_obsidian.Modal {
       text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
     });
     const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
-    const noButton = buttonContainer.createEl("button", {
-      text: "No, keep files in old location",
-      cls: "nexus-migration-button-no"
+    const cancelButton = buttonContainer.createEl("button", {
+      text: "Cancel",
+      cls: "nexus-migration-button-cancel"
     });
-    noButton.addEventListener("click", async () => {
+    cancelButton.addEventListener("click", async () => {
       this.close();
       try {
-        await this.onComplete(false);
+        await this.onComplete("cancel");
+        new import_obsidian.Notice(`Change cancelled. Folder setting reverted.`);
+      } catch (error) {
+        new import_obsidian.Notice(`Failed to revert setting: ${error.message}`);
+      }
+    });
+    const keepButton = buttonContainer.createEl("button", {
+      text: "No, keep files in old location",
+      cls: "nexus-migration-button-keep"
+    });
+    keepButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete("keep");
         new import_obsidian.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
       } catch (error) {
         new import_obsidian.Notice(`Failed to update setting: ${error.message}`);
       }
     });
-    const yesButton = buttonContainer.createEl("button", {
+    const moveButton = buttonContainer.createEl("button", {
       text: "Yes, move files",
-      cls: "mod-cta nexus-migration-button-yes"
+      cls: "mod-cta nexus-migration-button-move"
     });
-    yesButton.addEventListener("click", async () => {
+    moveButton.addEventListener("click", async () => {
       this.close();
       try {
-        await this.onComplete(true);
+        await this.onComplete("move");
         new import_obsidian.Notice(`Files moved to ${this.newPath}`);
       } catch (error) {
         new import_obsidian.Notice(`Failed to move files: ${error.message}`);
@@ -5153,16 +5166,26 @@ var FolderMigrationDialog = class extends import_obsidian.Modal {
 
             .nexus-migration-buttons {
                 display: flex;
-                justify-content: flex-end;
+                justify-content: space-between;
                 gap: 10px;
             }
 
             .nexus-migration-buttons button {
                 padding: 8px 16px;
+                flex: 1;
             }
 
-            .nexus-migration-button-no {
+            .nexus-migration-button-cancel {
                 background-color: var(--background-modifier-border);
+                color: var(--text-muted);
+            }
+
+            .nexus-migration-button-keep {
+                background-color: var(--background-modifier-border);
+            }
+
+            .nexus-migration-button-move {
+                /* Uses mod-cta class for primary styling */
             }
         `;
     document.head.appendChild(styleEl);
@@ -5181,23 +5204,29 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     this.order = 10;
   }
   render(containerEl) {
-    new import_obsidian2.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText(
-      (text) => text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder).onChange(async (value) => {
-        await this.handleFolderChange("conversationFolder", value, "conversations");
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText(
-      (text) => text.setPlaceholder("Nexus/Reports").setValue(this.plugin.settings.reportFolder).onChange(async (value) => {
-        await this.handleFolderChange("reportFolder", value, "reports");
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText(
-      (text) => text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder).onChange(async (value) => {
-        await this.handleFolderChange("attachmentFolder", value, "attachments");
-      })
-    );
+    new import_obsidian2.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
+      text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder);
+      text.inputEl.addEventListener("blur", async () => {
+        const newValue = text.getValue();
+        await this.handleFolderChange("conversationFolder", newValue, "conversations", text);
+      });
+    });
+    new import_obsidian2.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText((text) => {
+      text.setPlaceholder("Nexus/Reports").setValue(this.plugin.settings.reportFolder);
+      text.inputEl.addEventListener("blur", async () => {
+        const newValue = text.getValue();
+        await this.handleFolderChange("reportFolder", newValue, "reports", text);
+      });
+    });
+    new import_obsidian2.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
+      text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder);
+      text.inputEl.addEventListener("blur", async () => {
+        const newValue = text.getValue();
+        await this.handleFolderChange("attachmentFolder", newValue, "attachments", text);
+      });
+    });
   }
-  async handleFolderChange(settingKey, newPath, folderType) {
+  async handleFolderChange(settingKey, newPath, folderType, textComponent) {
     this.plugin.logger.debug(`[FolderSettings] Folder change detected: ${settingKey} = "${newPath}"`);
     const oldPath = this.plugin.settings[settingKey];
     if (oldPath === newPath) {
@@ -5226,9 +5255,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       oldPath,
       newPath,
       folderType,
-      async (shouldMigrate) => {
-        this.plugin.logger.debug(`[FolderSettings] User choice: shouldMigrate = ${shouldMigrate}`);
-        if (shouldMigrate) {
+      async (action) => {
+        this.plugin.logger.debug(`[FolderSettings] User choice: ${action}`);
+        if (action === "cancel") {
+          this.plugin.logger.debug(`[FolderSettings] User cancelled, restoring old value: "${oldPath}"`);
+          textComponent.setValue(oldPath);
+          return;
+        }
+        if (action === "move") {
           this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
           try {
             await this.plugin.app.vault.rename(oldFolder, newPath);

@@ -6,7 +6,7 @@ import type NexusAiChatImporterPlugin from "../main";
  * Dialog to ask user if they want to migrate files when changing folder location
  */
 export class FolderMigrationDialog extends Modal {
-    private onComplete: (shouldMigrate: boolean) => Promise<void>;
+    private onComplete: (action: 'move' | 'keep' | 'cancel') => Promise<void>;
     private oldPath: string;
     private newPath: string;
     private folderType: string;
@@ -16,7 +16,7 @@ export class FolderMigrationDialog extends Modal {
         oldPath: string,
         newPath: string,
         folderType: string,
-        onComplete: (shouldMigrate: boolean) => Promise<void>
+        onComplete: (action: 'move' | 'keep' | 'cancel') => Promise<void>
     ) {
         super(plugin.app);
         this.oldPath = oldPath;
@@ -63,31 +63,48 @@ export class FolderMigrationDialog extends Modal {
             text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates." 
         });
 
-        // Buttons
+        // Buttons (3 options: Cancel, Keep, Move)
         const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
-        
-        const noButton = buttonContainer.createEl("button", { 
-            text: "No, keep files in old location",
-            cls: "nexus-migration-button-no"
+
+        // Cancel button (left)
+        const cancelButton = buttonContainer.createEl("button", {
+            text: "Cancel",
+            cls: "nexus-migration-button-cancel"
         });
-        noButton.addEventListener("click", async () => {
+        cancelButton.addEventListener("click", async () => {
             this.close();
             try {
-                await this.onComplete(false);
+                await this.onComplete('cancel');
+                new Notice(`Change cancelled. Folder setting reverted.`);
+            } catch (error) {
+                new Notice(`Failed to revert setting: ${error.message}`);
+            }
+        });
+
+        // Keep button (middle)
+        const keepButton = buttonContainer.createEl("button", {
+            text: "No, keep files in old location",
+            cls: "nexus-migration-button-keep"
+        });
+        keepButton.addEventListener("click", async () => {
+            this.close();
+            try {
+                await this.onComplete('keep');
                 new Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
             } catch (error) {
                 new Notice(`Failed to update setting: ${error.message}`);
             }
         });
 
-        const yesButton = buttonContainer.createEl("button", { 
+        // Move button (right, primary action)
+        const moveButton = buttonContainer.createEl("button", {
             text: "Yes, move files",
-            cls: "mod-cta nexus-migration-button-yes"
+            cls: "mod-cta nexus-migration-button-move"
         });
-        yesButton.addEventListener("click", async () => {
+        moveButton.addEventListener("click", async () => {
             this.close();
             try {
-                await this.onComplete(true);
+                await this.onComplete('move');
                 new Notice(`Files moved to ${this.newPath}`);
             } catch (error) {
                 new Notice(`Failed to move files: ${error.message}`);
@@ -151,16 +168,26 @@ export class FolderMigrationDialog extends Modal {
 
             .nexus-migration-buttons {
                 display: flex;
-                justify-content: flex-end;
+                justify-content: space-between;
                 gap: 10px;
             }
 
             .nexus-migration-buttons button {
                 padding: 8px 16px;
+                flex: 1;
             }
 
-            .nexus-migration-button-no {
+            .nexus-migration-button-cancel {
                 background-color: var(--background-modifier-border);
+                color: var(--text-muted);
+            }
+
+            .nexus-migration-button-keep {
+                background-color: var(--background-modifier-border);
+            }
+
+            .nexus-migration-button-move {
+                /* Uses mod-cta class for primary styling */
             }
         `;
         document.head.appendChild(styleEl);
