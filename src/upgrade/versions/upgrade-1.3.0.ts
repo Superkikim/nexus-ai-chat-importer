@@ -17,14 +17,14 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -65,14 +65,14 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute starting`);
 
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -241,14 +241,14 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Check conversation files (sample verification)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -306,14 +306,14 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -354,14 +354,14 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases.execute starting`);
 
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -556,14 +556,14 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Check conversation files (sample verification)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||

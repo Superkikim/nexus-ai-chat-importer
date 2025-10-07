@@ -4315,12 +4315,12 @@ var init_upgrade_1_3_0 = __esm({
       }
       async canRun(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -4348,12 +4348,12 @@ var init_upgrade_1_3_0 = __esm({
       async execute(context) {
         try {
           console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute starting`);
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -4478,12 +4478,12 @@ ${frontmatter}
       }
       async verify(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -4525,12 +4525,12 @@ ${frontmatter}
       }
       async canRun(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -4558,12 +4558,12 @@ ${frontmatter}
       async execute(context) {
         try {
           console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases.execute starting`);
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -4686,12 +4686,12 @@ ${frontmatter}
       }
       async verify(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
