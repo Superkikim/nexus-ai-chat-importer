@@ -583,6 +583,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
         // This is necessary because the selection result only contains IDs
         try {
             const providerRegistry = createProviderRegistry(this);
+            // Fixed: Pass plugin instance to constructor
             const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
             const storage = this.getStorageService();
             const existingConversations = await storage.scanExistingConversations();
