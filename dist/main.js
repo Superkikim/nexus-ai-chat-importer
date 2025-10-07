@@ -2788,7 +2788,7 @@ __export(utils_exports, {
   old_getConversationId: () => old_getConversationId
 });
 function formatTimestamp(unixTime, format) {
-  const date = (0, import_obsidian6.moment)(unixTime * 1e3);
+  const date = (0, import_obsidian7.moment)(unixTime * 1e3);
   switch (format) {
     case "prefix":
       return date.format("YYYYMMDD");
@@ -2969,7 +2969,7 @@ async function checkConversationLink(conversationId, provider = "chatgpt") {
       return false;
   }
   try {
-    const response = await (0, import_obsidian7.requestUrl)({
+    const response = await (0, import_obsidian8.requestUrl)({
       url,
       method: "HEAD"
     });
@@ -2993,20 +2993,20 @@ function isNexusRelated(file, app) {
   const frontmatter = (_a = app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
   return (frontmatter == null ? void 0 : frontmatter.nexus) === "nexus-ai-chat-importer";
 }
-var import_obsidian6, import_obsidian7, logger;
+var import_obsidian7, import_obsidian8, logger;
 var init_utils = __esm({
   "src/utils.ts"() {
     "use strict";
-    import_obsidian6 = require("obsidian");
-    init_logger();
     import_obsidian7 = require("obsidian");
+    init_logger();
+    import_obsidian8 = require("obsidian");
     logger = new Logger();
   }
 });
 
 // src/dialogs.ts
 function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian8.Modal(app);
+  const modal = new import_obsidian9.Modal(app);
   modal.contentEl.addClass("nexus-ai-chat-importer-modal");
   const titleEl = modal.contentEl.createEl("h2", {
     text: title,
@@ -3088,11 +3088,11 @@ async function showDialog(app, type, title, paragraphs, note, customLabels) {
     modal.open();
   });
 }
-var import_obsidian8;
+var import_obsidian9;
 var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
-    import_obsidian8 = require("obsidian");
+    import_obsidian9 = require("obsidian");
   }
 });
 
@@ -3715,12 +3715,12 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian14, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian15, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian14 = require("obsidian");
+    import_obsidian15 = require("obsidian");
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -4181,7 +4181,7 @@ ${cleanContent}`;
         }
       }
     };
-    NexusUpgradeModal = class extends import_obsidian14.Modal {
+    NexusUpgradeModal = class extends import_obsidian15.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -4222,7 +4222,7 @@ Your conversations will be reorganized with provider structure and modern callou
         } catch (error) {
           console.debug("[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback");
         }
-        await import_obsidian14.MarkdownRenderer.render(
+        await import_obsidian15.MarkdownRenderer.render(
           this.app,
           message,
           this.contentEl,
@@ -4806,12 +4806,12 @@ var upgrade_notice_dialog_exports = {};
 __export(upgrade_notice_dialog_exports, {
   UpgradeNoticeDialog: () => UpgradeNoticeDialog
 });
-var import_obsidian15, UpgradeNoticeDialog;
+var import_obsidian16, UpgradeNoticeDialog;
 var init_upgrade_notice_dialog = __esm({
   "src/dialogs/upgrade-notice-dialog.ts"() {
     "use strict";
-    import_obsidian15 = require("obsidian");
-    UpgradeNoticeDialog = class extends import_obsidian15.Modal {
+    import_obsidian16 = require("obsidian");
+    UpgradeNoticeDialog = class extends import_obsidian16.Modal {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -4824,21 +4824,21 @@ var init_upgrade_notice_dialog = __esm({
           cls: "nexus-upgrade-title"
         });
         const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
-        messageContainer.createEl("h3", { text: "\u2728 New: Configurable Folder Locations" });
+        messageContainer.createEl("h3", { text: "\u2728 New: Report Folder Setting" });
         messageContainer.createEl("p", {
-          text: "You can now specify separate folder locations for:"
+          text: "You can now configure the report folder location separately from conversations and attachments."
         });
-        const folderList = messageContainer.createEl("ul");
-        folderList.createEl("li", { text: "Conversations" });
-        folderList.createEl("li", { text: "Reports" });
-        folderList.createEl("li", { text: "Attachments" });
         messageContainer.createEl("p", {
           text: "All folder locations can be changed at any time in the plugin settings."
         });
         const infoBox = contentEl.createDiv({ cls: "nexus-upgrade-info" });
-        infoBox.createEl("strong", { text: "\u2139\uFE0F Note:" });
-        infoBox.createEl("p", {
-          text: "Your existing files have NOT been moved. They remain in their current locations. You can manually move them if desired by changing the folder settings."
+        infoBox.createEl("strong", { text: "\u2139\uFE0F Folder Migration:" });
+        const infoText = infoBox.createDiv();
+        infoText.createEl("p", {
+          text: "When you change a folder path, you will be asked if you want to move existing files automatically."
+        });
+        infoText.createEl("p", {
+          text: "If you choose to ignore, existing files will not be impacted by future updates."
         });
         const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
         const okButton = buttonContainer.createEl("button", {
@@ -4922,7 +4922,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian21 = require("obsidian");
+var import_obsidian22 = require("obsidian");
 
 // src/config/constants.ts
 var DEFAULT_SETTINGS = {
@@ -4955,10 +4955,10 @@ var GITHUB = {
 };
 
 // src/ui/settings-tab.ts
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/ui/settings/folder-settings-section.ts
-var import_obsidian = require("obsidian");
+var import_obsidian2 = require("obsidian");
 
 // src/ui/settings/base-settings-section.ts
 var BaseSettingsSection = class {
@@ -4985,6 +4985,146 @@ var BaseSettingsSection = class {
   }
 };
 
+// src/dialogs/folder-migration-dialog.ts
+var import_obsidian = require("obsidian");
+var FolderMigrationDialog = class extends import_obsidian.Modal {
+  constructor(plugin, oldPath, newPath, folderType, onComplete) {
+    super(plugin.app);
+    this.oldPath = oldPath;
+    this.newPath = newPath;
+    this.folderType = folderType;
+    this.onComplete = onComplete;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", {
+      text: "Move Existing Files?",
+      cls: "nexus-migration-title"
+    });
+    const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
+    messageContainer.createEl("p", {
+      text: `You are changing the ${this.folderType} folder location:`
+    });
+    const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
+    pathContainer.createEl("div", {
+      text: `From: ${this.oldPath}`,
+      cls: "nexus-migration-path-old"
+    });
+    pathContainer.createEl("div", {
+      text: `To: ${this.newPath}`,
+      cls: "nexus-migration-path-new"
+    });
+    messageContainer.createEl("p", {
+      text: "Do you want to move existing files to the new location?"
+    });
+    const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
+    warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
+    warningBox.createEl("p", {
+      text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
+    });
+    const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
+    const noButton = buttonContainer.createEl("button", {
+      text: "No, keep files in old location",
+      cls: "nexus-migration-button-no"
+    });
+    noButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete(false);
+        new import_obsidian.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+      } catch (error) {
+        new import_obsidian.Notice(`Failed to update setting: ${error.message}`);
+      }
+    });
+    const yesButton = buttonContainer.createEl("button", {
+      text: "Yes, move files",
+      cls: "mod-cta nexus-migration-button-yes"
+    });
+    yesButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete(true);
+        new import_obsidian.Notice(`Files moved to ${this.newPath}`);
+      } catch (error) {
+        new import_obsidian.Notice(`Failed to move files: ${error.message}`);
+      }
+    });
+    this.addStyles();
+  }
+  addStyles() {
+    const styleEl = document.createElement("style");
+    styleEl.textContent = `
+            .nexus-migration-title {
+                margin-bottom: 1em;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-migration-paths {
+                background-color: var(--background-secondary);
+                padding: 1em;
+                margin: 1em 0;
+                border-radius: 4px;
+                font-family: var(--font-monospace);
+                font-size: 0.9em;
+            }
+
+            .nexus-migration-path-old {
+                color: var(--text-muted);
+                margin-bottom: 0.5em;
+            }
+
+            .nexus-migration-path-new {
+                color: var(--interactive-accent);
+                font-weight: 500;
+            }
+
+            .nexus-migration-warning {
+                background-color: var(--background-modifier-error-hover);
+                border-left: 4px solid var(--text-error);
+                padding: 1em;
+                margin-bottom: 1.5em;
+                border-radius: 4px;
+            }
+
+            .nexus-migration-warning strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--text-error);
+            }
+
+            .nexus-migration-warning p {
+                margin: 0;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-buttons {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+
+            .nexus-migration-buttons button {
+                padding: 8px 16px;
+            }
+
+            .nexus-migration-button-no {
+                background-color: var(--background-modifier-border);
+            }
+        `;
+    document.head.appendChild(styleEl);
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
 // src/ui/settings/folder-settings-section.ts
 var FolderSettingsSection = class extends BaseSettingsSection {
   constructor() {
@@ -4993,29 +5133,76 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     this.order = 10;
   }
   render(containerEl) {
-    new import_obsidian.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText(
+    new import_obsidian2.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText(
       (text) => text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder).onChange(async (value) => {
-        this.plugin.settings.conversationFolder = value;
-        await this.plugin.saveSettings();
+        await this.handleFolderChange("conversationFolder", value, "conversations");
       })
     );
-    new import_obsidian.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText(
+    new import_obsidian2.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText(
       (text) => text.setPlaceholder("Nexus/Reports").setValue(this.plugin.settings.reportFolder).onChange(async (value) => {
-        this.plugin.settings.reportFolder = value;
-        await this.plugin.saveSettings();
+        await this.handleFolderChange("reportFolder", value, "reports");
       })
     );
-    new import_obsidian.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText(
+    new import_obsidian2.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText(
       (text) => text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder).onChange(async (value) => {
-        this.plugin.settings.attachmentFolder = value;
-        await this.plugin.saveSettings();
+        await this.handleFolderChange("attachmentFolder", value, "attachments");
       })
     );
+  }
+  async handleFolderChange(settingKey, newPath, folderType) {
+    this.plugin.logger.debug(`[FolderSettings] Folder change detected: ${settingKey} = "${newPath}"`);
+    const oldPath = this.plugin.settings[settingKey];
+    if (oldPath === newPath) {
+      this.plugin.logger.debug(`[FolderSettings] Path unchanged, skipping`);
+      return;
+    }
+    this.plugin.logger.debug(`[FolderSettings] Old path: "${oldPath}" \u2192 New path: "${newPath}"`);
+    const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
+    if (!oldFolder || !(oldFolder instanceof import_obsidian2.TFolder)) {
+      this.plugin.logger.debug(`[FolderSettings] Old folder doesn't exist, just updating setting`);
+      this.plugin.settings[settingKey] = newPath;
+      await this.plugin.saveSettings();
+      return;
+    }
+    const hasContent = oldFolder.children.length > 0;
+    this.plugin.logger.debug(`[FolderSettings] Old folder exists, has content: ${hasContent}`);
+    if (!hasContent) {
+      this.plugin.logger.debug(`[FolderSettings] Old folder is empty, just updating setting`);
+      this.plugin.settings[settingKey] = newPath;
+      await this.plugin.saveSettings();
+      return;
+    }
+    this.plugin.logger.debug(`[FolderSettings] Showing migration dialog`);
+    const dialog = new FolderMigrationDialog(
+      this.plugin,
+      oldPath,
+      newPath,
+      folderType,
+      async (shouldMigrate) => {
+        this.plugin.logger.debug(`[FolderSettings] User choice: shouldMigrate = ${shouldMigrate}`);
+        if (shouldMigrate) {
+          this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
+          try {
+            await this.plugin.app.vault.rename(oldFolder, newPath);
+            this.plugin.logger.debug(`[FolderSettings] Migration successful`);
+          } catch (error) {
+            this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
+            throw error;
+          }
+        } else {
+          this.plugin.logger.debug(`[FolderSettings] User chose not to migrate, just updating setting`);
+        }
+        this.plugin.settings[settingKey] = newPath;
+        await this.plugin.saveSettings();
+        this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
+      }
+    );
+    dialog.open();
   }
 };
 
 // src/ui/settings/display-settings-section.ts
-var import_obsidian2 = require("obsidian");
+var import_obsidian3 = require("obsidian");
 var DisplaySettingsSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
@@ -5023,7 +5210,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
     this.order = 20;
   }
   render(containerEl) {
-    new import_obsidian2.Setting(containerEl).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames").addToggle(
+    new import_obsidian3.Setting(containerEl).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames").addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.addDatePrefix).onChange(async (value) => {
         this.plugin.settings.addDatePrefix = value;
         await this.plugin.saveSettings();
@@ -5031,7 +5218,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
       })
     );
     if (this.plugin.settings.addDatePrefix) {
-      new import_obsidian2.Setting(containerEl).setName("Date format").setDesc("Choose the format for the date prefix").addDropdown(
+      new import_obsidian3.Setting(containerEl).setName("Date format").setDesc("Choose the format for the date prefix").addDropdown(
         (dropdown) => dropdown.addOption("YYYY-MM-DD", "YYYY-MM-DD").addOption("YYYYMMDD", "YYYYMMDD").setValue(this.plugin.settings.dateFormat).onChange(async (value) => {
           if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {
             this.plugin.settings.dateFormat = value;
@@ -5044,7 +5231,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
 };
 
 // src/ui/settings-tab.ts
-var NexusAiChatImporterPluginSettingTab = class extends import_obsidian3.PluginSettingTab {
+var NexusAiChatImporterPluginSettingTab = class extends import_obsidian4.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -5076,7 +5263,7 @@ var NexusAiChatImporterPluginSettingTab = class extends import_obsidian3.PluginS
 };
 
 // src/commands/command-registry.ts
-var import_obsidian4 = require("obsidian");
+var import_obsidian5 = require("obsidian");
 var CommandRegistry = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -5091,7 +5278,7 @@ var CommandRegistry = class {
     });
   }
   showResetConfirmation() {
-    const modal = new import_obsidian4.Modal(this.plugin.app);
+    const modal = new import_obsidian5.Modal(this.plugin.app);
     modal.contentEl.createEl("p", {
       text: "This will reset all import catalogs. This action cannot be undone."
     });
@@ -5108,7 +5295,7 @@ var CommandRegistry = class {
 };
 
 // src/events/event-handlers.ts
-var import_obsidian5 = require("obsidian");
+var import_obsidian6 = require("obsidian");
 var EventHandlers = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -5116,7 +5303,7 @@ var EventHandlers = class {
   registerEvents() {
     this.plugin.registerEvent(
       this.plugin.app.vault.on("delete", async (file) => {
-        if (file instanceof import_obsidian5.TFile) {
+        if (file instanceof import_obsidian6.TFile) {
           await this.plugin.getFileService().handleConversationFileDeletion(file);
         }
       })
@@ -5127,7 +5314,7 @@ var EventHandlers = class {
 };
 
 // src/services/import-service.ts
-var import_obsidian12 = require("obsidian");
+var import_obsidian13 = require("obsidian");
 var import_jszip = __toESM(require_jszip_min());
 init_utils();
 init_dialogs();
@@ -5511,7 +5698,7 @@ var ImportReport = class {
 };
 
 // src/services/conversation-processor.ts
-var import_obsidian10 = require("obsidian");
+var import_obsidian11 = require("obsidian");
 
 // src/formatters/message-formatter.ts
 init_utils();
@@ -5738,7 +5925,7 @@ update_time: ${updateTimeStr}
 };
 
 // src/services/file-service.ts
-var import_obsidian9 = require("obsidian");
+var import_obsidian10 = require("obsidian");
 var FileService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -5746,9 +5933,9 @@ var FileService = class {
   async writeToFile(filePath, content) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian9.TFile) {
+      if (file instanceof import_obsidian10.TFile) {
         await this.plugin.app.vault.modify(file, content);
-      } else if (file instanceof import_obsidian9.TFolder) {
+      } else if (file instanceof import_obsidian10.TFolder) {
         throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
       } else {
         await this.plugin.app.vault.create(filePath, content);
@@ -5956,7 +6143,7 @@ var ConversationProcessor = class {
   async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian10.TFile) {
+      if (file instanceof import_obsidian11.TFile) {
         let content = await this.plugin.app.vault.read(file);
         const originalContent = content;
         const chatUpdateTime = adapter.getUpdateTime(chat);
@@ -8174,8 +8361,8 @@ function createProviderRegistry(plugin) {
 }
 
 // src/ui/import-progress-modal.ts
-var import_obsidian11 = require("obsidian");
-var ImportProgressModal = class extends import_obsidian11.Modal {
+var import_obsidian12 = require("obsidian");
+var ImportProgressModal = class extends import_obsidian12.Modal {
   constructor(app, fileName) {
     super(app);
     this.totalConversations = 0;
@@ -8450,7 +8637,7 @@ var ImportService = class {
             { button1: "Let's do this", button2: "Skip this file" }
           );
           if (!shouldReimport) {
-            new import_obsidian12.Notice(`Skipping ${file.name} (already imported).`);
+            new import_obsidian13.Notice(`Skipping ${file.name} (already imported).`);
             progressModal.close();
             return;
           }
@@ -8481,7 +8668,7 @@ var ImportService = class {
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
         if (!progressModal.isComplete) {
-          new import_obsidian12.Notice(
+          new import_obsidian13.Notice(
             this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
           );
         }
@@ -8678,7 +8865,7 @@ var ReportWriter = class {
     const folderResult = await ensureFolderExists2(reportInfo.folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
-      new import_obsidian12.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian13.Notice("Failed to create log file. Check console for details.");
       return;
     }
     let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
@@ -8706,7 +8893,7 @@ ${report.generateReportContent()}
       await this.plugin.app.vault.create(logFilePath, logContent);
     } catch (error) {
       this.plugin.logger.error(`Failed to write import log`, error.message);
-      new import_obsidian12.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian13.Notice("Failed to create log file. Check console for details.");
     }
   }
   getReportGenerationInfo(zipFileName, provider) {
@@ -9067,14 +9254,14 @@ var StorageService = class {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian16 = require("obsidian");
+var import_obsidian17 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
-var import_obsidian13 = require("obsidian");
-var MultiOperationProgressModal = class extends import_obsidian13.Modal {
+var import_obsidian14 = require("obsidian");
+var MultiOperationProgressModal = class extends import_obsidian14.Modal {
   constructor(app, title, operations) {
     super(app);
     this.canClose = false;
@@ -9386,7 +9573,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian16.Notice("Upgrade failed - see console for details");
+      new import_obsidian17.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -9484,7 +9671,7 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian16.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      new import_obsidian17.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -9696,7 +9883,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian16.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian17.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -9813,8 +10000,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian17 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian17.Modal {
+var import_obsidian18 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian18.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -9846,7 +10033,7 @@ var ProviderSelectionDialog = class extends import_obsidian17.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian17.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian18.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -9871,8 +10058,8 @@ var ProviderSelectionDialog = class extends import_obsidian17.Modal {
 };
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian18 = require("obsidian");
-var EnhancedFileSelectionDialog = class extends import_obsidian18.Modal {
+var import_obsidian19 = require("obsidian");
+var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -10270,8 +10457,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian18.Modal {
 };
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian19 = require("obsidian");
-var ConversationSelectionDialog = class extends import_obsidian19.Modal {
+var import_obsidian20 = require("obsidian");
+var ConversationSelectionDialog = class extends import_obsidian20.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -11361,8 +11548,8 @@ var ConversationMetadataExtractor = class {
 };
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian20 = require("obsidian");
-var ImportCompletionDialog = class extends import_obsidian20.Modal {
+var import_obsidian21 = require("obsidian");
+var ImportCompletionDialog = class extends import_obsidian21.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -11549,7 +11736,7 @@ var ImportCompletionDialog = class extends import_obsidian20.Modal {
 };
 
 // src/main.ts
-var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -11721,7 +11908,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
    */
   async handleImportAll(files, provider) {
     try {
-      new import_obsidian21.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian22.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
       const storage = this.getStorageService();
@@ -11733,7 +11920,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
       );
       const operationReport = new ImportReport();
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian21.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian22.Notice("No new or updated conversations found. All conversations are already up to date.");
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -11741,7 +11928,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
-      new import_obsidian21.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+      new import_obsidian22.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -11765,11 +11952,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian21.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian22.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
       }
     } catch (error) {
       this.logger.error("Error in import all:", error);
-      new import_obsidian21.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian22.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -11777,7 +11964,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
-      new import_obsidian21.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian22.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
       const storage = this.getStorageService();
@@ -11788,7 +11975,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian21.Notice("No conversations found in the selected files.");
+        new import_obsidian22.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
@@ -11802,7 +11989,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
       ).open();
     } catch (error) {
       this.logger.error("Error in selective import:", error);
-      new import_obsidian21.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian22.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -11811,14 +11998,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
   async handleConversationSelectionResult(result, files, provider, analysisInfo) {
     const operationReport = new ImportReport();
     if (result.selectedIds.length === 0) {
-      new import_obsidian21.Notice("No conversations selected for import.");
+      new import_obsidian22.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian21.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian22.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
@@ -11834,7 +12021,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian21.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian22.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
     }
   }
   /**
@@ -11857,7 +12044,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
     const folderResult = await ensureFolderExists2(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian21.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian22.Notice("Failed to create log file. Check console for details.");
       return "";
     }
     const timestamp = formatTimestamp2(Date.now() / 1e3, "date");
@@ -11904,7 +12091,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       console.error("Full error:", error);
       console.error("Log content length:", logContent.length);
-      new import_obsidian21.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian22.Notice("Failed to create log file. Check console for details.");
       return "";
     }
   }

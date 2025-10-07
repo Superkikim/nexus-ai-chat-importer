@@ -22,27 +22,27 @@ export class UpgradeNoticeDialog extends Modal {
 
         // Main message
         const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
-        
-        messageContainer.createEl("h3", { text: "✨ New: Configurable Folder Locations" });
-        
-        messageContainer.createEl("p", { 
-            text: "You can now specify separate folder locations for:" 
+
+        messageContainer.createEl("h3", { text: "✨ New: Report Folder Setting" });
+
+        messageContainer.createEl("p", {
+            text: "You can now configure the report folder location separately from conversations and attachments."
         });
 
-        const folderList = messageContainer.createEl("ul");
-        folderList.createEl("li", { text: "Conversations" });
-        folderList.createEl("li", { text: "Reports" });
-        folderList.createEl("li", { text: "Attachments" });
-
-        messageContainer.createEl("p", { 
-            text: "All folder locations can be changed at any time in the plugin settings." 
+        messageContainer.createEl("p", {
+            text: "All folder locations can be changed at any time in the plugin settings."
         });
 
         // Info box
         const infoBox = contentEl.createDiv({ cls: "nexus-upgrade-info" });
-        infoBox.createEl("strong", { text: "ℹ️ Note:" });
-        infoBox.createEl("p", { 
-            text: "Your existing files have NOT been moved. They remain in their current locations. You can manually move them if desired by changing the folder settings." 
+        infoBox.createEl("strong", { text: "ℹ️ Folder Migration:" });
+
+        const infoText = infoBox.createDiv();
+        infoText.createEl("p", {
+            text: "When you change a folder path, you will be asked if you want to move existing files automatically."
+        });
+        infoText.createEl("p", {
+            text: "If you choose to ignore, existing files will not be impacted by future updates."
         });
 
         // Button
