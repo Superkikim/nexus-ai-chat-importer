@@ -4,6 +4,7 @@ import { ProviderRegistry } from "../providers/provider-adapter";
 import { Chat } from "../providers/chatgpt/chatgpt-types";
 import { ClaudeConversation, ClaudeExportData } from "../providers/claude/claude-types";
 import { isValidMessage } from "../utils";
+import type NexusAiChatImporterPlugin from "../main";
 
 /**
  * Conversation existence status for import preview
@@ -61,7 +62,10 @@ export interface MetadataExtractionResult {
  * Used for conversation selection preview
  */
 export class ConversationMetadataExtractor {
-    constructor(private providerRegistry: ProviderRegistry) {}
+    constructor(
+        private providerRegistry: ProviderRegistry,
+        private plugin: NexusAiChatImporterPlugin
+    ) {}
 
     /**
      * Extract conversation metadata from ZIP file

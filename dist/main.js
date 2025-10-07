@@ -11980,8 +11980,9 @@ var ConversationSelectionDialog = class extends import_obsidian22.Modal {
 // src/services/conversation-metadata-extractor.ts
 init_utils();
 var ConversationMetadataExtractor = class {
-  constructor(providerRegistry) {
+  constructor(providerRegistry, plugin) {
     this.providerRegistry = providerRegistry;
+    this.plugin = plugin;
   }
   /**
    * Extract conversation metadata from ZIP file
@@ -12715,7 +12716,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
       this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
       this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
-      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       this.logger.debug(`[IMPORT-ALL] Getting storage service`);
       const storage = this.getStorageService();
       this.logger.debug(`[IMPORT-ALL] Scanning existing conversations`);
@@ -12787,7 +12788,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
       this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
       this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
-      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
       const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(

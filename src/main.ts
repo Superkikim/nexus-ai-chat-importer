@@ -258,7 +258,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
             const providerRegistry = createProviderRegistry(this);
             this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
-            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
 
             // Get existing conversations for status checking
             this.logger.debug(`[IMPORT-ALL] Getting storage service`);
@@ -359,7 +359,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
             const providerRegistry = createProviderRegistry(this);
             this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
-            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
 
             // Get existing conversations for status checking
             const storage = this.getStorageService();
