@@ -38,6 +38,692 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// src/services/link-update-service.ts
+var link_update_service_exports = {};
+__export(link_update_service_exports, {
+  LinkUpdateService: () => LinkUpdateService
+});
+var LinkUpdateService;
+var init_link_update_service = __esm({
+  "src/services/link-update-service.ts"() {
+    "use strict";
+    LinkUpdateService = class {
+      constructor(plugin) {
+        this.plugin = plugin;
+      }
+      /**
+       * Update attachment links when attachment folder path changes
+       */
+      async updateAttachmentLinks(oldAttachmentPath, newAttachmentPath, progressCallback) {
+        const stats = {
+          conversationsScanned: 0,
+          reportsScanned: 0,
+          attachmentLinksUpdated: 0,
+          conversationLinksUpdated: 0,
+          filesModified: 0,
+          errors: 0
+        };
+        try {
+          const conversationFiles = await this.getConversationFiles();
+          stats.conversationsScanned = conversationFiles.length;
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "scanning",
+            current: 0,
+            total: conversationFiles.length,
+            detail: `Found ${conversationFiles.length} conversations to scan`
+          });
+          const batchSize = 10;
+          for (let i = 0; i < conversationFiles.length; i += batchSize) {
+            const batch = conversationFiles.slice(i, i + batchSize);
+            progressCallback == null ? void 0 : progressCallback({
+              phase: "updating-attachments",
+              current: i,
+              total: conversationFiles.length,
+              detail: `Updating attachment links: ${i}/${conversationFiles.length} files processed`
+            });
+            for (const file of batch) {
+              try {
+                const result = await this.updateAttachmentLinksInFile(file, oldAttachmentPath, newAttachmentPath);
+                stats.attachmentLinksUpdated += result.linksUpdated;
+                if (result.fileModified) {
+                  stats.filesModified++;
+                }
+              } catch (error) {
+                stats.errors++;
+                this.plugin.logger.error(`Error updating attachment links in ${file.path}:`, error);
+              }
+            }
+            if (i + batchSize < conversationFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "complete",
+            current: conversationFiles.length,
+            total: conversationFiles.length,
+            detail: `Updated ${stats.attachmentLinksUpdated} attachment links in ${stats.filesModified} files`
+          });
+          return stats;
+        } catch (error) {
+          this.plugin.logger.error("Error updating attachment links:", error);
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "error",
+            current: 0,
+            total: 0,
+            detail: `Error: ${error.message}`
+          });
+          throw error;
+        }
+      }
+      /**
+       * Update conversation links when conversation folder path changes
+       */
+      async updateConversationLinks(oldConversationPath, newConversationPath, progressCallback) {
+        const stats = {
+          conversationsScanned: 0,
+          reportsScanned: 0,
+          attachmentLinksUpdated: 0,
+          conversationLinksUpdated: 0,
+          filesModified: 0,
+          errors: 0
+        };
+        try {
+          const reportFiles = await this.getReportFiles();
+          stats.reportsScanned = reportFiles.length;
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "scanning",
+            current: 0,
+            total: reportFiles.length,
+            detail: `Found ${reportFiles.length} reports to scan`
+          });
+          const batchSize = 5;
+          for (let i = 0; i < reportFiles.length; i += batchSize) {
+            const batch = reportFiles.slice(i, i + batchSize);
+            progressCallback == null ? void 0 : progressCallback({
+              phase: "updating-conversations",
+              current: i,
+              total: reportFiles.length,
+              detail: `Updating conversation links: ${i}/${reportFiles.length} reports processed`
+            });
+            for (const file of batch) {
+              try {
+                const result = await this.updateConversationLinksInFile(file, oldConversationPath, newConversationPath);
+                stats.conversationLinksUpdated += result.linksUpdated;
+                if (result.fileModified) {
+                  stats.filesModified++;
+                }
+              } catch (error) {
+                stats.errors++;
+                this.plugin.logger.error(`Error updating conversation links in ${file.path}:`, error);
+              }
+            }
+            if (i + batchSize < reportFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "complete",
+            current: reportFiles.length,
+            total: reportFiles.length,
+            detail: `Updated ${stats.conversationLinksUpdated} conversation links in ${stats.filesModified} files`
+          });
+          return stats;
+        } catch (error) {
+          this.plugin.logger.error("Error updating conversation links:", error);
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "error",
+            current: 0,
+            total: 0,
+            detail: `Error: ${error.message}`
+          });
+          throw error;
+        }
+      }
+      /**
+       * Estimate time for link updates based on file count
+       */
+      async estimateUpdateTime(folderType) {
+        let fileCount = 0;
+        if (folderType === "attachments") {
+          const conversationFiles = await this.getConversationFiles();
+          fileCount = conversationFiles.length;
+        } else {
+          const reportFiles = await this.getReportFiles();
+          fileCount = reportFiles.length;
+        }
+        const estimatedSeconds = Math.max(2, Math.ceil(fileCount * 0.1));
+        return { fileCount, estimatedSeconds };
+      }
+      /**
+       * Get all conversation files from the vault
+       */
+      async getConversationFiles() {
+        const conversationFolder = this.plugin.settings.conversationFolder;
+        const allFiles = this.plugin.app.vault.getMarkdownFiles();
+        return allFiles.filter((file) => {
+          if (!file.path.startsWith(conversationFolder))
+            return false;
+          const relativePath = file.path.substring(conversationFolder.length + 1);
+          if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+            return false;
+          }
+          return true;
+        });
+      }
+      /**
+       * Get all report files from the vault
+       */
+      async getReportFiles() {
+        const reportFolder = this.plugin.settings.reportFolder;
+        const allFiles = this.plugin.app.vault.getMarkdownFiles();
+        return allFiles.filter((file) => file.path.startsWith(reportFolder));
+      }
+      /**
+       * Update attachment links in a single file
+       */
+      async updateAttachmentLinksInFile(file, oldAttachmentPath, newAttachmentPath) {
+        const content = await this.plugin.app.vault.read(file);
+        let updatedContent = content;
+        let linksUpdated = 0;
+        const escapedOldPath = this.escapeRegExp(oldAttachmentPath);
+        const imagePattern = new RegExp(`(!\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, "g");
+        updatedContent = updatedContent.replace(imagePattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${newAttachmentPath}${suffix}`;
+        });
+        const linkPattern = new RegExp(`(\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, "g");
+        updatedContent = updatedContent.replace(linkPattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${newAttachmentPath}${suffix}`;
+        });
+        const obsidianImagePattern = new RegExp(`(!\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
+        updatedContent = updatedContent.replace(obsidianImagePattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${newAttachmentPath}${suffix}`;
+        });
+        const obsidianLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
+        updatedContent = updatedContent.replace(obsidianLinkPattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${newAttachmentPath}${suffix}`;
+        });
+        const fileModified = content !== updatedContent;
+        if (fileModified) {
+          await this.plugin.app.vault.modify(file, updatedContent);
+        }
+        return { linksUpdated, fileModified };
+      }
+      /**
+       * Update conversation links in a single report file
+       */
+      async updateConversationLinksInFile(file, oldConversationPath, newConversationPath) {
+        const content = await this.plugin.app.vault.read(file);
+        let updatedContent = content;
+        let linksUpdated = 0;
+        const escapedOldPath = this.escapeRegExp(oldConversationPath);
+        const linkWithAliasPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`, "g");
+        updatedContent = updatedContent.replace(linkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
+          linksUpdated++;
+          return `${prefix}${newConversationPath}${pathSuffix}${aliasSuffix}`;
+        });
+        const simpleLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
+        updatedContent = updatedContent.replace(simpleLinkPattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${newConversationPath}${suffix}`;
+        });
+        const fileModified = content !== updatedContent;
+        if (fileModified) {
+          await this.plugin.app.vault.modify(file, updatedContent);
+        }
+        return { linksUpdated, fileModified };
+      }
+      /**
+       * Escape special regex characters
+       */
+      escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+    };
+  }
+});
+
+// src/upgrade/utils/progress-modal.ts
+var progress_modal_exports = {};
+__export(progress_modal_exports, {
+  ProgressModal: () => UpgradeProgressModal,
+  UpgradeProgressModal: () => UpgradeProgressModal
+});
+var import_obsidian2, UpgradeProgressModal;
+var init_progress_modal = __esm({
+  "src/upgrade/utils/progress-modal.ts"() {
+    "use strict";
+    import_obsidian2 = require("obsidian");
+    UpgradeProgressModal = class extends import_obsidian2.Modal {
+      constructor(app, title, totalSteps = 100) {
+        super(app);
+        this.currentStep = 0;
+        this.title = title;
+        this.totalSteps = totalSteps;
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.addClass("nexus-ai-chat-importer-modal");
+        this.modalTitleEl = contentEl.createEl("h2", {
+          text: this.title,
+          cls: "modal-title"
+        });
+        const contentContainer = contentEl.createDiv({ cls: "modal-content" });
+        this.stepEl = contentContainer.createEl("div", { cls: "step-counter" });
+        this.stepEl.style.cssText = `
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 500;
+            color: var(--text-normal);
+        `;
+        const progressContainer = contentContainer.createDiv({ cls: "progress-container" });
+        progressContainer.style.cssText = `
+            background: var(--background-secondary);
+            border-radius: 8px;
+            padding: 4px;
+            margin: 20px 0;
+            border: 1px solid var(--background-modifier-border);
+        `;
+        this.progressBarEl = progressContainer.createDiv({ cls: "progress-bar" });
+        this.progressBarEl.style.cssText = `
+            background: var(--interactive-accent);
+            height: 20px;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        `;
+        this.statusEl = contentContainer.createEl("div", { cls: "status-text" });
+        this.statusEl.style.cssText = `
+            text-align: center;
+            margin: 15px 0;
+            font-weight: 500;
+            color: var(--text-normal);
+        `;
+        this.detailEl = contentContainer.createEl("div", { cls: "detail-text" });
+        this.detailEl.style.cssText = `
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9em;
+            min-height: 1.2em;
+        `;
+        this.updateProgress({ title: "Starting...", progress: 0 });
+      }
+      /**
+       * Update progress with step information
+       */
+      updateProgress(step) {
+        if (step.progress !== void 0) {
+          const percentage = Math.min(100, Math.max(0, step.progress));
+          this.progressBarEl.style.width = `${percentage}%`;
+          this.stepEl.textContent = `Progress: ${Math.round(percentage)}%`;
+        } else {
+          this.currentStep++;
+          const percentage = Math.round(this.currentStep / this.totalSteps * 100);
+          this.progressBarEl.style.width = `${percentage}%`;
+          this.stepEl.textContent = `Step ${this.currentStep}/${this.totalSteps}`;
+        }
+        this.statusEl.textContent = step.title;
+        this.detailEl.textContent = step.detail || "";
+      }
+      /**
+       * Update with specific step number
+       */
+      updateStep(stepNumber, step) {
+        this.currentStep = stepNumber;
+        const percentage = Math.round(stepNumber / this.totalSteps * 100);
+        this.progressBarEl.style.width = `${percentage}%`;
+        this.stepEl.textContent = `Step ${stepNumber}/${this.totalSteps}`;
+        this.statusEl.textContent = step.title;
+        this.detailEl.textContent = step.detail || "";
+      }
+      /**
+       * Show completion state
+       */
+      showComplete(message = "Completed successfully") {
+        this.progressBarEl.style.width = "100%";
+        this.stepEl.textContent = "Complete";
+        this.statusEl.textContent = message;
+        this.detailEl.textContent = "";
+        this.progressBarEl.style.background = "var(--text-success)";
+      }
+      /**
+       * Show error state
+       */
+      showError(message = "An error occurred") {
+        this.statusEl.textContent = message;
+        this.detailEl.textContent = "";
+        this.progressBarEl.style.background = "var(--text-error)";
+      }
+      /**
+       * Close after delay
+       */
+      closeAfterDelay(delay = 2e3) {
+        setTimeout(() => this.close(), delay);
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+  }
+});
+
+// src/dialogs/enhanced-folder-migration-dialog.ts
+var enhanced_folder_migration_dialog_exports = {};
+__export(enhanced_folder_migration_dialog_exports, {
+  EnhancedFolderMigrationDialog: () => EnhancedFolderMigrationDialog
+});
+var import_obsidian3, EnhancedFolderMigrationDialog;
+var init_enhanced_folder_migration_dialog = __esm({
+  "src/dialogs/enhanced-folder-migration-dialog.ts"() {
+    "use strict";
+    import_obsidian3 = require("obsidian");
+    EnhancedFolderMigrationDialog = class extends import_obsidian3.Modal {
+      constructor(plugin, oldPath, newPath, folderType, onComplete) {
+        super(plugin.app);
+        this.estimatedTime = 0;
+        this.fileCount = 0;
+        this.oldPath = oldPath;
+        this.newPath = newPath;
+        this.folderType = folderType;
+        this.onComplete = onComplete;
+      }
+      async onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        await this.loadEstimates();
+        contentEl.createEl("h2", {
+          text: "Move Existing Files?",
+          cls: "nexus-migration-title"
+        });
+        const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
+        messageContainer.createEl("p", {
+          text: `You are changing the ${this.folderType} folder location:`
+        });
+        const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
+        pathContainer.createEl("div", {
+          text: `From: ${this.oldPath}`,
+          cls: "nexus-migration-path-old"
+        });
+        pathContainer.createEl("div", {
+          text: `To: ${this.newPath}`,
+          cls: "nexus-migration-path-new"
+        });
+        messageContainer.createEl("p", {
+          text: "Do you want to move existing files to the new location?"
+        });
+        if (this.shouldShowLinkUpdateInfo()) {
+          this.createLinkUpdateInfo(contentEl);
+        }
+        const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
+        warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
+        warningBox.createEl("p", {
+          text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
+        });
+        this.createButtons(contentEl);
+        this.addStyles();
+      }
+      async loadEstimates() {
+        try {
+          const { LinkUpdateService: LinkUpdateService2 } = await Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports));
+          const linkUpdateService = new LinkUpdateService2(this.app.plugins.plugins["nexus-ai-chat-importer"]);
+          if (this.folderType === "attachments") {
+            const estimate = await linkUpdateService.estimateUpdateTime("attachments");
+            this.fileCount = estimate.fileCount;
+            this.estimatedTime = estimate.estimatedSeconds;
+          } else if (this.folderType === "conversations") {
+            const estimate = await linkUpdateService.estimateUpdateTime("conversations");
+            this.fileCount = estimate.fileCount;
+            this.estimatedTime = estimate.estimatedSeconds;
+          }
+        } catch (error) {
+          console.warn("Failed to load link update estimates:", error);
+        }
+      }
+      shouldShowLinkUpdateInfo() {
+        return this.folderType === "attachments" || this.folderType === "conversations";
+      }
+      createLinkUpdateInfo(contentEl) {
+        const linkUpdateBox = contentEl.createDiv({ cls: "nexus-link-update-info" });
+        linkUpdateBox.createEl("strong", { text: "\u{1F517} Link Updates:" });
+        const infoText = linkUpdateBox.createDiv();
+        if (this.folderType === "attachments") {
+          infoText.createEl("p", {
+            text: `Moving attachments will also update ${this.fileCount} conversation files to fix attachment links.`
+          });
+        } else if (this.folderType === "conversations") {
+          infoText.createEl("p", {
+            text: `Moving conversations will also update ${this.fileCount} report files to fix conversation links.`
+          });
+        }
+        if (this.estimatedTime > 0) {
+          const timeText = this.estimatedTime < 60 ? `~${this.estimatedTime} seconds` : `~${Math.ceil(this.estimatedTime / 60)} minute(s)`;
+          infoText.createEl("p", {
+            text: `Estimated time: ${timeText}`,
+            cls: "nexus-time-estimate"
+          });
+        }
+      }
+      createButtons(contentEl) {
+        const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
+        const cancelButton = buttonContainer.createEl("button", {
+          text: "Cancel",
+          cls: "nexus-migration-button-cancel"
+        });
+        cancelButton.addEventListener("click", async () => {
+          this.close();
+          try {
+            await this.onComplete("cancel");
+            new import_obsidian3.Notice(`Change cancelled. Folder setting reverted.`);
+          } catch (error) {
+            new import_obsidian3.Notice(`Failed to revert setting: ${error.message}`);
+          }
+        });
+        const keepButton = buttonContainer.createEl("button", {
+          text: "No, keep files in old location",
+          cls: "nexus-migration-button-keep"
+        });
+        keepButton.addEventListener("click", async () => {
+          this.close();
+          try {
+            await this.onComplete("keep");
+            new import_obsidian3.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+          } catch (error) {
+            new import_obsidian3.Notice(`Failed to update setting: ${error.message}`);
+          }
+        });
+        const moveButton = buttonContainer.createEl("button", {
+          text: this.shouldShowLinkUpdateInfo() ? "Yes, move files and update links" : "Yes, move files",
+          cls: "mod-cta nexus-migration-button-move"
+        });
+        moveButton.addEventListener("click", async () => {
+          this.close();
+          if (this.shouldShowLinkUpdateInfo()) {
+            await this.handleMoveWithLinkUpdates();
+          } else {
+            try {
+              await this.onComplete("move");
+              new import_obsidian3.Notice(`Files moved to ${this.newPath}`);
+            } catch (error) {
+              new import_obsidian3.Notice(`Failed to move files: ${error.message}`);
+            }
+          }
+        });
+      }
+      async handleMoveWithLinkUpdates() {
+        try {
+          const [{ UpgradeProgressModal: UpgradeProgressModal2 }, { LinkUpdateService: LinkUpdateService2 }] = await Promise.all([
+            Promise.resolve().then(() => (init_progress_modal(), progress_modal_exports)),
+            Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports))
+          ]);
+          const progressModal = new UpgradeProgressModal2(
+            this.app,
+            `Moving ${this.folderType} and updating links`,
+            100
+          );
+          progressModal.open();
+          progressModal.updateProgress({
+            title: "Moving files...",
+            detail: `Moving from ${this.oldPath} to ${this.newPath}`,
+            progress: 20
+          });
+          await this.onComplete("move");
+          progressModal.updateProgress({
+            title: "Updating links...",
+            detail: "Scanning and updating file links",
+            progress: 40
+          });
+          const linkUpdateService = new LinkUpdateService2(this.app.plugins.plugins["nexus-ai-chat-importer"]);
+          let stats;
+          if (this.folderType === "attachments") {
+            stats = await linkUpdateService.updateAttachmentLinks(
+              this.oldPath,
+              this.newPath,
+              (progress) => {
+                const percentage = 40 + Math.round(progress.current / progress.total * 50);
+                progressModal.updateProgress({
+                  title: "Updating attachment links...",
+                  detail: progress.detail,
+                  progress: percentage
+                });
+              }
+            );
+          } else if (this.folderType === "conversations") {
+            stats = await linkUpdateService.updateConversationLinks(
+              this.oldPath,
+              this.newPath,
+              (progress) => {
+                const percentage = 40 + Math.round(progress.current / progress.total * 50);
+                progressModal.updateProgress({
+                  title: "Updating conversation links...",
+                  detail: progress.detail,
+                  progress: percentage
+                });
+              }
+            );
+          }
+          progressModal.showComplete(
+            `Files moved and ${(stats == null ? void 0 : stats.attachmentLinksUpdated) || (stats == null ? void 0 : stats.conversationLinksUpdated) || 0} links updated successfully`
+          );
+          progressModal.closeAfterDelay(3e3);
+          new import_obsidian3.Notice(`\u2705 Files moved to ${this.newPath} and links updated`);
+        } catch (error) {
+          new import_obsidian3.Notice(`\u274C Failed to move files or update links: ${error.message}`);
+        }
+      }
+      addStyles() {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = `
+            .nexus-migration-title {
+                margin-bottom: 1em;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-migration-paths {
+                background-color: var(--background-secondary);
+                padding: 1em;
+                margin: 1em 0;
+                border-radius: 4px;
+                font-family: var(--font-monospace);
+                font-size: 0.9em;
+            }
+
+            .nexus-migration-path-old {
+                color: var(--text-muted);
+                margin-bottom: 0.5em;
+            }
+
+            .nexus-migration-path-new {
+                color: var(--interactive-accent);
+                font-weight: 500;
+            }
+
+            .nexus-link-update-info {
+                background-color: var(--background-modifier-success-hover);
+                border-left: 4px solid var(--text-success);
+                padding: 1em;
+                margin-bottom: 1em;
+                border-radius: 4px;
+            }
+
+            .nexus-link-update-info strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--text-success);
+            }
+
+            .nexus-link-update-info p {
+                margin: 0.3em 0;
+                color: var(--text-normal);
+            }
+
+            .nexus-time-estimate {
+                font-style: italic;
+                color: var(--text-muted) !important;
+                font-size: 0.9em;
+            }
+
+            .nexus-migration-warning {
+                background-color: var(--background-modifier-error-hover);
+                border-left: 4px solid var(--text-error);
+                padding: 1em;
+                margin-bottom: 1.5em;
+                border-radius: 4px;
+            }
+
+            .nexus-migration-warning strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--text-error);
+            }
+
+            .nexus-migration-warning p {
+                margin: 0;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-buttons {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .nexus-migration-buttons button {
+                padding: 8px 16px;
+                flex: 1;
+            }
+
+            .nexus-migration-button-cancel {
+                background-color: var(--background-modifier-border);
+                color: var(--text-muted);
+            }
+
+            .nexus-migration-button-keep {
+                background-color: var(--background-modifier-border);
+            }
+
+            .nexus-migration-button-move {
+                /* Uses mod-cta class for primary styling */
+            }
+        `;
+        document.head.appendChild(styleEl);
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+  }
+});
+
 // node_modules/jszip/dist/jszip.min.js
 var require_jszip_min = __commonJS({
   "node_modules/jszip/dist/jszip.min.js"(exports, module2) {
@@ -2788,7 +3474,7 @@ __export(utils_exports, {
   old_getConversationId: () => old_getConversationId
 });
 function formatTimestamp(unixTime, format) {
-  const date = (0, import_obsidian7.moment)(unixTime * 1e3);
+  const date = (0, import_obsidian9.moment)(unixTime * 1e3);
   switch (format) {
     case "prefix":
       return date.format("YYYYMMDD");
@@ -2969,7 +3655,7 @@ async function checkConversationLink(conversationId, provider = "chatgpt") {
       return false;
   }
   try {
-    const response = await (0, import_obsidian8.requestUrl)({
+    const response = await (0, import_obsidian10.requestUrl)({
       url,
       method: "HEAD"
     });
@@ -2993,20 +3679,20 @@ function isNexusRelated(file, app) {
   const frontmatter = (_a = app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
   return (frontmatter == null ? void 0 : frontmatter.nexus) === "nexus-ai-chat-importer";
 }
-var import_obsidian7, import_obsidian8, logger;
+var import_obsidian9, import_obsidian10, logger;
 var init_utils = __esm({
   "src/utils.ts"() {
     "use strict";
-    import_obsidian7 = require("obsidian");
+    import_obsidian9 = require("obsidian");
     init_logger();
-    import_obsidian8 = require("obsidian");
+    import_obsidian10 = require("obsidian");
     logger = new Logger();
   }
 });
 
 // src/dialogs.ts
 function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian9.Modal(app);
+  const modal = new import_obsidian11.Modal(app);
   modal.contentEl.addClass("nexus-ai-chat-importer-modal");
   const titleEl = modal.contentEl.createEl("h2", {
     text: title,
@@ -3088,11 +3774,11 @@ async function showDialog(app, type, title, paragraphs, note, customLabels) {
     modal.open();
   });
 }
-var import_obsidian9;
+var import_obsidian11;
 var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
-    import_obsidian9 = require("obsidian");
+    import_obsidian11 = require("obsidian");
   }
 });
 
@@ -3715,12 +4401,12 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian15, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian17, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian15 = require("obsidian");
+    import_obsidian17 = require("obsidian");
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -4181,7 +4867,7 @@ ${cleanContent}`;
         }
       }
     };
-    NexusUpgradeModal = class extends import_obsidian15.Modal {
+    NexusUpgradeModal = class extends import_obsidian17.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -4222,7 +4908,7 @@ Your conversations will be reorganized with provider structure and modern callou
         } catch (error) {
           console.debug("[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback");
         }
-        await import_obsidian15.MarkdownRenderer.render(
+        await import_obsidian17.MarkdownRenderer.render(
           this.app,
           message,
           this.contentEl,
@@ -4854,12 +5540,12 @@ var upgrade_notice_dialog_exports = {};
 __export(upgrade_notice_dialog_exports, {
   UpgradeNoticeDialog: () => UpgradeNoticeDialog
 });
-var import_obsidian16, UpgradeNoticeDialog;
+var import_obsidian18, UpgradeNoticeDialog;
 var init_upgrade_notice_dialog = __esm({
   "src/dialogs/upgrade-notice-dialog.ts"() {
     "use strict";
-    import_obsidian16 = require("obsidian");
-    UpgradeNoticeDialog = class extends import_obsidian16.Modal {
+    import_obsidian18 = require("obsidian");
+    UpgradeNoticeDialog = class extends import_obsidian18.Modal {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -4970,7 +5656,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian22 = require("obsidian");
+var import_obsidian24 = require("obsidian");
 
 // src/config/constants.ts
 var DEFAULT_SETTINGS = {
@@ -5003,10 +5689,10 @@ var GITHUB = {
 };
 
 // src/ui/settings-tab.ts
-var import_obsidian4 = require("obsidian");
+var import_obsidian6 = require("obsidian");
 
 // src/ui/settings/folder-settings-section.ts
-var import_obsidian2 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/ui/settings/base-settings-section.ts
 var BaseSettingsSection = class {
@@ -5204,21 +5890,21 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     this.order = 10;
   }
   render(containerEl) {
-    new import_obsidian2.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
+    new import_obsidian4.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
       text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
         await this.handleFolderChange("conversationFolder", newValue, "conversations", text);
       });
     });
-    new import_obsidian2.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText((text) => {
+    new import_obsidian4.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText((text) => {
       text.setPlaceholder("Nexus/Reports").setValue(this.plugin.settings.reportFolder);
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
         await this.handleFolderChange("reportFolder", newValue, "reports", text);
       });
     });
-    new import_obsidian2.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
+    new import_obsidian4.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
       text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
@@ -5235,7 +5921,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     }
     this.plugin.logger.debug(`[FolderSettings] Old path: "${oldPath}" \u2192 New path: "${newPath}"`);
     const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-    if (!oldFolder || !(oldFolder instanceof import_obsidian2.TFolder)) {
+    if (!oldFolder || !(oldFolder instanceof import_obsidian4.TFolder)) {
       this.plugin.logger.debug(`[FolderSettings] Old folder doesn't exist, just updating setting`);
       this.plugin.settings[settingKey] = newPath;
       await this.plugin.saveSettings();
@@ -5250,41 +5936,75 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       return;
     }
     this.plugin.logger.debug(`[FolderSettings] Showing migration dialog`);
-    const dialog = new FolderMigrationDialog(
-      this.plugin,
-      oldPath,
-      newPath,
-      folderType,
-      async (action) => {
-        this.plugin.logger.debug(`[FolderSettings] User choice: ${action}`);
-        if (action === "cancel") {
-          this.plugin.logger.debug(`[FolderSettings] User cancelled, restoring old value: "${oldPath}"`);
-          textComponent.setValue(oldPath);
-          return;
-        }
-        if (action === "move") {
-          this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
-          try {
-            await this.plugin.app.vault.rename(oldFolder, newPath);
-            this.plugin.logger.debug(`[FolderSettings] Migration successful`);
-          } catch (error) {
-            this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
-            throw error;
+    const useEnhancedDialog = settingKey === "attachmentFolder" || settingKey === "conversationFolder";
+    if (useEnhancedDialog) {
+      Promise.resolve().then(() => (init_enhanced_folder_migration_dialog(), enhanced_folder_migration_dialog_exports)).then(({ EnhancedFolderMigrationDialog: EnhancedFolderMigrationDialog2 }) => {
+        const dialog = new EnhancedFolderMigrationDialog2(
+          this.plugin,
+          oldPath,
+          newPath,
+          folderType,
+          async (action) => {
+            await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
           }
-        } else {
-          this.plugin.logger.debug(`[FolderSettings] User chose not to migrate, just updating setting`);
+        );
+        dialog.open();
+      }).catch((error) => {
+        this.plugin.logger.error("Failed to load enhanced dialog:", error);
+        const dialog = new FolderMigrationDialog(
+          this.plugin,
+          oldPath,
+          newPath,
+          folderType,
+          async (action) => {
+            await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
+          }
+        );
+        dialog.open();
+      });
+    } else {
+      const dialog = new FolderMigrationDialog(
+        this.plugin,
+        oldPath,
+        newPath,
+        folderType,
+        async (action) => {
+          await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
         }
-        this.plugin.settings[settingKey] = newPath;
-        await this.plugin.saveSettings();
-        this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
+      );
+      dialog.open();
+    }
+  }
+  /**
+   * Handle migration action (extracted for reuse between dialog types)
+   */
+  async handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent) {
+    this.plugin.logger.debug(`[FolderSettings] User choice: ${action}`);
+    if (action === "cancel") {
+      this.plugin.logger.debug(`[FolderSettings] User cancelled, restoring old value: "${oldPath}"`);
+      textComponent.setValue(oldPath);
+      return;
+    }
+    if (action === "move") {
+      this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
+      try {
+        await this.plugin.app.vault.rename(oldFolder, newPath);
+        this.plugin.logger.debug(`[FolderSettings] Migration successful`);
+      } catch (error) {
+        this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
+        throw error;
       }
-    );
-    dialog.open();
+    } else {
+      this.plugin.logger.debug(`[FolderSettings] User chose not to migrate, just updating setting`);
+    }
+    this.plugin.settings[settingKey] = newPath;
+    await this.plugin.saveSettings();
+    this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
   }
 };
 
 // src/ui/settings/display-settings-section.ts
-var import_obsidian3 = require("obsidian");
+var import_obsidian5 = require("obsidian");
 var DisplaySettingsSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
@@ -5292,7 +6012,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
     this.order = 20;
   }
   render(containerEl) {
-    new import_obsidian3.Setting(containerEl).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames").addToggle(
+    new import_obsidian5.Setting(containerEl).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames").addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.addDatePrefix).onChange(async (value) => {
         this.plugin.settings.addDatePrefix = value;
         await this.plugin.saveSettings();
@@ -5300,7 +6020,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
       })
     );
     if (this.plugin.settings.addDatePrefix) {
-      new import_obsidian3.Setting(containerEl).setName("Date format").setDesc("Choose the format for the date prefix").addDropdown(
+      new import_obsidian5.Setting(containerEl).setName("Date format").setDesc("Choose the format for the date prefix").addDropdown(
         (dropdown) => dropdown.addOption("YYYY-MM-DD", "YYYY-MM-DD").addOption("YYYYMMDD", "YYYYMMDD").setValue(this.plugin.settings.dateFormat).onChange(async (value) => {
           if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {
             this.plugin.settings.dateFormat = value;
@@ -5313,7 +6033,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
 };
 
 // src/ui/settings-tab.ts
-var NexusAiChatImporterPluginSettingTab = class extends import_obsidian4.PluginSettingTab {
+var NexusAiChatImporterPluginSettingTab = class extends import_obsidian6.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -5345,7 +6065,7 @@ var NexusAiChatImporterPluginSettingTab = class extends import_obsidian4.PluginS
 };
 
 // src/commands/command-registry.ts
-var import_obsidian5 = require("obsidian");
+var import_obsidian7 = require("obsidian");
 var CommandRegistry = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -5360,7 +6080,7 @@ var CommandRegistry = class {
     });
   }
   showResetConfirmation() {
-    const modal = new import_obsidian5.Modal(this.plugin.app);
+    const modal = new import_obsidian7.Modal(this.plugin.app);
     modal.contentEl.createEl("p", {
       text: "This will reset all import catalogs. This action cannot be undone."
     });
@@ -5377,7 +6097,7 @@ var CommandRegistry = class {
 };
 
 // src/events/event-handlers.ts
-var import_obsidian6 = require("obsidian");
+var import_obsidian8 = require("obsidian");
 var EventHandlers = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -5385,7 +6105,7 @@ var EventHandlers = class {
   registerEvents() {
     this.plugin.registerEvent(
       this.plugin.app.vault.on("delete", async (file) => {
-        if (file instanceof import_obsidian6.TFile) {
+        if (file instanceof import_obsidian8.TFile) {
           await this.plugin.getFileService().handleConversationFileDeletion(file);
         }
       })
@@ -5396,7 +6116,7 @@ var EventHandlers = class {
 };
 
 // src/services/import-service.ts
-var import_obsidian13 = require("obsidian");
+var import_obsidian15 = require("obsidian");
 var import_jszip = __toESM(require_jszip_min());
 init_utils();
 init_dialogs();
@@ -5780,7 +6500,7 @@ var ImportReport = class {
 };
 
 // src/services/conversation-processor.ts
-var import_obsidian11 = require("obsidian");
+var import_obsidian13 = require("obsidian");
 
 // src/formatters/message-formatter.ts
 init_utils();
@@ -6007,7 +6727,7 @@ update_time: ${updateTimeStr}
 };
 
 // src/services/file-service.ts
-var import_obsidian10 = require("obsidian");
+var import_obsidian12 = require("obsidian");
 var FileService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -6015,9 +6735,9 @@ var FileService = class {
   async writeToFile(filePath, content) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian10.TFile) {
+      if (file instanceof import_obsidian12.TFile) {
         await this.plugin.app.vault.modify(file, content);
-      } else if (file instanceof import_obsidian10.TFolder) {
+      } else if (file instanceof import_obsidian12.TFolder) {
         throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
       } else {
         await this.plugin.app.vault.create(filePath, content);
@@ -6225,7 +6945,7 @@ var ConversationProcessor = class {
   async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian11.TFile) {
+      if (file instanceof import_obsidian13.TFile) {
         let content = await this.plugin.app.vault.read(file);
         const originalContent = content;
         const chatUpdateTime = adapter.getUpdateTime(chat);
@@ -8443,8 +9163,8 @@ function createProviderRegistry(plugin) {
 }
 
 // src/ui/import-progress-modal.ts
-var import_obsidian12 = require("obsidian");
-var ImportProgressModal = class extends import_obsidian12.Modal {
+var import_obsidian14 = require("obsidian");
+var ImportProgressModal = class extends import_obsidian14.Modal {
   constructor(app, fileName) {
     super(app);
     this.totalConversations = 0;
@@ -8719,7 +9439,7 @@ var ImportService = class {
             { button1: "Let's do this", button2: "Skip this file" }
           );
           if (!shouldReimport) {
-            new import_obsidian13.Notice(`Skipping ${file.name} (already imported).`);
+            new import_obsidian15.Notice(`Skipping ${file.name} (already imported).`);
             progressModal.close();
             return;
           }
@@ -8750,7 +9470,7 @@ var ImportService = class {
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
         if (!progressModal.isComplete) {
-          new import_obsidian13.Notice(
+          new import_obsidian15.Notice(
             this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
           );
         }
@@ -8936,7 +9656,6 @@ var ReportWriter = class {
     this.providerRegistry = providerRegistry;
   }
   async writeReport(report, zipFileName, provider) {
-    const { ensureFolderExists: ensureFolderExists2, formatTimestamp: formatTimestamp2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
     const reportInfo = this.getReportGenerationInfo(zipFileName, provider);
     const adapter = this.providerRegistry.getAdapter(provider);
     if (adapter) {
@@ -8944,10 +9663,10 @@ var ReportWriter = class {
       const columnInfo = strategy.getProviderSpecificColumn();
       report.setProviderSpecificColumnHeader(columnInfo.header);
     }
-    const folderResult = await ensureFolderExists2(reportInfo.folderPath, this.plugin.app.vault);
+    const folderResult = await ensureFolderExists(reportInfo.folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
-      new import_obsidian13.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian15.Notice("Failed to create log file. Check console for details.");
       return;
     }
     let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
@@ -8957,7 +9676,7 @@ var ReportWriter = class {
       logFilePath = `${reportInfo.folderPath}/${baseName}-${counter} - import report.md`;
       counter++;
     }
-    const currentDate = `${formatTimestamp2(Date.now() / 1e3, "date")} ${formatTimestamp2(Date.now() / 1e3, "time")}`;
+    const currentDate = `${formatTimestamp(Date.now() / 1e3, "date")} ${formatTimestamp(Date.now() / 1e3, "time")}`;
     const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
     const logContent = `---
 importdate: ${currentDate}
@@ -8975,7 +9694,7 @@ ${report.generateReportContent()}
       await this.plugin.app.vault.create(logFilePath, logContent);
     } catch (error) {
       this.plugin.logger.error(`Failed to write import log`, error.message);
-      new import_obsidian13.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian15.Notice("Failed to create log file. Check console for details.");
     }
   }
   getReportGenerationInfo(zipFileName, provider) {
@@ -9336,14 +10055,14 @@ var StorageService = class {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian17 = require("obsidian");
+var import_obsidian19 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
-var import_obsidian14 = require("obsidian");
-var MultiOperationProgressModal = class extends import_obsidian14.Modal {
+var import_obsidian16 = require("obsidian");
+var MultiOperationProgressModal = class extends import_obsidian16.Modal {
   constructor(app, title, operations) {
     super(app);
     this.canClose = false;
@@ -9655,7 +10374,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian17.Notice("Upgrade failed - see console for details");
+      new import_obsidian19.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -9753,7 +10472,7 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian17.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      new import_obsidian19.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -9965,7 +10684,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian17.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian19.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -10082,8 +10801,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian18 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian18.Modal {
+var import_obsidian20 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian20.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -10115,7 +10834,7 @@ var ProviderSelectionDialog = class extends import_obsidian18.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian18.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian20.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -10140,8 +10859,8 @@ var ProviderSelectionDialog = class extends import_obsidian18.Modal {
 };
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian19 = require("obsidian");
-var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
+var import_obsidian21 = require("obsidian");
+var EnhancedFileSelectionDialog = class extends import_obsidian21.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -10539,8 +11258,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian19.Modal {
 };
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian20 = require("obsidian");
-var ConversationSelectionDialog = class extends import_obsidian20.Modal {
+var import_obsidian22 = require("obsidian");
+var ConversationSelectionDialog = class extends import_obsidian22.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -11630,8 +12349,8 @@ var ConversationMetadataExtractor = class {
 };
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian21 = require("obsidian");
-var ImportCompletionDialog = class extends import_obsidian21.Modal {
+var import_obsidian23 = require("obsidian");
+var ImportCompletionDialog = class extends import_obsidian23.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -11818,7 +12537,8 @@ var ImportCompletionDialog = class extends import_obsidian21.Modal {
 };
 
 // src/main.ts
-var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
+init_utils();
+var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -11990,27 +12710,39 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
    */
   async handleImportAll(files, provider) {
     try {
-      new import_obsidian22.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      this.logger.debug(`[IMPORT-ALL] Starting import all with ${files.length} files, provider: ${provider}`);
+      new import_obsidian24.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
+      this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+      this.logger.debug(`[IMPORT-ALL] Getting storage service`);
       const storage = this.getStorageService();
+      this.logger.debug(`[IMPORT-ALL] Scanning existing conversations`);
       const existingConversations = await storage.scanExistingConversations();
+      this.logger.debug(`[IMPORT-ALL] Found ${Object.keys(existingConversations).length} existing conversations`);
+      this.logger.debug(`[IMPORT-ALL] Calling extractMetadataFromMultipleZips`);
       const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
         files,
         provider,
         existingConversations
       );
+      this.logger.debug(`[IMPORT-ALL] Extraction completed, found ${extractionResult.conversations.length} conversations`);
+      this.logger.debug(`[IMPORT-ALL] Creating ImportReport`);
       const operationReport = new ImportReport();
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian22.Notice("No new or updated conversations found. All conversations are already up to date.");
+        this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
+        new import_obsidian24.Notice("No new or updated conversations found. All conversations are already up to date.");
+        this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
+        this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath2}`);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
         }
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
-      new import_obsidian22.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+      new import_obsidian24.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -12034,11 +12766,15 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian22.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian24.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
       }
     } catch (error) {
-      this.logger.error("Error in import all:", error);
-      new import_obsidian22.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error("[IMPORT-ALL] Error in import all:", error);
+      console.error("[IMPORT-ALL] Full error details:", error);
+      if (error instanceof Error) {
+        console.error("[IMPORT-ALL] Error stack:", error.stack);
+      }
+      new import_obsidian24.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -12046,8 +12782,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
-      new import_obsidian22.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      this.logger.debug(`[SELECTIVE-IMPORT] Starting selective import with ${files.length} files, provider: ${provider}`);
+      new import_obsidian24.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
+      this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
@@ -12057,7 +12796,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian22.Notice("No conversations found in the selected files.");
+        new import_obsidian24.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
@@ -12070,8 +12809,12 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
         extractionResult.analysisInfo
       ).open();
     } catch (error) {
-      this.logger.error("Error in selective import:", error);
-      new import_obsidian22.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error("[SELECTIVE-IMPORT] Error in selective import:", error);
+      console.error("[SELECTIVE-IMPORT] Full error details:", error);
+      if (error instanceof Error) {
+        console.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
+      }
+      new import_obsidian24.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -12080,14 +12823,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
   async handleConversationSelectionResult(result, files, provider, analysisInfo) {
     const operationReport = new ImportReport();
     if (result.selectedIds.length === 0) {
-      new import_obsidian22.Notice("No conversations selected for import.");
+      new import_obsidian24.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian22.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian24.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
@@ -12103,18 +12846,24 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian22.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian24.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
     }
   }
   /**
    * Write consolidated report for multi-file import
    */
   async writeConsolidatedReport(report, provider, files, analysisInfo) {
-    this.logger.info("Writing consolidated report...");
-    const { ensureFolderExists: ensureFolderExists2, formatTimestamp: formatTimestamp2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
+    this.logger.debug("[WRITE-REPORT] Starting writeConsolidatedReport");
+    this.logger.debug(`[WRITE-REPORT] Provider: ${provider}, Files: ${files.length}`);
+    this.logger.debug("[WRITE-REPORT] Using static imports for ensureFolderExists and formatTimestamp");
+    this.logger.debug("[WRITE-REPORT] Getting report folder from settings");
     const reportFolder = this.settings.reportFolder;
+    this.logger.debug(`[WRITE-REPORT] Report folder: ${reportFolder}`);
+    this.logger.debug("[WRITE-REPORT] Creating provider registry");
     const providerRegistry = createProviderRegistry(this);
+    this.logger.debug("[WRITE-REPORT] Getting adapter for provider");
     const adapter = providerRegistry.getAdapter(provider);
+    this.logger.debug(`[WRITE-REPORT] Adapter found: ${adapter ? "yes" : "no"}`);
     let providerName = provider;
     if (adapter) {
       const strategy = adapter.getReportNamingStrategy();
@@ -12123,21 +12872,21 @@ var NexusAiChatImporterPlugin = class extends import_obsidian22.Plugin {
       report.setProviderSpecificColumnHeader(columnInfo.header);
     }
     const folderPath = `${reportFolder}/${providerName}`;
-    const folderResult = await ensureFolderExists2(folderPath, this.app.vault);
+    const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian22.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian24.Notice("Failed to create log file. Check console for details.");
       return "";
     }
-    const timestamp = formatTimestamp2(Date.now() / 1e3, "date");
-    const timeStr = formatTimestamp2(Date.now() / 1e3, "time").replace(/:/g, "-");
+    const timestamp = formatTimestamp(Date.now() / 1e3, "date");
+    const timeStr = formatTimestamp(Date.now() / 1e3, "time").replace(/:/g, "-");
     let logFilePath = `${folderPath}/${timestamp} ${timeStr} - import report.md`;
     let counter = 2;
     while (await this.app.vault.adapter.exists(logFilePath)) {
       logFilePath = `${folderPath}/${timestamp} ${timeStr}-${counter} - import report.md`;
       counter++;
     }
-    const currentDate = `${formatTimestamp2(Date.now() / 1e3, "date")} ${formatTimestamp2(Date.now() / 1e3, "time")}`;
+    const currentDate = `${formatTimestamp(Date.now() / 1e3, "date")} ${formatTimestamp(Date.now() / 1e3, "time")}`;
     const stats = report.getCompletionStats();
     const processedFiles = [];
     const skippedFiles = [];
@@ -12173,7 +12922,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       console.error("Full error:", error);
       console.error("Log content length:", logContent.length);
-      new import_obsidian22.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian24.Notice("Failed to create log file. Check console for details.");
       return "";
     }
   }

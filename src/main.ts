@@ -18,6 +18,7 @@ import { FileSelectionResult, ConversationSelectionResult } from "./types/conver
 import { ConversationMetadataExtractor } from "./services/conversation-metadata-extractor";
 import { ImportReport } from "./models/import-report";
 import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
+import { ensureFolderExists, formatTimestamp } from "./utils";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
@@ -250,32 +251,44 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(files: File[], provider: string): Promise<void> {
         try {
+            this.logger.debug(`[IMPORT-ALL] Starting import all with ${files.length} files, provider: ${provider}`);
             new Notice(`Analyzing conversations from ${files.length} file(s)...`);
 
             // Create metadata extractor
+            this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
             const providerRegistry = createProviderRegistry(this);
+            this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
             const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
 
             // Get existing conversations for status checking
+            this.logger.debug(`[IMPORT-ALL] Getting storage service`);
             const storage = this.getStorageService();
+            this.logger.debug(`[IMPORT-ALL] Scanning existing conversations`);
             const existingConversations = await storage.scanExistingConversations();
+            this.logger.debug(`[IMPORT-ALL] Found ${Object.keys(existingConversations).length} existing conversations`);
 
             // Extract metadata from all ZIP files (same as selective mode)
+            this.logger.debug(`[IMPORT-ALL] Calling extractMetadataFromMultipleZips`);
             const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
                 files,
                 provider,
                 existingConversations
             );
+            this.logger.debug(`[IMPORT-ALL] Extraction completed, found ${extractionResult.conversations.length} conversations`);
 
             // Create shared report for the entire operation
+            this.logger.debug(`[IMPORT-ALL] Creating ImportReport`);
             const operationReport = new ImportReport();
 
             if (extractionResult.conversations.length === 0) {
                 // No conversations to import, but still generate report and show dialog
+                this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
                 new Notice("No new or updated conversations found. All conversations are already up to date.");
 
                 // Write report showing what was analyzed
+                this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
                 const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
+                this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath}`);
 
                 // Show completion dialog with 0 imports
                 if (reportPath) {
@@ -325,7 +338,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             }
 
         } catch (error) {
-            this.logger.error("Error in import all:", error);
+            this.logger.error("[IMPORT-ALL] Error in import all:", error);
+            console.error("[IMPORT-ALL] Full error details:", error);
+            if (error instanceof Error) {
+                console.error("[IMPORT-ALL] Error stack:", error.stack);
+            }
             new Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
@@ -335,10 +352,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
+            this.logger.debug(`[SELECTIVE-IMPORT] Starting selective import with ${files.length} files, provider: ${provider}`);
             new Notice(`Analyzing conversations from ${files.length} file(s)...`);
 
             // Create metadata extractor
+            this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
             const providerRegistry = createProviderRegistry(this);
+            this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
             const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
 
             // Get existing conversations for status checking
@@ -369,7 +389,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             ).open();
 
         } catch (error) {
-            this.logger.error("Error in selective import:", error);
+            this.logger.error("[SELECTIVE-IMPORT] Error in selective import:", error);
+            console.error("[SELECTIVE-IMPORT] Full error details:", error);
+            if (error instanceof Error) {
+                console.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
+            }
             new Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
@@ -436,14 +460,22 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         files: File[],
         analysisInfo?: any
     ): Promise<string> {
-        this.logger.info("Writing consolidated report...");
+        this.logger.debug("[WRITE-REPORT] Starting writeConsolidatedReport");
+        this.logger.debug(`[WRITE-REPORT] Provider: ${provider}, Files: ${files.length}`);
 
-        const { ensureFolderExists, formatTimestamp } = await import("./utils");
+        // Static imports - no dynamic import needed
+        this.logger.debug("[WRITE-REPORT] Using static imports for ensureFolderExists and formatTimestamp");
 
         // Get provider-specific folder
+        this.logger.debug("[WRITE-REPORT] Getting report folder from settings");
         const reportFolder = this.settings.reportFolder;
+        this.logger.debug(`[WRITE-REPORT] Report folder: ${reportFolder}`);
+
+        this.logger.debug("[WRITE-REPORT] Creating provider registry");
         const providerRegistry = createProviderRegistry(this);
+        this.logger.debug("[WRITE-REPORT] Getting adapter for provider");
         const adapter = providerRegistry.getAdapter(provider);
+        this.logger.debug(`[WRITE-REPORT] Adapter found: ${adapter ? 'yes' : 'no'}`);
 
         let providerName = provider;
         if (adapter) {

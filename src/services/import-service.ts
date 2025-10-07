@@ -2,7 +2,7 @@
 import { Notice } from "obsidian";
 import JSZip from "jszip";
 import { CustomError } from "../types/plugin";
-import { getFileHash } from "../utils";
+import { getFileHash, ensureFolderExists, formatTimestamp } from "../utils";
 import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
 import { ConversationProcessor } from "./conversation-processor";
@@ -411,7 +411,7 @@ class ReportWriter {
     constructor(private plugin: NexusAiChatImporterPlugin, private providerRegistry: ProviderRegistry) {}
 
     async writeReport(report: ImportReport, zipFileName: string, provider: string): Promise<void> {
-        const { ensureFolderExists, formatTimestamp } = await import("../utils");
+        // Static imports - no dynamic import needed
 
         // Get provider-specific naming strategy and set column header
         const reportInfo = this.getReportGenerationInfo(zipFileName, provider);

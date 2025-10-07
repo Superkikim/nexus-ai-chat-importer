@@ -95,45 +95,91 @@ export class FolderSettingsSection extends BaseSettingsSection {
             return;
         }
 
-        // Show migration dialog
+        // Show migration dialog - use enhanced dialog for attachment and conversation folders
         this.plugin.logger.debug(`[FolderSettings] Showing migration dialog`);
-        const dialog = new FolderMigrationDialog(
-            this.plugin,
-            oldPath,
-            newPath,
-            folderType,
-            async (action: 'move' | 'keep' | 'cancel') => {
-                this.plugin.logger.debug(`[FolderSettings] User choice: ${action}`);
 
-                if (action === 'cancel') {
-                    // Restore old value in the text field
-                    this.plugin.logger.debug(`[FolderSettings] User cancelled, restoring old value: "${oldPath}"`);
-                    textComponent.setValue(oldPath);
-                    return;
-                }
+        const useEnhancedDialog = settingKey === 'attachmentFolder' || settingKey === 'conversationFolder';
 
-                if (action === 'move') {
-                    // Migrate files
-                    this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
-                    try {
-                        await this.plugin.app.vault.rename(oldFolder, newPath);
-                        this.plugin.logger.debug(`[FolderSettings] Migration successful`);
-                    } catch (error) {
-                        this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
-                        throw error;
+        if (useEnhancedDialog) {
+            // Lazy import to avoid loading issues during plugin initialization
+            import("../../dialogs/enhanced-folder-migration-dialog").then(({ EnhancedFolderMigrationDialog }) => {
+                const dialog = new EnhancedFolderMigrationDialog(
+                    this.plugin,
+                    oldPath,
+                    newPath,
+                    folderType,
+                    async (action: 'move' | 'keep' | 'cancel') => {
+                        await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
                     }
-                } else {
-                    // action === 'keep'
-                    this.plugin.logger.debug(`[FolderSettings] User chose not to migrate, just updating setting`);
+                );
+                dialog.open();
+            }).catch(error => {
+                this.plugin.logger.error("Failed to load enhanced dialog:", error);
+                // Fallback to standard dialog
+                const dialog = new FolderMigrationDialog(
+                    this.plugin,
+                    oldPath,
+                    newPath,
+                    folderType,
+                    async (action: 'move' | 'keep' | 'cancel') => {
+                        await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
+                    }
+                );
+                dialog.open();
+            });
+        } else {
+            const dialog = new FolderMigrationDialog(
+                this.plugin,
+                oldPath,
+                newPath,
+                folderType,
+                async (action: 'move' | 'keep' | 'cancel') => {
+                    await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
                 }
+            );
+            dialog.open();
+        }
+    }
 
-                // Update setting (for both 'move' and 'keep')
-                this.plugin.settings[settingKey] = newPath;
-                await this.plugin.saveSettings();
-                this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
+    /**
+     * Handle migration action (extracted for reuse between dialog types)
+     */
+    private async handleMigrationAction(
+        action: 'move' | 'keep' | 'cancel',
+        oldPath: string,
+        newPath: string,
+        oldFolder: TFolder,
+        settingKey: 'conversationFolder' | 'reportFolder' | 'attachmentFolder',
+        textComponent: TextComponent
+    ): Promise<void> {
+        this.plugin.logger.debug(`[FolderSettings] User choice: ${action}`);
+
+        if (action === 'cancel') {
+            // Restore old value in the text field
+            this.plugin.logger.debug(`[FolderSettings] User cancelled, restoring old value: "${oldPath}"`);
+            textComponent.setValue(oldPath);
+            return;
+        }
+
+        if (action === 'move') {
+            // Migrate files (the enhanced dialog handles link updates internally)
+            this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
+            try {
+                await this.plugin.app.vault.rename(oldFolder, newPath);
+                this.plugin.logger.debug(`[FolderSettings] Migration successful`);
+            } catch (error) {
+                this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
+                throw error;
             }
-        );
-        dialog.open();
+        } else {
+            // action === 'keep'
+            this.plugin.logger.debug(`[FolderSettings] User chose not to migrate, just updating setting`);
+        }
+
+        // Update setting (for both 'move' and 'keep')
+        this.plugin.settings[settingKey] = newPath;
+        await this.plugin.saveSettings();
+        this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
     }
 }
 
