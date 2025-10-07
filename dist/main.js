@@ -4733,40 +4733,88 @@ ${frontmatter}
       async execute(context) {
         const results = [];
         try {
-          const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          context.logger.debug(`[MigrateToSeparateFolders] Old archiveFolder: ${oldArchiveFolder}`);
-          context.plugin.settings.conversationFolder = oldArchiveFolder;
-          context.plugin.settings.reportFolder = `${oldArchiveFolder}/Reports`;
+          console.debug(`[MigrateToSeparateFolders] Starting migration...`);
+          console.debug(`[MigrateToSeparateFolders] Current settings:`, {
+            conversationFolder: context.plugin.settings.conversationFolder,
+            reportFolder: context.plugin.settings.reportFolder,
+            attachmentFolder: context.plugin.settings.attachmentFolder,
+            archiveFolder: context.plugin.settings.archiveFolder
+          });
+          if (!context.plugin.settings.conversationFolder) {
+            const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+            console.debug(`[MigrateToSeparateFolders] Migrating from archiveFolder: ${oldArchiveFolder}`);
+            context.plugin.settings.conversationFolder = oldArchiveFolder;
+            context.plugin.settings.reportFolder = `${oldArchiveFolder}/Reports`;
+            results.push(`\u2705 Migrated conversation folder: ${context.plugin.settings.conversationFolder}`);
+            results.push(`\u2705 Migrated report folder: ${context.plugin.settings.reportFolder}`);
+          } else {
+            console.debug(`[MigrateToSeparateFolders] New settings already exist, keeping them`);
+            results.push(`\u2705 Conversation folder: ${context.plugin.settings.conversationFolder} (already set)`);
+            results.push(`\u2705 Report folder: ${context.plugin.settings.reportFolder} (already set)`);
+          }
           if (!context.plugin.settings.attachmentFolder) {
             context.plugin.settings.attachmentFolder = "Nexus/Attachments";
-          }
-          if (context.plugin.settings.conversationPageSize) {
-            context.plugin.settings.lastConversationsPerPage = context.plugin.settings.conversationPageSize;
+            results.push(`\u2705 Set attachment folder: ${context.plugin.settings.attachmentFolder}`);
           } else {
-            context.plugin.settings.lastConversationsPerPage = 50;
+            results.push(`\u2705 Attachment folder: ${context.plugin.settings.attachmentFolder} (already set)`);
           }
-          delete context.plugin.settings.archiveFolder;
-          delete context.plugin.settings.importAttachments;
-          delete context.plugin.settings.skipMissingAttachments;
-          delete context.plugin.settings.showAttachmentDetails;
-          delete context.plugin.settings.defaultImportMode;
-          delete context.plugin.settings.rememberLastImportMode;
-          delete context.plugin.settings.conversationPageSize;
-          delete context.plugin.settings.autoSelectAllOnOpen;
+          if (!context.plugin.settings.lastConversationsPerPage) {
+            if (context.plugin.settings.conversationPageSize) {
+              context.plugin.settings.lastConversationsPerPage = context.plugin.settings.conversationPageSize;
+              results.push(`\u2705 Migrated page size: ${context.plugin.settings.lastConversationsPerPage}`);
+            } else {
+              context.plugin.settings.lastConversationsPerPage = 50;
+              results.push(`\u2705 Set default page size: 50`);
+            }
+          } else {
+            results.push(`\u2705 Page size: ${context.plugin.settings.lastConversationsPerPage} (already set)`);
+          }
+          let removedCount = 0;
+          if (context.plugin.settings.archiveFolder !== void 0) {
+            delete context.plugin.settings.archiveFolder;
+            removedCount++;
+          }
+          if (context.plugin.settings.importAttachments !== void 0) {
+            delete context.plugin.settings.importAttachments;
+            removedCount++;
+          }
+          if (context.plugin.settings.skipMissingAttachments !== void 0) {
+            delete context.plugin.settings.skipMissingAttachments;
+            removedCount++;
+          }
+          if (context.plugin.settings.showAttachmentDetails !== void 0) {
+            delete context.plugin.settings.showAttachmentDetails;
+            removedCount++;
+          }
+          if (context.plugin.settings.defaultImportMode !== void 0) {
+            delete context.plugin.settings.defaultImportMode;
+            removedCount++;
+          }
+          if (context.plugin.settings.rememberLastImportMode !== void 0) {
+            delete context.plugin.settings.rememberLastImportMode;
+            removedCount++;
+          }
+          if (context.plugin.settings.conversationPageSize !== void 0) {
+            delete context.plugin.settings.conversationPageSize;
+            removedCount++;
+          }
+          if (context.plugin.settings.autoSelectAllOnOpen !== void 0) {
+            delete context.plugin.settings.autoSelectAllOnOpen;
+            removedCount++;
+          }
+          if (removedCount > 0) {
+            results.push(`\u{1F5D1}\uFE0F  Removed ${removedCount} deprecated settings`);
+          }
           await context.plugin.saveSettings();
-          results.push(`\u2705 Conversation folder: ${context.plugin.settings.conversationFolder}`);
-          results.push(`\u2705 Report folder: ${context.plugin.settings.reportFolder}`);
-          results.push(`\u2705 Attachment folder: ${context.plugin.settings.attachmentFolder}`);
-          results.push(`\u2139\uFE0F  Note: Existing files were NOT moved. You can move them manually in settings if needed.`);
-          context.logger.debug(`[MigrateToSeparateFolders] Migration completed successfully`);
+          console.debug(`[MigrateToSeparateFolders] Migration completed successfully`);
           return {
             success: true,
-            message: "Folder settings updated successfully",
+            message: "Folder settings migration completed",
             details: results
           };
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          context.logger.error(`[MigrateToSeparateFolders] Failed:`, error);
+          console.error(`[MigrateToSeparateFolders] Failed:`, error);
           results.push(`Error: ${errorMsg}`);
           return {
             success: false,
