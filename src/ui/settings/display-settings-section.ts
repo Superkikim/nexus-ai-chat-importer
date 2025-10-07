@@ -1,27 +1,13 @@
-// src/ui/settings/conversation-settings-section.ts
+// src/ui/settings/display-settings-section.ts
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 
-export class ConversationSettingsSection extends BaseSettingsSection {
-    readonly title = "Conversation Settings";
-    readonly order = 10;
+export class DisplaySettingsSection extends BaseSettingsSection {
+    readonly title = "🎨 Display Options";
+    readonly order = 20;
 
     render(containerEl: HTMLElement): void {
-        new Setting(containerEl)
-            .setName("Conversations folder")
-            .setDesc("Choose a folder to store AI chat conversations and import reports")
-            .addText((text) =>
-                text
-                    .setPlaceholder("Enter folder name")
-                    .setValue(this.plugin.settings.archiveFolder)
-                    .onChange(async (value) => {
-                        this.plugin.settings.archiveFolder = value;
-                        // Keep reports under the archive folder
-                        this.plugin.settings.reportFolder = `${value}/Reports`;
-                        await this.plugin.saveSettings();
-                    })
-            );
-
+        // Add Date Prefix
         new Setting(containerEl)
             .setName("Add date prefix to filenames")
             .setDesc("Add creation date as a prefix to conversation filenames")
@@ -35,6 +21,7 @@ export class ConversationSettingsSection extends BaseSettingsSection {
                     })
             );
 
+        // Date Format (only shown if addDatePrefix is enabled)
         if (this.plugin.settings.addDatePrefix) {
             new Setting(containerEl)
                 .setName("Date format")
@@ -54,3 +41,4 @@ export class ConversationSettingsSection extends BaseSettingsSection {
         }
     }
 }
+

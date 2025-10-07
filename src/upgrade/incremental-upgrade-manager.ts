@@ -159,14 +159,14 @@ export class IncrementalUpgradeManager {
             const hasImportedArchives = !!(data?.importedArchives && Object.keys(data.importedArchives).length > 0);
             
             // Check 2: No existing conversations in vault
-            const archiveFolder = this.plugin.settings.archiveFolder;
+            const conversationFolder = this.plugin.settings.conversationFolder;
             const allFiles = this.plugin.app.vault.getMarkdownFiles();
             
             const existingConversations = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
-                
+                if (!file.path.startsWith(conversationFolder)) return false;
+
                 // Exclude Reports and Attachments folders
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') || 
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||

@@ -463,8 +463,8 @@ export class ConversationProcessor {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
 
-        // New structure: <archiveFolder>/<provider>/<year>/<month>/
-        const folderPath = `${this.plugin.settings.archiveFolder}/${providerName}/${year}/${month}`;
+        // New structure: <conversationFolder>/<provider>/<year>/<month>/
+        const folderPath = `${this.plugin.settings.conversationFolder}/${providerName}/${year}/${month}`;
 
         const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
         if (!folderResult.success) {

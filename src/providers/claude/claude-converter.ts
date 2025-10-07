@@ -671,7 +671,7 @@ export class ClaudeConverter {
             );
 
             // Use absolute path from vault root (without .md extension for links)
-            const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
+            const conversationPath = `${this.plugin.settings.conversationFolder}/claude/${year}/${month}/${fileName}`;
             conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
         }
 

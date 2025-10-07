@@ -134,16 +134,16 @@ class CleanMetadataOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
             
-            // Filter files in archive folder but EXCLUDE Reports and Attachments
+            // Filter files in conversation folder but EXCLUDE Reports and Attachments
             const conversationFiles = allFiles.filter(file => {
-                // Must be in archive folder
-                if (!file.path.startsWith(archiveFolder)) return false;
-                
+                // Must be in conversation folder
+                if (!file.path.startsWith(conversationFolder)) return false;
+
                 // EXCLUDE Reports and Attachments folders
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') || 
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -166,15 +166,15 @@ class CleanMetadataOperation extends UpgradeOperation {
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
             console.debug(`[NEXUS-DEBUG] CleanMetadata.execute starting`);
-            
-            const archiveFolder = context.plugin.settings.archiveFolder;
+
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
             
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
-                
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (!file.path.startsWith(conversationFolder)) return false;
+
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') || 
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -371,14 +371,14 @@ class CleanMetadataOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
             
             // Check conversation files (sample verification)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
-                
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                if (!file.path.startsWith(conversationFolder)) return false;
+
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') || 
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||

@@ -109,14 +109,14 @@ export class StorageService {
         await this.waitForCacheClean(1000); // Max 1 second wait
         
         const conversations = new Map<string, ConversationCatalogEntry>();
-        const archiveFolder = this.plugin.settings.archiveFolder;
+        const conversationFolder = this.plugin.settings.conversationFolder;
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
         
         // Filter conversation files (exclude Reports/Attachments)
         const conversationFiles = allFiles.filter(file => {
-            if (!file.path.startsWith(archiveFolder)) return false;
-            
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            if (!file.path.startsWith(conversationFolder)) return false;
+
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith('Reports/') || 
                 relativePath.startsWith('Attachments/') ||
                 relativePath.startsWith('reports/') ||

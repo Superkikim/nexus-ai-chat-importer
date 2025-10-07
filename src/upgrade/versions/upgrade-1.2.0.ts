@@ -14,14 +14,14 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -57,14 +57,14 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] ConvertToCallouts.execute starting`);
 
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -251,14 +251,14 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Check conversation files (sample verification)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -425,8 +425,8 @@ class UpdateReportLinksOperation extends UpgradeOperation {
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
             const reportFolder = context.plugin.settings.reportFolder;
-            const archiveFolder = context.plugin.settings.archiveFolder;
-            const escapedArchive = this.escapeRegExp(archiveFolder);
+            const conversationFolder = context.plugin.settings.conversationFolder;
+            const escapedArchive = this.escapeRegExp(conversationFolder);
 
             let processed = 0;
             let updated = 0;
@@ -454,7 +454,7 @@ class UpdateReportLinksOperation extends UpgradeOperation {
                     return false;
                 });
 
-            // Regex: [[<archiveFolder>/YYYY/MM/ ...]] -> insert chatgpt/
+            // Regex: [[<conversationFolder>/YYYY/MM/ ...]] -> insert chatgpt/
             const linkPattern = new RegExp(`(\\[\\[${escapedArchive}/)(\\d{4}/\\d{2}/)`, 'g');
 
             for (const file of reportFiles) {
@@ -507,10 +507,10 @@ class MoveYearFoldersOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
 
-            // Check if year folders exist directly in archive (not in chatgpt subfolder)
-            const yearFolders = await this.findYearFolders(context, archiveFolder);
+            // Check if year folders exist directly in conversation folder (not in chatgpt subfolder)
+            const yearFolders = await this.findYearFolders(context, conversationFolder);
 
             return yearFolders.length > 0;
         } catch (error) {
@@ -523,21 +523,21 @@ class MoveYearFoldersOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] MoveYearFolders.execute starting`);
 
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
 
             let movedFolders = 0;
             let errors = 0;
 
             // Move <yyyy> folders to chatgpt/<yyyy>
-            const yearFolders = await this.findYearFolders(context, archiveFolder);
+            const yearFolders = await this.findYearFolders(context, conversationFolder);
 
             for (const yearFolder of yearFolders) {
                 try {
-                    const chatgptFolder = `${archiveFolder}/chatgpt`;
+                    const chatgptFolder = `${conversationFolder}/chatgpt`;
                     await context.plugin.app.vault.adapter.mkdir(chatgptFolder);
 
                     const newPath = `${chatgptFolder}/${yearFolder}`;
-                    const oldPath = `${archiveFolder}/${yearFolder}`;
+                    const oldPath = `${conversationFolder}/${yearFolder}`;
 
                     await context.plugin.app.vault.adapter.rename(oldPath, newPath);
                     movedFolders++;
@@ -569,10 +569,10 @@ class MoveYearFoldersOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
 
             // Check that year folders are now in chatgpt structure
-            const remainingYearFolders = await this.findYearFolders(context, archiveFolder);
+            const remainingYearFolders = await this.findYearFolders(context, conversationFolder);
 
             if (remainingYearFolders.length > 0) {
                 console.debug(`[NEXUS-DEBUG] MoveYearFolders.verify: Still ${remainingYearFolders.length} year folders in old structure`);
@@ -587,11 +587,11 @@ class MoveYearFoldersOperation extends UpgradeOperation {
     }
 
     /**
-     * Find year folders (YYYY) directly in archive folder
+     * Find year folders (YYYY) directly in conversation folder
      */
-    private async findYearFolders(context: UpgradeContext, archiveFolder: string): Promise<string[]> {
+    private async findYearFolders(context: UpgradeContext, conversationFolder: string): Promise<string[]> {
         try {
-            const folders = await context.plugin.app.vault.adapter.list(archiveFolder);
+            const folders = await context.plugin.app.vault.adapter.list(conversationFolder);
             return folders.folders.filter(folder => {
                 const folderName = folder.split('/').pop() || '';
                 return /^\d{4}$/.test(folderName) && folderName !== 'chatgpt';

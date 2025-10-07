@@ -2,10 +2,8 @@
 import { App, PluginSettingTab } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { BaseSettingsSection } from "./settings/base-settings-section";
-import { ConversationSettingsSection } from "./settings/conversation-settings-section";
-import { ConversationSelectionSettingsSection } from "./settings/conversation-selection-settings-section";
-import { AttachmentSettingsSection } from "./settings/attachment-settings-section";
-import { MigrationsSettingsSection } from "./settings/migrations-settings-section";
+import { FolderSettingsSection } from "./settings/folder-settings-section";
+import { DisplaySettingsSection } from "./settings/display-settings-section";
 
 export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
     private sections: BaseSettingsSection[] = [];
@@ -17,10 +15,8 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
 
     private initializeSections(): void {
         this.sections = [
-            new ConversationSettingsSection(this.plugin),
-            new ConversationSelectionSettingsSection(this.plugin),
-            new AttachmentSettingsSection(this.plugin),
-            new MigrationsSettingsSection(this.plugin)
+            new FolderSettingsSection(this.plugin),
+            new DisplaySettingsSection(this.plugin)
         ].sort((a, b) => a.order - b.order);
 
         // Set redraw callback for each section
@@ -41,7 +37,7 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
             if (section.title) {
                 containerEl.createEl("h2", { text: section.title });
             }
-            
+
             await section.render(containerEl);
         }
     }
