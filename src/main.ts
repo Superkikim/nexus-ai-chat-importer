@@ -583,7 +583,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
         // This is necessary because the selection result only contains IDs
         try {
             const providerRegistry = createProviderRegistry(this);
-            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
+            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
             const storage = this.getStorageService();
             const existingConversations = await storage.scanExistingConversations();
 
