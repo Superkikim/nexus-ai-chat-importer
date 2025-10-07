@@ -27,8 +27,8 @@ export class ConversationSelectionDialog extends Modal {
         this.plugin = plugin;
         this.analysisInfo = analysisInfo;
 
-        // Get page size from settings or use default
-        const pageSize = plugin?.settings?.conversationPageSize || 20;
+        // Get page size from settings (automatically memorized from last use)
+        const pageSize = plugin?.settings?.lastConversationsPerPage || 50;
 
         // Initialize state
         this.state = {
@@ -217,10 +217,18 @@ export class ConversationSelectionDialog extends Modal {
         });
 
         pageSizeSelect.value = this.state.pagination.pageSize.toString();
-        pageSizeSelect.addEventListener('change', (e) => {
+        pageSizeSelect.addEventListener('change', async (e) => {
             const target = e.target as HTMLSelectElement;
-            this.state.pagination.pageSize = parseInt(target.value);
+            const newPageSize = parseInt(target.value);
+            this.state.pagination.pageSize = newPageSize;
             this.state.pagination.currentPage = 1;
+
+            // Automatically save to settings (memorize user's preference)
+            if (this.plugin) {
+                this.plugin.settings.lastConversationsPerPage = newPageSize;
+                await this.plugin.saveSettings();
+            }
+
             this.updatePagination();
             this.renderConversationList();
         });

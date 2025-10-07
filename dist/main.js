@@ -4801,13 +4801,128 @@ ${frontmatter}
   }
 });
 
+// src/dialogs/upgrade-notice-dialog.ts
+var upgrade_notice_dialog_exports = {};
+__export(upgrade_notice_dialog_exports, {
+  UpgradeNoticeDialog: () => UpgradeNoticeDialog
+});
+var import_obsidian15, UpgradeNoticeDialog;
+var init_upgrade_notice_dialog = __esm({
+  "src/dialogs/upgrade-notice-dialog.ts"() {
+    "use strict";
+    import_obsidian15 = require("obsidian");
+    UpgradeNoticeDialog = class extends import_obsidian15.Modal {
+      constructor(plugin) {
+        super(plugin.app);
+        this.plugin = plugin;
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.createEl("h2", {
+          text: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+          cls: "nexus-upgrade-title"
+        });
+        const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
+        messageContainer.createEl("h3", { text: "\u2728 New: Configurable Folder Locations" });
+        messageContainer.createEl("p", {
+          text: "You can now specify separate folder locations for:"
+        });
+        const folderList = messageContainer.createEl("ul");
+        folderList.createEl("li", { text: "Conversations" });
+        folderList.createEl("li", { text: "Reports" });
+        folderList.createEl("li", { text: "Attachments" });
+        messageContainer.createEl("p", {
+          text: "All folder locations can be changed at any time in the plugin settings."
+        });
+        const infoBox = contentEl.createDiv({ cls: "nexus-upgrade-info" });
+        infoBox.createEl("strong", { text: "\u2139\uFE0F Note:" });
+        infoBox.createEl("p", {
+          text: "Your existing files have NOT been moved. They remain in their current locations. You can manually move them if desired by changing the folder settings."
+        });
+        const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
+        const okButton = buttonContainer.createEl("button", {
+          text: "Got it!",
+          cls: "mod-cta"
+        });
+        okButton.addEventListener("click", () => {
+          this.close();
+        });
+        this.addStyles();
+      }
+      addStyles() {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = `
+            .nexus-upgrade-title {
+                margin-bottom: 1em;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-upgrade-message h3 {
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-message ul {
+                margin-left: 2em;
+                margin-bottom: 1em;
+            }
+
+            .nexus-upgrade-message li {
+                margin-bottom: 0.3em;
+            }
+
+            .nexus-upgrade-info {
+                background-color: var(--background-secondary);
+                border-left: 4px solid var(--interactive-accent);
+                padding: 1em;
+                margin-bottom: 1.5em;
+                border-radius: 4px;
+            }
+
+            .nexus-upgrade-info strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-info p {
+                margin: 0;
+                color: var(--text-muted);
+            }
+
+            .nexus-upgrade-button-container {
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .nexus-upgrade-button-container button {
+                padding: 8px 24px;
+            }
+        `;
+        document.head.appendChild(styleEl);
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+  }
+});
+
 // src/main.ts
 var main_exports = {};
 __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian20 = require("obsidian");
+var import_obsidian21 = require("obsidian");
 
 // src/config/constants.ts
 var DEFAULT_SETTINGS = {
@@ -8952,7 +9067,7 @@ var StorageService = class {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian15 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
@@ -9259,11 +9374,19 @@ var IncrementalUpgradeManager = class {
       const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
       console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);
       await this.markUpgradeComplete(currentVersion);
+      if (currentVersion === "1.3.0" && !this.plugin.settings.hasShownUpgradeNotice) {
+        console.debug(`[NEXUS-DEBUG] Showing v1.3.0 upgrade notice`);
+        const { UpgradeNoticeDialog: UpgradeNoticeDialog2 } = await Promise.resolve().then(() => (init_upgrade_notice_dialog(), upgrade_notice_dialog_exports));
+        const dialog = new UpgradeNoticeDialog2(this.plugin);
+        dialog.open();
+        this.plugin.settings.hasShownUpgradeNotice = true;
+        await this.plugin.saveSettings();
+      }
       return result;
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian15.Notice("Upgrade failed - see console for details");
+      new import_obsidian16.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -9361,7 +9484,7 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian15.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      new import_obsidian16.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -9573,7 +9696,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian15.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian16.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -9690,8 +9813,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian16 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian16.Modal {
+var import_obsidian17 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian17.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -9723,7 +9846,7 @@ var ProviderSelectionDialog = class extends import_obsidian16.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian16.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian17.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -9748,8 +9871,8 @@ var ProviderSelectionDialog = class extends import_obsidian16.Modal {
 };
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian17 = require("obsidian");
-var EnhancedFileSelectionDialog = class extends import_obsidian17.Modal {
+var import_obsidian18 = require("obsidian");
+var EnhancedFileSelectionDialog = class extends import_obsidian18.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -10147,8 +10270,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian17.Modal {
 };
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian18 = require("obsidian");
-var ConversationSelectionDialog = class extends import_obsidian18.Modal {
+var import_obsidian19 = require("obsidian");
+var ConversationSelectionDialog = class extends import_obsidian19.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -10156,7 +10279,7 @@ var ConversationSelectionDialog = class extends import_obsidian18.Modal {
     this.onSelectionComplete = onSelectionComplete;
     this.plugin = plugin;
     this.analysisInfo = analysisInfo;
-    const pageSize = ((_a = plugin == null ? void 0 : plugin.settings) == null ? void 0 : _a.conversationPageSize) || 20;
+    const pageSize = ((_a = plugin == null ? void 0 : plugin.settings) == null ? void 0 : _a.lastConversationsPerPage) || 50;
     this.state = {
       allConversations: conversations,
       filteredConversations: conversations,
@@ -10302,10 +10425,15 @@ var ConversationSelectionDialog = class extends import_obsidian18.Modal {
       optionEl.textContent = size.toString();
     });
     pageSizeSelect.value = this.state.pagination.pageSize.toString();
-    pageSizeSelect.addEventListener("change", (e) => {
+    pageSizeSelect.addEventListener("change", async (e) => {
       const target = e.target;
-      this.state.pagination.pageSize = parseInt(target.value);
+      const newPageSize = parseInt(target.value);
+      this.state.pagination.pageSize = newPageSize;
       this.state.pagination.currentPage = 1;
+      if (this.plugin) {
+        this.plugin.settings.lastConversationsPerPage = newPageSize;
+        await this.plugin.saveSettings();
+      }
       this.updatePagination();
       this.renderConversationList();
     });
@@ -11233,8 +11361,8 @@ var ConversationMetadataExtractor = class {
 };
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian19 = require("obsidian");
-var ImportCompletionDialog = class extends import_obsidian19.Modal {
+var import_obsidian20 = require("obsidian");
+var ImportCompletionDialog = class extends import_obsidian20.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -11421,7 +11549,7 @@ var ImportCompletionDialog = class extends import_obsidian19.Modal {
 };
 
 // src/main.ts
-var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian21.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -11593,7 +11721,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
    */
   async handleImportAll(files, provider) {
     try {
-      new import_obsidian20.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian21.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
       const storage = this.getStorageService();
@@ -11605,7 +11733,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
       );
       const operationReport = new ImportReport();
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian20.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian21.Notice("No new or updated conversations found. All conversations are already up to date.");
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -11613,7 +11741,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
-      new import_obsidian20.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+      new import_obsidian21.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -11637,11 +11765,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian20.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian21.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
       }
     } catch (error) {
       this.logger.error("Error in import all:", error);
-      new import_obsidian20.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian21.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -11649,7 +11777,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
-      new import_obsidian20.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian21.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry);
       const storage = this.getStorageService();
@@ -11660,7 +11788,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian20.Notice("No conversations found in the selected files.");
+        new import_obsidian21.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
@@ -11674,7 +11802,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
       ).open();
     } catch (error) {
       this.logger.error("Error in selective import:", error);
-      new import_obsidian20.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian21.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -11683,14 +11811,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
   async handleConversationSelectionResult(result, files, provider, analysisInfo) {
     const operationReport = new ImportReport();
     if (result.selectedIds.length === 0) {
-      new import_obsidian20.Notice("No conversations selected for import.");
+      new import_obsidian21.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian20.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian21.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
@@ -11706,7 +11834,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian20.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian21.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
     }
   }
   /**
@@ -11729,7 +11857,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian20.Plugin {
     const folderResult = await ensureFolderExists2(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian20.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian21.Notice("Failed to create log file. Check console for details.");
       return "";
     }
     const timestamp = formatTimestamp2(Date.now() / 1e3, "date");
@@ -11776,7 +11904,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       console.error("Full error:", error);
       console.error("Log content length:", logContent.length);
-      new import_obsidian20.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian21.Notice("Failed to create log file. Check console for details.");
       return "";
     }
   }

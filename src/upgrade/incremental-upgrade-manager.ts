@@ -132,6 +132,16 @@ export class IncrementalUpgradeManager {
             console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);
             await this.markUpgradeComplete(currentVersion);
 
+            // Show upgrade notice for v1.3.0 (new folder settings)
+            if (currentVersion === "1.3.0" && !this.plugin.settings.hasShownUpgradeNotice) {
+                console.debug(`[NEXUS-DEBUG] Showing v1.3.0 upgrade notice`);
+                const { UpgradeNoticeDialog } = await import("../dialogs/upgrade-notice-dialog");
+                const dialog = new UpgradeNoticeDialog(this.plugin);
+                dialog.open();
+                this.plugin.settings.hasShownUpgradeNotice = true;
+                await this.plugin.saveSettings();
+            }
+
             return result;
 
         } catch (error) {
