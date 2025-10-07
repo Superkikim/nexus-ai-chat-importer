@@ -104,14 +104,19 @@ export class StorageService {
      */
     async scanExistingConversations(): Promise<Map<string, ConversationCatalogEntry>> {
         const startTime = Date.now();
-        
+
         // Step 1: Wait for cache to be clean (with timeout)
         await this.waitForCacheClean(1000); // Max 1 second wait
-        
+
         const conversations = new Map<string, ConversationCatalogEntry>();
-        const conversationFolder = this.plugin.settings.conversationFolder;
+
+        // Get conversation folder with fallback for backward compatibility
+        const conversationFolder = this.plugin.settings.conversationFolder ||
+                                  this.plugin.settings.archiveFolder ||
+                                  "Nexus/Conversations";
+
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
-        
+
         // Filter conversation files (exclude Reports/Attachments)
         const conversationFiles = allFiles.filter(file => {
             if (!file.path.startsWith(conversationFolder)) return false;

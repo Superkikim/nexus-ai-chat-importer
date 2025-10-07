@@ -9093,7 +9093,7 @@ var StorageService = class {
     const startTime = Date.now();
     await this.waitForCacheClean(1e3);
     const conversations = /* @__PURE__ */ new Map();
-    const conversationFolder = this.plugin.settings.conversationFolder;
+    const conversationFolder = this.plugin.settings.conversationFolder || this.plugin.settings.archiveFolder || "Nexus/Conversations";
     const allFiles = this.plugin.app.vault.getMarkdownFiles();
     const conversationFiles = allFiles.filter((file) => {
       if (!file.path.startsWith(conversationFolder))
