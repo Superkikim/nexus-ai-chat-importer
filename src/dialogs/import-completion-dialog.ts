@@ -73,7 +73,7 @@ export class ImportCompletionDialog extends Modal {
         section.style.gap = "12px";
 
         // Files cartouche
-        this.createStatCartouche(section, "📁", this.stats.totalFiles.toString(), "Files Processed");
+        this.createStatCartouche(section, "📁", this.stats.totalFiles.toString(), "Files with New/Updated Content");
 
         // Total conversations cartouche
         this.createStatCartouche(section, "💬", this.stats.totalConversations.toString(), "Total Conversations");

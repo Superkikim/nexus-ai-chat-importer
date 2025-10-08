@@ -508,8 +508,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             counter++;
         }
 
-        // Generate frontmatter
-        const currentDate = `${formatTimestamp(Date.now() / 1000, "date")} ${formatTimestamp(Date.now() / 1000, "time")}`;
+        // Generate frontmatter with ISO 8601 date format (consistent with conversation frontmatter)
+        const currentDate = new Date().toISOString();
         const stats = report.getCompletionStats();
 
         // Determine which files were processed vs skipped

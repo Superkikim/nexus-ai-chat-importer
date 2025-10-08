@@ -439,8 +439,8 @@ class ReportWriter {
             counter++;
         }
 
-        // Enhanced frontmatter with both dates
-        const currentDate = `${formatTimestamp(Date.now() / 1000, "date")} ${formatTimestamp(Date.now() / 1000, "time")}`;
+        // Enhanced frontmatter with both dates (ISO 8601 format for consistency)
+        const currentDate = new Date().toISOString();
         const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
         
         const logContent = `---

@@ -253,18 +253,21 @@ export class ImportReport {
         if (analysisInfo) {
             summary += `### Analysis\n`;
             summary += `- **Files Analyzed**: ${totalFilesAnalyzed}\n`;
-            summary += `- **Total Conversations Found**: ${analysisInfo.conversationsTotal || 0}\n`;
-            summary += `- **Unique Conversations**: ${analysisInfo.conversationsUnique || 0}\n`;
+            summary += `- **Total Conversations Found**: ${analysisInfo.totalConversationsFound || 0}\n`;
+            summary += `- **Unique Conversations**: ${analysisInfo.uniqueConversationsKept || 0}\n`;
+            if (analysisInfo.duplicatesRemoved > 0) {
+                summary += `- **Duplicates Removed**: ${analysisInfo.duplicatesRemoved}\n`;
+            }
             summary += `- **New**: ${analysisInfo.conversationsNew || 0}\n`;
             summary += `- **Updated**: ${analysisInfo.conversationsUpdated || 0}\n`;
-            summary += `- **Unchanged**: ${analysisInfo.conversationsUnchanged || 0}\n\n`;
+            summary += `- **Unchanged**: ${analysisInfo.conversationsIgnored || 0}\n\n`;
         }
 
         // Import results
         summary += `### Import Results\n`;
-        summary += `- **Files Processed**: ${fileCount}\n`;
+        summary += `- **Files with New/Updated Content**: ${fileCount}\n`;
         if (filesSkipped > 0) {
-            summary += `- **Files Skipped**: ${filesSkipped} (already up to date)\n`;
+            summary += `- **Files with No Changes**: ${filesSkipped} (already up to date)\n`;
         }
         summary += `- **Conversations Imported**: ${stats.created + stats.updated}\n`;
         summary += `- **Created**: ${stats.created} new conversations\n`;

@@ -6304,24 +6304,28 @@ var ImportReport = class {
 `;
       summary += `- **Files Analyzed**: ${totalFilesAnalyzed}
 `;
-      summary += `- **Total Conversations Found**: ${analysisInfo.conversationsTotal || 0}
+      summary += `- **Total Conversations Found**: ${analysisInfo.totalConversationsFound || 0}
 `;
-      summary += `- **Unique Conversations**: ${analysisInfo.conversationsUnique || 0}
+      summary += `- **Unique Conversations**: ${analysisInfo.uniqueConversationsKept || 0}
 `;
+      if (analysisInfo.duplicatesRemoved > 0) {
+        summary += `- **Duplicates Removed**: ${analysisInfo.duplicatesRemoved}
+`;
+      }
       summary += `- **New**: ${analysisInfo.conversationsNew || 0}
 `;
       summary += `- **Updated**: ${analysisInfo.conversationsUpdated || 0}
 `;
-      summary += `- **Unchanged**: ${analysisInfo.conversationsUnchanged || 0}
+      summary += `- **Unchanged**: ${analysisInfo.conversationsIgnored || 0}
 
 `;
     }
     summary += `### Import Results
 `;
-    summary += `- **Files Processed**: ${fileCount}
+    summary += `- **Files with New/Updated Content**: ${fileCount}
 `;
     if (filesSkipped > 0) {
-      summary += `- **Files Skipped**: ${filesSkipped} (already up to date)
+      summary += `- **Files with No Changes**: ${filesSkipped} (already up to date)
 `;
     }
     summary += `- **Conversations Imported**: ${stats.created + stats.updated}
@@ -9676,7 +9680,7 @@ var ReportWriter = class {
       logFilePath = `${reportInfo.folderPath}/${baseName}-${counter} - import report.md`;
       counter++;
     }
-    const currentDate = `${formatTimestamp(Date.now() / 1e3, "date")} ${formatTimestamp(Date.now() / 1e3, "time")}`;
+    const currentDate = new Date().toISOString();
     const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
     const logContent = `---
 importdate: ${currentDate}
@@ -12383,7 +12387,7 @@ var ImportCompletionDialog = class extends import_obsidian23.Modal {
     section.style.display = "grid";
     section.style.gridTemplateColumns = "repeat(3, 1fr)";
     section.style.gap = "12px";
-    this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), "Files Processed");
+    this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), "Files with New/Updated Content");
     this.createStatCartouche(section, "\u{1F4AC}", this.stats.totalConversations.toString(), "Total Conversations");
     this.createStatCartouche(section, "\u2728", this.stats.created.toString(), "New", "var(--color-green)");
     this.createStatCartouche(section, "\u{1F504}", this.stats.updated.toString(), "Updated", "var(--color-orange)");
@@ -12888,7 +12892,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
       logFilePath = `${folderPath}/${datePrefix}-${timeStr}-${counter} - import report.md`;
       counter++;
     }
-    const currentDate = `${formatTimestamp(Date.now() / 1e3, "date")} ${formatTimestamp(Date.now() / 1e3, "time")}`;
+    const currentDate = new Date().toISOString();
     const stats = report.getCompletionStats();
     const processedFiles = [];
     const skippedFiles = [];
