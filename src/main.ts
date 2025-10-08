@@ -495,15 +495,16 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             return "";
         }
 
-        // Generate filename with timestamp
-        const timestamp = formatTimestamp(Date.now() / 1000, "date").replace(/\//g, "-");
-        const timeStr = formatTimestamp(Date.now() / 1000, "time").replace(/:/g, "-");
-        let logFilePath = `${folderPath}/${timestamp} ${timeStr} - import report.md`;
+        // Generate filename with timestamp (YYYYMMDD-HHMMSS format for chronological sorting)
+        const now = Date.now() / 1000;
+        const datePrefix = formatTimestamp(now, "prefix"); // YYYYMMDD
+        const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, ""); // HHMMSS
+        let logFilePath = `${folderPath}/${datePrefix}-${timeStr} - import report.md`;
 
         // Handle duplicates
         let counter = 2;
         while (await this.app.vault.adapter.exists(logFilePath)) {
-            logFilePath = `${folderPath}/${timestamp} ${timeStr}-${counter} - import report.md`;
+            logFilePath = `${folderPath}/${datePrefix}-${timeStr}-${counter} - import report.md`;
             counter++;
         }
 
