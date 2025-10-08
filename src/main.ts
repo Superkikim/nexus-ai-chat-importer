@@ -496,7 +496,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         // Generate filename with timestamp
-        const timestamp = formatTimestamp(Date.now() / 1000, "date");
+        const timestamp = formatTimestamp(Date.now() / 1000, "date").replace(/\//g, "-");
         const timeStr = formatTimestamp(Date.now() / 1000, "time").replace(/:/g, "-");
         let logFilePath = `${folderPath}/${timestamp} ${timeStr} - import report.md`;
 

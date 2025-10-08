@@ -12879,7 +12879,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
       new import_obsidian24.Notice("Failed to create log file. Check console for details.");
       return "";
     }
-    const timestamp = formatTimestamp(Date.now() / 1e3, "date");
+    const timestamp = formatTimestamp(Date.now() / 1e3, "date").replace(/\//g, "-");
     const timeStr = formatTimestamp(Date.now() / 1e3, "time").replace(/:/g, "-");
     let logFilePath = `${folderPath}/${timestamp} ${timeStr} - import report.md`;
     let counter = 2;
