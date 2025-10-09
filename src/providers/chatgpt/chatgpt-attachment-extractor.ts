@@ -278,7 +278,38 @@ export class ChatGPTAttachmentExtractor {
             return zipFile;
         }
 
-        // Strategy 2: Comprehensive search by file ID in entire ZIP
+        // Strategy 2: DALL-E Strategy - Check dalle-generations/ folder first (restored from v1.2.0)
+        if (attachment.fileName.startsWith('dalle_')) {
+            const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
+            if (dalleFiles.length > 0) {
+                this.logger.debug(`Found DALL-E file in dalle-generations/: ${dalleFiles[0].name}`);
+                this.zipFileCache.set(cacheKey, dalleFiles[0]);
+                return dalleFiles[0]; // Return first match
+            }
+        }
+
+        // Strategy 3: Regular file ID patterns (restored from v1.2.0)
+        const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
+        zipFile = zip.file(fileIdPattern);
+        if (zipFile) {
+            this.logger.debug(`Found file by ID pattern match: ${fileIdPattern}`);
+            this.zipFileCache.set(cacheKey, zipFile);
+            return zipFile;
+        }
+
+        // Strategy 4: Pattern file-{ID}.{ext} (restored from v1.2.0)
+        const extension = this.getFileExtension(attachment.fileName);
+        if (extension) {
+            const fileIdExtPattern = `${attachment.fileId}.${extension}`;
+            zipFile = zip.file(fileIdExtPattern);
+            if (zipFile) {
+                this.logger.debug(`Found file by ID extension match: ${fileIdExtPattern}`);
+                this.zipFileCache.set(cacheKey, zipFile);
+                return zipFile;
+            }
+        }
+
+        // Strategy 5: Comprehensive search by file ID in entire ZIP
         const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
 
         // Cache result (even if null)
@@ -327,6 +358,34 @@ export class ChatGPTAttachmentExtractor {
 
         this.logger.debug(`[DALLE-DEBUG] No file found for fileId: ${fileId}`);
         return null;
+    }
+
+    /**
+     * Search specifically in dalle-generations/ folder (restored from v1.2.0)
+     */
+    private async searchDalleGenerations(zip: JSZip, fileId: string): Promise<JSZip.JSZipObject[]> {
+        const matches: JSZip.JSZipObject[] = [];
+
+        for (const [path, file] of Object.entries(zip.files)) {
+            if (!file.dir && path.toLowerCase().includes('dalle')) {
+                // Check various patterns for DALL-E files
+                if (path.includes(fileId) ||
+                    path.includes(fileId.replace('file_', '')) ||
+                    path.includes(fileId.replace('file-', ''))) {
+                    matches.push(file);
+                }
+            }
+        }
+
+        return matches;
+    }
+
+    /**
+     * Get file extension from filename (restored from v1.2.0)
+     */
+    private getFileExtension(fileName: string): string {
+        const lastDot = fileName.lastIndexOf('.');
+        return lastDot === -1 ? '' : fileName.substring(lastDot + 1).toLowerCase();
     }
 
     /**

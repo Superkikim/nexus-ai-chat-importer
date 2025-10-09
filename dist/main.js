@@ -7759,6 +7759,31 @@ var ChatGPTAttachmentExtractor = class {
       this.zipFileCache.set(cacheKey, zipFile);
       return zipFile;
     }
+    if (attachment.fileName.startsWith("dalle_")) {
+      const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
+      if (dalleFiles.length > 0) {
+        this.logger.debug(`Found DALL-E file in dalle-generations/: ${dalleFiles[0].name}`);
+        this.zipFileCache.set(cacheKey, dalleFiles[0]);
+        return dalleFiles[0];
+      }
+    }
+    const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
+    zipFile = zip.file(fileIdPattern);
+    if (zipFile) {
+      this.logger.debug(`Found file by ID pattern match: ${fileIdPattern}`);
+      this.zipFileCache.set(cacheKey, zipFile);
+      return zipFile;
+    }
+    const extension = this.getFileExtension(attachment.fileName);
+    if (extension) {
+      const fileIdExtPattern = `${attachment.fileId}.${extension}`;
+      zipFile = zip.file(fileIdExtPattern);
+      if (zipFile) {
+        this.logger.debug(`Found file by ID extension match: ${fileIdExtPattern}`);
+        this.zipFileCache.set(cacheKey, zipFile);
+        return zipFile;
+      }
+    }
     const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
     this.zipFileCache.set(cacheKey, foundFile);
     return foundFile;
@@ -7789,6 +7814,27 @@ var ChatGPTAttachmentExtractor = class {
     }
     this.logger.debug(`[DALLE-DEBUG] No file found for fileId: ${fileId}`);
     return null;
+  }
+  /**
+   * Search specifically in dalle-generations/ folder (restored from v1.2.0)
+   */
+  async searchDalleGenerations(zip, fileId) {
+    const matches = [];
+    for (const [path, file] of Object.entries(zip.files)) {
+      if (!file.dir && path.toLowerCase().includes("dalle")) {
+        if (path.includes(fileId) || path.includes(fileId.replace("file_", "")) || path.includes(fileId.replace("file-", ""))) {
+          matches.push(file);
+        }
+      }
+    }
+    return matches;
+  }
+  /**
+   * Get file extension from filename (restored from v1.2.0)
+   */
+  getFileExtension(fileName) {
+    const lastDot = fileName.lastIndexOf(".");
+    return lastDot === -1 ? "" : fileName.substring(lastDot + 1).toLowerCase();
   }
   /**
    * Generate local path for ChatGPT attachment using attachmentFolder setting
