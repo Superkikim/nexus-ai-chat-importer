@@ -12,6 +12,18 @@ export interface AttachmentStatus {
 }
 
 /**
+ * Attachment type enumeration for provider-agnostic classification
+ */
+export type AttachmentType =
+    | 'file'              // File uploaded by user
+    | 'generated_image'   // Generated image (DALL-E, Midjourney, etc.)
+    | 'artifact'          // Generated code/document (Claude artifacts, etc.)
+    | 'transcription'     // Audio/video transcription
+    | 'analysis'          // Document/image analysis
+    | 'audio'             // Audio files (voice conversations)
+    | 'link';             // External link
+
+/**
  * Provider-agnostic attachment interface with status tracking
  */
 export interface StandardAttachment {
@@ -22,9 +34,14 @@ export interface StandardAttachment {
     extractedContent?: string; // For processed content (OCR, transcriptions)
     url?: string; // For linked attachments
     fileId?: string; // Provider-specific file ID (for ZIP lookup)
-    
+
     // Attachment processing status
     status?: AttachmentStatus;
+
+    // Provider-agnostic metadata
+    attachmentType?: AttachmentType;
+    generationPrompt?: string; // For generated content (images, artifacts, etc.)
+    providerMetadata?: Record<string, any>; // Provider-specific data
 }
 
 /**
