@@ -22,7 +22,7 @@ export class ChatGPTAttachmentExtractor {
         attachments: StandardAttachment[],
         messageId?: string
     ): Promise<StandardAttachment[]> {
-        if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+        if (attachments.length === 0) {
             return attachments.map(att => ({ ...att, status: { processed: false, found: false } }));
         }
 

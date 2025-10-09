@@ -6961,7 +6961,7 @@ var ConversationProcessor = class {
         let attachmentStats = void 0;
         if (forceUpdate) {
           let standardConversation = await adapter.convertChat(chat);
-          if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+          if (zip && adapter.processMessageAttachments) {
             standardConversation.messages = await adapter.processMessageAttachments(
               standardConversation.messages,
               adapter.getId(chat),
@@ -6984,7 +6984,7 @@ var ConversationProcessor = class {
         }
         if (newMessages.length > 0) {
           let standardMessages = await adapter.convertMessages(newMessages, adapter.getId(chat));
-          if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+          if (zip && adapter.processMessageAttachments) {
             standardMessages = await adapter.processMessageAttachments(
               standardMessages,
               adapter.getId(chat),
@@ -7030,7 +7030,7 @@ var ConversationProcessor = class {
       }
       let standardConversation = await adapter.convertChat(chat);
       let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
-      if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+      if (zip && adapter.processMessageAttachments) {
         standardConversation.messages = await adapter.processMessageAttachments(
           standardConversation.messages,
           adapter.getId(chat),
@@ -7578,7 +7578,7 @@ var ChatGPTAttachmentExtractor = class {
    * - If file missing: create informative note
    */
   async extractAttachments(zip, conversationId, attachments, messageId) {
-    if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+    if (attachments.length === 0) {
       return attachments.map((att) => ({ ...att, status: { processed: false, found: false } }));
     }
     const processedAttachments = [];
@@ -8810,10 +8810,10 @@ var ClaudeAttachmentExtractor = class {
    * This method handles the "files not found" case gracefully
    */
   async extractAttachments(zip, conversationId, attachments) {
-    if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+    if (attachments.length === 0) {
       return attachments.map((att) => ({
         ...att,
-        extractedContent: `File: ${att.fileName} (attachment import disabled)`
+        extractedContent: `File: ${att.fileName} (no attachments to process)`
       }));
     }
     const processedAttachments = [];
@@ -8919,19 +8919,12 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     try {
       const imageData = await zipFile.async("base64");
       const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-      if (this.plugin.settings.importAttachments) {
-        const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
-        return {
-          ...attachment,
-          fileName,
-          extractedContent: `![${attachment.fileName}](${filePath})`
-        };
-      } else {
-        return {
-          ...attachment,
-          extractedContent: `Image: ${attachment.fileName} (not imported - attachment import disabled)`
-        };
-      }
+      const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
+      return {
+        ...attachment,
+        fileName,
+        extractedContent: `![${attachment.fileName}](${filePath})`
+      };
     } catch (error) {
       this.logger.error(`Error processing Claude image ${attachment.fileName}:`, error);
       return {
@@ -8965,21 +8958,14 @@ ${textContent}
    */
   async processBinaryAttachment(zipFile, attachment, conversationId) {
     try {
-      if (this.plugin.settings.importAttachments) {
-        const binaryData = await zipFile.async("base64");
-        const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-        const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
-        return {
-          ...attachment,
-          fileName,
-          extractedContent: `[${attachment.fileName}](${filePath})`
-        };
-      } else {
-        return {
-          ...attachment,
-          extractedContent: `File: ${attachment.fileName} (not imported - attachment import disabled)`
-        };
-      }
+      const binaryData = await zipFile.async("base64");
+      const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
+      const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
+      return {
+        ...attachment,
+        fileName,
+        extractedContent: `[${attachment.fileName}](${filePath})`
+      };
     } catch (error) {
       this.logger.error(`Error processing Claude binary file ${attachment.fileName}:`, error);
       return {

@@ -20,10 +20,10 @@ export class ClaudeAttachmentExtractor {
         conversationId: string,
         attachments: StandardAttachment[]
     ): Promise<StandardAttachment[]> {
-        if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+        if (attachments.length === 0) {
             return attachments.map(att => ({
                 ...att,
-                extractedContent: `File: ${att.fileName} (attachment import disabled)`
+                extractedContent: `File: ${att.fileName} (no attachments to process)`
             }));
         }
 
@@ -156,21 +156,14 @@ export class ClaudeAttachmentExtractor {
             const imageData = await zipFile.async("base64");
             const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
             
-            // Save to vault if enabled
-            if (this.plugin.settings.importAttachments) {
-                const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
+            // Save to vault (always enabled)
+            const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
 
-                return {
-                    ...attachment,
-                    fileName: fileName,
-                    extractedContent: `![${attachment.fileName}](${filePath})`
-                };
-            } else {
-                return {
-                    ...attachment,
-                    extractedContent: `Image: ${attachment.fileName} (not imported - attachment import disabled)`
-                };
-            }
+            return {
+                ...attachment,
+                fileName: fileName,
+                extractedContent: `![${attachment.fileName}](${filePath})`
+            };
         } catch (error) {
             this.logger.error(`Error processing Claude image ${attachment.fileName}:`, error);
             return {
@@ -212,22 +205,15 @@ export class ClaudeAttachmentExtractor {
         conversationId: string
     ): Promise<StandardAttachment> {
         try {
-            if (this.plugin.settings.importAttachments) {
-                const binaryData = await zipFile.async("base64");
-                const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-                const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
+            const binaryData = await zipFile.async("base64");
+            const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
+            const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
 
-                return {
-                    ...attachment,
-                    fileName: fileName,
-                    extractedContent: `[${attachment.fileName}](${filePath})`
-                };
-            } else {
-                return {
-                    ...attachment,
-                    extractedContent: `File: ${attachment.fileName} (not imported - attachment import disabled)`
-                };
-            }
+            return {
+                ...attachment,
+                fileName: fileName,
+                extractedContent: `[${attachment.fileName}](${filePath})`
+            };
         } catch (error) {
             this.logger.error(`Error processing Claude binary file ${attachment.fileName}:`, error);
             return {

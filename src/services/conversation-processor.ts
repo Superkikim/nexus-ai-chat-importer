@@ -282,8 +282,8 @@ export class ConversationProcessor {
                     // Convert entire chat to standard format with attachments
                     let standardConversation = await adapter.convertChat(chat);
 
-                    // Process attachments if ZIP provided and settings enabled
-                    if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+                    // Process attachments if ZIP provided
+                    if (zip && adapter.processMessageAttachments) {
                         standardConversation.messages = await adapter.processMessageAttachments(
                             standardConversation.messages,
                             adapter.getId(chat),
@@ -316,8 +316,8 @@ export class ConversationProcessor {
                     // Convert messages to standard format
                     let standardMessages = await adapter.convertMessages(newMessages, adapter.getId(chat));
 
-                    // Process attachments if ZIP provided and settings enabled
-                    if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+                    // Process attachments if ZIP provided
+                    if (zip && adapter.processMessageAttachments) {
                         standardMessages = await adapter.processMessageAttachments(
                             standardMessages,
                             adapter.getId(chat),
@@ -378,9 +378,9 @@ export class ConversationProcessor {
             // Convert to standard format
             let standardConversation = await adapter.convertChat(chat);
 
-            // Process attachments if ZIP provided and settings enabled
+            // Process attachments if ZIP provided
             let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
-            if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+            if (zip && adapter.processMessageAttachments) {
                 standardConversation.messages = await adapter.processMessageAttachments(
                     standardConversation.messages,
                     adapter.getId(chat),
