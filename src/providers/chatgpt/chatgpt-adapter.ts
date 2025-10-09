@@ -5,6 +5,7 @@ import { StandardConversation, StandardMessage } from "../../types/standard";
 import { ChatGPTConverter } from "./chatgpt-converter";
 import { ChatGPTAttachmentExtractor } from "./chatgpt-attachment-extractor";
 import { ChatGPTReportNamingStrategy } from "./chatgpt-report-naming";
+import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
 import { Chat, ChatMessage } from "./chatgpt-types";
 import { isValidMessage } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
@@ -47,9 +48,7 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
         return ChatGPTConverter.convertChat(chat);
     }
 
-    convertMessages(messages: ChatMessage[], conversationId?: string): StandardMessage[] {
-        return ChatGPTConverter.convertMessages(messages, conversationId);
-    }
+
 
     getProviderName(): string {
         return "chatgpt";
@@ -57,18 +56,34 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
 
     getNewMessages(chat: Chat, existingMessageIds: string[]): ChatMessage[] {
         const newMessages: ChatMessage[] = [];
-        
+
+        // Extract DALL-E prompts using centralized processor
+        const dallePrompts = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
+
         for (const messageObj of Object.values(chat.mapping)) {
             if (messageObj?.id && !existingMessageIds.includes(messageObj.id)) {
                 const message = messageObj.message;
                 if (!message) continue;
 
-                // Apply same filtering logic as in ChatGPTConverter.extractMessagesFromMapping
-                if (message.author?.role === "tool" && this.hasRealDalleImage(message)) {
-                    // Create Assistant (DALL-E) message for real DALL-E generations
-                    const dalleMessage = this.createDalleAssistantMessage(message);
+                // Handle DALL-E tool messages using processor
+                if (message.author?.role === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
+                    const prompt = dallePrompts.get(messageObj.id || "");
+                    const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(message, prompt);
                     if (dalleMessage) {
-                        newMessages.push(dalleMessage);
+                        // Convert StandardMessage back to ChatMessage for compatibility
+                        const chatMessage: ChatMessage = {
+                            id: dalleMessage.id,
+                            author: { role: dalleMessage.role as any },
+                            content: { parts: [dalleMessage.content] },
+                            create_time: dalleMessage.timestamp,
+                            attachments: dalleMessage.attachments?.map(att => ({
+                                file_name: att.fileName,
+                                file_size: att.fileSize,
+                                file_type: att.fileType,
+                                extracted_content: att.extractedContent
+                            }))
+                        };
+                        newMessages.push(chatMessage);
                     }
                 } else if (this.shouldIncludeMessage(message)) {
                     // Regular user/assistant messages with enhanced filtering
@@ -76,7 +91,7 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
                 }
             }
         }
-        
+
         return newMessages;
     }
 
@@ -112,85 +127,7 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
         return this.reportNamingStrategy;
     }
 
-    getProviderName(): string {
-        return "chatgpt";
-    }
 
-    /**
-     * Check if message contains REAL DALL-E image (not user upload)
-     */
-    private hasRealDalleImage(message: any): boolean {
-        if (!message.content?.parts || !Array.isArray(message.content.parts)) {
-            return false;
-        }
-        
-        return message.content.parts.some((part: any) => {
-            if (typeof part !== "object" || part === null) return false;
-            
-            return part.content_type === "image_asset_pointer" && 
-                   part.asset_pointer &&
-                   part.metadata?.dalle && 
-                   part.metadata.dalle !== null;
-        });
-    }
-
-    /**
-     * Create Assistant (DALL-E) message from tool message
-     */
-    private createDalleAssistantMessage(toolMessage: any): ChatMessage | null {
-        if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
-            return null;
-        }
-
-        const attachments: any[] = [];
-        
-        for (const part of toolMessage.content.parts) {
-            if (typeof part === "object" && part !== null) {
-                if (part.content_type === "image_asset_pointer" && 
-                    part.asset_pointer &&
-                    part.metadata?.dalle &&
-                    part.metadata.dalle !== null) {
-                    
-                    // Extract file ID from asset pointer
-                    let fileId = part.asset_pointer;
-                    if (fileId.includes('://')) {
-                        fileId = fileId.split('://')[1];
-                    }
-
-                    // Generate descriptive filename
-                    const genId = part.metadata.dalle.gen_id || 'unknown';
-                    const width = part.width || 1024;
-                    const height = part.height || 1024;
-                    const fileName = `dalle_${genId}_${width}x${height}.png`;
-
-                    const dalleAttachment = {
-                        fileName: fileName,
-                        fileSize: part.size_bytes,
-                        fileType: "image/png",
-                        fileId: fileId,
-                        extractedContent: part.metadata.dalle.prompt
-                    };
-                    
-                    attachments.push(dalleAttachment);
-                }
-            }
-        }
-
-        if (attachments.length === 0) {
-            return null;
-        }
-
-        return {
-            id: toolMessage.id || "",
-            author: { role: "assistant" },
-            content: {
-                parts: ["Image générée par DALL-E"],
-                content_type: "text"
-            },
-            create_time: toolMessage.create_time || 0,
-            attachments: attachments
-        };
-    }
 
     /**
      * Determine if a message should be included - same logic as ChatGPTConverter

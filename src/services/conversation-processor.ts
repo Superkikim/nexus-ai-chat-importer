@@ -311,24 +311,30 @@ export class ConversationProcessor {
                     return;
                 }
 
-                // Normal update logic (existing messages)
+                // Unified update logic - use convertChat for consistency
                 if (newMessages.length > 0) {
-                    // Convert messages to standard format
-                    let standardMessages = await adapter.convertMessages(newMessages, adapter.getId(chat));
+                    // Convert full conversation to get consistent processing
+                    let standardConversation = await adapter.convertChat(chat);
 
-                    // Process attachments if ZIP provided
+                    // Filter only new messages for formatting
+                    const newStandardMessages = standardConversation.messages.filter(msg =>
+                        newMessages.some(newMsg => newMsg.id === msg.id)
+                    );
+
+                    // Process attachments on new messages only
+                    let processedNewMessages = newStandardMessages;
                     if (zip && adapter.processMessageAttachments) {
-                        standardMessages = await adapter.processMessageAttachments(
-                            standardMessages,
+                        processedNewMessages = await adapter.processMessageAttachments(
+                            newStandardMessages,
                             adapter.getId(chat),
                             zip
                         );
                     }
 
                     // Always calculate attachment stats (even if not processed)
-                    attachmentStats = this.calculateAttachmentStats(standardMessages);
+                    attachmentStats = this.calculateAttachmentStats(processedNewMessages);
 
-                    content += "\n\n" + this.messageFormatter.formatMessages(standardMessages);
+                    content += "\n\n" + this.messageFormatter.formatMessages(processedNewMessages);
                     this.counters.totalConversationsActuallyUpdated++;
                     this.counters.totalNonEmptyMessagesAdded += newMessages.length;
                 }

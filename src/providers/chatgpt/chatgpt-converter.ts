@@ -1,6 +1,6 @@
 // src/providers/chatgpt/chatgpt-converter.ts
 import { Chat, ChatMessage } from "./chatgpt-types";
-import { StandardConversation, StandardMessage } from "../../types/standard";
+import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
 import { isValidMessage } from "../../utils";
 
 export class ChatGPTConverter {
@@ -30,14 +30,7 @@ export class ChatGPTConverter {
         };
     }
 
-    /**
-     * Convert array of ChatGPT ChatMessages to StandardMessages
-     */
-    static convertMessages(chatMessages: ChatMessage[], conversationId?: string): StandardMessage[] {
-        return chatMessages
-            .filter(msg => isValidMessage(msg))
-            .map(msg => this.convertMessage(msg, conversationId));
-    }
+
 
     /**
      * Convert single ChatGPT ChatMessage to StandardMessage
