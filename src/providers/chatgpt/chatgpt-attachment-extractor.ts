@@ -288,19 +288,44 @@ export class ChatGPTAttachmentExtractor {
     }
 
     /**
-     * Search entire ZIP for file by exact ID
+     * Search entire ZIP for file by exact ID with enhanced DALL-E support
      */
     private async searchZipByFileId(zip: JSZip, fileId: string): Promise<JSZip.JSZipObject | null> {
+        this.logger.debug(`[DALLE-DEBUG] Searching ZIP for fileId: ${fileId}`);
+
+        // List all files for debugging
+        const allFiles = Object.keys(zip.files).filter(path => !zip.files[path].dir);
+        this.logger.debug(`[DALLE-DEBUG] ZIP contains ${allFiles.length} files:`);
+        allFiles.slice(0, 10).forEach(path => this.logger.debug(`[DALLE-DEBUG]   - ${path}`));
+        if (allFiles.length > 10) {
+            this.logger.debug(`[DALLE-DEBUG]   ... and ${allFiles.length - 10} more files`);
+        }
+
         // Search through all files in ZIP for exact match
         for (const [path, file] of Object.entries(zip.files)) {
             if (file.dir) continue;
-            
-            // Check if path contains the exact file ID
+
+            // Strategy 1: Check if path contains the exact file ID
             if (path.includes(fileId)) {
+                this.logger.debug(`[DALLE-DEBUG] Found file by exact fileId match: ${path}`);
+                return file;
+            }
+
+            // Strategy 2: For DALL-E files, also check common patterns
+            // DALL-E files might be stored as:
+            // - dalle/file-{fileId}.png
+            // - images/{fileId}.dat
+            // - attachments/{fileId}
+            const fileName = path.split('/').pop() || '';
+            if (fileName.includes(fileId) ||
+                fileName.startsWith(`file-${fileId}`) ||
+                fileName.startsWith(fileId)) {
+                this.logger.debug(`[DALLE-DEBUG] Found file by filename pattern match: ${path}`);
                 return file;
             }
         }
-        
+
+        this.logger.debug(`[DALLE-DEBUG] No file found for fileId: ${fileId}`);
         return null;
     }
 

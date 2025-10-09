@@ -7764,16 +7764,30 @@ var ChatGPTAttachmentExtractor = class {
     return foundFile;
   }
   /**
-   * Search entire ZIP for file by exact ID
+   * Search entire ZIP for file by exact ID with enhanced DALL-E support
    */
   async searchZipByFileId(zip, fileId) {
+    this.logger.debug(`[DALLE-DEBUG] Searching ZIP for fileId: ${fileId}`);
+    const allFiles = Object.keys(zip.files).filter((path) => !zip.files[path].dir);
+    this.logger.debug(`[DALLE-DEBUG] ZIP contains ${allFiles.length} files:`);
+    allFiles.slice(0, 10).forEach((path) => this.logger.debug(`[DALLE-DEBUG]   - ${path}`));
+    if (allFiles.length > 10) {
+      this.logger.debug(`[DALLE-DEBUG]   ... and ${allFiles.length - 10} more files`);
+    }
     for (const [path, file] of Object.entries(zip.files)) {
       if (file.dir)
         continue;
       if (path.includes(fileId)) {
+        this.logger.debug(`[DALLE-DEBUG] Found file by exact fileId match: ${path}`);
+        return file;
+      }
+      const fileName = path.split("/").pop() || "";
+      if (fileName.includes(fileId) || fileName.startsWith(`file-${fileId}`) || fileName.startsWith(fileId)) {
+        this.logger.debug(`[DALLE-DEBUG] Found file by filename pattern match: ${path}`);
         return file;
       }
     }
+    this.logger.debug(`[DALLE-DEBUG] No file found for fileId: ${fileId}`);
     return null;
   }
   /**
