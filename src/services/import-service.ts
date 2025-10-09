@@ -453,7 +453,7 @@ totalUpdatedImports: ${report.getUpdatedCount()}
 totalSkippedImports: ${report.getSkippedCount()}
 ---
 
-${report.generateReportContent()}
+${report.generateReportContent(undefined, undefined, undefined, undefined, false)}
 `;
 
         try {

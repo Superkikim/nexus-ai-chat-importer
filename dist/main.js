@@ -6243,11 +6243,11 @@ var ImportReport = class {
   addError(message, details) {
     this.globalErrors.push({ message, details });
   }
-  generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo) {
+  generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) {
     let content = "# Nexus AI Chat Importer Report\n\n";
     content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo) + "\n\n";
     if (skippedFiles && skippedFiles.length > 0) {
-      content += this.generateSkippedFilesSection(skippedFiles) + "\n\n";
+      content += this.generateSkippedFilesSection(skippedFiles, isSelectiveImport) + "\n\n";
     }
     const fileNames = Array.from(this.fileSections.keys());
     if (fileNames.length === 0) {
@@ -6279,9 +6279,17 @@ var ImportReport = class {
     }
     return content;
   }
-  generateSkippedFilesSection(skippedFiles) {
-    let section = "## Skipped Files (Already Up to Date)\n\n";
-    section += "The following files were analyzed but not processed because all their conversations are already up to date:\n\n";
+  generateSkippedFilesSection(skippedFiles, isSelectiveImport) {
+    let section;
+    let explanation;
+    if (isSelectiveImport) {
+      section = "## Skipped Files (No Selected Conversations)\n\n";
+      explanation = "The following files were not processed because they contain no selected conversations:\n\n";
+    } else {
+      section = "## Skipped Files (Already Up to Date)\n\n";
+      explanation = "The following files were analyzed but not processed because all their conversations are already up to date:\n\n";
+    }
+    section += explanation;
     skippedFiles.forEach((fileName) => {
       section += `- ${fileName}
 `;
@@ -7949,9 +7957,17 @@ var ChatGPTReportNamingStrategy = class {
         let attachmentCount = 0;
         if (chat.mapping) {
           Object.values(chat.mapping).forEach((node) => {
-            var _a, _b;
+            var _a, _b, _c, _d;
             if ((_b = (_a = node.message) == null ? void 0 : _a.metadata) == null ? void 0 : _b.attachments) {
               attachmentCount += node.message.metadata.attachments.length;
+            }
+            if ((_d = (_c = node.message) == null ? void 0 : _c.content) == null ? void 0 : _d.parts) {
+              node.message.content.parts.forEach((part) => {
+                var _a2;
+                if (part.content_type === "image_asset_pointer" && part.asset_pointer && ((_a2 = part.metadata) == null ? void 0 : _a2.dalle) && part.metadata.dalle !== null) {
+                  attachmentCount++;
+                }
+              });
             }
           });
         }
@@ -9738,7 +9754,7 @@ totalUpdatedImports: ${report.getUpdatedCount()}
 totalSkippedImports: ${report.getSkippedCount()}
 ---
 
-${report.generateReportContent()}
+${report.generateReportContent(void 0, void 0, void 0, void 0, false)}
 `;
     try {
       await this.plugin.app.vault.create(logFilePath, logContent);
@@ -12785,7 +12801,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
         this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
         new import_obsidian24.Notice("No new or updated conversations found. All conversations are already up to date.");
         this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
-        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
+        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, false);
         this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath2}`);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -12813,7 +12829,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
           }
         }
       }
-      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
+      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, false);
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
@@ -12875,7 +12891,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
     const operationReport = new ImportReport();
     if (result.selectedIds.length === 0) {
       new import_obsidian24.Notice("No conversations selected for import.");
-      const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
+      const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, true);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
@@ -12893,7 +12909,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
         }
       }
     }
-    const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
+    const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, true);
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
@@ -12903,7 +12919,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
   /**
    * Write consolidated report for multi-file import
    */
-  async writeConsolidatedReport(report, provider, files, analysisInfo) {
+  async writeConsolidatedReport(report, provider, files, analysisInfo, isSelectiveImport) {
     this.logger.debug("[WRITE-REPORT] Starting writeConsolidatedReport");
     this.logger.debug(`[WRITE-REPORT] Provider: ${provider}, Files: ${files.length}`);
     this.logger.debug("[WRITE-REPORT] Using static imports for ensureFolderExists and formatTimestamp");
@@ -12963,7 +12979,7 @@ totalSkipped: ${stats.skipped}
 totalFailed: ${stats.failed}
 ---
 
-${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo)}
+${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo, isSelectiveImport)}
 `;
     try {
       this.logger.info(`Creating report file at: ${logFilePath}`);

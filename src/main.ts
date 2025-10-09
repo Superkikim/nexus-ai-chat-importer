@@ -287,7 +287,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
                 // Write report showing what was analyzed
                 this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
-                const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
+                const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, false);
                 this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath}`);
 
                 // Show completion dialog with 0 imports
@@ -327,7 +327,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             }
 
             // Write the consolidated report (always, even if some files failed)
-            const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo);
+            const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, false);
 
             // Show completion dialog
             if (reportPath) {
@@ -414,7 +414,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             new Notice("No conversations selected for import.");
 
             // Still write report and show dialog
-            const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
+            const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, true);
             if (reportPath) {
                 this.showImportCompletionDialog(operationReport, reportPath);
             }
@@ -440,7 +440,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         // Write the consolidated report (always, even if some files failed)
-        const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo);
+        const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, true);
 
         // Show completion dialog
         if (reportPath) {
@@ -458,7 +458,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         report: ImportReport,
         provider: string,
         files: File[],
-        analysisInfo?: any
+        analysisInfo?: any,
+        isSelectiveImport?: boolean
     ): Promise<string> {
         this.logger.debug("[WRITE-REPORT] Starting writeConsolidatedReport");
         this.logger.debug(`[WRITE-REPORT] Provider: ${provider}, Files: ${files.length}`);
@@ -541,7 +542,7 @@ totalSkipped: ${stats.skipped}
 totalFailed: ${stats.failed}
 ---
 
-${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo)}
+${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo, isSelectiveImport)}
 `;
 
         try {

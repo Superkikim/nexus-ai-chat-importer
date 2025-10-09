@@ -175,7 +175,8 @@ export class ImportReport {
         allFiles?: File[],
         processedFiles?: string[],
         skippedFiles?: string[],
-        analysisInfo?: any
+        analysisInfo?: any,
+        isSelectiveImport?: boolean
     ): string {
         let content = "# Nexus AI Chat Importer Report\n\n";
 
@@ -184,7 +185,7 @@ export class ImportReport {
 
         // Show skipped files section if any
         if (skippedFiles && skippedFiles.length > 0) {
-            content += this.generateSkippedFilesSection(skippedFiles) + "\n\n";
+            content += this.generateSkippedFilesSection(skippedFiles, isSelectiveImport) + "\n\n";
         }
 
         // Generate section for each file
@@ -222,9 +223,19 @@ export class ImportReport {
         return content;
     }
 
-    private generateSkippedFilesSection(skippedFiles: string[]): string {
-        let section = "## Skipped Files (Already Up to Date)\n\n";
-        section += "The following files were analyzed but not processed because all their conversations are already up to date:\n\n";
+    private generateSkippedFilesSection(skippedFiles: string[], isSelectiveImport?: boolean): string {
+        let section: string;
+        let explanation: string;
+
+        if (isSelectiveImport) {
+            section = "## Skipped Files (No Selected Conversations)\n\n";
+            explanation = "The following files were not processed because they contain no selected conversations:\n\n";
+        } else {
+            section = "## Skipped Files (Already Up to Date)\n\n";
+            explanation = "The following files were analyzed but not processed because all their conversations are already up to date:\n\n";
+        }
+
+        section += explanation;
         skippedFiles.forEach(fileName => {
             section += `- ${fileName}\n`;
         });

@@ -50,8 +50,21 @@ export class ChatGPTReportNamingStrategy implements ReportNamingStrategy {
                 let attachmentCount = 0;
                 if (chat.mapping) {
                     Object.values(chat.mapping).forEach((node: any) => {
+                        // Count regular attachments (user uploads)
                         if (node.message?.metadata?.attachments) {
                             attachmentCount += node.message.metadata.attachments.length;
+                        }
+
+                        // Count DALL-E images (generated images)
+                        if (node.message?.content?.parts) {
+                            node.message.content.parts.forEach((part: any) => {
+                                if (part.content_type === "image_asset_pointer" &&
+                                    part.asset_pointer &&
+                                    part.metadata?.dalle &&
+                                    part.metadata.dalle !== null) {
+                                    attachmentCount++;
+                                }
+                            });
                         }
                     });
                 }
