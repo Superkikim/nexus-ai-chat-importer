@@ -1,6 +1,7 @@
 // src/providers/chatgpt/chatgpt-converter.ts
 import { Chat, ChatMessage } from "./chatgpt-types";
 import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
+import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
 import { isValidMessage } from "../../utils";
 
 export class ChatGPTConverter {
@@ -52,44 +53,20 @@ export class ChatGPTConverter {
      */
     private static extractMessagesFromMapping(chat: Chat): StandardMessage[] {
         const messages: StandardMessage[] = [];
-        const dallePrompts = new Map<string, string>(); // Map tool message ID to prompt
         const conversationId = chat.id; // Pass conversation ID for smart linking
-        
-        // SINGLE PASS: Extract prompts and process messages in one go
-        const mappingValues = Object.values(chat.mapping); // Cache the values array
 
-        // First pass: Extract DALL-E prompts (quick scan)
-        for (const messageObj of mappingValues) {
-            const message = messageObj?.message;
-            if (!message || message.author?.role !== "assistant") continue;
+        // Extract DALL-E prompts using centralized processor
+        const dallePrompts = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
 
-            // Check if this is a DALL-E JSON prompt message
-            if (this.isDallePromptMessage(message)) {
-                const prompt = this.extractPromptFromJson(message);
-                if (prompt) {
-                    // Find the corresponding tool message (usually the next child)
-                    const children = messageObj.children || [];
-                    for (const childId of children) {
-                        const childObj = chat.mapping[childId];
-                        if (childObj?.message?.author?.role === "tool" &&
-                            this.hasRealDalleImage(childObj.message)) {
-                            dallePrompts.set(childId, prompt);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Second pass: Process all messages (reuse cached array)
-        for (const messageObj of mappingValues) {
+        // Process all messages
+        for (const messageObj of Object.values(chat.mapping)) {
             const message = messageObj?.message;
             if (!message) continue;
 
-            // Handle DALL-E tool messages with associated prompts
-            if (message.author?.role === "tool" && this.hasRealDalleImage(message)) {
+            // Handle DALL-E tool messages using processor
+            if (message.author?.role === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
                 const prompt = dallePrompts.get(messageObj.id || "");
-                const dalleMessage = this.createDalleAssistantMessage(message, prompt);
+                const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(message, prompt);
                 if (dalleMessage) {
                     messages.push(dalleMessage);
                 }
@@ -116,39 +93,7 @@ export class ChatGPTConverter {
         });
     }
 
-    /**
-     * Check if message is a DALL-E JSON prompt message
-     */
-    private static isDallePromptMessage(message: ChatMessage): boolean {
-        if (message.author?.role !== "assistant") return false;
-        
-        if (message.content?.parts && 
-            Array.isArray(message.content.parts) &&
-            message.content.parts.length === 1 &&
-            typeof message.content.parts[0] === "string") {
-            
-            const content = message.content.parts[0].trim();
-            return content.startsWith('{') && content.includes('"prompt"');
-        }
-        
-        return false;
-    }
 
-    /**
-     * Extract prompt from DALL-E JSON message
-     */
-    private static extractPromptFromJson(message: ChatMessage): string | null {
-        try {
-            if (message.content?.parts && message.content.parts[0]) {
-                const jsonStr = message.content.parts[0] as string;
-                const parsed = JSON.parse(jsonStr);
-                return parsed.prompt || null;
-            }
-        } catch (error) {
-            // Invalid JSON, ignore
-        }
-        return null;
-    }
 
     /**
      * Determine if a message should be included in the conversation - ENHANCED VERSION
@@ -199,7 +144,7 @@ export class ChatGPTConverter {
             }
             
             // Skip DALL-E JSON prompt messages (handled separately)
-            if (this.isDallePromptMessage(message)) {
+            if (ChatGPTDalleProcessor.isDallePromptMessage(message)) {
                 return false;
             }
             
@@ -258,81 +203,7 @@ export class ChatGPTConverter {
         return isValidMessage(message);
     }
 
-    /**
-     * Check if message contains REAL DALL-E image (not user upload)
-     */
-    private static hasRealDalleImage(message: ChatMessage): boolean {
-        if (!message.content?.parts || !Array.isArray(message.content.parts)) {
-            return false;
-        }
-        
-        return message.content.parts.some(part => {
-            if (typeof part !== "object" || part === null) return false;
-            
-            const contentPart = part as any;
-            return contentPart.content_type === "image_asset_pointer" && 
-                   contentPart.asset_pointer &&
-                   contentPart.metadata?.dalle && 
-                   contentPart.metadata.dalle !== null; // REAL DALL-E check
-        });
-    }
 
-    /**
-     * Create Assistant (DALL-E) message from tool message with associated prompt
-     */
-    private static createDalleAssistantMessage(toolMessage: ChatMessage, associatedPrompt?: string): StandardMessage | null {
-        if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
-            return null;
-        }
-
-        const attachments: any[] = [];
-        
-        for (const part of toolMessage.content.parts) {
-            if (typeof part === "object" && part !== null) {
-                const contentPart = part as any;
-                if (contentPart.content_type === "image_asset_pointer" && 
-                    contentPart.asset_pointer &&
-                    contentPart.metadata?.dalle &&
-                    contentPart.metadata.dalle !== null) {
-                    
-                    // Extract file ID from asset pointer
-                    let fileId = contentPart.asset_pointer;
-                    if (fileId.includes('://')) {
-                        fileId = fileId.split('://')[1];
-                    }
-
-                    // Generate descriptive filename
-                    const genId = contentPart.metadata.dalle.gen_id || 'unknown';
-                    const width = contentPart.width || 1024;
-                    const height = contentPart.height || 1024;
-                    const fileName = `dalle_${genId}_${width}x${height}.png`;
-
-                    const dalleAttachment = {
-                        fileName: fileName,
-                        fileSize: contentPart.size_bytes,
-                        fileType: "image/png",
-                        fileId: fileId,
-                        // Use associated prompt from JSON message, fallback to metadata
-                        extractedContent: associatedPrompt || contentPart.metadata.dalle.prompt
-                    };
-                    
-                    attachments.push(dalleAttachment);
-                }
-            }
-        }
-
-        if (attachments.length === 0) {
-            return null;
-        }
-
-        return {
-            id: toolMessage.id || "",
-            role: "assistant",
-            content: "Image générée par DALL-E",
-            timestamp: toolMessage.create_time || 0,
-            attachments: attachments
-        };
-    }
 
     /**
      * Extract content and attachments from ChatGPT message parts
