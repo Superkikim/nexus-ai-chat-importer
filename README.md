@@ -19,6 +19,7 @@
 - [🔄 Reimporting & Updates](#-reimporting--updates)
 - [⚠️ Important Notes](#️-important-notes)
 - [🐛 Troubleshooting](#-troubleshooting)
+- [🚀 Future Plans](#-future-plans)
 - [📝 License](#-license)
 - [🙏 Credits](#-credits)
 - [🔗 Links](#-links)
@@ -196,6 +197,53 @@ Each conversation is saved as a Markdown file with:
 - **Header**: Title with link to original web conversation
 - **Messages**: Formatted with custom callouts (user, assistant, attachments, artifacts)
 - **Timestamps**: ISO 8601 format for international compatibility
+
+### Note Structure Details
+
+**Frontmatter Fields**:
+```yaml
+---
+conversation_id: "abc123..."          # Unique identifier
+provider: "chatgpt"                   # chatgpt or claude
+title: "Conversation Title"           # Original conversation title
+create_time: "2024-01-15T14:30:22Z"  # ISO 8601 creation timestamp
+update_time: "2024-01-15T16:45:10Z"  # ISO 8601 last update timestamp
+message_count: 42                     # Total number of messages
+aliases:                              # Alternative titles for linking
+  - "Conversation Title"
+---
+```
+
+**Date Format Choice - ISO 8601**:
+
+We use **ISO 8601** format (`YYYY-MM-DDTHH:MM:SSZ`) for all timestamps because:
+
+- ✅ **Universal**: Works with all locales and languages
+- ✅ **Sortable**: Alphabetical sort = chronological sort
+- ✅ **Unambiguous**: No confusion between MM/DD vs DD/MM
+- ✅ **Standard**: Recognized by all programming languages and tools
+- ✅ **Dataview Compatible**: Perfect for queries and filtering
+- ✅ **Future-Proof**: International standard that won't change
+
+**Example**: `2024-01-15T14:30:22Z` is always January 15, 2024 at 14:30:22 UTC, regardless of your locale.
+
+**Message Structure**:
+
+Each message in the conversation follows this pattern:
+
+```markdown
+> [!nexus_user]
+> **User** - 2024-01-15 14:30:22
+>
+> Message content here...
+
+> [!nexus_assistant]
+> **Assistant** - 2024-01-15 14:31:05
+>
+> Response content here...
+```
+
+Attachments and artifacts use similar callout structures with their specific types.
 
 ### Import Reports
 
@@ -499,6 +547,37 @@ If you encounter issues:
    - Provider (ChatGPT/Claude)
    - Description of the problem
    - Steps to reproduce
+
+## 🚀 Future Plans
+
+We're constantly working to improve the plugin. Here's what's planned for future releases:
+
+### Upcoming Features
+
+**🤖 New Provider Support**:
+- **Mistral Le Chat**: Full integration for Mistral AI conversations
+- **Other Providers**: We'll add support for any AI provider that offers exportable conversation data
+
+**🌍 Localization**:
+- **Multi-language UI**: Plugin interface translated into multiple languages
+- **Date Format Options**: Choose your preferred date format (ISO 8601, US, European, etc.)
+- **Locale-Aware Formatting**: Respect your system locale settings
+
+**🎙️ Audio Support**:
+- **Voice Conversations**: Optional import of audio files from ChatGPT voice conversations
+- **Audio Embedding**: Link audio files directly in conversation notes
+- **Transcript Integration**: Combine audio with text transcripts
+
+### How You Can Help
+
+- 💡 **Suggest Features**: Open an issue on GitHub with your ideas
+- 🐛 **Report Bugs**: Help us improve by reporting issues
+- ☕ **Support Development**: [Buy me a coffee](https://ko-fi.com/nexusplugins) to speed up development
+- ⭐ **Star the Repo**: Show your support on GitHub
+
+Your feedback and support directly influence what features get prioritized!
+
+---
 
 ## 📝 License
 
