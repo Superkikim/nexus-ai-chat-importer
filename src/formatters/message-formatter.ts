@@ -50,7 +50,7 @@ export class MessageFormatter {
 
         // Format attachments if any
         if (message.attachments && message.attachments.length > 0) {
-            messageContent += "\n\n" + this.formatAttachments(message.attachments);
+            messageContent += "\n" + this.formatAttachments(message.attachments);
         }
 
         // Add UID for update tracking

@@ -6612,7 +6612,7 @@ var _MessageFormatter = class {
       messageContent += `> [No content found]`;
     }
     if (message.attachments && message.attachments.length > 0) {
-      messageContent += "\n\n" + this.formatAttachments(message.attachments);
+      messageContent += "\n" + this.formatAttachments(message.attachments);
     }
     messageContent += `
 <!-- UID: ${message.id} -->`;
