@@ -75,7 +75,7 @@ export const MESSAGE_TIMESTAMP_FORMATS: Record<MessageTimestampFormat, {
         separator: ' at '
     },
     iso: {
-        label: 'YYYY-MM-DD HH:mm:ss (ISO 8601-like)',
+        label: 'YYYY-MM-DD HH:mm:ss (Universal)',
         description: 'YYYY-MM-DD HH:mm:ss - Sortable, unambiguous',
         dateFormat: 'YYYY-MM-DD',
         timeFormat: 'HH:mm:ss',
@@ -89,8 +89,8 @@ export const MESSAGE_TIMESTAMP_FORMATS: Record<MessageTimestampFormat, {
         separator: ' at '
     },
     eu: {
-        label: 'European Format',
-        description: 'DD/MM/YYYY HH:mm:ss (24-hour)',
+        label: 'DD/MM/YYYY HH:mm:ss (Europe)',
+        description: 'DD/MM/YYYY HH:mm:ss',
         dateFormat: 'DD/MM/YYYY',
         timeFormat: 'HH:mm:ss',
         separator: ' at '
