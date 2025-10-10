@@ -6317,16 +6317,39 @@ var ImportReport = class {
     let summary = `## \u{1F4CA} Import Summary
 
 `;
+    if (allFiles && allFiles.length > 0) {
+      summary += `### \u{1F4E6} Files Analyzed
+
+`;
+      summary += `| File | Status | Conversations | Imported |
+`;
+      summary += `|:---|:---:|---:|---:|
+`;
+      const processedFileNames = Array.from(this.fileSections.keys());
+      processedFileNames.forEach((fileName) => {
+        const section = this.fileSections.get(fileName);
+        const totalImported = section.created.length + section.updated.length;
+        const totalInFile = section.counters.totalConversationsProcessed;
+        summary += `| \`${fileName}\` | \u2705 Processed | ${totalInFile} | ${totalImported} |
+`;
+      });
+      if (skippedFiles && skippedFiles.length > 0) {
+        skippedFiles.forEach((fileName) => {
+          summary += `| \`${fileName}\` | \u23ED\uFE0F Skipped | - | 0 |
+`;
+        });
+      }
+      summary += `
+`;
+    }
     if (analysisInfo && !isSelectiveImport) {
-      summary += `> [!info]- \u{1F50D} Analysis Details
+      summary += `> [!info]- \u{1F50D} Global Statistics
 `;
       summary += `> 
 `;
       summary += `> | Metric | Count |
 `;
       summary += `> |:---|---:|
-`;
-      summary += `> | Files Analyzed | ${totalFilesAnalyzed} |
 `;
       summary += `> | Total Conversations Found | ${analysisInfo.totalConversationsFound || 0} |
 `;
@@ -6345,27 +6368,27 @@ var ImportReport = class {
       summary += `
 `;
     }
-    summary += `### \u{1F4E5} Import Results
+    summary += `### \u{1F4E5} Import Summary
 
 `;
     summary += `| Category | Count |
 `;
     summary += `|:---|---:|
 `;
-    summary += `| Files Processed | ${fileCount} |
-`;
-    if (filesSkipped > 0) {
-      summary += `| Files Skipped (up to date) | ${filesSkipped} |
-`;
-    }
     summary += `| **Total Imported** | **${stats.created + stats.updated}** |
 `;
     summary += `| \u2728 Created | ${stats.created} |
 `;
-    summary += `| \u{1F504} Updated | ${stats.updated} (${stats.newMessages} new messages) |
+    summary += `| \u{1F504} Updated | ${stats.updated}`;
+    if (stats.newMessages > 0) {
+      summary += ` (${stats.newMessages} new messages)`;
+    }
+    summary += ` |
 `;
-    summary += `| \u23ED\uFE0F Skipped | ${stats.skipped} |
+    if (stats.skipped > 0) {
+      summary += `| \u23ED\uFE0F Skipped (unchanged) | ${stats.skipped} |
 `;
+    }
     if (stats.failed > 0) {
       summary += `| \u274C Failed | ${stats.failed} |
 `;

@@ -264,14 +264,37 @@ export class ImportReport {
 
         let summary = `## 📊 Import Summary\n\n`;
 
-        // Analysis callout - only show if NOT selective import or if no conversations were selected
-        // For selective imports, the analysis stats are misleading (show all conversations, not just selected)
+        // Files analyzed table - show all files with their status
+        if (allFiles && allFiles.length > 0) {
+            summary += `### 📦 Files Analyzed\n\n`;
+            summary += `| File | Status | Conversations | Imported |\n`;
+            summary += `|:---|:---:|---:|---:|\n`;
+
+            // Processed files
+            const processedFileNames = Array.from(this.fileSections.keys());
+            processedFileNames.forEach(fileName => {
+                const section = this.fileSections.get(fileName)!;
+                const totalImported = section.created.length + section.updated.length;
+                const totalInFile = section.counters.totalConversationsProcessed;
+                summary += `| \`${fileName}\` | ✅ Processed | ${totalInFile} | ${totalImported} |\n`;
+            });
+
+            // Skipped files
+            if (skippedFiles && skippedFiles.length > 0) {
+                skippedFiles.forEach(fileName => {
+                    summary += `| \`${fileName}\` | ⏭️ Skipped | - | 0 |\n`;
+                });
+            }
+
+            summary += `\n`;
+        }
+
+        // Global stats callout - only show if NOT selective import
         if (analysisInfo && !isSelectiveImport) {
-            summary += `> [!info]- 🔍 Analysis Details\n`;
+            summary += `> [!info]- 🔍 Global Statistics\n`;
             summary += `> \n`;
             summary += `> | Metric | Count |\n`;
             summary += `> |:---|---:|\n`;
-            summary += `> | Files Analyzed | ${totalFilesAnalyzed} |\n`;
             summary += `> | Total Conversations Found | ${analysisInfo.totalConversationsFound || 0} |\n`;
             summary += `> | Unique Conversations | ${analysisInfo.uniqueConversationsKept || 0} |\n`;
             if (analysisInfo.duplicatesRemoved > 0) {
@@ -283,19 +306,21 @@ export class ImportReport {
             summary += `\n`;
         }
 
-        // Import results in a clean grid
-        summary += `### 📥 Import Results\n\n`;
+        // Import results summary
+        summary += `### 📥 Import Summary\n\n`;
         summary += `| Category | Count |\n`;
         summary += `|:---|---:|\n`;
-        summary += `| Files Processed | ${fileCount} |\n`;
-        if (filesSkipped > 0) {
-            summary += `| Files Skipped (up to date) | ${filesSkipped} |\n`;
-        }
         summary += `| **Total Imported** | **${stats.created + stats.updated}** |\n`;
         summary += `| ✨ Created | ${stats.created} |\n`;
-        summary += `| 🔄 Updated | ${stats.updated} (${stats.newMessages} new messages) |\n`;
-        summary += `| ⏭️ Skipped | ${stats.skipped} |\n`;
+        summary += `| 🔄 Updated | ${stats.updated}`;
+        if (stats.newMessages > 0) {
+            summary += ` (${stats.newMessages} new messages)`;
+        }
+        summary += ` |\n`;
 
+        if (stats.skipped > 0) {
+            summary += `| ⏭️ Skipped (unchanged) | ${stats.skipped} |\n`;
+        }
         if (stats.failed > 0) {
             summary += `| ❌ Failed | ${stats.failed} |\n`;
         }
