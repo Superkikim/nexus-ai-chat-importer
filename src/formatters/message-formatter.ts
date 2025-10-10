@@ -125,16 +125,17 @@ export class MessageFormatter {
 
             // Add link to original conversation for missing attachments
             if (attachment.status.reason === 'missing_from_export') {
-                // Try to extract conversation URL from attachment or use generic ChatGPT link
-                const conversationUrl = attachment.url?.includes('chatgpt.com')
-                    ? attachment.url
-                    : 'https://chatgpt.com/';
-                content += `\n> [Open original conversation](${conversationUrl})`;
+                // Try to extract conversation URL from attachment or use generic provider link
+                if (attachment.url) {
+                    content += `\n> [Open original conversation](${attachment.url})`;
+                } else {
+                    content += `\n> Original conversation link not available`;
+                }
             }
         }
 
-        // Add DALL-E prompt as separate callout (special case for DALL-E images)
-        else if (attachment.extractedContent && this.isDalleImage(attachment)) {
+        // Add generated image with prompt (provider-agnostic)
+        else if (attachment.extractedContent && this.isGeneratedImage(attachment)) {
             content += `> ${this.isImageFile(attachment) ? '![[' + attachment.url + ']]' : '[[' + attachment.url + ']]'}`;
         }
         // Add extracted content for other types (transcriptions, OCR, code, etc.)
@@ -147,23 +148,27 @@ export class MessageFormatter {
             content += `> ${attachment.content}`;
         }
 
-        // Add DALL-E prompt as separate callout after the attachment
-        let dallePrompt = '';
-        if (attachment.extractedContent && this.isDalleImage(attachment)) {
-            dallePrompt = `\n\n>[!${MessageFormatter.CALLOUTS.PROMPT}] **DALL-E Prompt**\n> \`\`\`\n> ${attachment.extractedContent}\n> \`\`\``;
+        // Add generation prompt as separate callout after the attachment (provider-agnostic)
+        let generationPrompt = '';
+        if (attachment.generationPrompt && this.isGeneratedImage(attachment)) {
+            generationPrompt = `\n\n>[!${MessageFormatter.CALLOUTS.PROMPT}] **Generation Prompt**\n> \`\`\`\n> ${attachment.generationPrompt}\n> \`\`\``;
         }
 
-        return content + dallePrompt;
+        return content + generationPrompt;
     }
 
     /**
-     * Check if attachment is a DALL-E generated image
+     * Check if attachment is a generated image (provider-agnostic)
      */
-    private isDalleImage(attachment: StandardAttachment): boolean {
-        // Check if filename follows DALL-E pattern: dalle_genId_widthxheight.png
-        return attachment.fileName.startsWith('dalle_') && 
-               attachment.fileName.includes('_') && 
-               attachment.fileType === 'image/png';
+    private isGeneratedImage(attachment: StandardAttachment): boolean {
+        return attachment.attachmentType === 'generated_image';
+    }
+
+    /**
+     * Check if attachment is an artifact (provider-agnostic)
+     */
+    private isArtifact(attachment: StandardAttachment): boolean {
+        return attachment.attachmentType === 'artifact';
     }
 
     /**
