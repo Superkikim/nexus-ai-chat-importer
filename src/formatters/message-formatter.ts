@@ -136,8 +136,9 @@ export class MessageFormatter {
 
         // For generated images with extractedContent, use it directly (contains prompt + image/warning)
         else if (this.isGeneratedImage(attachment) && attachment.extractedContent) {
-            // extractedContent already contains formatted prompt and image/warning callouts
-            content += `> ${attachment.extractedContent.split('\n').join('\n> ')}`;
+            // extractedContent already contains formatted callouts, just indent them
+            const lines = attachment.extractedContent.split('\n');
+            content += lines.map(line => `> ${line}`).join('\n');
 
             // Add image embed if found
             if (attachment.status?.found && attachment.url) {

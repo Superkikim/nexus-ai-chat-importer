@@ -6687,7 +6687,8 @@ var _MessageFormatter = class {
         }
       }
     } else if (this.isGeneratedImage(attachment) && attachment.extractedContent) {
-      content += `> ${attachment.extractedContent.split("\n").join("\n> ")}`;
+      const lines = attachment.extractedContent.split("\n");
+      content += lines.map((line) => `> ${line}`).join("\n");
       if (((_c = attachment.status) == null ? void 0 : _c.found) && attachment.url) {
         content += `
 > 
