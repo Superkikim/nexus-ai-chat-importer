@@ -7408,15 +7408,14 @@ var ChatGPTDalleProcessor = class {
       extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
 >> \`\`\`
 >> ${formattedPrompt}
->> \`\`\``;
-      if (hasImage) {
-        extractedContent += `
->
+>> \`\`\`
 >>[!nexus_attachment] **{{FILENAME}}** ({{FILETYPE}}) - {{FILESIZE}}
 >> ![[{{URL}}]]`;
-      } else {
-        extractedContent += `
->
+      if (!hasImage) {
+        extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
 >>[!nexus_attachment] **Image Not Found**
 >> \u26A0\uFE0F Image could not be found. Perhaps it was not generated or is missing from the archive.`;
       }
@@ -7497,7 +7496,6 @@ var ChatGPTDalleProcessor = class {
 >> \`\`\`
 >> ${formattedPrompt}
 >> \`\`\`
->
 >>[!nexus_attachment] **Image Not Found**
 >> \u26A0\uFE0F Image generation may have failed or been interrupted. The prompt was saved but no image was found in the export.`,
       status: {
