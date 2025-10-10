@@ -32,7 +32,7 @@ export class MessageDateFormatSection extends BaseSettingsSection {
         // Custom Message Timestamp Format
         new Setting(containerEl)
             .setName("Custom message timestamp format")
-            .setDesc("Override the default locale-based timestamp format in message callouts. When disabled, timestamps follow Obsidian's language setting (English = US format).")
+            .setDesc("Override the default locale-based timestamp format in message callouts. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced.")
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.useCustomMessageTimestampFormat)

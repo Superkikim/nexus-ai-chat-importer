@@ -69,7 +69,7 @@ export const MESSAGE_TIMESTAMP_FORMATS: Record<MessageTimestampFormat, {
 }> = {
     locale: {
         label: 'Auto (Obsidian Language)',
-        description: 'Follows Obsidian language setting (EN = US format)',
+        description: 'Follows Obsidian language setting',
         dateFormat: 'L',      // moment.js locale-aware
         timeFormat: 'LTS',    // moment.js locale-aware
         separator: ' at '
