@@ -204,8 +204,8 @@ Each conversation note contains:
 conversation_id: "abc123..."          # Unique identifier
 provider: "chatgpt"                   # chatgpt or claude
 title: "Conversation Title"           # Original title
-create_time: "2024-01-15T14:30:22Z"  # Creation timestamp
-update_time: "2024-01-15T16:45:10Z"  # Last update timestamp
+create_time: "2024-01-15T14:30:22Z"  # Creation timestamp (UTC, ISO 8601)
+update_time: "2024-01-15T16:45:10Z"  # Last update timestamp (UTC, ISO 8601)
 message_count: 42                     # Total messages
 aliases: ["Conversation Title"]       # For linking
 ---
@@ -261,8 +261,13 @@ All timestamps use **ISO 8601** format (`YYYY-MM-DDTHH:MM:SSZ`):
 ✅ **Standard** - Recognized everywhere
 ✅ **Dataview-friendly** - Perfect for queries
 ✅ **Future-proof** - Won't change
+✅ **UTC timezone** - Always in UTC (Z = Zulu time = UTC+0), no timezone confusion
 
-**Example**: `2024-01-15T14:30:22Z` = January 15, 2024 at 14:30:22 UTC (same everywhere)
+**Example**: `2024-01-15T14:30:22Z`
+- **Date**: 2024-01-15 (January 15, 2024)
+- **Time**: 14:30:22 (2:30:22 PM)
+- **Timezone**: Z (UTC, universal time)
+- **Same timestamp everywhere in the world** - no conversion needed
 
 #### Recommendations
 
