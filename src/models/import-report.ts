@@ -288,11 +288,11 @@ export class ImportReport {
                 });
             });
 
-            // Sort by file lastModified date (most recent first)
+            // Sort by file lastModified date (oldest first)
             fileInfos.sort((a, b) => {
                 const timeA = a.file?.lastModified || 0;
                 const timeB = b.file?.lastModified || 0;
-                return timeB - timeA; // Descending order (newest first)
+                return timeA - timeB; // Ascending order (oldest first)
             });
 
             // Generate table rows using fileStats

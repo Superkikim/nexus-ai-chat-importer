@@ -6336,7 +6336,7 @@ var ImportReport = class {
         var _a, _b;
         const timeA = ((_a = a.file) == null ? void 0 : _a.lastModified) || 0;
         const timeB = ((_b = b.file) == null ? void 0 : _b.lastModified) || 0;
-        return timeB - timeA;
+        return timeA - timeB;
       });
       fileInfos.forEach((info) => {
         const stats2 = fileStats == null ? void 0 : fileStats.get(info.name);
@@ -12376,6 +12376,7 @@ var ConversationMetadataExtractor = class {
     const conversationMap = /* @__PURE__ */ new Map();
     const allConversationsFound = [];
     const fileStatsMap = /* @__PURE__ */ new Map();
+    const conversationToFileMap = /* @__PURE__ */ new Map();
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
@@ -12399,16 +12400,30 @@ var ConversationMetadataExtractor = class {
           if (!existing) {
             uniqueFromFile++;
             conversationMap.set(conversation.id, conversation);
+            conversationToFileMap.set(conversation.id, file.name);
           } else {
-            duplicatesInFile++;
+            let shouldReplace = false;
             if (conversation.updateTime > existing.updateTime) {
-              conversationMap.set(conversation.id, conversation);
+              shouldReplace = true;
             } else if (conversation.updateTime === existing.updateTime) {
               const currentFileIndex = conversation.sourceFileIndex || 0;
               const existingFileIndex = existing.sourceFileIndex || 0;
               if (currentFileIndex > existingFileIndex) {
-                conversationMap.set(conversation.id, conversation);
+                shouldReplace = true;
               }
+            }
+            if (shouldReplace) {
+              const oldFileName = conversationToFileMap.get(conversation.id);
+              const oldFileStats = fileStatsMap.get(oldFileName);
+              if (oldFileStats) {
+                oldFileStats.uniqueContributed--;
+                oldFileStats.duplicates++;
+              }
+              uniqueFromFile++;
+              conversationMap.set(conversation.id, conversation);
+              conversationToFileMap.set(conversation.id, file.name);
+            } else {
+              duplicatesInFile++;
             }
           }
         }

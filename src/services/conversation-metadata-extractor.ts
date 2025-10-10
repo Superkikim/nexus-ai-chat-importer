@@ -346,6 +346,9 @@ export class ConversationMetadataExtractor {
         const allConversationsFound: ConversationMetadata[] = [];
         const fileStatsMap = new Map<string, FileAnalysisStats>();
 
+        // Track which file contributed each conversation to the final map
+        const conversationToFileMap = new Map<string, string>(); // conversationId → fileName
+
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             try {
@@ -379,24 +382,45 @@ export class ConversationMetadataExtractor {
                         // First occurrence of this conversation ID
                         uniqueFromFile++;
                         conversationMap.set(conversation.id, conversation);
+                        conversationToFileMap.set(conversation.id, file.name);
                     } else {
-                        // Duplicate found
-                        duplicatesInFile++;
+                        // Duplicate found - determine which version to keep
+                        let shouldReplace = false;
 
-                        // Keep the one with latest updateTime
                         if (conversation.updateTime > existing.updateTime) {
                             // Current conversation is newer
-                            conversationMap.set(conversation.id, conversation);
+                            shouldReplace = true;
                         } else if (conversation.updateTime === existing.updateTime) {
                             // Same updateTime - prefer the one from later file (higher sourceFileIndex)
                             const currentFileIndex = conversation.sourceFileIndex || 0;
                             const existingFileIndex = existing.sourceFileIndex || 0;
 
                             if (currentFileIndex > existingFileIndex) {
-                                conversationMap.set(conversation.id, conversation);
+                                shouldReplace = true;
                             }
                         }
-                        // If existing is newer or same age from later file, keep it (no action needed)
+
+                        if (shouldReplace) {
+                            // Current is newer - it replaces the old one
+
+                            // Update stats for OLD file (its version is now a duplicate)
+                            const oldFileName = conversationToFileMap.get(conversation.id)!;
+                            const oldFileStats = fileStatsMap.get(oldFileName);
+                            if (oldFileStats) {
+                                oldFileStats.uniqueContributed--;
+                                oldFileStats.duplicates++;
+                            }
+
+                            // Update stats for CURRENT file (it's now unique)
+                            uniqueFromFile++;
+
+                            // Replace in map
+                            conversationMap.set(conversation.id, conversation);
+                            conversationToFileMap.set(conversation.id, file.name);
+                        } else {
+                            // Current is older or same priority - it's a duplicate
+                            duplicatesInFile++;
+                        }
                     }
                 }
 
