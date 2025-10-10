@@ -140,19 +140,22 @@ export class ChatGPTAttachmentExtractor {
         // Detect actual file format (especially for .dat files)
         const formatInfo = this.detectFileFormat(fileContent);
         
-        // Update filename with correct extension if needed
+        // Update filename with correct extension if needed (for all generated images)
         let finalFileName = attachment.fileName;
-        if (zipFile.name.endsWith('.dat') && formatInfo.extension) {
-            // Replace .dat with correct extension
+        let finalFileType = attachment.fileType;
+
+        if (attachment.attachmentType === 'generated_image' && formatInfo.extension) {
+            // Correct extension for generated images (handles .dat, .webp, .jpg, .png)
             const baseName = attachment.fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, '');
             finalFileName = `${baseName}.${formatInfo.extension}`;
+            finalFileType = formatInfo.mimeType || attachment.fileType;
         }
         
         // Generate target path for saving
         let targetPath = this.generateLocalPath(conversationId, {
             ...attachment,
             fileName: finalFileName,
-            fileType: formatInfo.mimeType || attachment.fileType
+            fileType: finalFileType
         });
 
         // Ensure folder exists
@@ -166,12 +169,12 @@ export class ChatGPTAttachmentExtractor {
         targetPath = await this.resolveFileConflict(targetPath);
 
         // Save file
-        await this.plugin.app.vault.adapter.writeBinary(targetPath, fileContent);
+        await this.plugin.app.vault.adapter.writeBinary(targetPath, fileContent.buffer as ArrayBuffer);
 
         return {
             localPath: targetPath,
             finalFileName: finalFileName,
-            actualFileType: formatInfo.mimeType || attachment.fileType || 'application/octet-stream'
+            actualFileType: finalFileType || 'application/octet-stream'
         };
     }
 
@@ -271,45 +274,7 @@ export class ChatGPTAttachmentExtractor {
             return this.zipFileCache.get(cacheKey)!;
         }
 
-        // Strategy 1: Try exact filename match first
-        let zipFile = zip.file(attachment.fileName);
-        if (zipFile) {
-            this.zipFileCache.set(cacheKey, zipFile);
-            return zipFile;
-        }
-
-        // Strategy 2: DALL-E Strategy - Check dalle-generations/ folder first (restored from v1.2.0)
-        if (attachment.fileName.startsWith('dalle_')) {
-            const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
-            if (dalleFiles.length > 0) {
-                this.logger.debug(`Found DALL-E file in dalle-generations/: ${dalleFiles[0].name}`);
-                this.zipFileCache.set(cacheKey, dalleFiles[0]);
-                return dalleFiles[0]; // Return first match
-            }
-        }
-
-        // Strategy 3: Regular file ID patterns (restored from v1.2.0)
-        const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
-        zipFile = zip.file(fileIdPattern);
-        if (zipFile) {
-            this.logger.debug(`Found file by ID pattern match: ${fileIdPattern}`);
-            this.zipFileCache.set(cacheKey, zipFile);
-            return zipFile;
-        }
-
-        // Strategy 4: Pattern file-{ID}.{ext} (restored from v1.2.0)
-        const extension = this.getFileExtension(attachment.fileName);
-        if (extension) {
-            const fileIdExtPattern = `${attachment.fileId}.${extension}`;
-            zipFile = zip.file(fileIdExtPattern);
-            if (zipFile) {
-                this.logger.debug(`Found file by ID extension match: ${fileIdExtPattern}`);
-                this.zipFileCache.set(cacheKey, zipFile);
-                return zipFile;
-            }
-        }
-
-        // Strategy 5: Comprehensive search by file ID in entire ZIP
+        // Unified strategy: Search entire ZIP for file ID (handles all cases)
         const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
 
         // Cache result (even if null)
