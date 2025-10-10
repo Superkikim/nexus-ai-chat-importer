@@ -22,9 +22,10 @@ export class ClaudeAdapter implements ProviderAdapter<ClaudeConversation> {
 
         const sample = rawConversations[0];
 
-        // Claude detection: has uuid, name field, chat_messages array, created_at/updated_at, and account
+        // Claude detection: has uuid, name field, chat_messages array, created_at/updated_at
+        // Note: 'account' field is optional (not present in older Claude exports)
         return !!(sample.uuid && 'name' in sample && sample.chat_messages &&
-                 Array.isArray(sample.chat_messages) && sample.created_at && sample.updated_at && sample.account);
+                 Array.isArray(sample.chat_messages) && sample.created_at && sample.updated_at);
     }
 
     getId(chat: ClaudeConversation): string {

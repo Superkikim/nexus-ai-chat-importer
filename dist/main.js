@@ -9263,7 +9263,7 @@ var ClaudeAdapter = class {
     if (rawConversations.length === 0)
       return false;
     const sample = rawConversations[0];
-    return !!(sample.uuid && "name" in sample && sample.chat_messages && Array.isArray(sample.chat_messages) && sample.created_at && sample.updated_at && sample.account);
+    return !!(sample.uuid && "name" in sample && sample.chat_messages && Array.isArray(sample.chat_messages) && sample.created_at && sample.updated_at);
   }
   getId(chat) {
     return chat.uuid || "";
