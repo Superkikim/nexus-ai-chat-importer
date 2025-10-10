@@ -21,11 +21,36 @@
 import { moment, App, TFile } from "obsidian";
 import { Logger } from "./logger";
 import { requestUrl } from "obsidian";
+import { MESSAGE_TIMESTAMP_FORMATS } from "./config/constants";
+import type { MessageTimestampFormat } from "./types/plugin";
 
 const logger = new Logger();
 
+/**
+ * Format message timestamp with custom or locale-based format
+ * Used for message callouts and note headers
+ */
+export function formatMessageTimestamp(
+    unixTime: number,
+    customFormat?: MessageTimestampFormat
+): string {
+    const date = moment(unixTime * 1000);
+
+    // If no custom format, use locale (default behavior)
+    if (!customFormat || customFormat === 'locale') {
+        return `${date.format('L')} at ${date.format('LTS')}`;
+    }
+
+    // Use custom format
+    const format = MESSAGE_TIMESTAMP_FORMATS[customFormat];
+    return `${date.format(format.dateFormat)}${format.separator}${date.format(format.timeFormat)}`;
+}
+
+/**
+ * Format timestamp for legacy uses (prefix, reports)
+ * KEPT for backward compatibility
+ */
 export function formatTimestamp(
-    // REQUIRE REFACTORING TO SUPPORT OTHER DATE FORMATS THAN UNIXTIME
     unixTime: number,
     format: "prefix" | "date" | "time"
 ): string {
@@ -36,7 +61,7 @@ export function formatTimestamp(
         case "date":
             return date.format("L");
         case "time":
-            return date.format("LTS"); // Changed from LT to LTS to include seconds
+            return date.format("LTS");
     }
 }
 

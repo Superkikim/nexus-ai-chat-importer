@@ -22,7 +22,7 @@ import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 
 export class DisplaySettingsSection extends BaseSettingsSection {
-    readonly title = "🎨 Display Options";
+    readonly title = "📅 Date Prefix";
     readonly order = 20;
 
     render(containerEl: HTMLElement): void {

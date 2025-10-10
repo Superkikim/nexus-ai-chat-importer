@@ -82,16 +82,19 @@ No manual intervention required!
 
 ### Plugin Settings
 
-The plugin has only **5 simple settings**:
-
-**Folder Paths** (3 settings):
+**Folder Paths**:
 - **Conversations Folder**: `<conversations>/` - Where conversation notes are stored
 - **Attachments Folder**: `<attachments>/` - Where images, files, and artifacts are saved
 - **Reports Folder**: `<reports>/` - Where import reports are generated
 
-**Filename Options** (2 settings):
+**Date Prefix**:
 - **Enable Date Prefix**: Add date before the title (e.g., `2024-01-15 - conversation-title.md`)
 - **Date Format**: With dashes (`2024-01-15`) or without (`20240115`)
+
+**Message Date Format**:
+- **Custom Message Timestamp Format**: Override default locale-based timestamps in message callouts
+  - **Disabled** (default): Follows Obsidian's language setting (English = US format)
+  - **Enabled**: Choose from ISO 8601, US, European, UK, German, or Japanese formats
 
 ### Changing Folder Paths
 
@@ -251,9 +254,13 @@ This metadata enables powerful Obsidian features:
 - **Live Preview**: Rendered callouts while editing
 - **Source Mode**: Raw Markdown syntax
 
-#### Date Format - Why ISO 8601?
+#### Date & Time Formats
 
-All timestamps use **ISO 8601** format (`YYYY-MM-DDTHH:MM:SSZ`):
+The plugin uses a **two-tier timestamp system**:
+
+**1. Frontmatter (Metadata) - ISO 8601 Format**
+
+All `create_time` and `update_time` fields use **ISO 8601** format (`YYYY-MM-DDTHH:MM:SSZ`):
 
 ✅ **Universal** - Works with all locales
 ✅ **Sortable** - Alphabetical = chronological
@@ -262,6 +269,25 @@ All timestamps use **ISO 8601** format (`YYYY-MM-DDTHH:MM:SSZ`):
 ✅ **Dataview-friendly** - Perfect for queries
 ✅ **Future-proof** - Won't change
 ✅ **UTC timezone** - Always in UTC (Z = Zulu time = UTC+0), no timezone confusion
+
+**2. Message Timestamps (Note Body) - Locale or Custom Format**
+
+Message callouts display timestamps in your preferred format:
+
+- **Default (Custom Format OFF)**: Follows Obsidian's language setting
+  - English → `MM/DD/YYYY h:mm:ss AM/PM` (US format)
+  - French → `DD/MM/YYYY HH:mm:ss` (European format)
+  - German → `DD.MM.YYYY HH:mm:ss` (German format)
+
+- **Custom Format (NEW in v1.3.0)**: Choose your preferred format in Settings
+  - **ISO 8601-like**: `YYYY-MM-DD HH:mm:ss` (Universal, sortable)
+  - **US Format**: `MM/DD/YYYY h:mm:ss AM/PM`
+  - **European Format**: `DD/MM/YYYY HH:mm:ss`
+  - **UK Format**: `DD/MM/YYYY HH:mm:ss`
+  - **German Format**: `DD.MM.YYYY HH:mm:ss`
+  - **Japanese Format**: `YYYY/MM/DD HH:mm:ss`
+
+> **Note**: Changing the timestamp format only affects **new imports**. Existing notes keep their current format to avoid modifying your data.
 
 **Example**: `2024-01-15T14:30:22Z`
 - **Date**: 2024-01-15 (January 15, 2024)
@@ -416,7 +442,6 @@ We're constantly working to improve the plugin. Here's what's planned for future
 
 **🌍 Localization**:
 - **Multi-language UI**: Plugin interface translated into multiple languages
-- **Date Format Options**: Choose your preferred date format (ISO 8601, US, European, etc.)
 - **Locale-Aware Formatting**: Respect your system locale settings
 
 **🎙️ Audio Support**:

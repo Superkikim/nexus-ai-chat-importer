@@ -18,7 +18,7 @@
 
 
 // src/config/constants.ts
-import { PluginSettings } from "../types/plugin";
+import { PluginSettings, MessageTimestampFormat } from "../types/plugin";
 
 export const DEFAULT_SETTINGS: PluginSettings = {
     // ========================================
@@ -33,6 +33,10 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     // ========================================
     addDatePrefix: false,
     dateFormat: "YYYY-MM-DD",
+
+    // Message timestamp format
+    useCustomMessageTimestampFormat: false,
+    messageTimestampFormat: "locale",
 
     // ========================================
     // 🔧 INTERNAL SETTINGS
@@ -52,3 +56,64 @@ export const GITHUB = {
     RAW_BASE: "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer",
     REPO_BASE: "https://github.com/Superkikim/nexus-ai-chat-importer"
 } as const;
+
+/**
+ * Message timestamp format definitions
+ */
+export const MESSAGE_TIMESTAMP_FORMATS: Record<MessageTimestampFormat, {
+    label: string;
+    description: string;
+    dateFormat: string;
+    timeFormat: string;
+    separator: string;
+}> = {
+    locale: {
+        label: 'Auto (Obsidian Language)',
+        description: 'Follows Obsidian language setting (EN = US format)',
+        dateFormat: 'L',      // moment.js locale-aware
+        timeFormat: 'LTS',    // moment.js locale-aware
+        separator: ' at '
+    },
+    iso: {
+        label: 'ISO 8601-like (Universal)',
+        description: 'YYYY-MM-DD HH:mm:ss - Sortable, unambiguous',
+        dateFormat: 'YYYY-MM-DD',
+        timeFormat: 'HH:mm:ss',
+        separator: ' '
+    },
+    us: {
+        label: 'US Format',
+        description: 'MM/DD/YYYY h:mm:ss AM/PM',
+        dateFormat: 'MM/DD/YYYY',
+        timeFormat: 'h:mm:ss A',
+        separator: ' at '
+    },
+    eu: {
+        label: 'European Format',
+        description: 'DD/MM/YYYY HH:mm:ss (24-hour)',
+        dateFormat: 'DD/MM/YYYY',
+        timeFormat: 'HH:mm:ss',
+        separator: ' at '
+    },
+    uk: {
+        label: 'UK Format',
+        description: 'DD/MM/YYYY HH:mm:ss (24-hour)',
+        dateFormat: 'DD/MM/YYYY',
+        timeFormat: 'HH:mm:ss',
+        separator: ' at '
+    },
+    de: {
+        label: 'German Format',
+        description: 'DD.MM.YYYY HH:mm:ss',
+        dateFormat: 'DD.MM.YYYY',
+        timeFormat: 'HH:mm:ss',
+        separator: ' '
+    },
+    jp: {
+        label: 'Japanese Format',
+        description: 'YYYY/MM/DD HH:mm:ss',
+        dateFormat: 'YYYY/MM/DD',
+        timeFormat: 'HH:mm:ss',
+        separator: ' '
+    }
+};

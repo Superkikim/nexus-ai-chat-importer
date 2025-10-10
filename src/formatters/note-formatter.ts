@@ -23,12 +23,18 @@ import { formatTimestamp, generateSafeAlias } from "../utils";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
 import { URL_GENERATORS } from "../types/standard";
+import type NexusAiChatImporterPlugin from "../main";
 
 export class NoteFormatter {
     private messageFormatter: MessageFormatter;
 
-    constructor(private logger: Logger, private pluginId: string, private pluginVersion: string) {
-        this.messageFormatter = new MessageFormatter(logger);
+    constructor(
+        private logger: Logger,
+        private pluginId: string,
+        private pluginVersion: string,
+        private plugin: NexusAiChatImporterPlugin
+    ) {
+        this.messageFormatter = new MessageFormatter(logger, plugin);
     }
 
     generateMarkdownContent(conversation: StandardConversation): string {

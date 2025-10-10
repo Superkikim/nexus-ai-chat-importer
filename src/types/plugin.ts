@@ -32,6 +32,10 @@ export interface PluginSettings {
     addDatePrefix: boolean;
     dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
 
+    // Message timestamp format
+    useCustomMessageTimestampFormat: boolean;
+    messageTimestampFormat: MessageTimestampFormat;
+
     // ========================================
     // 🔧 INTERNAL SETTINGS (not shown in UI)
     // ========================================
@@ -106,3 +110,15 @@ export interface AttachmentStats {
     missing: number;
     failed: number;
 }
+
+/**
+ * Available message timestamp formats
+ */
+export type MessageTimestampFormat =
+    | 'locale'    // Auto (follows Obsidian language)
+    | 'iso'       // YYYY-MM-DD HH:mm:ss
+    | 'us'        // MM/DD/YYYY h:mm:ss A
+    | 'eu'        // DD/MM/YYYY HH:mm:ss
+    | 'uk'        // DD/MM/YYYY HH:mm:ss
+    | 'de'        // DD.MM.YYYY HH:mm:ss
+    | 'jp';       // YYYY/MM/DD HH:mm:ss

@@ -98,10 +98,14 @@ See [LICENSE.md](LICENSE.md) for full legal details.
 ### 🔧 **TECHNICAL IMPROVEMENTS**
 
 #### **Internationalization & Standards**
-- **ISO 8601 timestamps**: All dates now use international standard format
+- **ISO 8601 timestamps in frontmatter**: All metadata dates use international standard format
+- **Custom message timestamp formats**: Choose your preferred format for message callouts
+  - Default: Follows Obsidian's language setting (English = US format)
+  - Custom: ISO 8601, US, European, UK, German, or Japanese formats
 - **Non-US locale support**: Fixed timestamp parsing issues for international users
 - **Consistent date formatting**: Unified date handling across all features
-- **Automatic migration**: Existing conversations upgraded to new timestamp format
+- **Automatic migration**: Existing conversations upgraded to ISO 8601 in frontmatter
+- **Note**: Format changes only affect new imports, existing notes remain unchanged
 
 #### **DALL-E Processing Enhancements**
 - **Centralized processor**: Unified DALL-E handling logic for better reliability

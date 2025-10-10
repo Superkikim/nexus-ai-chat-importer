@@ -19,8 +19,9 @@
 
 // src/formatters/message-formatter.ts
 import { StandardMessage, StandardAttachment } from "../types/standard";
-import { formatTimestamp } from "../utils";
+import { formatMessageTimestamp } from "../utils";
 import { Logger } from "../logger";
+import type NexusAiChatImporterPlugin from "../main";
 
 export class MessageFormatter {
     // Nexus custom callouts with icons
@@ -32,7 +33,10 @@ export class MessageFormatter {
         PROMPT: 'nexus_prompt'          // 💭 System prompts
     };
 
-    constructor(private logger: Logger) {}
+    constructor(
+        private logger: Logger,
+        private plugin: NexusAiChatImporterPlugin
+    ) {}
 
     formatMessages(messages: StandardMessage[]): string {
         return messages
@@ -48,10 +52,12 @@ export class MessageFormatter {
             return "";
         }
 
-        const messageTime =
-            formatTimestamp(message.timestamp, "date") +
-            " at " +
-            formatTimestamp(message.timestamp, "time");
+        // Get custom format if enabled
+        const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+            ? this.plugin.settings.messageTimestampFormat
+            : undefined;
+
+        const messageTime = formatMessageTimestamp(message.timestamp, customFormat);
 
         const authorName = message.role === "user" ? "User" : "Assistant";
         const calloutType = message.role === "user" ? MessageFormatter.CALLOUTS.USER : MessageFormatter.CALLOUTS.AGENT;
