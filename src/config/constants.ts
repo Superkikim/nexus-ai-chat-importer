@@ -95,13 +95,6 @@ export const MESSAGE_TIMESTAMP_FORMATS: Record<MessageTimestampFormat, {
         timeFormat: 'HH:mm:ss',
         separator: ' at '
     },
-    uk: {
-        label: 'DD/MM/YYYY HH:mm:ss (UK)',
-        description: 'DD/MM/YYYY HH:mm:ss (British format)',
-        dateFormat: 'DD/MM/YYYY',
-        timeFormat: 'HH:mm:ss',
-        separator: ' at '
-    },
     de: {
         label: 'DD.MM.YYYY HH:mm:ss (German/Swiss)',
         description: 'DD.MM.YYYY HH:mm:ss',

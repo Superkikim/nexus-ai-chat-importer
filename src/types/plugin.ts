@@ -119,6 +119,5 @@ export type MessageTimestampFormat =
     | 'iso'       // YYYY-MM-DD HH:mm:ss
     | 'us'        // MM/DD/YYYY h:mm:ss A
     | 'eu'        // DD/MM/YYYY HH:mm:ss
-    | 'uk'        // DD/MM/YYYY HH:mm:ss
     | 'de'        // DD.MM.YYYY HH:mm:ss
     | 'jp';       // YYYY/MM/DD HH:mm:ss
