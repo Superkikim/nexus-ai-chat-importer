@@ -423,7 +423,13 @@ export class ImportReport {
         table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
 
-        entries.forEach((entry) => {
+        // Sort by createDate (newest first)
+        const sortedEntries = [...entries].sort((a, b) => {
+            // Compare dates as strings (ISO 8601 format is sortable)
+            return b.createDate.localeCompare(a.createDate);
+        });
+
+        sortedEntries.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const providerSpecificValue = entry.providerSpecificCount || 0;
@@ -443,7 +449,13 @@ export class ImportReport {
         table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
 
-        entries.forEach((entry) => {
+        // Sort by updateDate (newest first)
+        const sortedEntries = [...entries].sort((a, b) => {
+            // Compare dates as strings (ISO 8601 format is sortable)
+            return b.updateDate.localeCompare(a.updateDate);
+        });
+
+        sortedEntries.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const providerSpecificValue = entry.providerSpecificCount || 0;
@@ -463,7 +475,13 @@ export class ImportReport {
         table += "| | Title | Date | Error |\n";
         table += "|:---:|:---|:---:|:---|\n";
 
-        entries.forEach((entry) => {
+        // Sort by createDate (newest first)
+        const sortedEntries = [...entries].sort((a, b) => {
+            // Compare dates as strings (ISO 8601 format is sortable)
+            return b.createDate.localeCompare(a.createDate);
+        });
+
+        sortedEntries.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             table += `| 🚫 | ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |\n`;
         });

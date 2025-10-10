@@ -6829,7 +6829,10 @@ var ImportReport = class {
     table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
-    entries.forEach((entry) => {
+    const sortedEntries = [...entries].sort((a, b) => {
+      return b.createDate.localeCompare(a.createDate);
+    });
+    sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
@@ -6847,7 +6850,10 @@ var ImportReport = class {
     table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
-    entries.forEach((entry) => {
+    const sortedEntries = [...entries].sort((a, b) => {
+      return b.updateDate.localeCompare(a.updateDate);
+    });
+    sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
@@ -6864,7 +6870,10 @@ var ImportReport = class {
 `;
     table += "| | Title | Date | Error |\n";
     table += "|:---:|:---|:---:|:---|\n";
-    entries.forEach((entry) => {
+    const sortedEntries = [...entries].sort((a, b) => {
+      return b.createDate.localeCompare(a.createDate);
+    });
+    sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       table += `| \u{1F6AB} | ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |
 `;
