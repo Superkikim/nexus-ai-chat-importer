@@ -228,6 +228,7 @@ export class ChatGPTDalleProcessor {
 >> \`\`\`
 >> ${formattedPrompt}
 >> \`\`\`
+>
 >>[!nexus_attachment] **{{FILENAME}}** ({{FILETYPE}}) - {{FILESIZE}}
 >> ![[{{URL}}]]`;
 
@@ -237,6 +238,7 @@ export class ChatGPTDalleProcessor {
 >> \`\`\`
 >> ${formattedPrompt}
 >> \`\`\`
+>
 >>[!nexus_attachment] **Image Not Found**
 >> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`;
             }
@@ -328,6 +330,7 @@ export class ChatGPTDalleProcessor {
 >> \`\`\`
 >> ${formattedPrompt}
 >> \`\`\`
+>
 >>[!nexus_attachment] **Image Not Found**
 >> ⚠️ Image generation may have failed or been interrupted. The prompt was saved but no image was found in the export.`,
             status: {
