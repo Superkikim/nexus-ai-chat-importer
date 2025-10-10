@@ -134,9 +134,20 @@ export class MessageFormatter {
             }
         }
 
-        // Add generated image with prompt (provider-agnostic)
-        else if (attachment.extractedContent && this.isGeneratedImage(attachment)) {
-            content += `> ${this.isImageFile(attachment) ? '![[' + attachment.url + ']]' : '[[' + attachment.url + ']]'}`;
+        // For generated images with extractedContent, use it directly (contains prompt + image/warning)
+        else if (this.isGeneratedImage(attachment) && attachment.extractedContent) {
+            // extractedContent already contains formatted prompt and image/warning callouts
+            content += `> ${attachment.extractedContent.split('\n').join('\n> ')}`;
+
+            // Add image embed if found
+            if (attachment.status?.found && attachment.url) {
+                content += `\n> \n> >[!nexus_attachment] **${attachment.fileName}**`;
+                if (this.isImageFile(attachment)) {
+                    content += `\n> > ![[${attachment.url}]]`;
+                } else {
+                    content += `\n> > [[${attachment.url}]]`;
+                }
+            }
         }
         // Add extracted content for other types (transcriptions, OCR, code, etc.)
         else if (attachment.extractedContent) {
@@ -148,13 +159,7 @@ export class MessageFormatter {
             content += `> ${attachment.content}`;
         }
 
-        // Add generation prompt as separate callout after the attachment (provider-agnostic)
-        let generationPrompt = '';
-        if (attachment.generationPrompt && this.isGeneratedImage(attachment)) {
-            generationPrompt = `\n\n>[!${MessageFormatter.CALLOUTS.PROMPT}] **Generation Prompt**\n> \`\`\`\n> ${attachment.generationPrompt}\n> \`\`\``;
-        }
-
-        return content + generationPrompt;
+        return content;
     }
 
     /**

@@ -6619,7 +6619,7 @@ var _MessageFormatter = class {
    * Format single attachment with Nexus callout styling
    */
   formatSingleAttachment(attachment) {
-    var _a, _b;
+    var _a, _b, _c;
     if (attachment.extractedContent && attachment.extractedContent.includes("nexus_attachment")) {
       return attachment.extractedContent;
     }
@@ -6661,23 +6661,26 @@ var _MessageFormatter = class {
 > Original conversation link not available`;
         }
       }
-    } else if (attachment.extractedContent && this.isGeneratedImage(attachment)) {
-      content += `> ${this.isImageFile(attachment) ? "![[" + attachment.url + "]]" : "[[" + attachment.url + "]]"}`;
+    } else if (this.isGeneratedImage(attachment) && attachment.extractedContent) {
+      content += `> ${attachment.extractedContent.split("\n").join("\n> ")}`;
+      if (((_c = attachment.status) == null ? void 0 : _c.found) && attachment.url) {
+        content += `
+> 
+> >[!nexus_attachment] **${attachment.fileName}**`;
+        if (this.isImageFile(attachment)) {
+          content += `
+> > ![[${attachment.url}]]`;
+        } else {
+          content += `
+> > [[${attachment.url}]]`;
+        }
+      }
     } else if (attachment.extractedContent) {
       content += `> ${attachment.extractedContent}`;
     } else if (attachment.content && !attachment.extractedContent) {
       content += `> ${attachment.content}`;
     }
-    let generationPrompt = "";
-    if (attachment.generationPrompt && this.isGeneratedImage(attachment)) {
-      generationPrompt = `
-
->[!${_MessageFormatter.CALLOUTS.PROMPT}] **Generation Prompt**
-> \`\`\`
-> ${attachment.generationPrompt}
-> \`\`\``;
-    }
-    return content + generationPrompt;
+    return content;
   }
   /**
    * Check if attachment is a generated image (provider-agnostic)
@@ -7379,22 +7382,36 @@ var ChatGPTDalleProcessor = class {
   }
   /**
    * Create StandardAttachment for DALL-E image with provider-agnostic metadata
+   * The prompt will be embedded in extractedContent for display
    */
-  static createDalleAttachment(contentPart, associatedPrompt) {
+  static createDalleAttachment(contentPart, associatedPrompt, hasImage = true) {
     const fileId = contentPart.asset_pointer.includes("://") ? contentPart.asset_pointer.split("://")[1] : contentPart.asset_pointer;
     const genId = contentPart.metadata.dalle.gen_id || "unknown";
     const width = contentPart.width || 1024;
     const height = contentPart.height || 1024;
     const fileName = `dalle_${genId}_${width}x${height}.png`;
+    const prompt = associatedPrompt || contentPart.metadata.dalle.prompt;
+    let extractedContent = "";
+    if (prompt) {
+      extractedContent = `>[!nexus_prompt] **Prompt**
+> ${prompt.split("\n").join("\n> ")}`;
+    }
+    if (!hasImage) {
+      if (extractedContent)
+        extractedContent += "\n\n";
+      extractedContent += `>[!nexus_attachment] **Image Not Found**
+> \u26A0\uFE0F Image could not be found. Perhaps it was not generated or is missing from the archive.`;
+    }
     return {
       fileName,
       fileSize: contentPart.size_bytes,
       fileType: "image/png",
       // Will be corrected dynamically by extractor
       fileId,
+      extractedContent,
       // Provider-agnostic metadata
       attachmentType: "generated_image",
-      generationPrompt: associatedPrompt || contentPart.metadata.dalle.prompt,
+      generationPrompt: prompt,
       // Provider-specific metadata
       providerMetadata: {
         dalle: {
@@ -7419,7 +7436,7 @@ var ChatGPTDalleProcessor = class {
       if (typeof part === "object" && part !== null) {
         const contentPart = part;
         if (contentPart.content_type === "image_asset_pointer" && contentPart.asset_pointer && ((_b = contentPart.metadata) == null ? void 0 : _b.dalle) && contentPart.metadata.dalle !== null) {
-          const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt);
+          const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt, true);
           attachments.push(dalleAttachment);
         }
       }
@@ -7430,7 +7447,7 @@ var ChatGPTDalleProcessor = class {
     return {
       id: toolMessage.id || "",
       role: "assistant",
-      content: "Image g\xE9n\xE9r\xE9e par DALL-E",
+      content: "DALL-E Generated Image",
       // Use prompt timestamp if available, otherwise fall back to tool message timestamp
       timestamp: promptTimestamp || toolMessage.create_time || 0,
       attachments
@@ -7438,17 +7455,32 @@ var ChatGPTDalleProcessor = class {
   }
   /**
    * Create informational message for orphaned DALL-E prompt (no image found)
+   * Creates a "phantom" attachment with the prompt and warning
    */
   static createOrphanedPromptMessage(promptMessage, prompt) {
+    const phantomAttachment = {
+      fileName: "dalle_image_not_found.png",
+      fileType: "image/png",
+      attachmentType: "generated_image",
+      generationPrompt: prompt,
+      extractedContent: `>[!nexus_prompt] **Prompt**
+> ${prompt.split("\n").join("\n> ")}
+
+>[!nexus_attachment] **Image Not Found**
+> \u26A0\uFE0F Image could not be found. Perhaps it was not generated or is missing from the archive.`,
+      status: {
+        processed: true,
+        found: false,
+        reason: "missing_from_export",
+        note: "DALL-E generation was requested but the image was not found in the archive"
+      }
+    };
     return {
       id: promptMessage.id || "",
       role: "assistant",
-      content: `\u26A0\uFE0F DALL-E generation requested but image not found in archive
-
-**Prompt:**
-${prompt}`,
+      content: "DALL-E Generated Image",
       timestamp: promptMessage.create_time || 0,
-      attachments: []
+      attachments: [phantomAttachment]
     };
   }
 };

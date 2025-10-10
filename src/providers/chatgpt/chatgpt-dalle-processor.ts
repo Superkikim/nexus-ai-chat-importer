@@ -173,27 +173,43 @@ export class ChatGPTDalleProcessor {
 
     /**
      * Create StandardAttachment for DALL-E image with provider-agnostic metadata
+     * The prompt will be embedded in extractedContent for display
      */
-    static createDalleAttachment(contentPart: any, associatedPrompt?: string): StandardAttachment {
-        const fileId = contentPart.asset_pointer.includes('://') 
-            ? contentPart.asset_pointer.split('://')[1] 
+    static createDalleAttachment(contentPart: any, associatedPrompt?: string, hasImage: boolean = true): StandardAttachment {
+        const fileId = contentPart.asset_pointer.includes('://')
+            ? contentPart.asset_pointer.split('://')[1]
             : contentPart.asset_pointer;
-            
+
         const genId = contentPart.metadata.dalle.gen_id || 'unknown';
         const width = contentPart.width || 1024;
         const height = contentPart.height || 1024;
         const fileName = `dalle_${genId}_${width}x${height}.png`;
-        
+
+        const prompt = associatedPrompt || contentPart.metadata.dalle.prompt;
+
+        // Create extracted content with prompt in callout
+        let extractedContent = '';
+        if (prompt) {
+            extractedContent = `>[!nexus_prompt] **Prompt**\n> ${prompt.split('\n').join('\n> ')}`;
+        }
+
+        // If no image found, add warning
+        if (!hasImage) {
+            if (extractedContent) extractedContent += '\n\n';
+            extractedContent += `>[!nexus_attachment] **Image Not Found**\n> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`;
+        }
+
         return {
             fileName,
             fileSize: contentPart.size_bytes,
             fileType: "image/png", // Will be corrected dynamically by extractor
             fileId,
-            
+            extractedContent,
+
             // Provider-agnostic metadata
             attachmentType: 'generated_image',
-            generationPrompt: associatedPrompt || contentPart.metadata.dalle.prompt,
-            
+            generationPrompt: prompt,
+
             // Provider-specific metadata
             providerMetadata: {
                 dalle: {
@@ -228,7 +244,7 @@ export class ChatGPTDalleProcessor {
                     contentPart.metadata?.dalle &&
                     contentPart.metadata.dalle !== null) {
 
-                    const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt);
+                    const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt, true);
                     attachments.push(dalleAttachment);
                 }
             }
@@ -241,7 +257,7 @@ export class ChatGPTDalleProcessor {
         return {
             id: toolMessage.id || "",
             role: "assistant",
-            content: "Image générée par DALL-E",
+            content: "DALL-E Generated Image",
             // Use prompt timestamp if available, otherwise fall back to tool message timestamp
             timestamp: promptTimestamp || toolMessage.create_time || 0,
             attachments: attachments
@@ -250,14 +266,30 @@ export class ChatGPTDalleProcessor {
 
     /**
      * Create informational message for orphaned DALL-E prompt (no image found)
+     * Creates a "phantom" attachment with the prompt and warning
      */
     static createOrphanedPromptMessage(promptMessage: ChatMessage, prompt: string): StandardMessage {
+        // Create a phantom attachment with prompt and warning
+        const phantomAttachment: StandardAttachment = {
+            fileName: 'dalle_image_not_found.png',
+            fileType: 'image/png',
+            attachmentType: 'generated_image',
+            generationPrompt: prompt,
+            extractedContent: `>[!nexus_prompt] **Prompt**\n> ${prompt.split('\n').join('\n> ')}\n\n>[!nexus_attachment] **Image Not Found**\n> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`,
+            status: {
+                processed: true,
+                found: false,
+                reason: 'missing_from_export',
+                note: 'DALL-E generation was requested but the image was not found in the archive'
+            }
+        };
+
         return {
             id: promptMessage.id || "",
             role: "assistant",
-            content: `⚠️ DALL-E generation requested but image not found in archive\n\n**Prompt:**\n${prompt}`,
+            content: "DALL-E Generated Image",
             timestamp: promptMessage.create_time || 0,
-            attachments: []
+            attachments: [phantomAttachment]
         };
     }
 }
