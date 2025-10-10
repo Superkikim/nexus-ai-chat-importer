@@ -28,23 +28,37 @@ Your support helps me dedicate more time to:
 
 ## ⚖️ **LICENSE CHANGE**
 
-**Starting with version 1.3.0, this project is licensed under GPL-3.0** (previously MIT).
+### ⚠️ Important: License Update
 
-**What this means for users**:
-- ✅ The plugin remains **free and open source**
-- ✅ You can still use, modify, and share it freely
-- ✅ No impact on your usage of the plugin
+**Previous versions (≤1.2.0):** MIT License
+**Version 1.3.0+:** GNU GPL v3.0
 
-**Why the change?**
+### Why the change?
 
-GPL-3.0 protects the open-source nature of this project while preventing commercial exploitation without giving back to the community. This ensures that any commercial products based on this code must also be open source.
+After **300+ hours of development** and **1000+ downloads**, I'm changing to GPL v3 to:
+- Protect this work from commercial exploitation without giving back
+- Ensure it remains free and open for everyone
+- Allow me to create commercial products for other platforms based on this codebase
 
-**For developers**:
-- Any derivative works must also be licensed under GPL-3.0
-- Commercial use requires compliance with GPL-3.0 terms
-- Source code must be made available for derivative works
+### What this means for you:
 
-See [LICENSE.md](LICENSE.md) for full details.
+**As a user:** Nothing changes! The plugin is still:
+- ✅ **Free forever**
+- ✅ **Open source**
+- ✅ **Fully functional**
+
+**As a developer:** If you fork or modify this plugin:
+- ✅ You must keep it open source (GPL v3)
+- ✅ You must share your improvements
+- ✅ You cannot create a closed-source commercial version
+
+### Previous versions
+
+Versions ≤1.2.0 remain under MIT license (already released, can't be revoked). However, **all future development will be GPL v3**.
+
+Thank you for your understanding and continued support! 🙏
+
+See [LICENSE.md](LICENSE.md) for full legal details.
 
 ---
 
