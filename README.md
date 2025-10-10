@@ -90,7 +90,7 @@ The plugin has only **5 simple settings**:
 - **Reports Folder**: `<reports>/` - Where import reports are generated
 
 **Filename Options** (2 settings):
-- **Add Date Suffix**: Append date to filenames (e.g., `conversation-title-2024-01-15.md`)
+- **Enable Date Suffix**: Add date after the title (e.g., `conversation-title-2024-01-15.md`)
 - **Date Format**: With dashes (`2024-01-15`) or without (`20240115`)
 
 ### Changing Folder Paths
