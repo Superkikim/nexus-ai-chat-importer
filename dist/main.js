@@ -7278,28 +7278,43 @@ var ChatGPTDalleProcessor = class {
     var _a;
     const imagePrompts = /* @__PURE__ */ new Map();
     const orphanedPrompts = /* @__PURE__ */ new Map();
+    console.log(`[DALLE-EXTRACT] Starting extraction for conversation ${chat.id}`);
+    let promptMessagesFound = 0;
+    let promptsWithImages = 0;
+    let orphanedPromptsCount = 0;
     for (const messageObj of Object.values(chat.mapping)) {
       const message = messageObj == null ? void 0 : messageObj.message;
       if (!message || ((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
         continue;
       if (this.isDallePromptMessage(message)) {
+        promptMessagesFound++;
         const prompt = this.extractPromptFromJson(message);
+        console.log(`[DALLE-EXTRACT] Found prompt message ${messageObj.id}`);
+        console.log(`[DALLE-EXTRACT] Prompt extracted: ${prompt ? `"${prompt.substring(0, 50)}..."` : "NULL"}`);
         if (prompt) {
           const imageMessageId = this.findDalleImageInDescendants(
             chat.mapping,
             messageObj.id || ""
           );
+          console.log(`[DALLE-EXTRACT] Image search result: ${imageMessageId || "NOT FOUND"}`);
           if (imageMessageId) {
+            promptsWithImages++;
             imagePrompts.set(imageMessageId, {
               prompt,
               timestamp: message.create_time || 0
             });
+            console.log(`[DALLE-EXTRACT] \u2705 Associated prompt with image ${imageMessageId}`);
           } else {
+            orphanedPromptsCount++;
             orphanedPrompts.set(messageObj.id || "", prompt);
+            console.log(`[DALLE-EXTRACT] \u26A0\uFE0F Orphaned prompt (no image found)`);
           }
+        } else {
+          console.log(`[DALLE-EXTRACT] \u274C Failed to extract prompt from JSON`);
         }
       }
     }
+    console.log(`[DALLE-EXTRACT] Summary: ${promptMessagesFound} prompt messages, ${promptsWithImages} with images, ${orphanedPromptsCount} orphaned`);
     return { imagePrompts, orphanedPrompts };
   }
   /**
@@ -7366,15 +7381,21 @@ var ChatGPTDalleProcessor = class {
       let jsonStr = null;
       if (((_a = message.content) == null ? void 0 : _a.parts) && message.content.parts[0]) {
         jsonStr = message.content.parts[0];
+        console.log(`[DALLE-PROMPT] Format 1 (text/parts): ${jsonStr.substring(0, 100)}...`);
       } else if (((_b = message.content) == null ? void 0 : _b.content_type) === "code" && ((_c = message.content) == null ? void 0 : _c.text)) {
         jsonStr = message.content.text;
+        console.log(`[DALLE-PROMPT] Format 2 (code/text): ${jsonStr.substring(0, 100)}...`);
       }
       if (jsonStr) {
         const parsed = JSON.parse(jsonStr);
-        return parsed.prompt || null;
+        const extractedPrompt = parsed.prompt || null;
+        console.log(`[DALLE-PROMPT] Parsed JSON, prompt: ${extractedPrompt ? `"${extractedPrompt.substring(0, 50)}..."` : "NULL"}`);
+        return extractedPrompt;
       }
     } catch (error) {
+      console.log(`[DALLE-PROMPT] \u274C JSON parse error: ${error}`);
     }
+    console.log(`[DALLE-PROMPT] \u274C No JSON string found`);
     return null;
   }
   /**
@@ -7404,10 +7425,17 @@ var ChatGPTDalleProcessor = class {
     const height = contentPart.height || 1024;
     const fileName = `dalle_${genId}_${width}x${height}.png`;
     const prompt = associatedPrompt || contentPart.metadata.dalle.prompt;
+    console.log(`[DALLE-ATTACHMENT] Creating attachment for ${fileName}`);
+    console.log(`[DALLE-ATTACHMENT] associatedPrompt: ${associatedPrompt ? `"${associatedPrompt.substring(0, 50)}..."` : "NULL"}`);
+    console.log(`[DALLE-ATTACHMENT] metadata.dalle.prompt: ${contentPart.metadata.dalle.prompt ? `"${contentPart.metadata.dalle.prompt.substring(0, 50)}..."` : "EMPTY"}`);
+    console.log(`[DALLE-ATTACHMENT] Final prompt: ${prompt ? `"${prompt.substring(0, 50)}..."` : "NULL"}`);
     let extractedContent = "";
     if (prompt) {
       extractedContent = `>[!nexus_prompt] **Prompt**
 > ${prompt.split("\n").join("\n> ")}`;
+      console.log(`[DALLE-ATTACHMENT] \u2705 extractedContent created (${extractedContent.length} chars)`);
+    } else {
+      console.log(`[DALLE-ATTACHMENT] \u26A0\uFE0F No prompt, extractedContent will be empty`);
     }
     if (!hasImage) {
       if (extractedContent)
@@ -7441,7 +7469,11 @@ var ChatGPTDalleProcessor = class {
    */
   static createDalleAssistantMessage(toolMessage, associatedPrompt, promptTimestamp) {
     var _a, _b;
+    console.log(`[DALLE-MESSAGE] Creating DALL-E assistant message for ${toolMessage.id}`);
+    console.log(`[DALLE-MESSAGE] associatedPrompt: ${associatedPrompt ? `"${associatedPrompt.substring(0, 50)}..."` : "NULL"}`);
+    console.log(`[DALLE-MESSAGE] promptTimestamp: ${promptTimestamp || "NULL"}`);
     if (!((_a = toolMessage.content) == null ? void 0 : _a.parts) || !Array.isArray(toolMessage.content.parts)) {
+      console.log(`[DALLE-MESSAGE] \u274C No parts in tool message`);
       return null;
     }
     const attachments = [];
@@ -7451,12 +7483,15 @@ var ChatGPTDalleProcessor = class {
         if (contentPart.content_type === "image_asset_pointer" && contentPart.asset_pointer && ((_b = contentPart.metadata) == null ? void 0 : _b.dalle) && contentPart.metadata.dalle !== null) {
           const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt, true);
           attachments.push(dalleAttachment);
+          console.log(`[DALLE-MESSAGE] \u2705 Added DALL-E attachment`);
         }
       }
     }
     if (attachments.length === 0) {
+      console.log(`[DALLE-MESSAGE] \u274C No attachments created`);
       return null;
     }
+    console.log(`[DALLE-MESSAGE] \u2705 Created message with ${attachments.length} attachment(s)`);
     return {
       id: toolMessage.id || "",
       role: "assistant",
