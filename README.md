@@ -179,13 +179,19 @@ Conversations are organized by provider, year, and month:
 ├── <provider>/
 │   └── YYYY/
 │       └── MM/
-│           └── conversation-title-YYYYMMDD.md
+│           └── YYYY-MM-DD - conversation-title.md
 ```
 
-**Example**:
+**Example** (with date prefix enabled):
 ```
-<conversations>/chatgpt/2024/01/my-conversation-20240115.md
-<conversations>/claude/2024/02/another-chat-20240220.md
+<conversations>/chatgpt/2024/01/2024-01-15 - my-conversation.md
+<conversations>/claude/2024/02/2024-02-20 - another-chat.md
+```
+
+**Example** (without date prefix):
+```
+<conversations>/chatgpt/2024/01/my-conversation.md
+<conversations>/claude/2024/02/another-chat.md
 ```
 
 #### Structure
