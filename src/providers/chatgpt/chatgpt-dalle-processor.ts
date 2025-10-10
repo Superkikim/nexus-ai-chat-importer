@@ -8,11 +8,16 @@ import { StandardMessage, StandardAttachment } from "../../types/standard";
  */
 export class ChatGPTDalleProcessor {
     /**
-     * Extract DALL-E prompts from chat mapping using parent-child relationships
+     * Extract DALL-E prompts from chat mapping using recursive descendant search
+     * Returns both matched prompts (image found) and orphaned prompts (no image found)
      */
-    static extractDallePromptsFromMapping(chat: Chat): Map<string, string> {
-        const dallePrompts = new Map<string, string>();
-        
+    static extractDallePromptsFromMapping(chat: Chat): {
+        imagePrompts: Map<string, string>;
+        orphanedPrompts: Map<string, string>;
+    } {
+        const imagePrompts = new Map<string, string>();
+        const orphanedPrompts = new Map<string, string>();
+
         for (const messageObj of Object.values(chat.mapping)) {
             const message = messageObj?.message;
             if (!message || message.author?.role !== "assistant") continue;
@@ -20,21 +25,63 @@ export class ChatGPTDalleProcessor {
             if (this.isDallePromptMessage(message)) {
                 const prompt = this.extractPromptFromJson(message);
                 if (prompt) {
-                    // Find the corresponding tool message (usually the next child)
-                    const children = messageObj.children || [];
-                    for (const childId of children) {
-                        const childObj = chat.mapping[childId];
-                        if (childObj?.message?.author?.role === "tool" &&
-                            this.hasRealDalleImage(childObj.message)) {
-                            dallePrompts.set(childId, prompt);
-                            break;
-                        }
+                    // Recursive search in descendants until we find image or hit user message
+                    const imageMessageId = this.findDalleImageInDescendants(
+                        chat.mapping,
+                        messageObj.id || ""
+                    );
+
+                    if (imageMessageId) {
+                        imagePrompts.set(imageMessageId, prompt);
+                    } else {
+                        // No image found - store as orphaned prompt
+                        orphanedPrompts.set(messageObj.id || "", prompt);
                     }
                 }
             }
         }
-        
-        return dallePrompts;
+
+        return { imagePrompts, orphanedPrompts };
+    }
+
+    /**
+     * Recursively search for DALL-E image in descendants
+     * Stops at first user message encountered (limit to prevent going too far)
+     */
+    private static findDalleImageInDescendants(
+        mapping: Record<string, any>,
+        startId: string
+    ): string | null {
+        const queue = [startId];
+        const visited = new Set<string>();
+
+        while (queue.length > 0) {
+            const currentId = queue.shift()!;
+
+            if (visited.has(currentId)) continue;
+            visited.add(currentId);
+
+            const currentObj = mapping[currentId];
+            if (!currentObj) continue;
+
+            const message = currentObj.message;
+
+            // LIMIT: Stop if we encounter a user message
+            if (message?.author?.role === "user") {
+                return null;
+            }
+
+            // Check if this is a DALL-E image
+            if (message?.author?.role === "tool" && this.hasRealDalleImage(message)) {
+                return currentId;
+            }
+
+            // Continue with children
+            const children = currentObj.children || [];
+            queue.push(...children);
+        }
+
+        return null;
     }
 
     /**
@@ -159,6 +206,19 @@ export class ChatGPTDalleProcessor {
             content: "Image générée par DALL-E",
             timestamp: toolMessage.create_time || 0,
             attachments: attachments
+        };
+    }
+
+    /**
+     * Create informational message for orphaned DALL-E prompt (no image found)
+     */
+    static createOrphanedPromptMessage(promptMessage: ChatMessage, prompt: string): StandardMessage {
+        return {
+            id: promptMessage.id || "",
+            role: "assistant",
+            content: `⚠️ DALL-E generation requested but image not found in archive\n\n**Prompt:**\n${prompt}`,
+            timestamp: promptMessage.create_time || 0,
+            attachments: []
         };
     }
 }

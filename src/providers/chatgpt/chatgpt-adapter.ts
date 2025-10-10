@@ -57,17 +57,17 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
     getNewMessages(chat: Chat, existingMessageIds: string[]): ChatMessage[] {
         const newMessages: ChatMessage[] = [];
 
-        // Extract DALL-E prompts using centralized processor
-        const dallePrompts = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
+        // Extract DALL-E prompts using centralized processor (with orphaned prompts support)
+        const { imagePrompts, orphanedPrompts } = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
 
         for (const messageObj of Object.values(chat.mapping)) {
             if (messageObj?.id && !existingMessageIds.includes(messageObj.id)) {
                 const message = messageObj.message;
                 if (!message) continue;
 
-                // Handle DALL-E tool messages using processor
+                // Handle DALL-E tool messages with images using processor
                 if (message.author?.role === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
-                    const prompt = dallePrompts.get(messageObj.id || "");
+                    const prompt = imagePrompts.get(messageObj.id || "");
                     const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(message, prompt);
                     if (dalleMessage) {
                         // Convert StandardMessage back to ChatMessage for compatibility
@@ -85,8 +85,23 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
                         };
                         newMessages.push(chatMessage);
                     }
-                } else if (ChatGPTMessageFilter.shouldIncludeMessage(message)) {
-                    // Regular user/assistant messages with enhanced filtering
+                }
+                // Handle orphaned DALL-E prompts (no image found)
+                else if (orphanedPrompts.has(messageObj.id || "")) {
+                    const prompt = orphanedPrompts.get(messageObj.id || "");
+                    if (prompt) {
+                        const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(message, prompt);
+                        const chatMessage: ChatMessage = {
+                            id: orphanedMessage.id,
+                            author: { role: orphanedMessage.role as any },
+                            content: { parts: [orphanedMessage.content] },
+                            create_time: orphanedMessage.timestamp
+                        };
+                        newMessages.push(chatMessage);
+                    }
+                }
+                // Regular user/assistant messages with enhanced filtering
+                else if (ChatGPTMessageFilter.shouldIncludeMessage(message)) {
                     newMessages.push(message);
                 }
             }

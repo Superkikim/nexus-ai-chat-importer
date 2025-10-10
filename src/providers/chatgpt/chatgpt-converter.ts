@@ -55,20 +55,28 @@ export class ChatGPTConverter {
         const messages: StandardMessage[] = [];
         const conversationId = chat.id; // Pass conversation ID for smart linking
 
-        // Extract DALL-E prompts using centralized processor
-        const dallePrompts = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
+        // Extract DALL-E prompts using centralized processor (with orphaned prompts support)
+        const { imagePrompts, orphanedPrompts } = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
 
         // Process all messages
         for (const messageObj of Object.values(chat.mapping)) {
             const message = messageObj?.message;
             if (!message) continue;
 
-            // Handle DALL-E tool messages using processor
+            // Handle DALL-E tool messages with images using processor
             if (message.author?.role === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
-                const prompt = dallePrompts.get(messageObj.id || "");
+                const prompt = imagePrompts.get(messageObj.id || "");
                 const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(message, prompt);
                 if (dalleMessage) {
                     messages.push(dalleMessage);
+                }
+            }
+            // Handle orphaned DALL-E prompts (no image found)
+            else if (orphanedPrompts.has(messageObj.id || "")) {
+                const prompt = orphanedPrompts.get(messageObj.id || "");
+                if (prompt) {
+                    const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(message, prompt);
+                    messages.push(orphanedMessage);
                 }
             }
             // Handle regular messages (but skip DALL-E JSON prompts)
@@ -76,7 +84,7 @@ export class ChatGPTConverter {
                 messages.push(this.convertMessage(message, conversationId));
             }
         }
-        
+
         // Sort by timestamp with ID as secondary sort for chronological order
         if (messages.length <= 1) return messages;
 
