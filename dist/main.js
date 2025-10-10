@@ -7024,7 +7024,7 @@ var _MessageFormatter = class {
     if (attachment.extractedContent) {
       return attachment.extractedContent;
     }
-    let content = `>[!${_MessageFormatter.CALLOUTS.ATTACHMENT}] `;
+    let content = `>>[!${_MessageFormatter.CALLOUTS.ATTACHMENT}] `;
     if ((_a = attachment.status) == null ? void 0 : _a.found) {
       content += `**${attachment.fileName}**`;
     } else {
@@ -7040,30 +7040,30 @@ var _MessageFormatter = class {
     if (((_b = attachment.status) == null ? void 0 : _b.found) && attachment.url) {
       if (!attachment.url.startsWith("sandbox://")) {
         if (this.isImageFile(attachment)) {
-          content += `> ![[${attachment.url}]]`;
+          content += `>> ![[${attachment.url}]]`;
         } else {
-          content += `> [[${attachment.url}]]`;
+          content += `>> [[${attachment.url}]]`;
         }
       } else {
-        content += `> \u26A0\uFE0F File not available in archive. Visit the original conversation to access it`;
+        content += `>> \u26A0\uFE0F File not available in archive. Visit the original conversation to access it`;
       }
     } else if (attachment.status && !attachment.status.found) {
-      content += `> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
+      content += `>> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
       if (attachment.status.note) {
         content += `
-> **Note:** ${attachment.status.note}`;
+>> **Note:** ${attachment.status.note}`;
       }
       if (attachment.status.reason === "missing_from_export") {
         if (attachment.url) {
           content += `
-> [Open original conversation](${attachment.url})`;
+>> [Open original conversation](${attachment.url})`;
         } else {
           content += `
-> Original conversation link not available`;
+>> Original conversation link not available`;
         }
       }
     } else if (attachment.content) {
-      content += `> ${attachment.content}`;
+      content += `>> ${attachment.content}`;
     }
     return content;
   }
@@ -9422,8 +9422,8 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     const fileName = attachment.fileName;
     const conversationUrl = `https://claude.ai/chat/${conversationId}`;
     const fileType = this.getFileTypeFromExtension(fileName);
-    const placeholder = `>[!nexus_attachment] **${fileName}** (${fileType})
-> \u26A0\uFE0F Not included in archive. [Open original conversation](${conversationUrl})`;
+    const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})
+>> \u26A0\uFE0F Not included in archive. [Open original conversation](${conversationUrl})`;
     return {
       ...attachment,
       extractedContent: placeholder

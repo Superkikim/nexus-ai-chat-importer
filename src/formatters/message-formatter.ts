@@ -107,8 +107,8 @@ export class MessageFormatter {
             return attachment.extractedContent;
         }
 
-        // Generic formatting for attachments without extractedContent
-        let content = `>[!${MessageFormatter.CALLOUTS.ATTACHMENT}] `;
+        // Generic formatting for attachments without extractedContent (nested in message callout)
+        let content = `>>[!${MessageFormatter.CALLOUTS.ATTACHMENT}] `;
 
         // Status-aware header
         if (attachment.status?.found) {
@@ -133,38 +133,38 @@ export class MessageFormatter {
             // Skip sandbox:// URLs - they don't work in Obsidian
             if (!attachment.url.startsWith('sandbox://')) {
                 if (this.isImageFile(attachment)) {
-                    content += `> ![[${attachment.url}]]`; // Embed images
+                    content += `>> ![[${attachment.url}]]`; // Embed images
                 } else {
-                    content += `> [[${attachment.url}]]`; // Link documents
+                    content += `>> [[${attachment.url}]]`; // Link documents
                 }
             } else {
                 // Sandbox URL - explain to user
-                content += `> ⚠️ File not available in archive. Visit the original conversation to access it`;
+                content += `>> ⚠️ File not available in archive. Visit the original conversation to access it`;
             }
         }
 
         // Handle missing/failed attachments with informative notes
         else if (attachment.status && !attachment.status.found) {
-            content += `> ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
+            content += `>> ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
 
             if (attachment.status.note) {
-                content += `\n> **Note:** ${attachment.status.note}`;
+                content += `\n>> **Note:** ${attachment.status.note}`;
             }
 
             // Add link to original conversation for missing attachments
             if (attachment.status.reason === 'missing_from_export') {
                 // Try to extract conversation URL from attachment or use generic provider link
                 if (attachment.url) {
-                    content += `\n> [Open original conversation](${attachment.url})`;
+                    content += `\n>> [Open original conversation](${attachment.url})`;
                 } else {
-                    content += `\n> Original conversation link not available`;
+                    content += `\n>> Original conversation link not available`;
                 }
             }
         }
 
         // Add raw content for text files
         else if (attachment.content) {
-            content += `> ${attachment.content}`;
+            content += `>> ${attachment.content}`;
         }
 
         return content;
