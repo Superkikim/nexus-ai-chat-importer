@@ -181,7 +181,7 @@ export class ImportReport {
         let content = "# Nexus AI Chat Importer Report\n\n";
 
         // Generate global summary
-        content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo) + "\n\n";
+        content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) + "\n\n";
 
         // Show skipped files section if any
         if (skippedFiles && skippedFiles.length > 0) {
@@ -253,7 +253,8 @@ export class ImportReport {
         allFiles?: File[],
         processedFiles?: string[],
         skippedFiles?: string[],
-        analysisInfo?: any
+        analysisInfo?: any,
+        isSelectiveImport?: boolean
     ): string {
         const stats = this.getGlobalStats();
         const totalAttachments = this.getTotalAttachmentStats();
@@ -263,8 +264,9 @@ export class ImportReport {
 
         let summary = `## 📊 Import Summary\n\n`;
 
-        // Analysis callout if available
-        if (analysisInfo) {
+        // Analysis callout - only show if NOT selective import or if no conversations were selected
+        // For selective imports, the analysis stats are misleading (show all conversations, not just selected)
+        if (analysisInfo && !isSelectiveImport) {
             summary += `> [!info]- 🔍 Analysis Details\n`;
             summary += `> \n`;
             summary += `> | Metric | Count |\n`;

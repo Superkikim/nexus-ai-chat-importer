@@ -6245,7 +6245,7 @@ var ImportReport = class {
   }
   generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) {
     let content = "# Nexus AI Chat Importer Report\n\n";
-    content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo) + "\n\n";
+    content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) + "\n\n";
     if (skippedFiles && skippedFiles.length > 0) {
       content += this.generateSkippedFilesSection(skippedFiles, isSelectiveImport) + "\n\n";
     }
@@ -6308,7 +6308,7 @@ var ImportReport = class {
 `;
     return section;
   }
-  generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo) {
+  generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) {
     const stats = this.getGlobalStats();
     const totalAttachments = this.getTotalAttachmentStats();
     const fileCount = this.fileSections.size;
@@ -6317,7 +6317,7 @@ var ImportReport = class {
     let summary = `## \u{1F4CA} Import Summary
 
 `;
-    if (analysisInfo) {
+    if (analysisInfo && !isSelectiveImport) {
       summary += `> [!info]- \u{1F50D} Analysis Details
 `;
       summary += `> 
