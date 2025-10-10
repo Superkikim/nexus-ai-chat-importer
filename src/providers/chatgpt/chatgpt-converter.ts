@@ -65,8 +65,12 @@ export class ChatGPTConverter {
 
             // Handle DALL-E tool messages with images using processor
             if (message.author?.role === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
-                const prompt = imagePrompts.get(messageObj.id || "");
-                const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(message, prompt);
+                const promptData = imagePrompts.get(messageObj.id || "");
+                const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(
+                    message,
+                    promptData?.prompt,
+                    promptData?.timestamp
+                );
                 if (dalleMessage) {
                     messages.push(dalleMessage);
                 }

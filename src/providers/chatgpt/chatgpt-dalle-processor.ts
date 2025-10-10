@@ -12,10 +12,10 @@ export class ChatGPTDalleProcessor {
      * Returns both matched prompts (image found) and orphaned prompts (no image found)
      */
     static extractDallePromptsFromMapping(chat: Chat): {
-        imagePrompts: Map<string, string>;
+        imagePrompts: Map<string, { prompt: string; timestamp: number }>;
         orphanedPrompts: Map<string, string>;
     } {
-        const imagePrompts = new Map<string, string>();
+        const imagePrompts = new Map<string, { prompt: string; timestamp: number }>();
         const orphanedPrompts = new Map<string, string>();
 
         for (const messageObj of Object.values(chat.mapping)) {
@@ -32,7 +32,11 @@ export class ChatGPTDalleProcessor {
                     );
 
                     if (imageMessageId) {
-                        imagePrompts.set(imageMessageId, prompt);
+                        // Store prompt with timestamp from prompt message
+                        imagePrompts.set(imageMessageId, {
+                            prompt,
+                            timestamp: message.create_time || 0
+                        });
                     } else {
                         // No image found - store as orphaned prompt
                         orphanedPrompts.set(messageObj.id || "", prompt);
@@ -175,21 +179,25 @@ export class ChatGPTDalleProcessor {
     /**
      * Create Assistant (DALL-E) message from tool message with associated prompt
      */
-    static createDalleAssistantMessage(toolMessage: ChatMessage, associatedPrompt?: string): StandardMessage | null {
+    static createDalleAssistantMessage(
+        toolMessage: ChatMessage,
+        associatedPrompt?: string,
+        promptTimestamp?: number
+    ): StandardMessage | null {
         if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
             return null;
         }
 
         const attachments: StandardAttachment[] = [];
-        
+
         for (const part of toolMessage.content.parts) {
             if (typeof part === "object" && part !== null) {
                 const contentPart = part as any;
-                if (contentPart.content_type === "image_asset_pointer" && 
+                if (contentPart.content_type === "image_asset_pointer" &&
                     contentPart.asset_pointer &&
                     contentPart.metadata?.dalle &&
                     contentPart.metadata.dalle !== null) {
-                    
+
                     const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt);
                     attachments.push(dalleAttachment);
                 }
@@ -204,7 +212,8 @@ export class ChatGPTDalleProcessor {
             id: toolMessage.id || "",
             role: "assistant",
             content: "Image générée par DALL-E",
-            timestamp: toolMessage.create_time || 0,
+            // Use prompt timestamp if available, otherwise fall back to tool message timestamp
+            timestamp: promptTimestamp || toolMessage.create_time || 0,
             attachments: attachments
         };
     }

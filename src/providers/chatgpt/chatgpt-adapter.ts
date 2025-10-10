@@ -67,8 +67,12 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
 
                 // Handle DALL-E tool messages with images using processor
                 if (message.author?.role === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
-                    const prompt = imagePrompts.get(messageObj.id || "");
-                    const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(message, prompt);
+                    const promptData = imagePrompts.get(messageObj.id || "");
+                    const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(
+                        message,
+                        promptData?.prompt,
+                        promptData?.timestamp
+                    );
                     if (dalleMessage) {
                         // Convert StandardMessage back to ChatMessage for compatibility
                         const chatMessage: ChatMessage = {

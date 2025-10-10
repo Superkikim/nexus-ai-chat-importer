@@ -7213,7 +7213,10 @@ var ChatGPTDalleProcessor = class {
             messageObj.id || ""
           );
           if (imageMessageId) {
-            imagePrompts.set(imageMessageId, prompt);
+            imagePrompts.set(imageMessageId, {
+              prompt,
+              timestamp: message.create_time || 0
+            });
           } else {
             orphanedPrompts.set(messageObj.id || "", prompt);
           }
@@ -7326,7 +7329,7 @@ var ChatGPTDalleProcessor = class {
   /**
    * Create Assistant (DALL-E) message from tool message with associated prompt
    */
-  static createDalleAssistantMessage(toolMessage, associatedPrompt) {
+  static createDalleAssistantMessage(toolMessage, associatedPrompt, promptTimestamp) {
     var _a, _b;
     if (!((_a = toolMessage.content) == null ? void 0 : _a.parts) || !Array.isArray(toolMessage.content.parts)) {
       return null;
@@ -7348,7 +7351,8 @@ var ChatGPTDalleProcessor = class {
       id: toolMessage.id || "",
       role: "assistant",
       content: "Image g\xE9n\xE9r\xE9e par DALL-E",
-      timestamp: toolMessage.create_time || 0,
+      // Use prompt timestamp if available, otherwise fall back to tool message timestamp
+      timestamp: promptTimestamp || toolMessage.create_time || 0,
       attachments
     };
   }
@@ -7488,8 +7492,12 @@ var ChatGPTConverter = class {
       if (!message)
         continue;
       if (((_a = message.author) == null ? void 0 : _a.role) === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
-        const prompt = imagePrompts.get(messageObj.id || "");
-        const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(message, prompt);
+        const promptData = imagePrompts.get(messageObj.id || "");
+        const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(
+          message,
+          promptData == null ? void 0 : promptData.prompt,
+          promptData == null ? void 0 : promptData.timestamp
+        );
         if (dalleMessage) {
           messages.push(dalleMessage);
         }
@@ -8071,8 +8079,12 @@ var ChatGPTAdapter = class {
         if (!message)
           continue;
         if (((_a = message.author) == null ? void 0 : _a.role) === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
-          const prompt = imagePrompts.get(messageObj.id || "");
-          const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(message, prompt);
+          const promptData = imagePrompts.get(messageObj.id || "");
+          const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(
+            message,
+            promptData == null ? void 0 : promptData.prompt,
+            promptData == null ? void 0 : promptData.timestamp
+          );
           if (dalleMessage) {
             const chatMessage = {
               id: dalleMessage.id,
