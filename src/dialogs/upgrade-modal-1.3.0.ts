@@ -93,7 +93,6 @@ Try the new **selective import** feature on your next import - you'll love the c
             }
         } catch (error) {
             // Use fallback message if GitHub fetch fails
-            console.debug('[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback');
         }
 
         // Render markdown content

@@ -434,8 +434,6 @@ export class ClaudeConverter {
                                 artifactContents.set(artifactId, finalContent);
                             }
 
-                            console.log(`Processing ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
-
                             try {
                                 // Save this specific version
                                 await this.saveSingleArtifactVersionWithContent(

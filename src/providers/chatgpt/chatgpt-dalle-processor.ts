@@ -37,7 +37,6 @@ export class ChatGPTDalleProcessor {
         const imagePrompts = new Map<string, { prompt: string; timestamp: number }>();
         const orphanedPrompts = new Map<string, string>();
 
-        console.log(`[DALLE-EXTRACT] Starting extraction for conversation ${chat.id}`);
         let promptMessagesFound = 0;
         let promptsWithImages = 0;
         let orphanedPromptsCount = 0;
@@ -50,8 +49,6 @@ export class ChatGPTDalleProcessor {
                 promptMessagesFound++;
                 const prompt = this.extractPromptFromJson(message);
 
-                console.log(`[DALLE-EXTRACT] Found prompt message ${messageObj.id}`);
-                console.log(`[DALLE-EXTRACT] Prompt extracted: ${prompt ? `"${prompt.substring(0, 50)}..."` : 'NULL'}`);
 
                 if (prompt) {
                     // Recursive search in descendants until we find image or hit user message
@@ -60,7 +57,6 @@ export class ChatGPTDalleProcessor {
                         messageObj.id || ""
                     );
 
-                    console.log(`[DALLE-EXTRACT] Image search result: ${imageMessageId || 'NOT FOUND'}`);
 
                     if (imageMessageId) {
                         promptsWithImages++;
@@ -69,20 +65,16 @@ export class ChatGPTDalleProcessor {
                             prompt,
                             timestamp: message.create_time || 0
                         });
-                        console.log(`[DALLE-EXTRACT] ✅ Associated prompt with image ${imageMessageId}`);
                     } else {
                         orphanedPromptsCount++;
                         // No image found - store as orphaned prompt
                         orphanedPrompts.set(messageObj.id || "", prompt);
-                        console.log(`[DALLE-EXTRACT] ⚠️ Orphaned prompt (no image found)`);
                     }
                 } else {
-                    console.log(`[DALLE-EXTRACT] ❌ Failed to extract prompt from JSON`);
                 }
             }
         }
 
-        console.log(`[DALLE-EXTRACT] Summary: ${promptMessagesFound} prompt messages, ${promptsWithImages} with images, ${orphanedPromptsCount} orphaned`);
         return { imagePrompts, orphanedPrompts };
     }
 
@@ -174,24 +166,19 @@ export class ChatGPTDalleProcessor {
             // Format 1: content_type "text" with parts array
             if (message.content?.parts && message.content.parts[0]) {
                 jsonStr = message.content.parts[0] as string;
-                console.log(`[DALLE-PROMPT] Format 1 (text/parts): ${jsonStr.substring(0, 100)}...`);
             }
             // Format 2: content_type "code" with text field
             else if (message.content?.content_type === "code" && message.content?.text) {
                 jsonStr = message.content.text as string;
-                console.log(`[DALLE-PROMPT] Format 2 (code/text): ${jsonStr.substring(0, 100)}...`);
             }
 
             if (jsonStr) {
                 const parsed = JSON.parse(jsonStr);
                 const extractedPrompt = parsed.prompt || null;
-                console.log(`[DALLE-PROMPT] Parsed JSON, prompt: ${extractedPrompt ? `"${extractedPrompt.substring(0, 50)}..."` : 'NULL'}`);
                 return extractedPrompt;
             }
         } catch (error) {
-            console.log(`[DALLE-PROMPT] ❌ JSON parse error: ${error}`);
         }
-        console.log(`[DALLE-PROMPT] ❌ No JSON string found`);
         return null;
     }
 
@@ -230,10 +217,6 @@ export class ChatGPTDalleProcessor {
 
         const prompt = associatedPrompt || contentPart.metadata.dalle.prompt;
 
-        console.log(`[DALLE-ATTACHMENT] Creating attachment for ${fileName}`);
-        console.log(`[DALLE-ATTACHMENT] associatedPrompt: ${associatedPrompt ? `"${associatedPrompt.substring(0, 50)}..."` : 'NULL'}`);
-        console.log(`[DALLE-ATTACHMENT] metadata.dalle.prompt: ${contentPart.metadata.dalle.prompt ? `"${contentPart.metadata.dalle.prompt.substring(0, 50)}..."` : 'EMPTY'}`);
-        console.log(`[DALLE-ATTACHMENT] Final prompt: ${prompt ? `"${prompt.substring(0, 50)}..."` : 'NULL'}`);
 
         // Create extracted content with prompt + image callouts (provider-formatted)
         let extractedContent = '';
@@ -258,9 +241,7 @@ export class ChatGPTDalleProcessor {
 >> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`;
             }
 
-            console.log(`[DALLE-ATTACHMENT] ✅ extractedContent created (${extractedContent.length} chars)`);
         } else {
-            console.log(`[DALLE-ATTACHMENT] ⚠️ No prompt, extractedContent will be empty`);
         }
 
         return {
@@ -294,12 +275,8 @@ export class ChatGPTDalleProcessor {
         associatedPrompt?: string,
         promptTimestamp?: number
     ): StandardMessage | null {
-        console.log(`[DALLE-MESSAGE] Creating DALL-E assistant message for ${toolMessage.id}`);
-        console.log(`[DALLE-MESSAGE] associatedPrompt: ${associatedPrompt ? `"${associatedPrompt.substring(0, 50)}..."` : 'NULL'}`);
-        console.log(`[DALLE-MESSAGE] promptTimestamp: ${promptTimestamp || 'NULL'}`);
 
         if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
-            console.log(`[DALLE-MESSAGE] ❌ No parts in tool message`);
             return null;
         }
 
@@ -315,17 +292,14 @@ export class ChatGPTDalleProcessor {
 
                     const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt, true);
                     attachments.push(dalleAttachment);
-                    console.log(`[DALLE-MESSAGE] ✅ Added DALL-E attachment`);
                 }
             }
         }
 
         if (attachments.length === 0) {
-            console.log(`[DALLE-MESSAGE] ❌ No attachments created`);
             return null;
         }
 
-        console.log(`[DALLE-MESSAGE] ✅ Created message with ${attachments.length} attachment(s)`);
         return {
             id: toolMessage.id || "",
             role: "assistant",
