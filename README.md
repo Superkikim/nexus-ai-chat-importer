@@ -126,7 +126,6 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 ### Advanced Options
 
 - **Skip Missing Attachments**: Continue import even if some attachments are missing
-- **Debug Logging**: Enable detailed logging for troubleshooting
 
 ## 💡 Best Practices
 
@@ -135,7 +134,6 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 - ✅ **Use Reading View** for optimal visual experience with callouts
 - ✅ **Exclude attachments folder** from cloud sync to save bandwidth
 - ✅ **Enable date suffix** to avoid filename conflicts
-- ✅ **Keep debug logging off** unless troubleshooting
 
 ### Workflow Tips
 
@@ -146,7 +144,9 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 
 ## 📁 File Organization
 
-### Folder Structure
+### Default Folder Structure
+
+All folder paths can be customized in settings.
 
 ```
 Nexus AI Chat Imports/
@@ -187,7 +187,12 @@ Nexus AI Chat Imports/
 ### Conversation Files
 
 Each conversation is saved as a Markdown file with:
-- **Frontmatter**: Metadata (ID, provider, dates, aliases)
+
+- **Frontmatter**: Rich metadata (ID, provider, dates, message count, aliases) that enables Obsidian's powerful features:
+  - Search and filter by any metadata field
+  - Create dynamic queries with Dataview plugin
+  - Build custom dashboards and views
+  - Track conversation history and statistics
 - **Header**: Title with link to original web conversation
 - **Messages**: Formatted with custom callouts (user, assistant, attachments, artifacts)
 - **Timestamps**: ISO 8601 format for international compatibility
@@ -213,10 +218,11 @@ The plugin uses Obsidian's callout system for beautiful formatting:
 - ✨ **Artifacts** (Claude): Purple callouts with sparkles icon
 - 🪄 **DALL-E Prompts**: Red callouts with magic wand icon
 
-### Reading View vs. Edit Mode
+### Viewing Modes
 
 - **Reading View**: Full visual experience with colored callouts
-- **Edit Mode**: Raw Markdown with callout syntax visible
+- **Live Preview**: Rendered callouts while editing
+- **Source Mode**: Raw Markdown with callout syntax visible
 
 **Recommendation**: Use Reading View for browsing conversations, Edit Mode for editing.
 
@@ -248,50 +254,14 @@ The plugin automatically extracts and imports attachments from your conversation
 
 **ChatGPT Attachments**:
 - 📷 **Images**: User-uploaded photos, screenshots
-- 🎨 **DALL-E Images**: AI-generated images with their prompts
+- 🎨 **DALL-E Images**: AI-generated images embedded with their original prompts
 - 📄 **Documents**: PDFs, text files, code files
 - 🔗 **Links**: Embedded as Obsidian links to the actual files
 
 **Claude Attachments**:
 - 📷 **Images**: User-uploaded images
 - 📄 **Documents**: Uploaded files
-- ✨ **Artifacts**: Code, documents, and other AI-generated content saved as separate versioned files
-
-### DALL-E Special Handling
-
-DALL-E images receive special treatment:
-
-1. **Prompt Preservation**: The original prompt is saved in a dedicated callout
-2. **Nested Structure**: Prompts and images are organized in nested callouts for clarity
-3. **Timestamp Accuracy**: Uses the prompt timestamp for proper chronological ordering
-4. **Format Support**: Handles both text-based and code-based prompt formats
-
-**Example in your note**:
-```markdown
-> [!nexus_assistant]
-> Here's your image:
->
-> > [!nexus_prompt]
-> > **DALL-E Prompt**
-> >
-> > A serene mountain landscape at sunset...
->
-> ![Generated Image](Attachments/chatgpt/images/dalle-abc123.png)
-```
-
-### Claude Artifact Versioning
-
-Claude artifacts are saved as separate files with version tracking:
-
-- **Location**: `Attachments/claude/artifacts/{conversation_id}/`
-- **Naming**: `artifact-name_v1.py`, `artifact-name_v2.py`, etc.
-- **Versioning**: Each modification creates a new version
-- **Linking**: Conversations link to specific artifact versions
-
-**Version Types**:
-- `create` → New artifact with full content (v1)
-- `rewrite` → Complete replacement (new version)
-- `update` → Incremental changes (new version with accumulated changes)
+- ✨ **Artifacts**: Code, documents, and other AI-generated content saved as separate versioned files (each modification creates a new version)
 
 ### Attachment Status
 
@@ -427,20 +397,22 @@ You can safely reimport the same ZIP file multiple times:
 
 ### What's Preserved
 
-- Your manual edits to conversations (if you've made any)
+- Your manual edits to conversations (as long as frontmatter and message IDs remain intact)
 - Existing attachments and artifacts
 - Folder organization
+
+> **⚠️ Important**: Avoid modifying frontmatter fields or deleting message IDs (hidden in Reading View). These are essential for proper reimport and update detection.
 
 ## ⚠️ Important Notes
 
 ### Provider-Specific Limitations
 
-**Claude Projects**:
-- Claude exports don't currently include project association data
-- This limitation has been reported to Anthropic
-- All conversations are imported individually regardless of project membership
+**Projects (ChatGPT & Claude)**:
+- Project organization is not currently supported in this release
+- All conversations are imported individually
+- Future versions may add project support
 
-**ChatGPT Attachments**:
+**Attachments**:
 - Only attachments included in the ZIP export can be imported
 - Some older exports may not contain all referenced files
 - DALL-E images are automatically detected and imported with their prompts
@@ -449,7 +421,7 @@ You can safely reimport the same ZIP file multiple times:
 
 **Large Archives**:
 - Archives with 1000+ conversations may take several minutes to analyze
-- Conversation selection dialog loads all conversations for preview
+- Conversation selection dialog loads conversation titles for preview (not full content)
 - Import progress is shown in real-time
 - Obsidian may become temporarily unresponsive during indexing
 
@@ -462,12 +434,12 @@ You can safely reimport the same ZIP file multiple times:
 
 **Vault Size**:
 - Importing attachments significantly increases vault size
-- DALL-E images can be several MB each
+- AI-generated images can be several MB each
 - Consider excluding the attachments folder from cloud sync
 
 **Sync Performance**:
 - Large attachment folders can slow down cloud sync
-- Recommended: Add `Nexus AI Chat Imports/Attachments/` to your sync ignore list
+- Recommended: Add your attachments folder to your sync ignore list (folder path can be customized in settings)
 
 ## 🐛 Troubleshooting
 
@@ -482,14 +454,13 @@ You can safely reimport the same ZIP file multiple times:
 **No Conversations Appear in Selection Dialog**:
 - Verify you selected the correct provider (ChatGPT vs Claude)
 - Check that the ZIP file is a valid export from the provider
-- Try the other provider option if auto-detection failed
-- Check the console (Ctrl+Shift+I) for error messages
+- Check the import report for detailed error information
 
 **Missing Attachments**:
 - Verify "Import Attachments" is enabled in settings
 - Check that your export ZIP includes the attachments folder
 - Some older exports may not contain all referenced files
-- Enable "Skip Missing Attachments" to continue import despite missing files
+- Check the import report for attachment statistics
 
 ### Formatting Issues
 
@@ -521,14 +492,14 @@ You can safely reimport the same ZIP file multiple times:
 
 If you encounter issues:
 
-1. **Enable debug logging** in settings
-2. **Reproduce the issue**
-3. **Check the console** (Ctrl/Cmd+Shift+I) for errors
+1. **Check the import report** for detailed error information
+2. **Verify your settings** are correct
+3. **Try with a smaller export** to isolate the problem
 4. **Report the issue** on [GitHub Issues](https://github.com/Superkikim/nexus-ai-chat-importer/issues) with:
    - Plugin version
    - Obsidian version
    - Provider (ChatGPT/Claude)
-   - Error messages from console
+   - Description of the problem
    - Steps to reproduce
 
 ## 📝 License
