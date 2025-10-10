@@ -224,21 +224,28 @@ export class ImportReport {
     }
 
     private generateSkippedFilesSection(skippedFiles: string[], isSelectiveImport?: boolean): string {
-        let section: string;
-        let explanation: string;
+        const title = isSelectiveImport
+            ? "⏭️ Skipped Files (No Selected Conversations)"
+            : "⏭️ Skipped Files (Already Up to Date)";
 
-        if (isSelectiveImport) {
-            section = "## Skipped Files (No Selected Conversations)\n\n";
-            explanation = "The following files were not processed because they contain no selected conversations:\n\n";
-        } else {
-            section = "## Skipped Files (Already Up to Date)\n\n";
-            explanation = "The following files were analyzed but not processed because all their conversations are already up to date:\n\n";
-        }
+        const explanation = isSelectiveImport
+            ? "Files not processed because they contain no selected conversations"
+            : "Files analyzed but not processed because all conversations are already up to date";
 
-        section += explanation;
+        let section = `> [!note]- ${title}\n`;
+        section += `> ${explanation}\n`;
+        section += `> \n`;
+        section += `> **Total:** ${skippedFiles.length} files\n`;
+        section += `> \n`;
+        section += `> <details>\n`;
+        section += `> <summary>View file list</summary>\n`;
+        section += `> \n`;
         skippedFiles.forEach(fileName => {
-            section += `- ${fileName}\n`;
+            section += `> - \`${fileName}\`\n`;
         });
+        section += `> \n`;
+        section += `> </details>\n`;
+
         return section;
     }
 
@@ -250,42 +257,59 @@ export class ImportReport {
     ): string {
         const stats = this.getGlobalStats();
         const totalAttachments = this.getTotalAttachmentStats();
-        const attachmentSummary = totalAttachments.total > 0
-            ? `\n- **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)`
-            : "";
-
         const fileCount = this.fileSections.size;
         const totalFilesAnalyzed = allFiles ? allFiles.length : fileCount;
         const filesSkipped = skippedFiles ? skippedFiles.length : 0;
 
-        let summary = `## Summary\n\n`;
+        let summary = `## 📊 Import Summary\n\n`;
 
-        // Analysis info if available
+        // Analysis callout if available
         if (analysisInfo) {
-            summary += `### Analysis\n`;
-            summary += `- **Files Analyzed**: ${totalFilesAnalyzed}\n`;
-            summary += `- **Total Conversations Found**: ${analysisInfo.totalConversationsFound || 0}\n`;
-            summary += `- **Unique Conversations**: ${analysisInfo.uniqueConversationsKept || 0}\n`;
+            summary += `> [!info]- 🔍 Analysis Details\n`;
+            summary += `> \n`;
+            summary += `> | Metric | Count |\n`;
+            summary += `> |:---|---:|\n`;
+            summary += `> | Files Analyzed | ${totalFilesAnalyzed} |\n`;
+            summary += `> | Total Conversations Found | ${analysisInfo.totalConversationsFound || 0} |\n`;
+            summary += `> | Unique Conversations | ${analysisInfo.uniqueConversationsKept || 0} |\n`;
             if (analysisInfo.duplicatesRemoved > 0) {
-                summary += `- **Duplicates Removed**: ${analysisInfo.duplicatesRemoved}\n`;
+                summary += `> | Duplicates Removed | ${analysisInfo.duplicatesRemoved} |\n`;
             }
-            summary += `- **New**: ${analysisInfo.conversationsNew || 0}\n`;
-            summary += `- **Updated**: ${analysisInfo.conversationsUpdated || 0}\n`;
-            summary += `- **Unchanged**: ${analysisInfo.conversationsIgnored || 0}\n\n`;
+            summary += `> | New | ${analysisInfo.conversationsNew || 0} |\n`;
+            summary += `> | Updated | ${analysisInfo.conversationsUpdated || 0} |\n`;
+            summary += `> | Unchanged | ${analysisInfo.conversationsIgnored || 0} |\n`;
+            summary += `\n`;
         }
 
-        // Import results
-        summary += `### Import Results\n`;
-        summary += `- **Files with New/Updated Content**: ${fileCount}\n`;
+        // Import results in a clean grid
+        summary += `### 📥 Import Results\n\n`;
+        summary += `| Category | Count |\n`;
+        summary += `|:---|---:|\n`;
+        summary += `| Files Processed | ${fileCount} |\n`;
         if (filesSkipped > 0) {
-            summary += `- **Files with No Changes**: ${filesSkipped} (already up to date)\n`;
+            summary += `| Files Skipped (up to date) | ${filesSkipped} |\n`;
         }
-        summary += `- **Conversations Imported**: ${stats.created + stats.updated}\n`;
-        summary += `- **Created**: ${stats.created} new conversations\n`;
-        summary += `- **Updated**: ${stats.updated} conversations with ${stats.newMessages} new messages\n`;
-        summary += `- **Skipped**: ${stats.skipped} conversations (no changes)\n`;
-        summary += `- **Failed**: ${stats.failed} conversations\n`;
-        summary += `- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+        summary += `| **Total Imported** | **${stats.created + stats.updated}** |\n`;
+        summary += `| ✨ Created | ${stats.created} |\n`;
+        summary += `| 🔄 Updated | ${stats.updated} (${stats.newMessages} new messages) |\n`;
+        summary += `| ⏭️ Skipped | ${stats.skipped} |\n`;
+
+        if (stats.failed > 0) {
+            summary += `| ❌ Failed | ${stats.failed} |\n`;
+        }
+        if (this.globalErrors.length > 0) {
+            summary += `| ⚠️ Errors | ${this.globalErrors.length} |\n`;
+        }
+
+        if (totalAttachments.total > 0) {
+            const attachmentIcon = totalAttachments.found === totalAttachments.total ? '✅' :
+                                   totalAttachments.found === 0 ? '❌' : '⚠️';
+            summary += `| ${attachmentIcon} Attachments | ${totalAttachments.found}/${totalAttachments.total} |\n`;
+            if (totalAttachments.missing > 0 || totalAttachments.failed > 0) {
+                summary += `| └─ Missing | ${totalAttachments.missing} |\n`;
+                summary += `| └─ Failed | ${totalAttachments.failed} |\n`;
+            }
+        }
 
         return summary;
     }

@@ -6280,73 +6280,111 @@ var ImportReport = class {
     return content;
   }
   generateSkippedFilesSection(skippedFiles, isSelectiveImport) {
-    let section;
-    let explanation;
-    if (isSelectiveImport) {
-      section = "## Skipped Files (No Selected Conversations)\n\n";
-      explanation = "The following files were not processed because they contain no selected conversations:\n\n";
-    } else {
-      section = "## Skipped Files (Already Up to Date)\n\n";
-      explanation = "The following files were analyzed but not processed because all their conversations are already up to date:\n\n";
-    }
-    section += explanation;
+    const title = isSelectiveImport ? "\u23ED\uFE0F Skipped Files (No Selected Conversations)" : "\u23ED\uFE0F Skipped Files (Already Up to Date)";
+    const explanation = isSelectiveImport ? "Files not processed because they contain no selected conversations" : "Files analyzed but not processed because all conversations are already up to date";
+    let section = `> [!note]- ${title}
+`;
+    section += `> ${explanation}
+`;
+    section += `> 
+`;
+    section += `> **Total:** ${skippedFiles.length} files
+`;
+    section += `> 
+`;
+    section += `> <details>
+`;
+    section += `> <summary>View file list</summary>
+`;
+    section += `> 
+`;
     skippedFiles.forEach((fileName) => {
-      section += `- ${fileName}
+      section += `> - \`${fileName}\`
 `;
     });
+    section += `> 
+`;
+    section += `> </details>
+`;
     return section;
   }
   generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo) {
     const stats = this.getGlobalStats();
     const totalAttachments = this.getTotalAttachmentStats();
-    const attachmentSummary = totalAttachments.total > 0 ? `
-- **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)` : "";
     const fileCount = this.fileSections.size;
     const totalFilesAnalyzed = allFiles ? allFiles.length : fileCount;
     const filesSkipped = skippedFiles ? skippedFiles.length : 0;
-    let summary = `## Summary
+    let summary = `## \u{1F4CA} Import Summary
 
 `;
     if (analysisInfo) {
-      summary += `### Analysis
+      summary += `> [!info]- \u{1F50D} Analysis Details
 `;
-      summary += `- **Files Analyzed**: ${totalFilesAnalyzed}
+      summary += `> 
 `;
-      summary += `- **Total Conversations Found**: ${analysisInfo.totalConversationsFound || 0}
+      summary += `> | Metric | Count |
 `;
-      summary += `- **Unique Conversations**: ${analysisInfo.uniqueConversationsKept || 0}
+      summary += `> |:---|---:|
+`;
+      summary += `> | Files Analyzed | ${totalFilesAnalyzed} |
+`;
+      summary += `> | Total Conversations Found | ${analysisInfo.totalConversationsFound || 0} |
+`;
+      summary += `> | Unique Conversations | ${analysisInfo.uniqueConversationsKept || 0} |
 `;
       if (analysisInfo.duplicatesRemoved > 0) {
-        summary += `- **Duplicates Removed**: ${analysisInfo.duplicatesRemoved}
+        summary += `> | Duplicates Removed | ${analysisInfo.duplicatesRemoved} |
 `;
       }
-      summary += `- **New**: ${analysisInfo.conversationsNew || 0}
+      summary += `> | New | ${analysisInfo.conversationsNew || 0} |
 `;
-      summary += `- **Updated**: ${analysisInfo.conversationsUpdated || 0}
+      summary += `> | Updated | ${analysisInfo.conversationsUpdated || 0} |
 `;
-      summary += `- **Unchanged**: ${analysisInfo.conversationsIgnored || 0}
+      summary += `> | Unchanged | ${analysisInfo.conversationsIgnored || 0} |
+`;
+      summary += `
+`;
+    }
+    summary += `### \u{1F4E5} Import Results
 
 `;
-    }
-    summary += `### Import Results
+    summary += `| Category | Count |
 `;
-    summary += `- **Files with New/Updated Content**: ${fileCount}
+    summary += `|:---|---:|
+`;
+    summary += `| Files Processed | ${fileCount} |
 `;
     if (filesSkipped > 0) {
-      summary += `- **Files with No Changes**: ${filesSkipped} (already up to date)
+      summary += `| Files Skipped (up to date) | ${filesSkipped} |
 `;
     }
-    summary += `- **Conversations Imported**: ${stats.created + stats.updated}
+    summary += `| **Total Imported** | **${stats.created + stats.updated}** |
 `;
-    summary += `- **Created**: ${stats.created} new conversations
+    summary += `| \u2728 Created | ${stats.created} |
 `;
-    summary += `- **Updated**: ${stats.updated} conversations with ${stats.newMessages} new messages
+    summary += `| \u{1F504} Updated | ${stats.updated} (${stats.newMessages} new messages) |
 `;
-    summary += `- **Skipped**: ${stats.skipped} conversations (no changes)
+    summary += `| \u23ED\uFE0F Skipped | ${stats.skipped} |
 `;
-    summary += `- **Failed**: ${stats.failed} conversations
+    if (stats.failed > 0) {
+      summary += `| \u274C Failed | ${stats.failed} |
 `;
-    summary += `- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+    }
+    if (this.globalErrors.length > 0) {
+      summary += `| \u26A0\uFE0F Errors | ${this.globalErrors.length} |
+`;
+    }
+    if (totalAttachments.total > 0) {
+      const attachmentIcon = totalAttachments.found === totalAttachments.total ? "\u2705" : totalAttachments.found === 0 ? "\u274C" : "\u26A0\uFE0F";
+      summary += `| ${attachmentIcon} Attachments | ${totalAttachments.found}/${totalAttachments.total} |
+`;
+      if (totalAttachments.missing > 0 || totalAttachments.failed > 0) {
+        summary += `| \u2514\u2500 Missing | ${totalAttachments.missing} |
+`;
+        summary += `| \u2514\u2500 Failed | ${totalAttachments.failed} |
+`;
+      }
+    }
     return summary;
   }
   generateFileSummary(section) {
