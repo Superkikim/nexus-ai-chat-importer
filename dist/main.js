@@ -6243,9 +6243,9 @@ var ImportReport = class {
   addError(message, details) {
     this.globalErrors.push({ message, details });
   }
-  generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) {
+  generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) {
     let content = "# Nexus AI Chat Importer Report\n\n";
-    content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) + "\n\n";
+    content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) + "\n\n";
     if (skippedFiles && skippedFiles.length > 0) {
       content += this.generateSkippedFilesSection(skippedFiles, isSelectiveImport) + "\n\n";
     }
@@ -6308,7 +6308,7 @@ var ImportReport = class {
 `;
     return section;
   }
-  generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) {
+  generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) {
     const stats = this.getGlobalStats();
     const totalAttachments = this.getTotalAttachmentStats();
     const fileCount = this.fileSections.size;
@@ -6321,37 +6321,17 @@ var ImportReport = class {
       summary += `### \u{1F4E6} Files Analyzed
 
 `;
-      summary += `| File | Status | Conversations | Imported |
+      summary += `| File | Conversations | Duplicates | Selected | Created | Updated |
 `;
-      summary += `|:---|:---:|---:|---:|
+      summary += `|:---|---:|---:|---:|---:|---:|
 `;
       const fileInfos = [];
-      const processedFileNames = Array.from(this.fileSections.keys());
-      processedFileNames.forEach((fileName) => {
-        const section = this.fileSections.get(fileName);
-        const totalImported = section.created.length + section.updated.length;
-        const totalInFile = section.counters.totalConversationsProcessed;
-        const file = allFiles.find((f) => f.name === fileName);
+      allFiles.forEach((file) => {
         fileInfos.push({
-          name: fileName,
-          status: "processed",
-          conversations: totalInFile,
-          imported: totalImported,
+          name: file.name,
           file
         });
       });
-      if (skippedFiles && skippedFiles.length > 0) {
-        skippedFiles.forEach((fileName) => {
-          const file = allFiles.find((f) => f.name === fileName);
-          fileInfos.push({
-            name: fileName,
-            status: "skipped",
-            conversations: 0,
-            imported: 0,
-            file
-          });
-        });
-      }
       fileInfos.sort((a, b) => {
         var _a, _b;
         const timeA = ((_a = a.file) == null ? void 0 : _a.lastModified) || 0;
@@ -6359,10 +6339,17 @@ var ImportReport = class {
         return timeB - timeA;
       });
       fileInfos.forEach((info) => {
-        const statusIcon = info.status === "processed" ? "\u2705 Processed" : "\u23ED\uFE0F Skipped";
-        const conversations = info.status === "processed" ? info.conversations : "-";
-        summary += `| \`${info.name}\` | ${statusIcon} | ${conversations} | ${info.imported} |
+        const stats2 = fileStats == null ? void 0 : fileStats.get(info.name);
+        const section = this.fileSections.get(info.name);
+        if (stats2) {
+          const created = (section == null ? void 0 : section.created.length) || 0;
+          const updated = (section == null ? void 0 : section.updated.length) || 0;
+          summary += `| \`${info.name}\` | ${stats2.totalConversations} | ${stats2.duplicates} | ${stats2.selectedForImport} | ${created} | ${updated} |
 `;
+        } else {
+          summary += `| \`${info.name}\` | - | - | - | 0 | 0 |
+`;
+        }
       });
       summary += `
 `;
@@ -12353,6 +12340,7 @@ var ConversationMetadataExtractor = class {
   async extractMetadataFromMultipleZips(files, forcedProvider, existingConversations) {
     const conversationMap = /* @__PURE__ */ new Map();
     const allConversationsFound = [];
+    const fileStatsMap = /* @__PURE__ */ new Map();
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
@@ -12368,11 +12356,16 @@ var ConversationMetadataExtractor = class {
           // Don't compare with vault yet
         );
         allConversationsFound.push(...metadata);
+        const totalInFile = metadata.length;
+        let duplicatesInFile = 0;
+        let uniqueFromFile = 0;
         for (const conversation of metadata) {
           const existing = conversationMap.get(conversation.id);
           if (!existing) {
+            uniqueFromFile++;
             conversationMap.set(conversation.id, conversation);
           } else {
+            duplicatesInFile++;
             if (conversation.updateTime > existing.updateTime) {
               conversationMap.set(conversation.id, conversation);
             } else if (conversation.updateTime === existing.updateTime) {
@@ -12384,6 +12377,15 @@ var ConversationMetadataExtractor = class {
             }
           }
         }
+        fileStatsMap.set(file.name, {
+          fileName: file.name,
+          totalConversations: totalInFile,
+          duplicates: duplicatesInFile,
+          uniqueContributed: uniqueFromFile,
+          selectedForImport: 0,
+          newConversations: 0,
+          updatedConversations: 0
+        });
       } catch (error) {
         console.error(`Error extracting metadata from ${file.name}:`, error);
       }
@@ -12392,6 +12394,18 @@ var ConversationMetadataExtractor = class {
       Array.from(conversationMap.values()),
       existingConversations
     );
+    for (const conversation of filterResult.conversations) {
+      const fileName = conversation.sourceFile;
+      if (fileName && fileStatsMap.has(fileName)) {
+        const stats = fileStatsMap.get(fileName);
+        stats.selectedForImport++;
+        if (conversation.existenceStatus === "new") {
+          stats.newConversations++;
+        } else if (conversation.existenceStatus === "updated") {
+          stats.updatedConversations++;
+        }
+      }
+    }
     const analysisInfo = {
       totalConversationsFound: allConversationsFound.length,
       uniqueConversationsKept: conversationMap.size,
@@ -12404,7 +12418,8 @@ var ConversationMetadataExtractor = class {
     this.plugin.logger.debug(`Analysis: Found ${analysisInfo.totalConversationsFound} conversations across ${files.length} files. After deduplication: ${analysisInfo.uniqueConversationsKept} unique conversations. For selection: ${filterResult.conversations.length} conversations (${analysisInfo.conversationsNew} new, ${analysisInfo.conversationsUpdated} updated). Ignored: ${analysisInfo.conversationsIgnored} unchanged.`);
     return {
       conversations: filterResult.conversations,
-      analysisInfo
+      analysisInfo,
+      fileStats: fileStatsMap
     };
   }
   /**
@@ -12899,7 +12914,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
         this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
         new import_obsidian24.Notice("No new or updated conversations found. All conversations are already up to date.");
         this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
-        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, false);
+        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath2}`);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -12927,7 +12942,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
           }
         }
       }
-      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, false);
+      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
@@ -12968,7 +12983,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
         this.app,
         extractionResult.conversations,
         (result) => {
-          this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo);
+          this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo, extractionResult.fileStats);
         },
         this,
         extractionResult.analysisInfo
@@ -12985,11 +13000,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
   /**
    * Handle the result from conversation selection dialog
    */
-  async handleConversationSelectionResult(result, files, provider, analysisInfo) {
+  async handleConversationSelectionResult(result, files, provider, analysisInfo, fileStats) {
     const operationReport = new ImportReport();
     if (result.selectedIds.length === 0) {
       new import_obsidian24.Notice("No conversations selected for import.");
-      const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, true);
+      const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
@@ -13007,7 +13022,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
         }
       }
     }
-    const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, true);
+    const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
@@ -13017,7 +13032,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian24.Plugin {
   /**
    * Write consolidated report for multi-file import
    */
-  async writeConsolidatedReport(report, provider, files, analysisInfo, isSelectiveImport) {
+  async writeConsolidatedReport(report, provider, files, analysisInfo, fileStats, isSelectiveImport) {
     this.logger.debug("[WRITE-REPORT] Starting writeConsolidatedReport");
     this.logger.debug(`[WRITE-REPORT] Provider: ${provider}, Files: ${files.length}`);
     this.logger.debug("[WRITE-REPORT] Using static imports for ensureFolderExists and formatTimestamp");
@@ -13077,7 +13092,7 @@ totalSkipped: ${stats.skipped}
 totalFailed: ${stats.failed}
 ---
 
-${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo, isSelectiveImport)}
+${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport)}
 `;
     try {
       this.logger.info(`Creating report file at: ${logFilePath}`);

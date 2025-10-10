@@ -176,12 +176,13 @@ export class ImportReport {
         processedFiles?: string[],
         skippedFiles?: string[],
         analysisInfo?: any,
+        fileStats?: Map<string, any>,
         isSelectiveImport?: boolean
     ): string {
         let content = "# Nexus AI Chat Importer Report\n\n";
 
         // Generate global summary
-        content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, isSelectiveImport) + "\n\n";
+        content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) + "\n\n";
 
         // Show skipped files section if any
         if (skippedFiles && skippedFiles.length > 0) {
@@ -254,6 +255,7 @@ export class ImportReport {
         processedFiles?: string[],
         skippedFiles?: string[],
         analysisInfo?: any,
+        fileStats?: Map<string, any>,
         isSelectiveImport?: boolean
     ): string {
         const stats = this.getGlobalStats();
@@ -267,49 +269,24 @@ export class ImportReport {
         // Files analyzed table - show all files with their status
         if (allFiles && allFiles.length > 0) {
             summary += `### 📦 Files Analyzed\n\n`;
-            summary += `| File | Status | Conversations | Imported |\n`;
-            summary += `|:---|:---:|---:|---:|\n`;
+            summary += `| File | Conversations | Duplicates | Selected | Created | Updated |\n`;
+            summary += `|:---|---:|---:|---:|---:|---:|\n`;
 
-            // Combine processed and skipped files with their info
+            // Combine all files (processed and skipped) with their stats
             interface FileInfo {
                 name: string;
-                status: 'processed' | 'skipped';
-                conversations: number;
-                imported: number;
                 file?: File;
             }
 
             const fileInfos: FileInfo[] = [];
 
-            // Add processed files
-            const processedFileNames = Array.from(this.fileSections.keys());
-            processedFileNames.forEach(fileName => {
-                const section = this.fileSections.get(fileName)!;
-                const totalImported = section.created.length + section.updated.length;
-                const totalInFile = section.counters.totalConversationsProcessed;
-                const file = allFiles.find(f => f.name === fileName);
+            // Add all files
+            allFiles.forEach(file => {
                 fileInfos.push({
-                    name: fileName,
-                    status: 'processed',
-                    conversations: totalInFile,
-                    imported: totalImported,
-                    file
+                    name: file.name,
+                    file: file
                 });
             });
-
-            // Add skipped files
-            if (skippedFiles && skippedFiles.length > 0) {
-                skippedFiles.forEach(fileName => {
-                    const file = allFiles.find(f => f.name === fileName);
-                    fileInfos.push({
-                        name: fileName,
-                        status: 'skipped',
-                        conversations: 0,
-                        imported: 0,
-                        file
-                    });
-                });
-            }
 
             // Sort by file lastModified date (most recent first)
             fileInfos.sort((a, b) => {
@@ -318,11 +295,21 @@ export class ImportReport {
                 return timeB - timeA; // Descending order (newest first)
             });
 
-            // Generate table rows
+            // Generate table rows using fileStats
             fileInfos.forEach(info => {
-                const statusIcon = info.status === 'processed' ? '✅ Processed' : '⏭️ Skipped';
-                const conversations = info.status === 'processed' ? info.conversations : '-';
-                summary += `| \`${info.name}\` | ${statusIcon} | ${conversations} | ${info.imported} |\n`;
+                const stats = fileStats?.get(info.name);
+                const section = this.fileSections.get(info.name);
+
+                if (stats) {
+                    // Use analysis stats from metadata extraction
+                    const created = section?.created.length || 0;
+                    const updated = section?.updated.length || 0;
+
+                    summary += `| \`${info.name}\` | ${stats.totalConversations} | ${stats.duplicates} | ${stats.selectedForImport} | ${created} | ${updated} |\n`;
+                } else {
+                    // File was skipped or no stats available
+                    summary += `| \`${info.name}\` | - | - | - | 0 | 0 |\n`;
+                }
             });
 
             summary += `\n`;

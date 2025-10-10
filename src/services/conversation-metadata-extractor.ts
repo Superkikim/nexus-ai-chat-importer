@@ -50,11 +50,25 @@ export interface ConversationMetadata {
 }
 
 /**
+ * Statistics for a single file during analysis
+ */
+export interface FileAnalysisStats {
+    fileName: string;
+    totalConversations: number;        // Total in this file
+    duplicates: number;                 // Duplicates (already seen in previous files)
+    uniqueContributed: number;          // Unique conversations from this file
+    selectedForImport: number;          // Selected for import (new + updated)
+    newConversations: number;           // New (not in vault)
+    updatedConversations: number;       // Updated (newer than vault)
+}
+
+/**
  * Result of metadata extraction with analysis info
  */
 export interface MetadataExtractionResult {
     conversations: ConversationMetadata[];
     analysisInfo?: AnalysisInfo;
+    fileStats?: Map<string, FileAnalysisStats>;
 }
 
 /**
@@ -330,6 +344,7 @@ export class ConversationMetadataExtractor {
         // Step 1: Process files chronologically and build conversation map
         const conversationMap = new Map<string, ConversationMetadata>();
         const allConversationsFound: ConversationMetadata[] = [];
+        const fileStatsMap = new Map<string, FileAnalysisStats>();
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -351,15 +366,24 @@ export class ConversationMetadataExtractor {
                 // Track all conversations found for deduplication stats
                 allConversationsFound.push(...metadata);
 
+                // Initialize stats for this file
+                const totalInFile = metadata.length;
+                let duplicatesInFile = 0;
+                let uniqueFromFile = 0;
+
                 // Step 2: Build map of best versions (same logic as working import)
                 for (const conversation of metadata) {
                     const existing = conversationMap.get(conversation.id);
 
                     if (!existing) {
                         // First occurrence of this conversation ID
+                        uniqueFromFile++;
                         conversationMap.set(conversation.id, conversation);
                     } else {
-                        // Duplicate found - keep the one with latest updateTime
+                        // Duplicate found
+                        duplicatesInFile++;
+
+                        // Keep the one with latest updateTime
                         if (conversation.updateTime > existing.updateTime) {
                             // Current conversation is newer
                             conversationMap.set(conversation.id, conversation);
@@ -375,6 +399,17 @@ export class ConversationMetadataExtractor {
                         // If existing is newer or same age from later file, keep it (no action needed)
                     }
                 }
+
+                // Store stats for this file (will complete selected/new/updated after filtering)
+                fileStatsMap.set(file.name, {
+                    fileName: file.name,
+                    totalConversations: totalInFile,
+                    duplicates: duplicatesInFile,
+                    uniqueContributed: uniqueFromFile,
+                    selectedForImport: 0,
+                    newConversations: 0,
+                    updatedConversations: 0
+                });
             } catch (error) {
                 console.error(`Error extracting metadata from ${file.name}:`, error);
                 // Continue with other files even if one fails
@@ -387,7 +422,22 @@ export class ConversationMetadataExtractor {
             existingConversations
         );
 
-        // Step 4: Build analysis info with detailed breakdown
+        // Step 4: Complete file stats with selected/new/updated counts
+        for (const conversation of filterResult.conversations) {
+            const fileName = conversation.sourceFile;
+            if (fileName && fileStatsMap.has(fileName)) {
+                const stats = fileStatsMap.get(fileName)!;
+                stats.selectedForImport++;
+
+                if (conversation.existenceStatus === 'new') {
+                    stats.newConversations++;
+                } else if (conversation.existenceStatus === 'updated') {
+                    stats.updatedConversations++;
+                }
+            }
+        }
+
+        // Step 5: Build analysis info with detailed breakdown
         const analysisInfo: AnalysisInfo = {
             totalConversationsFound: allConversationsFound.length,
             uniqueConversationsKept: conversationMap.size,
@@ -407,7 +457,8 @@ export class ConversationMetadataExtractor {
 
         return {
             conversations: filterResult.conversations,
-            analysisInfo: analysisInfo
+            analysisInfo: analysisInfo,
+            fileStats: fileStatsMap
         };
     }
 
