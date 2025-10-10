@@ -85,11 +85,22 @@ export class ChatGPTAttachmentExtractor {
             const extractResult = await this.extractSingleAttachment(zip, conversationId, attachment, zipFile);
 
             if (extractResult) {
+                // For generated images with extractedContent, replace placeholders
+                let finalExtractedContent = attachment.extractedContent;
+                if (attachment.attachmentType === 'generated_image' && attachment.extractedContent) {
+                    finalExtractedContent = attachment.extractedContent
+                        .replace('{{FILENAME}}', extractResult.finalFileName)
+                        .replace('{{FILETYPE}}', extractResult.actualFileType)
+                        .replace('{{FILESIZE}}', this.formatFileSize(attachment.fileSize || 0))
+                        .replace('{{URL}}', extractResult.localPath);
+                }
+
                 return {
                     ...attachment,
                     fileName: extractResult.finalFileName, // Update with actual extracted filename
                     fileType: extractResult.actualFileType, // Update with detected file type
                     url: extractResult.localPath,
+                    extractedContent: finalExtractedContent, // Update with replaced placeholders
                     status: {
                         processed: true,
                         found: true,
@@ -407,6 +418,16 @@ export class ChatGPTAttachmentExtractor {
         // If filename conflicts might occur, we could add a timestamp prefix
         // but for now, ChatGPT file IDs should make names unique enough
         return cleanName;
+    }
+
+    /**
+     * Format file size in human-readable format
+     */
+    private formatFileSize(bytes: number): string {
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        if (bytes === 0) return '0 Bytes';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
     }
 
     /**

@@ -72,14 +72,17 @@ export class MessageFormatter {
 
     /**
      * Format single attachment with Nexus callout styling
+     *
+     * Provider-formatted attachments (with extractedContent) are displayed as-is.
+     * Generic attachments get basic formatting.
      */
     private formatSingleAttachment(attachment: StandardAttachment): string {
-        // For Claude attachments, check if already formatted as callout
-        if (attachment.extractedContent && attachment.extractedContent.includes('nexus_attachment')) {
+        // If extractedContent exists, display it as-is (already formatted by provider)
+        if (attachment.extractedContent) {
             return attachment.extractedContent;
         }
 
-        // Create attachment callout
+        // Generic formatting for attachments without extractedContent
         let content = `>[!${MessageFormatter.CALLOUTS.ATTACHMENT}] `;
 
         // Status-aware header
@@ -134,47 +137,12 @@ export class MessageFormatter {
             }
         }
 
-        // For generated images with extractedContent, use it directly (contains prompt + image/warning)
-        else if (this.isGeneratedImage(attachment) && attachment.extractedContent) {
-            // extractedContent already contains formatted callouts, just indent them
-            const lines = attachment.extractedContent.split('\n');
-            content += lines.map(line => `> ${line}`).join('\n');
-
-            // Add image embed if found
-            if (attachment.status?.found && attachment.url) {
-                content += `\n> \n> >[!nexus_attachment] **${attachment.fileName}**`;
-                if (this.isImageFile(attachment)) {
-                    content += `\n> > ![[${attachment.url}]]`;
-                } else {
-                    content += `\n> > [[${attachment.url}]]`;
-                }
-            }
-        }
-        // Add extracted content for other types (transcriptions, OCR, code, etc.)
-        else if (attachment.extractedContent) {
-            content += `> ${attachment.extractedContent}`;
-        }
-
-        // Add raw content for text files - always show if available
-        else if (attachment.content && !attachment.extractedContent) {
+        // Add raw content for text files
+        else if (attachment.content) {
             content += `> ${attachment.content}`;
         }
 
         return content;
-    }
-
-    /**
-     * Check if attachment is a generated image (provider-agnostic)
-     */
-    private isGeneratedImage(attachment: StandardAttachment): boolean {
-        return attachment.attachmentType === 'generated_image';
-    }
-
-    /**
-     * Check if attachment is an artifact (provider-agnostic)
-     */
-    private isArtifact(attachment: StandardAttachment): boolean {
-        return attachment.attachmentType === 'artifact';
     }
 
     /**

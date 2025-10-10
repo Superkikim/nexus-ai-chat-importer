@@ -6629,10 +6629,13 @@ var _MessageFormatter = class {
   }
   /**
    * Format single attachment with Nexus callout styling
+   *
+   * Provider-formatted attachments (with extractedContent) are displayed as-is.
+   * Generic attachments get basic formatting.
    */
   formatSingleAttachment(attachment) {
-    var _a, _b, _c;
-    if (attachment.extractedContent && attachment.extractedContent.includes("nexus_attachment")) {
+    var _a, _b;
+    if (attachment.extractedContent) {
       return attachment.extractedContent;
     }
     let content = `>[!${_MessageFormatter.CALLOUTS.ATTACHMENT}] `;
@@ -6673,39 +6676,10 @@ var _MessageFormatter = class {
 > Original conversation link not available`;
         }
       }
-    } else if (this.isGeneratedImage(attachment) && attachment.extractedContent) {
-      const lines = attachment.extractedContent.split("\n");
-      content += lines.map((line) => `> ${line}`).join("\n");
-      if (((_c = attachment.status) == null ? void 0 : _c.found) && attachment.url) {
-        content += `
-> 
-> >[!nexus_attachment] **${attachment.fileName}**`;
-        if (this.isImageFile(attachment)) {
-          content += `
-> > ![[${attachment.url}]]`;
-        } else {
-          content += `
-> > [[${attachment.url}]]`;
-        }
-      }
-    } else if (attachment.extractedContent) {
-      content += `> ${attachment.extractedContent}`;
-    } else if (attachment.content && !attachment.extractedContent) {
+    } else if (attachment.content) {
       content += `> ${attachment.content}`;
     }
     return content;
-  }
-  /**
-   * Check if attachment is a generated image (provider-agnostic)
-   */
-  isGeneratedImage(attachment) {
-    return attachment.attachmentType === "generated_image";
-  }
-  /**
-   * Check if attachment is an artifact (provider-agnostic)
-   */
-  isArtifact(attachment) {
-    return attachment.attachmentType === "artifact";
   }
   /**
    * Get user-friendly status message
@@ -7431,17 +7405,25 @@ var ChatGPTDalleProcessor = class {
     console.log(`[DALLE-ATTACHMENT] Final prompt: ${prompt ? `"${prompt.substring(0, 50)}..."` : "NULL"}`);
     let extractedContent = "";
     if (prompt) {
-      extractedContent = `>[!nexus_prompt] **Prompt**
-> ${prompt.split("\n").join("\n> ")}`;
+      const formattedPrompt = prompt.split("\n").join("\n>> ");
+      extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\``;
+      if (hasImage) {
+        extractedContent += `
+>
+>>[!nexus_attachment] **{{FILENAME}}** ({{FILETYPE}}) - {{FILESIZE}}
+>> ![[{{URL}}]]`;
+      } else {
+        extractedContent += `
+>
+>>[!nexus_attachment] **Image Not Found**
+>> \u26A0\uFE0F Image could not be found. Perhaps it was not generated or is missing from the archive.`;
+      }
       console.log(`[DALLE-ATTACHMENT] \u2705 extractedContent created (${extractedContent.length} chars)`);
     } else {
       console.log(`[DALLE-ATTACHMENT] \u26A0\uFE0F No prompt, extractedContent will be empty`);
-    }
-    if (!hasImage) {
-      if (extractedContent)
-        extractedContent += "\n\n";
-      extractedContent += `>[!nexus_attachment] **Image Not Found**
-> \u26A0\uFE0F Image could not be found. Perhaps it was not generated or is missing from the archive.`;
     }
     return {
       fileName,
@@ -7506,16 +7488,19 @@ var ChatGPTDalleProcessor = class {
    * Creates a "phantom" attachment with the prompt and warning
    */
   static createOrphanedPromptMessage(promptMessage, prompt) {
+    const formattedPrompt = prompt.split("\n").join("\n>> ");
     const phantomAttachment = {
       fileName: "dalle_image_not_found.png",
       fileType: "image/png",
       attachmentType: "generated_image",
       generationPrompt: prompt,
-      extractedContent: `>[!nexus_prompt] **Prompt**
-> ${prompt.split("\n").join("\n> ")}
-
->[!nexus_attachment] **Image Not Found**
-> \u26A0\uFE0F Image could not be found. Perhaps it was not generated or is missing from the archive.`,
+      extractedContent: `>>[!nexus_prompt] **DALL-E Prompt** (Image Generation Failed or Interrupted)
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
+>
+>>[!nexus_attachment] **Image Not Found**
+>> \u26A0\uFE0F Image generation may have failed or been interrupted. The prompt was saved but no image was found in the export.`,
       status: {
         processed: true,
         found: false,
@@ -7526,7 +7511,7 @@ var ChatGPTDalleProcessor = class {
     return {
       id: promptMessage.id || "",
       role: "assistant",
-      content: "DALL-E Generated Image",
+      content: "DALL-E Image Generation (Failed/Interrupted)",
       timestamp: promptMessage.create_time || 0,
       attachments: [phantomAttachment]
     };
@@ -7879,6 +7864,10 @@ var ChatGPTAttachmentExtractor = class {
     try {
       const extractResult = await this.extractSingleAttachment(zip, conversationId, attachment, zipFile);
       if (extractResult) {
+        let finalExtractedContent = attachment.extractedContent;
+        if (attachment.attachmentType === "generated_image" && attachment.extractedContent) {
+          finalExtractedContent = attachment.extractedContent.replace("{{FILENAME}}", extractResult.finalFileName).replace("{{FILETYPE}}", extractResult.actualFileType).replace("{{FILESIZE}}", this.formatFileSize(attachment.fileSize || 0)).replace("{{URL}}", extractResult.localPath);
+        }
         return {
           ...attachment,
           fileName: extractResult.finalFileName,
@@ -7886,6 +7875,8 @@ var ChatGPTAttachmentExtractor = class {
           fileType: extractResult.actualFileType,
           // Update with detected file type
           url: extractResult.localPath,
+          extractedContent: finalExtractedContent,
+          // Update with replaced placeholders
           status: {
             processed: true,
             found: true,
@@ -8110,6 +8101,16 @@ var ChatGPTAttachmentExtractor = class {
   sanitizeFileName(fileName) {
     let cleanName = fileName.replace(/[<>:"\/\\|?*]/g, "_").replace(/\s+/g, "_").trim();
     return cleanName;
+  }
+  /**
+   * Format file size in human-readable format
+   */
+  formatFileSize(bytes) {
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    if (bytes === 0)
+      return "0 Bytes";
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + " " + sizes[i];
   }
   /**
    * Clear ZIP file cache (call between different ZIP files)

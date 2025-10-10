@@ -216,19 +216,34 @@ export class ChatGPTDalleProcessor {
         console.log(`[DALLE-ATTACHMENT] metadata.dalle.prompt: ${contentPart.metadata.dalle.prompt ? `"${contentPart.metadata.dalle.prompt.substring(0, 50)}..."` : 'EMPTY'}`);
         console.log(`[DALLE-ATTACHMENT] Final prompt: ${prompt ? `"${prompt.substring(0, 50)}..."` : 'NULL'}`);
 
-        // Create extracted content with prompt in callout
+        // Create extracted content with prompt + image callouts (provider-formatted)
         let extractedContent = '';
+
         if (prompt) {
-            extractedContent = `>[!nexus_prompt] **Prompt**\n> ${prompt.split('\n').join('\n> ')}`;
+            // Format prompt in code block with nested callout
+            const formattedPrompt = prompt.split('\n').join('\n>> ');
+            extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\``;
+
+            if (hasImage) {
+                // Add image callout with placeholders (will be replaced by extractor)
+                extractedContent += `
+>
+>>[!nexus_attachment] **{{FILENAME}}** ({{FILETYPE}}) - {{FILESIZE}}
+>> ![[{{URL}}]]`;
+            } else {
+                // Image not found - add warning
+                extractedContent += `
+>
+>>[!nexus_attachment] **Image Not Found**
+>> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`;
+            }
+
             console.log(`[DALLE-ATTACHMENT] ✅ extractedContent created (${extractedContent.length} chars)`);
         } else {
             console.log(`[DALLE-ATTACHMENT] ⚠️ No prompt, extractedContent will be empty`);
-        }
-
-        // If no image found, add warning
-        if (!hasImage) {
-            if (extractedContent) extractedContent += '\n\n';
-            extractedContent += `>[!nexus_attachment] **Image Not Found**\n> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`;
         }
 
         return {
@@ -309,13 +324,22 @@ export class ChatGPTDalleProcessor {
      * Creates a "phantom" attachment with the prompt and warning
      */
     static createOrphanedPromptMessage(promptMessage: ChatMessage, prompt: string): StandardMessage {
+        // Format prompt with nested callouts (provider-formatted)
+        const formattedPrompt = prompt.split('\n').join('\n>> ');
+
         // Create a phantom attachment with prompt and warning
         const phantomAttachment: StandardAttachment = {
             fileName: 'dalle_image_not_found.png',
             fileType: 'image/png',
             attachmentType: 'generated_image',
             generationPrompt: prompt,
-            extractedContent: `>[!nexus_prompt] **Prompt**\n> ${prompt.split('\n').join('\n> ')}\n\n>[!nexus_attachment] **Image Not Found**\n> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`,
+            extractedContent: `>>[!nexus_prompt] **DALL-E Prompt** (Image Generation Failed or Interrupted)
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
+>
+>>[!nexus_attachment] **Image Not Found**
+>> ⚠️ Image generation may have failed or been interrupted. The prompt was saved but no image was found in the export.`,
             status: {
                 processed: true,
                 found: false,
@@ -327,7 +351,7 @@ export class ChatGPTDalleProcessor {
         return {
             id: promptMessage.id || "",
             role: "assistant",
-            content: "DALL-E Generated Image",
+            content: "DALL-E Image Generation (Failed/Interrupted)",
             timestamp: promptMessage.create_time || 0,
             attachments: [phantomAttachment]
         };
