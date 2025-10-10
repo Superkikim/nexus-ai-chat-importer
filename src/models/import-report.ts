@@ -270,21 +270,60 @@ export class ImportReport {
             summary += `| File | Status | Conversations | Imported |\n`;
             summary += `|:---|:---:|---:|---:|\n`;
 
-            // Processed files
+            // Combine processed and skipped files with their info
+            interface FileInfo {
+                name: string;
+                status: 'processed' | 'skipped';
+                conversations: number;
+                imported: number;
+                file?: File;
+            }
+
+            const fileInfos: FileInfo[] = [];
+
+            // Add processed files
             const processedFileNames = Array.from(this.fileSections.keys());
             processedFileNames.forEach(fileName => {
                 const section = this.fileSections.get(fileName)!;
                 const totalImported = section.created.length + section.updated.length;
                 const totalInFile = section.counters.totalConversationsProcessed;
-                summary += `| \`${fileName}\` | ✅ Processed | ${totalInFile} | ${totalImported} |\n`;
+                const file = allFiles.find(f => f.name === fileName);
+                fileInfos.push({
+                    name: fileName,
+                    status: 'processed',
+                    conversations: totalInFile,
+                    imported: totalImported,
+                    file
+                });
             });
 
-            // Skipped files
+            // Add skipped files
             if (skippedFiles && skippedFiles.length > 0) {
                 skippedFiles.forEach(fileName => {
-                    summary += `| \`${fileName}\` | ⏭️ Skipped | - | 0 |\n`;
+                    const file = allFiles.find(f => f.name === fileName);
+                    fileInfos.push({
+                        name: fileName,
+                        status: 'skipped',
+                        conversations: 0,
+                        imported: 0,
+                        file
+                    });
                 });
             }
+
+            // Sort by file lastModified date (most recent first)
+            fileInfos.sort((a, b) => {
+                const timeA = a.file?.lastModified || 0;
+                const timeB = b.file?.lastModified || 0;
+                return timeB - timeA; // Descending order (newest first)
+            });
+
+            // Generate table rows
+            fileInfos.forEach(info => {
+                const statusIcon = info.status === 'processed' ? '✅ Processed' : '⏭️ Skipped';
+                const conversations = info.status === 'processed' ? info.conversations : '-';
+                summary += `| \`${info.name}\` | ${statusIcon} | ${conversations} | ${info.imported} |\n`;
+            });
 
             summary += `\n`;
         }

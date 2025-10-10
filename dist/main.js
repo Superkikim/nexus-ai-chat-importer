@@ -6325,20 +6325,45 @@ var ImportReport = class {
 `;
       summary += `|:---|:---:|---:|---:|
 `;
+      const fileInfos = [];
       const processedFileNames = Array.from(this.fileSections.keys());
       processedFileNames.forEach((fileName) => {
         const section = this.fileSections.get(fileName);
         const totalImported = section.created.length + section.updated.length;
         const totalInFile = section.counters.totalConversationsProcessed;
-        summary += `| \`${fileName}\` | \u2705 Processed | ${totalInFile} | ${totalImported} |
-`;
+        const file = allFiles.find((f) => f.name === fileName);
+        fileInfos.push({
+          name: fileName,
+          status: "processed",
+          conversations: totalInFile,
+          imported: totalImported,
+          file
+        });
       });
       if (skippedFiles && skippedFiles.length > 0) {
         skippedFiles.forEach((fileName) => {
-          summary += `| \`${fileName}\` | \u23ED\uFE0F Skipped | - | 0 |
-`;
+          const file = allFiles.find((f) => f.name === fileName);
+          fileInfos.push({
+            name: fileName,
+            status: "skipped",
+            conversations: 0,
+            imported: 0,
+            file
+          });
         });
       }
+      fileInfos.sort((a, b) => {
+        var _a, _b;
+        const timeA = ((_a = a.file) == null ? void 0 : _a.lastModified) || 0;
+        const timeB = ((_b = b.file) == null ? void 0 : _b.lastModified) || 0;
+        return timeB - timeA;
+      });
+      fileInfos.forEach((info) => {
+        const statusIcon = info.status === "processed" ? "\u2705 Processed" : "\u23ED\uFE0F Skipped";
+        const conversations = info.status === "processed" ? info.conversations : "-";
+        summary += `| \`${info.name}\` | ${statusIcon} | ${conversations} | ${info.imported} |
+`;
+      });
       summary += `
 `;
     }
