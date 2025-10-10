@@ -7,15 +7,9 @@
 - [Overview](#overview)
 - [☕ Support My Work](#-support-my-work)
 - [✨ Key Features](#-key-features)
-- [📥 Installation](#-installation)
-- [🚀 Quick Start](#-quick-start)
-- [⚙️ Settings](#️-settings)
-- [💡 Best Practices](#-best-practices)
-- [📁 File Organization](#-file-organization)
-- [🎨 Visual Features](#-visual-features)
-- [🔄 Selective Import](#-selective-import)
-- [📎 Attachment Handling](#-attachment-handling)
-- [📊 Import Reports](#-import-reports)
+- [📥 Installation & Settings](#-installation--settings)
+- [📤 Importing Conversations](#-importing-conversations)
+- [📁 Data Organization](#-data-organization)
 - [🔄 Reimporting & Updates](#-reimporting--updates)
 - [⚠️ Important Notes](#️-important-notes)
 - [🐛 Troubleshooting](#-troubleshooting)
@@ -62,491 +56,342 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 - ⏱️ **Progress Tracking**: Real-time feedback during large imports
 - 🔄 **Smart Deduplication**: Handles multiple ZIP files without creating duplicates
 
-## 📥 Installation
+## 📥 Installation & Settings
 
-### From Obsidian Community Plugins
+### Installation Methods
 
+**From Obsidian Community Plugins** (Recommended):
 1. Open **Settings** → **Community Plugins**
 2. Click **Browse** and search for "**Nexus AI Chat Importer**"
 3. Click **Install**, then **Enable**
 
-### Manual Installation
-
+**Manual Installation**:
 1. Download the latest release from [GitHub Releases](https://github.com/Superkikim/nexus-ai-chat-importer/releases)
-2. Extract the files to your vault's `.obsidian/plugins/nexus-ai-chat-importer/` folder
-3. Reload Obsidian and enable the plugin in Settings
+2. Extract files to `.obsidian/plugins/nexus-ai-chat-importer/`
+3. Reload Obsidian and enable the plugin
 
-**Note**: Upgrades automatically migrate your settings and existing conversations to the latest format.
+### Automatic Migration
 
-## 🚀 Quick Start
+When you upgrade to a new version, the plugin automatically:
+- Migrates your settings to the new format
+- Updates existing conversations with new features
+- Reorganizes folders if needed
+- Shows you what changed in a beautiful upgrade dialog
 
-### 1. Export Your Conversations
+No manual intervention required!
+
+### Plugin Settings
+
+The plugin has only **5 simple settings**:
+
+**Folder Paths** (3 settings):
+- **Conversations Folder**: `<conversations>/` - Where conversation notes are stored
+- **Attachments Folder**: `<attachments>/` - Where images, files, and artifacts are saved
+- **Reports Folder**: `<reports>/` - Where import reports are generated
+
+**Filename Options** (2 settings):
+- **Add Date Suffix**: Append date to filenames (e.g., `conversation-title-2024-01-15.md`)
+- **Date Format**: With dashes (`2024-01-15`) or without (`20240115`)
+
+### Changing Folder Paths
+
+You can change folder paths **at any time**. When you do:
+
+1. The plugin will **offer to migrate** existing files to the new location
+2. If you **accept migration**: All files move automatically, links update
+3. If you **decline migration**: Old files stay in place but won't be managed by the plugin anymore
+
+> **⚠️ Important**: If you don't migrate, the plugin won't update or manage conversations in the old location.
+
+## 📤 Importing Conversations
+
+### Getting Your Exports
 
 **ChatGPT**:
-- Go to **Settings** → **Data Controls** → **Export data**
-- Wait for the email with your download link
-- Download the ZIP file
+1. Go to **Settings** → **Data Controls** → **Export data**
+2. Wait for the email with your download link (usually within minutes)
+3. Download the ZIP file
 
 **Claude**:
-- Go to **Settings** → **Privacy** → **Export data**
-- Wait for the email with your download link
-- Download the ZIP file
+1. Go to **Settings** → **Privacy** → **Export data**
+2. Wait for the email with your download link (usually within minutes)
+3. Download the ZIP file
 
-### 2. Import into Obsidian
+### Import Process
 
-1. Click the **chat+** icon in the ribbon, or use **Ctrl/Cmd+P** → "**Nexus: Select zip file to process**"
-2. Select your provider (ChatGPT or Claude)
-3. Choose one or more ZIP files to import
-4. **Review and select** which conversations to import
-5. Click **Import Selected** and wait for completion
+**Starting an Import**:
+- Click the **chat+** icon in the ribbon, OR
+- Use command palette: **Ctrl/Cmd+P** → "**Nexus: Select zip file to process**"
 
-### 3. View Your Conversations
+**Choose Import Mode**:
 
-- Conversations are organized by provider, year, and month
-- Click any conversation title to open it
-- Use **Reading View** for the best visual experience
-- Check the import report for detailed statistics
+#### All Conversations (Quick Import)
+- Select provider (ChatGPT or Claude)
+- Choose ZIP file(s)
+- Click **Import All**
+- All new and updated conversations are imported automatically
 
-## ⚙️ Settings
+#### Selective Import (Recommended)
+- Select provider (ChatGPT or Claude)
+- Choose ZIP file(s)
+- **Review conversation list** with:
+  - Title, date, message count
+  - Status: 🆕 New, 🔄 Update, ✅ Already imported
+  - Attachment information
+  - Source file
+- **Select** which conversations to import
+- Click **Import Selected**
 
-### Folder Configuration
+**Features**:
+- ✅ **Multi-file support**: Process multiple ZIP files at once
+- ✅ **Smart deduplication**: Automatically detects duplicates across files
+- ✅ **Sorting & filtering**: Sort by date, title, messages, or status
+- ✅ **Batch operations**: Select all, deselect all, or cherry-pick
 
-- **Conversations Folder**: Where conversation notes are stored (default: `Nexus AI Chat Imports/Conversations`)
-- **Attachments Folder**: Where images, files, and artifacts are saved (default: `Nexus AI Chat Imports/Attachments`)
-- **Reports Folder**: Where import reports are generated (default: `Nexus AI Chat Imports/Reports`)
+### Import Reports
 
-**Tip**: You can change these folders at any time. The plugin will offer to migrate existing content.
+After each import, a detailed report is generated:
 
-### Display Options
+**Summary**:
+- Total conversations analyzed vs. imported
+- Processing time and success rate
+- Overall statistics
 
-- **Add Date Suffix**: Append conversation date to filenames
-- **Date Format**: Choose between formats with or without dashes
-  - With dashes: `conversation-title-2024-01-15.md`
-  - Without dashes: `conversation-title-20240115.md`
+**Per-File Breakdown**:
+- Which conversations were imported from each ZIP
+- Status breakdown (new, updates, existing)
+- Attachment statistics (found, missing, failed)
 
-### Advanced Options
+**Report Location**: `<reports>/<provider>/import-YYYYMMDD-HHMMSS.md`
 
-- **Import Attachments**: Enable or disable attachment import (images, documents, artifacts)
+Reports include clickable links to imported conversations for easy access.
 
-## 💡 Best Practices
+## 📁 Data Organization
 
-### Recommended Settings
+### Notes
 
-- ✅ **Use Reading View** for optimal visual experience with callouts
-- ✅ **Exclude attachments folder** from cloud sync to save bandwidth
-- ✅ **Enable date suffix** to avoid filename conflicts
+#### Location
 
-### Workflow Tips
-
-- **Selective import**: Use the conversation selection dialog to import only what you need
-- **Multi-file processing**: Select multiple ZIP files to process them all at once
-- **Regular exports**: Export your conversations periodically to keep your vault up to date
-- **Check reports**: Review import reports to verify everything imported correctly
-
-## 📁 File Organization
-
-### Default Folder Structure
-
-All folder paths can be customized in settings.
+Conversations are organized by provider, year, and month:
 
 ```
-Nexus AI Chat Imports/
-├── Conversations/
-│   ├── chatgpt/
-│   │   ├── 2024/
-│   │   │   ├── 01/
-│   │   │   │   ├── conversation-title-20240115.md
-│   │   │   │   └── another-chat-20240120.md
-│   │   │   └── 02/
-│   │   └── 2023/
-│   └── claude/
-│       ├── 2024/
-│       │   └── 01/
-│       │       └── claude-conversation-20240115.md
-│       └── 2023/
-├── Attachments/
-│   ├── chatgpt/
-│   │   ├── images/
-│   │   │   ├── dalle-image-1.png
-│   │   │   └── uploaded-photo.jpg
-│   │   └── documents/
-│   │       └── document.pdf
-│   └── claude/
-│       ├── artifacts/
-│       │   └── conversation-id/
-│       │       ├── script_v1.py
-│       │       ├── script_v2.py
-│       │       └── script_v3.py
-│       └── attachments/
-└── Reports/
-    ├── chatgpt/
-    │   └── import-20240115-143022.md
-    └── claude/
-        └── import-20240115-150000.md
+<conversations>/
+├── <provider>/
+│   └── YYYY/
+│       └── MM/
+│           └── conversation-title-YYYYMMDD.md
 ```
 
-### Conversation Files
+**Example**:
+```
+<conversations>/chatgpt/2024/01/my-conversation-20240115.md
+<conversations>/claude/2024/02/another-chat-20240220.md
+```
 
-Each conversation is saved as a Markdown file with:
+#### Structure
 
-- **Frontmatter**: Rich metadata (ID, provider, dates, message count, aliases) that enables Obsidian's powerful features:
-  - Search and filter by any metadata field
-  - Create dynamic queries with Dataview plugin
-  - Build custom dashboards and views
-  - Track conversation history and statistics
-- **Header**: Title with link to original web conversation
-- **Messages**: Formatted with custom callouts (user, assistant, attachments, artifacts)
-- **Timestamps**: ISO 8601 format for international compatibility
+Each conversation note contains:
 
-### Note Structure Details
-
-**Frontmatter Fields**:
+**1. Frontmatter** - Rich metadata for Obsidian features:
 ```yaml
 ---
 conversation_id: "abc123..."          # Unique identifier
 provider: "chatgpt"                   # chatgpt or claude
-title: "Conversation Title"           # Original conversation title
-create_time: "2024-01-15T14:30:22Z"  # ISO 8601 creation timestamp
-update_time: "2024-01-15T16:45:10Z"  # ISO 8601 last update timestamp
-message_count: 42                     # Total number of messages
-aliases:                              # Alternative titles for linking
-  - "Conversation Title"
+title: "Conversation Title"           # Original title
+create_time: "2024-01-15T14:30:22Z"  # Creation timestamp
+update_time: "2024-01-15T16:45:10Z"  # Last update timestamp
+message_count: 42                     # Total messages
+aliases: ["Conversation Title"]       # For linking
 ---
 ```
 
-**Date Format Choice - ISO 8601**:
+This metadata enables powerful Obsidian features:
+- 🔍 **Search & filter** by any field
+- 📊 **Dataview queries** for custom dashboards
+- 📈 **Track statistics** across conversations
+- 🔗 **Link** using aliases
 
-We use **ISO 8601** format (`YYYY-MM-DDTHH:MM:SSZ`) for all timestamps because:
+**2. Header** - Title with link to original conversation:
+```markdown
+# Conversation Title
+[View original conversation](https://chatgpt.com/c/abc123...)
+```
 
-- ✅ **Universal**: Works with all locales and languages
-- ✅ **Sortable**: Alphabetical sort = chronological sort
-- ✅ **Unambiguous**: No confusion between MM/DD vs DD/MM
-- ✅ **Standard**: Recognized by all programming languages and tools
-- ✅ **Dataview Compatible**: Perfect for queries and filtering
-- ✅ **Future-Proof**: International standard that won't change
+> **Note**: If you deleted the conversation online, the link will be dead.
 
-**Example**: `2024-01-15T14:30:22Z` is always January 15, 2024 at 14:30:22 UTC, regardless of your locale.
-
-**Message Structure**:
-
-Each message in the conversation follows this pattern:
+**3. Messages** - Formatted with custom callouts:
 
 ```markdown
 > [!nexus_user]
 > **User** - 2024-01-15 14:30:22
 >
-> Message content here...
+> Your message here...
 
 > [!nexus_assistant]
 > **Assistant** - 2024-01-15 14:31:05
 >
-> Response content here...
+> AI response here...
 ```
 
-Attachments and artifacts use similar callout structures with their specific types.
+**Callout Types**:
+- 👤 **nexus_user**: Blue callouts for user messages
+- 🤖 **nexus_assistant**: Green callouts for AI responses
+- 📎 **nexus_attachment**: Amber callouts for attachments
+- ✨ **nexus_artifact**: Purple callouts for Claude artifacts
+- 🪄 **nexus_prompt**: Red callouts for DALL-E prompts
 
-### Import Reports
-
-Reports include:
-- Summary statistics (total analyzed, imported, skipped)
-- Per-file breakdown with detailed metrics
-- Attachment statistics (found, missing, failed)
-- Processing time and performance data
-- Links to imported conversations
-
-## 🎨 Visual Features
-
-### Custom Callouts
-
-The plugin uses Obsidian's callout system for beautiful formatting:
-
-- 👤 **User messages**: Blue callouts with user icon
-- 🤖 **Assistant messages**: Green callouts with bot icon
-- 📎 **Attachments**: Amber callouts with paperclip icon
-- ✨ **Artifacts** (Claude): Purple callouts with sparkles icon
-- 🪄 **DALL-E Prompts**: Red callouts with magic wand icon
-
-### Viewing Modes
-
+**Viewing Modes**:
 - **Reading View**: Full visual experience with colored callouts
 - **Live Preview**: Rendered callouts while editing
-- **Source Mode**: Raw Markdown with callout syntax visible
+- **Source Mode**: Raw Markdown syntax
 
-**Recommendation**: Use Reading View for browsing conversations, Edit Mode for editing.
+#### Date Format - Why ISO 8601?
 
-## 🔄 Selective Import
+All timestamps use **ISO 8601** format (`YYYY-MM-DDTHH:MM:SSZ`):
 
-### How It Works
+✅ **Universal** - Works with all locales
+✅ **Sortable** - Alphabetical = chronological
+✅ **Unambiguous** - No MM/DD vs DD/MM confusion
+✅ **Standard** - Recognized everywhere
+✅ **Dataview-friendly** - Perfect for queries
+✅ **Future-proof** - Won't change
 
-1. **Analysis Phase**: Plugin scans all ZIP files and extracts conversation metadata
-2. **Selection Dialog**: Interactive table shows all available conversations with:
-   - Title, date, message count
-   - Status: 🆕 New, 🔄 Update, ✅ Already imported
-   - Attachment information
-   - Source file
-3. **Deduplication**: Automatically detects duplicates across multiple files
-4. **Import Phase**: Only selected conversations are processed
+**Example**: `2024-01-15T14:30:22Z` = January 15, 2024 at 14:30:22 UTC (same everywhere)
 
-### Selection Features
+#### Recommendations
 
-- **Sort by**: Date, title, messages, or status
-- **Filter by status**: Show only new, updates, or all conversations
-- **Batch operations**: Select all, deselect all, or toggle individual items
-- **Preview**: See conversation details before importing
+**✅ DO**:
+- Add your own frontmatter fields (v1.3.0+) - the plugin won't touch them
+- Edit message content as needed
+- Use Reading View for best experience
 
-## 📎 Attachment Handling
+**❌ DON'T**:
+- Modify plugin-generated frontmatter fields (conversation_id, provider, etc.)
+- Delete message IDs (hidden in Reading View)
+- Remove messages - they'll be restored on reimport
 
-### What Gets Imported
+> **Why?** The plugin uses conversation_id and message IDs to detect updates and avoid duplicates. Modifying them breaks this functionality.
 
-The plugin automatically extracts and imports attachments from your conversation exports:
+### Attachments
 
-**ChatGPT Attachments**:
-- 📷 **Images**: User-uploaded photos, screenshots
-- 🎨 **DALL-E Images**: AI-generated images embedded with their original prompts
-- 📄 **Documents**: PDFs, text files, code files
-- 🔗 **Links**: Embedded as Obsidian links to the actual files
+#### Location
 
-**Claude Attachments**:
-- 📷 **Images**: User-uploaded images
-- 📄 **Documents**: Uploaded files
-- ✨ **Artifacts**: Code, documents, and other AI-generated content saved as separate versioned files (each modification creates a new version)
-
-### Attachment Status
-
-In your conversation notes, attachments show their status:
-
-- ✅ **Found**: File successfully imported
-- ⚠️ **Missing**: Referenced but not in ZIP export
-- ❌ **Failed**: Import error occurred
-
-### Storage Locations
+Attachments are organized by provider:
 
 ```
-Attachments/
-├── chatgpt/
-│   ├── images/
-│   │   ├── dalle-abc123.png
-│   │   └── photo-xyz789.jpg
-│   └── documents/
-│       └── report.pdf
-└── claude/
-    ├── artifacts/
-    │   └── conversation-id/
-    │       ├── script_v1.py
-    │       ├── script_v2.py
-    │       └── document_v1.md
-    └── attachments/
-        └── uploaded-file.pdf
+<attachments>/
+└── <provider>/
+    ├── images/
+    ├── documents/
+    └── artifacts/  (Claude only)
 ```
-
-### Missing Attachments
-
-Some attachments may be missing from exports:
-
-- **Older exports**: May not include all referenced files
-- **Large files**: Sometimes excluded from ZIP
-- **External links**: Not downloadable
-
-The plugin will continue importing even if some attachments are missing. Check import reports for detailed attachment statistics and missing file information.
-
-## 📊 Import Reports
-
-### What's in a Report
-
-After each import, a detailed report is generated with:
-
-**Summary Section**:
-- Total conversations analyzed
-- Total conversations imported
-- Processing time
-- Overall success rate
-
-**Files Analyzed Table**:
-```markdown
-| File | Date | Conversations | Imported | Status |
-|------|------|---------------|----------|--------|
-| export-2024-01.zip | 2024-01-15 | 150 | 75 (50%) | ✅ |
-| export-2024-02.zip | 2024-02-20 | 100 | 50 (50%) | ✅ |
-```
-
-**Per-File Statistics**:
-For each ZIP file processed:
-- Conversations analyzed vs. imported
-- Status breakdown (🆕 new, 🔄 updates, ✅ existing)
-- Attachment statistics (found/missing/failed)
-- Processing details
-
-**Attachment Details**:
-- Total attachments found
-- Missing attachments (with reasons)
-- Failed imports (with error messages)
-- DALL-E images with prompts
-
-### Report Location
-
-Reports are saved in:
-```
-Reports/
-├── chatgpt/
-│   └── import-20240115-143022.md
-└── claude/
-    └── import-20240115-150000.md
-```
-
-**Filename Format**: `import-YYYYMMDD-HHMMSS.md`
-
-### Understanding Report Statistics
-
-**When importing multiple files**:
-- Each file is analyzed separately
-- Duplicates across files are detected
-- Only unique conversations are imported
-- Report shows both analyzed and imported counts
 
 **Example**:
 ```
-File 1: 100 conversations analyzed, 50 imported (50 were duplicates)
-File 2: 100 conversations analyzed, 30 imported (70 were duplicates or already existed)
-Total: 200 analyzed, 80 imported
+<attachments>/chatgpt/images/dalle-abc123.png
+<attachments>/claude/artifacts/conv-id/script_v1.py
 ```
 
-### Selective Import Reports
+#### What Gets Imported
 
-When using selective import:
-- Report shows which conversations you selected
-- Unselected conversations are marked as "skipped by user"
-- Statistics reflect your selection choices
+**Images**:
+- User-uploaded photos and screenshots
+- AI-generated images (DALL-E with prompts)
+- Embedded directly in conversation notes
+
+**Documents**:
+- PDFs, text files, code files
+- Linked in conversation notes
+
+**Claude Artifacts**:
+- Code, documents, and AI-generated content
+- Saved as separate versioned files
+- Each modification creates a new version (v1, v2, v3...)
+
+#### Missing Attachments
+
+Some attachments may be missing from exports:
+- **Older exports**: May not include all files
+- **Large files**: Sometimes excluded from ZIP
+- **External links**: Not downloadable
+
+The plugin continues importing even with missing attachments. Check import reports for details.
+
+
 
 ## 🔄 Reimporting & Updates
 
-### Safe Reimporting
+You can safely reimport the same ZIP file multiple times. The plugin intelligently handles updates:
 
-You can safely reimport the same ZIP file multiple times:
-- ✅ **New conversations** are added
-- ✅ **Updated conversations** are refreshed
-- ✅ **Unchanged conversations** are skipped
-- ✅ **No duplicates** are created
+**What Happens**:
+- ✅ **New conversations** → Added
+- ✅ **Updated conversations** → Refreshed with new messages
+- ✅ **Unchanged conversations** → Skipped
+- ✅ **No duplicates** → Smart detection prevents duplicates
 
-### When to Reimport
+**When to Reimport**:
+- You've had more conversations since last export
+- Plugin update adds new features
+- Fix issues from previous import
+- Retry failed attachments
 
-- **New conversations**: You've had more chats since your last export
-- **Plugin updates**: New version adds features to conversation formatting
-- **Fix issues**: Resolve any import problems from previous attempts
-- **Attachment recovery**: Retry failed attachment downloads
-
-### What Gets Updated
-
-- Conversation content and messages
+**What's Updated**:
+- Messages and content
 - Attachments and artifacts
 - Frontmatter metadata
-- Formatting and callouts
+- Formatting
 
-### What's Preserved
-
-- Your manual edits to conversations (as long as frontmatter and message IDs remain intact)
-- Existing attachments and artifacts
-- Folder organization
-
-> **⚠️ Important**: Avoid modifying frontmatter fields or deleting message IDs (hidden in Reading View). These are essential for proper reimport and update detection.
+**What's Preserved**:
+- Your manual edits (if frontmatter/message IDs intact)
+- Existing attachments
+- Folder structure
 
 ## ⚠️ Important Notes
 
-### Provider-Specific Limitations
-
-**Projects (ChatGPT & Claude)**:
-- Project organization is not currently supported in this release
+**Projects**:
+- Project organization is not currently supported
 - All conversations are imported individually
 - Future versions may add project support
 
-**Attachments**:
-- Only attachments included in the ZIP export can be imported
-- Some older exports may not contain all referenced files
-- DALL-E images are automatically detected and imported with their prompts
+**Performance**:
+- Large archives (1000+ conversations) take several minutes to analyze
+- Obsidian may become temporarily unresponsive during processing
+- Progress dialogs show real-time status
 
-### Performance Considerations
-
-**Large Archives**:
-- Archives with 1000+ conversations may take several minutes to analyze
-- Conversation selection dialog loads conversation titles for preview (not full content)
-- Import progress is shown in real-time
-- Obsidian may become temporarily unresponsive during indexing
-
-**Multi-File Processing**:
-- Processing multiple ZIP files adds deduplication overhead
-- Each file is analyzed before the selection dialog appears
-- Progress dialogs show current file and overall status
-
-### Storage Considerations
-
-**Vault Size**:
-- Importing attachments significantly increases vault size
+**Storage**:
+- Attachments can significantly increase vault size
 - AI-generated images can be several MB each
-- Consider excluding the attachments folder from cloud sync
-
-**Sync Performance**:
-- Large attachment folders can slow down cloud sync
-- Recommended: Add your attachments folder to your sync ignore list (folder path can be customized in settings)
+- Consider excluding `<attachments>/` from cloud sync
 
 ## 🐛 Troubleshooting
 
-### Import Issues
+**Import stuck or slow**:
+- Large archives take 5-10 minutes
+- Check progress dialog
+- If frozen, restart Obsidian
 
-**Import Stuck or Slow**:
-- Check the progress dialog for current status
-- Large archives with many attachments take longer
-- Wait for the process to complete (can take 5-10 minutes for large archives)
-- If truly frozen, restart Obsidian and try again
+**No conversations appear**:
+- Verify correct provider selected
+- Check ZIP file is valid export
+- Review import report for errors
 
-**No Conversations Appear in Selection Dialog**:
-- Verify you selected the correct provider (ChatGPT vs Claude)
-- Check that the ZIP file is a valid export from the provider
-- Check the import report for detailed error information
+**Missing attachments**:
+- Check import report for details
+- Older exports may not include all files
+- Reimport to retry failed attachments
 
-**Missing Attachments**:
-- Verify "Import Attachments" is enabled in settings
-- Check that your export ZIP includes the attachments folder
-- Some older exports may not contain all referenced files
-- Check the import report for attachment statistics
+**Callouts not displaying**:
+- Use Reading View
+- Update Obsidian to latest version
+- Try different theme
 
-### Formatting Issues
-
-**Callouts Not Displaying Correctly**:
-- Use **Reading View** for the best experience
-- Ensure your Obsidian theme supports callouts
-- Update to the latest version of Obsidian
-- Try a different theme if issues persist
-
-**Broken Links to Attachments**:
-- Verify attachments were imported successfully
-- Check the import report for attachment statistics
-- Ensure attachment folder path hasn't changed
-- Try reimporting with attachments enabled
-
-### Settings & Migration Issues
-
-**Settings Not Saving**:
-- Check that you have write permissions to your vault
-- Restart Obsidian after changing settings
-- Verify the plugin is enabled
-
-**Folder Migration Problems**:
-- Don't manually move folders while the plugin is running
-- Use the plugin's folder migration feature when changing paths
-- Backup your vault before major folder reorganizations
-
-### Getting Help
-
-If you encounter issues:
-
-1. **Check the import report** for detailed error information
-2. **Verify your settings** are correct
-3. **Try with a smaller export** to isolate the problem
-4. **Report the issue** on [GitHub Issues](https://github.com/Superkikim/nexus-ai-chat-importer/issues) with:
-   - Plugin version
-   - Obsidian version
+**Need help?**
+1. Check import report for errors
+2. Verify settings are correct
+3. Open issue on [GitHub](https://github.com/Superkikim/nexus-ai-chat-importer/issues) with:
+   - Plugin & Obsidian versions
    - Provider (ChatGPT/Claude)
-   - Description of the problem
-   - Steps to reproduce
+   - Problem description
 
 ## 🚀 Future Plans
 
@@ -556,7 +401,7 @@ We're constantly working to improve the plugin. Here's what's planned for future
 
 **🤖 New Provider Support**:
 - **Mistral Le Chat**: Full integration for Mistral AI conversations
-- **Other Providers**: We'll add support for any AI provider that offers exportable conversation data
+- **Other Providers**: Support for any AI provider that offers easily exploitable conversation export files
 
 **🌍 Localization**:
 - **Multi-language UI**: Plugin interface translated into multiple languages
