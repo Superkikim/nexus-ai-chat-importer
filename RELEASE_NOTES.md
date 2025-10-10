@@ -26,6 +26,28 @@ Your support helps me dedicate more time to:
 
 ---
 
+## ⚖️ **LICENSE CHANGE**
+
+**Starting with version 1.3.0, this project is licensed under GPL-3.0** (previously MIT).
+
+**What this means for users**:
+- ✅ The plugin remains **free and open source**
+- ✅ You can still use, modify, and share it freely
+- ✅ No impact on your usage of the plugin
+
+**Why the change?**
+
+GPL-3.0 protects the open-source nature of this project while preventing commercial exploitation without giving back to the community. This ensures that any commercial products based on this code must also be open source.
+
+**For developers**:
+- Any derivative works must also be licensed under GPL-3.0
+- Commercial use requires compliance with GPL-3.0 terms
+- Source code must be made available for derivative works
+
+See [LICENSE.md](LICENSE.md) for full details.
+
+---
+
 ### 🚀 **MAJOR NEW FEATURES**
 
 #### **🎯 Selective Conversation Import**

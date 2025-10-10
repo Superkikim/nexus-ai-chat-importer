@@ -12,8 +12,8 @@
         "ios-build": "node esbuild.config.mjs ios"
     },
     "keywords": [],
-    "author": "",
-    "license": "MIT",
+    "author": "Akim Sissaoui (Superkikim)",
+    "license": "GPL-3.0-or-later",
     "devDependencies": {
         "@eslint/eslintrc": "^1.0.0",
         "@types/node": "^16.11.6",

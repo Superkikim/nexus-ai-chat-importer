@@ -426,7 +426,23 @@ Your feedback and support directly influence what features get prioritized!
 
 ## 📝 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+**GNU General Public License v3.0 (GPL-3.0)**
+
+This project is licensed under GPL-3.0 starting from version 1.3.0.
+
+**What this means**:
+- ✅ **Free to use** - The plugin is and will always be free
+- ✅ **Open source** - Source code is publicly available
+- ✅ **Can modify** - You can modify the code for personal use
+- ✅ **Can redistribute** - You can share modified versions
+- ⚠️ **Must share source** - Derivative works must also be GPL-3.0 and open source
+- ⚠️ **No commercial use without GPL** - Commercial derivatives must also be GPL-3.0
+
+**Why GPL-3.0?**
+
+This license protects the open-source nature of this project while preventing commercial exploitation without giving back to the community. If you create a commercial product based on this code, it must also be open source under GPL-3.0.
+
+See [LICENSE.md](LICENSE.md) for full details.
 
 ## 🙏 Credits
 
