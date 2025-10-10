@@ -7293,25 +7293,44 @@ var ChatGPTDalleProcessor = class {
   }
   /**
    * Check if message is a DALL-E JSON prompt message
+   * Handles both formats:
+   * - content_type: "text" with parts[0] containing JSON
+   * - content_type: "code" with text containing JSON
    */
   static isDallePromptMessage(message) {
-    var _a, _b;
+    var _a, _b, _c, _d;
     if (((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
       return false;
     if (((_b = message.content) == null ? void 0 : _b.parts) && Array.isArray(message.content.parts) && message.content.parts.length === 1 && typeof message.content.parts[0] === "string") {
       const content = message.content.parts[0].trim();
-      return content.startsWith("{") && content.includes('"prompt"');
+      if (content.startsWith("{") && content.includes('"prompt"')) {
+        return true;
+      }
+    }
+    if (((_c = message.content) == null ? void 0 : _c.content_type) === "code" && ((_d = message.content) == null ? void 0 : _d.text) && typeof message.content.text === "string") {
+      const content = message.content.text.trim();
+      if (content.startsWith("{") && content.includes('"prompt"')) {
+        return true;
+      }
     }
     return false;
   }
   /**
    * Extract prompt from DALL-E JSON message
+   * Handles both formats:
+   * - content_type: "text" with parts[0] containing JSON
+   * - content_type: "code" with text containing JSON
    */
   static extractPromptFromJson(message) {
-    var _a;
+    var _a, _b, _c;
     try {
+      let jsonStr = null;
       if (((_a = message.content) == null ? void 0 : _a.parts) && message.content.parts[0]) {
-        const jsonStr = message.content.parts[0];
+        jsonStr = message.content.parts[0];
+      } else if (((_b = message.content) == null ? void 0 : _b.content_type) === "code" && ((_c = message.content) == null ? void 0 : _c.text)) {
+        jsonStr = message.content.text;
+      }
+      if (jsonStr) {
         const parsed = JSON.parse(jsonStr);
         return parsed.prompt || null;
       }

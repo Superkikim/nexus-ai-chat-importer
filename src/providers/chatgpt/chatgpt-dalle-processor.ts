@@ -90,29 +90,59 @@ export class ChatGPTDalleProcessor {
 
     /**
      * Check if message is a DALL-E JSON prompt message
+     * Handles both formats:
+     * - content_type: "text" with parts[0] containing JSON
+     * - content_type: "code" with text containing JSON
      */
     static isDallePromptMessage(message: ChatMessage): boolean {
         if (message.author?.role !== "assistant") return false;
-        
-        if (message.content?.parts && 
+
+        // Format 1: content_type "text" with parts array
+        if (message.content?.parts &&
             Array.isArray(message.content.parts) &&
             message.content.parts.length === 1 &&
             typeof message.content.parts[0] === "string") {
-            
+
             const content = message.content.parts[0].trim();
-            return content.startsWith('{') && content.includes('"prompt"');
+            if (content.startsWith('{') && content.includes('"prompt"')) {
+                return true;
+            }
         }
-        
+
+        // Format 2: content_type "code" with text field (OpenAI inconsistency)
+        if (message.content?.content_type === "code" &&
+            message.content?.text &&
+            typeof message.content.text === "string") {
+
+            const content = message.content.text.trim();
+            if (content.startsWith('{') && content.includes('"prompt"')) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     /**
      * Extract prompt from DALL-E JSON message
+     * Handles both formats:
+     * - content_type: "text" with parts[0] containing JSON
+     * - content_type: "code" with text containing JSON
      */
     static extractPromptFromJson(message: ChatMessage): string | null {
         try {
+            let jsonStr: string | null = null;
+
+            // Format 1: content_type "text" with parts array
             if (message.content?.parts && message.content.parts[0]) {
-                const jsonStr = message.content.parts[0] as string;
+                jsonStr = message.content.parts[0] as string;
+            }
+            // Format 2: content_type "code" with text field
+            else if (message.content?.content_type === "code" && message.content?.text) {
+                jsonStr = message.content.text as string;
+            }
+
+            if (jsonStr) {
                 const parsed = JSON.parse(jsonStr);
                 return parsed.prompt || null;
             }
