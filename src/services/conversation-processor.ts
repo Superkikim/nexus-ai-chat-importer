@@ -29,9 +29,8 @@ import { ProviderRegistry } from "../providers/provider-adapter";
 import { ImportProgressCallback } from "../ui/import-progress-modal";
 import JSZip from "jszip";
 import {
-    formatTimestamp,
+    formatMessageTimestamp,
     isValidMessage,
-    generateFileName,
     ensureFolderExists,
     doesFilePathExist,
     generateUniqueFileName,
@@ -208,11 +207,16 @@ export class ConversationProcessor {
 
         // Normal logic: Check timestamps
         if (existingRecord.updateTime >= updateTime) {
+            // Get custom format if enabled
+            const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+                ? this.plugin.settings.messageTimestampFormat
+                : undefined;
+
             importReport.addSkipped(
                 chatTitle,
                 existingRecord.path,
-                formatTimestamp(createTime, "date"),
-                formatTimestamp(updateTime, "date"),
+                formatMessageTimestamp(createTime, customFormat),
+                formatMessageTimestamp(updateTime, customFormat),
                 totalMessageCount,
                 "No Updates"
             );
@@ -317,11 +321,16 @@ export class ConversationProcessor {
                     const newContent = this.noteFormatter.generateMarkdownContent(standardConversation);
                     await this.fileService.writeToFile(filePath, newContent);
 
+                    // Get custom format if enabled
+                    const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+                        ? this.plugin.settings.messageTimestampFormat
+                        : undefined;
+
                     importReport.addUpdated(
                         chatTitle,
                         filePath,
-                        `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-                        `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+                        formatMessageTimestamp(chatCreateTime, customFormat),
+                        formatMessageTimestamp(chatUpdateTime, customFormat),
                         totalMessageCount,
                         attachmentStats
                     );
@@ -361,20 +370,30 @@ export class ConversationProcessor {
                 if (content !== originalContent) {
                     await this.fileService.writeToFile(filePath, content);
 
+                    // Get custom format if enabled
+                    const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+                        ? this.plugin.settings.messageTimestampFormat
+                        : undefined;
+
                     importReport.addUpdated(
                         chatTitle,
                         filePath,
-                        `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-                        `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+                        formatMessageTimestamp(chatCreateTime, customFormat),
+                        formatMessageTimestamp(chatUpdateTime, customFormat),
                         newMessages.length,
                         attachmentStats
                     );
                 } else {
+                    // Get custom format if enabled
+                    const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+                        ? this.plugin.settings.messageTimestampFormat
+                        : undefined;
+
                     importReport.addSkipped(
                         chatTitle,
                         filePath,
-                        `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-                        `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+                        formatMessageTimestamp(chatCreateTime, customFormat),
+                        formatMessageTimestamp(chatUpdateTime, customFormat),
                         totalMessageCount,
                         "No changes needed"
                     );
@@ -428,11 +447,16 @@ export class ConversationProcessor {
             // Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
             const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
 
+            // Get custom format if enabled
+            const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+                ? this.plugin.settings.messageTimestampFormat
+                : undefined;
+
             importReport.addCreated(
                 chatTitle,
                 filePath,
-                `${formatTimestamp(createTime, "date")} ${formatTimestamp(createTime, "time")}`,
-                `${formatTimestamp(updateTime, "date")} ${formatTimestamp(updateTime, "time")}`,
+                formatMessageTimestamp(createTime, customFormat),
+                formatMessageTimestamp(updateTime, customFormat),
                 messageCount,
                 attachmentStats,
                 providerSpecificCount
@@ -447,11 +471,16 @@ export class ConversationProcessor {
             const updateTime = adapter.getUpdateTime(chat);
             const chatTitle = adapter.getTitle(chat);
 
+            // Get custom format if enabled
+            const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+                ? this.plugin.settings.messageTimestampFormat
+                : undefined;
+
             importReport.addFailed(
                 chatTitle,
                 filePath,
-                formatTimestamp(createTime, "date") + " " + formatTimestamp(createTime, "time"),
-                formatTimestamp(updateTime, "date") + " " + formatTimestamp(updateTime, "time"),
+                formatMessageTimestamp(createTime, customFormat),
+                formatMessageTimestamp(updateTime, customFormat),
                 error.message
             );
             throw error;
@@ -461,8 +490,11 @@ export class ConversationProcessor {
 
 
     private updateMetadata(content: string, updateTime: number): string {
-        const updateTimeStr = `${formatTimestamp(updateTime, "date")} at ${formatTimestamp(updateTime, "time")}`;
+        // Use ISO 8601 format for frontmatter (consistent with create_time)
+        const updateTimeStr = new Date(updateTime * 1000).toISOString();
         content = content.replace(/^update_time: .*$/m, `update_time: ${updateTimeStr}`);
+
+        // Note: "Last Updated" field is not used in current note format, but kept for backward compatibility
         content = content.replace(/^Last Updated: .*$/m, `Last Updated: ${updateTimeStr}`);
         return content;
     }
