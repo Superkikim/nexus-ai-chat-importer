@@ -534,10 +534,17 @@ export class IncrementalUpgradeManager {
             
             // INFORMATION DIALOG - no cancel option
             if (upgradeChain.length > 0) {
-                // Check if this is the v1.2.0 upgrade - use beautiful modal
+                // Check if this is the v1.2.0 or v1.3.0 upgrade - use beautiful modal
                 const isV120Upgrade = upgradeChain.some(upgrade => upgrade.version === "1.2.0");
+                const isV130Upgrade = upgradeChain.some(upgrade => upgrade.version === "1.3.0");
 
-                if (isV120Upgrade) {
+                if (isV130Upgrade) {
+                    // Use beautiful upgrade modal for v1.3.0
+                    const { NexusUpgradeModal130 } = await import("../dialogs/upgrade-modal-1.3.0");
+                    await new Promise<void>((resolve) => {
+                        new NexusUpgradeModal130(this.plugin.app, this.plugin, "1.3.0", resolve).open();
+                    });
+                } else if (isV120Upgrade) {
                     // Use beautiful upgrade modal for v1.2.0
                     const { NexusUpgradeModal } = require("./versions/upgrade-1.2.0");
                     await new Promise<void>((resolve) => {
@@ -558,7 +565,7 @@ export class IncrementalUpgradeManager {
                 // Rien à faire
                 await showDialog(
                     this.plugin.app,
-                    "information", 
+                    "information",
                     `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
                     paragraphs,
                     this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
