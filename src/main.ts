@@ -531,6 +531,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         // Generate frontmatter with ISO 8601 date format (consistent with conversation frontmatter)
         const currentDate = new Date().toISOString();
+
+        // Store file stats for duplicate counting
+        if (fileStats) {
+            report.setFileStats(fileStats);
+        }
+
         const stats = report.getCompletionStats();
 
         // Determine which files were processed vs skipped

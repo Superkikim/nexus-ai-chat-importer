@@ -23,6 +23,7 @@ import { App, Modal } from "obsidian";
 export interface ImportCompletionStats {
     totalFiles: number;
     totalConversations: number;
+    duplicates: number;
     created: number;
     updated: number;
     skipped: number;
@@ -99,6 +100,11 @@ export class ImportCompletionDialog extends Modal {
 
         // Total conversations cartouche
         this.createStatCartouche(section, "💬", this.stats.totalConversations.toString(), "Total Conversations");
+
+        // Duplicates cartouche (only if > 0)
+        if (this.stats.duplicates > 0) {
+            this.createStatCartouche(section, "🔁", this.stats.duplicates.toString(), "Duplicates", "var(--text-muted)");
+        }
 
         // Created cartouche
         this.createStatCartouche(section, "✨", this.stats.created.toString(), "New", "var(--color-green)");

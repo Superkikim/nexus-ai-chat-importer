@@ -56,6 +56,7 @@ export class ImportReport {
     private globalErrors: { message: string; details: string }[] = [];
     private providerSpecificColumnHeader: string = "Attachments";
     private operationStartTime: number = Date.now();
+    private fileStats?: Map<string, any>; // Store file analysis stats for duplicate counting
 
     /**
      * Start a new file section for multi-file imports
@@ -560,6 +561,26 @@ export class ImportReport {
     }
 
     /**
+     * Store file analysis stats for duplicate counting
+     */
+    setFileStats(fileStats: Map<string, any>) {
+        this.fileStats = fileStats;
+    }
+
+    /**
+     * Calculate total duplicates from file stats
+     */
+    private getTotalDuplicates(): number {
+        if (!this.fileStats) return 0;
+
+        let totalDuplicates = 0;
+        this.fileStats.forEach(stats => {
+            totalDuplicates += stats.duplicates || 0;
+        });
+        return totalDuplicates;
+    }
+
+    /**
      * Get statistics for the completion dialog
      */
     getCompletionStats() {
@@ -569,6 +590,7 @@ export class ImportReport {
         return {
             totalFiles: this.fileSections.size,
             totalConversations: globalStats.totalProcessed,
+            duplicates: this.getTotalDuplicates(),
             created: globalStats.created,
             updated: globalStats.updated,
             skipped: globalStats.skipped,

@@ -6506,6 +6506,7 @@ var ImportReport = class {
     this.providerSpecificColumnHeader = "Attachments";
     this.operationStartTime = Date.now();
   }
+  // Store file analysis stats for duplicate counting
   /**
    * Start a new file section for multi-file imports
    */
@@ -6943,6 +6944,24 @@ var ImportReport = class {
     return count;
   }
   /**
+   * Store file analysis stats for duplicate counting
+   */
+  setFileStats(fileStats) {
+    this.fileStats = fileStats;
+  }
+  /**
+   * Calculate total duplicates from file stats
+   */
+  getTotalDuplicates() {
+    if (!this.fileStats)
+      return 0;
+    let totalDuplicates = 0;
+    this.fileStats.forEach((stats) => {
+      totalDuplicates += stats.duplicates || 0;
+    });
+    return totalDuplicates;
+  }
+  /**
    * Get statistics for the completion dialog
    */
   getCompletionStats() {
@@ -6951,6 +6970,7 @@ var ImportReport = class {
     return {
       totalFiles: this.fileSections.size,
       totalConversations: globalStats.totalProcessed,
+      duplicates: this.getTotalDuplicates(),
       created: globalStats.created,
       updated: globalStats.updated,
       skipped: globalStats.skipped,
@@ -12990,6 +13010,9 @@ var ImportCompletionDialog = class extends import_obsidian25.Modal {
     section.style.gap = "12px";
     this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), "Files with New/Updated Content");
     this.createStatCartouche(section, "\u{1F4AC}", this.stats.totalConversations.toString(), "Total Conversations");
+    if (this.stats.duplicates > 0) {
+      this.createStatCartouche(section, "\u{1F501}", this.stats.duplicates.toString(), "Duplicates", "var(--text-muted)");
+    }
     this.createStatCartouche(section, "\u2728", this.stats.created.toString(), "New", "var(--color-green)");
     this.createStatCartouche(section, "\u{1F504}", this.stats.updated.toString(), "Updated", "var(--color-orange)");
     this.createStatCartouche(section, "\u23ED\uFE0F", this.stats.skipped.toString(), "Skipped", "var(--text-muted)");
@@ -13531,6 +13554,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian26.Plugin {
       counter++;
     }
     const currentDate = new Date().toISOString();
+    if (fileStats) {
+      report.setFileStats(fileStats);
+    }
     const stats = report.getCompletionStats();
     const processedFiles = [];
     const skippedFiles = [];
