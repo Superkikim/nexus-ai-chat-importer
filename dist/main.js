@@ -6498,6 +6498,7 @@ init_utils();
 init_dialogs();
 
 // src/models/import-report.ts
+init_utils();
 var ImportReport = class {
   constructor() {
     this.fileSections = /* @__PURE__ */ new Map();
@@ -6506,7 +6507,7 @@ var ImportReport = class {
     this.providerSpecificColumnHeader = "Attachments";
     this.operationStartTime = Date.now();
   }
-  // Store file analysis stats for duplicate counting
+  // Custom format for report dates
   /**
    * Start a new file section for multi-file imports
    */
@@ -6542,6 +6543,9 @@ var ImportReport = class {
   }
   setProviderSpecificColumnHeader(header) {
     this.providerSpecificColumnHeader = header;
+  }
+  setCustomTimestampFormat(format) {
+    this.customTimestampFormat = format;
   }
   /**
    * Legacy method for backward compatibility (single file imports)
@@ -6593,28 +6597,28 @@ var ImportReport = class {
     });
     return { created, updated, skipped, failed, totalProcessed, newMessages };
   }
-  addCreated(title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount) {
+  addCreated(title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
     }
   }
-  addUpdated(title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount) {
+  addUpdated(title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
     }
   }
-  addSkipped(title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount) {
+  addSkipped(title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
     }
   }
-  addFailed(title, filePath, createDate, updateDate, errorMessage) {
+  addFailed(title, filePath, createTime, updateTime, errorMessage) {
     const section = this.getCurrentSection();
     if (section) {
-      section.failed.push({ title, filePath, createDate, updateDate, errorMessage, sourceFile: this.currentFileName });
+      section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
     }
   }
   addError(message, details) {
@@ -6831,14 +6835,15 @@ var ImportReport = class {
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
     const sortedEntries = [...entries].sort((a, b) => {
-      return a.createDate.localeCompare(b.createDate);
+      return a.createTime - b.createTime;
     });
     sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
+      const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
       const providerSpecificDisplay = providerSpecificValue > 0 ? `\u2705 ${providerSpecificValue}` : providerSpecificValue;
-      table += `| \u2728 | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |
+      table += `| \u2728 | ${titleLink} | ${createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |
 `;
     });
     return table + "\n\n";
@@ -6852,14 +6857,15 @@ var ImportReport = class {
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
     const sortedEntries = [...entries].sort((a, b) => {
-      return a.updateDate.localeCompare(b.updateDate);
+      return a.updateTime - b.updateTime;
     });
     sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
+      const updateDate = formatMessageTimestamp(entry.updateTime, this.customTimestampFormat);
       const providerSpecificDisplay = providerSpecificValue > 0 ? `\u2705 ${providerSpecificValue}` : providerSpecificValue;
-      table += `| \u{1F504} | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |
+      table += `| \u{1F504} | ${titleLink} | ${updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |
 `;
     });
     return table + "\n\n";
@@ -6872,11 +6878,12 @@ var ImportReport = class {
     table += "| | Title | Date | Error |\n";
     table += "|:---:|:---|:---:|:---|\n";
     const sortedEntries = [...entries].sort((a, b) => {
-      return a.createDate.localeCompare(b.createDate);
+      return a.createTime - b.createTime;
     });
     sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
-      table += `| \u{1F6AB} | ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |
+      const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
+      table += `| \u{1F6AB} | ${sanitizedTitle} | ${createDate} | ${entry.errorMessage || "Unknown error"} |
 `;
     });
     return table + "\n\n";
@@ -7374,12 +7381,11 @@ var ConversationProcessor = class {
       return;
     }
     if (existingRecord.updateTime >= updateTime) {
-      const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
       importReport.addSkipped(
         chatTitle,
         existingRecord.path,
-        formatMessageTimestamp(createTime, customFormat),
-        formatMessageTimestamp(updateTime, customFormat),
+        createTime,
+        updateTime,
         totalMessageCount,
         "No Updates"
       );
@@ -7448,12 +7454,11 @@ var ConversationProcessor = class {
           }
           const newContent = this.noteFormatter.generateMarkdownContent(standardConversation);
           await this.fileService.writeToFile(filePath, newContent);
-          const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
           importReport.addUpdated(
             chatTitle,
             filePath,
-            formatMessageTimestamp(chatCreateTime, customFormat),
-            formatMessageTimestamp(chatUpdateTime, customFormat),
+            chatCreateTime,
+            chatUpdateTime,
             totalMessageCount,
             attachmentStats
           );
@@ -7480,22 +7485,20 @@ var ConversationProcessor = class {
         }
         if (content !== originalContent) {
           await this.fileService.writeToFile(filePath, content);
-          const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
           importReport.addUpdated(
             chatTitle,
             filePath,
-            formatMessageTimestamp(chatCreateTime, customFormat),
-            formatMessageTimestamp(chatUpdateTime, customFormat),
+            chatCreateTime,
+            chatUpdateTime,
             newMessages.length,
             attachmentStats
           );
         } else {
-          const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
           importReport.addSkipped(
             chatTitle,
             filePath,
-            formatMessageTimestamp(chatCreateTime, customFormat),
-            formatMessageTimestamp(chatUpdateTime, customFormat),
+            chatCreateTime,
+            chatUpdateTime,
             totalMessageCount,
             "No changes needed"
           );
@@ -7529,12 +7532,11 @@ var ConversationProcessor = class {
       const updateTime = adapter.getUpdateTime(chat);
       const chatTitle = adapter.getTitle(chat);
       const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
-      const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
       importReport.addCreated(
         chatTitle,
         filePath,
-        formatMessageTimestamp(createTime, customFormat),
-        formatMessageTimestamp(updateTime, customFormat),
+        createTime,
+        updateTime,
         messageCount,
         attachmentStats,
         providerSpecificCount
@@ -7546,12 +7548,11 @@ var ConversationProcessor = class {
       const createTime = adapter.getCreateTime(chat);
       const updateTime = adapter.getUpdateTime(chat);
       const chatTitle = adapter.getTitle(chat);
-      const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
       importReport.addFailed(
         chatTitle,
         filePath,
-        formatMessageTimestamp(createTime, customFormat),
-        formatMessageTimestamp(updateTime, customFormat),
+        createTime,
+        updateTime,
         error.message
       );
       throw error;
@@ -9971,6 +9972,9 @@ var ImportService = class {
   async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport) {
     const isSharedReport = !!sharedReport;
     this.importReport = sharedReport || new ImportReport();
+    if (!isSharedReport && this.plugin.settings.useCustomMessageTimestampFormat) {
+      this.importReport.setCustomTimestampFormat(this.plugin.settings.messageTimestampFormat);
+    }
     this.importReport.startFileSection(file.name);
     const storage = this.plugin.getStorageService();
     let processingStarted = false;
@@ -13396,6 +13400,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian26.Plugin {
       this.logger.debug(`[IMPORT-ALL] Extraction completed, found ${extractionResult.conversations.length} conversations`);
       this.logger.debug(`[IMPORT-ALL] Creating ImportReport`);
       const operationReport = new ImportReport();
+      if (this.settings.useCustomMessageTimestampFormat) {
+        operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+      }
       if (extractionResult.conversations.length === 0) {
         this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
         new import_obsidian26.Notice("No new or updated conversations found. All conversations are already up to date.");
@@ -13488,6 +13495,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian26.Plugin {
    */
   async handleConversationSelectionResult(result, files, provider, analysisInfo, fileStats) {
     const operationReport = new ImportReport();
+    if (this.settings.useCustomMessageTimestampFormat) {
+      operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+    }
     if (result.selectedIds.length === 0) {
       new import_obsidian26.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);

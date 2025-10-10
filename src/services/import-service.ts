@@ -78,6 +78,11 @@ export class ImportService {
         const isSharedReport = !!sharedReport;
         this.importReport = sharedReport || new ImportReport();
 
+        // Set custom timestamp format if enabled (only if creating new report)
+        if (!isSharedReport && this.plugin.settings.useCustomMessageTimestampFormat) {
+            this.importReport.setCustomTimestampFormat(this.plugin.settings.messageTimestampFormat);
+        }
+
         // Start a new file section in the report
         this.importReport.startFileSection(file.name);
 

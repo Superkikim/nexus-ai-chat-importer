@@ -29,7 +29,6 @@ import { ProviderRegistry } from "../providers/provider-adapter";
 import { ImportProgressCallback } from "../ui/import-progress-modal";
 import JSZip from "jszip";
 import {
-    formatMessageTimestamp,
     isValidMessage,
     ensureFolderExists,
     doesFilePathExist,
@@ -207,16 +206,11 @@ export class ConversationProcessor {
 
         // Normal logic: Check timestamps
         if (existingRecord.updateTime >= updateTime) {
-            // Get custom format if enabled
-            const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
-                ? this.plugin.settings.messageTimestampFormat
-                : undefined;
-
             importReport.addSkipped(
                 chatTitle,
                 existingRecord.path,
-                formatMessageTimestamp(createTime, customFormat),
-                formatMessageTimestamp(updateTime, customFormat),
+                createTime,
+                updateTime,
                 totalMessageCount,
                 "No Updates"
             );
@@ -321,16 +315,11 @@ export class ConversationProcessor {
                     const newContent = this.noteFormatter.generateMarkdownContent(standardConversation);
                     await this.fileService.writeToFile(filePath, newContent);
 
-                    // Get custom format if enabled
-                    const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
-                        ? this.plugin.settings.messageTimestampFormat
-                        : undefined;
-
                     importReport.addUpdated(
                         chatTitle,
                         filePath,
-                        formatMessageTimestamp(chatCreateTime, customFormat),
-                        formatMessageTimestamp(chatUpdateTime, customFormat),
+                        chatCreateTime,
+                        chatUpdateTime,
                         totalMessageCount,
                         attachmentStats
                     );
@@ -370,30 +359,20 @@ export class ConversationProcessor {
                 if (content !== originalContent) {
                     await this.fileService.writeToFile(filePath, content);
 
-                    // Get custom format if enabled
-                    const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
-                        ? this.plugin.settings.messageTimestampFormat
-                        : undefined;
-
                     importReport.addUpdated(
                         chatTitle,
                         filePath,
-                        formatMessageTimestamp(chatCreateTime, customFormat),
-                        formatMessageTimestamp(chatUpdateTime, customFormat),
+                        chatCreateTime,
+                        chatUpdateTime,
                         newMessages.length,
                         attachmentStats
                     );
                 } else {
-                    // Get custom format if enabled
-                    const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
-                        ? this.plugin.settings.messageTimestampFormat
-                        : undefined;
-
                     importReport.addSkipped(
                         chatTitle,
                         filePath,
-                        formatMessageTimestamp(chatCreateTime, customFormat),
-                        formatMessageTimestamp(chatUpdateTime, customFormat),
+                        chatCreateTime,
+                        chatUpdateTime,
                         totalMessageCount,
                         "No changes needed"
                     );
@@ -447,16 +426,11 @@ export class ConversationProcessor {
             // Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
             const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
 
-            // Get custom format if enabled
-            const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
-                ? this.plugin.settings.messageTimestampFormat
-                : undefined;
-
             importReport.addCreated(
                 chatTitle,
                 filePath,
-                formatMessageTimestamp(createTime, customFormat),
-                formatMessageTimestamp(updateTime, customFormat),
+                createTime,
+                updateTime,
                 messageCount,
                 attachmentStats,
                 providerSpecificCount
@@ -471,16 +445,11 @@ export class ConversationProcessor {
             const updateTime = adapter.getUpdateTime(chat);
             const chatTitle = adapter.getTitle(chat);
 
-            // Get custom format if enabled
-            const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
-                ? this.plugin.settings.messageTimestampFormat
-                : undefined;
-
             importReport.addFailed(
                 chatTitle,
                 filePath,
-                formatMessageTimestamp(createTime, customFormat),
-                formatMessageTimestamp(updateTime, customFormat),
+                createTime,
+                updateTime,
                 error.message
             );
             throw error;

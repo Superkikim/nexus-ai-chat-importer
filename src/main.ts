@@ -298,6 +298,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.logger.debug(`[IMPORT-ALL] Creating ImportReport`);
             const operationReport = new ImportReport();
 
+            // Set custom timestamp format if enabled
+            if (this.settings.useCustomMessageTimestampFormat) {
+                operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+            }
+
             if (extractionResult.conversations.length === 0) {
                 // No conversations to import, but still generate report and show dialog
                 this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
@@ -428,6 +433,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     ): Promise<void> {
         // Create shared report for the entire operation
         const operationReport = new ImportReport();
+
+        // Set custom timestamp format if enabled
+        if (this.settings.useCustomMessageTimestampFormat) {
+            operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+        }
 
         if (result.selectedIds.length === 0) {
             new Notice("No conversations selected for import.");

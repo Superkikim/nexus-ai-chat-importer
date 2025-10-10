@@ -19,12 +19,13 @@
 
 // src/models/import-report.ts
 import { AttachmentStats } from "../types/plugin";
+import { formatMessageTimestamp, MessageTimestampFormat } from "../utils";
 
 interface ReportEntry {
     title: string;
     filePath: string;
-    createDate: string;
-    updateDate: string;
+    createTime: number; // Unix timestamp (seconds)
+    updateTime: number; // Unix timestamp (seconds)
     messageCount?: number;
     newMessageCount?: number; // For updates
     providerSpecificCount?: number; // For provider-specific column (artifacts, attachments, etc.)
@@ -57,6 +58,7 @@ export class ImportReport {
     private providerSpecificColumnHeader: string = "Attachments";
     private operationStartTime: number = Date.now();
     private fileStats?: Map<string, any>; // Store file analysis stats for duplicate counting
+    private customTimestampFormat?: MessageTimestampFormat; // Custom format for report dates
 
     /**
      * Start a new file section for multi-file imports
@@ -96,6 +98,10 @@ export class ImportReport {
 
     setProviderSpecificColumnHeader(header: string) {
         this.providerSpecificColumnHeader = header;
+    }
+
+    setCustomTimestampFormat(format?: MessageTimestampFormat) {
+        this.customTimestampFormat = format;
     }
 
     /**
@@ -159,31 +165,31 @@ export class ImportReport {
         return { created, updated, skipped, failed, totalProcessed, newMessages };
     }
 
-    addCreated(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+    addCreated(title: string, filePath: string, createTime: number, updateTime: number, messageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
         const section = this.getCurrentSection();
         if (section) {
-            section.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
         }
     }
 
-    addUpdated(title: string, filePath: string, createDate: string, updateDate: string, newMessageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+    addUpdated(title: string, filePath: string, createTime: number, updateTime: number, newMessageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
         const section = this.getCurrentSection();
         if (section) {
-            section.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
         }
     }
 
-    addSkipped(title: string, filePath: string, createDate: string, updateDate: string, messageCount: number, reason: string, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+    addSkipped(title: string, filePath: string, createTime: number, updateTime: number, messageCount: number, reason: string, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
         const section = this.getCurrentSection();
         if (section) {
-            section.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
         }
     }
 
-    addFailed(title: string, filePath: string, createDate: string, updateDate: string, errorMessage: string) {
+    addFailed(title: string, filePath: string, createTime: number, updateTime: number, errorMessage: string) {
         const section = this.getCurrentSection();
         if (section) {
-            section.failed.push({ title, filePath, createDate, updateDate, errorMessage, sourceFile: this.currentFileName });
+            section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
         }
     }
 
@@ -424,10 +430,9 @@ export class ImportReport {
         table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
 
-        // Sort by createDate (oldest first, newest at bottom)
+        // Sort by createTime (oldest first, newest at bottom) - numeric sort
         const sortedEntries = [...entries].sort((a, b) => {
-            // Compare dates as strings (ISO 8601 format is sortable)
-            return a.createDate.localeCompare(b.createDate);
+            return a.createTime - b.createTime;
         });
 
         sortedEntries.forEach((entry) => {
@@ -435,10 +440,13 @@ export class ImportReport {
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const providerSpecificValue = entry.providerSpecificCount || 0;
 
+            // Format timestamp with custom format or default
+            const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
+
             // Add green checkmark for artifacts/attachments when > 0
             const providerSpecificDisplay = providerSpecificValue > 0 ? `✅ ${providerSpecificValue}` : providerSpecificValue;
 
-            table += `| ✨ | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |\n`;
+            table += `| ✨ | ${titleLink} | ${createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |\n`;
         });
 
         return table + "\n\n";
@@ -450,10 +458,9 @@ export class ImportReport {
         table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
 
-        // Sort by updateDate (oldest first, newest at bottom)
+        // Sort by updateTime (oldest first, newest at bottom) - numeric sort
         const sortedEntries = [...entries].sort((a, b) => {
-            // Compare dates as strings (ISO 8601 format is sortable)
-            return a.updateDate.localeCompare(b.updateDate);
+            return a.updateTime - b.updateTime;
         });
 
         sortedEntries.forEach((entry) => {
@@ -461,10 +468,13 @@ export class ImportReport {
             const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
             const providerSpecificValue = entry.providerSpecificCount || 0;
 
+            // Format timestamp with custom format or default
+            const updateDate = formatMessageTimestamp(entry.updateTime, this.customTimestampFormat);
+
             // Add green checkmark for artifacts/attachments when > 0
             const providerSpecificDisplay = providerSpecificValue > 0 ? `✅ ${providerSpecificValue}` : providerSpecificValue;
 
-            table += `| 🔄 | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |\n`;
+            table += `| 🔄 | ${titleLink} | ${updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |\n`;
         });
 
         return table + "\n\n";
@@ -476,15 +486,16 @@ export class ImportReport {
         table += "| | Title | Date | Error |\n";
         table += "|:---:|:---|:---:|:---|\n";
 
-        // Sort by createDate (oldest first, newest at bottom)
+        // Sort by createTime (oldest first, newest at bottom) - numeric sort
         const sortedEntries = [...entries].sort((a, b) => {
-            // Compare dates as strings (ISO 8601 format is sortable)
-            return a.createDate.localeCompare(b.createDate);
+            return a.createTime - b.createTime;
         });
 
         sortedEntries.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
-            table += `| 🚫 | ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |\n`;
+            // Format timestamp with custom format or default
+            const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
+            table += `| 🚫 | ${sanitizedTitle} | ${createDate} | ${entry.errorMessage || "Unknown error"} |\n`;
         });
 
         return table + "\n\n";
