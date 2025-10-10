@@ -125,7 +125,7 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 
 ### Advanced Options
 
-- **Skip Missing Attachments**: Continue import even if some attachments are missing
+- **Import Attachments**: Enable or disable attachment import (images, documents, artifacts)
 
 ## 💡 Best Practices
 
@@ -299,9 +299,7 @@ Some attachments may be missing from exports:
 - **Large files**: Sometimes excluded from ZIP
 - **External links**: Not downloadable
 
-**Settings**:
-- Enable "Skip Missing Attachments" to continue import despite missing files
-- Check import reports for detailed attachment statistics
+The plugin will continue importing even if some attachments are missing. Check import reports for detailed attachment statistics and missing file information.
 
 ## 📊 Import Reports
 
