@@ -75,14 +75,14 @@ export const MESSAGE_TIMESTAMP_FORMATS: Record<MessageTimestampFormat, {
         separator: ' at '
     },
     iso: {
-        label: 'ISO 8601-like (Universal)',
+        label: 'YYYY-MM-DD HH:mm:ss (ISO 8601-like)',
         description: 'YYYY-MM-DD HH:mm:ss - Sortable, unambiguous',
         dateFormat: 'YYYY-MM-DD',
         timeFormat: 'HH:mm:ss',
         separator: ' '
     },
     us: {
-        label: 'US Format',
+        label: 'MM/DD/YYYY h:mm:ss AM/PM (US)',
         description: 'MM/DD/YYYY h:mm:ss AM/PM',
         dateFormat: 'MM/DD/YYYY',
         timeFormat: 'h:mm:ss A',
@@ -96,21 +96,21 @@ export const MESSAGE_TIMESTAMP_FORMATS: Record<MessageTimestampFormat, {
         separator: ' at '
     },
     uk: {
-        label: 'UK Format',
-        description: 'DD/MM/YYYY HH:mm:ss (24-hour)',
+        label: 'DD/MM/YYYY HH:mm:ss (UK)',
+        description: 'DD/MM/YYYY HH:mm:ss (British format)',
         dateFormat: 'DD/MM/YYYY',
         timeFormat: 'HH:mm:ss',
         separator: ' at '
     },
     de: {
-        label: 'German Format',
+        label: 'DD.MM.YYYY HH:mm:ss (German/Swiss)',
         description: 'DD.MM.YYYY HH:mm:ss',
         dateFormat: 'DD.MM.YYYY',
         timeFormat: 'HH:mm:ss',
         separator: ' '
     },
     jp: {
-        label: 'Japanese Format',
+        label: 'YYYY/MM/DD HH:mm:ss (Japanese)',
         description: 'YYYY/MM/DD HH:mm:ss',
         dateFormat: 'YYYY/MM/DD',
         timeFormat: 'HH:mm:ss',
