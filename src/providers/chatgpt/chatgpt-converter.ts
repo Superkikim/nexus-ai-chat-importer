@@ -2,7 +2,7 @@
 import { Chat, ChatMessage } from "./chatgpt-types";
 import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
 import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
-import { isValidMessage } from "../../utils";
+import { ChatGPTMessageFilter } from "./chatgpt-message-filter";
 
 export class ChatGPTConverter {
     /**
@@ -72,7 +72,7 @@ export class ChatGPTConverter {
                 }
             }
             // Handle regular messages (but skip DALL-E JSON prompts)
-            else if (this.shouldIncludeMessage(message)) {
+            else if (ChatGPTMessageFilter.shouldIncludeMessage(message)) {
                 messages.push(this.convertMessage(message, conversationId));
             }
         }
@@ -95,113 +95,7 @@ export class ChatGPTConverter {
 
 
 
-    /**
-     * Determine if a message should be included in the conversation - ENHANCED VERSION
-     */
-    private static shouldIncludeMessage(message: ChatMessage): boolean {
-        // Safety check
-        if (!message || !message.author) {
-            return false;
-        }
-        
-        // ===== STRICT EXCLUSIONS =====
-        
-        // 1. Skip ALL system messages (always internal ChatGPT stuff)
-        if (message.author.role === "system") {
-            return false;
-        }
-        
-        // 2. Skip ALL tool messages (browsing, code execution, etc.)
-        if (message.author.role === "tool") {
-            return false;
-        }
-        
-        // 3. Skip hidden messages (user profile, system instructions)
-        if (message.metadata?.is_visually_hidden_from_conversation === true) {
-            return false;
-        }
-        
-        // 4. Skip user system messages (user_editable_context)
-        if (message.metadata?.is_user_system_message === true) {
-            return false;
-        }
-        
-        // 5. Skip user_editable_context content type
-        if (message.content?.content_type === "user_editable_context") {
-            return false;
-        }
-        
-        // ===== ASSISTANT MESSAGE FILTERING =====
-        
-        if (message.author.role === "assistant") {
-            // Skip empty assistant messages
-            if (message.content?.parts && 
-                Array.isArray(message.content.parts) &&
-                message.content.parts.every(part => 
-                    typeof part === "string" && part.trim() === ""
-                )) {
-                return false;
-            }
-            
-            // Skip DALL-E JSON prompt messages (handled separately)
-            if (ChatGPTDalleProcessor.isDallePromptMessage(message)) {
-                return false;
-            }
-            
-            // Skip code execution assistant messages (these are intermediate outputs)
-            if (message.content?.content_type === "code") {
-                return false;
-            }
-            
-            // Skip system error messages
-            if (message.content?.content_type === "system_error") {
-                return false;
-            }
-            
-            // Skip execution output messages  
-            if (message.content?.content_type === "execution_output") {
-                return false;
-            }
-            
-            // Keep multimodal_text messages ONLY if they have actual text content
-            if (message.content?.content_type === "multimodal_text") {
-                // Check if parts contain actual text (not just objects)
-                if (message.content?.parts && Array.isArray(message.content.parts)) {
-                    const hasTextContent = message.content.parts.some(part => {
-                        if (typeof part === "string" && part.trim() !== "") {
-                            return true;
-                        }
-                        if (typeof part === "object" && part !== null && 'text' in part) {
-                            return typeof part.text === "string" && part.text.trim() !== "";
-                        }
-                        return false;
-                    });
-                    
-                    if (!hasTextContent) {
-                        return false; // Skip multimodal messages without text
-                    }
-                }
-            }
-        }
-        
-        // ===== USER MESSAGE FILTERING =====
-        
-        if (message.author.role === "user") {
-            // User messages should generally be kept, but exclude special content types
-            const excludedContentTypes = [
-                "user_editable_context" // Already covered above but double-check
-            ];
-            
-            if (message.content?.content_type && excludedContentTypes.includes(message.content.content_type)) {
-                return false;
-            }
-        }
-        
-        // ===== FINAL VALIDATION =====
-        
-        // Use existing validation for basic message structure
-        return isValidMessage(message);
-    }
+
 
 
 

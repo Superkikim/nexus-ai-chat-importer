@@ -6,8 +6,8 @@ import { ChatGPTConverter } from "./chatgpt-converter";
 import { ChatGPTAttachmentExtractor } from "./chatgpt-attachment-extractor";
 import { ChatGPTReportNamingStrategy } from "./chatgpt-report-naming";
 import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
+import { ChatGPTMessageFilter } from "./chatgpt-message-filter";
 import { Chat, ChatMessage } from "./chatgpt-types";
-import { isValidMessage } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
 
 export class ChatGPTAdapter implements ProviderAdapter<Chat> {
@@ -85,7 +85,7 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
                         };
                         newMessages.push(chatMessage);
                     }
-                } else if (this.shouldIncludeMessage(message)) {
+                } else if (ChatGPTMessageFilter.shouldIncludeMessage(message)) {
                     // Regular user/assistant messages with enhanced filtering
                     newMessages.push(message);
                 }
@@ -129,99 +129,5 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
 
 
 
-    /**
-     * Determine if a message should be included - same logic as ChatGPTConverter
-     */
-    private shouldIncludeMessage(message: any): boolean {
-        // Safety check
-        if (!message || !message.author) {
-            return false;
-        }
-        
-        // Skip ALL system messages
-        if (message.author.role === "system") {
-            return false;
-        }
-        
-        // Skip ALL tool messages
-        if (message.author.role === "tool") {
-            return false;
-        }
-        
-        // Skip hidden messages
-        if (message.metadata?.is_visually_hidden_from_conversation === true) {
-            return false;
-        }
-        
-        // Skip user system messages
-        if (message.metadata?.is_user_system_message === true) {
-            return false;
-        }
-        
-        // Skip user_editable_context content type
-        if (message.content?.content_type === "user_editable_context") {
-            return false;
-        }
-        
-        // Assistant message filtering
-        if (message.author.role === "assistant") {
-            // Skip empty assistant messages
-            if (message.content?.parts && 
-                Array.isArray(message.content.parts) &&
-                message.content.parts.every((part: any) => 
-                    typeof part === "string" && part.trim() === ""
-                )) {
-                return false;
-            }
-            
-            // Skip assistant messages that are just DALL-E JSON prompts
-            if (message.content?.parts && 
-                Array.isArray(message.content.parts) &&
-                message.content.parts.length === 1 &&
-                typeof message.content.parts[0] === "string") {
-                
-                const content = message.content.parts[0].trim();
-                if (content.startsWith('{') && content.includes('"prompt"')) {
-                    return false;
-                }
-            }
-            
-            // Skip various technical content types
-            const excludedContentTypes = ["code", "system_error", "execution_output"];
-            if (message.content?.content_type && excludedContentTypes.includes(message.content.content_type)) {
-                return false;
-            }
-            
-            // For multimodal_text, check if it has actual text content
-            if (message.content?.content_type === "multimodal_text") {
-                if (message.content?.parts && Array.isArray(message.content.parts)) {
-                    const hasTextContent = message.content.parts.some((part: any) => {
-                        if (typeof part === "string" && part.trim() !== "") {
-                            return true;
-                        }
-                        if (typeof part === "object" && part !== null && 'text' in part) {
-                            return typeof part.text === "string" && part.text.trim() !== "";
-                        }
-                        return false;
-                    });
-                    
-                    if (!hasTextContent) {
-                        return false;
-                    }
-                }
-            }
-        }
-        
-        // User message filtering
-        if (message.author.role === "user") {
-            const excludedContentTypes = ["user_editable_context"];
-            
-            if (message.content?.content_type && excludedContentTypes.includes(message.content.content_type)) {
-                return false;
-            }
-        }
-        
-        // Final validation using existing function
-        return isValidMessage(message);
-    }
+
 }
