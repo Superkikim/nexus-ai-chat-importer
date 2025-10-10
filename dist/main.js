@@ -6830,7 +6830,7 @@ var ImportReport = class {
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
     const sortedEntries = [...entries].sort((a, b) => {
-      return b.createDate.localeCompare(a.createDate);
+      return a.createDate.localeCompare(b.createDate);
     });
     sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
@@ -6851,7 +6851,7 @@ var ImportReport = class {
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
     const sortedEntries = [...entries].sort((a, b) => {
-      return b.updateDate.localeCompare(a.updateDate);
+      return a.updateDate.localeCompare(b.updateDate);
     });
     sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
@@ -6871,7 +6871,7 @@ var ImportReport = class {
     table += "| | Title | Date | Error |\n";
     table += "|:---:|:---|:---:|:---|\n";
     const sortedEntries = [...entries].sort((a, b) => {
-      return b.createDate.localeCompare(a.createDate);
+      return a.createDate.localeCompare(b.createDate);
     });
     sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();

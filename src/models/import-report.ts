@@ -423,10 +423,10 @@ export class ImportReport {
         table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
 
-        // Sort by createDate (newest first)
+        // Sort by createDate (oldest first, newest at bottom)
         const sortedEntries = [...entries].sort((a, b) => {
             // Compare dates as strings (ISO 8601 format is sortable)
-            return b.createDate.localeCompare(a.createDate);
+            return a.createDate.localeCompare(b.createDate);
         });
 
         sortedEntries.forEach((entry) => {
@@ -449,10 +449,10 @@ export class ImportReport {
         table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
 
-        // Sort by updateDate (newest first)
+        // Sort by updateDate (oldest first, newest at bottom)
         const sortedEntries = [...entries].sort((a, b) => {
             // Compare dates as strings (ISO 8601 format is sortable)
-            return b.updateDate.localeCompare(a.updateDate);
+            return a.updateDate.localeCompare(b.updateDate);
         });
 
         sortedEntries.forEach((entry) => {
@@ -475,10 +475,10 @@ export class ImportReport {
         table += "| | Title | Date | Error |\n";
         table += "|:---:|:---|:---:|:---|\n";
 
-        // Sort by createDate (newest first)
+        // Sort by createDate (oldest first, newest at bottom)
         const sortedEntries = [...entries].sort((a, b) => {
             // Compare dates as strings (ISO 8601 format is sortable)
-            return b.createDate.localeCompare(a.createDate);
+            return a.createDate.localeCompare(b.createDate);
         });
 
         sortedEntries.forEach((entry) => {
