@@ -21,6 +21,7 @@ export interface ChatMessage {
     content: {
         parts: (string | any)[];
         content_type?: string;
+        text?: string; // Used when content_type is "code" (OpenAI inconsistency)
     };
     create_time: number;
     attachments?: ChatGPTAttachment[]; // Added attachment support
