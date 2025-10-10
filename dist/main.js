@@ -6594,7 +6594,7 @@ var _MessageFormatter = class {
     this.logger = logger4;
   }
   formatMessages(messages) {
-    return messages.filter((message) => message !== void 0).map((message) => this.formatMessage(message)).filter((formattedMessage) => formattedMessage !== "").join("\n\n");
+    return messages.filter((message) => message !== void 0).map((message) => this.formatMessage(message)).filter((formattedMessage) => formattedMessage !== "").join("\n");
   }
   formatMessage(message) {
     if (!message) {
@@ -6615,12 +6615,11 @@ var _MessageFormatter = class {
       messageContent += "\n\n" + this.formatAttachments(message.attachments);
     }
     messageContent += `
-<!-- UID: ${message.id} -->
-`;
+<!-- UID: ${message.id} -->`;
     if (message.role === "assistant") {
-      messageContent += "\n---\n";
+      messageContent += "\n\n---";
     }
-    return messageContent + "\n\n";
+    return messageContent;
   }
   formatAttachments(attachments) {
     return attachments.map((attachment) => {

@@ -20,7 +20,7 @@ export class MessageFormatter {
             .filter(message => message !== undefined)
             .map(message => this.formatMessage(message))
             .filter(formattedMessage => formattedMessage !== "")
-            .join("\n\n");
+            .join("\n");
     }
 
     formatMessage(message: StandardMessage): string {
@@ -54,14 +54,14 @@ export class MessageFormatter {
         }
 
         // Add UID for update tracking
-        messageContent += `\n<!-- UID: ${message.id} -->\n`;
+        messageContent += `\n<!-- UID: ${message.id} -->`;
 
         // Add separator for assistant messages
         if (message.role === "assistant") {
-            messageContent += "\n---\n";
+            messageContent += "\n\n---";
         }
 
-        return messageContent + "\n\n";
+        return messageContent;
     }
 
     private formatAttachments(attachments: StandardAttachment[]): string {
