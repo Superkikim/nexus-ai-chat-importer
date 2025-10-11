@@ -86,6 +86,9 @@ export class ImportService {
         // Start a new file section in the report
         this.importReport.startFileSection(file.name);
 
+        // Reset counters for this file (prevents accumulation across multiple files)
+        this.conversationProcessor.resetCounters();
+
         const storage = this.plugin.getStorageService();
         let processingStarted = false;
 

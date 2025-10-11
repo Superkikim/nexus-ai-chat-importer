@@ -517,6 +517,23 @@ export class ConversationProcessor {
     }
 
     /**
+     * Reset counters for processing a new file
+     */
+    resetCounters() {
+        this.counters = {
+            totalExistingConversations: 0,
+            totalNewConversationsToImport: 0,
+            totalExistingConversationsToUpdate: 0,
+            totalNewConversationsSuccessfullyImported: 0,
+            totalConversationsActuallyUpdated: 0,
+            totalConversationsProcessed: 0,
+            totalNonEmptyMessagesToImport: 0,
+            totalNonEmptyMessagesToAdd: 0,
+            totalNonEmptyMessagesAdded: 0,
+        };
+    }
+
+    /**
      * Calculate attachment statistics from processed messages
      */
     private calculateAttachmentStats(messages: StandardMessage[]): { total: number; found: number; missing: number; failed: number } {
