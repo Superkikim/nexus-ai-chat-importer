@@ -6050,17 +6050,41 @@ var SupportSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
-    new import_obsidian.Setting(supportContainer).setName("\u2615 Support Development").setDesc("I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses. If these plugins help you, even a small donation would mean the world and help keep them alive.").addButton(
-      (button) => button.setButtonText("Support on Ko-fi").setCta().onClick(() => {
-        window.open("https://ko-fi.com/nexusplugins", "_blank");
-      })
+    const heroContainer = supportContainer.createDiv({ cls: "nexus-support-hero" });
+    const messageTitle = heroContainer.createEl("h3", {
+      text: "Support Nexus Projects",
+      cls: "nexus-support-title"
+    });
+    const messageText = heroContainer.createEl("p", {
+      cls: "nexus-support-message"
+    });
+    messageText.setText(
+      "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses. If these plugins help you, even a small donation would mean the world and help keep them alive."
     );
+    const statsContainer = heroContainer.createDiv({ cls: "nexus-support-stats" });
+    const stat1 = statsContainer.createDiv({ cls: "nexus-stat" });
+    stat1.createEl("div", { text: "1,000+", cls: "nexus-stat-number" });
+    stat1.createEl("div", { text: "Users", cls: "nexus-stat-label" });
+    const stat2 = statsContainer.createDiv({ cls: "nexus-stat" });
+    stat2.createEl("div", { text: "$10", cls: "nexus-stat-number nexus-stat-negative" });
+    stat2.createEl("div", { text: "Received", cls: "nexus-stat-label" });
+    const stat3 = statsContainer.createDiv({ cls: "nexus-stat" });
+    stat3.createEl("div", { text: "$200/mo", cls: "nexus-stat-number nexus-stat-negative" });
+    stat3.createEl("div", { text: "Expenses", cls: "nexus-stat-label" });
+    const ctaContainer = heroContainer.createDiv({ cls: "nexus-support-cta" });
+    const kofiButton = ctaContainer.createEl("button", {
+      text: "\u2615 Support on Ko-fi",
+      cls: "mod-cta nexus-kofi-button"
+    });
+    kofiButton.onclick = () => {
+      window.open("https://ko-fi.com/nexusplugins", "_blank");
+    };
+    supportContainer.createEl("hr", { cls: "nexus-section-separator" });
     new import_obsidian.Setting(supportContainer).setName("\u{1F41B} Report Issues & Request Features").setDesc("Found a bug or have a feature request? Open an issue on GitHub to help improve the plugin.").addButton(
       (button) => button.setButtonText("Open GitHub Issues").onClick(() => {
         window.open("https://github.com/Superkikim/nexus-ai-chat-importer/issues", "_blank");
       })
     );
-    supportContainer.createEl("hr", { cls: "nexus-section-separator" });
   }
 };
 
