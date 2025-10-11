@@ -21,6 +21,7 @@
 import { ConversationCatalogEntry } from "../types/plugin";
 import { TFile } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
+import { DateParser } from "../utils/date-parser";
 
 export class StorageService {
     private importedArchives: Record<string, { fileName: string; date: string }> = {};
@@ -316,36 +317,11 @@ export class StorageService {
 
     /**
      * Parse time string from frontmatter (handle multiple formats)
-     * Supports ISO 8601 (v1.3.0+) with fallback to US format (v1.2.0)
-     * Examples:
-     * - ISO 8601 (v1.3.0+): "2025-10-04T22:30:45Z" or "2025-10-04T22:30:45.000Z"
-     * - US format with seconds (v1.2.0): "01/15/2024 at 2:30:00 PM"
+     * Supports all formats: ISO 8601, US, EU, DE, JP, and locale-based
+     * Uses intelligent format detection from DateParser utility
      */
     private parseTimeString(timeStr: string): number {
-        if (!timeStr) return 0;
-
-        try {
-            // Import moment from obsidian (same instance used for formatting)
-            const { moment } = require("obsidian");
-
-            // Try ISO 8601 first (v1.3.0+)
-            let date = moment(timeStr, moment.ISO_8601, true);
-
-            if (!date.isValid()) {
-                // Fallback: US format with seconds (v1.2.0 - in case migration failed)
-                date = moment(timeStr, "MM/DD/YYYY [at] h:mm:ss A", true);
-            }
-
-            if (!date.isValid()) {
-                console.warn(`Could not parse date: ${timeStr}`);
-                return 0;
-            }
-
-            return date.unix();
-        } catch (error) {
-            console.warn(`Date parsing error for "${timeStr}":`, error);
-            return 0;
-        }
+        return DateParser.parseDate(timeStr);
     }
 
     /**

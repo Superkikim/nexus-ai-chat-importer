@@ -3877,6 +3877,184 @@ var init_dialogs = __esm({
   }
 });
 
+// src/utils/date-parser.ts
+var import_obsidian18, DateParser;
+var init_date_parser = __esm({
+  "src/utils/date-parser.ts"() {
+    "use strict";
+    import_obsidian18 = require("obsidian");
+    DateParser = class {
+      /**
+       * Parse a date string with automatic format detection
+       * Returns Unix timestamp (seconds) or 0 if parsing fails
+       */
+      static parseDate(dateStr) {
+        if (!dateStr || typeof dateStr !== "string") {
+          return 0;
+        }
+        try {
+          const isoDate = (0, import_obsidian18.moment)(dateStr, import_obsidian18.moment.ISO_8601, true);
+          if (isoDate.isValid()) {
+            return isoDate.unix();
+          }
+          const format = this.detectFormat(dateStr);
+          if (!format) {
+            console.warn(`Could not detect date format: ${dateStr}`);
+            return 0;
+          }
+          const parsed = this.parseWithFormat(dateStr, format);
+          if (parsed === 0) {
+            console.warn(`Could not parse date: ${dateStr}`);
+          }
+          return parsed;
+        } catch (error) {
+          console.warn(`Date parsing error for "${dateStr}":`, error);
+          return 0;
+        }
+      }
+      /**
+       * Detect date format from a single date string
+       */
+      static detectFormat(dateStr) {
+        if (dateStr.match(/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/)) {
+          return {
+            separator: "-",
+            order: "YMD",
+            timeFormat: "24h",
+            timeSeparator: dateStr.includes("T") ? "T" : " ",
+            hasSeconds: dateStr.includes(":") && dateStr.split(":").length >= 3
+          };
+        }
+        let separator = "/";
+        if (dateStr.includes("-") && !dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+          separator = "-";
+        } else if (dateStr.includes(".")) {
+          separator = ".";
+        } else if (dateStr.includes("/")) {
+          separator = "/";
+        } else {
+          return null;
+        }
+        const hasAMPM = /\s(AM|PM)$/i.test(dateStr);
+        const timeFormat = hasAMPM ? "12h" : "24h";
+        const timeSeparator = dateStr.includes(" at ") ? " at " : " ";
+        const timePart = dateStr.split(timeSeparator)[1] || "";
+        const hasSeconds = timePart.split(":").length >= 3;
+        const datePart = dateStr.split(/\s/)[0];
+        const parts = datePart.split(separator).map((p) => parseInt(p, 10));
+        if (parts.length !== 3 || parts.some(isNaN)) {
+          return null;
+        }
+        const order = this.detectOrder(parts, separator);
+        return {
+          separator,
+          order,
+          timeFormat,
+          timeSeparator,
+          hasSeconds
+        };
+      }
+      /**
+       * Detect date component order (YMD, DMY, MDY)
+       */
+      static detectOrder(parts, separator) {
+        const [first, second, third] = parts;
+        if (first > 31) {
+          return "YMD";
+        }
+        if (third > 31) {
+          if (first > 12) {
+            return "DMY";
+          }
+          if (second > 12) {
+            return "MDY";
+          }
+          if (separator === ".") {
+            return "DMY";
+          }
+          return "DMY";
+        }
+        if (first > 12) {
+          return "DMY";
+        }
+        if (second > 12) {
+          return "MDY";
+        }
+        if (separator === "-") {
+          return "YMD";
+        } else if (separator === ".") {
+          return "DMY";
+        }
+        return "DMY";
+      }
+      /**
+       * Parse date string with detected format
+       */
+      static parseWithFormat(dateStr, format) {
+        let datePattern;
+        switch (format.order) {
+          case "YMD":
+            datePattern = format.separator === "-" ? "YYYY-MM-DD" : "YYYY/MM/DD";
+            break;
+          case "DMY":
+            datePattern = format.separator === "." ? "DD.MM.YYYY" : "DD/MM/YYYY";
+            break;
+          case "MDY":
+            datePattern = "MM/DD/YYYY";
+            break;
+        }
+        const timePattern = format.timeFormat === "12h" ? format.hasSeconds ? "h:mm:ss A" : "h:mm A" : format.hasSeconds ? "HH:mm:ss" : "HH:mm";
+        const separator = format.timeSeparator === "T" ? "[T]" : format.timeSeparator;
+        const fullPattern = `${datePattern}${separator}${timePattern}`;
+        const date = (0, import_obsidian18.moment)(dateStr, fullPattern, true);
+        if (!date.isValid()) {
+          if (format.hasSeconds) {
+            const timePatternNoSec = format.timeFormat === "12h" ? "h:mm A" : "HH:mm";
+            const fallbackPattern = `${datePattern}${separator}${timePatternNoSec}`;
+            const fallbackDate = (0, import_obsidian18.moment)(dateStr, fallbackPattern, true);
+            if (fallbackDate.isValid()) {
+              return fallbackDate.unix();
+            }
+          }
+          return 0;
+        }
+        return date.unix();
+      }
+      /**
+       * Convert any date format to ISO 8601
+       * Returns ISO 8601 string or null if parsing fails
+       */
+      static convertToISO8601(dateStr) {
+        const unixTime = this.parseDate(dateStr);
+        if (unixTime === 0) {
+          return null;
+        }
+        return new Date(unixTime * 1e3).toISOString();
+      }
+      /**
+       * Detect format from multiple date samples (more reliable)
+       * Used for batch processing (e.g., upgrade operations)
+       */
+      static detectFormatFromSamples(dates) {
+        if (!dates || dates.length === 0) {
+          return null;
+        }
+        for (const dateStr of dates.slice(0, 20)) {
+          const format = this.detectFormat(dateStr);
+          if (format) {
+            const datePart = dateStr.split(/\s/)[0];
+            const parts = datePart.split(format.separator).map((p) => parseInt(p, 10));
+            if (parts.some((p) => p > 12)) {
+              return format;
+            }
+          }
+        }
+        return this.detectFormat(dates[0]);
+      }
+    };
+  }
+});
+
 // src/upgrade/utils/version-utils.ts
 var VersionUtils;
 var init_version_utils = __esm({
@@ -4496,12 +4674,12 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian19, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian20, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian19 = require("obsidian");
+    import_obsidian20 = require("obsidian");
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -4962,7 +5140,7 @@ ${cleanContent}`;
         }
       }
     };
-    NexusUpgradeModal = class extends import_obsidian19.Modal {
+    NexusUpgradeModal = class extends import_obsidian20.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -5003,7 +5181,7 @@ Your conversations will be reorganized with provider structure and modern callou
         } catch (error) {
           console.debug("[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback");
         }
-        await import_obsidian19.MarkdownRenderer.render(
+        await import_obsidian20.MarkdownRenderer.render(
           this.app,
           message,
           this.contentEl,
@@ -5086,6 +5264,7 @@ var init_upgrade_1_3_0 = __esm({
     "use strict";
     init_upgrade_interface();
     init_utils();
+    init_date_parser();
     ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -5113,7 +5292,7 @@ var init_upgrade_1_3_0 = __esm({
               if (!this.isNexusFile(content)) {
                 continue;
               }
-              if (this.hasUSFormatTimestamps(content)) {
+              if (this.hasNonISOTimestamps(content)) {
                 return true;
               }
             } catch (error) {
@@ -5164,7 +5343,7 @@ var init_upgrade_1_3_0 = __esm({
                   skipped++;
                   continue;
                 }
-                if (!this.hasUSFormatTimestamps(content)) {
+                if (!this.hasNonISOTimestamps(content)) {
                   continue;
                 }
                 const convertedContent = this.convertTimestampsToISO8601(content);
@@ -5211,19 +5390,24 @@ var init_upgrade_1_3_0 = __esm({
         return content.includes("nexus: nexus-ai-chat-importer");
       }
       /**
-       * Check if content has US format timestamps (need conversion to ISO 8601)
-       * Pattern: create_time: MM/DD/YYYY at H:MM:SS AM/PM
+       * Check if content has non-ISO timestamps (need conversion to ISO 8601)
+       * Detects any format that is not already ISO 8601
        */
-      hasUSFormatTimestamps(content) {
+      hasNonISOTimestamps(content) {
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
         if (!frontmatterMatch)
           return false;
         const frontmatter = frontmatterMatch[1];
-        return /^(create|update)_time: \d{1,2}\/\d{1,2}\/\d{4} at \d{1,2}:\d{2}(:\d{2})? (AM|PM)$/m.test(frontmatter);
+        const hasISO = /^(create|update)_time: \d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/m.test(frontmatter);
+        if (hasISO) {
+          return false;
+        }
+        return /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(frontmatter);
       }
       /**
-       * Convert US format timestamps to ISO 8601 in frontmatter only
-       * Converts: MM/DD/YYYY at H:MM:SS AM/PM → YYYY-MM-DDTHH:MM:SSZ
+       * Convert any date format to ISO 8601 in frontmatter only
+       * Supports: US, EU, DE, JP, and all locale-based formats
+       * Uses intelligent DateParser for automatic format detection
        */
       convertTimestampsToISO8601(content) {
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
@@ -5232,15 +5416,16 @@ var init_upgrade_1_3_0 = __esm({
         let frontmatter = frontmatterMatch[1];
         const restOfContent = content.substring(frontmatterMatch[0].length);
         frontmatter = frontmatter.replace(
-          /^(create|update)_time: (\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}):(\d{2})(?::(\d{2}))? (AM|PM)$/gm,
-          (match, field, month, day, year, hour, minute, second, ampm) => {
-            let h = parseInt(hour);
-            if (ampm === "PM" && h !== 12)
-              h += 12;
-            if (ampm === "AM" && h === 12)
-              h = 0;
-            const sec = second || "00";
-            const isoDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${h.toString().padStart(2, "0")}:${minute}:${sec}Z`;
+          /^(create|update)_time: (.+)$/gm,
+          (match, field, dateStr) => {
+            if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(dateStr)) {
+              return match;
+            }
+            const isoDate = DateParser.convertToISO8601(dateStr);
+            if (!isoDate) {
+              console.warn(`[NEXUS-DEBUG] Could not convert timestamp: ${dateStr}`);
+              return match;
+            }
             return `${field}_time: ${isoDate}`;
           }
         );
@@ -5276,8 +5461,8 @@ ${frontmatter}
               if (!this.isNexusFile(content)) {
                 continue;
               }
-              if (this.hasUSFormatTimestamps(content)) {
-                console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Still has US format timestamps in ${file.path}`);
+              if (this.hasNonISOTimestamps(content)) {
+                console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Still has non-ISO format timestamps in ${file.path}`);
                 return false;
               }
               if (!content.includes('plugin_version: "1.3.0"')) {
@@ -5635,12 +5820,12 @@ var upgrade_notice_dialog_exports = {};
 __export(upgrade_notice_dialog_exports, {
   UpgradeNoticeDialog: () => UpgradeNoticeDialog
 });
-var import_obsidian20, UpgradeNoticeDialog;
+var import_obsidian21, UpgradeNoticeDialog;
 var init_upgrade_notice_dialog = __esm({
   "src/dialogs/upgrade-notice-dialog.ts"() {
     "use strict";
-    import_obsidian20 = require("obsidian");
-    UpgradeNoticeDialog = class extends import_obsidian20.Modal {
+    import_obsidian21 = require("obsidian");
+    UpgradeNoticeDialog = class extends import_obsidian21.Modal {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -5750,12 +5935,12 @@ var upgrade_modal_1_3_0_exports = {};
 __export(upgrade_modal_1_3_0_exports, {
   NexusUpgradeModal130: () => NexusUpgradeModal130
 });
-var import_obsidian21, NexusUpgradeModal130;
+var import_obsidian22, NexusUpgradeModal130;
 var init_upgrade_modal_1_3_0 = __esm({
   "src/dialogs/upgrade-modal-1.3.0.ts"() {
     "use strict";
-    import_obsidian21 = require("obsidian");
-    NexusUpgradeModal130 = class extends import_obsidian21.Modal {
+    import_obsidian22 = require("obsidian");
+    NexusUpgradeModal130 = class extends import_obsidian22.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -5812,7 +5997,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         } catch (error) {
         }
         const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-        await import_obsidian21.MarkdownRenderer.render(
+        await import_obsidian22.MarkdownRenderer.render(
           this.app,
           message,
           contentDiv,
@@ -6007,7 +6192,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian27 = require("obsidian");
+var import_obsidian28 = require("obsidian");
 init_constants();
 
 // src/ui/settings-tab.ts
@@ -10384,6 +10569,7 @@ ${report.generateReportContent(void 0, void 0, void 0, void 0, false)}
 };
 
 // src/services/storage-service.ts
+init_date_parser();
 var StorageService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -10600,29 +10786,11 @@ var StorageService = class {
   }
   /**
    * Parse time string from frontmatter (handle multiple formats)
-   * Supports ISO 8601 (v1.3.0+) with fallback to US format (v1.2.0)
-   * Examples:
-   * - ISO 8601 (v1.3.0+): "2025-10-04T22:30:45Z" or "2025-10-04T22:30:45.000Z"
-   * - US format with seconds (v1.2.0): "01/15/2024 at 2:30:00 PM"
+   * Supports all formats: ISO 8601, US, EU, DE, JP, and locale-based
+   * Uses intelligent format detection from DateParser utility
    */
   parseTimeString(timeStr) {
-    if (!timeStr)
-      return 0;
-    try {
-      const { moment: moment2 } = require("obsidian");
-      let date = moment2(timeStr, moment2.ISO_8601, true);
-      if (!date.isValid()) {
-        date = moment2(timeStr, "MM/DD/YYYY [at] h:mm:ss A", true);
-      }
-      if (!date.isValid()) {
-        console.warn(`Could not parse date: ${timeStr}`);
-        return 0;
-      }
-      return date.unix();
-    } catch (error) {
-      console.warn(`Date parsing error for "${timeStr}":`, error);
-      return 0;
-    }
+    return DateParser.parseDate(timeStr);
   }
   /**
    * Fast check if a specific conversation exists
@@ -10709,15 +10877,15 @@ var StorageService = class {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian22 = require("obsidian");
+var import_obsidian23 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
 init_constants();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
-var import_obsidian18 = require("obsidian");
-var MultiOperationProgressModal = class extends import_obsidian18.Modal {
+var import_obsidian19 = require("obsidian");
+var MultiOperationProgressModal = class extends import_obsidian19.Modal {
   constructor(app, title, operations) {
     super(app);
     this.canClose = false;
@@ -11029,7 +11197,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian22.Notice("Upgrade failed - see console for details");
+      new import_obsidian23.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -11127,7 +11295,7 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian22.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      new import_obsidian23.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -11345,7 +11513,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian22.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian23.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -11462,8 +11630,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian23 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian23.Modal {
+var import_obsidian24 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian24.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -11495,7 +11663,7 @@ var ProviderSelectionDialog = class extends import_obsidian23.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian23.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian24.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -11520,8 +11688,8 @@ var ProviderSelectionDialog = class extends import_obsidian23.Modal {
 };
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian24 = require("obsidian");
-var EnhancedFileSelectionDialog = class extends import_obsidian24.Modal {
+var import_obsidian25 = require("obsidian");
+var EnhancedFileSelectionDialog = class extends import_obsidian25.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -11919,8 +12087,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian24.Modal {
 };
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian25 = require("obsidian");
-var ConversationSelectionDialog = class extends import_obsidian25.Modal {
+var import_obsidian26 = require("obsidian");
+var ConversationSelectionDialog = class extends import_obsidian26.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -12988,9 +13156,9 @@ var ConversationMetadataExtractor = class {
         newCount++;
       } else {
         conversation.existingUpdateTime = vaultConversation.updateTime;
-        const { moment: moment2 } = require("obsidian");
+        const { moment: moment3 } = require("obsidian");
         const zipUpdateTimeISO = new Date(conversation.updateTime * 1e3).toISOString();
-        const normalizedZipUpdateTime = moment2(zipUpdateTimeISO, moment2.ISO_8601, true).unix();
+        const normalizedZipUpdateTime = moment3(zipUpdateTimeISO, moment3.ISO_8601, true).unix();
         if (normalizedZipUpdateTime > vaultConversation.updateTime) {
           this.plugin.logger.debug(`TIMESTAMP COMPARISON - UPDATED: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
             conversationId: conversation.id,
@@ -13054,8 +13222,8 @@ var ConversationMetadataExtractor = class {
 };
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian26 = require("obsidian");
-var ImportCompletionDialog = class extends import_obsidian26.Modal {
+var import_obsidian27 = require("obsidian");
+var ImportCompletionDialog = class extends import_obsidian27.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -13284,7 +13452,7 @@ var ImportCompletionDialog = class extends import_obsidian26.Modal {
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -13457,7 +13625,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
   async handleImportAll(files, provider) {
     try {
       this.logger.debug(`[IMPORT-ALL] Starting import all with ${files.length} files, provider: ${provider}`);
-      new import_obsidian27.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian28.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
       this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
@@ -13481,7 +13649,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
       }
       if (extractionResult.conversations.length === 0) {
         this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
-        new import_obsidian27.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian28.Notice("No new or updated conversations found. All conversations are already up to date.");
         this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath2}`);
@@ -13491,7 +13659,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
-      new import_obsidian27.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+      new import_obsidian28.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -13515,7 +13683,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian27.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian28.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
       }
     } catch (error) {
       this.logger.error("[IMPORT-ALL] Error in import all:", error);
@@ -13523,7 +13691,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
       if (error instanceof Error) {
         console.error("[IMPORT-ALL] Error stack:", error.stack);
       }
-      new import_obsidian27.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian28.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -13532,7 +13700,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
   async handleSelectiveImport(files, provider) {
     try {
       this.logger.debug(`[SELECTIVE-IMPORT] Starting selective import with ${files.length} files, provider: ${provider}`);
-      new import_obsidian27.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian28.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
       this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
@@ -13545,7 +13713,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian27.Notice("No conversations found in the selected files.");
+        new import_obsidian28.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
@@ -13563,7 +13731,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
       if (error instanceof Error) {
         console.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
       }
-      new import_obsidian27.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian28.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -13575,14 +13743,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
       operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
     }
     if (result.selectedIds.length === 0) {
-      new import_obsidian27.Notice("No conversations selected for import.");
+      new import_obsidian28.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian27.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian28.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
@@ -13598,7 +13766,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian27.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian28.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
     }
   }
   /**
@@ -13627,7 +13795,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian27.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian27.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian28.Notice("Failed to create log file. Check console for details.");
       return "";
     }
     const now = Date.now() / 1e3;
@@ -13678,7 +13846,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       console.error("Full error:", error);
       console.error("Log content length:", logContent.length);
-      new import_obsidian27.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian28.Notice("Failed to create log file. Check console for details.");
       return "";
     }
   }

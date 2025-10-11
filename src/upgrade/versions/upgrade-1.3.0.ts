@@ -21,6 +21,7 @@
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
 import type NexusAiChatImporterPlugin from "../../main";
 import { generateSafeAlias } from "../../utils";
+import { DateParser } from "../../utils/date-parser";
 import { TFolder } from "obsidian";
 
 /**
@@ -64,8 +65,8 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                         continue;
                     }
 
-                    // Check for US format timestamps
-                    if (this.hasUSFormatTimestamps(content)) {
+                    // Check for non-ISO format timestamps
+                    if (this.hasNonISOTimestamps(content)) {
                         return true;
                     }
                 } catch (error) {
@@ -136,8 +137,8 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                             continue;
                         }
 
-                        // Only process files with US format timestamps
-                        if (!this.hasUSFormatTimestamps(content)) {
+                        // Only process files with non-ISO format timestamps
+                        if (!this.hasNonISOTimestamps(content)) {
                             continue;
                         }
 
@@ -197,24 +198,31 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
     }
 
     /**
-     * Check if content has US format timestamps (need conversion to ISO 8601)
-     * Pattern: create_time: MM/DD/YYYY at H:MM:SS AM/PM
+     * Check if content has non-ISO timestamps (need conversion to ISO 8601)
+     * Detects any format that is not already ISO 8601
      */
-    private hasUSFormatTimestamps(content: string): boolean {
+    private hasNonISOTimestamps(content: string): boolean {
         // Extract frontmatter only
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
         if (!frontmatterMatch) return false;
 
         const frontmatter = frontmatterMatch[1];
 
-        // Check for US format timestamps in frontmatter
-        // Pattern: MM/DD/YYYY at H:MM:SS AM/PM or MM/DD/YYYY at H:MM AM/PM
-        return /^(create|update)_time: \d{1,2}\/\d{1,2}\/\d{4} at \d{1,2}:\d{2}(:\d{2})? (AM|PM)$/m.test(frontmatter);
+        // Check for ISO 8601 format (if present, no conversion needed)
+        const hasISO = /^(create|update)_time: \d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/m.test(frontmatter);
+        if (hasISO) {
+            return false; // Already ISO, no conversion needed
+        }
+
+        // Check for any date-like pattern (needs conversion)
+        // Matches: DD/MM/YYYY, MM/DD/YYYY, YYYY/MM/DD, DD.MM.YYYY, etc.
+        return /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(frontmatter);
     }
 
     /**
-     * Convert US format timestamps to ISO 8601 in frontmatter only
-     * Converts: MM/DD/YYYY at H:MM:SS AM/PM → YYYY-MM-DDTHH:MM:SSZ
+     * Convert any date format to ISO 8601 in frontmatter only
+     * Supports: US, EU, DE, JP, and all locale-based formats
+     * Uses intelligent DateParser for automatic format detection
      */
     private convertTimestampsToISO8601(content: string): string {
         // Extract frontmatter
@@ -224,21 +232,23 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
         let frontmatter = frontmatterMatch[1];
         const restOfContent = content.substring(frontmatterMatch[0].length);
 
-        // Convert timestamps in frontmatter only
-        // Pattern: create_time: 10/04/2025 at 10:30:45 PM
+        // Convert timestamps in frontmatter using intelligent parser
+        // Matches any date format: DD/MM/YYYY, MM/DD/YYYY, YYYY/MM/DD, DD.MM.YYYY, etc.
         frontmatter = frontmatter.replace(
-            /^(create|update)_time: (\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}):(\d{2})(?::(\d{2}))? (AM|PM)$/gm,
-            (match, field, month, day, year, hour, minute, second, ampm) => {
-                // Convert to 24-hour format
-                let h = parseInt(hour);
-                if (ampm === 'PM' && h !== 12) h += 12;
-                if (ampm === 'AM' && h === 12) h = 0;
+            /^(create|update)_time: (.+)$/gm,
+            (match, field, dateStr) => {
+                // Skip if already ISO 8601
+                if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(dateStr)) {
+                    return match; // Already ISO, keep as-is
+                }
 
-                // Default seconds to 00 if not present
-                const sec = second || '00';
+                // Convert using intelligent parser
+                const isoDate = DateParser.convertToISO8601(dateStr);
 
-                // Build ISO 8601 string
-                const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${h.toString().padStart(2, '0')}:${minute}:${sec}Z`;
+                if (!isoDate) {
+                    console.warn(`[NEXUS-DEBUG] Could not convert timestamp: ${dateStr}`);
+                    return match; // Keep original if conversion fails
+                }
 
                 return `${field}_time: ${isoDate}`;
             }
@@ -287,9 +297,9 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                         continue;
                     }
 
-                    // Check if still has US format timestamps
-                    if (this.hasUSFormatTimestamps(content)) {
-                        console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Still has US format timestamps in ${file.path}`);
+                    // Check if still has non-ISO format timestamps
+                    if (this.hasNonISOTimestamps(content)) {
+                        console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Still has non-ISO format timestamps in ${file.path}`);
                         return false;
                     }
 
