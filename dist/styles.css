@@ -432,3 +432,116 @@
     text-transform: uppercase;
     color: var(--text-accent);
 }
+
+/* ========================================
+   SETTINGS TAB IMPROVEMENTS
+   ======================================== */
+
+/* Increase base font size for better readability */
+.vertical-tab-content {
+    font-size: 15px;
+}
+
+/* Section headers - larger and more prominent */
+.vertical-tab-content h2 {
+    font-size: 1.4em;
+    font-weight: 600;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid var(--background-modifier-border);
+    color: var(--text-accent);
+}
+
+/* First section - no top margin */
+.vertical-tab-content h2:first-child {
+    margin-top: 0;
+}
+
+/* Setting items - better spacing */
+.vertical-tab-content .setting-item {
+    padding: 1.2em 0;
+    border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+/* Setting name - larger and bolder */
+.vertical-tab-content .setting-item-name {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--text-normal);
+    margin-bottom: 0.4em;
+}
+
+/* Setting description - better readability */
+.vertical-tab-content .setting-item-description {
+    font-size: 0.95em;
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin-top: 0.4em;
+}
+
+/* Support section styling */
+.nexus-support-section {
+    background: var(--background-secondary);
+    border-radius: 8px;
+    padding: 1em;
+    margin-bottom: 1em;
+}
+
+.nexus-support-section .setting-item {
+    border-bottom: none;
+    padding: 0.8em 0;
+}
+
+.nexus-support-section button {
+    font-size: 1em;
+    padding: 0.6em 1.2em;
+}
+
+/* Section separator */
+.nexus-section-separator {
+    border: none;
+    border-top: 2px solid var(--background-modifier-border);
+    margin: 1.5em 0;
+}
+
+/* Date prefix section */
+.nexus-date-prefix-section .setting-item {
+    display: flex;
+    align-items: center;
+}
+
+/* Message date section */
+.nexus-message-date-section {
+    margin-top: 1em;
+}
+
+/* Timestamp preview styling */
+.nexus-timestamp-preview {
+    background: var(--background-secondary);
+    border-radius: 6px;
+    padding: 1em;
+    margin-top: 1em;
+    border-left: 3px solid var(--interactive-accent);
+}
+
+.nexus-preview-line {
+    margin-bottom: 0.5em;
+}
+
+.nexus-preview-code {
+    background: var(--background-primary);
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+    font-family: var(--font-monospace);
+    font-size: 1.05em;
+    color: var(--text-accent);
+    margin-left: 0.5em;
+}
+
+.nexus-format-description {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-top: 0.5em;
+}

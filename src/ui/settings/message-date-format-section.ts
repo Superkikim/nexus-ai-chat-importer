@@ -29,10 +29,13 @@ export class MessageDateFormatSection extends BaseSettingsSection {
     readonly order = 21;
 
     render(containerEl: HTMLElement): void {
+        // Add custom styling for better readability
+        const sectionContainer = containerEl.createDiv({ cls: "nexus-message-date-section" });
+
         // Custom Message Timestamp Format
-        new Setting(containerEl)
+        new Setting(sectionContainer)
             .setName("Custom message timestamp format")
-            .setDesc("Override the default locale-based timestamp format in message callouts. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced.")
+            .setDesc("Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced.")
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.useCustomMessageTimestampFormat)
@@ -45,9 +48,7 @@ export class MessageDateFormatSection extends BaseSettingsSection {
 
         // Message Timestamp Format Dropdown (only shown if custom format is enabled)
         if (this.plugin.settings.useCustomMessageTimestampFormat) {
-            const previewContainer = containerEl.createDiv({ cls: "setting-item-description" });
-            
-            new Setting(containerEl)
+            new Setting(sectionContainer)
                 .setName("Timestamp format")
                 .setDesc("Choose the format for message timestamps in conversation notes")
                 .addDropdown((dropdown) => {
@@ -55,7 +56,7 @@ export class MessageDateFormatSection extends BaseSettingsSection {
                     Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
                         dropdown.addOption(key, config.label);
                     });
-                    
+
                     dropdown
                         .setValue(this.plugin.settings.messageTimestampFormat)
                         .onChange(async (value) => {
@@ -66,6 +67,9 @@ export class MessageDateFormatSection extends BaseSettingsSection {
                             this.updateTimestampPreview(previewContainer, value as MessageTimestampFormat);
                         });
                 });
+
+            // Preview container AFTER the dropdown setting
+            const previewContainer = sectionContainer.createDiv({ cls: "nexus-timestamp-preview" });
 
             // Initial preview
             this.updateTimestampPreview(previewContainer, this.plugin.settings.messageTimestampFormat);
@@ -81,16 +85,18 @@ export class MessageDateFormatSection extends BaseSettingsSection {
         const preview = formatMessageTimestamp(now, format);
 
         container.empty();
-        container.createEl("strong", { text: "Preview: " });
-        container.createEl("code", { text: preview });
+
+        // Create preview with better styling
+        const previewLine = container.createDiv({ cls: "nexus-preview-line" });
+        previewLine.createEl("strong", { text: "Preview: " });
+        previewLine.createEl("code", { text: preview, cls: "nexus-preview-code" });
 
         // Add format description
         const config = MESSAGE_TIMESTAMP_FORMATS[format];
         if (config) {
-            container.createEl("br");
-            container.createEl("small", {
+            container.createEl("div", {
                 text: config.description,
-                cls: "setting-item-description"
+                cls: "nexus-format-description"
             });
         }
     }
