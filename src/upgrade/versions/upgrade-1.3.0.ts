@@ -38,7 +38,10 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
             const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversationFolder: ${conversationFolder}`);
+
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
+            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - total markdown files: ${allFiles.length}`);
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
@@ -55,28 +58,44 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                 return true;
             });
 
-            // Check if any files have US format timestamps (need conversion to ISO 8601)
+            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversation files: ${conversationFiles.length}`);
+
+            // Check if any files have non-ISO format timestamps (need conversion to ISO 8601)
             for (const file of conversationFiles.slice(0, 10)) { // Sample first 10 files
                 try {
                     const content = await context.plugin.app.vault.read(file);
 
                     // Only check files that belong to this plugin
                     if (!this.isNexusFile(content)) {
+                        console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - skipping non-Nexus file: ${file.path}`);
                         continue;
                     }
 
                     // Check for non-ISO format timestamps
-                    if (this.hasNonISOTimestamps(content)) {
+                    const hasNonISO = this.hasNonISOTimestamps(content);
+                    console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - file: ${file.path}, hasNonISO: ${hasNonISO}`);
+
+                    if (hasNonISO) {
+                        // Extract and log the actual timestamps
+                        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+                        if (frontmatterMatch) {
+                            const createMatch = frontmatterMatch[1].match(/^create_time: (.+)$/m);
+                            const updateMatch = frontmatterMatch[1].match(/^update_time: (.+)$/m);
+                            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - FOUND NON-ISO TIMESTAMPS:`);
+                            console.debug(`  create_time: ${createMatch ? createMatch[1] : 'N/A'}`);
+                            console.debug(`  update_time: ${updateMatch ? updateMatch[1] : 'N/A'}`);
+                        }
                         return true;
                     }
                 } catch (error) {
-                    console.error(`Error checking file ${file.path}:`, error);
+                    console.error(`[NEXUS-UPGRADE] Error checking file ${file.path}:`, error);
                 }
             }
 
+            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - NO non-ISO timestamps found`);
             return false;
         } catch (error) {
-            console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
+            console.error(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun failed:`, error);
             return false;
         }
     }
@@ -204,19 +223,27 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
     private hasNonISOTimestamps(content: string): boolean {
         // Extract frontmatter only
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-        if (!frontmatterMatch) return false;
+        if (!frontmatterMatch) {
+            console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - no frontmatter found`);
+            return false;
+        }
 
         const frontmatter = frontmatterMatch[1];
 
         // Check for ISO 8601 format (if present, no conversion needed)
         const hasISO = /^(create|update)_time: \d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/m.test(frontmatter);
+        console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - hasISO: ${hasISO}`);
+
         if (hasISO) {
             return false; // Already ISO, no conversion needed
         }
 
         // Check for any date-like pattern (needs conversion)
         // Matches: DD/MM/YYYY, MM/DD/YYYY, YYYY/MM/DD, DD.MM.YYYY, etc.
-        return /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(frontmatter);
+        const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(frontmatter);
+        console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - hasNonISO pattern match: ${hasNonISO}`);
+
+        return hasNonISO;
     }
 
     /**
@@ -225,34 +252,51 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
      * Uses intelligent DateParser for automatic format detection
      */
     private convertTimestampsToISO8601(content: string): string {
+        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - START`);
+
         // Extract frontmatter
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-        if (!frontmatterMatch) return content;
+        if (!frontmatterMatch) {
+            console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - no frontmatter found`);
+            return content;
+        }
 
         let frontmatter = frontmatterMatch[1];
         const restOfContent = content.substring(frontmatterMatch[0].length);
 
+        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - original frontmatter:\n${frontmatter}`);
+
         // Convert timestamps in frontmatter using intelligent parser
         // Matches any date format: DD/MM/YYYY, MM/DD/YYYY, YYYY/MM/DD, DD.MM.YYYY, etc.
+        let conversionCount = 0;
         frontmatter = frontmatter.replace(
             /^(create|update)_time: (.+)$/gm,
             (match, field, dateStr) => {
+                console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - processing ${field}_time: "${dateStr}"`);
+
                 // Skip if already ISO 8601
                 if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(dateStr)) {
+                    console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - already ISO, skipping`);
                     return match; // Already ISO, keep as-is
                 }
 
                 // Convert using intelligent parser
+                console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - calling DateParser.convertToISO8601("${dateStr}")`);
                 const isoDate = DateParser.convertToISO8601(dateStr);
 
                 if (!isoDate) {
-                    console.warn(`[NEXUS-DEBUG] Could not convert timestamp: ${dateStr}`);
+                    console.warn(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
                     return match; // Keep original if conversion fails
                 }
 
+                console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - SUCCESS: "${dateStr}" → "${isoDate}"`);
+                conversionCount++;
                 return `${field}_time: ${isoDate}`;
             }
         );
+
+        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - converted ${conversionCount} timestamps`);
+        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - new frontmatter:\n${frontmatter}`);
 
         // Reconstruct file
         return `---\n${frontmatter}\n---${restOfContent}`;

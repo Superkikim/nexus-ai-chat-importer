@@ -3890,25 +3890,33 @@ var init_date_parser = __esm({
        */
       static parseDate(dateStr) {
         if (!dateStr || typeof dateStr !== "string") {
+          console.debug(`[NEXUS-DATEPARSER] parseDate - invalid input: ${dateStr}`);
           return 0;
         }
+        console.debug(`[NEXUS-DATEPARSER] parseDate - input: "${dateStr}"`);
         try {
           const isoDate = (0, import_obsidian18.moment)(dateStr, import_obsidian18.moment.ISO_8601, true);
           if (isoDate.isValid()) {
-            return isoDate.unix();
+            const result = isoDate.unix();
+            console.debug(`[NEXUS-DATEPARSER] parseDate - ISO 8601 match: ${result}`);
+            return result;
           }
+          console.debug(`[NEXUS-DATEPARSER] parseDate - not ISO 8601, detecting format...`);
           const format = this.detectFormat(dateStr);
           if (!format) {
-            console.warn(`Could not detect date format: ${dateStr}`);
+            console.warn(`[NEXUS-DATEPARSER] parseDate - could not detect format: ${dateStr}`);
             return 0;
           }
+          console.debug(`[NEXUS-DATEPARSER] parseDate - detected format:`, format);
           const parsed = this.parseWithFormat(dateStr, format);
           if (parsed === 0) {
-            console.warn(`Could not parse date: ${dateStr}`);
+            console.warn(`[NEXUS-DATEPARSER] parseDate - parsing failed: ${dateStr}`);
+          } else {
+            console.debug(`[NEXUS-DATEPARSER] parseDate - SUCCESS: ${parsed}`);
           }
           return parsed;
         } catch (error) {
-          console.warn(`Date parsing error for "${dateStr}":`, error);
+          console.warn(`[NEXUS-DATEPARSER] parseDate - error for "${dateStr}":`, error);
           return 0;
         }
       }
@@ -3916,7 +3924,9 @@ var init_date_parser = __esm({
        * Detect date format from a single date string
        */
       static detectFormat(dateStr) {
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - input: "${dateStr}"`);
         if (dateStr.match(/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/)) {
+          console.debug(`[NEXUS-DATEPARSER] detectFormat - ISO 8601 detected`);
           return {
             separator: "-",
             order: "YMD",
@@ -3933,26 +3943,36 @@ var init_date_parser = __esm({
         } else if (dateStr.includes("/")) {
           separator = "/";
         } else {
+          console.debug(`[NEXUS-DATEPARSER] detectFormat - no recognizable separator`);
           return null;
         }
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - separator: "${separator}"`);
         const hasAMPM = /\s(AM|PM)$/i.test(dateStr);
         const timeFormat = hasAMPM ? "12h" : "24h";
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - timeFormat: ${timeFormat}`);
         const timeSeparator = dateStr.includes(" at ") ? " at " : " ";
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - timeSeparator: "${timeSeparator}"`);
         const timePart = dateStr.split(timeSeparator)[1] || "";
         const hasSeconds = timePart.split(":").length >= 3;
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - hasSeconds: ${hasSeconds}, timePart: "${timePart}"`);
         const datePart = dateStr.split(/\s/)[0];
         const parts = datePart.split(separator).map((p) => parseInt(p, 10));
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - datePart: "${datePart}", parts: [${parts.join(", ")}]`);
         if (parts.length !== 3 || parts.some(isNaN)) {
+          console.debug(`[NEXUS-DATEPARSER] detectFormat - invalid date parts`);
           return null;
         }
         const order = this.detectOrder(parts, separator);
-        return {
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - order: ${order}`);
+        const result = {
           separator,
           order,
           timeFormat,
           timeSeparator,
           hasSeconds
         };
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - result:`, result);
+        return result;
       }
       /**
        * Detect date component order (YMD, DMY, MDY)
@@ -4025,11 +4045,15 @@ var init_date_parser = __esm({
        * Returns ISO 8601 string or null if parsing fails
        */
       static convertToISO8601(dateStr) {
+        console.debug(`[NEXUS-DATEPARSER] convertToISO8601 - input: "${dateStr}"`);
         const unixTime = this.parseDate(dateStr);
         if (unixTime === 0) {
+          console.warn(`[NEXUS-DATEPARSER] convertToISO8601 - parsing returned 0`);
           return null;
         }
-        return new Date(unixTime * 1e3).toISOString();
+        const result = new Date(unixTime * 1e3).toISOString();
+        console.debug(`[NEXUS-DATEPARSER] convertToISO8601 - result: "${result}"`);
+        return result;
       }
       /**
        * Detect format from multiple date samples (more reliable)
@@ -5276,7 +5300,9 @@ var init_upgrade_1_3_0 = __esm({
       async canRun(context) {
         try {
           const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+          console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversationFolder: ${conversationFolder}`);
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - total markdown files: ${allFiles.length}`);
           const conversationFiles = allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder))
               return false;
@@ -5286,22 +5312,35 @@ var init_upgrade_1_3_0 = __esm({
             }
             return true;
           });
+          console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversation files: ${conversationFiles.length}`);
           for (const file of conversationFiles.slice(0, 10)) {
             try {
               const content = await context.plugin.app.vault.read(file);
               if (!this.isNexusFile(content)) {
+                console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - skipping non-Nexus file: ${file.path}`);
                 continue;
               }
-              if (this.hasNonISOTimestamps(content)) {
+              const hasNonISO = this.hasNonISOTimestamps(content);
+              console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - file: ${file.path}, hasNonISO: ${hasNonISO}`);
+              if (hasNonISO) {
+                const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+                if (frontmatterMatch) {
+                  const createMatch = frontmatterMatch[1].match(/^create_time: (.+)$/m);
+                  const updateMatch = frontmatterMatch[1].match(/^update_time: (.+)$/m);
+                  console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - FOUND NON-ISO TIMESTAMPS:`);
+                  console.debug(`  create_time: ${createMatch ? createMatch[1] : "N/A"}`);
+                  console.debug(`  update_time: ${updateMatch ? updateMatch[1] : "N/A"}`);
+                }
                 return true;
               }
             } catch (error) {
-              console.error(`Error checking file ${file.path}:`, error);
+              console.error(`[NEXUS-UPGRADE] Error checking file ${file.path}:`, error);
             }
           }
+          console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - NO non-ISO timestamps found`);
           return false;
         } catch (error) {
-          console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
+          console.error(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun failed:`, error);
           return false;
         }
       }
@@ -5395,14 +5434,19 @@ var init_upgrade_1_3_0 = __esm({
        */
       hasNonISOTimestamps(content) {
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-        if (!frontmatterMatch)
+        if (!frontmatterMatch) {
+          console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - no frontmatter found`);
           return false;
+        }
         const frontmatter = frontmatterMatch[1];
         const hasISO = /^(create|update)_time: \d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/m.test(frontmatter);
+        console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - hasISO: ${hasISO}`);
         if (hasISO) {
           return false;
         }
-        return /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(frontmatter);
+        const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(frontmatter);
+        console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - hasNonISO pattern match: ${hasNonISO}`);
+        return hasNonISO;
       }
       /**
        * Convert any date format to ISO 8601 in frontmatter only
@@ -5410,25 +5454,39 @@ var init_upgrade_1_3_0 = __esm({
        * Uses intelligent DateParser for automatic format detection
        */
       convertTimestampsToISO8601(content) {
+        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - START`);
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-        if (!frontmatterMatch)
+        if (!frontmatterMatch) {
+          console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - no frontmatter found`);
           return content;
+        }
         let frontmatter = frontmatterMatch[1];
         const restOfContent = content.substring(frontmatterMatch[0].length);
+        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - original frontmatter:
+${frontmatter}`);
+        let conversionCount = 0;
         frontmatter = frontmatter.replace(
           /^(create|update)_time: (.+)$/gm,
           (match, field, dateStr) => {
+            console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - processing ${field}_time: "${dateStr}"`);
             if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(dateStr)) {
+              console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - already ISO, skipping`);
               return match;
             }
+            console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - calling DateParser.convertToISO8601("${dateStr}")`);
             const isoDate = DateParser.convertToISO8601(dateStr);
             if (!isoDate) {
-              console.warn(`[NEXUS-DEBUG] Could not convert timestamp: ${dateStr}`);
+              console.warn(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
               return match;
             }
+            console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - SUCCESS: "${dateStr}" \u2192 "${isoDate}"`);
+            conversionCount++;
             return `${field}_time: ${isoDate}`;
           }
         );
+        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - converted ${conversionCount} timestamps`);
+        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - new frontmatter:
+${frontmatter}`);
         return `---
 ${frontmatter}
 ---${restOfContent}`;

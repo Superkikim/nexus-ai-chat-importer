@@ -42,32 +42,43 @@ export class DateParser {
      */
     static parseDate(dateStr: string): number {
         if (!dateStr || typeof dateStr !== 'string') {
+            console.debug(`[NEXUS-DATEPARSER] parseDate - invalid input: ${dateStr}`);
             return 0;
         }
+
+        console.debug(`[NEXUS-DATEPARSER] parseDate - input: "${dateStr}"`);
 
         try {
             // Try ISO 8601 first (fastest and most common in v1.3.0+)
             const isoDate = moment(dateStr, moment.ISO_8601, true);
             if (isoDate.isValid()) {
-                return isoDate.unix();
+                const result = isoDate.unix();
+                console.debug(`[NEXUS-DATEPARSER] parseDate - ISO 8601 match: ${result}`);
+                return result;
             }
+
+            console.debug(`[NEXUS-DATEPARSER] parseDate - not ISO 8601, detecting format...`);
 
             // Detect format and parse
             const format = this.detectFormat(dateStr);
             if (!format) {
-                console.warn(`Could not detect date format: ${dateStr}`);
+                console.warn(`[NEXUS-DATEPARSER] parseDate - could not detect format: ${dateStr}`);
                 return 0;
             }
 
+            console.debug(`[NEXUS-DATEPARSER] parseDate - detected format:`, format);
+
             const parsed = this.parseWithFormat(dateStr, format);
             if (parsed === 0) {
-                console.warn(`Could not parse date: ${dateStr}`);
+                console.warn(`[NEXUS-DATEPARSER] parseDate - parsing failed: ${dateStr}`);
+            } else {
+                console.debug(`[NEXUS-DATEPARSER] parseDate - SUCCESS: ${parsed}`);
             }
-            
+
             return parsed;
 
         } catch (error) {
-            console.warn(`Date parsing error for "${dateStr}":`, error);
+            console.warn(`[NEXUS-DATEPARSER] parseDate - error for "${dateStr}":`, error);
             return 0;
         }
     }
@@ -76,8 +87,11 @@ export class DateParser {
      * Detect date format from a single date string
      */
     static detectFormat(dateStr: string): DateFormatInfo | null {
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - input: "${dateStr}"`);
+
         // Check for ISO 8601 format first
         if (dateStr.match(/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/)) {
+            console.debug(`[NEXUS-DATEPARSER] detectFormat - ISO 8601 detected`);
             return {
                 separator: '-',
                 order: 'YMD',
@@ -96,38 +110,51 @@ export class DateParser {
         } else if (dateStr.includes('/')) {
             separator = '/';
         } else {
+            console.debug(`[NEXUS-DATEPARSER] detectFormat - no recognizable separator`);
             return null; // No recognizable separator
         }
+
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - separator: "${separator}"`);
+
 
         // Determine time format (12h with AM/PM or 24h)
         const hasAMPM = /\s(AM|PM)$/i.test(dateStr);
         const timeFormat: '12h' | '24h' = hasAMPM ? '12h' : '24h';
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - timeFormat: ${timeFormat}`);
 
         // Determine time separator
         const timeSeparator = dateStr.includes(' at ') ? ' at ' : ' ';
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - timeSeparator: "${timeSeparator}"`);
 
         // Check if has seconds
         const timePart = dateStr.split(timeSeparator)[1] || '';
         const hasSeconds = timePart.split(':').length >= 3;
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - hasSeconds: ${hasSeconds}, timePart: "${timePart}"`);
 
         // Extract date part (before time)
         const datePart = dateStr.split(/\s/)[0];
         const parts = datePart.split(separator).map(p => parseInt(p, 10));
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - datePart: "${datePart}", parts: [${parts.join(', ')}]`);
 
         if (parts.length !== 3 || parts.some(isNaN)) {
+            console.debug(`[NEXUS-DATEPARSER] detectFormat - invalid date parts`);
             return null;
         }
 
         // Detect order (YMD, DMY, MDY)
         const order = this.detectOrder(parts, separator);
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - order: ${order}`);
 
-        return {
+        const result = {
             separator,
             order,
             timeFormat,
             timeSeparator,
             hasSeconds
         };
+
+        console.debug(`[NEXUS-DATEPARSER] detectFormat - result:`, result);
+        return result;
     }
 
     /**
@@ -231,13 +258,18 @@ export class DateParser {
      * Returns ISO 8601 string or null if parsing fails
      */
     static convertToISO8601(dateStr: string): string | null {
+        console.debug(`[NEXUS-DATEPARSER] convertToISO8601 - input: "${dateStr}"`);
+
         const unixTime = this.parseDate(dateStr);
         if (unixTime === 0) {
+            console.warn(`[NEXUS-DATEPARSER] convertToISO8601 - parsing returned 0`);
             return null;
         }
 
         // Convert to ISO 8601 with milliseconds
-        return new Date(unixTime * 1000).toISOString();
+        const result = new Date(unixTime * 1000).toISOString();
+        console.debug(`[NEXUS-DATEPARSER] convertToISO8601 - result: "${result}"`);
+        return result;
     }
 
     /**
