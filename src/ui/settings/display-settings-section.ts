@@ -36,6 +36,11 @@ export class DisplaySettingsSection extends BaseSettingsSection {
 
         // Add dropdown BEFORE toggle (shown only when enabled)
         if (this.plugin.settings.addDatePrefix) {
+            setting.controlEl.createSpan({ 
+                text: "Select date format: ",
+                cls: "date-format-label"
+            });
+
             setting.addDropdown((dropdown) =>
                 dropdown
                     .addOption("YYYY-MM-DD", "YYYY-MM-DD")
