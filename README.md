@@ -24,9 +24,9 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 
 ## ☕ Support My Work
 
-**This plugin is free and always will be.** I build it in my free time, dedicating hundreds of hours to development, bug fixes, and new features.
+I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses.
 
-**If you find it valuable, please consider supporting its development:**
+**If these plugins make your life easier, a donation would mean the world and help keep them alive.**
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
 
@@ -87,11 +87,9 @@ No manual intervention required!
 - **Attachments Folder**: `<attachments>/` - Where images, files, and artifacts are saved
 - **Reports Folder**: `<reports>/` - Where import reports are generated
 
-**Date Prefix**:
+**Display Options**:
 - **Enable Date Prefix**: Add date before the title (e.g., `2024-01-15 - conversation-title.md`)
 - **Date Format**: With dashes (`2024-01-15`) or without (`20240115`)
-
-**Message Date Format**:
 - **Custom Message Timestamp Format**: Override default locale-based timestamps in message callouts
   - **Disabled** (default): Follows Obsidian's language setting (English = US format)
   - **Enabled**: Choose from ISO 8601, US, European, UK, German, or Japanese formats
