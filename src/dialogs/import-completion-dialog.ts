@@ -221,7 +221,13 @@ export class ImportCompletionDialog extends Modal {
         const message = section.createDiv();
         message.innerHTML = `
             <div style="margin-bottom: 12px; font-size: 0.95em;">
-                ☕ <strong>Enjoying this plugin?</strong> Support its development!
+                I'm working on Nexus projects full-time while unemployed 
+and dealing with health issues - over 1,000 users so far, 
+but I've received just $10 in donations while paying 
+$200/month out of pocket in expenses.
+
+If these plugins help you, even a small donation would 
+mean the world and help keep them alive.
             </div>
         `;
 

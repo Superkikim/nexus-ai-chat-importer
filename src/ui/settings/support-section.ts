@@ -32,13 +32,12 @@ export class SupportSection extends BaseSettingsSection {
         // Ko-fi Support
         new Setting(supportContainer)
             .setName("☕ Support Development")
-            .setDesc("If you find this plugin useful, consider buying me a coffee! Your support helps maintain and improve this plugin.")
-            .addButton((button) =>
+            .setDesc("I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses. If these plugins help you, even a small donation would mean the world and help keep them alive.")            .addButton((button) =>
                 button
                     .setButtonText("Support on Ko-fi")
                     .setCta()
                     .onClick(() => {
-                        window.open("https://ko-fi.com/superkikim", "_blank");
+                        window.open("https://ko-fi.com/nexusplugins", "_blank");
                     })
             );
 
