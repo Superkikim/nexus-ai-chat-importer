@@ -458,12 +458,21 @@
     color: var(--text-normal);
 }
 
-.nexus-support-message {
+.nexus-support-message-container {
     max-width: 600px;
     margin: 0 auto 2em auto;
+}
+
+.nexus-support-line {
+    margin: 0.75em 0;
     line-height: 1.6;
     color: var(--text-muted);
     font-size: 0.95em;
+}
+
+.nexus-support-cta-text {
+    font-weight: 500;
+    color: var(--text-normal);
 }
 
 .nexus-support-stats {

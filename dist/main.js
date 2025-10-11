@@ -6051,16 +6051,17 @@ var SupportSection = class extends BaseSettingsSection {
   render(containerEl) {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
     const heroContainer = supportContainer.createDiv({ cls: "nexus-support-hero" });
-    const messageTitle = heroContainer.createEl("h3", {
+    heroContainer.createEl("h3", {
       text: "Support Nexus Projects",
       cls: "nexus-support-title"
     });
-    const messageText = heroContainer.createEl("p", {
-      cls: "nexus-support-message"
-    });
-    messageText.setText(
-      "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses. If these plugins help you, even a small donation would mean the world and help keep them alive."
-    );
+    const messageContainer = heroContainer.createDiv({ cls: "nexus-support-message-container" });
+    const line1 = messageContainer.createEl("p", { cls: "nexus-support-line" });
+    line1.setText("I'm working on Nexus projects full-time while unemployed and dealing with health issues.");
+    const line2 = messageContainer.createEl("p", { cls: "nexus-support-line" });
+    line2.setText("Over 1,000 users so far, but only $10 in donations while paying $200/month in expenses.");
+    const line3 = messageContainer.createEl("p", { cls: "nexus-support-line nexus-support-cta-text" });
+    line3.setText("A donation would mean the world and help keep these plugins alive.");
     const statsContainer = heroContainer.createDiv({ cls: "nexus-support-stats" });
     const stat1 = statsContainer.createDiv({ cls: "nexus-stat" });
     stat1.createEl("div", { text: "1,000+", cls: "nexus-stat-number" });
