@@ -434,51 +434,8 @@
 }
 
 /* ========================================
-   SETTINGS TAB IMPROVEMENTS
+   PLUGIN-SPECIFIC SETTINGS STYLING
    ======================================== */
-
-/* Increase base font size for better readability */
-.vertical-tab-content {
-    font-size: 15px;
-}
-
-/* Section headers - larger and more prominent */
-.vertical-tab-content h2 {
-    font-size: 1.4em;
-    font-weight: 600;
-    margin-top: 2em;
-    margin-bottom: 1em;
-    padding-bottom: 0.5em;
-    border-bottom: 2px solid var(--background-modifier-border);
-    color: var(--text-accent);
-}
-
-/* First section - no top margin */
-.vertical-tab-content h2:first-child {
-    margin-top: 0;
-}
-
-/* Setting items - better spacing */
-.vertical-tab-content .setting-item {
-    padding: 1.2em 0;
-    border-bottom: 1px solid var(--background-modifier-border-hover);
-}
-
-/* Setting name - larger and bolder */
-.vertical-tab-content .setting-item-name {
-    font-size: 1.1em;
-    font-weight: 500;
-    color: var(--text-normal);
-    margin-bottom: 0.4em;
-}
-
-/* Setting description - better readability */
-.vertical-tab-content .setting-item-description {
-    font-size: 0.95em;
-    line-height: 1.5;
-    color: var(--text-muted);
-    margin-top: 0.4em;
-}
 
 /* Support section styling */
 .nexus-support-section {
