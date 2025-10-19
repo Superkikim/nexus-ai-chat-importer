@@ -6587,30 +6587,43 @@ ${body}`;
           }
           console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found artifact link at position ${linkMatch.index}`);
           const textBeforeLink = content.substring(0, linkMatch.index);
+          const contextStart = Math.max(0, linkMatch.index - 300);
+          const contextText = content.substring(contextStart, linkMatch.index);
+          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Context before link (last 300 chars):
+${contextText}
+[ARTIFACT LINK HERE]`);
           const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - (.+?)\s*$/gm;
           let lastMatch = null;
           let match;
+          let matchCount = 0;
           console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching for agent callout pattern in ${textBeforeLink.length} chars`);
+          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Pattern: />${agentPattern.source}/gm`);
           while ((match = agentPattern.exec(textBeforeLink)) !== null) {
+            matchCount++;
             lastMatch = match;
-            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found agent callout candidate: "${match[1]}"`);
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found agent callout #${matchCount} at position ${match.index}: "${match[1]}"`);
           }
+          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Total agent callouts found: ${matchCount}`);
           if (lastMatch && lastMatch[1]) {
             const timestampStr = lastMatch[1];
-            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found parent agent callout with timestamp: "${timestampStr}"`);
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Selected LAST agent callout timestamp: "${timestampStr}"`);
             const timestamp = DateParser.parseDate(timestampStr, artifactRef);
             if (timestamp > 0) {
               const isoDate = new Date(timestamp * 1e3).toISOString();
-              console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Successfully parsed message timestamp: ${isoDate}`);
+              console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: \u2705 Successfully parsed message timestamp: ${isoDate}`);
               return {
                 value: isoDate,
                 source: "message"
               };
             } else {
-              console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Timestamp parsing FAILED (returned 0), using conversation fallback`);
+              console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: \u274C Timestamp parsing FAILED (returned 0), using conversation fallback`);
+              console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Failed timestamp string was: "${timestampStr}"`);
             }
           } else {
-            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No agent callout found before artifact link, using conversation fallback`);
+            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: \u274C No agent callout found before artifact link, using conversation fallback`);
+            const sampleText = textBeforeLink.substring(Math.max(0, textBeforeLink.length - 500));
+            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Last 500 chars of search text:
+${sampleText}`);
           }
           const fm = (_c = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _c.frontmatter;
           if (fm == null ? void 0 : fm.create_time) {
