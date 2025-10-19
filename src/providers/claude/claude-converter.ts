@@ -41,11 +41,13 @@ export class ClaudeConverter {
 
     static async convertChat(chat: ClaudeConversation): Promise<StandardConversation> {
         const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1000) : 0;
-        const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name, createTime);
+        // Normalize title to "Untitled" if missing (fix for artifact conversation links)
+        const conversationTitle = chat.name || "Untitled";
+        const messages = await this.convertMessages(chat.chat_messages, chat.uuid, conversationTitle, createTime);
 
         return {
             id: chat.uuid,
-            title: chat.name || "Untitled",
+            title: conversationTitle,
             createTime: chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1000) : 0,
             updateTime: chat.updated_at ? Math.floor(new Date(chat.updated_at).getTime() / 1000) : 0,
             messages: messages,
@@ -68,8 +70,8 @@ export class ClaudeConverter {
             return standardMessages;
         }
 
-        // PHASE 1: Collect ALL artifacts from entire conversation
-        const allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number}> = [];
+        // PHASE 1: Collect ALL artifacts from entire conversation with message timestamps
+        const allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number, messageTimestamp: number}> = [];
 
         for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
             const message = messages[msgIndex];
@@ -82,10 +84,16 @@ export class ClaudeConverter {
 
                         // Skip view commands only
                         if (command !== 'view' && versionUuid) {
+                            // Get message timestamp (convert ISO string to Unix timestamp)
+                            const messageTimestamp = message.created_at
+                                ? Math.floor(new Date(message.created_at).getTime() / 1000)
+                                : 0;
+
                             allArtifacts.push({
                                 artifact: block.input,
                                 messageIndex: msgIndex,
-                                blockIndex: blockIndex
+                                blockIndex: blockIndex,
+                                messageTimestamp: messageTimestamp
                             });
                         }
                     }
@@ -165,7 +173,7 @@ export class ClaudeConverter {
      * Process ALL artifacts from entire conversation and create files
      */
     private static async processAllArtifacts(
-        allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number}>,
+        allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number, messageTimestamp: number}>,
         conversationId?: string,
         conversationTitle?: string,
         conversationCreateTime?: number
@@ -178,7 +186,7 @@ export class ClaudeConverter {
 
         this.plugin.logger.debug(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
 
-        for (const {artifact} of allArtifacts) {
+        for (const {artifact, messageTimestamp} of allArtifacts) {
             const artifactId = artifact.id || 'unknown';
             const command = artifact.command || 'create';
 
@@ -220,7 +228,7 @@ export class ClaudeConverter {
                 const storedLanguage = artifactLanguages.get(artifactId);
                 const languageToUse = storedLanguage || this.detectLanguageFromContent(finalContent, artifact.type);
 
-                // Save this specific version
+                // Save this specific version with message timestamp
                 await this.saveSingleArtifactVersionWithContent(
                     artifactId,
                     artifact,
@@ -229,7 +237,8 @@ export class ClaudeConverter {
                     conversationId,
                     conversationTitle,
                     conversationCreateTime,
-                    languageToUse
+                    languageToUse,
+                    messageTimestamp
                 );
 
                 // Track version info for linking
@@ -537,7 +546,8 @@ export class ClaudeConverter {
         conversationId?: string,
         conversationTitle?: string,
         conversationCreateTime?: number,
-        forcedLanguage?: string
+        forcedLanguage?: string,
+        messageTimestamp?: number
     ): Promise<void> {
         if (!this.plugin) {
             throw new Error('Plugin not available');
@@ -571,7 +581,8 @@ export class ClaudeConverter {
             conversationId,
             conversationTitle,
             conversationCreateTime,
-            forcedLanguage
+            forcedLanguage,
+            messageTimestamp
         );
     }
 
@@ -651,7 +662,8 @@ export class ClaudeConverter {
         conversationId?: string,
         conversationTitle?: string,
         conversationCreateTime?: number,
-        forcedLanguage?: string
+        forcedLanguage?: string,
+        messageTimestamp?: number
     ): Promise<void> {
         const title = artifactInput.title || 'Untitled Artifact';
         let language = artifactInput.language || 'text';
@@ -696,6 +708,10 @@ export class ClaudeConverter {
         const safeArtifactTitle = generateSafeAlias(title);
         const safeArtifactAlias = generateSafeAlias(`${artifactId}_v${versionNumber}`);
 
+        // Generate ISO 8601 timestamp for artifact creation (from message timestamp or conversation timestamp)
+        const artifactCreateTime = messageTimestamp || conversationCreateTime || 0;
+        const createTimeStr = artifactCreateTime > 0 ? new Date(artifactCreateTime * 1000).toISOString() : 'unknown';
+
         // Create markdown content with enhanced frontmatter
         let markdownContent = `---
 nexus: nexus-ai-chat-importer
@@ -706,31 +722,23 @@ version_uuid: ${versionUuid}
 version_number: ${versionNumber}
 command: ${command}
 conversation_id: ${conversationId || 'unknown'}
+create_time: ${createTimeStr}
 format: ${language}
 aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
 ---
 
 # ${title} (Version ${versionNumber})
+`;
 
-**Type:** Claude Artifact
-**Language:** ${language}`;
-
-        if (artifactInput.language !== language) {
-            markdownContent += ` (detected from content, original: ${artifactInput.language})`;
-        }
-
-        markdownContent += `
-**Command:** ${command}
-**Version:** ${versionNumber}
-**ID:** ${artifactId}
-**UUID:** ${versionUuid}`;
-
+        // Add conversation link if available (simplified header - removed Type/Language/Command/Version/ID/UUID)
         if (conversationLink) {
             markdownContent += `
-**Conversation:** ${conversationLink}`;
+**Conversation:** ${conversationLink}
+
+`;
         }
 
-        markdownContent += `\n\n## Content\n\n`;
+        markdownContent += `## Content\n\n`;
 
         // Add content based on language
         if (language.toLowerCase() === 'markdown') {

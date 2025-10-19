@@ -26,7 +26,6 @@ export interface DateFormatInfo {
     separator: '/' | '-' | '.';
     order: 'YMD' | 'DMY' | 'MDY';
     timeFormat: '12h' | '24h';
-    timeSeparator: string; // ' at ' or ' '
     hasSeconds: boolean;
 }
 
@@ -35,68 +34,95 @@ export interface DateFormatInfo {
  * Supports all formats: ISO, US, EU, DE, JP, and locale-based formats
  */
 export class DateParser {
-    
+
     /**
      * Parse a date string with automatic format detection
      * Returns Unix timestamp (seconds) or 0 if parsing fails
+     * @param dateStr - Date string to parse
+     * @param contextId - Optional context identifier for logging (e.g., "Artifact abc123_v1", "Conversation xyz")
      */
-    static parseDate(dateStr: string): number {
+    static parseDate(dateStr: string, contextId?: string): number {
+        const ctx = contextId ? `[${contextId}] ` : '';
+
         if (!dateStr || typeof dateStr !== 'string') {
-            console.debug(`[NEXUS-DATEPARSER] parseDate - invalid input: ${dateStr}`);
+            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - invalid input: ${dateStr}`);
             return 0;
         }
 
-        console.debug(`[NEXUS-DATEPARSER] parseDate - input: "${dateStr}"`);
+        console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - input: "${dateStr}"`);
 
         try {
             // Try ISO 8601 first (fastest and most common in v1.3.0+)
             const isoDate = moment(dateStr, moment.ISO_8601, true);
             if (isoDate.isValid()) {
                 const result = isoDate.unix();
-                console.debug(`[NEXUS-DATEPARSER] parseDate - ISO 8601 match: ${result}`);
+                console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - ISO 8601 match, result: ${result}`);
                 return result;
             }
 
-            console.debug(`[NEXUS-DATEPARSER] parseDate - not ISO 8601, detecting format...`);
+            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - not ISO 8601, detecting format...`);
 
             // Detect format and parse
             const format = this.detectFormat(dateStr);
             if (!format) {
-                console.warn(`[NEXUS-DATEPARSER] parseDate - could not detect format: ${dateStr}`);
+                console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: could not detect format`);
                 return 0;
             }
 
-            console.debug(`[NEXUS-DATEPARSER] parseDate - detected format:`, format);
+            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - detected format: ${format.order} ${format.separator} ${format.timeFormat}${format.hasSeconds ? ' +seconds' : ''}`);
 
             const parsed = this.parseWithFormat(dateStr, format);
             if (parsed === 0) {
-                console.warn(`[NEXUS-DATEPARSER] parseDate - parsing failed: ${dateStr}`);
+                console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: parsing returned 0`);
             } else {
-                console.debug(`[NEXUS-DATEPARSER] parseDate - SUCCESS: ${parsed}`);
+                console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - SUCCESS: ${parsed}`);
             }
 
             return parsed;
 
         } catch (error) {
-            console.warn(`[NEXUS-DATEPARSER] parseDate - error for "${dateStr}":`, error);
+            console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: exception:`, error);
             return 0;
         }
+    }
+
+    /**
+     * Parse a date string with a forced component order (YMD/DMY/MDY)
+     * Keeps other parts auto-detected from the string (separator, time format, seconds)
+     */
+    static parseDateWithOrder(dateStr: string, order: 'YMD'|'DMY'|'MDY'): number {
+        if (!dateStr || typeof dateStr !== 'string') return 0;
+
+        // If ISO, short-circuit
+        const isoDate = moment(dateStr, moment.ISO_8601, true);
+        if (isoDate.isValid()) return isoDate.unix();
+
+        // Start from auto-detected format and override order
+        const detected = this.detectFormat(dateStr);
+        if (!detected) return 0;
+        const forced: DateFormatInfo = { ...detected, order };
+        return this.parseWithFormat(dateStr, forced);
+    }
+
+    /**
+     * Convert a date string to ISO 8601 with a forced component order
+     */
+    static convertToISO8601WithOrder(dateStr: string, order: 'YMD'|'DMY'|'MDY'): string | null {
+        const unixTime = this.parseDateWithOrder(dateStr, order);
+        if (unixTime === 0) return null;
+        return new Date(unixTime * 1000).toISOString();
     }
 
     /**
      * Detect date format from a single date string
      */
     static detectFormat(dateStr: string): DateFormatInfo | null {
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - input: "${dateStr}"`);
-
         // Check for ISO 8601 format first
         if (dateStr.match(/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/)) {
-            console.debug(`[NEXUS-DATEPARSER] detectFormat - ISO 8601 detected`);
             return {
                 separator: '-',
                 order: 'YMD',
                 timeFormat: '24h',
-                timeSeparator: dateStr.includes('T') ? 'T' : ' ',
                 hasSeconds: dateStr.includes(':') && dateStr.split(':').length >= 3
             };
         }
@@ -110,57 +136,44 @@ export class DateParser {
         } else if (dateStr.includes('/')) {
             separator = '/';
         } else {
-            console.debug(`[NEXUS-DATEPARSER] detectFormat - no recognizable separator`);
             return null; // No recognizable separator
         }
-
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - separator: "${separator}"`);
-
 
         // Determine time format (12h with AM/PM or 24h)
         const hasAMPM = /\s(AM|PM)$/i.test(dateStr);
         const timeFormat: '12h' | '24h' = hasAMPM ? '12h' : '24h';
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - timeFormat: ${timeFormat}`);
 
-        // Determine time separator
-        const timeSeparator = dateStr.includes(' at ') ? ' at ' : ' ';
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - timeSeparator: "${timeSeparator}"`);
-
-        // Check if has seconds
-        const timePart = dateStr.split(timeSeparator)[1] || '';
+        // Check if has seconds (extract time part after any whitespace)
+        const timeMatch = dateStr.match(/\s(\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?)/i);
+        const timePart = timeMatch ? timeMatch[1] : '';
         const hasSeconds = timePart.split(':').length >= 3;
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - hasSeconds: ${hasSeconds}, timePart: "${timePart}"`);
 
         // Extract date part (before time)
         const datePart = dateStr.split(/\s/)[0];
         const parts = datePart.split(separator).map(p => parseInt(p, 10));
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - datePart: "${datePart}", parts: [${parts.join(', ')}]`);
 
         if (parts.length !== 3 || parts.some(isNaN)) {
-            console.debug(`[NEXUS-DATEPARSER] detectFormat - invalid date parts`);
             return null;
         }
 
-        // Detect order (YMD, DMY, MDY)
-        const order = this.detectOrder(parts, separator);
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - order: ${order}`);
+        // Detect order (YMD, DMY, MDY) - now with AM/PM hint
+        const order = this.detectOrder(parts, separator, hasAMPM);
 
-        const result = {
+        return {
             separator,
             order,
             timeFormat,
-            timeSeparator,
             hasSeconds
         };
-
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - result:`, result);
-        return result;
     }
 
     /**
      * Detect date component order (YMD, DMY, MDY)
+     * @param parts - Date parts [first, second, third]
+     * @param separator - Date separator ('/', '-', '.')
+     * @param hasAMPM - Whether the time uses AM/PM format (hint for US format)
      */
-    private static detectOrder(parts: number[], separator: string): 'YMD' | 'DMY' | 'MDY' {
+    private static detectOrder(parts: number[], separator: string, hasAMPM: boolean): 'YMD' | 'DMY' | 'MDY' {
         const [first, second, third] = parts;
 
         // RULE 1: If first > 31 → Year first → YMD
@@ -178,9 +191,12 @@ export class DateParser {
             if (second > 12) {
                 return 'MDY'; // 06/28/2024
             }
-            // Ambiguous (both ≤ 12), use separator as hint
+            // Ambiguous (both ≤ 12), use hints
             if (separator === '.') {
                 return 'DMY'; // German format
+            }
+            if (hasAMPM) {
+                return 'MDY'; // US format (most common with 12h)
             }
             // Default to DMY (more common internationally)
             return 'DMY';
@@ -196,11 +212,13 @@ export class DateParser {
             return 'MDY'; // 06/28/2024
         }
 
-        // Ambiguous - use separator as hint
+        // Ambiguous - use hints
         if (separator === '-') {
             return 'YMD'; // ISO-like
         } else if (separator === '.') {
             return 'DMY'; // German
+        } else if (hasAMPM) {
+            return 'MDY'; // US format (most common with 12h)
         }
 
         // Default to DMY (European format more common)
@@ -213,7 +231,7 @@ export class DateParser {
     private static parseWithFormat(dateStr: string, format: DateFormatInfo): number {
         // Build moment.js format string
         let datePattern: string;
-        
+
         switch (format.order) {
             case 'YMD':
                 datePattern = format.separator === '-' ? 'YYYY-MM-DD' : 'YYYY/MM/DD';
@@ -230,27 +248,39 @@ export class DateParser {
             ? (format.hasSeconds ? 'h:mm:ss A' : 'h:mm A')
             : (format.hasSeconds ? 'HH:mm:ss' : 'HH:mm');
 
-        // Handle ISO 8601 'T' separator
-        const separator = format.timeSeparator === 'T' ? '[T]' : format.timeSeparator;
-        const fullPattern = `${datePattern}${separator}${timePattern}`;
+        // Auto-detect time separator (space, 'T', or ' at ')
+        // We don't store it anymore - just try common patterns
+        const patterns = [
+            `${datePattern} ${timePattern}`,      // Standard space
+            `${datePattern}[T]${timePattern}`,    // ISO 8601 T
+            `${datePattern}[ at ]${timePattern}`  // English "at"
+        ];
 
-        const date = moment(dateStr, fullPattern, true);
-
-        if (!date.isValid()) {
-            // Try without seconds as fallback
-            if (format.hasSeconds) {
-                const timePatternNoSec = format.timeFormat === '12h' ? 'h:mm A' : 'HH:mm';
-                const fallbackPattern = `${datePattern}${separator}${timePatternNoSec}`;
-                const fallbackDate = moment(dateStr, fallbackPattern, true);
-                
-                if (fallbackDate.isValid()) {
-                    return fallbackDate.unix();
-                }
+        for (const pattern of patterns) {
+            const date = moment(dateStr, pattern, true);
+            if (date.isValid()) {
+                return date.unix();
             }
-            return 0;
         }
 
-        return date.unix();
+        // Try without seconds as fallback
+        if (format.hasSeconds) {
+            const timePatternNoSec = format.timeFormat === '12h' ? 'h:mm A' : 'HH:mm';
+            const fallbackPatterns = [
+                `${datePattern} ${timePatternNoSec}`,
+                `${datePattern}[T]${timePatternNoSec}`,
+                `${datePattern}[ at ]${timePatternNoSec}`
+            ];
+
+            for (const pattern of fallbackPatterns) {
+                const date = moment(dateStr, pattern, true);
+                if (date.isValid()) {
+                    return date.unix();
+                }
+            }
+        }
+
+        return 0;
     }
 
     /**

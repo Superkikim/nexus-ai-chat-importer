@@ -1,17 +1,17 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -32,12 +32,15 @@ import { TFolder } from "obsidian";
 class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
     readonly id = "convert-to-iso8601-timestamps";
     readonly name = "Convert Timestamps to ISO 8601";
-    readonly description = "Convert all create_time and update_time frontmatter entries from US format to ISO 8601 format";
+    readonly description = "Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ). This fixes parsing issues with locale-specific date formats and ensures consistent timestamps across all regions.";
     readonly type = "automatic" as const;
+
+    private globalOrder?: 'YMD' | 'DMY' | 'MDY';
+
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
             console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversationFolder: ${conversationFolder}`);
 
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
@@ -60,36 +63,33 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 
             console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversation files: ${conversationFiles.length}`);
 
-            // Check if any files have non-ISO format timestamps (need conversion to ISO 8601)
-            for (const file of conversationFiles.slice(0, 10)) { // Sample first 10 files
-                try {
-                    const content = await context.plugin.app.vault.read(file);
+            // Build a fast sample via metadataCache (no file I/O)
+            const samples: string[] = [];
+            let foundNonISO = false;
 
-                    // Only check files that belong to this plugin
-                    if (!this.isNexusFile(content)) {
-                        console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - skipping non-Nexus file: ${file.path}`);
-                        continue;
+            for (const file of conversationFiles) {
+                const fm = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter as any;
+                if (!fm || fm.nexus !== context.plugin.manifest.id) continue;
+
+                const vals = [fm.create_time, fm.update_time].filter(v => typeof v === 'string') as string[];
+                for (const v of vals) {
+                    if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(v)) {
+                        samples.push(v);
+                        foundNonISO = true;
                     }
-
-                    // Check for non-ISO format timestamps
-                    const hasNonISO = this.hasNonISOTimestamps(content);
-                    console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - file: ${file.path}, hasNonISO: ${hasNonISO}`);
-
-                    if (hasNonISO) {
-                        // Extract and log the actual timestamps
-                        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-                        if (frontmatterMatch) {
-                            const createMatch = frontmatterMatch[1].match(/^create_time: (.+)$/m);
-                            const updateMatch = frontmatterMatch[1].match(/^update_time: (.+)$/m);
-                            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - FOUND NON-ISO TIMESTAMPS:`);
-                            console.debug(`  create_time: ${createMatch ? createMatch[1] : 'N/A'}`);
-                            console.debug(`  update_time: ${updateMatch ? updateMatch[1] : 'N/A'}`);
-                        }
-                        return true;
-                    }
-                } catch (error) {
-                    console.error(`[NEXUS-UPGRADE] Error checking file ${file.path}:`, error);
                 }
+            }
+
+            // Determine a global order hint from decisive samples
+            if (samples.length) {
+                const format = DateParser.detectFormatFromSamples(samples);
+                this.globalOrder = format?.order;
+                console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - detected global order: ${this.globalOrder ?? 'none'}`);
+            }
+
+            if (foundNonISO) {
+                console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - FOUND non-ISO timestamps`);
+                return true;
             }
 
             console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - NO non-ISO timestamps found`);
@@ -104,7 +104,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute starting`);
 
-            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
@@ -122,9 +122,31 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                 return true;
             });
 
+            // Determine global order hint if not already computed
+            if (!this.globalOrder) {
+                const samples: string[] = [];
+                for (const file of conversationFiles) {
+                    const fm = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter as any;
+                    if (!fm || fm.nexus !== context.plugin.manifest.id) continue;
+                    const vals = [fm.create_time, fm.update_time].filter(v => typeof v === 'string') as string[];
+                    for (const v of vals) {
+                        if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(v)) {
+                            samples.push(v);
+                        }
+                    }
+                }
+                if (samples.length) {
+                    const format = DateParser.detectFormatFromSamples(samples);
+                    this.globalOrder = format?.order;
+                    console.debug(`[NEXUS-UPGRADE] execute - detected global order: ${this.globalOrder ?? 'none'}`);
+                }
+            }
+
             let processed = 0;
             let converted = 0;
             let skipped = 0;
+            let alreadyISO = 0;
+            let failed = 0;
             let errors = 0;
 
             console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Processing ${conversationFiles.length} files`);
@@ -134,15 +156,6 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
             for (let i = 0; i < conversationFiles.length; i += batchSize) {
                 const batch = conversationFiles.slice(i, i + batchSize);
 
-                // Update progress if callback provided
-                if (context.progressCallback) {
-                    const percentage = Math.round((i / conversationFiles.length) * 100);
-                    context.progressCallback({
-                        status: 'running',
-                        progress: percentage,
-                        currentDetail: `Converting timestamps: ${i}/${conversationFiles.length} files`
-                    });
-                }
 
                 for (const file of batch) {
                     processed++;
@@ -156,9 +169,10 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                             continue;
                         }
 
-                        // Only process files with non-ISO format timestamps
-                        if (!this.hasNonISOTimestamps(content)) {
-                            continue;
+                        const hadNonISO = this.hasNonISOTimestamps(content);
+                        if (!hadNonISO) {
+                            alreadyISO++;
+                            continue; // Nothing to do
                         }
 
                         const convertedContent = this.convertTimestampsToISO8601(content);
@@ -168,6 +182,9 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                             const finalContent = this.updatePluginVersion(convertedContent, "1.3.0");
                             await context.plugin.app.vault.modify(file, finalContent);
                             converted++;
+                        } else {
+                            // Still has non-ISO after attempt → mark as failed
+                            failed++;
                         }
 
                     } catch (error) {
@@ -182,21 +199,30 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                 }
             }
 
-            // Final progress update
-            if (context.progressCallback) {
-                context.progressCallback({
-                    status: 'running',
-                    progress: 100,
-                    currentDetail: `Completed: ${converted} timestamps converted`
-                });
-            }
-
             console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Completed - processed:${processed}, converted:${converted}, skipped:${skipped}, errors:${errors}`);
+
+            const results: string[] = [];
+            results.push(`**What this does:**`);
+            results.push(`Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).`);
+            results.push(`This fixes parsing issues with locale-specific date formats.`);
+            results.push(``);
+            results.push(`**Summary:**`);
+            results.push(``);
+            results.push(`- Total files scanned: ${processed}`);
+            results.push(`- Already in ISO format: ${alreadyISO}`);
+            results.push(`- Converted to ISO: ${converted}`);
+            results.push(`- Skipped (non-Nexus): ${skipped}`);
+            if (failed > 0) {
+                results.push(`- Failed to convert: ${failed}`);
+            }
+            if (errors > 0) {
+                results.push(`- Errors: ${errors}`);
+            }
 
             return {
                 success: errors === 0,
-                message: `Timestamp conversion completed: ${converted} files updated, ${skipped} skipped (non-Nexus), ${errors} errors`,
-                details: { processed, converted, skipped, errors }
+                message: `Converted ${converted} conversation(s) to ISO 8601 format.`,
+                details: results
             };
 
         } catch (error) {
@@ -222,7 +248,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
      */
     private hasNonISOTimestamps(content: string): boolean {
         // Extract frontmatter only
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
         if (!frontmatterMatch) {
             console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - no frontmatter found`);
             return false;
@@ -240,7 +266,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 
         // Check for any date-like pattern (needs conversion)
         // Matches: DD/MM/YYYY, MM/DD/YYYY, YYYY/MM/DD, DD.MM.YYYY, etc.
-        const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(frontmatter);
+        const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/m.test(frontmatter);
         console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - hasNonISO pattern match: ${hasNonISO}`);
 
         return hasNonISO;
@@ -255,7 +281,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
         console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - START`);
 
         // Extract frontmatter
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
         if (!frontmatterMatch) {
             console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - no frontmatter found`);
             return content;
@@ -282,7 +308,13 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 
                 // Convert using intelligent parser
                 console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - calling DateParser.convertToISO8601("${dateStr}")`);
-                const isoDate = DateParser.convertToISO8601(dateStr);
+                let isoDate = DateParser.convertToISO8601(dateStr);
+
+                // Fallback: if global order was detected, try with forced order
+                if (!isoDate && this.globalOrder) {
+                    console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - trying fallback with order ${this.globalOrder}`);
+                    isoDate = DateParser.convertToISO8601WithOrder(dateStr, this.globalOrder);
+                }
 
                 if (!isoDate) {
                     console.warn(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
@@ -314,7 +346,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Check conversation files (sample verification)
@@ -374,12 +406,12 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 class FixFrontmatterAliasesOperation extends UpgradeOperation {
     readonly id = "fix-frontmatter-aliases";
     readonly name = "Fix Frontmatter Aliases";
-    readonly description = "Fix aliases containing YAML special characters (colons, brackets, braces, etc.)";
+    readonly description = "Fixes YAML syntax errors in conversation aliases. Properly quotes titles containing special characters (colons, brackets, etc.) to prevent frontmatter parsing errors.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
@@ -427,7 +459,7 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
         try {
             console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases.execute starting`);
 
-            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
@@ -457,15 +489,6 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
             for (let i = 0; i < conversationFiles.length; i += batchSize) {
                 const batch = conversationFiles.slice(i, i + batchSize);
 
-                // Update progress if callback provided
-                if (context.progressCallback) {
-                    const percentage = Math.round((i / conversationFiles.length) * 100);
-                    context.progressCallback({
-                        status: 'running',
-                        progress: percentage,
-                        currentDetail: `Checking aliases: ${i}/${conversationFiles.length} files`
-                    });
-                }
 
                 for (const file of batch) {
                     processed++;
@@ -503,21 +526,27 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
                 }
             }
 
-            // Final progress update
-            if (context.progressCallback) {
-                context.progressCallback({
-                    status: 'running',
-                    progress: 100,
-                    currentDetail: `Completed: ${fixed} aliases fixed`
-                });
-            }
 
             console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases: Completed - processed:${processed}, fixed:${fixed}, skipped:${skipped}, errors:${errors}`);
 
+            const results: string[] = [];
+            results.push(`**What this does:**`);
+            results.push(`Fixes YAML syntax errors in conversation aliases caused by special characters.`);
+            results.push(`Properly quotes titles containing colons, brackets, etc. to prevent parsing errors.`);
+            results.push(``);
+            results.push(`**Summary:**`);
+            results.push(``);
+            results.push(`- Total files scanned: ${processed}`);
+            results.push(`- Fixed: ${fixed}`);
+            results.push(`- Skipped (non-Nexus): ${skipped}`);
+            if (errors > 0) {
+                results.push(`- Errors: ${errors}`);
+            }
+
             return {
                 success: errors === 0,
-                message: `Alias fix completed: ${fixed} files updated, ${skipped} skipped (non-Nexus), ${errors} errors`,
-                details: { processed, fixed, skipped, errors }
+                message: `Fixed ${fixed} conversation(s) with problematic aliases.`,
+                details: results
             };
 
         } catch (error) {
@@ -605,7 +634,7 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
         // Find and fix aliases line
         frontmatter = frontmatter.replace(
             /^aliases: (.+)$/m,
-            (match, aliasValue) => {
+            (_m, aliasValue) => {
                 // Remove existing quotes if any
                 let cleanAlias = aliasValue.trim();
                 if ((cleanAlias.startsWith('"') && cleanAlias.endsWith('"')) ||
@@ -686,7 +715,7 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
 class MigrateToSeparateFoldersOperation extends UpgradeOperation {
     readonly id = "migrate-to-separate-folders";
     readonly name = "Update Folder Settings";
-    readonly description = "Separate Reports and Attachments from Conversations folder";
+    readonly description = "Updates plugin settings to use separate folders for Conversations, Reports, and Attachments. This improves organization and allows you to exclude attachments from sync. Your existing files are not moved.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
@@ -698,6 +727,15 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
         const results: string[] = [];
 
         try {
+            results.push(`**What this does:**`);
+            results.push(`This updates your plugin settings to use separate folders for better organization:`);
+            results.push(`- **Conversations**: Your chat notes`);
+            results.push(`- **Reports**: Import and upgrade reports`);
+            results.push(`- **Attachments**: Files, images, and Claude artifacts`);
+            results.push(``);
+            results.push(`**Your files are NOT moved** - only settings are updated. You can move files later in Settings if needed.`);
+            results.push(``);
+
             console.debug(`[MigrateToSeparateFolders] Starting migration...`);
             console.debug(`[MigrateToSeparateFolders] Current settings:`, {
                 conversationFolder: context.plugin.settings.conversationFolder,
@@ -705,6 +743,9 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
                 attachmentFolder: context.plugin.settings.attachmentFolder,
                 archiveFolder: context.plugin.settings.archiveFolder
             });
+
+            results.push(`**Settings updated:**`);
+            results.push(``);
 
             // Only migrate if new settings don't exist yet
             if (!context.plugin.settings.conversationFolder) {
@@ -714,33 +755,29 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
                 context.plugin.settings.conversationFolder = oldArchiveFolder;
                 context.plugin.settings.reportFolder = `${oldArchiveFolder}/Reports`;
 
-                results.push(`✅ Migrated conversation folder: ${context.plugin.settings.conversationFolder}`);
-                results.push(`✅ Migrated report folder: ${context.plugin.settings.reportFolder}`);
+                results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\``);
+                results.push(`- Reports: \`${context.plugin.settings.reportFolder}\``);
             } else {
                 console.debug(`[MigrateToSeparateFolders] New settings already exist, keeping them`);
-                results.push(`✅ Conversation folder: ${context.plugin.settings.conversationFolder} (already set)`);
-                results.push(`✅ Report folder: ${context.plugin.settings.reportFolder} (already set)`);
+                results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\` (already configured)`);
+                results.push(`- Reports: \`${context.plugin.settings.reportFolder}\` (already configured)`);
             }
 
             // Migrate attachmentFolder (keep existing or set default)
             if (!context.plugin.settings.attachmentFolder) {
                 context.plugin.settings.attachmentFolder = "Nexus/Attachments";
-                results.push(`✅ Set attachment folder: ${context.plugin.settings.attachmentFolder}`);
+                results.push(`- Attachments: \`${context.plugin.settings.attachmentFolder}\``);
             } else {
-                results.push(`✅ Attachment folder: ${context.plugin.settings.attachmentFolder} (already set)`);
+                results.push(`- Attachments: \`${context.plugin.settings.attachmentFolder}\` (already configured)`);
             }
 
             // Migrate conversationPageSize to lastConversationsPerPage
             if (!context.plugin.settings.lastConversationsPerPage) {
                 if (context.plugin.settings.conversationPageSize) {
                     context.plugin.settings.lastConversationsPerPage = context.plugin.settings.conversationPageSize;
-                    results.push(`✅ Migrated page size: ${context.plugin.settings.lastConversationsPerPage}`);
                 } else {
                     context.plugin.settings.lastConversationsPerPage = 50;
-                    results.push(`✅ Set default page size: 50`);
                 }
-            } else {
-                results.push(`✅ Page size: ${context.plugin.settings.lastConversationsPerPage} (already set)`);
             }
 
             // Remove deprecated settings (only if they exist)
@@ -780,7 +817,8 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
             }
 
             if (removedCount > 0) {
-                results.push(`🗑️  Removed ${removedCount} deprecated settings`);
+                results.push(``);
+                results.push(`Cleaned up ${removedCount} deprecated setting(s).`);
             }
 
             await context.plugin.saveSettings();
@@ -789,7 +827,7 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
 
             return {
                 success: true,
-                message: "Folder settings migration completed",
+                message: "Settings updated successfully. Your files were not moved.",
                 details: results
             };
         } catch (error: unknown) {
@@ -821,6 +859,449 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
 }
 
 /**
+ * Migrate Claude artifacts to new format:
+ * 1. Remove redundant header (Type/Language/Command/Version/ID/UUID)
+ * 2. Add conversation link if missing
+ * 3. Add create_time to frontmatter
+ */
+class MigrateClaudeArtifactsOperation extends UpgradeOperation {
+    readonly id = "migrate-claude-artifacts";
+    readonly name = "Migrate Claude Artifacts";
+    readonly description = "Updates existing Claude artifacts: removes redundant header information (already in frontmatter), adds missing conversation links, and adds creation timestamps for better organization.";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        try {
+            const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+            const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+
+            // Check if Claude artifacts folder exists
+            const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
+            if (!folder || !(folder instanceof TFolder)) {
+                console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No Claude artifacts folder found`);
+                return false;
+            }
+
+            // Get all artifact files
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+            const artifactFiles = allFiles.filter(file => file.path.startsWith(claudeArtifactsPath));
+
+            if (artifactFiles.length === 0) {
+                console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No artifact files found`);
+                return false;
+            }
+
+            // Check if any artifacts need migration (missing create_time or has old header)
+            for (const file of artifactFiles) {
+                const fm = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter as any;
+                if (!fm || fm.provider !== 'claude') continue;
+
+                // Check if create_time is missing
+                if (!fm.create_time) {
+                    console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - Found artifact without create_time`);
+                    return true;
+                }
+
+                // Check if old header exists (read file content)
+                const content = await context.plugin.app.vault.read(file);
+                if (content.includes('**Type:** Claude Artifact') ||
+                    content.includes('**Command:**') ||
+                    content.includes('**UUID:**')) {
+                    console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - Found artifact with old header`);
+                    return true;
+                }
+            }
+
+            console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No artifacts need migration`);
+            return false;
+        } catch (error) {
+            console.error(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun failed:`, error);
+            return false;
+        }
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        const results: string[] = [];
+        let totalFiles = 0;
+        let processedCount = 0;
+        let skippedCount = 0;
+        let updatedCount = 0;
+        let errorCount = 0;
+        let warningCount = 0;
+
+        try {
+            const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+            const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+            const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+
+            // Get all artifact files
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+            const artifactFiles = allFiles.filter(file => file.path.startsWith(claudeArtifactsPath));
+            totalFiles = artifactFiles.length;
+
+            results.push(`**What this does:**`);
+            results.push(`Updates your existing Claude artifacts to the new format:`);
+            results.push(`- Removes redundant header information (Type, Language, Command, etc.)`);
+            results.push(`- Adds missing conversation links`);
+            results.push(`- Adds creation timestamps for better organization`);
+            results.push(``);
+            results.push(`**Processing ${totalFiles} artifact file(s)...**`);
+            results.push(``);
+
+            for (const file of artifactFiles) {
+                try {
+                    console.debug(`[NEXUS-UPGRADE] ========================================`);
+                    console.debug(`[NEXUS-UPGRADE] Processing artifact file: ${file.basename}`);
+
+                    const fm = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter as any;
+                    if (!fm || fm.provider !== 'claude') {
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: Skipped (not a Claude artifact)`);
+                        skippedCount++;
+                        continue;
+                    }
+
+                    processedCount++;
+                    console.debug(`[NEXUS-UPGRADE] ${file.basename}: Claude artifact detected (ID: ${fm.artifact_id}, Version: ${fm.version_number})`);
+
+                    let content = await context.plugin.app.vault.read(file);
+                    let modified = false;
+                    let warnings: string[] = [];
+
+                    // Extract frontmatter and body
+                    const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+                    if (!fmMatch) {
+                        errorCount++;
+                        results.push(`❌ ${file.basename}: Invalid frontmatter format`);
+                        continue;
+                    }
+
+                    let frontmatter = fmMatch[1];
+                    let body = fmMatch[2];
+
+                    // TASK 1: Add create_time if missing
+                    if (!fm.create_time) {
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Adding create_time (currently missing)`);
+
+                        const createTime = await this.extractArtifactCreateTime(
+                            fm,
+                            conversationFolder,
+                            context.plugin,
+                            file
+                        );
+
+                        if (createTime.source === 'message') {
+                            frontmatter += `\ncreate_time: ${createTime.value}`;
+                            modified = true;
+                            console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Added create_time from message: ${createTime.value}`);
+                        } else if (createTime.source === 'conversation') {
+                            frontmatter += `\ncreate_time: ${createTime.value}`;
+                            warnings.push(`Used conversation create_time (message not found)`);
+                            warningCount++;
+                            modified = true;
+                            console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Added create_time from conversation (fallback): ${createTime.value}`);
+                        } else {
+                            warnings.push(`Could not determine create_time`);
+                            warningCount++;
+                            console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - FAILED to determine create_time`);
+                        }
+                    } else {
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Skipped (create_time already exists: ${fm.create_time})`);
+                    }
+
+                    // TASK 2: Remove old header (Type/Language/Command/Version/ID/UUID)
+                    console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Checking for old header to remove`);
+                    const headerRegex = /\n\n\*\*Type:\*\* Claude Artifact\n\*\*Language:\*\*[^\n]*(?:\n\*\*Command:\*\*[^\n]*)?(?:\n\*\*Version:\*\*[^\n]*)?(?:\n\*\*ID:\*\*[^\n]*)?(?:\n\*\*UUID:\*\*[^\n]*)?/;
+                    if (headerRegex.test(body)) {
+                        body = body.replace(headerRegex, '');
+                        modified = true;
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Removed old header`);
+                    } else {
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Skipped (no old header found)`);
+                    }
+
+                    // TASK 3: Add conversation link if missing
+                    console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Checking for conversation link`);
+                    if (!body.includes('**Conversation:**') && fm.conversation_id) {
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Conversation link missing, searching for conversation ${fm.conversation_id}`);
+
+                        const conversationLink = await this.findConversationLink(
+                            fm.conversation_id,
+                            conversationFolder,
+                            context.plugin
+                        );
+
+                        if (conversationLink) {
+                            // Insert after title
+                            const titleMatch = body.match(/^# [^\n]+\n/);
+                            if (titleMatch) {
+                                const insertPos = titleMatch[0].length;
+                                body = body.substring(0, insertPos) +
+                                       `\n**Conversation:** ${conversationLink}\n` +
+                                       body.substring(insertPos);
+                                modified = true;
+                                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Added conversation link`);
+                            } else {
+                                console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Could not find title to insert link after`);
+                            }
+                        } else {
+                            warnings.push(`Conversation note not found (ID: ${fm.conversation_id})`);
+                            warningCount++;
+                            console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
+                        }
+                    } else if (body.includes('**Conversation:**')) {
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Skipped (conversation link already exists)`);
+                    } else {
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Skipped (no conversation_id in frontmatter)`);
+                    }
+
+                    // Write back if modified
+                    if (modified) {
+                        // Update plugin_version to 1.3.0
+                        frontmatter = frontmatter.replace(
+                            /^plugin_version: ".*?"$/m,
+                            `plugin_version: "1.3.0"`
+                        );
+
+                        const newContent = `---\n${frontmatter}\n---\n${body}`;
+                        await context.plugin.app.vault.modify(file, newContent);
+                        updatedCount++;
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: ✅ UPDATED (${warnings.length} warning(s))`);
+
+                        if (warnings.length > 0) {
+                            results.push(`⚠️  ${file.basename}: ${warnings.join(', ')}`);
+                        }
+                    } else {
+                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: No changes needed`);
+                    }
+
+                    console.debug(`[NEXUS-UPGRADE] ========================================`);
+
+                } catch (error: any) {
+                    errorCount++;
+                    console.error(`[NEXUS-UPGRADE] ${file.basename}: ❌ ERROR:`, error);
+                    results.push(`❌ ${file.basename}: ${error.message}`);
+                }
+            }
+
+            results.push(``);
+            results.push(`**Summary:**`);
+            results.push(``);
+            results.push(`- Total files found: ${totalFiles}`);
+            results.push(`- Claude artifacts: ${processedCount}`);
+            results.push(`- Skipped (non-Claude): ${skippedCount}`);
+            results.push(`- Updated: ${updatedCount}`);
+            results.push(`- Warnings: ${warningCount}`);
+            results.push(`- Errors: ${errorCount}`);
+            results.push(``);
+
+            if (skippedCount > 0) {
+                results.push(`*Note: ${skippedCount} file(s) were skipped because they are not Claude artifacts.*`);
+            }
+
+            return {
+                success: errorCount === 0,
+                message: `Migrated ${updatedCount} artifact(s) with ${warningCount} warning(s) and ${errorCount} error(s)`,
+                details: results
+            };
+
+        } catch (error: any) {
+            return {
+                success: false,
+                message: `Migration failed: ${error.message}`,
+                details: results
+            };
+        }
+    }
+
+    /**
+     * Extract artifact create_time from conversation note
+     */
+    private async extractArtifactCreateTime(
+        artifactFm: any,
+        conversationFolder: string,
+        plugin: NexusAiChatImporterPlugin,
+        artifactFile: any
+    ): Promise<{value: string, source: 'message' | 'conversation' | 'none'}> {
+        const artifactId = artifactFm.artifact_id;
+        const versionNumber = artifactFm.version_number;
+        const conversationId = artifactFm.conversation_id;
+        const artifactRef = `${artifactId}_v${versionNumber}`;
+
+        try {
+            console.debug(`[NEXUS-UPGRADE] === Extracting create_time for artifact: ${artifactRef} ===`);
+
+            if (!conversationId) {
+                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No conversation_id in frontmatter`);
+                return {value: '', source: 'none'};
+            }
+
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching in conversation ${conversationId}`);
+
+            // Find conversation note
+            const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
+            if (!conversationFile) {
+                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
+                return {value: '', source: 'none'};
+            }
+
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found conversation file: ${conversationFile.basename}`);
+
+            // Read conversation content
+            const content = await plugin.app.vault.read(conversationFile);
+
+            if (!artifactId || !versionNumber) {
+                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
+                // Fallback to conversation create_time
+                const fm = plugin.app.metadataCache.getFileCache(conversationFile)?.frontmatter as any;
+                if (fm?.create_time) {
+                    console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time: ${fm.create_time}`);
+                    return {value: fm.create_time, source: 'conversation'};
+                }
+                return {value: '', source: 'none'};
+            }
+
+            // Extract artifact file path (without .md extension) for exact link matching
+            const artifactLinkPath = artifactFile.path.replace(/\.md$/, '');
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching for exact link: [[${artifactLinkPath}|View Artifact]]`);
+
+            // Escape special regex characters in the path
+            const escapedPath = artifactLinkPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            // Search for the exact artifact link
+            const linkPattern = new RegExp(`\\[\\[${escapedPath}\\|View Artifact\\]\\]`, 'm');
+            const linkMatch = content.match(linkPattern);
+
+            if (!linkMatch) {
+                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
+                // Fallback to conversation create_time
+                const fm = plugin.app.metadataCache.getFileCache(conversationFile)?.frontmatter as any;
+                if (fm?.create_time) {
+                    console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time fallback: ${fm.create_time}`);
+                    return {value: fm.create_time, source: 'conversation'};
+                }
+                return {value: '', source: 'none'};
+            }
+
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found artifact link at position ${linkMatch.index}`);
+
+            // Get all text BEFORE the artifact link
+            const textBeforeLink = content.substring(0, linkMatch.index);
+
+            // Find the LAST nexus_agent callout before the link (the parent message)
+            const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - (.+?)$/gm;
+            let lastMatch = null;
+            let match;
+
+            while ((match = agentPattern.exec(textBeforeLink)) !== null) {
+                lastMatch = match;
+            }
+
+            if (lastMatch && lastMatch[1]) {
+                const timestampStr = lastMatch[1];
+                console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found parent agent callout with timestamp: "${timestampStr}"`);
+
+                // Parse timestamp with DateParser (with context for better logging)
+                const timestamp = DateParser.parseDate(timestampStr, artifactRef);
+
+                if (timestamp > 0) {
+                    const isoDate = new Date(timestamp * 1000).toISOString();
+                    console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Successfully parsed message timestamp: ${isoDate}`);
+                    return {
+                        value: isoDate,
+                        source: 'message'
+                    };
+                } else {
+                    console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Timestamp parsing FAILED (returned 0), using conversation fallback`);
+                }
+            } else {
+                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No agent callout found before artifact link, using conversation fallback`);
+            }
+
+            // Fallback to conversation create_time
+            const fm = plugin.app.metadataCache.getFileCache(conversationFile)?.frontmatter as any;
+            if (fm?.create_time) {
+                console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time fallback: ${fm.create_time}`);
+                return {value: fm.create_time, source: 'conversation'};
+            }
+
+            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No create_time available`);
+            return {value: '', source: 'none'};
+
+        } catch (error) {
+            console.error(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Exception during create_time extraction:`, error);
+            return {value: '', source: 'none'};
+        }
+    }
+
+    /**
+     * Find conversation file by ID
+     */
+    private async findConversationFile(
+        conversationId: string,
+        conversationFolder: string,
+        plugin: NexusAiChatImporterPlugin
+    ): Promise<any> {
+        const allFiles = plugin.app.vault.getMarkdownFiles();
+        const claudePath = `${conversationFolder}/claude`;
+
+        for (const file of allFiles) {
+            if (!file.path.startsWith(claudePath)) continue;
+
+            const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter as any;
+            if (fm?.conversation_id === conversationId) {
+                return file;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find and generate conversation link
+     */
+    private async findConversationLink(
+        conversationId: string,
+        conversationFolder: string,
+        plugin: NexusAiChatImporterPlugin
+    ): Promise<string | null> {
+        const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
+        if (!conversationFile) {
+            return null;
+        }
+
+        const fm = plugin.app.metadataCache.getFileCache(conversationFile)?.frontmatter as any;
+        const title = fm?.aliases || conversationFile.basename;
+
+        // Remove .md extension from path for Obsidian links
+        const linkPath = conversationFile.path.replace(/\.md$/, '');
+        return `[[${linkPath}|${title}]]`;
+    }
+
+    async verify(context: UpgradeContext): Promise<boolean> {
+        try {
+            const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+            const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+            const artifactFiles = allFiles.filter(file => file.path.startsWith(claudeArtifactsPath));
+
+            // Verify all artifacts have create_time
+            for (const file of artifactFiles) {
+                const fm = context.plugin.app.metadataCache.getFileCache(file)?.frontmatter as any;
+                if (fm?.provider === 'claude' && !fm.create_time) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`MigrateClaudeArtifacts.verify failed:`, error);
+            return false;
+        }
+    }
+}
+
+/**
  * Version 1.3.0 Upgrade Definition
  */
 export class Upgrade130 extends VersionUpgrade {
@@ -829,7 +1310,8 @@ export class Upgrade130 extends VersionUpgrade {
     readonly automaticOperations = [
         new MigrateToSeparateFoldersOperation(),
         new ConvertToISO8601TimestampsOperation(),
-        new FixFrontmatterAliasesOperation()
+        new FixFrontmatterAliasesOperation(),
+        new MigrateClaudeArtifactsOperation()
     ];
 
     readonly manualOperations = [

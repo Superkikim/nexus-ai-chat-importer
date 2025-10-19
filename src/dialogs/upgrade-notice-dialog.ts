@@ -18,15 +18,19 @@
 
 
 // src/dialogs/upgrade-notice-dialog.ts
-import { Modal } from "obsidian";
+import { Modal, Setting } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**
  * Dialog to inform users about new folder settings in v1.3.0
  */
 export class UpgradeNoticeDialog extends Modal {
+    private reportFolderInput: HTMLInputElement | null = null;
+    private originalReportFolder: string;
+
     constructor(private plugin: NexusAiChatImporterPlugin) {
         super(plugin.app);
+        this.originalReportFolder = plugin.settings.reportFolder || "Nexus/Conversations/Reports";
     }
 
     onOpen() {
@@ -34,7 +38,7 @@ export class UpgradeNoticeDialog extends Modal {
         contentEl.empty();
 
         // Title
-        contentEl.createEl("h2", { 
+        contentEl.createEl("h2", {
             text: "🎉 Nexus AI Chat Importer v1.3.0",
             cls: "nexus-upgrade-title"
         });
@@ -48,8 +52,23 @@ export class UpgradeNoticeDialog extends Modal {
             text: "You can now configure the report folder location separately from conversations and attachments."
         });
 
+        // Report folder input section
+        const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
+
+        new Setting(folderSection)
+            .setName("📁 Report Folder Location")
+            .setDesc("You can change this path now if you want to move your reports to a different location.")
+            .addText(text => {
+                this.reportFolderInput = text.inputEl;
+                text
+                    .setPlaceholder("Nexus/Reports")
+                    .setValue(this.originalReportFolder)
+                    .inputEl.addClass("nexus-upgrade-folder-input");
+            });
+
         messageContainer.createEl("p", {
-            text: "All folder locations can be changed at any time in the plugin settings."
+            text: "All folder locations can be changed at any time in the plugin settings.",
+            cls: "nexus-upgrade-hint"
         });
 
         // Info box
@@ -64,18 +83,66 @@ export class UpgradeNoticeDialog extends Modal {
             text: "If you choose to ignore, existing files will not be impacted by future updates."
         });
 
-        // Button
+        // Buttons
         const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
-        const okButton = buttonContainer.createEl("button", { 
-            text: "Got it!",
+
+        const cancelButton = buttonContainer.createEl("button", {
+            text: "Skip",
+            cls: "nexus-upgrade-button-secondary"
+        });
+        cancelButton.addEventListener("click", () => {
+            this.close();
+        });
+
+        const saveButton = buttonContainer.createEl("button", {
+            text: "Save & Continue",
             cls: "mod-cta"
         });
-        okButton.addEventListener("click", () => {
-            this.close();
+        saveButton.addEventListener("click", async () => {
+            await this.handleSave();
         });
 
         // Add styles
         this.addStyles();
+    }
+
+    private async handleSave() {
+        if (!this.reportFolderInput) {
+            this.close();
+            return;
+        }
+
+        const newReportFolder = this.reportFolderInput.value.trim();
+
+        // If no change, just close
+        if (newReportFolder === this.originalReportFolder) {
+            this.close();
+            return;
+        }
+
+        // Validate folder path
+        if (!newReportFolder) {
+            this.close();
+            return;
+        }
+
+        // Update settings
+        const oldReportFolder = this.plugin.settings.reportFolder;
+        this.plugin.settings.reportFolder = newReportFolder;
+        await this.plugin.saveSettings();
+
+        // Close the dialog first
+        this.close();
+
+        // Ask if user wants to move existing files
+        if (oldReportFolder && oldReportFolder !== newReportFolder) {
+            const migrationService = new FolderMigrationService(this.plugin);
+            await migrationService.handleFolderChange(
+                oldReportFolder,
+                newReportFolder,
+                "Reports"
+            );
+        }
     }
 
     private addStyles() {
@@ -106,6 +173,23 @@ export class UpgradeNoticeDialog extends Modal {
                 margin-bottom: 0.3em;
             }
 
+            .nexus-upgrade-hint {
+                font-size: 0.9em;
+                color: var(--text-muted);
+                margin-top: 0.5em;
+            }
+
+            .nexus-upgrade-folder-section {
+                background-color: var(--background-secondary);
+                padding: 1em;
+                margin: 1em 0;
+                border-radius: 4px;
+            }
+
+            .nexus-upgrade-folder-input {
+                width: 100%;
+            }
+
             .nexus-upgrade-info {
                 background-color: var(--background-secondary);
                 border-left: 4px solid var(--interactive-accent);
@@ -128,10 +212,23 @@ export class UpgradeNoticeDialog extends Modal {
             .nexus-upgrade-button-container {
                 display: flex;
                 justify-content: flex-end;
+                gap: 0.5em;
             }
 
             .nexus-upgrade-button-container button {
                 padding: 8px 24px;
+            }
+
+            .nexus-upgrade-button-secondary {
+                background-color: var(--background-modifier-border);
+                color: var(--text-normal);
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            .nexus-upgrade-button-secondary:hover {
+                background-color: var(--background-modifier-border-hover);
             }
         `;
         document.head.appendChild(styleEl);

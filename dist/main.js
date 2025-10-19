@@ -3887,51 +3887,76 @@ var init_date_parser = __esm({
       /**
        * Parse a date string with automatic format detection
        * Returns Unix timestamp (seconds) or 0 if parsing fails
+       * @param dateStr - Date string to parse
+       * @param contextId - Optional context identifier for logging (e.g., "Artifact abc123_v1", "Conversation xyz")
        */
-      static parseDate(dateStr) {
+      static parseDate(dateStr, contextId) {
+        const ctx = contextId ? `[${contextId}] ` : "";
         if (!dateStr || typeof dateStr !== "string") {
-          console.debug(`[NEXUS-DATEPARSER] parseDate - invalid input: ${dateStr}`);
+          console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - invalid input: ${dateStr}`);
           return 0;
         }
-        console.debug(`[NEXUS-DATEPARSER] parseDate - input: "${dateStr}"`);
+        console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - input: "${dateStr}"`);
         try {
           const isoDate = (0, import_obsidian18.moment)(dateStr, import_obsidian18.moment.ISO_8601, true);
           if (isoDate.isValid()) {
             const result = isoDate.unix();
-            console.debug(`[NEXUS-DATEPARSER] parseDate - ISO 8601 match: ${result}`);
+            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - ISO 8601 match, result: ${result}`);
             return result;
           }
-          console.debug(`[NEXUS-DATEPARSER] parseDate - not ISO 8601, detecting format...`);
+          console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - not ISO 8601, detecting format...`);
           const format = this.detectFormat(dateStr);
           if (!format) {
-            console.warn(`[NEXUS-DATEPARSER] parseDate - could not detect format: ${dateStr}`);
+            console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: could not detect format`);
             return 0;
           }
-          console.debug(`[NEXUS-DATEPARSER] parseDate - detected format:`, format);
+          console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - detected format: ${format.order} ${format.separator} ${format.timeFormat}${format.hasSeconds ? " +seconds" : ""}`);
           const parsed = this.parseWithFormat(dateStr, format);
           if (parsed === 0) {
-            console.warn(`[NEXUS-DATEPARSER] parseDate - parsing failed: ${dateStr}`);
+            console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: parsing returned 0`);
           } else {
-            console.debug(`[NEXUS-DATEPARSER] parseDate - SUCCESS: ${parsed}`);
+            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - SUCCESS: ${parsed}`);
           }
           return parsed;
         } catch (error) {
-          console.warn(`[NEXUS-DATEPARSER] parseDate - error for "${dateStr}":`, error);
+          console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: exception:`, error);
           return 0;
         }
+      }
+      /**
+       * Parse a date string with a forced component order (YMD/DMY/MDY)
+       * Keeps other parts auto-detected from the string (separator, time format, seconds)
+       */
+      static parseDateWithOrder(dateStr, order) {
+        if (!dateStr || typeof dateStr !== "string")
+          return 0;
+        const isoDate = (0, import_obsidian18.moment)(dateStr, import_obsidian18.moment.ISO_8601, true);
+        if (isoDate.isValid())
+          return isoDate.unix();
+        const detected = this.detectFormat(dateStr);
+        if (!detected)
+          return 0;
+        const forced = { ...detected, order };
+        return this.parseWithFormat(dateStr, forced);
+      }
+      /**
+       * Convert a date string to ISO 8601 with a forced component order
+       */
+      static convertToISO8601WithOrder(dateStr, order) {
+        const unixTime = this.parseDateWithOrder(dateStr, order);
+        if (unixTime === 0)
+          return null;
+        return new Date(unixTime * 1e3).toISOString();
       }
       /**
        * Detect date format from a single date string
        */
       static detectFormat(dateStr) {
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - input: "${dateStr}"`);
         if (dateStr.match(/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/)) {
-          console.debug(`[NEXUS-DATEPARSER] detectFormat - ISO 8601 detected`);
           return {
             separator: "-",
             order: "YMD",
             timeFormat: "24h",
-            timeSeparator: dateStr.includes("T") ? "T" : " ",
             hasSeconds: dateStr.includes(":") && dateStr.split(":").length >= 3
           };
         }
@@ -3943,41 +3968,33 @@ var init_date_parser = __esm({
         } else if (dateStr.includes("/")) {
           separator = "/";
         } else {
-          console.debug(`[NEXUS-DATEPARSER] detectFormat - no recognizable separator`);
           return null;
         }
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - separator: "${separator}"`);
         const hasAMPM = /\s(AM|PM)$/i.test(dateStr);
         const timeFormat = hasAMPM ? "12h" : "24h";
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - timeFormat: ${timeFormat}`);
-        const timeSeparator = dateStr.includes(" at ") ? " at " : " ";
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - timeSeparator: "${timeSeparator}"`);
-        const timePart = dateStr.split(timeSeparator)[1] || "";
+        const timeMatch = dateStr.match(/\s(\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?)/i);
+        const timePart = timeMatch ? timeMatch[1] : "";
         const hasSeconds = timePart.split(":").length >= 3;
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - hasSeconds: ${hasSeconds}, timePart: "${timePart}"`);
         const datePart = dateStr.split(/\s/)[0];
         const parts = datePart.split(separator).map((p) => parseInt(p, 10));
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - datePart: "${datePart}", parts: [${parts.join(", ")}]`);
         if (parts.length !== 3 || parts.some(isNaN)) {
-          console.debug(`[NEXUS-DATEPARSER] detectFormat - invalid date parts`);
           return null;
         }
-        const order = this.detectOrder(parts, separator);
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - order: ${order}`);
-        const result = {
+        const order = this.detectOrder(parts, separator, hasAMPM);
+        return {
           separator,
           order,
           timeFormat,
-          timeSeparator,
           hasSeconds
         };
-        console.debug(`[NEXUS-DATEPARSER] detectFormat - result:`, result);
-        return result;
       }
       /**
        * Detect date component order (YMD, DMY, MDY)
+       * @param parts - Date parts [first, second, third]
+       * @param separator - Date separator ('/', '-', '.')
+       * @param hasAMPM - Whether the time uses AM/PM format (hint for US format)
        */
-      static detectOrder(parts, separator) {
+      static detectOrder(parts, separator, hasAMPM) {
         const [first, second, third] = parts;
         if (first > 31) {
           return "YMD";
@@ -3992,6 +4009,9 @@ var init_date_parser = __esm({
           if (separator === ".") {
             return "DMY";
           }
+          if (hasAMPM) {
+            return "MDY";
+          }
           return "DMY";
         }
         if (first > 12) {
@@ -4004,6 +4024,8 @@ var init_date_parser = __esm({
           return "YMD";
         } else if (separator === ".") {
           return "DMY";
+        } else if (hasAMPM) {
+          return "MDY";
         }
         return "DMY";
       }
@@ -4024,21 +4046,35 @@ var init_date_parser = __esm({
             break;
         }
         const timePattern = format.timeFormat === "12h" ? format.hasSeconds ? "h:mm:ss A" : "h:mm A" : format.hasSeconds ? "HH:mm:ss" : "HH:mm";
-        const separator = format.timeSeparator === "T" ? "[T]" : format.timeSeparator;
-        const fullPattern = `${datePattern}${separator}${timePattern}`;
-        const date = (0, import_obsidian18.moment)(dateStr, fullPattern, true);
-        if (!date.isValid()) {
-          if (format.hasSeconds) {
-            const timePatternNoSec = format.timeFormat === "12h" ? "h:mm A" : "HH:mm";
-            const fallbackPattern = `${datePattern}${separator}${timePatternNoSec}`;
-            const fallbackDate = (0, import_obsidian18.moment)(dateStr, fallbackPattern, true);
-            if (fallbackDate.isValid()) {
-              return fallbackDate.unix();
+        const patterns = [
+          `${datePattern} ${timePattern}`,
+          // Standard space
+          `${datePattern}[T]${timePattern}`,
+          // ISO 8601 T
+          `${datePattern}[ at ]${timePattern}`
+          // English "at"
+        ];
+        for (const pattern of patterns) {
+          const date = (0, import_obsidian18.moment)(dateStr, pattern, true);
+          if (date.isValid()) {
+            return date.unix();
+          }
+        }
+        if (format.hasSeconds) {
+          const timePatternNoSec = format.timeFormat === "12h" ? "h:mm A" : "HH:mm";
+          const fallbackPatterns = [
+            `${datePattern} ${timePatternNoSec}`,
+            `${datePattern}[T]${timePatternNoSec}`,
+            `${datePattern}[ at ]${timePatternNoSec}`
+          ];
+          for (const pattern of fallbackPatterns) {
+            const date = (0, import_obsidian18.moment)(dateStr, pattern, true);
+            if (date.isValid()) {
+              return date.unix();
             }
           }
-          return 0;
         }
-        return date.unix();
+        return 0;
       }
       /**
        * Convert any date format to ISO 8601
@@ -5282,24 +5318,26 @@ var upgrade_1_3_0_exports = {};
 __export(upgrade_1_3_0_exports, {
   Upgrade130: () => Upgrade130
 });
-var ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, Upgrade130;
+var import_obsidian21, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, Upgrade130;
 var init_upgrade_1_3_0 = __esm({
   "src/upgrade/versions/upgrade-1.3.0.ts"() {
     "use strict";
     init_upgrade_interface();
     init_utils();
     init_date_parser();
+    import_obsidian21 = require("obsidian");
     ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
         this.id = "convert-to-iso8601-timestamps";
         this.name = "Convert Timestamps to ISO 8601";
-        this.description = "Convert all create_time and update_time frontmatter entries from US format to ISO 8601 format";
+        this.description = "Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ). This fixes parsing issues with locale-specific date formats and ensures consistent timestamps across all regions.";
         this.type = "automatic";
       }
       async canRun(context) {
+        var _a, _b;
         try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
           console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversationFolder: ${conversationFolder}`);
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - total markdown files: ${allFiles.length}`);
@@ -5313,29 +5351,28 @@ var init_upgrade_1_3_0 = __esm({
             return true;
           });
           console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversation files: ${conversationFiles.length}`);
-          for (const file of conversationFiles.slice(0, 10)) {
-            try {
-              const content = await context.plugin.app.vault.read(file);
-              if (!this.isNexusFile(content)) {
-                console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - skipping non-Nexus file: ${file.path}`);
-                continue;
+          const samples = [];
+          let foundNonISO = false;
+          for (const file of conversationFiles) {
+            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+            if (!fm || fm.nexus !== context.plugin.manifest.id)
+              continue;
+            const vals = [fm.create_time, fm.update_time].filter((v) => typeof v === "string");
+            for (const v of vals) {
+              if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(v)) {
+                samples.push(v);
+                foundNonISO = true;
               }
-              const hasNonISO = this.hasNonISOTimestamps(content);
-              console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - file: ${file.path}, hasNonISO: ${hasNonISO}`);
-              if (hasNonISO) {
-                const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-                if (frontmatterMatch) {
-                  const createMatch = frontmatterMatch[1].match(/^create_time: (.+)$/m);
-                  const updateMatch = frontmatterMatch[1].match(/^update_time: (.+)$/m);
-                  console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - FOUND NON-ISO TIMESTAMPS:`);
-                  console.debug(`  create_time: ${createMatch ? createMatch[1] : "N/A"}`);
-                  console.debug(`  update_time: ${updateMatch ? updateMatch[1] : "N/A"}`);
-                }
-                return true;
-              }
-            } catch (error) {
-              console.error(`[NEXUS-UPGRADE] Error checking file ${file.path}:`, error);
             }
+          }
+          if (samples.length) {
+            const format = DateParser.detectFormatFromSamples(samples);
+            this.globalOrder = format == null ? void 0 : format.order;
+            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - detected global order: ${(_b = this.globalOrder) != null ? _b : "none"}`);
+          }
+          if (foundNonISO) {
+            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - FOUND non-ISO timestamps`);
+            return true;
           }
           console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - NO non-ISO timestamps found`);
           return false;
@@ -5345,9 +5382,10 @@ var init_upgrade_1_3_0 = __esm({
         }
       }
       async execute(context) {
+        var _a, _b;
         try {
           console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute starting`);
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder))
@@ -5358,22 +5396,35 @@ var init_upgrade_1_3_0 = __esm({
             }
             return true;
           });
+          if (!this.globalOrder) {
+            const samples = [];
+            for (const file of conversationFiles) {
+              const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+              if (!fm || fm.nexus !== context.plugin.manifest.id)
+                continue;
+              const vals = [fm.create_time, fm.update_time].filter((v) => typeof v === "string");
+              for (const v of vals) {
+                if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(v)) {
+                  samples.push(v);
+                }
+              }
+            }
+            if (samples.length) {
+              const format = DateParser.detectFormatFromSamples(samples);
+              this.globalOrder = format == null ? void 0 : format.order;
+              console.debug(`[NEXUS-UPGRADE] execute - detected global order: ${(_b = this.globalOrder) != null ? _b : "none"}`);
+            }
+          }
           let processed = 0;
           let converted = 0;
           let skipped = 0;
+          let alreadyISO = 0;
+          let failed = 0;
           let errors = 0;
           console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Processing ${conversationFiles.length} files`);
           const batchSize = 10;
           for (let i = 0; i < conversationFiles.length; i += batchSize) {
             const batch = conversationFiles.slice(i, i + batchSize);
-            if (context.progressCallback) {
-              const percentage = Math.round(i / conversationFiles.length * 100);
-              context.progressCallback({
-                status: "running",
-                progress: percentage,
-                currentDetail: `Converting timestamps: ${i}/${conversationFiles.length} files`
-              });
-            }
             for (const file of batch) {
               processed++;
               try {
@@ -5382,7 +5433,9 @@ var init_upgrade_1_3_0 = __esm({
                   skipped++;
                   continue;
                 }
-                if (!this.hasNonISOTimestamps(content)) {
+                const hadNonISO = this.hasNonISOTimestamps(content);
+                if (!hadNonISO) {
+                  alreadyISO++;
                   continue;
                 }
                 const convertedContent = this.convertTimestampsToISO8601(content);
@@ -5390,6 +5443,8 @@ var init_upgrade_1_3_0 = __esm({
                   const finalContent = this.updatePluginVersion(convertedContent, "1.3.0");
                   await context.plugin.app.vault.modify(file, finalContent);
                   converted++;
+                } else {
+                  failed++;
                 }
               } catch (error) {
                 errors++;
@@ -5400,18 +5455,28 @@ var init_upgrade_1_3_0 = __esm({
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          if (context.progressCallback) {
-            context.progressCallback({
-              status: "running",
-              progress: 100,
-              currentDetail: `Completed: ${converted} timestamps converted`
-            });
-          }
           console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Completed - processed:${processed}, converted:${converted}, skipped:${skipped}, errors:${errors}`);
+          const results = [];
+          results.push(`**What this does:**`);
+          results.push(`Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).`);
+          results.push(`This fixes parsing issues with locale-specific date formats.`);
+          results.push(``);
+          results.push(`**Summary:**`);
+          results.push(``);
+          results.push(`- Total files scanned: ${processed}`);
+          results.push(`- Already in ISO format: ${alreadyISO}`);
+          results.push(`- Converted to ISO: ${converted}`);
+          results.push(`- Skipped (non-Nexus): ${skipped}`);
+          if (failed > 0) {
+            results.push(`- Failed to convert: ${failed}`);
+          }
+          if (errors > 0) {
+            results.push(`- Errors: ${errors}`);
+          }
           return {
             success: errors === 0,
-            message: `Timestamp conversion completed: ${converted} files updated, ${skipped} skipped (non-Nexus), ${errors} errors`,
-            details: { processed, converted, skipped, errors }
+            message: `Converted ${converted} conversation(s) to ISO 8601 format.`,
+            details: results
           };
         } catch (error) {
           console.error(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute failed:`, error);
@@ -5433,7 +5498,7 @@ var init_upgrade_1_3_0 = __esm({
        * Detects any format that is not already ISO 8601
        */
       hasNonISOTimestamps(content) {
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
         if (!frontmatterMatch) {
           console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - no frontmatter found`);
           return false;
@@ -5444,7 +5509,7 @@ var init_upgrade_1_3_0 = __esm({
         if (hasISO) {
           return false;
         }
-        const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(frontmatter);
+        const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/m.test(frontmatter);
         console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - hasNonISO pattern match: ${hasNonISO}`);
         return hasNonISO;
       }
@@ -5455,7 +5520,7 @@ var init_upgrade_1_3_0 = __esm({
        */
       convertTimestampsToISO8601(content) {
         console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - START`);
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
         if (!frontmatterMatch) {
           console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - no frontmatter found`);
           return content;
@@ -5474,7 +5539,11 @@ ${frontmatter}`);
               return match;
             }
             console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - calling DateParser.convertToISO8601("${dateStr}")`);
-            const isoDate = DateParser.convertToISO8601(dateStr);
+            let isoDate = DateParser.convertToISO8601(dateStr);
+            if (!isoDate && this.globalOrder) {
+              console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - trying fallback with order ${this.globalOrder}`);
+              isoDate = DateParser.convertToISO8601WithOrder(dateStr, this.globalOrder);
+            }
             if (!isoDate) {
               console.warn(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
               return match;
@@ -5502,7 +5571,7 @@ ${frontmatter}
       }
       async verify(context) {
         try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder))
@@ -5544,12 +5613,12 @@ ${frontmatter}
         super(...arguments);
         this.id = "fix-frontmatter-aliases";
         this.name = "Fix Frontmatter Aliases";
-        this.description = "Fix aliases containing YAML special characters (colons, brackets, braces, etc.)";
+        this.description = "Fixes YAML syntax errors in conversation aliases. Properly quotes titles containing special characters (colons, brackets, etc.) to prevent frontmatter parsing errors.";
         this.type = "automatic";
       }
       async canRun(context) {
         try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder))
@@ -5582,7 +5651,7 @@ ${frontmatter}
       async execute(context) {
         try {
           console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases.execute starting`);
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder))
@@ -5601,14 +5670,6 @@ ${frontmatter}
           const batchSize = 10;
           for (let i = 0; i < conversationFiles.length; i += batchSize) {
             const batch = conversationFiles.slice(i, i + batchSize);
-            if (context.progressCallback) {
-              const percentage = Math.round(i / conversationFiles.length * 100);
-              context.progressCallback({
-                status: "running",
-                progress: percentage,
-                currentDetail: `Checking aliases: ${i}/${conversationFiles.length} files`
-              });
-            }
             for (const file of batch) {
               processed++;
               try {
@@ -5634,18 +5695,24 @@ ${frontmatter}
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          if (context.progressCallback) {
-            context.progressCallback({
-              status: "running",
-              progress: 100,
-              currentDetail: `Completed: ${fixed} aliases fixed`
-            });
-          }
           console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases: Completed - processed:${processed}, fixed:${fixed}, skipped:${skipped}, errors:${errors}`);
+          const results = [];
+          results.push(`**What this does:**`);
+          results.push(`Fixes YAML syntax errors in conversation aliases caused by special characters.`);
+          results.push(`Properly quotes titles containing colons, brackets, etc. to prevent parsing errors.`);
+          results.push(``);
+          results.push(`**Summary:**`);
+          results.push(``);
+          results.push(`- Total files scanned: ${processed}`);
+          results.push(`- Fixed: ${fixed}`);
+          results.push(`- Skipped (non-Nexus): ${skipped}`);
+          if (errors > 0) {
+            results.push(`- Errors: ${errors}`);
+          }
           return {
             success: errors === 0,
-            message: `Alias fix completed: ${fixed} files updated, ${skipped} skipped (non-Nexus), ${errors} errors`,
-            details: { processed, fixed, skipped, errors }
+            message: `Fixed ${fixed} conversation(s) with problematic aliases.`,
+            details: results
           };
         } catch (error) {
           console.error(`[NEXUS-DEBUG] FixFrontmatterAliases.execute failed:`, error);
@@ -5694,7 +5761,7 @@ ${frontmatter}
         const restOfContent = content.substring(frontmatterMatch[0].length);
         frontmatter = frontmatter.replace(
           /^aliases: (.+)$/m,
-          (match, aliasValue) => {
+          (_m, aliasValue) => {
             let cleanAlias = aliasValue.trim();
             if (cleanAlias.startsWith('"') && cleanAlias.endsWith('"') || cleanAlias.startsWith("'") && cleanAlias.endsWith("'")) {
               cleanAlias = cleanAlias.slice(1, -1);
@@ -5748,7 +5815,7 @@ ${frontmatter}
         super(...arguments);
         this.id = "migrate-to-separate-folders";
         this.name = "Update Folder Settings";
-        this.description = "Separate Reports and Attachments from Conversations folder";
+        this.description = "Updates plugin settings to use separate folders for Conversations, Reports, and Attachments. This improves organization and allows you to exclude attachments from sync. Your existing files are not moved.";
         this.type = "automatic";
       }
       async canRun(context) {
@@ -5757,6 +5824,14 @@ ${frontmatter}
       async execute(context) {
         const results = [];
         try {
+          results.push(`**What this does:**`);
+          results.push(`This updates your plugin settings to use separate folders for better organization:`);
+          results.push(`- **Conversations**: Your chat notes`);
+          results.push(`- **Reports**: Import and upgrade reports`);
+          results.push(`- **Attachments**: Files, images, and Claude artifacts`);
+          results.push(``);
+          results.push(`**Your files are NOT moved** - only settings are updated. You can move files later in Settings if needed.`);
+          results.push(``);
           console.debug(`[MigrateToSeparateFolders] Starting migration...`);
           console.debug(`[MigrateToSeparateFolders] Current settings:`, {
             conversationFolder: context.plugin.settings.conversationFolder,
@@ -5764,34 +5839,32 @@ ${frontmatter}
             attachmentFolder: context.plugin.settings.attachmentFolder,
             archiveFolder: context.plugin.settings.archiveFolder
           });
+          results.push(`**Settings updated:**`);
+          results.push(``);
           if (!context.plugin.settings.conversationFolder) {
             const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
             console.debug(`[MigrateToSeparateFolders] Migrating from archiveFolder: ${oldArchiveFolder}`);
             context.plugin.settings.conversationFolder = oldArchiveFolder;
             context.plugin.settings.reportFolder = `${oldArchiveFolder}/Reports`;
-            results.push(`\u2705 Migrated conversation folder: ${context.plugin.settings.conversationFolder}`);
-            results.push(`\u2705 Migrated report folder: ${context.plugin.settings.reportFolder}`);
+            results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\``);
+            results.push(`- Reports: \`${context.plugin.settings.reportFolder}\``);
           } else {
             console.debug(`[MigrateToSeparateFolders] New settings already exist, keeping them`);
-            results.push(`\u2705 Conversation folder: ${context.plugin.settings.conversationFolder} (already set)`);
-            results.push(`\u2705 Report folder: ${context.plugin.settings.reportFolder} (already set)`);
+            results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\` (already configured)`);
+            results.push(`- Reports: \`${context.plugin.settings.reportFolder}\` (already configured)`);
           }
           if (!context.plugin.settings.attachmentFolder) {
             context.plugin.settings.attachmentFolder = "Nexus/Attachments";
-            results.push(`\u2705 Set attachment folder: ${context.plugin.settings.attachmentFolder}`);
+            results.push(`- Attachments: \`${context.plugin.settings.attachmentFolder}\``);
           } else {
-            results.push(`\u2705 Attachment folder: ${context.plugin.settings.attachmentFolder} (already set)`);
+            results.push(`- Attachments: \`${context.plugin.settings.attachmentFolder}\` (already configured)`);
           }
           if (!context.plugin.settings.lastConversationsPerPage) {
             if (context.plugin.settings.conversationPageSize) {
               context.plugin.settings.lastConversationsPerPage = context.plugin.settings.conversationPageSize;
-              results.push(`\u2705 Migrated page size: ${context.plugin.settings.lastConversationsPerPage}`);
             } else {
               context.plugin.settings.lastConversationsPerPage = 50;
-              results.push(`\u2705 Set default page size: 50`);
             }
-          } else {
-            results.push(`\u2705 Page size: ${context.plugin.settings.lastConversationsPerPage} (already set)`);
           }
           let removedCount = 0;
           if (context.plugin.settings.archiveFolder !== void 0) {
@@ -5827,13 +5900,14 @@ ${frontmatter}
             removedCount++;
           }
           if (removedCount > 0) {
-            results.push(`\u{1F5D1}\uFE0F  Removed ${removedCount} deprecated settings`);
+            results.push(``);
+            results.push(`Cleaned up ${removedCount} deprecated setting(s).`);
           }
           await context.plugin.saveSettings();
           console.debug(`[MigrateToSeparateFolders] Migration completed successfully`);
           return {
             success: true,
-            message: "Folder settings migration completed",
+            message: "Settings updated successfully. Your files were not moved.",
             details: results
           };
         } catch (error) {
@@ -5856,6 +5930,350 @@ ${frontmatter}
         }
       }
     };
+    MigrateClaudeArtifactsOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "migrate-claude-artifacts";
+        this.name = "Migrate Claude Artifacts";
+        this.description = "Updates existing Claude artifacts: removes redundant header information (already in frontmatter), adds missing conversation links, and adds creation timestamps for better organization.";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        var _a;
+        try {
+          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+          const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
+          if (!folder || !(folder instanceof import_obsidian21.TFolder)) {
+            console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No Claude artifacts folder found`);
+            return false;
+          }
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+          if (artifactFiles.length === 0) {
+            console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No artifact files found`);
+            return false;
+          }
+          for (const file of artifactFiles) {
+            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+            if (!fm || fm.provider !== "claude")
+              continue;
+            if (!fm.create_time) {
+              console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - Found artifact without create_time`);
+              return true;
+            }
+            const content = await context.plugin.app.vault.read(file);
+            if (content.includes("**Type:** Claude Artifact") || content.includes("**Command:**") || content.includes("**UUID:**")) {
+              console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - Found artifact with old header`);
+              return true;
+            }
+          }
+          console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No artifacts need migration`);
+          return false;
+        } catch (error) {
+          console.error(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun failed:`, error);
+          return false;
+        }
+      }
+      async execute(context) {
+        var _a;
+        const results = [];
+        let totalFiles = 0;
+        let processedCount = 0;
+        let skippedCount = 0;
+        let updatedCount = 0;
+        let errorCount = 0;
+        let warningCount = 0;
+        try {
+          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+          const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+          totalFiles = artifactFiles.length;
+          results.push(`**What this does:**`);
+          results.push(`Updates your existing Claude artifacts to the new format:`);
+          results.push(`- Removes redundant header information (Type, Language, Command, etc.)`);
+          results.push(`- Adds missing conversation links`);
+          results.push(`- Adds creation timestamps for better organization`);
+          results.push(``);
+          results.push(`**Processing ${totalFiles} artifact file(s)...**`);
+          results.push(``);
+          for (const file of artifactFiles) {
+            try {
+              console.debug(`[NEXUS-UPGRADE] ========================================`);
+              console.debug(`[NEXUS-UPGRADE] Processing artifact file: ${file.basename}`);
+              const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+              if (!fm || fm.provider !== "claude") {
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: Skipped (not a Claude artifact)`);
+                skippedCount++;
+                continue;
+              }
+              processedCount++;
+              console.debug(`[NEXUS-UPGRADE] ${file.basename}: Claude artifact detected (ID: ${fm.artifact_id}, Version: ${fm.version_number})`);
+              let content = await context.plugin.app.vault.read(file);
+              let modified = false;
+              let warnings = [];
+              const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+              if (!fmMatch) {
+                errorCount++;
+                results.push(`\u274C ${file.basename}: Invalid frontmatter format`);
+                continue;
+              }
+              let frontmatter = fmMatch[1];
+              let body = fmMatch[2];
+              if (!fm.create_time) {
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Adding create_time (currently missing)`);
+                const createTime = await this.extractArtifactCreateTime(
+                  fm,
+                  conversationFolder,
+                  context.plugin,
+                  file
+                );
+                if (createTime.source === "message") {
+                  frontmatter += `
+create_time: ${createTime.value}`;
+                  modified = true;
+                  console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Added create_time from message: ${createTime.value}`);
+                } else if (createTime.source === "conversation") {
+                  frontmatter += `
+create_time: ${createTime.value}`;
+                  warnings.push(`Used conversation create_time (message not found)`);
+                  warningCount++;
+                  modified = true;
+                  console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Added create_time from conversation (fallback): ${createTime.value}`);
+                } else {
+                  warnings.push(`Could not determine create_time`);
+                  warningCount++;
+                  console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - FAILED to determine create_time`);
+                }
+              } else {
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Skipped (create_time already exists: ${fm.create_time})`);
+              }
+              console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Checking for old header to remove`);
+              const headerRegex = /\n\n\*\*Type:\*\* Claude Artifact\n\*\*Language:\*\*[^\n]*(?:\n\*\*Command:\*\*[^\n]*)?(?:\n\*\*Version:\*\*[^\n]*)?(?:\n\*\*ID:\*\*[^\n]*)?(?:\n\*\*UUID:\*\*[^\n]*)?/;
+              if (headerRegex.test(body)) {
+                body = body.replace(headerRegex, "");
+                modified = true;
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Removed old header`);
+              } else {
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Skipped (no old header found)`);
+              }
+              console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Checking for conversation link`);
+              if (!body.includes("**Conversation:**") && fm.conversation_id) {
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Conversation link missing, searching for conversation ${fm.conversation_id}`);
+                const conversationLink = await this.findConversationLink(
+                  fm.conversation_id,
+                  conversationFolder,
+                  context.plugin
+                );
+                if (conversationLink) {
+                  const titleMatch = body.match(/^# [^\n]+\n/);
+                  if (titleMatch) {
+                    const insertPos = titleMatch[0].length;
+                    body = body.substring(0, insertPos) + `
+**Conversation:** ${conversationLink}
+` + body.substring(insertPos);
+                    modified = true;
+                    console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Added conversation link`);
+                  } else {
+                    console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Could not find title to insert link after`);
+                  }
+                } else {
+                  warnings.push(`Conversation note not found (ID: ${fm.conversation_id})`);
+                  warningCount++;
+                  console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
+                }
+              } else if (body.includes("**Conversation:**")) {
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Skipped (conversation link already exists)`);
+              } else {
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Skipped (no conversation_id in frontmatter)`);
+              }
+              if (modified) {
+                frontmatter = frontmatter.replace(
+                  /^plugin_version: ".*?"$/m,
+                  `plugin_version: "1.3.0"`
+                );
+                const newContent = `---
+${frontmatter}
+---
+${body}`;
+                await context.plugin.app.vault.modify(file, newContent);
+                updatedCount++;
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: \u2705 UPDATED (${warnings.length} warning(s))`);
+                if (warnings.length > 0) {
+                  results.push(`\u26A0\uFE0F  ${file.basename}: ${warnings.join(", ")}`);
+                }
+              } else {
+                console.debug(`[NEXUS-UPGRADE] ${file.basename}: No changes needed`);
+              }
+              console.debug(`[NEXUS-UPGRADE] ========================================`);
+            } catch (error) {
+              errorCount++;
+              console.error(`[NEXUS-UPGRADE] ${file.basename}: \u274C ERROR:`, error);
+              results.push(`\u274C ${file.basename}: ${error.message}`);
+            }
+          }
+          results.push(``);
+          results.push(`**Summary:**`);
+          results.push(``);
+          results.push(`- Total files found: ${totalFiles}`);
+          results.push(`- Claude artifacts: ${processedCount}`);
+          results.push(`- Skipped (non-Claude): ${skippedCount}`);
+          results.push(`- Updated: ${updatedCount}`);
+          results.push(`- Warnings: ${warningCount}`);
+          results.push(`- Errors: ${errorCount}`);
+          results.push(``);
+          if (skippedCount > 0) {
+            results.push(`*Note: ${skippedCount} file(s) were skipped because they are not Claude artifacts.*`);
+          }
+          return {
+            success: errorCount === 0,
+            message: `Migrated ${updatedCount} artifact(s) with ${warningCount} warning(s) and ${errorCount} error(s)`,
+            details: results
+          };
+        } catch (error) {
+          return {
+            success: false,
+            message: `Migration failed: ${error.message}`,
+            details: results
+          };
+        }
+      }
+      /**
+       * Extract artifact create_time from conversation note
+       */
+      async extractArtifactCreateTime(artifactFm, conversationFolder, plugin, artifactFile) {
+        var _a, _b, _c;
+        const artifactId = artifactFm.artifact_id;
+        const versionNumber = artifactFm.version_number;
+        const conversationId = artifactFm.conversation_id;
+        const artifactRef = `${artifactId}_v${versionNumber}`;
+        try {
+          console.debug(`[NEXUS-UPGRADE] === Extracting create_time for artifact: ${artifactRef} ===`);
+          if (!conversationId) {
+            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No conversation_id in frontmatter`);
+            return { value: "", source: "none" };
+          }
+          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching in conversation ${conversationId}`);
+          const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
+          if (!conversationFile) {
+            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
+            return { value: "", source: "none" };
+          }
+          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found conversation file: ${conversationFile.basename}`);
+          const content = await plugin.app.vault.read(conversationFile);
+          if (!artifactId || !versionNumber) {
+            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
+            const fm2 = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
+            if (fm2 == null ? void 0 : fm2.create_time) {
+              console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time: ${fm2.create_time}`);
+              return { value: fm2.create_time, source: "conversation" };
+            }
+            return { value: "", source: "none" };
+          }
+          const artifactLinkPath = artifactFile.path.replace(/\.md$/, "");
+          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching for exact link: [[${artifactLinkPath}|View Artifact]]`);
+          const escapedPath = artifactLinkPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const linkPattern = new RegExp(`\\[\\[${escapedPath}\\|View Artifact\\]\\]`, "m");
+          const linkMatch = content.match(linkPattern);
+          if (!linkMatch) {
+            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
+            const fm2 = (_b = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _b.frontmatter;
+            if (fm2 == null ? void 0 : fm2.create_time) {
+              console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time fallback: ${fm2.create_time}`);
+              return { value: fm2.create_time, source: "conversation" };
+            }
+            return { value: "", source: "none" };
+          }
+          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found artifact link at position ${linkMatch.index}`);
+          const textBeforeLink = content.substring(0, linkMatch.index);
+          const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - (.+?)$/gm;
+          let lastMatch = null;
+          let match;
+          while ((match = agentPattern.exec(textBeforeLink)) !== null) {
+            lastMatch = match;
+          }
+          if (lastMatch && lastMatch[1]) {
+            const timestampStr = lastMatch[1];
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found parent agent callout with timestamp: "${timestampStr}"`);
+            const timestamp = DateParser.parseDate(timestampStr, artifactRef);
+            if (timestamp > 0) {
+              const isoDate = new Date(timestamp * 1e3).toISOString();
+              console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Successfully parsed message timestamp: ${isoDate}`);
+              return {
+                value: isoDate,
+                source: "message"
+              };
+            } else {
+              console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Timestamp parsing FAILED (returned 0), using conversation fallback`);
+            }
+          } else {
+            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No agent callout found before artifact link, using conversation fallback`);
+          }
+          const fm = (_c = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _c.frontmatter;
+          if (fm == null ? void 0 : fm.create_time) {
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time fallback: ${fm.create_time}`);
+            return { value: fm.create_time, source: "conversation" };
+          }
+          console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No create_time available`);
+          return { value: "", source: "none" };
+        } catch (error) {
+          console.error(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Exception during create_time extraction:`, error);
+          return { value: "", source: "none" };
+        }
+      }
+      /**
+       * Find conversation file by ID
+       */
+      async findConversationFile(conversationId, conversationFolder, plugin) {
+        var _a;
+        const allFiles = plugin.app.vault.getMarkdownFiles();
+        const claudePath = `${conversationFolder}/claude`;
+        for (const file of allFiles) {
+          if (!file.path.startsWith(claudePath))
+            continue;
+          const fm = (_a = plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+          if ((fm == null ? void 0 : fm.conversation_id) === conversationId) {
+            return file;
+          }
+        }
+        return null;
+      }
+      /**
+       * Find and generate conversation link
+       */
+      async findConversationLink(conversationId, conversationFolder, plugin) {
+        var _a;
+        const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
+        if (!conversationFile) {
+          return null;
+        }
+        const fm = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
+        const title = (fm == null ? void 0 : fm.aliases) || conversationFile.basename;
+        const linkPath = conversationFile.path.replace(/\.md$/, "");
+        return `[[${linkPath}|${title}]]`;
+      }
+      async verify(context) {
+        var _a;
+        try {
+          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+          for (const file of artifactFiles) {
+            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+            if ((fm == null ? void 0 : fm.provider) === "claude" && !fm.create_time) {
+              return false;
+            }
+          }
+          return true;
+        } catch (error) {
+          console.error(`MigrateClaudeArtifacts.verify failed:`, error);
+          return false;
+        }
+      }
+    };
     Upgrade130 = class extends VersionUpgrade {
       constructor() {
         super(...arguments);
@@ -5863,7 +6281,8 @@ ${frontmatter}
         this.automaticOperations = [
           new MigrateToSeparateFoldersOperation(),
           new ConvertToISO8601TimestampsOperation(),
-          new FixFrontmatterAliasesOperation()
+          new FixFrontmatterAliasesOperation(),
+          new MigrateClaudeArtifactsOperation()
         ];
         this.manualOperations = [
           // No manual operations for this version
@@ -5878,15 +6297,17 @@ var upgrade_notice_dialog_exports = {};
 __export(upgrade_notice_dialog_exports, {
   UpgradeNoticeDialog: () => UpgradeNoticeDialog
 });
-var import_obsidian21, UpgradeNoticeDialog;
+var import_obsidian22, UpgradeNoticeDialog;
 var init_upgrade_notice_dialog = __esm({
   "src/dialogs/upgrade-notice-dialog.ts"() {
     "use strict";
-    import_obsidian21 = require("obsidian");
-    UpgradeNoticeDialog = class extends import_obsidian21.Modal {
+    import_obsidian22 = require("obsidian");
+    UpgradeNoticeDialog = class extends import_obsidian22.Modal {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
+        this.reportFolderInput = null;
+        this.originalReportFolder = plugin.settings.reportFolder || "Nexus/Conversations/Reports";
       }
       onOpen() {
         const { contentEl } = this;
@@ -5900,8 +6321,14 @@ var init_upgrade_notice_dialog = __esm({
         messageContainer.createEl("p", {
           text: "You can now configure the report folder location separately from conversations and attachments."
         });
+        const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
+        new import_obsidian22.Setting(folderSection).setName("\u{1F4C1} Report Folder Location").setDesc("You can change this path now if you want to move your reports to a different location.").addText((text) => {
+          this.reportFolderInput = text.inputEl;
+          text.setPlaceholder("Nexus/Reports").setValue(this.originalReportFolder).inputEl.addClass("nexus-upgrade-folder-input");
+        });
         messageContainer.createEl("p", {
-          text: "All folder locations can be changed at any time in the plugin settings."
+          text: "All folder locations can be changed at any time in the plugin settings.",
+          cls: "nexus-upgrade-hint"
         });
         const infoBox = contentEl.createDiv({ cls: "nexus-upgrade-info" });
         infoBox.createEl("strong", { text: "\u2139\uFE0F Folder Migration:" });
@@ -5913,14 +6340,48 @@ var init_upgrade_notice_dialog = __esm({
           text: "If you choose to ignore, existing files will not be impacted by future updates."
         });
         const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
-        const okButton = buttonContainer.createEl("button", {
-          text: "Got it!",
-          cls: "mod-cta"
+        const cancelButton = buttonContainer.createEl("button", {
+          text: "Skip",
+          cls: "nexus-upgrade-button-secondary"
         });
-        okButton.addEventListener("click", () => {
+        cancelButton.addEventListener("click", () => {
           this.close();
         });
+        const saveButton = buttonContainer.createEl("button", {
+          text: "Save & Continue",
+          cls: "mod-cta"
+        });
+        saveButton.addEventListener("click", async () => {
+          await this.handleSave();
+        });
         this.addStyles();
+      }
+      async handleSave() {
+        if (!this.reportFolderInput) {
+          this.close();
+          return;
+        }
+        const newReportFolder = this.reportFolderInput.value.trim();
+        if (newReportFolder === this.originalReportFolder) {
+          this.close();
+          return;
+        }
+        if (!newReportFolder) {
+          this.close();
+          return;
+        }
+        const oldReportFolder = this.plugin.settings.reportFolder;
+        this.plugin.settings.reportFolder = newReportFolder;
+        await this.plugin.saveSettings();
+        this.close();
+        if (oldReportFolder && oldReportFolder !== newReportFolder) {
+          const migrationService = new FolderMigrationService(this.plugin);
+          await migrationService.handleFolderChange(
+            oldReportFolder,
+            newReportFolder,
+            "Reports"
+          );
+        }
       }
       addStyles() {
         const styleEl = document.createElement("style");
@@ -5950,6 +6411,23 @@ var init_upgrade_notice_dialog = __esm({
                 margin-bottom: 0.3em;
             }
 
+            .nexus-upgrade-hint {
+                font-size: 0.9em;
+                color: var(--text-muted);
+                margin-top: 0.5em;
+            }
+
+            .nexus-upgrade-folder-section {
+                background-color: var(--background-secondary);
+                padding: 1em;
+                margin: 1em 0;
+                border-radius: 4px;
+            }
+
+            .nexus-upgrade-folder-input {
+                width: 100%;
+            }
+
             .nexus-upgrade-info {
                 background-color: var(--background-secondary);
                 border-left: 4px solid var(--interactive-accent);
@@ -5972,10 +6450,23 @@ var init_upgrade_notice_dialog = __esm({
             .nexus-upgrade-button-container {
                 display: flex;
                 justify-content: flex-end;
+                gap: 0.5em;
             }
 
             .nexus-upgrade-button-container button {
                 padding: 8px 24px;
+            }
+
+            .nexus-upgrade-button-secondary {
+                background-color: var(--background-modifier-border);
+                color: var(--text-normal);
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            .nexus-upgrade-button-secondary:hover {
+                background-color: var(--background-modifier-border-hover);
             }
         `;
         document.head.appendChild(styleEl);
@@ -5993,12 +6484,12 @@ var upgrade_modal_1_3_0_exports = {};
 __export(upgrade_modal_1_3_0_exports, {
   NexusUpgradeModal130: () => NexusUpgradeModal130
 });
-var import_obsidian22, NexusUpgradeModal130;
+var import_obsidian23, NexusUpgradeModal130;
 var init_upgrade_modal_1_3_0 = __esm({
   "src/dialogs/upgrade-modal-1.3.0.ts"() {
     "use strict";
-    import_obsidian22 = require("obsidian");
-    NexusUpgradeModal130 = class extends import_obsidian22.Modal {
+    import_obsidian23 = require("obsidian");
+    NexusUpgradeModal130 = class extends import_obsidian23.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -6055,7 +6546,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         } catch (error) {
         }
         const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-        await import_obsidian22.MarkdownRenderer.render(
+        await import_obsidian23.MarkdownRenderer.render(
           this.app,
           message,
           contentDiv,
@@ -6250,7 +6741,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian28 = require("obsidian");
+var import_obsidian29 = require("obsidian");
 init_constants();
 
 // src/ui/settings-tab.ts
@@ -9021,10 +9512,11 @@ var ClaudeConverter = class {
   }
   static async convertChat(chat) {
     const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0;
-    const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name, createTime);
+    const conversationTitle = chat.name || "Untitled";
+    const messages = await this.convertMessages(chat.chat_messages, chat.uuid, conversationTitle, createTime);
     return {
       id: chat.uuid,
-      title: chat.name || "Untitled",
+      title: conversationTitle,
       createTime: chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0,
       updateTime: chat.updated_at ? Math.floor(new Date(chat.updated_at).getTime() / 1e3) : 0,
       messages,
@@ -9054,10 +9546,12 @@ var ClaudeConverter = class {
             const command = block.input.command || "create";
             const versionUuid = block.input.version_uuid;
             if (command !== "view" && versionUuid) {
+              const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
               allArtifacts.push({
                 artifact: block.input,
                 messageIndex: msgIndex,
-                blockIndex
+                blockIndex,
+                messageTimestamp
               });
             }
           }
@@ -9119,7 +9613,7 @@ var ClaudeConverter = class {
     const artifactContents = /* @__PURE__ */ new Map();
     const artifactLanguages = /* @__PURE__ */ new Map();
     this.plugin.logger.debug(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
-    for (const { artifact } of allArtifacts) {
+    for (const { artifact, messageTimestamp } of allArtifacts) {
       const artifactId = artifact.id || "unknown";
       const command = artifact.command || "create";
       const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
@@ -9152,7 +9646,8 @@ var ClaudeConverter = class {
           conversationId,
           conversationTitle,
           conversationCreateTime,
-          languageToUse
+          languageToUse,
+          messageTimestamp
         );
         artifactVersionMap.set(artifact.version_uuid, {
           versionNumber: currentVersion,
@@ -9374,7 +9869,7 @@ ${code}
   /**
    * Save a single artifact version with computed content
    */
-  static async saveSingleArtifactVersionWithContent(artifactId, artifactData, versionNumber, finalContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage) {
+  static async saveSingleArtifactVersionWithContent(artifactId, artifactData, versionNumber, finalContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage, messageTimestamp) {
     if (!this.plugin) {
       throw new Error("Plugin not available");
     }
@@ -9399,7 +9894,8 @@ ${code}
       conversationId,
       conversationTitle,
       conversationCreateTime,
-      forcedLanguage
+      forcedLanguage,
+      messageTimestamp
     );
   }
   /**
@@ -9451,7 +9947,7 @@ ${code}
   /**
    * Save a single artifact version with specific content
    */
-  static async saveIndividualArtifactVersion(artifactInput, filePath, versionNumber, versionContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage) {
+  static async saveIndividualArtifactVersion(artifactInput, filePath, versionNumber, versionContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage, messageTimestamp) {
     const title = artifactInput.title || "Untitled Artifact";
     let language = artifactInput.language || "text";
     const command = artifactInput.command || "create";
@@ -9482,6 +9978,8 @@ ${code}
     }
     const safeArtifactTitle = generateSafeAlias(title);
     const safeArtifactAlias = generateSafeAlias(`${artifactId}_v${versionNumber}`);
+    const artifactCreateTime = messageTimestamp || conversationCreateTime || 0;
+    const createTimeStr = artifactCreateTime > 0 ? new Date(artifactCreateTime * 1e3).toISOString() : "unknown";
     let markdownContent = `---
 nexus: nexus-ai-chat-importer
 plugin_version: ${this.plugin.manifest.version}
@@ -9491,29 +9989,20 @@ version_uuid: ${versionUuid}
 version_number: ${versionNumber}
 command: ${command}
 conversation_id: ${conversationId || "unknown"}
+create_time: ${createTimeStr}
 format: ${language}
 aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
 ---
 
 # ${title} (Version ${versionNumber})
-
-**Type:** Claude Artifact
-**Language:** ${language}`;
-    if (artifactInput.language !== language) {
-      markdownContent += ` (detected from content, original: ${artifactInput.language})`;
-    }
-    markdownContent += `
-**Command:** ${command}
-**Version:** ${versionNumber}
-**ID:** ${artifactId}
-**UUID:** ${versionUuid}`;
+`;
     if (conversationLink) {
       markdownContent += `
-**Conversation:** ${conversationLink}`;
-    }
-    markdownContent += `
+**Conversation:** ${conversationLink}
 
-## Content
+`;
+    }
+    markdownContent += `## Content
 
 `;
     if (language.toLowerCase() === "markdown") {
@@ -10935,7 +11424,7 @@ var StorageService = class {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian23 = require("obsidian");
+var import_obsidian24 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
@@ -11161,6 +11650,7 @@ var MultiOperationProgressModal = class extends import_obsidian19.Modal {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
+init_utils();
 var logger3 = new Logger();
 var IncrementalUpgradeManager = class {
   constructor(plugin) {
@@ -11243,6 +11733,11 @@ var IncrementalUpgradeManager = class {
       const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
       console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);
       await this.markUpgradeComplete(currentVersion);
+      try {
+        await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
+      } catch (e) {
+        console.warn("[NEXUS-DEBUG] Failed to write consolidated upgrade report", e);
+      }
       if (currentVersion === "1.3.0" && !this.plugin.settings.hasShownUpgradeNotice) {
         console.debug(`[NEXUS-DEBUG] Showing v1.3.0 upgrade notice`);
         const { UpgradeNoticeDialog: UpgradeNoticeDialog2 } = await Promise.resolve().then(() => (init_upgrade_notice_dialog(), upgrade_notice_dialog_exports));
@@ -11255,7 +11750,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian23.Notice("Upgrade failed - see console for details");
+      new import_obsidian24.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -11353,7 +11848,7 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian23.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      new import_obsidian24.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -11458,17 +11953,11 @@ var IncrementalUpgradeManager = class {
    * Execute single operation with progress callbacks
    */
   async executeOperationWithProgress(operation, context, modalOperationId, progressModal) {
-    var _a;
     const result = await operation.execute(context);
-    const steps = 5;
-    for (let i = 1; i <= steps; i++) {
-      progressModal.updateOperation(modalOperationId, {
-        status: "running",
-        progress: i / steps * 100,
-        currentDetail: ((_a = result.details) == null ? void 0 : _a.processed) ? `Processing... ${i}/${steps}` : void 0
-      });
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
+    progressModal.updateOperation(modalOperationId, {
+      status: "running",
+      progress: 100
+    });
     return result;
   }
   /**
@@ -11508,6 +11997,108 @@ var IncrementalUpgradeManager = class {
     }
     await this.plugin.saveData(data);
     logger3.info(`Marked overall upgrade to ${version} as complete`);
+  }
+  /**
+   * Write a consolidated upgrade report per run
+   */
+  async writeUpgradeReport(fromVersion, toVersion, upgradeChain, result) {
+    var _a, _b, _c, _d, _e;
+    const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
+    const upgradesFolder = `${reportRoot}/Upgrades`;
+    await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
+    const now = new Date();
+    const pad = (n) => n.toString().padStart(2, "0");
+    const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const fileName = `${ts} - Upgrade to ${toVersion}.md`;
+    const filePath = `${upgradesFolder}/${fileName}`;
+    const opsByVersion = {};
+    for (const up of upgradeChain) {
+      opsByVersion[up.version] = {};
+      for (const op of up.automaticOperations) {
+        opsByVersion[up.version][op.id] = op.name;
+      }
+    }
+    const readmeUrl = `${GITHUB.REPO_BASE}#readme`;
+    const issuesUrl = `${GITHUB.REPO_BASE}/issues`;
+    const totalVersions = result.results.length;
+    const totalOps = result.results.reduce((acc, v) => {
+      var _a2, _b2;
+      return acc + (((_b2 = (_a2 = v.automaticResults) == null ? void 0 : _a2.results) == null ? void 0 : _b2.length) || 0);
+    }, 0);
+    let md = `# Upgrade to v${toVersion}
+
+`;
+    md += `From v${fromVersion} \u2192 v${toVersion}
+
+`;
+    md += `- Versions processed: ${totalVersions}
+`;
+    md += `- Operations executed: ${totalOps}
+
+`;
+    md += `See the latest README and release notes: ${readmeUrl}
+
+`;
+    md += `Report or review issues: ${issuesUrl}
+
+`;
+    for (const entry of result.results) {
+      md += `## ${entry.version}
+
+`;
+      const ops = ((_a = entry.automaticResults) == null ? void 0 : _a.results) || [];
+      if (!ops.length) {
+        md += `- No automatic operations
+
+`;
+        continue;
+      }
+      for (const opRes of ops) {
+        const opId = opRes.operationId;
+        const opName = ((_b = opsByVersion[entry.version]) == null ? void 0 : _b[opId]) || opId;
+        const ok = ((_c = opRes.result) == null ? void 0 : _c.success) === true;
+        const status = ok ? "\u2705" : "\u26A0\uFE0F";
+        const msg = ((_d = opRes.result) == null ? void 0 : _d.message) || "";
+        md += `### ${opName} ${status}
+
+`;
+        if (msg)
+          md += `${msg}
+
+`;
+        const details = (_e = opRes.result) == null ? void 0 : _e.details;
+        if (details) {
+          if (Array.isArray(details)) {
+            if (details.length > 0) {
+              for (const item of details) {
+                if (typeof item === "string") {
+                  md += `${item}
+`;
+                }
+              }
+              md += `
+`;
+            }
+          } else if (typeof details === "object") {
+            const keys = Object.keys(details);
+            if (keys.length > 0 && !keys.every((k) => /^\d+$/.test(k))) {
+              md += `**Statistics:**
+
+`;
+              for (const key of keys) {
+                const value = details[key];
+                md += `- ${key}: ${String(value)}
+`;
+              }
+              md += `
+`;
+            }
+          }
+        }
+      }
+    }
+    await this.plugin.app.vault.create(filePath, md);
+    console.debug(`[NEXUS-DEBUG] Consolidated upgrade report written: ${filePath}`);
   }
   /**
    * Show upgrade dialog - INFORMATION ONLY (no cancel)
@@ -11571,7 +12162,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian23.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian24.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -11688,8 +12279,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian24 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian24.Modal {
+var import_obsidian25 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian25.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -11721,7 +12312,7 @@ var ProviderSelectionDialog = class extends import_obsidian24.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian24.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian25.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -11746,8 +12337,8 @@ var ProviderSelectionDialog = class extends import_obsidian24.Modal {
 };
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian25 = require("obsidian");
-var EnhancedFileSelectionDialog = class extends import_obsidian25.Modal {
+var import_obsidian26 = require("obsidian");
+var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -12145,8 +12736,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian25.Modal {
 };
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian26 = require("obsidian");
-var ConversationSelectionDialog = class extends import_obsidian26.Modal {
+var import_obsidian27 = require("obsidian");
+var ConversationSelectionDialog = class extends import_obsidian27.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -13280,8 +13871,8 @@ var ConversationMetadataExtractor = class {
 };
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian27 = require("obsidian");
-var ImportCompletionDialog = class extends import_obsidian27.Modal {
+var import_obsidian28 = require("obsidian");
+var ImportCompletionDialog = class extends import_obsidian28.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -13510,7 +14101,7 @@ var ImportCompletionDialog = class extends import_obsidian27.Modal {
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian29.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -13683,7 +14274,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
   async handleImportAll(files, provider) {
     try {
       this.logger.debug(`[IMPORT-ALL] Starting import all with ${files.length} files, provider: ${provider}`);
-      new import_obsidian28.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian29.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
       this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
@@ -13707,7 +14298,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
       }
       if (extractionResult.conversations.length === 0) {
         this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
-        new import_obsidian28.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian29.Notice("No new or updated conversations found. All conversations are already up to date.");
         this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath2}`);
@@ -13717,7 +14308,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
-      new import_obsidian28.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+      new import_obsidian29.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -13741,7 +14332,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian28.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian29.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
       }
     } catch (error) {
       this.logger.error("[IMPORT-ALL] Error in import all:", error);
@@ -13749,7 +14340,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
       if (error instanceof Error) {
         console.error("[IMPORT-ALL] Error stack:", error.stack);
       }
-      new import_obsidian28.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian29.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -13758,7 +14349,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
   async handleSelectiveImport(files, provider) {
     try {
       this.logger.debug(`[SELECTIVE-IMPORT] Starting selective import with ${files.length} files, provider: ${provider}`);
-      new import_obsidian28.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian29.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
       this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
@@ -13771,7 +14362,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian28.Notice("No conversations found in the selected files.");
+        new import_obsidian29.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
@@ -13789,7 +14380,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
       if (error instanceof Error) {
         console.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
       }
-      new import_obsidian28.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian29.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -13801,14 +14392,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
       operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
     }
     if (result.selectedIds.length === 0) {
-      new import_obsidian28.Notice("No conversations selected for import.");
+      new import_obsidian29.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian28.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian29.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
@@ -13824,7 +14415,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian28.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian29.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
     }
   }
   /**
@@ -13853,7 +14444,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian28.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian28.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian29.Notice("Failed to create log file. Check console for details.");
       return "";
     }
     const now = Date.now() / 1e3;
@@ -13904,7 +14495,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       console.error("Full error:", error);
       console.error("Log content length:", logContent.length);
-      new import_obsidian28.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian29.Notice("Failed to create log file. Check console for details.");
       return "";
     }
   }
