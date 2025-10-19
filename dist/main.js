@@ -6587,11 +6587,13 @@ ${body}`;
           }
           console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found artifact link at position ${linkMatch.index}`);
           const textBeforeLink = content.substring(0, linkMatch.index);
-          const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - (.+?)$/gm;
+          const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - (.+?)\s*$/gm;
           let lastMatch = null;
           let match;
+          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching for agent callout pattern in ${textBeforeLink.length} chars`);
           while ((match = agentPattern.exec(textBeforeLink)) !== null) {
             lastMatch = match;
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found agent callout candidate: "${match[1]}"`);
           }
           if (lastMatch && lastMatch[1]) {
             const timestampStr = lastMatch[1];
@@ -6693,20 +6695,17 @@ ${body}`;
               console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations - User completed configuration:`, result);
               const details = [];
               if (result.conversationFolder.changed) {
-                const msg = result.conversationFolder.filesMoved !== void 0 ? `\u2705 Conversation folder: ${result.conversationFolder.oldPath} \u2192 ${result.conversationFolder.newPath} (${result.conversationFolder.filesMoved} files moved)` : `\u2705 Conversation folder: ${result.conversationFolder.oldPath} \u2192 ${result.conversationFolder.newPath} (files kept in old location)`;
-                details.push(msg);
+                details.push(`\u2705 Conversation folder: ${result.conversationFolder.oldPath} \u2192 ${result.conversationFolder.newPath}`);
               } else {
                 details.push(`\u2139\uFE0F  Conversation folder: ${result.conversationFolder.newPath} (unchanged)`);
               }
               if (result.reportFolder.changed) {
-                const msg = result.reportFolder.filesMoved !== void 0 ? `\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath} (${result.reportFolder.filesMoved} files moved)` : `\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath} (files kept in old location)`;
-                details.push(msg);
+                details.push(`\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath}`);
               } else {
                 details.push(`\u2139\uFE0F  Report folder: ${result.reportFolder.newPath} (unchanged)`);
               }
               if (result.attachmentFolder.changed) {
-                const msg = result.attachmentFolder.filesMoved !== void 0 ? `\u2705 Attachment folder: ${result.attachmentFolder.oldPath} \u2192 ${result.attachmentFolder.newPath} (${result.attachmentFolder.filesMoved} files moved)` : `\u2705 Attachment folder: ${result.attachmentFolder.oldPath} \u2192 ${result.attachmentFolder.newPath} (files kept in old location)`;
-                details.push(msg);
+                details.push(`\u2705 Attachment folder: ${result.attachmentFolder.oldPath} \u2192 ${result.attachmentFolder.newPath}`);
               } else {
                 details.push(`\u2139\uFE0F  Attachment folder: ${result.attachmentFolder.newPath} (unchanged)`);
               }

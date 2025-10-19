@@ -1189,12 +1189,17 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
             const textBeforeLink = content.substring(0, linkMatch.index);
 
             // Find the LAST nexus_agent callout before the link (the parent message)
-            const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - (.+?)$/gm;
+            // Pattern matches: >[!nexus_agent] **Assistant** - <timestamp>
+            // Allow optional whitespace at end of line
+            const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - (.+?)\s*$/gm;
             let lastMatch = null;
             let match;
 
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching for agent callout pattern in ${textBeforeLink.length} chars`);
+
             while ((match = agentPattern.exec(textBeforeLink)) !== null) {
                 lastMatch = match;
+                console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found agent callout candidate: "${match[1]}"`);
             }
 
             if (lastMatch && lastMatch[1]) {
@@ -1330,28 +1335,19 @@ class ConfigureFolderLocationsOperation extends UpgradeOperation {
                     const details: string[] = [];
 
                     if (result.conversationFolder.changed) {
-                        const msg = result.conversationFolder.filesMoved !== undefined
-                            ? `✅ Conversation folder: ${result.conversationFolder.oldPath} → ${result.conversationFolder.newPath} (${result.conversationFolder.filesMoved} files moved)`
-                            : `✅ Conversation folder: ${result.conversationFolder.oldPath} → ${result.conversationFolder.newPath} (files kept in old location)`;
-                        details.push(msg);
+                        details.push(`✅ Conversation folder: ${result.conversationFolder.oldPath} → ${result.conversationFolder.newPath}`);
                     } else {
                         details.push(`ℹ️  Conversation folder: ${result.conversationFolder.newPath} (unchanged)`);
                     }
 
                     if (result.reportFolder.changed) {
-                        const msg = result.reportFolder.filesMoved !== undefined
-                            ? `✅ Report folder: ${result.reportFolder.oldPath} → ${result.reportFolder.newPath} (${result.reportFolder.filesMoved} files moved)`
-                            : `✅ Report folder: ${result.reportFolder.oldPath} → ${result.reportFolder.newPath} (files kept in old location)`;
-                        details.push(msg);
+                        details.push(`✅ Report folder: ${result.reportFolder.oldPath} → ${result.reportFolder.newPath}`);
                     } else {
                         details.push(`ℹ️  Report folder: ${result.reportFolder.newPath} (unchanged)`);
                     }
 
                     if (result.attachmentFolder.changed) {
-                        const msg = result.attachmentFolder.filesMoved !== undefined
-                            ? `✅ Attachment folder: ${result.attachmentFolder.oldPath} → ${result.attachmentFolder.newPath} (${result.attachmentFolder.filesMoved} files moved)`
-                            : `✅ Attachment folder: ${result.attachmentFolder.oldPath} → ${result.attachmentFolder.newPath} (files kept in old location)`;
-                        details.push(msg);
+                        details.push(`✅ Attachment folder: ${result.attachmentFolder.oldPath} → ${result.attachmentFolder.newPath}`);
                     } else {
                         details.push(`ℹ️  Attachment folder: ${result.attachmentFolder.newPath} (unchanged)`);
                     }
