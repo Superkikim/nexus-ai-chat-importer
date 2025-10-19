@@ -36,6 +36,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     .setPlaceholder("Nexus/Conversations")
                     .setValue(this.plugin.settings.conversationFolder);
 
+                text.inputEl.addClass("nexus-folder-path-input");
+
                 // Detect change when user leaves the field (not on every keystroke)
                 text.inputEl.addEventListener('blur', async () => {
                     const newValue = text.getValue();
@@ -52,6 +54,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     .setPlaceholder("Nexus/Reports")
                     .setValue(this.plugin.settings.reportFolder);
 
+                text.inputEl.addClass("nexus-folder-path-input");
+
                 // Detect change when user leaves the field (not on every keystroke)
                 text.inputEl.addEventListener('blur', async () => {
                     const newValue = text.getValue();
@@ -67,6 +71,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
                 text
                     .setPlaceholder("Nexus/Attachments")
                     .setValue(this.plugin.settings.attachmentFolder);
+
+                text.inputEl.addClass("nexus-folder-path-input");
 
                 // Detect change when user leaves the field (not on every keystroke)
                 text.inputEl.addEventListener('blur', async () => {

@@ -6604,7 +6604,8 @@ var init_upgrade_notice_dialog = __esm({
             }
 
             .nexus-upgrade-folder-input {
-                width: 100%;
+                width: 100% !important;
+                min-width: 400px !important;
             }
 
             .nexus-upgrade-info {
@@ -7014,6 +7015,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
   render(containerEl) {
     new import_obsidian5.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
       text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder);
+      text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
         await this.handleFolderChange("conversationFolder", newValue, "conversations", text);
@@ -7021,6 +7023,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     });
     new import_obsidian5.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText((text) => {
       text.setPlaceholder("Nexus/Reports").setValue(this.plugin.settings.reportFolder);
+      text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
         await this.handleFolderChange("reportFolder", newValue, "reports", text);
@@ -7028,6 +7031,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     });
     new import_obsidian5.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
       text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder);
+      text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
         await this.handleFolderChange("attachmentFolder", newValue, "attachments", text);
