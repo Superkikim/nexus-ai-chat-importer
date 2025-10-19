@@ -5482,19 +5482,249 @@ Your conversations will be reorganized with provider structure and modern callou
   }
 });
 
+// src/dialogs/configure-folder-locations-dialog.ts
+var import_obsidian21, ConfigureFolderLocationsDialog;
+var init_configure_folder_locations_dialog = __esm({
+  "src/dialogs/configure-folder-locations-dialog.ts"() {
+    "use strict";
+    import_obsidian21 = require("obsidian");
+    init_folder_migration_dialog();
+    init_enhanced_folder_migration_dialog();
+    ConfigureFolderLocationsDialog = class extends import_obsidian21.Modal {
+      constructor(plugin, onComplete) {
+        super(plugin.app);
+        this.plugin = plugin;
+        this.conversationFolderInput = null;
+        this.reportFolderInput = null;
+        this.attachmentFolderInput = null;
+        this.onComplete = onComplete;
+        this.originalConversationFolder = plugin.settings.conversationFolder || "Nexus/Conversations";
+        this.originalReportFolder = plugin.settings.reportFolder || "Nexus/Conversations/Reports";
+        this.originalAttachmentFolder = plugin.settings.attachmentFolder || "Nexus/Attachments";
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.createEl("h2", {
+          text: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+          cls: "nexus-upgrade-title"
+        });
+        const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
+        messageContainer.createEl("h3", { text: "\u2728 New: Configurable Folder Locations" });
+        messageContainer.createEl("p", {
+          text: "You can now configure separate folder locations for conversations, reports, and attachments."
+        });
+        const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
+        new import_obsidian21.Setting(folderSection).setName("\u{1F4C1} Conversation Folder").setDesc("Where imported conversations are stored").addText((text) => {
+          this.conversationFolderInput = text.inputEl;
+          text.setPlaceholder("Nexus/Conversations").setValue(this.originalConversationFolder).inputEl.addClass("nexus-upgrade-folder-input");
+        });
+        new import_obsidian21.Setting(folderSection).setName("\u{1F4CA} Report Folder").setDesc("Where import reports are stored").addText((text) => {
+          this.reportFolderInput = text.inputEl;
+          text.setPlaceholder("Nexus/Reports").setValue(this.originalReportFolder).inputEl.addClass("nexus-upgrade-folder-input");
+        });
+        new import_obsidian21.Setting(folderSection).setName("\u{1F4CE} Attachment Folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
+          this.attachmentFolderInput = text.inputEl;
+          text.setPlaceholder("Nexus/Attachments").setValue(this.originalAttachmentFolder).inputEl.addClass("nexus-upgrade-folder-input");
+        });
+        messageContainer.createEl("p", {
+          text: "All folder locations can be changed at any time in the plugin settings.",
+          cls: "nexus-upgrade-hint"
+        });
+        const infoBox = contentEl.createDiv({ cls: "nexus-upgrade-info" });
+        infoBox.createEl("strong", { text: "\u2139\uFE0F Folder Migration:" });
+        const infoText = infoBox.createDiv();
+        infoText.createEl("p", {
+          text: "When you change a folder path, you will be asked if you want to move existing files automatically."
+        });
+        infoText.createEl("p", {
+          text: "If you choose to keep files in the old location, they will not be impacted by future updates."
+        });
+        const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
+        const saveButton = buttonContainer.createEl("button", {
+          text: "Save & Continue",
+          cls: "mod-cta"
+        });
+        saveButton.addEventListener("click", async () => {
+          await this.handleSave();
+        });
+        this.addStyles();
+      }
+      async handleSave() {
+        if (!this.conversationFolderInput || !this.reportFolderInput || !this.attachmentFolderInput) {
+          this.close();
+          this.onComplete({
+            conversationFolder: { changed: false, oldPath: this.originalConversationFolder, newPath: this.originalConversationFolder },
+            reportFolder: { changed: false, oldPath: this.originalReportFolder, newPath: this.originalReportFolder },
+            attachmentFolder: { changed: false, oldPath: this.originalAttachmentFolder, newPath: this.originalAttachmentFolder }
+          });
+          return;
+        }
+        const newConversationFolder = this.conversationFolderInput.value.trim();
+        const newReportFolder = this.reportFolderInput.value.trim();
+        const newAttachmentFolder = this.attachmentFolderInput.value.trim();
+        const result = {
+          conversationFolder: {
+            changed: newConversationFolder !== this.originalConversationFolder,
+            oldPath: this.originalConversationFolder,
+            newPath: newConversationFolder
+          },
+          reportFolder: {
+            changed: newReportFolder !== this.originalReportFolder,
+            oldPath: this.originalReportFolder,
+            newPath: newReportFolder
+          },
+          attachmentFolder: {
+            changed: newAttachmentFolder !== this.originalAttachmentFolder,
+            oldPath: this.originalAttachmentFolder,
+            newPath: newAttachmentFolder
+          }
+        };
+        this.close();
+        await this.handleFolderChange("conversationFolder", result.conversationFolder);
+        await this.handleFolderChange("reportFolder", result.reportFolder);
+        await this.handleFolderChange("attachmentFolder", result.attachmentFolder);
+        this.onComplete(result);
+      }
+      async handleFolderChange(folderType, folderInfo) {
+        if (!folderInfo.changed) {
+          return;
+        }
+        const oldPath = folderInfo.oldPath;
+        const newPath = folderInfo.newPath;
+        this.plugin.settings[folderType] = newPath;
+        await this.plugin.saveSettings();
+        const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
+        if (!oldFolder || !(oldFolder instanceof import_obsidian21.TFolder) || oldFolder.children.length === 0) {
+          return;
+        }
+        const useEnhancedDialog = folderType === "conversationFolder" || folderType === "attachmentFolder";
+        const folderTypeLabel = folderType === "conversationFolder" ? "Conversations" : folderType === "reportFolder" ? "Reports" : "Attachments";
+        await new Promise((resolve) => {
+          const handleMigrationAction = async (action) => {
+            if (action === "move") {
+              try {
+                await this.plugin.app.vault.rename(oldFolder, newPath);
+                folderInfo.filesMoved = oldFolder.children.length;
+              } catch (error) {
+                this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
+              }
+            } else if (action === "cancel") {
+              this.plugin.settings[folderType] = oldPath;
+              await this.plugin.saveSettings();
+            }
+            resolve();
+          };
+          if (useEnhancedDialog) {
+            const dialog = new EnhancedFolderMigrationDialog(
+              this.plugin,
+              oldPath,
+              newPath,
+              folderTypeLabel,
+              handleMigrationAction
+            );
+            dialog.open();
+          } else {
+            const dialog = new FolderMigrationDialog(
+              this.plugin,
+              oldPath,
+              newPath,
+              folderTypeLabel,
+              handleMigrationAction
+            );
+            dialog.open();
+          }
+        });
+      }
+      addStyles() {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = `
+            .nexus-upgrade-title {
+                margin-bottom: 1em;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-upgrade-message h3 {
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-hint {
+                font-size: 0.9em;
+                color: var(--text-muted);
+                margin-top: 0.5em;
+            }
+
+            .nexus-upgrade-folder-section {
+                background-color: var(--background-secondary);
+                padding: 1em;
+                margin: 1em 0;
+                border-radius: 4px;
+            }
+
+            .nexus-upgrade-folder-input {
+                width: 100%;
+            }
+
+            .nexus-upgrade-info {
+                background-color: var(--background-secondary);
+                border-left: 4px solid var(--interactive-accent);
+                padding: 1em;
+                margin-bottom: 1.5em;
+                border-radius: 4px;
+            }
+
+            .nexus-upgrade-info strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--interactive-accent);
+            }
+
+            .nexus-upgrade-info p {
+                margin: 0.3em 0;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-button-container {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+
+            .nexus-upgrade-button-container button {
+                padding: 8px 16px;
+            }
+        `;
+        document.head.appendChild(styleEl);
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+  }
+});
+
 // src/upgrade/versions/upgrade-1.3.0.ts
 var upgrade_1_3_0_exports = {};
 __export(upgrade_1_3_0_exports, {
   Upgrade130: () => Upgrade130
 });
-var import_obsidian21, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, Upgrade130;
+var import_obsidian22, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
 var init_upgrade_1_3_0 = __esm({
   "src/upgrade/versions/upgrade-1.3.0.ts"() {
     "use strict";
     init_upgrade_interface();
     init_utils();
     init_date_parser();
-    import_obsidian21 = require("obsidian");
+    import_obsidian22 = require("obsidian");
+    init_configure_folder_locations_dialog();
     ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -6113,7 +6343,7 @@ ${frontmatter}
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!folder || !(folder instanceof import_obsidian21.TFolder)) {
+          if (!folder || !(folder instanceof import_obsidian22.TFolder)) {
             console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No Claude artifacts folder found`);
             return false;
           }
@@ -6443,6 +6673,55 @@ ${body}`;
         }
       }
     };
+    ConfigureFolderLocationsOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "configure-folder-locations";
+        this.name = "Configure Folder Locations";
+        this.description = "Configure separate folder locations for conversations, reports, and attachments. Optionally migrate existing files to new locations.";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        return true;
+      }
+      async execute(context) {
+        console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations.execute starting`);
+        return new Promise((resolve) => {
+          const dialog = new ConfigureFolderLocationsDialog(
+            context.plugin,
+            async (result) => {
+              console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations - User completed configuration:`, result);
+              const details = [];
+              if (result.conversationFolder.changed) {
+                const msg = result.conversationFolder.filesMoved !== void 0 ? `\u2705 Conversation folder: ${result.conversationFolder.oldPath} \u2192 ${result.conversationFolder.newPath} (${result.conversationFolder.filesMoved} files moved)` : `\u2705 Conversation folder: ${result.conversationFolder.oldPath} \u2192 ${result.conversationFolder.newPath} (files kept in old location)`;
+                details.push(msg);
+              } else {
+                details.push(`\u2139\uFE0F  Conversation folder: ${result.conversationFolder.newPath} (unchanged)`);
+              }
+              if (result.reportFolder.changed) {
+                const msg = result.reportFolder.filesMoved !== void 0 ? `\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath} (${result.reportFolder.filesMoved} files moved)` : `\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath} (files kept in old location)`;
+                details.push(msg);
+              } else {
+                details.push(`\u2139\uFE0F  Report folder: ${result.reportFolder.newPath} (unchanged)`);
+              }
+              if (result.attachmentFolder.changed) {
+                const msg = result.attachmentFolder.filesMoved !== void 0 ? `\u2705 Attachment folder: ${result.attachmentFolder.oldPath} \u2192 ${result.attachmentFolder.newPath} (${result.attachmentFolder.filesMoved} files moved)` : `\u2705 Attachment folder: ${result.attachmentFolder.oldPath} \u2192 ${result.attachmentFolder.newPath} (files kept in old location)`;
+                details.push(msg);
+              } else {
+                details.push(`\u2139\uFE0F  Attachment folder: ${result.attachmentFolder.newPath} (unchanged)`);
+              }
+              console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations.execute completed successfully`);
+              resolve({
+                success: true,
+                message: "Folder locations configured successfully",
+                details
+              });
+            }
+          );
+          dialog.open();
+        });
+      }
+    };
     Upgrade130 = class extends VersionUpgrade {
       constructor() {
         super(...arguments);
@@ -6451,209 +6730,12 @@ ${body}`;
           new MigrateToSeparateFoldersOperation(),
           new ConvertToISO8601TimestampsOperation(),
           new FixFrontmatterAliasesOperation(),
-          new MigrateClaudeArtifactsOperation()
+          new MigrateClaudeArtifactsOperation(),
+          new ConfigureFolderLocationsOperation()
         ];
         this.manualOperations = [
           // No manual operations for this version
         ];
-      }
-    };
-  }
-});
-
-// src/dialogs/upgrade-notice-dialog.ts
-var upgrade_notice_dialog_exports = {};
-__export(upgrade_notice_dialog_exports, {
-  UpgradeNoticeDialog: () => UpgradeNoticeDialog
-});
-var import_obsidian22, UpgradeNoticeDialog;
-var init_upgrade_notice_dialog = __esm({
-  "src/dialogs/upgrade-notice-dialog.ts"() {
-    "use strict";
-    import_obsidian22 = require("obsidian");
-    init_folder_migration_dialog();
-    UpgradeNoticeDialog = class extends import_obsidian22.Modal {
-      constructor(plugin) {
-        super(plugin.app);
-        this.plugin = plugin;
-        this.reportFolderInput = null;
-        this.originalReportFolder = plugin.settings.reportFolder || "Nexus/Conversations/Reports";
-      }
-      onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-        contentEl.createEl("h2", {
-          text: "\u{1F389} Nexus AI Chat Importer v1.3.0",
-          cls: "nexus-upgrade-title"
-        });
-        const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
-        messageContainer.createEl("h3", { text: "\u2728 New: Report Folder Setting" });
-        messageContainer.createEl("p", {
-          text: "You can now configure the report folder location separately from conversations and attachments."
-        });
-        const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
-        new import_obsidian22.Setting(folderSection).setName("\u{1F4C1} Report Folder Location").setDesc("You can change this path now if you want to move your reports to a different location.").addText((text) => {
-          this.reportFolderInput = text.inputEl;
-          text.setPlaceholder("Nexus/Reports").setValue(this.originalReportFolder).inputEl.addClass("nexus-upgrade-folder-input");
-        });
-        messageContainer.createEl("p", {
-          text: "All folder locations can be changed at any time in the plugin settings.",
-          cls: "nexus-upgrade-hint"
-        });
-        const infoBox = contentEl.createDiv({ cls: "nexus-upgrade-info" });
-        infoBox.createEl("strong", { text: "\u2139\uFE0F Folder Migration:" });
-        const infoText = infoBox.createDiv();
-        infoText.createEl("p", {
-          text: "When you change a folder path, you will be asked if you want to move existing files automatically."
-        });
-        infoText.createEl("p", {
-          text: "If you choose to ignore, existing files will not be impacted by future updates."
-        });
-        const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
-        const cancelButton = buttonContainer.createEl("button", {
-          text: "Skip",
-          cls: "nexus-upgrade-button-secondary"
-        });
-        cancelButton.addEventListener("click", () => {
-          this.close();
-        });
-        const saveButton = buttonContainer.createEl("button", {
-          text: "Save & Continue",
-          cls: "mod-cta"
-        });
-        saveButton.addEventListener("click", async () => {
-          await this.handleSave();
-        });
-        this.addStyles();
-      }
-      async handleSave() {
-        if (!this.reportFolderInput) {
-          this.close();
-          return;
-        }
-        const newReportFolder = this.reportFolderInput.value.trim();
-        if (newReportFolder === this.originalReportFolder) {
-          this.close();
-          return;
-        }
-        if (!newReportFolder) {
-          this.close();
-          return;
-        }
-        const oldReportFolder = this.plugin.settings.reportFolder;
-        this.plugin.settings.reportFolder = newReportFolder;
-        await this.plugin.saveSettings();
-        this.close();
-        if (oldReportFolder && oldReportFolder !== newReportFolder) {
-          const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldReportFolder);
-          if (oldFolder && oldFolder instanceof import_obsidian22.TFolder && oldFolder.children.length > 0) {
-            const dialog = new FolderMigrationDialog(
-              this.plugin,
-              oldReportFolder,
-              newReportFolder,
-              "Reports",
-              async (action) => {
-                if (action === "move") {
-                  await this.plugin.app.vault.rename(oldFolder, newReportFolder);
-                }
-              }
-            );
-            dialog.open();
-          }
-        }
-      }
-      addStyles() {
-        const styleEl = document.createElement("style");
-        styleEl.textContent = `
-            .nexus-upgrade-title {
-                margin-bottom: 1em;
-                color: var(--text-normal);
-            }
-
-            .nexus-upgrade-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-upgrade-message h3 {
-                margin-top: 0.5em;
-                margin-bottom: 0.5em;
-                color: var(--text-normal);
-            }
-
-            .nexus-upgrade-message ul {
-                margin-left: 2em;
-                margin-bottom: 1em;
-            }
-
-            .nexus-upgrade-message li {
-                margin-bottom: 0.3em;
-            }
-
-            .nexus-upgrade-hint {
-                font-size: 0.9em;
-                color: var(--text-muted);
-                margin-top: 0.5em;
-            }
-
-            .nexus-upgrade-folder-section {
-                background-color: var(--background-secondary);
-                padding: 1em;
-                margin: 1em 0;
-                border-radius: 4px;
-            }
-
-            .nexus-upgrade-folder-input {
-                width: 100% !important;
-                min-width: 400px !important;
-            }
-
-            .nexus-upgrade-info {
-                background-color: var(--background-secondary);
-                border-left: 4px solid var(--interactive-accent);
-                padding: 1em;
-                margin-bottom: 1.5em;
-                border-radius: 4px;
-            }
-
-            .nexus-upgrade-info strong {
-                display: block;
-                margin-bottom: 0.5em;
-                color: var(--text-normal);
-            }
-
-            .nexus-upgrade-info p {
-                margin: 0;
-                color: var(--text-muted);
-            }
-
-            .nexus-upgrade-button-container {
-                display: flex;
-                justify-content: flex-end;
-                gap: 0.5em;
-            }
-
-            .nexus-upgrade-button-container button {
-                padding: 8px 24px;
-            }
-
-            .nexus-upgrade-button-secondary {
-                background-color: var(--background-modifier-border);
-                color: var(--text-normal);
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
-            .nexus-upgrade-button-secondary:hover {
-                background-color: var(--background-modifier-border-hover);
-            }
-        `;
-        document.head.appendChild(styleEl);
-      }
-      onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
       }
     };
   }
@@ -11766,14 +11848,6 @@ var IncrementalUpgradeManager = class {
         console.error("[NEXUS-DEBUG] Error stack:", e instanceof Error ? e.stack : "No stack trace");
       }
       console.debug(`[NEXUS-DEBUG] ========================================`);
-      if (currentVersion === "1.3.0" && !this.plugin.settings.hasShownUpgradeNotice) {
-        console.debug(`[NEXUS-DEBUG] Showing v1.3.0 upgrade notice`);
-        const { UpgradeNoticeDialog: UpgradeNoticeDialog2 } = await Promise.resolve().then(() => (init_upgrade_notice_dialog(), upgrade_notice_dialog_exports));
-        const dialog = new UpgradeNoticeDialog2(this.plugin);
-        dialog.open();
-        this.plugin.settings.hasShownUpgradeNotice = true;
-        await this.plugin.saveSettings();
-      }
       return result;
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);

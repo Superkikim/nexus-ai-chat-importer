@@ -168,15 +168,8 @@ export class IncrementalUpgradeManager {
             }
             console.debug(`[NEXUS-DEBUG] ========================================`);
 
-            // Show upgrade notice for v1.3.0 (new folder settings)
-            if (currentVersion === "1.3.0" && !this.plugin.settings.hasShownUpgradeNotice) {
-                console.debug(`[NEXUS-DEBUG] Showing v1.3.0 upgrade notice`);
-                const { UpgradeNoticeDialog } = await import("../dialogs/upgrade-notice-dialog");
-                const dialog = new UpgradeNoticeDialog(this.plugin);
-                dialog.open();
-                this.plugin.settings.hasShownUpgradeNotice = true;
-                await this.plugin.saveSettings();
-            }
+            // Note: Folder configuration is now handled by ConfigureFolderLocationsOperation (task 5)
+            // No need for separate UpgradeNoticeDialog anymore
 
             return result;
 

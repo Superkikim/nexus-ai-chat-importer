@@ -23,6 +23,7 @@ import type NexusAiChatImporterPlugin from "../../main";
 import { generateSafeAlias } from "../../utils";
 import { DateParser } from "../../utils/date-parser";
 import { TFolder } from "obsidian";
+import { ConfigureFolderLocationsDialog, FolderConfigurationResult } from "../../dialogs/configure-folder-locations-dialog";
 
 /**
  * Convert timestamps to ISO 8601 format in all existing frontmatter
@@ -1302,6 +1303,74 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
 }
 
 /**
+ * Configure folder locations and optionally migrate files
+ * This is a BLOCKING operation that shows a dialog and waits for user input
+ */
+class ConfigureFolderLocationsOperation extends UpgradeOperation {
+    readonly id = "configure-folder-locations";
+    readonly name = "Configure Folder Locations";
+    readonly description = "Configure separate folder locations for conversations, reports, and attachments. Optionally migrate existing files to new locations.";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        // Always run - this is the final step to let user configure folders
+        return true;
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations.execute starting`);
+
+        return new Promise<OperationResult>((resolve) => {
+            const dialog = new ConfigureFolderLocationsDialog(
+                context.plugin,
+                async (result: FolderConfigurationResult) => {
+                    console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations - User completed configuration:`, result);
+
+                    // Build result message
+                    const details: string[] = [];
+
+                    if (result.conversationFolder.changed) {
+                        const msg = result.conversationFolder.filesMoved !== undefined
+                            ? `✅ Conversation folder: ${result.conversationFolder.oldPath} → ${result.conversationFolder.newPath} (${result.conversationFolder.filesMoved} files moved)`
+                            : `✅ Conversation folder: ${result.conversationFolder.oldPath} → ${result.conversationFolder.newPath} (files kept in old location)`;
+                        details.push(msg);
+                    } else {
+                        details.push(`ℹ️  Conversation folder: ${result.conversationFolder.newPath} (unchanged)`);
+                    }
+
+                    if (result.reportFolder.changed) {
+                        const msg = result.reportFolder.filesMoved !== undefined
+                            ? `✅ Report folder: ${result.reportFolder.oldPath} → ${result.reportFolder.newPath} (${result.reportFolder.filesMoved} files moved)`
+                            : `✅ Report folder: ${result.reportFolder.oldPath} → ${result.reportFolder.newPath} (files kept in old location)`;
+                        details.push(msg);
+                    } else {
+                        details.push(`ℹ️  Report folder: ${result.reportFolder.newPath} (unchanged)`);
+                    }
+
+                    if (result.attachmentFolder.changed) {
+                        const msg = result.attachmentFolder.filesMoved !== undefined
+                            ? `✅ Attachment folder: ${result.attachmentFolder.oldPath} → ${result.attachmentFolder.newPath} (${result.attachmentFolder.filesMoved} files moved)`
+                            : `✅ Attachment folder: ${result.attachmentFolder.oldPath} → ${result.attachmentFolder.newPath} (files kept in old location)`;
+                        details.push(msg);
+                    } else {
+                        details.push(`ℹ️  Attachment folder: ${result.attachmentFolder.newPath} (unchanged)`);
+                    }
+
+                    console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations.execute completed successfully`);
+
+                    resolve({
+                        success: true,
+                        message: "Folder locations configured successfully",
+                        details
+                    });
+                }
+            );
+            dialog.open();
+        });
+    }
+}
+
+/**
  * Version 1.3.0 Upgrade Definition
  */
 export class Upgrade130 extends VersionUpgrade {
@@ -1311,7 +1380,8 @@ export class Upgrade130 extends VersionUpgrade {
         new MigrateToSeparateFoldersOperation(),
         new ConvertToISO8601TimestampsOperation(),
         new FixFrontmatterAliasesOperation(),
-        new MigrateClaudeArtifactsOperation()
+        new MigrateClaudeArtifactsOperation(),
+        new ConfigureFolderLocationsOperation()
     ];
 
     readonly manualOperations = [
