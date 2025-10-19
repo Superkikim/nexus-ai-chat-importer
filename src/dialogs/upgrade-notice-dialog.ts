@@ -18,8 +18,9 @@
 
 
 // src/dialogs/upgrade-notice-dialog.ts
-import { Modal, Setting } from "obsidian";
+import { Modal, Setting, TFolder } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
+import { FolderMigrationDialog } from "./folder-migration-dialog";
 
 /**
  * Dialog to inform users about new folder settings in v1.3.0
@@ -136,12 +137,25 @@ export class UpgradeNoticeDialog extends Modal {
 
         // Ask if user wants to move existing files
         if (oldReportFolder && oldReportFolder !== newReportFolder) {
-            const migrationService = new FolderMigrationService(this.plugin);
-            await migrationService.handleFolderChange(
-                oldReportFolder,
-                newReportFolder,
-                "Reports"
-            );
+            const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldReportFolder);
+
+            // Only show dialog if old folder exists and has content
+            if (oldFolder && oldFolder instanceof TFolder && oldFolder.children.length > 0) {
+                const dialog = new FolderMigrationDialog(
+                    this.plugin,
+                    oldReportFolder,
+                    newReportFolder,
+                    "Reports",
+                    async (action: 'move' | 'keep' | 'cancel') => {
+                        if (action === 'move') {
+                            // Move the folder
+                            await this.plugin.app.vault.rename(oldFolder, newReportFolder);
+                        }
+                        // For 'keep' or 'cancel', settings are already updated
+                    }
+                );
+                dialog.open();
+            }
         }
     }
 
