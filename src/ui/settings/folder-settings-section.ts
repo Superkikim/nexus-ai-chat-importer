@@ -21,6 +21,8 @@
 import { Setting, TFolder, TextComponent } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
+import { FolderSuggest } from "../folder-suggest";
+import { FolderBrowserModal } from "../../dialogs/folder-browser-modal";
 
 export class FolderSettingsSection extends BaseSettingsSection {
     readonly title = "📁 Folder Structure";
@@ -50,6 +52,9 @@ export class FolderSettingsSection extends BaseSettingsSection {
             .setName("Report folder")
             .setDesc("Where import reports are stored")
             .addText((text) => {
+                // Add folder autocomplete
+                new FolderSuggest(this.plugin.app, text.inputEl);
+
                 text
                     .setPlaceholder("Nexus Reports")
                     .setValue(this.plugin.settings.reportFolder);
@@ -61,6 +66,32 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     const newValue = text.getValue();
                     await this.handleFolderChange('reportFolder', newValue, 'reports', text);
                 });
+            })
+            .addButton((button) => {
+                button
+                    .setButtonText("Browse")
+                    .setTooltip("Browse folders or create a new one")
+                    .onClick(() => {
+                        const textComponent = containerEl.querySelector('.nexus-folder-path-input') as HTMLInputElement;
+                        const modal = new FolderBrowserModal(
+                            this.plugin.app,
+                            (folder) => {
+                                // User selected an existing folder
+                                if (textComponent) {
+                                    textComponent.value = folder.path;
+                                    textComponent.dispatchEvent(new Event('blur'));
+                                }
+                            },
+                            (path) => {
+                                // User created a new folder
+                                if (textComponent) {
+                                    textComponent.value = path;
+                                    textComponent.dispatchEvent(new Event('blur'));
+                                }
+                            }
+                        );
+                        modal.open();
+                    });
             });
 
         // Attachment Folder

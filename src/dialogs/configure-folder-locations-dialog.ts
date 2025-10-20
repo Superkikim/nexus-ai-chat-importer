@@ -22,6 +22,8 @@ import { Modal, Setting, TFolder } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { FolderMigrationDialog } from "./folder-migration-dialog";
 import { EnhancedFolderMigrationDialog } from "./enhanced-folder-migration-dialog";
+import { FolderSuggest } from "../ui/folder-suggest";
+import { FolderBrowserModal } from "./folder-browser-modal";
 
 export interface FolderConfigurationResult {
     conversationFolder: {
@@ -112,10 +114,37 @@ export class ConfigureFolderLocationsDialog extends Modal {
             .setDesc("Where import reports are stored")
             .addText(text => {
                 this.reportFolderInput = text.inputEl;
+
+                // Add folder autocomplete
+                new FolderSuggest(this.plugin.app, text.inputEl);
+
                 text
                     .setPlaceholder("Nexus Reports")
                     .setValue(this.originalReportFolder)
                     .inputEl.addClass("nexus-upgrade-folder-input");
+            })
+            .addButton(button => {
+                button
+                    .setButtonText("Browse")
+                    .setTooltip("Browse folders or create a new one")
+                    .onClick(() => {
+                        const modal = new FolderBrowserModal(
+                            this.plugin.app,
+                            (folder) => {
+                                // User selected an existing folder
+                                if (this.reportFolderInput) {
+                                    this.reportFolderInput.value = folder.path;
+                                }
+                            },
+                            (path) => {
+                                // User created a new folder
+                                if (this.reportFolderInput) {
+                                    this.reportFolderInput.value = path;
+                                }
+                            }
+                        );
+                        modal.open();
+                    });
             });
 
         // Attachment Folder
