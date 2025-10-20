@@ -1202,7 +1202,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
             const linkPattern = new RegExp(`\\[\\[${escapedPath}\\|View Artifact\\]\\]`, 'm');
             const linkMatch = content.match(linkPattern);
 
-            if (!linkMatch) {
+            if (!linkMatch || linkMatch.index === undefined) {
                 console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
                 // Fallback to conversation create_time
                 const fm = plugin.app.metadataCache.getFileCache(conversationFile)?.frontmatter as any;
@@ -1213,14 +1213,15 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                 return {value: '', source: 'none'};
             }
 
-            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found artifact link at position ${linkMatch.index}`);
+            const linkIndex = linkMatch.index;
+            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found artifact link at position ${linkIndex}`);
 
             // Get all text BEFORE the artifact link
-            const textBeforeLink = content.substring(0, linkMatch.index);
+            const textBeforeLink = content.substring(0, linkIndex);
 
             // DEBUG: Show context around the artifact link (last 300 chars before link)
-            const contextStart = Math.max(0, linkMatch.index - 300);
-            const contextText = content.substring(contextStart, linkMatch.index);
+            const contextStart = Math.max(0, linkIndex - 300);
+            const contextText = content.substring(contextStart, linkIndex);
             console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Context before link (last 300 chars):\n${contextText}\n[ARTIFACT LINK HERE]`);
 
             // Find the LAST nexus_agent callout before the link (the parent message)
@@ -1362,7 +1363,7 @@ class ConfigureFolderLocationsOperation extends UpgradeOperation {
     readonly description = "Configure separate folder locations for conversations, reports, and attachments. Optionally migrate existing files to new locations.";
     readonly type = "automatic" as const;
 
-    async canRun(context: UpgradeContext): Promise<boolean> {
+    async canRun(_context: UpgradeContext): Promise<boolean> {
         // Always run - this is the final step to let user configure folders
         return true;
     }
