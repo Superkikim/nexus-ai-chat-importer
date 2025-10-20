@@ -62,6 +62,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     .setValue(this.plugin.settings.reportFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
+                text.inputEl.addClass("nexus-report-folder-input"); // Unique class for this input
 
                 // Detect change when user leaves the field (not on every keystroke)
                 text.inputEl.addEventListener('blur', async () => {
@@ -74,7 +75,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     .setButtonText("Browse")
                     .setTooltip("Browse folders or create a new one")
                     .onClick(() => {
-                        const textComponent = containerEl.querySelector('.nexus-folder-path-input') as HTMLInputElement;
+                        const textComponent = containerEl.querySelector('.nexus-report-folder-input') as HTMLInputElement;
                         const modal = new FolderBrowserModal(
                             this.plugin.app,
                             (path) => {

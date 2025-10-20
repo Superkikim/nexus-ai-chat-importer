@@ -9536,13 +9536,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       new FolderSuggest(this.plugin.app, text.inputEl);
       text.setPlaceholder("Nexus Reports").setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
+      text.inputEl.addClass("nexus-report-folder-input");
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
         await this.handleFolderChange("reportFolder", newValue, "reports", text);
       });
     }).addButton((button) => {
       button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
-        const textComponent = containerEl.querySelector(".nexus-folder-path-input");
+        const textComponent = containerEl.querySelector(".nexus-report-folder-input");
         const modal = new FolderBrowserModal(
           this.plugin.app,
           (path) => {
