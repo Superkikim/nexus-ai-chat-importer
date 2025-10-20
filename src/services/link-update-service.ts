@@ -140,27 +140,31 @@ export class LinkUpdateService {
         };
 
         try {
-            // Get all report files
+            // Get all report files and Claude artifact files
             const reportFiles = await this.getReportFiles();
+            const artifactFiles = await this.getClaudeArtifactFiles();
+            const totalFiles = reportFiles.length + artifactFiles.length;
             stats.reportsScanned = reportFiles.length;
 
             progressCallback?.({
                 phase: 'scanning',
                 current: 0,
-                total: reportFiles.length,
-                detail: `Found ${reportFiles.length} reports to scan`
+                total: totalFiles,
+                detail: `Found ${reportFiles.length} reports and ${artifactFiles.length} artifacts to scan`
             });
 
             // Process reports in batches
             const batchSize = 5; // Smaller batches for reports since they're typically fewer
+            let processedCount = 0;
+
             for (let i = 0; i < reportFiles.length; i += batchSize) {
                 const batch = reportFiles.slice(i, i + batchSize);
 
                 progressCallback?.({
                     phase: 'updating-conversations',
-                    current: i,
-                    total: reportFiles.length,
-                    detail: `Updating conversation links: ${i}/${reportFiles.length} reports processed`
+                    current: processedCount,
+                    total: totalFiles,
+                    detail: `Updating conversation links in reports: ${i}/${reportFiles.length} processed`
                 });
 
                 for (const file of batch) {
@@ -176,16 +180,52 @@ export class LinkUpdateService {
                     }
                 }
 
+                processedCount += batch.length;
+
                 // Small delay between batches
                 if (i + batchSize < reportFiles.length) {
                     await new Promise(resolve => setTimeout(resolve, 10));
                 }
             }
 
+            // Process Claude artifacts in batches
+            for (let i = 0; i < artifactFiles.length; i += batchSize) {
+                const batch = artifactFiles.slice(i, i + batchSize);
+
+                progressCallback?.({
+                    phase: 'updating-conversations',
+                    current: processedCount,
+                    total: totalFiles,
+                    detail: `Updating conversation links in artifacts: ${i}/${artifactFiles.length} processed`
+                });
+
+                for (const file of batch) {
+                    try {
+                        const result = await this.updateConversationLinkInArtifactFrontmatter(file, oldConversationPath, newConversationPath);
+                        if (result.linksUpdated > 0) {
+                            stats.conversationLinksUpdated += result.linksUpdated;
+                        }
+                        if (result.fileModified) {
+                            stats.filesModified++;
+                        }
+                    } catch (error) {
+                        stats.errors++;
+                        this.plugin.logger.error(`Error updating conversation link in artifact ${file.path}:`, error);
+                    }
+                }
+
+                processedCount += batch.length;
+
+                // Small delay between batches
+                if (i + batchSize < artifactFiles.length) {
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+            }
+
             progressCallback?.({
                 phase: 'complete',
-                current: reportFiles.length,
-                total: reportFiles.length,
+                current: totalFiles,
+                total: totalFiles,
                 detail: `Updated ${stats.conversationLinksUpdated} conversation links in ${stats.filesModified} files`
             });
 
@@ -254,6 +294,17 @@ export class LinkUpdateService {
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
 
         return allFiles.filter(file => file.path.startsWith(reportFolder));
+    }
+
+    /**
+     * Get all Claude artifact files from the vault
+     */
+    private async getClaudeArtifactFiles(): Promise<TFile[]> {
+        const attachmentFolder = this.plugin.settings.attachmentFolder;
+        const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+        const allFiles = this.plugin.app.vault.getMarkdownFiles();
+
+        return allFiles.filter(file => file.path.startsWith(claudeArtifactsPath));
     }
 
     /**
@@ -334,6 +385,39 @@ export class LinkUpdateService {
         updatedContent = updatedContent.replace(simpleLinkPattern, (match, prefix, suffix) => {
             linksUpdated++;
             return `${prefix}${newConversationPath}${suffix}`;
+        });
+
+        const fileModified = content !== updatedContent;
+        if (fileModified) {
+            await this.plugin.app.vault.modify(file, updatedContent);
+        }
+
+        return { linksUpdated, fileModified };
+    }
+
+    /**
+     * Update conversation_link in Claude artifact frontmatter
+     */
+    private async updateConversationLinkInArtifactFrontmatter(
+        file: TFile,
+        oldConversationPath: string,
+        newConversationPath: string
+    ): Promise<{ linksUpdated: number; fileModified: boolean }> {
+        const content = await this.plugin.app.vault.read(file);
+        let linksUpdated = 0;
+
+        // Escape special regex characters in paths
+        const escapedOldPath = this.escapeRegExp(oldConversationPath);
+
+        // Pattern: conversation_link: "[[oldPath/...]]" or conversation_link: "[[oldPath/...|alias]]"
+        const frontmatterLinkPattern = new RegExp(
+            `(conversation_link:\\s*"\\[\\[)${escapedOldPath}(/[^\\]]+)(\\]\\]")`,
+            'g'
+        );
+
+        const updatedContent = content.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${newConversationPath}${pathSuffix}${suffix}`;
         });
 
         const fileModified = content !== updatedContent;
