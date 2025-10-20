@@ -31,7 +31,7 @@ export class UpgradeNoticeDialog extends Modal {
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
         super(plugin.app);
-        this.originalReportFolder = plugin.settings.reportFolder || "Nexus/Conversations/Reports";
+        this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
     }
 
     onOpen() {
@@ -62,7 +62,7 @@ export class UpgradeNoticeDialog extends Modal {
             .addText(text => {
                 this.reportFolderInput = text.inputEl;
                 text
-                    .setPlaceholder("Nexus/Reports")
+                    .setPlaceholder("Nexus Reports")
                     .setValue(this.originalReportFolder)
                     .inputEl.addClass("nexus-upgrade-folder-input");
             });

@@ -68,7 +68,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
         
         // Store original values
         this.originalConversationFolder = plugin.settings.conversationFolder || "Nexus/Conversations";
-        this.originalReportFolder = plugin.settings.reportFolder || "Nexus/Conversations/Reports";
+        this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
         this.originalAttachmentFolder = plugin.settings.attachmentFolder || "Nexus/Attachments";
     }
 
@@ -113,7 +113,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
             .addText(text => {
                 this.reportFolderInput = text.inputEl;
                 text
-                    .setPlaceholder("Nexus/Reports")
+                    .setPlaceholder("Nexus Reports")
                     .setValue(this.originalReportFolder)
                     .inputEl.addClass("nexus-upgrade-folder-input");
             });

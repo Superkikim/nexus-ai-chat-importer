@@ -709,14 +709,14 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
 /**
  * Migrate to new folder settings structure
  * - Rename archiveFolder → conversationFolder
- * - Create reportFolder setting
+ * - Move Reports folder from <conversations>/Reports to ../Nexus Reports
+ * - Create reportFolder and attachmentFolder settings
  * - Remove deprecated settings
- * - No file movement (user can do it manually via settings UI)
  */
 class MigrateToSeparateFoldersOperation extends UpgradeOperation {
     readonly id = "migrate-to-separate-folders";
     readonly name = "Update Folder Settings";
-    readonly description = "Updates plugin settings to use separate folders for Conversations, Reports, and Attachments. This improves organization and allows you to exclude attachments from sync. Your existing files are not moved.";
+    readonly description = "Updates plugin settings to use separate folders for Conversations, Reports, and Attachments. Moves Reports folder out of Conversations for better organization.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
@@ -731,10 +731,8 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
             results.push(`**What this does:**`);
             results.push(`This updates your plugin settings to use separate folders for better organization:`);
             results.push(`- **Conversations**: Your chat notes`);
-            results.push(`- **Reports**: Import and upgrade reports`);
+            results.push(`- **Reports**: Import and upgrade reports (moved to "Nexus Reports")`);
             results.push(`- **Attachments**: Files, images, and Claude artifacts`);
-            results.push(``);
-            results.push(`**Your files are NOT moved** - only settings are updated. You can move files later in Settings if needed.`);
             results.push(``);
 
             console.debug(`[MigrateToSeparateFolders] Starting migration...`);
@@ -753,11 +751,43 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
                 const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
                 console.debug(`[MigrateToSeparateFolders] Migrating from archiveFolder: ${oldArchiveFolder}`);
 
+                // Set conversation folder
                 context.plugin.settings.conversationFolder = oldArchiveFolder;
-                context.plugin.settings.reportFolder = `${oldArchiveFolder}/Reports`;
+
+                // Calculate new Reports path: move from <conversations>/Reports to ../Nexus Reports
+                const oldReportPath = `${oldArchiveFolder}/Reports`;
+                const parentPath = oldArchiveFolder.split('/').slice(0, -1).join('/');
+                const newReportPath = parentPath ? `${parentPath}/Nexus Reports` : 'Nexus Reports';
+
+                // Try to move Reports folder if it exists
+                const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
+                let reportsMoved = false;
+
+                if (oldReportFolder && oldReportFolder instanceof TFolder) {
+                    try {
+                        console.debug(`[MigrateToSeparateFolders] Moving Reports: ${oldReportPath} → ${newReportPath}`);
+                        await context.plugin.app.vault.rename(oldReportFolder, newReportPath);
+                        reportsMoved = true;
+                        console.debug(`[MigrateToSeparateFolders] Reports folder moved successfully`);
+                    } catch (error) {
+                        console.error(`[MigrateToSeparateFolders] Failed to move Reports folder:`, error);
+                        // Fallback: keep old path if move fails
+                        context.plugin.settings.reportFolder = oldReportPath;
+                        results.push(`- Reports: \`${oldReportPath}\` (move failed, kept in old location)`);
+                    }
+                }
+
+                // Set report folder to new path (or old if move failed)
+                if (reportsMoved || !oldReportFolder) {
+                    context.plugin.settings.reportFolder = newReportPath;
+                    if (reportsMoved) {
+                        results.push(`- Reports: \`${oldReportPath}\` → \`${newReportPath}\` ✅`);
+                    } else {
+                        results.push(`- Reports: \`${newReportPath}\` (folder will be created on next import)`);
+                    }
+                }
 
                 results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\``);
-                results.push(`- Reports: \`${context.plugin.settings.reportFolder}\``);
             } else {
                 console.debug(`[MigrateToSeparateFolders] New settings already exist, keeping them`);
                 results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\` (already configured)`);

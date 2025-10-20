@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     // 📁 FOLDER STRUCTURE
     // ========================================
     conversationFolder: "Nexus/Conversations",
-    reportFolder: "Nexus/Reports",
+    reportFolder: "Nexus Reports",
     attachmentFolder: "Nexus/Attachments",
 
     // ========================================

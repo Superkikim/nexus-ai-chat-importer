@@ -48,7 +48,7 @@ var init_constants = __esm({
       // 📁 FOLDER STRUCTURE
       // ========================================
       conversationFolder: "Nexus/Conversations",
-      reportFolder: "Nexus/Reports",
+      reportFolder: "Nexus Reports",
       attachmentFolder: "Nexus/Attachments",
       // ========================================
       // 🎨 DISPLAY OPTIONS
@@ -118,175 +118,6 @@ var init_constants = __esm({
         dateFormat: "YYYY/MM/DD",
         timeFormat: "HH:mm:ss",
         separator: " "
-      }
-    };
-  }
-});
-
-// src/dialogs/folder-migration-dialog.ts
-var import_obsidian2, FolderMigrationDialog;
-var init_folder_migration_dialog = __esm({
-  "src/dialogs/folder-migration-dialog.ts"() {
-    "use strict";
-    import_obsidian2 = require("obsidian");
-    FolderMigrationDialog = class extends import_obsidian2.Modal {
-      constructor(plugin, oldPath, newPath, folderType, onComplete) {
-        super(plugin.app);
-        this.oldPath = oldPath;
-        this.newPath = newPath;
-        this.folderType = folderType;
-        this.onComplete = onComplete;
-      }
-      onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-        contentEl.createEl("h2", {
-          text: "Move Existing Files?",
-          cls: "nexus-migration-title"
-        });
-        const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
-        messageContainer.createEl("p", {
-          text: `You are changing the ${this.folderType} folder location:`
-        });
-        const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
-        pathContainer.createEl("div", {
-          text: `From: ${this.oldPath}`,
-          cls: "nexus-migration-path-old"
-        });
-        pathContainer.createEl("div", {
-          text: `To: ${this.newPath}`,
-          cls: "nexus-migration-path-new"
-        });
-        messageContainer.createEl("p", {
-          text: "Do you want to move existing files to the new location?"
-        });
-        const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
-        warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
-        warningBox.createEl("p", {
-          text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
-        });
-        const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
-        const cancelButton = buttonContainer.createEl("button", {
-          text: "Cancel",
-          cls: "nexus-migration-button-cancel"
-        });
-        cancelButton.addEventListener("click", async () => {
-          this.close();
-          try {
-            await this.onComplete("cancel");
-            new import_obsidian2.Notice(`Change cancelled. Folder setting reverted.`);
-          } catch (error) {
-            new import_obsidian2.Notice(`Failed to revert setting: ${error.message}`);
-          }
-        });
-        const keepButton = buttonContainer.createEl("button", {
-          text: "No, keep files in old location",
-          cls: "nexus-migration-button-keep"
-        });
-        keepButton.addEventListener("click", async () => {
-          this.close();
-          try {
-            await this.onComplete("keep");
-            new import_obsidian2.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
-          } catch (error) {
-            new import_obsidian2.Notice(`Failed to update setting: ${error.message}`);
-          }
-        });
-        const moveButton = buttonContainer.createEl("button", {
-          text: "Yes, move files",
-          cls: "mod-cta nexus-migration-button-move"
-        });
-        moveButton.addEventListener("click", async () => {
-          this.close();
-          try {
-            await this.onComplete("move");
-            new import_obsidian2.Notice(`Files moved to ${this.newPath}`);
-          } catch (error) {
-            new import_obsidian2.Notice(`Failed to move files: ${error.message}`);
-          }
-        });
-        this.addStyles();
-      }
-      addStyles() {
-        const styleEl = document.createElement("style");
-        styleEl.textContent = `
-            .nexus-migration-title {
-                margin-bottom: 1em;
-                color: var(--text-normal);
-            }
-
-            .nexus-migration-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-migration-paths {
-                background-color: var(--background-secondary);
-                padding: 1em;
-                margin: 1em 0;
-                border-radius: 4px;
-                font-family: var(--font-monospace);
-                font-size: 0.9em;
-            }
-
-            .nexus-migration-path-old {
-                color: var(--text-muted);
-                margin-bottom: 0.5em;
-            }
-
-            .nexus-migration-path-new {
-                color: var(--interactive-accent);
-                font-weight: 500;
-            }
-
-            .nexus-migration-warning {
-                background-color: var(--background-modifier-error-hover);
-                border-left: 4px solid var(--text-error);
-                padding: 1em;
-                margin-bottom: 1.5em;
-                border-radius: 4px;
-            }
-
-            .nexus-migration-warning strong {
-                display: block;
-                margin-bottom: 0.5em;
-                color: var(--text-error);
-            }
-
-            .nexus-migration-warning p {
-                margin: 0;
-                color: var(--text-normal);
-            }
-
-            .nexus-migration-buttons {
-                display: flex;
-                justify-content: space-between;
-                gap: 10px;
-            }
-
-            .nexus-migration-buttons button {
-                padding: 8px 16px;
-                flex: 1;
-            }
-
-            .nexus-migration-button-cancel {
-                background-color: var(--background-modifier-border);
-                color: var(--text-muted);
-            }
-
-            .nexus-migration-button-keep {
-                background-color: var(--background-modifier-border);
-            }
-
-            .nexus-migration-button-move {
-                /* Uses mod-cta class for primary styling */
-            }
-        `;
-        document.head.appendChild(styleEl);
-      }
-      onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
       }
     };
   }
@@ -383,21 +214,24 @@ var init_link_update_service = __esm({
         };
         try {
           const reportFiles = await this.getReportFiles();
+          const artifactFiles = await this.getClaudeArtifactFiles();
+          const totalFiles = reportFiles.length + artifactFiles.length;
           stats.reportsScanned = reportFiles.length;
           progressCallback == null ? void 0 : progressCallback({
             phase: "scanning",
             current: 0,
-            total: reportFiles.length,
-            detail: `Found ${reportFiles.length} reports to scan`
+            total: totalFiles,
+            detail: `Found ${reportFiles.length} reports and ${artifactFiles.length} artifacts to scan`
           });
           const batchSize = 5;
+          let processedCount = 0;
           for (let i = 0; i < reportFiles.length; i += batchSize) {
             const batch = reportFiles.slice(i, i + batchSize);
             progressCallback == null ? void 0 : progressCallback({
               phase: "updating-conversations",
-              current: i,
-              total: reportFiles.length,
-              detail: `Updating conversation links: ${i}/${reportFiles.length} reports processed`
+              current: processedCount,
+              total: totalFiles,
+              detail: `Updating conversation links in reports: ${i}/${reportFiles.length} processed`
             });
             for (const file of batch) {
               try {
@@ -411,14 +245,42 @@ var init_link_update_service = __esm({
                 this.plugin.logger.error(`Error updating conversation links in ${file.path}:`, error);
               }
             }
+            processedCount += batch.length;
             if (i + batchSize < reportFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          for (let i = 0; i < artifactFiles.length; i += batchSize) {
+            const batch = artifactFiles.slice(i, i + batchSize);
+            progressCallback == null ? void 0 : progressCallback({
+              phase: "updating-conversations",
+              current: processedCount,
+              total: totalFiles,
+              detail: `Updating conversation links in artifacts: ${i}/${artifactFiles.length} processed`
+            });
+            for (const file of batch) {
+              try {
+                const result = await this.updateConversationLinkInArtifactFrontmatter(file, oldConversationPath, newConversationPath);
+                if (result.linksUpdated > 0) {
+                  stats.conversationLinksUpdated += result.linksUpdated;
+                }
+                if (result.fileModified) {
+                  stats.filesModified++;
+                }
+              } catch (error) {
+                stats.errors++;
+                this.plugin.logger.error(`Error updating conversation link in artifact ${file.path}:`, error);
+              }
+            }
+            processedCount += batch.length;
+            if (i + batchSize < artifactFiles.length) {
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
           progressCallback == null ? void 0 : progressCallback({
             phase: "complete",
-            current: reportFiles.length,
-            total: reportFiles.length,
+            current: totalFiles,
+            total: totalFiles,
             detail: `Updated ${stats.conversationLinksUpdated} conversation links in ${stats.filesModified} files`
           });
           return stats;
@@ -473,6 +335,15 @@ var init_link_update_service = __esm({
         return allFiles.filter((file) => file.path.startsWith(reportFolder));
       }
       /**
+       * Get all Claude artifact files from the vault
+       */
+      async getClaudeArtifactFiles() {
+        const attachmentFolder = this.plugin.settings.attachmentFolder;
+        const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+        const allFiles = this.plugin.app.vault.getMarkdownFiles();
+        return allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+      }
+      /**
        * Update attachment links in a single file
        */
       async updateAttachmentLinksInFile(file, oldAttachmentPath, newAttachmentPath) {
@@ -523,6 +394,27 @@ var init_link_update_service = __esm({
         updatedContent = updatedContent.replace(simpleLinkPattern, (match, prefix, suffix) => {
           linksUpdated++;
           return `${prefix}${newConversationPath}${suffix}`;
+        });
+        const fileModified = content !== updatedContent;
+        if (fileModified) {
+          await this.plugin.app.vault.modify(file, updatedContent);
+        }
+        return { linksUpdated, fileModified };
+      }
+      /**
+       * Update conversation_link in Claude artifact frontmatter
+       */
+      async updateConversationLinkInArtifactFrontmatter(file, oldConversationPath, newConversationPath) {
+        const content = await this.plugin.app.vault.read(file);
+        let linksUpdated = 0;
+        const escapedOldPath = this.escapeRegExp(oldConversationPath);
+        const frontmatterLinkPattern = new RegExp(
+          `(conversation_link:\\s*"\\[\\[)${escapedOldPath}(/[^\\]]+)(\\]\\]")`,
+          "g"
+        );
+        const updatedContent = content.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${newConversationPath}${pathSuffix}${suffix}`;
         });
         const fileModified = content !== updatedContent;
         if (fileModified) {
@@ -5488,7 +5380,6 @@ var init_configure_folder_locations_dialog = __esm({
   "src/dialogs/configure-folder-locations-dialog.ts"() {
     "use strict";
     import_obsidian21 = require("obsidian");
-    init_folder_migration_dialog();
     init_enhanced_folder_migration_dialog();
     ConfigureFolderLocationsDialog = class extends import_obsidian21.Modal {
       constructor(plugin, onComplete) {
@@ -5499,7 +5390,7 @@ var init_configure_folder_locations_dialog = __esm({
         this.attachmentFolderInput = null;
         this.onComplete = onComplete;
         this.originalConversationFolder = plugin.settings.conversationFolder || "Nexus/Conversations";
-        this.originalReportFolder = plugin.settings.reportFolder || "Nexus/Conversations/Reports";
+        this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
         this.originalAttachmentFolder = plugin.settings.attachmentFolder || "Nexus/Attachments";
       }
       onOpen() {
@@ -5521,7 +5412,7 @@ var init_configure_folder_locations_dialog = __esm({
         });
         new import_obsidian21.Setting(folderSection).setName("\u{1F4CA} Report Folder").setDesc("Where import reports are stored").addText((text) => {
           this.reportFolderInput = text.inputEl;
-          text.setPlaceholder("Nexus/Reports").setValue(this.originalReportFolder).inputEl.addClass("nexus-upgrade-folder-input");
+          text.setPlaceholder("Nexus Reports").setValue(this.originalReportFolder).inputEl.addClass("nexus-upgrade-folder-input");
         });
         new import_obsidian21.Setting(folderSection).setName("\u{1F4CE} Attachment Folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
           this.attachmentFolderInput = text.inputEl;
@@ -5598,8 +5489,7 @@ var init_configure_folder_locations_dialog = __esm({
         if (!oldFolder || !(oldFolder instanceof import_obsidian21.TFolder) || oldFolder.children.length === 0) {
           return;
         }
-        const useEnhancedDialog = folderType === "conversationFolder" || folderType === "attachmentFolder";
-        const folderTypeLabel = folderType === "conversationFolder" ? "Conversations" : folderType === "reportFolder" ? "Reports" : "Attachments";
+        const folderTypeLabel = folderType === "conversationFolder" ? "conversations" : folderType === "reportFolder" ? "reports" : "attachments";
         await new Promise((resolve) => {
           const handleMigrationAction = async (action) => {
             if (action === "move") {
@@ -5615,25 +5505,14 @@ var init_configure_folder_locations_dialog = __esm({
             }
             resolve();
           };
-          if (useEnhancedDialog) {
-            const dialog = new EnhancedFolderMigrationDialog(
-              this.plugin,
-              oldPath,
-              newPath,
-              folderTypeLabel,
-              handleMigrationAction
-            );
-            dialog.open();
-          } else {
-            const dialog = new FolderMigrationDialog(
-              this.plugin,
-              oldPath,
-              newPath,
-              folderTypeLabel,
-              handleMigrationAction
-            );
-            dialog.open();
-          }
+          const dialog = new EnhancedFolderMigrationDialog(
+            this.plugin,
+            oldPath,
+            newPath,
+            folderTypeLabel,
+            handleMigrationAction
+          );
+          dialog.open();
         });
       }
       addStyles() {
@@ -6214,7 +6093,7 @@ ${frontmatter}
         super(...arguments);
         this.id = "migrate-to-separate-folders";
         this.name = "Update Folder Settings";
-        this.description = "Updates plugin settings to use separate folders for Conversations, Reports, and Attachments. This improves organization and allows you to exclude attachments from sync. Your existing files are not moved.";
+        this.description = "Updates plugin settings to use separate folders for Conversations, Reports, and Attachments. Moves Reports folder out of Conversations for better organization.";
         this.type = "automatic";
       }
       async canRun(context) {
@@ -6226,10 +6105,8 @@ ${frontmatter}
           results.push(`**What this does:**`);
           results.push(`This updates your plugin settings to use separate folders for better organization:`);
           results.push(`- **Conversations**: Your chat notes`);
-          results.push(`- **Reports**: Import and upgrade reports`);
+          results.push(`- **Reports**: Import and upgrade reports (moved to "Nexus Reports")`);
           results.push(`- **Attachments**: Files, images, and Claude artifacts`);
-          results.push(``);
-          results.push(`**Your files are NOT moved** - only settings are updated. You can move files later in Settings if needed.`);
           results.push(``);
           console.debug(`[MigrateToSeparateFolders] Starting migration...`);
           console.debug(`[MigrateToSeparateFolders] Current settings:`, {
@@ -6244,9 +6121,32 @@ ${frontmatter}
             const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
             console.debug(`[MigrateToSeparateFolders] Migrating from archiveFolder: ${oldArchiveFolder}`);
             context.plugin.settings.conversationFolder = oldArchiveFolder;
-            context.plugin.settings.reportFolder = `${oldArchiveFolder}/Reports`;
+            const oldReportPath = `${oldArchiveFolder}/Reports`;
+            const parentPath = oldArchiveFolder.split("/").slice(0, -1).join("/");
+            const newReportPath = parentPath ? `${parentPath}/Nexus Reports` : "Nexus Reports";
+            const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
+            let reportsMoved = false;
+            if (oldReportFolder && oldReportFolder instanceof import_obsidian22.TFolder) {
+              try {
+                console.debug(`[MigrateToSeparateFolders] Moving Reports: ${oldReportPath} \u2192 ${newReportPath}`);
+                await context.plugin.app.vault.rename(oldReportFolder, newReportPath);
+                reportsMoved = true;
+                console.debug(`[MigrateToSeparateFolders] Reports folder moved successfully`);
+              } catch (error) {
+                console.error(`[MigrateToSeparateFolders] Failed to move Reports folder:`, error);
+                context.plugin.settings.reportFolder = oldReportPath;
+                results.push(`- Reports: \`${oldReportPath}\` (move failed, kept in old location)`);
+              }
+            }
+            if (reportsMoved || !oldReportFolder) {
+              context.plugin.settings.reportFolder = newReportPath;
+              if (reportsMoved) {
+                results.push(`- Reports: \`${oldReportPath}\` \u2192 \`${newReportPath}\` \u2705`);
+              } else {
+                results.push(`- Reports: \`${newReportPath}\` (folder will be created on next import)`);
+              }
+            }
             results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\``);
-            results.push(`- Reports: \`${context.plugin.settings.reportFolder}\``);
           } else {
             console.debug(`[MigrateToSeparateFolders] New settings already exist, keeping them`);
             results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\` (already configured)`);
@@ -7099,7 +6999,171 @@ var SupportSection = class extends BaseSettingsSection {
 
 // src/ui/settings/folder-settings-section.ts
 var import_obsidian5 = require("obsidian");
-init_folder_migration_dialog();
+
+// src/dialogs/folder-migration-dialog.ts
+var import_obsidian2 = require("obsidian");
+var FolderMigrationDialog = class extends import_obsidian2.Modal {
+  constructor(plugin, oldPath, newPath, folderType, onComplete) {
+    super(plugin.app);
+    this.oldPath = oldPath;
+    this.newPath = newPath;
+    this.folderType = folderType;
+    this.onComplete = onComplete;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", {
+      text: "Move Existing Files?",
+      cls: "nexus-migration-title"
+    });
+    const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
+    messageContainer.createEl("p", {
+      text: `You are changing the ${this.folderType} folder location:`
+    });
+    const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
+    pathContainer.createEl("div", {
+      text: `From: ${this.oldPath}`,
+      cls: "nexus-migration-path-old"
+    });
+    pathContainer.createEl("div", {
+      text: `To: ${this.newPath}`,
+      cls: "nexus-migration-path-new"
+    });
+    messageContainer.createEl("p", {
+      text: "Do you want to move existing files to the new location?"
+    });
+    const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
+    warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
+    warningBox.createEl("p", {
+      text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
+    });
+    const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
+    const cancelButton = buttonContainer.createEl("button", {
+      text: "Cancel",
+      cls: "nexus-migration-button-cancel"
+    });
+    cancelButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete("cancel");
+        new import_obsidian2.Notice(`Change cancelled. Folder setting reverted.`);
+      } catch (error) {
+        new import_obsidian2.Notice(`Failed to revert setting: ${error.message}`);
+      }
+    });
+    const keepButton = buttonContainer.createEl("button", {
+      text: "No, keep files in old location",
+      cls: "nexus-migration-button-keep"
+    });
+    keepButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete("keep");
+        new import_obsidian2.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+      } catch (error) {
+        new import_obsidian2.Notice(`Failed to update setting: ${error.message}`);
+      }
+    });
+    const moveButton = buttonContainer.createEl("button", {
+      text: "Yes, move files",
+      cls: "mod-cta nexus-migration-button-move"
+    });
+    moveButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete("move");
+        new import_obsidian2.Notice(`Files moved to ${this.newPath}`);
+      } catch (error) {
+        new import_obsidian2.Notice(`Failed to move files: ${error.message}`);
+      }
+    });
+    this.addStyles();
+  }
+  addStyles() {
+    const styleEl = document.createElement("style");
+    styleEl.textContent = `
+            .nexus-migration-title {
+                margin-bottom: 1em;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-migration-paths {
+                background-color: var(--background-secondary);
+                padding: 1em;
+                margin: 1em 0;
+                border-radius: 4px;
+                font-family: var(--font-monospace);
+                font-size: 0.9em;
+            }
+
+            .nexus-migration-path-old {
+                color: var(--text-muted);
+                margin-bottom: 0.5em;
+            }
+
+            .nexus-migration-path-new {
+                color: var(--interactive-accent);
+                font-weight: 500;
+            }
+
+            .nexus-migration-warning {
+                background-color: var(--background-modifier-error-hover);
+                border-left: 4px solid var(--text-error);
+                padding: 1em;
+                margin-bottom: 1.5em;
+                border-radius: 4px;
+            }
+
+            .nexus-migration-warning strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--text-error);
+            }
+
+            .nexus-migration-warning p {
+                margin: 0;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-buttons {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .nexus-migration-buttons button {
+                padding: 8px 16px;
+                flex: 1;
+            }
+
+            .nexus-migration-button-cancel {
+                background-color: var(--background-modifier-border);
+                color: var(--text-muted);
+            }
+
+            .nexus-migration-button-keep {
+                background-color: var(--background-modifier-border);
+            }
+
+            .nexus-migration-button-move {
+                /* Uses mod-cta class for primary styling */
+            }
+        `;
+    document.head.appendChild(styleEl);
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
+// src/ui/settings/folder-settings-section.ts
 var FolderSettingsSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
@@ -7116,7 +7180,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       });
     });
     new import_obsidian5.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText((text) => {
-      text.setPlaceholder("Nexus/Reports").setValue(this.plugin.settings.reportFolder);
+      text.setPlaceholder("Nexus Reports").setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
@@ -7470,6 +7534,10 @@ var ImportReport = class {
           total.missing += entry.attachmentStats.missing;
           total.failed += entry.attachmentStats.failed;
         }
+        if (entry.providerSpecificCount) {
+          total.total += entry.providerSpecificCount;
+          total.found += entry.providerSpecificCount;
+        }
       });
     });
     return total;
@@ -7482,6 +7550,10 @@ var ImportReport = class {
         total.found += entry.attachmentStats.found;
         total.missing += entry.attachmentStats.missing;
         total.failed += entry.attachmentStats.failed;
+      }
+      if (entry.providerSpecificCount) {
+        total.total += entry.providerSpecificCount;
+        total.found += entry.providerSpecificCount;
       }
     });
     return total;

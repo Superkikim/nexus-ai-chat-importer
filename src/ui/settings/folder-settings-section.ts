@@ -51,7 +51,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
             .setDesc("Where import reports are stored")
             .addText((text) => {
                 text
-                    .setPlaceholder("Nexus/Reports")
+                    .setPlaceholder("Nexus Reports")
                     .setValue(this.plugin.settings.reportFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
