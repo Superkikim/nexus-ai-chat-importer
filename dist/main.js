@@ -2638,16 +2638,24 @@ async function moveAndMergeFolders(oldFolder, newPath, vault) {
   }
   try {
     await moveRecursive(oldFolder, newPath);
+    logger.debug(`[moveAndMergeFolders] Attempting to delete ${foldersToDelete.length} folders...`);
     for (const folder of foldersToDelete.reverse()) {
       try {
+        const exists = await vault.adapter.exists(folder.path);
+        if (!exists) {
+          logger.debug(`Folder already deleted: ${folder.path}`);
+          continue;
+        }
         await vault.delete(folder);
         logger.debug(`Deleted empty folder: ${folder.path}`);
       } catch (error) {
         const errorMsg = error.message || String(error);
         if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
-          logger.debug(`Folder not empty, skipping deletion: ${folder.path}`);
+          logger.warn(`Folder not empty, skipping deletion: ${folder.path} (children: ${folder.children.length})`);
+        } else if (errorMsg.includes("does not exist") || errorMsg.includes("ENOENT")) {
+          logger.debug(`Folder already deleted: ${folder.path}`);
         } else {
-          logger.debug(`Could not delete folder ${folder.path}: ${errorMsg}`);
+          logger.warn(`Could not delete folder ${folder.path}: ${errorMsg}`);
         }
       }
     }
