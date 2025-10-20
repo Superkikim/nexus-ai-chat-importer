@@ -283,6 +283,11 @@ export class FolderSettingsSection extends BaseSettingsSection {
                 const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
                 this.plugin.logger.debug(`[FolderSettings] Migration completed: ${result.moved} moved, ${result.skipped} skipped, ${result.errors} errors`);
 
+                // Update links if needed (for conversations and attachments)
+                if (settingKey === 'conversationFolder' || settingKey === 'attachmentFolder') {
+                    await this.updateLinksAfterMove(settingKey, oldPath, newPath);
+                }
+
                 // Show result to user
                 if (result.success && result.skipped === 0) {
                     // Perfect success - simple notice
@@ -305,6 +310,36 @@ export class FolderSettingsSection extends BaseSettingsSection {
         this.plugin.settings[settingKey] = newPath;
         await this.plugin.saveSettings();
         this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
+    }
+
+    /**
+     * Update links after moving conversations or attachments
+     */
+    private async updateLinksAfterMove(
+        settingKey: 'conversationFolder' | 'attachmentFolder',
+        oldPath: string,
+        newPath: string
+    ): Promise<void> {
+        try {
+            // Lazy import LinkUpdateService
+            const { LinkUpdateService } = await import("../../services/link-update-service");
+            const linkUpdateService = new LinkUpdateService(this.plugin);
+
+            this.plugin.logger.debug(`[FolderSettings] Updating links for ${settingKey}...`);
+
+            if (settingKey === 'conversationFolder') {
+                // Update conversation links in reports AND artifacts
+                await linkUpdateService.updateConversationLinks(oldPath, newPath);
+                this.plugin.logger.debug(`[FolderSettings] Conversation links updated`);
+            } else if (settingKey === 'attachmentFolder') {
+                // Update attachment links in conversations
+                await linkUpdateService.updateAttachmentLinks(oldPath, newPath);
+                this.plugin.logger.debug(`[FolderSettings] Attachment links updated`);
+            }
+        } catch (error) {
+            this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
+            new Notice(`⚠️ Files moved but some links may not have been updated`);
+        }
     }
 
     /**

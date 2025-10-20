@@ -9702,6 +9702,9 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       try {
         const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
         this.plugin.logger.debug(`[FolderSettings] Migration completed: ${result.moved} moved, ${result.skipped} skipped, ${result.errors} errors`);
+        if (settingKey === "conversationFolder" || settingKey === "attachmentFolder") {
+          await this.updateLinksAfterMove(settingKey, oldPath, newPath);
+        }
         if (result.success && result.skipped === 0) {
           new import_obsidian10.Notice(`\u2705 Files moved to ${newPath}`);
         } else {
@@ -9718,6 +9721,26 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     this.plugin.settings[settingKey] = newPath;
     await this.plugin.saveSettings();
     this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
+  }
+  /**
+   * Update links after moving conversations or attachments
+   */
+  async updateLinksAfterMove(settingKey, oldPath, newPath) {
+    try {
+      const { LinkUpdateService: LinkUpdateService2 } = await Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports));
+      const linkUpdateService = new LinkUpdateService2(this.plugin);
+      this.plugin.logger.debug(`[FolderSettings] Updating links for ${settingKey}...`);
+      if (settingKey === "conversationFolder") {
+        await linkUpdateService.updateConversationLinks(oldPath, newPath);
+        this.plugin.logger.debug(`[FolderSettings] Conversation links updated`);
+      } else if (settingKey === "attachmentFolder") {
+        await linkUpdateService.updateAttachmentLinks(oldPath, newPath);
+        this.plugin.logger.debug(`[FolderSettings] Attachment links updated`);
+      }
+    } catch (error) {
+      this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
+      new import_obsidian10.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
+    }
   }
   /**
    * Show dialog with merge result details when files were skipped or errors occurred
