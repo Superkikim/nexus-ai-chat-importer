@@ -714,8 +714,8 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
  */
 class MigrateToSeparateFoldersOperation extends UpgradeOperation {
     readonly id = "migrate-to-separate-folders";
-    readonly name = "Move Reports Folder";
-    readonly description = "Moves the Reports folder from inside Conversations to the vault root for better organization.";
+    readonly name = "Implement Separate Folder Settings";
+    readonly description = "Creates dedicated settings for Reports folder location and moves Reports from inside Conversations to the vault root for better organization.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {

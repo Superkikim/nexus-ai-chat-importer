@@ -25,42 +25,60 @@ import { App, Modal, SuggestModal, TFolder, Notice } from "obsidian";
 export class FolderBrowserModal extends SuggestModal<TFolder> {
     private onSelect: (folder: TFolder) => void;
     private onCreate: (path: string) => void;
+    private selectedFolder: TFolder | null = null;
+    private selectedEl: HTMLElement | null = null;
 
     constructor(app: App, onSelect: (folder: TFolder) => void, onCreate: (path: string) => void) {
         super(app);
         this.onSelect = onSelect;
         this.onCreate = onCreate;
-        
+
         this.setPlaceholder("Type to search folders...");
     }
 
     onOpen(): void {
         super.onOpen();
-        
-        // Add "Create new folder" button at the bottom
+
+        // Add buttons at the bottom
         const buttonContainer = this.modalEl.createDiv({ cls: "modal-button-container" });
         buttonContainer.style.padding = "10px";
         buttonContainer.style.borderTop = "1px solid var(--background-modifier-border)";
-        
-        const createButton = buttonContainer.createEl("button", {
-            text: "Create new folder",
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.gap = "10px";
+
+        // Button 1: Select folder
+        const selectButton = buttonContainer.createEl("button", {
+            text: "Select this folder",
             cls: "mod-cta"
         });
-        
+        selectButton.addEventListener("click", () => {
+            if (this.selectedFolder) {
+                this.onSelect(this.selectedFolder);
+                this.close();
+            } else {
+                new Notice("⚠️ Please select a folder first");
+            }
+        });
+
+        // Button 2: Create subfolder
+        const createButton = buttonContainer.createEl("button", {
+            text: "Create subfolder here"
+        });
         createButton.addEventListener("click", () => {
+            const parentPath = this.selectedFolder?.path || "";
             this.close();
-            this.promptCreateFolder();
+            this.promptCreateFolder(parentPath);
         });
     }
 
     getSuggestions(query: string): TFolder[] {
         const folders = this.app.vault.getAllLoadedFiles()
             .filter((f): f is TFolder => f instanceof TFolder);
-        
+
         if (!query) {
             return folders.slice(0, 100); // Show first 100 folders when no query
         }
-        
+
         const lowerQuery = query.toLowerCase();
         return folders
             .filter(f => f.path.toLowerCase().includes(lowerQuery))
@@ -69,27 +87,40 @@ export class FolderBrowserModal extends SuggestModal<TFolder> {
 
     renderSuggestion(folder: TFolder, el: HTMLElement): void {
         el.createEl("div", { text: folder.path, cls: "suggestion-content" });
+
+        // Add click handler to track selection
+        el.addEventListener("click", () => {
+            // Remove previous selection highlight
+            if (this.selectedEl) {
+                this.selectedEl.style.backgroundColor = "";
+            }
+
+            // Highlight this element
+            el.style.backgroundColor = "var(--background-modifier-hover)";
+            this.selectedEl = el;
+            this.selectedFolder = folder;
+        });
     }
 
     onChooseSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent): void {
-        this.onSelect(folder);
+        this.selectedFolder = folder;
+        // Don't close immediately - let user choose between "Select" or "Create subfolder"
     }
 
-    private promptCreateFolder(): void {
-        const modal = new CreateFolderModal(this.app, async (path: string) => {
+    private promptCreateFolder(parentPath: string): void {
+        const modal = new CreateFolderModal(this.app, parentPath, async (subfolderName: string) => {
+            const fullPath = parentPath ? `${parentPath}/${subfolderName}` : subfolderName;
+
             try {
-                await this.app.vault.createFolder(path);
-                new Notice(`✅ Folder created: ${path}`);
-                
-                // Get the created folder and pass it to onCreate callback
-                const createdFolder = this.app.vault.getAbstractFileByPath(path);
-                if (createdFolder instanceof TFolder) {
-                    this.onCreate(path);
-                }
+                await this.app.vault.createFolder(fullPath);
+                new Notice(`✅ Folder created: ${fullPath}`);
+
+                // Pass the created path to onCreate callback (don't create it again!)
+                this.onCreate(fullPath);
             } catch (error) {
                 if (error.message && error.message.includes("Folder already exists")) {
-                    new Notice(`⚠️ Folder already exists: ${path}`);
-                    this.onCreate(path); // Still use it
+                    new Notice(`⚠️ Folder already exists: ${fullPath}`);
+                    this.onCreate(fullPath); // Still use it
                 } else {
                     new Notice(`❌ Failed to create folder: ${error.message}`);
                 }
@@ -103,45 +134,58 @@ export class FolderBrowserModal extends SuggestModal<TFolder> {
  * Modal for creating a new folder
  */
 class CreateFolderModal extends Modal {
-    private onSubmit: (path: string) => void;
+    private onSubmit: (subfolderName: string) => void;
+    private parentPath: string;
 
-    constructor(app: App, onSubmit: (path: string) => void) {
+    constructor(app: App, parentPath: string, onSubmit: (subfolderName: string) => void) {
         super(app);
+        this.parentPath = parentPath;
         this.onSubmit = onSubmit;
     }
 
     onOpen(): void {
         const { contentEl } = this;
-        
-        contentEl.createEl("h3", { text: "Create new folder" });
+
+        contentEl.createEl("h3", { text: "Create new subfolder" });
+
+        // Show parent path
+        if (this.parentPath) {
+            const parentInfo = contentEl.createDiv({ cls: "setting-item-description" });
+            parentInfo.style.marginBottom = "10px";
+            parentInfo.setText(`Parent folder: ${this.parentPath}`);
+        } else {
+            const parentInfo = contentEl.createDiv({ cls: "setting-item-description" });
+            parentInfo.style.marginBottom = "10px";
+            parentInfo.setText(`Creating folder at vault root`);
+        }
 
         const inputContainer = contentEl.createDiv({ cls: "setting-item" });
         inputContainer.style.border = "none";
         inputContainer.style.paddingTop = "0";
-        
+
         const input = inputContainer.createEl("input", {
             type: "text",
-            placeholder: "Folder path (e.g., My Folder/Subfolder)"
+            placeholder: "Subfolder name (e.g., Reports)"
         });
         input.style.width = "100%";
         input.style.marginBottom = "20px";
 
         const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-        
+
         const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
         cancelButton.addEventListener("click", () => this.close());
-        
-        const createButton = buttonContainer.createEl("button", { 
-            text: "Create", 
-            cls: "mod-cta" 
+
+        const createButton = buttonContainer.createEl("button", {
+            text: "Create",
+            cls: "mod-cta"
         });
         createButton.addEventListener("click", () => {
-            const path = input.value.trim();
-            if (path) {
-                this.onSubmit(path);
+            const subfolderName = input.value.trim();
+            if (subfolderName) {
+                this.onSubmit(subfolderName);
                 this.close();
             } else {
-                new Notice("⚠️ Please enter a folder path");
+                new Notice("⚠️ Please enter a subfolder name");
             }
         });
 
@@ -149,12 +193,12 @@ class CreateFolderModal extends Modal {
         input.focus();
         input.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
-                const path = input.value.trim();
-                if (path) {
-                    this.onSubmit(path);
+                const subfolderName = input.value.trim();
+                if (subfolderName) {
+                    this.onSubmit(subfolderName);
                     this.close();
                 } else {
-                    new Notice("⚠️ Please enter a folder path");
+                    new Notice("⚠️ Please enter a subfolder name");
                 }
             } else if (e.key === "Escape") {
                 this.close();

@@ -438,7 +438,7 @@ export interface FolderMergeResult {
 }
 
 /**
- * Move and merge folders - moves all files from oldFolder to newPath
+ * Move and merge folders - moves all files from oldFolder to newPath RECURSIVELY
  * If files already exist in destination, they are skipped (not overwritten)
  *
  * @param oldFolder - The source folder to move from
@@ -456,10 +456,13 @@ export async function moveAndMergeFolders(
     let errors = 0;
     const errorDetails: string[] = [];
 
-    try {
+    /**
+     * Recursively move all files from a folder
+     */
+    async function moveRecursive(sourceFolder: TFolder, destPath: string): Promise<void> {
         // Ensure destination folder exists
         try {
-            await vault.createFolder(newPath);
+            await vault.createFolder(destPath);
         } catch (error: any) {
             if (!error.message?.includes("Folder already exists")) {
                 throw error;
@@ -467,42 +470,52 @@ export async function moveAndMergeFolders(
             // Folder exists, that's fine - we're merging
         }
 
-        // Move all children recursively
-        for (const child of oldFolder.children) {
-            const childNewPath = `${newPath}/${child.name}`;
+        // Process all children
+        for (const child of [...sourceFolder.children]) { // Copy array to avoid modification during iteration
+            const childNewPath = `${destPath}/${child.name}`;
 
-            try {
-                // Check if destination already exists
-                const exists = await vault.adapter.exists(childNewPath);
+            if (child instanceof TFolder) {
+                // Recursively process subfolder
+                await moveRecursive(child, childNewPath);
+            } else {
+                // It's a file
+                try {
+                    // Check if destination already exists
+                    const exists = await vault.adapter.exists(childNewPath);
 
-                if (exists) {
-                    // Skip existing files to avoid overwriting
-                    logger.debug(`Target already exists, skipping: ${childNewPath}`);
-                    skipped++;
-                    continue;
+                    if (exists) {
+                        // Skip existing files to avoid overwriting
+                        logger.debug(`Target already exists, skipping: ${childNewPath}`);
+                        skipped++;
+                        continue;
+                    }
+
+                    // Destination doesn't exist, safe to move
+                    await vault.rename(child, childNewPath);
+                    moved++;
+                } catch (error: any) {
+                    const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
+                    logger.error(errorMsg);
+                    errorDetails.push(errorMsg);
+                    errors++;
                 }
-
-                // Destination doesn't exist, safe to move
-                await vault.rename(child, childNewPath);
-                moved++;
-            } catch (error: any) {
-                const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
-                logger.error(errorMsg);
-                errorDetails.push(errorMsg);
-                errors++;
             }
         }
 
-        // Delete old folder if it's now empty
-        if (oldFolder.children.length === 0) {
+        // Delete folder if it's now empty
+        if (sourceFolder.children.length === 0) {
             try {
-                await vault.delete(oldFolder);
-                logger.debug(`Deleted empty old folder: ${oldFolder.path}`);
+                await vault.delete(sourceFolder);
+                logger.debug(`Deleted empty folder: ${sourceFolder.path}`);
             } catch (error: any) {
-                logger.error(`Failed to delete old folder ${oldFolder.path}:`, error);
+                logger.error(`Failed to delete folder ${sourceFolder.path}:`, error);
                 // Don't count this as a critical error
             }
         }
+    }
+
+    try {
+        await moveRecursive(oldFolder, newPath);
 
         return {
             success: errors === 0,

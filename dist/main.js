@@ -2154,6 +2154,8 @@ var init_folder_browser_modal = __esm({
     FolderBrowserModal = class extends import_obsidian5.SuggestModal {
       constructor(app, onSelect, onCreate) {
         super(app);
+        this.selectedFolder = null;
+        this.selectedEl = null;
         this.onSelect = onSelect;
         this.onCreate = onCreate;
         this.setPlaceholder("Type to search folders...");
@@ -2163,13 +2165,28 @@ var init_folder_browser_modal = __esm({
         const buttonContainer = this.modalEl.createDiv({ cls: "modal-button-container" });
         buttonContainer.style.padding = "10px";
         buttonContainer.style.borderTop = "1px solid var(--background-modifier-border)";
-        const createButton = buttonContainer.createEl("button", {
-          text: "Create new folder",
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.gap = "10px";
+        const selectButton = buttonContainer.createEl("button", {
+          text: "Select this folder",
           cls: "mod-cta"
         });
+        selectButton.addEventListener("click", () => {
+          if (this.selectedFolder) {
+            this.onSelect(this.selectedFolder);
+            this.close();
+          } else {
+            new import_obsidian5.Notice("\u26A0\uFE0F Please select a folder first");
+          }
+        });
+        const createButton = buttonContainer.createEl("button", {
+          text: "Create subfolder here"
+        });
         createButton.addEventListener("click", () => {
+          var _a;
+          const parentPath = ((_a = this.selectedFolder) == null ? void 0 : _a.path) || "";
           this.close();
-          this.promptCreateFolder();
+          this.promptCreateFolder(parentPath);
         });
       }
       getSuggestions(query) {
@@ -2182,23 +2199,29 @@ var init_folder_browser_modal = __esm({
       }
       renderSuggestion(folder, el) {
         el.createEl("div", { text: folder.path, cls: "suggestion-content" });
+        el.addEventListener("click", () => {
+          if (this.selectedEl) {
+            this.selectedEl.style.backgroundColor = "";
+          }
+          el.style.backgroundColor = "var(--background-modifier-hover)";
+          this.selectedEl = el;
+          this.selectedFolder = folder;
+        });
       }
       onChooseSuggestion(folder, _evt) {
-        this.onSelect(folder);
+        this.selectedFolder = folder;
       }
-      promptCreateFolder() {
-        const modal = new CreateFolderModal(this.app, async (path) => {
+      promptCreateFolder(parentPath) {
+        const modal = new CreateFolderModal(this.app, parentPath, async (subfolderName) => {
+          const fullPath = parentPath ? `${parentPath}/${subfolderName}` : subfolderName;
           try {
-            await this.app.vault.createFolder(path);
-            new import_obsidian5.Notice(`\u2705 Folder created: ${path}`);
-            const createdFolder = this.app.vault.getAbstractFileByPath(path);
-            if (createdFolder instanceof import_obsidian5.TFolder) {
-              this.onCreate(path);
-            }
+            await this.app.vault.createFolder(fullPath);
+            new import_obsidian5.Notice(`\u2705 Folder created: ${fullPath}`);
+            this.onCreate(fullPath);
           } catch (error) {
             if (error.message && error.message.includes("Folder already exists")) {
-              new import_obsidian5.Notice(`\u26A0\uFE0F Folder already exists: ${path}`);
-              this.onCreate(path);
+              new import_obsidian5.Notice(`\u26A0\uFE0F Folder already exists: ${fullPath}`);
+              this.onCreate(fullPath);
             } else {
               new import_obsidian5.Notice(`\u274C Failed to create folder: ${error.message}`);
             }
@@ -2208,19 +2231,29 @@ var init_folder_browser_modal = __esm({
       }
     };
     CreateFolderModal = class extends import_obsidian5.Modal {
-      constructor(app, onSubmit) {
+      constructor(app, parentPath, onSubmit) {
         super(app);
+        this.parentPath = parentPath;
         this.onSubmit = onSubmit;
       }
       onOpen() {
         const { contentEl } = this;
-        contentEl.createEl("h3", { text: "Create new folder" });
+        contentEl.createEl("h3", { text: "Create new subfolder" });
+        if (this.parentPath) {
+          const parentInfo = contentEl.createDiv({ cls: "setting-item-description" });
+          parentInfo.style.marginBottom = "10px";
+          parentInfo.setText(`Parent folder: ${this.parentPath}`);
+        } else {
+          const parentInfo = contentEl.createDiv({ cls: "setting-item-description" });
+          parentInfo.style.marginBottom = "10px";
+          parentInfo.setText(`Creating folder at vault root`);
+        }
         const inputContainer = contentEl.createDiv({ cls: "setting-item" });
         inputContainer.style.border = "none";
         inputContainer.style.paddingTop = "0";
         const input = inputContainer.createEl("input", {
           type: "text",
-          placeholder: "Folder path (e.g., My Folder/Subfolder)"
+          placeholder: "Subfolder name (e.g., Reports)"
         });
         input.style.width = "100%";
         input.style.marginBottom = "20px";
@@ -2232,23 +2265,23 @@ var init_folder_browser_modal = __esm({
           cls: "mod-cta"
         });
         createButton.addEventListener("click", () => {
-          const path = input.value.trim();
-          if (path) {
-            this.onSubmit(path);
+          const subfolderName = input.value.trim();
+          if (subfolderName) {
+            this.onSubmit(subfolderName);
             this.close();
           } else {
-            new import_obsidian5.Notice("\u26A0\uFE0F Please enter a folder path");
+            new import_obsidian5.Notice("\u26A0\uFE0F Please enter a subfolder name");
           }
         });
         input.focus();
         input.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
-            const path = input.value.trim();
-            if (path) {
-              this.onSubmit(path);
+            const subfolderName = input.value.trim();
+            if (subfolderName) {
+              this.onSubmit(subfolderName);
               this.close();
             } else {
-              new import_obsidian5.Notice("\u26A0\uFE0F Please enter a folder path");
+              new import_obsidian5.Notice("\u26A0\uFE0F Please enter a subfolder name");
             }
           } else if (e.key === "Escape") {
             this.close();
@@ -2605,45 +2638,52 @@ function isNexusRelated(file, app) {
   return (frontmatter == null ? void 0 : frontmatter.nexus) === "nexus-ai-chat-importer";
 }
 async function moveAndMergeFolders(oldFolder, newPath, vault) {
-  var _a;
   let moved = 0;
   let skipped = 0;
   let errors = 0;
   const errorDetails = [];
-  try {
+  async function moveRecursive(sourceFolder, destPath) {
+    var _a;
     try {
-      await vault.createFolder(newPath);
+      await vault.createFolder(destPath);
     } catch (error) {
       if (!((_a = error.message) == null ? void 0 : _a.includes("Folder already exists"))) {
         throw error;
       }
     }
-    for (const child of oldFolder.children) {
-      const childNewPath = `${newPath}/${child.name}`;
-      try {
-        const exists = await vault.adapter.exists(childNewPath);
-        if (exists) {
-          logger.debug(`Target already exists, skipping: ${childNewPath}`);
-          skipped++;
-          continue;
+    for (const child of [...sourceFolder.children]) {
+      const childNewPath = `${destPath}/${child.name}`;
+      if (child instanceof import_obsidian6.TFolder) {
+        await moveRecursive(child, childNewPath);
+      } else {
+        try {
+          const exists = await vault.adapter.exists(childNewPath);
+          if (exists) {
+            logger.debug(`Target already exists, skipping: ${childNewPath}`);
+            skipped++;
+            continue;
+          }
+          await vault.rename(child, childNewPath);
+          moved++;
+        } catch (error) {
+          const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
+          logger.error(errorMsg);
+          errorDetails.push(errorMsg);
+          errors++;
         }
-        await vault.rename(child, childNewPath);
-        moved++;
-      } catch (error) {
-        const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
-        logger.error(errorMsg);
-        errorDetails.push(errorMsg);
-        errors++;
       }
     }
-    if (oldFolder.children.length === 0) {
+    if (sourceFolder.children.length === 0) {
       try {
-        await vault.delete(oldFolder);
-        logger.debug(`Deleted empty old folder: ${oldFolder.path}`);
+        await vault.delete(sourceFolder);
+        logger.debug(`Deleted empty folder: ${sourceFolder.path}`);
       } catch (error) {
-        logger.error(`Failed to delete old folder ${oldFolder.path}:`, error);
+        logger.error(`Failed to delete folder ${sourceFolder.path}:`, error);
       }
     }
+  }
+  try {
+    await moveRecursive(oldFolder, newPath);
     return {
       success: errors === 0,
       moved,
@@ -8515,8 +8555,8 @@ ${frontmatter}
       constructor() {
         super(...arguments);
         this.id = "migrate-to-separate-folders";
-        this.name = "Move Reports Folder";
-        this.description = "Moves the Reports folder from inside Conversations to the vault root for better organization.";
+        this.name = "Implement Separate Folder Settings";
+        this.description = "Creates dedicated settings for Reports folder location and moves Reports from inside Conversations to the vault root for better organization.";
         this.type = "automatic";
       }
       async canRun(context) {
