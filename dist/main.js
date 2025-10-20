@@ -2615,25 +2615,28 @@ async function moveAndMergeFolders(oldFolder, newPath, vault) {
     for (const child of [...sourceFolder.children]) {
       const childNewPath = `${destPath}/${child.name}`;
       if (child instanceof import_obsidian6.TFolder) {
+        logger.debug(`[moveAndMergeFolders] Processing subfolder: ${child.path}`);
         await moveRecursive(child, childNewPath);
       } else {
         try {
           const exists = await vault.adapter.exists(childNewPath);
           if (exists) {
-            logger.debug(`Target already exists, skipping: ${childNewPath}`);
+            logger.debug(`[moveAndMergeFolders] Target already exists, skipping: ${childNewPath}`);
             skipped++;
             continue;
           }
           await vault.rename(child, childNewPath);
+          logger.debug(`[moveAndMergeFolders] Moved file: ${child.path} \u2192 ${childNewPath}`);
           moved++;
         } catch (error) {
           const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
-          logger.error(errorMsg);
+          logger.error(`[moveAndMergeFolders] ${errorMsg}`);
           errorDetails.push(errorMsg);
           errors++;
         }
       }
     }
+    logger.debug(`[moveAndMergeFolders] Marking for deletion: ${sourceFolder.path} (children: ${sourceFolder.children.length})`);
     foldersToDelete.push(sourceFolder);
   }
   try {
@@ -2643,19 +2646,19 @@ async function moveAndMergeFolders(oldFolder, newPath, vault) {
       try {
         const exists = await vault.adapter.exists(folder.path);
         if (!exists) {
-          logger.debug(`Folder already deleted: ${folder.path}`);
+          logger.debug(`[moveAndMergeFolders] Folder already deleted: ${folder.path}`);
           continue;
         }
         await vault.delete(folder);
-        logger.debug(`Deleted empty folder: ${folder.path}`);
+        logger.debug(`[moveAndMergeFolders] \u2705 Deleted empty folder: ${folder.path}`);
       } catch (error) {
         const errorMsg = error.message || String(error);
         if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
-          logger.warn(`Folder not empty, skipping deletion: ${folder.path} (children: ${folder.children.length})`);
+          logger.warn(`[moveAndMergeFolders] \u26A0\uFE0F Folder not empty, skipping deletion: ${folder.path} (children: ${folder.children.length})`);
         } else if (errorMsg.includes("does not exist") || errorMsg.includes("ENOENT")) {
-          logger.debug(`Folder already deleted: ${folder.path}`);
+          logger.debug(`[moveAndMergeFolders] Folder already deleted: ${folder.path}`);
         } else {
-          logger.warn(`Could not delete folder ${folder.path}: ${errorMsg}`);
+          logger.warn(`[moveAndMergeFolders] \u274C Could not delete folder ${folder.path}: ${errorMsg}`);
         }
       }
     }
