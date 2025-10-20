@@ -514,17 +514,21 @@ export async function moveAndMergeFolders(
         // Reverse the array so we delete children before parents
         for (const folder of foldersToDelete.reverse()) {
             try {
-                // Check if folder still exists and is empty
-                if (folder.children.length === 0) {
-                    await vault.delete(folder);
-                    logger.debug(`Deleted empty folder: ${folder.path}`);
-                } else {
-                    logger.debug(`Folder not empty, skipping deletion: ${folder.path} (${folder.children.length} items)`);
-                }
+                // Try to delete the folder
+                // Obsidian will throw an error if the folder is not empty
+                // Note: folder.children might not be updated immediately after moving files,
+                // so we rely on vault.delete() to tell us if the folder is empty
+                await vault.delete(folder);
+                logger.debug(`Deleted empty folder: ${folder.path}`);
             } catch (error: any) {
-                // Folder might have already been deleted or might not be empty
+                // Folder might not be empty, might have already been deleted, or might not exist
                 // This is not a critical error - just log it
-                logger.debug(`Could not delete folder ${folder.path}: ${error.message || String(error)}`);
+                const errorMsg = error.message || String(error);
+                if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
+                    logger.debug(`Folder not empty, skipping deletion: ${folder.path}`);
+                } else {
+                    logger.debug(`Could not delete folder ${folder.path}: ${errorMsg}`);
+                }
             }
         }
 
