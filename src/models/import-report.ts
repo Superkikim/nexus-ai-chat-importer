@@ -118,11 +118,18 @@ export class ImportReport {
 
         this.fileSections.forEach(section => {
             [...section.created, ...section.updated].forEach(entry => {
+                // Count regular attachments (uploaded files)
                 if (entry.attachmentStats) {
                     total.total += entry.attachmentStats.total;
                     total.found += entry.attachmentStats.found;
                     total.missing += entry.attachmentStats.missing;
                     total.failed += entry.attachmentStats.failed;
+                }
+
+                // Count artifacts as attachments (they are stored in attachmentFolder)
+                if (entry.providerSpecificCount) {
+                    total.total += entry.providerSpecificCount;
+                    total.found += entry.providerSpecificCount; // Artifacts are always successfully created
                 }
             });
         });
@@ -134,11 +141,18 @@ export class ImportReport {
         const total = { total: 0, found: 0, missing: 0, failed: 0 };
 
         [...section.created, ...section.updated].forEach(entry => {
+            // Count regular attachments (uploaded files)
             if (entry.attachmentStats) {
                 total.total += entry.attachmentStats.total;
                 total.found += entry.attachmentStats.found;
                 total.missing += entry.attachmentStats.missing;
                 total.failed += entry.attachmentStats.failed;
+            }
+
+            // Count artifacts as attachments (they are stored in attachmentFolder)
+            if (entry.providerSpecificCount) {
+                total.total += entry.providerSpecificCount;
+                total.found += entry.providerSpecificCount; // Artifacts are always successfully created
             }
         });
 
