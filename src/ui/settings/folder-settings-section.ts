@@ -36,17 +36,40 @@ export class FolderSettingsSection extends BaseSettingsSection {
             .setName("Conversation folder")
             .setDesc("Where imported conversations are stored")
             .addText((text) => {
+                // Add folder autocomplete
+                new FolderSuggest(this.plugin.app, text.inputEl);
+
                 text
                     .setPlaceholder("Nexus/Conversations")
                     .setValue(this.plugin.settings.conversationFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
+                text.inputEl.addClass("nexus-conversation-folder-input"); // Unique class for this input
 
                 // Detect change when user leaves the field (not on every keystroke)
                 text.inputEl.addEventListener('blur', async () => {
                     const newValue = text.getValue();
                     await this.handleFolderChange('conversationFolder', newValue, 'conversations', text);
                 });
+            })
+            .addButton((button) => {
+                button
+                    .setButtonText("Browse")
+                    .setTooltip("Browse folders or create a new one")
+                    .onClick(() => {
+                        const textComponent = containerEl.querySelector('.nexus-conversation-folder-input') as HTMLInputElement;
+                        const modal = new FolderBrowserModal(
+                            this.plugin.app,
+                            (path) => {
+                                // User selected or created a folder
+                                if (textComponent) {
+                                    textComponent.value = path;
+                                    textComponent.dispatchEvent(new Event('blur'));
+                                }
+                            }
+                        );
+                        modal.open();
+                    });
             });
 
         // Report Folder
@@ -95,17 +118,40 @@ export class FolderSettingsSection extends BaseSettingsSection {
             .setName("Attachment folder")
             .setDesc("Where attachments are stored (⚠️ Exclude from sync to save space)")
             .addText((text) => {
+                // Add folder autocomplete
+                new FolderSuggest(this.plugin.app, text.inputEl);
+
                 text
                     .setPlaceholder("Nexus/Attachments")
                     .setValue(this.plugin.settings.attachmentFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
+                text.inputEl.addClass("nexus-attachment-folder-input"); // Unique class for this input
 
                 // Detect change when user leaves the field (not on every keystroke)
                 text.inputEl.addEventListener('blur', async () => {
                     const newValue = text.getValue();
                     await this.handleFolderChange('attachmentFolder', newValue, 'attachments', text);
                 });
+            })
+            .addButton((button) => {
+                button
+                    .setButtonText("Browse")
+                    .setTooltip("Browse folders or create a new one")
+                    .onClick(() => {
+                        const textComponent = containerEl.querySelector('.nexus-attachment-folder-input') as HTMLInputElement;
+                        const modal = new FolderBrowserModal(
+                            this.plugin.app,
+                            (path) => {
+                                // User selected or created a folder
+                                if (textComponent) {
+                                    textComponent.value = path;
+                                    textComponent.dispatchEvent(new Event('blur'));
+                                }
+                            }
+                        );
+                        modal.open();
+                    });
             });
     }
 

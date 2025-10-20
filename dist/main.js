@@ -9531,11 +9531,27 @@ var FolderSettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     new import_obsidian10.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
+      new FolderSuggest(this.plugin.app, text.inputEl);
       text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addClass("nexus-folder-path-input");
+      text.inputEl.addClass("nexus-conversation-folder-input");
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
         await this.handleFolderChange("conversationFolder", newValue, "conversations", text);
+      });
+    }).addButton((button) => {
+      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
+        const textComponent = containerEl.querySelector(".nexus-conversation-folder-input");
+        const modal = new FolderBrowserModal(
+          this.plugin.app,
+          (path) => {
+            if (textComponent) {
+              textComponent.value = path;
+              textComponent.dispatchEvent(new Event("blur"));
+            }
+          }
+        );
+        modal.open();
       });
     });
     new import_obsidian10.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText((text) => {
@@ -9563,11 +9579,27 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       });
     });
     new import_obsidian10.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
+      new FolderSuggest(this.plugin.app, text.inputEl);
       text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addClass("nexus-folder-path-input");
+      text.inputEl.addClass("nexus-attachment-folder-input");
       text.inputEl.addEventListener("blur", async () => {
         const newValue = text.getValue();
         await this.handleFolderChange("attachmentFolder", newValue, "attachments", text);
+      });
+    }).addButton((button) => {
+      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
+        const textComponent = containerEl.querySelector(".nexus-attachment-folder-input");
+        const modal = new FolderBrowserModal(
+          this.plugin.app,
+          (path) => {
+            if (textComponent) {
+              textComponent.value = path;
+              textComponent.dispatchEvent(new Event("blur"));
+            }
+          }
+        );
+        modal.open();
       });
     });
   }
