@@ -2960,19 +2960,36 @@ var init_link_update_service = __esm({
         return { linksUpdated, fileModified };
       }
       /**
-       * Update conversation_link in Claude artifact frontmatter
+       * Update conversation links in Claude artifact (both frontmatter and body)
        */
       async updateConversationLinkInArtifactFrontmatter(file, oldConversationPath, newConversationPath) {
         const content = await this.plugin.app.vault.read(file);
+        let updatedContent = content;
         let linksUpdated = 0;
         const escapedOldPath = this.escapeRegExp(oldConversationPath);
         const frontmatterLinkPattern = new RegExp(
           `(conversation_link:\\s*"\\[\\[)${escapedOldPath}(/[^\\]]+)(\\]\\]")`,
           "g"
         );
-        const updatedContent = content.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
+        updatedContent = updatedContent.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
           linksUpdated++;
           return `${prefix}${newConversationPath}${pathSuffix}${suffix}`;
+        });
+        const bodyLinkWithAliasPattern = new RegExp(
+          `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(bodyLinkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
+          linksUpdated++;
+          return `${prefix}${newConversationPath}${pathSuffix}${aliasSuffix}`;
+        });
+        const bodyLinkSimplePattern = new RegExp(
+          `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(bodyLinkSimplePattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${newConversationPath}${suffix}`;
         });
         const fileModified = content !== updatedContent;
         if (fileModified) {

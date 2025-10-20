@@ -396,7 +396,7 @@ export class LinkUpdateService {
     }
 
     /**
-     * Update conversation_link in Claude artifact frontmatter
+     * Update conversation links in Claude artifact (both frontmatter and body)
      */
     private async updateConversationLinkInArtifactFrontmatter(
         file: TFile,
@@ -404,20 +404,40 @@ export class LinkUpdateService {
         newConversationPath: string
     ): Promise<{ linksUpdated: number; fileModified: boolean }> {
         const content = await this.plugin.app.vault.read(file);
+        let updatedContent = content;
         let linksUpdated = 0;
 
         // Escape special regex characters in paths
         const escapedOldPath = this.escapeRegExp(oldConversationPath);
 
-        // Pattern: conversation_link: "[[oldPath/...]]" or conversation_link: "[[oldPath/...|alias]]"
+        // Pattern 1: conversation_link in frontmatter: "[[oldPath/...]]" or "[[oldPath/...|alias]]"
         const frontmatterLinkPattern = new RegExp(
             `(conversation_link:\\s*"\\[\\[)${escapedOldPath}(/[^\\]]+)(\\]\\]")`,
             'g'
         );
-
-        const updatedContent = content.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
+        updatedContent = updatedContent.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
             linksUpdated++;
             return `${prefix}${newConversationPath}${pathSuffix}${suffix}`;
+        });
+
+        // Pattern 2: **Conversation:** link in body with alias [[path|title]]
+        const bodyLinkWithAliasPattern = new RegExp(
+            `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
+            'g'
+        );
+        updatedContent = updatedContent.replace(bodyLinkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
+            linksUpdated++;
+            return `${prefix}${newConversationPath}${pathSuffix}${aliasSuffix}`;
+        });
+
+        // Pattern 3: **Conversation:** link in body without alias [[path]]
+        const bodyLinkSimplePattern = new RegExp(
+            `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+            'g'
+        );
+        updatedContent = updatedContent.replace(bodyLinkSimplePattern, (match, prefix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${newConversationPath}${suffix}`;
         });
 
         const fileModified = content !== updatedContent;
