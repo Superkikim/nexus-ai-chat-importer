@@ -18,11 +18,12 @@
 
 
 // src/ui/settings/folder-settings-section.ts
-import { Setting, TFolder, TextComponent } from "obsidian";
+import { Setting, TFolder, TextComponent, Notice } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
 import { FolderSuggest } from "../folder-suggest";
 import { FolderBrowserModal } from "../../dialogs/folder-browser-modal";
+import { validateFolderNesting } from "../../utils/folder-validation";
 
 export class FolderSettingsSection extends BaseSettingsSection {
     readonly title = "📁 Folder Structure";
@@ -130,6 +131,23 @@ export class FolderSettingsSection extends BaseSettingsSection {
         }
 
         this.plugin.logger.debug(`[FolderSettings] Old path: "${oldPath}" → New path: "${newPath}"`);
+
+        // Validate folder nesting
+        const validation = validateFolderNesting(
+            settingKey,
+            newPath,
+            this.plugin.settings.conversationFolder,
+            this.plugin.settings.reportFolder,
+            this.plugin.settings.attachmentFolder
+        );
+
+        if (!validation.valid) {
+            new Notice(`❌ ${validation.error}`);
+            // Restore old value in the text field
+            textComponent.setValue(oldPath);
+            this.plugin.logger.debug(`[FolderSettings] Validation failed: ${validation.error}`);
+            return;
+        }
 
         // Check if old folder exists and has content
         const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);

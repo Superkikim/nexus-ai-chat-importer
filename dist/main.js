@@ -2263,6 +2263,78 @@ var init_folder_browser_modal = __esm({
   }
 });
 
+// src/utils/folder-validation.ts
+function isPathInsidePath(pathToCheck, existingPath) {
+  if (!pathToCheck || !existingPath) {
+    return false;
+  }
+  const normalizedCheck = pathToCheck.replace(/\/$/, "");
+  const normalizedExisting = existingPath.replace(/\/$/, "");
+  if (normalizedCheck === normalizedExisting) {
+    return false;
+  }
+  return normalizedCheck.startsWith(normalizedExisting + "/");
+}
+function validateFolderNesting(folderType, newPath, conversationFolder, reportFolder, attachmentFolder) {
+  const normalizedNewPath = newPath.trim().replace(/\/$/, "");
+  if (!normalizedNewPath) {
+    return {
+      valid: false,
+      error: "Folder path cannot be empty"
+    };
+  }
+  switch (folderType) {
+    case "conversationFolder":
+      if (isPathInsidePath(normalizedNewPath, reportFolder)) {
+        return {
+          valid: false,
+          error: `Conversation folder cannot be inside the Report folder (${reportFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, attachmentFolder)) {
+        return {
+          valid: false,
+          error: `Conversation folder cannot be inside the Attachment folder (${attachmentFolder})`
+        };
+      }
+      break;
+    case "reportFolder":
+      if (isPathInsidePath(normalizedNewPath, conversationFolder)) {
+        return {
+          valid: false,
+          error: `Report folder cannot be inside the Conversation folder (${conversationFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, attachmentFolder)) {
+        return {
+          valid: false,
+          error: `Report folder cannot be inside the Attachment folder (${attachmentFolder})`
+        };
+      }
+      break;
+    case "attachmentFolder":
+      if (isPathInsidePath(normalizedNewPath, conversationFolder)) {
+        return {
+          valid: false,
+          error: `Attachment folder cannot be inside the Conversation folder (${conversationFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, reportFolder)) {
+        return {
+          valid: false,
+          error: `Attachment folder cannot be inside the Report folder (${reportFolder})`
+        };
+      }
+      break;
+  }
+  return { valid: true };
+}
+var init_folder_validation = __esm({
+  "src/utils/folder-validation.ts"() {
+    "use strict";
+  }
+});
+
 // src/services/link-update-service.ts
 var link_update_service_exports = {};
 __export(link_update_service_exports, {
@@ -7523,17 +7595,14 @@ var init_configure_folder_locations_dialog = __esm({
     init_enhanced_folder_migration_dialog();
     init_folder_suggest();
     init_folder_browser_modal();
+    init_folder_validation();
     ConfigureFolderLocationsDialog = class extends import_obsidian24.Modal {
       constructor(plugin, onComplete) {
         super(plugin.app);
         this.plugin = plugin;
-        this.conversationFolderInput = null;
         this.reportFolderInput = null;
-        this.attachmentFolderInput = null;
         this.onComplete = onComplete;
-        this.originalConversationFolder = plugin.settings.conversationFolder || "Nexus/Conversations";
         this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
-        this.originalAttachmentFolder = plugin.settings.attachmentFolder || "Nexus/Attachments";
       }
       onOpen() {
         const { contentEl } = this;
@@ -7543,16 +7612,24 @@ var init_configure_folder_locations_dialog = __esm({
           cls: "nexus-upgrade-title"
         });
         const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
-        messageContainer.createEl("h3", { text: "\u2728 New: Configurable Folder Locations" });
-        messageContainer.createEl("p", {
-          text: "You can now configure separate folder locations for conversations, reports, and attachments."
+        messageContainer.createEl("h3", { text: "\u2728 New: Custom Report Folder Location" });
+        const descriptionEl = messageContainer.createDiv({ cls: "nexus-upgrade-description" });
+        descriptionEl.createEl("p", {
+          text: "Version 1.3.0 adds a custom field for the Reports location."
+        });
+        descriptionEl.createEl("p", {
+          text: "To prevent reports from moving with conversations, we moved it to the root of your vault."
+        });
+        descriptionEl.createEl("p", {
+          text: "You can now select a different folder below."
+        });
+        const warningBox = contentEl.createDiv({ cls: "nexus-upgrade-warning" });
+        warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
+        warningBox.createEl("p", {
+          text: "You cannot put the report folder inside the Conversations folder nor the Attachment folder for practical reasons."
         });
         const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
-        new import_obsidian24.Setting(folderSection).setName("\u{1F4C1} Conversation Folder").setDesc("Where imported conversations are stored").addText((text) => {
-          this.conversationFolderInput = text.inputEl;
-          text.setPlaceholder("Nexus/Conversations").setValue(this.originalConversationFolder).inputEl.addClass("nexus-upgrade-folder-input");
-        });
-        new import_obsidian24.Setting(folderSection).setName("\u{1F4CA} Report Folder").setDesc("Where import reports are stored").addText((text) => {
+        new import_obsidian24.Setting(folderSection).setName("\u{1F4CA} Report Folder").setDesc("Where import and upgrade reports are stored").addText((text) => {
           this.reportFolderInput = text.inputEl;
           new FolderSuggest(this.plugin.app, text.inputEl);
           text.setPlaceholder("Nexus Reports").setValue(this.originalReportFolder).inputEl.addClass("nexus-upgrade-folder-input");
@@ -7574,12 +7651,8 @@ var init_configure_folder_locations_dialog = __esm({
             modal.open();
           });
         });
-        new import_obsidian24.Setting(folderSection).setName("\u{1F4CE} Attachment Folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
-          this.attachmentFolderInput = text.inputEl;
-          text.setPlaceholder("Nexus/Attachments").setValue(this.originalAttachmentFolder).inputEl.addClass("nexus-upgrade-folder-input");
-        });
         messageContainer.createEl("p", {
-          text: "All folder locations can be changed at any time in the plugin settings.",
+          text: "You can change this location at any time in the plugin settings.",
           cls: "nexus-upgrade-hint"
         });
         const infoBox = contentEl.createDiv({ cls: "nexus-upgrade-info" });
@@ -7602,23 +7675,45 @@ var init_configure_folder_locations_dialog = __esm({
         this.addStyles();
       }
       async handleSave() {
-        if (!this.conversationFolderInput || !this.reportFolderInput || !this.attachmentFolderInput) {
+        if (!this.reportFolderInput) {
           this.close();
           this.onComplete({
-            conversationFolder: { changed: false, oldPath: this.originalConversationFolder, newPath: this.originalConversationFolder },
-            reportFolder: { changed: false, oldPath: this.originalReportFolder, newPath: this.originalReportFolder },
-            attachmentFolder: { changed: false, oldPath: this.originalAttachmentFolder, newPath: this.originalAttachmentFolder }
+            conversationFolder: {
+              changed: false,
+              oldPath: this.plugin.settings.conversationFolder,
+              newPath: this.plugin.settings.conversationFolder
+            },
+            reportFolder: {
+              changed: false,
+              oldPath: this.originalReportFolder,
+              newPath: this.originalReportFolder
+            },
+            attachmentFolder: {
+              changed: false,
+              oldPath: this.plugin.settings.attachmentFolder,
+              newPath: this.plugin.settings.attachmentFolder
+            }
           });
           return;
         }
-        const newConversationFolder = this.conversationFolderInput.value.trim();
         const newReportFolder = this.reportFolderInput.value.trim();
-        const newAttachmentFolder = this.attachmentFolderInput.value.trim();
+        const validation = validateFolderNesting(
+          "reportFolder",
+          newReportFolder,
+          this.plugin.settings.conversationFolder,
+          this.originalReportFolder,
+          // Use original to avoid self-check
+          this.plugin.settings.attachmentFolder
+        );
+        if (!validation.valid) {
+          new import_obsidian24.Notice(`\u274C ${validation.error}`);
+          return;
+        }
         const result = {
           conversationFolder: {
-            changed: newConversationFolder !== this.originalConversationFolder,
-            oldPath: this.originalConversationFolder,
-            newPath: newConversationFolder
+            changed: false,
+            oldPath: this.plugin.settings.conversationFolder,
+            newPath: this.plugin.settings.conversationFolder
           },
           reportFolder: {
             changed: newReportFolder !== this.originalReportFolder,
@@ -7626,15 +7721,13 @@ var init_configure_folder_locations_dialog = __esm({
             newPath: newReportFolder
           },
           attachmentFolder: {
-            changed: newAttachmentFolder !== this.originalAttachmentFolder,
-            oldPath: this.originalAttachmentFolder,
-            newPath: newAttachmentFolder
+            changed: false,
+            oldPath: this.plugin.settings.attachmentFolder,
+            newPath: this.plugin.settings.attachmentFolder
           }
         };
         this.close();
-        await this.handleFolderChange("conversationFolder", result.conversationFolder);
         await this.handleFolderChange("reportFolder", result.reportFolder);
-        await this.handleFolderChange("attachmentFolder", result.attachmentFolder);
         this.onComplete(result);
       }
       async handleFolderChange(folderType, folderInfo) {
@@ -8252,139 +8345,73 @@ ${frontmatter}
       constructor() {
         super(...arguments);
         this.id = "migrate-to-separate-folders";
-        this.name = "Update Folder Settings";
-        this.description = "Updates plugin settings to use separate folders for Conversations, Reports, and Attachments. Moves Reports folder out of Conversations for better organization.";
+        this.name = "Move Reports Folder";
+        this.description = "Moves the Reports folder from inside Conversations to the vault root for better organization.";
         this.type = "automatic";
       }
       async canRun(context) {
-        return !!context.plugin.settings.archiveFolder;
+        return !context.plugin.settings.reportFolder;
       }
       async execute(context) {
         const results = [];
         try {
           results.push(`**What this does:**`);
-          results.push(`This updates your plugin settings to use separate folders for better organization:`);
-          results.push(`- **Conversations**: Your chat notes`);
-          results.push(`- **Reports**: Import and upgrade reports (moved to "Nexus Reports")`);
-          results.push(`- **Attachments**: Files, images, and Claude artifacts`);
+          results.push(`Version 1.3.0 adds a dedicated setting for the Reports folder location.`);
+          results.push(`To prevent reports from moving when you reorganize conversations, we're moving the Reports folder to the vault root.`);
           results.push(``);
-          console.debug(`[MigrateToSeparateFolders] Starting migration...`);
-          console.debug(`[MigrateToSeparateFolders] Current settings:`, {
-            conversationFolder: context.plugin.settings.conversationFolder,
-            reportFolder: context.plugin.settings.reportFolder,
-            attachmentFolder: context.plugin.settings.attachmentFolder,
-            archiveFolder: context.plugin.settings.archiveFolder
-          });
-          results.push(`**Settings updated:**`);
-          results.push(``);
-          if (!context.plugin.settings.conversationFolder) {
-            const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
-            console.debug(`[MigrateToSeparateFolders] Migrating from archiveFolder: ${oldArchiveFolder}`);
-            context.plugin.settings.conversationFolder = oldArchiveFolder;
-            const oldReportPath = `${oldArchiveFolder}/Reports`;
-            const parentPath = oldArchiveFolder.split("/").slice(0, -1).join("/");
-            const newReportPath = parentPath ? `${parentPath}/Nexus Reports` : "Nexus Reports";
-            const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
-            let reportsMoved = false;
-            if (oldReportFolder && oldReportFolder instanceof import_obsidian25.TFolder) {
-              try {
-                console.debug(`[MigrateToSeparateFolders] Moving Reports: ${oldReportPath} \u2192 ${newReportPath}`);
-                await context.plugin.app.vault.rename(oldReportFolder, newReportPath);
-                reportsMoved = true;
-                console.debug(`[MigrateToSeparateFolders] Reports folder moved successfully`);
-              } catch (error) {
-                console.error(`[MigrateToSeparateFolders] Failed to move Reports folder:`, error);
-                context.plugin.settings.reportFolder = oldReportPath;
-                results.push(`- Reports: \`${oldReportPath}\` (move failed, kept in old location)`);
-              }
+          console.debug(`[MigrateReportsFolder] Starting migration...`);
+          const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+          const oldReportPath = `${oldArchiveFolder}/Reports`;
+          const newReportPath = "Nexus Reports";
+          console.debug(`[MigrateReportsFolder] Old path: ${oldReportPath}`);
+          console.debug(`[MigrateReportsFolder] New path: ${newReportPath}`);
+          const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
+          let reportsMoved = false;
+          if (oldReportFolder && oldReportFolder instanceof import_obsidian25.TFolder) {
+            try {
+              console.debug(`[MigrateReportsFolder] Moving Reports folder...`);
+              await context.plugin.app.vault.rename(oldReportFolder, newReportPath);
+              reportsMoved = true;
+              console.debug(`[MigrateReportsFolder] Reports folder moved successfully`);
+              results.push(`\u2705 Reports folder moved: \`${oldReportPath}\` \u2192 \`${newReportPath}\``);
+            } catch (error) {
+              console.error(`[MigrateReportsFolder] Failed to move Reports folder:`, error);
+              context.plugin.settings.reportFolder = oldReportPath;
+              results.push(`\u26A0\uFE0F Reports folder could not be moved automatically.`);
+              results.push(`   Current location: \`${oldReportPath}\``);
+              results.push(`   You can move it manually later in settings.`);
             }
-            if (reportsMoved || !oldReportFolder) {
-              context.plugin.settings.reportFolder = newReportPath;
-              if (reportsMoved) {
-                results.push(`- Reports: \`${oldReportPath}\` \u2192 \`${newReportPath}\` \u2705`);
-              } else {
-                results.push(`- Reports: \`${newReportPath}\` (folder will be created on next import)`);
-              }
-            }
-            results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\``);
           } else {
-            console.debug(`[MigrateToSeparateFolders] New settings already exist, keeping them`);
-            results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\` (already configured)`);
-            results.push(`- Reports: \`${context.plugin.settings.reportFolder}\` (already configured)`);
+            console.debug(`[MigrateReportsFolder] No existing Reports folder found`);
+            results.push(`\u2139\uFE0F No existing Reports folder found. New reports will be created in \`${newReportPath}\``);
           }
-          if (!context.plugin.settings.attachmentFolder) {
-            context.plugin.settings.attachmentFolder = "Nexus/Attachments";
-            results.push(`- Attachments: \`${context.plugin.settings.attachmentFolder}\``);
-          } else {
-            results.push(`- Attachments: \`${context.plugin.settings.attachmentFolder}\` (already configured)`);
-          }
-          if (!context.plugin.settings.lastConversationsPerPage) {
-            if (context.plugin.settings.conversationPageSize) {
-              context.plugin.settings.lastConversationsPerPage = context.plugin.settings.conversationPageSize;
-            } else {
-              context.plugin.settings.lastConversationsPerPage = 50;
-            }
-          }
-          let removedCount = 0;
-          if (context.plugin.settings.archiveFolder !== void 0) {
-            delete context.plugin.settings.archiveFolder;
-            removedCount++;
-          }
-          if (context.plugin.settings.importAttachments !== void 0) {
-            delete context.plugin.settings.importAttachments;
-            removedCount++;
-          }
-          if (context.plugin.settings.skipMissingAttachments !== void 0) {
-            delete context.plugin.settings.skipMissingAttachments;
-            removedCount++;
-          }
-          if (context.plugin.settings.showAttachmentDetails !== void 0) {
-            delete context.plugin.settings.showAttachmentDetails;
-            removedCount++;
-          }
-          if (context.plugin.settings.defaultImportMode !== void 0) {
-            delete context.plugin.settings.defaultImportMode;
-            removedCount++;
-          }
-          if (context.plugin.settings.rememberLastImportMode !== void 0) {
-            delete context.plugin.settings.rememberLastImportMode;
-            removedCount++;
-          }
-          if (context.plugin.settings.conversationPageSize !== void 0) {
-            delete context.plugin.settings.conversationPageSize;
-            removedCount++;
-          }
-          if (context.plugin.settings.autoSelectAllOnOpen !== void 0) {
-            delete context.plugin.settings.autoSelectAllOnOpen;
-            removedCount++;
-          }
-          if (removedCount > 0) {
-            results.push(``);
-            results.push(`Cleaned up ${removedCount} deprecated setting(s).`);
+          if (reportsMoved || !oldReportFolder) {
+            context.plugin.settings.reportFolder = newReportPath;
           }
           await context.plugin.saveSettings();
-          console.debug(`[MigrateToSeparateFolders] Migration completed successfully`);
+          console.debug(`[MigrateReportsFolder] Migration completed successfully`);
+          console.debug(`[MigrateReportsFolder] reportFolder setting: ${context.plugin.settings.reportFolder}`);
           return {
             success: true,
-            message: "Settings updated successfully. Your files were not moved.",
+            message: "Reports folder migrated successfully",
             details: results
           };
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          console.error(`[MigrateToSeparateFolders] Failed:`, error);
-          results.push(`Error: ${errorMsg}`);
+          console.error(`[MigrateReportsFolder] Failed:`, error);
+          results.push(`\u274C Error: ${errorMsg}`);
           return {
             success: false,
-            message: `Failed to update folder settings: ${errorMsg}`,
+            message: `Failed to migrate Reports folder: ${errorMsg}`,
             details: results
           };
         }
       }
       async verify(context) {
         try {
-          return !!(context.plugin.settings.conversationFolder && context.plugin.settings.reportFolder && context.plugin.settings.attachmentFolder && !context.plugin.settings.archiveFolder);
+          return !!context.plugin.settings.reportFolder;
         } catch (error) {
-          console.error(`MigrateToSeparateFolders.verify failed:`, error);
+          console.error(`MigrateReportsFolder.verify failed:`, error);
           return false;
         }
       }
@@ -8761,32 +8788,22 @@ ${sampleText}`);
         return true;
       }
       async execute(context) {
-        console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations.execute starting`);
+        console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder.execute starting`);
         return new Promise((resolve) => {
           const dialog = new ConfigureFolderLocationsDialog(
             context.plugin,
             async (result) => {
-              console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations - User completed configuration:`, result);
+              console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder - User completed configuration:`, result);
               const details = [];
-              if (result.conversationFolder.changed) {
-                details.push(`\u2705 Conversation folder: ${result.conversationFolder.oldPath} \u2192 ${result.conversationFolder.newPath}`);
-              } else {
-                details.push(`\u2139\uFE0F  Conversation folder: ${result.conversationFolder.newPath} (unchanged)`);
-              }
               if (result.reportFolder.changed) {
                 details.push(`\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath}`);
               } else {
                 details.push(`\u2139\uFE0F  Report folder: ${result.reportFolder.newPath} (unchanged)`);
               }
-              if (result.attachmentFolder.changed) {
-                details.push(`\u2705 Attachment folder: ${result.attachmentFolder.oldPath} \u2192 ${result.attachmentFolder.newPath}`);
-              } else {
-                details.push(`\u2139\uFE0F  Attachment folder: ${result.attachmentFolder.newPath} (unchanged)`);
-              }
-              console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations.execute completed successfully`);
+              console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder.execute completed successfully`);
               resolve({
                 success: true,
-                message: "Folder locations configured successfully",
+                message: "Report folder location configured successfully",
                 details
               });
             }
@@ -9327,6 +9344,7 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
 // src/ui/settings/folder-settings-section.ts
 init_folder_suggest();
 init_folder_browser_modal();
+init_folder_validation();
 var FolderSettingsSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
@@ -9388,6 +9406,19 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       return;
     }
     this.plugin.logger.debug(`[FolderSettings] Old path: "${oldPath}" \u2192 New path: "${newPath}"`);
+    const validation = validateFolderNesting(
+      settingKey,
+      newPath,
+      this.plugin.settings.conversationFolder,
+      this.plugin.settings.reportFolder,
+      this.plugin.settings.attachmentFolder
+    );
+    if (!validation.valid) {
+      new import_obsidian8.Notice(`\u274C ${validation.error}`);
+      textComponent.setValue(oldPath);
+      this.plugin.logger.debug(`[FolderSettings] Validation failed: ${validation.error}`);
+      return;
+    }
     const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
     if (!oldFolder || !(oldFolder instanceof import_obsidian8.TFolder)) {
       this.plugin.logger.debug(`[FolderSettings] Old folder doesn't exist, just updating setting`);

@@ -18,12 +18,13 @@
 
 
 // src/dialogs/configure-folder-locations-dialog.ts
-import { Modal, Setting, TFolder } from "obsidian";
+import { Modal, Setting, TFolder, Notice } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { FolderMigrationDialog } from "./folder-migration-dialog";
 import { EnhancedFolderMigrationDialog } from "./enhanced-folder-migration-dialog";
 import { FolderSuggest } from "../ui/folder-suggest";
 import { FolderBrowserModal } from "./folder-browser-modal";
+import { validateFolderNesting } from "../utils/folder-validation";
 
 export interface FolderConfigurationResult {
     conversationFolder: {
@@ -47,18 +48,14 @@ export interface FolderConfigurationResult {
 }
 
 /**
- * Dialog to configure folder locations during v1.3.0 upgrade
+ * Dialog to configure Report folder location during v1.3.0 upgrade
  * This is a BLOCKING dialog - it waits for user to save before continuing
  */
 export class ConfigureFolderLocationsDialog extends Modal {
-    private conversationFolderInput: HTMLInputElement | null = null;
     private reportFolderInput: HTMLInputElement | null = null;
-    private attachmentFolderInput: HTMLInputElement | null = null;
-    
-    private originalConversationFolder: string;
+
     private originalReportFolder: string;
-    private originalAttachmentFolder: string;
-    
+
     private onComplete: (result: FolderConfigurationResult) => void;
 
     constructor(
@@ -67,11 +64,9 @@ export class ConfigureFolderLocationsDialog extends Modal {
     ) {
         super(plugin.app);
         this.onComplete = onComplete;
-        
-        // Store original values
-        this.originalConversationFolder = plugin.settings.conversationFolder || "Nexus/Conversations";
+
+        // Store original value
         this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
-        this.originalAttachmentFolder = plugin.settings.attachmentFolder || "Nexus/Attachments";
     }
 
     onOpen() {
@@ -87,31 +82,33 @@ export class ConfigureFolderLocationsDialog extends Modal {
         // Main message
         const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
 
-        messageContainer.createEl("h3", { text: "✨ New: Configurable Folder Locations" });
+        messageContainer.createEl("h3", { text: "✨ New: Custom Report Folder Location" });
 
-        messageContainer.createEl("p", {
-            text: "You can now configure separate folder locations for conversations, reports, and attachments."
+        const descriptionEl = messageContainer.createDiv({ cls: "nexus-upgrade-description" });
+        descriptionEl.createEl("p", {
+            text: "Version 1.3.0 adds a custom field for the Reports location."
+        });
+        descriptionEl.createEl("p", {
+            text: "To prevent reports from moving with conversations, we moved it to the root of your vault."
+        });
+        descriptionEl.createEl("p", {
+            text: "You can now select a different folder below."
+        });
+
+        // Warning box
+        const warningBox = contentEl.createDiv({ cls: "nexus-upgrade-warning" });
+        warningBox.createEl("strong", { text: "⚠️ Important:" });
+        warningBox.createEl("p", {
+            text: "You cannot put the report folder inside the Conversations folder nor the Attachment folder for practical reasons."
         });
 
         // Folder inputs section
         const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
 
-        // Conversation Folder
-        new Setting(folderSection)
-            .setName("📁 Conversation Folder")
-            .setDesc("Where imported conversations are stored")
-            .addText(text => {
-                this.conversationFolderInput = text.inputEl;
-                text
-                    .setPlaceholder("Nexus/Conversations")
-                    .setValue(this.originalConversationFolder)
-                    .inputEl.addClass("nexus-upgrade-folder-input");
-            });
-
         // Report Folder
         new Setting(folderSection)
             .setName("📊 Report Folder")
-            .setDesc("Where import reports are stored")
+            .setDesc("Where import and upgrade reports are stored")
             .addText(text => {
                 this.reportFolderInput = text.inputEl;
 
@@ -147,20 +144,8 @@ export class ConfigureFolderLocationsDialog extends Modal {
                     });
             });
 
-        // Attachment Folder
-        new Setting(folderSection)
-            .setName("📎 Attachment Folder")
-            .setDesc("Where attachments are stored (⚠️ Exclude from sync to save space)")
-            .addText(text => {
-                this.attachmentFolderInput = text.inputEl;
-                text
-                    .setPlaceholder("Nexus/Attachments")
-                    .setValue(this.originalAttachmentFolder)
-                    .inputEl.addClass("nexus-upgrade-folder-input");
-            });
-
         messageContainer.createEl("p", {
-            text: "All folder locations can be changed at any time in the plugin settings.",
+            text: "You can change this location at any time in the plugin settings.",
             cls: "nexus-upgrade-hint"
         });
 
@@ -192,25 +177,49 @@ export class ConfigureFolderLocationsDialog extends Modal {
     }
 
     private async handleSave() {
-        if (!this.conversationFolderInput || !this.reportFolderInput || !this.attachmentFolderInput) {
+        if (!this.reportFolderInput) {
             this.close();
             this.onComplete({
-                conversationFolder: { changed: false, oldPath: this.originalConversationFolder, newPath: this.originalConversationFolder },
-                reportFolder: { changed: false, oldPath: this.originalReportFolder, newPath: this.originalReportFolder },
-                attachmentFolder: { changed: false, oldPath: this.originalAttachmentFolder, newPath: this.originalAttachmentFolder }
+                conversationFolder: {
+                    changed: false,
+                    oldPath: this.plugin.settings.conversationFolder,
+                    newPath: this.plugin.settings.conversationFolder
+                },
+                reportFolder: {
+                    changed: false,
+                    oldPath: this.originalReportFolder,
+                    newPath: this.originalReportFolder
+                },
+                attachmentFolder: {
+                    changed: false,
+                    oldPath: this.plugin.settings.attachmentFolder,
+                    newPath: this.plugin.settings.attachmentFolder
+                }
             });
             return;
         }
 
-        const newConversationFolder = this.conversationFolderInput.value.trim();
         const newReportFolder = this.reportFolderInput.value.trim();
-        const newAttachmentFolder = this.attachmentFolderInput.value.trim();
+
+        // Validate that report folder is not inside conversations or attachments
+        const validation = validateFolderNesting(
+            'reportFolder',
+            newReportFolder,
+            this.plugin.settings.conversationFolder,
+            this.originalReportFolder, // Use original to avoid self-check
+            this.plugin.settings.attachmentFolder
+        );
+
+        if (!validation.valid) {
+            new Notice(`❌ ${validation.error}`);
+            return; // Don't close dialog, let user fix the path
+        }
 
         const result: FolderConfigurationResult = {
             conversationFolder: {
-                changed: newConversationFolder !== this.originalConversationFolder,
-                oldPath: this.originalConversationFolder,
-                newPath: newConversationFolder
+                changed: false,
+                oldPath: this.plugin.settings.conversationFolder,
+                newPath: this.plugin.settings.conversationFolder
             },
             reportFolder: {
                 changed: newReportFolder !== this.originalReportFolder,
@@ -218,19 +227,17 @@ export class ConfigureFolderLocationsDialog extends Modal {
                 newPath: newReportFolder
             },
             attachmentFolder: {
-                changed: newAttachmentFolder !== this.originalAttachmentFolder,
-                oldPath: this.originalAttachmentFolder,
-                newPath: newAttachmentFolder
+                changed: false,
+                oldPath: this.plugin.settings.attachmentFolder,
+                newPath: this.plugin.settings.attachmentFolder
             }
         };
 
         // Close this dialog first
         this.close();
 
-        // Handle each folder change sequentially
-        await this.handleFolderChange('conversationFolder', result.conversationFolder);
+        // Handle report folder change
         await this.handleFolderChange('reportFolder', result.reportFolder);
-        await this.handleFolderChange('attachmentFolder', result.attachmentFolder);
 
         // Call completion callback with results
         this.onComplete(result);

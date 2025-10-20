@@ -707,21 +707,20 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
 }
 
 /**
- * Migrate to new folder settings structure
- * - Rename archiveFolder → conversationFolder
- * - Move Reports folder from <conversations>/Reports to ../Nexus Reports
- * - Create reportFolder and attachmentFolder settings
- * - Remove deprecated settings
+ * Migrate Reports folder to vault root and create reportFolder setting
+ * - Move Reports from <archiveFolder>/Reports to Nexus Reports (vault root)
+ * - Create reportFolder setting
+ * This is the ONLY change in this operation - conversationFolder and attachmentFolder are not touched
  */
 class MigrateToSeparateFoldersOperation extends UpgradeOperation {
     readonly id = "migrate-to-separate-folders";
-    readonly name = "Update Folder Settings";
-    readonly description = "Updates plugin settings to use separate folders for Conversations, Reports, and Attachments. Moves Reports folder out of Conversations for better organization.";
+    readonly name = "Move Reports Folder";
+    readonly description = "Moves the Reports folder from inside Conversations to the vault root for better organization.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
-        // Run if old archiveFolder setting exists
-        return !!context.plugin.settings.archiveFolder;
+        // Run if reportFolder setting doesn't exist yet (indicates migration needed)
+        return !context.plugin.settings.reportFolder;
     }
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
@@ -729,145 +728,66 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
 
         try {
             results.push(`**What this does:**`);
-            results.push(`This updates your plugin settings to use separate folders for better organization:`);
-            results.push(`- **Conversations**: Your chat notes`);
-            results.push(`- **Reports**: Import and upgrade reports (moved to "Nexus Reports")`);
-            results.push(`- **Attachments**: Files, images, and Claude artifacts`);
+            results.push(`Version 1.3.0 adds a dedicated setting for the Reports folder location.`);
+            results.push(`To prevent reports from moving when you reorganize conversations, we're moving the Reports folder to the vault root.`);
             results.push(``);
 
-            console.debug(`[MigrateToSeparateFolders] Starting migration...`);
-            console.debug(`[MigrateToSeparateFolders] Current settings:`, {
-                conversationFolder: context.plugin.settings.conversationFolder,
-                reportFolder: context.plugin.settings.reportFolder,
-                attachmentFolder: context.plugin.settings.attachmentFolder,
-                archiveFolder: context.plugin.settings.archiveFolder
-            });
+            console.debug(`[MigrateReportsFolder] Starting migration...`);
 
-            results.push(`**Settings updated:**`);
-            results.push(``);
+            // Get old report path (was always <archiveFolder>/Reports in v1.2.0)
+            const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+            const oldReportPath = `${oldArchiveFolder}/Reports`;
+            const newReportPath = "Nexus Reports";
 
-            // Only migrate if new settings don't exist yet
-            if (!context.plugin.settings.conversationFolder) {
-                const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
-                console.debug(`[MigrateToSeparateFolders] Migrating from archiveFolder: ${oldArchiveFolder}`);
+            console.debug(`[MigrateReportsFolder] Old path: ${oldReportPath}`);
+            console.debug(`[MigrateReportsFolder] New path: ${newReportPath}`);
 
-                // Set conversation folder
-                context.plugin.settings.conversationFolder = oldArchiveFolder;
+            // Try to move Reports folder if it exists
+            const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
+            let reportsMoved = false;
 
-                // Calculate new Reports path: move from <conversations>/Reports to ../Nexus Reports
-                const oldReportPath = `${oldArchiveFolder}/Reports`;
-                const parentPath = oldArchiveFolder.split('/').slice(0, -1).join('/');
-                const newReportPath = parentPath ? `${parentPath}/Nexus Reports` : 'Nexus Reports';
-
-                // Try to move Reports folder if it exists
-                const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
-                let reportsMoved = false;
-
-                if (oldReportFolder && oldReportFolder instanceof TFolder) {
-                    try {
-                        console.debug(`[MigrateToSeparateFolders] Moving Reports: ${oldReportPath} → ${newReportPath}`);
-                        await context.plugin.app.vault.rename(oldReportFolder, newReportPath);
-                        reportsMoved = true;
-                        console.debug(`[MigrateToSeparateFolders] Reports folder moved successfully`);
-                    } catch (error) {
-                        console.error(`[MigrateToSeparateFolders] Failed to move Reports folder:`, error);
-                        // Fallback: keep old path if move fails
-                        context.plugin.settings.reportFolder = oldReportPath;
-                        results.push(`- Reports: \`${oldReportPath}\` (move failed, kept in old location)`);
-                    }
+            if (oldReportFolder && oldReportFolder instanceof TFolder) {
+                try {
+                    console.debug(`[MigrateReportsFolder] Moving Reports folder...`);
+                    await context.plugin.app.vault.rename(oldReportFolder, newReportPath);
+                    reportsMoved = true;
+                    console.debug(`[MigrateReportsFolder] Reports folder moved successfully`);
+                    results.push(`✅ Reports folder moved: \`${oldReportPath}\` → \`${newReportPath}\``);
+                } catch (error) {
+                    console.error(`[MigrateReportsFolder] Failed to move Reports folder:`, error);
+                    // Fallback: keep old path if move fails
+                    context.plugin.settings.reportFolder = oldReportPath;
+                    results.push(`⚠️ Reports folder could not be moved automatically.`);
+                    results.push(`   Current location: \`${oldReportPath}\``);
+                    results.push(`   You can move it manually later in settings.`);
                 }
-
-                // Set report folder to new path (or old if move failed)
-                if (reportsMoved || !oldReportFolder) {
-                    context.plugin.settings.reportFolder = newReportPath;
-                    if (reportsMoved) {
-                        results.push(`- Reports: \`${oldReportPath}\` → \`${newReportPath}\` ✅`);
-                    } else {
-                        results.push(`- Reports: \`${newReportPath}\` (folder will be created on next import)`);
-                    }
-                }
-
-                results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\``);
             } else {
-                console.debug(`[MigrateToSeparateFolders] New settings already exist, keeping them`);
-                results.push(`- Conversations: \`${context.plugin.settings.conversationFolder}\` (already configured)`);
-                results.push(`- Reports: \`${context.plugin.settings.reportFolder}\` (already configured)`);
+                console.debug(`[MigrateReportsFolder] No existing Reports folder found`);
+                results.push(`ℹ️ No existing Reports folder found. New reports will be created in \`${newReportPath}\``);
             }
 
-            // Migrate attachmentFolder (keep existing or set default)
-            if (!context.plugin.settings.attachmentFolder) {
-                context.plugin.settings.attachmentFolder = "Nexus/Attachments";
-                results.push(`- Attachments: \`${context.plugin.settings.attachmentFolder}\``);
-            } else {
-                results.push(`- Attachments: \`${context.plugin.settings.attachmentFolder}\` (already configured)`);
-            }
-
-            // Migrate conversationPageSize to lastConversationsPerPage
-            if (!context.plugin.settings.lastConversationsPerPage) {
-                if (context.plugin.settings.conversationPageSize) {
-                    context.plugin.settings.lastConversationsPerPage = context.plugin.settings.conversationPageSize;
-                } else {
-                    context.plugin.settings.lastConversationsPerPage = 50;
-                }
-            }
-
-            // Remove deprecated settings (only if they exist)
-            let removedCount = 0;
-
-            if (context.plugin.settings.archiveFolder !== undefined) {
-                delete context.plugin.settings.archiveFolder;
-                removedCount++;
-            }
-            if (context.plugin.settings.importAttachments !== undefined) {
-                delete context.plugin.settings.importAttachments;
-                removedCount++;
-            }
-            if (context.plugin.settings.skipMissingAttachments !== undefined) {
-                delete context.plugin.settings.skipMissingAttachments;
-                removedCount++;
-            }
-            if (context.plugin.settings.showAttachmentDetails !== undefined) {
-                delete context.plugin.settings.showAttachmentDetails;
-                removedCount++;
-            }
-            if (context.plugin.settings.defaultImportMode !== undefined) {
-                delete context.plugin.settings.defaultImportMode;
-                removedCount++;
-            }
-            if (context.plugin.settings.rememberLastImportMode !== undefined) {
-                delete context.plugin.settings.rememberLastImportMode;
-                removedCount++;
-            }
-            if (context.plugin.settings.conversationPageSize !== undefined) {
-                delete context.plugin.settings.conversationPageSize;
-                removedCount++;
-            }
-            if (context.plugin.settings.autoSelectAllOnOpen !== undefined) {
-                delete context.plugin.settings.autoSelectAllOnOpen;
-                removedCount++;
-            }
-
-            if (removedCount > 0) {
-                results.push(``);
-                results.push(`Cleaned up ${removedCount} deprecated setting(s).`);
+            // Set report folder setting
+            if (reportsMoved || !oldReportFolder) {
+                context.plugin.settings.reportFolder = newReportPath;
             }
 
             await context.plugin.saveSettings();
 
-            console.debug(`[MigrateToSeparateFolders] Migration completed successfully`);
+            console.debug(`[MigrateReportsFolder] Migration completed successfully`);
+            console.debug(`[MigrateReportsFolder] reportFolder setting: ${context.plugin.settings.reportFolder}`);
 
             return {
                 success: true,
-                message: "Settings updated successfully. Your files were not moved.",
+                message: "Reports folder migrated successfully",
                 details: results
             };
         } catch (error: unknown) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            console.error(`[MigrateToSeparateFolders] Failed:`, error);
-            results.push(`Error: ${errorMsg}`);
+            console.error(`[MigrateReportsFolder] Failed:`, error);
+            results.push(`❌ Error: ${errorMsg}`);
             return {
                 success: false,
-                message: `Failed to update folder settings: ${errorMsg}`,
+                message: `Failed to migrate Reports folder: ${errorMsg}`,
                 details: results
             };
         }
@@ -875,15 +795,10 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            // Verify new settings exist
-            return !!(
-                context.plugin.settings.conversationFolder &&
-                context.plugin.settings.reportFolder &&
-                context.plugin.settings.attachmentFolder &&
-                !context.plugin.settings.archiveFolder  // Old setting should be gone
-            );
+            // Verify reportFolder setting exists
+            return !!context.plugin.settings.reportFolder;
         } catch (error) {
-            console.error(`MigrateToSeparateFolders.verify failed:`, error);
+            console.error(`MigrateReportsFolder.verify failed:`, error);
             return false;
         }
     }
@@ -1369,22 +1284,16 @@ class ConfigureFolderLocationsOperation extends UpgradeOperation {
     }
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
-        console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations.execute starting`);
+        console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder.execute starting`);
 
         return new Promise<OperationResult>((resolve) => {
             const dialog = new ConfigureFolderLocationsDialog(
                 context.plugin,
                 async (result: FolderConfigurationResult) => {
-                    console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations - User completed configuration:`, result);
+                    console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder - User completed configuration:`, result);
 
                     // Build result message
                     const details: string[] = [];
-
-                    if (result.conversationFolder.changed) {
-                        details.push(`✅ Conversation folder: ${result.conversationFolder.oldPath} → ${result.conversationFolder.newPath}`);
-                    } else {
-                        details.push(`ℹ️  Conversation folder: ${result.conversationFolder.newPath} (unchanged)`);
-                    }
 
                     if (result.reportFolder.changed) {
                         details.push(`✅ Report folder: ${result.reportFolder.oldPath} → ${result.reportFolder.newPath}`);
@@ -1392,17 +1301,11 @@ class ConfigureFolderLocationsOperation extends UpgradeOperation {
                         details.push(`ℹ️  Report folder: ${result.reportFolder.newPath} (unchanged)`);
                     }
 
-                    if (result.attachmentFolder.changed) {
-                        details.push(`✅ Attachment folder: ${result.attachmentFolder.oldPath} → ${result.attachmentFolder.newPath}`);
-                    } else {
-                        details.push(`ℹ️  Attachment folder: ${result.attachmentFolder.newPath} (unchanged)`);
-                    }
-
-                    console.debug(`[NEXUS-UPGRADE] ConfigureFolderLocations.execute completed successfully`);
+                    console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder.execute completed successfully`);
 
                     resolve({
                         success: true,
-                        message: "Folder locations configured successfully",
+                        message: "Report folder location configured successfully",
                         details
                     });
                 }
