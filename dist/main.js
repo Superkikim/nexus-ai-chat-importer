@@ -2214,10 +2214,18 @@ var init_folder_browser_modal = __esm({
         const subfolder = this.subfolderInput.value.trim();
         let fullPath = "";
         if (baseFolder && subfolder) {
-          fullPath = `${baseFolder}/${subfolder}`;
+          if (baseFolder === "/") {
+            fullPath = subfolder;
+          } else {
+            fullPath = `${baseFolder}/${subfolder}`;
+          }
         } else if (subfolder) {
           fullPath = subfolder;
         } else if (baseFolder) {
+          if (baseFolder === "/") {
+            new import_obsidian5.Notice("\u26A0\uFE0F Please enter a folder name");
+            return;
+          }
           fullPath = baseFolder;
         } else {
           new import_obsidian5.Notice("\u26A0\uFE0F Please enter at least a folder name");

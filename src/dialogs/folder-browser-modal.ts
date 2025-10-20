@@ -114,12 +114,22 @@ export class FolderBrowserModal extends Modal {
         // Build full path
         let fullPath = "";
         if (baseFolder && subfolder) {
-            fullPath = `${baseFolder}/${subfolder}`;
+            // Special case: if base folder is "/" (vault root), don't double the slash
+            if (baseFolder === "/") {
+                fullPath = subfolder;
+            } else {
+                fullPath = `${baseFolder}/${subfolder}`;
+            }
         } else if (subfolder) {
             // No base folder = vault root
             fullPath = subfolder;
         } else if (baseFolder) {
             // No subfolder = just use base folder
+            // Special case: if user selected "/" alone, treat as empty (vault root)
+            if (baseFolder === "/") {
+                new Notice("⚠️ Please enter a folder name");
+                return;
+            }
             fullPath = baseFolder;
         } else {
             new Notice("⚠️ Please enter at least a folder name");
