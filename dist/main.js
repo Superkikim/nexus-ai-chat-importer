@@ -2594,6 +2594,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault) {
   let skipped = 0;
   let errors = 0;
   const errorDetails = [];
+  const foldersToDelete = [];
   async function moveRecursive(sourceFolder, destPath) {
     var _a;
     try {
@@ -2625,17 +2626,22 @@ async function moveAndMergeFolders(oldFolder, newPath, vault) {
         }
       }
     }
-    if (sourceFolder.children.length === 0) {
-      try {
-        await vault.delete(sourceFolder);
-        logger.debug(`Deleted empty folder: ${sourceFolder.path}`);
-      } catch (error) {
-        logger.error(`Failed to delete folder ${sourceFolder.path}:`, error);
-      }
-    }
+    foldersToDelete.push(sourceFolder);
   }
   try {
     await moveRecursive(oldFolder, newPath);
+    for (const folder of foldersToDelete.reverse()) {
+      try {
+        if (folder.children.length === 0) {
+          await vault.delete(folder);
+          logger.debug(`Deleted empty folder: ${folder.path}`);
+        } else {
+          logger.debug(`Folder not empty, skipping deletion: ${folder.path} (${folder.children.length} items)`);
+        }
+      } catch (error) {
+        logger.debug(`Could not delete folder ${folder.path}: ${error.message || String(error)}`);
+      }
+    }
     return {
       success: errors === 0,
       moved,

@@ -455,6 +455,7 @@ export async function moveAndMergeFolders(
     let skipped = 0;
     let errors = 0;
     const errorDetails: string[] = [];
+    const foldersToDelete: TFolder[] = []; // Track folders to delete after moving files
 
     /**
      * Recursively move all files from a folder
@@ -502,20 +503,30 @@ export async function moveAndMergeFolders(
             }
         }
 
-        // Delete folder if it's now empty
-        if (sourceFolder.children.length === 0) {
-            try {
-                await vault.delete(sourceFolder);
-                logger.debug(`Deleted empty folder: ${sourceFolder.path}`);
-            } catch (error: any) {
-                logger.error(`Failed to delete folder ${sourceFolder.path}:`, error);
-                // Don't count this as a critical error
-            }
-        }
+        // Mark folder for deletion (will be deleted bottom-up after all moves)
+        foldersToDelete.push(sourceFolder);
     }
 
     try {
         await moveRecursive(oldFolder, newPath);
+
+        // Delete folders bottom-up (deepest first)
+        // Reverse the array so we delete children before parents
+        for (const folder of foldersToDelete.reverse()) {
+            try {
+                // Check if folder still exists and is empty
+                if (folder.children.length === 0) {
+                    await vault.delete(folder);
+                    logger.debug(`Deleted empty folder: ${folder.path}`);
+                } else {
+                    logger.debug(`Folder not empty, skipping deletion: ${folder.path} (${folder.children.length} items)`);
+                }
+            } catch (error: any) {
+                // Folder might have already been deleted or might not be empty
+                // This is not a critical error - just log it
+                logger.debug(`Could not delete folder ${folder.path}: ${error.message || String(error)}`);
+            }
+        }
 
         return {
             success: errors === 0,
