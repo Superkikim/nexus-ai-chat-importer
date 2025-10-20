@@ -7597,10 +7597,12 @@ var init_configure_folder_locations_dialog = __esm({
     init_folder_browser_modal();
     init_folder_validation();
     ConfigureFolderLocationsDialog = class extends import_obsidian24.Modal {
+      // Track if onComplete was already called
       constructor(plugin, onComplete) {
         super(plugin.app);
         this.plugin = plugin;
         this.reportFolderInput = null;
+        this.completed = false;
         this.onComplete = onComplete;
         this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
       }
@@ -7675,7 +7677,10 @@ var init_configure_folder_locations_dialog = __esm({
         this.addStyles();
       }
       async handleSave() {
+        if (this.completed)
+          return;
         if (!this.reportFolderInput) {
+          this.completed = true;
           this.close();
           this.onComplete({
             conversationFolder: {
@@ -7726,6 +7731,7 @@ var init_configure_folder_locations_dialog = __esm({
             newPath: this.plugin.settings.attachmentFolder
           }
         };
+        this.completed = true;
         this.close();
         await this.handleFolderChange("reportFolder", result.reportFolder);
         this.onComplete(result);
@@ -7838,6 +7844,26 @@ var init_configure_folder_locations_dialog = __esm({
       onClose() {
         const { contentEl } = this;
         contentEl.empty();
+        if (!this.completed && this.onComplete) {
+          this.completed = true;
+          this.onComplete({
+            conversationFolder: {
+              changed: false,
+              oldPath: this.plugin.settings.conversationFolder,
+              newPath: this.plugin.settings.conversationFolder
+            },
+            reportFolder: {
+              changed: false,
+              oldPath: this.originalReportFolder,
+              newPath: this.originalReportFolder
+            },
+            attachmentFolder: {
+              changed: false,
+              oldPath: this.plugin.settings.attachmentFolder,
+              newPath: this.plugin.settings.attachmentFolder
+            }
+          });
+        }
       }
     };
   }
@@ -8350,7 +8376,10 @@ ${frontmatter}
         this.type = "automatic";
       }
       async canRun(context) {
-        return !context.plugin.settings.reportFolder;
+        const reportFolder = context.plugin.settings.reportFolder;
+        const archiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+        const oldReportPath = `${archiveFolder}/Reports`;
+        return !reportFolder || reportFolder === "" || reportFolder === oldReportPath;
       }
       async execute(context) {
         const results = [];

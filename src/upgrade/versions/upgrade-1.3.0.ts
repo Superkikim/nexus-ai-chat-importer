@@ -719,8 +719,15 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
-        // Run if reportFolder setting doesn't exist yet (indicates migration needed)
-        return !context.plugin.settings.reportFolder;
+        // Run if reportFolder is empty or still points to the old nested location
+        const reportFolder = context.plugin.settings.reportFolder;
+        const archiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+        const oldReportPath = `${archiveFolder}/Reports`;
+
+        // Migration needed if:
+        // 1. reportFolder is empty/undefined, OR
+        // 2. reportFolder still points to the old nested path (e.g., "Nexus/Conversations/Reports")
+        return !reportFolder || reportFolder === "" || reportFolder === oldReportPath;
     }
 
     async execute(context: UpgradeContext): Promise<OperationResult> {

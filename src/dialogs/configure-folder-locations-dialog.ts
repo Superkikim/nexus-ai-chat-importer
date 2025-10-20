@@ -57,6 +57,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
     private originalReportFolder: string;
 
     private onComplete: (result: FolderConfigurationResult) => void;
+    private completed: boolean = false; // Track if onComplete was already called
 
     constructor(
         private plugin: NexusAiChatImporterPlugin,
@@ -177,7 +178,10 @@ export class ConfigureFolderLocationsDialog extends Modal {
     }
 
     private async handleSave() {
+        if (this.completed) return; // Prevent double execution
+
         if (!this.reportFolderInput) {
+            this.completed = true;
             this.close();
             this.onComplete({
                 conversationFolder: {
@@ -232,6 +236,9 @@ export class ConfigureFolderLocationsDialog extends Modal {
                 newPath: this.plugin.settings.attachmentFolder
             }
         };
+
+        // Mark as completed before closing
+        this.completed = true;
 
         // Close this dialog first
         this.close();
@@ -371,6 +378,29 @@ export class ConfigureFolderLocationsDialog extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
+
+        // If dialog is closed without saving (e.g., clicking X), resolve with no changes
+        // This prevents the upgrade process from hanging
+        if (!this.completed && this.onComplete) {
+            this.completed = true;
+            this.onComplete({
+                conversationFolder: {
+                    changed: false,
+                    oldPath: this.plugin.settings.conversationFolder,
+                    newPath: this.plugin.settings.conversationFolder
+                },
+                reportFolder: {
+                    changed: false,
+                    oldPath: this.originalReportFolder,
+                    newPath: this.originalReportFolder
+                },
+                attachmentFolder: {
+                    changed: false,
+                    oldPath: this.plugin.settings.attachmentFolder,
+                    newPath: this.plugin.settings.attachmentFolder
+                }
+            });
+        }
     }
 }
 
