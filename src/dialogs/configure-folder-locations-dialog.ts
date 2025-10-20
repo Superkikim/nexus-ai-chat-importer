@@ -231,9 +231,9 @@ export class ConfigureFolderLocationsDialog extends Modal {
         }
 
         // Show migration dialog and wait for user choice
-        const useEnhancedDialog = folderType === 'conversationFolder' || folderType === 'attachmentFolder';
-        const folderTypeLabel = folderType === 'conversationFolder' ? 'Conversations' : 
-                               folderType === 'reportFolder' ? 'Reports' : 'Attachments';
+        // Use Enhanced dialog for ALL folder types (it handles link updates for conversations/attachments, simple move for reports)
+        const folderTypeLabel = folderType === 'conversationFolder' ? 'conversations' :
+                               folderType === 'reportFolder' ? 'reports' : 'attachments';
 
         await new Promise<void>((resolve) => {
             const handleMigrationAction = async (action: 'move' | 'keep' | 'cancel') => {
@@ -252,25 +252,15 @@ export class ConfigureFolderLocationsDialog extends Modal {
                 resolve();
             };
 
-            if (useEnhancedDialog) {
-                const dialog = new EnhancedFolderMigrationDialog(
-                    this.plugin,
-                    oldPath,
-                    newPath,
-                    folderTypeLabel,
-                    handleMigrationAction
-                );
-                dialog.open();
-            } else {
-                const dialog = new FolderMigrationDialog(
-                    this.plugin,
-                    oldPath,
-                    newPath,
-                    folderTypeLabel,
-                    handleMigrationAction
-                );
-                dialog.open();
-            }
+            // Always use Enhanced dialog (it handles link updates when needed)
+            const dialog = new EnhancedFolderMigrationDialog(
+                this.plugin,
+                oldPath,
+                newPath,
+                folderTypeLabel,
+                handleMigrationAction
+            );
+            dialog.open();
         });
     }
 
