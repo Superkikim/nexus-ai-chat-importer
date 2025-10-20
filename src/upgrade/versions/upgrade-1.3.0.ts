@@ -20,7 +20,7 @@
 // src/upgrade/versions/upgrade-1.3.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
 import type NexusAiChatImporterPlugin from "../../main";
-import { generateSafeAlias } from "../../utils";
+import { generateSafeAlias, moveAndMergeFolders } from "../../utils";
 import { DateParser } from "../../utils/date-parser";
 import { TFolder } from "obsidian";
 import { ConfigureFolderLocationsDialog, FolderConfigurationResult } from "../../dialogs/configure-folder-locations-dialog";
@@ -756,10 +756,25 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
             if (oldReportFolder && oldReportFolder instanceof TFolder) {
                 try {
                     console.debug(`[MigrateReportsFolder] Moving Reports folder...`);
-                    await context.plugin.app.vault.rename(oldReportFolder, newReportPath);
-                    reportsMoved = true;
-                    console.debug(`[MigrateReportsFolder] Reports folder moved successfully`);
-                    results.push(`✅ Reports folder moved: \`${oldReportPath}\` → \`${newReportPath}\``);
+                    const result = await moveAndMergeFolders(oldReportFolder, newReportPath, context.plugin.app.vault);
+                    reportsMoved = result.moved > 0;
+
+                    console.debug(`[MigrateReportsFolder] Migration completed: ${result.moved} moved, ${result.skipped} skipped, ${result.errors} errors`);
+
+                    if (result.success && result.skipped === 0) {
+                        // Perfect success
+                        results.push(`✅ Reports folder moved: \`${oldReportPath}\` → \`${newReportPath}\` (${result.moved} file(s))`);
+                    } else {
+                        // Some files skipped or errors
+                        results.push(`⚠️ Reports folder migration completed with warnings:`);
+                        results.push(`   - Successfully moved: ${result.moved} file(s)`);
+                        if (result.skipped > 0) {
+                            results.push(`   - Skipped (already exist): ${result.skipped} file(s)`);
+                        }
+                        if (result.errors > 0) {
+                            results.push(`   - Errors: ${result.errors} file(s)`);
+                        }
+                    }
                 } catch (error) {
                     console.error(`[MigrateReportsFolder] Failed to move Reports folder:`, error);
                     // Fallback: keep old path if move fails

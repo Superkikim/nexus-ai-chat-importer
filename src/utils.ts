@@ -18,7 +18,7 @@
 
 
 // src/utils.ts
-import { moment, App, TFile } from "obsidian";
+import { moment, App, TFile, TFolder, Vault } from "obsidian";
 import { Logger } from "./logger";
 import { requestUrl } from "obsidian";
 import { MESSAGE_TIMESTAMP_FORMATS } from "./config/constants";
@@ -424,4 +424,101 @@ interface ChatMessage {
         parts: any[];
         content_type?: string;
     };
+}
+
+/**
+ * Result of a folder merge operation
+ */
+export interface FolderMergeResult {
+    success: boolean;
+    moved: number;
+    skipped: number;
+    errors: number;
+    errorDetails?: string[];
+}
+
+/**
+ * Move and merge folders - moves all files from oldFolder to newPath
+ * If files already exist in destination, they are skipped (not overwritten)
+ *
+ * @param oldFolder - The source folder to move from
+ * @param newPath - The destination path
+ * @param vault - The Obsidian vault instance
+ * @returns Result with counts of moved, skipped, and error files
+ */
+export async function moveAndMergeFolders(
+    oldFolder: TFolder,
+    newPath: string,
+    vault: Vault
+): Promise<FolderMergeResult> {
+    let moved = 0;
+    let skipped = 0;
+    let errors = 0;
+    const errorDetails: string[] = [];
+
+    try {
+        // Ensure destination folder exists
+        try {
+            await vault.createFolder(newPath);
+        } catch (error: any) {
+            if (!error.message?.includes("Folder already exists")) {
+                throw error;
+            }
+            // Folder exists, that's fine - we're merging
+        }
+
+        // Move all children recursively
+        for (const child of oldFolder.children) {
+            const childNewPath = `${newPath}/${child.name}`;
+
+            try {
+                // Check if destination already exists
+                const exists = await vault.adapter.exists(childNewPath);
+
+                if (exists) {
+                    // Skip existing files to avoid overwriting
+                    logger.debug(`Target already exists, skipping: ${childNewPath}`);
+                    skipped++;
+                    continue;
+                }
+
+                // Destination doesn't exist, safe to move
+                await vault.rename(child, childNewPath);
+                moved++;
+            } catch (error: any) {
+                const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
+                logger.error(errorMsg);
+                errorDetails.push(errorMsg);
+                errors++;
+            }
+        }
+
+        // Delete old folder if it's now empty
+        if (oldFolder.children.length === 0) {
+            try {
+                await vault.delete(oldFolder);
+                logger.debug(`Deleted empty old folder: ${oldFolder.path}`);
+            } catch (error: any) {
+                logger.error(`Failed to delete old folder ${oldFolder.path}:`, error);
+                // Don't count this as a critical error
+            }
+        }
+
+        return {
+            success: errors === 0,
+            moved,
+            skipped,
+            errors,
+            errorDetails: errorDetails.length > 0 ? errorDetails : undefined
+        };
+    } catch (error: any) {
+        logger.error(`Failed to merge folders:`, error);
+        return {
+            success: false,
+            moved,
+            skipped,
+            errors: errors + 1,
+            errorDetails: [`Critical error: ${error.message || String(error)}`]
+        };
+    }
 }

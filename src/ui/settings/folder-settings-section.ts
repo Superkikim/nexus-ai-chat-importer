@@ -18,12 +18,13 @@
 
 
 // src/ui/settings/folder-settings-section.ts
-import { Setting, TFolder, TextComponent, Notice } from "obsidian";
+import { Setting, TFolder, TextComponent, Notice, Modal } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
 import { FolderSuggest } from "../folder-suggest";
 import { FolderBrowserModal } from "../../dialogs/folder-browser-modal";
 import { validateFolderNesting } from "../../utils/folder-validation";
+import { moveAndMergeFolders, type FolderMergeResult } from "../../utils";
 
 export class FolderSettingsSection extends BaseSettingsSection {
     readonly title = "📁 Folder Structure";
@@ -236,13 +237,23 @@ export class FolderSettingsSection extends BaseSettingsSection {
         }
 
         if (action === 'move') {
-            // Migrate files (the enhanced dialog handles link updates internally)
+            // Migrate files using merge function
             this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
             try {
-                await this.plugin.app.vault.rename(oldFolder, newPath);
-                this.plugin.logger.debug(`[FolderSettings] Migration successful`);
+                const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
+                this.plugin.logger.debug(`[FolderSettings] Migration completed: ${result.moved} moved, ${result.skipped} skipped, ${result.errors} errors`);
+
+                // Show result to user
+                if (result.success && result.skipped === 0) {
+                    // Perfect success - simple notice
+                    new Notice(`✅ Files moved to ${newPath}`);
+                } else {
+                    // Some files skipped or errors - show detailed dialog
+                    this.showMergeResultDialog(result, oldPath, newPath);
+                }
             } catch (error) {
                 this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
+                new Notice(`❌ Failed to move files: ${error.message}`);
                 throw error;
             }
         } else {
@@ -254,6 +265,100 @@ export class FolderSettingsSection extends BaseSettingsSection {
         this.plugin.settings[settingKey] = newPath;
         await this.plugin.saveSettings();
         this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
+    }
+
+    /**
+     * Show dialog with merge result details when files were skipped or errors occurred
+     */
+    private showMergeResultDialog(result: FolderMergeResult, oldPath: string, newPath: string): void {
+        const modal = new Modal(this.plugin.app);
+        modal.titleEl.setText("Folder Migration Result");
+
+        const { contentEl } = modal;
+
+        // Summary
+        const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
+        summary.createEl("h3", { text: "Migration Summary" });
+
+        const stats = summary.createDiv({ cls: "nexus-merge-stats" });
+        stats.createEl("p", { text: `✅ Successfully moved: ${result.moved} file(s)` });
+
+        if (result.skipped > 0) {
+            stats.createEl("p", {
+                text: `⚠️ Skipped (already exist): ${result.skipped} file(s)`,
+                cls: "nexus-merge-warning"
+            });
+        }
+
+        if (result.errors > 0) {
+            stats.createEl("p", {
+                text: `❌ Errors: ${result.errors} file(s)`,
+                cls: "nexus-merge-error"
+            });
+        }
+
+        // Explanation
+        const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
+        explanation.createEl("p", {
+            text: "Files that already existed in the destination were not overwritten to preserve your data."
+        });
+
+        // Error details if any
+        if (result.errorDetails && result.errorDetails.length > 0) {
+            const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
+            errorSection.createEl("h4", { text: "Error Details:" });
+            const errorList = errorSection.createEl("ul");
+            for (const error of result.errorDetails) {
+                errorList.createEl("li", { text: error });
+            }
+        }
+
+        // Close button
+        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
+        const closeButton = buttonContainer.createEl("button", { text: "OK", cls: "mod-cta" });
+        closeButton.addEventListener("click", () => modal.close());
+
+        // Add styles
+        const styleEl = document.createElement("style");
+        styleEl.textContent = `
+            .nexus-merge-summary {
+                margin-bottom: 20px;
+            }
+            .nexus-merge-stats p {
+                margin: 8px 0;
+                font-size: 14px;
+            }
+            .nexus-merge-warning {
+                color: var(--text-warning);
+            }
+            .nexus-merge-error {
+                color: var(--text-error);
+            }
+            .nexus-merge-explanation {
+                padding: 12px;
+                background: var(--background-secondary);
+                border-radius: 4px;
+                margin: 16px 0;
+            }
+            .nexus-merge-errors {
+                margin-top: 16px;
+                padding: 12px;
+                background: var(--background-modifier-error);
+                border-radius: 4px;
+            }
+            .nexus-merge-errors ul {
+                margin: 8px 0;
+                padding-left: 20px;
+            }
+            .nexus-merge-errors li {
+                margin: 4px 0;
+                font-size: 12px;
+                font-family: var(--font-monospace);
+            }
+        `;
+        document.head.appendChild(styleEl);
+
+        modal.open();
     }
 }
 
