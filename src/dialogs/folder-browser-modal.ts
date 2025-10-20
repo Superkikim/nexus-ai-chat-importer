@@ -1,209 +1,150 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { App, Modal, SuggestModal, TFolder, Notice } from "obsidian";
+import { App, Modal, Notice } from "obsidian";
+import { FolderSuggest } from "../ui/folder-suggest";
 
 /**
- * Modal for browsing and selecting folders in the vault
- * Includes a "Create new folder" button
+ * Modal for selecting/creating a folder with inline base folder + subfolder inputs
  */
-export class FolderBrowserModal extends SuggestModal<TFolder> {
-    private onSelect: (folder: TFolder) => void;
-    private onCreate: (path: string) => void;
-    private selectedFolder: TFolder | null = null;
-    private selectedEl: HTMLElement | null = null;
+export class FolderBrowserModal extends Modal {
+    private onSubmit: (path: string) => void;
+    private baseFolderInput: HTMLInputElement;
+    private subfolderInput: HTMLInputElement;
 
-    constructor(app: App, onSelect: (folder: TFolder) => void, onCreate: (path: string) => void) {
+    constructor(app: App, onSubmit: (path: string) => void) {
         super(app);
-        this.onSelect = onSelect;
-        this.onCreate = onCreate;
-
-        this.setPlaceholder("Type to search folders...");
-    }
-
-    onOpen(): void {
-        super.onOpen();
-
-        // Add buttons at the bottom
-        const buttonContainer = this.modalEl.createDiv({ cls: "modal-button-container" });
-        buttonContainer.style.padding = "10px";
-        buttonContainer.style.borderTop = "1px solid var(--background-modifier-border)";
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.gap = "10px";
-
-        // Button 1: Select folder
-        const selectButton = buttonContainer.createEl("button", {
-            text: "Select this folder",
-            cls: "mod-cta"
-        });
-        selectButton.addEventListener("click", () => {
-            if (this.selectedFolder) {
-                this.onSelect(this.selectedFolder);
-                this.close();
-            } else {
-                new Notice("⚠️ Please select a folder first");
-            }
-        });
-
-        // Button 2: Create subfolder
-        const createButton = buttonContainer.createEl("button", {
-            text: "Create subfolder here"
-        });
-        createButton.addEventListener("click", () => {
-            const parentPath = this.selectedFolder?.path || "";
-            this.close();
-            this.promptCreateFolder(parentPath);
-        });
-    }
-
-    getSuggestions(query: string): TFolder[] {
-        const folders = this.app.vault.getAllLoadedFiles()
-            .filter((f): f is TFolder => f instanceof TFolder);
-
-        if (!query) {
-            return folders.slice(0, 100); // Show first 100 folders when no query
-        }
-
-        const lowerQuery = query.toLowerCase();
-        return folders
-            .filter(f => f.path.toLowerCase().includes(lowerQuery))
-            .slice(0, 100); // Limit to 100 results
-    }
-
-    renderSuggestion(folder: TFolder, el: HTMLElement): void {
-        el.createEl("div", { text: folder.path, cls: "suggestion-content" });
-
-        // Add click handler to track selection
-        el.addEventListener("click", () => {
-            // Remove previous selection highlight
-            if (this.selectedEl) {
-                this.selectedEl.style.backgroundColor = "";
-            }
-
-            // Highlight this element
-            el.style.backgroundColor = "var(--background-modifier-hover)";
-            this.selectedEl = el;
-            this.selectedFolder = folder;
-        });
-    }
-
-    onChooseSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent): void {
-        this.selectedFolder = folder;
-        // Don't close immediately - let user choose between "Select" or "Create subfolder"
-    }
-
-    private promptCreateFolder(parentPath: string): void {
-        const modal = new CreateFolderModal(this.app, parentPath, async (subfolderName: string) => {
-            const fullPath = parentPath ? `${parentPath}/${subfolderName}` : subfolderName;
-
-            try {
-                await this.app.vault.createFolder(fullPath);
-                new Notice(`✅ Folder created: ${fullPath}`);
-
-                // Pass the created path to onCreate callback (don't create it again!)
-                this.onCreate(fullPath);
-            } catch (error) {
-                if (error.message && error.message.includes("Folder already exists")) {
-                    new Notice(`⚠️ Folder already exists: ${fullPath}`);
-                    this.onCreate(fullPath); // Still use it
-                } else {
-                    new Notice(`❌ Failed to create folder: ${error.message}`);
-                }
-            }
-        });
-        modal.open();
-    }
-}
-
-/**
- * Modal for creating a new folder
- */
-class CreateFolderModal extends Modal {
-    private onSubmit: (subfolderName: string) => void;
-    private parentPath: string;
-
-    constructor(app: App, parentPath: string, onSubmit: (subfolderName: string) => void) {
-        super(app);
-        this.parentPath = parentPath;
         this.onSubmit = onSubmit;
     }
 
     onOpen(): void {
         const { contentEl } = this;
 
-        contentEl.createEl("h3", { text: "Create new subfolder" });
+        contentEl.createEl("h3", { text: "Select Folder Location" });
 
-        // Show parent path
-        if (this.parentPath) {
-            const parentInfo = contentEl.createDiv({ cls: "setting-item-description" });
-            parentInfo.style.marginBottom = "10px";
-            parentInfo.setText(`Parent folder: ${this.parentPath}`);
-        } else {
-            const parentInfo = contentEl.createDiv({ cls: "setting-item-description" });
-            parentInfo.style.marginBottom = "10px";
-            parentInfo.setText(`Creating folder at vault root`);
-        }
+        // Label
+        const label = contentEl.createDiv({ cls: "setting-item-description" });
+        label.style.marginBottom = "10px";
+        label.setText("Select base folder and type target subfolder:");
 
-        const inputContainer = contentEl.createDiv({ cls: "setting-item" });
-        inputContainer.style.border = "none";
-        inputContainer.style.paddingTop = "0";
+        // Inline input container
+        const inputRow = contentEl.createDiv();
+        inputRow.style.display = "flex";
+        inputRow.style.alignItems = "center";
+        inputRow.style.gap = "8px";
+        inputRow.style.marginBottom = "20px";
 
-        const input = inputContainer.createEl("input", {
+        // Base folder input (with autocomplete)
+        this.baseFolderInput = inputRow.createEl("input", {
+            type: "text",
+            placeholder: "Base folder (e.g., Nexus)"
+        });
+        this.baseFolderInput.style.flex = "1";
+
+        // Add folder autocomplete
+        new FolderSuggest(this.app, this.baseFolderInput);
+
+        // Separator
+        const separator = inputRow.createEl("span", { text: "/" });
+        separator.style.fontSize = "18px";
+        separator.style.fontWeight = "bold";
+        separator.style.color = "var(--text-muted)";
+
+        // Subfolder input
+        this.subfolderInput = inputRow.createEl("input", {
             type: "text",
             placeholder: "Subfolder name (e.g., Reports)"
         });
-        input.style.width = "100%";
-        input.style.marginBottom = "20px";
+        this.subfolderInput.style.flex = "1";
 
+        // Buttons
         const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
 
         const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
         cancelButton.addEventListener("click", () => this.close());
 
-        const createButton = buttonContainer.createEl("button", {
-            text: "Create",
+        const proceedButton = buttonContainer.createEl("button", {
+            text: "Proceed",
             cls: "mod-cta"
         });
-        createButton.addEventListener("click", () => {
-            const subfolderName = input.value.trim();
-            if (subfolderName) {
-                this.onSubmit(subfolderName);
-                this.close();
-            } else {
-                new Notice("⚠️ Please enter a subfolder name");
-            }
-        });
+        proceedButton.addEventListener("click", () => this.handleProceed());
 
-        // Focus input and handle Enter key
-        input.focus();
-        input.addEventListener("keydown", (e) => {
+        // Focus base folder input
+        this.baseFolderInput.focus();
+
+        // Handle Enter key on both inputs
+        this.baseFolderInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
-                const subfolderName = input.value.trim();
-                if (subfolderName) {
-                    this.onSubmit(subfolderName);
-                    this.close();
-                } else {
-                    new Notice("⚠️ Please enter a subfolder name");
-                }
+                e.preventDefault();
+                this.subfolderInput.focus();
             } else if (e.key === "Escape") {
                 this.close();
             }
         });
+
+        this.subfolderInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                this.handleProceed();
+            } else if (e.key === "Escape") {
+                this.close();
+            }
+        });
+    }
+
+    private async handleProceed(): Promise<void> {
+        const baseFolder = this.baseFolderInput.value.trim();
+        const subfolder = this.subfolderInput.value.trim();
+
+        // Build full path
+        let fullPath = "";
+        if (baseFolder && subfolder) {
+            fullPath = `${baseFolder}/${subfolder}`;
+        } else if (subfolder) {
+            // No base folder = vault root
+            fullPath = subfolder;
+        } else if (baseFolder) {
+            // No subfolder = just use base folder
+            fullPath = baseFolder;
+        } else {
+            new Notice("⚠️ Please enter at least a folder name");
+            return;
+        }
+
+        // Try to create the folder if it doesn't exist
+        try {
+            const exists = await this.app.vault.adapter.exists(fullPath);
+            if (!exists) {
+                await this.app.vault.createFolder(fullPath);
+                new Notice(`✅ Folder created: ${fullPath}`);
+            }
+
+            this.onSubmit(fullPath);
+            this.close();
+        } catch (error) {
+            if (error.message && error.message.includes("Folder already exists")) {
+                // Folder exists, that's fine
+                this.onSubmit(fullPath);
+                this.close();
+            } else {
+                new Notice(`❌ Failed to create folder: ${error.message}`);
+            }
+        }
     }
 
     onClose(): void {

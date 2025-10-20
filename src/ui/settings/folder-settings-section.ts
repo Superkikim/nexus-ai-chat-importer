@@ -77,15 +77,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
                         const textComponent = containerEl.querySelector('.nexus-folder-path-input') as HTMLInputElement;
                         const modal = new FolderBrowserModal(
                             this.plugin.app,
-                            (folder) => {
-                                // User selected an existing folder
-                                if (textComponent) {
-                                    textComponent.value = folder.path;
-                                    textComponent.dispatchEvent(new Event('blur'));
-                                }
-                            },
                             (path) => {
-                                // User created a new folder
+                                // User selected or created a folder
                                 if (textComponent) {
                                     textComponent.value = path;
                                     textComponent.dispatchEvent(new Event('blur'));

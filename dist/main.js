@@ -2146,147 +2146,99 @@ var init_folder_suggest = __esm({
 });
 
 // src/dialogs/folder-browser-modal.ts
-var import_obsidian5, FolderBrowserModal, CreateFolderModal;
+var import_obsidian5, FolderBrowserModal;
 var init_folder_browser_modal = __esm({
   "src/dialogs/folder-browser-modal.ts"() {
     "use strict";
     import_obsidian5 = require("obsidian");
-    FolderBrowserModal = class extends import_obsidian5.SuggestModal {
-      constructor(app, onSelect, onCreate) {
+    init_folder_suggest();
+    FolderBrowserModal = class extends import_obsidian5.Modal {
+      constructor(app, onSubmit) {
         super(app);
-        this.selectedFolder = null;
-        this.selectedEl = null;
-        this.onSelect = onSelect;
-        this.onCreate = onCreate;
-        this.setPlaceholder("Type to search folders...");
-      }
-      onOpen() {
-        super.onOpen();
-        const buttonContainer = this.modalEl.createDiv({ cls: "modal-button-container" });
-        buttonContainer.style.padding = "10px";
-        buttonContainer.style.borderTop = "1px solid var(--background-modifier-border)";
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.gap = "10px";
-        const selectButton = buttonContainer.createEl("button", {
-          text: "Select this folder",
-          cls: "mod-cta"
-        });
-        selectButton.addEventListener("click", () => {
-          if (this.selectedFolder) {
-            this.onSelect(this.selectedFolder);
-            this.close();
-          } else {
-            new import_obsidian5.Notice("\u26A0\uFE0F Please select a folder first");
-          }
-        });
-        const createButton = buttonContainer.createEl("button", {
-          text: "Create subfolder here"
-        });
-        createButton.addEventListener("click", () => {
-          var _a;
-          const parentPath = ((_a = this.selectedFolder) == null ? void 0 : _a.path) || "";
-          this.close();
-          this.promptCreateFolder(parentPath);
-        });
-      }
-      getSuggestions(query) {
-        const folders = this.app.vault.getAllLoadedFiles().filter((f) => f instanceof import_obsidian5.TFolder);
-        if (!query) {
-          return folders.slice(0, 100);
-        }
-        const lowerQuery = query.toLowerCase();
-        return folders.filter((f) => f.path.toLowerCase().includes(lowerQuery)).slice(0, 100);
-      }
-      renderSuggestion(folder, el) {
-        el.createEl("div", { text: folder.path, cls: "suggestion-content" });
-        el.addEventListener("click", () => {
-          if (this.selectedEl) {
-            this.selectedEl.style.backgroundColor = "";
-          }
-          el.style.backgroundColor = "var(--background-modifier-hover)";
-          this.selectedEl = el;
-          this.selectedFolder = folder;
-        });
-      }
-      onChooseSuggestion(folder, _evt) {
-        this.selectedFolder = folder;
-      }
-      promptCreateFolder(parentPath) {
-        const modal = new CreateFolderModal(this.app, parentPath, async (subfolderName) => {
-          const fullPath = parentPath ? `${parentPath}/${subfolderName}` : subfolderName;
-          try {
-            await this.app.vault.createFolder(fullPath);
-            new import_obsidian5.Notice(`\u2705 Folder created: ${fullPath}`);
-            this.onCreate(fullPath);
-          } catch (error) {
-            if (error.message && error.message.includes("Folder already exists")) {
-              new import_obsidian5.Notice(`\u26A0\uFE0F Folder already exists: ${fullPath}`);
-              this.onCreate(fullPath);
-            } else {
-              new import_obsidian5.Notice(`\u274C Failed to create folder: ${error.message}`);
-            }
-          }
-        });
-        modal.open();
-      }
-    };
-    CreateFolderModal = class extends import_obsidian5.Modal {
-      constructor(app, parentPath, onSubmit) {
-        super(app);
-        this.parentPath = parentPath;
         this.onSubmit = onSubmit;
       }
       onOpen() {
         const { contentEl } = this;
-        contentEl.createEl("h3", { text: "Create new subfolder" });
-        if (this.parentPath) {
-          const parentInfo = contentEl.createDiv({ cls: "setting-item-description" });
-          parentInfo.style.marginBottom = "10px";
-          parentInfo.setText(`Parent folder: ${this.parentPath}`);
-        } else {
-          const parentInfo = contentEl.createDiv({ cls: "setting-item-description" });
-          parentInfo.style.marginBottom = "10px";
-          parentInfo.setText(`Creating folder at vault root`);
-        }
-        const inputContainer = contentEl.createDiv({ cls: "setting-item" });
-        inputContainer.style.border = "none";
-        inputContainer.style.paddingTop = "0";
-        const input = inputContainer.createEl("input", {
+        contentEl.createEl("h3", { text: "Select Folder Location" });
+        const label = contentEl.createDiv({ cls: "setting-item-description" });
+        label.style.marginBottom = "10px";
+        label.setText("Select base folder and type target subfolder:");
+        const inputRow = contentEl.createDiv();
+        inputRow.style.display = "flex";
+        inputRow.style.alignItems = "center";
+        inputRow.style.gap = "8px";
+        inputRow.style.marginBottom = "20px";
+        this.baseFolderInput = inputRow.createEl("input", {
+          type: "text",
+          placeholder: "Base folder (e.g., Nexus)"
+        });
+        this.baseFolderInput.style.flex = "1";
+        new FolderSuggest(this.app, this.baseFolderInput);
+        const separator = inputRow.createEl("span", { text: "/" });
+        separator.style.fontSize = "18px";
+        separator.style.fontWeight = "bold";
+        separator.style.color = "var(--text-muted)";
+        this.subfolderInput = inputRow.createEl("input", {
           type: "text",
           placeholder: "Subfolder name (e.g., Reports)"
         });
-        input.style.width = "100%";
-        input.style.marginBottom = "20px";
+        this.subfolderInput.style.flex = "1";
         const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
         const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
         cancelButton.addEventListener("click", () => this.close());
-        const createButton = buttonContainer.createEl("button", {
-          text: "Create",
+        const proceedButton = buttonContainer.createEl("button", {
+          text: "Proceed",
           cls: "mod-cta"
         });
-        createButton.addEventListener("click", () => {
-          const subfolderName = input.value.trim();
-          if (subfolderName) {
-            this.onSubmit(subfolderName);
-            this.close();
-          } else {
-            new import_obsidian5.Notice("\u26A0\uFE0F Please enter a subfolder name");
-          }
-        });
-        input.focus();
-        input.addEventListener("keydown", (e) => {
+        proceedButton.addEventListener("click", () => this.handleProceed());
+        this.baseFolderInput.focus();
+        this.baseFolderInput.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
-            const subfolderName = input.value.trim();
-            if (subfolderName) {
-              this.onSubmit(subfolderName);
-              this.close();
-            } else {
-              new import_obsidian5.Notice("\u26A0\uFE0F Please enter a subfolder name");
-            }
+            e.preventDefault();
+            this.subfolderInput.focus();
           } else if (e.key === "Escape") {
             this.close();
           }
         });
+        this.subfolderInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this.handleProceed();
+          } else if (e.key === "Escape") {
+            this.close();
+          }
+        });
+      }
+      async handleProceed() {
+        const baseFolder = this.baseFolderInput.value.trim();
+        const subfolder = this.subfolderInput.value.trim();
+        let fullPath = "";
+        if (baseFolder && subfolder) {
+          fullPath = `${baseFolder}/${subfolder}`;
+        } else if (subfolder) {
+          fullPath = subfolder;
+        } else if (baseFolder) {
+          fullPath = baseFolder;
+        } else {
+          new import_obsidian5.Notice("\u26A0\uFE0F Please enter at least a folder name");
+          return;
+        }
+        try {
+          const exists = await this.app.vault.adapter.exists(fullPath);
+          if (!exists) {
+            await this.app.vault.createFolder(fullPath);
+            new import_obsidian5.Notice(`\u2705 Folder created: ${fullPath}`);
+          }
+          this.onSubmit(fullPath);
+          this.close();
+        } catch (error) {
+          if (error.message && error.message.includes("Folder already exists")) {
+            this.onSubmit(fullPath);
+            this.close();
+          } else {
+            new import_obsidian5.Notice(`\u274C Failed to create folder: ${error.message}`);
+          }
+        }
       }
       onClose() {
         const { contentEl } = this;
@@ -7739,11 +7691,6 @@ var init_configure_folder_locations_dialog = __esm({
           button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
             const modal = new FolderBrowserModal(
               this.plugin.app,
-              (folder) => {
-                if (this.reportFolderInput) {
-                  this.reportFolderInput.value = folder.path;
-                }
-              },
               (path) => {
                 if (this.reportFolderInput) {
                   this.reportFolderInput.value = path;
@@ -9598,12 +9545,6 @@ var FolderSettingsSection = class extends BaseSettingsSection {
         const textComponent = containerEl.querySelector(".nexus-folder-path-input");
         const modal = new FolderBrowserModal(
           this.plugin.app,
-          (folder) => {
-            if (textComponent) {
-              textComponent.value = folder.path;
-              textComponent.dispatchEvent(new Event("blur"));
-            }
-          },
           (path) => {
             if (textComponent) {
               textComponent.value = path;

@@ -129,14 +129,8 @@ export class ConfigureFolderLocationsDialog extends Modal {
                     .onClick(() => {
                         const modal = new FolderBrowserModal(
                             this.plugin.app,
-                            (folder) => {
-                                // User selected an existing folder
-                                if (this.reportFolderInput) {
-                                    this.reportFolderInput.value = folder.path;
-                                }
-                            },
                             (path) => {
-                                // User created a new folder
+                                // User selected or created a folder
                                 if (this.reportFolderInput) {
                                     this.reportFolderInput.value = path;
                                 }
