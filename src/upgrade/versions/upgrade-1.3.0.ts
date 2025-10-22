@@ -1179,8 +1179,9 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
 
             // Find the LAST nexus_agent callout before the link (the parent message)
             // Pattern matches: >[!nexus_agent] **Assistant** - <timestamp>
-            // Allow optional whitespace at end of line
-            const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - (.+?)\s*$/gm;
+            // Note: Don't use $ (end of line) because callouts can be multi-line
+            // Instead, capture everything up to the newline
+            const agentPattern = />\\[!nexus_agent\\] \\*\\*Assistant\\*\\* - ([^\n]+)/gm;
             let lastMatch = null;
             let match;
             let matchCount = 0;
