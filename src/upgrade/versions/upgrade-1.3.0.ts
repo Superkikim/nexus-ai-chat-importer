@@ -761,6 +761,22 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
 
                     console.debug(`[MigrateReportsFolder] Migration completed: ${result.moved} moved, ${result.skipped} skipped, ${result.errors} errors`);
 
+                    // Try to explicitly delete the old Reports folder if it still exists
+                    try {
+                        const stillExists = await context.plugin.app.vault.adapter.exists(oldReportPath);
+                        if (stillExists) {
+                            console.debug(`[MigrateReportsFolder] Old Reports folder still exists, attempting explicit deletion...`);
+                            const folderToDelete = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
+                            if (folderToDelete && folderToDelete instanceof TFolder) {
+                                await context.plugin.app.vault.delete(folderToDelete);
+                                console.debug(`[MigrateReportsFolder] ✅ Successfully deleted old Reports folder`);
+                            }
+                        }
+                    } catch (deleteError: any) {
+                        // Not critical - just log it
+                        console.debug(`[MigrateReportsFolder] Could not delete old Reports folder: ${deleteError.message || String(deleteError)}`);
+                    }
+
                     if (result.success && result.skipped === 0) {
                         // Perfect success
                         results.push(`✅ Reports folder moved: \`${oldReportPath}\` → \`${newReportPath}\` (${result.moved} file(s))`);
