@@ -2612,6 +2612,8 @@ async function moveAndMergeFolders(oldFolder, newPath, vault) {
         throw error;
       }
     }
+    logger.debug(`[moveAndMergeFolders] Marking for deletion: ${sourceFolder.path} (children: ${sourceFolder.children.length})`);
+    foldersToDelete.push(sourceFolder);
     for (const child of [...sourceFolder.children]) {
       const childNewPath = `${destPath}/${child.name}`;
       if (child instanceof import_obsidian6.TFolder) {
@@ -2636,8 +2638,6 @@ async function moveAndMergeFolders(oldFolder, newPath, vault) {
         }
       }
     }
-    logger.debug(`[moveAndMergeFolders] Marking for deletion: ${sourceFolder.path} (children: ${sourceFolder.children.length})`);
-    foldersToDelete.push(sourceFolder);
   }
   try {
     await moveRecursive(oldFolder, newPath);

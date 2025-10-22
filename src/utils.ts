@@ -471,6 +471,12 @@ export async function moveAndMergeFolders(
             // Folder exists, that's fine - we're merging
         }
 
+        // Mark THIS folder for deletion BEFORE processing children
+        // This ensures parent folders are added to the list before their children
+        // When we reverse the list later, children will be deleted before parents
+        logger.debug(`[moveAndMergeFolders] Marking for deletion: ${sourceFolder.path} (children: ${sourceFolder.children.length})`);
+        foldersToDelete.push(sourceFolder);
+
         // Process all children
         for (const child of [...sourceFolder.children]) { // Copy array to avoid modification during iteration
             const childNewPath = `${destPath}/${child.name}`;
@@ -504,10 +510,6 @@ export async function moveAndMergeFolders(
                 }
             }
         }
-
-        // Mark folder for deletion (will be deleted bottom-up after all moves)
-        logger.debug(`[moveAndMergeFolders] Marking for deletion: ${sourceFolder.path} (children: ${sourceFolder.children.length})`);
-        foldersToDelete.push(sourceFolder);
     }
 
     try {
