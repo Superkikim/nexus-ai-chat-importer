@@ -8806,7 +8806,7 @@ create_time: ${createTime.value}`;
               if (modified || needsVersionUpdate) {
                 if (frontmatter.includes("plugin_version:")) {
                   frontmatter = frontmatter.replace(
-                    /^plugin_version: ".*?"$/m,
+                    /^plugin_version: .*$/m,
                     `plugin_version: "1.3.0"`
                   );
                 } else {
@@ -12754,7 +12754,7 @@ ${code}
     const createTimeStr = artifactCreateTime > 0 ? new Date(artifactCreateTime * 1e3).toISOString() : "unknown";
     let markdownContent = `---
 nexus: nexus-ai-chat-importer
-plugin_version: ${this.plugin.manifest.version}
+plugin_version: "${this.plugin.manifest.version}"
 provider: claude
 artifact_id: ${artifactId}
 version_uuid: ${versionUuid}

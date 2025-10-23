@@ -1042,10 +1042,11 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                     const needsVersionUpdate = !frontmatter.includes('plugin_version: "1.3.0"');
 
                     if (modified || needsVersionUpdate) {
-                        // Update plugin_version to 1.3.0
+                        // Update plugin_version to 1.3.0 (with quotes for semantic versioning)
+                        // Match both with and without quotes: 1.2.0 or "1.2.0"
                         if (frontmatter.includes('plugin_version:')) {
                             frontmatter = frontmatter.replace(
-                                /^plugin_version: ".*?"$/m,
+                                /^plugin_version: .*$/m,
                                 `plugin_version: "1.3.0"`
                             );
                         } else {

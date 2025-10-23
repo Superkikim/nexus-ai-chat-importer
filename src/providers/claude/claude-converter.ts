@@ -715,7 +715,7 @@ export class ClaudeConverter {
         // Create markdown content with enhanced frontmatter
         let markdownContent = `---
 nexus: nexus-ai-chat-importer
-plugin_version: ${this.plugin.manifest.version}
+plugin_version: "${this.plugin.manifest.version}"
 provider: claude
 artifact_id: ${artifactId}
 version_uuid: ${versionUuid}
