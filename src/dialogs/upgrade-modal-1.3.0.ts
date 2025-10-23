@@ -179,7 +179,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         const styleEl = document.createElement("style");
         styleEl.textContent = `
             .nexus-upgrade-modal-130 .modal {
-                max-width: 700px;
+                max-width: 1050px;
             }
 
             .nexus-upgrade-content {
