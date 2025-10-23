@@ -56,28 +56,20 @@ export class NexusUpgradeModal130 extends Modal {
         // Add Ko-fi support section FIRST (at the top)
         this.addKofiSection();
 
+        // Add migration info section
+        this.addMigrationSection();
+
+        // Add migration button (centered and prominent)
+        this.addMigrationButton();
+
         // Fallback message if GitHub fetch fails
-        let message = `## 🎯 Welcome to v1.3.0!
-
-**Selective Import** is here! You can now choose exactly which conversations to import.
-
-### ✨ What's New
+        let message = `## ✨ What's New in v1.3.0
 
 - **🎯 Selective Conversation Import**: Interactive dialog to choose which conversations to import
 - **📊 Enhanced Reports**: Per-file statistics with detailed breakdown
 - **🗂️ Flexible Folders**: Separate settings for conversations, attachments, and reports
 - **🌍 International Support**: ISO 8601 timestamps work with all locales
 - **🐛 26 Bug Fixes**: Improved stability and reliability
-
-### 🔄 Automatic Migrations
-
-The plugin will automatically:
-- Migrate folder settings to new structure
-- Update timestamps to ISO 8601 format
-- Fix frontmatter aliases
-- Move Reports folder to proper location
-
-**No action required** - everything happens automatically!
 
 ---
 
@@ -107,9 +99,6 @@ Try the new **selective import** feature on your next import - you'll love the c
             "",
             this.plugin,
         );
-
-        // Add confirmation button
-        this.addButtons();
 
         // Add custom styles
         this.addStyles();
@@ -162,15 +151,51 @@ Try the new **selective import** feature on your next import - you'll love the c
         `;
     }
 
-    private addButtons() {
-        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-buttons" });
-        
-        const btnOk = buttonContainer.createEl("button", {
-            text: "Let's Go! 🚀",
-            cls: "mod-cta nexus-btn-primary"
+    private addMigrationSection() {
+        const migrationSection = this.contentEl.createDiv({ cls: "nexus-migration-section" });
+
+        // Header
+        const header = migrationSection.createDiv({ cls: "nexus-migration-header" });
+        header.innerHTML = `
+            <div class="nexus-migration-title">
+                🔄 <strong>Migration Required</strong>
+            </div>
+        `;
+
+        // Message
+        const message = migrationSection.createDiv({ cls: "nexus-migration-message" });
+        message.innerHTML = `
+            <p>The following tasks will run automatically to upgrade your data to v1.3.0:</p>
+        `;
+
+        // Task list
+        const taskList = migrationSection.createDiv({ cls: "nexus-migration-tasks" });
+        taskList.innerHTML = `
+            <ul>
+                <li>✓ Migrate folder settings to new structure</li>
+                <li>✓ Update timestamps to ISO 8601 format</li>
+                <li>✓ Fix frontmatter aliases</li>
+                <li>✓ Move Reports folder to proper location</li>
+                <li>✓ Update artifact metadata</li>
+            </ul>
+        `;
+
+        // Estimated time
+        const estimate = migrationSection.createDiv({ cls: "nexus-migration-estimate" });
+        estimate.innerHTML = `
+            <p><em>This will take a few seconds. Your data will be backed up automatically.</em></p>
+        `;
+    }
+
+    private addMigrationButton() {
+        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-migration-button-container" });
+
+        const migrationButton = buttonContainer.createEl("button", {
+            text: "🚀 Run Migration Tasks",
+            cls: "mod-cta nexus-migration-button"
         });
-        
-        btnOk.onclick = () => {
+
+        migrationButton.onclick = () => {
             this.close();
             this.resolve("ok");
         };
@@ -289,18 +314,76 @@ Try the new **selective import** feature on your next import - you'll love the c
                 margin: 0;
             }
 
-            /* Button Styles */
-            .nexus-upgrade-buttons {
-                text-align: right;
-                margin-top: 24px;
-                padding-top: 20px;
-                border-top: 1px solid var(--background-modifier-border);
+            /* Migration Section Styles */
+            .nexus-migration-section {
+                background: var(--background-secondary);
+                border: 2px solid var(--interactive-accent);
+                border-radius: 12px;
+                padding: 24px;
+                margin: 24px 0;
             }
 
-            .nexus-btn-primary {
-                padding: 10px 28px;
-                font-size: 1.05em;
-                font-weight: 600;
+            .nexus-migration-header {
+                margin-bottom: 16px;
+            }
+
+            .nexus-migration-title {
+                font-size: 1.3em;
+                text-align: center;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-title strong {
+                color: var(--interactive-accent);
+            }
+
+            .nexus-migration-message {
+                text-align: center;
+                margin-bottom: 16px;
+                color: var(--text-muted);
+            }
+
+            .nexus-migration-tasks {
+                margin: 16px 0;
+            }
+
+            .nexus-migration-tasks ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .nexus-migration-tasks li {
+                padding: 8px 0;
+                font-size: 0.95em;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-estimate {
+                text-align: center;
+                margin-top: 16px;
+                color: var(--text-muted);
+                font-size: 0.9em;
+            }
+
+            /* Migration Button Styles */
+            .nexus-migration-button-container {
+                text-align: center;
+                margin: 32px 0;
+            }
+
+            .nexus-migration-button {
+                padding: 16px 48px !important;
+                font-size: 1.2em !important;
+                font-weight: 700 !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .nexus-migration-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
             }
         `;
         document.head.appendChild(styleEl);
