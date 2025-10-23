@@ -8802,18 +8802,28 @@ create_time: ${createTime.value}`;
               } else {
                 console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Skipped (no conversation_id in frontmatter)`);
               }
-              if (modified) {
-                frontmatter = frontmatter.replace(
-                  /^plugin_version: ".*?"$/m,
-                  `plugin_version: "1.3.0"`
-                );
+              const needsVersionUpdate = !frontmatter.includes('plugin_version: "1.3.0"');
+              if (modified || needsVersionUpdate) {
+                if (frontmatter.includes("plugin_version:")) {
+                  frontmatter = frontmatter.replace(
+                    /^plugin_version: ".*?"$/m,
+                    `plugin_version: "1.3.0"`
+                  );
+                } else {
+                  frontmatter += `
+plugin_version: "1.3.0"`;
+                }
                 const newContent = `---
 ${frontmatter}
 ---
 ${body}`;
                 await context.plugin.app.vault.modify(file, newContent);
                 updatedCount++;
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: \u2705 UPDATED (${warnings.length} warning(s))`);
+                if (modified) {
+                  console.debug(`[NEXUS-UPGRADE] ${file.basename}: \u2705 UPDATED (${warnings.length} warning(s))`);
+                } else {
+                  console.debug(`[NEXUS-UPGRADE] ${file.basename}: \u2705 UPDATED (plugin_version only)`);
+                }
                 if (warnings.length > 0) {
                   results.push(`\u26A0\uFE0F  ${file.basename}: ${warnings.join(", ")}`);
                 }

@@ -1038,18 +1038,30 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                         console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Skipped (no conversation_id in frontmatter)`);
                     }
 
-                    // Write back if modified
-                    if (modified) {
+                    // ALWAYS update plugin_version to 1.3.0 (even if nothing else changed)
+                    const needsVersionUpdate = !frontmatter.includes('plugin_version: "1.3.0"');
+
+                    if (modified || needsVersionUpdate) {
                         // Update plugin_version to 1.3.0
-                        frontmatter = frontmatter.replace(
-                            /^plugin_version: ".*?"$/m,
-                            `plugin_version: "1.3.0"`
-                        );
+                        if (frontmatter.includes('plugin_version:')) {
+                            frontmatter = frontmatter.replace(
+                                /^plugin_version: ".*?"$/m,
+                                `plugin_version: "1.3.0"`
+                            );
+                        } else {
+                            // Add plugin_version if missing
+                            frontmatter += `\nplugin_version: "1.3.0"`;
+                        }
 
                         const newContent = `---\n${frontmatter}\n---\n${body}`;
                         await context.plugin.app.vault.modify(file, newContent);
                         updatedCount++;
-                        console.debug(`[NEXUS-UPGRADE] ${file.basename}: ✅ UPDATED (${warnings.length} warning(s))`);
+
+                        if (modified) {
+                            console.debug(`[NEXUS-UPGRADE] ${file.basename}: ✅ UPDATED (${warnings.length} warning(s))`);
+                        } else {
+                            console.debug(`[NEXUS-UPGRADE] ${file.basename}: ✅ UPDATED (plugin_version only)`);
+                        }
 
                         if (warnings.length > 0) {
                             results.push(`⚠️  ${file.basename}: ${warnings.join(', ')}`);
