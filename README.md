@@ -70,102 +70,134 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 2. Extract files to `.obsidian/plugins/nexus-ai-chat-importer/`
 3. Reload Obsidian and enable the plugin
 
-### Automatic Migration
+### First-Time Setup
 
-When you upgrade to a new version, the plugin automatically:
-- Migrates your settings to the new format
-- Updates existing conversations with new features
-- Reorganizes folders if needed
-- Shows you what changed in a beautiful upgrade dialog
+After installing the plugin:
 
-No manual intervention required!
+1. **Open Settings** → **Community Plugins** → **Nexus AI Chat Importer**
+2. **Configure your folders** (or keep the defaults):
+   - **Conversations**: Where your chat notes will be saved
+   - **Attachments**: Where images and files will be stored
+   - **Reports**: Where import summaries will be created
+3. **That's it!** You're ready to import
+
+### Upgrading from Previous Versions
+
+**Good news:** The plugin handles everything automatically!
+
+When you upgrade to v1.3.0:
+- ✅ Your settings are migrated to the new format
+- ✅ Your existing conversations are updated with new features
+- ✅ Folders are reorganized if needed (with your permission)
+- ✅ A detailed upgrade report shows you what changed
+
+**No manual work required** - just install and go!
 
 ### Plugin Settings
 
-**Folder Paths**:
-- **Conversations Folder**: `<conversations>/` - Where conversation notes are stored
-- **Attachments Folder**: `<attachments>/` - Where images, files, and artifacts are saved
-- **Reports Folder**: `<reports>/` - Where import reports are generated
+#### **📁 Folder Organization** (NEW in v1.3.0)
 
-**Display Options**:
-- **Enable Date Prefix**: Add date before the title (e.g., `2024-01-15 - conversation-title.md`)
-- **Date Format**: With dashes (`2024-01-15`) or without (`20240115`)
-- **Custom Message Timestamp Format**: Override default locale-based timestamps in message callouts
-  - **Disabled** (default): Follows Obsidian's language setting (English = US format)
-  - **Enabled**: Choose from ISO 8601, US, European, UK, German, or Japanese formats
+Choose where your files are stored:
 
-### Changing Folder Paths
+- **Conversations Folder**: Your chat notes (default: `Nexus AI Chat Imports`)
+- **Attachments Folder**: Images, files, and Claude artifacts (default: `Nexus AI Chat Imports/Attachments`)
+- **Reports Folder**: Import summaries (default: `Nexus Reports`)
 
-You can change folder paths **at any time**. When you do:
+**💡 Tip:** You can organize these folders however you like! Put them all together, or spread them across your vault.
 
-1. The plugin will **offer to migrate** existing files to the new location
-2. If you **accept migration**: All files move automatically, links update
-3. If you **decline migration**: Old files stay in place but won't be managed by the plugin anymore
+#### **🎨 Display Options**
 
-> **⚠️ Important**: If you don't migrate, the plugin won't update or manage conversations in the old location.
+Customize how your conversations look:
+
+- **Date Prefix**: Add dates to filenames
+  - ✅ Enabled: `2024-01-15 - My Conversation.md`
+  - ❌ Disabled: `My Conversation.md`
+
+- **Date Format**: Choose your style
+  - With dashes: `2024-01-15`
+  - Without: `20240115`
+
+- **Message Timestamps** (NEW in v1.3.0): Choose how dates appear in messages
+  - **Auto** (default): Matches your Obsidian language
+  - **Custom**: Pick from ISO 8601, US, European, UK, German, or Japanese
+
+#### **🔄 Moving Your Files**
+
+Want to reorganize? No problem!
+
+1. **Change a folder path** in settings
+2. **Click Save**
+3. **Choose what to do**:
+   - ✅ **Move files**: Everything moves automatically, links stay working
+   - ❌ **Leave files**: They stay put (but won't be managed by the plugin anymore)
+
+> **💡 Pro tip:** The plugin is smart - it merges folders instead of overwriting, so your existing files are safe!
 
 ## 📤 Importing Conversations
 
-### Getting Your Exports
+### Step 1: Get Your Export
 
 **ChatGPT**:
-1. Go to **Settings** → **Data Controls** → **Export data**
-2. Wait for the email with your download link (usually within minutes)
+1. Open ChatGPT → **Settings** → **Data Controls** → **Export data**
+2. Check your email (arrives in a few minutes)
 3. Download the ZIP file
 
 **Claude**:
-1. Go to **Settings** → **Privacy** → **Export data**
-2. Wait for the email with your download link (usually within minutes)
+1. Open Claude → **Settings** → **Privacy** → **Export data**
+2. Check your email (arrives in a few minutes)
 3. Download the ZIP file
 
-### Import Process
+### Step 2: Import to Obsidian
 
-**Starting an Import**:
-- Click the **chat+** icon in the ribbon, OR
-- Use command palette: **Ctrl/Cmd+P** → "**Nexus: Select zip file to process**"
+**Two ways to start:**
+- Click the **💬+** icon in the left sidebar, OR
+- Press **Ctrl/Cmd+P** → type "**Nexus**" → select "**Select zip file to process**"
 
-**Choose Import Mode**:
+### Step 3: Choose Your Import Style
 
-#### All Conversations (Quick Import)
-- Select provider (ChatGPT or Claude)
-- Choose ZIP file(s)
-- Click **Import All**
-- All new and updated conversations are imported automatically
+#### 🚀 **Quick Import** (Import Everything)
 
-#### Selective Import (Recommended)
-- Select provider (ChatGPT or Claude)
-- Choose ZIP file(s)
-- **Review conversation list** with:
-  - Title, date, message count
-  - Status: 🆕 New, 🔄 Update, ✅ Already imported
-  - Attachment information
-  - Source file
-- **Select** which conversations to import
-- Click **Import Selected**
+Perfect when you want everything imported fast:
 
-**Features**:
-- ✅ **Multi-file support**: Process multiple ZIP files at once
-- ✅ **Smart deduplication**: Automatically detects duplicates across files
-- ✅ **Sorting & filtering**: Sort by date, title, messages, or status
-- ✅ **Batch operations**: Select all, deselect all, or cherry-pick
+1. Select **ChatGPT** or **Claude**
+2. Choose your ZIP file(s)
+3. Click **Import All**
+4. Done! ✨
 
-### Import Reports
+#### 🎯 **Selective Import** (Pick & Choose) - NEW in v1.3.0
 
-After each import, a detailed report is generated:
+Perfect when you want control:
 
-**Summary**:
-- Total conversations analyzed vs. imported
-- Processing time and success rate
-- Overall statistics
+1. Select **ChatGPT** or **Claude**
+2. Choose your ZIP file(s)
+3. **Review the list** - you'll see:
+   - 📝 Conversation title and date
+   - 💬 Number of messages
+   - 🆕 **New** / 🔄 **Updated** / ✅ **Already imported**
+   - 📎 Attachments info
+4. **Check the ones you want**
+5. Click **Import Selected**
 
-**Per-File Breakdown**:
-- Which conversations were imported from each ZIP
-- Status breakdown (new, updates, existing)
-- Attachment statistics (found, missing, failed)
+**Cool features:**
+- ✅ Process multiple ZIP files at once
+- ✅ Automatically finds duplicates
+- ✅ Sort by date, title, or status
+- ✅ Select all / deselect all buttons
 
-**Report Location**: `<reports>/<provider>/import-YYYYMMDD-HHMMSS.md`
+### Step 4: Check Your Report
 
-Reports include clickable links to imported conversations for easy access.
+After every import, you get a beautiful summary report:
+
+**What's in it:**
+- ✅ How many conversations were imported
+- ⏱️ How long it took
+- 📊 Success rate
+- 📎 Attachment statistics
+- 🔗 Clickable links to your new conversations
+
+**Where to find it:** `<reports>/<provider>/import-YYYYMMDD-HHMMSS.md`
+
+**💡 Tip:** The report opens automatically when import finishes!
 
 ## 📁 Data Organization
 
