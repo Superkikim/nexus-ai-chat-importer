@@ -99,8 +99,8 @@ When you upgrade to v1.3.0:
 
 Choose where your files are stored:
 
-- **Conversations Folder**: Your chat notes (default: `Nexus AI Chat Imports`)
-- **Attachments Folder**: Images, files, and Claude artifacts (default: `Nexus AI Chat Imports/Attachments`)
+- **Conversations Folder**: Your chat notes (default: `Nexus/Conversations`)
+- **Attachments Folder**: Images, files, and Claude artifacts (default: `Nexus/Attachments`)
 - **Reports Folder**: Import summaries (default: `Nexus Reports`)
 
 **💡 Tip:** You can organize these folders however you like! Put them all together, or spread them across your vault.
