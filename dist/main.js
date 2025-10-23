@@ -8907,7 +8907,7 @@ ${body}`;
           console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Context before link (last 300 chars):
 ${contextText}
 [ARTIFACT LINK HERE]`);
-          const agentPattern = />\\[!nexus_(?:agent|assistant)\\] \\*\\*Assistant\\*\\* - ([^\n]+)/gm;
+          const agentPattern = />\[!nexus_agent\] \*\*Assistant\*\* - ([^\n]+)/gm;
           let lastMatch = null;
           let match;
           let matchCount = 0;
