@@ -9097,6 +9097,7 @@ var init_upgrade_modal_1_3_0 = __esm({
         this.contentEl.empty();
       }
       async createForm() {
+        this.addKofiSection();
         let message = `## \u{1F3AF} Welcome to v1.3.0!
 
 **Selective Import** is here! You can now choose exactly which conversations to import.
@@ -9142,7 +9143,6 @@ Try the new **selective import** feature on your next import - you'll love the c
           "",
           this.plugin
         );
-        this.addKofiSection();
         this.addButtons();
         this.addStyles();
       }
@@ -9151,13 +9151,14 @@ Try the new **selective import** feature on your next import - you'll love the c
         const header = kofiSection.createDiv({ cls: "nexus-kofi-header" });
         header.innerHTML = `
             <div class="nexus-kofi-title">
-                \u2615 <strong>Love this plugin?</strong>
+                \u2615 <strong>Support This Plugin</strong>
             </div>
         `;
         const message = kofiSection.createDiv({ cls: "nexus-kofi-message" });
         message.innerHTML = `
-            <p>I build this plugin in my free time, as a labor of love. Development takes hundreds of hours.</p>
-            <p><strong>If you find it valuable, please consider supporting its development!</strong></p>
+            <p>I'm working on Nexus projects full-time while unemployed and dealing with health issues.</p>
+            <p><strong>Over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses.</strong></p>
+            <p>If this plugin makes your life easier, a donation would mean the world and help keep it alive.</p>
         `;
         const buttonContainer = kofiSection.createDiv({ cls: "nexus-kofi-button-container" });
         buttonContainer.innerHTML = `
@@ -9177,7 +9178,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         const stats = kofiSection.createDiv({ cls: "nexus-kofi-stats" });
         stats.innerHTML = `
             <p class="nexus-kofi-stats-text">
-                <em>Your support helps me dedicate more time to adding features, fixing bugs, and keeping this plugin free for everyone.</em>
+                <em>Reality check: Thousands of downloads, but only 2 donations totaling $10. If you use it regularly, please consider contributing. Even $5 makes a difference! \u{1F64F}</em>
             </p>
         `;
       }
