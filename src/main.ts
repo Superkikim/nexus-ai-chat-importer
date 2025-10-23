@@ -215,8 +215,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     /**
      * Show provider selection dialog and then file selection
+     * Ensures migration is complete before allowing import
      */
-    showProviderSelectionDialog(): void {
+    async showProviderSelectionDialog(): Promise<void> {
+        // Check if migration is needed before allowing import
+        const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
+
+        // If migration was needed but failed/cancelled, block import
+        if (upgradeResult !== null && !upgradeResult.success) {
+            // Migration failed or was cancelled - notice already shown by upgrade manager
+            return;
+        }
+        // If upgradeResult === null: no migration needed
+        // If upgradeResult.success === true: migration completed successfully
+        // In both cases, continue with import
+
         const providerRegistry = createProviderRegistry(this);
 
         new ProviderSelectionDialog(

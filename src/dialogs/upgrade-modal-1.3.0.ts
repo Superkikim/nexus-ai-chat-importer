@@ -27,6 +27,7 @@ export class NexusUpgradeModal130 extends Modal {
     private plugin: NexusAiChatImporterPlugin;
     private version: string;
     private resolve: (value: string) => void;
+    private hasResolved: boolean = false;
 
     constructor(app: App, plugin: NexusAiChatImporterPlugin, version: string, resolve: (value: string) => void) {
         super(app);
@@ -46,6 +47,13 @@ export class NexusUpgradeModal130 extends Modal {
         this.modalEl.querySelector('.modal-close-button')?.remove();
 
         this.createForm();
+    }
+
+    onClose(): void {
+        // If user closed dialog without clicking button, resolve with "cancel"
+        if (!this.hasResolved) {
+            this.resolve("cancel");
+        }
     }
 
     async onClose() {
@@ -196,8 +204,9 @@ Try the new **selective import** feature on your next import - you'll love the c
         });
 
         migrationButton.onclick = () => {
-            this.close();
+            this.hasResolved = true;
             this.resolve("ok");
+            this.close();
         };
     }
 

@@ -178,6 +178,21 @@ export class IncrementalUpgradeManager {
 
         } catch (error) {
             console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
+
+            // Check if user cancelled
+            if (error instanceof Error && error.message === "User cancelled upgrade") {
+                console.debug(`[NEXUS-DEBUG] User cancelled upgrade dialog`);
+                new Notice("Migration cancelled. Please complete the migration before importing.");
+                return {
+                    success: false,
+                    upgradesExecuted: 0,
+                    upgradesSkipped: 0,
+                    upgradesFailed: 0,
+                    results: []
+                };
+            }
+
+            // Other errors
             logger.error("Error during incremental upgrade:", error);
             new Notice("Upgrade failed - see console for details");
             return {
@@ -708,9 +723,14 @@ export class IncrementalUpgradeManager {
                 if (isV130Upgrade) {
                     // Use beautiful upgrade modal for v1.3.0
                     const { NexusUpgradeModal130 } = await import("../dialogs/upgrade-modal-1.3.0");
-                    await new Promise<void>((resolve) => {
+                    const userChoice = await new Promise<string>((resolve) => {
                         new NexusUpgradeModal130(this.plugin.app, this.plugin, "1.3.0", resolve).open();
                     });
+
+                    // If user cancelled/closed dialog, throw error to abort upgrade
+                    if (userChoice !== "ok") {
+                        throw new Error("User cancelled upgrade");
+                    }
                 } else if (isV120Upgrade) {
                     // Use beautiful upgrade modal for v1.2.0
                     const { NexusUpgradeModal } = require("./versions/upgrade-1.2.0");

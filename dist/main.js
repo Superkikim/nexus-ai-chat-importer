@@ -9081,6 +9081,7 @@ var init_upgrade_modal_1_3_0 = __esm({
     NexusUpgradeModal130 = class extends import_obsidian26.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
+        this.hasResolved = false;
         this.plugin = plugin;
         this.version = version;
         this.resolve = resolve;
@@ -9092,6 +9093,11 @@ var init_upgrade_modal_1_3_0 = __esm({
         titleEl.setText(`\u{1F389} Nexus AI Chat Importer ${this.version}`);
         (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
         this.createForm();
+      }
+      onClose() {
+        if (!this.hasResolved) {
+          this.resolve("cancel");
+        }
       }
       async onClose() {
         this.contentEl.empty();
@@ -9203,8 +9209,9 @@ Try the new **selective import** feature on your next import - you'll love the c
           cls: "mod-cta nexus-migration-button"
         });
         migrationButton.onclick = () => {
-          this.close();
+          this.hasResolved = true;
           this.resolve("ok");
+          this.close();
         };
       }
       addStyles() {
@@ -14596,6 +14603,17 @@ var IncrementalUpgradeManager = class {
       return result;
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
+      if (error instanceof Error && error.message === "User cancelled upgrade") {
+        console.debug(`[NEXUS-DEBUG] User cancelled upgrade dialog`);
+        new import_obsidian27.Notice("Migration cancelled. Please complete the migration before importing.");
+        return {
+          success: false,
+          upgradesExecuted: 0,
+          upgradesSkipped: 0,
+          upgradesFailed: 0,
+          results: []
+        };
+      }
       logger3.error("Error during incremental upgrade:", error);
       new import_obsidian27.Notice("Upgrade failed - see console for details");
       return {
@@ -15021,9 +15039,12 @@ ${md.substring(0, 500)}`);
         const isV130Upgrade = upgradeChain.some((upgrade) => upgrade.version === "1.3.0");
         if (isV130Upgrade) {
           const { NexusUpgradeModal130: NexusUpgradeModal1302 } = await Promise.resolve().then(() => (init_upgrade_modal_1_3_0(), upgrade_modal_1_3_0_exports));
-          await new Promise((resolve) => {
+          const userChoice = await new Promise((resolve) => {
             new NexusUpgradeModal1302(this.plugin.app, this.plugin, "1.3.0", resolve).open();
           });
+          if (userChoice !== "ok") {
+            throw new Error("User cancelled upgrade");
+          }
         } else if (isV120Upgrade) {
           const { NexusUpgradeModal: NexusUpgradeModal2 } = (init_upgrade_1_2_0(), __toCommonJS(upgrade_1_2_0_exports));
           await new Promise((resolve) => {
@@ -17119,8 +17140,13 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   }
   /**
    * Show provider selection dialog and then file selection
+   * Ensures migration is complete before allowing import
    */
-  showProviderSelectionDialog() {
+  async showProviderSelectionDialog() {
+    const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
+    if (upgradeResult !== null && !upgradeResult.success) {
+      return;
+    }
     const providerRegistry = createProviderRegistry(this);
     new ProviderSelectionDialog(
       this.app,
