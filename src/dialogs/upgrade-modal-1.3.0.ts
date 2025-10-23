@@ -36,15 +36,15 @@ export class NexusUpgradeModal130 extends Modal {
     }
 
     onOpen(): void {
-        const { containerEl, titleEl } = this;
+        const { containerEl, titleEl, modalEl } = this;
 
-        // Add custom CSS class
-        containerEl.classList.add('nexus-upgrade-modal-130');
+        // Add custom CSS class to modal element
+        modalEl.classList.add('nexus-upgrade-modal-130');
 
         // Set title
         titleEl.setText(`🎉 Nexus AI Chat Importer ${this.version}`);
         this.modalEl.querySelector('.modal-close-button')?.remove();
-        
+
         this.createForm();
     }
 
@@ -178,8 +178,9 @@ Try the new **selective import** feature on your next import - you'll love the c
     private addStyles() {
         const styleEl = document.createElement("style");
         styleEl.textContent = `
-            .nexus-upgrade-modal-130 .modal {
-                max-width: 1050px;
+            .modal.nexus-upgrade-modal-130 {
+                max-width: 1050px !important;
+                width: 1050px !important;
             }
 
             .nexus-upgrade-content {

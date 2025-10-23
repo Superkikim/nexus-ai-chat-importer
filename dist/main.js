@@ -9087,8 +9087,8 @@ var init_upgrade_modal_1_3_0 = __esm({
       }
       onOpen() {
         var _a;
-        const { containerEl, titleEl } = this;
-        containerEl.classList.add("nexus-upgrade-modal-130");
+        const { containerEl, titleEl, modalEl } = this;
+        modalEl.classList.add("nexus-upgrade-modal-130");
         titleEl.setText(`\u{1F389} Nexus AI Chat Importer ${this.version}`);
         (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
         this.createForm();
@@ -9195,8 +9195,9 @@ Try the new **selective import** feature on your next import - you'll love the c
       addStyles() {
         const styleEl = document.createElement("style");
         styleEl.textContent = `
-            .nexus-upgrade-modal-130 .modal {
-                max-width: 1050px;
+            .modal.nexus-upgrade-modal-130 {
+                max-width: 1050px !important;
+                width: 1050px !important;
             }
 
             .nexus-upgrade-content {
