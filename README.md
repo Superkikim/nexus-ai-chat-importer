@@ -101,7 +101,7 @@ Choose where your files are stored:
 
 - **Conversations Folder**: Your chat notes (default: `Nexus/Conversations`)
 - **Attachments Folder**: Images, files, and Claude artifacts (default: `Nexus/Attachments`)
-- **Reports Folder**: Import summaries (default: `Nexus Reports`)
+- **Reports Folder**: Import summaries (default: `Nexus/Reports`)
 
 **💡 Tip:** You can organize these folders however you like! Put them all together, or spread them across your vault.
 
