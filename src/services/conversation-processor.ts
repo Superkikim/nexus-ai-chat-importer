@@ -288,7 +288,6 @@ export class ConversationProcessor {
                 const chatCreateTime = adapter.getCreateTime(chat);
                 const chatTitle = adapter.getTitle(chat);
 
-                content = this.updateMetadata(content, chatUpdateTime);
                 const existingMessageIds = this.extractMessageUIDsFromNote(content);
                 const newMessages = adapter.getNewMessages(chat, existingMessageIds);
 
@@ -330,6 +329,9 @@ export class ConversationProcessor {
 
                 // Unified update logic - use convertChat for consistency
                 if (newMessages.length > 0) {
+                    // Update metadata only when there are new messages
+                    content = this.updateMetadata(content, chatUpdateTime);
+
                     // Convert full conversation to get consistent processing
                     let standardConversation = await adapter.convertChat(chat);
 
