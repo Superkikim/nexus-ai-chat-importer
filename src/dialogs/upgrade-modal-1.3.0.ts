@@ -191,7 +191,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         // Estimated time
         const estimate = migrationSection.createDiv({ cls: "nexus-migration-estimate" });
         estimate.innerHTML = `
-            <p><em>This will take a few seconds. Your data will be backed up automatically.</em></p>
+            <p><em>This will take a few seconds.</em></p>
         `;
     }
 
