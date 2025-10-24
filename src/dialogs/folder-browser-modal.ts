@@ -136,24 +136,21 @@ export class FolderBrowserModal extends Modal {
             return;
         }
 
-        // Try to create the folder if it doesn't exist
+        // Validate path format but don't create the folder yet
+        // The folder will be created when files are actually moved
         try {
-            const exists = await this.app.vault.adapter.exists(fullPath);
-            if (!exists) {
-                await this.app.vault.createFolder(fullPath);
-                new Notice(`✅ Folder created: ${fullPath}`);
+            // Just check if path is valid (no invalid characters, etc.)
+            if (fullPath.includes('\\') || fullPath.includes(':') || fullPath.includes('*') ||
+                fullPath.includes('?') || fullPath.includes('"') || fullPath.includes('<') ||
+                fullPath.includes('>') || fullPath.includes('|')) {
+                new Notice("❌ Invalid folder name: contains illegal characters");
+                return;
             }
 
             this.onSubmit(fullPath);
             this.close();
         } catch (error) {
-            if (error.message && error.message.includes("Folder already exists")) {
-                // Folder exists, that's fine
-                this.onSubmit(fullPath);
-                this.close();
-            } else {
-                new Notice(`❌ Failed to create folder: ${error.message}`);
-            }
+            new Notice(`❌ Invalid folder path: ${error.message}`);
         }
     }
 
