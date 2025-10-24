@@ -575,8 +575,29 @@
     margin-top: 0.5em;
 }
 
-/* Folder path input styling - consistent width for all folder inputs */
+/* Folder path input styling - force consistent layout with column structure */
+.setting-item:has(.nexus-folder-path-input) {
+    display: grid !important;
+    grid-template-columns: 30% 1fr auto !important;
+    gap: 12px !important;
+    align-items: start !important;
+}
+
+.setting-item:has(.nexus-folder-path-input) .setting-item-info {
+    grid-column: 1 !important;
+    text-align: left !important;
+    padding-right: 0 !important;
+}
+
+.setting-item:has(.nexus-folder-path-input) .setting-item-control {
+    grid-column: 2 / 4 !important;
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+}
+
 .nexus-folder-path-input {
-    width: 100% !important;
-    max-width: 400px !important;
+    flex: 1 1 auto !important;
+    max-width: 500px !important;
+    min-width: 200px !important;
 }
