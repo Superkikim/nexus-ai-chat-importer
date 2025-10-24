@@ -577,6 +577,7 @@
 
 /* Folder path input styling - wider inputs for better UX */
 .nexus-folder-path-input {
-    width: 100% !important;
+    width: 400px !important;
     min-width: 400px !important;
+    max-width: 400px !important;
 }
