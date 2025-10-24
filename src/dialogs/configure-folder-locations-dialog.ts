@@ -439,7 +439,8 @@ export class ConfigureFolderLocationsDialog extends Modal {
             }
 
             .nexus-upgrade-folder-input {
-                width: 100%;
+                width: 100% !important;
+                min-width: 400px !important;
             }
 
             .nexus-upgrade-info {
