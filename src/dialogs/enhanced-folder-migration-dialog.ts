@@ -221,31 +221,32 @@ export class EnhancedFolderMigrationDialog extends Modal {
             );
             progressModal.open();
 
-            // Step 1: Move the files
+            // Step 1: Move the files (0-30%)
             progressModal.updateProgress({
                 title: "Moving files...",
                 detail: `Moving from ${this.oldPath} to ${this.newPath}`,
-                progress: 20
+                progress: 5
             });
 
             await this.onComplete('move');
 
-            // Step 2: Update links
             progressModal.updateProgress({
-                title: "Updating links...",
-                detail: "Scanning and updating file links",
-                progress: 40
+                title: "Files moved",
+                detail: "Preparing to update links...",
+                progress: 30
             });
 
             const linkUpdateService = new LinkUpdateService(this.app.plugins.plugins['nexus-ai-chat-importer'] as any);
             let stats;
 
+            // Step 2: Update links (30-100%)
             if (this.folderType === 'attachments') {
                 stats = await linkUpdateService.updateAttachmentLinks(
                     this.oldPath,
                     this.newPath,
                     (progress) => {
-                        const percentage = 40 + Math.round((progress.current / progress.total) * 50);
+                        // Map link update progress from 30% to 100%
+                        const percentage = 30 + Math.round((progress.current / progress.total) * 70);
                         progressModal.updateProgress({
                             title: "Updating attachment links...",
                             detail: progress.detail,
@@ -258,9 +259,19 @@ export class EnhancedFolderMigrationDialog extends Modal {
                     this.oldPath,
                     this.newPath,
                     (progress) => {
-                        const percentage = 40 + Math.round((progress.current / progress.total) * 50);
+                        // Map link update progress from 30% to 100%
+                        const percentage = 30 + Math.round((progress.current / progress.total) * 70);
+
+                        // Provide more detailed progress messages
+                        let title = "Updating conversation links...";
+                        if (progress.phase === 'updating-conversations') {
+                            title = "Updating links in reports...";
+                        } else if (progress.phase === 'updating-artifacts') {
+                            title = "Updating links in artifacts...";
+                        }
+
                         progressModal.updateProgress({
-                            title: "Updating conversation links...",
+                            title: title,
                             detail: progress.detail,
                             progress: percentage
                         });
@@ -269,12 +280,16 @@ export class EnhancedFolderMigrationDialog extends Modal {
             }
 
             // Complete
+            const linksUpdated = this.folderType === 'attachments'
+                ? stats?.attachmentLinksUpdated || 0
+                : stats?.conversationLinksUpdated || 0;
+
             progressModal.showComplete(
-                `Files moved and ${stats?.attachmentLinksUpdated || stats?.conversationLinksUpdated || 0} links updated successfully`
+                `Files moved and ${linksUpdated} links updated successfully`
             );
             progressModal.closeAfterDelay(3000);
 
-            new Notice(`✅ Files moved to ${this.newPath} and links updated`);
+            new Notice(`✅ Files moved to ${this.newPath} and ${linksUpdated} links updated`);
 
         } catch (error) {
             new Notice(`❌ Failed to move files or update links: ${error.message}`);

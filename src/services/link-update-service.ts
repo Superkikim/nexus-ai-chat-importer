@@ -32,7 +32,7 @@ export interface LinkUpdateStats {
 }
 
 export interface LinkUpdateProgress {
-    phase: 'scanning' | 'updating-attachments' | 'updating-conversations' | 'complete' | 'error';
+    phase: 'scanning' | 'updating-attachments' | 'updating-conversations' | 'updating-artifacts' | 'complete' | 'error';
     current: number;
     total: number;
     detail: string;
@@ -193,7 +193,7 @@ export class LinkUpdateService {
                 const batch = artifactFiles.slice(i, i + batchSize);
 
                 progressCallback?.({
-                    phase: 'updating-conversations',
+                    phase: 'updating-artifacts',
                     current: processedCount,
                     total: totalFiles,
                     detail: `Updating conversation links in artifacts: ${i}/${artifactFiles.length} processed`
