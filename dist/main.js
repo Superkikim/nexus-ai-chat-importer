@@ -2232,20 +2232,14 @@ var init_folder_browser_modal = __esm({
           return;
         }
         try {
-          const exists = await this.app.vault.adapter.exists(fullPath);
-          if (!exists) {
-            await this.app.vault.createFolder(fullPath);
-            new import_obsidian5.Notice(`\u2705 Folder created: ${fullPath}`);
+          if (fullPath.includes("\\") || fullPath.includes(":") || fullPath.includes("*") || fullPath.includes("?") || fullPath.includes('"') || fullPath.includes("<") || fullPath.includes(">") || fullPath.includes("|")) {
+            new import_obsidian5.Notice("\u274C Invalid folder name: contains illegal characters");
+            return;
           }
           this.onSubmit(fullPath);
           this.close();
         } catch (error) {
-          if (error.message && error.message.includes("Folder already exists")) {
-            this.onSubmit(fullPath);
-            this.close();
-          } else {
-            new import_obsidian5.Notice(`\u274C Failed to create folder: ${error.message}`);
-          }
+          new import_obsidian5.Notice(`\u274C Invalid folder path: ${error.message}`);
         }
       }
       onClose() {
@@ -2822,7 +2816,7 @@ var init_link_update_service = __esm({
           for (let i = 0; i < artifactFiles.length; i += batchSize) {
             const batch = artifactFiles.slice(i, i + batchSize);
             progressCallback == null ? void 0 : progressCallback({
-              phase: "updating-conversations",
+              phase: "updating-artifacts",
               current: processedCount,
               total: totalFiles,
               detail: `Updating conversation links in artifacts: ${i}/${artifactFiles.length} processed`
@@ -3300,13 +3294,13 @@ var init_enhanced_folder_migration_dialog = __esm({
           progressModal.updateProgress({
             title: "Moving files...",
             detail: `Moving from ${this.oldPath} to ${this.newPath}`,
-            progress: 20
+            progress: 5
           });
           await this.onComplete("move");
           progressModal.updateProgress({
-            title: "Updating links...",
-            detail: "Scanning and updating file links",
-            progress: 40
+            title: "Files moved",
+            detail: "Preparing to update links...",
+            progress: 30
           });
           const linkUpdateService = new LinkUpdateService2(this.app.plugins.plugins["nexus-ai-chat-importer"]);
           let stats;
@@ -3315,7 +3309,7 @@ var init_enhanced_folder_migration_dialog = __esm({
               this.oldPath,
               this.newPath,
               (progress) => {
-                const percentage = 40 + Math.round(progress.current / progress.total * 50);
+                const percentage = 30 + Math.round(progress.current / progress.total * 70);
                 progressModal.updateProgress({
                   title: "Updating attachment links...",
                   detail: progress.detail,
@@ -3328,20 +3322,27 @@ var init_enhanced_folder_migration_dialog = __esm({
               this.oldPath,
               this.newPath,
               (progress) => {
-                const percentage = 40 + Math.round(progress.current / progress.total * 50);
+                const percentage = 30 + Math.round(progress.current / progress.total * 70);
+                let title = "Updating conversation links...";
+                if (progress.phase === "updating-conversations") {
+                  title = "Updating links in reports...";
+                } else if (progress.phase === "updating-artifacts") {
+                  title = "Updating links in artifacts...";
+                }
                 progressModal.updateProgress({
-                  title: "Updating conversation links...",
+                  title,
                   detail: progress.detail,
                   progress: percentage
                 });
               }
             );
           }
+          const linksUpdated = this.folderType === "attachments" ? (stats == null ? void 0 : stats.attachmentLinksUpdated) || 0 : (stats == null ? void 0 : stats.conversationLinksUpdated) || 0;
           progressModal.showComplete(
-            `Files moved and ${(stats == null ? void 0 : stats.attachmentLinksUpdated) || (stats == null ? void 0 : stats.conversationLinksUpdated) || 0} links updated successfully`
+            `Files moved and ${linksUpdated} links updated successfully`
           );
           progressModal.closeAfterDelay(3e3);
-          new import_obsidian9.Notice(`\u2705 Files moved to ${this.newPath} and links updated`);
+          new import_obsidian9.Notice(`\u2705 Files moved to ${this.newPath} and ${linksUpdated} links updated`);
         } catch (error) {
           new import_obsidian9.Notice(`\u274C Failed to move files or update links: ${error.message}`);
         }
@@ -7981,7 +7982,8 @@ var init_configure_folder_locations_dialog = __esm({
             }
 
             .nexus-upgrade-folder-input {
-                width: 100%;
+                width: 100% !important;
+                min-width: 400px !important;
             }
 
             .nexus-upgrade-info {
@@ -9695,7 +9697,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
         modal.open();
       });
     });
-    new import_obsidian10.Setting(containerEl).setName("Report folder").setDesc("Where import reports are stored").addText((text) => {
+    new import_obsidian10.Setting(containerEl).setName("Reports folder").setDesc("Where import reports are stored").addText((text) => {
       new FolderSuggest(this.plugin.app, text.inputEl);
       text.setPlaceholder("Nexus Reports").setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -11084,7 +11086,6 @@ var ConversationProcessor = class {
         const chatUpdateTime = adapter.getUpdateTime(chat);
         const chatCreateTime = adapter.getCreateTime(chat);
         const chatTitle = adapter.getTitle(chat);
-        content = this.updateMetadata(content, chatUpdateTime);
         const existingMessageIds = this.extractMessageUIDsFromNote(content);
         const newMessages = adapter.getNewMessages(chat, existingMessageIds);
         let attachmentStats = void 0;
@@ -11112,6 +11113,7 @@ var ConversationProcessor = class {
           return;
         }
         if (newMessages.length > 0) {
+          content = this.updateMetadata(content, chatUpdateTime);
           let standardConversation = await adapter.convertChat(chat);
           const newStandardMessages = standardConversation.messages.filter(
             (msg) => newMessages.some((newMsg) => newMsg.id === msg.id)
