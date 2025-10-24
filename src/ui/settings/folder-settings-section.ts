@@ -296,7 +296,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     // Some files skipped or errors - show detailed dialog
                     this.showMergeResultDialog(result, oldPath, newPath);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
                 new Notice(`❌ Failed to move files: ${error.message}`);
                 throw error;
