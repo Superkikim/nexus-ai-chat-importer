@@ -444,18 +444,38 @@ export interface FolderMergeResult {
  * @param oldFolder - The source folder to move from
  * @param newPath - The destination path
  * @param vault - The Obsidian vault instance
+ * @param onProgress - Optional callback for progress updates
  * @returns Result with counts of moved, skipped, and error files
  */
 export async function moveAndMergeFolders(
     oldFolder: TFolder,
     newPath: string,
-    vault: Vault
+    vault: Vault,
+    onProgress?: (current: number, total: number) => void
 ): Promise<FolderMergeResult> {
     let moved = 0;
     let skipped = 0;
     let errors = 0;
     const errorDetails: string[] = [];
     const foldersToDelete: TFolder[] = []; // Track folders to delete after moving files
+
+    // Count total files to move for progress tracking
+    let totalFiles = 0;
+    let processedFiles = 0;
+
+    function countFiles(folder: TFolder): number {
+        let count = 0;
+        for (const child of folder.children) {
+            if (child instanceof TFolder) {
+                count += countFiles(child);
+            } else {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    totalFiles = countFiles(oldFolder);
 
     /**
      * Recursively move all files from a folder
@@ -495,6 +515,10 @@ export async function moveAndMergeFolders(
                         // Skip existing files to avoid overwriting
                         logger.debug(`[moveAndMergeFolders] Target already exists, skipping: ${childNewPath}`);
                         skipped++;
+                        processedFiles++;
+                        if (onProgress) {
+                            onProgress(processedFiles, totalFiles);
+                        }
                         continue;
                     }
 
@@ -502,11 +526,19 @@ export async function moveAndMergeFolders(
                     await vault.rename(child, childNewPath);
                     logger.debug(`[moveAndMergeFolders] Moved file: ${child.path} → ${childNewPath}`);
                     moved++;
+                    processedFiles++;
+                    if (onProgress) {
+                        onProgress(processedFiles, totalFiles);
+                    }
                 } catch (error: any) {
                     const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
                     logger.error(`[moveAndMergeFolders] ${errorMsg}`);
                     errorDetails.push(errorMsg);
                     errors++;
+                    processedFiles++;
+                    if (onProgress) {
+                        onProgress(processedFiles, totalFiles);
+                    }
                 }
             }
         }

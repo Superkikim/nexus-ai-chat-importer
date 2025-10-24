@@ -2591,12 +2591,26 @@ function isNexusRelated(file, app) {
   const frontmatter = (_a = app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
   return (frontmatter == null ? void 0 : frontmatter.nexus) === "nexus-ai-chat-importer";
 }
-async function moveAndMergeFolders(oldFolder, newPath, vault) {
+async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
   let moved = 0;
   let skipped = 0;
   let errors = 0;
   const errorDetails = [];
   const foldersToDelete = [];
+  let totalFiles = 0;
+  let processedFiles = 0;
+  function countFiles(folder) {
+    let count = 0;
+    for (const child of folder.children) {
+      if (child instanceof import_obsidian6.TFolder) {
+        count += countFiles(child);
+      } else {
+        count++;
+      }
+    }
+    return count;
+  }
+  totalFiles = countFiles(oldFolder);
   async function moveRecursive(sourceFolder, destPath) {
     var _a;
     try {
@@ -2619,16 +2633,28 @@ async function moveAndMergeFolders(oldFolder, newPath, vault) {
           if (exists) {
             logger.debug(`[moveAndMergeFolders] Target already exists, skipping: ${childNewPath}`);
             skipped++;
+            processedFiles++;
+            if (onProgress) {
+              onProgress(processedFiles, totalFiles);
+            }
             continue;
           }
           await vault.rename(child, childNewPath);
           logger.debug(`[moveAndMergeFolders] Moved file: ${child.path} \u2192 ${childNewPath}`);
           moved++;
+          processedFiles++;
+          if (onProgress) {
+            onProgress(processedFiles, totalFiles);
+          }
         } catch (error) {
           const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
           logger.error(`[moveAndMergeFolders] ${errorMsg}`);
           errorDetails.push(errorMsg);
           errors++;
+          processedFiles++;
+          if (onProgress) {
+            onProgress(processedFiles, totalFiles);
+          }
         }
       }
     }
@@ -3281,9 +3307,10 @@ var init_enhanced_folder_migration_dialog = __esm({
       }
       async handleMoveWithLinkUpdates() {
         try {
-          const [{ UpgradeProgressModal: UpgradeProgressModal2 }, { LinkUpdateService: LinkUpdateService2 }] = await Promise.all([
+          const [{ UpgradeProgressModal: UpgradeProgressModal2 }, { LinkUpdateService: LinkUpdateService2 }, { moveAndMergeFolders: moveAndMergeFolders2 }] = await Promise.all([
             Promise.resolve().then(() => (init_progress_modal(), progress_modal_exports)),
-            Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports))
+            Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports)),
+            Promise.resolve().then(() => (init_utils(), utils_exports))
           ]);
           const progressModal = new UpgradeProgressModal2(
             this.app,
@@ -3296,10 +3323,26 @@ var init_enhanced_folder_migration_dialog = __esm({
             detail: `Moving from ${this.oldPath} to ${this.newPath}`,
             progress: 5
           });
-          await this.onComplete("move");
+          const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
+          if (!oldFolder || !(oldFolder instanceof (await import("obsidian")).TFolder)) {
+            throw new Error(`Source folder not found: ${this.oldPath}`);
+          }
+          const moveResult = await moveAndMergeFolders2(
+            oldFolder,
+            this.newPath,
+            this.app.vault,
+            (current, total) => {
+              const percentage = 5 + Math.round(current / total * 25);
+              progressModal.updateProgress({
+                title: "Moving files...",
+                detail: `${current} / ${total} files processed`,
+                progress: percentage
+              });
+            }
+          );
           progressModal.updateProgress({
             title: "Files moved",
-            detail: "Preparing to update links...",
+            detail: `${moveResult.moved} files moved, ${moveResult.skipped} skipped. Preparing to update links...`,
             progress: 30
           });
           const linkUpdateService = new LinkUpdateService2(this.app.plugins.plugins["nexus-ai-chat-importer"]);
@@ -3339,10 +3382,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           }
           const linksUpdated = this.folderType === "attachments" ? (stats == null ? void 0 : stats.attachmentLinksUpdated) || 0 : (stats == null ? void 0 : stats.conversationLinksUpdated) || 0;
           progressModal.showComplete(
-            `Files moved and ${linksUpdated} links updated successfully`
+            `${moveResult.moved} files moved. ${linksUpdated} links updated successfully`
           );
           progressModal.closeAfterDelay(3e3);
-          new import_obsidian9.Notice(`\u2705 Files moved to ${this.newPath} and ${linksUpdated} links updated`);
+          new import_obsidian9.Notice(`\u2705 ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
         } catch (error) {
           new import_obsidian9.Notice(`\u274C Failed to move files or update links: ${error.message}`);
         }

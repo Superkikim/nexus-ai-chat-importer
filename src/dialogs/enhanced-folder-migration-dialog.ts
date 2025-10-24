@@ -208,9 +208,10 @@ export class EnhancedFolderMigrationDialog extends Modal {
     private async handleMoveWithLinkUpdates(): Promise<void> {
         try {
             // Lazy import dependencies
-            const [{ UpgradeProgressModal }, { LinkUpdateService }] = await Promise.all([
+            const [{ UpgradeProgressModal }, { LinkUpdateService }, { moveAndMergeFolders }] = await Promise.all([
                 import("../upgrade/utils/progress-modal"),
-                import("../services/link-update-service")
+                import("../services/link-update-service"),
+                import("../utils")
             ]);
 
             // Show progress modal for the operation
@@ -228,11 +229,31 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 progress: 5
             });
 
-            await this.onComplete('move');
+            // Get the old folder
+            const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
+            if (!oldFolder || !(oldFolder instanceof (await import("obsidian")).TFolder)) {
+                throw new Error(`Source folder not found: ${this.oldPath}`);
+            }
+
+            // Move files with progress tracking
+            const moveResult = await moveAndMergeFolders(
+                oldFolder,
+                this.newPath,
+                this.app.vault,
+                (current, total) => {
+                    // Map file move progress from 5% to 30%
+                    const percentage = 5 + Math.round((current / total) * 25);
+                    progressModal.updateProgress({
+                        title: "Moving files...",
+                        detail: `${current} / ${total} files processed`,
+                        progress: percentage
+                    });
+                }
+            );
 
             progressModal.updateProgress({
                 title: "Files moved",
-                detail: "Preparing to update links...",
+                detail: `${moveResult.moved} files moved, ${moveResult.skipped} skipped. Preparing to update links...`,
                 progress: 30
             });
 
@@ -285,11 +306,11 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 : stats?.conversationLinksUpdated || 0;
 
             progressModal.showComplete(
-                `Files moved and ${linksUpdated} links updated successfully`
+                `${moveResult.moved} files moved. ${linksUpdated} links updated successfully`
             );
             progressModal.closeAfterDelay(3000);
 
-            new Notice(`✅ Files moved to ${this.newPath} and ${linksUpdated} links updated`);
+            new Notice(`✅ ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
 
         } catch (error) {
             new Notice(`❌ Failed to move files or update links: ${error.message}`);
