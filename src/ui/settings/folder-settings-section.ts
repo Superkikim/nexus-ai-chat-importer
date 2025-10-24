@@ -21,7 +21,6 @@
 import { Setting, TFolder, TextComponent, Notice, Modal } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
-import { FolderSuggest } from "../folder-suggest";
 import { FolderBrowserModal } from "../../dialogs/folder-browser-modal";
 import { validateFolderNesting } from "../../utils/folder-validation";
 import { moveAndMergeFolders, type FolderMergeResult } from "../../utils";
@@ -32,39 +31,36 @@ export class FolderSettingsSection extends BaseSettingsSection {
 
     render(containerEl: HTMLElement): void {
         // Conversation Folder
+        let conversationFolderTextComponent: any;
         new Setting(containerEl)
             .setName("Conversation folder")
             .setDesc("Where imported conversations are stored")
             .addText((text) => {
-                // Add folder autocomplete
-                new FolderSuggest(this.plugin.app, text.inputEl);
+                conversationFolderTextComponent = text;
 
                 text
                     .setPlaceholder("Nexus/Conversations")
                     .setValue(this.plugin.settings.conversationFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
-                text.inputEl.addClass("nexus-conversation-folder-input"); // Unique class for this input
+                text.inputEl.addClass("nexus-conversation-folder-input");
 
-                // Detect change when user leaves the field (not on every keystroke)
-                text.inputEl.addEventListener('blur', async () => {
-                    const newValue = text.getValue();
-                    await this.handleFolderChange('conversationFolder', newValue, 'conversations', text);
-                });
+                // Make input read-only - only Browse button can change the value
+                text.inputEl.readOnly = true;
+                text.inputEl.style.cursor = "default";
             })
             .addButton((button) => {
                 button
                     .setButtonText("Browse")
                     .setTooltip("Browse folders or create a new one")
-                    .onClick(() => {
-                        const textComponent = containerEl.querySelector('.nexus-conversation-folder-input') as HTMLInputElement;
+                    .onClick(async () => {
                         const modal = new FolderBrowserModal(
                             this.plugin.app,
-                            (path) => {
-                                // User selected or created a folder
-                                if (textComponent) {
-                                    textComponent.value = path;
-                                    textComponent.dispatchEvent(new Event('blur'));
+                            async (path) => {
+                                // User selected or created a folder - handle the change directly
+                                if (conversationFolderTextComponent) {
+                                    conversationFolderTextComponent.setValue(path);
+                                    await this.handleFolderChange('conversationFolder', path, 'conversations', conversationFolderTextComponent);
                                 }
                             }
                         );
@@ -73,39 +69,36 @@ export class FolderSettingsSection extends BaseSettingsSection {
             });
 
         // Report Folder
+        let reportFolderTextComponent: any;
         new Setting(containerEl)
             .setName("Reports folder")
             .setDesc("Where import reports are stored")
             .addText((text) => {
-                // Add folder autocomplete
-                new FolderSuggest(this.plugin.app, text.inputEl);
+                reportFolderTextComponent = text;
 
                 text
                     .setPlaceholder("Nexus Reports")
                     .setValue(this.plugin.settings.reportFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
-                text.inputEl.addClass("nexus-report-folder-input"); // Unique class for this input
+                text.inputEl.addClass("nexus-report-folder-input");
 
-                // Detect change when user leaves the field (not on every keystroke)
-                text.inputEl.addEventListener('blur', async () => {
-                    const newValue = text.getValue();
-                    await this.handleFolderChange('reportFolder', newValue, 'reports', text);
-                });
+                // Make input read-only - only Browse button can change the value
+                text.inputEl.readOnly = true;
+                text.inputEl.style.cursor = "default";
             })
             .addButton((button) => {
                 button
                     .setButtonText("Browse")
                     .setTooltip("Browse folders or create a new one")
-                    .onClick(() => {
-                        const textComponent = containerEl.querySelector('.nexus-report-folder-input') as HTMLInputElement;
+                    .onClick(async () => {
                         const modal = new FolderBrowserModal(
                             this.plugin.app,
-                            (path) => {
-                                // User selected or created a folder
-                                if (textComponent) {
-                                    textComponent.value = path;
-                                    textComponent.dispatchEvent(new Event('blur'));
+                            async (path) => {
+                                // User selected or created a folder - handle the change directly
+                                if (reportFolderTextComponent) {
+                                    reportFolderTextComponent.setValue(path);
+                                    await this.handleFolderChange('reportFolder', path, 'reports', reportFolderTextComponent);
                                 }
                             }
                         );
@@ -114,39 +107,36 @@ export class FolderSettingsSection extends BaseSettingsSection {
             });
 
         // Attachment Folder
+        let attachmentFolderTextComponent: any;
         new Setting(containerEl)
             .setName("Attachment folder")
             .setDesc("Where attachments are stored (⚠️ Exclude from sync to save space)")
             .addText((text) => {
-                // Add folder autocomplete
-                new FolderSuggest(this.plugin.app, text.inputEl);
+                attachmentFolderTextComponent = text;
 
                 text
                     .setPlaceholder("Nexus/Attachments")
                     .setValue(this.plugin.settings.attachmentFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
-                text.inputEl.addClass("nexus-attachment-folder-input"); // Unique class for this input
+                text.inputEl.addClass("nexus-attachment-folder-input");
 
-                // Detect change when user leaves the field (not on every keystroke)
-                text.inputEl.addEventListener('blur', async () => {
-                    const newValue = text.getValue();
-                    await this.handleFolderChange('attachmentFolder', newValue, 'attachments', text);
-                });
+                // Make input read-only - only Browse button can change the value
+                text.inputEl.readOnly = true;
+                text.inputEl.style.cursor = "default";
             })
             .addButton((button) => {
                 button
                     .setButtonText("Browse")
                     .setTooltip("Browse folders or create a new one")
-                    .onClick(() => {
-                        const textComponent = containerEl.querySelector('.nexus-attachment-folder-input') as HTMLInputElement;
+                    .onClick(async () => {
                         const modal = new FolderBrowserModal(
                             this.plugin.app,
-                            (path) => {
-                                // User selected or created a folder
-                                if (textComponent) {
-                                    textComponent.value = path;
-                                    textComponent.dispatchEvent(new Event('blur'));
+                            async (path) => {
+                                // User selected or created a folder - handle the change directly
+                                if (attachmentFolderTextComponent) {
+                                    attachmentFolderTextComponent.setValue(path);
+                                    await this.handleFolderChange('attachmentFolder', path, 'attachments', attachmentFolderTextComponent);
                                 }
                             }
                         );

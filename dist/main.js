@@ -9705,7 +9705,6 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
 };
 
 // src/ui/settings/folder-settings-section.ts
-init_folder_suggest();
 init_folder_browser_modal();
 init_folder_validation();
 init_utils();
@@ -9716,72 +9715,66 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     this.order = 10;
   }
   render(containerEl) {
+    let conversationFolderTextComponent;
     new import_obsidian10.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
-      new FolderSuggest(this.plugin.app, text.inputEl);
+      conversationFolderTextComponent = text;
       text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-conversation-folder-input");
-      text.inputEl.addEventListener("blur", async () => {
-        const newValue = text.getValue();
-        await this.handleFolderChange("conversationFolder", newValue, "conversations", text);
-      });
+      text.inputEl.readOnly = true;
+      text.inputEl.style.cursor = "default";
     }).addButton((button) => {
-      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
-        const textComponent = containerEl.querySelector(".nexus-conversation-folder-input");
+      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
         const modal = new FolderBrowserModal(
           this.plugin.app,
-          (path) => {
-            if (textComponent) {
-              textComponent.value = path;
-              textComponent.dispatchEvent(new Event("blur"));
+          async (path) => {
+            if (conversationFolderTextComponent) {
+              conversationFolderTextComponent.setValue(path);
+              await this.handleFolderChange("conversationFolder", path, "conversations", conversationFolderTextComponent);
             }
           }
         );
         modal.open();
       });
     });
+    let reportFolderTextComponent;
     new import_obsidian10.Setting(containerEl).setName("Reports folder").setDesc("Where import reports are stored").addText((text) => {
-      new FolderSuggest(this.plugin.app, text.inputEl);
+      reportFolderTextComponent = text;
       text.setPlaceholder("Nexus Reports").setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-report-folder-input");
-      text.inputEl.addEventListener("blur", async () => {
-        const newValue = text.getValue();
-        await this.handleFolderChange("reportFolder", newValue, "reports", text);
-      });
+      text.inputEl.readOnly = true;
+      text.inputEl.style.cursor = "default";
     }).addButton((button) => {
-      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
-        const textComponent = containerEl.querySelector(".nexus-report-folder-input");
+      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
         const modal = new FolderBrowserModal(
           this.plugin.app,
-          (path) => {
-            if (textComponent) {
-              textComponent.value = path;
-              textComponent.dispatchEvent(new Event("blur"));
+          async (path) => {
+            if (reportFolderTextComponent) {
+              reportFolderTextComponent.setValue(path);
+              await this.handleFolderChange("reportFolder", path, "reports", reportFolderTextComponent);
             }
           }
         );
         modal.open();
       });
     });
+    let attachmentFolderTextComponent;
     new import_obsidian10.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
-      new FolderSuggest(this.plugin.app, text.inputEl);
+      attachmentFolderTextComponent = text;
       text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-attachment-folder-input");
-      text.inputEl.addEventListener("blur", async () => {
-        const newValue = text.getValue();
-        await this.handleFolderChange("attachmentFolder", newValue, "attachments", text);
-      });
+      text.inputEl.readOnly = true;
+      text.inputEl.style.cursor = "default";
     }).addButton((button) => {
-      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
-        const textComponent = containerEl.querySelector(".nexus-attachment-folder-input");
+      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
         const modal = new FolderBrowserModal(
           this.plugin.app,
-          (path) => {
-            if (textComponent) {
-              textComponent.value = path;
-              textComponent.dispatchEvent(new Event("blur"));
+          async (path) => {
+            if (attachmentFolderTextComponent) {
+              attachmentFolderTextComponent.setValue(path);
+              await this.handleFolderChange("attachmentFolder", path, "attachments", attachmentFolderTextComponent);
             }
           }
         );

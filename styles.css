@@ -601,3 +601,10 @@
     max-width: 500px !important;
     min-width: 200px !important;
 }
+
+/* Read-only folder inputs - keep normal appearance but indicate non-editable */
+.nexus-folder-path-input[readonly] {
+    background-color: var(--background-primary) !important;
+    opacity: 1 !important;
+    cursor: default !important;
+}
