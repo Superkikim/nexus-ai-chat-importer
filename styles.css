@@ -575,9 +575,8 @@
     margin-top: 0.5em;
 }
 
-/* Folder path input styling - wider inputs for better UX */
+/* Folder path input styling - consistent width for all folder inputs */
 .nexus-folder-path-input {
-    width: 400px !important;
-    min-width: 400px !important;
+    width: 100% !important;
     max-width: 400px !important;
 }

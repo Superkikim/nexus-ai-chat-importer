@@ -74,7 +74,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
 
         // Report Folder
         new Setting(containerEl)
-            .setName("Report folder")
+            .setName("Reports folder")
             .setDesc("Where import reports are stored")
             .addText((text) => {
                 // Add folder autocomplete
