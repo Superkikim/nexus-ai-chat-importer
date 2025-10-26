@@ -5855,7 +5855,6 @@ var init_configure_folder_locations_dialog = __esm({
           cls: "nexus-upgrade-title"
         });
         const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
-        messageContainer.createEl("h3", { text: "\u2728 New: Report Folder Setting" });
         const descriptionEl = messageContainer.createDiv({ cls: "nexus-upgrade-description" });
         descriptionEl.createEl("p", {
           text: `In version 1.3.0, you can specify a folder for Reports. We will move existing reports to ${this.originalReportFolder}, or you can select your preferred folder below.`
@@ -5865,24 +5864,34 @@ var init_configure_folder_locations_dialog = __esm({
           cls: "nexus-upgrade-note"
         });
         const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
-        new import_obsidian22.Setting(folderSection).setName("\u{1F4CA} Report Folder").setDesc("Where import and upgrade reports are stored").addText((text) => {
-          this.reportFolderInput = text.inputEl;
-          text.setPlaceholder("Nexus Reports").setValue(this.originalReportFolder).inputEl.addClass("nexus-upgrade-folder-input");
-          text.inputEl.readOnly = true;
-          text.inputEl.style.cursor = "default";
-        }).addButton((button) => {
-          button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
-            const modal = new FolderTreeBrowserModal(
-              this.plugin.app,
-              (path) => {
-                if (this.reportFolderInput) {
-                  this.reportFolderInput.value = path;
-                }
-              },
-              this.originalReportFolder
-            );
-            modal.open();
-          });
+        folderSection.createEl("div", {
+          text: "\u{1F4CA} Report Folder",
+          cls: "nexus-upgrade-folder-label"
+        });
+        const inputContainer = folderSection.createDiv({ cls: "nexus-upgrade-input-container" });
+        this.reportFolderInput = inputContainer.createEl("input", {
+          type: "text",
+          placeholder: "Nexus Reports",
+          value: this.originalReportFolder,
+          cls: "nexus-upgrade-folder-input"
+        });
+        this.reportFolderInput.readOnly = true;
+        this.reportFolderInput.style.cursor = "default";
+        const browseButton = inputContainer.createEl("button", {
+          text: "Browse",
+          cls: "mod-cta nexus-upgrade-browse-button"
+        });
+        browseButton.addEventListener("click", () => {
+          const modal = new FolderTreeBrowserModal(
+            this.plugin.app,
+            (path) => {
+              if (this.reportFolderInput) {
+                this.reportFolderInput.value = path;
+              }
+            },
+            this.originalReportFolder
+          );
+          modal.open();
         });
         const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container-centered" });
         const proceedButton = buttonContainer.createEl("button", {
@@ -6090,15 +6099,10 @@ var init_configure_folder_locations_dialog = __esm({
                 line-height: 1.6;
             }
 
-            .nexus-upgrade-message h3 {
-                margin-top: 0.5em;
-                margin-bottom: 0.8em;
-                color: var(--text-normal);
-            }
-
             .nexus-upgrade-description {
-                font-size: 1em;
+                font-size: 1.05em;
                 line-height: 1.6;
+                margin-bottom: 1.5em;
             }
 
             .nexus-upgrade-description p {
@@ -6113,14 +6117,38 @@ var init_configure_folder_locations_dialog = __esm({
 
             .nexus-upgrade-folder-section {
                 background-color: var(--background-secondary);
-                padding: 1.2em;
-                margin: 1.5em 0;
-                border-radius: 6px;
+                padding: 1.5em;
+                margin: 1em 0;
+                border-radius: 8px;
+            }
+
+            .nexus-upgrade-folder-label {
+                font-size: 1.1em;
+                font-weight: 600;
+                margin-bottom: 0.8em;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-input-container {
+                display: flex;
+                gap: 0.8em;
+                align-items: center;
             }
 
             .nexus-upgrade-folder-input {
-                width: 100% !important;
-                min-width: 400px !important;
+                flex: 1;
+                padding: 0.6em 0.8em;
+                font-size: 1em;
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+                background-color: var(--background-primary);
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-browse-button {
+                padding: 0.6em 1.5em !important;
+                font-size: 1em !important;
+                white-space: nowrap;
             }
 
             .nexus-upgrade-button-container-centered {
