@@ -288,7 +288,5 @@ export abstract class VersionUpgrade {
         };
         
         await context.plugin.saveData(data);
-        
-        logger.info(`Marked operation ${operationId} (v${this.version}) as completed`);
     }
 }

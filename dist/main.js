@@ -4934,7 +4934,6 @@ var init_upgrade_interface = __esm({
           completed: true
         };
         await context.plugin.saveData(data);
-        logger2.info(`Marked operation ${operationId} (v${this.version}) as completed`);
       }
     };
   }
@@ -6271,12 +6270,10 @@ var init_upgrade_1_3_0 = __esm({
         this.type = "automatic";
       }
       async canRun(context) {
-        var _a, _b;
+        var _a;
         try {
           const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversationFolder: ${conversationFolder}`);
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - total markdown files: ${allFiles.length}`);
           const conversationFiles = allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder))
               return false;
@@ -6286,7 +6283,6 @@ var init_upgrade_1_3_0 = __esm({
             }
             return true;
           });
-          console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - conversation files: ${conversationFiles.length}`);
           const samples = [];
           let foundNonISO = false;
           for (const file of conversationFiles) {
@@ -6304,13 +6300,10 @@ var init_upgrade_1_3_0 = __esm({
           if (samples.length) {
             const format = DateParser.detectFormatFromSamples(samples);
             this.globalOrder = format == null ? void 0 : format.order;
-            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - detected global order: ${(_b = this.globalOrder) != null ? _b : "none"}`);
           }
           if (foundNonISO) {
-            console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - FOUND non-ISO timestamps`);
             return true;
           }
-          console.debug(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun - NO non-ISO timestamps found`);
           return false;
         } catch (error) {
           console.error(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun failed:`, error);
@@ -6318,9 +6311,8 @@ var init_upgrade_1_3_0 = __esm({
         }
       }
       async execute(context) {
-        var _a, _b;
+        var _a;
         try {
-          console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute starting`);
           const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
@@ -6348,7 +6340,6 @@ var init_upgrade_1_3_0 = __esm({
             if (samples.length) {
               const format = DateParser.detectFormatFromSamples(samples);
               this.globalOrder = format == null ? void 0 : format.order;
-              console.debug(`[NEXUS-UPGRADE] execute - detected global order: ${(_b = this.globalOrder) != null ? _b : "none"}`);
             }
           }
           let processed = 0;
@@ -6357,7 +6348,6 @@ var init_upgrade_1_3_0 = __esm({
           let alreadyISO = 0;
           let failed = 0;
           let errors = 0;
-          console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Processing ${conversationFiles.length} files`);
           const batchSize = 10;
           for (let i = 0; i < conversationFiles.length; i += batchSize) {
             const batch = conversationFiles.slice(i, i + batchSize);
@@ -6391,7 +6381,6 @@ var init_upgrade_1_3_0 = __esm({
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps: Completed - processed:${processed}, converted:${converted}, skipped:${skipped}, errors:${errors}`);
           const results = [];
           results.push(`**What this does:**`);
           results.push(`Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).`);
@@ -6436,17 +6425,14 @@ var init_upgrade_1_3_0 = __esm({
       hasNonISOTimestamps(content) {
         const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
         if (!frontmatterMatch) {
-          console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - no frontmatter found`);
           return false;
         }
         const frontmatter = frontmatterMatch[1];
         const hasISO = /^(create|update)_time: \d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/m.test(frontmatter);
-        console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - hasISO: ${hasISO}`);
         if (hasISO) {
           return false;
         }
         const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/m.test(frontmatter);
-        console.debug(`[NEXUS-UPGRADE] hasNonISOTimestamps - hasNonISO pattern match: ${hasNonISO}`);
         return hasNonISO;
       }
       /**
@@ -6455,43 +6441,31 @@ var init_upgrade_1_3_0 = __esm({
        * Uses intelligent DateParser for automatic format detection
        */
       convertTimestampsToISO8601(content) {
-        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - START`);
         const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
         if (!frontmatterMatch) {
-          console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - no frontmatter found`);
           return content;
         }
         let frontmatter = frontmatterMatch[1];
         const restOfContent = content.substring(frontmatterMatch[0].length);
-        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - original frontmatter:
-${frontmatter}`);
         let conversionCount = 0;
         frontmatter = frontmatter.replace(
           /^(create|update)_time: (.+)$/gm,
           (match, field, dateStr) => {
-            console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - processing ${field}_time: "${dateStr}"`);
             if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(dateStr)) {
-              console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - already ISO, skipping`);
               return match;
             }
-            console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - calling DateParser.convertToISO8601("${dateStr}")`);
             let isoDate = DateParser.convertToISO8601(dateStr);
             if (!isoDate && this.globalOrder) {
-              console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - trying fallback with order ${this.globalOrder}`);
               isoDate = DateParser.convertToISO8601WithOrder(dateStr, this.globalOrder);
             }
             if (!isoDate) {
               console.warn(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
               return match;
             }
-            console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - SUCCESS: "${dateStr}" \u2192 "${isoDate}"`);
             conversionCount++;
             return `${field}_time: ${isoDate}`;
           }
         );
-        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - converted ${conversionCount} timestamps`);
-        console.debug(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - new frontmatter:
-${frontmatter}`);
         return `---
 ${frontmatter}
 ---${restOfContent}`;
@@ -6525,11 +6499,9 @@ ${frontmatter}
                 continue;
               }
               if (this.hasNonISOTimestamps(content)) {
-                console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Still has non-ISO format timestamps in ${file.path}`);
                 return false;
               }
               if (!content.includes('plugin_version: "1.3.0"')) {
-                console.debug(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.verify: Missing v1.3.0 in ${file.path}`);
                 return false;
               }
             } catch (error) {
@@ -6586,7 +6558,6 @@ ${frontmatter}
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases.execute starting`);
           const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
@@ -6602,7 +6573,6 @@ ${frontmatter}
           let fixed = 0;
           let skipped = 0;
           let errors = 0;
-          console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases: Processing ${conversationFiles.length} files`);
           const batchSize = 10;
           for (let i = 0; i < conversationFiles.length; i += batchSize) {
             const batch = conversationFiles.slice(i, i + batchSize);
@@ -6631,7 +6601,6 @@ ${frontmatter}
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases: Completed - processed:${processed}, fixed:${fixed}, skipped:${skipped}, errors:${errors}`);
           const results = [];
           results.push(`**What this does:**`);
           results.push(`Fixes YAML syntax errors in conversation aliases caused by special characters.`);
@@ -6731,7 +6700,6 @@ ${frontmatter}
                 continue;
               }
               if (this.hasProblematicAlias(content)) {
-                console.debug(`[NEXUS-DEBUG] FixFrontmatterAliases.verify: Still has problematic alias in ${file.path}`);
                 return false;
               }
             } catch (error) {
@@ -6767,32 +6735,24 @@ ${frontmatter}
           results.push(`Version 1.3.0 adds a dedicated setting for the Reports folder location.`);
           results.push(`To prevent reports from moving when you reorganize conversations, we're moving the Reports folder to the vault root.`);
           results.push(``);
-          console.debug(`[MigrateReportsFolder] Starting migration...`);
           const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
           const oldReportPath = `${oldArchiveFolder}/Reports`;
           const newReportPath = "Nexus Reports";
-          console.debug(`[MigrateReportsFolder] Old path: ${oldReportPath}`);
-          console.debug(`[MigrateReportsFolder] New path: ${newReportPath}`);
           const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
           let reportsMoved = false;
           if (oldReportFolder && oldReportFolder instanceof import_obsidian23.TFolder) {
             try {
-              console.debug(`[MigrateReportsFolder] Moving Reports folder...`);
               const result = await moveAndMergeFolders(oldReportFolder, newReportPath, context.plugin.app.vault);
               reportsMoved = result.moved > 0;
-              console.debug(`[MigrateReportsFolder] Migration completed: ${result.moved} moved, ${result.skipped} skipped, ${result.errors} errors`);
               try {
                 const stillExists = await context.plugin.app.vault.adapter.exists(oldReportPath);
                 if (stillExists) {
-                  console.debug(`[MigrateReportsFolder] Old Reports folder still exists, attempting explicit deletion...`);
                   const folderToDelete = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
                   if (folderToDelete && folderToDelete instanceof import_obsidian23.TFolder) {
                     await context.plugin.app.vault.delete(folderToDelete);
-                    console.debug(`[MigrateReportsFolder] \u2705 Successfully deleted old Reports folder`);
                   }
                 }
               } catch (deleteError) {
-                console.debug(`[MigrateReportsFolder] Could not delete old Reports folder: ${deleteError.message || String(deleteError)}`);
               }
               if (result.success && result.skipped === 0) {
                 results.push(`\u2705 Reports folder moved: \`${oldReportPath}\` \u2192 \`${newReportPath}\` (${result.moved} file(s))`);
@@ -6814,15 +6774,12 @@ ${frontmatter}
               results.push(`   You can move it manually later in settings.`);
             }
           } else {
-            console.debug(`[MigrateReportsFolder] No existing Reports folder found`);
             results.push(`\u2139\uFE0F No existing Reports folder found. New reports will be created in \`${newReportPath}\``);
           }
           if (reportsMoved || !oldReportFolder) {
             context.plugin.settings.reportFolder = newReportPath;
           }
           await context.plugin.saveSettings();
-          console.debug(`[MigrateReportsFolder] Migration completed successfully`);
-          console.debug(`[MigrateReportsFolder] reportFolder setting: ${context.plugin.settings.reportFolder}`);
           return {
             success: true,
             message: "Reports folder migrated successfully",
@@ -6863,13 +6820,11 @@ ${frontmatter}
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
           if (!folder || !(folder instanceof import_obsidian23.TFolder)) {
-            console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No Claude artifacts folder found`);
             return false;
           }
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
           if (artifactFiles.length === 0) {
-            console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No artifact files found`);
             return false;
           }
           for (const file of artifactFiles) {
@@ -6877,16 +6832,13 @@ ${frontmatter}
             if (!fm || fm.provider !== "claude")
               continue;
             if (!fm.create_time) {
-              console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - Found artifact without create_time`);
               return true;
             }
             const content = await context.plugin.app.vault.read(file);
             if (content.includes("**Type:** Claude Artifact") || content.includes("**Command:**") || content.includes("**UUID:**")) {
-              console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - Found artifact with old header`);
               return true;
             }
           }
-          console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No artifacts need migration`);
           return false;
         } catch (error) {
           console.error(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun failed:`, error);
@@ -6919,16 +6871,12 @@ ${frontmatter}
           results.push(``);
           for (const file of artifactFiles) {
             try {
-              console.debug(`[NEXUS-UPGRADE] ========================================`);
-              console.debug(`[NEXUS-UPGRADE] Processing artifact file: ${file.basename}`);
               const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
               if (!fm || fm.provider !== "claude") {
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: Skipped (not a Claude artifact)`);
                 skippedCount++;
                 continue;
               }
               processedCount++;
-              console.debug(`[NEXUS-UPGRADE] ${file.basename}: Claude artifact detected (ID: ${fm.artifact_id}, Version: ${fm.version_number})`);
               let content = await context.plugin.app.vault.read(file);
               let modified = false;
               let warnings = [];
@@ -6941,7 +6889,6 @@ ${frontmatter}
               let frontmatter = fmMatch[1];
               let body = fmMatch[2];
               if (!fm.create_time) {
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Adding create_time (currently missing)`);
                 const createTime = await this.extractArtifactCreateTime(
                   fm,
                   conversationFolder,
@@ -6952,34 +6899,26 @@ ${frontmatter}
                   frontmatter += `
 create_time: ${createTime.value}`;
                   modified = true;
-                  console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Added create_time from message: ${createTime.value}`);
                 } else if (createTime.source === "conversation") {
                   frontmatter += `
 create_time: ${createTime.value}`;
                   warnings.push(`Used conversation create_time (message not found)`);
                   warningCount++;
                   modified = true;
-                  console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Added create_time from conversation (fallback): ${createTime.value}`);
                 } else {
                   warnings.push(`Could not determine create_time`);
                   warningCount++;
                   console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - FAILED to determine create_time`);
                 }
               } else {
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - Skipped (create_time already exists: ${fm.create_time})`);
               }
-              console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Checking for old header to remove`);
               const headerRegex = /\n\n\*\*Type:\*\* Claude Artifact\n\*\*Language:\*\*[^\n]*(?:\n\*\*Command:\*\*[^\n]*)?(?:\n\*\*Version:\*\*[^\n]*)?(?:\n\*\*ID:\*\*[^\n]*)?(?:\n\*\*UUID:\*\*[^\n]*)?/;
               if (headerRegex.test(body)) {
                 body = body.replace(headerRegex, "");
                 modified = true;
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Removed old header`);
               } else {
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 2 - Skipped (no old header found)`);
               }
-              console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Checking for conversation link`);
               if (!body.includes("**Conversation:**") && fm.conversation_id) {
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Conversation link missing, searching for conversation ${fm.conversation_id}`);
                 const conversationLink = await this.findConversationLink(
                   fm.conversation_id,
                   conversationFolder,
@@ -6993,7 +6932,6 @@ create_time: ${createTime.value}`;
 **Conversation:** ${conversationLink}
 ` + body.substring(insertPos);
                     modified = true;
-                    console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Added conversation link`);
                   } else {
                     console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Could not find title to insert link after`);
                   }
@@ -7003,9 +6941,7 @@ create_time: ${createTime.value}`;
                   console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
                 }
               } else if (body.includes("**Conversation:**")) {
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Skipped (conversation link already exists)`);
               } else {
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Skipped (no conversation_id in frontmatter)`);
               }
               const needsVersionUpdate = !frontmatter.includes('plugin_version: "1.3.0"');
               if (modified || needsVersionUpdate) {
@@ -7025,17 +6961,13 @@ ${body}`;
                 await context.plugin.app.vault.modify(file, newContent);
                 updatedCount++;
                 if (modified) {
-                  console.debug(`[NEXUS-UPGRADE] ${file.basename}: \u2705 UPDATED (${warnings.length} warning(s))`);
                 } else {
-                  console.debug(`[NEXUS-UPGRADE] ${file.basename}: \u2705 UPDATED (plugin_version only)`);
                 }
                 if (warnings.length > 0) {
                   results.push(`\u26A0\uFE0F  ${file.basename}: ${warnings.join(", ")}`);
                 }
               } else {
-                console.debug(`[NEXUS-UPGRADE] ${file.basename}: No changes needed`);
               }
-              console.debug(`[NEXUS-UPGRADE] ========================================`);
             } catch (error) {
               errorCount++;
               console.error(`[NEXUS-UPGRADE] ${file.basename}: \u274C ERROR:`, error);
@@ -7078,30 +7010,25 @@ ${body}`;
         const conversationId = artifactFm.conversation_id;
         const artifactRef = `${artifactId}_v${versionNumber}`;
         try {
-          console.debug(`[NEXUS-UPGRADE] === Extracting create_time for artifact: ${artifactRef} ===`);
           if (!conversationId) {
             console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No conversation_id in frontmatter`);
             return { value: "", source: "none" };
           }
-          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching in conversation ${conversationId}`);
           const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
           if (!conversationFile) {
             console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
             return { value: "", source: "none" };
           }
-          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found conversation file: ${conversationFile.basename}`);
           const content = await plugin.app.vault.read(conversationFile);
           if (!artifactId || !versionNumber) {
             console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
             const fm2 = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
             if (fm2 == null ? void 0 : fm2.create_time) {
-              console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time: ${fm2.create_time}`);
               return { value: fm2.create_time, source: "conversation" };
             }
             return { value: "", source: "none" };
           }
           const artifactLinkPath = artifactFile.path.replace(/\.md$/, "");
-          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching for exact link: [[${artifactLinkPath}|View Artifact]]`);
           const escapedPath = artifactLinkPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const linkPattern = new RegExp(`\\[\\[${escapedPath}\\|View Artifact\\]\\]`, "m");
           const linkMatch = content.match(linkPattern);
@@ -7109,38 +7036,27 @@ ${body}`;
             console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
             const fm2 = (_b = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _b.frontmatter;
             if (fm2 == null ? void 0 : fm2.create_time) {
-              console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time fallback: ${fm2.create_time}`);
               return { value: fm2.create_time, source: "conversation" };
             }
             return { value: "", source: "none" };
           }
           const linkIndex = linkMatch.index;
-          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found artifact link at position ${linkIndex}`);
           const textBeforeLink = content.substring(0, linkIndex);
           const contextStart = Math.max(0, linkIndex - 300);
           const contextText = content.substring(contextStart, linkIndex);
-          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Context before link (last 300 chars):
-${contextText}
-[ARTIFACT LINK HERE]`);
           const agentPattern = />\[!nexus_agent\] \*\*Assistant\*\* - ([^\n]+)/gm;
           let lastMatch = null;
           let match;
           let matchCount = 0;
-          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Searching for agent callout pattern in ${textBeforeLink.length} chars`);
-          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Pattern: />${agentPattern.source}/gm`);
           while ((match = agentPattern.exec(textBeforeLink)) !== null) {
             matchCount++;
             lastMatch = match;
-            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Found agent callout #${matchCount} at position ${match.index}: "${match[1]}"`);
           }
-          console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Total agent callouts found: ${matchCount}`);
           if (lastMatch && lastMatch[1]) {
             const timestampStr = lastMatch[1];
-            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Selected LAST agent callout timestamp: "${timestampStr}"`);
             const timestamp = DateParser.parseDate(timestampStr, artifactRef);
             if (timestamp > 0) {
               const isoDate = new Date(timestamp * 1e3).toISOString();
-              console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: \u2705 Successfully parsed message timestamp: ${isoDate}`);
               return {
                 value: isoDate,
                 source: "message"
@@ -7157,7 +7073,6 @@ ${sampleText}`);
           }
           const fm = (_c = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _c.frontmatter;
           if (fm == null ? void 0 : fm.create_time) {
-            console.debug(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Using conversation create_time fallback: ${fm.create_time}`);
             return { value: fm.create_time, source: "conversation" };
           }
           console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No create_time available`);
@@ -7230,19 +7145,16 @@ ${sampleText}`);
         return true;
       }
       async execute(context) {
-        console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder.execute starting`);
         return new Promise((resolve) => {
           const dialog = new ConfigureFolderLocationsDialog(
             context.plugin,
             async (result) => {
-              console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder - User completed configuration:`, result);
               const details = [];
               if (result.reportFolder.changed) {
                 details.push(`\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath}`);
               } else {
                 details.push(`\u2139\uFE0F  Report folder: ${result.reportFolder.newPath} (unchanged)`);
               }
-              console.debug(`[NEXUS-UPGRADE] ConfigureReportFolder.execute completed successfully`);
               resolve({
                 success: true,
                 message: "Report folder location configured successfully",
@@ -12728,7 +12640,6 @@ var IncrementalUpgradeManager = class {
     this.availableUpgrades.sort((a, b) => {
       return VersionUtils.compareVersions(a.version, b.version);
     });
-    logger3.info(`Registered ${this.availableUpgrades.length} version upgrades`);
   }
   /**
    * Main incremental upgrade check and execution
@@ -12741,7 +12652,6 @@ var IncrementalUpgradeManager = class {
       console.debug(`[NEXUS-DEBUG] Incremental upgrade check: ${previousVersion} \u2192 ${currentVersion}`);
       if (previousVersion === currentVersion) {
         console.debug(`[NEXUS-DEBUG] No version change - SKIPPING ALL`);
-        logger3.info(`No version change (${currentVersion}), skipping upgrade checks`);
         return null;
       }
       const data = await this.plugin.loadData();
@@ -12750,7 +12660,6 @@ var IncrementalUpgradeManager = class {
       console.debug(`[NEXUS-DEBUG] Upgrade history check for '${versionKey}': ${hasCompletedThisUpgrade}`);
       if (hasCompletedThisUpgrade) {
         console.debug(`[NEXUS-DEBUG] Upgrade already completed - SKIPPING ALL`);
-        logger3.info(`Already completed upgrade to ${currentVersion}, skipping`);
         return null;
       }
       const isFreshInstall = await this.detectFreshInstall();
@@ -12758,7 +12667,6 @@ var IncrementalUpgradeManager = class {
       if (isFreshInstall) {
         console.debug(`[NEXUS-DEBUG] Fresh install detected - marking as complete without upgrades`);
         await this.markUpgradeComplete(currentVersion);
-        logger3.info(`Fresh installation detected - marked as up-to-date v${currentVersion}`);
         return {
           success: true,
           upgradesExecuted: 0,
@@ -13062,7 +12970,6 @@ var IncrementalUpgradeManager = class {
       data.versionTrackingEnabled = true;
     }
     await this.plugin.saveData(data);
-    logger3.info(`Marked overall upgrade to ${version} as complete`);
   }
   /**
    * Write a consolidated upgrade report per run
@@ -13305,7 +13212,6 @@ ${md.substring(0, 500)}`);
       completed: true
     };
     await this.plugin.saveData(data);
-    logger3.info(`Marked operation ${operationId} (v${version}) as completed`);
   }
   /**
    * Get documentation links

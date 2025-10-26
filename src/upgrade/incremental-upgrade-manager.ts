@@ -71,8 +71,6 @@ export class IncrementalUpgradeManager {
         this.availableUpgrades.sort((a, b) => {
             return VersionUtils.compareVersions(a.version, b.version);
         });
-
-        logger.info(`Registered ${this.availableUpgrades.length} version upgrades`);
     }
 
     /**
@@ -88,7 +86,6 @@ export class IncrementalUpgradeManager {
             // Skip if no version change
             if (previousVersion === currentVersion) {
                 console.debug(`[NEXUS-DEBUG] No version change - SKIPPING ALL`);
-                logger.info(`No version change (${currentVersion}), skipping upgrade checks`);
                 return null;
             }
 
@@ -101,7 +98,6 @@ export class IncrementalUpgradeManager {
 
             if (hasCompletedThisUpgrade) {
                 console.debug(`[NEXUS-DEBUG] Upgrade already completed - SKIPPING ALL`);
-                logger.info(`Already completed upgrade to ${currentVersion}, skipping`);
                 return null;
             }
 
@@ -112,7 +108,6 @@ export class IncrementalUpgradeManager {
             if (isFreshInstall) {
                 console.debug(`[NEXUS-DEBUG] Fresh install detected - marking as complete without upgrades`);
                 await this.markUpgradeComplete(currentVersion);
-                logger.info(`Fresh installation detected - marked as up-to-date v${currentVersion}`);
                 return {
                     success: true,
                     upgradesExecuted: 0,
@@ -533,7 +528,6 @@ export class IncrementalUpgradeManager {
         }
 
         await this.plugin.saveData(data);
-        logger.info(`Marked overall upgrade to ${version} as complete`);
     }
 
     /**
@@ -798,8 +792,6 @@ export class IncrementalUpgradeManager {
         };
 
         await this.plugin.saveData(data);
-
-        logger.info(`Marked operation ${operationId} (v${version}) as completed`);
     }
 
     /**
