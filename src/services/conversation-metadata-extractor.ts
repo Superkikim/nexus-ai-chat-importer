@@ -491,13 +491,6 @@ export class ConversationMetadataExtractor {
             conversationsIgnored: filterResult.ignoredCount
         };
 
-        // Log results for debugging
-        this.plugin.logger.debug(`Analysis: Found ${analysisInfo.totalConversationsFound} conversations across ${files.length} files. ` +
-                   `After deduplication: ${analysisInfo.uniqueConversationsKept} unique conversations. ` +
-                   `For selection: ${filterResult.conversations.length} conversations ` +
-                   `(${analysisInfo.conversationsNew} new, ${analysisInfo.conversationsUpdated} updated). ` +
-                   `Ignored: ${analysisInfo.conversationsIgnored} unchanged.`);
-
         return {
             conversations: filterResult.conversations,
             analysisInfo: analysisInfo,
@@ -541,16 +534,6 @@ export class ConversationMetadataExtractor {
 
             if (!vaultConversation) {
                 // Si absente du vault → NEW (toujours proposer)
-                this.plugin.logger.debug(`TIMESTAMP COMPARISON - NEW: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
-                    conversationId: conversation.id,
-                    title: conversation.title.substring(0, 50) + '...',
-                    zipUpdateTime: conversation.updateTime,
-                    vaultUpdateTime: 'N/A (not in vault)',
-                    zipDate: new Date(conversation.updateTime * 1000).toISOString(),
-                    provider: conversation.provider,
-                    messageCount: conversation.messageCount
-                });
-
                 conversation.existenceStatus = 'new';
                 conversation.hasNewerContent = true;
                 conversationsForSelection.push(conversation);
@@ -571,40 +554,12 @@ export class ConversationMetadataExtractor {
 
                 if (normalizedZipUpdateTime > vaultConversation.updateTime) {
                     // ZIP plus récent que vault → UPDATED (proposer)
-                    this.plugin.logger.debug(`TIMESTAMP COMPARISON - UPDATED: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
-                        conversationId: conversation.id,
-                        title: conversation.title.substring(0, 50) + '...',
-                        zipUpdateTimeRaw: conversation.updateTime,
-                        zipUpdateTimeNormalized: normalizedZipUpdateTime,
-                        vaultUpdateTime: vaultConversation.updateTime,
-                        difference: normalizedZipUpdateTime - vaultConversation.updateTime,
-                        zipDate: new Date(normalizedZipUpdateTime * 1000).toISOString(),
-                        vaultDate: new Date(vaultConversation.updateTime * 1000).toISOString(),
-                        provider: conversation.provider,
-                        messageCount: conversation.messageCount,
-                        vaultPath: vaultConversation.path
-                    });
-
                     conversation.existenceStatus = 'updated';
                     conversation.hasNewerContent = true;
                     conversationsForSelection.push(conversation);
                     updatedCount++;
                 } else {
                     // ZIP identique ou plus ancien que vault → UNCHANGED (IGNORER)
-                    this.plugin.logger.debug(`TIMESTAMP COMPARISON - IGNORED: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
-                        conversationId: conversation.id,
-                        title: conversation.title.substring(0, 50) + '...',
-                        zipUpdateTimeRaw: conversation.updateTime,
-                        zipUpdateTimeNormalized: normalizedZipUpdateTime,
-                        vaultUpdateTime: vaultConversation.updateTime,
-                        difference: normalizedZipUpdateTime - vaultConversation.updateTime,
-                        zipDate: new Date(normalizedZipUpdateTime * 1000).toISOString(),
-                        vaultDate: new Date(vaultConversation.updateTime * 1000).toISOString(),
-                        provider: conversation.provider,
-                        messageCount: conversation.messageCount,
-                        vaultPath: vaultConversation.path
-                    });
-
                     // Ne pas ajouter à conversationsForSelection
                     // Cette conversation ne sera pas proposée dans la sélection
                     ignoredCount++;

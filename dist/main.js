@@ -738,18 +738,15 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
         throw error;
       }
     }
-    logger.debug(`[moveAndMergeFolders] Marking for deletion: ${sourceFolder.path} (children: ${sourceFolder.children.length})`);
     foldersToDelete.push(sourceFolder);
     for (const child of [...sourceFolder.children]) {
       const childNewPath = `${destPath}/${child.name}`;
       if (child instanceof import_obsidian4.TFolder) {
-        logger.debug(`[moveAndMergeFolders] Processing subfolder: ${child.path}`);
         await moveRecursive(child, childNewPath);
       } else {
         try {
           const exists = await vault.adapter.exists(childNewPath);
           if (exists) {
-            logger.debug(`[moveAndMergeFolders] Target already exists, skipping: ${childNewPath}`);
             skipped++;
             processedFiles++;
             if (onProgress) {
@@ -758,7 +755,6 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
             continue;
           }
           await vault.rename(child, childNewPath);
-          logger.debug(`[moveAndMergeFolders] Moved file: ${child.path} \u2192 ${childNewPath}`);
           moved++;
           processedFiles++;
           if (onProgress) {
@@ -779,48 +775,32 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
   }
   try {
     await moveRecursive(oldFolder, newPath);
-    logger.debug(`[moveAndMergeFolders] Attempting to delete ${foldersToDelete.length} folders...`);
     for (const folder of foldersToDelete.reverse()) {
       try {
         const exists = await vault.adapter.exists(folder.path);
         if (!exists) {
-          logger.debug(`[moveAndMergeFolders] Folder already deleted: ${folder.path}`);
           continue;
         }
         await vault.delete(folder);
-        logger.debug(`[moveAndMergeFolders] \u2705 Deleted empty folder: ${folder.path}`);
       } catch (error) {
         const errorMsg = error.message || String(error);
         if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
           logger.warn(`[moveAndMergeFolders] \u26A0\uFE0F Folder not empty, skipping deletion: ${folder.path} (children: ${folder.children.length})`);
-        } else if (errorMsg.includes("does not exist") || errorMsg.includes("ENOENT")) {
-          logger.debug(`[moveAndMergeFolders] Folder already deleted: ${folder.path}`);
-        } else {
+        } else if (!errorMsg.includes("does not exist") && !errorMsg.includes("ENOENT")) {
           logger.warn(`[moveAndMergeFolders] \u274C Could not delete folder ${folder.path}: ${errorMsg}`);
         }
       }
     }
-    logger.debug(`[moveAndMergeFolders] Checking parent folders for deletion...`);
     let currentFolder = oldFolder.parent;
     while (currentFolder && currentFolder.path !== "/") {
       try {
         const exists = await vault.adapter.exists(currentFolder.path);
         if (!exists) {
-          logger.debug(`[moveAndMergeFolders] Parent folder already deleted: ${currentFolder.path}`);
           break;
         }
         await vault.delete(currentFolder);
-        logger.debug(`[moveAndMergeFolders] \u2705 Deleted empty parent folder: ${currentFolder.path}`);
         currentFolder = currentFolder.parent;
       } catch (error) {
-        const errorMsg = error.message || String(error);
-        if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
-          logger.debug(`[moveAndMergeFolders] Parent folder not empty, stopping: ${currentFolder.path}`);
-        } else if (errorMsg.includes("does not exist") || errorMsg.includes("ENOENT")) {
-          logger.debug(`[moveAndMergeFolders] Parent folder already deleted: ${currentFolder.path}`);
-        } else {
-          logger.debug(`[moveAndMergeFolders] Could not delete parent folder ${currentFolder.path}: ${errorMsg}`);
-        }
         break;
       }
     }
@@ -7966,13 +7946,10 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     });
   }
   async handleFolderChange(settingKey, newPath, folderType, textComponent) {
-    this.plugin.logger.debug(`[FolderSettings] Folder change detected: ${settingKey} = "${newPath}"`);
     const oldPath = this.plugin.settings[settingKey];
     if (oldPath === newPath) {
-      this.plugin.logger.debug(`[FolderSettings] Path unchanged, skipping`);
       return;
     }
-    this.plugin.logger.debug(`[FolderSettings] Old path: "${oldPath}" \u2192 New path: "${newPath}"`);
     const validation = validateFolderNesting(
       settingKey,
       newPath,
@@ -7981,29 +7958,24 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       this.plugin.settings.attachmentFolder
     );
     if (!validation.valid) {
-      this.plugin.logger.debug(`[FolderSettings] Validation failed: ${validation.error}`);
       this.showErrorDialog("Invalid Folder Location", validation.error);
       textComponent.setValue(oldPath);
       return;
     }
     const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
     if (!oldFolder || !(oldFolder instanceof import_obsidian8.TFolder)) {
-      this.plugin.logger.debug(`[FolderSettings] Old folder doesn't exist, just updating setting`);
       this.plugin.settings[settingKey] = newPath;
       await this.plugin.saveSettings();
       return;
     }
     const hasContent = oldFolder.children.length > 0;
-    this.plugin.logger.debug(`[FolderSettings] Old folder exists, has content: ${hasContent}`);
     if (!hasContent) {
-      this.plugin.logger.debug(`[FolderSettings] Old folder is empty, just updating setting`);
       this.plugin.settings[settingKey] = newPath;
       await this.plugin.saveSettings();
       return;
     }
     const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
     if (newFolder && newFolder instanceof import_obsidian8.TFolder && newFolder.children.length > 0) {
-      this.plugin.logger.debug(`[FolderSettings] Target folder is not empty, aborting`);
       this.showErrorDialog(
         "Target Folder Must Be Empty",
         `The target folder "${newPath}" must be empty before migrating files.
@@ -8013,7 +7985,6 @@ Please choose an empty folder or create a new one.`
       textComponent.setValue(oldPath);
       return;
     }
-    this.plugin.logger.debug(`[FolderSettings] Showing migration dialog`);
     const useEnhancedDialog = settingKey === "attachmentFolder" || settingKey === "conversationFolder";
     if (useEnhancedDialog) {
       Promise.resolve().then(() => (init_enhanced_folder_migration_dialog(), enhanced_folder_migration_dialog_exports)).then(({ EnhancedFolderMigrationDialog: EnhancedFolderMigrationDialog2 }) => {
@@ -8057,17 +8028,13 @@ Please choose an empty folder or create a new one.`
    * Handle migration action (extracted for reuse between dialog types)
    */
   async handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent) {
-    this.plugin.logger.debug(`[FolderSettings] User choice: ${action}`);
     if (action === "cancel") {
-      this.plugin.logger.debug(`[FolderSettings] User cancelled, restoring old value: "${oldPath}"`);
       textComponent.setValue(oldPath);
       return;
     }
     if (action === "move") {
-      this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
       try {
         const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
-        this.plugin.logger.debug(`[FolderSettings] Migration completed: ${result.moved} moved, ${result.skipped} skipped, ${result.errors} errors`);
         if (settingKey === "conversationFolder" || settingKey === "attachmentFolder") {
           await this.updateLinksAfterMove(settingKey, oldPath, newPath);
         }
@@ -8081,12 +8048,9 @@ Please choose an empty folder or create a new one.`
         this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
         throw error;
       }
-    } else {
-      this.plugin.logger.debug(`[FolderSettings] User chose not to migrate, just updating setting`);
     }
     this.plugin.settings[settingKey] = newPath;
     await this.plugin.saveSettings();
-    this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
   }
   /**
    * Update links after moving conversations or attachments
@@ -8095,13 +8059,10 @@ Please choose an empty folder or create a new one.`
     try {
       const { LinkUpdateService: LinkUpdateService2 } = await Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports));
       const linkUpdateService = new LinkUpdateService2(this.plugin);
-      this.plugin.logger.debug(`[FolderSettings] Updating links for ${settingKey}...`);
       if (settingKey === "conversationFolder") {
         await linkUpdateService.updateConversationLinks(oldPath, newPath);
-        this.plugin.logger.debug(`[FolderSettings] Conversation links updated`);
       } else if (settingKey === "attachmentFolder") {
         await linkUpdateService.updateAttachmentLinks(oldPath, newPath);
-        this.plugin.logger.debug(`[FolderSettings] Attachment links updated`);
       }
     } catch (error) {
       this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
@@ -10297,7 +10258,6 @@ var ChatGPTAttachmentExtractor = class {
       this.logger.warn(`No fileId provided for attachment: ${attachment.fileName} (${context})`);
       const zipFile = zip.file(attachment.fileName);
       if (zipFile) {
-        this.logger.debug(`Found attachment by filename fallback: ${attachment.fileName} (${context})`);
         return zipFile;
       }
       return null;
@@ -10314,27 +10274,17 @@ var ChatGPTAttachmentExtractor = class {
    * Search entire ZIP for file by exact ID with enhanced DALL-E support
    */
   async searchZipByFileId(zip, fileId) {
-    this.logger.debug(`[DALLE-DEBUG] Searching ZIP for fileId: ${fileId}`);
-    const allFiles = Object.keys(zip.files).filter((path) => !zip.files[path].dir);
-    this.logger.debug(`[DALLE-DEBUG] ZIP contains ${allFiles.length} files:`);
-    allFiles.slice(0, 10).forEach((path) => this.logger.debug(`[DALLE-DEBUG]   - ${path}`));
-    if (allFiles.length > 10) {
-      this.logger.debug(`[DALLE-DEBUG]   ... and ${allFiles.length - 10} more files`);
-    }
     for (const [path, file] of Object.entries(zip.files)) {
       if (file.dir)
         continue;
       if (path.includes(fileId)) {
-        this.logger.debug(`[DALLE-DEBUG] Found file by exact fileId match: ${path}`);
         return file;
       }
       const fileName = path.split("/").pop() || "";
       if (fileName.includes(fileId) || fileName.startsWith(`file-${fileId}`) || fileName.startsWith(fileId)) {
-        this.logger.debug(`[DALLE-DEBUG] Found file by filename pattern match: ${path}`);
         return file;
       }
     }
-    this.logger.debug(`[DALLE-DEBUG] No file found for fileId: ${fileId}`);
     return null;
   }
   /**
@@ -14919,7 +14869,6 @@ var ConversationMetadataExtractor = class {
       conversationsUpdated: filterResult.updatedCount,
       conversationsIgnored: filterResult.ignoredCount
     };
-    this.plugin.logger.debug(`Analysis: Found ${analysisInfo.totalConversationsFound} conversations across ${files.length} files. After deduplication: ${analysisInfo.uniqueConversationsKept} unique conversations. For selection: ${filterResult.conversations.length} conversations (${analysisInfo.conversationsNew} new, ${analysisInfo.conversationsUpdated} updated). Ignored: ${analysisInfo.conversationsIgnored} unchanged.`);
     return {
       conversations: filterResult.conversations,
       analysisInfo,
@@ -14952,15 +14901,6 @@ var ConversationMetadataExtractor = class {
       }
       const vaultConversation = existingConversations.get(conversation.id);
       if (!vaultConversation) {
-        this.plugin.logger.debug(`TIMESTAMP COMPARISON - NEW: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
-          conversationId: conversation.id,
-          title: conversation.title.substring(0, 50) + "...",
-          zipUpdateTime: conversation.updateTime,
-          vaultUpdateTime: "N/A (not in vault)",
-          zipDate: new Date(conversation.updateTime * 1e3).toISOString(),
-          provider: conversation.provider,
-          messageCount: conversation.messageCount
-        });
         conversation.existenceStatus = "new";
         conversation.hasNewerContent = true;
         conversationsForSelection.push(conversation);
@@ -14971,37 +14911,11 @@ var ConversationMetadataExtractor = class {
         const zipUpdateTimeISO = new Date(conversation.updateTime * 1e3).toISOString();
         const normalizedZipUpdateTime = moment3(zipUpdateTimeISO, moment3.ISO_8601, true).unix();
         if (normalizedZipUpdateTime > vaultConversation.updateTime) {
-          this.plugin.logger.debug(`TIMESTAMP COMPARISON - UPDATED: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
-            conversationId: conversation.id,
-            title: conversation.title.substring(0, 50) + "...",
-            zipUpdateTimeRaw: conversation.updateTime,
-            zipUpdateTimeNormalized: normalizedZipUpdateTime,
-            vaultUpdateTime: vaultConversation.updateTime,
-            difference: normalizedZipUpdateTime - vaultConversation.updateTime,
-            zipDate: new Date(normalizedZipUpdateTime * 1e3).toISOString(),
-            vaultDate: new Date(vaultConversation.updateTime * 1e3).toISOString(),
-            provider: conversation.provider,
-            messageCount: conversation.messageCount,
-            vaultPath: vaultConversation.path
-          });
           conversation.existenceStatus = "updated";
           conversation.hasNewerContent = true;
           conversationsForSelection.push(conversation);
           updatedCount++;
         } else {
-          this.plugin.logger.debug(`TIMESTAMP COMPARISON - IGNORED: ${conversation.id} (${conversation.title.substring(0, 50)}...)`, {
-            conversationId: conversation.id,
-            title: conversation.title.substring(0, 50) + "...",
-            zipUpdateTimeRaw: conversation.updateTime,
-            zipUpdateTimeNormalized: normalizedZipUpdateTime,
-            vaultUpdateTime: vaultConversation.updateTime,
-            difference: normalizedZipUpdateTime - vaultConversation.updateTime,
-            zipDate: new Date(normalizedZipUpdateTime * 1e3).toISOString(),
-            vaultDate: new Date(vaultConversation.updateTime * 1e3).toISOString(),
-            provider: conversation.provider,
-            messageCount: conversation.messageCount,
-            vaultPath: vaultConversation.path
-          });
           ignoredCount++;
         }
       }
@@ -15440,35 +15354,23 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
    */
   async handleImportAll(files, provider) {
     try {
-      this.logger.debug(`[IMPORT-ALL] Starting import all with ${files.length} files, provider: ${provider}`);
       new import_obsidian30.Notice(`Analyzing conversations from ${files.length} file(s)...`);
-      this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
-      this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
-      this.logger.debug(`[IMPORT-ALL] Getting storage service`);
       const storage = this.getStorageService();
-      this.logger.debug(`[IMPORT-ALL] Scanning existing conversations`);
       const existingConversations = await storage.scanExistingConversations();
-      this.logger.debug(`[IMPORT-ALL] Found ${Object.keys(existingConversations).length} existing conversations`);
-      this.logger.debug(`[IMPORT-ALL] Calling extractMetadataFromMultipleZips`);
       const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
         files,
         provider,
         existingConversations
       );
-      this.logger.debug(`[IMPORT-ALL] Extraction completed, found ${extractionResult.conversations.length} conversations`);
-      this.logger.debug(`[IMPORT-ALL] Creating ImportReport`);
       const operationReport = new ImportReport();
       if (this.settings.useCustomMessageTimestampFormat) {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (extractionResult.conversations.length === 0) {
-        this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
         new import_obsidian30.Notice("No new or updated conversations found. All conversations are already up to date.");
-        this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
-        this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath2}`);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
         }
@@ -15515,11 +15417,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
-      this.logger.debug(`[SELECTIVE-IMPORT] Starting selective import with ${files.length} files, provider: ${provider}`);
       new import_obsidian30.Notice(`Analyzing conversations from ${files.length} file(s)...`);
-      this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
-      this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
@@ -15589,17 +15488,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
    * Write consolidated report for multi-file import
    */
   async writeConsolidatedReport(report, provider, files, analysisInfo, fileStats, isSelectiveImport) {
-    this.logger.debug("[WRITE-REPORT] Starting writeConsolidatedReport");
-    this.logger.debug(`[WRITE-REPORT] Provider: ${provider}, Files: ${files.length}`);
-    this.logger.debug("[WRITE-REPORT] Using static imports for ensureFolderExists and formatTimestamp");
-    this.logger.debug("[WRITE-REPORT] Getting report folder from settings");
     const reportFolder = this.settings.reportFolder;
-    this.logger.debug(`[WRITE-REPORT] Report folder: ${reportFolder}`);
-    this.logger.debug("[WRITE-REPORT] Creating provider registry");
     const providerRegistry = createProviderRegistry(this);
-    this.logger.debug("[WRITE-REPORT] Getting adapter for provider");
     const adapter = providerRegistry.getAdapter(provider);
-    this.logger.debug(`[WRITE-REPORT] Adapter found: ${adapter ? "yes" : "no"}`);
     let providerName = provider;
     if (adapter) {
       const strategy = adapter.getReportNamingStrategy();
@@ -15654,9 +15545,7 @@ totalFailed: ${stats.failed}
 ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport)}
 `;
     try {
-      this.logger.info(`Creating report file at: ${logFilePath}`);
       await this.app.vault.create(logFilePath, logContent);
-      this.logger.info(`Consolidated report written to: ${logFilePath}`);
       return logFilePath;
     } catch (error) {
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);

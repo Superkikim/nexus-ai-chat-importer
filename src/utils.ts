@@ -494,7 +494,6 @@ export async function moveAndMergeFolders(
         // Mark THIS folder for deletion BEFORE processing children
         // This ensures parent folders are added to the list before their children
         // When we reverse the list later, children will be deleted before parents
-        logger.debug(`[moveAndMergeFolders] Marking for deletion: ${sourceFolder.path} (children: ${sourceFolder.children.length})`);
         foldersToDelete.push(sourceFolder);
 
         // Process all children
@@ -503,7 +502,6 @@ export async function moveAndMergeFolders(
 
             if (child instanceof TFolder) {
                 // Recursively process subfolder
-                logger.debug(`[moveAndMergeFolders] Processing subfolder: ${child.path}`);
                 await moveRecursive(child, childNewPath);
             } else {
                 // It's a file
@@ -513,7 +511,6 @@ export async function moveAndMergeFolders(
 
                     if (exists) {
                         // Skip existing files to avoid overwriting
-                        logger.debug(`[moveAndMergeFolders] Target already exists, skipping: ${childNewPath}`);
                         skipped++;
                         processedFiles++;
                         if (onProgress) {
@@ -524,7 +521,6 @@ export async function moveAndMergeFolders(
 
                     // Destination doesn't exist, safe to move
                     await vault.rename(child, childNewPath);
-                    logger.debug(`[moveAndMergeFolders] Moved file: ${child.path} → ${childNewPath}`);
                     moved++;
                     processedFiles++;
                     if (onProgress) {
@@ -549,14 +545,11 @@ export async function moveAndMergeFolders(
 
         // Delete folders bottom-up (deepest first)
         // Reverse the array so we delete children before parents
-        logger.debug(`[moveAndMergeFolders] Attempting to delete ${foldersToDelete.length} folders...`);
-
         for (const folder of foldersToDelete.reverse()) {
             try {
                 // Check if folder still exists before trying to delete
                 const exists = await vault.adapter.exists(folder.path);
                 if (!exists) {
-                    logger.debug(`[moveAndMergeFolders] Folder already deleted: ${folder.path}`);
                     continue;
                 }
 
@@ -565,16 +558,13 @@ export async function moveAndMergeFolders(
                 // Note: folder.children might not be updated immediately after moving files,
                 // so we rely on vault.delete() to tell us if the folder is empty
                 await vault.delete(folder);
-                logger.debug(`[moveAndMergeFolders] ✅ Deleted empty folder: ${folder.path}`);
             } catch (error: any) {
                 // Folder might not be empty, might have already been deleted, or might not exist
                 // This is not a critical error - just log it
                 const errorMsg = error.message || String(error);
                 if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
                     logger.warn(`[moveAndMergeFolders] ⚠️ Folder not empty, skipping deletion: ${folder.path} (children: ${folder.children.length})`);
-                } else if (errorMsg.includes("does not exist") || errorMsg.includes("ENOENT")) {
-                    logger.debug(`[moveAndMergeFolders] Folder already deleted: ${folder.path}`);
-                } else {
+                } else if (!errorMsg.includes("does not exist") && !errorMsg.includes("ENOENT")) {
                     logger.warn(`[moveAndMergeFolders] ❌ Could not delete folder ${folder.path}: ${errorMsg}`);
                 }
             }
@@ -582,34 +572,23 @@ export async function moveAndMergeFolders(
 
         // Delete empty parent folders recursively
         // Start from the original folder's parent and go up
-        logger.debug(`[moveAndMergeFolders] Checking parent folders for deletion...`);
         let currentFolder = oldFolder.parent;
         while (currentFolder && currentFolder.path !== "/") {
             try {
                 // Check if folder still exists
                 const exists = await vault.adapter.exists(currentFolder.path);
                 if (!exists) {
-                    logger.debug(`[moveAndMergeFolders] Parent folder already deleted: ${currentFolder.path}`);
                     break;
                 }
 
                 // Try to delete the parent folder
                 // This will only succeed if the folder is empty
                 await vault.delete(currentFolder);
-                logger.debug(`[moveAndMergeFolders] ✅ Deleted empty parent folder: ${currentFolder.path}`);
 
                 // Move up to the next parent
                 currentFolder = currentFolder.parent;
             } catch (error: any) {
                 // Parent folder is not empty or other error - stop here
-                const errorMsg = error.message || String(error);
-                if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
-                    logger.debug(`[moveAndMergeFolders] Parent folder not empty, stopping: ${currentFolder.path}`);
-                } else if (errorMsg.includes("does not exist") || errorMsg.includes("ENOENT")) {
-                    logger.debug(`[moveAndMergeFolders] Parent folder already deleted: ${currentFolder.path}`);
-                } else {
-                    logger.debug(`[moveAndMergeFolders] Could not delete parent folder ${currentFolder.path}: ${errorMsg}`);
-                }
                 // Stop trying to delete parent folders
                 break;
             }

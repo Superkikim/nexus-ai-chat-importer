@@ -282,33 +282,24 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(files: File[], provider: string): Promise<void> {
         try {
-            this.logger.debug(`[IMPORT-ALL] Starting import all with ${files.length} files, provider: ${provider}`);
             new Notice(`Analyzing conversations from ${files.length} file(s)...`);
 
             // Create metadata extractor
-            this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
             const providerRegistry = createProviderRegistry(this);
-            this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
             const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
 
             // Get existing conversations for status checking
-            this.logger.debug(`[IMPORT-ALL] Getting storage service`);
             const storage = this.getStorageService();
-            this.logger.debug(`[IMPORT-ALL] Scanning existing conversations`);
             const existingConversations = await storage.scanExistingConversations();
-            this.logger.debug(`[IMPORT-ALL] Found ${Object.keys(existingConversations).length} existing conversations`);
 
             // Extract metadata from all ZIP files (same as selective mode)
-            this.logger.debug(`[IMPORT-ALL] Calling extractMetadataFromMultipleZips`);
             const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
                 files,
                 provider,
                 existingConversations
             );
-            this.logger.debug(`[IMPORT-ALL] Extraction completed, found ${extractionResult.conversations.length} conversations`);
 
             // Create shared report for the entire operation
-            this.logger.debug(`[IMPORT-ALL] Creating ImportReport`);
             const operationReport = new ImportReport();
 
             // Set custom timestamp format if enabled
@@ -318,13 +309,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             if (extractionResult.conversations.length === 0) {
                 // No conversations to import, but still generate report and show dialog
-                this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
                 new Notice("No new or updated conversations found. All conversations are already up to date.");
 
                 // Write report showing what was analyzed
-                this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
                 const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
-                this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath}`);
 
                 // Show completion dialog with 0 imports
                 if (reportPath) {
@@ -388,13 +376,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
-            this.logger.debug(`[SELECTIVE-IMPORT] Starting selective import with ${files.length} files, provider: ${provider}`);
             new Notice(`Analyzing conversations from ${files.length} file(s)...`);
 
             // Create metadata extractor
-            this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
             const providerRegistry = createProviderRegistry(this);
-            this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
             const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
 
             // Get existing conversations for status checking
@@ -504,22 +489,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         fileStats?: Map<string, any>,
         isSelectiveImport?: boolean
     ): Promise<string> {
-        this.logger.debug("[WRITE-REPORT] Starting writeConsolidatedReport");
-        this.logger.debug(`[WRITE-REPORT] Provider: ${provider}, Files: ${files.length}`);
-
-        // Static imports - no dynamic import needed
-        this.logger.debug("[WRITE-REPORT] Using static imports for ensureFolderExists and formatTimestamp");
-
         // Get provider-specific folder
-        this.logger.debug("[WRITE-REPORT] Getting report folder from settings");
         const reportFolder = this.settings.reportFolder;
-        this.logger.debug(`[WRITE-REPORT] Report folder: ${reportFolder}`);
 
-        this.logger.debug("[WRITE-REPORT] Creating provider registry");
         const providerRegistry = createProviderRegistry(this);
-        this.logger.debug("[WRITE-REPORT] Getting adapter for provider");
         const adapter = providerRegistry.getAdapter(provider);
-        this.logger.debug(`[WRITE-REPORT] Adapter found: ${adapter ? 'yes' : 'no'}`);
 
         let providerName = provider;
         if (adapter) {
@@ -595,9 +569,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
 `;
 
         try {
-            this.logger.info(`Creating report file at: ${logFilePath}`);
             await this.app.vault.create(logFilePath, logContent);
-            this.logger.info(`Consolidated report written to: ${logFilePath}`);
             return logFilePath;
         } catch (error: any) {
             this.logger.error(`Failed to write import log to ${logFilePath}:`, error);

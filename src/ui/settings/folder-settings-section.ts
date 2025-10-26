@@ -154,17 +154,12 @@ export class FolderSettingsSection extends BaseSettingsSection {
         folderType: string,
         textComponent: TextComponent
     ): Promise<void> {
-        this.plugin.logger.debug(`[FolderSettings] Folder change detected: ${settingKey} = "${newPath}"`);
-
         const oldPath = this.plugin.settings[settingKey];
 
         // If path hasn't changed, do nothing
         if (oldPath === newPath) {
-            this.plugin.logger.debug(`[FolderSettings] Path unchanged, skipping`);
             return;
         }
-
-        this.plugin.logger.debug(`[FolderSettings] Old path: "${oldPath}" → New path: "${newPath}"`);
 
         // Validate folder nesting
         const validation = validateFolderNesting(
@@ -176,7 +171,6 @@ export class FolderSettingsSection extends BaseSettingsSection {
         );
 
         if (!validation.valid) {
-            this.plugin.logger.debug(`[FolderSettings] Validation failed: ${validation.error}`);
             this.showErrorDialog("Invalid Folder Location", validation.error);
             // Restore old value in the text field
             textComponent.setValue(oldPath);
@@ -187,17 +181,14 @@ export class FolderSettingsSection extends BaseSettingsSection {
         const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
 
         if (!oldFolder || !(oldFolder instanceof TFolder)) {
-            this.plugin.logger.debug(`[FolderSettings] Old folder doesn't exist, just updating setting`);
             this.plugin.settings[settingKey] = newPath;
             await this.plugin.saveSettings();
             return;
         }
 
         const hasContent = oldFolder.children.length > 0;
-        this.plugin.logger.debug(`[FolderSettings] Old folder exists, has content: ${hasContent}`);
 
         if (!hasContent) {
-            this.plugin.logger.debug(`[FolderSettings] Old folder is empty, just updating setting`);
             this.plugin.settings[settingKey] = newPath;
             await this.plugin.saveSettings();
             return;
@@ -206,7 +197,6 @@ export class FolderSettingsSection extends BaseSettingsSection {
         // Check if target folder exists and is not empty
         const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
         if (newFolder && newFolder instanceof TFolder && newFolder.children.length > 0) {
-            this.plugin.logger.debug(`[FolderSettings] Target folder is not empty, aborting`);
             this.showErrorDialog(
                 "Target Folder Must Be Empty",
                 `The target folder "${newPath}" must be empty before migrating files.\n\nPlease choose an empty folder or create a new one.`
@@ -217,7 +207,6 @@ export class FolderSettingsSection extends BaseSettingsSection {
         }
 
         // Show migration dialog - use enhanced dialog for attachment and conversation folders
-        this.plugin.logger.debug(`[FolderSettings] Showing migration dialog`);
 
         const useEnhancedDialog = settingKey === 'attachmentFolder' || settingKey === 'conversationFolder';
 
@@ -273,21 +262,16 @@ export class FolderSettingsSection extends BaseSettingsSection {
         settingKey: 'conversationFolder' | 'reportFolder' | 'attachmentFolder',
         textComponent: TextComponent
     ): Promise<void> {
-        this.plugin.logger.debug(`[FolderSettings] User choice: ${action}`);
-
         if (action === 'cancel') {
             // Restore old value in the text field
-            this.plugin.logger.debug(`[FolderSettings] User cancelled, restoring old value: "${oldPath}"`);
             textComponent.setValue(oldPath);
             return;
         }
 
         if (action === 'move') {
             // Migrate files using merge function
-            this.plugin.logger.debug(`[FolderSettings] Starting migration...`);
             try {
                 const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
-                this.plugin.logger.debug(`[FolderSettings] Migration completed: ${result.moved} moved, ${result.skipped} skipped, ${result.errors} errors`);
 
                 // Update links if needed (for conversations and attachments)
                 if (settingKey === 'conversationFolder' || settingKey === 'attachmentFolder') {
@@ -307,15 +291,11 @@ export class FolderSettingsSection extends BaseSettingsSection {
                 this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
                 throw error;
             }
-        } else {
-            // action === 'keep'
-            this.plugin.logger.debug(`[FolderSettings] User chose not to migrate, just updating setting`);
         }
 
         // Update setting (for both 'move' and 'keep')
         this.plugin.settings[settingKey] = newPath;
         await this.plugin.saveSettings();
-        this.plugin.logger.debug(`[FolderSettings] Setting updated and saved`);
     }
 
     /**
@@ -331,16 +311,12 @@ export class FolderSettingsSection extends BaseSettingsSection {
             const { LinkUpdateService } = await import("../../services/link-update-service");
             const linkUpdateService = new LinkUpdateService(this.plugin);
 
-            this.plugin.logger.debug(`[FolderSettings] Updating links for ${settingKey}...`);
-
             if (settingKey === 'conversationFolder') {
                 // Update conversation links in reports AND artifacts
                 await linkUpdateService.updateConversationLinks(oldPath, newPath);
-                this.plugin.logger.debug(`[FolderSettings] Conversation links updated`);
             } else if (settingKey === 'attachmentFolder') {
                 // Update attachment links in conversations
                 await linkUpdateService.updateAttachmentLinks(oldPath, newPath);
-                this.plugin.logger.debug(`[FolderSettings] Attachment links updated`);
             }
         } catch (error) {
             this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
