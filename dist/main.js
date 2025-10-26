@@ -10,6 +10,7 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
@@ -365,6 +366,7 @@ var init_folder_tree_browser_modal = __esm({
         contentEl.empty();
       }
     };
+    __name(FolderTreeBrowserModal, "FolderTreeBrowserModal");
   }
 });
 
@@ -437,6 +439,8 @@ function validateFolderNesting(folderType, newPath, conversationFolder, reportFo
 var init_folder_validation = __esm({
   "src/utils/folder-validation.ts"() {
     "use strict";
+    __name(isPathInsidePath, "isPathInsidePath");
+    __name(validateFolderNesting, "validateFolderNesting");
   }
 });
 
@@ -469,6 +473,7 @@ var init_logger = __esm({
         console.error(`[Nexus AI Chat Importer] [ERROR] ${message}`);
       }
     };
+    __name(Logger, "Logger");
   }
 });
 
@@ -736,6 +741,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
     }
     return count;
   }
+  __name(countFiles, "countFiles");
   totalFiles = countFiles(oldFolder);
   async function moveRecursive(sourceFolder, destPath) {
     var _a;
@@ -781,6 +787,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
       }
     }
   }
+  __name(moveRecursive, "moveRecursive");
   try {
     await moveRecursive(oldFolder, newPath);
     for (const folder of foldersToDelete.reverse()) {
@@ -839,6 +846,27 @@ var init_utils = __esm({
     import_obsidian5 = require("obsidian");
     init_constants();
     logger = new Logger();
+    __name(truncateToMinute, "truncateToMinute");
+    __name(compareTimestampsIgnoringSeconds, "compareTimestampsIgnoringSeconds");
+    __name(formatMessageTimestamp, "formatMessageTimestamp");
+    __name(formatTimestamp, "formatTimestamp");
+    __name(generateYearMonthFolder, "generateYearMonthFolder");
+    __name(formatTitle, "formatTitle");
+    __name(generateFileName, "generateFileName");
+    __name(addPrefix, "addPrefix");
+    __name(createDatePrefix, "createDatePrefix");
+    __name(generateUniqueFileName, "generateUniqueFileName");
+    __name(doesFilePathExist, "doesFilePathExist");
+    __name(getFileHash, "getFileHash");
+    __name(generateConversationFileName, "generateConversationFileName");
+    __name(generateSafeAlias, "generateSafeAlias");
+    __name(isValidMessage, "isValidMessage");
+    __name(isCustomError, "isCustomError");
+    __name(ensureFolderExists, "ensureFolderExists");
+    __name(checkConversationLink, "checkConversationLink");
+    __name(old_getConversationId, "old_getConversationId");
+    __name(isNexusRelated, "isNexusRelated");
+    __name(moveAndMergeFolders, "moveAndMergeFolders");
   }
 });
 
@@ -1165,6 +1193,7 @@ var init_link_update_service = __esm({
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       }
     };
+    __name(LinkUpdateService, "LinkUpdateService");
   }
 });
 
@@ -1290,6 +1319,7 @@ var init_progress_modal = __esm({
         contentEl.empty();
       }
     };
+    __name(UpgradeProgressModal, "UpgradeProgressModal");
   }
 });
 
@@ -1646,6 +1676,7 @@ var init_enhanced_folder_migration_dialog = __esm({
         contentEl.empty();
       }
     };
+    __name(EnhancedFolderMigrationDialog, "EnhancedFolderMigrationDialog");
   }
 });
 
@@ -1661,7 +1692,7 @@ var require_jszip_min = __commonJS({
         ("undefined" != typeof window ? window : "undefined" != typeof global ? global : "undefined" != typeof self ? self : this).JSZip = e();
       }
     }(function() {
-      return function s(a, o, h) {
+      return (/* @__PURE__ */ __name(function s(a, o, h) {
         function u(r, e2) {
           if (!o[r]) {
             if (!a[r]) {
@@ -1681,10 +1712,11 @@ var require_jszip_min = __commonJS({
           }
           return o[r].exports;
         }
+        __name(u, "u");
         for (var l = "function" == typeof require && require, e = 0; e < h.length; e++)
           u(h[e]);
         return u;
-      }({ 1: [function(e, t, r) {
+      }, "s"))({ 1: [function(e, t, r) {
         "use strict";
         var d = e("./utils"), c = e("./support"), p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
         r.encode = function(e2) {
@@ -1708,6 +1740,7 @@ var require_jszip_min = __commonJS({
         function o(e2, t2, r2, n2, i2) {
           this.compressedSize = e2, this.uncompressedSize = t2, this.crc32 = r2, this.compression = n2, this.compressedContent = i2;
         }
+        __name(o, "o");
         o.prototype = { getContentWorker: function() {
           var e2 = new i(n.Promise.resolve(this.compressedContent)).pipe(this.compression.uncompressWorker()).pipe(new a("data_length")), t2 = this;
           return e2.on("end", function() {
@@ -1767,6 +1800,7 @@ var require_jszip_min = __commonJS({
         function h(e2, t2) {
           a.call(this, "FlateWorker/" + e2), this._pako = null, this._pakoAction = e2, this._pakoOptions = t2, this.meta = {};
         }
+        __name(h, "h");
         r.magic = "\b\0", s.inherits(h, a), h.prototype.processChunk = function(e2) {
           this.meta = e2.meta, null === this._pako && this._createPako(), this._pako.push(s.transformTo(o, e2.data), false);
         }, h.prototype.flush = function() {
@@ -1792,6 +1826,7 @@ var require_jszip_min = __commonJS({
             n2 += String.fromCharCode(255 & e2), e2 >>>= 8;
           return n2;
         }
+        __name(A, "A");
         function n(e2, t2, r2, n2, i2, s2) {
           var a, o, h = e2.file, u = e2.compression, l = s2 !== O.utf8encode, f = I.transformTo("string", s2(h.name)), c = I.transformTo("string", O.utf8encode(h.name)), d = h.comment, p = I.transformTo("string", s2(d)), m = I.transformTo("string", O.utf8encode(d)), _ = c.length !== h.name.length, g = m.length !== d.length, b = "", v = "", y = "", w = h.dir, k = h.date, x = { crc32: 0, compressedSize: 0, uncompressedSize: 0 };
           t2 && !r2 || (x.crc32 = e2.crc32, x.compressedSize = e2.compressedSize, x.uncompressedSize = e2.uncompressedSize);
@@ -1807,10 +1842,12 @@ var require_jszip_min = __commonJS({
           var E = "";
           return E += "\n\0", E += A(S, 2), E += u.magic, E += A(a, 2), E += A(o, 2), E += A(x.crc32, 4), E += A(x.compressedSize, 4), E += A(x.uncompressedSize, 4), E += A(f.length, 2), E += A(b.length, 2), { fileRecord: R.LOCAL_FILE_HEADER + E + f + b, dirRecord: R.CENTRAL_FILE_HEADER + A(C, 2) + E + A(p.length, 2) + "\0\0\0\0" + A(z, 4) + A(n2, 4) + f + b + p };
         }
+        __name(n, "n");
         var I = e("../utils"), i = e("../stream/GenericWorker"), O = e("../utf8"), B = e("../crc32"), R = e("../signature");
         function s(e2, t2, r2, n2) {
           i.call(this, "ZipFileWorker"), this.bytesWritten = 0, this.zipComment = t2, this.zipPlatform = r2, this.encodeFileName = n2, this.streamFiles = e2, this.accumulate = false, this.contentBuffer = [], this.dirRecords = [], this.currentSourceOffset = 0, this.entriesCount = 0, this.currentFile = null, this._sources = [];
         }
+        __name(s, "s");
         I.inherits(s, i), s.prototype.push = function(e2) {
           var t2 = e2.meta.percent || 0, r2 = this.entriesCount, n2 = this._sources.length;
           this.accumulate ? this.contentBuffer.push(e2) : (this.bytesWritten += e2.data.length, i.prototype.push.call(this, { data: e2.data, meta: { currentFile: this.currentFile, percent: r2 ? (t2 + 100 * (r2 - n2 - 1)) / r2 : 100 } }));
@@ -1905,6 +1942,7 @@ var require_jszip_min = __commonJS({
             return e2;
           };
         }
+        __name(n, "n");
         (n.prototype = e("./object")).loadAsync = e("./load"), n.support = e("./support"), n.defaults = e("./defaults"), n.version = "3.10.1", n.loadAsync = function(e2, t2) {
           return new n().loadAsync(e2, t2);
         }, n.external = e("./external"), t.exports = n;
@@ -1921,6 +1959,7 @@ var require_jszip_min = __commonJS({
             }).resume();
           });
         }
+        __name(f, "f");
         t.exports = function(e2, o) {
           var h = this;
           return o = u.extend(o || {}, { base64: false, checkCRC32: false, optimizedBinaryString: false, createFolders: false, decodeFileName: n.utf8decode }), l.isNode && l.isStream(e2) ? i.Promise.reject(new Error("JSZip can't accept a stream when loading a zip file.")) : u.prepareContent("the loaded zip file", e2, true, o.optimizedBinaryString, o.base64).then(function(e3) {
@@ -1946,6 +1985,7 @@ var require_jszip_min = __commonJS({
         function s(e2, t2) {
           i.call(this, "Nodejs stream input adapter for " + e2), this._upstreamEnded = false, this._bindStream(t2);
         }
+        __name(s, "s");
         n.inherits(s, i), s.prototype._bindStream = function(e2) {
           var t2 = this;
           (this._stream = e2).pause(), e2.on("data", function(e3) {
@@ -1974,6 +2014,7 @@ var require_jszip_min = __commonJS({
             n2.push(null);
           });
         }
+        __name(n, "n");
         e("../utils").inherits(n, i), n.prototype._read = function() {
           this._helper.resume();
         }, t.exports = n;
@@ -2007,18 +2048,20 @@ var require_jszip_min = __commonJS({
           var h2 = new d(e2, o2, s2);
           this.files[e2] = h2;
         }
-        var i = e("./utf8"), u = e("./utils"), l = e("./stream/GenericWorker"), a = e("./stream/StreamHelper"), f = e("./defaults"), c = e("./compressedObject"), d = e("./zipObject"), o = e("./generate"), p = e("./nodejsUtils"), m = e("./nodejs/NodejsStreamInputAdapter"), _ = function(e2) {
+        __name(s, "s");
+        var i = e("./utf8"), u = e("./utils"), l = e("./stream/GenericWorker"), a = e("./stream/StreamHelper"), f = e("./defaults"), c = e("./compressedObject"), d = e("./zipObject"), o = e("./generate"), p = e("./nodejsUtils"), m = e("./nodejs/NodejsStreamInputAdapter"), _ = /* @__PURE__ */ __name(function(e2) {
           "/" === e2.slice(-1) && (e2 = e2.substring(0, e2.length - 1));
           var t2 = e2.lastIndexOf("/");
           return 0 < t2 ? e2.substring(0, t2) : "";
-        }, g = function(e2) {
+        }, "_"), g = /* @__PURE__ */ __name(function(e2) {
           return "/" !== e2.slice(-1) && (e2 += "/"), e2;
-        }, b = function(e2, t2) {
+        }, "g"), b = /* @__PURE__ */ __name(function(e2, t2) {
           return t2 = void 0 !== t2 ? t2 : f.createFolders, e2 = g(e2), this.files[e2] || s.call(this, e2, null, { dir: true, createFolders: t2 }), this.files[e2];
-        };
+        }, "b");
         function h(e2) {
           return "[object RegExp]" === Object.prototype.toString.call(e2);
         }
+        __name(h, "h");
         var n = { load: function() {
           throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
         }, forEach: function(e2) {
@@ -2092,6 +2135,7 @@ var require_jszip_min = __commonJS({
           for (var t2 = 0; t2 < this.data.length; t2++)
             e2[t2] = 255 & e2[t2];
         }
+        __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.byteAt = function(e2) {
           return this.data[this.zero + e2];
         }, i.prototype.lastIndexOfSignature = function(e2) {
@@ -2114,6 +2158,7 @@ var require_jszip_min = __commonJS({
         function i(e2) {
           this.data = e2, this.length = e2.length, this.index = 0, this.zero = 0;
         }
+        __name(i, "i");
         i.prototype = { checkOffset: function(e2) {
           this.checkIndex(this.index + e2);
         }, checkIndex: function(e2) {
@@ -2144,6 +2189,7 @@ var require_jszip_min = __commonJS({
         function i(e2) {
           n.call(this, e2);
         }
+        __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.readData = function(e2) {
           this.checkOffset(e2);
           var t2 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
@@ -2155,6 +2201,7 @@ var require_jszip_min = __commonJS({
         function i(e2) {
           n.call(this, e2);
         }
+        __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.byteAt = function(e2) {
           return this.data.charCodeAt(this.zero + e2);
         }, i.prototype.lastIndexOfSignature = function(e2) {
@@ -2172,6 +2219,7 @@ var require_jszip_min = __commonJS({
         function i(e2) {
           n.call(this, e2);
         }
+        __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.readData = function(e2) {
           if (this.checkOffset(e2), 0 === e2)
             return new Uint8Array(0);
@@ -2194,6 +2242,7 @@ var require_jszip_min = __commonJS({
         function s(e2) {
           n.call(this, "ConvertWorker to " + e2), this.destType = e2;
         }
+        __name(s, "s");
         i.inherits(s, n), s.prototype.processChunk = function(e2) {
           this.push({ data: i.transformTo(this.destType, e2.data), meta: e2.meta });
         }, t.exports = s;
@@ -2203,6 +2252,7 @@ var require_jszip_min = __commonJS({
         function s() {
           n.call(this, "Crc32Probe"), this.withStreamInfo("crc32", 0);
         }
+        __name(s, "s");
         e("../utils").inherits(s, n), s.prototype.processChunk = function(e2) {
           this.streamInfo.crc32 = i(e2.data, this.streamInfo.crc32 || 0), this.push(e2);
         }, t.exports = s;
@@ -2212,6 +2262,7 @@ var require_jszip_min = __commonJS({
         function s(e2) {
           i.call(this, "DataLengthProbe for " + e2), this.propName = e2, this.withStreamInfo(e2, 0);
         }
+        __name(s, "s");
         n.inherits(s, i), s.prototype.processChunk = function(e2) {
           if (e2) {
             var t2 = this.streamInfo[this.propName] || 0;
@@ -2231,6 +2282,7 @@ var require_jszip_min = __commonJS({
             t2.error(e3);
           });
         }
+        __name(s, "s");
         n.inherits(s, i), s.prototype.cleanUp = function() {
           i.prototype.cleanUp.call(this), this.data = null;
         }, s.prototype.resume = function() {
@@ -2261,6 +2313,7 @@ var require_jszip_min = __commonJS({
         function n(e2) {
           this.name = e2 || "default", this.streamInfo = {}, this.generatedError = null, this.extraStreamInfo = {}, this.isPaused = true, this.isFinished = false, this.isLocked = false, this._listeners = { data: [], end: [], error: [] }, this.previous = null;
         }
+        __name(n, "n");
         n.prototype = { push: function(e2) {
           this.emit("data", e2);
         }, end: function() {
@@ -2373,6 +2426,7 @@ var require_jszip_min = __commonJS({
             }).resume();
           });
         }
+        __name(l, "l");
         function f(e2, t2, r2) {
           var n2 = t2;
           switch (t2) {
@@ -2389,6 +2443,7 @@ var require_jszip_min = __commonJS({
             this._worker = new s("error"), this._worker.error(e3);
           }
         }
+        __name(f, "f");
         f.prototype = { accumulate: function(e2) {
           return l(this, e2);
         }, on: function(e2, t2) {
@@ -2437,9 +2492,11 @@ var require_jszip_min = __commonJS({
         function a() {
           n.call(this, "utf-8 decode"), this.leftOver = null;
         }
+        __name(a, "a");
         function l() {
           n.call(this, "utf-8 encode");
         }
+        __name(l, "l");
         s.utf8encode = function(e2) {
           return h.nodebuffer ? r.newBufferFrom(e2, "utf-8") : function(e3) {
             var t2, r2, n2, i2, s2, a2 = e3.length, o2 = 0;
@@ -2492,11 +2549,13 @@ var require_jszip_min = __commonJS({
         function n(e2) {
           return e2;
         }
+        __name(n, "n");
         function l(e2, t2) {
           for (var r2 = 0; r2 < e2.length; ++r2)
             t2[r2] = 255 & e2.charCodeAt(r2);
           return t2;
         }
+        __name(l, "l");
         e("setimmediate"), a.newBlob = function(t2, r2) {
           a.checkSupport("blob");
           try {
@@ -2545,11 +2604,13 @@ var require_jszip_min = __commonJS({
               }
           return i.stringifyByChar(e2);
         }
+        __name(s, "s");
         function f(e2, t2) {
           for (var r2 = 0; r2 < e2.length; r2++)
             t2[r2] = e2[r2];
           return t2;
         }
+        __name(f, "f");
         a.applyFromCharCode = s;
         var c = {};
         c.string = { string: n, array: function(e2) {
@@ -2615,6 +2676,7 @@ var require_jszip_min = __commonJS({
         }, a.inherits = function(e2, t2) {
           function r2() {
           }
+          __name(r2, "r");
           r2.prototype = t2.prototype, e2.prototype = new r2();
         }, a.extend = function() {
           var e2, t2, r2 = {};
@@ -2645,6 +2707,7 @@ var require_jszip_min = __commonJS({
         function h(e2) {
           this.files = [], this.loadOptions = e2;
         }
+        __name(h, "h");
         h.prototype = { checkSignature: function(e2) {
           if (!this.reader.readAndCheckSignature(e2)) {
             this.reader.index -= 4;
@@ -2708,6 +2771,7 @@ var require_jszip_min = __commonJS({
         function l(e2, t2) {
           this.options = e2, this.loadOptions = t2;
         }
+        __name(l, "l");
         l.prototype = { isEncrypted: function() {
           return 1 == (1 & this.bitFlag);
         }, useUTF8: function() {
@@ -2784,6 +2848,7 @@ var require_jszip_min = __commonJS({
         function n(e2, t2, r2) {
           this.name = e2, this.dir = r2.dir, this.date = r2.date, this.comment = r2.comment, this.unixPermissions = r2.unixPermissions, this.dosPermissions = r2.dosPermissions, this._data = t2, this._dataBinary = r2.binary, this.options = { compression: r2.compression, compressionOptions: r2.compressionOptions };
         }
+        __name(n, "n");
         var s = e("./stream/StreamHelper"), i = e("./stream/DataWorker"), a = e("./utf8"), o = e("./compressedObject"), h = e("./stream/GenericWorker");
         n.prototype = { internalStream: function(e2) {
           var t2 = null, r2 = "string";
@@ -2821,9 +2886,9 @@ var require_jszip_min = __commonJS({
           var r, n, e2 = t2.MutationObserver || t2.WebKitMutationObserver;
           if (e2) {
             var i = 0, s = new e2(u), a = t2.document.createTextNode("");
-            s.observe(a, { characterData: true }), r = function() {
+            s.observe(a, { characterData: true }), r = /* @__PURE__ */ __name(function() {
               a.data = i = ++i % 2;
-            };
+            }, "r");
           } else if (t2.setImmediate || void 0 === t2.MessageChannel)
             r = "document" in t2 && "onreadystatechange" in t2.document.createElement("script") ? function() {
               var e3 = t2.document.createElement("script");
@@ -2835,9 +2900,9 @@ var require_jszip_min = __commonJS({
             };
           else {
             var o = new t2.MessageChannel();
-            o.port1.onmessage = u, r = function() {
+            o.port1.onmessage = u, r = /* @__PURE__ */ __name(function() {
               o.port2.postMessage(0);
-            };
+            }, "r");
           }
           var h = [];
           function u() {
@@ -2850,6 +2915,7 @@ var require_jszip_min = __commonJS({
             }
             n = false;
           }
+          __name(u, "u");
           l.exports = function(e3) {
             1 !== h.push(e3) || n || r();
           };
@@ -2859,15 +2925,18 @@ var require_jszip_min = __commonJS({
         var i = e("immediate");
         function u() {
         }
+        __name(u, "u");
         var l = {}, s = ["REJECTED"], a = ["FULFILLED"], n = ["PENDING"];
         function o(e2) {
           if ("function" != typeof e2)
             throw new TypeError("resolver must be a function");
           this.state = n, this.queue = [], this.outcome = void 0, e2 !== u && d(this, e2);
         }
+        __name(o, "o");
         function h(e2, t2, r2) {
           this.promise = e2, "function" == typeof t2 && (this.onFulfilled = t2, this.callFulfilled = this.otherCallFulfilled), "function" == typeof r2 && (this.onRejected = r2, this.callRejected = this.otherCallRejected);
         }
+        __name(h, "h");
         function f(t2, r2, n2) {
           i(function() {
             var e2;
@@ -2879,6 +2948,7 @@ var require_jszip_min = __commonJS({
             e2 === t2 ? l.reject(t2, new TypeError("Cannot resolve promise with itself")) : l.resolve(t2, e2);
           });
         }
+        __name(f, "f");
         function c(e2) {
           var t2 = e2 && e2.then;
           if (e2 && ("object" == typeof e2 || "function" == typeof e2) && "function" == typeof t2)
@@ -2886,19 +2956,23 @@ var require_jszip_min = __commonJS({
               t2.apply(e2, arguments);
             };
         }
+        __name(c, "c");
         function d(t2, e2) {
           var r2 = false;
           function n2(e3) {
             r2 || (r2 = true, l.reject(t2, e3));
           }
+          __name(n2, "n");
           function i2(e3) {
             r2 || (r2 = true, l.resolve(t2, e3));
           }
+          __name(i2, "i");
           var s2 = p(function() {
             e2(i2, n2);
           });
           "error" === s2.status && n2(s2.value);
         }
+        __name(d, "d");
         function p(e2, t2) {
           var r2 = {};
           try {
@@ -2908,6 +2982,7 @@ var require_jszip_min = __commonJS({
           }
           return r2;
         }
+        __name(p, "p");
         (t.exports = o).prototype.finally = function(t2) {
           if ("function" != typeof t2)
             return this;
@@ -2980,6 +3055,7 @@ var require_jszip_min = __commonJS({
               i2 || (i2 = true, l.reject(o2, e4));
             });
           }
+          __name(h2, "h");
         }, o.race = function(e2) {
           var t2 = this;
           if ("[object Array]" !== Object.prototype.toString.call(e2))
@@ -3020,12 +3096,14 @@ var require_jszip_min = __commonJS({
             this._dict_set = true;
           }
         }
+        __name(p, "p");
         function n(e2, t2) {
           var r2 = new p(t2);
           if (r2.push(e2, true), r2.err)
             throw r2.msg || i[r2.err];
           return r2.result;
         }
+        __name(n, "n");
         p.prototype.push = function(e2, t2) {
           var r2, n2, i2 = this.strm, s2 = this.options.chunkSize;
           if (this.ended)
@@ -3060,12 +3138,14 @@ var require_jszip_min = __commonJS({
             throw new Error(n[r2]);
           this.header = new s(), c.inflateGetHeader(this.strm, this.header);
         }
+        __name(a, "a");
         function o(e2, t2) {
           var r2 = new a(t2);
           if (r2.push(e2, true), r2.err)
             throw r2.msg || n[r2.err];
           return r2.result;
         }
+        __name(o, "o");
         a.prototype.push = function(e2, t2) {
           var r2, n2, i2, s2, a2, o2, h = this.strm, u = this.options.chunkSize, l = this.options.dictionary, f = false;
           if (this.ended)
@@ -3145,6 +3225,7 @@ var require_jszip_min = __commonJS({
             r2 += String.fromCharCode(e2[n2]);
           return r2;
         }
+        __name(l, "l");
         u[254] = u[254] = 1, r.string2buf = function(e2) {
           var t2, r2, n2, i2, s2, a = e2.length, o = 0;
           for (i2 = 0; i2 < a; i2++)
@@ -3214,26 +3295,33 @@ var require_jszip_min = __commonJS({
         function R(e2, t2) {
           return e2.msg = n[t2], t2;
         }
+        __name(R, "R");
         function T(e2) {
           return (e2 << 1) - (4 < e2 ? 9 : 0);
         }
+        __name(T, "T");
         function D(e2) {
           for (var t2 = e2.length; 0 <= --t2; )
             e2[t2] = 0;
         }
+        __name(D, "D");
         function F(e2) {
           var t2 = e2.state, r2 = t2.pending;
           r2 > e2.avail_out && (r2 = e2.avail_out), 0 !== r2 && (c.arraySet(e2.output, t2.pending_buf, t2.pending_out, r2, e2.next_out), e2.next_out += r2, t2.pending_out += r2, e2.total_out += r2, e2.avail_out -= r2, t2.pending -= r2, 0 === t2.pending && (t2.pending_out = 0));
         }
+        __name(F, "F");
         function N(e2, t2) {
           u._tr_flush_block(e2, 0 <= e2.block_start ? e2.block_start : -1, e2.strstart - e2.block_start, t2), e2.block_start = e2.strstart, F(e2.strm);
         }
+        __name(N, "N");
         function U(e2, t2) {
           e2.pending_buf[e2.pending++] = t2;
         }
+        __name(U, "U");
         function P(e2, t2) {
           e2.pending_buf[e2.pending++] = t2 >>> 8 & 255, e2.pending_buf[e2.pending++] = 255 & t2;
         }
+        __name(P, "P");
         function L(e2, t2) {
           var r2, n2, i2 = e2.max_chain_length, s2 = e2.strstart, a2 = e2.prev_length, o2 = e2.nice_match, h2 = e2.strstart > e2.w_size - z ? e2.strstart - (e2.w_size - z) : 0, u2 = e2.window, l2 = e2.w_mask, f2 = e2.prev, c2 = e2.strstart + S, d2 = u2[s2 + a2 - 1], p2 = u2[s2 + a2];
           e2.prev_length >= e2.good_match && (i2 >>= 2), o2 > e2.lookahead && (o2 = e2.lookahead);
@@ -3251,6 +3339,7 @@ var require_jszip_min = __commonJS({
           } while ((t2 = f2[t2 & l2]) > h2 && 0 != --i2);
           return a2 <= e2.lookahead ? a2 : e2.lookahead;
         }
+        __name(L, "L");
         function j(e2) {
           var t2, r2, n2, i2, s2, a2, o2, h2, u2, l2, f2 = e2.w_size;
           do {
@@ -3268,6 +3357,7 @@ var require_jszip_min = __commonJS({
                 ;
           } while (e2.lookahead < z && 0 !== e2.strm.avail_in);
         }
+        __name(j, "j");
         function Z(e2, t2) {
           for (var r2, n2; ; ) {
             if (e2.lookahead < z) {
@@ -3290,6 +3380,7 @@ var require_jszip_min = __commonJS({
           }
           return e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
         }
+        __name(Z, "Z");
         function W(e2, t2) {
           for (var r2, n2, i2; ; ) {
             if (e2.lookahead < z) {
@@ -3311,22 +3402,27 @@ var require_jszip_min = __commonJS({
           }
           return e2.match_available && (n2 = u._tr_tally(e2, 0, e2.window[e2.strstart - 1]), e2.match_available = 0), e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
         }
+        __name(W, "W");
         function M(e2, t2, r2, n2, i2) {
           this.good_length = e2, this.max_lazy = t2, this.nice_length = r2, this.max_chain = n2, this.func = i2;
         }
+        __name(M, "M");
         function H() {
           this.strm = null, this.status = 0, this.pending_buf = null, this.pending_buf_size = 0, this.pending_out = 0, this.pending = 0, this.wrap = 0, this.gzhead = null, this.gzindex = 0, this.method = v, this.last_flush = -1, this.w_size = 0, this.w_bits = 0, this.w_mask = 0, this.window = null, this.window_size = 0, this.prev = null, this.head = null, this.ins_h = 0, this.hash_size = 0, this.hash_bits = 0, this.hash_mask = 0, this.hash_shift = 0, this.block_start = 0, this.match_length = 0, this.prev_match = 0, this.match_available = 0, this.strstart = 0, this.match_start = 0, this.lookahead = 0, this.prev_length = 0, this.max_chain_length = 0, this.max_lazy_match = 0, this.level = 0, this.strategy = 0, this.good_match = 0, this.nice_match = 0, this.dyn_ltree = new c.Buf16(2 * w), this.dyn_dtree = new c.Buf16(2 * (2 * a + 1)), this.bl_tree = new c.Buf16(2 * (2 * o + 1)), D(this.dyn_ltree), D(this.dyn_dtree), D(this.bl_tree), this.l_desc = null, this.d_desc = null, this.bl_desc = null, this.bl_count = new c.Buf16(k + 1), this.heap = new c.Buf16(2 * s + 1), D(this.heap), this.heap_len = 0, this.heap_max = 0, this.depth = new c.Buf16(2 * s + 1), D(this.depth), this.l_buf = 0, this.lit_bufsize = 0, this.last_lit = 0, this.d_buf = 0, this.opt_len = 0, this.static_len = 0, this.matches = 0, this.insert = 0, this.bi_buf = 0, this.bi_valid = 0;
         }
+        __name(H, "H");
         function G(e2) {
           var t2;
           return e2 && e2.state ? (e2.total_in = e2.total_out = 0, e2.data_type = i, (t2 = e2.state).pending = 0, t2.pending_out = 0, t2.wrap < 0 && (t2.wrap = -t2.wrap), t2.status = t2.wrap ? C : E, e2.adler = 2 === t2.wrap ? 0 : 1, t2.last_flush = l, u._tr_init(t2), m) : R(e2, _);
         }
+        __name(G, "G");
         function K(e2) {
           var t2 = G(e2);
           return t2 === m && function(e3) {
             e3.window_size = 2 * e3.w_size, D(e3.head), e3.max_lazy_match = h[e3.level].max_lazy, e3.good_match = h[e3.level].good_length, e3.nice_match = h[e3.level].nice_length, e3.max_chain_length = h[e3.level].max_chain, e3.strstart = 0, e3.block_start = 0, e3.lookahead = 0, e3.insert = 0, e3.match_length = e3.prev_length = x - 1, e3.match_available = 0, e3.ins_h = 0;
           }(e2.state), t2;
         }
+        __name(K, "K");
         function Y(e2, t2, r2, n2, i2, s2) {
           if (!e2)
             return _;
@@ -3337,6 +3433,7 @@ var require_jszip_min = __commonJS({
           var o2 = new H();
           return (e2.state = o2).strm = e2, o2.wrap = a2, o2.gzhead = null, o2.w_bits = n2, o2.w_size = 1 << o2.w_bits, o2.w_mask = o2.w_size - 1, o2.hash_bits = i2 + 7, o2.hash_size = 1 << o2.hash_bits, o2.hash_mask = o2.hash_size - 1, o2.hash_shift = ~~((o2.hash_bits + x - 1) / x), o2.window = new c.Buf8(2 * o2.w_size), o2.head = new c.Buf16(o2.hash_size), o2.prev = new c.Buf16(o2.w_size), o2.lit_bufsize = 1 << i2 + 6, o2.pending_buf_size = 4 * o2.lit_bufsize, o2.pending_buf = new c.Buf8(o2.pending_buf_size), o2.d_buf = 1 * o2.lit_bufsize, o2.l_buf = 3 * o2.lit_bufsize, o2.level = t2, o2.strategy = s2, o2.method = r2, K(e2);
         }
+        __name(Y, "Y");
         h = [new M(0, 0, 0, 0, function(e2, t2) {
           var r2 = 65535;
           for (r2 > e2.pending_buf_size - 5 && (r2 = e2.pending_buf_size - 5); ; ) {
@@ -3557,25 +3654,31 @@ var require_jszip_min = __commonJS({
         function L(e2) {
           return (e2 >>> 24 & 255) + (e2 >>> 8 & 65280) + ((65280 & e2) << 8) + ((255 & e2) << 24);
         }
+        __name(L, "L");
         function s() {
           this.mode = 0, this.last = false, this.wrap = 0, this.havedict = false, this.flags = 0, this.dmax = 0, this.check = 0, this.total = 0, this.head = null, this.wbits = 0, this.wsize = 0, this.whave = 0, this.wnext = 0, this.window = null, this.hold = 0, this.bits = 0, this.length = 0, this.offset = 0, this.extra = 0, this.lencode = null, this.distcode = null, this.lenbits = 0, this.distbits = 0, this.ncode = 0, this.nlen = 0, this.ndist = 0, this.have = 0, this.next = null, this.lens = new I.Buf16(320), this.work = new I.Buf16(288), this.lendyn = null, this.distdyn = null, this.sane = 0, this.back = 0, this.was = 0;
         }
+        __name(s, "s");
         function a(e2) {
           var t2;
           return e2 && e2.state ? (t2 = e2.state, e2.total_in = e2.total_out = t2.total = 0, e2.msg = "", t2.wrap && (e2.adler = 1 & t2.wrap), t2.mode = P, t2.last = 0, t2.havedict = 0, t2.dmax = 32768, t2.head = null, t2.hold = 0, t2.bits = 0, t2.lencode = t2.lendyn = new I.Buf32(n), t2.distcode = t2.distdyn = new I.Buf32(i), t2.sane = 1, t2.back = -1, N) : U;
         }
+        __name(a, "a");
         function o(e2) {
           var t2;
           return e2 && e2.state ? ((t2 = e2.state).wsize = 0, t2.whave = 0, t2.wnext = 0, a(e2)) : U;
         }
+        __name(o, "o");
         function h(e2, t2) {
           var r2, n2;
           return e2 && e2.state ? (n2 = e2.state, t2 < 0 ? (r2 = 0, t2 = -t2) : (r2 = 1 + (t2 >> 4), t2 < 48 && (t2 &= 15)), t2 && (t2 < 8 || 15 < t2) ? U : (null !== n2.window && n2.wbits !== t2 && (n2.window = null), n2.wrap = r2, n2.wbits = t2, o(e2))) : U;
         }
+        __name(h, "h");
         function u(e2, t2) {
           var r2, n2;
           return e2 ? (n2 = new s(), (e2.state = n2).window = null, (r2 = h(e2, t2)) !== N && (e2.state = null), r2) : U;
         }
+        __name(u, "u");
         var l, f, c = true;
         function j(e2) {
           if (c) {
@@ -3594,10 +3697,12 @@ var require_jszip_min = __commonJS({
           }
           e2.lencode = l, e2.lenbits = 9, e2.distcode = f, e2.distbits = 5;
         }
+        __name(j, "j");
         function Z(e2, t2, r2, n2) {
           var i2, s2 = e2.state;
           return null === s2.window && (s2.wsize = 1 << s2.wbits, s2.wnext = 0, s2.whave = 0, s2.window = new I.Buf8(s2.wsize)), n2 >= s2.wsize ? (I.arraySet(s2.window, t2, r2 - s2.wsize, s2.wsize, 0), s2.wnext = 0, s2.whave = s2.wsize) : (n2 < (i2 = s2.wsize - s2.wnext) && (i2 = n2), I.arraySet(s2.window, t2, r2 - n2, i2, s2.wnext), (n2 -= i2) ? (I.arraySet(s2.window, t2, r2 - n2, n2, 0), s2.wnext = n2, s2.whave = s2.wsize) : (s2.wnext += i2, s2.wnext === s2.wsize && (s2.wnext = 0), s2.whave < s2.wsize && (s2.whave += i2))), 0;
         }
+        __name(Z, "Z");
         r.inflateReset = o, r.inflateReset2 = h, r.inflateResetKeep = a, r.inflateInit = function(e2) {
           return u(e2, 15);
         }, r.inflateInit2 = u, r.inflate = function(e2, t2) {
@@ -4075,6 +4180,7 @@ var require_jszip_min = __commonJS({
           for (var t2 = e2.length; 0 <= --t2; )
             e2[t2] = 0;
         }
+        __name(n, "n");
         var s = 0, a = 29, u = 256, l = u + 1 + a, f = 30, c = 19, _ = 2 * l + 1, g = 15, d = 16, p = 7, m = 256, b = 16, v = 17, y = 18, w = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0], k = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13], x = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7], S = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15], z = new Array(2 * (l + 2));
         n(z);
         var C = new Array(2 * f);
@@ -4089,26 +4195,33 @@ var require_jszip_min = __commonJS({
         function D(e2, t2, r2, n2, i2) {
           this.static_tree = e2, this.extra_bits = t2, this.extra_base = r2, this.elems = n2, this.max_length = i2, this.has_stree = e2 && e2.length;
         }
+        __name(D, "D");
         function F(e2, t2) {
           this.dyn_tree = e2, this.max_code = 0, this.stat_desc = t2;
         }
+        __name(F, "F");
         function N(e2) {
           return e2 < 256 ? E[e2] : E[256 + (e2 >>> 7)];
         }
+        __name(N, "N");
         function U(e2, t2) {
           e2.pending_buf[e2.pending++] = 255 & t2, e2.pending_buf[e2.pending++] = t2 >>> 8 & 255;
         }
+        __name(U, "U");
         function P(e2, t2, r2) {
           e2.bi_valid > d - r2 ? (e2.bi_buf |= t2 << e2.bi_valid & 65535, U(e2, e2.bi_buf), e2.bi_buf = t2 >> d - e2.bi_valid, e2.bi_valid += r2 - d) : (e2.bi_buf |= t2 << e2.bi_valid & 65535, e2.bi_valid += r2);
         }
+        __name(P, "P");
         function L(e2, t2, r2) {
           P(e2, r2[2 * t2], r2[2 * t2 + 1]);
         }
+        __name(L, "L");
         function j(e2, t2) {
           for (var r2 = 0; r2 |= 1 & e2, e2 >>>= 1, r2 <<= 1, 0 < --t2; )
             ;
           return r2 >>> 1;
         }
+        __name(j, "j");
         function Z(e2, t2, r2) {
           var n2, i2, s2 = new Array(g + 1), a2 = 0;
           for (n2 = 1; n2 <= g; n2++)
@@ -4118,6 +4231,7 @@ var require_jszip_min = __commonJS({
             0 !== o2 && (e2[2 * i2] = j(s2[o2]++, o2));
           }
         }
+        __name(Z, "Z");
         function W(e2) {
           var t2;
           for (t2 = 0; t2 < l; t2++)
@@ -4128,18 +4242,22 @@ var require_jszip_min = __commonJS({
             e2.bl_tree[2 * t2] = 0;
           e2.dyn_ltree[2 * m] = 1, e2.opt_len = e2.static_len = 0, e2.last_lit = e2.matches = 0;
         }
+        __name(W, "W");
         function M(e2) {
           8 < e2.bi_valid ? U(e2, e2.bi_buf) : 0 < e2.bi_valid && (e2.pending_buf[e2.pending++] = e2.bi_buf), e2.bi_buf = 0, e2.bi_valid = 0;
         }
+        __name(M, "M");
         function H(e2, t2, r2, n2) {
           var i2 = 2 * t2, s2 = 2 * r2;
           return e2[i2] < e2[s2] || e2[i2] === e2[s2] && n2[t2] <= n2[r2];
         }
+        __name(H, "H");
         function G(e2, t2, r2) {
           for (var n2 = e2.heap[r2], i2 = r2 << 1; i2 <= e2.heap_len && (i2 < e2.heap_len && H(t2, e2.heap[i2 + 1], e2.heap[i2], e2.depth) && i2++, !H(t2, n2, e2.heap[i2], e2.depth)); )
             e2.heap[r2] = e2.heap[i2], r2 = i2, i2 <<= 1;
           e2.heap[r2] = n2;
         }
+        __name(G, "G");
         function K(e2, t2, r2) {
           var n2, i2, s2, a2, o2 = 0;
           if (0 !== e2.last_lit)
@@ -4147,6 +4265,7 @@ var require_jszip_min = __commonJS({
               ;
           L(e2, m, t2);
         }
+        __name(K, "K");
         function Y(e2, t2) {
           var r2, n2, i2, s2 = t2.dyn_tree, a2 = t2.stat_desc.static_tree, o2 = t2.stat_desc.has_stree, h2 = t2.stat_desc.elems, u2 = -1;
           for (e2.heap_len = 0, e2.heap_max = _, r2 = 0; r2 < h2; r2++)
@@ -4175,11 +4294,13 @@ var require_jszip_min = __commonJS({
             }
           }(e2, t2), Z(s2, u2, e2.bl_count);
         }
+        __name(Y, "Y");
         function X(e2, t2, r2) {
           var n2, i2, s2 = -1, a2 = t2[1], o2 = 0, h2 = 7, u2 = 4;
           for (0 === a2 && (h2 = 138, u2 = 3), t2[2 * (r2 + 1) + 1] = 65535, n2 = 0; n2 <= r2; n2++)
             i2 = a2, a2 = t2[2 * (n2 + 1) + 1], ++o2 < h2 && i2 === a2 || (o2 < u2 ? e2.bl_tree[2 * i2] += o2 : 0 !== i2 ? (i2 !== s2 && e2.bl_tree[2 * i2]++, e2.bl_tree[2 * b]++) : o2 <= 10 ? e2.bl_tree[2 * v]++ : e2.bl_tree[2 * y]++, s2 = i2, u2 = (o2 = 0) === a2 ? (h2 = 138, 3) : i2 === a2 ? (h2 = 6, 3) : (h2 = 7, 4));
         }
+        __name(X, "X");
         function V(e2, t2, r2) {
           var n2, i2, s2 = -1, a2 = t2[1], o2 = 0, h2 = 7, u2 = 4;
           for (0 === a2 && (h2 = 138, u2 = 3), n2 = 0; n2 <= r2; n2++)
@@ -4192,6 +4313,7 @@ var require_jszip_min = __commonJS({
               s2 = i2, u2 = (o2 = 0) === a2 ? (h2 = 138, 3) : i2 === a2 ? (h2 = 6, 3) : (h2 = 7, 4);
             }
         }
+        __name(V, "V");
         n(T);
         var q = false;
         function J(e2, t2, r2, n2) {
@@ -4199,6 +4321,7 @@ var require_jszip_min = __commonJS({
             M(e3), n3 && (U(e3, r3), U(e3, ~r3)), i.arraySet(e3.pending_buf, e3.window, t3, r3, e3.pending), e3.pending += r3;
           }(e2, t2, r2, true);
         }
+        __name(J, "J");
         r._tr_init = function(e2) {
           q || (function() {
             var e3, t2, r2, n2, i2, s2 = new Array(g + 1);
@@ -4302,6 +4425,7 @@ var require_jszip_min = __commonJS({
             function f(e4) {
               delete h[e4];
             }
+            __name(f, "f");
             function c(e4) {
               if (u)
                 setTimeout(c, 0, e4);
@@ -4335,9 +4459,11 @@ var require_jszip_min = __commonJS({
                 }
               }
             }
+            __name(c, "c");
             function d(e4) {
               e4.source === r2 && "string" == typeof e4.data && 0 === e4.data.indexOf(a) && c(+e4.data.slice(a.length));
             }
+            __name(d, "d");
           }("undefined" == typeof self ? void 0 === e2 ? this : e2 : self);
         }).call(this, "undefined" != typeof global ? global : "undefined" != typeof self ? self : "undefined" != typeof window ? window : {});
       }, {}] }, {}, [10])(10);
@@ -4434,6 +4560,9 @@ var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
     import_obsidian14 = require("obsidian");
+    __name(displayModal, "displayModal");
+    __name(addButtons, "addButtons");
+    __name(showDialog, "showDialog");
   }
 });
 
@@ -4661,6 +4790,7 @@ var init_date_parser = __esm({
         return this.detectFormat(dates[0]);
       }
     };
+    __name(DateParser, "DateParser");
   }
 });
 
@@ -4733,6 +4863,7 @@ var init_version_utils = __esm({
         return `v${parsed.major}.${parsed.minor}.${parsed.patch}`;
       }
     };
+    __name(VersionUtils, "VersionUtils");
   }
 });
 
@@ -4759,6 +4890,7 @@ var init_upgrade_interface = __esm({
         return true;
       }
     };
+    __name(UpgradeOperation, "UpgradeOperation");
     VersionUpgrade = class {
       /**
        * Check if this upgrade should run for the version range
@@ -4933,6 +5065,7 @@ var init_upgrade_interface = __esm({
         await context.plugin.saveData(data);
       }
     };
+    __name(VersionUpgrade, "VersionUpgrade");
   }
 });
 
@@ -5031,6 +5164,7 @@ var init_upgrade_1_1_0 = __esm({
         }
       }
     };
+    __name(DeleteCatalogOperation, "DeleteCatalogOperation");
     CleanMetadataOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -5240,6 +5374,7 @@ ${cleanedFrontmatter}
         }
       }
     };
+    __name(CleanMetadataOperation, "CleanMetadataOperation");
     Upgrade110 = class extends VersionUpgrade {
       constructor() {
         super(...arguments);
@@ -5254,6 +5389,7 @@ ${cleanedFrontmatter}
         ];
       }
     };
+    __name(Upgrade110, "Upgrade110");
   }
 });
 
@@ -5492,6 +5628,7 @@ ${cleanContent}`;
         }
       }
     };
+    __name(ConvertToCalloutsOperation, "ConvertToCalloutsOperation");
     MoveReportsToProviderOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -5568,6 +5705,7 @@ ${cleanContent}`;
         return true;
       }
     };
+    __name(MoveReportsToProviderOperation, "MoveReportsToProviderOperation");
     UpdateReportLinksOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -5636,6 +5774,7 @@ ${cleanContent}`;
         return true;
       }
     };
+    __name(UpdateReportLinksOperation, "UpdateReportLinksOperation");
     MoveYearFoldersOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -5715,6 +5854,7 @@ ${cleanContent}`;
         }
       }
     };
+    __name(MoveYearFoldersOperation, "MoveYearFoldersOperation");
     NexusUpgradeModal = class extends import_obsidian21.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
@@ -5778,6 +5918,7 @@ Your conversations will be reorganized with provider structure and modern callou
         });
       }
     };
+    __name(NexusUpgradeModal, "NexusUpgradeModal");
     OfferReimportOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -5809,6 +5950,7 @@ Your conversations will be reorganized with provider structure and modern callou
         return true;
       }
     };
+    __name(OfferReimportOperation, "OfferReimportOperation");
     Upgrade120 = class extends VersionUpgrade {
       constructor() {
         super(...arguments);
@@ -5824,6 +5966,7 @@ Your conversations will be reorganized with provider structure and modern callou
         ];
       }
     };
+    __name(Upgrade120, "Upgrade120");
   }
 });
 
@@ -5977,7 +6120,7 @@ var init_configure_folder_locations_dialog = __esm({
         }
         const folderTypeLabel = folderType === "conversationFolder" ? "conversations" : folderType === "reportFolder" ? "reports" : "attachments";
         await new Promise((resolve) => {
-          const handleMigrationAction = async (action) => {
+          const handleMigrationAction = /* @__PURE__ */ __name(async (action) => {
             if (action === "move") {
               try {
                 const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
@@ -5996,7 +6139,7 @@ var init_configure_folder_locations_dialog = __esm({
               await this.plugin.saveSettings();
             }
             resolve();
-          };
+          }, "handleMigrationAction");
           const dialog = new EnhancedFolderMigrationDialog(
             this.plugin,
             oldPath,
@@ -6212,6 +6355,7 @@ var init_configure_folder_locations_dialog = __esm({
         modal.open();
       }
     };
+    __name(ConfigureFolderLocationsDialog, "ConfigureFolderLocationsDialog");
   }
 });
 
@@ -6484,6 +6628,7 @@ ${frontmatter}
         }
       }
     };
+    __name(ConvertToISO8601TimestampsOperation, "ConvertToISO8601TimestampsOperation");
     FixFrontmatterAliasesOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -6682,6 +6827,7 @@ ${frontmatter}
         }
       }
     };
+    __name(FixFrontmatterAliasesOperation, "FixFrontmatterAliasesOperation");
     MigrateToSeparateFoldersOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -6773,6 +6919,7 @@ ${frontmatter}
         }
       }
     };
+    __name(MigrateToSeparateFoldersOperation, "MigrateToSeparateFoldersOperation");
     MigrateClaudeArtifactsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -7101,6 +7248,7 @@ ${sampleText}`);
         }
       }
     };
+    __name(MigrateClaudeArtifactsOperation, "MigrateClaudeArtifactsOperation");
     ConfigureFolderLocationsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -7134,6 +7282,7 @@ ${sampleText}`);
         });
       }
     };
+    __name(ConfigureFolderLocationsOperation, "ConfigureFolderLocationsOperation");
     Upgrade130 = class extends VersionUpgrade {
       constructor() {
         super(...arguments);
@@ -7150,6 +7299,7 @@ ${sampleText}`);
         ];
       }
     };
+    __name(Upgrade130, "Upgrade130");
   }
 });
 
@@ -7487,6 +7637,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         document.head.appendChild(styleEl);
       }
     };
+    __name(NexusUpgradeModal130, "NexusUpgradeModal130");
   }
 });
 
@@ -7529,6 +7680,7 @@ var BaseSettingsSection = class {
     }
   }
 };
+__name(BaseSettingsSection, "BaseSettingsSection");
 
 // src/ui/settings/support-section.ts
 var SupportSection = class extends BaseSettingsSection {
@@ -7577,6 +7729,7 @@ var SupportSection = class extends BaseSettingsSection {
     );
   }
 };
+__name(SupportSection, "SupportSection");
 
 // src/ui/settings/folder-settings-section.ts
 var import_obsidian8 = require("obsidian");
@@ -7743,6 +7896,7 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
     contentEl.empty();
   }
 };
+__name(FolderMigrationDialog, "FolderMigrationDialog");
 
 // src/ui/settings/folder-settings-section.ts
 init_folder_tree_browser_modal();
@@ -8046,6 +8200,7 @@ Please choose an empty folder or create a new one.`
     modal.open();
   }
 };
+__name(FolderSettingsSection, "FolderSettingsSection");
 
 // src/ui/settings/display-settings-section.ts
 var import_obsidian9 = require("obsidian");
@@ -8081,6 +8236,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
     );
   }
 };
+__name(DisplaySettingsSection, "DisplaySettingsSection");
 
 // src/ui/settings/message-date-format-section.ts
 var import_obsidian10 = require("obsidian");
@@ -8135,6 +8291,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
     }
   }
 };
+__name(MessageDateFormatSection, "MessageDateFormatSection");
 
 // src/ui/settings-tab.ts
 var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.PluginSettingTab {
@@ -8169,6 +8326,7 @@ var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.Plugin
     }
   }
 };
+__name(NexusAiChatImporterPluginSettingTab, "NexusAiChatImporterPluginSettingTab");
 
 // src/commands/command-registry.ts
 var import_obsidian12 = require("obsidian");
@@ -8201,6 +8359,7 @@ var CommandRegistry = class {
     modal.open();
   }
 };
+__name(CommandRegistry, "CommandRegistry");
 
 // src/events/event-handlers.ts
 var import_obsidian13 = require("obsidian");
@@ -8220,6 +8379,7 @@ var EventHandlers = class {
   cleanup() {
   }
 };
+__name(EventHandlers, "EventHandlers");
 
 // src/services/import-service.ts
 var import_obsidian18 = require("obsidian");
@@ -8733,6 +8893,7 @@ var ImportReport = class {
     return Array.from(this.fileSections.keys());
   }
 };
+__name(ImportReport, "ImportReport");
 
 // src/services/conversation-processor.ts
 var import_obsidian16 = require("obsidian");
@@ -8870,6 +9031,7 @@ var _MessageFormatter = class {
   }
 };
 var MessageFormatter = _MessageFormatter;
+__name(MessageFormatter, "MessageFormatter");
 // Nexus custom callouts with icons
 MessageFormatter.CALLOUTS = {
   USER: "nexus_user",
@@ -8950,6 +9112,7 @@ update_time: ${updateTimeStr}
     return this.messageFormatter.formatMessages(conversation.messages);
   }
 };
+__name(NoteFormatter, "NoteFormatter");
 
 // src/services/file-service.ts
 var import_obsidian15 = require("obsidian");
@@ -9004,6 +9167,7 @@ var FileService = class {
   //     // Implementation for deleting attachments when conversation is deleted
   // }
 };
+__name(FileService, "FileService");
 
 // src/services/conversation-processor.ts
 init_utils();
@@ -9378,6 +9542,7 @@ var ConversationProcessor = class {
     return stats;
   }
 };
+__name(ConversationProcessor, "ConversationProcessor");
 
 // src/models/errors.ts
 var NexusAiChatImporterError = class extends Error {
@@ -9387,6 +9552,7 @@ var NexusAiChatImporterError = class extends Error {
     this.name = "NexusAiChatImporterError";
   }
 };
+__name(NexusAiChatImporterError, "NexusAiChatImporterError");
 
 // src/providers/provider-adapter.ts
 var DefaultProviderRegistry = class {
@@ -9410,6 +9576,7 @@ var DefaultProviderRegistry = class {
     return "unknown";
   }
 };
+__name(DefaultProviderRegistry, "DefaultProviderRegistry");
 
 // src/providers/chatgpt/chatgpt-dalle-processor.ts
 var ChatGPTDalleProcessor = class {
@@ -9661,6 +9828,7 @@ var ChatGPTDalleProcessor = class {
     };
   }
 };
+__name(ChatGPTDalleProcessor, "ChatGPTDalleProcessor");
 
 // src/providers/chatgpt/chatgpt-message-filter.ts
 init_utils();
@@ -9727,6 +9895,7 @@ var ChatGPTMessageFilter = class {
     return isValidMessage(message);
   }
 };
+__name(ChatGPTMessageFilter, "ChatGPTMessageFilter");
 
 // src/providers/chatgpt/chatgpt-converter.ts
 var ChatGPTConverter = class {
@@ -9930,6 +10099,7 @@ ${codeContent}
     return cleanText.trim();
   }
 };
+__name(ChatGPTConverter, "ChatGPTConverter");
 // Pre-compiled regex patterns for performance
 ChatGPTConverter.CLEANUP_PATTERNS = [
   // SMART: Replace sandbox links with actual links to original conversation
@@ -10272,6 +10442,7 @@ var ChatGPTAttachmentExtractor = class {
     };
   }
 };
+__name(ChatGPTAttachmentExtractor, "ChatGPTAttachmentExtractor");
 
 // src/providers/chatgpt/chatgpt-report-naming.ts
 var ChatGPTReportNamingStrategy = class {
@@ -10331,6 +10502,7 @@ var ChatGPTReportNamingStrategy = class {
     };
   }
 };
+__name(ChatGPTReportNamingStrategy, "ChatGPTReportNamingStrategy");
 
 // src/providers/chatgpt/chatgpt-adapter.ts
 var ChatGPTAdapter = class {
@@ -10438,6 +10610,7 @@ var ChatGPTAdapter = class {
     return this.reportNamingStrategy;
   }
 };
+__name(ChatGPTAdapter, "ChatGPTAdapter");
 
 // src/providers/claude/claude-converter.ts
 init_utils();
@@ -11111,6 +11284,7 @@ ${versionContent}
     return uniqueArtifacts.size;
   }
 };
+__name(ClaudeConverter, "ClaudeConverter");
 // Nexus custom callouts with icons
 ClaudeConverter.CALLOUTS = {
   USER: "nexus_user",
@@ -11349,6 +11523,7 @@ ${textContent}
     return filePath;
   }
 };
+__name(ClaudeAttachmentExtractor, "ClaudeAttachmentExtractor");
 
 // src/providers/claude/claude-report-naming.ts
 var ClaudeReportNamingStrategy = class {
@@ -11384,6 +11559,7 @@ var ClaudeReportNamingStrategy = class {
     };
   }
 };
+__name(ClaudeReportNamingStrategy, "ClaudeReportNamingStrategy");
 
 // src/providers/claude/claude-adapter.ts
 var ClaudeAdapter = class {
@@ -11470,6 +11646,7 @@ var ClaudeAdapter = class {
     return false;
   }
 };
+__name(ClaudeAdapter, "ClaudeAdapter");
 
 // src/providers/provider-registry.ts
 function createProviderRegistry(plugin) {
@@ -11478,6 +11655,7 @@ function createProviderRegistry(plugin) {
   registry.register("claude", new ClaudeAdapter(plugin));
   return registry;
 }
+__name(createProviderRegistry, "createProviderRegistry");
 
 // src/ui/import-progress-modal.ts
 var import_obsidian17 = require("obsidian");
@@ -11672,6 +11850,7 @@ var ImportProgressModal = class extends import_obsidian17.Modal {
     contentEl.empty();
   }
 };
+__name(ImportProgressModal, "ImportProgressModal");
 
 // src/services/import-service.ts
 var ImportService = class {
@@ -11700,14 +11879,14 @@ var ImportService = class {
   sortFilesByTimestamp(files) {
     return files.sort((a, b) => {
       const timestampRegex = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
-      const getTimestamp = (filename) => {
+      const getTimestamp = /* @__PURE__ */ __name((filename) => {
         const match = filename.match(timestampRegex);
         if (!match) {
           this.plugin.logger.warn(`No timestamp found in filename: ${filename}`);
           return "0";
         }
         return match[1];
-      };
+      }, "getTimestamp");
       return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
     });
   }
@@ -11971,6 +12150,7 @@ var ImportService = class {
     await reportWriter.writeReport(this.importReport, zipFileName, currentProvider);
   }
 };
+__name(ImportService, "ImportService");
 var ReportWriter = class {
   constructor(plugin, providerRegistry) {
     this.plugin = plugin;
@@ -12049,6 +12229,7 @@ ${report.generateReportContent(void 0, void 0, void 0, void 0, false)}
     return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
   }
 };
+__name(ReportWriter, "ReportWriter");
 
 // src/services/storage-service.ts
 init_date_parser();
@@ -12357,6 +12538,7 @@ var StorageService = class {
     this.plugin.logger.warn("deleteFromConversationCatalog() is deprecated - files tracked via vault");
   }
 };
+__name(StorageService, "StorageService");
 
 // src/upgrade/incremental-upgrade-manager.ts
 var import_obsidian25 = require("obsidian");
@@ -12583,6 +12765,7 @@ var MultiOperationProgressModal = class extends import_obsidian20.Modal {
     contentEl.empty();
   }
 };
+__name(MultiOperationProgressModal, "MultiOperationProgressModal");
 
 // src/upgrade/incremental-upgrade-manager.ts
 init_utils();
@@ -12925,7 +13108,7 @@ var IncrementalUpgradeManager = class {
       throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
     }
     const now = new Date();
-    const pad = (n) => n.toString().padStart(2, "0");
+    const pad = /* @__PURE__ */ __name((n) => n.toString().padStart(2, "0"), "pad");
     const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
     const fileName = `${ts} - Upgrade to ${toVersion}.md`;
     const filePath = `${upgradesFolder}/${fileName}`;
@@ -13203,6 +13386,7 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
     };
   }
 };
+__name(IncrementalUpgradeManager, "IncrementalUpgradeManager");
 
 // src/main.ts
 init_logger();
@@ -13264,6 +13448,7 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
     contentEl.empty();
   }
 };
+__name(ProviderSelectionDialog, "ProviderSelectionDialog");
 
 // src/dialogs/enhanced-file-selection-dialog.ts
 var import_obsidian27 = require("obsidian");
@@ -13663,6 +13848,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     contentEl.empty();
   }
 };
+__name(EnhancedFileSelectionDialog, "EnhancedFileSelectionDialog");
 
 // src/dialogs/conversation-selection-dialog.ts
 var import_obsidian28 = require("obsidian");
@@ -14383,6 +14569,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     contentEl.empty();
   }
 };
+__name(ConversationSelectionDialog, "ConversationSelectionDialog");
 
 // src/services/conversation-metadata-extractor.ts
 init_utils();
@@ -14765,6 +14952,7 @@ var ConversationMetadataExtractor = class {
     }
   }
 };
+__name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
 var import_obsidian29 = require("obsidian");
@@ -14994,6 +15182,7 @@ var ImportCompletionDialog = class extends import_obsidian29.Modal {
     contentEl.empty();
   }
 };
+__name(ImportCompletionDialog, "ImportCompletionDialog");
 
 // src/main.ts
 init_utils();
@@ -15422,18 +15611,19 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
   sortFilesByTimestamp(files) {
     return files.sort((a, b) => {
       const timestampRegex = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
-      const getTimestamp = (filename) => {
+      const getTimestamp = /* @__PURE__ */ __name((filename) => {
         const match = filename.match(timestampRegex);
         if (!match) {
           this.logger.warn(`No timestamp found in filename: ${filename}`);
           return "0";
         }
         return match[1];
-      };
+      }, "getTimestamp");
       return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
     });
   }
 };
+__name(NexusAiChatImporterPlugin, "NexusAiChatImporterPlugin");
 /*! Bundled license information:
 
 jszip/dist/jszip.min.js:
