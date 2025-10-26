@@ -477,6 +477,7 @@ var utils_exports = {};
 __export(utils_exports, {
   addPrefix: () => addPrefix,
   checkConversationLink: () => checkConversationLink,
+  compareTimestampsIgnoringSeconds: () => compareTimestampsIgnoringSeconds,
   createDatePrefix: () => createDatePrefix,
   doesFilePathExist: () => doesFilePathExist,
   ensureFolderExists: () => ensureFolderExists,
@@ -493,8 +494,15 @@ __export(utils_exports, {
   isNexusRelated: () => isNexusRelated,
   isValidMessage: () => isValidMessage,
   moveAndMergeFolders: () => moveAndMergeFolders,
-  old_getConversationId: () => old_getConversationId
+  old_getConversationId: () => old_getConversationId,
+  truncateToMinute: () => truncateToMinute
 });
+function truncateToMinute(unixTime) {
+  return Math.floor(unixTime / 60) * 60;
+}
+function compareTimestampsIgnoringSeconds(time1, time2) {
+  return truncateToMinute(time1) - truncateToMinute(time2);
+}
 function formatMessageTimestamp(unixTime, customFormat) {
   const date = (0, import_obsidian4.moment)(unixTime * 1e3);
   if (!customFormat || customFormat === "locale") {
@@ -9079,7 +9087,8 @@ var ConversationProcessor = class {
       await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true);
       return;
     }
-    if (existingRecord.updateTime >= updateTime) {
+    const comparison = compareTimestampsIgnoringSeconds(updateTime, existingRecord.updateTime);
+    if (comparison <= 0) {
       importReport.addSkipped(
         chatTitle,
         existingRecord.path,
@@ -14375,7 +14384,8 @@ var ConversationMetadataExtractor = class {
           const existing = existingConversations.get(conv.id);
           if (existing) {
             enhanced.existingUpdateTime = existing.updateTime;
-            if (conv.updateTime > existing.updateTime) {
+            const comparison = compareTimestampsIgnoringSeconds(conv.updateTime, existing.updateTime);
+            if (comparison > 0) {
               enhanced.existenceStatus = "updated";
               enhanced.hasNewerContent = true;
             } else {
@@ -14584,9 +14594,10 @@ var ConversationMetadataExtractor = class {
             conversationToFileMap.set(conversation.id, file.name);
           } else {
             let shouldReplace = false;
-            if (conversation.updateTime > existing.updateTime) {
+            const comparison = compareTimestampsIgnoringSeconds(conversation.updateTime, existing.updateTime);
+            if (comparison > 0) {
               shouldReplace = true;
-            } else if (conversation.updateTime === existing.updateTime) {
+            } else if (comparison === 0) {
               const currentFileIndex = conversation.sourceFileIndex || 0;
               const existingFileIndex = existing.sourceFileIndex || 0;
               if (currentFileIndex > existingFileIndex) {
@@ -14687,7 +14698,8 @@ var ConversationMetadataExtractor = class {
         const { moment: moment3 } = require("obsidian");
         const zipUpdateTimeISO = new Date(conversation.updateTime * 1e3).toISOString();
         const normalizedZipUpdateTime = moment3(zipUpdateTimeISO, moment3.ISO_8601, true).unix();
-        if (normalizedZipUpdateTime > vaultConversation.updateTime) {
+        const comparison = compareTimestampsIgnoringSeconds(normalizedZipUpdateTime, vaultConversation.updateTime);
+        if (comparison > 0) {
           conversation.existenceStatus = "updated";
           conversation.hasNewerContent = true;
           conversationsForSelection.push(conversation);

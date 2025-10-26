@@ -33,7 +33,8 @@ import {
     ensureFolderExists,
     doesFilePathExist,
     generateUniqueFileName,
-    generateConversationFileName
+    generateConversationFileName,
+    compareTimestampsIgnoringSeconds
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 
@@ -204,8 +205,10 @@ export class ConversationProcessor {
             return;
         }
 
-        // Normal logic: Check timestamps
-        if (existingRecord.updateTime >= updateTime) {
+        // Normal logic: Check timestamps (ignoring seconds for v1.2.0 → v1.3.0 compatibility)
+        const comparison = compareTimestampsIgnoringSeconds(updateTime, existingRecord.updateTime);
+        if (comparison <= 0) {
+            // ZIP is older or same as vault (ignoring seconds) → Skip
             importReport.addSkipped(
                 chatTitle,
                 existingRecord.path,
@@ -215,6 +218,7 @@ export class ConversationProcessor {
                 "No Updates"
             );
         } else {
+            // ZIP is newer than vault → Update
             this.counters.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip);
         }

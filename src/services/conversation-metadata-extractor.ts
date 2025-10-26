@@ -22,7 +22,7 @@ import JSZip from "jszip";
 import { ProviderRegistry } from "../providers/provider-adapter";
 import { Chat } from "../providers/chatgpt/chatgpt-types";
 import { ClaudeConversation, ClaudeExportData } from "../providers/claude/claude-types";
-import { isValidMessage } from "../utils";
+import { isValidMessage, compareTimestampsIgnoringSeconds } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**
@@ -141,7 +141,9 @@ export class ConversationMetadataExtractor {
                     const existing = existingConversations.get(conv.id);
                     if (existing) {
                         enhanced.existingUpdateTime = existing.updateTime;
-                        if (conv.updateTime > existing.updateTime) {
+                        // Compare timestamps ignoring seconds (v1.2.0 → v1.3.0 compatibility)
+                        const comparison = compareTimestampsIgnoringSeconds(conv.updateTime, existing.updateTime);
+                        if (comparison > 0) {
                             enhanced.existenceStatus = 'updated';
                             enhanced.hasNewerContent = true;
                         } else {
@@ -406,11 +408,14 @@ export class ConversationMetadataExtractor {
                         // Duplicate found - determine which version to keep
                         let shouldReplace = false;
 
-                        if (conversation.updateTime > existing.updateTime) {
+                        // Compare timestamps ignoring seconds (v1.2.0 → v1.3.0 compatibility)
+                        const comparison = compareTimestampsIgnoringSeconds(conversation.updateTime, existing.updateTime);
+
+                        if (comparison > 0) {
                             // Current conversation is newer
                             shouldReplace = true;
-                        } else if (conversation.updateTime === existing.updateTime) {
-                            // Same updateTime - prefer the one from later file (higher sourceFileIndex)
+                        } else if (comparison === 0) {
+                            // Same updateTime (ignoring seconds) - prefer the one from later file (higher sourceFileIndex)
                             const currentFileIndex = conversation.sourceFileIndex || 0;
                             const existingFileIndex = existing.sourceFileIndex || 0;
 
@@ -552,7 +557,10 @@ export class ConversationMetadataExtractor {
                 const zipUpdateTimeISO = new Date(conversation.updateTime * 1000).toISOString();
                 const normalizedZipUpdateTime = moment(zipUpdateTimeISO, moment.ISO_8601, true).unix();
 
-                if (normalizedZipUpdateTime > vaultConversation.updateTime) {
+                // Compare timestamps ignoring seconds (v1.2.0 → v1.3.0 compatibility)
+                const comparison = compareTimestampsIgnoringSeconds(normalizedZipUpdateTime, vaultConversation.updateTime);
+
+                if (comparison > 0) {
                     // ZIP plus récent que vault → UPDATED (proposer)
                     conversation.existenceStatus = 'updated';
                     conversation.hasNewerContent = true;

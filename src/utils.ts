@@ -27,6 +27,37 @@ import type { MessageTimestampFormat } from "./types/plugin";
 const logger = new Logger();
 
 /**
+ * Truncate Unix timestamp to minute precision (remove seconds)
+ * Used for comparing conversation timestamps between v1.2.0 (no seconds) and v1.3.0 (with seconds)
+ *
+ * @param unixTime - Unix timestamp in seconds
+ * @returns Unix timestamp truncated to minute precision
+ *
+ * @example
+ * truncateToMinute(1719582647) // 14:30:47 → returns 1719582600 (14:30:00)
+ * truncateToMinute(1719582600) // 14:30:00 → returns 1719582600 (14:30:00)
+ */
+export function truncateToMinute(unixTime: number): number {
+    return Math.floor(unixTime / 60) * 60;
+}
+
+/**
+ * Compare two Unix timestamps with minute precision (ignoring seconds)
+ * Returns negative if time1 < time2, positive if time1 > time2, zero if equal
+ *
+ * @param time1 - First Unix timestamp in seconds
+ * @param time2 - Second Unix timestamp in seconds
+ * @returns Comparison result (negative/zero/positive)
+ *
+ * @example
+ * compareTimestampsIgnoringSeconds(1719582647, 1719582600) // Both 14:30:xx → returns 0 (equal)
+ * compareTimestampsIgnoringSeconds(1719582700, 1719582600) // 14:31 vs 14:30 → returns 60 (positive)
+ */
+export function compareTimestampsIgnoringSeconds(time1: number, time2: number): number {
+    return truncateToMinute(time1) - truncateToMinute(time2);
+}
+
+/**
  * Format message timestamp with custom or locale-based format
  * Used for message callouts and note headers
  */
