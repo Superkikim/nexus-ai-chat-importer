@@ -580,6 +580,41 @@ export async function moveAndMergeFolders(
             }
         }
 
+        // Delete empty parent folders recursively
+        // Start from the original folder's parent and go up
+        logger.debug(`[moveAndMergeFolders] Checking parent folders for deletion...`);
+        let currentFolder = oldFolder.parent;
+        while (currentFolder && currentFolder.path !== "/") {
+            try {
+                // Check if folder still exists
+                const exists = await vault.adapter.exists(currentFolder.path);
+                if (!exists) {
+                    logger.debug(`[moveAndMergeFolders] Parent folder already deleted: ${currentFolder.path}`);
+                    break;
+                }
+
+                // Try to delete the parent folder
+                // This will only succeed if the folder is empty
+                await vault.delete(currentFolder);
+                logger.debug(`[moveAndMergeFolders] ✅ Deleted empty parent folder: ${currentFolder.path}`);
+
+                // Move up to the next parent
+                currentFolder = currentFolder.parent;
+            } catch (error: any) {
+                // Parent folder is not empty or other error - stop here
+                const errorMsg = error.message || String(error);
+                if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
+                    logger.debug(`[moveAndMergeFolders] Parent folder not empty, stopping: ${currentFolder.path}`);
+                } else if (errorMsg.includes("does not exist") || errorMsg.includes("ENOENT")) {
+                    logger.debug(`[moveAndMergeFolders] Parent folder already deleted: ${currentFolder.path}`);
+                } else {
+                    logger.debug(`[moveAndMergeFolders] Could not delete parent folder ${currentFolder.path}: ${errorMsg}`);
+                }
+                // Stop trying to delete parent folders
+                break;
+            }
+        }
+
         return {
             success: errors === 0,
             moved,

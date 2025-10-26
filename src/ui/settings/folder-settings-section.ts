@@ -21,7 +21,7 @@
 import { Setting, TFolder, TextComponent, Notice, Modal } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
-import { FolderBrowserModal } from "../../dialogs/folder-browser-modal";
+import { FolderTreeBrowserModal } from "../../dialogs/folder-tree-browser-modal";
 import { validateFolderNesting } from "../../utils/folder-validation";
 import { moveAndMergeFolders, type FolderMergeResult } from "../../utils";
 
@@ -54,15 +54,16 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     .setButtonText("Browse")
                     .setTooltip("Browse folders or create a new one")
                     .onClick(async () => {
-                        const modal = new FolderBrowserModal(
+                        const modal = new FolderTreeBrowserModal(
                             this.plugin.app,
-                            async (path) => {
+                            async (path: string) => {
                                 // User selected or created a folder - handle the change directly
                                 if (conversationFolderTextComponent) {
                                     conversationFolderTextComponent.setValue(path);
                                     await this.handleFolderChange('conversationFolder', path, 'conversations', conversationFolderTextComponent);
                                 }
-                            }
+                            },
+                            this.plugin.settings.conversationFolder
                         );
                         modal.open();
                     });
@@ -92,15 +93,16 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     .setButtonText("Browse")
                     .setTooltip("Browse folders or create a new one")
                     .onClick(async () => {
-                        const modal = new FolderBrowserModal(
+                        const modal = new FolderTreeBrowserModal(
                             this.plugin.app,
-                            async (path) => {
+                            async (path: string) => {
                                 // User selected or created a folder - handle the change directly
                                 if (reportFolderTextComponent) {
                                     reportFolderTextComponent.setValue(path);
                                     await this.handleFolderChange('reportFolder', path, 'reports', reportFolderTextComponent);
                                 }
-                            }
+                            },
+                            this.plugin.settings.reportFolder
                         );
                         modal.open();
                     });
@@ -130,15 +132,16 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     .setButtonText("Browse")
                     .setTooltip("Browse folders or create a new one")
                     .onClick(async () => {
-                        const modal = new FolderBrowserModal(
+                        const modal = new FolderTreeBrowserModal(
                             this.plugin.app,
-                            async (path) => {
+                            async (path: string) => {
                                 // User selected or created a folder - handle the change directly
                                 if (attachmentFolderTextComponent) {
                                     attachmentFolderTextComponent.setValue(path);
                                     await this.handleFolderChange('attachmentFolder', path, 'attachments', attachmentFolderTextComponent);
                                 }
-                            }
+                            },
+                            this.plugin.settings.attachmentFolder
                         );
                         modal.open();
                     });
@@ -173,10 +176,10 @@ export class FolderSettingsSection extends BaseSettingsSection {
         );
 
         if (!validation.valid) {
-            new Notice(`❌ ${validation.error}`);
+            this.plugin.logger.debug(`[FolderSettings] Validation failed: ${validation.error}`);
+            this.showErrorDialog("Invalid Folder Location", validation.error);
             // Restore old value in the text field
             textComponent.setValue(oldPath);
-            this.plugin.logger.debug(`[FolderSettings] Validation failed: ${validation.error}`);
             return;
         }
 
@@ -197,6 +200,19 @@ export class FolderSettingsSection extends BaseSettingsSection {
             this.plugin.logger.debug(`[FolderSettings] Old folder is empty, just updating setting`);
             this.plugin.settings[settingKey] = newPath;
             await this.plugin.saveSettings();
+            return;
+        }
+
+        // Check if target folder exists and is not empty
+        const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
+        if (newFolder && newFolder instanceof TFolder && newFolder.children.length > 0) {
+            this.plugin.logger.debug(`[FolderSettings] Target folder is not empty, aborting`);
+            this.showErrorDialog(
+                "Target Folder Must Be Empty",
+                `The target folder "${newPath}" must be empty before migrating files.\n\nPlease choose an empty folder or create a new one.`
+            );
+            // Restore old value in the text field
+            textComponent.setValue(oldPath);
             return;
         }
 
@@ -288,7 +304,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
                 }
             } catch (error: any) {
                 this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
-                new Notice(`❌ Failed to move files: ${error.message}`);
+                this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
                 throw error;
             }
         } else {
@@ -422,6 +438,29 @@ export class FolderSettingsSection extends BaseSettingsSection {
             }
         `;
         document.head.appendChild(styleEl);
+
+        modal.open();
+    }
+
+    private showErrorDialog(title: string, message: string): void {
+        const modal = new Modal(this.plugin.app);
+        modal.titleEl.setText(title);
+
+        modal.contentEl.createEl("p", {
+            text: message,
+            cls: "nexus-error-message"
+        });
+
+        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.justifyContent = "flex-end";
+        buttonContainer.style.marginTop = "1em";
+
+        const okButton = buttonContainer.createEl("button", {
+            text: "OK",
+            cls: "mod-cta"
+        });
+        okButton.addEventListener("click", () => modal.close());
 
         modal.open();
     }

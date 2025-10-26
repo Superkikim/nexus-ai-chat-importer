@@ -18,7 +18,7 @@
 
 
 // src/dialogs/enhanced-folder-migration-dialog.ts
-import { Modal, Notice } from "obsidian";
+import { Modal, Notice, TFolder } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**
@@ -231,7 +231,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
 
             // Get the old folder
             const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
-            if (!oldFolder || !(oldFolder instanceof (await import("obsidian")).TFolder)) {
+            if (!oldFolder || !(oldFolder instanceof TFolder)) {
                 throw new Error(`Source folder not found: ${this.oldPath}`);
             }
 
@@ -313,7 +313,8 @@ export class EnhancedFolderMigrationDialog extends Modal {
             new Notice(`✅ ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
 
         } catch (error) {
-            new Notice(`❌ Failed to move files or update links: ${error.message}`);
+            progressModal.close();
+            this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${error.message}`);
         }
     }
 
@@ -418,6 +419,29 @@ export class EnhancedFolderMigrationDialog extends Modal {
             }
         `;
         document.head.appendChild(styleEl);
+    }
+
+    private showErrorDialog(title: string, message: string): void {
+        const modal = new Modal(this.app);
+        modal.titleEl.setText(title);
+
+        modal.contentEl.createEl("p", {
+            text: message,
+            cls: "nexus-error-message"
+        });
+
+        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.justifyContent = "flex-end";
+        buttonContainer.style.marginTop = "1em";
+
+        const okButton = buttonContainer.createEl("button", {
+            text: "OK",
+            cls: "mod-cta"
+        });
+        okButton.addEventListener("click", () => modal.close());
+
+        modal.open();
     }
 
     onClose() {

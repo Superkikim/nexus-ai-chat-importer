@@ -22,8 +22,7 @@ import { Modal, Setting, TFolder, Notice } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { FolderMigrationDialog } from "./folder-migration-dialog";
 import { EnhancedFolderMigrationDialog } from "./enhanced-folder-migration-dialog";
-import { FolderSuggest } from "../ui/folder-suggest";
-import { FolderBrowserModal } from "./folder-browser-modal";
+import { FolderTreeBrowserModal } from "./folder-tree-browser-modal";
 import { validateFolderNesting } from "../utils/folder-validation";
 import { moveAndMergeFolders, type FolderMergeResult } from "../utils";
 
@@ -114,27 +113,29 @@ export class ConfigureFolderLocationsDialog extends Modal {
             .addText(text => {
                 this.reportFolderInput = text.inputEl;
 
-                // Add folder autocomplete
-                new FolderSuggest(this.plugin.app, text.inputEl);
-
                 text
                     .setPlaceholder("Nexus Reports")
                     .setValue(this.originalReportFolder)
                     .inputEl.addClass("nexus-upgrade-folder-input");
+
+                // Make input read-only - only Browse button can change the value
+                text.inputEl.readOnly = true;
+                text.inputEl.style.cursor = "default";
             })
             .addButton(button => {
                 button
                     .setButtonText("Browse")
                     .setTooltip("Browse folders or create a new one")
                     .onClick(() => {
-                        const modal = new FolderBrowserModal(
+                        const modal = new FolderTreeBrowserModal(
                             this.plugin.app,
-                            (path) => {
+                            (path: string) => {
                                 // User selected or created a folder
                                 if (this.reportFolderInput) {
                                     this.reportFolderInput.value = path;
                                 }
-                            }
+                            },
+                            this.originalReportFolder
                         );
                         modal.open();
                     });
@@ -210,7 +211,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
         );
 
         if (!validation.valid) {
-            new Notice(`❌ ${validation.error}`);
+            this.showErrorDialog("Invalid Folder Location", validation.error);
             return; // Don't close dialog, let user fix the path
         }
 
@@ -290,7 +291,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
                         }
                     } catch (error) {
                         this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
-                        new Notice(`❌ Failed to move files: ${error.message}`);
+                        this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
                     }
                 } else if (action === 'cancel') {
                     // Revert setting
@@ -501,6 +502,29 @@ export class ConfigureFolderLocationsDialog extends Modal {
                 }
             });
         }
+    }
+
+    private showErrorDialog(title: string, message: string): void {
+        const modal = new Modal(this.plugin.app);
+        modal.titleEl.setText(title);
+
+        modal.contentEl.createEl("p", {
+            text: message,
+            cls: "nexus-error-message"
+        });
+
+        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.justifyContent = "flex-end";
+        buttonContainer.style.marginTop = "1em";
+
+        const okButton = buttonContainer.createEl("button", {
+            text: "OK",
+            cls: "mod-cta"
+        });
+        okButton.addEventListener("click", () => modal.close());
+
+        modal.open();
     }
 }
 

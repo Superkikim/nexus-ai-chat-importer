@@ -10,8 +10,8 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __esm = (fn2, res) => function __init() {
-  return fn2 && (res = (0, fn2[__getOwnPropNames(fn2)[0]])(fn2 = 0)), res;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
@@ -123,2124 +123,242 @@ var init_constants = __esm({
   }
 });
 
-// node_modules/@popperjs/core/lib/enums.js
-var top, bottom, right, left, auto, basePlacements, start, end, clippingParents, viewport, popper, reference, variationPlacements, placements, beforeRead, read, afterRead, beforeMain, main, afterMain, beforeWrite, write, afterWrite, modifierPhases;
-var init_enums = __esm({
-  "node_modules/@popperjs/core/lib/enums.js"() {
-    top = "top";
-    bottom = "bottom";
-    right = "right";
-    left = "left";
-    auto = "auto";
-    basePlacements = [top, bottom, right, left];
-    start = "start";
-    end = "end";
-    clippingParents = "clippingParents";
-    viewport = "viewport";
-    popper = "popper";
-    reference = "reference";
-    variationPlacements = /* @__PURE__ */ basePlacements.reduce(function(acc, placement) {
-      return acc.concat([placement + "-" + start, placement + "-" + end]);
-    }, []);
-    placements = /* @__PURE__ */ [].concat(basePlacements, [auto]).reduce(function(acc, placement) {
-      return acc.concat([placement, placement + "-" + start, placement + "-" + end]);
-    }, []);
-    beforeRead = "beforeRead";
-    read = "read";
-    afterRead = "afterRead";
-    beforeMain = "beforeMain";
-    main = "main";
-    afterMain = "afterMain";
-    beforeWrite = "beforeWrite";
-    write = "write";
-    afterWrite = "afterWrite";
-    modifierPhases = [beforeRead, read, afterRead, beforeMain, main, afterMain, beforeWrite, write, afterWrite];
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getNodeName.js
-function getNodeName(element) {
-  return element ? (element.nodeName || "").toLowerCase() : null;
-}
-var init_getNodeName = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getNodeName.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getWindow.js
-function getWindow(node) {
-  if (node == null) {
-    return window;
-  }
-  if (node.toString() !== "[object Window]") {
-    var ownerDocument = node.ownerDocument;
-    return ownerDocument ? ownerDocument.defaultView || window : window;
-  }
-  return node;
-}
-var init_getWindow = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getWindow.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/instanceOf.js
-function isElement(node) {
-  var OwnElement = getWindow(node).Element;
-  return node instanceof OwnElement || node instanceof Element;
-}
-function isHTMLElement(node) {
-  var OwnElement = getWindow(node).HTMLElement;
-  return node instanceof OwnElement || node instanceof HTMLElement;
-}
-function isShadowRoot(node) {
-  if (typeof ShadowRoot === "undefined") {
-    return false;
-  }
-  var OwnElement = getWindow(node).ShadowRoot;
-  return node instanceof OwnElement || node instanceof ShadowRoot;
-}
-var init_instanceOf = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/instanceOf.js"() {
-    init_getWindow();
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/applyStyles.js
-function applyStyles(_ref) {
-  var state = _ref.state;
-  Object.keys(state.elements).forEach(function(name) {
-    var style = state.styles[name] || {};
-    var attributes = state.attributes[name] || {};
-    var element = state.elements[name];
-    if (!isHTMLElement(element) || !getNodeName(element)) {
-      return;
-    }
-    Object.assign(element.style, style);
-    Object.keys(attributes).forEach(function(name2) {
-      var value = attributes[name2];
-      if (value === false) {
-        element.removeAttribute(name2);
-      } else {
-        element.setAttribute(name2, value === true ? "" : value);
-      }
-    });
-  });
-}
-function effect(_ref2) {
-  var state = _ref2.state;
-  var initialStyles = {
-    popper: {
-      position: state.options.strategy,
-      left: "0",
-      top: "0",
-      margin: "0"
-    },
-    arrow: {
-      position: "absolute"
-    },
-    reference: {}
-  };
-  Object.assign(state.elements.popper.style, initialStyles.popper);
-  state.styles = initialStyles;
-  if (state.elements.arrow) {
-    Object.assign(state.elements.arrow.style, initialStyles.arrow);
-  }
-  return function() {
-    Object.keys(state.elements).forEach(function(name) {
-      var element = state.elements[name];
-      var attributes = state.attributes[name] || {};
-      var styleProperties = Object.keys(state.styles.hasOwnProperty(name) ? state.styles[name] : initialStyles[name]);
-      var style = styleProperties.reduce(function(style2, property) {
-        style2[property] = "";
-        return style2;
-      }, {});
-      if (!isHTMLElement(element) || !getNodeName(element)) {
-        return;
-      }
-      Object.assign(element.style, style);
-      Object.keys(attributes).forEach(function(attribute) {
-        element.removeAttribute(attribute);
-      });
-    });
-  };
-}
-var applyStyles_default;
-var init_applyStyles = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/applyStyles.js"() {
-    init_getNodeName();
-    init_instanceOf();
-    applyStyles_default = {
-      name: "applyStyles",
-      enabled: true,
-      phase: "write",
-      fn: applyStyles,
-      effect,
-      requires: ["computeStyles"]
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/getBasePlacement.js
-function getBasePlacement(placement) {
-  return placement.split("-")[0];
-}
-var init_getBasePlacement = __esm({
-  "node_modules/@popperjs/core/lib/utils/getBasePlacement.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/math.js
-var max, min, round;
-var init_math = __esm({
-  "node_modules/@popperjs/core/lib/utils/math.js"() {
-    max = Math.max;
-    min = Math.min;
-    round = Math.round;
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/userAgent.js
-function getUAString() {
-  var uaData = navigator.userAgentData;
-  if (uaData != null && uaData.brands && Array.isArray(uaData.brands)) {
-    return uaData.brands.map(function(item) {
-      return item.brand + "/" + item.version;
-    }).join(" ");
-  }
-  return navigator.userAgent;
-}
-var init_userAgent = __esm({
-  "node_modules/@popperjs/core/lib/utils/userAgent.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/isLayoutViewport.js
-function isLayoutViewport() {
-  return !/^((?!chrome|android).)*safari/i.test(getUAString());
-}
-var init_isLayoutViewport = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/isLayoutViewport.js"() {
-    init_userAgent();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js
-function getBoundingClientRect(element, includeScale, isFixedStrategy) {
-  if (includeScale === void 0) {
-    includeScale = false;
-  }
-  if (isFixedStrategy === void 0) {
-    isFixedStrategy = false;
-  }
-  var clientRect = element.getBoundingClientRect();
-  var scaleX = 1;
-  var scaleY = 1;
-  if (includeScale && isHTMLElement(element)) {
-    scaleX = element.offsetWidth > 0 ? round(clientRect.width) / element.offsetWidth || 1 : 1;
-    scaleY = element.offsetHeight > 0 ? round(clientRect.height) / element.offsetHeight || 1 : 1;
-  }
-  var _ref = isElement(element) ? getWindow(element) : window, visualViewport = _ref.visualViewport;
-  var addVisualOffsets = !isLayoutViewport() && isFixedStrategy;
-  var x = (clientRect.left + (addVisualOffsets && visualViewport ? visualViewport.offsetLeft : 0)) / scaleX;
-  var y = (clientRect.top + (addVisualOffsets && visualViewport ? visualViewport.offsetTop : 0)) / scaleY;
-  var width = clientRect.width / scaleX;
-  var height = clientRect.height / scaleY;
-  return {
-    width,
-    height,
-    top: y,
-    right: x + width,
-    bottom: y + height,
-    left: x,
-    x,
-    y
-  };
-}
-var init_getBoundingClientRect = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js"() {
-    init_instanceOf();
-    init_math();
-    init_getWindow();
-    init_isLayoutViewport();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js
-function getLayoutRect(element) {
-  var clientRect = getBoundingClientRect(element);
-  var width = element.offsetWidth;
-  var height = element.offsetHeight;
-  if (Math.abs(clientRect.width - width) <= 1) {
-    width = clientRect.width;
-  }
-  if (Math.abs(clientRect.height - height) <= 1) {
-    height = clientRect.height;
-  }
-  return {
-    x: element.offsetLeft,
-    y: element.offsetTop,
-    width,
-    height
-  };
-}
-var init_getLayoutRect = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js"() {
-    init_getBoundingClientRect();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/contains.js
-function contains(parent, child) {
-  var rootNode = child.getRootNode && child.getRootNode();
-  if (parent.contains(child)) {
-    return true;
-  } else if (rootNode && isShadowRoot(rootNode)) {
-    var next = child;
-    do {
-      if (next && parent.isSameNode(next)) {
-        return true;
-      }
-      next = next.parentNode || next.host;
-    } while (next);
-  }
-  return false;
-}
-var init_contains = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/contains.js"() {
-    init_instanceOf();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js
-function getComputedStyle(element) {
-  return getWindow(element).getComputedStyle(element);
-}
-var init_getComputedStyle = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js"() {
-    init_getWindow();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/isTableElement.js
-function isTableElement(element) {
-  return ["table", "td", "th"].indexOf(getNodeName(element)) >= 0;
-}
-var init_isTableElement = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/isTableElement.js"() {
-    init_getNodeName();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js
-function getDocumentElement(element) {
-  return ((isElement(element) ? element.ownerDocument : (
-    // $FlowFixMe[prop-missing]
-    element.document
-  )) || window.document).documentElement;
-}
-var init_getDocumentElement = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js"() {
-    init_instanceOf();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getParentNode.js
-function getParentNode(element) {
-  if (getNodeName(element) === "html") {
-    return element;
-  }
-  return (
-    // this is a quicker (but less type safe) way to save quite some bytes from the bundle
-    // $FlowFixMe[incompatible-return]
-    // $FlowFixMe[prop-missing]
-    element.assignedSlot || // step into the shadow DOM of the parent of a slotted node
-    element.parentNode || // DOM Element detected
-    (isShadowRoot(element) ? element.host : null) || // ShadowRoot detected
-    // $FlowFixMe[incompatible-call]: HTMLElement is a Node
-    getDocumentElement(element)
-  );
-}
-var init_getParentNode = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getParentNode.js"() {
-    init_getNodeName();
-    init_getDocumentElement();
-    init_instanceOf();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js
-function getTrueOffsetParent(element) {
-  if (!isHTMLElement(element) || // https://github.com/popperjs/popper-core/issues/837
-  getComputedStyle(element).position === "fixed") {
-    return null;
-  }
-  return element.offsetParent;
-}
-function getContainingBlock(element) {
-  var isFirefox = /firefox/i.test(getUAString());
-  var isIE = /Trident/i.test(getUAString());
-  if (isIE && isHTMLElement(element)) {
-    var elementCss = getComputedStyle(element);
-    if (elementCss.position === "fixed") {
-      return null;
-    }
-  }
-  var currentNode = getParentNode(element);
-  if (isShadowRoot(currentNode)) {
-    currentNode = currentNode.host;
-  }
-  while (isHTMLElement(currentNode) && ["html", "body"].indexOf(getNodeName(currentNode)) < 0) {
-    var css = getComputedStyle(currentNode);
-    if (css.transform !== "none" || css.perspective !== "none" || css.contain === "paint" || ["transform", "perspective"].indexOf(css.willChange) !== -1 || isFirefox && css.willChange === "filter" || isFirefox && css.filter && css.filter !== "none") {
-      return currentNode;
-    } else {
-      currentNode = currentNode.parentNode;
-    }
-  }
-  return null;
-}
-function getOffsetParent(element) {
-  var window2 = getWindow(element);
-  var offsetParent = getTrueOffsetParent(element);
-  while (offsetParent && isTableElement(offsetParent) && getComputedStyle(offsetParent).position === "static") {
-    offsetParent = getTrueOffsetParent(offsetParent);
-  }
-  if (offsetParent && (getNodeName(offsetParent) === "html" || getNodeName(offsetParent) === "body" && getComputedStyle(offsetParent).position === "static")) {
-    return window2;
-  }
-  return offsetParent || getContainingBlock(element) || window2;
-}
-var init_getOffsetParent = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js"() {
-    init_getWindow();
-    init_getNodeName();
-    init_getComputedStyle();
-    init_instanceOf();
-    init_isTableElement();
-    init_getParentNode();
-    init_userAgent();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js
-function getMainAxisFromPlacement(placement) {
-  return ["top", "bottom"].indexOf(placement) >= 0 ? "x" : "y";
-}
-var init_getMainAxisFromPlacement = __esm({
-  "node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/within.js
-function within(min2, value, max2) {
-  return max(min2, min(value, max2));
-}
-function withinMaxClamp(min2, value, max2) {
-  var v = within(min2, value, max2);
-  return v > max2 ? max2 : v;
-}
-var init_within = __esm({
-  "node_modules/@popperjs/core/lib/utils/within.js"() {
-    init_math();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/getFreshSideObject.js
-function getFreshSideObject() {
-  return {
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0
-  };
-}
-var init_getFreshSideObject = __esm({
-  "node_modules/@popperjs/core/lib/utils/getFreshSideObject.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/mergePaddingObject.js
-function mergePaddingObject(paddingObject) {
-  return Object.assign({}, getFreshSideObject(), paddingObject);
-}
-var init_mergePaddingObject = __esm({
-  "node_modules/@popperjs/core/lib/utils/mergePaddingObject.js"() {
-    init_getFreshSideObject();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/expandToHashMap.js
-function expandToHashMap(value, keys) {
-  return keys.reduce(function(hashMap, key) {
-    hashMap[key] = value;
-    return hashMap;
-  }, {});
-}
-var init_expandToHashMap = __esm({
-  "node_modules/@popperjs/core/lib/utils/expandToHashMap.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/arrow.js
-function arrow(_ref) {
-  var _state$modifiersData$;
-  var state = _ref.state, name = _ref.name, options = _ref.options;
-  var arrowElement = state.elements.arrow;
-  var popperOffsets2 = state.modifiersData.popperOffsets;
-  var basePlacement = getBasePlacement(state.placement);
-  var axis = getMainAxisFromPlacement(basePlacement);
-  var isVertical = [left, right].indexOf(basePlacement) >= 0;
-  var len = isVertical ? "height" : "width";
-  if (!arrowElement || !popperOffsets2) {
-    return;
-  }
-  var paddingObject = toPaddingObject(options.padding, state);
-  var arrowRect = getLayoutRect(arrowElement);
-  var minProp = axis === "y" ? top : left;
-  var maxProp = axis === "y" ? bottom : right;
-  var endDiff = state.rects.reference[len] + state.rects.reference[axis] - popperOffsets2[axis] - state.rects.popper[len];
-  var startDiff = popperOffsets2[axis] - state.rects.reference[axis];
-  var arrowOffsetParent = getOffsetParent(arrowElement);
-  var clientSize = arrowOffsetParent ? axis === "y" ? arrowOffsetParent.clientHeight || 0 : arrowOffsetParent.clientWidth || 0 : 0;
-  var centerToReference = endDiff / 2 - startDiff / 2;
-  var min2 = paddingObject[minProp];
-  var max2 = clientSize - arrowRect[len] - paddingObject[maxProp];
-  var center = clientSize / 2 - arrowRect[len] / 2 + centerToReference;
-  var offset2 = within(min2, center, max2);
-  var axisProp = axis;
-  state.modifiersData[name] = (_state$modifiersData$ = {}, _state$modifiersData$[axisProp] = offset2, _state$modifiersData$.centerOffset = offset2 - center, _state$modifiersData$);
-}
-function effect2(_ref2) {
-  var state = _ref2.state, options = _ref2.options;
-  var _options$element = options.element, arrowElement = _options$element === void 0 ? "[data-popper-arrow]" : _options$element;
-  if (arrowElement == null) {
-    return;
-  }
-  if (typeof arrowElement === "string") {
-    arrowElement = state.elements.popper.querySelector(arrowElement);
-    if (!arrowElement) {
-      return;
-    }
-  }
-  if (!contains(state.elements.popper, arrowElement)) {
-    return;
-  }
-  state.elements.arrow = arrowElement;
-}
-var toPaddingObject, arrow_default;
-var init_arrow = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/arrow.js"() {
-    init_getBasePlacement();
-    init_getLayoutRect();
-    init_contains();
-    init_getOffsetParent();
-    init_getMainAxisFromPlacement();
-    init_within();
-    init_mergePaddingObject();
-    init_expandToHashMap();
-    init_enums();
-    toPaddingObject = function toPaddingObject2(padding, state) {
-      padding = typeof padding === "function" ? padding(Object.assign({}, state.rects, {
-        placement: state.placement
-      })) : padding;
-      return mergePaddingObject(typeof padding !== "number" ? padding : expandToHashMap(padding, basePlacements));
-    };
-    arrow_default = {
-      name: "arrow",
-      enabled: true,
-      phase: "main",
-      fn: arrow,
-      effect: effect2,
-      requires: ["popperOffsets"],
-      requiresIfExists: ["preventOverflow"]
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/getVariation.js
-function getVariation(placement) {
-  return placement.split("-")[1];
-}
-var init_getVariation = __esm({
-  "node_modules/@popperjs/core/lib/utils/getVariation.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/computeStyles.js
-function roundOffsetsByDPR(_ref, win) {
-  var x = _ref.x, y = _ref.y;
-  var dpr = win.devicePixelRatio || 1;
-  return {
-    x: round(x * dpr) / dpr || 0,
-    y: round(y * dpr) / dpr || 0
-  };
-}
-function mapToStyles(_ref2) {
-  var _Object$assign2;
-  var popper2 = _ref2.popper, popperRect = _ref2.popperRect, placement = _ref2.placement, variation = _ref2.variation, offsets = _ref2.offsets, position = _ref2.position, gpuAcceleration = _ref2.gpuAcceleration, adaptive = _ref2.adaptive, roundOffsets = _ref2.roundOffsets, isFixed = _ref2.isFixed;
-  var _offsets$x = offsets.x, x = _offsets$x === void 0 ? 0 : _offsets$x, _offsets$y = offsets.y, y = _offsets$y === void 0 ? 0 : _offsets$y;
-  var _ref3 = typeof roundOffsets === "function" ? roundOffsets({
-    x,
-    y
-  }) : {
-    x,
-    y
-  };
-  x = _ref3.x;
-  y = _ref3.y;
-  var hasX = offsets.hasOwnProperty("x");
-  var hasY = offsets.hasOwnProperty("y");
-  var sideX = left;
-  var sideY = top;
-  var win = window;
-  if (adaptive) {
-    var offsetParent = getOffsetParent(popper2);
-    var heightProp = "clientHeight";
-    var widthProp = "clientWidth";
-    if (offsetParent === getWindow(popper2)) {
-      offsetParent = getDocumentElement(popper2);
-      if (getComputedStyle(offsetParent).position !== "static" && position === "absolute") {
-        heightProp = "scrollHeight";
-        widthProp = "scrollWidth";
-      }
-    }
-    offsetParent = offsetParent;
-    if (placement === top || (placement === left || placement === right) && variation === end) {
-      sideY = bottom;
-      var offsetY = isFixed && offsetParent === win && win.visualViewport ? win.visualViewport.height : (
-        // $FlowFixMe[prop-missing]
-        offsetParent[heightProp]
-      );
-      y -= offsetY - popperRect.height;
-      y *= gpuAcceleration ? 1 : -1;
-    }
-    if (placement === left || (placement === top || placement === bottom) && variation === end) {
-      sideX = right;
-      var offsetX = isFixed && offsetParent === win && win.visualViewport ? win.visualViewport.width : (
-        // $FlowFixMe[prop-missing]
-        offsetParent[widthProp]
-      );
-      x -= offsetX - popperRect.width;
-      x *= gpuAcceleration ? 1 : -1;
-    }
-  }
-  var commonStyles = Object.assign({
-    position
-  }, adaptive && unsetSides);
-  var _ref4 = roundOffsets === true ? roundOffsetsByDPR({
-    x,
-    y
-  }, getWindow(popper2)) : {
-    x,
-    y
-  };
-  x = _ref4.x;
-  y = _ref4.y;
-  if (gpuAcceleration) {
-    var _Object$assign;
-    return Object.assign({}, commonStyles, (_Object$assign = {}, _Object$assign[sideY] = hasY ? "0" : "", _Object$assign[sideX] = hasX ? "0" : "", _Object$assign.transform = (win.devicePixelRatio || 1) <= 1 ? "translate(" + x + "px, " + y + "px)" : "translate3d(" + x + "px, " + y + "px, 0)", _Object$assign));
-  }
-  return Object.assign({}, commonStyles, (_Object$assign2 = {}, _Object$assign2[sideY] = hasY ? y + "px" : "", _Object$assign2[sideX] = hasX ? x + "px" : "", _Object$assign2.transform = "", _Object$assign2));
-}
-function computeStyles(_ref5) {
-  var state = _ref5.state, options = _ref5.options;
-  var _options$gpuAccelerat = options.gpuAcceleration, gpuAcceleration = _options$gpuAccelerat === void 0 ? true : _options$gpuAccelerat, _options$adaptive = options.adaptive, adaptive = _options$adaptive === void 0 ? true : _options$adaptive, _options$roundOffsets = options.roundOffsets, roundOffsets = _options$roundOffsets === void 0 ? true : _options$roundOffsets;
-  var commonStyles = {
-    placement: getBasePlacement(state.placement),
-    variation: getVariation(state.placement),
-    popper: state.elements.popper,
-    popperRect: state.rects.popper,
-    gpuAcceleration,
-    isFixed: state.options.strategy === "fixed"
-  };
-  if (state.modifiersData.popperOffsets != null) {
-    state.styles.popper = Object.assign({}, state.styles.popper, mapToStyles(Object.assign({}, commonStyles, {
-      offsets: state.modifiersData.popperOffsets,
-      position: state.options.strategy,
-      adaptive,
-      roundOffsets
-    })));
-  }
-  if (state.modifiersData.arrow != null) {
-    state.styles.arrow = Object.assign({}, state.styles.arrow, mapToStyles(Object.assign({}, commonStyles, {
-      offsets: state.modifiersData.arrow,
-      position: "absolute",
-      adaptive: false,
-      roundOffsets
-    })));
-  }
-  state.attributes.popper = Object.assign({}, state.attributes.popper, {
-    "data-popper-placement": state.placement
-  });
-}
-var unsetSides, computeStyles_default;
-var init_computeStyles = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/computeStyles.js"() {
-    init_enums();
-    init_getOffsetParent();
-    init_getWindow();
-    init_getDocumentElement();
-    init_getComputedStyle();
-    init_getBasePlacement();
-    init_getVariation();
-    init_math();
-    unsetSides = {
-      top: "auto",
-      right: "auto",
-      bottom: "auto",
-      left: "auto"
-    };
-    computeStyles_default = {
-      name: "computeStyles",
-      enabled: true,
-      phase: "beforeWrite",
-      fn: computeStyles,
-      data: {}
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/eventListeners.js
-function effect3(_ref) {
-  var state = _ref.state, instance = _ref.instance, options = _ref.options;
-  var _options$scroll = options.scroll, scroll = _options$scroll === void 0 ? true : _options$scroll, _options$resize = options.resize, resize = _options$resize === void 0 ? true : _options$resize;
-  var window2 = getWindow(state.elements.popper);
-  var scrollParents = [].concat(state.scrollParents.reference, state.scrollParents.popper);
-  if (scroll) {
-    scrollParents.forEach(function(scrollParent) {
-      scrollParent.addEventListener("scroll", instance.update, passive);
-    });
-  }
-  if (resize) {
-    window2.addEventListener("resize", instance.update, passive);
-  }
-  return function() {
-    if (scroll) {
-      scrollParents.forEach(function(scrollParent) {
-        scrollParent.removeEventListener("scroll", instance.update, passive);
-      });
-    }
-    if (resize) {
-      window2.removeEventListener("resize", instance.update, passive);
-    }
-  };
-}
-var passive, eventListeners_default;
-var init_eventListeners = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/eventListeners.js"() {
-    init_getWindow();
-    passive = {
-      passive: true
-    };
-    eventListeners_default = {
-      name: "eventListeners",
-      enabled: true,
-      phase: "write",
-      fn: function fn() {
-      },
-      effect: effect3,
-      data: {}
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/getOppositePlacement.js
-function getOppositePlacement(placement) {
-  return placement.replace(/left|right|bottom|top/g, function(matched) {
-    return hash[matched];
-  });
-}
-var hash;
-var init_getOppositePlacement = __esm({
-  "node_modules/@popperjs/core/lib/utils/getOppositePlacement.js"() {
-    hash = {
-      left: "right",
-      right: "left",
-      bottom: "top",
-      top: "bottom"
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/getOppositeVariationPlacement.js
-function getOppositeVariationPlacement(placement) {
-  return placement.replace(/start|end/g, function(matched) {
-    return hash2[matched];
-  });
-}
-var hash2;
-var init_getOppositeVariationPlacement = __esm({
-  "node_modules/@popperjs/core/lib/utils/getOppositeVariationPlacement.js"() {
-    hash2 = {
-      start: "end",
-      end: "start"
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getWindowScroll.js
-function getWindowScroll(node) {
-  var win = getWindow(node);
-  var scrollLeft = win.pageXOffset;
-  var scrollTop = win.pageYOffset;
-  return {
-    scrollLeft,
-    scrollTop
-  };
-}
-var init_getWindowScroll = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getWindowScroll.js"() {
-    init_getWindow();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getWindowScrollBarX.js
-function getWindowScrollBarX(element) {
-  return getBoundingClientRect(getDocumentElement(element)).left + getWindowScroll(element).scrollLeft;
-}
-var init_getWindowScrollBarX = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getWindowScrollBarX.js"() {
-    init_getBoundingClientRect();
-    init_getDocumentElement();
-    init_getWindowScroll();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getViewportRect.js
-function getViewportRect(element, strategy) {
-  var win = getWindow(element);
-  var html = getDocumentElement(element);
-  var visualViewport = win.visualViewport;
-  var width = html.clientWidth;
-  var height = html.clientHeight;
-  var x = 0;
-  var y = 0;
-  if (visualViewport) {
-    width = visualViewport.width;
-    height = visualViewport.height;
-    var layoutViewport = isLayoutViewport();
-    if (layoutViewport || !layoutViewport && strategy === "fixed") {
-      x = visualViewport.offsetLeft;
-      y = visualViewport.offsetTop;
-    }
-  }
-  return {
-    width,
-    height,
-    x: x + getWindowScrollBarX(element),
-    y
-  };
-}
-var init_getViewportRect = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getViewportRect.js"() {
-    init_getWindow();
-    init_getDocumentElement();
-    init_getWindowScrollBarX();
-    init_isLayoutViewport();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getDocumentRect.js
-function getDocumentRect(element) {
-  var _element$ownerDocumen;
-  var html = getDocumentElement(element);
-  var winScroll = getWindowScroll(element);
-  var body = (_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body;
-  var width = max(html.scrollWidth, html.clientWidth, body ? body.scrollWidth : 0, body ? body.clientWidth : 0);
-  var height = max(html.scrollHeight, html.clientHeight, body ? body.scrollHeight : 0, body ? body.clientHeight : 0);
-  var x = -winScroll.scrollLeft + getWindowScrollBarX(element);
-  var y = -winScroll.scrollTop;
-  if (getComputedStyle(body || html).direction === "rtl") {
-    x += max(html.clientWidth, body ? body.clientWidth : 0) - width;
-  }
-  return {
-    width,
-    height,
-    x,
-    y
-  };
-}
-var init_getDocumentRect = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getDocumentRect.js"() {
-    init_getDocumentElement();
-    init_getComputedStyle();
-    init_getWindowScrollBarX();
-    init_getWindowScroll();
-    init_math();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/isScrollParent.js
-function isScrollParent(element) {
-  var _getComputedStyle = getComputedStyle(element), overflow = _getComputedStyle.overflow, overflowX = _getComputedStyle.overflowX, overflowY = _getComputedStyle.overflowY;
-  return /auto|scroll|overlay|hidden/.test(overflow + overflowY + overflowX);
-}
-var init_isScrollParent = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/isScrollParent.js"() {
-    init_getComputedStyle();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getScrollParent.js
-function getScrollParent(node) {
-  if (["html", "body", "#document"].indexOf(getNodeName(node)) >= 0) {
-    return node.ownerDocument.body;
-  }
-  if (isHTMLElement(node) && isScrollParent(node)) {
-    return node;
-  }
-  return getScrollParent(getParentNode(node));
-}
-var init_getScrollParent = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getScrollParent.js"() {
-    init_getParentNode();
-    init_isScrollParent();
-    init_getNodeName();
-    init_instanceOf();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/listScrollParents.js
-function listScrollParents(element, list) {
-  var _element$ownerDocumen;
-  if (list === void 0) {
-    list = [];
-  }
-  var scrollParent = getScrollParent(element);
-  var isBody = scrollParent === ((_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body);
-  var win = getWindow(scrollParent);
-  var target = isBody ? [win].concat(win.visualViewport || [], isScrollParent(scrollParent) ? scrollParent : []) : scrollParent;
-  var updatedList = list.concat(target);
-  return isBody ? updatedList : (
-    // $FlowFixMe[incompatible-call]: isBody tells us target will be an HTMLElement here
-    updatedList.concat(listScrollParents(getParentNode(target)))
-  );
-}
-var init_listScrollParents = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/listScrollParents.js"() {
-    init_getScrollParent();
-    init_getParentNode();
-    init_getWindow();
-    init_isScrollParent();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/rectToClientRect.js
-function rectToClientRect(rect) {
-  return Object.assign({}, rect, {
-    left: rect.x,
-    top: rect.y,
-    right: rect.x + rect.width,
-    bottom: rect.y + rect.height
-  });
-}
-var init_rectToClientRect = __esm({
-  "node_modules/@popperjs/core/lib/utils/rectToClientRect.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getClippingRect.js
-function getInnerBoundingClientRect(element, strategy) {
-  var rect = getBoundingClientRect(element, false, strategy === "fixed");
-  rect.top = rect.top + element.clientTop;
-  rect.left = rect.left + element.clientLeft;
-  rect.bottom = rect.top + element.clientHeight;
-  rect.right = rect.left + element.clientWidth;
-  rect.width = element.clientWidth;
-  rect.height = element.clientHeight;
-  rect.x = rect.left;
-  rect.y = rect.top;
-  return rect;
-}
-function getClientRectFromMixedType(element, clippingParent, strategy) {
-  return clippingParent === viewport ? rectToClientRect(getViewportRect(element, strategy)) : isElement(clippingParent) ? getInnerBoundingClientRect(clippingParent, strategy) : rectToClientRect(getDocumentRect(getDocumentElement(element)));
-}
-function getClippingParents(element) {
-  var clippingParents2 = listScrollParents(getParentNode(element));
-  var canEscapeClipping = ["absolute", "fixed"].indexOf(getComputedStyle(element).position) >= 0;
-  var clipperElement = canEscapeClipping && isHTMLElement(element) ? getOffsetParent(element) : element;
-  if (!isElement(clipperElement)) {
-    return [];
-  }
-  return clippingParents2.filter(function(clippingParent) {
-    return isElement(clippingParent) && contains(clippingParent, clipperElement) && getNodeName(clippingParent) !== "body";
-  });
-}
-function getClippingRect(element, boundary, rootBoundary, strategy) {
-  var mainClippingParents = boundary === "clippingParents" ? getClippingParents(element) : [].concat(boundary);
-  var clippingParents2 = [].concat(mainClippingParents, [rootBoundary]);
-  var firstClippingParent = clippingParents2[0];
-  var clippingRect = clippingParents2.reduce(function(accRect, clippingParent) {
-    var rect = getClientRectFromMixedType(element, clippingParent, strategy);
-    accRect.top = max(rect.top, accRect.top);
-    accRect.right = min(rect.right, accRect.right);
-    accRect.bottom = min(rect.bottom, accRect.bottom);
-    accRect.left = max(rect.left, accRect.left);
-    return accRect;
-  }, getClientRectFromMixedType(element, firstClippingParent, strategy));
-  clippingRect.width = clippingRect.right - clippingRect.left;
-  clippingRect.height = clippingRect.bottom - clippingRect.top;
-  clippingRect.x = clippingRect.left;
-  clippingRect.y = clippingRect.top;
-  return clippingRect;
-}
-var init_getClippingRect = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getClippingRect.js"() {
-    init_enums();
-    init_getViewportRect();
-    init_getDocumentRect();
-    init_listScrollParents();
-    init_getOffsetParent();
-    init_getDocumentElement();
-    init_getComputedStyle();
-    init_instanceOf();
-    init_getBoundingClientRect();
-    init_getParentNode();
-    init_contains();
-    init_getNodeName();
-    init_rectToClientRect();
-    init_math();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/computeOffsets.js
-function computeOffsets(_ref) {
-  var reference2 = _ref.reference, element = _ref.element, placement = _ref.placement;
-  var basePlacement = placement ? getBasePlacement(placement) : null;
-  var variation = placement ? getVariation(placement) : null;
-  var commonX = reference2.x + reference2.width / 2 - element.width / 2;
-  var commonY = reference2.y + reference2.height / 2 - element.height / 2;
-  var offsets;
-  switch (basePlacement) {
-    case top:
-      offsets = {
-        x: commonX,
-        y: reference2.y - element.height
-      };
-      break;
-    case bottom:
-      offsets = {
-        x: commonX,
-        y: reference2.y + reference2.height
-      };
-      break;
-    case right:
-      offsets = {
-        x: reference2.x + reference2.width,
-        y: commonY
-      };
-      break;
-    case left:
-      offsets = {
-        x: reference2.x - element.width,
-        y: commonY
-      };
-      break;
-    default:
-      offsets = {
-        x: reference2.x,
-        y: reference2.y
-      };
-  }
-  var mainAxis = basePlacement ? getMainAxisFromPlacement(basePlacement) : null;
-  if (mainAxis != null) {
-    var len = mainAxis === "y" ? "height" : "width";
-    switch (variation) {
-      case start:
-        offsets[mainAxis] = offsets[mainAxis] - (reference2[len] / 2 - element[len] / 2);
-        break;
-      case end:
-        offsets[mainAxis] = offsets[mainAxis] + (reference2[len] / 2 - element[len] / 2);
-        break;
-      default:
-    }
-  }
-  return offsets;
-}
-var init_computeOffsets = __esm({
-  "node_modules/@popperjs/core/lib/utils/computeOffsets.js"() {
-    init_getBasePlacement();
-    init_getVariation();
-    init_getMainAxisFromPlacement();
-    init_enums();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/detectOverflow.js
-function detectOverflow(state, options) {
-  if (options === void 0) {
-    options = {};
-  }
-  var _options = options, _options$placement = _options.placement, placement = _options$placement === void 0 ? state.placement : _options$placement, _options$strategy = _options.strategy, strategy = _options$strategy === void 0 ? state.strategy : _options$strategy, _options$boundary = _options.boundary, boundary = _options$boundary === void 0 ? clippingParents : _options$boundary, _options$rootBoundary = _options.rootBoundary, rootBoundary = _options$rootBoundary === void 0 ? viewport : _options$rootBoundary, _options$elementConte = _options.elementContext, elementContext = _options$elementConte === void 0 ? popper : _options$elementConte, _options$altBoundary = _options.altBoundary, altBoundary = _options$altBoundary === void 0 ? false : _options$altBoundary, _options$padding = _options.padding, padding = _options$padding === void 0 ? 0 : _options$padding;
-  var paddingObject = mergePaddingObject(typeof padding !== "number" ? padding : expandToHashMap(padding, basePlacements));
-  var altContext = elementContext === popper ? reference : popper;
-  var popperRect = state.rects.popper;
-  var element = state.elements[altBoundary ? altContext : elementContext];
-  var clippingClientRect = getClippingRect(isElement(element) ? element : element.contextElement || getDocumentElement(state.elements.popper), boundary, rootBoundary, strategy);
-  var referenceClientRect = getBoundingClientRect(state.elements.reference);
-  var popperOffsets2 = computeOffsets({
-    reference: referenceClientRect,
-    element: popperRect,
-    strategy: "absolute",
-    placement
-  });
-  var popperClientRect = rectToClientRect(Object.assign({}, popperRect, popperOffsets2));
-  var elementClientRect = elementContext === popper ? popperClientRect : referenceClientRect;
-  var overflowOffsets = {
-    top: clippingClientRect.top - elementClientRect.top + paddingObject.top,
-    bottom: elementClientRect.bottom - clippingClientRect.bottom + paddingObject.bottom,
-    left: clippingClientRect.left - elementClientRect.left + paddingObject.left,
-    right: elementClientRect.right - clippingClientRect.right + paddingObject.right
-  };
-  var offsetData = state.modifiersData.offset;
-  if (elementContext === popper && offsetData) {
-    var offset2 = offsetData[placement];
-    Object.keys(overflowOffsets).forEach(function(key) {
-      var multiply = [right, bottom].indexOf(key) >= 0 ? 1 : -1;
-      var axis = [top, bottom].indexOf(key) >= 0 ? "y" : "x";
-      overflowOffsets[key] += offset2[axis] * multiply;
-    });
-  }
-  return overflowOffsets;
-}
-var init_detectOverflow = __esm({
-  "node_modules/@popperjs/core/lib/utils/detectOverflow.js"() {
-    init_getClippingRect();
-    init_getDocumentElement();
-    init_getBoundingClientRect();
-    init_computeOffsets();
-    init_rectToClientRect();
-    init_enums();
-    init_instanceOf();
-    init_mergePaddingObject();
-    init_expandToHashMap();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/computeAutoPlacement.js
-function computeAutoPlacement(state, options) {
-  if (options === void 0) {
-    options = {};
-  }
-  var _options = options, placement = _options.placement, boundary = _options.boundary, rootBoundary = _options.rootBoundary, padding = _options.padding, flipVariations = _options.flipVariations, _options$allowedAutoP = _options.allowedAutoPlacements, allowedAutoPlacements = _options$allowedAutoP === void 0 ? placements : _options$allowedAutoP;
-  var variation = getVariation(placement);
-  var placements2 = variation ? flipVariations ? variationPlacements : variationPlacements.filter(function(placement2) {
-    return getVariation(placement2) === variation;
-  }) : basePlacements;
-  var allowedPlacements = placements2.filter(function(placement2) {
-    return allowedAutoPlacements.indexOf(placement2) >= 0;
-  });
-  if (allowedPlacements.length === 0) {
-    allowedPlacements = placements2;
-  }
-  var overflows = allowedPlacements.reduce(function(acc, placement2) {
-    acc[placement2] = detectOverflow(state, {
-      placement: placement2,
-      boundary,
-      rootBoundary,
-      padding
-    })[getBasePlacement(placement2)];
-    return acc;
-  }, {});
-  return Object.keys(overflows).sort(function(a, b) {
-    return overflows[a] - overflows[b];
-  });
-}
-var init_computeAutoPlacement = __esm({
-  "node_modules/@popperjs/core/lib/utils/computeAutoPlacement.js"() {
-    init_getVariation();
-    init_enums();
-    init_detectOverflow();
-    init_getBasePlacement();
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/flip.js
-function getExpandedFallbackPlacements(placement) {
-  if (getBasePlacement(placement) === auto) {
-    return [];
-  }
-  var oppositePlacement = getOppositePlacement(placement);
-  return [getOppositeVariationPlacement(placement), oppositePlacement, getOppositeVariationPlacement(oppositePlacement)];
-}
-function flip(_ref) {
-  var state = _ref.state, options = _ref.options, name = _ref.name;
-  if (state.modifiersData[name]._skip) {
-    return;
-  }
-  var _options$mainAxis = options.mainAxis, checkMainAxis = _options$mainAxis === void 0 ? true : _options$mainAxis, _options$altAxis = options.altAxis, checkAltAxis = _options$altAxis === void 0 ? true : _options$altAxis, specifiedFallbackPlacements = options.fallbackPlacements, padding = options.padding, boundary = options.boundary, rootBoundary = options.rootBoundary, altBoundary = options.altBoundary, _options$flipVariatio = options.flipVariations, flipVariations = _options$flipVariatio === void 0 ? true : _options$flipVariatio, allowedAutoPlacements = options.allowedAutoPlacements;
-  var preferredPlacement = state.options.placement;
-  var basePlacement = getBasePlacement(preferredPlacement);
-  var isBasePlacement = basePlacement === preferredPlacement;
-  var fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipVariations ? [getOppositePlacement(preferredPlacement)] : getExpandedFallbackPlacements(preferredPlacement));
-  var placements2 = [preferredPlacement].concat(fallbackPlacements).reduce(function(acc, placement2) {
-    return acc.concat(getBasePlacement(placement2) === auto ? computeAutoPlacement(state, {
-      placement: placement2,
-      boundary,
-      rootBoundary,
-      padding,
-      flipVariations,
-      allowedAutoPlacements
-    }) : placement2);
-  }, []);
-  var referenceRect = state.rects.reference;
-  var popperRect = state.rects.popper;
-  var checksMap = /* @__PURE__ */ new Map();
-  var makeFallbackChecks = true;
-  var firstFittingPlacement = placements2[0];
-  for (var i = 0; i < placements2.length; i++) {
-    var placement = placements2[i];
-    var _basePlacement = getBasePlacement(placement);
-    var isStartVariation = getVariation(placement) === start;
-    var isVertical = [top, bottom].indexOf(_basePlacement) >= 0;
-    var len = isVertical ? "width" : "height";
-    var overflow = detectOverflow(state, {
-      placement,
-      boundary,
-      rootBoundary,
-      altBoundary,
-      padding
-    });
-    var mainVariationSide = isVertical ? isStartVariation ? right : left : isStartVariation ? bottom : top;
-    if (referenceRect[len] > popperRect[len]) {
-      mainVariationSide = getOppositePlacement(mainVariationSide);
-    }
-    var altVariationSide = getOppositePlacement(mainVariationSide);
-    var checks = [];
-    if (checkMainAxis) {
-      checks.push(overflow[_basePlacement] <= 0);
-    }
-    if (checkAltAxis) {
-      checks.push(overflow[mainVariationSide] <= 0, overflow[altVariationSide] <= 0);
-    }
-    if (checks.every(function(check) {
-      return check;
-    })) {
-      firstFittingPlacement = placement;
-      makeFallbackChecks = false;
-      break;
-    }
-    checksMap.set(placement, checks);
-  }
-  if (makeFallbackChecks) {
-    var numberOfChecks = flipVariations ? 3 : 1;
-    var _loop = function _loop2(_i2) {
-      var fittingPlacement = placements2.find(function(placement2) {
-        var checks2 = checksMap.get(placement2);
-        if (checks2) {
-          return checks2.slice(0, _i2).every(function(check) {
-            return check;
-          });
-        }
-      });
-      if (fittingPlacement) {
-        firstFittingPlacement = fittingPlacement;
-        return "break";
-      }
-    };
-    for (var _i = numberOfChecks; _i > 0; _i--) {
-      var _ret = _loop(_i);
-      if (_ret === "break")
-        break;
-    }
-  }
-  if (state.placement !== firstFittingPlacement) {
-    state.modifiersData[name]._skip = true;
-    state.placement = firstFittingPlacement;
-    state.reset = true;
-  }
-}
-var flip_default;
-var init_flip = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/flip.js"() {
-    init_getOppositePlacement();
-    init_getBasePlacement();
-    init_getOppositeVariationPlacement();
-    init_detectOverflow();
-    init_computeAutoPlacement();
-    init_enums();
-    init_getVariation();
-    flip_default = {
-      name: "flip",
-      enabled: true,
-      phase: "main",
-      fn: flip,
-      requiresIfExists: ["offset"],
-      data: {
-        _skip: false
-      }
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/hide.js
-function getSideOffsets(overflow, rect, preventedOffsets) {
-  if (preventedOffsets === void 0) {
-    preventedOffsets = {
-      x: 0,
-      y: 0
-    };
-  }
-  return {
-    top: overflow.top - rect.height - preventedOffsets.y,
-    right: overflow.right - rect.width + preventedOffsets.x,
-    bottom: overflow.bottom - rect.height + preventedOffsets.y,
-    left: overflow.left - rect.width - preventedOffsets.x
-  };
-}
-function isAnySideFullyClipped(overflow) {
-  return [top, right, bottom, left].some(function(side) {
-    return overflow[side] >= 0;
-  });
-}
-function hide(_ref) {
-  var state = _ref.state, name = _ref.name;
-  var referenceRect = state.rects.reference;
-  var popperRect = state.rects.popper;
-  var preventedOffsets = state.modifiersData.preventOverflow;
-  var referenceOverflow = detectOverflow(state, {
-    elementContext: "reference"
-  });
-  var popperAltOverflow = detectOverflow(state, {
-    altBoundary: true
-  });
-  var referenceClippingOffsets = getSideOffsets(referenceOverflow, referenceRect);
-  var popperEscapeOffsets = getSideOffsets(popperAltOverflow, popperRect, preventedOffsets);
-  var isReferenceHidden = isAnySideFullyClipped(referenceClippingOffsets);
-  var hasPopperEscaped = isAnySideFullyClipped(popperEscapeOffsets);
-  state.modifiersData[name] = {
-    referenceClippingOffsets,
-    popperEscapeOffsets,
-    isReferenceHidden,
-    hasPopperEscaped
-  };
-  state.attributes.popper = Object.assign({}, state.attributes.popper, {
-    "data-popper-reference-hidden": isReferenceHidden,
-    "data-popper-escaped": hasPopperEscaped
-  });
-}
-var hide_default;
-var init_hide = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/hide.js"() {
-    init_enums();
-    init_detectOverflow();
-    hide_default = {
-      name: "hide",
-      enabled: true,
-      phase: "main",
-      requiresIfExists: ["preventOverflow"],
-      fn: hide
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/offset.js
-function distanceAndSkiddingToXY(placement, rects, offset2) {
-  var basePlacement = getBasePlacement(placement);
-  var invertDistance = [left, top].indexOf(basePlacement) >= 0 ? -1 : 1;
-  var _ref = typeof offset2 === "function" ? offset2(Object.assign({}, rects, {
-    placement
-  })) : offset2, skidding = _ref[0], distance = _ref[1];
-  skidding = skidding || 0;
-  distance = (distance || 0) * invertDistance;
-  return [left, right].indexOf(basePlacement) >= 0 ? {
-    x: distance,
-    y: skidding
-  } : {
-    x: skidding,
-    y: distance
-  };
-}
-function offset(_ref2) {
-  var state = _ref2.state, options = _ref2.options, name = _ref2.name;
-  var _options$offset = options.offset, offset2 = _options$offset === void 0 ? [0, 0] : _options$offset;
-  var data = placements.reduce(function(acc, placement) {
-    acc[placement] = distanceAndSkiddingToXY(placement, state.rects, offset2);
-    return acc;
-  }, {});
-  var _data$state$placement = data[state.placement], x = _data$state$placement.x, y = _data$state$placement.y;
-  if (state.modifiersData.popperOffsets != null) {
-    state.modifiersData.popperOffsets.x += x;
-    state.modifiersData.popperOffsets.y += y;
-  }
-  state.modifiersData[name] = data;
-}
-var offset_default;
-var init_offset = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/offset.js"() {
-    init_getBasePlacement();
-    init_enums();
-    offset_default = {
-      name: "offset",
-      enabled: true,
-      phase: "main",
-      requires: ["popperOffsets"],
-      fn: offset
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/popperOffsets.js
-function popperOffsets(_ref) {
-  var state = _ref.state, name = _ref.name;
-  state.modifiersData[name] = computeOffsets({
-    reference: state.rects.reference,
-    element: state.rects.popper,
-    strategy: "absolute",
-    placement: state.placement
-  });
-}
-var popperOffsets_default;
-var init_popperOffsets = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/popperOffsets.js"() {
-    init_computeOffsets();
-    popperOffsets_default = {
-      name: "popperOffsets",
-      enabled: true,
-      phase: "read",
-      fn: popperOffsets,
-      data: {}
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/getAltAxis.js
-function getAltAxis(axis) {
-  return axis === "x" ? "y" : "x";
-}
-var init_getAltAxis = __esm({
-  "node_modules/@popperjs/core/lib/utils/getAltAxis.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/preventOverflow.js
-function preventOverflow(_ref) {
-  var state = _ref.state, options = _ref.options, name = _ref.name;
-  var _options$mainAxis = options.mainAxis, checkMainAxis = _options$mainAxis === void 0 ? true : _options$mainAxis, _options$altAxis = options.altAxis, checkAltAxis = _options$altAxis === void 0 ? false : _options$altAxis, boundary = options.boundary, rootBoundary = options.rootBoundary, altBoundary = options.altBoundary, padding = options.padding, _options$tether = options.tether, tether = _options$tether === void 0 ? true : _options$tether, _options$tetherOffset = options.tetherOffset, tetherOffset = _options$tetherOffset === void 0 ? 0 : _options$tetherOffset;
-  var overflow = detectOverflow(state, {
-    boundary,
-    rootBoundary,
-    padding,
-    altBoundary
-  });
-  var basePlacement = getBasePlacement(state.placement);
-  var variation = getVariation(state.placement);
-  var isBasePlacement = !variation;
-  var mainAxis = getMainAxisFromPlacement(basePlacement);
-  var altAxis = getAltAxis(mainAxis);
-  var popperOffsets2 = state.modifiersData.popperOffsets;
-  var referenceRect = state.rects.reference;
-  var popperRect = state.rects.popper;
-  var tetherOffsetValue = typeof tetherOffset === "function" ? tetherOffset(Object.assign({}, state.rects, {
-    placement: state.placement
-  })) : tetherOffset;
-  var normalizedTetherOffsetValue = typeof tetherOffsetValue === "number" ? {
-    mainAxis: tetherOffsetValue,
-    altAxis: tetherOffsetValue
-  } : Object.assign({
-    mainAxis: 0,
-    altAxis: 0
-  }, tetherOffsetValue);
-  var offsetModifierState = state.modifiersData.offset ? state.modifiersData.offset[state.placement] : null;
-  var data = {
-    x: 0,
-    y: 0
-  };
-  if (!popperOffsets2) {
-    return;
-  }
-  if (checkMainAxis) {
-    var _offsetModifierState$;
-    var mainSide = mainAxis === "y" ? top : left;
-    var altSide = mainAxis === "y" ? bottom : right;
-    var len = mainAxis === "y" ? "height" : "width";
-    var offset2 = popperOffsets2[mainAxis];
-    var min2 = offset2 + overflow[mainSide];
-    var max2 = offset2 - overflow[altSide];
-    var additive = tether ? -popperRect[len] / 2 : 0;
-    var minLen = variation === start ? referenceRect[len] : popperRect[len];
-    var maxLen = variation === start ? -popperRect[len] : -referenceRect[len];
-    var arrowElement = state.elements.arrow;
-    var arrowRect = tether && arrowElement ? getLayoutRect(arrowElement) : {
-      width: 0,
-      height: 0
-    };
-    var arrowPaddingObject = state.modifiersData["arrow#persistent"] ? state.modifiersData["arrow#persistent"].padding : getFreshSideObject();
-    var arrowPaddingMin = arrowPaddingObject[mainSide];
-    var arrowPaddingMax = arrowPaddingObject[altSide];
-    var arrowLen = within(0, referenceRect[len], arrowRect[len]);
-    var minOffset = isBasePlacement ? referenceRect[len] / 2 - additive - arrowLen - arrowPaddingMin - normalizedTetherOffsetValue.mainAxis : minLen - arrowLen - arrowPaddingMin - normalizedTetherOffsetValue.mainAxis;
-    var maxOffset = isBasePlacement ? -referenceRect[len] / 2 + additive + arrowLen + arrowPaddingMax + normalizedTetherOffsetValue.mainAxis : maxLen + arrowLen + arrowPaddingMax + normalizedTetherOffsetValue.mainAxis;
-    var arrowOffsetParent = state.elements.arrow && getOffsetParent(state.elements.arrow);
-    var clientOffset = arrowOffsetParent ? mainAxis === "y" ? arrowOffsetParent.clientTop || 0 : arrowOffsetParent.clientLeft || 0 : 0;
-    var offsetModifierValue = (_offsetModifierState$ = offsetModifierState == null ? void 0 : offsetModifierState[mainAxis]) != null ? _offsetModifierState$ : 0;
-    var tetherMin = offset2 + minOffset - offsetModifierValue - clientOffset;
-    var tetherMax = offset2 + maxOffset - offsetModifierValue;
-    var preventedOffset = within(tether ? min(min2, tetherMin) : min2, offset2, tether ? max(max2, tetherMax) : max2);
-    popperOffsets2[mainAxis] = preventedOffset;
-    data[mainAxis] = preventedOffset - offset2;
-  }
-  if (checkAltAxis) {
-    var _offsetModifierState$2;
-    var _mainSide = mainAxis === "x" ? top : left;
-    var _altSide = mainAxis === "x" ? bottom : right;
-    var _offset = popperOffsets2[altAxis];
-    var _len = altAxis === "y" ? "height" : "width";
-    var _min = _offset + overflow[_mainSide];
-    var _max = _offset - overflow[_altSide];
-    var isOriginSide = [top, left].indexOf(basePlacement) !== -1;
-    var _offsetModifierValue = (_offsetModifierState$2 = offsetModifierState == null ? void 0 : offsetModifierState[altAxis]) != null ? _offsetModifierState$2 : 0;
-    var _tetherMin = isOriginSide ? _min : _offset - referenceRect[_len] - popperRect[_len] - _offsetModifierValue + normalizedTetherOffsetValue.altAxis;
-    var _tetherMax = isOriginSide ? _offset + referenceRect[_len] + popperRect[_len] - _offsetModifierValue - normalizedTetherOffsetValue.altAxis : _max;
-    var _preventedOffset = tether && isOriginSide ? withinMaxClamp(_tetherMin, _offset, _tetherMax) : within(tether ? _tetherMin : _min, _offset, tether ? _tetherMax : _max);
-    popperOffsets2[altAxis] = _preventedOffset;
-    data[altAxis] = _preventedOffset - _offset;
-  }
-  state.modifiersData[name] = data;
-}
-var preventOverflow_default;
-var init_preventOverflow = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/preventOverflow.js"() {
-    init_enums();
-    init_getBasePlacement();
-    init_getMainAxisFromPlacement();
-    init_getAltAxis();
-    init_within();
-    init_getLayoutRect();
-    init_getOffsetParent();
-    init_detectOverflow();
-    init_getVariation();
-    init_getFreshSideObject();
-    init_math();
-    preventOverflow_default = {
-      name: "preventOverflow",
-      enabled: true,
-      phase: "main",
-      fn: preventOverflow,
-      requiresIfExists: ["offset"]
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/modifiers/index.js
-var init_modifiers = __esm({
-  "node_modules/@popperjs/core/lib/modifiers/index.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getHTMLElementScroll.js
-function getHTMLElementScroll(element) {
-  return {
-    scrollLeft: element.scrollLeft,
-    scrollTop: element.scrollTop
-  };
-}
-var init_getHTMLElementScroll = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getHTMLElementScroll.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getNodeScroll.js
-function getNodeScroll(node) {
-  if (node === getWindow(node) || !isHTMLElement(node)) {
-    return getWindowScroll(node);
-  } else {
-    return getHTMLElementScroll(node);
-  }
-}
-var init_getNodeScroll = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getNodeScroll.js"() {
-    init_getWindowScroll();
-    init_getWindow();
-    init_instanceOf();
-    init_getHTMLElementScroll();
-  }
-});
-
-// node_modules/@popperjs/core/lib/dom-utils/getCompositeRect.js
-function isElementScaled(element) {
-  var rect = element.getBoundingClientRect();
-  var scaleX = round(rect.width) / element.offsetWidth || 1;
-  var scaleY = round(rect.height) / element.offsetHeight || 1;
-  return scaleX !== 1 || scaleY !== 1;
-}
-function getCompositeRect(elementOrVirtualElement, offsetParent, isFixed) {
-  if (isFixed === void 0) {
-    isFixed = false;
-  }
-  var isOffsetParentAnElement = isHTMLElement(offsetParent);
-  var offsetParentIsScaled = isHTMLElement(offsetParent) && isElementScaled(offsetParent);
-  var documentElement = getDocumentElement(offsetParent);
-  var rect = getBoundingClientRect(elementOrVirtualElement, offsetParentIsScaled, isFixed);
-  var scroll = {
-    scrollLeft: 0,
-    scrollTop: 0
-  };
-  var offsets = {
-    x: 0,
-    y: 0
-  };
-  if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
-    if (getNodeName(offsetParent) !== "body" || // https://github.com/popperjs/popper-core/issues/1078
-    isScrollParent(documentElement)) {
-      scroll = getNodeScroll(offsetParent);
-    }
-    if (isHTMLElement(offsetParent)) {
-      offsets = getBoundingClientRect(offsetParent, true);
-      offsets.x += offsetParent.clientLeft;
-      offsets.y += offsetParent.clientTop;
-    } else if (documentElement) {
-      offsets.x = getWindowScrollBarX(documentElement);
-    }
-  }
-  return {
-    x: rect.left + scroll.scrollLeft - offsets.x,
-    y: rect.top + scroll.scrollTop - offsets.y,
-    width: rect.width,
-    height: rect.height
-  };
-}
-var init_getCompositeRect = __esm({
-  "node_modules/@popperjs/core/lib/dom-utils/getCompositeRect.js"() {
-    init_getBoundingClientRect();
-    init_getNodeScroll();
-    init_getNodeName();
-    init_instanceOf();
-    init_getWindowScrollBarX();
-    init_getDocumentElement();
-    init_isScrollParent();
-    init_math();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/orderModifiers.js
-function order(modifiers) {
-  var map = /* @__PURE__ */ new Map();
-  var visited = /* @__PURE__ */ new Set();
-  var result = [];
-  modifiers.forEach(function(modifier) {
-    map.set(modifier.name, modifier);
-  });
-  function sort(modifier) {
-    visited.add(modifier.name);
-    var requires = [].concat(modifier.requires || [], modifier.requiresIfExists || []);
-    requires.forEach(function(dep) {
-      if (!visited.has(dep)) {
-        var depModifier = map.get(dep);
-        if (depModifier) {
-          sort(depModifier);
-        }
-      }
-    });
-    result.push(modifier);
-  }
-  modifiers.forEach(function(modifier) {
-    if (!visited.has(modifier.name)) {
-      sort(modifier);
-    }
-  });
-  return result;
-}
-function orderModifiers(modifiers) {
-  var orderedModifiers = order(modifiers);
-  return modifierPhases.reduce(function(acc, phase) {
-    return acc.concat(orderedModifiers.filter(function(modifier) {
-      return modifier.phase === phase;
-    }));
-  }, []);
-}
-var init_orderModifiers = __esm({
-  "node_modules/@popperjs/core/lib/utils/orderModifiers.js"() {
-    init_enums();
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/debounce.js
-function debounce(fn2) {
-  var pending;
-  return function() {
-    if (!pending) {
-      pending = new Promise(function(resolve) {
-        Promise.resolve().then(function() {
-          pending = void 0;
-          resolve(fn2());
-        });
-      });
-    }
-    return pending;
-  };
-}
-var init_debounce = __esm({
-  "node_modules/@popperjs/core/lib/utils/debounce.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/utils/mergeByName.js
-function mergeByName(modifiers) {
-  var merged = modifiers.reduce(function(merged2, current) {
-    var existing = merged2[current.name];
-    merged2[current.name] = existing ? Object.assign({}, existing, current, {
-      options: Object.assign({}, existing.options, current.options),
-      data: Object.assign({}, existing.data, current.data)
-    }) : current;
-    return merged2;
-  }, {});
-  return Object.keys(merged).map(function(key) {
-    return merged[key];
-  });
-}
-var init_mergeByName = __esm({
-  "node_modules/@popperjs/core/lib/utils/mergeByName.js"() {
-  }
-});
-
-// node_modules/@popperjs/core/lib/createPopper.js
-function areValidElements() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-  return !args.some(function(element) {
-    return !(element && typeof element.getBoundingClientRect === "function");
-  });
-}
-function popperGenerator(generatorOptions) {
-  if (generatorOptions === void 0) {
-    generatorOptions = {};
-  }
-  var _generatorOptions = generatorOptions, _generatorOptions$def = _generatorOptions.defaultModifiers, defaultModifiers2 = _generatorOptions$def === void 0 ? [] : _generatorOptions$def, _generatorOptions$def2 = _generatorOptions.defaultOptions, defaultOptions = _generatorOptions$def2 === void 0 ? DEFAULT_OPTIONS : _generatorOptions$def2;
-  return function createPopper2(reference2, popper2, options) {
-    if (options === void 0) {
-      options = defaultOptions;
-    }
-    var state = {
-      placement: "bottom",
-      orderedModifiers: [],
-      options: Object.assign({}, DEFAULT_OPTIONS, defaultOptions),
-      modifiersData: {},
-      elements: {
-        reference: reference2,
-        popper: popper2
-      },
-      attributes: {},
-      styles: {}
-    };
-    var effectCleanupFns = [];
-    var isDestroyed = false;
-    var instance = {
-      state,
-      setOptions: function setOptions(setOptionsAction) {
-        var options2 = typeof setOptionsAction === "function" ? setOptionsAction(state.options) : setOptionsAction;
-        cleanupModifierEffects();
-        state.options = Object.assign({}, defaultOptions, state.options, options2);
-        state.scrollParents = {
-          reference: isElement(reference2) ? listScrollParents(reference2) : reference2.contextElement ? listScrollParents(reference2.contextElement) : [],
-          popper: listScrollParents(popper2)
-        };
-        var orderedModifiers = orderModifiers(mergeByName([].concat(defaultModifiers2, state.options.modifiers)));
-        state.orderedModifiers = orderedModifiers.filter(function(m) {
-          return m.enabled;
-        });
-        runModifierEffects();
-        return instance.update();
-      },
-      // Sync update – it will always be executed, even if not necessary. This
-      // is useful for low frequency updates where sync behavior simplifies the
-      // logic.
-      // For high frequency updates (e.g. `resize` and `scroll` events), always
-      // prefer the async Popper#update method
-      forceUpdate: function forceUpdate() {
-        if (isDestroyed) {
-          return;
-        }
-        var _state$elements = state.elements, reference3 = _state$elements.reference, popper3 = _state$elements.popper;
-        if (!areValidElements(reference3, popper3)) {
-          return;
-        }
-        state.rects = {
-          reference: getCompositeRect(reference3, getOffsetParent(popper3), state.options.strategy === "fixed"),
-          popper: getLayoutRect(popper3)
-        };
-        state.reset = false;
-        state.placement = state.options.placement;
-        state.orderedModifiers.forEach(function(modifier) {
-          return state.modifiersData[modifier.name] = Object.assign({}, modifier.data);
-        });
-        for (var index = 0; index < state.orderedModifiers.length; index++) {
-          if (state.reset === true) {
-            state.reset = false;
-            index = -1;
-            continue;
-          }
-          var _state$orderedModifie = state.orderedModifiers[index], fn2 = _state$orderedModifie.fn, _state$orderedModifie2 = _state$orderedModifie.options, _options = _state$orderedModifie2 === void 0 ? {} : _state$orderedModifie2, name = _state$orderedModifie.name;
-          if (typeof fn2 === "function") {
-            state = fn2({
-              state,
-              options: _options,
-              name,
-              instance
-            }) || state;
-          }
-        }
-      },
-      // Async and optimistically optimized update – it will not be executed if
-      // not necessary (debounced to run at most once-per-tick)
-      update: debounce(function() {
-        return new Promise(function(resolve) {
-          instance.forceUpdate();
-          resolve(state);
-        });
-      }),
-      destroy: function destroy() {
-        cleanupModifierEffects();
-        isDestroyed = true;
-      }
-    };
-    if (!areValidElements(reference2, popper2)) {
-      return instance;
-    }
-    instance.setOptions(options).then(function(state2) {
-      if (!isDestroyed && options.onFirstUpdate) {
-        options.onFirstUpdate(state2);
-      }
-    });
-    function runModifierEffects() {
-      state.orderedModifiers.forEach(function(_ref) {
-        var name = _ref.name, _ref$options = _ref.options, options2 = _ref$options === void 0 ? {} : _ref$options, effect4 = _ref.effect;
-        if (typeof effect4 === "function") {
-          var cleanupFn = effect4({
-            state,
-            name,
-            instance,
-            options: options2
-          });
-          var noopFn = function noopFn2() {
-          };
-          effectCleanupFns.push(cleanupFn || noopFn);
-        }
-      });
-    }
-    function cleanupModifierEffects() {
-      effectCleanupFns.forEach(function(fn2) {
-        return fn2();
-      });
-      effectCleanupFns = [];
-    }
-    return instance;
-  };
-}
-var DEFAULT_OPTIONS;
-var init_createPopper = __esm({
-  "node_modules/@popperjs/core/lib/createPopper.js"() {
-    init_getCompositeRect();
-    init_getLayoutRect();
-    init_listScrollParents();
-    init_getOffsetParent();
-    init_orderModifiers();
-    init_debounce();
-    init_mergeByName();
-    init_instanceOf();
-    DEFAULT_OPTIONS = {
-      placement: "bottom",
-      modifiers: [],
-      strategy: "absolute"
-    };
-  }
-});
-
-// node_modules/@popperjs/core/lib/popper.js
-var defaultModifiers, createPopper;
-var init_popper = __esm({
-  "node_modules/@popperjs/core/lib/popper.js"() {
-    init_createPopper();
-    init_eventListeners();
-    init_popperOffsets();
-    init_computeStyles();
-    init_applyStyles();
-    init_offset();
-    init_flip();
-    init_preventOverflow();
-    init_arrow();
-    init_hide();
-    init_modifiers();
-    defaultModifiers = [eventListeners_default, popperOffsets_default, computeStyles_default, applyStyles_default, offset_default, flip_default, preventOverflow_default, arrow_default, hide_default];
-    createPopper = /* @__PURE__ */ popperGenerator({
-      defaultModifiers
-    });
-  }
-});
-
-// node_modules/@popperjs/core/lib/index.js
-var init_lib = __esm({
-  "node_modules/@popperjs/core/lib/index.js"() {
-    init_enums();
-    init_modifiers();
-    init_popper();
-  }
-});
-
-// src/ui/text-input-suggest.ts
-function wrapAround(value, size) {
-  return (value % size + size) % size;
-}
-var import_obsidian3, Suggest, TextInputSuggest;
-var init_text_input_suggest = __esm({
-  "src/ui/text-input-suggest.ts"() {
+// src/dialogs/folder-tree-browser-modal.ts
+var import_obsidian3, FolderTreeBrowserModal;
+var init_folder_tree_browser_modal = __esm({
+  "src/dialogs/folder-tree-browser-modal.ts"() {
     "use strict";
     import_obsidian3 = require("obsidian");
-    init_lib();
-    Suggest = class {
-      constructor(owner, containerEl, scope) {
-        this.owner = owner;
-        this.containerEl = containerEl;
-        containerEl.on("click", ".suggestion-item", this.onSuggestionClick.bind(this));
-        containerEl.on("mousemove", ".suggestion-item", this.onSuggestionMouseover.bind(this));
-        scope.register([], "ArrowUp", (event) => {
-          if (!event.isComposing) {
-            this.setSelectedItem(this.selectedItem - 1, true);
-            return false;
-          }
-        });
-        scope.register([], "ArrowDown", (event) => {
-          if (!event.isComposing) {
-            this.setSelectedItem(this.selectedItem + 1, true);
-            return false;
-          }
-        });
-        scope.register([], "Enter", (event) => {
-          if (!event.isComposing) {
-            this.useSelectedItem(event);
-            return false;
-          }
-        });
-      }
-      onSuggestionClick(event, el) {
-        event.preventDefault();
-        const item = this.suggestions.indexOf(el);
-        this.setSelectedItem(item, false);
-        this.useSelectedItem(event);
-      }
-      onSuggestionMouseover(_event, el) {
-        const item = this.suggestions.indexOf(el);
-        this.setSelectedItem(item, false);
-      }
-      setSuggestions(values) {
-        this.containerEl.empty();
-        const suggestionEls = [];
-        values.forEach((value) => {
-          const suggestionEl = this.containerEl.createDiv("suggestion-item");
-          this.owner.renderSuggestion(value, suggestionEl);
-          suggestionEls.push(suggestionEl);
-        });
-        this.values = values;
-        this.suggestions = suggestionEls;
-        this.setSelectedItem(0, false);
-      }
-      useSelectedItem(event) {
-        const currentValue = this.values[this.selectedItem];
-        if (currentValue) {
-          this.owner.selectSuggestion(currentValue, event);
-        }
-      }
-      setSelectedItem(selectedIndex, scrollIntoView) {
-        const normalizedIndex = wrapAround(selectedIndex, this.suggestions.length);
-        const prevSelectedSuggestion = this.suggestions[this.selectedItem];
-        const selectedSuggestion = this.suggestions[normalizedIndex];
-        prevSelectedSuggestion == null ? void 0 : prevSelectedSuggestion.removeClass("is-selected");
-        selectedSuggestion == null ? void 0 : selectedSuggestion.addClass("is-selected");
-        this.selectedItem = normalizedIndex;
-        if (scrollIntoView) {
-          selectedSuggestion.scrollIntoView(false);
-        }
-      }
-    };
-    TextInputSuggest = class {
-      constructor(app, inputEl) {
-        this.app = app;
-        this.inputEl = inputEl;
-        this.scope = new import_obsidian3.Scope();
-        this.suggestEl = createDiv("suggestion-container");
-        const suggestion = this.suggestEl.createDiv("suggestion");
-        this.suggest = new Suggest(this, suggestion, this.scope);
-        this.scope.register([], "Escape", this.close.bind(this));
-        this.inputEl.addEventListener("input", this.onInputChanged.bind(this));
-        this.inputEl.addEventListener("focus", this.onInputChanged.bind(this));
-        this.inputEl.addEventListener("blur", this.close.bind(this));
-        this.suggestEl.on("mousedown", ".suggestion-container", (event) => {
-          event.preventDefault();
-        });
-      }
-      onInputChanged() {
-        const inputStr = this.inputEl.value;
-        const suggestions = this.getSuggestions(inputStr);
-        if (suggestions.length > 0) {
-          this.suggest.setSuggestions(suggestions);
-          this.open(this.app.dom.appContainerEl, this.inputEl);
-        } else {
-          this.close();
-        }
-      }
-      open(container, inputEl) {
-        this.app.keymap.pushScope(this.scope);
-        container.appendChild(this.suggestEl);
-        this.popper = createPopper(inputEl, this.suggestEl, {
-          placement: "bottom-start",
-          modifiers: [
-            {
-              name: "sameWidth",
-              enabled: true,
-              fn: ({ state, instance }) => {
-                const targetWidth = `${state.rects.reference.width}px`;
-                if (state.styles.popper.width === targetWidth) {
-                  return;
-                }
-                state.styles.popper.width = targetWidth;
-                instance.update();
-              },
-              phase: "beforeWrite",
-              requires: ["computeStyles"]
-            }
-          ]
-        });
-      }
-      close() {
-        this.app.keymap.popScope(this.scope);
-        this.suggest.setSuggestions([]);
-        if (this.popper) {
-          this.popper.destroy();
-        }
-        this.suggestEl.detach();
-      }
-    };
-  }
-});
-
-// src/ui/folder-suggest.ts
-var import_obsidian4, FolderSuggest;
-var init_folder_suggest = __esm({
-  "src/ui/folder-suggest.ts"() {
-    "use strict";
-    import_obsidian4 = require("obsidian");
-    init_text_input_suggest();
-    FolderSuggest = class extends TextInputSuggest {
-      getSuggestions(inputStr) {
-        const abstractFiles = this.app.vault.getAllLoadedFiles();
-        const folders = [];
-        const lowerCaseInputStr = inputStr.toLowerCase();
-        abstractFiles.forEach((folder) => {
-          if (folder instanceof import_obsidian4.TFolder && folder.path.toLowerCase().contains(lowerCaseInputStr)) {
-            folders.push(folder);
-          }
-        });
-        return folders.slice(0, 1e3);
-      }
-      renderSuggestion(folder, el) {
-        el.setText(folder.path);
-      }
-      selectSuggestion(folder) {
-        this.inputEl.value = folder.path;
-        this.inputEl.trigger("input");
-        this.close();
-      }
-    };
-  }
-});
-
-// src/dialogs/folder-browser-modal.ts
-var import_obsidian5, FolderBrowserModal;
-var init_folder_browser_modal = __esm({
-  "src/dialogs/folder-browser-modal.ts"() {
-    "use strict";
-    import_obsidian5 = require("obsidian");
-    init_folder_suggest();
-    FolderBrowserModal = class extends import_obsidian5.Modal {
-      constructor(app, onSubmit) {
+    FolderTreeBrowserModal = class extends import_obsidian3.Modal {
+      constructor(app, onSubmit, initialPath) {
         super(app);
+        this.selectedFolder = null;
+        this.expandedFolders = /* @__PURE__ */ new Set();
         this.onSubmit = onSubmit;
+        if (initialPath) {
+          const folder = this.app.vault.getAbstractFileByPath(initialPath);
+          if (folder instanceof import_obsidian3.TFolder) {
+            this.selectedFolder = folder;
+            let current = folder.parent;
+            while (current && current.path !== "/") {
+              this.expandedFolders.add(current.path);
+              current = current.parent;
+            }
+            this.expandedFolders.add(folder.path);
+          }
+        }
       }
       onOpen() {
         const { contentEl } = this;
-        contentEl.createEl("h3", { text: "Select Folder Location" });
-        const label = contentEl.createDiv({ cls: "setting-item-description" });
-        label.style.marginBottom = "10px";
-        label.setText("Select base folder and type target subfolder:");
-        const inputRow = contentEl.createDiv();
-        inputRow.style.display = "flex";
-        inputRow.style.alignItems = "center";
-        inputRow.style.gap = "8px";
-        inputRow.style.marginBottom = "20px";
-        this.baseFolderInput = inputRow.createEl("input", {
-          type: "text",
-          placeholder: "Base folder (e.g., Nexus)"
-        });
-        this.baseFolderInput.style.flex = "1";
-        new FolderSuggest(this.app, this.baseFolderInput);
-        const separator = inputRow.createEl("span", { text: "/" });
-        separator.style.fontSize = "18px";
-        separator.style.fontWeight = "bold";
-        separator.style.color = "var(--text-muted)";
-        this.subfolderInput = inputRow.createEl("input", {
-          type: "text",
-          placeholder: "Subfolder name (e.g., Reports)"
-        });
-        this.subfolderInput.style.flex = "1";
+        contentEl.createEl("h3", { text: "Select Folder" });
+        this.treeContainer = contentEl.createDiv({ cls: "nexus-folder-tree-container" });
+        this.treeContainer.style.maxHeight = "400px";
+        this.treeContainer.style.overflowY = "auto";
+        this.treeContainer.style.marginBottom = "20px";
+        this.treeContainer.style.border = "1px solid var(--background-modifier-border)";
+        this.treeContainer.style.borderRadius = "4px";
+        this.treeContainer.style.padding = "8px";
+        this.renderTree();
         const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.gap = "8px";
+        buttonContainer.style.justifyContent = "flex-end";
+        const createButton = buttonContainer.createEl("button", { text: "Create New Folder" });
+        createButton.addEventListener("click", () => this.handleCreateFolder());
         const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
         cancelButton.addEventListener("click", () => this.close());
-        const proceedButton = buttonContainer.createEl("button", {
-          text: "Proceed",
+        const selectButton = buttonContainer.createEl("button", {
+          text: "Select",
           cls: "mod-cta"
         });
-        proceedButton.addEventListener("click", () => this.handleProceed());
-        this.baseFolderInput.focus();
-        this.baseFolderInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            this.subfolderInput.focus();
-          } else if (e.key === "Escape") {
-            this.close();
-          }
-        });
-        this.subfolderInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            this.handleProceed();
-          } else if (e.key === "Escape") {
-            this.close();
-          }
-        });
+        selectButton.addEventListener("click", () => this.handleSelect());
       }
-      async handleProceed() {
-        const baseFolder = this.baseFolderInput.value.trim();
-        const subfolder = this.subfolderInput.value.trim();
-        let fullPath = "";
-        if (baseFolder && subfolder) {
-          if (baseFolder === "/") {
-            fullPath = subfolder;
-          } else {
-            fullPath = `${baseFolder}/${subfolder}`;
-          }
-        } else if (subfolder) {
-          fullPath = subfolder;
-        } else if (baseFolder) {
-          if (baseFolder === "/") {
-            new import_obsidian5.Notice("\u26A0\uFE0F Please enter a folder name");
-            return;
-          }
-          fullPath = baseFolder;
+      renderTree() {
+        this.treeContainer.empty();
+        const root = this.app.vault.getRoot();
+        const rootItem = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
+        rootItem.style.display = "flex";
+        rootItem.style.alignItems = "center";
+        rootItem.style.padding = "4px 8px";
+        rootItem.style.cursor = "pointer";
+        rootItem.style.borderRadius = "4px";
+        if (this.selectedFolder === root) {
+          rootItem.style.backgroundColor = "var(--background-modifier-hover)";
+        }
+        const rootIcon = rootItem.createSpan({ text: "\u{1F4C1} " });
+        const rootLabel = rootItem.createSpan({ text: "Vault Root (/)" });
+        rootLabel.style.fontWeight = "bold";
+        rootItem.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.handleFolderClick(root);
+        });
+        this.renderFolderChildren(root, 0);
+      }
+      renderFolderChildren(folder, depth) {
+        const children = folder.children.filter((child) => child instanceof import_obsidian3.TFolder).sort((a, b) => a.name.localeCompare(b.name));
+        for (const child of children) {
+          this.renderFolder(child, depth + 1);
+        }
+      }
+      renderFolder(folder, depth) {
+        var _a;
+        const isExpanded = this.expandedFolders.has(folder.path);
+        const isSelected = ((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path;
+        const hasChildren = folder.children.some((c) => c instanceof import_obsidian3.TFolder);
+        const item = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
+        item.style.display = "flex";
+        item.style.alignItems = "center";
+        item.style.padding = "4px 8px";
+        item.style.paddingLeft = `${depth * 20 + 8}px`;
+        item.style.cursor = "pointer";
+        item.style.borderRadius = "4px";
+        if (isSelected) {
+          item.style.backgroundColor = "var(--background-modifier-hover)";
+          item.style.fontWeight = "bold";
+        }
+        const expandIcon = item.createSpan();
+        expandIcon.style.width = "16px";
+        expandIcon.style.marginRight = "4px";
+        if (hasChildren) {
+          expandIcon.setText(isExpanded ? "\u25BC" : "\u25B6");
         } else {
-          new import_obsidian5.Notice("\u26A0\uFE0F Please enter at least a folder name");
+          expandIcon.setText(" ");
+        }
+        item.createSpan({ text: "\u{1F4C1} " });
+        item.createSpan({ text: folder.name });
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.handleFolderClick(folder);
+        });
+        item.addEventListener("mouseenter", () => {
+          if (!isSelected) {
+            item.style.backgroundColor = "var(--background-modifier-hover-light)";
+          }
+        });
+        item.addEventListener("mouseleave", () => {
+          if (!isSelected) {
+            item.style.backgroundColor = "";
+          }
+        });
+        if (isExpanded && hasChildren) {
+          this.renderFolderChildren(folder, depth);
+        }
+      }
+      handleFolderClick(folder) {
+        var _a;
+        const wasExpanded = this.expandedFolders.has(folder.path);
+        if (((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path) {
+          if (wasExpanded) {
+            this.expandedFolders.delete(folder.path);
+            this.collapseAllChildren(folder);
+          } else {
+            this.expandedFolders.add(folder.path);
+          }
+        } else {
+          if (folder.parent) {
+            const siblings = folder.parent.children.filter((c) => c instanceof import_obsidian3.TFolder);
+            for (const sibling of siblings) {
+              if (sibling.path !== folder.path) {
+                this.expandedFolders.delete(sibling.path);
+                this.collapseAllChildren(sibling);
+              }
+            }
+          }
+          this.selectedFolder = folder;
+          this.expandedFolders.add(folder.path);
+        }
+        this.renderTree();
+      }
+      collapseAllChildren(folder) {
+        for (const child of folder.children) {
+          if (child instanceof import_obsidian3.TFolder) {
+            this.expandedFolders.delete(child.path);
+            this.collapseAllChildren(child);
+          }
+        }
+      }
+      async handleCreateFolder() {
+        if (!this.selectedFolder) {
+          new import_obsidian3.Notice("\u26A0\uFE0F Please select a parent folder first");
+          return;
+        }
+        const folderName = await this.promptForFolderName();
+        if (!folderName) {
+          return;
+        }
+        if (folderName.includes("/") || folderName.includes("\\") || folderName.includes(":") || folderName.includes("*") || folderName.includes("?") || folderName.includes('"') || folderName.includes("<") || folderName.includes(">") || folderName.includes("|")) {
+          new import_obsidian3.Notice("\u274C Invalid folder name: contains illegal characters");
+          return;
+        }
+        const parentPath = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
+        const newFolderPath = parentPath ? `${parentPath}/${folderName}` : folderName;
+        const exists = this.app.vault.getAbstractFileByPath(newFolderPath);
+        if (exists) {
+          new import_obsidian3.Notice("\u274C Folder already exists");
           return;
         }
         try {
-          if (fullPath.includes("\\") || fullPath.includes(":") || fullPath.includes("*") || fullPath.includes("?") || fullPath.includes('"') || fullPath.includes("<") || fullPath.includes(">") || fullPath.includes("|")) {
-            new import_obsidian5.Notice("\u274C Invalid folder name: contains illegal characters");
-            return;
+          await this.app.vault.createFolder(newFolderPath);
+          new import_obsidian3.Notice(`\u2705 Created folder: ${folderName}`);
+          this.expandedFolders.add(this.selectedFolder.path);
+          const newFolder = this.app.vault.getAbstractFileByPath(newFolderPath);
+          if (newFolder instanceof import_obsidian3.TFolder) {
+            this.selectedFolder = newFolder;
+            this.expandedFolders.add(newFolder.path);
           }
-          this.onSubmit(fullPath);
-          this.close();
+          this.renderTree();
         } catch (error) {
-          new import_obsidian5.Notice(`\u274C Invalid folder path: ${error.message}`);
+          new import_obsidian3.Notice(`\u274C Failed to create folder: ${error.message}`);
         }
+      }
+      promptForFolderName() {
+        return new Promise((resolve) => {
+          const modal = new import_obsidian3.Modal(this.app);
+          modal.titleEl.setText("Create New Folder");
+          const inputContainer = modal.contentEl.createDiv();
+          inputContainer.style.marginBottom = "20px";
+          inputContainer.createEl("label", { text: "Folder name:" });
+          const input = inputContainer.createEl("input", { type: "text" });
+          input.style.width = "100%";
+          input.style.marginTop = "8px";
+          const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+          const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+          cancelButton.addEventListener("click", () => {
+            modal.close();
+            resolve(null);
+          });
+          const createButton = buttonContainer.createEl("button", {
+            text: "Create",
+            cls: "mod-cta"
+          });
+          createButton.addEventListener("click", () => {
+            const value = input.value.trim();
+            modal.close();
+            resolve(value || null);
+          });
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const value = input.value.trim();
+              modal.close();
+              resolve(value || null);
+            } else if (e.key === "Escape") {
+              modal.close();
+              resolve(null);
+            }
+          });
+          modal.open();
+          input.focus();
+        });
+      }
+      handleSelect() {
+        if (!this.selectedFolder) {
+          new import_obsidian3.Notice("\u26A0\uFE0F Please select a folder first");
+          return;
+        }
+        const path = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
+        this.onSubmit(path);
+        this.close();
       }
       onClose() {
         const { contentEl } = this;
@@ -2378,7 +496,7 @@ __export(utils_exports, {
   old_getConversationId: () => old_getConversationId
 });
 function formatMessageTimestamp(unixTime, customFormat) {
-  const date = (0, import_obsidian6.moment)(unixTime * 1e3);
+  const date = (0, import_obsidian4.moment)(unixTime * 1e3);
   if (!customFormat || customFormat === "locale") {
     return `${date.format("L")} at ${date.format("LTS")}`;
   }
@@ -2386,7 +504,7 @@ function formatMessageTimestamp(unixTime, customFormat) {
   return `${date.format(format.dateFormat)}${format.separator}${date.format(format.timeFormat)}`;
 }
 function formatTimestamp(unixTime, format) {
-  const date = (0, import_obsidian6.moment)(unixTime * 1e3);
+  const date = (0, import_obsidian4.moment)(unixTime * 1e3);
   switch (format) {
     case "prefix":
       return date.format("YYYYMMDD");
@@ -2567,7 +685,7 @@ async function checkConversationLink(conversationId, provider = "chatgpt") {
       return false;
   }
   try {
-    const response = await (0, import_obsidian7.requestUrl)({
+    const response = await (0, import_obsidian5.requestUrl)({
       url,
       method: "HEAD"
     });
@@ -2602,7 +720,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
   function countFiles(folder) {
     let count = 0;
     for (const child of folder.children) {
-      if (child instanceof import_obsidian6.TFolder) {
+      if (child instanceof import_obsidian4.TFolder) {
         count += countFiles(child);
       } else {
         count++;
@@ -2624,7 +742,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
     foldersToDelete.push(sourceFolder);
     for (const child of [...sourceFolder.children]) {
       const childNewPath = `${destPath}/${child.name}`;
-      if (child instanceof import_obsidian6.TFolder) {
+      if (child instanceof import_obsidian4.TFolder) {
         logger.debug(`[moveAndMergeFolders] Processing subfolder: ${child.path}`);
         await moveRecursive(child, childNewPath);
       } else {
@@ -2682,6 +800,30 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
         }
       }
     }
+    logger.debug(`[moveAndMergeFolders] Checking parent folders for deletion...`);
+    let currentFolder = oldFolder.parent;
+    while (currentFolder && currentFolder.path !== "/") {
+      try {
+        const exists = await vault.adapter.exists(currentFolder.path);
+        if (!exists) {
+          logger.debug(`[moveAndMergeFolders] Parent folder already deleted: ${currentFolder.path}`);
+          break;
+        }
+        await vault.delete(currentFolder);
+        logger.debug(`[moveAndMergeFolders] \u2705 Deleted empty parent folder: ${currentFolder.path}`);
+        currentFolder = currentFolder.parent;
+      } catch (error) {
+        const errorMsg = error.message || String(error);
+        if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
+          logger.debug(`[moveAndMergeFolders] Parent folder not empty, stopping: ${currentFolder.path}`);
+        } else if (errorMsg.includes("does not exist") || errorMsg.includes("ENOENT")) {
+          logger.debug(`[moveAndMergeFolders] Parent folder already deleted: ${currentFolder.path}`);
+        } else {
+          logger.debug(`[moveAndMergeFolders] Could not delete parent folder ${currentFolder.path}: ${errorMsg}`);
+        }
+        break;
+      }
+    }
     return {
       success: errors === 0,
       moved,
@@ -2700,13 +842,13 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
     };
   }
 }
-var import_obsidian6, import_obsidian7, logger;
+var import_obsidian4, import_obsidian5, logger;
 var init_utils = __esm({
   "src/utils.ts"() {
     "use strict";
-    import_obsidian6 = require("obsidian");
+    import_obsidian4 = require("obsidian");
     init_logger();
-    import_obsidian7 = require("obsidian");
+    import_obsidian5 = require("obsidian");
     init_constants();
     logger = new Logger();
   }
@@ -3044,12 +1186,12 @@ __export(progress_modal_exports, {
   ProgressModal: () => UpgradeProgressModal,
   UpgradeProgressModal: () => UpgradeProgressModal
 });
-var import_obsidian8, UpgradeProgressModal;
+var import_obsidian6, UpgradeProgressModal;
 var init_progress_modal = __esm({
   "src/upgrade/utils/progress-modal.ts"() {
     "use strict";
-    import_obsidian8 = require("obsidian");
-    UpgradeProgressModal = class extends import_obsidian8.Modal {
+    import_obsidian6 = require("obsidian");
+    UpgradeProgressModal = class extends import_obsidian6.Modal {
       constructor(app, title, totalSteps = 100) {
         super(app);
         this.currentStep = 0;
@@ -3168,12 +1310,12 @@ var enhanced_folder_migration_dialog_exports = {};
 __export(enhanced_folder_migration_dialog_exports, {
   EnhancedFolderMigrationDialog: () => EnhancedFolderMigrationDialog
 });
-var import_obsidian9, EnhancedFolderMigrationDialog;
+var import_obsidian7, EnhancedFolderMigrationDialog;
 var init_enhanced_folder_migration_dialog = __esm({
   "src/dialogs/enhanced-folder-migration-dialog.ts"() {
     "use strict";
-    import_obsidian9 = require("obsidian");
-    EnhancedFolderMigrationDialog = class extends import_obsidian9.Modal {
+    import_obsidian7 = require("obsidian");
+    EnhancedFolderMigrationDialog = class extends import_obsidian7.Modal {
       constructor(plugin, oldPath, newPath, folderType, onComplete) {
         super(plugin.app);
         this.estimatedTime = 0;
@@ -3269,9 +1411,9 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("cancel");
-            new import_obsidian9.Notice(`Change cancelled. Folder setting reverted.`);
+            new import_obsidian7.Notice(`Change cancelled. Folder setting reverted.`);
           } catch (error) {
-            new import_obsidian9.Notice(`Failed to revert setting: ${error.message}`);
+            new import_obsidian7.Notice(`Failed to revert setting: ${error.message}`);
           }
         });
         const keepButton = buttonContainer.createEl("button", {
@@ -3282,9 +1424,9 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("keep");
-            new import_obsidian9.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+            new import_obsidian7.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
           } catch (error) {
-            new import_obsidian9.Notice(`Failed to update setting: ${error.message}`);
+            new import_obsidian7.Notice(`Failed to update setting: ${error.message}`);
           }
         });
         const moveButton = buttonContainer.createEl("button", {
@@ -3298,9 +1440,9 @@ var init_enhanced_folder_migration_dialog = __esm({
           } else {
             try {
               await this.onComplete("move");
-              new import_obsidian9.Notice(`Files moved to ${this.newPath}`);
+              new import_obsidian7.Notice(`Files moved to ${this.newPath}`);
             } catch (error) {
-              new import_obsidian9.Notice(`Failed to move files: ${error.message}`);
+              new import_obsidian7.Notice(`Failed to move files: ${error.message}`);
             }
           }
         });
@@ -3312,19 +1454,19 @@ var init_enhanced_folder_migration_dialog = __esm({
             Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports)),
             Promise.resolve().then(() => (init_utils(), utils_exports))
           ]);
-          const progressModal = new UpgradeProgressModal2(
+          const progressModal2 = new UpgradeProgressModal2(
             this.app,
             `Moving ${this.folderType} and updating links`,
             100
           );
-          progressModal.open();
-          progressModal.updateProgress({
+          progressModal2.open();
+          progressModal2.updateProgress({
             title: "Moving files...",
             detail: `Moving from ${this.oldPath} to ${this.newPath}`,
             progress: 5
           });
           const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
-          if (!oldFolder || !(oldFolder instanceof (await import("obsidian")).TFolder)) {
+          if (!oldFolder || !(oldFolder instanceof import_obsidian7.TFolder)) {
             throw new Error(`Source folder not found: ${this.oldPath}`);
           }
           const moveResult = await moveAndMergeFolders2(
@@ -3333,14 +1475,14 @@ var init_enhanced_folder_migration_dialog = __esm({
             this.app.vault,
             (current, total) => {
               const percentage = 5 + Math.round(current / total * 25);
-              progressModal.updateProgress({
+              progressModal2.updateProgress({
                 title: "Moving files...",
                 detail: `${current} / ${total} files processed`,
                 progress: percentage
               });
             }
           );
-          progressModal.updateProgress({
+          progressModal2.updateProgress({
             title: "Files moved",
             detail: `${moveResult.moved} files moved, ${moveResult.skipped} skipped. Preparing to update links...`,
             progress: 30
@@ -3353,7 +1495,7 @@ var init_enhanced_folder_migration_dialog = __esm({
               this.newPath,
               (progress) => {
                 const percentage = 30 + Math.round(progress.current / progress.total * 70);
-                progressModal.updateProgress({
+                progressModal2.updateProgress({
                   title: "Updating attachment links...",
                   detail: progress.detail,
                   progress: percentage
@@ -3372,7 +1514,7 @@ var init_enhanced_folder_migration_dialog = __esm({
                 } else if (progress.phase === "updating-artifacts") {
                   title = "Updating links in artifacts...";
                 }
-                progressModal.updateProgress({
+                progressModal2.updateProgress({
                   title,
                   detail: progress.detail,
                   progress: percentage
@@ -3381,13 +1523,14 @@ var init_enhanced_folder_migration_dialog = __esm({
             );
           }
           const linksUpdated = this.folderType === "attachments" ? (stats == null ? void 0 : stats.attachmentLinksUpdated) || 0 : (stats == null ? void 0 : stats.conversationLinksUpdated) || 0;
-          progressModal.showComplete(
+          progressModal2.showComplete(
             `${moveResult.moved} files moved. ${linksUpdated} links updated successfully`
           );
-          progressModal.closeAfterDelay(3e3);
-          new import_obsidian9.Notice(`\u2705 ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
+          progressModal2.closeAfterDelay(3e3);
+          new import_obsidian7.Notice(`\u2705 ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
         } catch (error) {
-          new import_obsidian9.Notice(`\u274C Failed to move files or update links: ${error.message}`);
+          progressModal.close();
+          this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${error.message}`);
         }
       }
       addStyles() {
@@ -3491,6 +1634,24 @@ var init_enhanced_folder_migration_dialog = __esm({
             }
         `;
         document.head.appendChild(styleEl);
+      }
+      showErrorDialog(title, message) {
+        const modal = new import_obsidian7.Modal(this.app);
+        modal.titleEl.setText(title);
+        modal.contentEl.createEl("p", {
+          text: message,
+          cls: "nexus-error-message"
+        });
+        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.justifyContent = "flex-end";
+        buttonContainer.style.marginTop = "1em";
+        const okButton = buttonContainer.createEl("button", {
+          text: "OK",
+          cls: "mod-cta"
+        });
+        okButton.addEventListener("click", () => modal.close());
+        modal.open();
       }
       onClose() {
         const { contentEl } = this;
@@ -6198,7 +4359,7 @@ var require_jszip_min = __commonJS({
 
 // src/dialogs.ts
 function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian16.Modal(app);
+  const modal = new import_obsidian14.Modal(app);
   modal.contentEl.addClass("nexus-ai-chat-importer-modal");
   const titleEl = modal.contentEl.createEl("h2", {
     text: title,
@@ -6280,20 +4441,20 @@ async function showDialog(app, type, title, paragraphs, note, customLabels) {
     modal.open();
   });
 }
-var import_obsidian16;
+var import_obsidian14;
 var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
-    import_obsidian16 = require("obsidian");
+    import_obsidian14 = require("obsidian");
   }
 });
 
 // src/utils/date-parser.ts
-var import_obsidian21, DateParser;
+var import_obsidian19, DateParser;
 var init_date_parser = __esm({
   "src/utils/date-parser.ts"() {
     "use strict";
-    import_obsidian21 = require("obsidian");
+    import_obsidian19 = require("obsidian");
     DateParser = class {
       /**
        * Parse a date string with automatic format detection
@@ -6309,7 +4470,7 @@ var init_date_parser = __esm({
         }
         console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - input: "${dateStr}"`);
         try {
-          const isoDate = (0, import_obsidian21.moment)(dateStr, import_obsidian21.moment.ISO_8601, true);
+          const isoDate = (0, import_obsidian19.moment)(dateStr, import_obsidian19.moment.ISO_8601, true);
           if (isoDate.isValid()) {
             const result = isoDate.unix();
             console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - ISO 8601 match, result: ${result}`);
@@ -6338,23 +4499,23 @@ var init_date_parser = __esm({
        * Parse a date string with a forced component order (YMD/DMY/MDY)
        * Keeps other parts auto-detected from the string (separator, time format, seconds)
        */
-      static parseDateWithOrder(dateStr, order2) {
+      static parseDateWithOrder(dateStr, order) {
         if (!dateStr || typeof dateStr !== "string")
           return 0;
-        const isoDate = (0, import_obsidian21.moment)(dateStr, import_obsidian21.moment.ISO_8601, true);
+        const isoDate = (0, import_obsidian19.moment)(dateStr, import_obsidian19.moment.ISO_8601, true);
         if (isoDate.isValid())
           return isoDate.unix();
         const detected = this.detectFormat(dateStr);
         if (!detected)
           return 0;
-        const forced = { ...detected, order: order2 };
+        const forced = { ...detected, order };
         return this.parseWithFormat(dateStr, forced);
       }
       /**
        * Convert a date string to ISO 8601 with a forced component order
        */
-      static convertToISO8601WithOrder(dateStr, order2) {
-        const unixTime = this.parseDateWithOrder(dateStr, order2);
+      static convertToISO8601WithOrder(dateStr, order) {
+        const unixTime = this.parseDateWithOrder(dateStr, order);
         if (unixTime === 0)
           return null;
         return new Date(unixTime * 1e3).toISOString();
@@ -6391,10 +4552,10 @@ var init_date_parser = __esm({
         if (parts.length !== 3 || parts.some(isNaN)) {
           return null;
         }
-        const order2 = this.detectOrder(parts, separator, hasAMPM);
+        const order = this.detectOrder(parts, separator, hasAMPM);
         return {
           separator,
-          order: order2,
+          order,
           timeFormat,
           hasSeconds
         };
@@ -6466,7 +4627,7 @@ var init_date_parser = __esm({
           // English "at"
         ];
         for (const pattern of patterns) {
-          const date = (0, import_obsidian21.moment)(dateStr, pattern, true);
+          const date = (0, import_obsidian19.moment)(dateStr, pattern, true);
           if (date.isValid()) {
             return date.unix();
           }
@@ -6479,7 +4640,7 @@ var init_date_parser = __esm({
             `${datePattern}[ at ]${timePatternNoSec}`
           ];
           for (const pattern of fallbackPatterns) {
-            const date = (0, import_obsidian21.moment)(dateStr, pattern, true);
+            const date = (0, import_obsidian19.moment)(dateStr, pattern, true);
             if (date.isValid()) {
               return date.unix();
             }
@@ -7145,12 +5306,12 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian23, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian21, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian23 = require("obsidian");
+    import_obsidian21 = require("obsidian");
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -7611,7 +5772,7 @@ ${cleanContent}`;
         }
       }
     };
-    NexusUpgradeModal = class extends import_obsidian23.Modal {
+    NexusUpgradeModal = class extends import_obsidian21.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -7652,7 +5813,7 @@ Your conversations will be reorganized with provider structure and modern callou
         } catch (error) {
           console.debug("[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback");
         }
-        await import_obsidian23.MarkdownRenderer.render(
+        await import_obsidian21.MarkdownRenderer.render(
           this.app,
           message,
           this.contentEl,
@@ -7725,17 +5886,16 @@ Your conversations will be reorganized with provider structure and modern callou
 });
 
 // src/dialogs/configure-folder-locations-dialog.ts
-var import_obsidian24, ConfigureFolderLocationsDialog;
+var import_obsidian22, ConfigureFolderLocationsDialog;
 var init_configure_folder_locations_dialog = __esm({
   "src/dialogs/configure-folder-locations-dialog.ts"() {
     "use strict";
-    import_obsidian24 = require("obsidian");
+    import_obsidian22 = require("obsidian");
     init_enhanced_folder_migration_dialog();
-    init_folder_suggest();
-    init_folder_browser_modal();
+    init_folder_tree_browser_modal();
     init_folder_validation();
     init_utils();
-    ConfigureFolderLocationsDialog = class extends import_obsidian24.Modal {
+    ConfigureFolderLocationsDialog = class extends import_obsidian22.Modal {
       // Track if onComplete was already called
       constructor(plugin, onComplete) {
         super(plugin.app);
@@ -7770,19 +5930,21 @@ var init_configure_folder_locations_dialog = __esm({
           text: "You cannot put the report folder inside the Conversations folder nor the Attachment folder for practical reasons."
         });
         const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
-        new import_obsidian24.Setting(folderSection).setName("\u{1F4CA} Report Folder").setDesc("Where import and upgrade reports are stored").addText((text) => {
+        new import_obsidian22.Setting(folderSection).setName("\u{1F4CA} Report Folder").setDesc("Where import and upgrade reports are stored").addText((text) => {
           this.reportFolderInput = text.inputEl;
-          new FolderSuggest(this.plugin.app, text.inputEl);
           text.setPlaceholder("Nexus Reports").setValue(this.originalReportFolder).inputEl.addClass("nexus-upgrade-folder-input");
+          text.inputEl.readOnly = true;
+          text.inputEl.style.cursor = "default";
         }).addButton((button) => {
           button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(() => {
-            const modal = new FolderBrowserModal(
+            const modal = new FolderTreeBrowserModal(
               this.plugin.app,
               (path) => {
                 if (this.reportFolderInput) {
                   this.reportFolderInput.value = path;
                 }
-              }
+              },
+              this.originalReportFolder
             );
             modal.open();
           });
@@ -7845,7 +6007,7 @@ var init_configure_folder_locations_dialog = __esm({
           this.plugin.settings.attachmentFolder
         );
         if (!validation.valid) {
-          new import_obsidian24.Notice(`\u274C ${validation.error}`);
+          this.showErrorDialog("Invalid Folder Location", validation.error);
           return;
         }
         const result = {
@@ -7879,7 +6041,7 @@ var init_configure_folder_locations_dialog = __esm({
         this.plugin.settings[folderType] = newPath;
         await this.plugin.saveSettings();
         const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-        if (!oldFolder || !(oldFolder instanceof import_obsidian24.TFolder) || oldFolder.children.length === 0) {
+        if (!oldFolder || !(oldFolder instanceof import_obsidian22.TFolder) || oldFolder.children.length === 0) {
           return;
         }
         const folderTypeLabel = folderType === "conversationFolder" ? "conversations" : folderType === "reportFolder" ? "reports" : "attachments";
@@ -7890,13 +6052,13 @@ var init_configure_folder_locations_dialog = __esm({
                 const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
                 folderInfo.filesMoved = result.moved;
                 if (result.success && result.skipped === 0) {
-                  new import_obsidian24.Notice(`\u2705 Files moved to ${newPath}`);
+                  new import_obsidian22.Notice(`\u2705 Files moved to ${newPath}`);
                 } else {
                   this.showMergeResultDialog(result, oldPath, newPath);
                 }
               } catch (error) {
                 this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
-                new import_obsidian24.Notice(`\u274C Failed to move files: ${error.message}`);
+                this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
               }
             } else if (action === "cancel") {
               this.plugin.settings[folderType] = oldPath;
@@ -7918,7 +6080,7 @@ var init_configure_folder_locations_dialog = __esm({
        * Show dialog with merge result details when files were skipped or errors occurred
        */
       showMergeResultDialog(result, oldPath, newPath) {
-        const modal = new import_obsidian24.Modal(this.plugin.app);
+        const modal = new import_obsidian22.Modal(this.plugin.app);
         modal.titleEl.setText("Folder Migration Result");
         const { contentEl } = modal;
         const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
@@ -8084,6 +6246,24 @@ var init_configure_folder_locations_dialog = __esm({
           });
         }
       }
+      showErrorDialog(title, message) {
+        const modal = new import_obsidian22.Modal(this.plugin.app);
+        modal.titleEl.setText(title);
+        modal.contentEl.createEl("p", {
+          text: message,
+          cls: "nexus-error-message"
+        });
+        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.justifyContent = "flex-end";
+        buttonContainer.style.marginTop = "1em";
+        const okButton = buttonContainer.createEl("button", {
+          text: "OK",
+          cls: "mod-cta"
+        });
+        okButton.addEventListener("click", () => modal.close());
+        modal.open();
+      }
     };
   }
 });
@@ -8093,14 +6273,14 @@ var upgrade_1_3_0_exports = {};
 __export(upgrade_1_3_0_exports, {
   Upgrade130: () => Upgrade130
 });
-var import_obsidian25, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
+var import_obsidian23, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
 var init_upgrade_1_3_0 = __esm({
   "src/upgrade/versions/upgrade-1.3.0.ts"() {
     "use strict";
     init_upgrade_interface();
     init_utils();
     init_date_parser();
-    import_obsidian25 = require("obsidian");
+    import_obsidian23 = require("obsidian");
     init_configure_folder_locations_dialog();
     ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
       constructor() {
@@ -8615,7 +6795,7 @@ ${frontmatter}
           console.debug(`[MigrateReportsFolder] New path: ${newReportPath}`);
           const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
           let reportsMoved = false;
-          if (oldReportFolder && oldReportFolder instanceof import_obsidian25.TFolder) {
+          if (oldReportFolder && oldReportFolder instanceof import_obsidian23.TFolder) {
             try {
               console.debug(`[MigrateReportsFolder] Moving Reports folder...`);
               const result = await moveAndMergeFolders(oldReportFolder, newReportPath, context.plugin.app.vault);
@@ -8626,7 +6806,7 @@ ${frontmatter}
                 if (stillExists) {
                   console.debug(`[MigrateReportsFolder] Old Reports folder still exists, attempting explicit deletion...`);
                   const folderToDelete = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
-                  if (folderToDelete && folderToDelete instanceof import_obsidian25.TFolder) {
+                  if (folderToDelete && folderToDelete instanceof import_obsidian23.TFolder) {
                     await context.plugin.app.vault.delete(folderToDelete);
                     console.debug(`[MigrateReportsFolder] \u2705 Successfully deleted old Reports folder`);
                   }
@@ -8702,7 +6882,7 @@ ${frontmatter}
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!folder || !(folder instanceof import_obsidian25.TFolder)) {
+          if (!folder || !(folder instanceof import_obsidian23.TFolder)) {
             console.debug(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun - No Claude artifacts folder found`);
             return false;
           }
@@ -9118,12 +7298,12 @@ var upgrade_modal_1_3_0_exports = {};
 __export(upgrade_modal_1_3_0_exports, {
   NexusUpgradeModal130: () => NexusUpgradeModal130
 });
-var import_obsidian26, NexusUpgradeModal130;
+var import_obsidian24, NexusUpgradeModal130;
 var init_upgrade_modal_1_3_0 = __esm({
   "src/dialogs/upgrade-modal-1.3.0.ts"() {
     "use strict";
-    import_obsidian26 = require("obsidian");
-    NexusUpgradeModal130 = class extends import_obsidian26.Modal {
+    import_obsidian24 = require("obsidian");
+    NexusUpgradeModal130 = class extends import_obsidian24.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.hasResolved = false;
@@ -9175,7 +7355,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         } catch (error) {
         }
         const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-        await import_obsidian26.MarkdownRenderer.render(
+        await import_obsidian24.MarkdownRenderer.render(
           this.app,
           message,
           contentDiv,
@@ -9456,11 +7636,11 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian32 = require("obsidian");
+var import_obsidian30 = require("obsidian");
 init_constants();
 
 // src/ui/settings-tab.ts
-var import_obsidian13 = require("obsidian");
+var import_obsidian11 = require("obsidian");
 
 // src/ui/settings/support-section.ts
 var import_obsidian = require("obsidian");
@@ -9539,7 +7719,7 @@ var SupportSection = class extends BaseSettingsSection {
 };
 
 // src/ui/settings/folder-settings-section.ts
-var import_obsidian10 = require("obsidian");
+var import_obsidian8 = require("obsidian");
 
 // src/dialogs/folder-migration-dialog.ts
 var import_obsidian2 = require("obsidian");
@@ -9705,7 +7885,7 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
 };
 
 // src/ui/settings/folder-settings-section.ts
-init_folder_browser_modal();
+init_folder_tree_browser_modal();
 init_folder_validation();
 init_utils();
 var FolderSettingsSection = class extends BaseSettingsSection {
@@ -9716,7 +7896,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     let conversationFolderTextComponent;
-    new import_obsidian10.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
       conversationFolderTextComponent = text;
       text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -9725,20 +7905,21 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       text.inputEl.style.cursor = "default";
     }).addButton((button) => {
       button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
-        const modal = new FolderBrowserModal(
+        const modal = new FolderTreeBrowserModal(
           this.plugin.app,
           async (path) => {
             if (conversationFolderTextComponent) {
               conversationFolderTextComponent.setValue(path);
               await this.handleFolderChange("conversationFolder", path, "conversations", conversationFolderTextComponent);
             }
-          }
+          },
+          this.plugin.settings.conversationFolder
         );
         modal.open();
       });
     });
     let reportFolderTextComponent;
-    new import_obsidian10.Setting(containerEl).setName("Reports folder").setDesc("Where import reports are stored").addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName("Reports folder").setDesc("Where import reports are stored").addText((text) => {
       reportFolderTextComponent = text;
       text.setPlaceholder("Nexus Reports").setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -9747,20 +7928,21 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       text.inputEl.style.cursor = "default";
     }).addButton((button) => {
       button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
-        const modal = new FolderBrowserModal(
+        const modal = new FolderTreeBrowserModal(
           this.plugin.app,
           async (path) => {
             if (reportFolderTextComponent) {
               reportFolderTextComponent.setValue(path);
               await this.handleFolderChange("reportFolder", path, "reports", reportFolderTextComponent);
             }
-          }
+          },
+          this.plugin.settings.reportFolder
         );
         modal.open();
       });
     });
     let attachmentFolderTextComponent;
-    new import_obsidian10.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
       attachmentFolderTextComponent = text;
       text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -9769,14 +7951,15 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       text.inputEl.style.cursor = "default";
     }).addButton((button) => {
       button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
-        const modal = new FolderBrowserModal(
+        const modal = new FolderTreeBrowserModal(
           this.plugin.app,
           async (path) => {
             if (attachmentFolderTextComponent) {
               attachmentFolderTextComponent.setValue(path);
               await this.handleFolderChange("attachmentFolder", path, "attachments", attachmentFolderTextComponent);
             }
-          }
+          },
+          this.plugin.settings.attachmentFolder
         );
         modal.open();
       });
@@ -9798,13 +7981,13 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       this.plugin.settings.attachmentFolder
     );
     if (!validation.valid) {
-      new import_obsidian10.Notice(`\u274C ${validation.error}`);
-      textComponent.setValue(oldPath);
       this.plugin.logger.debug(`[FolderSettings] Validation failed: ${validation.error}`);
+      this.showErrorDialog("Invalid Folder Location", validation.error);
+      textComponent.setValue(oldPath);
       return;
     }
     const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-    if (!oldFolder || !(oldFolder instanceof import_obsidian10.TFolder)) {
+    if (!oldFolder || !(oldFolder instanceof import_obsidian8.TFolder)) {
       this.plugin.logger.debug(`[FolderSettings] Old folder doesn't exist, just updating setting`);
       this.plugin.settings[settingKey] = newPath;
       await this.plugin.saveSettings();
@@ -9816,6 +7999,18 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       this.plugin.logger.debug(`[FolderSettings] Old folder is empty, just updating setting`);
       this.plugin.settings[settingKey] = newPath;
       await this.plugin.saveSettings();
+      return;
+    }
+    const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
+    if (newFolder && newFolder instanceof import_obsidian8.TFolder && newFolder.children.length > 0) {
+      this.plugin.logger.debug(`[FolderSettings] Target folder is not empty, aborting`);
+      this.showErrorDialog(
+        "Target Folder Must Be Empty",
+        `The target folder "${newPath}" must be empty before migrating files.
+
+Please choose an empty folder or create a new one.`
+      );
+      textComponent.setValue(oldPath);
       return;
     }
     this.plugin.logger.debug(`[FolderSettings] Showing migration dialog`);
@@ -9877,13 +8072,13 @@ var FolderSettingsSection = class extends BaseSettingsSection {
           await this.updateLinksAfterMove(settingKey, oldPath, newPath);
         }
         if (result.success && result.skipped === 0) {
-          new import_obsidian10.Notice(`\u2705 Files moved to ${newPath}`);
+          new import_obsidian8.Notice(`\u2705 Files moved to ${newPath}`);
         } else {
           this.showMergeResultDialog(result, oldPath, newPath);
         }
       } catch (error) {
         this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
-        new import_obsidian10.Notice(`\u274C Failed to move files: ${error.message}`);
+        this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
         throw error;
       }
     } else {
@@ -9910,14 +8105,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       }
     } catch (error) {
       this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
-      new import_obsidian10.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
+      new import_obsidian8.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
     }
   }
   /**
    * Show dialog with merge result details when files were skipped or errors occurred
    */
   showMergeResultDialog(result, oldPath, newPath) {
-    const modal = new import_obsidian10.Modal(this.plugin.app);
+    const modal = new import_obsidian8.Modal(this.plugin.app);
     modal.titleEl.setText("Folder Migration Result");
     const { contentEl } = modal;
     const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
@@ -9991,10 +8186,28 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     document.head.appendChild(styleEl);
     modal.open();
   }
+  showErrorDialog(title, message) {
+    const modal = new import_obsidian8.Modal(this.plugin.app);
+    modal.titleEl.setText(title);
+    modal.contentEl.createEl("p", {
+      text: message,
+      cls: "nexus-error-message"
+    });
+    const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.marginTop = "1em";
+    const okButton = buttonContainer.createEl("button", {
+      text: "OK",
+      cls: "mod-cta"
+    });
+    okButton.addEventListener("click", () => modal.close());
+    modal.open();
+  }
 };
 
 // src/ui/settings/display-settings-section.ts
-var import_obsidian11 = require("obsidian");
+var import_obsidian9 = require("obsidian");
 var DisplaySettingsSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
@@ -10003,7 +8216,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-date-prefix-section" });
-    const setting = new import_obsidian11.Setting(sectionContainer).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames");
+    const setting = new import_obsidian9.Setting(sectionContainer).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames");
     if (this.plugin.settings.addDatePrefix) {
       setting.controlEl.createSpan({
         text: "Select date format: ",
@@ -10029,7 +8242,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
 };
 
 // src/ui/settings/message-date-format-section.ts
-var import_obsidian12 = require("obsidian");
+var import_obsidian10 = require("obsidian");
 init_constants();
 init_utils();
 var MessageDateFormatSection = class extends BaseSettingsSection {
@@ -10040,7 +8253,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-message-date-section" });
-    new import_obsidian12.Setting(sectionContainer).setName("Custom message timestamp format").setDesc("Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced.").addToggle(
+    new import_obsidian10.Setting(sectionContainer).setName("Custom message timestamp format").setDesc("Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced.").addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.useCustomMessageTimestampFormat).onChange(async (value) => {
         this.plugin.settings.useCustomMessageTimestampFormat = value;
         await this.plugin.saveSettings();
@@ -10048,7 +8261,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
       })
     );
     if (this.plugin.settings.useCustomMessageTimestampFormat) {
-      new import_obsidian12.Setting(sectionContainer).setName("Timestamp format").setDesc("Choose the format for message timestamps in conversation notes").addDropdown((dropdown) => {
+      new import_obsidian10.Setting(sectionContainer).setName("Timestamp format").setDesc("Choose the format for message timestamps in conversation notes").addDropdown((dropdown) => {
         Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
           dropdown.addOption(key, config.label);
         });
@@ -10083,7 +8296,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
 };
 
 // src/ui/settings-tab.ts
-var NexusAiChatImporterPluginSettingTab = class extends import_obsidian13.PluginSettingTab {
+var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -10117,7 +8330,7 @@ var NexusAiChatImporterPluginSettingTab = class extends import_obsidian13.Plugin
 };
 
 // src/commands/command-registry.ts
-var import_obsidian14 = require("obsidian");
+var import_obsidian12 = require("obsidian");
 var CommandRegistry = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -10132,7 +8345,7 @@ var CommandRegistry = class {
     });
   }
   showResetConfirmation() {
-    const modal = new import_obsidian14.Modal(this.plugin.app);
+    const modal = new import_obsidian12.Modal(this.plugin.app);
     modal.contentEl.createEl("p", {
       text: "This will reset all import catalogs. This action cannot be undone."
     });
@@ -10149,7 +8362,7 @@ var CommandRegistry = class {
 };
 
 // src/events/event-handlers.ts
-var import_obsidian15 = require("obsidian");
+var import_obsidian13 = require("obsidian");
 var EventHandlers = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -10157,7 +8370,7 @@ var EventHandlers = class {
   registerEvents() {
     this.plugin.registerEvent(
       this.plugin.app.vault.on("delete", async (file) => {
-        if (file instanceof import_obsidian15.TFile) {
+        if (file instanceof import_obsidian13.TFile) {
           await this.plugin.getFileService().handleConversationFileDeletion(file);
         }
       })
@@ -10168,7 +8381,7 @@ var EventHandlers = class {
 };
 
 // src/services/import-service.ts
-var import_obsidian20 = require("obsidian");
+var import_obsidian18 = require("obsidian");
 var import_jszip = __toESM(require_jszip_min());
 init_utils();
 init_dialogs();
@@ -10681,7 +8894,7 @@ var ImportReport = class {
 };
 
 // src/services/conversation-processor.ts
-var import_obsidian18 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 
 // src/formatters/message-formatter.ts
 init_utils();
@@ -10898,7 +9111,7 @@ update_time: ${updateTimeStr}
 };
 
 // src/services/file-service.ts
-var import_obsidian17 = require("obsidian");
+var import_obsidian15 = require("obsidian");
 var FileService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -10906,9 +9119,9 @@ var FileService = class {
   async writeToFile(filePath, content) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian17.TFile) {
+      if (file instanceof import_obsidian15.TFile) {
         await this.plugin.app.vault.modify(file, content);
-      } else if (file instanceof import_obsidian17.TFolder) {
+      } else if (file instanceof import_obsidian15.TFolder) {
         throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
       } else {
         await this.plugin.app.vault.create(filePath, content);
@@ -11116,7 +9329,7 @@ var ConversationProcessor = class {
   async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian18.TFile) {
+      if (file instanceof import_obsidian16.TFile) {
         let content = await this.plugin.app.vault.read(file);
         const originalContent = content;
         const chatUpdateTime = adapter.getUpdateTime(chat);
@@ -13436,8 +11649,8 @@ function createProviderRegistry(plugin) {
 }
 
 // src/ui/import-progress-modal.ts
-var import_obsidian19 = require("obsidian");
-var ImportProgressModal = class extends import_obsidian19.Modal {
+var import_obsidian17 = require("obsidian");
+var ImportProgressModal = class extends import_obsidian17.Modal {
   constructor(app, fileName) {
     super(app);
     this.totalConversations = 0;
@@ -13677,9 +11890,9 @@ var ImportService = class {
     this.conversationProcessor.resetCounters();
     const storage = this.plugin.getStorageService();
     let processingStarted = false;
-    const progressModal = new ImportProgressModal(this.plugin.app, file.name);
-    const progressCallback = progressModal.getProgressCallback();
-    progressModal.open();
+    const progressModal2 = new ImportProgressModal(this.plugin.app, file.name);
+    const progressCallback = progressModal2.getProgressCallback();
+    progressModal2.open();
     if (selectedConversationIds && selectedConversationIds.length > 0) {
     }
     try {
@@ -13702,7 +11915,7 @@ var ImportService = class {
         const foundByName = storage.isArchiveImported(file.name);
         isReprocess = foundByHash || foundByName;
         if (isReprocess) {
-          progressModal.close();
+          progressModal2.close();
           const shouldReimport = await showDialog(
             this.plugin.app,
             "confirmation",
@@ -13716,17 +11929,17 @@ var ImportService = class {
             { button1: "Let's do this", button2: "Skip this file" }
           );
           if (!shouldReimport) {
-            new import_obsidian20.Notice(`Skipping ${file.name} (already imported).`);
-            progressModal.close();
+            new import_obsidian18.Notice(`Skipping ${file.name} (already imported).`);
+            progressModal2.close();
             return;
           }
-          progressModal.open();
+          progressModal2.open();
         }
       } else {
         fileHash = await getFileHash(file);
       }
       processingStarted = true;
-      await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
+      await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal2);
       storage.addImportedArchive(fileHash, file.name);
       await this.plugin.saveSettings();
       progressCallback({
@@ -13742,12 +11955,12 @@ var ImportService = class {
         title: "Import failed",
         detail: message
       });
-      setTimeout(() => progressModal.close(), 5e3);
+      setTimeout(() => progressModal2.close(), 5e3);
     } finally {
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
-        if (!progressModal.isComplete) {
-          new import_obsidian20.Notice(
+        if (!progressModal2.isComplete) {
+          new import_obsidian18.Notice(
             this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
           );
         }
@@ -13791,7 +12004,7 @@ var ImportService = class {
       }
     }
   }
-  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal) {
+  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal2) {
     try {
       progressCallback == null ? void 0 : progressCallback({
         phase: "scanning",
@@ -13802,8 +12015,8 @@ var ImportService = class {
       if (selectedConversationIds && selectedConversationIds.length > 0) {
         const originalCount = rawConversations.length;
         rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
-        if (progressModal) {
-          progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
+        if (progressModal2) {
+          progressModal2.setSelectiveImportMode(rawConversations.length, originalCount);
         }
         progressCallback == null ? void 0 : progressCallback({
           phase: "scanning",
@@ -13943,7 +12156,7 @@ var ReportWriter = class {
     const folderResult = await ensureFolderExists(reportInfo.folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
-      new import_obsidian20.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian18.Notice("Failed to create log file. Check console for details.");
       return;
     }
     let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
@@ -13971,7 +12184,7 @@ ${report.generateReportContent(void 0, void 0, void 0, void 0, false)}
       await this.plugin.app.vault.create(logFilePath, logContent);
     } catch (error) {
       this.plugin.logger.error(`Failed to write import log`, error.message);
-      new import_obsidian20.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian18.Notice("Failed to create log file. Check console for details.");
     }
   }
   getReportGenerationInfo(zipFileName, provider) {
@@ -14315,15 +12528,15 @@ var StorageService = class {
 };
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian27 = require("obsidian");
+var import_obsidian25 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
 init_constants();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
-var import_obsidian22 = require("obsidian");
-var MultiOperationProgressModal = class extends import_obsidian22.Modal {
+var import_obsidian20 = require("obsidian");
+var MultiOperationProgressModal = class extends import_obsidian20.Modal {
   constructor(app, title, operations) {
     super(app);
     this.canClose = false;
@@ -14643,7 +12856,7 @@ var IncrementalUpgradeManager = class {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
         console.debug(`[NEXUS-DEBUG] User cancelled upgrade dialog`);
-        new import_obsidian27.Notice("Migration cancelled. Please complete the migration before importing.");
+        new import_obsidian25.Notice("Migration cancelled. Please complete the migration before importing.");
         return {
           success: false,
           upgradesExecuted: 0,
@@ -14653,7 +12866,7 @@ var IncrementalUpgradeManager = class {
         };
       }
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian27.Notice("Upgrade failed - see console for details");
+      new import_obsidian25.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -14720,12 +12933,12 @@ var IncrementalUpgradeManager = class {
         });
       }
     }
-    const progressModal = new MultiOperationProgressModal(
+    const progressModal2 = new MultiOperationProgressModal(
       this.plugin.app,
       `Upgrading to v${toVersion}`,
       allOperations
     );
-    progressModal.open();
+    progressModal2.open();
     const results = [];
     let upgradesExecuted = 0;
     let upgradesSkipped = 0;
@@ -14738,7 +12951,7 @@ var IncrementalUpgradeManager = class {
           upgrade.automaticOperations,
           context,
           upgrade.version,
-          progressModal
+          progressModal2
         );
         console.debug(`[NEXUS-DEBUG] Automatic operations for ${upgrade.version}:`, automaticResults);
         const manualResults = { success: true, results: [] };
@@ -14750,8 +12963,8 @@ var IncrementalUpgradeManager = class {
         upgradesExecuted++;
       }
       const overallSuccess = true;
-      progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian27.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      progressModal2.markComplete(`All operations completed successfully!`);
+      new import_obsidian25.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -14761,21 +12974,21 @@ var IncrementalUpgradeManager = class {
       };
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Modal upgrade execution failed:`, error);
-      progressModal.showError(`Upgrade failed: ${error}`);
+      progressModal2.showError(`Upgrade failed: ${error}`);
       throw error;
     }
   }
   /**
    * Execute operations with progress updates to modal
    */
-  async executeOperationsWithProgress(operations, context, version, progressModal) {
+  async executeOperationsWithProgress(operations, context, version, progressModal2) {
     const results = [];
     let criticalFailures = 0;
     for (const operation of operations) {
       const modalOperationId = `${version}_${operation.id}`;
       try {
         if (await this.isOperationCompleted(operation.id, version)) {
-          progressModal.updateOperation(modalOperationId, {
+          progressModal2.updateOperation(modalOperationId, {
             status: "completed",
             progress: 100
           });
@@ -14785,12 +12998,12 @@ var IncrementalUpgradeManager = class {
           });
           continue;
         }
-        progressModal.updateOperation(modalOperationId, {
+        progressModal2.updateOperation(modalOperationId, {
           status: "running",
           progress: 0
         });
         if (!await operation.canRun(context)) {
-          progressModal.updateOperation(modalOperationId, {
+          progressModal2.updateOperation(modalOperationId, {
             status: "completed",
             progress: 100,
             currentDetail: "Nothing to process"
@@ -14805,12 +13018,12 @@ var IncrementalUpgradeManager = class {
           operation,
           context,
           modalOperationId,
-          progressModal
+          progressModal2
         );
         results.push({ operationId: operation.id, result });
         if (result.success) {
           await this.markOperationCompleted(operation.id, version);
-          progressModal.updateOperation(modalOperationId, {
+          progressModal2.updateOperation(modalOperationId, {
             status: "completed",
             progress: 100
           });
@@ -14818,12 +13031,12 @@ var IncrementalUpgradeManager = class {
           const isCritical = this.isCriticalFailure(result);
           if (isCritical) {
             criticalFailures++;
-            progressModal.updateOperation(modalOperationId, {
+            progressModal2.updateOperation(modalOperationId, {
               status: "failed",
               error: result.message
             });
           } else {
-            progressModal.updateOperation(modalOperationId, {
+            progressModal2.updateOperation(modalOperationId, {
               status: "completed",
               progress: 100,
               currentDetail: "Completed with warnings"
@@ -14837,7 +13050,7 @@ var IncrementalUpgradeManager = class {
           details: { error: String(error) }
         };
         results.push({ operationId: operation.id, result: errorResult });
-        progressModal.updateOperation(modalOperationId, {
+        progressModal2.updateOperation(modalOperationId, {
           status: "failed",
           error: String(error)
         });
@@ -14855,9 +13068,9 @@ var IncrementalUpgradeManager = class {
   /**
    * Execute single operation with progress callbacks
    */
-  async executeOperationWithProgress(operation, context, modalOperationId, progressModal) {
+  async executeOperationWithProgress(operation, context, modalOperationId, progressModal2) {
     const result = await operation.execute(context);
-    progressModal.updateOperation(modalOperationId, {
+    progressModal2.updateOperation(modalOperationId, {
       status: "running",
       progress: 100
     });
@@ -15111,7 +13324,7 @@ ${md.substring(0, 500)}`);
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian27.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian25.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -15228,8 +13441,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian28 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian28.Modal {
+var import_obsidian26 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian26.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -15261,7 +13474,7 @@ var ProviderSelectionDialog = class extends import_obsidian28.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian28.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian26.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -15286,8 +13499,8 @@ var ProviderSelectionDialog = class extends import_obsidian28.Modal {
 };
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian29 = require("obsidian");
-var EnhancedFileSelectionDialog = class extends import_obsidian29.Modal {
+var import_obsidian27 = require("obsidian");
+var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -15685,8 +13898,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian29.Modal {
 };
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian30 = require("obsidian");
-var ConversationSelectionDialog = class extends import_obsidian30.Modal {
+var import_obsidian28 = require("obsidian");
+var ConversationSelectionDialog = class extends import_obsidian28.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -16820,8 +15033,8 @@ var ConversationMetadataExtractor = class {
 };
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian31 = require("obsidian");
-var ImportCompletionDialog = class extends import_obsidian31.Modal {
+var import_obsidian29 = require("obsidian");
+var ImportCompletionDialog = class extends import_obsidian29.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -17050,7 +15263,7 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -17228,7 +15441,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   async handleImportAll(files, provider) {
     try {
       this.logger.debug(`[IMPORT-ALL] Starting import all with ${files.length} files, provider: ${provider}`);
-      new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian30.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       this.logger.debug(`[IMPORT-ALL] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
       this.logger.debug(`[IMPORT-ALL] Creating ConversationMetadataExtractor`);
@@ -17252,7 +15465,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       }
       if (extractionResult.conversations.length === 0) {
         this.logger.debug(`[IMPORT-ALL] No conversations to import, generating report`);
-        new import_obsidian32.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian30.Notice("No new or updated conversations found. All conversations are already up to date.");
         this.logger.debug(`[IMPORT-ALL] Calling writeConsolidatedReport for empty result`);
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         this.logger.debug(`[IMPORT-ALL] Report written to: ${reportPath2}`);
@@ -17262,7 +15475,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
-      new import_obsidian32.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+      new import_obsidian30.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -17286,7 +15499,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian32.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian30.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
       }
     } catch (error) {
       this.logger.error("[IMPORT-ALL] Error in import all:", error);
@@ -17294,7 +15507,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (error instanceof Error) {
         console.error("[IMPORT-ALL] Error stack:", error.stack);
       }
-      new import_obsidian32.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian30.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -17303,7 +15516,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   async handleSelectiveImport(files, provider) {
     try {
       this.logger.debug(`[SELECTIVE-IMPORT] Starting selective import with ${files.length} files, provider: ${provider}`);
-      new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian30.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       this.logger.debug(`[SELECTIVE-IMPORT] Creating provider registry`);
       const providerRegistry = createProviderRegistry(this);
       this.logger.debug(`[SELECTIVE-IMPORT] Creating ConversationMetadataExtractor`);
@@ -17316,7 +15529,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian32.Notice("No conversations found in the selected files.");
+        new import_obsidian30.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
@@ -17334,7 +15547,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (error instanceof Error) {
         console.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
       }
-      new import_obsidian32.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian30.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -17346,14 +15559,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
     }
     if (result.selectedIds.length === 0) {
-      new import_obsidian32.Notice("No conversations selected for import.");
+      new import_obsidian30.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian32.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian30.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
@@ -17369,7 +15582,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian32.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian30.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
     }
   }
   /**
@@ -17398,7 +15611,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian32.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian30.Notice("Failed to create log file. Check console for details.");
       return "";
     }
     const now = Date.now() / 1e3;
@@ -17449,7 +15662,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       console.error("Full error:", error);
       console.error("Log content length:", logContent.length);
-      new import_obsidian32.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian30.Notice("Failed to create log file. Check console for details.");
       return "";
     }
   }
