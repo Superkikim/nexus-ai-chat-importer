@@ -81,11 +81,9 @@ export class IncrementalUpgradeManager {
             const currentVersion = this.plugin.manifest.version;
             const previousVersion = this.plugin.settings.previousVersion; // ← Use settings instead of data
 
-            console.debug(`[NEXUS-DEBUG] Incremental upgrade check: ${previousVersion} → ${currentVersion}`);
 
             // Skip if no version change
             if (previousVersion === currentVersion) {
-                console.debug(`[NEXUS-DEBUG] No version change - SKIPPING ALL`);
                 return null;
             }
 
@@ -94,19 +92,15 @@ export class IncrementalUpgradeManager {
             const versionKey = currentVersion.replace(/\./g, '_');
             const hasCompletedThisUpgrade = data?.upgradeHistory?.completedUpgrades?.[versionKey]?.completed;
 
-            console.debug(`[NEXUS-DEBUG] Upgrade history check for '${versionKey}': ${hasCompletedThisUpgrade}`);
 
             if (hasCompletedThisUpgrade) {
-                console.debug(`[NEXUS-DEBUG] Upgrade already completed - SKIPPING ALL`);
                 return null;
             }
 
             // FRESH INSTALL DETECTION - Skip upgrades if this is a new installation
             const isFreshInstall = await this.detectFreshInstall();
-            console.debug(`[NEXUS-DEBUG] Fresh install detection: ${isFreshInstall}`);
 
             if (isFreshInstall) {
-                console.debug(`[NEXUS-DEBUG] Fresh install detected - marking as complete without upgrades`);
                 await this.markUpgradeComplete(currentVersion);
                 return {
                     success: true,
@@ -119,10 +113,8 @@ export class IncrementalUpgradeManager {
 
             // Get upgrade chain: all upgrades between previousVersion and currentVersion
             const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
-            console.debug(`[NEXUS-DEBUG] Upgrade chain:`, upgradeChain.map(u => u.version));
 
             if (upgradeChain.length === 0) {
-                console.debug(`[NEXUS-DEBUG] No upgrades needed - marking complete`);
                 await this.markUpgradeComplete(currentVersion);
                 await this.showUpgradeDialog(currentVersion, previousVersion, []);
                 return {
@@ -134,34 +126,23 @@ export class IncrementalUpgradeManager {
                 };
             }
 
-            console.debug(`[NEXUS-DEBUG] Need to execute ${upgradeChain.length} upgrades - showing dialog first`);
 
             // Show upgrade dialog FIRST - INFORMATION ONLY (no cancel option)
             await this.showUpgradeDialog(currentVersion, previousVersion, upgradeChain);
 
             // Execute upgrade chain with modal (no user choice - automatic)
-            console.debug(`[NEXUS-DEBUG] Executing upgrades with modal...`);
             const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
 
             // Mark overall upgrade complete - ALWAYS (even if some operations were "no-op")
-            console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);
             await this.markUpgradeComplete(currentVersion);
 
             // Write consolidated upgrade report
-            console.debug(`[NEXUS-DEBUG] ========================================`);
-            console.debug(`[NEXUS-DEBUG] Calling writeUpgradeReport...`);
-            console.debug(`[NEXUS-DEBUG] Previous version: ${previousVersion}`);
-            console.debug(`[NEXUS-DEBUG] Current version: ${currentVersion}`);
-            console.debug(`[NEXUS-DEBUG] Upgrade chain length: ${upgradeChain.length}`);
-            console.debug(`[NEXUS-DEBUG] Current reportFolder setting: ${this.plugin.settings.reportFolder}`);
             try {
                 await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
-                console.debug(`[NEXUS-DEBUG] ✅ writeUpgradeReport completed successfully`);
             } catch (e) {
                 console.error("[NEXUS-DEBUG] ❌ Failed to write consolidated upgrade report", e);
                 console.error("[NEXUS-DEBUG] Error stack:", e instanceof Error ? e.stack : 'No stack trace');
             }
-            console.debug(`[NEXUS-DEBUG] ========================================`);
 
             // Note: Folder configuration is now handled by ConfigureFolderLocationsOperation (task 5)
             // No need for separate UpgradeNoticeDialog anymore
@@ -176,7 +157,6 @@ export class IncrementalUpgradeManager {
 
             // Check if user cancelled
             if (error instanceof Error && error.message === "User cancelled upgrade") {
-                console.debug(`[NEXUS-DEBUG] User cancelled upgrade dialog`);
                 new Notice("Migration cancelled. Please complete the migration before importing.");
                 return {
                     success: false,
@@ -236,13 +216,6 @@ export class IncrementalUpgradeManager {
             // Fresh install criteria: no legacy data AND no imported archives AND no existing conversations
             const isFreshInstall = !hasLegacyData && !hasImportedArchives && !hasExistingConversations;
 
-            console.debug(`[NEXUS-DEBUG] Fresh install detection:`, {
-                hasLegacyData,
-                hasImportedArchives,
-                hasExistingConversations,
-                isFreshInstall
-            });
-
             return isFreshInstall;
 
         } catch (error) {
@@ -297,7 +270,6 @@ export class IncrementalUpgradeManager {
 
         try {
             for (const upgrade of upgradeChain) {
-                console.debug(`[NEXUS-DEBUG] Executing upgrade ${upgrade.version}...`);
 
                 const context = await this.createUpgradeContext(upgrade, fromVersion, toVersion);
 
@@ -309,7 +281,6 @@ export class IncrementalUpgradeManager {
                     progressModal
                 );
 
-                console.debug(`[NEXUS-DEBUG] Automatic operations for ${upgrade.version}:`, automaticResults);
 
                 // Manual operations will be handled separately if any exist
                 const manualResults = { success: true, results: [] };
@@ -539,37 +510,24 @@ export class IncrementalUpgradeManager {
         upgradeChain: VersionUpgrade[],
         result: IncrementalUpgradeResult
     ): Promise<void> {
-        console.debug(`[NEXUS-UPGRADE-REPORT] ========================================`);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Starting upgrade report generation`);
-        console.debug(`[NEXUS-UPGRADE-REPORT] From: ${fromVersion} → To: ${toVersion}`);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Upgrade chain length: ${upgradeChain.length}`);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Result:`, result);
 
         const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
-        console.debug(`[NEXUS-UPGRADE-REPORT] Report root folder: "${reportRoot}"`);
 
         const upgradesFolder = `${reportRoot}/Upgrades`;
-        console.debug(`[NEXUS-UPGRADE-REPORT] Upgrades folder: "${upgradesFolder}"`);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Ensuring folder exists...`);
 
         const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Folder creation result:`, folderResult);
 
         if (!folderResult.success) {
             console.error(`[NEXUS-UPGRADE-REPORT] ❌ Failed to create folder: ${folderResult.error}`);
             throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
         }
-        console.debug(`[NEXUS-UPGRADE-REPORT] ✅ Folder exists or created successfully`);
 
         const now = new Date();
         const pad = (n: number) => n.toString().padStart(2, '0');
         const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
         const fileName = `${ts} - Upgrade to ${toVersion}.md`;
         const filePath = `${upgradesFolder}/${fileName}`;
-        console.debug(`[NEXUS-UPGRADE-REPORT] File name: "${fileName}"`);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Full file path: "${filePath}"`);
 
-        console.debug(`[NEXUS-UPGRADE-REPORT] Building operation name map...`);
         // Build a map to resolve operation names per version
         const opsByVersion: Record<string, Record<string, string>> = {};
         for (const up of upgradeChain) {
@@ -578,7 +536,6 @@ export class IncrementalUpgradeManager {
                 opsByVersion[up.version][op.id] = op.name;
             }
         }
-        console.debug(`[NEXUS-UPGRADE-REPORT] Operation map built:`, opsByVersion);
 
         // Overview
         const readmeUrl = `${GITHUB.REPO_BASE}#readme`;
@@ -586,9 +543,7 @@ export class IncrementalUpgradeManager {
 
         const totalVersions = result.results.length;
         const totalOps = result.results.reduce((acc, v) => acc + (v.automaticResults?.results?.length || 0), 0);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Total versions: ${totalVersions}, Total operations: ${totalOps}`);
 
-        console.debug(`[NEXUS-UPGRADE-REPORT] Building markdown content...`);
         let md = `# Upgrade to v${toVersion}\n\n`;
         md += `From v${fromVersion} → v${toVersion}\n\n`;
         md += `- Versions processed: ${totalVersions}\n`;
@@ -597,12 +552,9 @@ export class IncrementalUpgradeManager {
         md += `Report or review issues: ${issuesUrl}\n\n`;
 
         // Sections per upgrade version and operation
-        console.debug(`[NEXUS-UPGRADE-REPORT] Processing ${result.results.length} version results...`);
         for (const entry of result.results) {
-            console.debug(`[NEXUS-UPGRADE-REPORT] Processing version: ${entry.version}`);
             md += `## ${entry.version}\n\n`;
             const ops = entry.automaticResults?.results || [];
-            console.debug(`[NEXUS-UPGRADE-REPORT] Version ${entry.version} has ${ops.length} operations`);
 
             if (!ops.length) {
                 md += `- No automatic operations\n\n`;
@@ -614,18 +566,15 @@ export class IncrementalUpgradeManager {
                 const ok = opRes.result?.success === true;
                 const status = ok ? '✅' : '⚠️';
                 const msg = opRes.result?.message || '';
-                console.debug(`[NEXUS-UPGRADE-REPORT]   - Operation: ${opName} (${opId}) - Success: ${ok}`);
                 md += `### ${opName} ${status}\n\n`;
                 if (msg) md += `${msg}\n\n`;
 
                 const details = opRes.result?.details;
                 if (details) {
-                    console.debug(`[NEXUS-UPGRADE-REPORT]     Details type: ${Array.isArray(details) ? 'array' : typeof details}`);
                     // Format details based on type
                     if (Array.isArray(details)) {
                         // Array of strings (e.g., migration results)
                         if (details.length > 0) {
-                            console.debug(`[NEXUS-UPGRADE-REPORT]     Details array length: ${details.length}`);
                             for (const item of details) {
                                 if (typeof item === 'string') {
                                     md += `${item}\n`;
@@ -636,7 +585,6 @@ export class IncrementalUpgradeManager {
                     } else if (typeof details === 'object') {
                         // Object with key-value pairs (e.g., statistics)
                         const keys = Object.keys(details);
-                        console.debug(`[NEXUS-UPGRADE-REPORT]     Details object keys: ${keys.length}`);
                         if (keys.length > 0 && !keys.every(k => /^\d+$/.test(k))) {
                             // Only show if not array-like keys (0, 1, 2...)
                             md += `**Statistics:**\n\n`;
@@ -651,15 +599,9 @@ export class IncrementalUpgradeManager {
             }
         }
 
-        console.debug(`[NEXUS-UPGRADE-REPORT] Markdown content built. Length: ${md.length} characters`);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Content preview (first 500 chars):\n${md.substring(0, 500)}`);
-        console.debug(`[NEXUS-UPGRADE-REPORT] Writing file to vault...`);
 
         try {
             await this.plugin.app.vault.create(filePath, md);
-            console.debug(`[NEXUS-UPGRADE-REPORT] ✅ Report written successfully!`);
-            console.debug(`[NEXUS-UPGRADE-REPORT] File path: ${filePath}`);
-            console.debug(`[NEXUS-UPGRADE-REPORT] ========================================`);
         } catch (error) {
             console.error(`[NEXUS-UPGRADE-REPORT] ❌ Failed to write report file:`, error);
             console.error(`[NEXUS-UPGRADE-REPORT] Error details:`, {

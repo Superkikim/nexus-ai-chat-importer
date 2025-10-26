@@ -74,7 +74,6 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            console.debug(`[NEXUS-DEBUG] ConvertToCallouts.execute starting`);
 
             const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
@@ -98,7 +97,6 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
             let converted = 0;
             let errors = 0;
 
-            console.debug(`[NEXUS-DEBUG] ConvertToCallouts: Processing ${conversationFiles.length} files`);
 
             // Process files in smaller batches to avoid blocking
             const batchSize = 10;
@@ -137,7 +135,6 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] ConvertToCallouts: Completed - processed:${processed}, converted:${converted}, errors:${errors}`);
 
             return {
                 success: errors === 0,
@@ -294,13 +291,11 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
                     // Check if still has old format
                     if (this.hasOldIndentationFormat(content)) {
-                        console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Still has old format in ${file.path}`);
                         return false;
                     }
 
                     // Check if plugin_version was updated
                     if (!content.includes('plugin_version: "1.2.0"')) {
-                        console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Missing v1.2.0 in ${file.path}`);
                         return false;
                     }
 
@@ -347,7 +342,6 @@ class MoveReportsToProviderOperation extends UpgradeOperation {
                     return f.name.includes('import report') || f.name.includes('import_');
                 });
 
-            console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun: found ${reportFiles.length} reports in root folder`);
             return reportFiles.length > 0;
         } catch (error) {
             console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun failed:`, error);
@@ -387,20 +381,17 @@ class MoveReportsToProviderOperation extends UpgradeOperation {
 
                     // Check if target already exists
                     if (await context.plugin.app.vault.adapter.exists(newPath)) {
-                        console.debug(`[NEXUS-DEBUG] Target already exists, skipping: ${newPath}`);
                         continue;
                     }
 
                     await context.plugin.app.vault.adapter.rename(file.path, newPath);
                     moved++;
-                    console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} → ${newPath}`);
                 } catch (error) {
                     errors++;
                     console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation: processed=${processed}, moved=${moved}, errors=${errors}`);
             return {
                 success: errors === 0,
                 message: `Reports organized: ${moved} files moved to provider structure, ${errors} errors`,
@@ -491,7 +482,6 @@ class UpdateReportLinksOperation extends UpgradeOperation {
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] UpdateReportLinksOperation: processed=${processed}, updated=${updated}, errors=${errors}`);
             return {
                 success: errors === 0,
                 message: `Report links updated: ${updated} files changed, ${errors} errors`,
@@ -540,7 +530,6 @@ class MoveYearFoldersOperation extends UpgradeOperation {
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            console.debug(`[NEXUS-DEBUG] MoveYearFolders.execute starting`);
 
             const conversationFolder = context.plugin.settings.conversationFolder;
 
@@ -561,14 +550,12 @@ class MoveYearFoldersOperation extends UpgradeOperation {
                     await context.plugin.app.vault.adapter.rename(oldPath, newPath);
                     movedFolders++;
 
-                    console.debug(`[NEXUS-DEBUG] Moved ${yearFolder} to chatgpt/${yearFolder}`);
                 } catch (error) {
                     errors++;
                     console.error(`[NEXUS-DEBUG] Error moving year folder ${yearFolder}:`, error);
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] MoveYearFolders: Completed - moved:${movedFolders}, errors:${errors}`);
 
             return {
                 success: errors === 0,
@@ -594,7 +581,6 @@ class MoveYearFoldersOperation extends UpgradeOperation {
             const remainingYearFolders = await this.findYearFolders(context, conversationFolder);
 
             if (remainingYearFolders.length > 0) {
-                console.debug(`[NEXUS-DEBUG] MoveYearFolders.verify: Still ${remainingYearFolders.length} year folders in old structure`);
                 return false;
             }
 
@@ -678,7 +664,6 @@ Your conversations will be reorganized with provider structure and modern callou
             }
         } catch (error) {
             // Use fallback message if GitHub fetch fails
-            console.debug('[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback');
         }
 
         // Render markdown content

@@ -4445,29 +4445,21 @@ var init_date_parser = __esm({
       static parseDate(dateStr, contextId) {
         const ctx = contextId ? `[${contextId}] ` : "";
         if (!dateStr || typeof dateStr !== "string") {
-          console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - invalid input: ${dateStr}`);
           return 0;
         }
-        console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - input: "${dateStr}"`);
         try {
           const isoDate = (0, import_obsidian19.moment)(dateStr, import_obsidian19.moment.ISO_8601, true);
           if (isoDate.isValid()) {
-            const result = isoDate.unix();
-            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - ISO 8601 match, result: ${result}`);
-            return result;
+            return isoDate.unix();
           }
-          console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - not ISO 8601, detecting format...`);
           const format = this.detectFormat(dateStr);
           if (!format) {
             console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: could not detect format`);
             return 0;
           }
-          console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - detected format: ${format.order} ${format.separator} ${format.timeFormat}${format.hasSeconds ? " +seconds" : ""}`);
           const parsed = this.parseWithFormat(dateStr, format);
           if (parsed === 0) {
             console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: parsing returned 0`);
-          } else {
-            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - SUCCESS: ${parsed}`);
           }
           return parsed;
         } catch (error) {
@@ -4633,15 +4625,12 @@ var init_date_parser = __esm({
        * Returns ISO 8601 string or null if parsing fails
        */
       static convertToISO8601(dateStr) {
-        console.debug(`[NEXUS-DATEPARSER] convertToISO8601 - input: "${dateStr}"`);
         const unixTime = this.parseDate(dateStr);
         if (unixTime === 0) {
           console.warn(`[NEXUS-DATEPARSER] convertToISO8601 - parsing returned 0`);
           return null;
         }
-        const result = new Date(unixTime * 1e3).toISOString();
-        console.debug(`[NEXUS-DATEPARSER] convertToISO8601 - result: "${result}"`);
-        return result;
+        return new Date(unixTime * 1e3).toISOString();
       }
       /**
        * Detect format from multiple date samples (more reliable)
@@ -4962,9 +4951,7 @@ var init_upgrade_1_1_0 = __esm({
           const data = await context.plugin.loadData();
           const catalog = data == null ? void 0 : data.conversationCatalog;
           const hasData = catalog && typeof catalog === "object" && Object.keys(catalog).length > 0;
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: catalog exists=${!!catalog}, hasData=${hasData}`);
           if (catalog) {
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: catalog size=${Object.keys(catalog).length}`);
           }
           return hasData;
         } catch (error) {
@@ -4974,21 +4961,16 @@ var init_upgrade_1_1_0 = __esm({
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog.execute starting`);
           const data = await context.plugin.loadData();
           const catalog = (data == null ? void 0 : data.conversationCatalog) || {};
           const catalogSize = Object.keys(catalog).length;
           if (catalogSize === 0) {
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: No catalog to delete`);
             return {
               success: true,
               message: "No legacy catalog found to delete"
             };
           }
           const existingImportedArchives = data == null ? void 0 : data.importedArchives;
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: Preserving importedArchives:`, existingImportedArchives);
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: importedArchives type:`, typeof existingImportedArchives);
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: importedArchives keys:`, existingImportedArchives ? Object.keys(existingImportedArchives).length : 0);
           const cleanedData = {
             settings: data.settings || context.plugin.settings,
             // CRITICAL FIX: Force preservation of importedArchives
@@ -5001,11 +4983,9 @@ var init_upgrade_1_1_0 = __esm({
             catalogDeletionDate: new Date().toISOString(),
             catalogDeletionStats: { entriesDeleted: catalogSize }
           };
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: cleanedData.importedArchives keys:`, Object.keys(cleanedData.importedArchives).length);
           await context.plugin.saveData(cleanedData);
           const verifyData = await context.plugin.loadData();
           const verifyArchives = (verifyData == null ? void 0 : verifyData.importedArchives) || {};
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: After save, importedArchives keys:`, Object.keys(verifyArchives).length);
           if (Object.keys(verifyArchives).length === 0 && Object.keys(existingImportedArchives || {}).length > 0) {
             console.error(`[NEXUS-DEBUG] DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
             return {
@@ -5017,7 +4997,6 @@ var init_upgrade_1_1_0 = __esm({
               }
             };
           }
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: Successfully deleted ${catalogSize} entries and preserved ${Object.keys(verifyArchives).length} imported archives`);
           return {
             success: true,
             message: `Legacy catalog deleted: ${catalogSize} entries removed, ${Object.keys(verifyArchives).length} imported archives preserved`,
@@ -5037,7 +5016,6 @@ var init_upgrade_1_1_0 = __esm({
           const data = await context.plugin.loadData();
           const hasNoCatalog = !(data == null ? void 0 : data.conversationCatalog);
           const hasImportedArchives = (data == null ? void 0 : data.importedArchives) && Object.keys(data.importedArchives).length > 0;
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog.verify: hasNoCatalog=${hasNoCatalog}, hasImportedArchives=${hasImportedArchives}`);
           return hasNoCatalog;
         } catch (error) {
           console.error(`[NEXUS-DEBUG] DeleteCatalog.verify failed:`, error);
@@ -5067,7 +5045,6 @@ var init_upgrade_1_1_0 = __esm({
             return true;
           });
           const canRun = conversationFiles.length > 0;
-          console.debug(`[NEXUS-DEBUG] CleanMetadata.canRun: found ${conversationFiles.length} conversation files, canRun=${canRun}`);
           return canRun;
         } catch (error) {
           console.error(`[NEXUS-DEBUG] CleanMetadata.canRun failed:`, error);
@@ -5076,7 +5053,6 @@ var init_upgrade_1_1_0 = __esm({
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] CleanMetadata.execute starting`);
           const conversationFolder = context.plugin.settings.conversationFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
@@ -5089,14 +5065,12 @@ var init_upgrade_1_1_0 = __esm({
             return true;
           });
           if (conversationFiles.length === 0) {
-            console.debug(`[NEXUS-DEBUG] CleanMetadata: No conversation files to clean`);
             return {
               success: true,
               message: "No conversation files found to clean",
               details: { processed: 0, cleaned: 0, errors: 0 }
             };
           }
-          console.debug(`[NEXUS-DEBUG] CleanMetadata: Processing ${conversationFiles.length} conversation files`);
           let processed = 0;
           let cleaned = 0;
           let errors = 0;
@@ -5121,7 +5095,6 @@ var init_upgrade_1_1_0 = __esm({
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          console.debug(`[NEXUS-DEBUG] CleanMetadata: Completed - processed:${processed}, cleaned:${cleaned}, errors:${errors}`);
           return {
             success: errors === 0,
             message: `Metadata cleanup completed: ${cleaned} files cleaned, ${errors} errors`,
@@ -5229,7 +5202,6 @@ ${cleanedFrontmatter}
                 continue;
               const frontmatterContent = frontmatterMatch[1];
               if (!frontmatterContent.includes("plugin_version:")) {
-                console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Missing plugin_version in ${file.path}`);
                 return false;
               }
               const forbiddenFields = [
@@ -5246,7 +5218,6 @@ ${cleanedFrontmatter}
                 (field) => frontmatterContent.includes(field)
               );
               if (hasUnwantedFields) {
-                console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Found unwanted fields in ${file.path}`);
                 return false;
               }
             } catch (error) {
@@ -5254,7 +5225,6 @@ ${cleanedFrontmatter}
               return false;
             }
           }
-          console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Passed verification`);
           return true;
         } catch (error) {
           console.error(`[NEXUS-DEBUG] CleanMetadata.verify failed:`, error);
@@ -5330,7 +5300,6 @@ var init_upgrade_1_2_0 = __esm({
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] ConvertToCallouts.execute starting`);
           const conversationFolder = context.plugin.settings.conversationFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
@@ -5345,7 +5314,6 @@ var init_upgrade_1_2_0 = __esm({
           let processed = 0;
           let converted = 0;
           let errors = 0;
-          console.debug(`[NEXUS-DEBUG] ConvertToCallouts: Processing ${conversationFiles.length} files`);
           const batchSize = 10;
           for (let i = 0; i < conversationFiles.length; i += batchSize) {
             const batch = conversationFiles.slice(i, i + batchSize);
@@ -5371,7 +5339,6 @@ var init_upgrade_1_2_0 = __esm({
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          console.debug(`[NEXUS-DEBUG] ConvertToCallouts: Completed - processed:${processed}, converted:${converted}, errors:${errors}`);
           return {
             success: errors === 0,
             message: `Callout conversion completed: ${converted} files converted, ${errors} errors`,
@@ -5500,11 +5467,9 @@ ${cleanContent}`;
             try {
               const content = await context.plugin.app.vault.read(file);
               if (this.hasOldIndentationFormat(content)) {
-                console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Still has old format in ${file.path}`);
                 return false;
               }
               if (!content.includes('plugin_version: "1.2.0"')) {
-                console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Missing v1.2.0 in ${file.path}`);
                 return false;
               }
             } catch (error) {
@@ -5538,7 +5503,6 @@ ${cleanContent}`;
               return false;
             return f.name.includes("import report") || f.name.includes("import_");
           });
-          console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun: found ${reportFiles.length} reports in root folder`);
           return reportFiles.length > 0;
         } catch (error) {
           console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun failed:`, error);
@@ -5569,18 +5533,15 @@ ${cleanContent}`;
               processed++;
               const newPath = `${chatgptReportFolder}/${file.name}`;
               if (await context.plugin.app.vault.adapter.exists(newPath)) {
-                console.debug(`[NEXUS-DEBUG] Target already exists, skipping: ${newPath}`);
                 continue;
               }
               await context.plugin.app.vault.adapter.rename(file.path, newPath);
               moved++;
-              console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} \u2192 ${newPath}`);
             } catch (error) {
               errors++;
               console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
             }
           }
-          console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation: processed=${processed}, moved=${moved}, errors=${errors}`);
           return {
             success: errors === 0,
             message: `Reports organized: ${moved} files moved to provider structure, ${errors} errors`,
@@ -5649,7 +5610,6 @@ ${cleanContent}`;
               console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation error in ${file.path}:`, e);
             }
           }
-          console.debug(`[NEXUS-DEBUG] UpdateReportLinksOperation: processed=${processed}, updated=${updated}, errors=${errors}`);
           return {
             success: errors === 0,
             message: `Report links updated: ${updated} files changed, ${errors} errors`,
@@ -5688,7 +5648,6 @@ ${cleanContent}`;
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] MoveYearFolders.execute starting`);
           const conversationFolder = context.plugin.settings.conversationFolder;
           let movedFolders = 0;
           let errors = 0;
@@ -5701,13 +5660,11 @@ ${cleanContent}`;
               const oldPath = `${conversationFolder}/${yearFolder}`;
               await context.plugin.app.vault.adapter.rename(oldPath, newPath);
               movedFolders++;
-              console.debug(`[NEXUS-DEBUG] Moved ${yearFolder} to chatgpt/${yearFolder}`);
             } catch (error) {
               errors++;
               console.error(`[NEXUS-DEBUG] Error moving year folder ${yearFolder}:`, error);
             }
           }
-          console.debug(`[NEXUS-DEBUG] MoveYearFolders: Completed - moved:${movedFolders}, errors:${errors}`);
           return {
             success: errors === 0,
             message: `Conversation organization completed: ${movedFolders} year folders moved to chatgpt structure, ${errors} errors`,
@@ -5727,7 +5684,6 @@ ${cleanContent}`;
           const conversationFolder = context.plugin.settings.conversationFolder;
           const remainingYearFolders = await this.findYearFolders(context, conversationFolder);
           if (remainingYearFolders.length > 0) {
-            console.debug(`[NEXUS-DEBUG] MoveYearFolders.verify: Still ${remainingYearFolders.length} year folders in old structure`);
             return false;
           }
           return true;
@@ -5790,7 +5746,6 @@ Your conversations will be reorganized with provider structure and modern callou
             }
           }
         } catch (error) {
-          console.debug("[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback");
         }
         await import_obsidian21.MarkdownRenderer.render(
           this.app,
@@ -12623,23 +12578,17 @@ var IncrementalUpgradeManager = class {
     try {
       const currentVersion = this.plugin.manifest.version;
       const previousVersion = this.plugin.settings.previousVersion;
-      console.debug(`[NEXUS-DEBUG] Incremental upgrade check: ${previousVersion} \u2192 ${currentVersion}`);
       if (previousVersion === currentVersion) {
-        console.debug(`[NEXUS-DEBUG] No version change - SKIPPING ALL`);
         return null;
       }
       const data = await this.plugin.loadData();
       const versionKey = currentVersion.replace(/\./g, "_");
       const hasCompletedThisUpgrade = (_c = (_b = (_a = data == null ? void 0 : data.upgradeHistory) == null ? void 0 : _a.completedUpgrades) == null ? void 0 : _b[versionKey]) == null ? void 0 : _c.completed;
-      console.debug(`[NEXUS-DEBUG] Upgrade history check for '${versionKey}': ${hasCompletedThisUpgrade}`);
       if (hasCompletedThisUpgrade) {
-        console.debug(`[NEXUS-DEBUG] Upgrade already completed - SKIPPING ALL`);
         return null;
       }
       const isFreshInstall = await this.detectFreshInstall();
-      console.debug(`[NEXUS-DEBUG] Fresh install detection: ${isFreshInstall}`);
       if (isFreshInstall) {
-        console.debug(`[NEXUS-DEBUG] Fresh install detected - marking as complete without upgrades`);
         await this.markUpgradeComplete(currentVersion);
         return {
           success: true,
@@ -12650,9 +12599,7 @@ var IncrementalUpgradeManager = class {
         };
       }
       const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
-      console.debug(`[NEXUS-DEBUG] Upgrade chain:`, upgradeChain.map((u) => u.version));
       if (upgradeChain.length === 0) {
-        console.debug(`[NEXUS-DEBUG] No upgrades needed - marking complete`);
         await this.markUpgradeComplete(currentVersion);
         await this.showUpgradeDialog(currentVersion, previousVersion, []);
         return {
@@ -12663,31 +12610,19 @@ var IncrementalUpgradeManager = class {
           results: []
         };
       }
-      console.debug(`[NEXUS-DEBUG] Need to execute ${upgradeChain.length} upgrades - showing dialog first`);
       await this.showUpgradeDialog(currentVersion, previousVersion, upgradeChain);
-      console.debug(`[NEXUS-DEBUG] Executing upgrades with modal...`);
       const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
-      console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);
       await this.markUpgradeComplete(currentVersion);
-      console.debug(`[NEXUS-DEBUG] ========================================`);
-      console.debug(`[NEXUS-DEBUG] Calling writeUpgradeReport...`);
-      console.debug(`[NEXUS-DEBUG] Previous version: ${previousVersion}`);
-      console.debug(`[NEXUS-DEBUG] Current version: ${currentVersion}`);
-      console.debug(`[NEXUS-DEBUG] Upgrade chain length: ${upgradeChain.length}`);
-      console.debug(`[NEXUS-DEBUG] Current reportFolder setting: ${this.plugin.settings.reportFolder}`);
       try {
         await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
-        console.debug(`[NEXUS-DEBUG] \u2705 writeUpgradeReport completed successfully`);
       } catch (e) {
         console.error("[NEXUS-DEBUG] \u274C Failed to write consolidated upgrade report", e);
         console.error("[NEXUS-DEBUG] Error stack:", e instanceof Error ? e.stack : "No stack trace");
       }
-      console.debug(`[NEXUS-DEBUG] ========================================`);
       return result;
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
-        console.debug(`[NEXUS-DEBUG] User cancelled upgrade dialog`);
         new import_obsidian25.Notice("Migration cancelled. Please complete the migration before importing.");
         return {
           success: false,
@@ -12731,12 +12666,6 @@ var IncrementalUpgradeManager = class {
       });
       const hasExistingConversations = existingConversations.length > 0;
       const isFreshInstall = !hasLegacyData && !hasImportedArchives && !hasExistingConversations;
-      console.debug(`[NEXUS-DEBUG] Fresh install detection:`, {
-        hasLegacyData,
-        hasImportedArchives,
-        hasExistingConversations,
-        isFreshInstall
-      });
       return isFreshInstall;
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Error detecting fresh install:`, error);
@@ -12777,7 +12706,6 @@ var IncrementalUpgradeManager = class {
     let upgradesFailed = 0;
     try {
       for (const upgrade of upgradeChain) {
-        console.debug(`[NEXUS-DEBUG] Executing upgrade ${upgrade.version}...`);
         const context = await this.createUpgradeContext(upgrade, fromVersion, toVersion);
         const automaticResults = await this.executeOperationsWithProgress(
           upgrade.automaticOperations,
@@ -12785,7 +12713,6 @@ var IncrementalUpgradeManager = class {
           upgrade.version,
           progressModal2
         );
-        console.debug(`[NEXUS-DEBUG] Automatic operations for ${upgrade.version}:`, automaticResults);
         const manualResults = { success: true, results: [] };
         results.push({
           version: upgrade.version,
@@ -12950,31 +12877,18 @@ var IncrementalUpgradeManager = class {
    */
   async writeUpgradeReport(fromVersion, toVersion, upgradeChain, result) {
     var _a, _b, _c, _d, _e;
-    console.debug(`[NEXUS-UPGRADE-REPORT] ========================================`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Starting upgrade report generation`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] From: ${fromVersion} \u2192 To: ${toVersion}`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Upgrade chain length: ${upgradeChain.length}`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Result:`, result);
     const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
-    console.debug(`[NEXUS-UPGRADE-REPORT] Report root folder: "${reportRoot}"`);
     const upgradesFolder = `${reportRoot}/Upgrades`;
-    console.debug(`[NEXUS-UPGRADE-REPORT] Upgrades folder: "${upgradesFolder}"`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Ensuring folder exists...`);
     const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Folder creation result:`, folderResult);
     if (!folderResult.success) {
       console.error(`[NEXUS-UPGRADE-REPORT] \u274C Failed to create folder: ${folderResult.error}`);
       throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
     }
-    console.debug(`[NEXUS-UPGRADE-REPORT] \u2705 Folder exists or created successfully`);
     const now = new Date();
     const pad = (n) => n.toString().padStart(2, "0");
     const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
     const fileName = `${ts} - Upgrade to ${toVersion}.md`;
     const filePath = `${upgradesFolder}/${fileName}`;
-    console.debug(`[NEXUS-UPGRADE-REPORT] File name: "${fileName}"`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Full file path: "${filePath}"`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Building operation name map...`);
     const opsByVersion = {};
     for (const up of upgradeChain) {
       opsByVersion[up.version] = {};
@@ -12982,7 +12896,6 @@ var IncrementalUpgradeManager = class {
         opsByVersion[up.version][op.id] = op.name;
       }
     }
-    console.debug(`[NEXUS-UPGRADE-REPORT] Operation map built:`, opsByVersion);
     const readmeUrl = `${GITHUB.REPO_BASE}#readme`;
     const issuesUrl = `${GITHUB.REPO_BASE}/issues`;
     const totalVersions = result.results.length;
@@ -12990,8 +12903,6 @@ var IncrementalUpgradeManager = class {
       var _a2, _b2;
       return acc + (((_b2 = (_a2 = v.automaticResults) == null ? void 0 : _a2.results) == null ? void 0 : _b2.length) || 0);
     }, 0);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Total versions: ${totalVersions}, Total operations: ${totalOps}`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Building markdown content...`);
     let md = `# Upgrade to v${toVersion}
 
 `;
@@ -13009,14 +12920,11 @@ var IncrementalUpgradeManager = class {
     md += `Report or review issues: ${issuesUrl}
 
 `;
-    console.debug(`[NEXUS-UPGRADE-REPORT] Processing ${result.results.length} version results...`);
     for (const entry of result.results) {
-      console.debug(`[NEXUS-UPGRADE-REPORT] Processing version: ${entry.version}`);
       md += `## ${entry.version}
 
 `;
       const ops = ((_a = entry.automaticResults) == null ? void 0 : _a.results) || [];
-      console.debug(`[NEXUS-UPGRADE-REPORT] Version ${entry.version} has ${ops.length} operations`);
       if (!ops.length) {
         md += `- No automatic operations
 
@@ -13029,7 +12937,6 @@ var IncrementalUpgradeManager = class {
         const ok = ((_c = opRes.result) == null ? void 0 : _c.success) === true;
         const status = ok ? "\u2705" : "\u26A0\uFE0F";
         const msg = ((_d = opRes.result) == null ? void 0 : _d.message) || "";
-        console.debug(`[NEXUS-UPGRADE-REPORT]   - Operation: ${opName} (${opId}) - Success: ${ok}`);
         md += `### ${opName} ${status}
 
 `;
@@ -13039,10 +12946,8 @@ var IncrementalUpgradeManager = class {
 `;
         const details = (_e = opRes.result) == null ? void 0 : _e.details;
         if (details) {
-          console.debug(`[NEXUS-UPGRADE-REPORT]     Details type: ${Array.isArray(details) ? "array" : typeof details}`);
           if (Array.isArray(details)) {
             if (details.length > 0) {
-              console.debug(`[NEXUS-UPGRADE-REPORT]     Details array length: ${details.length}`);
               for (const item of details) {
                 if (typeof item === "string") {
                   md += `${item}
@@ -13054,7 +12959,6 @@ var IncrementalUpgradeManager = class {
             }
           } else if (typeof details === "object") {
             const keys = Object.keys(details);
-            console.debug(`[NEXUS-UPGRADE-REPORT]     Details object keys: ${keys.length}`);
             if (keys.length > 0 && !keys.every((k) => /^\d+$/.test(k))) {
               md += `**Statistics:**
 
@@ -13071,15 +12975,8 @@ var IncrementalUpgradeManager = class {
         }
       }
     }
-    console.debug(`[NEXUS-UPGRADE-REPORT] Markdown content built. Length: ${md.length} characters`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Content preview (first 500 chars):
-${md.substring(0, 500)}`);
-    console.debug(`[NEXUS-UPGRADE-REPORT] Writing file to vault...`);
     try {
       await this.plugin.app.vault.create(filePath, md);
-      console.debug(`[NEXUS-UPGRADE-REPORT] \u2705 Report written successfully!`);
-      console.debug(`[NEXUS-UPGRADE-REPORT] File path: ${filePath}`);
-      console.debug(`[NEXUS-UPGRADE-REPORT] ========================================`);
     } catch (error) {
       console.error(`[NEXUS-UPGRADE-REPORT] \u274C Failed to write report file:`, error);
       console.error(`[NEXUS-UPGRADE-REPORT] Error details:`, {

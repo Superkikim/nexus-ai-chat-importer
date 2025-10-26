@@ -45,22 +45,15 @@ export class DateParser {
         const ctx = contextId ? `[${contextId}] ` : '';
 
         if (!dateStr || typeof dateStr !== 'string') {
-            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - invalid input: ${dateStr}`);
             return 0;
         }
-
-        console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - input: "${dateStr}"`);
 
         try {
             // Try ISO 8601 first (fastest and most common in v1.3.0+)
             const isoDate = moment(dateStr, moment.ISO_8601, true);
             if (isoDate.isValid()) {
-                const result = isoDate.unix();
-                console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - ISO 8601 match, result: ${result}`);
-                return result;
+                return isoDate.unix();
             }
-
-            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - not ISO 8601, detecting format...`);
 
             // Detect format and parse
             const format = this.detectFormat(dateStr);
@@ -69,13 +62,9 @@ export class DateParser {
                 return 0;
             }
 
-            console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - detected format: ${format.order} ${format.separator} ${format.timeFormat}${format.hasSeconds ? ' +seconds' : ''}`);
-
             const parsed = this.parseWithFormat(dateStr, format);
             if (parsed === 0) {
                 console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: parsing returned 0`);
-            } else {
-                console.debug(`[NEXUS-DATEPARSER] ${ctx}parseDate - SUCCESS: ${parsed}`);
             }
 
             return parsed;
@@ -288,8 +277,6 @@ export class DateParser {
      * Returns ISO 8601 string or null if parsing fails
      */
     static convertToISO8601(dateStr: string): string | null {
-        console.debug(`[NEXUS-DATEPARSER] convertToISO8601 - input: "${dateStr}"`);
-
         const unixTime = this.parseDate(dateStr);
         if (unixTime === 0) {
             console.warn(`[NEXUS-DATEPARSER] convertToISO8601 - parsing returned 0`);
@@ -297,9 +284,7 @@ export class DateParser {
         }
 
         // Convert to ISO 8601 with milliseconds
-        const result = new Date(unixTime * 1000).toISOString();
-        console.debug(`[NEXUS-DATEPARSER] convertToISO8601 - result: "${result}"`);
-        return result;
+        return new Date(unixTime * 1000).toISOString();
     }
 
     /**

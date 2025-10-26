@@ -39,9 +39,7 @@ class DeleteCatalogOperation extends UpgradeOperation {
             const catalog = data?.conversationCatalog;
             const hasData = catalog && typeof catalog === 'object' && Object.keys(catalog).length > 0;
             
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: catalog exists=${!!catalog}, hasData=${hasData}`);
             if (catalog) {
-                console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: catalog size=${Object.keys(catalog).length}`);
             }
             return hasData;
         } catch (error) {
@@ -52,7 +50,6 @@ class DeleteCatalogOperation extends UpgradeOperation {
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog.execute starting`);
             
             // Operation loads its own data - not relying on context.pluginData
             const data = await context.plugin.loadData();
@@ -60,7 +57,6 @@ class DeleteCatalogOperation extends UpgradeOperation {
             const catalogSize = Object.keys(catalog).length;
 
             if (catalogSize === 0) {
-                console.debug(`[NEXUS-DEBUG] DeleteCatalog: No catalog to delete`);
                 return {
                     success: true,
                     message: "No legacy catalog found to delete"
@@ -69,9 +65,6 @@ class DeleteCatalogOperation extends UpgradeOperation {
 
             // CRITICAL FIX: Preserve importedArchives explicitly
             const existingImportedArchives = data?.importedArchives;
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: Preserving importedArchives:`, existingImportedArchives);
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: importedArchives type:`, typeof existingImportedArchives);
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: importedArchives keys:`, existingImportedArchives ? Object.keys(existingImportedArchives).length : 0);
 
             // Create cleaned data without catalog BUT preserve importedArchives
             const cleanedData = {
@@ -87,7 +80,6 @@ class DeleteCatalogOperation extends UpgradeOperation {
                 catalogDeletionStats: { entriesDeleted: catalogSize }
             };
 
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: cleanedData.importedArchives keys:`, Object.keys(cleanedData.importedArchives).length);
 
             // Save cleaned data
             await context.plugin.saveData(cleanedData);
@@ -95,7 +87,6 @@ class DeleteCatalogOperation extends UpgradeOperation {
             // Verify preservation worked
             const verifyData = await context.plugin.loadData();
             const verifyArchives = verifyData?.importedArchives || {};
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: After save, importedArchives keys:`, Object.keys(verifyArchives).length);
 
             if (Object.keys(verifyArchives).length === 0 && Object.keys(existingImportedArchives || {}).length > 0) {
                 console.error(`[NEXUS-DEBUG] DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
@@ -109,7 +100,6 @@ class DeleteCatalogOperation extends UpgradeOperation {
                 };
             }
 
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: Successfully deleted ${catalogSize} entries and preserved ${Object.keys(verifyArchives).length} imported archives`);
             return {
                 success: true,
                 message: `Legacy catalog deleted: ${catalogSize} entries removed, ${Object.keys(verifyArchives).length} imported archives preserved`,
@@ -131,7 +121,6 @@ class DeleteCatalogOperation extends UpgradeOperation {
             const data = await context.plugin.loadData();
             const hasNoCatalog = !data?.conversationCatalog;
             const hasImportedArchives = data?.importedArchives && Object.keys(data.importedArchives).length > 0;
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog.verify: hasNoCatalog=${hasNoCatalog}, hasImportedArchives=${hasImportedArchives}`);
             
             // Success if catalog is gone AND importedArchives are preserved (if they existed)
             return hasNoCatalog;
@@ -174,7 +163,6 @@ class CleanMetadataOperation extends UpgradeOperation {
             });
 
             const canRun = conversationFiles.length > 0;
-            console.debug(`[NEXUS-DEBUG] CleanMetadata.canRun: found ${conversationFiles.length} conversation files, canRun=${canRun}`);
             return canRun;
         } catch (error) {
             console.error(`[NEXUS-DEBUG] CleanMetadata.canRun failed:`, error);
@@ -184,7 +172,6 @@ class CleanMetadataOperation extends UpgradeOperation {
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            console.debug(`[NEXUS-DEBUG] CleanMetadata.execute starting`);
 
             const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
@@ -205,7 +192,6 @@ class CleanMetadataOperation extends UpgradeOperation {
             });
 
             if (conversationFiles.length === 0) {
-                console.debug(`[NEXUS-DEBUG] CleanMetadata: No conversation files to clean`);
                 return {
                     success: true,
                     message: "No conversation files found to clean",
@@ -213,7 +199,6 @@ class CleanMetadataOperation extends UpgradeOperation {
                 };
             }
 
-            console.debug(`[NEXUS-DEBUG] CleanMetadata: Processing ${conversationFiles.length} conversation files`);
 
             let processed = 0;
             let cleaned = 0;
@@ -248,7 +233,6 @@ class CleanMetadataOperation extends UpgradeOperation {
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] CleanMetadata: Completed - processed:${processed}, cleaned:${cleaned}, errors:${errors}`);
 
             return {
                 success: errors === 0,
@@ -418,7 +402,6 @@ class CleanMetadataOperation extends UpgradeOperation {
                     // Check manually if plugin_version was added
                     const frontmatterContent = frontmatterMatch[1];
                     if (!frontmatterContent.includes('plugin_version:')) {
-                        console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Missing plugin_version in ${file.path}`);
                         return false;
                     }
 
@@ -433,7 +416,6 @@ class CleanMetadataOperation extends UpgradeOperation {
                         frontmatterContent.includes(field)
                     );
                     if (hasUnwantedFields) {
-                        console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Found unwanted fields in ${file.path}`);
                         return false;
                     }
                 } catch (error) {
@@ -442,7 +424,6 @@ class CleanMetadataOperation extends UpgradeOperation {
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Passed verification`);
             return true;
         } catch (error) {
             console.error(`[NEXUS-DEBUG] CleanMetadata.verify failed:`, error);
