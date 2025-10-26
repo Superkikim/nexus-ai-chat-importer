@@ -6132,7 +6132,8 @@ var init_configure_folder_locations_dialog = __esm({
             .nexus-upgrade-input-container {
                 display: flex;
                 gap: 0.8em;
-                align-items: center;
+                align-items: stretch;
+                width: 100%;
             }
 
             .nexus-upgrade-folder-input {
@@ -6143,12 +6144,14 @@ var init_configure_folder_locations_dialog = __esm({
                 border-radius: 4px;
                 background-color: var(--background-primary);
                 color: var(--text-normal);
+                min-width: 0;
             }
 
             .nexus-upgrade-browse-button {
-                padding: 0.6em 1.5em !important;
+                padding: 0.6em 1.2em !important;
                 font-size: 1em !important;
                 white-space: nowrap;
+                flex-shrink: 0;
             }
 
             .nexus-upgrade-button-container-centered {

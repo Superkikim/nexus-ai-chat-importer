@@ -427,7 +427,8 @@ export class ConfigureFolderLocationsDialog extends Modal {
             .nexus-upgrade-input-container {
                 display: flex;
                 gap: 0.8em;
-                align-items: center;
+                align-items: stretch;
+                width: 100%;
             }
 
             .nexus-upgrade-folder-input {
@@ -438,12 +439,14 @@ export class ConfigureFolderLocationsDialog extends Modal {
                 border-radius: 4px;
                 background-color: var(--background-primary);
                 color: var(--text-normal);
+                min-width: 0;
             }
 
             .nexus-upgrade-browse-button {
-                padding: 0.6em 1.5em !important;
+                padding: 0.6em 1.2em !important;
                 font-size: 1em !important;
                 white-space: nowrap;
+                flex-shrink: 0;
             }
 
             .nexus-upgrade-button-container-centered {
