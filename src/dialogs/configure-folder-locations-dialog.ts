@@ -80,27 +80,18 @@ export class ConfigureFolderLocationsDialog extends Modal {
             cls: "nexus-upgrade-title"
         });
 
-        // Main message
+        // Main message - SIMPLIFIED
         const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
 
-        messageContainer.createEl("h3", { text: "✨ New: Custom Report Folder Location" });
+        messageContainer.createEl("h3", { text: "✨ New: Report Folder Setting" });
 
         const descriptionEl = messageContainer.createDiv({ cls: "nexus-upgrade-description" });
         descriptionEl.createEl("p", {
-            text: "Version 1.3.0 adds a custom field for the Reports location."
+            text: `In version 1.3.0, you can specify a folder for Reports. We will move existing reports to ${this.originalReportFolder}, or you can select your preferred folder below.`
         });
         descriptionEl.createEl("p", {
-            text: "To prevent reports from moving with conversations, we moved it to the root of your vault."
-        });
-        descriptionEl.createEl("p", {
-            text: "You can now select a different folder below."
-        });
-
-        // Warning box
-        const warningBox = contentEl.createDiv({ cls: "nexus-upgrade-warning" });
-        warningBox.createEl("strong", { text: "⚠️ Important:" });
-        warningBox.createEl("p", {
-            text: "You cannot put the report folder inside the Conversations folder nor the Attachment folder for practical reasons."
+            text: "Note: The folder cannot be inside Conversations or Attachments.",
+            cls: "nexus-upgrade-note"
         });
 
         // Folder inputs section
@@ -141,31 +132,14 @@ export class ConfigureFolderLocationsDialog extends Modal {
                     });
             });
 
-        messageContainer.createEl("p", {
-            text: "You can change this location at any time in the plugin settings.",
-            cls: "nexus-upgrade-hint"
-        });
+        // Buttons - BIG CENTERED PROCEED BUTTON
+        const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container-centered" });
 
-        // Info box
-        const infoBox = contentEl.createDiv({ cls: "nexus-upgrade-info" });
-        infoBox.createEl("strong", { text: "ℹ️ Folder Migration:" });
-
-        const infoText = infoBox.createDiv();
-        infoText.createEl("p", {
-            text: "When you change a folder path, you will be asked if you want to move existing files automatically."
+        const proceedButton = buttonContainer.createEl("button", {
+            text: "Proceed",
+            cls: "mod-cta nexus-upgrade-proceed-button"
         });
-        infoText.createEl("p", {
-            text: "If you choose to keep files in the old location, they will not be impacted by future updates."
-        });
-
-        // Buttons
-        const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
-
-        const saveButton = buttonContainer.createEl("button", {
-            text: "Save & Continue",
-            cls: "mod-cta"
-        });
-        saveButton.addEventListener("click", async () => {
+        proceedButton.addEventListener("click", async () => {
             await this.handleSave();
         });
 
@@ -413,6 +387,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
             .nexus-upgrade-title {
                 margin-bottom: 1em;
                 color: var(--text-normal);
+                text-align: center;
             }
 
             .nexus-upgrade-message {
@@ -422,21 +397,30 @@ export class ConfigureFolderLocationsDialog extends Modal {
 
             .nexus-upgrade-message h3 {
                 margin-top: 0.5em;
-                margin-bottom: 0.5em;
+                margin-bottom: 0.8em;
                 color: var(--text-normal);
             }
 
-            .nexus-upgrade-hint {
-                font-size: 0.9em;
+            .nexus-upgrade-description {
+                font-size: 1em;
+                line-height: 1.6;
+            }
+
+            .nexus-upgrade-description p {
+                margin: 0.8em 0;
+            }
+
+            .nexus-upgrade-note {
+                font-size: 0.95em;
                 color: var(--text-muted);
-                margin-top: 0.5em;
+                font-style: italic;
             }
 
             .nexus-upgrade-folder-section {
                 background-color: var(--background-secondary);
-                padding: 1em;
-                margin: 1em 0;
-                border-radius: 4px;
+                padding: 1.2em;
+                margin: 1.5em 0;
+                border-radius: 6px;
             }
 
             .nexus-upgrade-folder-input {
@@ -444,33 +428,17 @@ export class ConfigureFolderLocationsDialog extends Modal {
                 min-width: 400px !important;
             }
 
-            .nexus-upgrade-info {
-                background-color: var(--background-secondary);
-                border-left: 4px solid var(--interactive-accent);
-                padding: 1em;
-                margin-bottom: 1.5em;
-                border-radius: 4px;
-            }
-
-            .nexus-upgrade-info strong {
-                display: block;
-                margin-bottom: 0.5em;
-                color: var(--interactive-accent);
-            }
-
-            .nexus-upgrade-info p {
-                margin: 0.3em 0;
-                color: var(--text-normal);
-            }
-
-            .nexus-upgrade-button-container {
+            .nexus-upgrade-button-container-centered {
                 display: flex;
-                justify-content: flex-end;
-                gap: 10px;
+                justify-content: center;
+                margin-top: 2em;
             }
 
-            .nexus-upgrade-button-container button {
-                padding: 8px 16px;
+            .nexus-upgrade-proceed-button {
+                padding: 12px 48px !important;
+                font-size: 16px !important;
+                font-weight: 600 !important;
+                min-width: 200px;
             }
         `;
         document.head.appendChild(styleEl);
