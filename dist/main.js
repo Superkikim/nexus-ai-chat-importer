@@ -9402,15 +9402,7 @@ var FileService = class {
       if (!(frontmatter == null ? void 0 : frontmatter.conversation_id) || (frontmatter == null ? void 0 : frontmatter.nexus) !== this.plugin.manifest.id) {
         return;
       }
-      const storage = this.plugin.getStorageService();
-      const catalog = storage.getConversationCatalog();
-      for (const [id, record] of Object.entries(catalog)) {
-        if (record.conversationId === frontmatter.conversation_id) {
-          storage.deleteFromConversationCatalog(id);
-          await this.plugin.saveSettings();
-          break;
-        }
-      }
+      this.plugin.logger.debug(`Nexus conversation file deleted: ${file.path} (ID: ${frontmatter.conversation_id})`);
     } catch (error) {
       this.plugin.logger.error("Error handling conversation file deletion:", error);
     }

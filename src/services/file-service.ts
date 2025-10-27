@@ -46,22 +46,14 @@ export class FileService {
         try {
             // Check if this is a Nexus conversation file
             const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
-            
+
             if (!frontmatter?.conversation_id || frontmatter?.nexus !== this.plugin.manifest.id) {
                 return; // Not a Nexus conversation file
             }
 
-            // Remove from conversation catalog
-            const storage = this.plugin.getStorageService();
-            const catalog = storage.getConversationCatalog();
-            
-            for (const [id, record] of Object.entries(catalog) as [string, ConversationCatalogEntry][]) {
-                if (record.conversationId === frontmatter.conversation_id) {
-                    storage.deleteFromConversationCatalog(id);
-                    await this.plugin.saveSettings();
-                    break;
-                }
-            }
+            // No action needed - conversations are tracked via frontmatter in vault
+            // The file deletion itself removes the conversation from the catalog
+            this.plugin.logger.debug(`Nexus conversation file deleted: ${file.path} (ID: ${frontmatter.conversation_id})`);
         } catch (error) {
             this.plugin.logger.error("Error handling conversation file deletion:", error);
         }
