@@ -205,34 +205,24 @@ update_time: 2024-06-28T22:34:21.000Z
 
 ### User Interface
 
-- ✅ Redesigned Settings UI with better organization
-- ✅ Wider folder path inputs for better readability
-- ✅ Improved dialog sizing and spacing
-- ✅ Better visual hierarchy in reports
-- ✅ Enhanced progress tracking with time estimates
-- ✅ Clearer migration dialogs with simplified text
+- ✅ Redesigned Settings page - easier to find what you need
+- ✅ Wider folder path inputs - see full paths without scrolling
+- ✅ Better dialog sizes - everything fits on screen
+- ✅ Clearer progress messages - know exactly what's happening
+- ✅ Simplified migration prompts - less confusing text
 
-### Performance
+### Speed & Performance
 
-- ✅ Optimized timestamp comparison (ignores seconds for v1.2.0 → v1.3.0 compatibility)
-- ✅ Batch processing for large migrations
-- ✅ Reduced console noise (removed debug logs)
-- ✅ Faster folder operations with vault.rename()
+- ✅ Faster imports - especially for large conversation collections
+- ✅ Quicker folder moves - no more waiting
+- ✅ Smoother upgrades - batch processing prevents freezing
 
-### Reports
+### Import Reports
 
-- ✅ ISO 8601 format in report frontmatter
-- ✅ Per-file statistics in import reports
-- ✅ Chronological sorting (newest first)
-- ✅ Duplicate count in completion dialog
-- ✅ Better visual presentation with callouts and tables
-
-### Developer Experience
-
-- ✅ Removed debugger statements in production builds
-- ✅ Better error logging with context
-- ✅ Comprehensive TypeScript type safety
-- ✅ Cleaner codebase with removed dead code
+- ✅ More detailed statistics - see exactly what was imported
+- ✅ Better organization - newest conversations at the top
+- ✅ Duplicate count shown - know how many were skipped
+- ✅ Prettier formatting - easier to read with colors and tables
 
 ---
 
@@ -249,106 +239,87 @@ update_time: 2024-06-28T22:34:21.000Z
 
 ### Import & Processing
 
-- ✅ Filter out empty conversations (0 messages)
-- ✅ Filter out invalid conversations (missing IDs or timestamps)
-- ✅ Skip conversations with no new messages instead of counting as updated
-- ✅ Prevent report generation when import is cancelled
-- ✅ Always generate report even when 0 conversations imported
-- ✅ Normalize ZIP timestamps before comparison
+- ✅ Empty conversations (0 messages) are now filtered out automatically
+- ✅ Invalid conversations are skipped instead of causing errors
+- ✅ Unchanged conversations no longer show as "Updated"
+- ✅ Import reports are always generated, even if nothing was imported
+- ✅ Cancelling an import no longer creates an empty report
 
 ### Attachments
 
-- ✅ Restore DALL-E attachment handling from v1.2.0
-- ✅ Fix DALL-E callout encapsulation and indentation
-- ✅ Fix file statistics tracking during deduplication
-- ✅ Count artifacts as attachments in statistics
-- ✅ Nest attachment callouts inside message callouts
+- ✅ DALL-E images now display correctly with their prompts
+- ✅ Better formatting for images and files in conversations
+- ✅ Attachment counts are now accurate in reports
+- ✅ Claude artifacts are counted properly in statistics
 
-### UI/UX
+### User Interface
 
-- ✅ Fix conversation selection dialog sizing
-- ✅ Fix truncated text in sort dropdown
-- ✅ Fix folder input width consistency
-- ✅ Prevent settings overwrite during migration
-- ✅ Fix upgrade modal width not applying correctly
+- ✅ Conversation selection dialog now fits properly on screen
+- ✅ Dropdown menus no longer cut off text
+- ✅ Folder input fields are now consistent width
+- ✅ Settings are preserved during upgrades
+- ✅ Upgrade dialogs are wider and easier to read
 
 ### Data Integrity
 
-- ✅ Fix YAML frontmatter alias sanitization for special characters
-- ✅ Fix title cleaning to handle double quotes
-- ✅ Normalize plugin_version with quotes in artifacts
-- ✅ Always update plugin_version during migration
-- ✅ Fix artifact date extraction regex for multi-line callouts
+- ✅ Fixed special characters in conversation titles (quotes, brackets, etc.)
+- ✅ Fixed conversation metadata corruption issues
+- ✅ Fixed artifact date detection for Claude conversations
 
 ---
 
 ## 🔄 Migration & Upgrade
 
-### Automatic Migrations
+### What Happens When You Upgrade
 
-When you upgrade to v1.3.0, the plugin automatically performs these operations:
+When you upgrade to v1.3.0, the plugin automatically:
 
-1. **Convert Timestamps to ISO 8601**
-   - Converts all frontmatter timestamps to universal format
-   - Supports all date formats (US, EU, DE, JP, ISO)
-   - Batch processing with progress tracking
-   - Only modifies frontmatter, never touches note body
+1. **Updates Your Timestamps**
+   - Converts dates to a universal format that works in all languages
+   - Shows a progress bar so you know it's working
+   - Only updates metadata, never touches your conversation content
 
-2. **Fix Frontmatter Aliases**
-   - Sanitizes special characters in aliases
-   - Ensures YAML compatibility
-   - Prevents parsing errors
+2. **Fixes Special Characters**
+   - Cleans up conversation titles with quotes, brackets, etc.
+   - Prevents errors when opening notes
 
-3. **Add Missing create_time to Artifacts**
-   - Extracts from first message timestamp
-   - Fallback to conversation create_time
-   - Ensures all artifacts have proper metadata
+3. **Adds Missing Dates to Claude Artifacts**
+   - Finds the creation date from the conversation
+   - Ensures all your artifacts have proper dates
 
-4. **Configure Folder Locations**
-   - Prompts for Reports folder location
-   - Validates folder nesting (prevents conflicts)
-   - Moves existing reports automatically
-   - Updates all links in artifacts
+4. **Reorganizes Your Reports Folder**
+   - Asks you where you want reports stored
+   - Moves all existing reports automatically
+   - Updates all links so nothing breaks
 
-### Migration Safety
+### Is It Safe?
 
-- ✅ **Non-destructive**: Original data is preserved
-- ✅ **Reversible**: Can downgrade if needed (though not recommended)
-- ✅ **Progress tracking**: Real-time feedback during migration
-- ✅ **Error handling**: Graceful fallbacks if issues occur
-- ✅ **Detailed reports**: See exactly what changed
+**Yes!** The migration is designed to be safe:
+
+- ✅ **Your data is preserved** - Nothing is deleted
+- ✅ **You can see progress** - Real-time updates show what's happening
+- ✅ **Errors are handled** - If something goes wrong, you'll see a clear message
+- ✅ **You get a report** - See exactly what changed
 
 ### What You Need to Do
 
-**Nothing!** Just:
-1. Update the plugin
+**Almost nothing!** Just:
+1. Update the plugin (Settings → Community Plugins)
 2. Reload Obsidian
-3. Confirm the Reports folder location when prompted
-4. Wait for automatic migration to complete
+3. When prompted, choose where you want your Reports folder
+4. Wait for the automatic migration to finish (usually 1-5 minutes)
+5. Done! ✅
 
 ---
 
-## 🔧 Technical Changes
+## 🔧 Under the Hood
 
-### Architecture
+**For the curious:** Here's what changed behind the scenes to make everything work better.
 
-- Refactored folder management with centralized validation
-- Simplified migration system with blocking dialogs
-- Provider-agnostic attachment handling
-- Centralized message filtering and processing
-
-### Code Quality
-
-- Removed 214+ lines of debug logs
-- Removed dead code and duplicated logic
-- Better TypeScript type safety
-- Comprehensive error handling
-
-### Build System
-
-- Added `drop: ["debugger"]` to remove debugger statements in production
-- Added `keepNames: true` to preserve function/class names
-- Optimized build output
+- ✅ Cleaner code - removed over 200 lines of unnecessary debug messages
+- ✅ Better error messages - when something goes wrong, you'll know why
+- ✅ Smarter folder handling - prevents conflicts and data loss
+- ✅ Optimized builds - smaller plugin size, faster loading
 
 ---
 

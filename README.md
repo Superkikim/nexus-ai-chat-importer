@@ -286,44 +286,40 @@ This metadata enables powerful Obsidian features:
 
 #### Date & Time Formats
 
-The plugin uses a **two-tier timestamp system**:
+The plugin uses **two different date formats** depending on where they appear:
 
-**1. Frontmatter (Metadata) - ISO 8601 Format**
+**1. Metadata (Top of File) - Universal Format**
 
-All `create_time` and `update_time` fields use **ISO 8601** format (`YYYY-MM-DDTHH:MM:SSZ`):
+The dates at the top of each note use **ISO 8601** format (`2024-01-15T14:30:22.000Z`):
 
-✅ **Universal** - Works with all locales
-✅ **Sortable** - Alphabetical = chronological
-✅ **Unambiguous** - No MM/DD vs DD/MM confusion
-✅ **Standard** - Recognized everywhere
-✅ **Dataview-friendly** - Perfect for queries
-✅ **Future-proof** - Won't change
-✅ **UTC timezone** - Always in UTC (Z = Zulu time = UTC+0), no timezone confusion
+✅ **Works everywhere** - No matter what language you use
+✅ **Sorts correctly** - Alphabetical order = chronological order
+✅ **No confusion** - Never mix up month and day
+✅ **Works with Dataview** - Perfect for queries and tables
+✅ **Same timezone** - Always UTC (no timezone confusion)
 
-**2. Message Timestamps (Note Body) - Locale or Custom Format**
+**2. Message Timestamps (In Conversation) - Your Choice**
 
-Message callouts display timestamps in your preferred format:
+The timestamps shown in each message can be customized:
 
-- **Default (Custom Format OFF)**: Follows Obsidian's language setting
-  - English → `MM/DD/YYYY h:mm:ss AM/PM` (US format)
-  - French → `DD/MM/YYYY HH:mm:ss` (European format)
-  - German → `DD.MM.YYYY HH:mm:ss` (German format)
+- **Auto (Default)**: Matches your Obsidian language
+  - English → `01/15/2024 2:30:22 PM`
+  - French → `15/01/2024 14:30:22`
+  - German → `15.01.2024 14:30:22`
 
-- **Custom Format (NEW in v1.3.0)**: Choose your preferred format in Settings
-  - **ISO 8601-like**: `YYYY-MM-DD HH:mm:ss` (Universal, sortable)
-  - **US Format**: `MM/DD/YYYY h:mm:ss AM/PM`
-  - **European Format**: `DD/MM/YYYY HH:mm:ss`
-  - **UK Format**: `DD/MM/YYYY HH:mm:ss`
-  - **German Format**: `DD.MM.YYYY HH:mm:ss`
-  - **Japanese Format**: `YYYY/MM/DD HH:mm:ss`
+- **Custom (NEW in v1.3.0)**: Pick your favorite format in Settings
+  - **Universal**: `2024-01-15 14:30:22` (same everywhere, easy to sort)
+  - **US**: `01/15/2024 2:30:22 PM`
+  - **European**: `15/01/2024 14:30:22`
+  - **German**: `15.01.2024 14:30:22`
+  - **Japanese**: `2024/01/15 14:30:22`
 
-> **Note**: Changing the timestamp format only affects **new imports**. Existing notes keep their current format to avoid modifying your data.
+> **⚠️ Important**: Changing this setting only affects **new imports**. Your existing notes won't change (to protect your data).
 
-**Example**: `2024-01-15T14:30:22Z`
-- **Date**: 2024-01-15 (January 15, 2024)
-- **Time**: 14:30:22 (2:30:22 PM)
-- **Timezone**: Z (UTC, universal time)
-- **Same timestamp everywhere in the world** - no conversion needed
+**Example of Universal Format**: `2024-01-15T14:30:22.000Z`
+- **Date**: January 15, 2024
+- **Time**: 2:30:22 PM (in UTC timezone)
+- **Why UTC?** So the same timestamp works everywhere in the world
 
 #### Recommendations
 
