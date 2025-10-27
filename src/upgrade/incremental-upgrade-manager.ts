@@ -127,10 +127,8 @@ export class IncrementalUpgradeManager {
             }
 
 
-            // Show upgrade dialog FIRST - INFORMATION ONLY (no cancel option)
-            await this.showUpgradeDialog(currentVersion, previousVersion, upgradeChain);
-
-            // Execute upgrade chain with modal (no user choice - automatic)
+            // PHASE 1: Execute migrations directly (no dialog before)
+            // Show progress modal automatically
             const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
 
             // Mark overall upgrade complete - ALWAYS (even if some operations were "no-op")
@@ -144,8 +142,9 @@ export class IncrementalUpgradeManager {
                 console.error("[NEXUS-DEBUG] Error stack:", e instanceof Error ? e.stack : 'No stack trace');
             }
 
-            // Note: Folder configuration is now handled by ConfigureFolderLocationsOperation (task 5)
-            // No need for separate UpgradeNoticeDialog anymore
+            // PHASE 2: Show completion dialog AFTER migrations
+            // Display Ko-fi + What's New + Improvements + Bug Fixes
+            await this.showUpgradeCompleteDialog(currentVersion);
 
             return result;
 
@@ -614,7 +613,36 @@ export class IncrementalUpgradeManager {
     }
 
     /**
+     * Show upgrade complete dialog AFTER migrations
+     * Displays Ko-fi + What's New + Improvements + Bug Fixes
+     */
+    private async showUpgradeCompleteDialog(version: string): Promise<void> {
+        try {
+            // Check if this is v1.3.0 or later - use new completion modal
+            const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
+
+            if (isV130OrLater) {
+                const { UpgradeCompleteModal } = await import("../dialogs/upgrade-complete-modal");
+                await new Promise<void>((resolve) => {
+                    const modal = new UpgradeCompleteModal(this.plugin.app, this.plugin, version);
+                    modal.onClose = () => {
+                        resolve();
+                    };
+                    modal.open();
+                });
+            } else {
+                // For older versions, just show a simple notice
+                new Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+            }
+        } catch (error) {
+            logger.error("Error showing upgrade complete dialog:", error);
+            new Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+        }
+    }
+
+    /**
      * Show upgrade dialog - INFORMATION ONLY (no cancel)
+     * @deprecated - No longer used in v1.3.0+, kept for compatibility
      */
     private async showUpgradeDialog(currentVersion: string, lastVersion: string, upgradeChain: VersionUpgrade[]): Promise<void> {
         try {
@@ -779,6 +807,25 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
             logger.warn("Could not fetch release overview:", error);
             return null;
         }
+    }
+
+    /**
+     * Compare two version strings
+     * Returns: -1 if v1 < v2, 0 if equal, 1 if v1 > v2
+     */
+    private compareVersions(v1: string, v2: string): number {
+        const parts1 = v1.split('.').map(Number);
+        const parts2 = v2.split('.').map(Number);
+
+        for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+            const num1 = parts1[i] || 0;
+            const num2 = parts2[i] || 0;
+
+            if (num1 < num2) return -1;
+            if (num1 > num2) return 1;
+        }
+
+        return 0;
     }
 
     /**

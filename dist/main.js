@@ -7303,17 +7303,266 @@ ${sampleText}`);
   }
 });
 
+// src/dialogs/upgrade-complete-modal.ts
+var upgrade_complete_modal_exports = {};
+__export(upgrade_complete_modal_exports, {
+  UpgradeCompleteModal: () => UpgradeCompleteModal
+});
+var import_obsidian24, UpgradeCompleteModal;
+var init_upgrade_complete_modal = __esm({
+  "src/dialogs/upgrade-complete-modal.ts"() {
+    "use strict";
+    import_obsidian24 = require("obsidian");
+    UpgradeCompleteModal = class extends import_obsidian24.Modal {
+      constructor(app, plugin, version) {
+        super(app);
+        this.plugin = plugin;
+        this.version = version;
+      }
+      onOpen() {
+        const { containerEl, titleEl, modalEl } = this;
+        modalEl.classList.add("nexus-upgrade-complete-modal");
+        titleEl.setText(`\u2705 Upgrade Complete - v${this.version}`);
+        this.createContent();
+      }
+      onClose() {
+        this.contentEl.empty();
+      }
+      async createContent() {
+        const { contentEl } = this;
+        this.addKofiSection();
+        await this.addReleaseNotes();
+        this.addCloseButton();
+        this.addStyles();
+      }
+      addKofiSection() {
+        const kofiSection = this.contentEl.createDiv({ cls: "nexus-kofi-section" });
+        const header = kofiSection.createDiv({ cls: "nexus-kofi-header" });
+        header.innerHTML = `
+            <div class="nexus-kofi-title">
+                \u2615 <strong>Support This Plugin</strong>
+            </div>
+        `;
+        const message = kofiSection.createDiv({ cls: "nexus-kofi-message" });
+        message.innerHTML = `
+            <p>I'm working on Nexus projects full-time while unemployed and dealing with health issues.</p>
+            <p><strong>Over 1,000 users, but only $10 in donations while paying $200/month in expenses.</strong></p>
+            <p>If this plugin helps you, please consider supporting it. Even $5 makes a difference! \u{1F64F}</p>
+        `;
+        const buttonContainer = kofiSection.createDiv({ cls: "nexus-kofi-button-container" });
+        buttonContainer.innerHTML = `
+            <a href="https://ko-fi.com/nexusplugins" target="_blank" class="nexus-kofi-link">
+                <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" alt="Buy Me a Coffee at ko-fi.com" height="50">
+            </a>
+        `;
+        const amounts = kofiSection.createDiv({ cls: "nexus-kofi-amounts" });
+        amounts.innerHTML = `
+            <div class="nexus-kofi-amounts-title">Suggested amounts:</div>
+            <div class="nexus-kofi-amounts-list">
+                <span class="nexus-kofi-amount">\u2615 $5 - Coffee</span>
+                <span class="nexus-kofi-amount">\u{1F916} $25 - AI Tools</span>
+                <span class="nexus-kofi-amount">\u{1F680} $75 - Dev Toolkit</span>
+            </div>
+        `;
+      }
+      async addReleaseNotes() {
+        let content = `## \u2728 What's New
+
+- **\u{1F5C2}\uFE0F Separate Reports Folder** - Better organization, easier to exclude from sync
+- **\u{1F30D} International Date Support** - Works in all languages, no more MM/DD confusion
+- **\u{1F333} Visual Folder Browser** - Tree-based navigation, create folders on the fly
+- **\u{1F3AF} Enhanced Selective Import** - Better preview, duplicate detection across ZIPs
+- **\u{1F4CE} Improved Attachments** - DALL-E images with prompts, better formatting
+
+## \u{1F3A8} Improvements
+
+- Redesigned Settings page - easier to find what you need
+- Faster imports - especially for large collections
+- Better progress messages - know exactly what's happening
+- More detailed reports - see exactly what was imported
+- Clearer dialogs - less confusing text
+
+## \u{1F41B} Bug Fixes
+
+- Fixed timestamp parsing for non-US locales
+- Fixed folder deletion after migration
+- Fixed link updates in Claude artifacts
+- Fixed duplicate conversations in multi-ZIP imports
+- Fixed special characters in conversation titles
+- Fixed DALL-E images display
+- Fixed progress modal accuracy
+- Fixed UI elements overflow
+- And many more...`;
+        try {
+          const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v${this.version}`);
+          if (response.ok) {
+            const release = await response.json();
+            if (release.body) {
+              content = release.body;
+            }
+          }
+        } catch (error) {
+        }
+        const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-notes" });
+        await import_obsidian24.MarkdownRenderer.render(
+          this.app,
+          content,
+          contentDiv,
+          "",
+          this.plugin
+        );
+      }
+      addCloseButton() {
+        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
+        const button = buttonContainer.createEl("button", {
+          text: "Got it!",
+          cls: "mod-cta nexus-upgrade-button"
+        });
+        button.addEventListener("click", () => {
+          this.close();
+        });
+      }
+      addStyles() {
+        const style = document.createElement("style");
+        style.textContent = `
+            /* Modal sizing */
+            .nexus-upgrade-complete-modal .modal {
+                width: 90vw;
+                max-width: 800px;
+                max-height: 85vh;
+            }
+
+            .nexus-upgrade-complete-modal .modal-content {
+                padding: 0;
+                overflow-y: auto;
+                max-height: calc(85vh - 100px);
+            }
+
+            /* Ko-fi section */
+            .nexus-kofi-section {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 2em;
+                border-radius: 8px;
+                margin-bottom: 2em;
+                text-align: center;
+            }
+
+            .nexus-kofi-header {
+                margin-bottom: 1em;
+            }
+
+            .nexus-kofi-title {
+                font-size: 1.5em;
+                font-weight: bold;
+            }
+
+            .nexus-kofi-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-kofi-message p {
+                margin: 0.5em 0;
+            }
+
+            .nexus-kofi-button-container {
+                margin: 1.5em 0;
+            }
+
+            .nexus-kofi-link {
+                display: inline-block;
+                transition: transform 0.2s;
+            }
+
+            .nexus-kofi-link:hover {
+                transform: scale(1.05);
+            }
+
+            .nexus-kofi-amounts {
+                margin-top: 1em;
+                font-size: 0.95em;
+            }
+
+            .nexus-kofi-amounts-title {
+                margin-bottom: 0.5em;
+                opacity: 0.9;
+            }
+
+            .nexus-kofi-amounts-list {
+                display: flex;
+                justify-content: center;
+                gap: 1.5em;
+                flex-wrap: wrap;
+            }
+
+            .nexus-kofi-amount {
+                background: rgba(255, 255, 255, 0.2);
+                padding: 0.5em 1em;
+                border-radius: 20px;
+                font-weight: 500;
+            }
+
+            /* Release notes content */
+            .nexus-upgrade-notes {
+                padding: 0 1em;
+                margin-bottom: 2em;
+            }
+
+            .nexus-upgrade-notes h2 {
+                color: var(--text-accent);
+                margin-top: 1.5em;
+                margin-bottom: 0.8em;
+                border-bottom: 2px solid var(--background-modifier-border);
+                padding-bottom: 0.3em;
+            }
+
+            .nexus-upgrade-notes h2:first-child {
+                margin-top: 0;
+            }
+
+            .nexus-upgrade-notes ul {
+                margin-left: 1.5em;
+                line-height: 1.8;
+            }
+
+            .nexus-upgrade-notes li {
+                margin: 0.5em 0;
+            }
+
+            /* Close button */
+            .nexus-upgrade-button-container {
+                text-align: center;
+                padding: 1.5em 0;
+                border-top: 1px solid var(--background-modifier-border);
+                margin-top: 1em;
+            }
+
+            .nexus-upgrade-button {
+                padding: 0.8em 3em;
+                font-size: 1.1em;
+                font-weight: 600;
+                border-radius: 8px;
+            }
+        `;
+        document.head.appendChild(style);
+      }
+    };
+    __name(UpgradeCompleteModal, "UpgradeCompleteModal");
+  }
+});
+
 // src/dialogs/upgrade-modal-1.3.0.ts
 var upgrade_modal_1_3_0_exports = {};
 __export(upgrade_modal_1_3_0_exports, {
   NexusUpgradeModal130: () => NexusUpgradeModal130
 });
-var import_obsidian24, NexusUpgradeModal130;
+var import_obsidian25, NexusUpgradeModal130;
 var init_upgrade_modal_1_3_0 = __esm({
   "src/dialogs/upgrade-modal-1.3.0.ts"() {
     "use strict";
-    import_obsidian24 = require("obsidian");
-    NexusUpgradeModal130 = class extends import_obsidian24.Modal {
+    import_obsidian25 = require("obsidian");
+    NexusUpgradeModal130 = class extends import_obsidian25.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.hasResolved = false;
@@ -7365,7 +7614,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         } catch (error) {
         }
         const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-        await import_obsidian24.MarkdownRenderer.render(
+        await import_obsidian25.MarkdownRenderer.render(
           this.app,
           message,
           contentDiv,
@@ -7647,7 +7896,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian30 = require("obsidian");
+var import_obsidian31 = require("obsidian");
 init_constants();
 
 // src/ui/settings-tab.ts
@@ -12541,7 +12790,7 @@ var StorageService = class {
 __name(StorageService, "StorageService");
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian25 = require("obsidian");
+var import_obsidian26 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
@@ -12833,7 +13082,6 @@ var IncrementalUpgradeManager = class {
           results: []
         };
       }
-      await this.showUpgradeDialog(currentVersion, previousVersion, upgradeChain);
       const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
       await this.markUpgradeComplete(currentVersion);
       try {
@@ -12842,11 +13090,12 @@ var IncrementalUpgradeManager = class {
         console.error("[NEXUS-DEBUG] \u274C Failed to write consolidated upgrade report", e);
         console.error("[NEXUS-DEBUG] Error stack:", e instanceof Error ? e.stack : "No stack trace");
       }
+      await this.showUpgradeCompleteDialog(currentVersion);
       return result;
     } catch (error) {
       console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
-        new import_obsidian25.Notice("Migration cancelled. Please complete the migration before importing.");
+        new import_obsidian26.Notice("Migration cancelled. Please complete the migration before importing.");
         return {
           success: false,
           upgradesExecuted: 0,
@@ -12856,7 +13105,7 @@ var IncrementalUpgradeManager = class {
         };
       }
       logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian25.Notice("Upgrade failed - see console for details");
+      new import_obsidian26.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -12946,7 +13195,7 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal2.markComplete(`All operations completed successfully!`);
-      new import_obsidian25.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+      new import_obsidian26.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -13211,7 +13460,32 @@ var IncrementalUpgradeManager = class {
     }
   }
   /**
+   * Show upgrade complete dialog AFTER migrations
+   * Displays Ko-fi + What's New + Improvements + Bug Fixes
+   */
+  async showUpgradeCompleteDialog(version) {
+    try {
+      const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
+      if (isV130OrLater) {
+        const { UpgradeCompleteModal: UpgradeCompleteModal2 } = await Promise.resolve().then(() => (init_upgrade_complete_modal(), upgrade_complete_modal_exports));
+        await new Promise((resolve) => {
+          const modal = new UpgradeCompleteModal2(this.plugin.app, this.plugin, version);
+          modal.onClose = () => {
+            resolve();
+          };
+          modal.open();
+        });
+      } else {
+        new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+      }
+    } catch (error) {
+      logger3.error("Error showing upgrade complete dialog:", error);
+      new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+    }
+  }
+  /**
    * Show upgrade dialog - INFORMATION ONLY (no cancel)
+   * @deprecated - No longer used in v1.3.0+, kept for compatibility
    */
   async showUpgradeDialog(currentVersion, lastVersion, upgradeChain) {
     try {
@@ -13275,7 +13549,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian25.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -13348,6 +13622,23 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
     }
   }
   /**
+   * Compare two version strings
+   * Returns: -1 if v1 < v2, 0 if equal, 1 if v1 > v2
+   */
+  compareVersions(v1, v2) {
+    const parts1 = v1.split(".").map(Number);
+    const parts2 = v2.split(".").map(Number);
+    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+      const num1 = parts1[i] || 0;
+      const num2 = parts2[i] || 0;
+      if (num1 < num2)
+        return -1;
+      if (num1 > num2)
+        return 1;
+    }
+    return 0;
+  }
+  /**
    * Get manual operations status for settings UI
    */
   async getManualOperationsForSettings() {
@@ -13392,8 +13683,8 @@ __name(IncrementalUpgradeManager, "IncrementalUpgradeManager");
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian26 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian26.Modal {
+var import_obsidian27 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian27.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -13425,7 +13716,7 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian26.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian27.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -13451,8 +13742,8 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
 __name(ProviderSelectionDialog, "ProviderSelectionDialog");
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian27 = require("obsidian");
-var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
+var import_obsidian28 = require("obsidian");
+var EnhancedFileSelectionDialog = class extends import_obsidian28.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -13851,8 +14142,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
 __name(EnhancedFileSelectionDialog, "EnhancedFileSelectionDialog");
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian28 = require("obsidian");
-var ConversationSelectionDialog = class extends import_obsidian28.Modal {
+var import_obsidian29 = require("obsidian");
+var ConversationSelectionDialog = class extends import_obsidian29.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -14955,8 +15246,8 @@ var ConversationMetadataExtractor = class {
 __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian29 = require("obsidian");
-var ImportCompletionDialog = class extends import_obsidian29.Modal {
+var import_obsidian30 = require("obsidian");
+var ImportCompletionDialog = class extends import_obsidian30.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -15186,7 +15477,7 @@ __name(ImportCompletionDialog, "ImportCompletionDialog");
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -15363,7 +15654,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
    */
   async handleImportAll(files, provider) {
     try {
-      new import_obsidian30.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian31.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -15378,7 +15669,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian30.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian31.Notice("No new or updated conversations found. All conversations are already up to date.");
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -15386,7 +15677,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
-      new import_obsidian30.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+      new import_obsidian31.Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -15410,7 +15701,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian30.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian31.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
       }
     } catch (error) {
       this.logger.error("[IMPORT-ALL] Error in import all:", error);
@@ -15418,7 +15709,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
       if (error instanceof Error) {
         console.error("[IMPORT-ALL] Error stack:", error.stack);
       }
-      new import_obsidian30.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian31.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -15426,7 +15717,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
-      new import_obsidian30.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian31.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -15437,7 +15728,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian30.Notice("No conversations found in the selected files.");
+        new import_obsidian31.Notice("No conversations found in the selected files.");
         return;
       }
       new ConversationSelectionDialog(
@@ -15455,7 +15746,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
       if (error instanceof Error) {
         console.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
       }
-      new import_obsidian30.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian31.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -15467,14 +15758,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
       operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
     }
     if (result.selectedIds.length === 0) {
-      new import_obsidian30.Notice("No conversations selected for import.");
+      new import_obsidian31.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian30.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian31.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
@@ -15490,7 +15781,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian30.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian31.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
     }
   }
   /**
@@ -15511,7 +15802,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian30.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian30.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian31.Notice("Failed to create log file. Check console for details.");
       return "";
     }
     const now = Date.now() / 1e3;
@@ -15560,7 +15851,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       console.error("Full error:", error);
       console.error("Log content length:", logContent.length);
-      new import_obsidian30.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian31.Notice("Failed to create log file. Check console for details.");
       return "";
     }
   }
