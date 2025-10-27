@@ -1098,26 +1098,28 @@ var init_link_update_service = __esm({
         const content = await this.plugin.app.vault.read(file);
         let updatedContent = content;
         let linksUpdated = 0;
-        const escapedOldPath = this.escapeRegExp(oldAttachmentPath);
+        const normalizedOldPath = oldAttachmentPath.replace(/\/+$/, "");
+        const normalizedNewPath = newAttachmentPath.replace(/\/+$/, "");
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
         const imagePattern = new RegExp(`(!\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, "g");
         updatedContent = updatedContent.replace(imagePattern, (match, prefix, suffix) => {
           linksUpdated++;
-          return `${prefix}${newAttachmentPath}${suffix}`;
+          return `${prefix}${normalizedNewPath}${suffix}`;
         });
         const linkPattern = new RegExp(`(\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, "g");
         updatedContent = updatedContent.replace(linkPattern, (match, prefix, suffix) => {
           linksUpdated++;
-          return `${prefix}${newAttachmentPath}${suffix}`;
+          return `${prefix}${normalizedNewPath}${suffix}`;
         });
         const obsidianImagePattern = new RegExp(`(!\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
         updatedContent = updatedContent.replace(obsidianImagePattern, (match, prefix, suffix) => {
           linksUpdated++;
-          return `${prefix}${newAttachmentPath}${suffix}`;
+          return `${prefix}${normalizedNewPath}${suffix}`;
         });
         const obsidianLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
         updatedContent = updatedContent.replace(obsidianLinkPattern, (match, prefix, suffix) => {
           linksUpdated++;
-          return `${prefix}${newAttachmentPath}${suffix}`;
+          return `${prefix}${normalizedNewPath}${suffix}`;
         });
         const fileModified = content !== updatedContent;
         if (fileModified) {
@@ -1132,16 +1134,18 @@ var init_link_update_service = __esm({
         const content = await this.plugin.app.vault.read(file);
         let updatedContent = content;
         let linksUpdated = 0;
-        const escapedOldPath = this.escapeRegExp(oldConversationPath);
+        const normalizedOldPath = oldConversationPath.replace(/\/+$/, "");
+        const normalizedNewPath = newConversationPath.replace(/\/+$/, "");
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
         const linkWithAliasPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`, "g");
         updatedContent = updatedContent.replace(linkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
           linksUpdated++;
-          return `${prefix}${newConversationPath}${pathSuffix}${aliasSuffix}`;
+          return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
         });
         const simpleLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
         updatedContent = updatedContent.replace(simpleLinkPattern, (match, prefix, suffix) => {
           linksUpdated++;
-          return `${prefix}${newConversationPath}${suffix}`;
+          return `${prefix}${normalizedNewPath}${suffix}`;
         });
         const fileModified = content !== updatedContent;
         if (fileModified) {
@@ -1156,14 +1160,16 @@ var init_link_update_service = __esm({
         const content = await this.plugin.app.vault.read(file);
         let updatedContent = content;
         let linksUpdated = 0;
-        const escapedOldPath = this.escapeRegExp(oldConversationPath);
+        const normalizedOldPath = oldConversationPath.replace(/\/+$/, "");
+        const normalizedNewPath = newConversationPath.replace(/\/+$/, "");
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
         const frontmatterLinkPattern = new RegExp(
           `(conversation_link:\\s*"\\[\\[)${escapedOldPath}(/[^\\]]+)(\\]\\]")`,
           "g"
         );
         updatedContent = updatedContent.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
           linksUpdated++;
-          return `${prefix}${newConversationPath}${pathSuffix}${suffix}`;
+          return `${prefix}${normalizedNewPath}${pathSuffix}${suffix}`;
         });
         const bodyLinkWithAliasPattern = new RegExp(
           `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
@@ -1171,7 +1177,7 @@ var init_link_update_service = __esm({
         );
         updatedContent = updatedContent.replace(bodyLinkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
           linksUpdated++;
-          return `${prefix}${newConversationPath}${pathSuffix}${aliasSuffix}`;
+          return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
         });
         const bodyLinkSimplePattern = new RegExp(
           `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,

@@ -319,35 +319,43 @@ export class LinkUpdateService {
         let updatedContent = content;
         let linksUpdated = 0;
 
-        // Escape special regex characters in paths
-        const escapedOldPath = this.escapeRegExp(oldAttachmentPath);
+        // Normalize paths: remove trailing slashes for consistent matching
+        const normalizedOldPath = oldAttachmentPath.replace(/\/+$/, '');
+        const normalizedNewPath = newAttachmentPath.replace(/\/+$/, '');
 
-        // Pattern 1: Markdown image links ![alt](path)
+        // Escape special regex characters in paths
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
+
+        // Pattern 1: Markdown image links ![alt](path/...)
+        // Matches: ![alt](oldPath/subpath/file.png)
         const imagePattern = new RegExp(`(!\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, 'g');
         updatedContent = updatedContent.replace(imagePattern, (match, prefix, suffix) => {
             linksUpdated++;
-            return `${prefix}${newAttachmentPath}${suffix}`;
+            return `${prefix}${normalizedNewPath}${suffix}`;
         });
 
-        // Pattern 2: Markdown file links [text](path)
+        // Pattern 2: Markdown file links [text](path/...)
+        // Matches: [text](oldPath/subpath/file.pdf)
         const linkPattern = new RegExp(`(\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, 'g');
         updatedContent = updatedContent.replace(linkPattern, (match, prefix, suffix) => {
             linksUpdated++;
-            return `${prefix}${newAttachmentPath}${suffix}`;
+            return `${prefix}${normalizedNewPath}${suffix}`;
         });
 
-        // Pattern 3: Obsidian image embeds ![[path]]
+        // Pattern 3: Obsidian image embeds ![[path/...]]
+        // Matches: ![[oldPath/subpath/file.png]]
         const obsidianImagePattern = new RegExp(`(!\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, 'g');
         updatedContent = updatedContent.replace(obsidianImagePattern, (match, prefix, suffix) => {
             linksUpdated++;
-            return `${prefix}${newAttachmentPath}${suffix}`;
+            return `${prefix}${normalizedNewPath}${suffix}`;
         });
 
-        // Pattern 4: Obsidian file links [[path]]
+        // Pattern 4: Obsidian file links [[path/...]]
+        // Matches: [[oldPath/subpath/file.md]]
         const obsidianLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, 'g');
         updatedContent = updatedContent.replace(obsidianLinkPattern, (match, prefix, suffix) => {
             linksUpdated++;
-            return `${prefix}${newAttachmentPath}${suffix}`;
+            return `${prefix}${normalizedNewPath}${suffix}`;
         });
 
         const fileModified = content !== updatedContent;
@@ -370,21 +378,25 @@ export class LinkUpdateService {
         let updatedContent = content;
         let linksUpdated = 0;
 
-        // Escape special regex characters in paths
-        const escapedOldPath = this.escapeRegExp(oldConversationPath);
+        // Normalize paths: remove trailing slashes for consistent matching
+        const normalizedOldPath = oldConversationPath.replace(/\/+$/, '');
+        const normalizedNewPath = newConversationPath.replace(/\/+$/, '');
 
-        // Pattern: Obsidian links with aliases [[path|title]]
+        // Escape special regex characters in paths
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
+
+        // Pattern: Obsidian links with aliases [[path/...|title]]
         const linkWithAliasPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`, 'g');
         updatedContent = updatedContent.replace(linkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
             linksUpdated++;
-            return `${prefix}${newConversationPath}${pathSuffix}${aliasSuffix}`;
+            return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
         });
 
-        // Pattern: Simple Obsidian links [[path]]
+        // Pattern: Simple Obsidian links [[path/...]]
         const simpleLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, 'g');
         updatedContent = updatedContent.replace(simpleLinkPattern, (match, prefix, suffix) => {
             linksUpdated++;
-            return `${prefix}${newConversationPath}${suffix}`;
+            return `${prefix}${normalizedNewPath}${suffix}`;
         });
 
         const fileModified = content !== updatedContent;
@@ -407,8 +419,12 @@ export class LinkUpdateService {
         let updatedContent = content;
         let linksUpdated = 0;
 
+        // Normalize paths: remove trailing slashes for consistent matching
+        const normalizedOldPath = oldConversationPath.replace(/\/+$/, '');
+        const normalizedNewPath = newConversationPath.replace(/\/+$/, '');
+
         // Escape special regex characters in paths
-        const escapedOldPath = this.escapeRegExp(oldConversationPath);
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
 
         // Pattern 1: conversation_link in frontmatter: "[[oldPath/...]]" or "[[oldPath/...|alias]]"
         const frontmatterLinkPattern = new RegExp(
@@ -417,17 +433,17 @@ export class LinkUpdateService {
         );
         updatedContent = updatedContent.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
             linksUpdated++;
-            return `${prefix}${newConversationPath}${pathSuffix}${suffix}`;
+            return `${prefix}${normalizedNewPath}${pathSuffix}${suffix}`;
         });
 
-        // Pattern 2: **Conversation:** link in body with alias [[path|title]]
+        // Pattern 2: **Conversation:** link in body with alias [[path/...|title]]
         const bodyLinkWithAliasPattern = new RegExp(
             `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
             'g'
         );
         updatedContent = updatedContent.replace(bodyLinkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
             linksUpdated++;
-            return `${prefix}${newConversationPath}${pathSuffix}${aliasSuffix}`;
+            return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
         });
 
         // Pattern 3: **Conversation:** link in body without alias [[path]]
