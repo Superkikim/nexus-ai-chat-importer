@@ -21,11 +21,11 @@
 ## 🌟 Overview
 
 Version 1.3.0 is a **major release** focused on:
-- ✅ **International support** with ISO 8601 timestamps
-- ✅ **Flexible folder organization** with separate Reports folder
-- ✅ **Enhanced UI/UX** with tree-based folder browser
-- ✅ **Improved reliability** with comprehensive bug fixes
-- ✅ **Better performance** with optimized imports and migrations
+- ✅ **Works in all languages** - Universal date format, no more confusion
+- ✅ **Better organization** - Separate folder for import reports
+- ✅ **Easier to use** - Visual folder browser, clearer dialogs
+- ✅ **More reliable** - Dozens of bug fixes and improvements
+- ✅ **Faster** - Quicker imports and smoother upgrades
 
 **Upgrading from v1.2.0?** The plugin automatically migrates your data. No manual work needed!
 
@@ -60,10 +60,10 @@ Version 1.3.0 is a **major release** focused on:
 **Now:** Proper international support!
 
 **What Changed:**
-- ✅ All **frontmatter** uses **ISO 8601** format (universal standard: `2024-01-15T14:30:22.000Z`)
-- ✅ Choose your preferred format for **message timestamps** in note body
-- ✅ Works correctly in all languages and locales
-- ✅ Automatic migration converts existing timestamps
+- ✅ Dates at the top of notes now use a **universal format** (`2024-01-15T14:30:22.000Z`)
+- ✅ Choose your preferred format for **message timestamps** inside conversations
+- ✅ Works correctly in all languages (English, French, German, Japanese, etc.)
+- ✅ Your existing notes are automatically updated
 
 **Available Message Timestamp Formats:**
 - **Auto (Default)**: Follows Obsidian's language setting
@@ -179,7 +179,7 @@ Nexus/
 
 ---
 
-### 3. **Timestamp Format in Frontmatter**
+### 3. **Date Format at Top of Notes**
 
 **Old Format (v1.2.0):**
 ```yaml
@@ -193,11 +193,15 @@ create_time: 2024-06-28T22:34:21.000Z
 update_time: 2024-06-28T22:34:21.000Z
 ```
 
+**Why the Change:**
+- Works in all languages (no more MM/DD vs DD/MM confusion)
+- Sorts correctly (alphabetical = chronological)
+- Compatible with Dataview and other plugins
+
 **Migration:**
-- Automatic conversion of all existing files
-- Supports all date formats (US, EU, DE, JP, etc.)
-- Intelligent parser detects format automatically
-- Progress tracking during migration
+- All your existing notes are automatically updated
+- Works with any date format you had before
+- Shows progress bar so you know it's working
 
 ---
 
