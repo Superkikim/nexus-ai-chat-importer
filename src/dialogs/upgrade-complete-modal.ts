@@ -39,6 +39,10 @@ export class UpgradeCompleteModal extends Modal {
         // Add custom CSS class
         modalEl.classList.add('nexus-upgrade-complete-modal');
 
+        // Set modal width IMMEDIATELY (before content loads)
+        modalEl.style.width = '800px';
+        modalEl.style.maxWidth = '90vw';
+
         // Set title
         titleEl.setText(`✅ Upgrade Complete - v${this.version}`);
 
@@ -173,10 +177,10 @@ export class UpgradeCompleteModal extends Modal {
     private addStyles() {
         const style = document.createElement("style");
         style.textContent = `
-            /* Modal sizing */
+            /* Modal sizing - LARGE by default */
             .nexus-upgrade-complete-modal .modal {
-                width: 90vw;
-                max-width: 800px;
+                width: 800px !important;
+                max-width: 90vw !important;
                 max-height: 85vh;
             }
 

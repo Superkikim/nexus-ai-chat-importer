@@ -7325,6 +7325,8 @@ var init_upgrade_complete_modal = __esm({
       onOpen() {
         const { containerEl, titleEl, modalEl } = this;
         modalEl.classList.add("nexus-upgrade-complete-modal");
+        modalEl.style.width = "800px";
+        modalEl.style.maxWidth = "90vw";
         titleEl.setText(`\u2705 Upgrade Complete - v${this.version}`);
         this.createContent();
       }
@@ -7428,10 +7430,10 @@ var init_upgrade_complete_modal = __esm({
       addStyles() {
         const style = document.createElement("style");
         style.textContent = `
-            /* Modal sizing */
+            /* Modal sizing - LARGE by default */
             .nexus-upgrade-complete-modal .modal {
-                width: 90vw;
-                max-width: 800px;
+                width: 800px !important;
+                max-width: 90vw !important;
                 max-height: 85vh;
             }
 
