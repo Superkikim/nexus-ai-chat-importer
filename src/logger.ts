@@ -48,3 +48,6 @@ export class Logger {
         console.error(`[Nexus AI Chat Importer] [ERROR] ${message}`);
     }
 }
+
+// Export singleton instance
+export const logger = new Logger();

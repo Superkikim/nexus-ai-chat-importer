@@ -21,6 +21,7 @@
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import NexusAiChatImporterPlugin from "../../main";
+import { logger } from "../../logger";
 
 /**
  * Convert indentations to callouts (automatic operation)
@@ -61,13 +62,13 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
                         return true;
                     }
                 } catch (error) {
-                    console.error(`Error checking file ${file.path}:`, error);
+                    logger.error(`Error checking file ${file.path}:`, error);
                 }
             }
 
             return false;
         } catch (error) {
-            console.error(`ConvertToCallouts.canRun failed:`, error);
+            logger.error(`ConvertToCallouts.canRun failed:`, error);
             return false;
         }
     }
@@ -125,7 +126,7 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
                     } catch (error) {
                         errors++;
-                        console.error(`[NEXUS-DEBUG] Error converting ${file.path}:`, error);
+                        logger.error(`Error converting ${file.path}:`, error);
                     }
                 }
 
@@ -143,7 +144,7 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] ConvertToCallouts.execute failed:`, error);
+            logger.error(`ConvertToCallouts.execute failed:`, error);
             return {
                 success: false,
                 message: `Callout conversion failed: ${error}`,
@@ -300,14 +301,14 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
                     }
 
                 } catch (error) {
-                    console.error(`Error verifying file ${file.path}:`, error);
+                    logger.error(`Error verifying file ${file.path}:`, error);
                     return false;
                 }
             }
 
             return true;
         } catch (error) {
-            console.error(`ConvertToCallouts.verify failed:`, error);
+            logger.error(`ConvertToCallouts.verify failed:`, error);
             return false;
         }
     }
@@ -344,7 +345,7 @@ class MoveReportsToProviderOperation extends UpgradeOperation {
 
             return reportFiles.length > 0;
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun failed:`, error);
+            logger.error(`MoveReportsToProviderOperation.canRun failed:`, error);
             return false;
         }
     }
@@ -388,7 +389,7 @@ class MoveReportsToProviderOperation extends UpgradeOperation {
                     moved++;
                 } catch (error) {
                     errors++;
-                    console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+                    logger.error(`Error moving report ${file.path}:`, error);
                 }
             }
 
@@ -398,7 +399,7 @@ class MoveReportsToProviderOperation extends UpgradeOperation {
                 details: { processed, moved, errors }
             };
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.execute failed:`, error);
+            logger.error(`MoveReportsToProviderOperation.execute failed:`, error);
             return {
                 success: false,
                 message: `Report organization failed: ${error}`,
@@ -478,7 +479,7 @@ class UpdateReportLinksOperation extends UpgradeOperation {
                     }
                 } catch (e) {
                     errors++;
-                    console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation error in ${file.path}:`, e);
+                    logger.error(`UpdateReportLinksOperation error in ${file.path}:`, e);
                 }
             }
 
@@ -488,7 +489,7 @@ class UpdateReportLinksOperation extends UpgradeOperation {
                 details: { processed, updated, errors }
             };
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation.execute failed:`, error);
+            logger.error(`UpdateReportLinksOperation.execute failed:`, error);
             return {
                 success: false,
                 message: `Report link update failed: ${error}`,
@@ -523,7 +524,7 @@ class MoveYearFoldersOperation extends UpgradeOperation {
 
             return yearFolders.length > 0;
         } catch (error) {
-            console.error(`MoveYearFolders.canRun failed:`, error);
+            logger.error(`MoveYearFolders.canRun failed:`, error);
             return false;
         }
     }
@@ -552,7 +553,7 @@ class MoveYearFoldersOperation extends UpgradeOperation {
 
                 } catch (error) {
                     errors++;
-                    console.error(`[NEXUS-DEBUG] Error moving year folder ${yearFolder}:`, error);
+                    logger.error(`Error moving year folder ${yearFolder}:`, error);
                 }
             }
 
@@ -564,7 +565,7 @@ class MoveYearFoldersOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] MoveYearFolders.execute failed:`, error);
+            logger.error(`MoveYearFolders.execute failed:`, error);
             return {
                 success: false,
                 message: `Conversation organization failed: ${error}`,
@@ -586,7 +587,7 @@ class MoveYearFoldersOperation extends UpgradeOperation {
 
             return true;
         } catch (error) {
-            console.error(`MoveYearFolders.verify failed:`, error);
+            logger.error(`MoveYearFolders.verify failed:`, error);
             return false;
         }
     }
@@ -719,7 +720,7 @@ class OfferReimportOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`OfferReimport.execute failed:`, error);
+            logger.error(`OfferReimport.execute failed:`, error);
             return {
                 success: false,
                 message: `Failed to complete reimport operation: ${error}`,

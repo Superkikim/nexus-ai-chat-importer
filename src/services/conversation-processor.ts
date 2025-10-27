@@ -145,7 +145,7 @@ export class ConversationProcessor {
             // Validate conversation has required fields
             if (!chatId || chatId.trim() === '') {
                 const chatTitle = adapter.getTitle(chat) || 'Untitled';
-                console.warn(`Skipping conversation with missing ID: ${chatTitle}`);
+                logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
                 importReport.addFailed(
                     chatTitle,
                     "N/A",

@@ -138,8 +138,7 @@ export class IncrementalUpgradeManager {
             try {
                 await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
             } catch (e) {
-                console.error("[NEXUS-DEBUG] ❌ Failed to write consolidated upgrade report", e);
-                console.error("[NEXUS-DEBUG] Error stack:", e instanceof Error ? e.stack : 'No stack trace');
+                logger.error("Failed to write upgrade report:", e);
             }
 
             // PHASE 2: Show completion dialog AFTER migrations
@@ -152,7 +151,7 @@ export class IncrementalUpgradeManager {
 
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
+            logger.error("Incremental upgrade failed:", error);
 
             // Check if user cancelled
             if (error instanceof Error && error.message === "User cancelled upgrade") {
@@ -218,7 +217,7 @@ export class IncrementalUpgradeManager {
             return isFreshInstall;
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] Error detecting fresh install:`, error);
+            logger.error("Error detecting fresh install:", error);
             // If we can't determine, assume it's not fresh (safer to run upgrades)
             return false;
         }
@@ -297,7 +296,7 @@ export class IncrementalUpgradeManager {
             const overallSuccess = true; // Always success for automatic operations
 
             progressModal.markComplete(`All operations completed successfully!`);
-            new Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+            // No Notice here - completion dialog will be shown after
 
             return {
                 success: overallSuccess,
@@ -308,7 +307,7 @@ export class IncrementalUpgradeManager {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] Modal upgrade execution failed:`, error);
+            logger.error("Modal upgrade execution failed:", error);
             progressModal.showError(`Upgrade failed: ${error}`);
             throw error;
         }
@@ -517,7 +516,7 @@ export class IncrementalUpgradeManager {
         const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
 
         if (!folderResult.success) {
-            console.error(`[NEXUS-UPGRADE-REPORT] ❌ Failed to create folder: ${folderResult.error}`);
+            logger.error(`❌ Failed to create folder: ${folderResult.error}`);
             throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
         }
 
@@ -602,8 +601,8 @@ export class IncrementalUpgradeManager {
         try {
             await this.plugin.app.vault.create(filePath, md);
         } catch (error) {
-            console.error(`[NEXUS-UPGRADE-REPORT] ❌ Failed to write report file:`, error);
-            console.error(`[NEXUS-UPGRADE-REPORT] Error details:`, {
+            logger.error(`❌ Failed to write report file:`, error);
+            logger.error(`Error details:`, {
                 message: error instanceof Error ? error.message : String(error),
                 filePath,
                 contentLength: md.length

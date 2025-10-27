@@ -363,9 +363,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         } catch (error) {
             this.logger.error("[IMPORT-ALL] Error in import all:", error);
-            console.error("[IMPORT-ALL] Full error details:", error);
+            logger.error("[IMPORT-ALL] Full error details:", error);
             if (error instanceof Error) {
-                console.error("[IMPORT-ALL] Error stack:", error.stack);
+                logger.error("[IMPORT-ALL] Error stack:", error.stack);
             }
             new Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -411,9 +411,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         } catch (error) {
             this.logger.error("[SELECTIVE-IMPORT] Error in selective import:", error);
-            console.error("[SELECTIVE-IMPORT] Full error details:", error);
+            logger.error("[SELECTIVE-IMPORT] Full error details:", error);
             if (error instanceof Error) {
-                console.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
+                logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
             }
             new Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -573,8 +573,8 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
             return logFilePath;
         } catch (error: any) {
             this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
-            console.error("Full error:", error);
-            console.error("Log content length:", logContent.length);
+            logger.error("Full error:", error);
+            logger.error("Log content length:", logContent.length);
             new Notice("Failed to create log file. Check console for details.");
             return "";
         }

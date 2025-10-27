@@ -24,6 +24,7 @@ import { generateSafeAlias, moveAndMergeFolders } from "../../utils";
 import { DateParser } from "../../utils/date-parser";
 import { TFolder } from "obsidian";
 import { ConfigureFolderLocationsDialog, FolderConfigurationResult } from "../../dialogs/configure-folder-locations-dialog";
+import { logger } from "../../logger";
 
 /**
  * Convert timestamps to ISO 8601 format in all existing frontmatter
@@ -90,7 +91,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 
             return false;
         } catch (error) {
-            console.error(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun failed:`, error);
+            console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
             return false;
         }
     }
@@ -181,7 +182,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
 
                     } catch (error) {
                         errors++;
-                        console.error(`[NEXUS-DEBUG] Error converting timestamps in ${file.path}:`, error);
+                        console.error(`Error converting timestamps in ${file.path}:`, error);
                     }
                 }
 
@@ -217,7 +218,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute failed:`, error);
+            console.error(`ConvertToISO8601Timestamps.execute failed:`, error);
             return {
                 success: false,
                 message: `Timestamp conversion failed: ${error}`,
@@ -298,7 +299,7 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
                 }
 
                 if (!isoDate) {
-                    console.warn(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
+                    console.warn(`convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
                     return match; // Keep original if conversion fails
                 }
 
@@ -490,7 +491,7 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
 
                     } catch (error) {
                         errors++;
-                        console.error(`[NEXUS-DEBUG] Error fixing aliases in ${file.path}:`, error);
+                        console.error(`Error fixing aliases in ${file.path}:`, error);
                     }
                 }
 
@@ -523,7 +524,7 @@ class FixFrontmatterAliasesOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] FixFrontmatterAliases.execute failed:`, error);
+            console.error(`FixFrontmatterAliases.execute failed:`, error);
             return {
                 success: false,
                 message: `Alias fix failed: ${error}`,
@@ -854,7 +855,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
 
             return false;
         } catch (error) {
-            console.error(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun failed:`, error);
+            console.error(`MigrateClaudeArtifacts.canRun failed:`, error);
             return false;
         }
     }
@@ -934,7 +935,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                         } else {
                             warnings.push(`Could not determine create_time`);
                             warningCount++;
-                            console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - FAILED to determine create_time`);
+                            console.warn(`${file.basename}: TASK 1 - FAILED to determine create_time`);
                         }
                     } else {
                     }
@@ -966,12 +967,12 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                                        body.substring(insertPos);
                                 modified = true;
                             } else {
-                                console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Could not find title to insert link after`);
+                                console.warn(`${file.basename}: TASK 3 - Could not find title to insert link after`);
                             }
                         } else {
                             warnings.push(`Conversation note not found (ID: ${fm.conversation_id})`);
                             warningCount++;
-                            console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
+                            console.warn(`${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
                         }
                     } else if (body.includes('**Conversation:**')) {
                     } else {
@@ -1010,7 +1011,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
 
                 } catch (error: any) {
                     errorCount++;
-                    console.error(`[NEXUS-UPGRADE] ${file.basename}: ❌ ERROR:`, error);
+                    console.error(`${file.basename}: ❌ ERROR:`, error);
                     results.push(`❌ ${file.basename}: ${error.message}`);
                 }
             }
@@ -1062,7 +1063,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
         try {
 
             if (!conversationId) {
-                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No conversation_id in frontmatter`);
+                console.warn(`Artifact ${artifactRef}: No conversation_id in frontmatter`);
                 return {value: '', source: 'none'};
             }
 
@@ -1070,7 +1071,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
             // Find conversation note
             const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
             if (!conversationFile) {
-                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
+                console.warn(`Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
                 return {value: '', source: 'none'};
             }
 
@@ -1079,7 +1080,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
             const content = await plugin.app.vault.read(conversationFile);
 
             if (!artifactId || !versionNumber) {
-                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
+                console.warn(`Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
                 // Fallback to conversation create_time
                 const fm = plugin.app.metadataCache.getFileCache(conversationFile)?.frontmatter as any;
                 if (fm?.create_time) {
@@ -1099,7 +1100,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
             const linkMatch = content.match(linkPattern);
 
             if (!linkMatch || linkMatch.index === undefined) {
-                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
+                console.warn(`Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
                 // Fallback to conversation create_time
                 const fm = plugin.app.metadataCache.getFileCache(conversationFile)?.frontmatter as any;
                 if (fm?.create_time) {
@@ -1146,15 +1147,15 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                         source: 'message'
                     };
                 } else {
-                    console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: ❌ Timestamp parsing FAILED (returned 0), using conversation fallback`);
-                    console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Failed timestamp string was: "${timestampStr}"`);
+                    console.warn(`Artifact ${artifactRef}: ❌ Timestamp parsing FAILED (returned 0), using conversation fallback`);
+                    console.warn(`Artifact ${artifactRef}: Failed timestamp string was: "${timestampStr}"`);
                 }
             } else {
-                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: ❌ No agent callout found before artifact link, using conversation fallback`);
+                console.warn(`Artifact ${artifactRef}: ❌ No agent callout found before artifact link, using conversation fallback`);
 
                 // DEBUG: Show a sample of what we were searching in
                 const sampleText = textBeforeLink.substring(Math.max(0, textBeforeLink.length - 500));
-                console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Last 500 chars of search text:\n${sampleText}`);
+                console.warn(`Artifact ${artifactRef}: Last 500 chars of search text:\n${sampleText}`);
             }
 
             // Fallback to conversation create_time
@@ -1163,11 +1164,11 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                 return {value: fm.create_time, source: 'conversation'};
             }
 
-            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No create_time available`);
+            console.warn(`Artifact ${artifactRef}: No create_time available`);
             return {value: '', source: 'none'};
 
         } catch (error) {
-            console.error(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Exception during create_time extraction:`, error);
+            console.error(`Artifact ${artifactRef}: Exception during create_time extraction:`, error);
             return {value: '', source: 'none'};
         }
     }

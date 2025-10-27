@@ -211,11 +211,11 @@ export class ConversationMetadataExtractor {
             .filter(chat => {
                 // Filter out invalid conversations (missing ID or timestamps)
                 if (!chat.id || chat.id.trim() === '') {
-                    console.warn('Skipping ChatGPT conversation with missing ID:', chat.title || 'Untitled');
+                    logger.warn('Skipping ChatGPT conversation with missing ID:', chat.title || 'Untitled');
                     return false;
                 }
                 if (!chat.create_time || !chat.update_time) {
-                    console.warn('Skipping ChatGPT conversation with missing timestamps:', chat.id, chat.title || 'Untitled');
+                    logger.warn('Skipping ChatGPT conversation with missing timestamps:', chat.id, chat.title || 'Untitled');
                     return false;
                 }
                 return true;
@@ -247,11 +247,11 @@ export class ConversationMetadataExtractor {
             .filter(chat => {
                 // Filter out invalid conversations (missing ID or timestamps)
                 if (!chat.uuid || chat.uuid.trim() === '') {
-                    console.warn('Skipping Claude conversation with missing UUID:', chat.name || 'Untitled');
+                    logger.warn('Skipping Claude conversation with missing UUID:', chat.name || 'Untitled');
                     return false;
                 }
                 if (!chat.created_at || !chat.updated_at) {
-                    console.warn('Skipping Claude conversation with missing timestamps:', chat.uuid, chat.name || 'Untitled');
+                    logger.warn('Skipping Claude conversation with missing timestamps:', chat.uuid, chat.name || 'Untitled');
                     return false;
                 }
                 return true;
@@ -459,7 +459,7 @@ export class ConversationMetadataExtractor {
                     updatedConversations: 0
                 });
             } catch (error) {
-                console.error(`Error extracting metadata from ${file.name}:`, error);
+                logger.error(`Error extracting metadata from ${file.name}:`, error);
                 // Continue with other files even if one fails
             }
         }

@@ -2,25 +2,42 @@
 
 [![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.0) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![GitHub all releases](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total)](https://github.com/Superkikim/nexus-ai-chat-importer/releases)
 
-## Table of Contents
+## Quick Links
 
-- [Overview](#overview)
-- [☕ Support My Work](#-support-my-work)
-- [✨ Key Features](#-key-features)
-- [📥 Installation & Settings](#-installation--settings)
-- [📤 Importing Conversations](#-importing-conversations)
-- [📁 Data Organization](#-data-organization)
-- [🔄 Reimporting & Updates](#-reimporting--updates)
-- [⚠️ Important Notes](#️-important-notes)
-- [🐛 Troubleshooting](#-troubleshooting)
-- [🚀 Future Plans](#-future-plans)
-- [📝 License](#-license)
-- [🙏 Credits](#-credits)
-- [🔗 Links](#-links)
+**Getting Started**: [Installation](#-installation--settings) • [First Import](#-importing-conversations) • [Settings](#plugin-settings)
+
+**Features**: [Selective Import](#-importing-conversations) • [Attachments](#-complete-attachment-handling) • [Reports](#-detailed-reports)
+
+**Help**: [Troubleshooting](#-troubleshooting) • [Support](#-support-my-work) • [License](#-license)
 
 ## Overview
 
-Import your AI chat conversations from **ChatGPT** and **Claude** exports into Obsidian as beautifully formatted Markdown files. Choose exactly which conversations to import, enjoy enhanced visual presentation with custom callouts, and benefit from comprehensive attachment support including DALL-E images and Claude artifact versioning.
+Import your AI chat conversations from **ChatGPT** and **Claude** exports into Obsidian as beautifully formatted Markdown files.
+
+### ✨ New in v1.3.0
+
+- **[Selective Import](#-importing-conversations)** - Choose exactly which conversations to import with interactive preview
+- **[Separate Reports Folder](#-folder-organization-new-in-v130)** - Better organization, easier to exclude from sync
+- **[International Date Support](#-date--time-formats)** - ISO 8601 timestamps work in all languages
+- **[Visual Folder Browser](#first-time-setup)** - Tree-based navigation, create folders on the fly
+- **[Enhanced Attachments](#-complete-attachment-handling)** - DALL-E images with prompts, better formatting
+
+### 🎨 Improvements in v1.3.0
+
+- Redesigned Settings page - easier to find what you need
+- Faster imports - especially for large collections
+- Better progress messages - know exactly what's happening
+- More detailed reports - see exactly what was imported
+- Clearer dialogs - less confusing text
+
+### 🐛 Fixed in v1.3.0
+
+- Fixed timestamp parsing for non-US locales
+- Fixed folder deletion after migration
+- Fixed link updates in Claude artifacts
+- Fixed duplicate conversations in multi-ZIP imports
+- Fixed special characters in conversation titles
+- And many more...
 
 ## ☕ Support My Work
 

@@ -115,7 +115,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 this.estimatedTime = estimate.estimatedSeconds;
             }
         } catch (error) {
-            console.warn("Failed to load link update estimates:", error);
+            logger.warn("Failed to load link update estimates:", error);
         }
     }
 

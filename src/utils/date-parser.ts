@@ -58,19 +58,19 @@ export class DateParser {
             // Detect format and parse
             const format = this.detectFormat(dateStr);
             if (!format) {
-                console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: could not detect format`);
+                logger.warn(`${ctx}parseDate - FAILED: could not detect format`);
                 return 0;
             }
 
             const parsed = this.parseWithFormat(dateStr, format);
             if (parsed === 0) {
-                console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: parsing returned 0`);
+                logger.warn(`${ctx}parseDate - FAILED: parsing returned 0`);
             }
 
             return parsed;
 
         } catch (error) {
-            console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: exception:`, error);
+            logger.warn(`${ctx}parseDate - FAILED: exception:`, error);
             return 0;
         }
     }
@@ -279,7 +279,7 @@ export class DateParser {
     static convertToISO8601(dateStr: string): string | null {
         const unixTime = this.parseDate(dateStr);
         if (unixTime === 0) {
-            console.warn(`[NEXUS-DATEPARSER] convertToISO8601 - parsing returned 0`);
+            logger.warn(`convertToISO8601 - parsing returned 0`);
             return null;
         }
 

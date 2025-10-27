@@ -280,7 +280,7 @@ export class ImportCompletionDialog extends Modal {
                 await this.app.workspace.getLeaf(false).openFile(file as any);
             }
         } catch (error) {
-            console.error("Failed to open report:", error);
+            logger.error("Failed to open report:", error);
         }
     }
 

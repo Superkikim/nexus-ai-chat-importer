@@ -445,7 +445,7 @@ var init_folder_validation = __esm({
 });
 
 // src/logger.ts
-var LogLevel, Logger;
+var LogLevel, Logger, logger2;
 var init_logger = __esm({
   "src/logger.ts"() {
     "use strict";
@@ -474,6 +474,7 @@ var init_logger = __esm({
       }
     };
     __name(Logger, "Logger");
+    logger2 = new Logger();
   }
 });
 
@@ -670,7 +671,7 @@ async function ensureFolderExists(folderPath, vault) {
         await vault.createFolder(currentPath);
       } catch (error) {
         if (error.message !== "Folder already exists.") {
-          logger.error(
+          logger3.error(
             `Failed to create folder: ${currentPath}`,
             error.message
           );
@@ -694,7 +695,7 @@ async function checkConversationLink(conversationId, provider = "chatgpt") {
       url = `https://claude.ai/chat/${conversationId}`;
       break;
     default:
-      logger.error(`Unknown provider for link checking: ${provider}`);
+      logger3.error(`Unknown provider for link checking: ${provider}`);
       return false;
   }
   try {
@@ -704,7 +705,7 @@ async function checkConversationLink(conversationId, provider = "chatgpt") {
     });
     return response.status >= 200 && response.status < 300;
   } catch (error) {
-    logger.error(`Error fetching ${url}:`, error);
+    logger3.error(`Error fetching ${url}:`, error);
     return false;
   }
 }
@@ -776,7 +777,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
           }
         } catch (error) {
           const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
-          logger.error(`[moveAndMergeFolders] ${errorMsg}`);
+          logger3.error(`[moveAndMergeFolders] ${errorMsg}`);
           errorDetails.push(errorMsg);
           errors++;
           processedFiles++;
@@ -800,9 +801,9 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
       } catch (error) {
         const errorMsg = error.message || String(error);
         if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
-          logger.warn(`[moveAndMergeFolders] \u26A0\uFE0F Folder not empty, skipping deletion: ${folder.path} (children: ${folder.children.length})`);
+          logger3.warn(`[moveAndMergeFolders] \u26A0\uFE0F Folder not empty, skipping deletion: ${folder.path} (children: ${folder.children.length})`);
         } else if (!errorMsg.includes("does not exist") && !errorMsg.includes("ENOENT")) {
-          logger.warn(`[moveAndMergeFolders] \u274C Could not delete folder ${folder.path}: ${errorMsg}`);
+          logger3.warn(`[moveAndMergeFolders] \u274C Could not delete folder ${folder.path}: ${errorMsg}`);
         }
       }
     }
@@ -827,7 +828,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
       errorDetails: errorDetails.length > 0 ? errorDetails : void 0
     };
   } catch (error) {
-    logger.error(`Failed to merge folders:`, error);
+    logger3.error(`Failed to merge folders:`, error);
     return {
       success: false,
       moved,
@@ -837,7 +838,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
     };
   }
 }
-var import_obsidian4, import_obsidian5, logger;
+var import_obsidian4, import_obsidian5, logger3;
 var init_utils = __esm({
   "src/utils.ts"() {
     "use strict";
@@ -845,7 +846,7 @@ var init_utils = __esm({
     init_logger();
     import_obsidian5 = require("obsidian");
     init_constants();
-    logger = new Logger();
+    logger3 = new Logger();
     __name(truncateToMinute, "truncateToMinute");
     __name(compareTimestampsIgnoringSeconds, "compareTimestampsIgnoringSeconds");
     __name(formatMessageTimestamp, "formatMessageTimestamp");
@@ -1392,7 +1393,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             this.estimatedTime = estimate.estimatedSeconds;
           }
         } catch (error) {
-          console.warn("Failed to load link update estimates:", error);
+          logger.warn("Failed to load link update estimates:", error);
         }
       }
       shouldShowLinkUpdateInfo() {
@@ -4591,16 +4592,16 @@ var init_date_parser = __esm({
           }
           const format = this.detectFormat(dateStr);
           if (!format) {
-            console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: could not detect format`);
+            logger.warn(`${ctx}parseDate - FAILED: could not detect format`);
             return 0;
           }
           const parsed = this.parseWithFormat(dateStr, format);
           if (parsed === 0) {
-            console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: parsing returned 0`);
+            logger.warn(`${ctx}parseDate - FAILED: parsing returned 0`);
           }
           return parsed;
         } catch (error) {
-          console.warn(`[NEXUS-DATEPARSER] ${ctx}parseDate - FAILED: exception:`, error);
+          logger.warn(`${ctx}parseDate - FAILED: exception:`, error);
           return 0;
         }
       }
@@ -4764,7 +4765,7 @@ var init_date_parser = __esm({
       static convertToISO8601(dateStr) {
         const unixTime = this.parseDate(dateStr);
         if (unixTime === 0) {
-          console.warn(`[NEXUS-DATEPARSER] convertToISO8601 - parsing returned 0`);
+          logger.warn(`convertToISO8601 - parsing returned 0`);
           return null;
         }
         return new Date(unixTime * 1e3).toISOString();
@@ -4868,14 +4869,14 @@ var init_version_utils = __esm({
 });
 
 // src/upgrade/upgrade-interface.ts
-var logger2, UpgradeOperation, VersionUpgrade;
+var logger4, UpgradeOperation, VersionUpgrade;
 var init_upgrade_interface = __esm({
   "src/upgrade/upgrade-interface.ts"() {
     "use strict";
     init_version_utils();
     init_dialogs();
     init_logger();
-    logger2 = new Logger();
+    logger4 = new Logger();
     UpgradeOperation = class {
       /**
        * Check if operation can run (prerequisites)
@@ -5079,6 +5080,7 @@ var init_upgrade_1_1_0 = __esm({
   "src/upgrade/versions/upgrade-1.1.0.ts"() {
     "use strict";
     init_upgrade_interface();
+    init_logger();
     DeleteCatalogOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -5096,7 +5098,7 @@ var init_upgrade_1_1_0 = __esm({
           }
           return hasData;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] DeleteCatalog.canRun failed:`, error);
+          logger2.error(`DeleteCatalog.canRun failed:`, error);
           return false;
         }
       }
@@ -5128,7 +5130,7 @@ var init_upgrade_1_1_0 = __esm({
           const verifyData = await context.plugin.loadData();
           const verifyArchives = (verifyData == null ? void 0 : verifyData.importedArchives) || {};
           if (Object.keys(verifyArchives).length === 0 && Object.keys(existingImportedArchives || {}).length > 0) {
-            console.error(`[NEXUS-DEBUG] DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
+            logger2.error(`DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
             return {
               success: false,
               message: `Critical error: importedArchives were lost during migration`,
@@ -5144,7 +5146,7 @@ var init_upgrade_1_1_0 = __esm({
             details: { entriesDeleted: catalogSize, archivesPreserved: Object.keys(verifyArchives).length }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] DeleteCatalog.execute failed:`, error);
+          logger2.error(`DeleteCatalog.execute failed:`, error);
           return {
             success: false,
             message: `Failed to delete legacy catalog: ${error}`,
@@ -5159,7 +5161,7 @@ var init_upgrade_1_1_0 = __esm({
           const hasImportedArchives = (data == null ? void 0 : data.importedArchives) && Object.keys(data.importedArchives).length > 0;
           return hasNoCatalog;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] DeleteCatalog.verify failed:`, error);
+          logger2.error(`DeleteCatalog.verify failed:`, error);
           return false;
         }
       }
@@ -5189,7 +5191,7 @@ var init_upgrade_1_1_0 = __esm({
           const canRun = conversationFiles.length > 0;
           return canRun;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] CleanMetadata.canRun failed:`, error);
+          logger2.error(`CleanMetadata.canRun failed:`, error);
           return false;
         }
       }
@@ -5230,7 +5232,7 @@ var init_upgrade_1_1_0 = __esm({
                 }
               } catch (error) {
                 errors++;
-                console.error(`[NEXUS-DEBUG] Error cleaning metadata for ${file.path}:`, error);
+                logger2.error(`Error cleaning metadata for ${file.path}:`, error);
               }
             }
             if (i + batchSize < conversationFiles.length) {
@@ -5243,7 +5245,7 @@ var init_upgrade_1_1_0 = __esm({
             details: { processed, cleaned, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] CleanMetadata.execute failed:`, error);
+          logger2.error(`CleanMetadata.execute failed:`, error);
           return {
             success: false,
             message: `Metadata cleanup failed: ${error}`,
@@ -5258,7 +5260,7 @@ var init_upgrade_1_1_0 = __esm({
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
         if (!frontmatterMatch) {
           if (content.includes("nexus:") || content.includes("conversation_id:")) {
-            console.warn(`[NEXUS-DEBUG] File ${fileName} appears to be Nexus but has malformed frontmatter`);
+            logger2.warn(`File ${fileName} appears to be Nexus but has malformed frontmatter`);
           }
           return content;
         }
@@ -5363,13 +5365,13 @@ ${cleanedFrontmatter}
                 return false;
               }
             } catch (error) {
-              console.error(`[NEXUS-DEBUG] CleanMetadata.verify error for ${file.path}:`, error);
+              logger2.error(`CleanMetadata.verify error for ${file.path}:`, error);
               return false;
             }
           }
           return true;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] CleanMetadata.verify failed:`, error);
+          logger2.error(`CleanMetadata.verify failed:`, error);
           return false;
         }
       }
@@ -5405,6 +5407,7 @@ var init_upgrade_1_2_0 = __esm({
     "use strict";
     init_upgrade_interface();
     import_obsidian21 = require("obsidian");
+    init_logger();
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -5433,12 +5436,12 @@ var init_upgrade_1_2_0 = __esm({
                 return true;
               }
             } catch (error) {
-              console.error(`Error checking file ${file.path}:`, error);
+              logger2.error(`Error checking file ${file.path}:`, error);
             }
           }
           return false;
         } catch (error) {
-          console.error(`ConvertToCallouts.canRun failed:`, error);
+          logger2.error(`ConvertToCallouts.canRun failed:`, error);
           return false;
         }
       }
@@ -5476,7 +5479,7 @@ var init_upgrade_1_2_0 = __esm({
                 }
               } catch (error) {
                 errors++;
-                console.error(`[NEXUS-DEBUG] Error converting ${file.path}:`, error);
+                logger2.error(`Error converting ${file.path}:`, error);
               }
             }
             if (i + batchSize < conversationFiles.length) {
@@ -5489,7 +5492,7 @@ var init_upgrade_1_2_0 = __esm({
             details: { processed, converted, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] ConvertToCallouts.execute failed:`, error);
+          logger2.error(`ConvertToCallouts.execute failed:`, error);
           return {
             success: false,
             message: `Callout conversion failed: ${error}`,
@@ -5617,13 +5620,13 @@ ${cleanContent}`;
                 return false;
               }
             } catch (error) {
-              console.error(`Error verifying file ${file.path}:`, error);
+              logger2.error(`Error verifying file ${file.path}:`, error);
               return false;
             }
           }
           return true;
         } catch (error) {
-          console.error(`ConvertToCallouts.verify failed:`, error);
+          logger2.error(`ConvertToCallouts.verify failed:`, error);
           return false;
         }
       }
@@ -5650,7 +5653,7 @@ ${cleanContent}`;
           });
           return reportFiles.length > 0;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun failed:`, error);
+          logger2.error(`MoveReportsToProviderOperation.canRun failed:`, error);
           return false;
         }
       }
@@ -5684,7 +5687,7 @@ ${cleanContent}`;
               moved++;
             } catch (error) {
               errors++;
-              console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+              logger2.error(`Error moving report ${file.path}:`, error);
             }
           }
           return {
@@ -5693,7 +5696,7 @@ ${cleanContent}`;
             details: { processed, moved, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.execute failed:`, error);
+          logger2.error(`MoveReportsToProviderOperation.execute failed:`, error);
           return {
             success: false,
             message: `Report organization failed: ${error}`,
@@ -5753,7 +5756,7 @@ ${cleanContent}`;
               }
             } catch (e) {
               errors++;
-              console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation error in ${file.path}:`, e);
+              logger2.error(`UpdateReportLinksOperation error in ${file.path}:`, e);
             }
           }
           return {
@@ -5762,7 +5765,7 @@ ${cleanContent}`;
             details: { processed, updated, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation.execute failed:`, error);
+          logger2.error(`UpdateReportLinksOperation.execute failed:`, error);
           return {
             success: false,
             message: `Report link update failed: ${error}`,
@@ -5789,7 +5792,7 @@ ${cleanContent}`;
           const yearFolders = await this.findYearFolders(context, conversationFolder);
           return yearFolders.length > 0;
         } catch (error) {
-          console.error(`MoveYearFolders.canRun failed:`, error);
+          logger2.error(`MoveYearFolders.canRun failed:`, error);
           return false;
         }
       }
@@ -5809,7 +5812,7 @@ ${cleanContent}`;
               movedFolders++;
             } catch (error) {
               errors++;
-              console.error(`[NEXUS-DEBUG] Error moving year folder ${yearFolder}:`, error);
+              logger2.error(`Error moving year folder ${yearFolder}:`, error);
             }
           }
           return {
@@ -5818,7 +5821,7 @@ ${cleanContent}`;
             details: { movedFolders, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] MoveYearFolders.execute failed:`, error);
+          logger2.error(`MoveYearFolders.execute failed:`, error);
           return {
             success: false,
             message: `Conversation organization failed: ${error}`,
@@ -5835,7 +5838,7 @@ ${cleanContent}`;
           }
           return true;
         } catch (error) {
-          console.error(`MoveYearFolders.verify failed:`, error);
+          logger2.error(`MoveYearFolders.verify failed:`, error);
           return false;
         }
       }
@@ -5938,7 +5941,7 @@ Your conversations will be reorganized with provider structure and modern callou
             details: { action: "info_displayed" }
           };
         } catch (error) {
-          console.error(`OfferReimport.execute failed:`, error);
+          logger2.error(`OfferReimport.execute failed:`, error);
           return {
             success: false,
             message: `Failed to complete reimport operation: ${error}`,
@@ -6418,7 +6421,7 @@ var init_upgrade_1_3_0 = __esm({
           }
           return false;
         } catch (error) {
-          console.error(`[NEXUS-UPGRADE] ConvertToISO8601Timestamps.canRun failed:`, error);
+          console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
           return false;
         }
       }
@@ -6486,7 +6489,7 @@ var init_upgrade_1_3_0 = __esm({
                 }
               } catch (error) {
                 errors++;
-                console.error(`[NEXUS-DEBUG] Error converting timestamps in ${file.path}:`, error);
+                console.error(`Error converting timestamps in ${file.path}:`, error);
               }
             }
             if (i + batchSize < conversationFiles.length) {
@@ -6516,7 +6519,7 @@ var init_upgrade_1_3_0 = __esm({
             details: results
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] ConvertToISO8601Timestamps.execute failed:`, error);
+          console.error(`ConvertToISO8601Timestamps.execute failed:`, error);
           return {
             success: false,
             message: `Timestamp conversion failed: ${error}`,
@@ -6571,7 +6574,7 @@ var init_upgrade_1_3_0 = __esm({
               isoDate = DateParser.convertToISO8601WithOrder(dateStr, this.globalOrder);
             }
             if (!isoDate) {
-              console.warn(`[NEXUS-UPGRADE] convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
+              console.warn(`convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
               return match;
             }
             conversionCount++;
@@ -6707,7 +6710,7 @@ ${frontmatter}
                 }
               } catch (error) {
                 errors++;
-                console.error(`[NEXUS-DEBUG] Error fixing aliases in ${file.path}:`, error);
+                console.error(`Error fixing aliases in ${file.path}:`, error);
               }
             }
             if (i + batchSize < conversationFiles.length) {
@@ -6733,7 +6736,7 @@ ${frontmatter}
             details: results
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] FixFrontmatterAliases.execute failed:`, error);
+          console.error(`FixFrontmatterAliases.execute failed:`, error);
           return {
             success: false,
             message: `Alias fix failed: ${error}`,
@@ -6956,7 +6959,7 @@ ${frontmatter}
           }
           return false;
         } catch (error) {
-          console.error(`[NEXUS-UPGRADE] MigrateClaudeArtifacts.canRun failed:`, error);
+          console.error(`MigrateClaudeArtifacts.canRun failed:`, error);
           return false;
         }
       }
@@ -7023,7 +7026,7 @@ create_time: ${createTime.value}`;
                 } else {
                   warnings.push(`Could not determine create_time`);
                   warningCount++;
-                  console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 1 - FAILED to determine create_time`);
+                  console.warn(`${file.basename}: TASK 1 - FAILED to determine create_time`);
                 }
               } else {
               }
@@ -7048,12 +7051,12 @@ create_time: ${createTime.value}`;
 ` + body.substring(insertPos);
                     modified = true;
                   } else {
-                    console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Could not find title to insert link after`);
+                    console.warn(`${file.basename}: TASK 3 - Could not find title to insert link after`);
                   }
                 } else {
                   warnings.push(`Conversation note not found (ID: ${fm.conversation_id})`);
                   warningCount++;
-                  console.warn(`[NEXUS-UPGRADE] ${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
+                  console.warn(`${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
                 }
               } else if (body.includes("**Conversation:**")) {
               } else {
@@ -7085,7 +7088,7 @@ ${body}`;
               }
             } catch (error) {
               errorCount++;
-              console.error(`[NEXUS-UPGRADE] ${file.basename}: \u274C ERROR:`, error);
+              console.error(`${file.basename}: \u274C ERROR:`, error);
               results.push(`\u274C ${file.basename}: ${error.message}`);
             }
           }
@@ -7126,17 +7129,17 @@ ${body}`;
         const artifactRef = `${artifactId}_v${versionNumber}`;
         try {
           if (!conversationId) {
-            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No conversation_id in frontmatter`);
+            console.warn(`Artifact ${artifactRef}: No conversation_id in frontmatter`);
             return { value: "", source: "none" };
           }
           const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
           if (!conversationFile) {
-            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
+            console.warn(`Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
             return { value: "", source: "none" };
           }
           const content = await plugin.app.vault.read(conversationFile);
           if (!artifactId || !versionNumber) {
-            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
+            console.warn(`Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
             const fm2 = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
             if (fm2 == null ? void 0 : fm2.create_time) {
               return { value: fm2.create_time, source: "conversation" };
@@ -7148,7 +7151,7 @@ ${body}`;
           const linkPattern = new RegExp(`\\[\\[${escapedPath}\\|View Artifact\\]\\]`, "m");
           const linkMatch = content.match(linkPattern);
           if (!linkMatch || linkMatch.index === void 0) {
-            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
+            console.warn(`Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
             const fm2 = (_b = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _b.frontmatter;
             if (fm2 == null ? void 0 : fm2.create_time) {
               return { value: fm2.create_time, source: "conversation" };
@@ -7177,23 +7180,23 @@ ${body}`;
                 source: "message"
               };
             } else {
-              console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: \u274C Timestamp parsing FAILED (returned 0), using conversation fallback`);
-              console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Failed timestamp string was: "${timestampStr}"`);
+              console.warn(`Artifact ${artifactRef}: \u274C Timestamp parsing FAILED (returned 0), using conversation fallback`);
+              console.warn(`Artifact ${artifactRef}: Failed timestamp string was: "${timestampStr}"`);
             }
           } else {
-            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: \u274C No agent callout found before artifact link, using conversation fallback`);
+            console.warn(`Artifact ${artifactRef}: \u274C No agent callout found before artifact link, using conversation fallback`);
             const sampleText = textBeforeLink.substring(Math.max(0, textBeforeLink.length - 500));
-            console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Last 500 chars of search text:
+            console.warn(`Artifact ${artifactRef}: Last 500 chars of search text:
 ${sampleText}`);
           }
           const fm = (_c = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _c.frontmatter;
           if (fm == null ? void 0 : fm.create_time) {
             return { value: fm.create_time, source: "conversation" };
           }
-          console.warn(`[NEXUS-UPGRADE] Artifact ${artifactRef}: No create_time available`);
+          console.warn(`Artifact ${artifactRef}: No create_time available`);
           return { value: "", source: "none" };
         } catch (error) {
-          console.error(`[NEXUS-UPGRADE] Artifact ${artifactRef}: Exception during create_time extraction:`, error);
+          console.error(`Artifact ${artifactRef}: Exception during create_time extraction:`, error);
           return { value: "", source: "none" };
         }
       }
@@ -9150,8 +9153,8 @@ var import_obsidian16 = require("obsidian");
 // src/formatters/message-formatter.ts
 init_utils();
 var _MessageFormatter = class {
-  constructor(logger4, plugin) {
-    this.logger = logger4;
+  constructor(logger6, plugin) {
+    this.logger = logger6;
     this.plugin = plugin;
   }
   formatMessages(messages) {
@@ -9310,12 +9313,12 @@ var URL_GENERATORS = {
 
 // src/formatters/note-formatter.ts
 var NoteFormatter = class {
-  constructor(logger4, pluginId, pluginVersion, plugin) {
-    this.logger = logger4;
+  constructor(logger6, pluginId, pluginVersion, plugin) {
+    this.logger = logger6;
     this.pluginId = pluginId;
     this.pluginVersion = pluginVersion;
     this.plugin = plugin;
-    this.messageFormatter = new MessageFormatter(logger4, plugin);
+    this.messageFormatter = new MessageFormatter(logger6, plugin);
   }
   generateMarkdownContent(conversation) {
     const safeTitle = generateSafeAlias(conversation.title);
@@ -9490,7 +9493,7 @@ var ConversationProcessor = class {
       const chatId = adapter.getId(chat);
       if (!chatId || chatId.trim() === "") {
         const chatTitle = adapter.getTitle(chat) || "Untitled";
-        console.warn(`Skipping conversation with missing ID: ${chatTitle}`);
+        logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
         importReport.addFailed(
           chatTitle,
           "N/A",
@@ -10372,9 +10375,9 @@ ChatGPTConverter.CLEANUP_PATTERNS = [
 init_utils();
 var ChatGPTAttachmentExtractor = class {
   // Cache for ZIP file lookups
-  constructor(plugin, logger4) {
+  constructor(plugin, logger6) {
     this.plugin = plugin;
-    this.logger = logger4;
+    this.logger = logger6;
     this.zipFileCache = /* @__PURE__ */ new Map();
   }
   /**
@@ -11011,7 +11014,7 @@ var ClaudeConverter = class {
           title: artifact.title || artifactId
         });
       } catch (error) {
-        console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+        logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
       }
     }
     return artifactVersionMap;
@@ -11157,7 +11160,7 @@ ${code}
 > \u{1F3A8} [[${versionFile}|View Artifact]]`;
                 textParts.push(specificLink);
               } catch (error) {
-                console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+                logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
                 textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${block.input.title || artifactId}** v${currentVersion}
 > \u274C Error saving artifact`);
               }
@@ -11284,7 +11287,7 @@ ${code}
     const title = (firstVersion == null ? void 0 : firstVersion.title) || "Untitled Artifact";
     const versionCount = savedVersions.length;
     if (!latestVersion) {
-      console.error("Claude converter: No latest version available for artifact summary");
+      logger.error("Claude converter: No latest version available for artifact summary");
       return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}** (Error: No accessible version)</div>`;
     }
     let formattedContent = `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}**`;
@@ -11372,7 +11375,7 @@ ${versionContent}
     try {
       await this.plugin.app.vault.create(filePath, markdownContent);
     } catch (error) {
-      console.error(`Failed to create artifact file ${filePath}:`, error);
+      logger.error(`Failed to create artifact file ${filePath}:`, error);
       throw error;
     }
   }
@@ -11550,9 +11553,9 @@ ClaudeConverter.CALLOUTS = {
 
 // src/providers/claude/claude-attachment-extractor.ts
 var ClaudeAttachmentExtractor = class {
-  constructor(plugin, logger4) {
+  constructor(plugin, logger6) {
     this.plugin = plugin;
-    this.logger = logger4;
+    this.logger = logger6;
   }
   /**
    * Extract attachments from Claude ZIP archive
@@ -12320,14 +12323,14 @@ var ImportService = class {
     } catch (error) {
       if (error instanceof NexusAiChatImporterError) {
         this.plugin.logger.error("Error processing conversations", error.message);
-        console.error("Full NexusAiChatImporterError:", error);
+        logger.error("Full NexusAiChatImporterError:", error);
       } else if (typeof error === "object" && error instanceof Error) {
         this.plugin.logger.error("General error processing conversations", error.message);
-        console.error("Full Error:", error);
-        console.error("Stack trace:", error.stack);
+        logger.error("Full Error:", error);
+        logger.error("Stack trace:", error.stack);
       } else {
         this.plugin.logger.error("Unknown error processing conversations", "An unknown error occurred");
-        console.error("Unknown error:", error);
+        logger.error("Unknown error:", error);
       }
       throw error;
     }
@@ -12598,7 +12601,7 @@ var StorageService = class {
           }
         } catch (error) {
           errors++;
-          console.warn(`Error parsing conversation file ${file.path}:`, error);
+          logger.warn(`Error parsing conversation file ${file.path}:`, error);
         }
       }
       if (i + batchSize < conversationFiles.length) {
@@ -12692,7 +12695,7 @@ var StorageService = class {
         update_time: updateTime
       };
     } catch (error) {
-      console.error(`Error manually parsing ${file.path}:`, error);
+      logger.error(`Error manually parsing ${file.path}:`, error);
       return null;
     }
   }
@@ -13018,7 +13021,7 @@ __name(MultiOperationProgressModal, "MultiOperationProgressModal");
 
 // src/upgrade/incremental-upgrade-manager.ts
 init_utils();
-var logger3 = new Logger();
+var logger5 = new Logger();
 var IncrementalUpgradeManager = class {
   constructor(plugin) {
     this.availableUpgrades = [];
@@ -13087,13 +13090,12 @@ var IncrementalUpgradeManager = class {
       try {
         await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
       } catch (e) {
-        console.error("[NEXUS-DEBUG] \u274C Failed to write consolidated upgrade report", e);
-        console.error("[NEXUS-DEBUG] Error stack:", e instanceof Error ? e.stack : "No stack trace");
+        logger5.error("Failed to write upgrade report:", e);
       }
       await this.showUpgradeCompleteDialog(currentVersion);
       return result;
     } catch (error) {
-      console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
+      logger5.error("Incremental upgrade failed:", error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
         new import_obsidian26.Notice("Migration cancelled. Please complete the migration before importing.");
         return {
@@ -13104,7 +13106,7 @@ var IncrementalUpgradeManager = class {
           results: []
         };
       }
-      logger3.error("Error during incremental upgrade:", error);
+      logger5.error("Error during incremental upgrade:", error);
       new import_obsidian26.Notice("Upgrade failed - see console for details");
       return {
         success: false,
@@ -13140,7 +13142,7 @@ var IncrementalUpgradeManager = class {
       const isFreshInstall = !hasLegacyData && !hasImportedArchives && !hasExistingConversations;
       return isFreshInstall;
     } catch (error) {
-      console.error(`[NEXUS-DEBUG] Error detecting fresh install:`, error);
+      logger5.error("Error detecting fresh install:", error);
       return false;
     }
   }
@@ -13195,7 +13197,6 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal2.markComplete(`All operations completed successfully!`);
-      new import_obsidian26.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -13204,7 +13205,7 @@ var IncrementalUpgradeManager = class {
         results
       };
     } catch (error) {
-      console.error(`[NEXUS-DEBUG] Modal upgrade execution failed:`, error);
+      logger5.error("Modal upgrade execution failed:", error);
       progressModal2.showError(`Upgrade failed: ${error}`);
       throw error;
     }
@@ -13353,7 +13354,7 @@ var IncrementalUpgradeManager = class {
     const upgradesFolder = `${reportRoot}/Upgrades`;
     const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
     if (!folderResult.success) {
-      console.error(`[NEXUS-UPGRADE-REPORT] \u274C Failed to create folder: ${folderResult.error}`);
+      logger5.error(`\u274C Failed to create folder: ${folderResult.error}`);
       throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
     }
     const now = new Date();
@@ -13450,8 +13451,8 @@ var IncrementalUpgradeManager = class {
     try {
       await this.plugin.app.vault.create(filePath, md);
     } catch (error) {
-      console.error(`[NEXUS-UPGRADE-REPORT] \u274C Failed to write report file:`, error);
-      console.error(`[NEXUS-UPGRADE-REPORT] Error details:`, {
+      logger5.error(`\u274C Failed to write report file:`, error);
+      logger5.error(`Error details:`, {
         message: error instanceof Error ? error.message : String(error),
         filePath,
         contentLength: md.length
@@ -13479,7 +13480,7 @@ var IncrementalUpgradeManager = class {
         new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
       }
     } catch (error) {
-      logger3.error("Error showing upgrade complete dialog:", error);
+      logger5.error("Error showing upgrade complete dialog:", error);
       new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
     }
   }
@@ -13548,7 +13549,7 @@ var IncrementalUpgradeManager = class {
         );
       }
     } catch (error) {
-      logger3.error("Error showing upgrade dialog:", error);
+      logger5.error("Error showing upgrade dialog:", error);
       new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
@@ -13617,7 +13618,7 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
       const match = response.text.match(overviewRegex);
       return match ? match[1].trim() : null;
     } catch (error) {
-      logger3.warn("Could not fetch release overview:", error);
+      logger5.warn("Could not fetch release overview:", error);
       return null;
     }
   }
@@ -14951,11 +14952,11 @@ var ConversationMetadataExtractor = class {
   extractChatGPTMetadata(conversations) {
     return conversations.filter((chat) => {
       if (!chat.id || chat.id.trim() === "") {
-        console.warn("Skipping ChatGPT conversation with missing ID:", chat.title || "Untitled");
+        logger.warn("Skipping ChatGPT conversation with missing ID:", chat.title || "Untitled");
         return false;
       }
       if (!chat.create_time || !chat.update_time) {
-        console.warn("Skipping ChatGPT conversation with missing timestamps:", chat.id, chat.title || "Untitled");
+        logger.warn("Skipping ChatGPT conversation with missing timestamps:", chat.id, chat.title || "Untitled");
         return false;
       }
       return true;
@@ -14981,11 +14982,11 @@ var ConversationMetadataExtractor = class {
   extractClaudeMetadata(conversations) {
     return conversations.filter((chat) => {
       if (!chat.uuid || chat.uuid.trim() === "") {
-        console.warn("Skipping Claude conversation with missing UUID:", chat.name || "Untitled");
+        logger.warn("Skipping Claude conversation with missing UUID:", chat.name || "Untitled");
         return false;
       }
       if (!chat.created_at || !chat.updated_at) {
-        console.warn("Skipping Claude conversation with missing timestamps:", chat.uuid, chat.name || "Untitled");
+        logger.warn("Skipping Claude conversation with missing timestamps:", chat.uuid, chat.name || "Untitled");
         return false;
       }
       return true;
@@ -15138,7 +15139,7 @@ var ConversationMetadataExtractor = class {
           updatedConversations: 0
         });
       } catch (error) {
-        console.error(`Error extracting metadata from ${file.name}:`, error);
+        logger.error(`Error extracting metadata from ${file.name}:`, error);
       }
     }
     const filterResult = this.filterConversationsForSelection(
@@ -15423,7 +15424,7 @@ var ImportCompletionDialog = class extends import_obsidian30.Modal {
         await this.app.workspace.getLeaf(false).openFile(file);
       }
     } catch (error) {
-      console.error("Failed to open report:", error);
+      logger.error("Failed to open report:", error);
     }
   }
   addCustomStyles() {
@@ -15705,9 +15706,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
       }
     } catch (error) {
       this.logger.error("[IMPORT-ALL] Error in import all:", error);
-      console.error("[IMPORT-ALL] Full error details:", error);
+      logger.error("[IMPORT-ALL] Full error details:", error);
       if (error instanceof Error) {
-        console.error("[IMPORT-ALL] Error stack:", error.stack);
+        logger.error("[IMPORT-ALL] Error stack:", error.stack);
       }
       new import_obsidian31.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -15742,9 +15743,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
       ).open();
     } catch (error) {
       this.logger.error("[SELECTIVE-IMPORT] Error in selective import:", error);
-      console.error("[SELECTIVE-IMPORT] Full error details:", error);
+      logger.error("[SELECTIVE-IMPORT] Full error details:", error);
       if (error instanceof Error) {
-        console.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
+        logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
       }
       new import_obsidian31.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -15849,8 +15850,8 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       return logFilePath;
     } catch (error) {
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
-      console.error("Full error:", error);
-      console.error("Log content length:", logContent.length);
+      logger.error("Full error:", error);
+      logger.error("Log content length:", logContent.length);
       new import_obsidian31.Notice("Failed to create log file. Check console for details.");
       return "";
     }

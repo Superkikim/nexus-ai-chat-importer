@@ -22,6 +22,7 @@ import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } fro
 import { UpgradeProgressModal } from "../utils/progress-modal";
 import { showDialog } from "../../dialogs";
 import { TFile } from "obsidian";
+import { logger } from "../../logger";
 
 /**
  * Delete old conversation catalog (automatic operation)
@@ -43,7 +44,7 @@ class DeleteCatalogOperation extends UpgradeOperation {
             }
             return hasData;
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] DeleteCatalog.canRun failed:`, error);
+            logger.error(`DeleteCatalog.canRun failed:`, error);
             return false;
         }
     }
@@ -89,7 +90,7 @@ class DeleteCatalogOperation extends UpgradeOperation {
             const verifyArchives = verifyData?.importedArchives || {};
 
             if (Object.keys(verifyArchives).length === 0 && Object.keys(existingImportedArchives || {}).length > 0) {
-                console.error(`[NEXUS-DEBUG] DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
+                logger.error(`DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
                 return {
                     success: false,
                     message: `Critical error: importedArchives were lost during migration`,
@@ -107,7 +108,7 @@ class DeleteCatalogOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] DeleteCatalog.execute failed:`, error);
+            logger.error(`DeleteCatalog.execute failed:`, error);
             return {
                 success: false,
                 message: `Failed to delete legacy catalog: ${error}`,
@@ -125,7 +126,7 @@ class DeleteCatalogOperation extends UpgradeOperation {
             // Success if catalog is gone AND importedArchives are preserved (if they existed)
             return hasNoCatalog;
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] DeleteCatalog.verify failed:`, error);
+            logger.error(`DeleteCatalog.verify failed:`, error);
             return false;
         }
     }
@@ -165,7 +166,7 @@ class CleanMetadataOperation extends UpgradeOperation {
             const canRun = conversationFiles.length > 0;
             return canRun;
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] CleanMetadata.canRun failed:`, error);
+            logger.error(`CleanMetadata.canRun failed:`, error);
             return false;
         }
     }
@@ -223,7 +224,7 @@ class CleanMetadataOperation extends UpgradeOperation {
 
                     } catch (error) {
                         errors++;
-                        console.error(`[NEXUS-DEBUG] Error cleaning metadata for ${file.path}:`, error);
+                        logger.error(`Error cleaning metadata for ${file.path}:`, error);
                     }
                 }
 
@@ -241,7 +242,7 @@ class CleanMetadataOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] CleanMetadata.execute failed:`, error);
+            logger.error(`CleanMetadata.execute failed:`, error);
             return {
                 success: false,
                 message: `Metadata cleanup failed: ${error}`,
@@ -260,7 +261,7 @@ class CleanMetadataOperation extends UpgradeOperation {
         if (!frontmatterMatch) {
             // No frontmatter found - check if this looks like a Nexus file
             if (content.includes('nexus:') || content.includes('conversation_id:')) {
-                console.warn(`[NEXUS-DEBUG] File ${fileName} appears to be Nexus but has malformed frontmatter`);
+                logger.warn(`File ${fileName} appears to be Nexus but has malformed frontmatter`);
             }
             return content;
         }
@@ -419,14 +420,14 @@ class CleanMetadataOperation extends UpgradeOperation {
                         return false;
                     }
                 } catch (error) {
-                    console.error(`[NEXUS-DEBUG] CleanMetadata.verify error for ${file.path}:`, error);
+                    logger.error(`CleanMetadata.verify error for ${file.path}:`, error);
                     return false;
                 }
             }
 
             return true;
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] CleanMetadata.verify failed:`, error);
+            logger.error(`CleanMetadata.verify failed:`, error);
             return false;
         }
     }

@@ -183,7 +183,7 @@ export class StorageService {
                     
                 } catch (error) {
                     errors++;
-                    console.warn(`Error parsing conversation file ${file.path}:`, error);
+                    logger.warn(`Error parsing conversation file ${file.path}:`, error);
                 }
             }
             
@@ -310,7 +310,7 @@ export class StorageService {
             };
 
         } catch (error) {
-            console.error(`Error manually parsing ${file.path}:`, error);
+            logger.error(`Error manually parsing ${file.path}:`, error);
             return null;
         }
     }
