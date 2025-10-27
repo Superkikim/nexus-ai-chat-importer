@@ -10567,15 +10567,46 @@ var ChatGPTAttachmentExtractor = class {
     if (!attachment.fileId) {
       const context = conversationId && messageId ? `conversation: ${conversationId}, message: ${messageId}` : conversationId ? `conversation: ${conversationId}` : "unknown context";
       this.logger.warn(`No fileId provided for attachment: ${attachment.fileName} (${context})`);
-      const zipFile = zip.file(attachment.fileName);
-      if (zipFile) {
-        return zipFile;
+      const zipFile2 = zip.file(attachment.fileName);
+      if (zipFile2) {
+        this.logger.debug(`Found attachment by filename fallback: ${attachment.fileName} (${context})`);
+        return zipFile2;
       }
       return null;
     }
     const cacheKey = `${attachment.fileId}_${attachment.fileName}`;
     if (this.zipFileCache.has(cacheKey)) {
       return this.zipFileCache.get(cacheKey);
+    }
+    let zipFile = zip.file(attachment.fileName);
+    if (zipFile) {
+      this.zipFileCache.set(cacheKey, zipFile);
+      return zipFile;
+    }
+    if (attachment.fileName.startsWith("dalle_")) {
+      const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
+      if (dalleFiles.length > 0) {
+        this.logger.debug(`Found DALL-E file in dalle-generations/: ${dalleFiles[0].name}`);
+        this.zipFileCache.set(cacheKey, dalleFiles[0]);
+        return dalleFiles[0];
+      }
+    }
+    const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
+    zipFile = zip.file(fileIdPattern);
+    if (zipFile) {
+      this.logger.debug(`Found file by ID pattern match: ${fileIdPattern}`);
+      this.zipFileCache.set(cacheKey, zipFile);
+      return zipFile;
+    }
+    const extension = this.getFileExtension(attachment.fileName);
+    if (extension) {
+      const fileIdExtPattern = `${attachment.fileId}.${extension}`;
+      zipFile = zip.file(fileIdExtPattern);
+      if (zipFile) {
+        this.logger.debug(`Found file by ID extension match: ${fileIdExtPattern}`);
+        this.zipFileCache.set(cacheKey, zipFile);
+        return zipFile;
+      }
     }
     const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
     this.zipFileCache.set(cacheKey, foundFile);

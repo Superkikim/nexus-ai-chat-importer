@@ -291,6 +291,7 @@ export class ChatGPTAttachmentExtractor {
             // Fallback: try to find by filename only
             const zipFile = zip.file(attachment.fileName);
             if (zipFile) {
+                this.logger.debug(`Found attachment by filename fallback: ${attachment.fileName} (${context})`);
                 return zipFile;
             }
 
@@ -303,7 +304,45 @@ export class ChatGPTAttachmentExtractor {
             return this.zipFileCache.get(cacheKey)!;
         }
 
-        // Unified strategy: Search entire ZIP for file ID (handles all cases)
+        // Strategy 1: Try exact filename match first
+        let zipFile = zip.file(attachment.fileName);
+        if (zipFile) {
+            this.zipFileCache.set(cacheKey, zipFile);
+            return zipFile;
+        }
+
+        // Strategy 2: DALL-E Strategy - Check dalle-generations/ folder first (restored from v1.2.0)
+        if (attachment.fileName.startsWith('dalle_')) {
+            const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
+            if (dalleFiles.length > 0) {
+                this.logger.debug(`Found DALL-E file in dalle-generations/: ${dalleFiles[0].name}`);
+                this.zipFileCache.set(cacheKey, dalleFiles[0]);
+                return dalleFiles[0]; // Return first match
+            }
+        }
+
+        // Strategy 3: Regular file ID patterns (restored from v1.2.0)
+        const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
+        zipFile = zip.file(fileIdPattern);
+        if (zipFile) {
+            this.logger.debug(`Found file by ID pattern match: ${fileIdPattern}`);
+            this.zipFileCache.set(cacheKey, zipFile);
+            return zipFile;
+        }
+
+        // Strategy 4: Pattern file-{ID}.{ext} (restored from v1.2.0)
+        const extension = this.getFileExtension(attachment.fileName);
+        if (extension) {
+            const fileIdExtPattern = `${attachment.fileId}.${extension}`;
+            zipFile = zip.file(fileIdExtPattern);
+            if (zipFile) {
+                this.logger.debug(`Found file by ID extension match: ${fileIdExtPattern}`);
+                this.zipFileCache.set(cacheKey, zipFile);
+                return zipFile;
+            }
+        }
+
+        // Strategy 5: Comprehensive search by file ID in entire ZIP
         const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
 
         // Cache result (even if null)
