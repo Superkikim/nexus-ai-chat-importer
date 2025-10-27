@@ -184,8 +184,6 @@ export class ClaudeConverter {
         const artifactContents = new Map<string, string>();
         const artifactLanguages = new Map<string, string>(); // Track language per artifact ID
 
-        this.plugin.logger.debug(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
-
         for (const {artifact, messageTimestamp} of allArtifacts) {
             const artifactId = artifact.id || 'unknown';
             const command = artifact.command || 'create';
@@ -363,13 +361,10 @@ export class ClaudeConverter {
                                     (command === 'update' && content.length > 100);
 
                 if (isSignificant && versionUuid) {
-                    this.plugin.logger.debug(`Claude converter: Found significant artifact version - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, UUID: ${versionUuid}`);
                     if (!artifactVersionsMap.has(artifactId)) {
                         artifactVersionsMap.set(artifactId, []);
                     }
                     artifactVersionsMap.get(artifactId)!.push(block.input);
-                } else {
-                    this.plugin.logger.debug(`Claude converter: Skipped artifact - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, Significant: ${isSignificant}, Has UUID: ${!!versionUuid}`);
                 }
             }
         }

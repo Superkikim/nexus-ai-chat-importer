@@ -11011,7 +11011,6 @@ var ClaudeConverter = class {
     const versionCounters = /* @__PURE__ */ new Map();
     const artifactContents = /* @__PURE__ */ new Map();
     const artifactLanguages = /* @__PURE__ */ new Map();
-    this.plugin.logger.debug(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
     for (const { artifact, messageTimestamp } of allArtifacts) {
       const artifactId = artifact.id || "unknown";
       const command = artifact.command || "create";
@@ -11129,13 +11128,10 @@ ${code}
         }
         const isSignificant = command === "create" || command === "rewrite" || command === "update" && content.length > 100;
         if (isSignificant && versionUuid) {
-          this.plugin.logger.debug(`Claude converter: Found significant artifact version - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, UUID: ${versionUuid}`);
           if (!artifactVersionsMap.has(artifactId)) {
             artifactVersionsMap.set(artifactId, []);
           }
           artifactVersionsMap.get(artifactId).push(block.input);
-        } else {
-          this.plugin.logger.debug(`Claude converter: Skipped artifact - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, Significant: ${isSignificant}, Has UUID: ${!!versionUuid}`);
         }
       }
     }
