@@ -10374,11 +10374,32 @@ ChatGPTConverter.CLEANUP_PATTERNS = [
 // src/providers/chatgpt/chatgpt-attachment-extractor.ts
 init_utils();
 var ChatGPTAttachmentExtractor = class {
-  // Cache for ZIP file lookups
+  // All opened ZIPs for multi-ZIP fallback
   constructor(plugin, logger6) {
     this.plugin = plugin;
     this.logger = logger6;
     this.zipFileCache = /* @__PURE__ */ new Map();
+    // Cache for ZIP file lookups
+    this.attachmentMap = null;
+    // Multi-ZIP attachment map
+    this.allZips = [];
+  }
+  /**
+   * Set attachment map for multi-ZIP support
+   * This enables fallback to older ZIPs when files are missing in recent exports
+   */
+  setAttachmentMap(attachmentMap, allZips) {
+    this.attachmentMap = attachmentMap;
+    this.allZips = allZips;
+    this.logger.debug(`Attachment map set with ${attachmentMap.size} file IDs across ${allZips.length} ZIPs`);
+  }
+  /**
+   * Clear attachment map and ZIPs (call after import completes)
+   */
+  clearAttachmentMap() {
+    this.attachmentMap = null;
+    this.allZips = [];
+    this.zipFileCache.clear();
   }
   /**
    * Extract and save ChatGPT attachments using "best effort" strategy
@@ -10553,7 +10574,7 @@ var ChatGPTAttachmentExtractor = class {
     return finalPath;
   }
   /**
-   * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH + CACHING
+   * Find file in ZIP - ENHANCED WITH MULTI-ZIP FALLBACK + COMPREHENSIVE SEARCH + CACHING
    */
   async findChatGPTFileById(zip, attachment, conversationId, messageId) {
     if (!attachment.fileId) {
@@ -10569,6 +10590,13 @@ var ChatGPTAttachmentExtractor = class {
     const cacheKey = `${attachment.fileId}_${attachment.fileName}`;
     if (this.zipFileCache.has(cacheKey)) {
       return this.zipFileCache.get(cacheKey);
+    }
+    if (this.attachmentMap && this.allZips.length > 0) {
+      const result = await this.findFileUsingAttachmentMap(attachment, conversationId, messageId);
+      if (result) {
+        this.zipFileCache.set(cacheKey, result);
+        return result;
+      }
     }
     let zipFile = zip.file(attachment.fileName);
     if (zipFile) {
@@ -10620,6 +10648,69 @@ var ChatGPTAttachmentExtractor = class {
       }
     }
     return null;
+  }
+  /**
+   * Find file using attachment map (multi-ZIP fallback)
+   * Tries to find the file in any of the available ZIPs, preferring newer exports
+   */
+  async findFileUsingAttachmentMap(attachment, conversationId, messageId) {
+    if (!this.attachmentMap || this.allZips.length === 0) {
+      return null;
+    }
+    const context = conversationId && messageId ? `conversation: ${conversationId}, message: ${messageId}` : conversationId ? `conversation: ${conversationId}` : "unknown context";
+    const fileId = attachment.fileId || "";
+    if (!fileId) {
+      return null;
+    }
+    const locations = this.attachmentMap.get(fileId);
+    if (!locations || locations.length === 0) {
+      const alternativeIds = this.getAlternativeFileIds(fileId);
+      for (const altId of alternativeIds) {
+        const altLocations = this.attachmentMap.get(altId);
+        if (altLocations && altLocations.length > 0) {
+          this.logger.debug(`Found attachment using alternative ID ${altId}: ${attachment.fileName} (${context})`);
+          return this.getFileFromLocation(altLocations[altLocations.length - 1]);
+        }
+      }
+      return null;
+    }
+    const bestLocation = locations[locations.length - 1];
+    this.logger.debug(`Found attachment in ZIP ${bestLocation.zipIndex + 1} (${bestLocation.zipFileName}): ${bestLocation.path} (${context})`);
+    return this.getFileFromLocation(bestLocation);
+  }
+  /**
+   * Get alternative file ID formats for fallback matching
+   */
+  getAlternativeFileIds(fileId) {
+    const alternatives = [];
+    if (fileId.startsWith("file_")) {
+      alternatives.push(fileId.substring(5));
+    } else if (!fileId.startsWith("file-")) {
+      alternatives.push(`file_${fileId}`);
+    }
+    if (fileId.includes("_")) {
+      alternatives.push(fileId.replace(/_/g, "-"));
+    }
+    if (fileId.includes("-")) {
+      alternatives.push(fileId.replace(/-/g, "_"));
+    }
+    return alternatives;
+  }
+  /**
+   * Get JSZip file object from attachment location
+   */
+  getFileFromLocation(location) {
+    if (location.zipIndex >= this.allZips.length) {
+      this.logger.error(`Invalid ZIP index ${location.zipIndex} (only ${this.allZips.length} ZIPs available)`);
+      return null;
+    }
+    const zip = this.allZips[location.zipIndex];
+    const zipFile = zip.file(location.path);
+    if (!zipFile) {
+      this.logger.error(`File not found in ZIP ${location.zipIndex}: ${location.path}`);
+      return null;
+    }
+    return zipFile;
   }
   /**
    * Search specifically in dalle-generations/ folder (restored from v1.2.0)
@@ -10891,6 +10982,18 @@ var ChatGPTAdapter = class {
   }
   getReportNamingStrategy() {
     return this.reportNamingStrategy;
+  }
+  /**
+   * Set attachment map for multi-ZIP support
+   */
+  setAttachmentMap(attachmentMap, allZips) {
+    this.attachmentExtractor.setAttachmentMap(attachmentMap, allZips);
+  }
+  /**
+   * Clear attachment map after import completes
+   */
+  clearAttachmentMap() {
+    this.attachmentExtractor.clearAttachmentMap();
   }
 };
 __name(ChatGPTAdapter, "ChatGPTAdapter");
@@ -12131,12 +12234,107 @@ var ImportProgressModal = class extends import_obsidian17.Modal {
 };
 __name(ImportProgressModal, "ImportProgressModal");
 
+// src/services/attachment-map-builder.ts
+var AttachmentMapBuilder = class {
+  constructor(logger6) {
+    this.logger = logger6;
+  }
+  /**
+   * Scan all ZIP files and build a map of available attachments
+   * Processes ZIPs in order (oldest to newest) so newer versions are at the end
+   */
+  async buildAttachmentMap(files) {
+    var _a;
+    const attachmentMap = /* @__PURE__ */ new Map();
+    const JSZipModule = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      this.logger.debug(`Scanning attachments in ZIP ${i + 1}/${files.length}: ${file.name}`);
+      try {
+        const zip = new JSZipModule();
+        const zipContent = await zip.loadAsync(file);
+        for (const [path, zipFile] of Object.entries(zipContent.files)) {
+          if (zipFile.dir)
+            continue;
+          const fileIds = this.extractFileIds(path);
+          for (const fileId of fileIds) {
+            if (!attachmentMap.has(fileId)) {
+              attachmentMap.set(fileId, []);
+            }
+            const locations = attachmentMap.get(fileId);
+            locations.push({
+              zipIndex: i,
+              path,
+              size: ((_a = zipFile._data) == null ? void 0 : _a.uncompressedSize) || 0,
+              zipFileName: file.name
+            });
+          }
+        }
+        this.logger.debug(`Found ${Object.keys(zipContent.files).length} files in ${file.name}`);
+      } catch (error) {
+        this.logger.error(`Failed to scan attachments in ${file.name}:`, error);
+      }
+    }
+    this.logger.info(`Built attachment map with ${attachmentMap.size} unique file IDs across ${files.length} ZIPs`);
+    return attachmentMap;
+  }
+  /**
+   * Extract all possible file IDs from a file path
+   * Handles various ChatGPT export formats:
+   * - file_XXXXX.dat → ["file_XXXXX", "XXXXX"]
+   * - user-xxx/file_XXXXX-uuid.png → ["file_XXXXX", "XXXXX"]
+   * - dalle-generations/xxx.png → ["xxx"]
+   */
+  extractFileIds(path) {
+    const fileIds = [];
+    const fileName = path.split("/").pop() || "";
+    const filePattern = /file_([a-f0-9]+)/i;
+    const fileMatch = fileName.match(filePattern);
+    if (fileMatch) {
+      fileIds.push(`file_${fileMatch[1]}`);
+      fileIds.push(fileMatch[1]);
+    }
+    const hashPattern = /^([a-f0-9]{32,})(?:[-.]|$)/i;
+    const hashMatch = fileName.match(hashPattern);
+    if (hashMatch && !fileMatch) {
+      fileIds.push(hashMatch[1]);
+    }
+    const baseFileName = fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, "");
+    if (baseFileName && !fileIds.includes(baseFileName)) {
+      fileIds.push(baseFileName);
+    }
+    return fileIds;
+  }
+  /**
+   * Find the best location for a file ID
+   * Returns the NEWEST available location (last in array)
+   * Falls back to older locations if needed
+   */
+  findBestLocation(attachmentMap, fileId) {
+    const locations = attachmentMap.get(fileId);
+    if (!locations || locations.length === 0) {
+      return null;
+    }
+    return locations[locations.length - 1];
+  }
+  /**
+   * Find all locations for a file ID (for debugging/logging)
+   */
+  findAllLocations(attachmentMap, fileId) {
+    return attachmentMap.get(fileId) || [];
+  }
+};
+__name(AttachmentMapBuilder, "AttachmentMapBuilder");
+
 // src/services/import-service.ts
 var ImportService = class {
   constructor(plugin) {
     this.plugin = plugin;
     this.importReport = new ImportReport();
+    this.currentAttachmentMap = null;
+    this.currentZips = [];
     this.providerRegistry = createProviderRegistry(plugin);
+    this.attachmentMapBuilder = new AttachmentMapBuilder(plugin.logger);
     this.conversationProcessor = new ConversationProcessor(plugin, this.providerRegistry);
   }
   async selectZipFile() {
@@ -12506,6 +12704,42 @@ ${report.generateReportContent(void 0, void 0, void 0, void 0, false)}
     }
     const now = new Date();
     return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
+  }
+  /**
+   * Build attachment map for multi-ZIP import
+   * Opens all ZIPs and scans for available attachments
+   */
+  async buildAttachmentMapForMultiZip(files) {
+    this.plugin.logger.info(`Building attachment map for ${files.length} ZIP files...`);
+    this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMap(files);
+    const JSZipModule = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
+    this.currentZips = [];
+    for (const file of files) {
+      try {
+        const zip = new JSZipModule();
+        const zipContent = await zip.loadAsync(file);
+        this.currentZips.push(zipContent);
+      } catch (error) {
+        this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
+      }
+    }
+    const chatgptAdapter = this.providerRegistry.getAdapter("chatgpt");
+    if (chatgptAdapter && this.currentAttachmentMap) {
+      chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, this.currentZips);
+    }
+    this.plugin.logger.info(`Attachment map built: ${this.currentAttachmentMap.size} file IDs across ${this.currentZips.length} ZIPs`);
+  }
+  /**
+   * Clear attachment map and close ZIPs after import completes
+   */
+  clearAttachmentMap() {
+    this.currentAttachmentMap = null;
+    this.currentZips = [];
+    const chatgptAdapter = this.providerRegistry.getAdapter("chatgpt");
+    if (chatgptAdapter) {
+      chatgptAdapter.clearAttachmentMap();
+    }
+    this.plugin.logger.debug("Attachment map cleared");
   }
 };
 __name(ReportWriter, "ReportWriter");
@@ -15715,6 +15949,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
           conversationsByFile.get(conv.sourceFile).push(conv.id);
         }
       });
+      if (provider === "chatgpt" && files.length > 1) {
+        await this.importService.buildAttachmentMapForMultiZip(files);
+      }
       for (const file of files) {
         const conversationsForFile = conversationsByFile.get(file.name);
         if (conversationsForFile && conversationsForFile.length > 0) {
@@ -15724,6 +15961,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
             this.logger.error(`Error processing file ${file.name}:`, error);
           }
         }
+      }
+      if (provider === "chatgpt" && files.length > 1) {
+        this.importService.clearAttachmentMap();
       }
       const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
       if (reportPath) {
@@ -15795,6 +16035,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
     }
     new import_obsidian31.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
+    if (provider === "chatgpt" && files.length > 1) {
+      await this.importService.buildAttachmentMapForMultiZip(files);
+    }
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
       if (conversationsForFile && conversationsForFile.length > 0) {
@@ -15804,6 +16047,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
           this.logger.error(`Error processing file ${file.name}:`, error);
         }
       }
+    }
+    if (provider === "chatgpt" && files.length > 1) {
+      this.importService.clearAttachmentMap();
     }
     const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
     if (reportPath) {

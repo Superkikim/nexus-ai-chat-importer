@@ -337,6 +337,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 }
             });
 
+            // Build attachment map for multi-ZIP fallback (ChatGPT only)
+            if (provider === 'chatgpt' && files.length > 1) {
+                await this.importService.buildAttachmentMapForMultiZip(files);
+            }
+
             // Process files sequentially with shared report
             for (const file of files) {
                 const conversationsForFile = conversationsByFile.get(file.name);
@@ -348,6 +353,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                         // Continue with other files even if one fails
                     }
                 }
+            }
+
+            // Clear attachment map after import completes
+            if (provider === 'chatgpt' && files.length > 1) {
+                this.importService.clearAttachmentMap();
             }
 
             // Write the consolidated report (always, even if some files failed)
@@ -453,6 +463,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Group selected conversations by source file for efficient processing
         const conversationsByFile = await this.groupConversationsByFile(result, files);
 
+        // Build attachment map for multi-ZIP fallback (ChatGPT only)
+        if (provider === 'chatgpt' && files.length > 1) {
+            await this.importService.buildAttachmentMapForMultiZip(files);
+        }
+
         // Process files sequentially in original order with shared report
         for (const file of files) {
             const conversationsForFile = conversationsByFile.get(file.name);
@@ -464,6 +479,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     // Continue with other files even if one fails
                 }
             }
+        }
+
+        // Clear attachment map after import completes
+        if (provider === 'chatgpt' && files.length > 1) {
+            this.importService.clearAttachmentMap();
         }
 
         // Write the consolidated report (always, even if some files failed)

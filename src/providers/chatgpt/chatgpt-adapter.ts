@@ -165,7 +165,17 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
         return this.reportNamingStrategy;
     }
 
+    /**
+     * Set attachment map for multi-ZIP support
+     */
+    setAttachmentMap(attachmentMap: any, allZips: any[]): void {
+        this.attachmentExtractor.setAttachmentMap(attachmentMap, allZips);
+    }
 
-
-
+    /**
+     * Clear attachment map after import completes
+     */
+    clearAttachmentMap(): void {
+        this.attachmentExtractor.clearAttachmentMap();
+    }
 }

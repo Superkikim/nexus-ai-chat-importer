@@ -23,12 +23,34 @@ import { StandardAttachment } from "../../types/standard";
 import { ensureFolderExists } from "../../utils";
 import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
+import { AttachmentMap, AttachmentLocation } from "../../services/attachment-map-builder";
 
 
 export class ChatGPTAttachmentExtractor {
     private zipFileCache = new Map<string, JSZip.JSZipObject | null>(); // Cache for ZIP file lookups
+    private attachmentMap: AttachmentMap | null = null; // Multi-ZIP attachment map
+    private allZips: JSZip[] = []; // All opened ZIPs for multi-ZIP fallback
 
     constructor(private plugin: NexusAiChatImporterPlugin, private logger: Logger) {}
+
+    /**
+     * Set attachment map for multi-ZIP support
+     * This enables fallback to older ZIPs when files are missing in recent exports
+     */
+    setAttachmentMap(attachmentMap: AttachmentMap, allZips: JSZip[]): void {
+        this.attachmentMap = attachmentMap;
+        this.allZips = allZips;
+        this.logger.debug(`Attachment map set with ${attachmentMap.size} file IDs across ${allZips.length} ZIPs`);
+    }
+
+    /**
+     * Clear attachment map and ZIPs (call after import completes)
+     */
+    clearAttachmentMap(): void {
+        this.attachmentMap = null;
+        this.allZips = [];
+        this.zipFileCache.clear();
+    }
 
     /**
      * Extract and save ChatGPT attachments using "best effort" strategy
@@ -272,7 +294,7 @@ export class ChatGPTAttachmentExtractor {
     }
 
     /**
-     * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH + CACHING
+     * Find file in ZIP - ENHANCED WITH MULTI-ZIP FALLBACK + COMPREHENSIVE SEARCH + CACHING
      */
     private async findChatGPTFileById(
         zip: JSZip,
@@ -302,6 +324,15 @@ export class ChatGPTAttachmentExtractor {
         const cacheKey = `${attachment.fileId}_${attachment.fileName}`;
         if (this.zipFileCache.has(cacheKey)) {
             return this.zipFileCache.get(cacheKey)!;
+        }
+
+        // NEW: If attachment map is available, use it for multi-ZIP fallback
+        if (this.attachmentMap && this.allZips.length > 0) {
+            const result = await this.findFileUsingAttachmentMap(attachment, conversationId, messageId);
+            if (result) {
+                this.zipFileCache.set(cacheKey, result);
+                return result;
+            }
         }
 
         // Strategy 1: Try exact filename match first
@@ -378,6 +409,101 @@ export class ChatGPTAttachmentExtractor {
         }
 
         return null;
+    }
+
+    /**
+     * Find file using attachment map (multi-ZIP fallback)
+     * Tries to find the file in any of the available ZIPs, preferring newer exports
+     */
+    private async findFileUsingAttachmentMap(
+        attachment: StandardAttachment,
+        conversationId?: string,
+        messageId?: string
+    ): Promise<JSZip.JSZipObject | null> {
+        if (!this.attachmentMap || this.allZips.length === 0) {
+            return null;
+        }
+
+        const context = conversationId && messageId
+            ? `conversation: ${conversationId}, message: ${messageId}`
+            : conversationId
+            ? `conversation: ${conversationId}`
+            : 'unknown context';
+
+        // Try to find the file in the attachment map
+        // The map contains all possible file IDs extracted from filenames
+        const fileId = attachment.fileId || '';
+        if (!fileId) {
+            return null;
+        }
+
+        const locations = this.attachmentMap.get(fileId);
+
+        if (!locations || locations.length === 0) {
+            // Try alternative file ID formats
+            const alternativeIds = this.getAlternativeFileIds(fileId);
+            for (const altId of alternativeIds) {
+                const altLocations = this.attachmentMap.get(altId);
+                if (altLocations && altLocations.length > 0) {
+                    this.logger.debug(`Found attachment using alternative ID ${altId}: ${attachment.fileName} (${context})`);
+                    return this.getFileFromLocation(altLocations[altLocations.length - 1]);
+                }
+            }
+            return null;
+        }
+
+        // Use the newest location (last in array)
+        const bestLocation = locations[locations.length - 1];
+
+        this.logger.debug(`Found attachment in ZIP ${bestLocation.zipIndex + 1} (${bestLocation.zipFileName}): ${bestLocation.path} (${context})`);
+
+        return this.getFileFromLocation(bestLocation);
+    }
+
+    /**
+     * Get alternative file ID formats for fallback matching
+     */
+    private getAlternativeFileIds(fileId: string): string[] {
+        const alternatives: string[] = [];
+
+        // If fileId starts with "file_", also try without prefix
+        if (fileId.startsWith('file_')) {
+            alternatives.push(fileId.substring(5));
+        }
+        // If fileId doesn't have prefix, try with "file_" prefix
+        else if (!fileId.startsWith('file-')) {
+            alternatives.push(`file_${fileId}`);
+        }
+
+        // Also try with dash instead of underscore
+        if (fileId.includes('_')) {
+            alternatives.push(fileId.replace(/_/g, '-'));
+        }
+        if (fileId.includes('-')) {
+            alternatives.push(fileId.replace(/-/g, '_'));
+        }
+
+        return alternatives;
+    }
+
+    /**
+     * Get JSZip file object from attachment location
+     */
+    private getFileFromLocation(location: AttachmentLocation): JSZip.JSZipObject | null {
+        if (location.zipIndex >= this.allZips.length) {
+            this.logger.error(`Invalid ZIP index ${location.zipIndex} (only ${this.allZips.length} ZIPs available)`);
+            return null;
+        }
+
+        const zip = this.allZips[location.zipIndex];
+        const zipFile = zip.file(location.path);
+
+        if (!zipFile) {
+            this.logger.error(`File not found in ZIP ${location.zipIndex}: ${location.path}`);
+            return null;
+        }
+
+        return zipFile;
     }
 
     /**

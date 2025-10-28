@@ -29,15 +29,20 @@ import { NexusAiChatImporterError } from "../models/errors";
 import { createProviderRegistry } from "../providers/provider-registry";
 import { ProviderRegistry } from "../providers/provider-adapter";
 import { ImportProgressModal, ImportProgressCallback } from "../ui/import-progress-modal";
+import { AttachmentMapBuilder, AttachmentMap } from "./attachment-map-builder";
 import type NexusAiChatImporterPlugin from "../main";
 
 export class ImportService {
     private importReport: ImportReport = new ImportReport();
     private conversationProcessor: ConversationProcessor;
     private providerRegistry: ProviderRegistry;
+    private attachmentMapBuilder: AttachmentMapBuilder;
+    private currentAttachmentMap: AttachmentMap | null = null;
+    private currentZips: JSZip[] = [];
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
         this.providerRegistry = createProviderRegistry(plugin);
+        this.attachmentMapBuilder = new AttachmentMapBuilder(plugin.logger);
         this.conversationProcessor = new ConversationProcessor(plugin, this.providerRegistry);
     }
 
@@ -519,14 +524,64 @@ ${report.generateReportContent(undefined, undefined, undefined, undefined, false
     private extractArchiveDateFromFilename(zipFileName: string): string {
         const dateRegex = /(\d{4})-(\d{2})-(\d{2})/;
         const match = zipFileName.match(dateRegex);
-        
+
         if (match) {
             const [, year, month, day] = match;
             return `${year}.${month}.${day}`;
         }
-        
+
         // Fallback: use current date
         const now = new Date();
         return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    /**
+     * Build attachment map for multi-ZIP import
+     * Opens all ZIPs and scans for available attachments
+     */
+    async buildAttachmentMapForMultiZip(files: File[]): Promise<void> {
+        this.plugin.logger.info(`Building attachment map for ${files.length} ZIP files...`);
+
+        // Build the attachment map
+        this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMap(files);
+
+        // Open all ZIPs for later access
+        const JSZipModule = (await import('jszip')).default;
+        this.currentZips = [];
+
+        for (const file of files) {
+            try {
+                const zip = new JSZipModule();
+                const zipContent = await zip.loadAsync(file);
+                this.currentZips.push(zipContent);
+            } catch (error) {
+                this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
+                // Continue with other ZIPs
+            }
+        }
+
+        // Pass the attachment map to the ChatGPT adapter
+        const chatgptAdapter = this.providerRegistry.getAdapter('chatgpt');
+        if (chatgptAdapter && this.currentAttachmentMap) {
+            chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, this.currentZips);
+        }
+
+        this.plugin.logger.info(`Attachment map built: ${this.currentAttachmentMap.size} file IDs across ${this.currentZips.length} ZIPs`);
+    }
+
+    /**
+     * Clear attachment map and close ZIPs after import completes
+     */
+    clearAttachmentMap(): void {
+        this.currentAttachmentMap = null;
+        this.currentZips = [];
+
+        // Clear the attachment map from the ChatGPT adapter
+        const chatgptAdapter = this.providerRegistry.getAdapter('chatgpt');
+        if (chatgptAdapter) {
+            chatgptAdapter.clearAttachmentMap();
+        }
+
+        this.plugin.logger.debug('Attachment map cleared');
     }
 }
