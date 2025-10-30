@@ -30,6 +30,7 @@ yarn-error.log*
 venv/
 .venv/
 __pycache__/
+tmp/
 
 # Removing build from sync
 *.js.map
