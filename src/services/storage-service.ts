@@ -136,35 +136,39 @@ export class StorageService {
                                   "Nexus/Conversations";
 
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
+        this.plugin.logger.debug(`[scanExistingConversations] Total markdown files in vault: ${allFiles.length}`);
+        this.plugin.logger.debug(`[scanExistingConversations] Conversation folder: ${conversationFolder}`);
 
         // Filter conversation files (exclude Reports/Attachments)
         const conversationFiles = allFiles.filter(file => {
             if (!file.path.startsWith(conversationFolder)) return false;
 
             const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith('Reports/') || 
+            if (relativePath.startsWith('Reports/') ||
                 relativePath.startsWith('Attachments/') ||
                 relativePath.startsWith('reports/') ||
                 relativePath.startsWith('attachments/')) {
                 return false;
             }
-            
+
             return true;
         });
-        
+
+        this.plugin.logger.debug(`[scanExistingConversations] Filtered conversation files: ${conversationFiles.length}`);
+
         let processed = 0;
         let foundViaCache = 0;
         let foundViaManual = 0;
         let errors = 0;
-        
+
         // Process files in batches
         const batchSize = 100;
         for (let i = 0; i < conversationFiles.length; i += batchSize) {
             const batch = conversationFiles.slice(i, i + batchSize);
-            
+
             for (const file of batch) {
                 processed++;
-                
+
                 try {
                     // Try metadataCache first (fast)
                     let entry = await this.parseWithCache(file);
@@ -173,31 +177,31 @@ export class StorageService {
                         foundViaCache++;
                         continue;
                     }
-                    
+
                     // Fallback to manual parsing
                     entry = await this.parseConversationFileManually(file);
                     if (entry) {
                         conversations.set(entry.conversationId, entry);
                         foundViaManual++;
                     }
-                    
+
                 } catch (error) {
                     errors++;
                     logger.warn(`Error parsing conversation file ${file.path}:`, error);
                 }
             }
-            
+
             // Small delay between large batches
             if (i + batchSize < conversationFiles.length) {
                 await new Promise(resolve => setTimeout(resolve, 1));
             }
         }
-        
+
         const duration = Date.now() - startTime;
         const total = foundViaCache + foundViaManual;
-        
-        this.plugin.logger.info(`Scanned vault: found ${total} conversations in ${duration}ms`);
-        
+
+        this.plugin.logger.info(`Scanned vault: found ${total} conversations (${foundViaCache} via cache, ${foundViaManual} via manual, ${errors} errors) in ${duration}ms from ${conversationFiles.length} files`);
+
         return conversations;
     }
 
@@ -224,18 +228,30 @@ export class StorageService {
     private async parseWithCache(file: TFile): Promise<ConversationCatalogEntry | null> {
         try {
             const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
-            
-            if (!frontmatter?.nexus || frontmatter.nexus !== this.plugin.manifest.id) {
+
+            if (!frontmatter) {
+                this.plugin.logger.debug(`[parseWithCache] No frontmatter found for ${file.path}`);
                 return null;
             }
-            
+
+            if (!frontmatter.nexus || frontmatter.nexus !== this.plugin.manifest.id) {
+                this.plugin.logger.debug(`[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`);
+                return null;
+            }
+
             if (!frontmatter.conversation_id) {
+                this.plugin.logger.debug(`[parseWithCache] No conversation_id for ${file.path}`);
                 return null;
             }
-            
+
             const createTime = this.parseTimeString(frontmatter.create_time);
             const updateTime = this.parseTimeString(frontmatter.update_time);
-            
+
+            if (createTime === 0 || updateTime === 0) {
+                this.plugin.logger.warn(`[parseWithCache] Failed to parse timestamps for ${file.path}: create=${frontmatter.create_time} (${createTime}), update=${frontmatter.update_time} (${updateTime})`);
+                return null;
+            }
+
             return {
                 conversationId: frontmatter.conversation_id,
                 provider: frontmatter.provider || 'unknown',
@@ -244,9 +260,9 @@ export class StorageService {
                 create_time: createTime,
                 update_time: updateTime
             };
-            
+
         } catch (error) {
-            // Silent fail - will try manual parsing
+            this.plugin.logger.warn(`[parseWithCache] Exception parsing ${file.path}:`, error);
             return null;
         }
     }
@@ -321,7 +337,11 @@ export class StorageService {
      * Uses intelligent format detection from DateParser utility
      */
     private parseTimeString(timeStr: string): number {
-        return DateParser.parseDate(timeStr);
+        const result = DateParser.parseDate(timeStr);
+        if (result === 0) {
+            this.plugin.logger.warn(`[parseTimeString] Failed to parse: "${timeStr}"`);
+        }
+        return result;
     }
 
     /**

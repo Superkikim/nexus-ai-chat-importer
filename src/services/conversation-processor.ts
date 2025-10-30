@@ -141,10 +141,10 @@ export class ConversationProcessor {
     ): Promise<void> {
         try {
             const chatId = adapter.getId(chat);
+            const chatTitle = adapter.getTitle(chat) || 'Untitled';
 
             // Validate conversation has required fields
             if (!chatId || chatId.trim() === '') {
-                const chatTitle = adapter.getTitle(chat) || 'Untitled';
                 logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
                 importReport.addFailed(
                     chatTitle,
@@ -160,8 +160,10 @@ export class ConversationProcessor {
             const existingEntry = existingConversations.get(chatId);
 
             if (existingEntry) {
+                this.plugin.logger.debug(`[processSingleChat] Found existing conversation: ${chatTitle} (${chatId}) at ${existingEntry.path}`);
                 await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess);
             } else {
+                this.plugin.logger.debug(`[processSingleChat] New conversation: ${chatTitle} (${chatId})`);
                 const filePath = await this.generateFilePathForChat(adapter, chat);
                 await this.handleNewChat(adapter, chat, filePath, importReport, zip);
             }

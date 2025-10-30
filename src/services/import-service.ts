@@ -335,14 +335,14 @@ export class ImportService {
         } catch (error: unknown) {
             if (error instanceof NexusAiChatImporterError) {
                 this.plugin.logger.error("Error processing conversations", error.message);
-                logger.error("Full NexusAiChatImporterError:", error);
+                this.plugin.logger.error("Full NexusAiChatImporterError:", error);
             } else if (typeof error === 'object' && error instanceof Error) {
                 this.plugin.logger.error("General error processing conversations", error.message);
-                logger.error("Full Error:", error);
-                logger.error("Stack trace:", error.stack);
+                this.plugin.logger.error("Full Error:", error);
+                this.plugin.logger.error("Stack trace:", error.stack);
             } else {
                 this.plugin.logger.error("Unknown error processing conversations", "An unknown error occurred");
-                logger.error("Unknown error:", error);
+                this.plugin.logger.error("Unknown error:", error);
             }
             // Re-throw the error so it can be caught by the caller
             throw error;
@@ -437,6 +437,54 @@ export class ImportService {
         const currentProvider = this.conversationProcessor.getCurrentProvider();
         await reportWriter.writeReport(this.importReport, zipFileName, currentProvider);
     }
+
+    /**
+     * Build attachment map for multi-ZIP import
+     * Opens all ZIPs and scans for available attachments
+     */
+    async buildAttachmentMapForMultiZip(files: File[]): Promise<void> {
+        try {
+            // Build the attachment map
+            this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMap(files);
+
+            // Open all ZIPs for later access
+            const JSZipModule = (await import('jszip')).default;
+            this.currentZips = [];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                try {
+                    const zip = new JSZipModule();
+                    const zipContent = await zip.loadAsync(file);
+                    this.currentZips.push(zipContent);
+                } catch (error) {
+                    this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
+                }
+            }
+
+            // Pass the attachment map to the ChatGPT adapter
+            const chatgptAdapter = this.providerRegistry.getAdapter('chatgpt') as any;
+            if (chatgptAdapter && this.currentAttachmentMap) {
+                chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, this.currentZips);
+            }
+        } catch (error) {
+            this.plugin.logger.error('Error building attachment map:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Clear attachment map and close ZIPs after import completes
+     */
+    clearAttachmentMap(): void {
+        this.currentAttachmentMap = null;
+        this.currentZips = [];
+
+        const chatgptAdapter = this.providerRegistry.getAdapter('chatgpt') as any;
+        if (chatgptAdapter) {
+            chatgptAdapter.clearAttachmentMap();
+        }
+    }
 }
 
 class ReportWriter {
@@ -485,7 +533,7 @@ totalUpdatedImports: ${report.getUpdatedCount()}
 totalSkippedImports: ${report.getSkippedCount()}
 ---
 
-${report.generateReportContent(undefined, undefined, undefined, undefined, false)}
+${report.generateReportContent()}
 `;
 
         try {
@@ -533,55 +581,5 @@ ${report.generateReportContent(undefined, undefined, undefined, undefined, false
         // Fallback: use current date
         const now = new Date();
         return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-    }
-
-    /**
-     * Build attachment map for multi-ZIP import
-     * Opens all ZIPs and scans for available attachments
-     */
-    async buildAttachmentMapForMultiZip(files: File[]): Promise<void> {
-        this.plugin.logger.info(`Building attachment map for ${files.length} ZIP files...`);
-
-        // Build the attachment map
-        this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMap(files);
-
-        // Open all ZIPs for later access
-        const JSZipModule = (await import('jszip')).default;
-        this.currentZips = [];
-
-        for (const file of files) {
-            try {
-                const zip = new JSZipModule();
-                const zipContent = await zip.loadAsync(file);
-                this.currentZips.push(zipContent);
-            } catch (error) {
-                this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
-                // Continue with other ZIPs
-            }
-        }
-
-        // Pass the attachment map to the ChatGPT adapter
-        const chatgptAdapter = this.providerRegistry.getAdapter('chatgpt');
-        if (chatgptAdapter && this.currentAttachmentMap) {
-            chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, this.currentZips);
-        }
-
-        this.plugin.logger.info(`Attachment map built: ${this.currentAttachmentMap.size} file IDs across ${this.currentZips.length} ZIPs`);
-    }
-
-    /**
-     * Clear attachment map and close ZIPs after import completes
-     */
-    clearAttachmentMap(): void {
-        this.currentAttachmentMap = null;
-        this.currentZips = [];
-
-        // Clear the attachment map from the ChatGPT adapter
-        const chatgptAdapter = this.providerRegistry.getAdapter('chatgpt');
-        if (chatgptAdapter) {
-            chatgptAdapter.clearAttachmentMap();
-        }
-
-        this.plugin.logger.debug('Attachment map cleared');
     }
 }

@@ -52,8 +52,6 @@ export class FileService {
             }
 
             // No action needed - conversations are tracked via frontmatter in vault
-            // The file deletion itself removes the conversation from the catalog
-            this.plugin.logger.debug(`Nexus conversation file deleted: ${file.path} (ID: ${frontmatter.conversation_id})`);
         } catch (error) {
             this.plugin.logger.error("Error handling conversation file deletion:", error);
         }

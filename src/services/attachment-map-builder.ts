@@ -39,7 +39,6 @@ export class AttachmentMapBuilder {
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            this.logger.debug(`Scanning attachments in ZIP ${i + 1}/${files.length}: ${file.name}`);
 
             try {
                 const zip = new JSZipModule();
@@ -68,15 +67,11 @@ export class AttachmentMapBuilder {
                         });
                     }
                 }
-
-                this.logger.debug(`Found ${Object.keys(zipContent.files).length} files in ${file.name}`);
             } catch (error) {
                 this.logger.error(`Failed to scan attachments in ${file.name}:`, error);
-                // Continue with other ZIPs even if one fails
             }
         }
 
-        this.logger.info(`Built attachment map with ${attachmentMap.size} unique file IDs across ${files.length} ZIPs`);
         return attachmentMap;
     }
 
