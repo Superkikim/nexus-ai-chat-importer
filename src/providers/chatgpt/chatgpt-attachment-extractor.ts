@@ -40,7 +40,6 @@ export class ChatGPTAttachmentExtractor {
     setAttachmentMap(attachmentMap: AttachmentMap, allZips: JSZip[]): void {
         this.attachmentMap = attachmentMap;
         this.allZips = allZips;
-        this.logger.debug(`Attachment map set with ${attachmentMap.size} file IDs across ${allZips.length} ZIPs`);
     }
 
     /**
@@ -108,9 +107,21 @@ export class ChatGPTAttachmentExtractor {
         const zipFile = await this.findChatGPTFileById(zip, attachment, conversationId, messageId);
 
         if (!zipFile) {
-            // File not found - create informative status
+            // File not found - handle DALL-E images specially
+            let finalExtractedContent = attachment.extractedContent;
+
+            if (attachment.attachmentType === 'generated_image' && attachment.extractedContent) {
+                // Replace the attachment callout with "Image Not Found" message
+                // Keep the prompt callout intact, only replace the attachment part
+                finalExtractedContent = attachment.extractedContent.replace(
+                    />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
+                    '>>[!nexus_attachment] **Image Not Found**\n>> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.'
+                );
+            }
+
             return {
                 ...attachment,
+                extractedContent: finalExtractedContent,
                 status: {
                     processed: true,
                     found: false,
@@ -149,8 +160,20 @@ export class ChatGPTAttachmentExtractor {
                     }
                 };
             } else {
+                // Extraction failed - handle DALL-E images specially
+                let finalExtractedContent = attachment.extractedContent;
+
+                if (attachment.attachmentType === 'generated_image' && attachment.extractedContent) {
+                    // Replace the attachment callout with "Image Not Found" message
+                    finalExtractedContent = attachment.extractedContent.replace(
+                        />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
+                        '>>[!nexus_attachment] **Image Not Found**\n>> ⚠️ File was found in export but could not be extracted to disk.'
+                    );
+                }
+
                 return {
                     ...attachment,
+                    extractedContent: finalExtractedContent,
                     status: {
                         processed: true,
                         found: false,
@@ -165,8 +188,21 @@ export class ChatGPTAttachmentExtractor {
                 ? `conversation: ${conversationId}, message: ${messageId}`
                 : `conversation: ${conversationId}`;
             this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
+
+            // Handle DALL-E images specially
+            let finalExtractedContent = attachment.extractedContent;
+
+            if (attachment.attachmentType === 'generated_image' && attachment.extractedContent) {
+                // Replace the attachment callout with error message
+                finalExtractedContent = attachment.extractedContent.replace(
+                    />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
+                    `>>[!nexus_attachment] **Extraction Failed**\n>> ⚠️ ${errorMessage}`
+                );
+            }
+
             return {
                 ...attachment,
+                extractedContent: finalExtractedContent,
                 status: {
                     processed: true,
                     found: true, // File exists but extraction failed
@@ -313,7 +349,6 @@ export class ChatGPTAttachmentExtractor {
             // Fallback: try to find by filename only
             const zipFile = zip.file(attachment.fileName);
             if (zipFile) {
-                this.logger.debug(`Found attachment by filename fallback: ${attachment.fileName} (${context})`);
                 return zipFile;
             }
 
@@ -346,7 +381,6 @@ export class ChatGPTAttachmentExtractor {
         if (attachment.fileName.startsWith('dalle_')) {
             const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
             if (dalleFiles.length > 0) {
-                this.logger.debug(`Found DALL-E file in dalle-generations/: ${dalleFiles[0].name}`);
                 this.zipFileCache.set(cacheKey, dalleFiles[0]);
                 return dalleFiles[0]; // Return first match
             }
@@ -356,7 +390,6 @@ export class ChatGPTAttachmentExtractor {
         const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
         zipFile = zip.file(fileIdPattern);
         if (zipFile) {
-            this.logger.debug(`Found file by ID pattern match: ${fileIdPattern}`);
             this.zipFileCache.set(cacheKey, zipFile);
             return zipFile;
         }
@@ -367,7 +400,6 @@ export class ChatGPTAttachmentExtractor {
             const fileIdExtPattern = `${attachment.fileId}.${extension}`;
             zipFile = zip.file(fileIdExtPattern);
             if (zipFile) {
-                this.logger.debug(`Found file by ID extension match: ${fileIdExtPattern}`);
                 this.zipFileCache.set(cacheKey, zipFile);
                 return zipFile;
             }
@@ -445,7 +477,6 @@ export class ChatGPTAttachmentExtractor {
             for (const altId of alternativeIds) {
                 const altLocations = this.attachmentMap.get(altId);
                 if (altLocations && altLocations.length > 0) {
-                    this.logger.debug(`Found attachment using alternative ID ${altId}: ${attachment.fileName} (${context})`);
                     return this.getFileFromLocation(altLocations[altLocations.length - 1]);
                 }
             }
@@ -454,8 +485,6 @@ export class ChatGPTAttachmentExtractor {
 
         // Use the newest location (last in array)
         const bestLocation = locations[locations.length - 1];
-
-        this.logger.debug(`Found attachment in ZIP ${bestLocation.zipIndex + 1} (${bestLocation.zipFileName}): ${bestLocation.path} (${context})`);
 
         return this.getFileFromLocation(bestLocation);
     }
