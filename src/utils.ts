@@ -584,18 +584,30 @@ export async function moveAndMergeFolders(
                     continue;
                 }
 
-                // Try to delete the folder
-                // Obsidian will throw an error if the folder is not empty
-                // Note: folder.children might not be updated immediately after moving files,
-                // so we rely on vault.delete() to tell us if the folder is empty
-                await vault.delete(folder);
+                // Check if folder is actually empty using low-level API
+                // folder.children might be stale after moving files
+                const folderContents = await vault.adapter.list(folder.path);
+
+                // Filter out hidden files (like .DS_Store on macOS)
+                const visibleFiles = folderContents.files.filter(f => {
+                    const fileName = f.split('/').pop() || '';
+                    return !fileName.startsWith('.');
+                });
+
+                const isEmpty = visibleFiles.length === 0 && folderContents.folders.length === 0;
+
+                if (isEmpty) {
+                    // Folder is empty (or only contains hidden files), safe to delete
+                    // rmdir with recursive=true will handle hidden files
+                    await vault.adapter.rmdir(folder.path, true);
+                } else {
+                    logger.warn(`[moveAndMergeFolders] ⚠️ Folder not empty, skipping deletion: ${folder.path} (${visibleFiles.length} files, ${folderContents.folders.length} folders)`);
+                }
             } catch (error: any) {
-                // Folder might not be empty, might have already been deleted, or might not exist
+                // Folder might have already been deleted, or might not exist
                 // This is not a critical error - just log it
                 const errorMsg = error.message || String(error);
-                if (errorMsg.includes("not empty") || errorMsg.includes("Folder is not empty")) {
-                    logger.warn(`[moveAndMergeFolders] ⚠️ Folder not empty, skipping deletion: ${folder.path} (children: ${folder.children.length})`);
-                } else if (!errorMsg.includes("does not exist") && !errorMsg.includes("ENOENT")) {
+                if (!errorMsg.includes("does not exist") && !errorMsg.includes("ENOENT")) {
                     logger.warn(`[moveAndMergeFolders] ❌ Could not delete folder ${folder.path}: ${errorMsg}`);
                 }
             }
@@ -612,15 +624,29 @@ export async function moveAndMergeFolders(
                     break;
                 }
 
-                // Try to delete the parent folder
-                // This will only succeed if the folder is empty
-                await vault.delete(currentFolder);
+                // Check if folder is actually empty using low-level API
+                const folderContents = await vault.adapter.list(currentFolder.path);
 
-                // Move up to the next parent
-                currentFolder = currentFolder.parent;
+                // Filter out hidden files (like .DS_Store on macOS)
+                const visibleFiles = folderContents.files.filter(f => {
+                    const fileName = f.split('/').pop() || '';
+                    return !fileName.startsWith('.');
+                });
+
+                const isEmpty = visibleFiles.length === 0 && folderContents.folders.length === 0;
+
+                if (isEmpty) {
+                    // Folder is empty (or only contains hidden files), safe to delete
+                    // rmdir with recursive=true will handle hidden files
+                    await vault.adapter.rmdir(currentFolder.path, true);
+                    // Move up to the next parent
+                    currentFolder = currentFolder.parent;
+                } else {
+                    // Parent folder is not empty - stop here
+                    break;
+                }
             } catch (error: any) {
-                // Parent folder is not empty or other error - stop here
-                // Stop trying to delete parent folders
+                // Parent folder error - stop here
                 break;
             }
         }
