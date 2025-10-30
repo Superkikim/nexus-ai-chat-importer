@@ -198,8 +198,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
         const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
         if (newFolder && newFolder instanceof TFolder && newFolder.children.length > 0) {
             this.showErrorDialog(
-                "Target Folder Must Be Empty",
-                `The target folder "${newPath}" must be empty before migrating files.\n\nPlease choose an empty folder or create a new one.`
+                "Target Folder Not Empty",
+                `The folder "${newPath}" already contains files.\n\nTo change the folder location:\n• Move existing files manually in Obsidian, OR\n• Choose an empty folder or create a new one`
             );
             // Restore old value in the text field
             textComponent.setValue(oldPath);

@@ -230,6 +230,17 @@ export class ConfigureFolderLocationsDialog extends Modal {
         const oldPath = folderInfo.oldPath;
         const newPath = folderInfo.newPath;
 
+        // Check if target folder exists and is not empty
+        const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
+        if (newFolder && newFolder instanceof TFolder && newFolder.children.length > 0) {
+            this.showErrorDialog(
+                "Target Folder Not Empty",
+                `The folder "${newPath}" already contains files.\n\nTo change the folder location:\n• Move existing files manually in Obsidian, OR\n• Choose an empty folder or create a new one`
+            );
+            // Don't update the setting
+            return;
+        }
+
         // Update setting first
         this.plugin.settings[folderType] = newPath;
         await this.plugin.saveSettings();
