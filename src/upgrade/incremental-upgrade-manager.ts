@@ -35,6 +35,7 @@ export interface IncrementalUpgradeResult {
     upgradesExecuted: number;
     upgradesSkipped: number;
     upgradesFailed: number;
+    isFreshInstall?: boolean; // Flag to indicate if this is a fresh installation
     results: Array<{
         version: string;
         automaticResults: any;
@@ -107,6 +108,7 @@ export class IncrementalUpgradeManager {
                     upgradesExecuted: 0,
                     upgradesSkipped: 0,
                     upgradesFailed: 0,
+                    isFreshInstall: true, // Flag for showing installation welcome dialog
                     results: []
                 };
             }
