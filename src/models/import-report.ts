@@ -58,6 +58,7 @@ export class ImportReport {
     private providerSpecificColumnHeader: string = "Attachments";
     private operationStartTime: number = Date.now();
     private fileStats?: Map<string, any>; // Store file analysis stats for duplicate counting
+    private analysisInfo?: any; // Store analysis info for completion stats
     private customTimestampFormat?: MessageTimestampFormat; // Custom format for report dates
 
     /**
@@ -593,6 +594,13 @@ export class ImportReport {
     }
 
     /**
+     * Store analysis info for completion stats
+     */
+    setAnalysisInfo(analysisInfo: any) {
+        this.analysisInfo = analysisInfo;
+    }
+
+    /**
      * Calculate total duplicates from file stats
      */
     private getTotalDuplicates(): number {
@@ -612,9 +620,13 @@ export class ImportReport {
         const globalStats = this.getGlobalStats();
         const attachmentStats = this.getTotalAttachmentStats();
 
+        // Use analysisInfo for accurate unique conversation count if available
+        // Otherwise fall back to totalProcessed (for backward compatibility)
+        const totalConversations = this.analysisInfo?.uniqueConversationsKept ?? globalStats.totalProcessed;
+
         return {
             totalFiles: this.fileSections.size,
-            totalConversations: globalStats.totalProcessed,
+            totalConversations: totalConversations,
             duplicates: this.getTotalDuplicates(),
             created: globalStats.created,
             updated: globalStats.updated,

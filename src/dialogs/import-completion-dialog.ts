@@ -96,10 +96,10 @@ export class ImportCompletionDialog extends Modal {
         section.style.gap = "12px";
 
         // Files cartouche
-        this.createStatCartouche(section, "📁", this.stats.totalFiles.toString(), "Files with New/Updated Content");
+        this.createStatCartouche(section, "📁", this.stats.totalFiles.toString(), "ZIP Files Processed");
 
-        // Total conversations cartouche
-        this.createStatCartouche(section, "💬", this.stats.totalConversations.toString(), "Total Conversations");
+        // Total conversations cartouche (unique UUIDs in ZIPs)
+        this.createStatCartouche(section, "💬", this.stats.totalConversations.toString(), "Unique Conversations");
 
         // Duplicates cartouche (always shown to explain difference between total and created)
         this.createStatCartouche(section, "🔁", this.stats.duplicates.toString(), "Duplicates", "var(--text-muted)");

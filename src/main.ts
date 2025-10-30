@@ -31,6 +31,7 @@ import { Logger } from "./logger";
 import { ProviderSelectionDialog } from "./dialogs/provider-selection-dialog";
 import { EnhancedFileSelectionDialog } from "./dialogs/enhanced-file-selection-dialog";
 import { ConversationSelectionDialog } from "./dialogs/conversation-selection-dialog";
+import { InstallationWelcomeDialog } from "./dialogs/installation-welcome-dialog";
 import { createProviderRegistry } from "./providers/provider-registry";
 import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
 import { ConversationMetadataExtractor } from "./services/conversation-metadata-extractor";
@@ -63,19 +64,25 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     async onload() {
         try {
             await this.loadSettings();
-            
+
             this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
             this.commandRegistry.registerCommands();
             this.eventHandlers.registerEvents();
-            
+
             const ribbonIconEl = this.addRibbonIcon(
                 "message-square-plus",
                 "Nexus AI Chat Importer - Import new file",
                 () => this.showProviderSelectionDialog()
             );
             ribbonIconEl.addClass("nexus-ai-chat-ribbon");
-            
-            await this.upgradeManager.checkAndPerformUpgrade();
+
+            // Check for upgrades and fresh installation
+            const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
+
+            // Show installation welcome dialog for fresh installs
+            if (upgradeResult?.isFreshInstall) {
+                new InstallationWelcomeDialog(this.app, this.manifest.version).open();
+            }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);
             throw error;
@@ -373,9 +380,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         } catch (error) {
             this.logger.error("[IMPORT-ALL] Error in import all:", error);
-            logger.error("[IMPORT-ALL] Full error details:", error);
             if (error instanceof Error) {
-                logger.error("[IMPORT-ALL] Error stack:", error.stack);
+                this.logger.error("[IMPORT-ALL] Error message:", error.message);
+                this.logger.error("[IMPORT-ALL] Error name:", error.name);
+                this.logger.error("[IMPORT-ALL] Error stack:", error.stack);
+            } else {
+                this.logger.error("[IMPORT-ALL] Error (not Error instance):", String(error));
             }
             new Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -421,9 +431,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         } catch (error) {
             this.logger.error("[SELECTIVE-IMPORT] Error in selective import:", error);
-            logger.error("[SELECTIVE-IMPORT] Full error details:", error);
+            this.logger.error("[SELECTIVE-IMPORT] Full error details:", error);
             if (error instanceof Error) {
-                logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
+                this.logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
             }
             new Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -465,7 +475,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         // Build attachment map for multi-ZIP fallback (ChatGPT only)
         if (provider === 'chatgpt' && files.length > 1) {
-            await this.importService.buildAttachmentMapForMultiZip(files);
+            try {
+                await this.importService.buildAttachmentMapForMultiZip(files);
+            } catch (error) {
+                this.logger.error('Failed to build attachment map:', error);
+                new Notice('Failed to build attachment map. Check console for details.');
+            }
         }
 
         // Process files sequentially in original order with shared report
@@ -476,7 +491,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
                 } catch (error) {
                     this.logger.error(`Error processing file ${file.name}:`, error);
-                    // Continue with other files even if one fails
+                    new Notice(`Error processing ${file.name}. Check console for details.`);
                 }
             }
         }
@@ -554,6 +569,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             report.setFileStats(fileStats);
         }
 
+        // Store analysis info for completion stats
+        if (analysisInfo) {
+            report.setAnalysisInfo(analysisInfo);
+        }
+
         const stats = report.getCompletionStats();
 
         // Determine which files were processed vs skipped
@@ -593,8 +613,8 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
             return logFilePath;
         } catch (error: any) {
             this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
-            logger.error("Full error:", error);
-            logger.error("Log content length:", logContent.length);
+            this.logger.error("Full error:", error);
+            this.logger.error("Log content length:", logContent.length);
             new Notice("Failed to create log file. Check console for details.");
             return "";
         }
