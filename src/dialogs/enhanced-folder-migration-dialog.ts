@@ -312,6 +312,9 @@ export class EnhancedFolderMigrationDialog extends Modal {
 
             new Notice(`✅ ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
 
+            // Save the setting change
+            await this.onComplete('move');
+
         } catch (error) {
             progressModal.close();
             this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${error.message}`);
