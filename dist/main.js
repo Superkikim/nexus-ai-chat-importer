@@ -142,13 +142,12 @@ function createKofiSupportBox(container, message) {
   } else {
     messageEl.innerHTML = `
             <p><span class="kofi-message-emphasis">I'm working on Nexus projects full-time while unemployed and dealing with health issues.</span></p>
-            <p>Over 4,300 downloads so far, yet I've received only $20 in donations in the last two months while paying about $200/month out of pocket in expenses.</p>
             <p>If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.</p>
         `;
   }
   const realityCheck = supportBox.createDiv("kofi-reality-check");
   realityCheck.innerHTML = `
-        <strong>Reality check:</strong> Thousands of hours of work, over 4,300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! \u{1F64F}
+        <strong>Reality check:</strong> Thousands of hours of work, over 4'300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! \u{1F64F}
     `;
   const buttonContainer = supportBox.createDiv("kofi-button-container");
   buttonContainer.innerHTML = `
@@ -7809,16 +7808,30 @@ var SupportSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
-    createKofiSupportBox(
-      supportContainer,
-      "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users so far, but only $10 in donations while paying $200/month in expenses. A donation would mean the world and help keep these plugins alive."
-    );
+    createKofiSupportBox(supportContainer);
     supportContainer.createEl("hr", { cls: "nexus-section-separator" });
-    new import_obsidian.Setting(supportContainer).setName("\u{1F41B} Report Issues & Request Features").setDesc("Found a bug or have a feature request? Open an issue on GitHub to help improve the plugin.").addButton(
-      (button) => button.setButtonText("Open GitHub Issues").onClick(() => {
-        window.open("https://github.com/Superkikim/nexus-ai-chat-importer/issues", "_blank");
+    const resourcesTitle = supportContainer.createEl("h3", { text: "\u{1F4DA} Resources" });
+    resourcesTitle.style.cssText = `
+            margin: 1.5em 0 1em 0;
+            color: var(--text-normal);
+            font-size: 1.1em;
+        `;
+    new import_obsidian.Setting(supportContainer).setName("\u{1F4D6} Documentation").setDesc("Learn how to use the plugin and explore all features").addButton(
+      (button) => button.setButtonText("Open README").onClick(() => {
+        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/README.md", "_blank");
       })
     );
+    new import_obsidian.Setting(supportContainer).setName("\u{1F4DD} Release Notes").setDesc("What's new in this version and previous updates").addButton(
+      (button) => button.setButtonText("View Changelog").onClick(() => {
+        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
+      })
+    );
+    new import_obsidian.Setting(supportContainer).setName("\u{1F4AC} Community Forum").setDesc("Join the discussion and connect with other users").addButton(
+      (button) => button.setButtonText("Open Forum").onClick(() => {
+        window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
+      })
+    );
+    supportContainer.createEl("hr", { cls: "nexus-section-separator" });
   }
 };
 __name(SupportSection, "SupportSection");

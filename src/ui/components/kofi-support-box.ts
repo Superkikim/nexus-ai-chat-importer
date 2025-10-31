@@ -34,7 +34,6 @@ export function createKofiSupportBox(container: HTMLElement, message?: string): 
         // Default message - emphasize unemployment + health issues
         messageEl.innerHTML = `
             <p><span class="kofi-message-emphasis">I'm working on Nexus projects full-time while unemployed and dealing with health issues.</span></p>
-            <p>Over 4,300 downloads so far, yet I've received only $20 in donations in the last two months while paying about $200/month out of pocket in expenses.</p>
             <p>If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.</p>
         `;
     }
@@ -42,7 +41,7 @@ export function createKofiSupportBox(container: HTMLElement, message?: string): 
     // Reality check (more visible, with thousands of hours)
     const realityCheck = supportBox.createDiv('kofi-reality-check');
     realityCheck.innerHTML = `
-        <strong>Reality check:</strong> Thousands of hours of work, over 4,300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! 🙏
+        <strong>Reality check:</strong> Thousands of hours of work, over 4'300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! 🙏
     `;
 
     // Ko-fi button

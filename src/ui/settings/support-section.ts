@@ -30,25 +30,57 @@ export class SupportSection extends BaseSettingsSection {
         const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
 
         // Use reusable Ko-fi support box component
-        createKofiSupportBox(
-            supportContainer,
-            "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users so far, but only $10 in donations while paying $200/month in expenses. A donation would mean the world and help keep these plugins alive."
-        );
+        createKofiSupportBox(supportContainer);
 
         // Separator
         supportContainer.createEl("hr", { cls: "nexus-section-separator" });
 
-        // GitHub Issues (standard setting style)
+        // Resources section
+        const resourcesTitle = supportContainer.createEl("h3", { text: "📚 Resources" });
+        resourcesTitle.style.cssText = `
+            margin: 1.5em 0 1em 0;
+            color: var(--text-normal);
+            font-size: 1.1em;
+        `;
+
+        // Documentation
         new Setting(supportContainer)
-            .setName("🐛 Report Issues & Request Features")
-            .setDesc("Found a bug or have a feature request? Open an issue on GitHub to help improve the plugin.")
+            .setName("📖 Documentation")
+            .setDesc("Learn how to use the plugin and explore all features")
             .addButton((button) =>
                 button
-                    .setButtonText("Open GitHub Issues")
+                    .setButtonText("Open README")
                     .onClick(() => {
-                        window.open("https://github.com/Superkikim/nexus-ai-chat-importer/issues", "_blank");
+                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/README.md", "_blank");
                     })
             );
+
+        // Release Notes
+        new Setting(supportContainer)
+            .setName("📝 Release Notes")
+            .setDesc("What's new in this version and previous updates")
+            .addButton((button) =>
+                button
+                    .setButtonText("View Changelog")
+                    .onClick(() => {
+                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
+                    })
+            );
+
+        // Community Forum
+        new Setting(supportContainer)
+            .setName("💬 Community Forum")
+            .setDesc("Join the discussion and connect with other users")
+            .addButton((button) =>
+                button
+                    .setButtonText("Open Forum")
+                    .onClick(() => {
+                        window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
+                    })
+            );
+
+        // Separator
+        supportContainer.createEl("hr", { cls: "nexus-section-separator" });
     }
 }
 
