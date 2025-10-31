@@ -1,14 +1,40 @@
 # Nexus AI Chat Importer
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.0) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![GitHub all releases](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total)](https://github.com/Superkikim/nexus-ai-chat-importer/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.0) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![GitHub all releases](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total)](https://github.com/Superkikim/nexus-ai-chat-importer/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
 
-## Quick Links
+## 📑 Table of Contents
 
-**Getting Started**: [Installation](#-installation--settings) • [First Import](#-importing-conversations) • [Settings](#plugin-settings)
+- [⚡ Quickstart](#-quickstart)
+- [Overview](#overview)
+- [☕ Support My Work](#-support-my-work)
+- [✨ Key Features](#-key-features)
+- [📥 Installation & Settings](#-installation--settings)
+- [📤 Exporting Your Chats](#-exporting-your-chats)
+- [📥 Importing Conversations](#-importing-conversations)
+- [📊 Understanding Import Reports](#-understanding-import-reports)
+- [📁 File Organization](#-file-organization)
+- [🎨 Conversation Format](#-conversation-format)
+- [📎 Complete Attachment Handling](#-complete-attachment-handling)
+- [🔧 Troubleshooting](#-troubleshooting)
+- [📜 License](#-license)
 
-**Features**: [Selective Import](#-importing-conversations) • [Attachments](#-complete-attachment-handling) • [Reports](#-detailed-reports)
+---
 
-**Help**: [Troubleshooting](#-troubleshooting) • [Support](#-support-my-work) • [License](#-license)
+## ⚡ Quickstart
+
+**Get started in 2 minutes:**
+
+1. **Install** the plugin from Obsidian Community Plugins (search "Nexus AI Chat Importer")
+2. **Export** your chats:
+   - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
+   - **Claude**: Settings → Export data → Download ZIP
+3. **Import**: Click the ribbon icon 📥 or use command palette → "Import AI Chats"
+4. **Select** your ZIP file(s) → Choose import mode (all or selective)
+5. **Done!** Your conversations are now in `Nexus/Conversations/`
+
+💡 **First time?** The plugin will show you a welcome dialog with helpful links!
+
+---
 
 ## Overview
 
@@ -41,9 +67,11 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 
 ## ☕ Support My Work
 
-I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses.
+I'm working on Nexus projects full-time while unemployed and dealing with health issues.
 
-**If these plugins make your life easier, a donation would mean the world and help keep them alive.**
+**Over 4,300 downloads so far, yet I've received only $20 in donations in the last two months while paying about $200/month out of pocket in expenses.**
+
+**If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.**
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
 
@@ -58,7 +86,7 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 - **$25** - Power my AI development tools 🤖 (Amazing!)
 - **$75** - Supercharge my entire dev toolkit 🚀 (You're a hero!)
 
-> **Reality check**: In the first month, I received only 2 donations totaling $10. Meanwhile, the plugin has been downloaded thousands of times. If you use it regularly, please consider contributing. Even $5 makes a difference! 🙏
+> **Reality check**: Over 4,300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! 🙏
 
 ## ✨ Key Features
 
@@ -72,6 +100,17 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 - 🌍 **International Support**: ISO 8601 timestamps, works with all locales
 - ⏱️ **Progress Tracking**: Real-time feedback during large imports
 - 🔄 **Smart Deduplication**: Handles multiple ZIP files without creating duplicates
+
+### 📸 See It In Action
+
+<!-- TODO: Add screenshots here
+Suggested screenshots:
+1. Conversation selection dialog showing preview
+2. Example of imported conversation with formatting
+3. Import completion dialog with statistics
+-->
+
+> 💡 **Tip**: Screenshots coming soon! For now, try the plugin yourself - it's free and takes 2 minutes to set up.
 
 ## 📥 Installation & Settings
 
@@ -533,9 +572,26 @@ See [LICENSE.md](LICENSE.md) for full details.
 - **Contributors**: See [GitHub Contributors](https://github.com/Superkikim/nexus-ai-chat-importer/graphs/contributors)
 - **Special Thanks**: To all users who report issues and suggest improvements
 
-## 🔗 Links
+## 🔗 Resources
 
-- **GitHub Repository**: [nexus-ai-chat-importer](https://github.com/Superkikim/nexus-ai-chat-importer)
-- **Report Issues**: [GitHub Issues](https://github.com/Superkikim/nexus-ai-chat-importer/issues)
-- **Release Notes**: [Version History](https://github.com/Superkikim/nexus-ai-chat-importer/releases)
-- **Support Development**: [Ko-fi](https://ko-fi.com/nexusplugins)
+<div align="center">
+
+### 📖 Documentation & Help
+
+[![README](https://img.shields.io/badge/📖_Documentation-README-blue?style=for-the-badge)](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/README.md)
+[![Release Notes](https://img.shields.io/badge/📝_Release_Notes-Changelog-green?style=for-the-badge)](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)
+[![Troubleshooting](https://img.shields.io/badge/🔧_Troubleshooting-Guide-orange?style=for-the-badge)](https://github.com/Superkikim/nexus-ai-chat-importer#-troubleshooting)
+
+### 💬 Community & Support
+
+[![Report Issues](https://img.shields.io/badge/🐛_Report_Issues-GitHub-red?style=for-the-badge)](https://github.com/Superkikim/nexus-ai-chat-importer/issues)
+[![Obsidian Forum](https://img.shields.io/badge/💬_Community-Obsidian_Forum-purple?style=for-the-badge)](https://forum.obsidian.md/)
+[![Ko-fi](https://img.shields.io/badge/☕_Support-Ko--fi-ff5e5b?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/nexusplugins)
+
+### 📦 Repository
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/Superkikim/nexus-ai-chat-importer)
+[![Releases](https://img.shields.io/badge/Releases-Download-blue?style=for-the-badge)](https://github.com/Superkikim/nexus-ai-chat-importer/releases)
+[![Contributors](https://img.shields.io/badge/Contributors-View-green?style=for-the-badge)](https://github.com/Superkikim/nexus-ai-chat-importer/graphs/contributors)
+
+</div>
