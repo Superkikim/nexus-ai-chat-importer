@@ -8818,7 +8818,7 @@ var ImportReport = class {
 `;
       summary += `> | Updated | ${analysisInfo.conversationsUpdated || 0} |
 `;
-      summary += `> | Unchanged | ${analysisInfo.conversationsIgnored || 0} |
+      summary += `> | Skipped | ${analysisInfo.conversationsIgnored || 0} |
 `;
       summary += `
 `;
@@ -9040,17 +9040,19 @@ var ImportReport = class {
    * Get statistics for the completion dialog
    */
   getCompletionStats() {
-    var _a, _b;
+    var _a, _b, _c, _d, _e, _f;
     const globalStats = this.getGlobalStats();
     const attachmentStats = this.getTotalAttachmentStats();
     const totalConversations = (_b = (_a = this.analysisInfo) == null ? void 0 : _a.uniqueConversationsKept) != null ? _b : globalStats.totalProcessed;
+    const duplicates = (_d = (_c = this.analysisInfo) == null ? void 0 : _c.duplicatesRemoved) != null ? _d : this.getTotalDuplicates();
+    const skipped = (_f = (_e = this.analysisInfo) == null ? void 0 : _e.conversationsIgnored) != null ? _f : globalStats.skipped;
     return {
       totalFiles: this.fileSections.size,
       totalConversations,
-      duplicates: this.getTotalDuplicates(),
+      duplicates,
       created: globalStats.created,
       updated: globalStats.updated,
-      skipped: globalStats.skipped,
+      skipped,
       failed: globalStats.failed,
       attachmentsFound: attachmentStats.found,
       attachmentsTotal: attachmentStats.total,

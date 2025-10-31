@@ -370,7 +370,7 @@ export class ImportReport {
             }
             summary += `> | New | ${analysisInfo.conversationsNew || 0} |\n`;
             summary += `> | Updated | ${analysisInfo.conversationsUpdated || 0} |\n`;
-            summary += `> | Unchanged | ${analysisInfo.conversationsIgnored || 0} |\n`;
+            summary += `> | Skipped | ${analysisInfo.conversationsIgnored || 0} |\n`;
             summary += `\n`;
         }
 
@@ -621,17 +621,18 @@ export class ImportReport {
         const globalStats = this.getGlobalStats();
         const attachmentStats = this.getTotalAttachmentStats();
 
-        // Use analysisInfo for accurate unique conversation count if available
-        // Otherwise fall back to totalProcessed (for backward compatibility)
+        // Use analysisInfo for accurate counts if available
         const totalConversations = this.analysisInfo?.uniqueConversationsKept ?? globalStats.totalProcessed;
+        const duplicates = this.analysisInfo?.duplicatesRemoved ?? this.getTotalDuplicates();
+        const skipped = this.analysisInfo?.conversationsIgnored ?? globalStats.skipped;
 
         return {
             totalFiles: this.fileSections.size,
             totalConversations: totalConversations,
-            duplicates: this.getTotalDuplicates(),
+            duplicates: duplicates,
             created: globalStats.created,
             updated: globalStats.updated,
-            skipped: globalStats.skipped,
+            skipped: skipped,
             failed: globalStats.failed,
             attachmentsFound: attachmentStats.found,
             attachmentsTotal: attachmentStats.total,
