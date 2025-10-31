@@ -458,19 +458,19 @@ var init_logger = __esm({
     })(LogLevel || {});
     Logger = class {
       logToConsole(level, message, details) {
-        console.log(`[Nexus AI Chat Importer] [${LogLevel[level]}] ${message}`);
+        console.log(`[${LogLevel[level]}] ${message}`);
       }
       debug(message, details) {
-        console.debug(`[Nexus AI Chat Importer] [DEBUG] ${message}`, details || "");
+        console.debug(message, details || "");
       }
       info(message, details) {
-        console.log(`[Nexus AI Chat Importer] [INFO] ${message}`);
+        console.log(message);
       }
       warn(message, details) {
-        console.warn(`[Nexus AI Chat Importer] [WARN] ${message}`);
+        console.warn(message);
       }
       error(message, details) {
-        console.error(`[Nexus AI Chat Importer] [ERROR] ${message}`);
+        console.error(message);
       }
     };
     __name(Logger, "Logger");
