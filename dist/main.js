@@ -7494,11 +7494,12 @@ var init_upgrade_complete_modal = __esm({
 - Fixed UI elements overflow
 - And many more...`;
         try {
-          const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/${this.version}`);
+          const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
           if (response.ok) {
-            const release = await response.json();
-            if (release.body) {
-              content = release.body;
+            const readme = await response.text();
+            const overviewMatch = readme.match(/## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/);
+            if (overviewMatch && overviewMatch[1]) {
+              content = overviewMatch[1].trim();
             }
           }
         } catch (error) {

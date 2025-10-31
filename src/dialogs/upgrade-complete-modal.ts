@@ -98,12 +98,15 @@ export class UpgradeCompleteModal extends Modal {
 - And many more...`;
 
         try {
-            // Try to fetch from GitHub release
-            const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/${this.version}`);
+            // Try to fetch Overview section from README
+            const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
             if (response.ok) {
-                const release = await response.json();
-                if (release.body) {
-                    content = release.body;
+                const readme = await response.text();
+
+                // Extract Overview section (between ## Overview and next ##)
+                const overviewMatch = readme.match(/## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/);
+                if (overviewMatch && overviewMatch[1]) {
+                    content = overviewMatch[1].trim();
                 }
             }
         } catch (error) {
