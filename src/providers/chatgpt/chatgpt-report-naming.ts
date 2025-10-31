@@ -1,3 +1,22 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/providers/chatgpt/chatgpt-report-naming.ts
 import { ReportNamingStrategy } from "../../types/standard";
 
@@ -50,8 +69,21 @@ export class ChatGPTReportNamingStrategy implements ReportNamingStrategy {
                 let attachmentCount = 0;
                 if (chat.mapping) {
                     Object.values(chat.mapping).forEach((node: any) => {
+                        // Count regular attachments (user uploads)
                         if (node.message?.metadata?.attachments) {
                             attachmentCount += node.message.metadata.attachments.length;
+                        }
+
+                        // Count DALL-E images (generated images)
+                        if (node.message?.content?.parts) {
+                            node.message.content.parts.forEach((part: any) => {
+                                if (part.content_type === "image_asset_pointer" &&
+                                    part.asset_pointer &&
+                                    part.metadata?.dalle &&
+                                    part.metadata.dalle !== null) {
+                                    attachmentCount++;
+                                }
+                            });
                         }
                     });
                 }

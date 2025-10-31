@@ -1,3 +1,22 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/services/file-service.ts
 import { TFile, TFolder } from "obsidian";
 import { ConversationCatalogEntry } from "../types/plugin";
@@ -27,22 +46,12 @@ export class FileService {
         try {
             // Check if this is a Nexus conversation file
             const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
-            
+
             if (!frontmatter?.conversation_id || frontmatter?.nexus !== this.plugin.manifest.id) {
                 return; // Not a Nexus conversation file
             }
 
-            // Remove from conversation catalog
-            const storage = this.plugin.getStorageService();
-            const catalog = storage.getConversationCatalog();
-            
-            for (const [id, record] of Object.entries(catalog) as [string, ConversationCatalogEntry][]) {
-                if (record.conversationId === frontmatter.conversation_id) {
-                    storage.deleteFromConversationCatalog(id);
-                    await this.plugin.saveSettings();
-                    break;
-                }
-            }
+            // No action needed - conversations are tracked via frontmatter in vault
         } catch (error) {
             this.plugin.logger.error("Error handling conversation file deletion:", error);
         }

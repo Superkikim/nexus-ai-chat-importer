@@ -1,3 +1,22 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/providers/claude/claude-attachment-extractor.ts
 import JSZip from "jszip";
 import { StandardAttachment } from "../../types/standard";
@@ -20,10 +39,10 @@ export class ClaudeAttachmentExtractor {
         conversationId: string,
         attachments: StandardAttachment[]
     ): Promise<StandardAttachment[]> {
-        if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+        if (attachments.length === 0) {
             return attachments.map(att => ({
                 ...att,
-                extractedContent: `File: ${att.fileName} (attachment import disabled)`
+                extractedContent: `File: ${att.fileName} (no attachments to process)`
             }));
         }
 
@@ -83,7 +102,7 @@ export class ClaudeAttachmentExtractor {
         const conversationUrl = `https://claude.ai/chat/${conversationId}`;
         const fileType = this.getFileTypeFromExtension(fileName);
 
-        const placeholder = `>[!nexus_attachment] **${fileName}** (${fileType})\n> ⚠️ Not included in archive. [Open original conversation](${conversationUrl})`;
+        const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})\n>> ⚠️ Not included in archive. [Open original conversation](${conversationUrl})`;
 
         return {
             ...attachment,
@@ -156,21 +175,14 @@ export class ClaudeAttachmentExtractor {
             const imageData = await zipFile.async("base64");
             const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
             
-            // Save to vault if enabled
-            if (this.plugin.settings.importAttachments) {
-                const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
+            // Save to vault (always enabled)
+            const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
 
-                return {
-                    ...attachment,
-                    fileName: fileName,
-                    extractedContent: `![${attachment.fileName}](${filePath})`
-                };
-            } else {
-                return {
-                    ...attachment,
-                    extractedContent: `Image: ${attachment.fileName} (not imported - attachment import disabled)`
-                };
-            }
+            return {
+                ...attachment,
+                fileName: fileName,
+                extractedContent: `![${attachment.fileName}](${filePath})`
+            };
         } catch (error) {
             this.logger.error(`Error processing Claude image ${attachment.fileName}:`, error);
             return {
@@ -212,22 +224,15 @@ export class ClaudeAttachmentExtractor {
         conversationId: string
     ): Promise<StandardAttachment> {
         try {
-            if (this.plugin.settings.importAttachments) {
-                const binaryData = await zipFile.async("base64");
-                const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-                const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
+            const binaryData = await zipFile.async("base64");
+            const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
+            const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
 
-                return {
-                    ...attachment,
-                    fileName: fileName,
-                    extractedContent: `[${attachment.fileName}](${filePath})`
-                };
-            } else {
-                return {
-                    ...attachment,
-                    extractedContent: `File: ${attachment.fileName} (not imported - attachment import disabled)`
-                };
-            }
+            return {
+                ...attachment,
+                fileName: fileName,
+                extractedContent: `[${attachment.fileName}](${filePath})`
+            };
         } catch (error) {
             this.logger.error(`Error processing Claude binary file ${attachment.fileName}:`, error);
             return {

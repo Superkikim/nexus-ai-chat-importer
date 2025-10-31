@@ -1,7 +1,27 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/providers/chatgpt/chatgpt-converter.ts
 import { Chat, ChatMessage } from "./chatgpt-types";
-import { StandardConversation, StandardMessage } from "../../types/standard";
-import { isValidMessage } from "../../utils";
+import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
+import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
+import { ChatGPTMessageFilter } from "./chatgpt-message-filter";
 
 export class ChatGPTConverter {
     /**
@@ -30,14 +50,7 @@ export class ChatGPTConverter {
         };
     }
 
-    /**
-     * Convert array of ChatGPT ChatMessages to StandardMessages
-     */
-    static convertMessages(chatMessages: ChatMessage[], conversationId?: string): StandardMessage[] {
-        return chatMessages
-            .filter(msg => isValidMessage(msg))
-            .map(msg => this.convertMessage(msg, conversationId));
-    }
+
 
     /**
      * Convert single ChatGPT ChatMessage to StandardMessage
@@ -59,54 +72,42 @@ export class ChatGPTConverter {
      */
     private static extractMessagesFromMapping(chat: Chat): StandardMessage[] {
         const messages: StandardMessage[] = [];
-        const dallePrompts = new Map<string, string>(); // Map tool message ID to prompt
         const conversationId = chat.id; // Pass conversation ID for smart linking
-        
-        // SINGLE PASS: Extract prompts and process messages in one go
-        const mappingValues = Object.values(chat.mapping); // Cache the values array
 
-        // First pass: Extract DALL-E prompts (quick scan)
-        for (const messageObj of mappingValues) {
-            const message = messageObj?.message;
-            if (!message || message.author?.role !== "assistant") continue;
+        // Extract DALL-E prompts using centralized processor (with orphaned prompts support)
+        const { imagePrompts, orphanedPrompts } = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
 
-            // Check if this is a DALL-E JSON prompt message
-            if (this.isDallePromptMessage(message)) {
-                const prompt = this.extractPromptFromJson(message);
-                if (prompt) {
-                    // Find the corresponding tool message (usually the next child)
-                    const children = messageObj.children || [];
-                    for (const childId of children) {
-                        const childObj = chat.mapping[childId];
-                        if (childObj?.message?.author?.role === "tool" &&
-                            this.hasRealDalleImage(childObj.message)) {
-                            dallePrompts.set(childId, prompt);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Second pass: Process all messages (reuse cached array)
-        for (const messageObj of mappingValues) {
+        // Process all messages
+        for (const messageObj of Object.values(chat.mapping)) {
             const message = messageObj?.message;
             if (!message) continue;
 
-            // Handle DALL-E tool messages with associated prompts
-            if (message.author?.role === "tool" && this.hasRealDalleImage(message)) {
-                const prompt = dallePrompts.get(messageObj.id || "");
-                const dalleMessage = this.createDalleAssistantMessage(message, prompt);
+            // Handle DALL-E tool messages with images using processor
+            if (message.author?.role === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
+                const promptData = imagePrompts.get(messageObj.id || "");
+                const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(
+                    message,
+                    promptData?.prompt,
+                    promptData?.timestamp
+                );
                 if (dalleMessage) {
                     messages.push(dalleMessage);
                 }
             }
+            // Handle orphaned DALL-E prompts (no image found)
+            else if (orphanedPrompts.has(messageObj.id || "")) {
+                const prompt = orphanedPrompts.get(messageObj.id || "");
+                if (prompt) {
+                    const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(message, prompt);
+                    messages.push(orphanedMessage);
+                }
+            }
             // Handle regular messages (but skip DALL-E JSON prompts)
-            else if (this.shouldIncludeMessage(message)) {
+            else if (ChatGPTMessageFilter.shouldIncludeMessage(message)) {
                 messages.push(this.convertMessage(message, conversationId));
             }
         }
-        
+
         // Sort by timestamp with ID as secondary sort for chronological order
         if (messages.length <= 1) return messages;
 
@@ -123,223 +124,11 @@ export class ChatGPTConverter {
         });
     }
 
-    /**
-     * Check if message is a DALL-E JSON prompt message
-     */
-    private static isDallePromptMessage(message: ChatMessage): boolean {
-        if (message.author?.role !== "assistant") return false;
-        
-        if (message.content?.parts && 
-            Array.isArray(message.content.parts) &&
-            message.content.parts.length === 1 &&
-            typeof message.content.parts[0] === "string") {
-            
-            const content = message.content.parts[0].trim();
-            return content.startsWith('{') && content.includes('"prompt"');
-        }
-        
-        return false;
-    }
 
-    /**
-     * Extract prompt from DALL-E JSON message
-     */
-    private static extractPromptFromJson(message: ChatMessage): string | null {
-        try {
-            if (message.content?.parts && message.content.parts[0]) {
-                const jsonStr = message.content.parts[0] as string;
-                const parsed = JSON.parse(jsonStr);
-                return parsed.prompt || null;
-            }
-        } catch (error) {
-            // Invalid JSON, ignore
-        }
-        return null;
-    }
 
-    /**
-     * Determine if a message should be included in the conversation - ENHANCED VERSION
-     */
-    private static shouldIncludeMessage(message: ChatMessage): boolean {
-        // Safety check
-        if (!message || !message.author) {
-            return false;
-        }
-        
-        // ===== STRICT EXCLUSIONS =====
-        
-        // 1. Skip ALL system messages (always internal ChatGPT stuff)
-        if (message.author.role === "system") {
-            return false;
-        }
-        
-        // 2. Skip ALL tool messages (browsing, code execution, etc.)
-        if (message.author.role === "tool") {
-            return false;
-        }
-        
-        // 3. Skip hidden messages (user profile, system instructions)
-        if (message.metadata?.is_visually_hidden_from_conversation === true) {
-            return false;
-        }
-        
-        // 4. Skip user system messages (user_editable_context)
-        if (message.metadata?.is_user_system_message === true) {
-            return false;
-        }
-        
-        // 5. Skip user_editable_context content type
-        if (message.content?.content_type === "user_editable_context") {
-            return false;
-        }
-        
-        // ===== ASSISTANT MESSAGE FILTERING =====
-        
-        if (message.author.role === "assistant") {
-            // Skip empty assistant messages
-            if (message.content?.parts && 
-                Array.isArray(message.content.parts) &&
-                message.content.parts.every(part => 
-                    typeof part === "string" && part.trim() === ""
-                )) {
-                return false;
-            }
-            
-            // Skip DALL-E JSON prompt messages (handled separately)
-            if (this.isDallePromptMessage(message)) {
-                return false;
-            }
-            
-            // Skip code execution assistant messages (these are intermediate outputs)
-            if (message.content?.content_type === "code") {
-                return false;
-            }
-            
-            // Skip system error messages
-            if (message.content?.content_type === "system_error") {
-                return false;
-            }
-            
-            // Skip execution output messages  
-            if (message.content?.content_type === "execution_output") {
-                return false;
-            }
-            
-            // Keep multimodal_text messages ONLY if they have actual text content
-            if (message.content?.content_type === "multimodal_text") {
-                // Check if parts contain actual text (not just objects)
-                if (message.content?.parts && Array.isArray(message.content.parts)) {
-                    const hasTextContent = message.content.parts.some(part => {
-                        if (typeof part === "string" && part.trim() !== "") {
-                            return true;
-                        }
-                        if (typeof part === "object" && part !== null && 'text' in part) {
-                            return typeof part.text === "string" && part.text.trim() !== "";
-                        }
-                        return false;
-                    });
-                    
-                    if (!hasTextContent) {
-                        return false; // Skip multimodal messages without text
-                    }
-                }
-            }
-        }
-        
-        // ===== USER MESSAGE FILTERING =====
-        
-        if (message.author.role === "user") {
-            // User messages should generally be kept, but exclude special content types
-            const excludedContentTypes = [
-                "user_editable_context" // Already covered above but double-check
-            ];
-            
-            if (message.content?.content_type && excludedContentTypes.includes(message.content.content_type)) {
-                return false;
-            }
-        }
-        
-        // ===== FINAL VALIDATION =====
-        
-        // Use existing validation for basic message structure
-        return isValidMessage(message);
-    }
 
-    /**
-     * Check if message contains REAL DALL-E image (not user upload)
-     */
-    private static hasRealDalleImage(message: ChatMessage): boolean {
-        if (!message.content?.parts || !Array.isArray(message.content.parts)) {
-            return false;
-        }
-        
-        return message.content.parts.some(part => {
-            if (typeof part !== "object" || part === null) return false;
-            
-            const contentPart = part as any;
-            return contentPart.content_type === "image_asset_pointer" && 
-                   contentPart.asset_pointer &&
-                   contentPart.metadata?.dalle && 
-                   contentPart.metadata.dalle !== null; // REAL DALL-E check
-        });
-    }
 
-    /**
-     * Create Assistant (DALL-E) message from tool message with associated prompt
-     */
-    private static createDalleAssistantMessage(toolMessage: ChatMessage, associatedPrompt?: string): StandardMessage | null {
-        if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
-            return null;
-        }
 
-        const attachments: any[] = [];
-        
-        for (const part of toolMessage.content.parts) {
-            if (typeof part === "object" && part !== null) {
-                const contentPart = part as any;
-                if (contentPart.content_type === "image_asset_pointer" && 
-                    contentPart.asset_pointer &&
-                    contentPart.metadata?.dalle &&
-                    contentPart.metadata.dalle !== null) {
-                    
-                    // Extract file ID from asset pointer
-                    let fileId = contentPart.asset_pointer;
-                    if (fileId.includes('://')) {
-                        fileId = fileId.split('://')[1];
-                    }
-
-                    // Generate descriptive filename
-                    const genId = contentPart.metadata.dalle.gen_id || 'unknown';
-                    const width = contentPart.width || 1024;
-                    const height = contentPart.height || 1024;
-                    const fileName = `dalle_${genId}_${width}x${height}.png`;
-
-                    const dalleAttachment = {
-                        fileName: fileName,
-                        fileSize: contentPart.size_bytes,
-                        fileType: "image/png",
-                        fileId: fileId,
-                        // Use associated prompt from JSON message, fallback to metadata
-                        extractedContent: associatedPrompt || contentPart.metadata.dalle.prompt
-                    };
-                    
-                    attachments.push(dalleAttachment);
-                }
-            }
-        }
-
-        if (attachments.length === 0) {
-            return null;
-        }
-
-        return {
-            id: toolMessage.id || "",
-            role: "assistant",
-            content: "Image générée par DALL-E",
-            timestamp: toolMessage.create_time || 0,
-            attachments: attachments
-        };
-    }
 
     /**
      * Extract content and attachments from ChatGPT message parts
@@ -494,7 +283,7 @@ export class ChatGPTConverter {
     private static cleanChatGPTArtifacts(text: string, conversationId?: string): string {
         if (!text || typeof text !== 'string') return '';
 
-        const chatUrl = conversationId ? `https://chat.openai.com/c/${conversationId}` : "https://chat.openai.com";
+        const chatUrl = conversationId ? `https://chatgpt.com/c/${conversationId}` : "https://chatgpt.com";
 
         let cleanText = text;
 

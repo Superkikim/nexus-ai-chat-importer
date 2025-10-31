@@ -1,33 +1,66 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/formatters/note-formatter.ts
 import { StandardConversation } from "../types/standard";
-import { formatTimestamp, formatTitle } from "../utils";
+import { formatTimestamp, generateSafeAlias } from "../utils";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
 import { URL_GENERATORS } from "../types/standard";
+import type NexusAiChatImporterPlugin from "../main";
 
 export class NoteFormatter {
     private messageFormatter: MessageFormatter;
 
-    constructor(private logger: Logger, private pluginId: string, private pluginVersion: string) {
-        this.messageFormatter = new MessageFormatter(logger);
+    constructor(
+        private logger: Logger,
+        private pluginId: string,
+        private pluginVersion: string,
+        private plugin: NexusAiChatImporterPlugin
+    ) {
+        this.messageFormatter = new MessageFormatter(logger, plugin);
     }
 
     generateMarkdownContent(conversation: StandardConversation): string {
-        const formattedTitle = formatTitle(conversation.title);
-        const createTimeStr = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
-        const updateTimeStr = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
+        const safeTitle = generateSafeAlias(conversation.title);
 
-        let content = this.generateHeader(formattedTitle, conversation.id, createTimeStr, updateTimeStr, conversation);
+        // Generate ISO 8601 timestamps for frontmatter (v1.3.0+)
+        const createTimeStr = new Date(conversation.createTime * 1000).toISOString();
+        const updateTimeStr = new Date(conversation.updateTime * 1000).toISOString();
+
+        // Generate user-friendly timestamps for note body
+        const createTimeDisplay = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
+        const updateTimeDisplay = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
+
+        let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation);
         content += this.generateMessagesContent(conversation);
 
         return content;
     }
 
     private generateHeader(
-        title: string, 
-        conversationId: string, 
-        createTimeStr: string, 
+        title: string,
+        conversationId: string,
+        createTimeStr: string,
         updateTimeStr: string,
+        createTimeDisplay: string,
+        updateTimeDisplay: string,
         conversation: StandardConversation
     ): string {
         // Generate chat URL
@@ -37,11 +70,12 @@ export class NoteFormatter {
         }
 
         // Build frontmatter with plugin_version after nexus
+        // Timestamps in ISO 8601 format (v1.3.0+)
         let frontmatter = `---
 nexus: ${this.pluginId}
 plugin_version: "${this.pluginVersion}"
 provider: ${conversation.provider}
-aliases: "${title}"
+aliases: ${title}
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
@@ -49,15 +83,16 @@ update_time: ${updateTimeStr}
 
 `;
 
-        // Build header content
-        let header = `# Title: ${title}\n\n`;
-        header += `Created: ${createTimeStr}\n`;
-        header += `Last Updated: ${updateTimeStr}\n`;
-        
+        // Build header content - use original title for display, safe title for frontmatter
+        // Display timestamps in user-friendly format
+        let header = `# Title: ${conversation.title}\n\n`;
+        header += `Created: ${createTimeDisplay}\n`;
+        header += `Last Updated: ${updateTimeDisplay}\n`;
+
         if (chatUrl) {
             header += `Chat URL: ${chatUrl}\n`;
         }
-        
+
         header += '\n\n';
 
         return frontmatter + header;

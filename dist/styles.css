@@ -432,3 +432,257 @@
     text-transform: uppercase;
     color: var(--text-accent);
 }
+
+/* ========================================
+   PLUGIN-SPECIFIC SETTINGS STYLING
+   ======================================== */
+
+/* Support Section Styling */
+.nexus-support-section {
+    margin: 2em 0;
+}
+
+.nexus-support-hero {
+    text-align: center;
+    padding: 2em 1.5em;
+    background: var(--background-secondary);
+    border-radius: 8px;
+    margin-bottom: 1.5em;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.nexus-support-title {
+    margin: 0 0 1em 0;
+    font-size: 1.5em;
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.nexus-support-message-container {
+    max-width: 600px;
+    margin: 0 auto 2em auto;
+}
+
+.nexus-support-line {
+    margin: 0.75em 0;
+    line-height: 1.6;
+    color: var(--text-muted);
+    font-size: 0.95em;
+}
+
+.nexus-support-cta-text {
+    font-weight: 500;
+    color: var(--text-normal);
+}
+
+.nexus-support-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3em;
+    margin-bottom: 2em;
+    flex-wrap: wrap;
+}
+
+.nexus-stat {
+    text-align: center;
+    min-width: 100px;
+}
+
+.nexus-stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: var(--interactive-accent);
+    margin-bottom: 0.25em;
+}
+
+.nexus-stat-number.nexus-stat-negative {
+    color: var(--text-error);
+}
+
+.nexus-stat-label {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nexus-support-cta {
+    margin-top: 1.5em;
+}
+
+.nexus-kofi-button {
+    font-size: 1.1em;
+    padding: 0.75em 2em;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nexus-kofi-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nexus-support-section .setting-item {
+    border-bottom: none;
+    padding: 0.8em 0;
+}
+
+/* Section separator */
+.nexus-section-separator {
+    margin: 2em 0;
+    border: none;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+/* Date prefix section */
+.nexus-date-prefix-section .setting-item {
+    display: flex;
+    align-items: center;
+}
+
+/* Message date section */
+.nexus-message-date-section {
+    margin-top: 1em;
+}
+
+/* Timestamp preview styling */
+.nexus-timestamp-preview {
+    background: var(--background-secondary);
+    border-radius: 6px;
+    padding: 1em;
+    margin-top: 1em;
+    border-left: 3px solid var(--interactive-accent);
+}
+
+.nexus-preview-line {
+    margin-bottom: 0.5em;
+}
+
+.nexus-preview-code {
+    background: var(--background-primary);
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+    font-family: var(--font-monospace);
+    font-size: 1.05em;
+    color: var(--text-accent);
+    margin-left: 0.5em;
+}
+
+.nexus-format-description {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-top: 0.5em;
+}
+
+/* Folder path input styling - force consistent layout with column structure */
+.setting-item:has(.nexus-folder-path-input) {
+    display: grid !important;
+    grid-template-columns: 30% 1fr auto !important;
+    gap: 12px !important;
+    align-items: start !important;
+}
+
+.setting-item:has(.nexus-folder-path-input) .setting-item-info {
+    grid-column: 1 !important;
+    text-align: left !important;
+    padding-right: 0 !important;
+}
+
+.setting-item:has(.nexus-folder-path-input) .setting-item-control {
+    grid-column: 2 / 4 !important;
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+}
+
+.nexus-folder-path-input {
+    flex: 1 1 auto !important;
+    max-width: 500px !important;
+    min-width: 200px !important;
+}
+
+/* Read-only folder inputs - keep normal appearance but indicate non-editable */
+.nexus-folder-path-input[readonly] {
+    background-color: var(--background-primary) !important;
+    opacity: 1 !important;
+    cursor: default !important;
+}
+
+/* ========================================
+   KO-FI SUPPORT BOX
+   ======================================== */
+
+.kofi-support-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.kofi-header {
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.kofi-header-highlight {
+    color: #FFD700;
+}
+
+.kofi-message {
+    text-align: center;
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.kofi-message p {
+    margin: 8px 0;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.kofi-message-emphasis {
+    color: #FFD700;
+    font-weight: 600;
+    font-size: 1.05em;
+}
+
+.kofi-reality-check {
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    text-align: center;
+    font-size: 0.95em;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.5;
+}
+
+.kofi-reality-check strong {
+    color: #FFD700;
+    font-weight: 600;
+}
+
+.kofi-button-container {
+    text-align: center;
+    margin: 0px 0;
+}
+
+.kofi-button-container a {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.kofi-button-container a:hover {
+    transform: scale(1.05);
+}
+
+.kofi-button-container img {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+

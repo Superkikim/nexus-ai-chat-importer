@@ -1,3 +1,22 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/services/conversation-processor.ts
 import { TFile } from "obsidian";
 import { ConversationCatalogEntry } from "../types/plugin";
@@ -10,13 +29,12 @@ import { ProviderRegistry } from "../providers/provider-adapter";
 import { ImportProgressCallback } from "../ui/import-progress-modal";
 import JSZip from "jszip";
 import {
-    formatTimestamp,
     isValidMessage,
-    generateFileName,
     ensureFolderExists,
     doesFilePathExist,
     generateUniqueFileName,
-    generateConversationFileName
+    generateConversationFileName,
+    compareTimestampsIgnoringSeconds
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 
@@ -38,9 +56,9 @@ export class ConversationProcessor {
     };
 
     constructor(private plugin: NexusAiChatImporterPlugin, providerRegistry: ProviderRegistry) {
-            this.messageFormatter = new MessageFormatter(plugin.logger);
+            this.messageFormatter = new MessageFormatter(plugin.logger, plugin);
             this.fileService = new FileService(plugin);
-            this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id, plugin.manifest.version);
+            this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id, plugin.manifest.version, plugin);
             this.providerRegistry = providerRegistry;
     }
 
@@ -123,6 +141,15 @@ export class ConversationProcessor {
     ): Promise<void> {
         try {
             const chatId = adapter.getId(chat);
+            const chatTitle = adapter.getTitle(chat) || 'Untitled';
+
+            // Validate conversation has required fields
+            if (!chatId || chatId.trim() === '') {
+                this.plugin.logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
+                importReport.addFailed(chatTitle, "N/A", 0, 0, "Missing conversation ID");
+                return;
+            }
+
             const existingEntry = existingConversations.get(chatId);
 
             if (existingEntry) {
@@ -165,23 +192,25 @@ export class ConversationProcessor {
 
         // REPROCESS LOGIC: Force update if this is a reprocess operation
         if (isReprocess) {
-            this.plugin.logger.info(`Reprocessing conversation: ${chatTitle}`);
             this.counters.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true); // Force update
             return;
         }
 
-        // Normal logic: Check timestamps
-        if (existingRecord.updateTime >= updateTime) {
+        // Normal logic: Check timestamps (ignoring seconds for v1.2.0 → v1.3.0 compatibility)
+        const comparison = compareTimestampsIgnoringSeconds(updateTime, existingRecord.updateTime);
+        if (comparison <= 0) {
+            // ZIP is older or same as vault (ignoring seconds) → Skip
             importReport.addSkipped(
                 chatTitle,
                 existingRecord.path,
-                formatTimestamp(createTime, "date"),
-                formatTimestamp(updateTime, "date"),
+                createTime,
+                updateTime,
                 totalMessageCount,
                 "No Updates"
             );
         } else {
+            // ZIP is newer than vault → Update
             this.counters.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip);
         }
@@ -255,7 +284,6 @@ export class ConversationProcessor {
                 const chatCreateTime = adapter.getCreateTime(chat);
                 const chatTitle = adapter.getTitle(chat);
 
-                content = this.updateMetadata(content, chatUpdateTime);
                 const existingMessageIds = this.extractMessageUIDsFromNote(content);
                 const newMessages = adapter.getNewMessages(chat, existingMessageIds);
 
@@ -266,8 +294,8 @@ export class ConversationProcessor {
                     // Convert entire chat to standard format with attachments
                     let standardConversation = await adapter.convertChat(chat);
 
-                    // Process attachments if ZIP provided and settings enabled
-                    if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+                    // Process attachments if ZIP provided
+                    if (zip && adapter.processMessageAttachments) {
                         standardConversation.messages = await adapter.processMessageAttachments(
                             standardConversation.messages,
                             adapter.getId(chat),
@@ -285,8 +313,8 @@ export class ConversationProcessor {
                     importReport.addUpdated(
                         chatTitle,
                         filePath,
-                        `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-                        `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+                        chatCreateTime,
+                        chatUpdateTime,
                         totalMessageCount,
                         attachmentStats
                     );
@@ -295,24 +323,33 @@ export class ConversationProcessor {
                     return;
                 }
 
-                // Normal update logic (existing messages)
+                // Unified update logic - use convertChat for consistency
                 if (newMessages.length > 0) {
-                    // Convert messages to standard format
-                    let standardMessages = await adapter.convertMessages(newMessages, adapter.getId(chat));
+                    // Update metadata only when there are new messages
+                    content = this.updateMetadata(content, chatUpdateTime);
 
-                    // Process attachments if ZIP provided and settings enabled
-                    if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
-                        standardMessages = await adapter.processMessageAttachments(
-                            standardMessages,
+                    // Convert full conversation to get consistent processing
+                    let standardConversation = await adapter.convertChat(chat);
+
+                    // Filter only new messages for formatting
+                    const newStandardMessages = standardConversation.messages.filter((msg: StandardMessage) =>
+                        newMessages.some((newMsg: StandardMessage) => newMsg.id === msg.id)
+                    );
+
+                    // Process attachments on new messages only
+                    let processedNewMessages = newStandardMessages;
+                    if (zip && adapter.processMessageAttachments) {
+                        processedNewMessages = await adapter.processMessageAttachments(
+                            newStandardMessages,
                             adapter.getId(chat),
                             zip
                         );
                     }
 
                     // Always calculate attachment stats (even if not processed)
-                    attachmentStats = this.calculateAttachmentStats(standardMessages);
+                    attachmentStats = this.calculateAttachmentStats(processedNewMessages);
 
-                    content += "\n\n" + this.messageFormatter.formatMessages(standardMessages);
+                    content += "\n\n" + this.messageFormatter.formatMessages(processedNewMessages);
                     this.counters.totalConversationsActuallyUpdated++;
                     this.counters.totalNonEmptyMessagesAdded += newMessages.length;
                 }
@@ -323,8 +360,8 @@ export class ConversationProcessor {
                     importReport.addUpdated(
                         chatTitle,
                         filePath,
-                        `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-                        `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+                        chatCreateTime,
+                        chatUpdateTime,
                         newMessages.length,
                         attachmentStats
                     );
@@ -332,8 +369,8 @@ export class ConversationProcessor {
                     importReport.addSkipped(
                         chatTitle,
                         filePath,
-                        `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-                        `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+                        chatCreateTime,
+                        chatUpdateTime,
                         totalMessageCount,
                         "No changes needed"
                     );
@@ -362,9 +399,9 @@ export class ConversationProcessor {
             // Convert to standard format
             let standardConversation = await adapter.convertChat(chat);
 
-            // Process attachments if ZIP provided and settings enabled
+            // Process attachments if ZIP provided
             let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
-            if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+            if (zip && adapter.processMessageAttachments) {
                 standardConversation.messages = await adapter.processMessageAttachments(
                     standardConversation.messages,
                     adapter.getId(chat),
@@ -390,8 +427,8 @@ export class ConversationProcessor {
             importReport.addCreated(
                 chatTitle,
                 filePath,
-                `${formatTimestamp(createTime, "date")} ${formatTimestamp(createTime, "time")}`,
-                `${formatTimestamp(updateTime, "date")} ${formatTimestamp(updateTime, "time")}`,
+                createTime,
+                updateTime,
                 messageCount,
                 attachmentStats,
                 providerSpecificCount
@@ -409,8 +446,8 @@ export class ConversationProcessor {
             importReport.addFailed(
                 chatTitle,
                 filePath,
-                formatTimestamp(createTime, "date") + " " + formatTimestamp(createTime, "time"),
-                formatTimestamp(updateTime, "date") + " " + formatTimestamp(updateTime, "time"),
+                createTime,
+                updateTime,
                 error.message
             );
             throw error;
@@ -420,8 +457,11 @@ export class ConversationProcessor {
 
 
     private updateMetadata(content: string, updateTime: number): string {
-        const updateTimeStr = `${formatTimestamp(updateTime, "date")} at ${formatTimestamp(updateTime, "time")}`;
+        // Use ISO 8601 format for frontmatter (consistent with create_time)
+        const updateTimeStr = new Date(updateTime * 1000).toISOString();
         content = content.replace(/^update_time: .*$/m, `update_time: ${updateTimeStr}`);
+
+        // Note: "Last Updated" field is not used in current note format, but kept for backward compatibility
         content = content.replace(/^Last Updated: .*$/m, `Last Updated: ${updateTimeStr}`);
         return content;
     }
@@ -447,8 +487,8 @@ export class ConversationProcessor {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
 
-        // New structure: <archiveFolder>/<provider>/<year>/<month>/
-        const folderPath = `${this.plugin.settings.archiveFolder}/${providerName}/${year}/${month}`;
+        // New structure: <conversationFolder>/<provider>/<year>/<month>/
+        const folderPath = `${this.plugin.settings.conversationFolder}/${providerName}/${year}/${month}`;
 
         const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
         if (!folderResult.success) {
@@ -472,6 +512,23 @@ export class ConversationProcessor {
 
     getCounters() {
         return this.counters;
+    }
+
+    /**
+     * Reset counters for processing a new file
+     */
+    resetCounters() {
+        this.counters = {
+            totalExistingConversations: 0,
+            totalNewConversationsToImport: 0,
+            totalExistingConversationsToUpdate: 0,
+            totalNewConversationsSuccessfullyImported: 0,
+            totalConversationsActuallyUpdated: 0,
+            totalConversationsProcessed: 0,
+            totalNonEmptyMessagesToImport: 0,
+            totalNonEmptyMessagesToAdd: 0,
+            totalNonEmptyMessagesAdded: 0,
+        };
     }
 
     /**

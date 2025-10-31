@@ -10,6 +10,7 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
@@ -38,6 +39,1759 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// src/config/constants.ts
+var DEFAULT_SETTINGS, GITHUB, MESSAGE_TIMESTAMP_FORMATS;
+var init_constants = __esm({
+  "src/config/constants.ts"() {
+    "use strict";
+    DEFAULT_SETTINGS = {
+      // ========================================
+      // 📁 FOLDER STRUCTURE
+      // ========================================
+      conversationFolder: "Nexus/Conversations",
+      reportFolder: "Nexus/Reports",
+      attachmentFolder: "Nexus/Attachments",
+      // ========================================
+      // 🎨 DISPLAY OPTIONS
+      // ========================================
+      addDatePrefix: false,
+      dateFormat: "YYYY-MM-DD",
+      // Message timestamp format
+      useCustomMessageTimestampFormat: false,
+      messageTimestampFormat: "locale",
+      // ========================================
+      // 🔧 INTERNAL SETTINGS
+      // ========================================
+      lastConversationsPerPage: 50,
+      // ========================================
+      // 🔄 MIGRATION FLAGS
+      // ========================================
+      hasShownUpgradeNotice: false,
+      hasCompletedUpgrade: false,
+      currentVersion: "0.0.0",
+      previousVersion: "0.0.0"
+    };
+    GITHUB = {
+      RAW_BASE: "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer",
+      REPO_BASE: "https://github.com/Superkikim/nexus-ai-chat-importer"
+    };
+    MESSAGE_TIMESTAMP_FORMATS = {
+      locale: {
+        label: "Auto (Obsidian Language)",
+        description: "Follows Obsidian language setting",
+        dateFormat: "L",
+        // moment.js locale-aware
+        timeFormat: "LTS",
+        // moment.js locale-aware
+        separator: " at "
+      },
+      iso: {
+        label: "YYYY-MM-DD HH:mm:ss (Universal)",
+        description: "YYYY-MM-DD HH:mm:ss - Sortable, unambiguous",
+        dateFormat: "YYYY-MM-DD",
+        timeFormat: "HH:mm:ss",
+        separator: " "
+      },
+      us: {
+        label: "MM/DD/YYYY h:mm:ss AM/PM (US)",
+        description: "MM/DD/YYYY h:mm:ss AM/PM",
+        dateFormat: "MM/DD/YYYY",
+        timeFormat: "h:mm:ss A",
+        separator: " at "
+      },
+      eu: {
+        label: "DD/MM/YYYY HH:mm:ss (Europe)",
+        description: "DD/MM/YYYY HH:mm:ss",
+        dateFormat: "DD/MM/YYYY",
+        timeFormat: "HH:mm:ss",
+        separator: " at "
+      },
+      de: {
+        label: "DD.MM.YYYY HH:mm:ss (German/Swiss)",
+        description: "DD.MM.YYYY HH:mm:ss",
+        dateFormat: "DD.MM.YYYY",
+        timeFormat: "HH:mm:ss",
+        separator: " "
+      },
+      jp: {
+        label: "YYYY/MM/DD HH:mm:ss (Japanese)",
+        description: "YYYY/MM/DD HH:mm:ss",
+        dateFormat: "YYYY/MM/DD",
+        timeFormat: "HH:mm:ss",
+        separator: " "
+      }
+    };
+  }
+});
+
+// src/ui/components/kofi-support-box.ts
+function createKofiSupportBox(container, message) {
+  const supportBox = container.createDiv("kofi-support-box");
+  const header = supportBox.createDiv("kofi-header");
+  header.innerHTML = `\u2615 <span class="kofi-header-highlight">Support This Plugin</span>`;
+  const messageEl = supportBox.createDiv("kofi-message");
+  if (message) {
+    const paragraphs = message.split("\n\n");
+    messageEl.innerHTML = paragraphs.map((p) => {
+      const hasStats = /\d{1,3}[',]\d{3}|\$\d+/.test(p);
+      if (hasStats) {
+        return `<p><span class="kofi-message-emphasis">${p}</span></p>`;
+      }
+      return `<p>${p}</p>`;
+    }).join("");
+  } else {
+    messageEl.innerHTML = `
+            <p><span class="kofi-message-emphasis">I'm working on Nexus projects full-time while unemployed and dealing with health issues.</span></p>
+            <p>If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.</p>
+        `;
+  }
+  const realityCheck = supportBox.createDiv("kofi-reality-check");
+  realityCheck.innerHTML = `
+        <strong>Reality check:</strong> Thousands of hours of work over the year, more than 4'300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! \u{1F64F}
+    `;
+  const buttonContainer = supportBox.createDiv("kofi-button-container");
+  const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/support_me_on_kofi_red.png";
+  buttonContainer.innerHTML = `
+        <a href="https://ko-fi.com/nexusplugins" target="_blank">
+            <img src="${buttonImagePath}" alt="Support me on Ko-fi" height="50">
+        </a>
+    `;
+}
+var init_kofi_support_box = __esm({
+  "src/ui/components/kofi-support-box.ts"() {
+    "use strict";
+    __name(createKofiSupportBox, "createKofiSupportBox");
+  }
+});
+
+// src/dialogs/folder-tree-browser-modal.ts
+var import_obsidian3, FolderTreeBrowserModal;
+var init_folder_tree_browser_modal = __esm({
+  "src/dialogs/folder-tree-browser-modal.ts"() {
+    "use strict";
+    import_obsidian3 = require("obsidian");
+    FolderTreeBrowserModal = class extends import_obsidian3.Modal {
+      // Track folders created during this session
+      constructor(app, onSubmit, initialPath, validatePath) {
+        super(app);
+        this.selectedFolder = null;
+        this.expandedFolders = /* @__PURE__ */ new Set();
+        this.createdFolders = /* @__PURE__ */ new Set();
+        this.onSubmit = onSubmit;
+        this.validatePath = validatePath;
+        if (initialPath) {
+          const folder = this.app.vault.getAbstractFileByPath(initialPath);
+          if (folder instanceof import_obsidian3.TFolder) {
+            this.selectedFolder = folder;
+            let current = folder.parent;
+            while (current && current.path !== "/") {
+              this.expandedFolders.add(current.path);
+              current = current.parent;
+            }
+            this.expandedFolders.add(folder.path);
+          }
+        }
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.createEl("h3", { text: "Select Folder" });
+        this.treeContainer = contentEl.createDiv({ cls: "nexus-folder-tree-container" });
+        this.treeContainer.style.maxHeight = "400px";
+        this.treeContainer.style.overflowY = "auto";
+        this.treeContainer.style.marginBottom = "20px";
+        this.treeContainer.style.border = "1px solid var(--background-modifier-border)";
+        this.treeContainer.style.borderRadius = "4px";
+        this.treeContainer.style.padding = "8px";
+        this.renderTree();
+        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.gap = "8px";
+        buttonContainer.style.justifyContent = "flex-end";
+        const createButton = buttonContainer.createEl("button", { text: "Create New Folder" });
+        createButton.addEventListener("click", () => this.handleCreateFolder());
+        const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+        cancelButton.addEventListener("click", () => this.handleCancel());
+        const selectButton = buttonContainer.createEl("button", {
+          text: "Select",
+          cls: "mod-cta"
+        });
+        selectButton.addEventListener("click", () => this.handleSelect());
+      }
+      renderTree() {
+        this.treeContainer.empty();
+        const root = this.app.vault.getRoot();
+        const rootItem = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
+        rootItem.style.display = "flex";
+        rootItem.style.alignItems = "center";
+        rootItem.style.padding = "4px 8px";
+        rootItem.style.cursor = "pointer";
+        rootItem.style.borderRadius = "4px";
+        if (this.selectedFolder === root) {
+          rootItem.style.backgroundColor = "var(--background-modifier-hover)";
+        }
+        const rootIcon = rootItem.createSpan({ text: "\u{1F4C1} " });
+        const rootLabel = rootItem.createSpan({ text: "Vault Root (/)" });
+        rootLabel.style.fontWeight = "bold";
+        rootItem.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.handleFolderClick(root);
+        });
+        this.renderFolderChildren(root, 0);
+      }
+      renderFolderChildren(folder, depth) {
+        const children = folder.children.filter((child) => child instanceof import_obsidian3.TFolder).sort((a, b) => a.name.localeCompare(b.name));
+        for (const child of children) {
+          this.renderFolder(child, depth + 1);
+        }
+      }
+      renderFolder(folder, depth) {
+        var _a;
+        const isExpanded = this.expandedFolders.has(folder.path);
+        const isSelected = ((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path;
+        const hasChildren = folder.children.some((c) => c instanceof import_obsidian3.TFolder);
+        const item = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
+        item.style.display = "flex";
+        item.style.alignItems = "center";
+        item.style.padding = "4px 8px";
+        item.style.paddingLeft = `${depth * 20 + 8}px`;
+        item.style.cursor = "pointer";
+        item.style.borderRadius = "4px";
+        if (isSelected) {
+          item.style.backgroundColor = "var(--background-modifier-hover)";
+          item.style.fontWeight = "bold";
+        }
+        const expandIcon = item.createSpan();
+        expandIcon.style.width = "16px";
+        expandIcon.style.marginRight = "4px";
+        if (hasChildren) {
+          expandIcon.setText(isExpanded ? "\u25BC" : "\u25B6");
+        } else {
+          expandIcon.setText(" ");
+        }
+        item.createSpan({ text: "\u{1F4C1} " });
+        item.createSpan({ text: folder.name });
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.handleFolderClick(folder);
+        });
+        item.addEventListener("mouseenter", () => {
+          if (!isSelected) {
+            item.style.backgroundColor = "var(--background-modifier-hover-light)";
+          }
+        });
+        item.addEventListener("mouseleave", () => {
+          if (!isSelected) {
+            item.style.backgroundColor = "";
+          }
+        });
+        if (isExpanded && hasChildren) {
+          this.renderFolderChildren(folder, depth);
+        }
+      }
+      handleFolderClick(folder) {
+        var _a;
+        const wasExpanded = this.expandedFolders.has(folder.path);
+        if (((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path) {
+          if (wasExpanded) {
+            this.expandedFolders.delete(folder.path);
+            this.collapseAllChildren(folder);
+          } else {
+            this.expandedFolders.add(folder.path);
+          }
+        } else {
+          if (folder.parent) {
+            const siblings = folder.parent.children.filter((c) => c instanceof import_obsidian3.TFolder);
+            for (const sibling of siblings) {
+              if (sibling.path !== folder.path) {
+                this.expandedFolders.delete(sibling.path);
+                this.collapseAllChildren(sibling);
+              }
+            }
+          }
+          this.selectedFolder = folder;
+          this.expandedFolders.add(folder.path);
+        }
+        this.renderTree();
+      }
+      collapseAllChildren(folder) {
+        for (const child of folder.children) {
+          if (child instanceof import_obsidian3.TFolder) {
+            this.expandedFolders.delete(child.path);
+            this.collapseAllChildren(child);
+          }
+        }
+      }
+      async handleCreateFolder() {
+        var _a;
+        if (!this.selectedFolder) {
+          new import_obsidian3.Notice("\u26A0\uFE0F Please select a parent folder first");
+          return;
+        }
+        const folderName = await this.promptForFolderName();
+        if (!folderName) {
+          return;
+        }
+        if (folderName.includes("/") || folderName.includes("\\") || folderName.includes(":") || folderName.includes("*") || folderName.includes("?") || folderName.includes('"') || folderName.includes("<") || folderName.includes(">") || folderName.includes("|")) {
+          new import_obsidian3.Notice("\u274C Invalid folder name: contains illegal characters");
+          return;
+        }
+        const parentPath = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
+        const newFolderPath = parentPath ? `${parentPath}/${folderName}` : folderName;
+        const exists = this.app.vault.getAbstractFileByPath(newFolderPath);
+        if (exists) {
+          new import_obsidian3.Notice("\u274C Folder already exists");
+          return;
+        }
+        if (this.validatePath) {
+          const validation = this.validatePath(newFolderPath);
+          if (!validation.valid) {
+            new import_obsidian3.Notice(`\u274C ${(_a = validation.error) != null ? _a : "Invalid folder location"}`);
+            return;
+          }
+        }
+        try {
+          await this.app.vault.createFolder(newFolderPath);
+          this.createdFolders.add(newFolderPath);
+          new import_obsidian3.Notice(`\u2705 Created folder: ${folderName}`);
+          this.expandedFolders.add(this.selectedFolder.path);
+          const newFolder = this.app.vault.getAbstractFileByPath(newFolderPath);
+          if (newFolder instanceof import_obsidian3.TFolder) {
+            this.selectedFolder = newFolder;
+            this.expandedFolders.add(newFolder.path);
+          }
+          this.renderTree();
+        } catch (error) {
+          new import_obsidian3.Notice(`\u274C Failed to create folder: ${error.message}`);
+        }
+      }
+      promptForFolderName() {
+        return new Promise((resolve) => {
+          const modal = new import_obsidian3.Modal(this.app);
+          modal.titleEl.setText("Create New Folder");
+          const inputContainer = modal.contentEl.createDiv();
+          inputContainer.style.marginBottom = "20px";
+          inputContainer.createEl("label", { text: "Folder name:" });
+          const input = inputContainer.createEl("input", { type: "text" });
+          input.style.width = "100%";
+          input.style.marginTop = "8px";
+          const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+          const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+          cancelButton.addEventListener("click", () => {
+            modal.close();
+            resolve(null);
+          });
+          const createButton = buttonContainer.createEl("button", {
+            text: "Create",
+            cls: "mod-cta"
+          });
+          createButton.addEventListener("click", () => {
+            const value = input.value.trim();
+            modal.close();
+            resolve(value || null);
+          });
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const value = input.value.trim();
+              modal.close();
+              resolve(value || null);
+            } else if (e.key === "Escape") {
+              modal.close();
+              resolve(null);
+            }
+          });
+          modal.open();
+          input.focus();
+        });
+      }
+      handleSelect() {
+        var _a;
+        if (!this.selectedFolder) {
+          new import_obsidian3.Notice("\u26A0\uFE0F Please select a folder first");
+          return;
+        }
+        const path = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
+        if (this.validatePath) {
+          const validation = this.validatePath(path);
+          if (!validation.valid) {
+            new import_obsidian3.Notice(`\u274C ${(_a = validation.error) != null ? _a : "Invalid folder location"}`);
+            return;
+          }
+        }
+        this.createdFolders.clear();
+        this.onSubmit(path);
+        this.close();
+      }
+      async handleCancel() {
+        await this.cleanupCreatedFolders();
+        this.close();
+      }
+      async cleanupCreatedFolders() {
+        const sortedFolders = Array.from(this.createdFolders).sort((a, b) => {
+          const depthA = a.split("/").length;
+          const depthB = b.split("/").length;
+          return depthB - depthA;
+        });
+        for (const folderPath of sortedFolders) {
+          try {
+            const folder = this.app.vault.getAbstractFileByPath(folderPath);
+            if (folder instanceof import_obsidian3.TFolder && folder.children.length === 0) {
+              await this.app.vault.delete(folder);
+            }
+          } catch (error) {
+          }
+        }
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+    __name(FolderTreeBrowserModal, "FolderTreeBrowserModal");
+  }
+});
+
+// src/utils/folder-validation.ts
+function isPathInsidePath(pathToCheck, existingPath) {
+  if (!pathToCheck || !existingPath) {
+    return false;
+  }
+  const normalizedCheck = pathToCheck.replace(/\/$/, "");
+  const normalizedExisting = existingPath.replace(/\/$/, "");
+  if (normalizedCheck === normalizedExisting) {
+    return false;
+  }
+  return normalizedCheck.startsWith(normalizedExisting + "/");
+}
+function validateFolderNesting(folderType, newPath, conversationFolder, reportFolder, attachmentFolder) {
+  const normalizedNewPath = newPath.trim().replace(/\/$/, "");
+  if (!normalizedNewPath) {
+    return {
+      valid: false,
+      error: "Folder path cannot be empty"
+    };
+  }
+  switch (folderType) {
+    case "conversationFolder":
+      if (isPathInsidePath(normalizedNewPath, reportFolder)) {
+        return {
+          valid: false,
+          error: `Conversation folder cannot be inside the Report folder (${reportFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, attachmentFolder)) {
+        return {
+          valid: false,
+          error: `Conversation folder cannot be inside the Attachment folder (${attachmentFolder})`
+        };
+      }
+      break;
+    case "reportFolder":
+      if (isPathInsidePath(normalizedNewPath, conversationFolder)) {
+        return {
+          valid: false,
+          error: `Report folder cannot be inside the Conversation folder (${conversationFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, attachmentFolder)) {
+        return {
+          valid: false,
+          error: `Report folder cannot be inside the Attachment folder (${attachmentFolder})`
+        };
+      }
+      break;
+    case "attachmentFolder":
+      if (isPathInsidePath(normalizedNewPath, conversationFolder)) {
+        return {
+          valid: false,
+          error: `Attachment folder cannot be inside the Conversation folder (${conversationFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, reportFolder)) {
+        return {
+          valid: false,
+          error: `Attachment folder cannot be inside the Report folder (${reportFolder})`
+        };
+      }
+      break;
+  }
+  return { valid: true };
+}
+var init_folder_validation = __esm({
+  "src/utils/folder-validation.ts"() {
+    "use strict";
+    __name(isPathInsidePath, "isPathInsidePath");
+    __name(validateFolderNesting, "validateFolderNesting");
+  }
+});
+
+// src/logger.ts
+var LogLevel, Logger, logger2;
+var init_logger = __esm({
+  "src/logger.ts"() {
+    "use strict";
+    LogLevel = /* @__PURE__ */ ((LogLevel2) => {
+      LogLevel2[LogLevel2["DEBUG"] = 0] = "DEBUG";
+      LogLevel2[LogLevel2["INFO"] = 1] = "INFO";
+      LogLevel2[LogLevel2["WARN"] = 2] = "WARN";
+      LogLevel2[LogLevel2["ERROR"] = 3] = "ERROR";
+      return LogLevel2;
+    })(LogLevel || {});
+    Logger = class {
+      logToConsole(level, message, details) {
+        console.log(`[${LogLevel[level]}] ${message}`);
+      }
+      debug(message, details) {
+        console.debug(message, details || "");
+      }
+      info(message, details) {
+        console.log(message);
+      }
+      warn(message, details) {
+        console.warn(message);
+      }
+      error(message, details) {
+        console.error(message);
+      }
+    };
+    __name(Logger, "Logger");
+    logger2 = new Logger();
+  }
+});
+
+// src/utils.ts
+var utils_exports = {};
+__export(utils_exports, {
+  addPrefix: () => addPrefix,
+  checkConversationLink: () => checkConversationLink,
+  compareTimestampsIgnoringSeconds: () => compareTimestampsIgnoringSeconds,
+  createDatePrefix: () => createDatePrefix,
+  doesFilePathExist: () => doesFilePathExist,
+  ensureFolderExists: () => ensureFolderExists,
+  formatMessageTimestamp: () => formatMessageTimestamp,
+  formatTimestamp: () => formatTimestamp,
+  formatTitle: () => formatTitle,
+  generateConversationFileName: () => generateConversationFileName,
+  generateFileName: () => generateFileName,
+  generateSafeAlias: () => generateSafeAlias,
+  generateUniqueFileName: () => generateUniqueFileName,
+  generateYearMonthFolder: () => generateYearMonthFolder,
+  getFileHash: () => getFileHash,
+  isCustomError: () => isCustomError,
+  isNexusRelated: () => isNexusRelated,
+  isValidMessage: () => isValidMessage,
+  moveAndMergeFolders: () => moveAndMergeFolders,
+  old_getConversationId: () => old_getConversationId,
+  truncateToMinute: () => truncateToMinute
+});
+function truncateToMinute(unixTime) {
+  return Math.floor(unixTime / 60) * 60;
+}
+function compareTimestampsIgnoringSeconds(time1, time2) {
+  return truncateToMinute(time1) - truncateToMinute(time2);
+}
+function formatMessageTimestamp(unixTime, customFormat) {
+  const date = (0, import_obsidian4.moment)(unixTime * 1e3);
+  if (!customFormat || customFormat === "locale") {
+    return `${date.format("L")} at ${date.format("LTS")}`;
+  }
+  const format = MESSAGE_TIMESTAMP_FORMATS[customFormat];
+  return `${date.format(format.dateFormat)}${format.separator}${date.format(format.timeFormat)}`;
+}
+function formatTimestamp(unixTime, format) {
+  const date = (0, import_obsidian4.moment)(unixTime * 1e3);
+  switch (format) {
+    case "prefix":
+      return date.format("YYYYMMDD");
+    case "date":
+      return date.format("L");
+    case "time":
+      return date.format("LTS");
+  }
+}
+function generateYearMonthFolder(unixTime) {
+  const date = new Date(unixTime * 1e3);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}/${month}`;
+}
+function formatTitle(title) {
+  return title.trim() || "Untitled";
+}
+function generateFileName(title) {
+  let fileName = formatTitle(title).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>:"\/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
+  fileName = fileName.replace(/^[^\w\d\s]+/, "");
+  fileName = fileName.replace(/\s+/g, " ").trim();
+  if (!fileName || fileName.length === 0) {
+    fileName = "Untitled";
+  }
+  if (fileName.startsWith(".")) {
+    fileName = fileName.substring(1);
+  }
+  if (!fileName || fileName.length === 0) {
+    fileName = "Untitled";
+  }
+  return fileName;
+}
+function addPrefix(filename, timeStamp, dateFormat) {
+  const timeStampStr = formatTimestamp(timeStamp, dateFormat);
+  if (timeStampStr) {
+    filename = `${timeStampStr} - ${filename}`;
+  }
+  return filename;
+}
+function createDatePrefix(timeStamp, dateFormat) {
+  const date = new Date(timeStamp * 1e3);
+  let prefix = "";
+  if (dateFormat === "YYYY-MM-DD") {
+    prefix = date.toISOString().split("T")[0];
+  } else if (dateFormat === "YYYYMMDD") {
+    prefix = date.toISOString().split("T")[0].replace(/-/g, "");
+  }
+  return prefix;
+}
+async function generateUniqueFileName(filePath, vaultAdapter) {
+  let uniqueFileName = filePath;
+  const baseName = filePath.replace(/\.md$/, "");
+  let counter = 1;
+  while (await vaultAdapter.exists(uniqueFileName)) {
+    uniqueFileName = `${baseName} (${counter++}).md`;
+  }
+  return uniqueFileName;
+}
+async function doesFilePathExist(filePath, vault) {
+  const file = vault.getAbstractFileByPath(filePath);
+  return file !== null;
+}
+async function getFileHash(file) {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function generateConversationFileName(chatTitle, createTime, addDatePrefix, dateFormat) {
+  const date = new Date(createTime * 1e3);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  let fileName = generateFileName(chatTitle);
+  if (addDatePrefix) {
+    const day = String(date.getDate()).padStart(2, "0");
+    let prefix = "";
+    if (dateFormat === "YYYY-MM-DD") {
+      prefix = `${year}-${month}-${day}`;
+    } else if (dateFormat === "YYYYMMDD") {
+      prefix = `${year}${month}${day}`;
+    }
+    fileName = `${prefix} - ${fileName}`;
+  }
+  return fileName;
+}
+function generateSafeAlias(title) {
+  if (!title || typeof title !== "string") {
+    return "Untitled";
+  }
+  const startsWithYamlSpecial = title.startsWith("#") || title.startsWith("&") || title.startsWith("*") || title.startsWith("!") || title.startsWith("|") || title.startsWith(">") || title.startsWith("%") || title.startsWith("@") || title.startsWith("`");
+  let cleanName = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>\/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
+  cleanName = cleanName.replace(/^[^\w\d\s"']+/, "");
+  cleanName = cleanName.replace(/\s+/g, " ").trim();
+  if (!cleanName || cleanName.length === 0) {
+    cleanName = "Untitled";
+  }
+  if (cleanName.startsWith(".")) {
+    cleanName = cleanName.substring(1);
+  }
+  if (!cleanName || cleanName.length === 0) {
+    cleanName = "Untitled";
+  }
+  const needsQuotes = (
+    // YAML reserved words
+    /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(cleanName) || // Contains quotes
+    cleanName.includes('"') || // Contains colon (CRITICAL: prevents YAML key-value interpretation)
+    cleanName.includes(":") || // Contains square brackets or curly braces (YAML flow collections)
+    cleanName.includes("[") || cleanName.includes("]") || cleanName.includes("{") || cleanName.includes("}") || // Started with YAML special characters (before sanitization)
+    startsWithYamlSpecial || // Contains newlines or tabs (safety check)
+    cleanName.includes("\n") || cleanName.includes("\r") || cleanName.includes("	")
+  );
+  if (needsQuotes) {
+    return `'${cleanName.replace(/'/g, "''")}'`;
+  }
+  return cleanName;
+}
+function isValidMessage(message) {
+  return message && typeof message === "object" && message.content && typeof message.content === "object" && Array.isArray(message.content.parts) && message.content.parts.length > 0 && message.content.parts.some(
+    (part) => {
+      if (typeof part === "string" && part.trim() !== "") {
+        return true;
+      }
+      if (typeof part === "object" && part !== null) {
+        if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
+          return true;
+        }
+        if (part.content_type === "text" && part.text && part.text.trim() !== "") {
+          return true;
+        }
+        if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
+          return true;
+        }
+      }
+      return false;
+    }
+  );
+}
+function isCustomError(error) {
+  return error && typeof error.message === "string";
+}
+async function ensureFolderExists(folderPath, vault) {
+  const folders = folderPath.split("/").filter((p) => p.length);
+  let currentPath = "";
+  for (const folder of folders) {
+    currentPath += folder + "/";
+    const currentFolder = vault.getAbstractFileByPath(currentPath);
+    if (!currentFolder) {
+      try {
+        await vault.createFolder(currentPath);
+      } catch (error) {
+        if (error.message !== "Folder already exists.") {
+          logger3.error(
+            `Failed to create folder: ${currentPath}`,
+            error.message
+          );
+          return {
+            success: false,
+            error: `Failed to create folder: ${currentPath}. Reason: ${error.message}`
+          };
+        }
+      }
+    }
+  }
+  return { success: true };
+}
+async function checkConversationLink(conversationId, provider = "chatgpt") {
+  let url;
+  switch (provider) {
+    case "chatgpt":
+      url = `https://chatgpt.com/c/${conversationId}`;
+      break;
+    case "claude":
+      url = `https://claude.ai/chat/${conversationId}`;
+      break;
+    default:
+      logger3.error(`Unknown provider for link checking: ${provider}`);
+      return false;
+  }
+  try {
+    const response = await (0, import_obsidian5.requestUrl)({
+      url,
+      method: "HEAD"
+    });
+    return response.status >= 200 && response.status < 300;
+  } catch (error) {
+    logger3.error(`Error fetching ${url}:`, error);
+    return false;
+  }
+}
+function old_getConversationId(app) {
+  var _a;
+  const activeFile = app.workspace.getActiveFile();
+  if (activeFile) {
+    const frontmatter = (_a = app.metadataCache.getFileCache(activeFile)) == null ? void 0 : _a.frontmatter;
+    return frontmatter == null ? void 0 : frontmatter.conversation_id;
+  }
+  return void 0;
+}
+function isNexusRelated(file, app) {
+  var _a;
+  const frontmatter = (_a = app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+  return (frontmatter == null ? void 0 : frontmatter.nexus) === "nexus-ai-chat-importer";
+}
+async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
+  let moved = 0;
+  let skipped = 0;
+  let errors = 0;
+  const errorDetails = [];
+  const foldersToDelete = [];
+  let totalFiles = 0;
+  let processedFiles = 0;
+  function countFiles(folder) {
+    let count = 0;
+    for (const child of folder.children) {
+      if (child instanceof import_obsidian4.TFolder) {
+        count += countFiles(child);
+      } else {
+        count++;
+      }
+    }
+    return count;
+  }
+  __name(countFiles, "countFiles");
+  totalFiles = countFiles(oldFolder);
+  async function moveRecursive(sourceFolder, destPath) {
+    var _a;
+    try {
+      await vault.createFolder(destPath);
+    } catch (error) {
+      if (!((_a = error.message) == null ? void 0 : _a.includes("Folder already exists"))) {
+        throw error;
+      }
+    }
+    foldersToDelete.push(sourceFolder);
+    for (const child of [...sourceFolder.children]) {
+      const childNewPath = `${destPath}/${child.name}`;
+      if (child instanceof import_obsidian4.TFolder) {
+        await moveRecursive(child, childNewPath);
+      } else {
+        try {
+          const exists = await vault.adapter.exists(childNewPath);
+          if (exists) {
+            skipped++;
+            processedFiles++;
+            if (onProgress) {
+              onProgress(processedFiles, totalFiles);
+            }
+            continue;
+          }
+          await vault.rename(child, childNewPath);
+          moved++;
+          processedFiles++;
+          if (onProgress) {
+            onProgress(processedFiles, totalFiles);
+          }
+        } catch (error) {
+          const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
+          logger3.error(`[moveAndMergeFolders] ${errorMsg}`);
+          errorDetails.push(errorMsg);
+          errors++;
+          processedFiles++;
+          if (onProgress) {
+            onProgress(processedFiles, totalFiles);
+          }
+        }
+      }
+    }
+  }
+  __name(moveRecursive, "moveRecursive");
+  try {
+    await moveRecursive(oldFolder, newPath);
+    for (const folder of foldersToDelete.reverse()) {
+      try {
+        const exists = await vault.adapter.exists(folder.path);
+        if (!exists) {
+          continue;
+        }
+        const folderContents = await vault.adapter.list(folder.path);
+        const visibleFiles = folderContents.files.filter((f) => {
+          const fileName = f.split("/").pop() || "";
+          return !fileName.startsWith(".");
+        });
+        const isEmpty = visibleFiles.length === 0 && folderContents.folders.length === 0;
+        if (isEmpty) {
+          await vault.adapter.rmdir(folder.path, true);
+        } else {
+          logger3.warn(`[moveAndMergeFolders] \u26A0\uFE0F Folder not empty, skipping deletion: ${folder.path} (${visibleFiles.length} files, ${folderContents.folders.length} folders)`);
+        }
+      } catch (error) {
+        const errorMsg = error.message || String(error);
+        if (!errorMsg.includes("does not exist") && !errorMsg.includes("ENOENT")) {
+          logger3.warn(`[moveAndMergeFolders] \u274C Could not delete folder ${folder.path}: ${errorMsg}`);
+        }
+      }
+    }
+    let currentFolder = oldFolder.parent;
+    while (currentFolder && currentFolder.path !== "/") {
+      try {
+        const exists = await vault.adapter.exists(currentFolder.path);
+        if (!exists) {
+          break;
+        }
+        const folderContents = await vault.adapter.list(currentFolder.path);
+        const visibleFiles = folderContents.files.filter((f) => {
+          const fileName = f.split("/").pop() || "";
+          return !fileName.startsWith(".");
+        });
+        const isEmpty = visibleFiles.length === 0 && folderContents.folders.length === 0;
+        if (isEmpty) {
+          await vault.adapter.rmdir(currentFolder.path, true);
+          currentFolder = currentFolder.parent;
+        } else {
+          break;
+        }
+      } catch (error) {
+        break;
+      }
+    }
+    return {
+      success: errors === 0,
+      moved,
+      skipped,
+      errors,
+      errorDetails: errorDetails.length > 0 ? errorDetails : void 0
+    };
+  } catch (error) {
+    logger3.error(`Failed to merge folders:`, error);
+    return {
+      success: false,
+      moved,
+      skipped,
+      errors: errors + 1,
+      errorDetails: [`Critical error: ${error.message || String(error)}`]
+    };
+  }
+}
+var import_obsidian4, import_obsidian5, logger3;
+var init_utils = __esm({
+  "src/utils.ts"() {
+    "use strict";
+    import_obsidian4 = require("obsidian");
+    init_logger();
+    import_obsidian5 = require("obsidian");
+    init_constants();
+    logger3 = new Logger();
+    __name(truncateToMinute, "truncateToMinute");
+    __name(compareTimestampsIgnoringSeconds, "compareTimestampsIgnoringSeconds");
+    __name(formatMessageTimestamp, "formatMessageTimestamp");
+    __name(formatTimestamp, "formatTimestamp");
+    __name(generateYearMonthFolder, "generateYearMonthFolder");
+    __name(formatTitle, "formatTitle");
+    __name(generateFileName, "generateFileName");
+    __name(addPrefix, "addPrefix");
+    __name(createDatePrefix, "createDatePrefix");
+    __name(generateUniqueFileName, "generateUniqueFileName");
+    __name(doesFilePathExist, "doesFilePathExist");
+    __name(getFileHash, "getFileHash");
+    __name(generateConversationFileName, "generateConversationFileName");
+    __name(generateSafeAlias, "generateSafeAlias");
+    __name(isValidMessage, "isValidMessage");
+    __name(isCustomError, "isCustomError");
+    __name(ensureFolderExists, "ensureFolderExists");
+    __name(checkConversationLink, "checkConversationLink");
+    __name(old_getConversationId, "old_getConversationId");
+    __name(isNexusRelated, "isNexusRelated");
+    __name(moveAndMergeFolders, "moveAndMergeFolders");
+  }
+});
+
+// src/services/link-update-service.ts
+var link_update_service_exports = {};
+__export(link_update_service_exports, {
+  LinkUpdateService: () => LinkUpdateService
+});
+var LinkUpdateService;
+var init_link_update_service = __esm({
+  "src/services/link-update-service.ts"() {
+    "use strict";
+    LinkUpdateService = class {
+      constructor(plugin) {
+        this.plugin = plugin;
+      }
+      /**
+       * Update attachment links when attachment folder path changes
+       */
+      async updateAttachmentLinks(oldAttachmentPath, newAttachmentPath, progressCallback) {
+        const stats = {
+          conversationsScanned: 0,
+          reportsScanned: 0,
+          attachmentLinksUpdated: 0,
+          conversationLinksUpdated: 0,
+          filesModified: 0,
+          errors: 0
+        };
+        try {
+          const conversationFiles = await this.getConversationFiles();
+          stats.conversationsScanned = conversationFiles.length;
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "scanning",
+            current: 0,
+            total: conversationFiles.length,
+            detail: `Found ${conversationFiles.length} conversations to scan`
+          });
+          const batchSize = 10;
+          for (let i = 0; i < conversationFiles.length; i += batchSize) {
+            const batch = conversationFiles.slice(i, i + batchSize);
+            progressCallback == null ? void 0 : progressCallback({
+              phase: "updating-attachments",
+              current: i,
+              total: conversationFiles.length,
+              detail: `Updating attachment links: ${i}/${conversationFiles.length} files processed`
+            });
+            for (const file of batch) {
+              try {
+                const result = await this.updateAttachmentLinksInFile(file, oldAttachmentPath, newAttachmentPath);
+                stats.attachmentLinksUpdated += result.linksUpdated;
+                if (result.fileModified) {
+                  stats.filesModified++;
+                }
+              } catch (error) {
+                stats.errors++;
+                this.plugin.logger.error(`Error updating attachment links in ${file.path}:`, error);
+              }
+            }
+            if (i + batchSize < conversationFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "complete",
+            current: conversationFiles.length,
+            total: conversationFiles.length,
+            detail: `Updated ${stats.attachmentLinksUpdated} attachment links in ${stats.filesModified} files`
+          });
+          return stats;
+        } catch (error) {
+          this.plugin.logger.error("Error updating attachment links:", error);
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "error",
+            current: 0,
+            total: 0,
+            detail: `Error: ${error.message}`
+          });
+          throw error;
+        }
+      }
+      /**
+       * Update conversation links when conversation folder path changes
+       */
+      async updateConversationLinks(oldConversationPath, newConversationPath, progressCallback) {
+        const stats = {
+          conversationsScanned: 0,
+          reportsScanned: 0,
+          attachmentLinksUpdated: 0,
+          conversationLinksUpdated: 0,
+          filesModified: 0,
+          errors: 0
+        };
+        try {
+          const reportFiles = await this.getReportFiles();
+          const artifactFiles = await this.getClaudeArtifactFiles();
+          const totalFiles = reportFiles.length + artifactFiles.length;
+          stats.reportsScanned = reportFiles.length;
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "scanning",
+            current: 0,
+            total: totalFiles,
+            detail: `Found ${reportFiles.length} reports and ${artifactFiles.length} artifacts to scan`
+          });
+          const batchSize = 5;
+          let processedCount = 0;
+          for (let i = 0; i < reportFiles.length; i += batchSize) {
+            const batch = reportFiles.slice(i, i + batchSize);
+            progressCallback == null ? void 0 : progressCallback({
+              phase: "updating-conversations",
+              current: processedCount,
+              total: totalFiles,
+              detail: `Updating conversation links in reports: ${i}/${reportFiles.length} processed`
+            });
+            for (const file of batch) {
+              try {
+                const result = await this.updateConversationLinksInFile(file, oldConversationPath, newConversationPath);
+                stats.conversationLinksUpdated += result.linksUpdated;
+                if (result.fileModified) {
+                  stats.filesModified++;
+                }
+              } catch (error) {
+                stats.errors++;
+                this.plugin.logger.error(`Error updating conversation links in ${file.path}:`, error);
+              }
+            }
+            processedCount += batch.length;
+            if (i + batchSize < reportFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          for (let i = 0; i < artifactFiles.length; i += batchSize) {
+            const batch = artifactFiles.slice(i, i + batchSize);
+            progressCallback == null ? void 0 : progressCallback({
+              phase: "updating-artifacts",
+              current: processedCount,
+              total: totalFiles,
+              detail: `Updating conversation links in artifacts: ${i}/${artifactFiles.length} processed`
+            });
+            for (const file of batch) {
+              try {
+                const result = await this.updateConversationLinkInArtifactFrontmatter(file, oldConversationPath, newConversationPath);
+                if (result.linksUpdated > 0) {
+                  stats.conversationLinksUpdated += result.linksUpdated;
+                }
+                if (result.fileModified) {
+                  stats.filesModified++;
+                }
+              } catch (error) {
+                stats.errors++;
+                this.plugin.logger.error(`Error updating conversation link in artifact ${file.path}:`, error);
+              }
+            }
+            processedCount += batch.length;
+            if (i + batchSize < artifactFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "complete",
+            current: totalFiles,
+            total: totalFiles,
+            detail: `Updated ${stats.conversationLinksUpdated} conversation links in ${stats.filesModified} files`
+          });
+          return stats;
+        } catch (error) {
+          this.plugin.logger.error("Error updating conversation links:", error);
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "error",
+            current: 0,
+            total: 0,
+            detail: `Error: ${error.message}`
+          });
+          throw error;
+        }
+      }
+      /**
+       * Estimate time for link updates based on file count
+       */
+      async estimateUpdateTime(folderType) {
+        let fileCount = 0;
+        if (folderType === "attachments") {
+          const conversationFiles = await this.getConversationFiles();
+          fileCount = conversationFiles.length;
+        } else {
+          const reportFiles = await this.getReportFiles();
+          fileCount = reportFiles.length;
+        }
+        const estimatedSeconds = Math.max(2, Math.ceil(fileCount * 0.1));
+        return { fileCount, estimatedSeconds };
+      }
+      /**
+       * Get all conversation files from the vault
+       */
+      async getConversationFiles() {
+        const conversationFolder = this.plugin.settings.conversationFolder;
+        const allFiles = this.plugin.app.vault.getMarkdownFiles();
+        return allFiles.filter((file) => {
+          if (!file.path.startsWith(conversationFolder))
+            return false;
+          const relativePath = file.path.substring(conversationFolder.length + 1);
+          if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+            return false;
+          }
+          return true;
+        });
+      }
+      /**
+       * Get all report files from the vault
+       */
+      async getReportFiles() {
+        const reportFolder = this.plugin.settings.reportFolder;
+        const allFiles = this.plugin.app.vault.getMarkdownFiles();
+        return allFiles.filter((file) => file.path.startsWith(reportFolder));
+      }
+      /**
+       * Get all Claude artifact files from the vault
+       */
+      async getClaudeArtifactFiles() {
+        const attachmentFolder = this.plugin.settings.attachmentFolder;
+        const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+        const allFiles = this.plugin.app.vault.getMarkdownFiles();
+        return allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+      }
+      /**
+       * Update attachment links in a single file
+       */
+      async updateAttachmentLinksInFile(file, oldAttachmentPath, newAttachmentPath) {
+        const content = await this.plugin.app.vault.read(file);
+        let updatedContent = content;
+        let linksUpdated = 0;
+        const normalizedOldPath = oldAttachmentPath.replace(/\/+$/, "");
+        const normalizedNewPath = newAttachmentPath.replace(/\/+$/, "");
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
+        const imagePattern = new RegExp(`(!\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, "g");
+        updatedContent = updatedContent.replace(imagePattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${normalizedNewPath}${suffix}`;
+        });
+        const linkPattern = new RegExp(`(\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, "g");
+        updatedContent = updatedContent.replace(linkPattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${normalizedNewPath}${suffix}`;
+        });
+        const obsidianImagePattern = new RegExp(`(!\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
+        updatedContent = updatedContent.replace(obsidianImagePattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${normalizedNewPath}${suffix}`;
+        });
+        const obsidianLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
+        updatedContent = updatedContent.replace(obsidianLinkPattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${normalizedNewPath}${suffix}`;
+        });
+        const fileModified = content !== updatedContent;
+        if (fileModified) {
+          await this.plugin.app.vault.modify(file, updatedContent);
+        }
+        return { linksUpdated, fileModified };
+      }
+      /**
+       * Update conversation links in a single report file
+       */
+      async updateConversationLinksInFile(file, oldConversationPath, newConversationPath) {
+        const content = await this.plugin.app.vault.read(file);
+        let updatedContent = content;
+        let linksUpdated = 0;
+        const normalizedOldPath = oldConversationPath.replace(/\/+$/, "");
+        const normalizedNewPath = newConversationPath.replace(/\/+$/, "");
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
+        const linkWithAliasPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`, "g");
+        updatedContent = updatedContent.replace(linkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
+          linksUpdated++;
+          return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
+        });
+        const simpleLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
+        updatedContent = updatedContent.replace(simpleLinkPattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${normalizedNewPath}${suffix}`;
+        });
+        const fileModified = content !== updatedContent;
+        if (fileModified) {
+          await this.plugin.app.vault.modify(file, updatedContent);
+        }
+        return { linksUpdated, fileModified };
+      }
+      /**
+       * Update conversation links in Claude artifact (both frontmatter and body)
+       */
+      async updateConversationLinkInArtifactFrontmatter(file, oldConversationPath, newConversationPath) {
+        const content = await this.plugin.app.vault.read(file);
+        let updatedContent = content;
+        let linksUpdated = 0;
+        const normalizedOldPath = oldConversationPath.replace(/\/+$/, "");
+        const normalizedNewPath = newConversationPath.replace(/\/+$/, "");
+        const escapedOldPath = this.escapeRegExp(normalizedOldPath);
+        const frontmatterLinkPattern = new RegExp(
+          `(conversation_link:\\s*"\\[\\[)${escapedOldPath}(/[^\\]]+)(\\]\\]")`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${normalizedNewPath}${pathSuffix}${suffix}`;
+        });
+        const bodyLinkWithAliasPattern = new RegExp(
+          `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(bodyLinkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
+          linksUpdated++;
+          return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
+        });
+        const bodyLinkSimplePattern = new RegExp(
+          `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(bodyLinkSimplePattern, (match, prefix, suffix) => {
+          linksUpdated++;
+          return `${prefix}${newConversationPath}${suffix}`;
+        });
+        const fileModified = content !== updatedContent;
+        if (fileModified) {
+          await this.plugin.app.vault.modify(file, updatedContent);
+        }
+        return { linksUpdated, fileModified };
+      }
+      /**
+       * Escape special regex characters
+       */
+      escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+    };
+    __name(LinkUpdateService, "LinkUpdateService");
+  }
+});
+
+// src/upgrade/utils/progress-modal.ts
+var progress_modal_exports = {};
+__export(progress_modal_exports, {
+  ProgressModal: () => UpgradeProgressModal,
+  UpgradeProgressModal: () => UpgradeProgressModal
+});
+var import_obsidian6, UpgradeProgressModal;
+var init_progress_modal = __esm({
+  "src/upgrade/utils/progress-modal.ts"() {
+    "use strict";
+    import_obsidian6 = require("obsidian");
+    UpgradeProgressModal = class extends import_obsidian6.Modal {
+      constructor(app, title, totalSteps = 100) {
+        super(app);
+        this.currentStep = 0;
+        this.title = title;
+        this.totalSteps = totalSteps;
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.addClass("nexus-ai-chat-importer-modal");
+        this.modalTitleEl = contentEl.createEl("h2", {
+          text: this.title,
+          cls: "modal-title"
+        });
+        const contentContainer = contentEl.createDiv({ cls: "modal-content" });
+        this.stepEl = contentContainer.createEl("div", { cls: "step-counter" });
+        this.stepEl.style.cssText = `
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 500;
+            color: var(--text-normal);
+        `;
+        const progressContainer = contentContainer.createDiv({ cls: "progress-container" });
+        progressContainer.style.cssText = `
+            background: var(--background-secondary);
+            border-radius: 8px;
+            padding: 4px;
+            margin: 20px 0;
+            border: 1px solid var(--background-modifier-border);
+        `;
+        this.progressBarEl = progressContainer.createDiv({ cls: "progress-bar" });
+        this.progressBarEl.style.cssText = `
+            background: var(--interactive-accent);
+            height: 20px;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        `;
+        this.statusEl = contentContainer.createEl("div", { cls: "status-text" });
+        this.statusEl.style.cssText = `
+            text-align: center;
+            margin: 15px 0;
+            font-weight: 500;
+            color: var(--text-normal);
+        `;
+        this.detailEl = contentContainer.createEl("div", { cls: "detail-text" });
+        this.detailEl.style.cssText = `
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9em;
+            min-height: 1.2em;
+        `;
+        this.updateProgress({ title: "Starting...", progress: 0 });
+      }
+      /**
+       * Update progress with step information
+       */
+      updateProgress(step) {
+        if (step.progress !== void 0) {
+          const percentage = Math.min(100, Math.max(0, step.progress));
+          this.progressBarEl.style.width = `${percentage}%`;
+          this.stepEl.textContent = `Progress: ${Math.round(percentage)}%`;
+        } else {
+          this.currentStep++;
+          const percentage = Math.round(this.currentStep / this.totalSteps * 100);
+          this.progressBarEl.style.width = `${percentage}%`;
+          this.stepEl.textContent = `Step ${this.currentStep}/${this.totalSteps}`;
+        }
+        this.statusEl.textContent = step.title;
+        this.detailEl.textContent = step.detail || "";
+      }
+      /**
+       * Update with specific step number
+       */
+      updateStep(stepNumber, step) {
+        this.currentStep = stepNumber;
+        const percentage = Math.round(stepNumber / this.totalSteps * 100);
+        this.progressBarEl.style.width = `${percentage}%`;
+        this.stepEl.textContent = `Step ${stepNumber}/${this.totalSteps}`;
+        this.statusEl.textContent = step.title;
+        this.detailEl.textContent = step.detail || "";
+      }
+      /**
+       * Show completion state
+       */
+      showComplete(message = "Completed successfully") {
+        this.progressBarEl.style.width = "100%";
+        this.stepEl.textContent = "Complete";
+        this.statusEl.textContent = message;
+        this.detailEl.textContent = "";
+        this.progressBarEl.style.background = "var(--text-success)";
+      }
+      /**
+       * Show error state
+       */
+      showError(message = "An error occurred") {
+        this.statusEl.textContent = message;
+        this.detailEl.textContent = "";
+        this.progressBarEl.style.background = "var(--text-error)";
+      }
+      /**
+       * Close after delay
+       */
+      closeAfterDelay(delay = 2e3) {
+        setTimeout(() => this.close(), delay);
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+    __name(UpgradeProgressModal, "UpgradeProgressModal");
+  }
+});
+
+// src/dialogs/enhanced-folder-migration-dialog.ts
+var enhanced_folder_migration_dialog_exports = {};
+__export(enhanced_folder_migration_dialog_exports, {
+  EnhancedFolderMigrationDialog: () => EnhancedFolderMigrationDialog
+});
+var import_obsidian7, EnhancedFolderMigrationDialog;
+var init_enhanced_folder_migration_dialog = __esm({
+  "src/dialogs/enhanced-folder-migration-dialog.ts"() {
+    "use strict";
+    import_obsidian7 = require("obsidian");
+    EnhancedFolderMigrationDialog = class extends import_obsidian7.Modal {
+      constructor(plugin, oldPath, newPath, folderType, onComplete) {
+        super(plugin.app);
+        this.estimatedTime = 0;
+        this.plugin = plugin;
+        this.oldPath = oldPath;
+        this.newPath = newPath;
+        this.folderType = folderType;
+        this.onComplete = onComplete;
+      }
+      async onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        await this.loadEstimates();
+        contentEl.createEl("h2", {
+          text: "Move Existing Files?",
+          cls: "nexus-migration-title"
+        });
+        const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
+        messageContainer.createEl("p", {
+          text: `You are changing the ${this.folderType} folder location:`
+        });
+        const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
+        pathContainer.createEl("div", {
+          text: `From: ${this.oldPath}`,
+          cls: "nexus-migration-path-old"
+        });
+        pathContainer.createEl("div", {
+          text: `To: ${this.newPath}`,
+          cls: "nexus-migration-path-new"
+        });
+        messageContainer.createEl("p", {
+          text: "Do you want to move existing files to the new location?"
+        });
+        if (this.shouldShowLinkUpdateInfo()) {
+          this.createLinkUpdateInfo(contentEl);
+        }
+        const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
+        warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
+        warningBox.createEl("p", {
+          text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
+        });
+        this.createButtons(contentEl);
+        this.addStyles();
+      }
+      async loadEstimates() {
+        try {
+          const { LinkUpdateService: LinkUpdateService2 } = await Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports));
+          const linkUpdateService = new LinkUpdateService2(this.plugin);
+          if (this.folderType === "attachments") {
+            const estimate = await linkUpdateService.estimateUpdateTime("attachments");
+            this.estimatedTime = estimate.estimatedSeconds;
+          } else if (this.folderType === "conversations") {
+            const estimate = await linkUpdateService.estimateUpdateTime("conversations");
+            this.estimatedTime = estimate.estimatedSeconds;
+          }
+        } catch (error) {
+          this.plugin.logger.warn("Failed to load link update estimates:", error);
+        }
+      }
+      shouldShowLinkUpdateInfo() {
+        return this.folderType === "attachments" || this.folderType === "conversations";
+      }
+      createLinkUpdateInfo(contentEl) {
+        const linkUpdateBox = contentEl.createDiv({ cls: "nexus-link-update-info" });
+        linkUpdateBox.createEl("strong", { text: "\u{1F517} Link Updates:" });
+        const infoText = linkUpdateBox.createDiv();
+        if (this.folderType === "attachments") {
+          infoText.createEl("p", {
+            text: "Moving attachments will also update all conversation notes that reference them."
+          });
+        } else if (this.folderType === "conversations") {
+          infoText.createEl("p", {
+            text: "Moving conversations will also update all reports and attachments that reference them."
+          });
+        }
+        if (this.estimatedTime > 0) {
+          const timeText = this.estimatedTime < 60 ? `~${this.estimatedTime} seconds` : `~${Math.ceil(this.estimatedTime / 60)} minute(s)`;
+          infoText.createEl("p", {
+            text: `Estimated time: ${timeText}`,
+            cls: "nexus-time-estimate"
+          });
+        }
+      }
+      createButtons(contentEl) {
+        const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
+        const cancelButton = buttonContainer.createEl("button", {
+          text: "Cancel",
+          cls: "nexus-migration-button-cancel"
+        });
+        cancelButton.addEventListener("click", async () => {
+          this.close();
+          try {
+            await this.onComplete("cancel");
+            new import_obsidian7.Notice(`Change cancelled. Folder setting reverted.`);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            new import_obsidian7.Notice(`Failed to revert setting: ${errorMessage}`);
+          }
+        });
+        const keepButton = buttonContainer.createEl("button", {
+          text: "No, keep files in old location",
+          cls: "nexus-migration-button-keep"
+        });
+        keepButton.addEventListener("click", async () => {
+          this.close();
+          try {
+            await this.onComplete("keep");
+            new import_obsidian7.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            new import_obsidian7.Notice(`Failed to update setting: ${errorMessage}`);
+          }
+        });
+        const moveButton = buttonContainer.createEl("button", {
+          text: this.shouldShowLinkUpdateInfo() ? "Yes, move files and update links" : "Yes, move files",
+          cls: "mod-cta nexus-migration-button-move"
+        });
+        moveButton.addEventListener("click", async () => {
+          this.close();
+          if (this.shouldShowLinkUpdateInfo()) {
+            await this.handleMoveWithLinkUpdates();
+          } else {
+            try {
+              await this.onComplete("move");
+              new import_obsidian7.Notice(`Files moved to ${this.newPath}`);
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              new import_obsidian7.Notice(`Failed to move files: ${errorMessage}`);
+            }
+          }
+        });
+      }
+      async handleMoveWithLinkUpdates() {
+        let progressModal = null;
+        try {
+          const [{ UpgradeProgressModal: UpgradeProgressModal2 }, { LinkUpdateService: LinkUpdateService2 }, { moveAndMergeFolders: moveAndMergeFolders2 }] = await Promise.all([
+            Promise.resolve().then(() => (init_progress_modal(), progress_modal_exports)),
+            Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports)),
+            Promise.resolve().then(() => (init_utils(), utils_exports))
+          ]);
+          progressModal = new UpgradeProgressModal2(
+            this.app,
+            `Moving ${this.folderType} and updating links`,
+            100
+          );
+          progressModal.open();
+          progressModal.updateProgress({
+            title: "Moving files...",
+            detail: `Moving from ${this.oldPath} to ${this.newPath}`,
+            progress: 5
+          });
+          const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
+          if (!oldFolder || !(oldFolder instanceof import_obsidian7.TFolder)) {
+            throw new Error(`Source folder not found: ${this.oldPath}`);
+          }
+          const moveResult = await moveAndMergeFolders2(
+            oldFolder,
+            this.newPath,
+            this.app.vault,
+            (current, total) => {
+              const percentage = 5 + Math.round(current / total * 25);
+              progressModal.updateProgress({
+                title: "Moving files...",
+                detail: `${current} / ${total} files processed`,
+                progress: percentage
+              });
+            }
+          );
+          progressModal.updateProgress({
+            title: "Files moved",
+            detail: `${moveResult.moved} files moved, ${moveResult.skipped} skipped. Preparing to update links...`,
+            progress: 30
+          });
+          const linkUpdateService = new LinkUpdateService2(this.plugin);
+          let stats;
+          if (this.folderType === "attachments") {
+            stats = await linkUpdateService.updateAttachmentLinks(
+              this.oldPath,
+              this.newPath,
+              (progress) => {
+                const percentage = 30 + Math.round(progress.current / progress.total * 70);
+                progressModal.updateProgress({
+                  title: "Updating attachment links...",
+                  detail: progress.detail,
+                  progress: percentage
+                });
+              }
+            );
+          } else if (this.folderType === "conversations") {
+            stats = await linkUpdateService.updateConversationLinks(
+              this.oldPath,
+              this.newPath,
+              (progress) => {
+                const percentage = 30 + Math.round(progress.current / progress.total * 70);
+                let title = "Updating conversation links...";
+                if (progress.phase === "updating-conversations") {
+                  title = "Updating links in reports...";
+                } else if (progress.phase === "updating-artifacts") {
+                  title = "Updating links in artifacts...";
+                }
+                progressModal.updateProgress({
+                  title,
+                  detail: progress.detail,
+                  progress: percentage
+                });
+              }
+            );
+          }
+          const linksUpdated = this.folderType === "attachments" ? (stats == null ? void 0 : stats.attachmentLinksUpdated) || 0 : (stats == null ? void 0 : stats.conversationLinksUpdated) || 0;
+          progressModal.showComplete(
+            `${moveResult.moved} files moved. ${linksUpdated} links updated successfully`
+          );
+          progressModal.closeAfterDelay(3e3);
+          new import_obsidian7.Notice(`\u2705 ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
+          await this.onComplete("move");
+        } catch (error) {
+          if (progressModal) {
+            progressModal.close();
+          }
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${errorMessage}`);
+        }
+      }
+      addStyles() {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = `
+            .nexus-migration-title {
+                margin-bottom: 1em;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-migration-paths {
+                background-color: var(--background-secondary);
+                padding: 1em;
+                margin: 1em 0;
+                border-radius: 4px;
+                font-family: var(--font-monospace);
+                font-size: 0.9em;
+            }
+
+            .nexus-migration-path-old {
+                color: var(--text-muted);
+                margin-bottom: 0.5em;
+            }
+
+            .nexus-migration-path-new {
+                color: var(--interactive-accent);
+                font-weight: 500;
+            }
+
+            .nexus-link-update-info {
+                background-color: var(--background-modifier-success-hover);
+                border-left: 4px solid var(--text-success);
+                padding: 1em;
+                margin-bottom: 1em;
+                border-radius: 4px;
+            }
+
+            .nexus-link-update-info strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--text-success);
+            }
+
+            .nexus-link-update-info p {
+                margin: 0.3em 0;
+                color: var(--text-normal);
+            }
+
+            .nexus-time-estimate {
+                font-style: italic;
+                color: var(--text-muted) !important;
+                font-size: 0.9em;
+            }
+
+            .nexus-migration-warning {
+                background-color: var(--background-modifier-error-hover);
+                border-left: 4px solid var(--text-error);
+                padding: 1em;
+                margin-bottom: 1.5em;
+                border-radius: 4px;
+            }
+
+            .nexus-migration-warning strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--text-error);
+            }
+
+            .nexus-migration-warning p {
+                margin: 0;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-buttons {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .nexus-migration-buttons button {
+                padding: 8px 16px;
+                flex: 1;
+            }
+
+            .nexus-migration-button-cancel {
+                background-color: var(--background-modifier-border);
+                color: var(--text-muted);
+            }
+
+            .nexus-migration-button-keep {
+                background-color: var(--background-modifier-border);
+            }
+
+            .nexus-migration-button-move {
+                /* Uses mod-cta class for primary styling */
+            }
+        `;
+        document.head.appendChild(styleEl);
+      }
+      showErrorDialog(title, message) {
+        const modal = new import_obsidian7.Modal(this.app);
+        modal.titleEl.setText(title);
+        modal.contentEl.createEl("p", {
+          text: message,
+          cls: "nexus-error-message"
+        });
+        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.justifyContent = "flex-end";
+        buttonContainer.style.marginTop = "1em";
+        const okButton = buttonContainer.createEl("button", {
+          text: "OK",
+          cls: "mod-cta"
+        });
+        okButton.addEventListener("click", () => modal.close());
+        modal.open();
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+    __name(EnhancedFolderMigrationDialog, "EnhancedFolderMigrationDialog");
+  }
+});
+
 // node_modules/jszip/dist/jszip.min.js
 var require_jszip_min = __commonJS({
   "node_modules/jszip/dist/jszip.min.js"(exports, module2) {
@@ -50,7 +1804,7 @@ var require_jszip_min = __commonJS({
         ("undefined" != typeof window ? window : "undefined" != typeof global ? global : "undefined" != typeof self ? self : this).JSZip = e();
       }
     }(function() {
-      return function s(a, o, h) {
+      return (/* @__PURE__ */ __name(function s(a, o, h) {
         function u(r, e2) {
           if (!o[r]) {
             if (!a[r]) {
@@ -70,10 +1824,11 @@ var require_jszip_min = __commonJS({
           }
           return o[r].exports;
         }
+        __name(u, "u");
         for (var l = "function" == typeof require && require, e = 0; e < h.length; e++)
           u(h[e]);
         return u;
-      }({ 1: [function(e, t, r) {
+      }, "s"))({ 1: [function(e, t, r) {
         "use strict";
         var d = e("./utils"), c = e("./support"), p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
         r.encode = function(e2) {
@@ -97,6 +1852,7 @@ var require_jszip_min = __commonJS({
         function o(e2, t2, r2, n2, i2) {
           this.compressedSize = e2, this.uncompressedSize = t2, this.crc32 = r2, this.compression = n2, this.compressedContent = i2;
         }
+        __name(o, "o");
         o.prototype = { getContentWorker: function() {
           var e2 = new i(n.Promise.resolve(this.compressedContent)).pipe(this.compression.uncompressWorker()).pipe(new a("data_length")), t2 = this;
           return e2.on("end", function() {
@@ -156,6 +1912,7 @@ var require_jszip_min = __commonJS({
         function h(e2, t2) {
           a.call(this, "FlateWorker/" + e2), this._pako = null, this._pakoAction = e2, this._pakoOptions = t2, this.meta = {};
         }
+        __name(h, "h");
         r.magic = "\b\0", s.inherits(h, a), h.prototype.processChunk = function(e2) {
           this.meta = e2.meta, null === this._pako && this._createPako(), this._pako.push(s.transformTo(o, e2.data), false);
         }, h.prototype.flush = function() {
@@ -181,6 +1938,7 @@ var require_jszip_min = __commonJS({
             n2 += String.fromCharCode(255 & e2), e2 >>>= 8;
           return n2;
         }
+        __name(A, "A");
         function n(e2, t2, r2, n2, i2, s2) {
           var a, o, h = e2.file, u = e2.compression, l = s2 !== O.utf8encode, f = I.transformTo("string", s2(h.name)), c = I.transformTo("string", O.utf8encode(h.name)), d = h.comment, p = I.transformTo("string", s2(d)), m = I.transformTo("string", O.utf8encode(d)), _ = c.length !== h.name.length, g = m.length !== d.length, b = "", v = "", y = "", w = h.dir, k = h.date, x = { crc32: 0, compressedSize: 0, uncompressedSize: 0 };
           t2 && !r2 || (x.crc32 = e2.crc32, x.compressedSize = e2.compressedSize, x.uncompressedSize = e2.uncompressedSize);
@@ -196,10 +1954,12 @@ var require_jszip_min = __commonJS({
           var E = "";
           return E += "\n\0", E += A(S, 2), E += u.magic, E += A(a, 2), E += A(o, 2), E += A(x.crc32, 4), E += A(x.compressedSize, 4), E += A(x.uncompressedSize, 4), E += A(f.length, 2), E += A(b.length, 2), { fileRecord: R.LOCAL_FILE_HEADER + E + f + b, dirRecord: R.CENTRAL_FILE_HEADER + A(C, 2) + E + A(p.length, 2) + "\0\0\0\0" + A(z, 4) + A(n2, 4) + f + b + p };
         }
+        __name(n, "n");
         var I = e("../utils"), i = e("../stream/GenericWorker"), O = e("../utf8"), B = e("../crc32"), R = e("../signature");
         function s(e2, t2, r2, n2) {
           i.call(this, "ZipFileWorker"), this.bytesWritten = 0, this.zipComment = t2, this.zipPlatform = r2, this.encodeFileName = n2, this.streamFiles = e2, this.accumulate = false, this.contentBuffer = [], this.dirRecords = [], this.currentSourceOffset = 0, this.entriesCount = 0, this.currentFile = null, this._sources = [];
         }
+        __name(s, "s");
         I.inherits(s, i), s.prototype.push = function(e2) {
           var t2 = e2.meta.percent || 0, r2 = this.entriesCount, n2 = this._sources.length;
           this.accumulate ? this.contentBuffer.push(e2) : (this.bytesWritten += e2.data.length, i.prototype.push.call(this, { data: e2.data, meta: { currentFile: this.currentFile, percent: r2 ? (t2 + 100 * (r2 - n2 - 1)) / r2 : 100 } }));
@@ -294,6 +2054,7 @@ var require_jszip_min = __commonJS({
             return e2;
           };
         }
+        __name(n, "n");
         (n.prototype = e("./object")).loadAsync = e("./load"), n.support = e("./support"), n.defaults = e("./defaults"), n.version = "3.10.1", n.loadAsync = function(e2, t2) {
           return new n().loadAsync(e2, t2);
         }, n.external = e("./external"), t.exports = n;
@@ -310,6 +2071,7 @@ var require_jszip_min = __commonJS({
             }).resume();
           });
         }
+        __name(f, "f");
         t.exports = function(e2, o) {
           var h = this;
           return o = u.extend(o || {}, { base64: false, checkCRC32: false, optimizedBinaryString: false, createFolders: false, decodeFileName: n.utf8decode }), l.isNode && l.isStream(e2) ? i.Promise.reject(new Error("JSZip can't accept a stream when loading a zip file.")) : u.prepareContent("the loaded zip file", e2, true, o.optimizedBinaryString, o.base64).then(function(e3) {
@@ -335,6 +2097,7 @@ var require_jszip_min = __commonJS({
         function s(e2, t2) {
           i.call(this, "Nodejs stream input adapter for " + e2), this._upstreamEnded = false, this._bindStream(t2);
         }
+        __name(s, "s");
         n.inherits(s, i), s.prototype._bindStream = function(e2) {
           var t2 = this;
           (this._stream = e2).pause(), e2.on("data", function(e3) {
@@ -363,6 +2126,7 @@ var require_jszip_min = __commonJS({
             n2.push(null);
           });
         }
+        __name(n, "n");
         e("../utils").inherits(n, i), n.prototype._read = function() {
           this._helper.resume();
         }, t.exports = n;
@@ -396,18 +2160,20 @@ var require_jszip_min = __commonJS({
           var h2 = new d(e2, o2, s2);
           this.files[e2] = h2;
         }
-        var i = e("./utf8"), u = e("./utils"), l = e("./stream/GenericWorker"), a = e("./stream/StreamHelper"), f = e("./defaults"), c = e("./compressedObject"), d = e("./zipObject"), o = e("./generate"), p = e("./nodejsUtils"), m = e("./nodejs/NodejsStreamInputAdapter"), _ = function(e2) {
+        __name(s, "s");
+        var i = e("./utf8"), u = e("./utils"), l = e("./stream/GenericWorker"), a = e("./stream/StreamHelper"), f = e("./defaults"), c = e("./compressedObject"), d = e("./zipObject"), o = e("./generate"), p = e("./nodejsUtils"), m = e("./nodejs/NodejsStreamInputAdapter"), _ = /* @__PURE__ */ __name(function(e2) {
           "/" === e2.slice(-1) && (e2 = e2.substring(0, e2.length - 1));
           var t2 = e2.lastIndexOf("/");
           return 0 < t2 ? e2.substring(0, t2) : "";
-        }, g = function(e2) {
+        }, "_"), g = /* @__PURE__ */ __name(function(e2) {
           return "/" !== e2.slice(-1) && (e2 += "/"), e2;
-        }, b = function(e2, t2) {
+        }, "g"), b = /* @__PURE__ */ __name(function(e2, t2) {
           return t2 = void 0 !== t2 ? t2 : f.createFolders, e2 = g(e2), this.files[e2] || s.call(this, e2, null, { dir: true, createFolders: t2 }), this.files[e2];
-        };
+        }, "b");
         function h(e2) {
           return "[object RegExp]" === Object.prototype.toString.call(e2);
         }
+        __name(h, "h");
         var n = { load: function() {
           throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
         }, forEach: function(e2) {
@@ -481,6 +2247,7 @@ var require_jszip_min = __commonJS({
           for (var t2 = 0; t2 < this.data.length; t2++)
             e2[t2] = 255 & e2[t2];
         }
+        __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.byteAt = function(e2) {
           return this.data[this.zero + e2];
         }, i.prototype.lastIndexOfSignature = function(e2) {
@@ -503,6 +2270,7 @@ var require_jszip_min = __commonJS({
         function i(e2) {
           this.data = e2, this.length = e2.length, this.index = 0, this.zero = 0;
         }
+        __name(i, "i");
         i.prototype = { checkOffset: function(e2) {
           this.checkIndex(this.index + e2);
         }, checkIndex: function(e2) {
@@ -533,6 +2301,7 @@ var require_jszip_min = __commonJS({
         function i(e2) {
           n.call(this, e2);
         }
+        __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.readData = function(e2) {
           this.checkOffset(e2);
           var t2 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
@@ -544,6 +2313,7 @@ var require_jszip_min = __commonJS({
         function i(e2) {
           n.call(this, e2);
         }
+        __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.byteAt = function(e2) {
           return this.data.charCodeAt(this.zero + e2);
         }, i.prototype.lastIndexOfSignature = function(e2) {
@@ -561,6 +2331,7 @@ var require_jszip_min = __commonJS({
         function i(e2) {
           n.call(this, e2);
         }
+        __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.readData = function(e2) {
           if (this.checkOffset(e2), 0 === e2)
             return new Uint8Array(0);
@@ -583,6 +2354,7 @@ var require_jszip_min = __commonJS({
         function s(e2) {
           n.call(this, "ConvertWorker to " + e2), this.destType = e2;
         }
+        __name(s, "s");
         i.inherits(s, n), s.prototype.processChunk = function(e2) {
           this.push({ data: i.transformTo(this.destType, e2.data), meta: e2.meta });
         }, t.exports = s;
@@ -592,6 +2364,7 @@ var require_jszip_min = __commonJS({
         function s() {
           n.call(this, "Crc32Probe"), this.withStreamInfo("crc32", 0);
         }
+        __name(s, "s");
         e("../utils").inherits(s, n), s.prototype.processChunk = function(e2) {
           this.streamInfo.crc32 = i(e2.data, this.streamInfo.crc32 || 0), this.push(e2);
         }, t.exports = s;
@@ -601,6 +2374,7 @@ var require_jszip_min = __commonJS({
         function s(e2) {
           i.call(this, "DataLengthProbe for " + e2), this.propName = e2, this.withStreamInfo(e2, 0);
         }
+        __name(s, "s");
         n.inherits(s, i), s.prototype.processChunk = function(e2) {
           if (e2) {
             var t2 = this.streamInfo[this.propName] || 0;
@@ -620,6 +2394,7 @@ var require_jszip_min = __commonJS({
             t2.error(e3);
           });
         }
+        __name(s, "s");
         n.inherits(s, i), s.prototype.cleanUp = function() {
           i.prototype.cleanUp.call(this), this.data = null;
         }, s.prototype.resume = function() {
@@ -650,6 +2425,7 @@ var require_jszip_min = __commonJS({
         function n(e2) {
           this.name = e2 || "default", this.streamInfo = {}, this.generatedError = null, this.extraStreamInfo = {}, this.isPaused = true, this.isFinished = false, this.isLocked = false, this._listeners = { data: [], end: [], error: [] }, this.previous = null;
         }
+        __name(n, "n");
         n.prototype = { push: function(e2) {
           this.emit("data", e2);
         }, end: function() {
@@ -762,6 +2538,7 @@ var require_jszip_min = __commonJS({
             }).resume();
           });
         }
+        __name(l, "l");
         function f(e2, t2, r2) {
           var n2 = t2;
           switch (t2) {
@@ -778,6 +2555,7 @@ var require_jszip_min = __commonJS({
             this._worker = new s("error"), this._worker.error(e3);
           }
         }
+        __name(f, "f");
         f.prototype = { accumulate: function(e2) {
           return l(this, e2);
         }, on: function(e2, t2) {
@@ -826,9 +2604,11 @@ var require_jszip_min = __commonJS({
         function a() {
           n.call(this, "utf-8 decode"), this.leftOver = null;
         }
+        __name(a, "a");
         function l() {
           n.call(this, "utf-8 encode");
         }
+        __name(l, "l");
         s.utf8encode = function(e2) {
           return h.nodebuffer ? r.newBufferFrom(e2, "utf-8") : function(e3) {
             var t2, r2, n2, i2, s2, a2 = e3.length, o2 = 0;
@@ -881,11 +2661,13 @@ var require_jszip_min = __commonJS({
         function n(e2) {
           return e2;
         }
+        __name(n, "n");
         function l(e2, t2) {
           for (var r2 = 0; r2 < e2.length; ++r2)
             t2[r2] = 255 & e2.charCodeAt(r2);
           return t2;
         }
+        __name(l, "l");
         e("setimmediate"), a.newBlob = function(t2, r2) {
           a.checkSupport("blob");
           try {
@@ -934,11 +2716,13 @@ var require_jszip_min = __commonJS({
               }
           return i.stringifyByChar(e2);
         }
+        __name(s, "s");
         function f(e2, t2) {
           for (var r2 = 0; r2 < e2.length; r2++)
             t2[r2] = e2[r2];
           return t2;
         }
+        __name(f, "f");
         a.applyFromCharCode = s;
         var c = {};
         c.string = { string: n, array: function(e2) {
@@ -1004,6 +2788,7 @@ var require_jszip_min = __commonJS({
         }, a.inherits = function(e2, t2) {
           function r2() {
           }
+          __name(r2, "r");
           r2.prototype = t2.prototype, e2.prototype = new r2();
         }, a.extend = function() {
           var e2, t2, r2 = {};
@@ -1034,6 +2819,7 @@ var require_jszip_min = __commonJS({
         function h(e2) {
           this.files = [], this.loadOptions = e2;
         }
+        __name(h, "h");
         h.prototype = { checkSignature: function(e2) {
           if (!this.reader.readAndCheckSignature(e2)) {
             this.reader.index -= 4;
@@ -1097,6 +2883,7 @@ var require_jszip_min = __commonJS({
         function l(e2, t2) {
           this.options = e2, this.loadOptions = t2;
         }
+        __name(l, "l");
         l.prototype = { isEncrypted: function() {
           return 1 == (1 & this.bitFlag);
         }, useUTF8: function() {
@@ -1173,6 +2960,7 @@ var require_jszip_min = __commonJS({
         function n(e2, t2, r2) {
           this.name = e2, this.dir = r2.dir, this.date = r2.date, this.comment = r2.comment, this.unixPermissions = r2.unixPermissions, this.dosPermissions = r2.dosPermissions, this._data = t2, this._dataBinary = r2.binary, this.options = { compression: r2.compression, compressionOptions: r2.compressionOptions };
         }
+        __name(n, "n");
         var s = e("./stream/StreamHelper"), i = e("./stream/DataWorker"), a = e("./utf8"), o = e("./compressedObject"), h = e("./stream/GenericWorker");
         n.prototype = { internalStream: function(e2) {
           var t2 = null, r2 = "string";
@@ -1210,9 +2998,9 @@ var require_jszip_min = __commonJS({
           var r, n, e2 = t2.MutationObserver || t2.WebKitMutationObserver;
           if (e2) {
             var i = 0, s = new e2(u), a = t2.document.createTextNode("");
-            s.observe(a, { characterData: true }), r = function() {
+            s.observe(a, { characterData: true }), r = /* @__PURE__ */ __name(function() {
               a.data = i = ++i % 2;
-            };
+            }, "r");
           } else if (t2.setImmediate || void 0 === t2.MessageChannel)
             r = "document" in t2 && "onreadystatechange" in t2.document.createElement("script") ? function() {
               var e3 = t2.document.createElement("script");
@@ -1224,9 +3012,9 @@ var require_jszip_min = __commonJS({
             };
           else {
             var o = new t2.MessageChannel();
-            o.port1.onmessage = u, r = function() {
+            o.port1.onmessage = u, r = /* @__PURE__ */ __name(function() {
               o.port2.postMessage(0);
-            };
+            }, "r");
           }
           var h = [];
           function u() {
@@ -1239,6 +3027,7 @@ var require_jszip_min = __commonJS({
             }
             n = false;
           }
+          __name(u, "u");
           l.exports = function(e3) {
             1 !== h.push(e3) || n || r();
           };
@@ -1248,15 +3037,18 @@ var require_jszip_min = __commonJS({
         var i = e("immediate");
         function u() {
         }
+        __name(u, "u");
         var l = {}, s = ["REJECTED"], a = ["FULFILLED"], n = ["PENDING"];
         function o(e2) {
           if ("function" != typeof e2)
             throw new TypeError("resolver must be a function");
           this.state = n, this.queue = [], this.outcome = void 0, e2 !== u && d(this, e2);
         }
+        __name(o, "o");
         function h(e2, t2, r2) {
           this.promise = e2, "function" == typeof t2 && (this.onFulfilled = t2, this.callFulfilled = this.otherCallFulfilled), "function" == typeof r2 && (this.onRejected = r2, this.callRejected = this.otherCallRejected);
         }
+        __name(h, "h");
         function f(t2, r2, n2) {
           i(function() {
             var e2;
@@ -1268,6 +3060,7 @@ var require_jszip_min = __commonJS({
             e2 === t2 ? l.reject(t2, new TypeError("Cannot resolve promise with itself")) : l.resolve(t2, e2);
           });
         }
+        __name(f, "f");
         function c(e2) {
           var t2 = e2 && e2.then;
           if (e2 && ("object" == typeof e2 || "function" == typeof e2) && "function" == typeof t2)
@@ -1275,19 +3068,23 @@ var require_jszip_min = __commonJS({
               t2.apply(e2, arguments);
             };
         }
+        __name(c, "c");
         function d(t2, e2) {
           var r2 = false;
           function n2(e3) {
             r2 || (r2 = true, l.reject(t2, e3));
           }
+          __name(n2, "n");
           function i2(e3) {
             r2 || (r2 = true, l.resolve(t2, e3));
           }
+          __name(i2, "i");
           var s2 = p(function() {
             e2(i2, n2);
           });
           "error" === s2.status && n2(s2.value);
         }
+        __name(d, "d");
         function p(e2, t2) {
           var r2 = {};
           try {
@@ -1297,6 +3094,7 @@ var require_jszip_min = __commonJS({
           }
           return r2;
         }
+        __name(p, "p");
         (t.exports = o).prototype.finally = function(t2) {
           if ("function" != typeof t2)
             return this;
@@ -1369,6 +3167,7 @@ var require_jszip_min = __commonJS({
               i2 || (i2 = true, l.reject(o2, e4));
             });
           }
+          __name(h2, "h");
         }, o.race = function(e2) {
           var t2 = this;
           if ("[object Array]" !== Object.prototype.toString.call(e2))
@@ -1409,12 +3208,14 @@ var require_jszip_min = __commonJS({
             this._dict_set = true;
           }
         }
+        __name(p, "p");
         function n(e2, t2) {
           var r2 = new p(t2);
           if (r2.push(e2, true), r2.err)
             throw r2.msg || i[r2.err];
           return r2.result;
         }
+        __name(n, "n");
         p.prototype.push = function(e2, t2) {
           var r2, n2, i2 = this.strm, s2 = this.options.chunkSize;
           if (this.ended)
@@ -1449,12 +3250,14 @@ var require_jszip_min = __commonJS({
             throw new Error(n[r2]);
           this.header = new s(), c.inflateGetHeader(this.strm, this.header);
         }
+        __name(a, "a");
         function o(e2, t2) {
           var r2 = new a(t2);
           if (r2.push(e2, true), r2.err)
             throw r2.msg || n[r2.err];
           return r2.result;
         }
+        __name(o, "o");
         a.prototype.push = function(e2, t2) {
           var r2, n2, i2, s2, a2, o2, h = this.strm, u = this.options.chunkSize, l = this.options.dictionary, f = false;
           if (this.ended)
@@ -1534,6 +3337,7 @@ var require_jszip_min = __commonJS({
             r2 += String.fromCharCode(e2[n2]);
           return r2;
         }
+        __name(l, "l");
         u[254] = u[254] = 1, r.string2buf = function(e2) {
           var t2, r2, n2, i2, s2, a = e2.length, o = 0;
           for (i2 = 0; i2 < a; i2++)
@@ -1603,26 +3407,33 @@ var require_jszip_min = __commonJS({
         function R(e2, t2) {
           return e2.msg = n[t2], t2;
         }
+        __name(R, "R");
         function T(e2) {
           return (e2 << 1) - (4 < e2 ? 9 : 0);
         }
+        __name(T, "T");
         function D(e2) {
           for (var t2 = e2.length; 0 <= --t2; )
             e2[t2] = 0;
         }
+        __name(D, "D");
         function F(e2) {
           var t2 = e2.state, r2 = t2.pending;
           r2 > e2.avail_out && (r2 = e2.avail_out), 0 !== r2 && (c.arraySet(e2.output, t2.pending_buf, t2.pending_out, r2, e2.next_out), e2.next_out += r2, t2.pending_out += r2, e2.total_out += r2, e2.avail_out -= r2, t2.pending -= r2, 0 === t2.pending && (t2.pending_out = 0));
         }
+        __name(F, "F");
         function N(e2, t2) {
           u._tr_flush_block(e2, 0 <= e2.block_start ? e2.block_start : -1, e2.strstart - e2.block_start, t2), e2.block_start = e2.strstart, F(e2.strm);
         }
+        __name(N, "N");
         function U(e2, t2) {
           e2.pending_buf[e2.pending++] = t2;
         }
+        __name(U, "U");
         function P(e2, t2) {
           e2.pending_buf[e2.pending++] = t2 >>> 8 & 255, e2.pending_buf[e2.pending++] = 255 & t2;
         }
+        __name(P, "P");
         function L(e2, t2) {
           var r2, n2, i2 = e2.max_chain_length, s2 = e2.strstart, a2 = e2.prev_length, o2 = e2.nice_match, h2 = e2.strstart > e2.w_size - z ? e2.strstart - (e2.w_size - z) : 0, u2 = e2.window, l2 = e2.w_mask, f2 = e2.prev, c2 = e2.strstart + S, d2 = u2[s2 + a2 - 1], p2 = u2[s2 + a2];
           e2.prev_length >= e2.good_match && (i2 >>= 2), o2 > e2.lookahead && (o2 = e2.lookahead);
@@ -1640,6 +3451,7 @@ var require_jszip_min = __commonJS({
           } while ((t2 = f2[t2 & l2]) > h2 && 0 != --i2);
           return a2 <= e2.lookahead ? a2 : e2.lookahead;
         }
+        __name(L, "L");
         function j(e2) {
           var t2, r2, n2, i2, s2, a2, o2, h2, u2, l2, f2 = e2.w_size;
           do {
@@ -1657,6 +3469,7 @@ var require_jszip_min = __commonJS({
                 ;
           } while (e2.lookahead < z && 0 !== e2.strm.avail_in);
         }
+        __name(j, "j");
         function Z(e2, t2) {
           for (var r2, n2; ; ) {
             if (e2.lookahead < z) {
@@ -1679,6 +3492,7 @@ var require_jszip_min = __commonJS({
           }
           return e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
         }
+        __name(Z, "Z");
         function W(e2, t2) {
           for (var r2, n2, i2; ; ) {
             if (e2.lookahead < z) {
@@ -1700,22 +3514,27 @@ var require_jszip_min = __commonJS({
           }
           return e2.match_available && (n2 = u._tr_tally(e2, 0, e2.window[e2.strstart - 1]), e2.match_available = 0), e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
         }
+        __name(W, "W");
         function M(e2, t2, r2, n2, i2) {
           this.good_length = e2, this.max_lazy = t2, this.nice_length = r2, this.max_chain = n2, this.func = i2;
         }
+        __name(M, "M");
         function H() {
           this.strm = null, this.status = 0, this.pending_buf = null, this.pending_buf_size = 0, this.pending_out = 0, this.pending = 0, this.wrap = 0, this.gzhead = null, this.gzindex = 0, this.method = v, this.last_flush = -1, this.w_size = 0, this.w_bits = 0, this.w_mask = 0, this.window = null, this.window_size = 0, this.prev = null, this.head = null, this.ins_h = 0, this.hash_size = 0, this.hash_bits = 0, this.hash_mask = 0, this.hash_shift = 0, this.block_start = 0, this.match_length = 0, this.prev_match = 0, this.match_available = 0, this.strstart = 0, this.match_start = 0, this.lookahead = 0, this.prev_length = 0, this.max_chain_length = 0, this.max_lazy_match = 0, this.level = 0, this.strategy = 0, this.good_match = 0, this.nice_match = 0, this.dyn_ltree = new c.Buf16(2 * w), this.dyn_dtree = new c.Buf16(2 * (2 * a + 1)), this.bl_tree = new c.Buf16(2 * (2 * o + 1)), D(this.dyn_ltree), D(this.dyn_dtree), D(this.bl_tree), this.l_desc = null, this.d_desc = null, this.bl_desc = null, this.bl_count = new c.Buf16(k + 1), this.heap = new c.Buf16(2 * s + 1), D(this.heap), this.heap_len = 0, this.heap_max = 0, this.depth = new c.Buf16(2 * s + 1), D(this.depth), this.l_buf = 0, this.lit_bufsize = 0, this.last_lit = 0, this.d_buf = 0, this.opt_len = 0, this.static_len = 0, this.matches = 0, this.insert = 0, this.bi_buf = 0, this.bi_valid = 0;
         }
+        __name(H, "H");
         function G(e2) {
           var t2;
           return e2 && e2.state ? (e2.total_in = e2.total_out = 0, e2.data_type = i, (t2 = e2.state).pending = 0, t2.pending_out = 0, t2.wrap < 0 && (t2.wrap = -t2.wrap), t2.status = t2.wrap ? C : E, e2.adler = 2 === t2.wrap ? 0 : 1, t2.last_flush = l, u._tr_init(t2), m) : R(e2, _);
         }
+        __name(G, "G");
         function K(e2) {
           var t2 = G(e2);
           return t2 === m && function(e3) {
             e3.window_size = 2 * e3.w_size, D(e3.head), e3.max_lazy_match = h[e3.level].max_lazy, e3.good_match = h[e3.level].good_length, e3.nice_match = h[e3.level].nice_length, e3.max_chain_length = h[e3.level].max_chain, e3.strstart = 0, e3.block_start = 0, e3.lookahead = 0, e3.insert = 0, e3.match_length = e3.prev_length = x - 1, e3.match_available = 0, e3.ins_h = 0;
           }(e2.state), t2;
         }
+        __name(K, "K");
         function Y(e2, t2, r2, n2, i2, s2) {
           if (!e2)
             return _;
@@ -1726,6 +3545,7 @@ var require_jszip_min = __commonJS({
           var o2 = new H();
           return (e2.state = o2).strm = e2, o2.wrap = a2, o2.gzhead = null, o2.w_bits = n2, o2.w_size = 1 << o2.w_bits, o2.w_mask = o2.w_size - 1, o2.hash_bits = i2 + 7, o2.hash_size = 1 << o2.hash_bits, o2.hash_mask = o2.hash_size - 1, o2.hash_shift = ~~((o2.hash_bits + x - 1) / x), o2.window = new c.Buf8(2 * o2.w_size), o2.head = new c.Buf16(o2.hash_size), o2.prev = new c.Buf16(o2.w_size), o2.lit_bufsize = 1 << i2 + 6, o2.pending_buf_size = 4 * o2.lit_bufsize, o2.pending_buf = new c.Buf8(o2.pending_buf_size), o2.d_buf = 1 * o2.lit_bufsize, o2.l_buf = 3 * o2.lit_bufsize, o2.level = t2, o2.strategy = s2, o2.method = r2, K(e2);
         }
+        __name(Y, "Y");
         h = [new M(0, 0, 0, 0, function(e2, t2) {
           var r2 = 65535;
           for (r2 > e2.pending_buf_size - 5 && (r2 = e2.pending_buf_size - 5); ; ) {
@@ -1946,25 +3766,31 @@ var require_jszip_min = __commonJS({
         function L(e2) {
           return (e2 >>> 24 & 255) + (e2 >>> 8 & 65280) + ((65280 & e2) << 8) + ((255 & e2) << 24);
         }
+        __name(L, "L");
         function s() {
           this.mode = 0, this.last = false, this.wrap = 0, this.havedict = false, this.flags = 0, this.dmax = 0, this.check = 0, this.total = 0, this.head = null, this.wbits = 0, this.wsize = 0, this.whave = 0, this.wnext = 0, this.window = null, this.hold = 0, this.bits = 0, this.length = 0, this.offset = 0, this.extra = 0, this.lencode = null, this.distcode = null, this.lenbits = 0, this.distbits = 0, this.ncode = 0, this.nlen = 0, this.ndist = 0, this.have = 0, this.next = null, this.lens = new I.Buf16(320), this.work = new I.Buf16(288), this.lendyn = null, this.distdyn = null, this.sane = 0, this.back = 0, this.was = 0;
         }
+        __name(s, "s");
         function a(e2) {
           var t2;
           return e2 && e2.state ? (t2 = e2.state, e2.total_in = e2.total_out = t2.total = 0, e2.msg = "", t2.wrap && (e2.adler = 1 & t2.wrap), t2.mode = P, t2.last = 0, t2.havedict = 0, t2.dmax = 32768, t2.head = null, t2.hold = 0, t2.bits = 0, t2.lencode = t2.lendyn = new I.Buf32(n), t2.distcode = t2.distdyn = new I.Buf32(i), t2.sane = 1, t2.back = -1, N) : U;
         }
+        __name(a, "a");
         function o(e2) {
           var t2;
           return e2 && e2.state ? ((t2 = e2.state).wsize = 0, t2.whave = 0, t2.wnext = 0, a(e2)) : U;
         }
+        __name(o, "o");
         function h(e2, t2) {
           var r2, n2;
           return e2 && e2.state ? (n2 = e2.state, t2 < 0 ? (r2 = 0, t2 = -t2) : (r2 = 1 + (t2 >> 4), t2 < 48 && (t2 &= 15)), t2 && (t2 < 8 || 15 < t2) ? U : (null !== n2.window && n2.wbits !== t2 && (n2.window = null), n2.wrap = r2, n2.wbits = t2, o(e2))) : U;
         }
+        __name(h, "h");
         function u(e2, t2) {
           var r2, n2;
           return e2 ? (n2 = new s(), (e2.state = n2).window = null, (r2 = h(e2, t2)) !== N && (e2.state = null), r2) : U;
         }
+        __name(u, "u");
         var l, f, c = true;
         function j(e2) {
           if (c) {
@@ -1983,10 +3809,12 @@ var require_jszip_min = __commonJS({
           }
           e2.lencode = l, e2.lenbits = 9, e2.distcode = f, e2.distbits = 5;
         }
+        __name(j, "j");
         function Z(e2, t2, r2, n2) {
           var i2, s2 = e2.state;
           return null === s2.window && (s2.wsize = 1 << s2.wbits, s2.wnext = 0, s2.whave = 0, s2.window = new I.Buf8(s2.wsize)), n2 >= s2.wsize ? (I.arraySet(s2.window, t2, r2 - s2.wsize, s2.wsize, 0), s2.wnext = 0, s2.whave = s2.wsize) : (n2 < (i2 = s2.wsize - s2.wnext) && (i2 = n2), I.arraySet(s2.window, t2, r2 - n2, i2, s2.wnext), (n2 -= i2) ? (I.arraySet(s2.window, t2, r2 - n2, n2, 0), s2.wnext = n2, s2.whave = s2.wsize) : (s2.wnext += i2, s2.wnext === s2.wsize && (s2.wnext = 0), s2.whave < s2.wsize && (s2.whave += i2))), 0;
         }
+        __name(Z, "Z");
         r.inflateReset = o, r.inflateReset2 = h, r.inflateResetKeep = a, r.inflateInit = function(e2) {
           return u(e2, 15);
         }, r.inflateInit2 = u, r.inflate = function(e2, t2) {
@@ -2464,6 +4292,7 @@ var require_jszip_min = __commonJS({
           for (var t2 = e2.length; 0 <= --t2; )
             e2[t2] = 0;
         }
+        __name(n, "n");
         var s = 0, a = 29, u = 256, l = u + 1 + a, f = 30, c = 19, _ = 2 * l + 1, g = 15, d = 16, p = 7, m = 256, b = 16, v = 17, y = 18, w = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0], k = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13], x = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7], S = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15], z = new Array(2 * (l + 2));
         n(z);
         var C = new Array(2 * f);
@@ -2478,26 +4307,33 @@ var require_jszip_min = __commonJS({
         function D(e2, t2, r2, n2, i2) {
           this.static_tree = e2, this.extra_bits = t2, this.extra_base = r2, this.elems = n2, this.max_length = i2, this.has_stree = e2 && e2.length;
         }
+        __name(D, "D");
         function F(e2, t2) {
           this.dyn_tree = e2, this.max_code = 0, this.stat_desc = t2;
         }
+        __name(F, "F");
         function N(e2) {
           return e2 < 256 ? E[e2] : E[256 + (e2 >>> 7)];
         }
+        __name(N, "N");
         function U(e2, t2) {
           e2.pending_buf[e2.pending++] = 255 & t2, e2.pending_buf[e2.pending++] = t2 >>> 8 & 255;
         }
+        __name(U, "U");
         function P(e2, t2, r2) {
           e2.bi_valid > d - r2 ? (e2.bi_buf |= t2 << e2.bi_valid & 65535, U(e2, e2.bi_buf), e2.bi_buf = t2 >> d - e2.bi_valid, e2.bi_valid += r2 - d) : (e2.bi_buf |= t2 << e2.bi_valid & 65535, e2.bi_valid += r2);
         }
+        __name(P, "P");
         function L(e2, t2, r2) {
           P(e2, r2[2 * t2], r2[2 * t2 + 1]);
         }
+        __name(L, "L");
         function j(e2, t2) {
           for (var r2 = 0; r2 |= 1 & e2, e2 >>>= 1, r2 <<= 1, 0 < --t2; )
             ;
           return r2 >>> 1;
         }
+        __name(j, "j");
         function Z(e2, t2, r2) {
           var n2, i2, s2 = new Array(g + 1), a2 = 0;
           for (n2 = 1; n2 <= g; n2++)
@@ -2507,6 +4343,7 @@ var require_jszip_min = __commonJS({
             0 !== o2 && (e2[2 * i2] = j(s2[o2]++, o2));
           }
         }
+        __name(Z, "Z");
         function W(e2) {
           var t2;
           for (t2 = 0; t2 < l; t2++)
@@ -2517,18 +4354,22 @@ var require_jszip_min = __commonJS({
             e2.bl_tree[2 * t2] = 0;
           e2.dyn_ltree[2 * m] = 1, e2.opt_len = e2.static_len = 0, e2.last_lit = e2.matches = 0;
         }
+        __name(W, "W");
         function M(e2) {
           8 < e2.bi_valid ? U(e2, e2.bi_buf) : 0 < e2.bi_valid && (e2.pending_buf[e2.pending++] = e2.bi_buf), e2.bi_buf = 0, e2.bi_valid = 0;
         }
+        __name(M, "M");
         function H(e2, t2, r2, n2) {
           var i2 = 2 * t2, s2 = 2 * r2;
           return e2[i2] < e2[s2] || e2[i2] === e2[s2] && n2[t2] <= n2[r2];
         }
+        __name(H, "H");
         function G(e2, t2, r2) {
           for (var n2 = e2.heap[r2], i2 = r2 << 1; i2 <= e2.heap_len && (i2 < e2.heap_len && H(t2, e2.heap[i2 + 1], e2.heap[i2], e2.depth) && i2++, !H(t2, n2, e2.heap[i2], e2.depth)); )
             e2.heap[r2] = e2.heap[i2], r2 = i2, i2 <<= 1;
           e2.heap[r2] = n2;
         }
+        __name(G, "G");
         function K(e2, t2, r2) {
           var n2, i2, s2, a2, o2 = 0;
           if (0 !== e2.last_lit)
@@ -2536,6 +4377,7 @@ var require_jszip_min = __commonJS({
               ;
           L(e2, m, t2);
         }
+        __name(K, "K");
         function Y(e2, t2) {
           var r2, n2, i2, s2 = t2.dyn_tree, a2 = t2.stat_desc.static_tree, o2 = t2.stat_desc.has_stree, h2 = t2.stat_desc.elems, u2 = -1;
           for (e2.heap_len = 0, e2.heap_max = _, r2 = 0; r2 < h2; r2++)
@@ -2564,11 +4406,13 @@ var require_jszip_min = __commonJS({
             }
           }(e2, t2), Z(s2, u2, e2.bl_count);
         }
+        __name(Y, "Y");
         function X(e2, t2, r2) {
           var n2, i2, s2 = -1, a2 = t2[1], o2 = 0, h2 = 7, u2 = 4;
           for (0 === a2 && (h2 = 138, u2 = 3), t2[2 * (r2 + 1) + 1] = 65535, n2 = 0; n2 <= r2; n2++)
             i2 = a2, a2 = t2[2 * (n2 + 1) + 1], ++o2 < h2 && i2 === a2 || (o2 < u2 ? e2.bl_tree[2 * i2] += o2 : 0 !== i2 ? (i2 !== s2 && e2.bl_tree[2 * i2]++, e2.bl_tree[2 * b]++) : o2 <= 10 ? e2.bl_tree[2 * v]++ : e2.bl_tree[2 * y]++, s2 = i2, u2 = (o2 = 0) === a2 ? (h2 = 138, 3) : i2 === a2 ? (h2 = 6, 3) : (h2 = 7, 4));
         }
+        __name(X, "X");
         function V(e2, t2, r2) {
           var n2, i2, s2 = -1, a2 = t2[1], o2 = 0, h2 = 7, u2 = 4;
           for (0 === a2 && (h2 = 138, u2 = 3), n2 = 0; n2 <= r2; n2++)
@@ -2581,6 +4425,7 @@ var require_jszip_min = __commonJS({
               s2 = i2, u2 = (o2 = 0) === a2 ? (h2 = 138, 3) : i2 === a2 ? (h2 = 6, 3) : (h2 = 7, 4);
             }
         }
+        __name(V, "V");
         n(T);
         var q = false;
         function J(e2, t2, r2, n2) {
@@ -2588,6 +4433,7 @@ var require_jszip_min = __commonJS({
             M(e3), n3 && (U(e3, r3), U(e3, ~r3)), i.arraySet(e3.pending_buf, e3.window, t3, r3, e3.pending), e3.pending += r3;
           }(e2, t2, r2, true);
         }
+        __name(J, "J");
         r._tr_init = function(e2) {
           q || (function() {
             var e3, t2, r2, n2, i2, s2 = new Array(g + 1);
@@ -2691,6 +4537,7 @@ var require_jszip_min = __commonJS({
             function f(e4) {
               delete h[e4];
             }
+            __name(f, "f");
             function c(e4) {
               if (u)
                 setTimeout(c, 0, e4);
@@ -2724,9 +4571,11 @@ var require_jszip_min = __commonJS({
                 }
               }
             }
+            __name(c, "c");
             function d(e4) {
               e4.source === r2 && "string" == typeof e4.data && 0 === e4.data.indexOf(a) && c(+e4.data.slice(a.length));
             }
+            __name(d, "d");
           }("undefined" == typeof self ? void 0 === e2 ? this : e2 : self);
         }).call(this, "undefined" != typeof global ? global : "undefined" != typeof self ? self : "undefined" != typeof window ? window : {});
       }, {}] }, {}, [10])(10);
@@ -2734,243 +4583,9 @@ var require_jszip_min = __commonJS({
   }
 });
 
-// src/logger.ts
-var LogLevel, Logger;
-var init_logger = __esm({
-  "src/logger.ts"() {
-    "use strict";
-    LogLevel = /* @__PURE__ */ ((LogLevel2) => {
-      LogLevel2[LogLevel2["INFO"] = 0] = "INFO";
-      LogLevel2[LogLevel2["WARN"] = 1] = "WARN";
-      LogLevel2[LogLevel2["ERROR"] = 2] = "ERROR";
-      return LogLevel2;
-    })(LogLevel || {});
-    Logger = class {
-      logToConsole(level, message, details) {
-        console.log(`[Nexus AI Chat Importer] [${LogLevel[level]}] ${message}`);
-      }
-      info(message, details) {
-        console.log(`[Nexus AI Chat Importer] [INFO] ${message}`);
-      }
-      warn(message, details) {
-        console.warn(`[Nexus AI Chat Importer] [WARN] ${message}`);
-      }
-      error(message, details) {
-        console.error(`[Nexus AI Chat Importer] [ERROR] ${message}`);
-      }
-    };
-  }
-});
-
-// src/utils.ts
-var utils_exports = {};
-__export(utils_exports, {
-  addPrefix: () => addPrefix,
-  checkConversationLink: () => checkConversationLink,
-  createDatePrefix: () => createDatePrefix,
-  doesFilePathExist: () => doesFilePathExist,
-  ensureFolderExists: () => ensureFolderExists,
-  formatTimestamp: () => formatTimestamp,
-  formatTitle: () => formatTitle,
-  generateConversationFileName: () => generateConversationFileName,
-  generateFileName: () => generateFileName,
-  generateUniqueFileName: () => generateUniqueFileName,
-  generateYearMonthFolder: () => generateYearMonthFolder,
-  getFileHash: () => getFileHash,
-  isCustomError: () => isCustomError,
-  isNexusRelated: () => isNexusRelated,
-  isValidMessage: () => isValidMessage,
-  old_getConversationId: () => old_getConversationId
-});
-function formatTimestamp(unixTime, format) {
-  const date = (0, import_obsidian7.moment)(unixTime * 1e3);
-  switch (format) {
-    case "prefix":
-      return date.format("YYYYMMDD");
-    case "date":
-      return date.format("L");
-    case "time":
-      return date.format("LT");
-  }
-}
-function generateYearMonthFolder(unixTime) {
-  const date = new Date(unixTime * 1e3);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${year}/${month}`;
-}
-function formatTitle(title) {
-  return title.trim() || "Untitled";
-}
-function generateFileName(title) {
-  let fileName = formatTitle(title).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>:"\/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
-  fileName = fileName.replace(/^[^\w\d\s]+/, "");
-  fileName = fileName.replace(/\s+/g, " ").trim();
-  if (!fileName || fileName.length === 0) {
-    fileName = "Untitled";
-  }
-  if (fileName.startsWith(".")) {
-    fileName = fileName.substring(1);
-  }
-  if (!fileName || fileName.length === 0) {
-    fileName = "Untitled";
-  }
-  return fileName;
-}
-function addPrefix(filename, timeStamp, dateFormat) {
-  const timeStampStr = formatTimestamp(timeStamp, dateFormat);
-  if (timeStampStr) {
-    filename = `${timeStampStr} - ${filename}`;
-  }
-  return filename;
-}
-function createDatePrefix(timeStamp, dateFormat) {
-  const date = new Date(timeStamp * 1e3);
-  let prefix = "";
-  if (dateFormat === "YYYY-MM-DD") {
-    prefix = date.toISOString().split("T")[0];
-  } else if (dateFormat === "YYYYMMDD") {
-    prefix = date.toISOString().split("T")[0].replace(/-/g, "");
-  }
-  return prefix;
-}
-async function generateUniqueFileName(filePath, vaultAdapter) {
-  let uniqueFileName = filePath;
-  const baseName = filePath.replace(/\.md$/, "");
-  let counter = 1;
-  while (await vaultAdapter.exists(uniqueFileName)) {
-    uniqueFileName = `${baseName} (${counter++}).md`;
-  }
-  return uniqueFileName;
-}
-async function doesFilePathExist(filePath, vault) {
-  const file = vault.getAbstractFileByPath(filePath);
-  return file !== null;
-}
-async function getFileHash(file) {
-  const buffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-function generateConversationFileName(chatTitle, createTime, addDatePrefix, dateFormat) {
-  const date = new Date(createTime * 1e3);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  let fileName = generateFileName(chatTitle);
-  if (addDatePrefix) {
-    const day = String(date.getDate()).padStart(2, "0");
-    let prefix = "";
-    if (dateFormat === "YYYY-MM-DD") {
-      prefix = `${year}-${month}-${day}`;
-    } else if (dateFormat === "YYYYMMDD") {
-      prefix = `${year}${month}${day}`;
-    }
-    fileName = `${prefix} - ${fileName}`;
-  }
-  return fileName;
-}
-function isValidMessage(message) {
-  return message && typeof message === "object" && message.content && typeof message.content === "object" && Array.isArray(message.content.parts) && message.content.parts.length > 0 && message.content.parts.some(
-    (part) => {
-      if (typeof part === "string" && part.trim() !== "") {
-        return true;
-      }
-      if (typeof part === "object" && part !== null) {
-        if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
-          return true;
-        }
-        if (part.content_type === "text" && part.text && part.text.trim() !== "") {
-          return true;
-        }
-        if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
-          return true;
-        }
-      }
-      return false;
-    }
-  );
-}
-function isCustomError(error) {
-  return error && typeof error.message === "string";
-}
-async function ensureFolderExists(folderPath, vault) {
-  const folders = folderPath.split("/").filter((p) => p.length);
-  let currentPath = "";
-  for (const folder of folders) {
-    currentPath += folder + "/";
-    const currentFolder = vault.getAbstractFileByPath(currentPath);
-    if (!currentFolder) {
-      try {
-        await vault.createFolder(currentPath);
-      } catch (error) {
-        if (error.message !== "Folder already exists.") {
-          logger.error(
-            `Failed to create folder: ${currentPath}`,
-            error.message
-          );
-          return {
-            success: false,
-            error: `Failed to create folder: ${currentPath}. Reason: ${error.message}`
-          };
-        }
-      }
-    }
-  }
-  return { success: true };
-}
-async function checkConversationLink(conversationId, provider = "chatgpt") {
-  let url;
-  switch (provider) {
-    case "chatgpt":
-      url = `https://chatgpt.com/c/${conversationId}`;
-      break;
-    case "claude":
-      url = `https://claude.ai/chat/${conversationId}`;
-      break;
-    default:
-      logger.error(`Unknown provider for link checking: ${provider}`);
-      return false;
-  }
-  try {
-    const response = await (0, import_obsidian8.requestUrl)({
-      url,
-      method: "HEAD"
-    });
-    return response.status >= 200 && response.status < 300;
-  } catch (error) {
-    logger.error(`Error fetching ${url}:`, error);
-    return false;
-  }
-}
-function old_getConversationId(app) {
-  var _a;
-  const activeFile = app.workspace.getActiveFile();
-  if (activeFile) {
-    const frontmatter = (_a = app.metadataCache.getFileCache(activeFile)) == null ? void 0 : _a.frontmatter;
-    return frontmatter == null ? void 0 : frontmatter.conversation_id;
-  }
-  return void 0;
-}
-function isNexusRelated(file, app) {
-  var _a;
-  const frontmatter = (_a = app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-  return (frontmatter == null ? void 0 : frontmatter.nexus) === "nexus-ai-chat-importer";
-}
-var import_obsidian7, import_obsidian8, logger;
-var init_utils = __esm({
-  "src/utils.ts"() {
-    "use strict";
-    import_obsidian7 = require("obsidian");
-    init_logger();
-    import_obsidian8 = require("obsidian");
-    logger = new Logger();
-  }
-});
-
 // src/dialogs.ts
 function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian9.Modal(app);
+  const modal = new import_obsidian14.Modal(app);
   modal.contentEl.addClass("nexus-ai-chat-importer-modal");
   const titleEl = modal.contentEl.createEl("h2", {
     text: title,
@@ -3052,11 +4667,242 @@ async function showDialog(app, type, title, paragraphs, note, customLabels) {
     modal.open();
   });
 }
-var import_obsidian9;
+var import_obsidian14;
 var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
-    import_obsidian9 = require("obsidian");
+    import_obsidian14 = require("obsidian");
+    __name(displayModal, "displayModal");
+    __name(addButtons, "addButtons");
+    __name(showDialog, "showDialog");
+  }
+});
+
+// src/utils/date-parser.ts
+var import_obsidian19, DateParser;
+var init_date_parser = __esm({
+  "src/utils/date-parser.ts"() {
+    "use strict";
+    import_obsidian19 = require("obsidian");
+    DateParser = class {
+      /**
+       * Parse a date string with automatic format detection
+       * Returns Unix timestamp (seconds) or 0 if parsing fails
+       * @param dateStr - Date string to parse
+       * @param contextId - Optional context identifier for logging (e.g., "Artifact abc123_v1", "Conversation xyz")
+       */
+      static parseDate(dateStr, contextId) {
+        const ctx = contextId ? `[${contextId}] ` : "";
+        if (!dateStr || typeof dateStr !== "string") {
+          return 0;
+        }
+        try {
+          const isoDate = (0, import_obsidian19.moment)(dateStr, import_obsidian19.moment.ISO_8601, true);
+          if (isoDate.isValid()) {
+            return isoDate.unix();
+          }
+          const format = this.detectFormat(dateStr);
+          if (!format) {
+            logger.warn(`${ctx}parseDate - FAILED: could not detect format`);
+            return 0;
+          }
+          const parsed = this.parseWithFormat(dateStr, format);
+          if (parsed === 0) {
+            logger.warn(`${ctx}parseDate - FAILED: parsing returned 0`);
+          }
+          return parsed;
+        } catch (error) {
+          logger.warn(`${ctx}parseDate - FAILED: exception:`, error);
+          return 0;
+        }
+      }
+      /**
+       * Parse a date string with a forced component order (YMD/DMY/MDY)
+       * Keeps other parts auto-detected from the string (separator, time format, seconds)
+       */
+      static parseDateWithOrder(dateStr, order) {
+        if (!dateStr || typeof dateStr !== "string")
+          return 0;
+        const isoDate = (0, import_obsidian19.moment)(dateStr, import_obsidian19.moment.ISO_8601, true);
+        if (isoDate.isValid())
+          return isoDate.unix();
+        const detected = this.detectFormat(dateStr);
+        if (!detected)
+          return 0;
+        const forced = { ...detected, order };
+        return this.parseWithFormat(dateStr, forced);
+      }
+      /**
+       * Convert a date string to ISO 8601 with a forced component order
+       */
+      static convertToISO8601WithOrder(dateStr, order) {
+        const unixTime = this.parseDateWithOrder(dateStr, order);
+        if (unixTime === 0)
+          return null;
+        return new Date(unixTime * 1e3).toISOString();
+      }
+      /**
+       * Detect date format from a single date string
+       */
+      static detectFormat(dateStr) {
+        if (dateStr.match(/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/)) {
+          return {
+            separator: "-",
+            order: "YMD",
+            timeFormat: "24h",
+            hasSeconds: dateStr.includes(":") && dateStr.split(":").length >= 3
+          };
+        }
+        let separator = "/";
+        if (dateStr.includes("-") && !dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+          separator = "-";
+        } else if (dateStr.includes(".")) {
+          separator = ".";
+        } else if (dateStr.includes("/")) {
+          separator = "/";
+        } else {
+          return null;
+        }
+        const hasAMPM = /\s(AM|PM)$/i.test(dateStr);
+        const timeFormat = hasAMPM ? "12h" : "24h";
+        const timeMatch = dateStr.match(/\s(\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?)/i);
+        const timePart = timeMatch ? timeMatch[1] : "";
+        const hasSeconds = timePart.split(":").length >= 3;
+        const datePart = dateStr.split(/\s/)[0];
+        const parts = datePart.split(separator).map((p) => parseInt(p, 10));
+        if (parts.length !== 3 || parts.some(isNaN)) {
+          return null;
+        }
+        const order = this.detectOrder(parts, separator, hasAMPM);
+        return {
+          separator,
+          order,
+          timeFormat,
+          hasSeconds
+        };
+      }
+      /**
+       * Detect date component order (YMD, DMY, MDY)
+       * @param parts - Date parts [first, second, third]
+       * @param separator - Date separator ('/', '-', '.')
+       * @param hasAMPM - Whether the time uses AM/PM format (hint for US format)
+       */
+      static detectOrder(parts, separator, hasAMPM) {
+        const [first, second, third] = parts;
+        if (first > 31) {
+          return "YMD";
+        }
+        if (third > 31) {
+          if (first > 12) {
+            return "DMY";
+          }
+          if (second > 12) {
+            return "MDY";
+          }
+          if (separator === ".") {
+            return "DMY";
+          }
+          if (hasAMPM) {
+            return "MDY";
+          }
+          return "DMY";
+        }
+        if (first > 12) {
+          return "DMY";
+        }
+        if (second > 12) {
+          return "MDY";
+        }
+        if (separator === "-") {
+          return "YMD";
+        } else if (separator === ".") {
+          return "DMY";
+        } else if (hasAMPM) {
+          return "MDY";
+        }
+        return "DMY";
+      }
+      /**
+       * Parse date string with detected format
+       */
+      static parseWithFormat(dateStr, format) {
+        let datePattern;
+        switch (format.order) {
+          case "YMD":
+            datePattern = format.separator === "-" ? "YYYY-MM-DD" : "YYYY/MM/DD";
+            break;
+          case "DMY":
+            datePattern = format.separator === "." ? "DD.MM.YYYY" : "DD/MM/YYYY";
+            break;
+          case "MDY":
+            datePattern = "MM/DD/YYYY";
+            break;
+        }
+        const timePattern = format.timeFormat === "12h" ? format.hasSeconds ? "h:mm:ss A" : "h:mm A" : format.hasSeconds ? "HH:mm:ss" : "HH:mm";
+        const patterns = [
+          `${datePattern} ${timePattern}`,
+          // Standard space
+          `${datePattern}[T]${timePattern}`,
+          // ISO 8601 T
+          `${datePattern}[ at ]${timePattern}`
+          // English "at"
+        ];
+        for (const pattern of patterns) {
+          const date = (0, import_obsidian19.moment)(dateStr, pattern, true);
+          if (date.isValid()) {
+            return date.unix();
+          }
+        }
+        if (format.hasSeconds) {
+          const timePatternNoSec = format.timeFormat === "12h" ? "h:mm A" : "HH:mm";
+          const fallbackPatterns = [
+            `${datePattern} ${timePatternNoSec}`,
+            `${datePattern}[T]${timePatternNoSec}`,
+            `${datePattern}[ at ]${timePatternNoSec}`
+          ];
+          for (const pattern of fallbackPatterns) {
+            const date = (0, import_obsidian19.moment)(dateStr, pattern, true);
+            if (date.isValid()) {
+              return date.unix();
+            }
+          }
+        }
+        return 0;
+      }
+      /**
+       * Convert any date format to ISO 8601
+       * Returns ISO 8601 string or null if parsing fails
+       */
+      static convertToISO8601(dateStr) {
+        const unixTime = this.parseDate(dateStr);
+        if (unixTime === 0) {
+          logger.warn(`convertToISO8601 - parsing returned 0`);
+          return null;
+        }
+        return new Date(unixTime * 1e3).toISOString();
+      }
+      /**
+       * Detect format from multiple date samples (more reliable)
+       * Used for batch processing (e.g., upgrade operations)
+       */
+      static detectFormatFromSamples(dates) {
+        if (!dates || dates.length === 0) {
+          return null;
+        }
+        for (const dateStr of dates.slice(0, 20)) {
+          const format = this.detectFormat(dateStr);
+          if (format) {
+            const datePart = dateStr.split(/\s/)[0];
+            const parts = datePart.split(format.separator).map((p) => parseInt(p, 10));
+            if (parts.some((p) => p > 12)) {
+              return format;
+            }
+          }
+        }
+        return this.detectFormat(dates[0]);
+      }
+    };
+    __name(DateParser, "DateParser");
   }
 });
 
@@ -3129,18 +4975,19 @@ var init_version_utils = __esm({
         return `v${parsed.major}.${parsed.minor}.${parsed.patch}`;
       }
     };
+    __name(VersionUtils, "VersionUtils");
   }
 });
 
 // src/upgrade/upgrade-interface.ts
-var logger2, UpgradeOperation, VersionUpgrade;
+var logger4, UpgradeOperation, VersionUpgrade;
 var init_upgrade_interface = __esm({
   "src/upgrade/upgrade-interface.ts"() {
     "use strict";
     init_version_utils();
     init_dialogs();
     init_logger();
-    logger2 = new Logger();
+    logger4 = new Logger();
     UpgradeOperation = class {
       /**
        * Check if operation can run (prerequisites)
@@ -3155,6 +5002,7 @@ var init_upgrade_interface = __esm({
         return true;
       }
     };
+    __name(UpgradeOperation, "UpgradeOperation");
     VersionUpgrade = class {
       /**
        * Check if this upgrade should run for the version range
@@ -3327,9 +5175,9 @@ var init_upgrade_interface = __esm({
           completed: true
         };
         await context.plugin.saveData(data);
-        logger2.info(`Marked operation ${operationId} (v${this.version}) as completed`);
       }
     };
+    __name(VersionUpgrade, "VersionUpgrade");
   }
 });
 
@@ -3343,6 +5191,7 @@ var init_upgrade_1_1_0 = __esm({
   "src/upgrade/versions/upgrade-1.1.0.ts"() {
     "use strict";
     init_upgrade_interface();
+    init_logger();
     DeleteCatalogOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -3356,33 +5205,26 @@ var init_upgrade_1_1_0 = __esm({
           const data = await context.plugin.loadData();
           const catalog = data == null ? void 0 : data.conversationCatalog;
           const hasData = catalog && typeof catalog === "object" && Object.keys(catalog).length > 0;
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: catalog exists=${!!catalog}, hasData=${hasData}`);
           if (catalog) {
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog.canRun: catalog size=${Object.keys(catalog).length}`);
           }
           return hasData;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] DeleteCatalog.canRun failed:`, error);
+          logger2.error(`DeleteCatalog.canRun failed:`, error);
           return false;
         }
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog.execute starting`);
           const data = await context.plugin.loadData();
           const catalog = (data == null ? void 0 : data.conversationCatalog) || {};
           const catalogSize = Object.keys(catalog).length;
           if (catalogSize === 0) {
-            console.debug(`[NEXUS-DEBUG] DeleteCatalog: No catalog to delete`);
             return {
               success: true,
               message: "No legacy catalog found to delete"
             };
           }
           const existingImportedArchives = data == null ? void 0 : data.importedArchives;
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: Preserving importedArchives:`, existingImportedArchives);
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: importedArchives type:`, typeof existingImportedArchives);
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: importedArchives keys:`, existingImportedArchives ? Object.keys(existingImportedArchives).length : 0);
           const cleanedData = {
             settings: data.settings || context.plugin.settings,
             // CRITICAL FIX: Force preservation of importedArchives
@@ -3395,13 +5237,11 @@ var init_upgrade_1_1_0 = __esm({
             catalogDeletionDate: new Date().toISOString(),
             catalogDeletionStats: { entriesDeleted: catalogSize }
           };
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: cleanedData.importedArchives keys:`, Object.keys(cleanedData.importedArchives).length);
           await context.plugin.saveData(cleanedData);
           const verifyData = await context.plugin.loadData();
           const verifyArchives = (verifyData == null ? void 0 : verifyData.importedArchives) || {};
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: After save, importedArchives keys:`, Object.keys(verifyArchives).length);
           if (Object.keys(verifyArchives).length === 0 && Object.keys(existingImportedArchives || {}).length > 0) {
-            console.error(`[NEXUS-DEBUG] DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
+            logger2.error(`DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
             return {
               success: false,
               message: `Critical error: importedArchives were lost during migration`,
@@ -3411,14 +5251,13 @@ var init_upgrade_1_1_0 = __esm({
               }
             };
           }
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog: Successfully deleted ${catalogSize} entries and preserved ${Object.keys(verifyArchives).length} imported archives`);
           return {
             success: true,
             message: `Legacy catalog deleted: ${catalogSize} entries removed, ${Object.keys(verifyArchives).length} imported archives preserved`,
             details: { entriesDeleted: catalogSize, archivesPreserved: Object.keys(verifyArchives).length }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] DeleteCatalog.execute failed:`, error);
+          logger2.error(`DeleteCatalog.execute failed:`, error);
           return {
             success: false,
             message: `Failed to delete legacy catalog: ${error}`,
@@ -3431,14 +5270,14 @@ var init_upgrade_1_1_0 = __esm({
           const data = await context.plugin.loadData();
           const hasNoCatalog = !(data == null ? void 0 : data.conversationCatalog);
           const hasImportedArchives = (data == null ? void 0 : data.importedArchives) && Object.keys(data.importedArchives).length > 0;
-          console.debug(`[NEXUS-DEBUG] DeleteCatalog.verify: hasNoCatalog=${hasNoCatalog}, hasImportedArchives=${hasImportedArchives}`);
           return hasNoCatalog;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] DeleteCatalog.verify failed:`, error);
+          logger2.error(`DeleteCatalog.verify failed:`, error);
           return false;
         }
       }
     };
+    __name(DeleteCatalogOperation, "DeleteCatalogOperation");
     CleanMetadataOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -3449,48 +5288,44 @@ var init_upgrade_1_1_0 = __esm({
       }
       async canRun(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
             return true;
           });
           const canRun = conversationFiles.length > 0;
-          console.debug(`[NEXUS-DEBUG] CleanMetadata.canRun: found ${conversationFiles.length} conversation files, canRun=${canRun}`);
           return canRun;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] CleanMetadata.canRun failed:`, error);
+          logger2.error(`CleanMetadata.canRun failed:`, error);
           return false;
         }
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] CleanMetadata.execute starting`);
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
             return true;
           });
           if (conversationFiles.length === 0) {
-            console.debug(`[NEXUS-DEBUG] CleanMetadata: No conversation files to clean`);
             return {
               success: true,
               message: "No conversation files found to clean",
               details: { processed: 0, cleaned: 0, errors: 0 }
             };
           }
-          console.debug(`[NEXUS-DEBUG] CleanMetadata: Processing ${conversationFiles.length} conversation files`);
           let processed = 0;
           let cleaned = 0;
           let errors = 0;
@@ -3508,21 +5343,20 @@ var init_upgrade_1_1_0 = __esm({
                 }
               } catch (error) {
                 errors++;
-                console.error(`[NEXUS-DEBUG] Error cleaning metadata for ${file.path}:`, error);
+                logger2.error(`Error cleaning metadata for ${file.path}:`, error);
               }
             }
             if (i + batchSize < conversationFiles.length) {
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          console.debug(`[NEXUS-DEBUG] CleanMetadata: Completed - processed:${processed}, cleaned:${cleaned}, errors:${errors}`);
           return {
             success: errors === 0,
             message: `Metadata cleanup completed: ${cleaned} files cleaned, ${errors} errors`,
             details: { processed, cleaned, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] CleanMetadata.execute failed:`, error);
+          logger2.error(`CleanMetadata.execute failed:`, error);
           return {
             success: false,
             message: `Metadata cleanup failed: ${error}`,
@@ -3537,7 +5371,7 @@ var init_upgrade_1_1_0 = __esm({
         const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
         if (!frontmatterMatch) {
           if (content.includes("nexus:") || content.includes("conversation_id:")) {
-            console.warn(`[NEXUS-DEBUG] File ${fileName} appears to be Nexus but has malformed frontmatter`);
+            logger2.warn(`File ${fileName} appears to be Nexus but has malformed frontmatter`);
           }
           return content;
         }
@@ -3567,7 +5401,7 @@ var init_upgrade_1_1_0 = __esm({
         if (frontmatterData.provider) {
           newFrontmatter.push(`provider: ${frontmatterData.provider}`);
         }
-        newFrontmatter.push(`aliases: "${safeAlias}"`);
+        newFrontmatter.push(`aliases: ${safeAlias}`);
         if (frontmatterData.conversation_id) {
           newFrontmatter.push(`conversation_id: ${frontmatterData.conversation_id}`);
         }
@@ -3604,12 +5438,12 @@ ${cleanedFrontmatter}
       }
       async verify(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -3623,7 +5457,6 @@ ${cleanedFrontmatter}
                 continue;
               const frontmatterContent = frontmatterMatch[1];
               if (!frontmatterContent.includes("plugin_version:")) {
-                console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Missing plugin_version in ${file.path}`);
                 return false;
               }
               const forbiddenFields = [
@@ -3640,22 +5473,21 @@ ${cleanedFrontmatter}
                 (field) => frontmatterContent.includes(field)
               );
               if (hasUnwantedFields) {
-                console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Found unwanted fields in ${file.path}`);
                 return false;
               }
             } catch (error) {
-              console.error(`[NEXUS-DEBUG] CleanMetadata.verify error for ${file.path}:`, error);
+              logger2.error(`CleanMetadata.verify error for ${file.path}:`, error);
               return false;
             }
           }
-          console.debug(`[NEXUS-DEBUG] CleanMetadata.verify: Passed verification`);
           return true;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] CleanMetadata.verify failed:`, error);
+          logger2.error(`CleanMetadata.verify failed:`, error);
           return false;
         }
       }
     };
+    __name(CleanMetadataOperation, "CleanMetadataOperation");
     Upgrade110 = class extends VersionUpgrade {
       constructor() {
         super(...arguments);
@@ -3670,6 +5502,7 @@ ${cleanedFrontmatter}
         ];
       }
     };
+    __name(Upgrade110, "Upgrade110");
   }
 });
 
@@ -3679,12 +5512,13 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian15, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian21, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian15 = require("obsidian");
+    import_obsidian21 = require("obsidian");
+    init_logger();
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -3695,12 +5529,12 @@ var init_upgrade_1_2_0 = __esm({
       }
       async canRun(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -3713,24 +5547,23 @@ var init_upgrade_1_2_0 = __esm({
                 return true;
               }
             } catch (error) {
-              console.error(`Error checking file ${file.path}:`, error);
+              logger2.error(`Error checking file ${file.path}:`, error);
             }
           }
           return false;
         } catch (error) {
-          console.error(`ConvertToCallouts.canRun failed:`, error);
+          logger2.error(`ConvertToCallouts.canRun failed:`, error);
           return false;
         }
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] ConvertToCallouts.execute starting`);
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -3739,7 +5572,6 @@ var init_upgrade_1_2_0 = __esm({
           let processed = 0;
           let converted = 0;
           let errors = 0;
-          console.debug(`[NEXUS-DEBUG] ConvertToCallouts: Processing ${conversationFiles.length} files`);
           const batchSize = 10;
           for (let i = 0; i < conversationFiles.length; i += batchSize) {
             const batch = conversationFiles.slice(i, i + batchSize);
@@ -3758,21 +5590,20 @@ var init_upgrade_1_2_0 = __esm({
                 }
               } catch (error) {
                 errors++;
-                console.error(`[NEXUS-DEBUG] Error converting ${file.path}:`, error);
+                logger2.error(`Error converting ${file.path}:`, error);
               }
             }
             if (i + batchSize < conversationFiles.length) {
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
           }
-          console.debug(`[NEXUS-DEBUG] ConvertToCallouts: Completed - processed:${processed}, converted:${converted}, errors:${errors}`);
           return {
             success: errors === 0,
             message: `Callout conversion completed: ${converted} files converted, ${errors} errors`,
             details: { processed, converted, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] ConvertToCallouts.execute failed:`, error);
+          logger2.error(`ConvertToCallouts.execute failed:`, error);
           return {
             success: false,
             message: `Callout conversion failed: ${error}`,
@@ -3879,12 +5710,12 @@ ${cleanContent}`;
       }
       async verify(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder;
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(archiveFolder))
+            if (!file.path.startsWith(conversationFolder))
               return false;
-            const relativePath = file.path.substring(archiveFolder.length + 1);
+            const relativePath = file.path.substring(conversationFolder.length + 1);
             if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
               return false;
             }
@@ -3894,25 +5725,24 @@ ${cleanContent}`;
             try {
               const content = await context.plugin.app.vault.read(file);
               if (this.hasOldIndentationFormat(content)) {
-                console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Still has old format in ${file.path}`);
                 return false;
               }
               if (!content.includes('plugin_version: "1.2.0"')) {
-                console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Missing v1.2.0 in ${file.path}`);
                 return false;
               }
             } catch (error) {
-              console.error(`Error verifying file ${file.path}:`, error);
+              logger2.error(`Error verifying file ${file.path}:`, error);
               return false;
             }
           }
           return true;
         } catch (error) {
-          console.error(`ConvertToCallouts.verify failed:`, error);
+          logger2.error(`ConvertToCallouts.verify failed:`, error);
           return false;
         }
       }
     };
+    __name(ConvertToCalloutsOperation, "ConvertToCalloutsOperation");
     MoveReportsToProviderOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -3932,10 +5762,9 @@ ${cleanContent}`;
               return false;
             return f.name.includes("import report") || f.name.includes("import_");
           });
-          console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun: found ${reportFiles.length} reports in root folder`);
           return reportFiles.length > 0;
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun failed:`, error);
+          logger2.error(`MoveReportsToProviderOperation.canRun failed:`, error);
           return false;
         }
       }
@@ -3963,25 +5792,22 @@ ${cleanContent}`;
               processed++;
               const newPath = `${chatgptReportFolder}/${file.name}`;
               if (await context.plugin.app.vault.adapter.exists(newPath)) {
-                console.debug(`[NEXUS-DEBUG] Target already exists, skipping: ${newPath}`);
                 continue;
               }
               await context.plugin.app.vault.adapter.rename(file.path, newPath);
               moved++;
-              console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} \u2192 ${newPath}`);
             } catch (error) {
               errors++;
-              console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+              logger2.error(`Error moving report ${file.path}:`, error);
             }
           }
-          console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation: processed=${processed}, moved=${moved}, errors=${errors}`);
           return {
             success: errors === 0,
             message: `Reports organized: ${moved} files moved to provider structure, ${errors} errors`,
             details: { processed, moved, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.execute failed:`, error);
+          logger2.error(`MoveReportsToProviderOperation.execute failed:`, error);
           return {
             success: false,
             message: `Report organization failed: ${error}`,
@@ -3993,6 +5819,7 @@ ${cleanContent}`;
         return true;
       }
     };
+    __name(MoveReportsToProviderOperation, "MoveReportsToProviderOperation");
     UpdateReportLinksOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -4010,8 +5837,8 @@ ${cleanContent}`;
       async execute(context) {
         try {
           const reportFolder = context.plugin.settings.reportFolder;
-          const archiveFolder = context.plugin.settings.archiveFolder;
-          const escapedArchive = this.escapeRegExp(archiveFolder);
+          const conversationFolder = context.plugin.settings.conversationFolder;
+          const escapedArchive = this.escapeRegExp(conversationFolder);
           let processed = 0;
           let updated = 0;
           let errors = 0;
@@ -4040,17 +5867,16 @@ ${cleanContent}`;
               }
             } catch (e) {
               errors++;
-              console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation error in ${file.path}:`, e);
+              logger2.error(`UpdateReportLinksOperation error in ${file.path}:`, e);
             }
           }
-          console.debug(`[NEXUS-DEBUG] UpdateReportLinksOperation: processed=${processed}, updated=${updated}, errors=${errors}`);
           return {
             success: errors === 0,
             message: `Report links updated: ${updated} files changed, ${errors} errors`,
             details: { processed, updated, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation.execute failed:`, error);
+          logger2.error(`UpdateReportLinksOperation.execute failed:`, error);
           return {
             success: false,
             message: `Report link update failed: ${error}`,
@@ -4062,6 +5888,7 @@ ${cleanContent}`;
         return true;
       }
     };
+    __name(UpdateReportLinksOperation, "UpdateReportLinksOperation");
     MoveYearFoldersOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -4072,43 +5899,40 @@ ${cleanContent}`;
       }
       async canRun(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
-          const yearFolders = await this.findYearFolders(context, archiveFolder);
+          const conversationFolder = context.plugin.settings.conversationFolder;
+          const yearFolders = await this.findYearFolders(context, conversationFolder);
           return yearFolders.length > 0;
         } catch (error) {
-          console.error(`MoveYearFolders.canRun failed:`, error);
+          logger2.error(`MoveYearFolders.canRun failed:`, error);
           return false;
         }
       }
       async execute(context) {
         try {
-          console.debug(`[NEXUS-DEBUG] MoveYearFolders.execute starting`);
-          const archiveFolder = context.plugin.settings.archiveFolder;
+          const conversationFolder = context.plugin.settings.conversationFolder;
           let movedFolders = 0;
           let errors = 0;
-          const yearFolders = await this.findYearFolders(context, archiveFolder);
+          const yearFolders = await this.findYearFolders(context, conversationFolder);
           for (const yearFolder of yearFolders) {
             try {
-              const chatgptFolder = `${archiveFolder}/chatgpt`;
+              const chatgptFolder = `${conversationFolder}/chatgpt`;
               await context.plugin.app.vault.adapter.mkdir(chatgptFolder);
               const newPath = `${chatgptFolder}/${yearFolder}`;
-              const oldPath = `${archiveFolder}/${yearFolder}`;
+              const oldPath = `${conversationFolder}/${yearFolder}`;
               await context.plugin.app.vault.adapter.rename(oldPath, newPath);
               movedFolders++;
-              console.debug(`[NEXUS-DEBUG] Moved ${yearFolder} to chatgpt/${yearFolder}`);
             } catch (error) {
               errors++;
-              console.error(`[NEXUS-DEBUG] Error moving year folder ${yearFolder}:`, error);
+              logger2.error(`Error moving year folder ${yearFolder}:`, error);
             }
           }
-          console.debug(`[NEXUS-DEBUG] MoveYearFolders: Completed - moved:${movedFolders}, errors:${errors}`);
           return {
             success: errors === 0,
             message: `Conversation organization completed: ${movedFolders} year folders moved to chatgpt structure, ${errors} errors`,
             details: { movedFolders, errors }
           };
         } catch (error) {
-          console.error(`[NEXUS-DEBUG] MoveYearFolders.execute failed:`, error);
+          logger2.error(`MoveYearFolders.execute failed:`, error);
           return {
             success: false,
             message: `Conversation organization failed: ${error}`,
@@ -4118,24 +5942,23 @@ ${cleanContent}`;
       }
       async verify(context) {
         try {
-          const archiveFolder = context.plugin.settings.archiveFolder;
-          const remainingYearFolders = await this.findYearFolders(context, archiveFolder);
+          const conversationFolder = context.plugin.settings.conversationFolder;
+          const remainingYearFolders = await this.findYearFolders(context, conversationFolder);
           if (remainingYearFolders.length > 0) {
-            console.debug(`[NEXUS-DEBUG] MoveYearFolders.verify: Still ${remainingYearFolders.length} year folders in old structure`);
             return false;
           }
           return true;
         } catch (error) {
-          console.error(`MoveYearFolders.verify failed:`, error);
+          logger2.error(`MoveYearFolders.verify failed:`, error);
           return false;
         }
       }
       /**
-       * Find year folders (YYYY) directly in archive folder
+       * Find year folders (YYYY) directly in conversation folder
        */
-      async findYearFolders(context, archiveFolder) {
+      async findYearFolders(context, conversationFolder) {
         try {
-          const folders = await context.plugin.app.vault.adapter.list(archiveFolder);
+          const folders = await context.plugin.app.vault.adapter.list(conversationFolder);
           return folders.folders.filter((folder) => {
             const folderName = folder.split("/").pop() || "";
             return /^\d{4}$/.test(folderName) && folderName !== "chatgpt";
@@ -4145,7 +5968,8 @@ ${cleanContent}`;
         }
       }
     };
-    NexusUpgradeModal = class extends import_obsidian15.Modal {
+    __name(MoveYearFoldersOperation, "MoveYearFoldersOperation");
+    NexusUpgradeModal = class extends import_obsidian21.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -4184,9 +6008,8 @@ Your conversations will be reorganized with provider structure and modern callou
             }
           }
         } catch (error) {
-          console.debug("[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback");
         }
-        await import_obsidian15.MarkdownRenderer.render(
+        await import_obsidian21.MarkdownRenderer.render(
           this.app,
           message,
           this.contentEl,
@@ -4209,6 +6032,7 @@ Your conversations will be reorganized with provider structure and modern callou
         });
       }
     };
+    __name(NexusUpgradeModal, "NexusUpgradeModal");
     OfferReimportOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -4228,7 +6052,7 @@ Your conversations will be reorganized with provider structure and modern callou
             details: { action: "info_displayed" }
           };
         } catch (error) {
-          console.error(`OfferReimport.execute failed:`, error);
+          logger2.error(`OfferReimport.execute failed:`, error);
           return {
             success: false,
             message: `Failed to complete reimport operation: ${error}`,
@@ -4240,6 +6064,7 @@ Your conversations will be reorganized with provider structure and modern callou
         return true;
       }
     };
+    __name(OfferReimportOperation, "OfferReimportOperation");
     Upgrade120 = class extends VersionUpgrade {
       constructor() {
         super(...arguments);
@@ -4255,6 +6080,1720 @@ Your conversations will be reorganized with provider structure and modern callou
         ];
       }
     };
+    __name(Upgrade120, "Upgrade120");
+  }
+});
+
+// src/dialogs/configure-folder-locations-dialog.ts
+var import_obsidian22, ConfigureFolderLocationsDialog;
+var init_configure_folder_locations_dialog = __esm({
+  "src/dialogs/configure-folder-locations-dialog.ts"() {
+    "use strict";
+    import_obsidian22 = require("obsidian");
+    init_enhanced_folder_migration_dialog();
+    init_folder_tree_browser_modal();
+    init_folder_validation();
+    init_utils();
+    ConfigureFolderLocationsDialog = class extends import_obsidian22.Modal {
+      // Track if onComplete was already called
+      constructor(plugin, onComplete) {
+        super(plugin.app);
+        this.plugin = plugin;
+        this.reportFolderInput = null;
+        this.completed = false;
+        this.onComplete = onComplete;
+        this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.createEl("h2", {
+          text: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+          cls: "nexus-upgrade-title"
+        });
+        const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
+        const descriptionEl = messageContainer.createDiv({ cls: "nexus-upgrade-description" });
+        descriptionEl.createEl("p", {
+          text: `In version 1.3.0, you can specify a folder for Reports. We will move existing reports to ${this.originalReportFolder}, or you can select your preferred folder below.`
+        });
+        descriptionEl.createEl("p", {
+          text: "Note: The folder cannot be inside Conversations or Attachments.",
+          cls: "nexus-upgrade-note"
+        });
+        const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
+        folderSection.createEl("div", {
+          text: "\u{1F4CA} Report Folder",
+          cls: "nexus-upgrade-folder-label"
+        });
+        const inputContainer = folderSection.createDiv({ cls: "nexus-upgrade-input-container" });
+        this.reportFolderInput = inputContainer.createEl("input", {
+          type: "text",
+          placeholder: "Nexus Reports",
+          value: this.originalReportFolder,
+          cls: "nexus-upgrade-folder-input"
+        });
+        this.reportFolderInput.readOnly = true;
+        this.reportFolderInput.style.cursor = "default";
+        const browseButton = inputContainer.createEl("button", {
+          text: "Browse",
+          cls: "mod-cta nexus-upgrade-browse-button"
+        });
+        browseButton.addEventListener("click", () => {
+          const modal = new FolderTreeBrowserModal(
+            this.plugin.app,
+            (path) => {
+              if (this.reportFolderInput) {
+                this.reportFolderInput.value = path;
+              }
+            },
+            this.originalReportFolder
+          );
+          modal.open();
+        });
+        const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container-centered" });
+        const proceedButton = buttonContainer.createEl("button", {
+          text: "Proceed",
+          cls: "mod-cta nexus-upgrade-proceed-button"
+        });
+        proceedButton.addEventListener("click", async () => {
+          await this.handleSave();
+        });
+        this.addStyles();
+      }
+      async handleSave() {
+        var _a;
+        if (this.completed)
+          return;
+        if (!this.reportFolderInput) {
+          this.completed = true;
+          this.close();
+          this.onComplete({
+            conversationFolder: {
+              changed: false,
+              oldPath: this.plugin.settings.conversationFolder,
+              newPath: this.plugin.settings.conversationFolder
+            },
+            reportFolder: {
+              changed: false,
+              oldPath: this.originalReportFolder,
+              newPath: this.originalReportFolder
+            },
+            attachmentFolder: {
+              changed: false,
+              oldPath: this.plugin.settings.attachmentFolder,
+              newPath: this.plugin.settings.attachmentFolder
+            }
+          });
+          return;
+        }
+        const newReportFolder = this.reportFolderInput.value.trim();
+        const validation = validateFolderNesting(
+          "reportFolder",
+          newReportFolder,
+          this.plugin.settings.conversationFolder,
+          this.originalReportFolder,
+          // Use original to avoid self-check
+          this.plugin.settings.attachmentFolder
+        );
+        if (!validation.valid) {
+          this.showErrorDialog("Invalid Folder Location", (_a = validation.error) != null ? _a : "Invalid folder configuration");
+          return;
+        }
+        const result = {
+          conversationFolder: {
+            changed: false,
+            oldPath: this.plugin.settings.conversationFolder,
+            newPath: this.plugin.settings.conversationFolder
+          },
+          reportFolder: {
+            changed: newReportFolder !== this.originalReportFolder,
+            oldPath: this.originalReportFolder,
+            newPath: newReportFolder
+          },
+          attachmentFolder: {
+            changed: false,
+            oldPath: this.plugin.settings.attachmentFolder,
+            newPath: this.plugin.settings.attachmentFolder
+          }
+        };
+        this.completed = true;
+        this.close();
+        await this.handleFolderChange("reportFolder", result.reportFolder);
+        this.onComplete(result);
+      }
+      async handleFolderChange(folderType, folderInfo) {
+        if (!folderInfo.changed) {
+          return;
+        }
+        const oldPath = folderInfo.oldPath;
+        const newPath = folderInfo.newPath;
+        const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
+        if (newFolder && newFolder instanceof import_obsidian22.TFolder && newFolder.children.length > 0) {
+          this.showErrorDialog(
+            "Target Folder Not Empty",
+            `The folder "${newPath}" already contains files.
+
+To change the folder location:
+\u2022 Move existing files manually in Obsidian, OR
+\u2022 Choose an empty folder or create a new one`
+          );
+          return;
+        }
+        this.plugin.settings[folderType] = newPath;
+        await this.plugin.saveSettings();
+        const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
+        if (!oldFolder || !(oldFolder instanceof import_obsidian22.TFolder) || oldFolder.children.length === 0) {
+          return;
+        }
+        const folderTypeLabel = folderType === "conversationFolder" ? "conversations" : folderType === "reportFolder" ? "reports" : "attachments";
+        await new Promise((resolve) => {
+          const handleMigrationAction = /* @__PURE__ */ __name(async (action) => {
+            if (action === "move") {
+              try {
+                const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
+                folderInfo.filesMoved = result.moved;
+                if (result.success && result.skipped === 0) {
+                  new import_obsidian22.Notice(`\u2705 Files moved to ${newPath}`);
+                } else {
+                  this.showMergeResultDialog(result, oldPath, newPath);
+                }
+              } catch (error) {
+                this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.showErrorDialog("Migration Failed", `Failed to move files: ${errorMessage}`);
+              }
+            } else if (action === "cancel") {
+              this.plugin.settings[folderType] = oldPath;
+              await this.plugin.saveSettings();
+            }
+            resolve();
+          }, "handleMigrationAction");
+          const dialog = new EnhancedFolderMigrationDialog(
+            this.plugin,
+            oldPath,
+            newPath,
+            folderTypeLabel,
+            handleMigrationAction
+          );
+          dialog.open();
+        });
+      }
+      /**
+       * Show dialog with merge result details when files were skipped or errors occurred
+       */
+      showMergeResultDialog(result, oldPath, newPath) {
+        const modal = new import_obsidian22.Modal(this.plugin.app);
+        modal.titleEl.setText("Folder Migration Result");
+        const { contentEl } = modal;
+        const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
+        summary.createEl("h3", { text: "Migration Summary" });
+        const stats = summary.createDiv({ cls: "nexus-merge-stats" });
+        stats.createEl("p", { text: `\u2705 Successfully moved: ${result.moved} file(s)` });
+        if (result.skipped > 0) {
+          stats.createEl("p", {
+            text: `\u26A0\uFE0F Skipped (already exist): ${result.skipped} file(s)`,
+            cls: "nexus-merge-warning"
+          });
+        }
+        if (result.errors > 0) {
+          stats.createEl("p", {
+            text: `\u274C Errors: ${result.errors} file(s)`,
+            cls: "nexus-merge-error"
+          });
+        }
+        const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
+        explanation.createEl("p", {
+          text: "Files that already existed in the destination were not overwritten to preserve your data."
+        });
+        if (result.errorDetails && result.errorDetails.length > 0) {
+          const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
+          errorSection.createEl("h4", { text: "Error Details:" });
+          const errorList = errorSection.createEl("ul");
+          for (const error of result.errorDetails) {
+            errorList.createEl("li", { text: error });
+          }
+        }
+        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
+        const closeButton = buttonContainer.createEl("button", { text: "OK", cls: "mod-cta" });
+        closeButton.addEventListener("click", () => modal.close());
+        const styleEl = document.createElement("style");
+        styleEl.textContent = `
+            .nexus-merge-summary {
+                margin-bottom: 20px;
+            }
+            .nexus-merge-stats p {
+                margin: 8px 0;
+                font-size: 14px;
+            }
+            .nexus-merge-warning {
+                color: var(--text-warning);
+            }
+            .nexus-merge-error {
+                color: var(--text-error);
+            }
+            .nexus-merge-explanation {
+                padding: 12px;
+                background: var(--background-secondary);
+                border-radius: 4px;
+                margin: 16px 0;
+            }
+            .nexus-merge-errors {
+                margin-top: 16px;
+                padding: 12px;
+                background: var(--background-modifier-error);
+                border-radius: 4px;
+            }
+            .nexus-merge-errors ul {
+                margin: 8px 0;
+                padding-left: 20px;
+            }
+            .nexus-merge-errors li {
+                margin: 4px 0;
+                font-size: 12px;
+                font-family: var(--font-monospace);
+            }
+        `;
+        document.head.appendChild(styleEl);
+        modal.open();
+      }
+      addStyles() {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = `
+            .nexus-upgrade-title {
+                margin-bottom: 1em;
+                color: var(--text-normal);
+                text-align: center;
+            }
+
+            .nexus-upgrade-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-upgrade-description {
+                font-size: 1.05em;
+                line-height: 1.6;
+                margin-bottom: 1.5em;
+            }
+
+            .nexus-upgrade-description p {
+                margin: 0.8em 0;
+            }
+
+            .nexus-upgrade-note {
+                font-size: 0.95em;
+                color: var(--text-muted);
+                font-style: italic;
+            }
+
+            .nexus-upgrade-folder-section {
+                background-color: var(--background-secondary);
+                padding: 1.5em;
+                margin: 1em 0;
+                border-radius: 8px;
+            }
+
+            .nexus-upgrade-folder-label {
+                font-size: 1.1em;
+                font-weight: 600;
+                margin-bottom: 0.8em;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-input-container {
+                display: flex;
+                gap: 0.8em;
+                align-items: stretch;
+                width: 100%;
+            }
+
+            .nexus-upgrade-folder-input {
+                flex: 1;
+                padding: 0.6em 0.8em;
+                font-size: 1em;
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+                background-color: var(--background-primary);
+                color: var(--text-normal);
+                min-width: 0;
+            }
+
+            .nexus-upgrade-browse-button {
+                padding: 0.6em 1.2em !important;
+                font-size: 1em !important;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .nexus-upgrade-button-container-centered {
+                display: flex;
+                justify-content: center;
+                margin-top: 2em;
+            }
+
+            .nexus-upgrade-proceed-button {
+                padding: 12px 48px !important;
+                font-size: 16px !important;
+                font-weight: 600 !important;
+                min-width: 200px;
+            }
+        `;
+        document.head.appendChild(styleEl);
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+        if (!this.completed && this.onComplete) {
+          this.completed = true;
+          this.onComplete({
+            conversationFolder: {
+              changed: false,
+              oldPath: this.plugin.settings.conversationFolder,
+              newPath: this.plugin.settings.conversationFolder
+            },
+            reportFolder: {
+              changed: false,
+              oldPath: this.originalReportFolder,
+              newPath: this.originalReportFolder
+            },
+            attachmentFolder: {
+              changed: false,
+              oldPath: this.plugin.settings.attachmentFolder,
+              newPath: this.plugin.settings.attachmentFolder
+            }
+          });
+        }
+      }
+      showErrorDialog(title, message) {
+        const modal = new import_obsidian22.Modal(this.plugin.app);
+        modal.titleEl.setText(title);
+        modal.contentEl.createEl("p", {
+          text: message,
+          cls: "nexus-error-message"
+        });
+        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+        buttonContainer.style.display = "flex";
+        buttonContainer.style.justifyContent = "flex-end";
+        buttonContainer.style.marginTop = "1em";
+        const okButton = buttonContainer.createEl("button", {
+          text: "OK",
+          cls: "mod-cta"
+        });
+        okButton.addEventListener("click", () => modal.close());
+        modal.open();
+      }
+    };
+    __name(ConfigureFolderLocationsDialog, "ConfigureFolderLocationsDialog");
+  }
+});
+
+// src/upgrade/versions/upgrade-1.3.0.ts
+var upgrade_1_3_0_exports = {};
+__export(upgrade_1_3_0_exports, {
+  Upgrade130: () => Upgrade130
+});
+var import_obsidian23, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
+var init_upgrade_1_3_0 = __esm({
+  "src/upgrade/versions/upgrade-1.3.0.ts"() {
+    "use strict";
+    init_upgrade_interface();
+    init_utils();
+    init_date_parser();
+    import_obsidian23 = require("obsidian");
+    init_configure_folder_locations_dialog();
+    ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "convert-to-iso8601-timestamps";
+        this.name = "Convert Timestamps to ISO 8601";
+        this.description = "Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ). This fixes parsing issues with locale-specific date formats and ensures consistent timestamps across all regions.";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        var _a;
+        try {
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const conversationFiles = allFiles.filter((file) => {
+            if (!file.path.startsWith(conversationFolder))
+              return false;
+            const relativePath = file.path.substring(conversationFolder.length + 1);
+            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+              return false;
+            }
+            return true;
+          });
+          const samples = [];
+          let foundNonISO = false;
+          for (const file of conversationFiles) {
+            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+            if (!fm || fm.nexus !== context.plugin.manifest.id)
+              continue;
+            const vals = [fm.create_time, fm.update_time].filter((v) => typeof v === "string");
+            for (const v of vals) {
+              if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(v)) {
+                samples.push(v);
+                foundNonISO = true;
+              }
+            }
+          }
+          if (samples.length) {
+            const format = DateParser.detectFormatFromSamples(samples);
+            this.globalOrder = format == null ? void 0 : format.order;
+          }
+          if (foundNonISO) {
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
+          return false;
+        }
+      }
+      async execute(context) {
+        var _a;
+        try {
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const conversationFiles = allFiles.filter((file) => {
+            if (!file.path.startsWith(conversationFolder))
+              return false;
+            const relativePath = file.path.substring(conversationFolder.length + 1);
+            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+              return false;
+            }
+            return true;
+          });
+          if (!this.globalOrder) {
+            const samples = [];
+            for (const file of conversationFiles) {
+              const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+              if (!fm || fm.nexus !== context.plugin.manifest.id)
+                continue;
+              const vals = [fm.create_time, fm.update_time].filter((v) => typeof v === "string");
+              for (const v of vals) {
+                if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(v)) {
+                  samples.push(v);
+                }
+              }
+            }
+            if (samples.length) {
+              const format = DateParser.detectFormatFromSamples(samples);
+              this.globalOrder = format == null ? void 0 : format.order;
+            }
+          }
+          let processed = 0;
+          let converted = 0;
+          let skipped = 0;
+          let alreadyISO = 0;
+          let failed = 0;
+          let errors = 0;
+          const batchSize = 10;
+          for (let i = 0; i < conversationFiles.length; i += batchSize) {
+            const batch = conversationFiles.slice(i, i + batchSize);
+            for (const file of batch) {
+              processed++;
+              try {
+                const content = await context.plugin.app.vault.read(file);
+                if (!this.isNexusFile(content)) {
+                  skipped++;
+                  continue;
+                }
+                const hadNonISO = this.hasNonISOTimestamps(content);
+                if (!hadNonISO) {
+                  alreadyISO++;
+                  continue;
+                }
+                const convertedContent = this.convertTimestampsToISO8601(content);
+                if (content !== convertedContent) {
+                  const finalContent = this.updatePluginVersion(convertedContent, "1.3.0");
+                  await context.plugin.app.vault.modify(file, finalContent);
+                  converted++;
+                } else {
+                  failed++;
+                }
+              } catch (error) {
+                errors++;
+                console.error(`Error converting timestamps in ${file.path}:`, error);
+              }
+            }
+            if (i + batchSize < conversationFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          const results = [];
+          results.push(`**What this does:**`);
+          results.push(`Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).`);
+          results.push(`This fixes parsing issues with locale-specific date formats.`);
+          results.push(``);
+          results.push(`**Summary:**`);
+          results.push(``);
+          results.push(`- Total files scanned: ${processed}`);
+          results.push(`- Already in ISO format: ${alreadyISO}`);
+          results.push(`- Converted to ISO: ${converted}`);
+          results.push(`- Skipped (non-Nexus): ${skipped}`);
+          if (failed > 0) {
+            results.push(`- Failed to convert: ${failed}`);
+          }
+          if (errors > 0) {
+            results.push(`- Errors: ${errors}`);
+          }
+          return {
+            success: errors === 0,
+            message: `Converted ${converted} conversation(s) to ISO 8601 format.`,
+            details: results
+          };
+        } catch (error) {
+          console.error(`ConvertToISO8601Timestamps.execute failed:`, error);
+          return {
+            success: false,
+            message: `Timestamp conversion failed: ${error}`,
+            details: { error: String(error) }
+          };
+        }
+      }
+      /**
+       * Check if file belongs to Nexus plugin
+       */
+      isNexusFile(content) {
+        return content.includes("nexus: nexus-ai-chat-importer");
+      }
+      /**
+       * Check if content has non-ISO timestamps (need conversion to ISO 8601)
+       * Detects any format that is not already ISO 8601
+       */
+      hasNonISOTimestamps(content) {
+        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+        if (!frontmatterMatch) {
+          return false;
+        }
+        const frontmatter = frontmatterMatch[1];
+        const hasISO = /^(create|update)_time: \d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/m.test(frontmatter);
+        if (hasISO) {
+          return false;
+        }
+        const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/m.test(frontmatter);
+        return hasNonISO;
+      }
+      /**
+       * Convert any date format to ISO 8601 in frontmatter only
+       * Supports: US, EU, DE, JP, and all locale-based formats
+       * Uses intelligent DateParser for automatic format detection
+       */
+      convertTimestampsToISO8601(content) {
+        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+        if (!frontmatterMatch) {
+          return content;
+        }
+        let frontmatter = frontmatterMatch[1];
+        const restOfContent = content.substring(frontmatterMatch[0].length);
+        let conversionCount = 0;
+        frontmatter = frontmatter.replace(
+          /^(create|update)_time: (.+)$/gm,
+          (match, field, dateStr) => {
+            if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(dateStr)) {
+              return match;
+            }
+            let isoDate = DateParser.convertToISO8601(dateStr);
+            if (!isoDate && this.globalOrder) {
+              isoDate = DateParser.convertToISO8601WithOrder(dateStr, this.globalOrder);
+            }
+            if (!isoDate) {
+              console.warn(`convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
+              return match;
+            }
+            conversionCount++;
+            return `${field}_time: ${isoDate}`;
+          }
+        );
+        return `---
+${frontmatter}
+---${restOfContent}`;
+      }
+      /**
+       * Update plugin_version in frontmatter
+       */
+      updatePluginVersion(content, version) {
+        return content.replace(
+          /^plugin_version: ".*?"$/m,
+          `plugin_version: "${version}"`
+        );
+      }
+      async verify(context) {
+        try {
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const conversationFiles = allFiles.filter((file) => {
+            if (!file.path.startsWith(conversationFolder))
+              return false;
+            const relativePath = file.path.substring(conversationFolder.length + 1);
+            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+              return false;
+            }
+            return true;
+          }).slice(0, 5);
+          for (const file of conversationFiles) {
+            try {
+              const content = await context.plugin.app.vault.read(file);
+              if (!this.isNexusFile(content)) {
+                continue;
+              }
+              if (this.hasNonISOTimestamps(content)) {
+                return false;
+              }
+              if (!content.includes('plugin_version: "1.3.0"')) {
+                return false;
+              }
+            } catch (error) {
+              console.error(`Error verifying file ${file.path}:`, error);
+              return false;
+            }
+          }
+          return true;
+        } catch (error) {
+          console.error(`ConvertToISO8601Timestamps.verify failed:`, error);
+          return false;
+        }
+      }
+    };
+    __name(ConvertToISO8601TimestampsOperation, "ConvertToISO8601TimestampsOperation");
+    FixFrontmatterAliasesOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "fix-frontmatter-aliases";
+        this.name = "Fix Frontmatter Aliases";
+        this.description = "Fixes YAML syntax errors in conversation aliases. Properly quotes titles containing special characters (colons, brackets, etc.) to prevent frontmatter parsing errors.";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        try {
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const conversationFiles = allFiles.filter((file) => {
+            if (!file.path.startsWith(conversationFolder))
+              return false;
+            const relativePath = file.path.substring(conversationFolder.length + 1);
+            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+              return false;
+            }
+            return true;
+          });
+          for (const file of conversationFiles.slice(0, 10)) {
+            try {
+              const content = await context.plugin.app.vault.read(file);
+              if (!this.isNexusFile(content)) {
+                continue;
+              }
+              if (this.hasProblematicAlias(content)) {
+                return true;
+              }
+            } catch (error) {
+              console.error(`Error checking file ${file.path}:`, error);
+            }
+          }
+          return false;
+        } catch (error) {
+          console.error(`FixFrontmatterAliases.canRun failed:`, error);
+          return false;
+        }
+      }
+      async execute(context) {
+        try {
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const conversationFiles = allFiles.filter((file) => {
+            if (!file.path.startsWith(conversationFolder))
+              return false;
+            const relativePath = file.path.substring(conversationFolder.length + 1);
+            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+              return false;
+            }
+            return true;
+          });
+          let processed = 0;
+          let fixed = 0;
+          let skipped = 0;
+          let errors = 0;
+          const batchSize = 10;
+          for (let i = 0; i < conversationFiles.length; i += batchSize) {
+            const batch = conversationFiles.slice(i, i + batchSize);
+            for (const file of batch) {
+              processed++;
+              try {
+                const content = await context.plugin.app.vault.read(file);
+                if (!this.isNexusFile(content)) {
+                  skipped++;
+                  continue;
+                }
+                if (!this.hasProblematicAlias(content)) {
+                  continue;
+                }
+                const fixedContent = this.fixAliases(content);
+                if (content !== fixedContent) {
+                  await context.plugin.app.vault.modify(file, fixedContent);
+                  fixed++;
+                }
+              } catch (error) {
+                errors++;
+                console.error(`Error fixing aliases in ${file.path}:`, error);
+              }
+            }
+            if (i + batchSize < conversationFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          const results = [];
+          results.push(`**What this does:**`);
+          results.push(`Fixes YAML syntax errors in conversation aliases caused by special characters.`);
+          results.push(`Properly quotes titles containing colons, brackets, etc. to prevent parsing errors.`);
+          results.push(``);
+          results.push(`**Summary:**`);
+          results.push(``);
+          results.push(`- Total files scanned: ${processed}`);
+          results.push(`- Fixed: ${fixed}`);
+          results.push(`- Skipped (non-Nexus): ${skipped}`);
+          if (errors > 0) {
+            results.push(`- Errors: ${errors}`);
+          }
+          return {
+            success: errors === 0,
+            message: `Fixed ${fixed} conversation(s) with problematic aliases.`,
+            details: results
+          };
+        } catch (error) {
+          console.error(`FixFrontmatterAliases.execute failed:`, error);
+          return {
+            success: false,
+            message: `Alias fix failed: ${error}`,
+            details: { error: String(error) }
+          };
+        }
+      }
+      /**
+       * Check if file belongs to Nexus plugin
+       */
+      isNexusFile(content) {
+        return content.includes("nexus: nexus-ai-chat-importer");
+      }
+      /**
+       * Check if content has problematic aliases (YAML special characters without proper quoting)
+       */
+      hasProblematicAlias(content) {
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch)
+          return false;
+        const frontmatter = frontmatterMatch[1];
+        const aliasMatch = frontmatter.match(/^aliases: (.+)$/m);
+        if (!aliasMatch)
+          return false;
+        const aliasValue = aliasMatch[1];
+        if (aliasValue.startsWith("'") && aliasValue.endsWith("'")) {
+          return false;
+        }
+        if (aliasValue.startsWith('"') && aliasValue.endsWith('"')) {
+          return true;
+        }
+        const needsQuoting = aliasValue.includes(":") || aliasValue.includes("[") || aliasValue.includes("]") || aliasValue.includes("{") || aliasValue.includes("}") || aliasValue.includes('"') || /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(aliasValue) || aliasValue.startsWith("#") || aliasValue.startsWith("&") || aliasValue.startsWith("*") || aliasValue.startsWith("!") || aliasValue.startsWith("|") || aliasValue.startsWith(">") || aliasValue.startsWith("%") || aliasValue.startsWith("@") || aliasValue.startsWith("`");
+        return needsQuoting;
+      }
+      /**
+       * Fix aliases in frontmatter using generateSafeAlias
+       */
+      fixAliases(content) {
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch)
+          return content;
+        let frontmatter = frontmatterMatch[1];
+        const restOfContent = content.substring(frontmatterMatch[0].length);
+        frontmatter = frontmatter.replace(
+          /^aliases: (.+)$/m,
+          (_m, aliasValue) => {
+            let cleanAlias = aliasValue.trim();
+            if (cleanAlias.startsWith('"') && cleanAlias.endsWith('"') || cleanAlias.startsWith("'") && cleanAlias.endsWith("'")) {
+              cleanAlias = cleanAlias.slice(1, -1);
+            }
+            cleanAlias = cleanAlias.replace(/''/g, "'");
+            const safeAlias = generateSafeAlias(cleanAlias);
+            return `aliases: ${safeAlias}`;
+          }
+        );
+        return `---
+${frontmatter}
+---${restOfContent}`;
+      }
+      async verify(context) {
+        try {
+          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const conversationFiles = allFiles.filter((file) => {
+            if (!file.path.startsWith(conversationFolder))
+              return false;
+            const relativePath = file.path.substring(conversationFolder.length + 1);
+            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+              return false;
+            }
+            return true;
+          }).slice(0, 5);
+          for (const file of conversationFiles) {
+            try {
+              const content = await context.plugin.app.vault.read(file);
+              if (!this.isNexusFile(content)) {
+                continue;
+              }
+              if (this.hasProblematicAlias(content)) {
+                return false;
+              }
+            } catch (error) {
+              console.error(`Error verifying file ${file.path}:`, error);
+              return false;
+            }
+          }
+          return true;
+        } catch (error) {
+          console.error(`FixFrontmatterAliases.verify failed:`, error);
+          return false;
+        }
+      }
+    };
+    __name(FixFrontmatterAliasesOperation, "FixFrontmatterAliasesOperation");
+    MigrateToSeparateFoldersOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "migrate-to-separate-folders";
+        this.name = "Implement Separate Folder Settings";
+        this.description = "Creates dedicated settings for Reports folder location and moves Reports from inside Conversations to the vault root for better organization.";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        const reportFolder = context.plugin.settings.reportFolder;
+        const archiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+        const oldReportPath = `${archiveFolder}/Reports`;
+        return !reportFolder || reportFolder === "" || reportFolder === oldReportPath;
+      }
+      async execute(context) {
+        const results = [];
+        try {
+          results.push(`**What this does:**`);
+          results.push(`Version 1.3.0 adds a dedicated setting for the Reports folder location.`);
+          results.push(`To prevent reports from moving when you reorganize conversations, we're moving the Reports folder to the vault root.`);
+          results.push(``);
+          const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+          const oldReportPath = `${oldArchiveFolder}/Reports`;
+          const newReportPath = "Nexus Reports";
+          const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
+          let reportsMoved = false;
+          if (oldReportFolder && oldReportFolder instanceof import_obsidian23.TFolder) {
+            try {
+              const result = await moveAndMergeFolders(oldReportFolder, newReportPath, context.plugin.app.vault);
+              reportsMoved = result.moved > 0;
+              try {
+                const stillExists = await context.plugin.app.vault.adapter.exists(oldReportPath);
+                if (stillExists) {
+                  const folderToDelete = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
+                  if (folderToDelete && folderToDelete instanceof import_obsidian23.TFolder) {
+                    await context.plugin.app.vault.delete(folderToDelete);
+                  }
+                }
+              } catch (deleteError) {
+              }
+              if (result.success && result.skipped === 0) {
+                results.push(`\u2705 Reports folder moved: \`${oldReportPath}\` \u2192 \`${newReportPath}\` (${result.moved} file(s))`);
+              } else {
+                results.push(`\u26A0\uFE0F Reports folder migration completed with warnings:`);
+                results.push(`   - Successfully moved: ${result.moved} file(s)`);
+                if (result.skipped > 0) {
+                  results.push(`   - Skipped (already exist): ${result.skipped} file(s)`);
+                }
+                if (result.errors > 0) {
+                  results.push(`   - Errors: ${result.errors} file(s)`);
+                }
+              }
+            } catch (error) {
+              console.error(`[MigrateReportsFolder] Failed to move Reports folder:`, error);
+              context.plugin.settings.reportFolder = oldReportPath;
+              results.push(`\u26A0\uFE0F Reports folder could not be moved automatically.`);
+              results.push(`   Current location: \`${oldReportPath}\``);
+              results.push(`   You can move it manually later in settings.`);
+            }
+          } else {
+            results.push(`\u2139\uFE0F No existing Reports folder found. New reports will be created in \`${newReportPath}\``);
+          }
+          if (reportsMoved || !oldReportFolder) {
+            context.plugin.settings.reportFolder = newReportPath;
+          }
+          await context.plugin.saveSettings();
+          return {
+            success: true,
+            message: "Reports folder migrated successfully",
+            details: results
+          };
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          console.error(`[MigrateReportsFolder] Failed:`, error);
+          results.push(`\u274C Error: ${errorMsg}`);
+          return {
+            success: false,
+            message: `Failed to migrate Reports folder: ${errorMsg}`,
+            details: results
+          };
+        }
+      }
+      async verify(context) {
+        try {
+          return !!context.plugin.settings.reportFolder;
+        } catch (error) {
+          console.error(`MigrateReportsFolder.verify failed:`, error);
+          return false;
+        }
+      }
+    };
+    __name(MigrateToSeparateFoldersOperation, "MigrateToSeparateFoldersOperation");
+    MigrateClaudeArtifactsOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "migrate-claude-artifacts";
+        this.name = "Migrate Claude Artifacts";
+        this.description = "Updates existing Claude artifacts: removes redundant header information (already in frontmatter), adds missing conversation links, and adds creation timestamps for better organization.";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        var _a;
+        try {
+          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+          const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
+          if (!folder || !(folder instanceof import_obsidian23.TFolder)) {
+            return false;
+          }
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+          if (artifactFiles.length === 0) {
+            return false;
+          }
+          for (const file of artifactFiles) {
+            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+            if (!fm || fm.provider !== "claude")
+              continue;
+            if (!fm.create_time) {
+              return true;
+            }
+            const content = await context.plugin.app.vault.read(file);
+            if (content.includes("**Type:** Claude Artifact") || content.includes("**Command:**") || content.includes("**UUID:**")) {
+              return true;
+            }
+          }
+          return false;
+        } catch (error) {
+          console.error(`MigrateClaudeArtifacts.canRun failed:`, error);
+          return false;
+        }
+      }
+      async execute(context) {
+        var _a;
+        const results = [];
+        let totalFiles = 0;
+        let processedCount = 0;
+        let skippedCount = 0;
+        let updatedCount = 0;
+        let errorCount = 0;
+        let warningCount = 0;
+        try {
+          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+          const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+          totalFiles = artifactFiles.length;
+          results.push(`**What this does:**`);
+          results.push(`Updates your existing Claude artifacts to the new format:`);
+          results.push(`- Removes redundant header information (Type, Language, Command, etc.)`);
+          results.push(`- Adds missing conversation links`);
+          results.push(`- Adds creation timestamps for better organization`);
+          results.push(``);
+          results.push(`**Processing ${totalFiles} artifact file(s)...**`);
+          results.push(``);
+          for (const file of artifactFiles) {
+            try {
+              const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+              if (!fm || fm.provider !== "claude") {
+                skippedCount++;
+                continue;
+              }
+              processedCount++;
+              let content = await context.plugin.app.vault.read(file);
+              let modified = false;
+              let warnings = [];
+              const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+              if (!fmMatch) {
+                errorCount++;
+                results.push(`\u274C ${file.basename}: Invalid frontmatter format`);
+                continue;
+              }
+              let frontmatter = fmMatch[1];
+              let body = fmMatch[2];
+              if (!fm.create_time) {
+                const createTime = await this.extractArtifactCreateTime(
+                  fm,
+                  conversationFolder,
+                  context.plugin,
+                  file
+                );
+                if (createTime.source === "message") {
+                  frontmatter += `
+create_time: ${createTime.value}`;
+                  modified = true;
+                } else if (createTime.source === "conversation") {
+                  frontmatter += `
+create_time: ${createTime.value}`;
+                  warnings.push(`Used conversation create_time (message not found)`);
+                  warningCount++;
+                  modified = true;
+                } else {
+                  warnings.push(`Could not determine create_time`);
+                  warningCount++;
+                  console.warn(`${file.basename}: TASK 1 - FAILED to determine create_time`);
+                }
+              } else {
+              }
+              const headerRegex = /\n\n\*\*Type:\*\* Claude Artifact\n\*\*Language:\*\*[^\n]*(?:\n\*\*Command:\*\*[^\n]*)?(?:\n\*\*Version:\*\*[^\n]*)?(?:\n\*\*ID:\*\*[^\n]*)?(?:\n\*\*UUID:\*\*[^\n]*)?/;
+              if (headerRegex.test(body)) {
+                body = body.replace(headerRegex, "");
+                modified = true;
+              } else {
+              }
+              if (!body.includes("**Conversation:**") && fm.conversation_id) {
+                const conversationLink = await this.findConversationLink(
+                  fm.conversation_id,
+                  conversationFolder,
+                  context.plugin
+                );
+                if (conversationLink) {
+                  const titleMatch = body.match(/^# [^\n]+\n/);
+                  if (titleMatch) {
+                    const insertPos = titleMatch[0].length;
+                    body = body.substring(0, insertPos) + `
+**Conversation:** ${conversationLink}
+` + body.substring(insertPos);
+                    modified = true;
+                  } else {
+                    console.warn(`${file.basename}: TASK 3 - Could not find title to insert link after`);
+                  }
+                } else {
+                  warnings.push(`Conversation note not found (ID: ${fm.conversation_id})`);
+                  warningCount++;
+                  console.warn(`${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
+                }
+              } else if (body.includes("**Conversation:**")) {
+              } else {
+              }
+              const needsVersionUpdate = !frontmatter.includes('plugin_version: "1.3.0"');
+              if (modified || needsVersionUpdate) {
+                if (frontmatter.includes("plugin_version:")) {
+                  frontmatter = frontmatter.replace(
+                    /^plugin_version: .*$/m,
+                    `plugin_version: "1.3.0"`
+                  );
+                } else {
+                  frontmatter += `
+plugin_version: "1.3.0"`;
+                }
+                const newContent = `---
+${frontmatter}
+---
+${body}`;
+                await context.plugin.app.vault.modify(file, newContent);
+                updatedCount++;
+                if (modified) {
+                } else {
+                }
+                if (warnings.length > 0) {
+                  results.push(`\u26A0\uFE0F  ${file.basename}: ${warnings.join(", ")}`);
+                }
+              } else {
+              }
+            } catch (error) {
+              errorCount++;
+              console.error(`${file.basename}: \u274C ERROR:`, error);
+              results.push(`\u274C ${file.basename}: ${error.message}`);
+            }
+          }
+          results.push(``);
+          results.push(`**Summary:**`);
+          results.push(``);
+          results.push(`- Total files found: ${totalFiles}`);
+          results.push(`- Claude artifacts: ${processedCount}`);
+          results.push(`- Skipped (non-Claude): ${skippedCount}`);
+          results.push(`- Updated: ${updatedCount}`);
+          results.push(`- Warnings: ${warningCount}`);
+          results.push(`- Errors: ${errorCount}`);
+          results.push(``);
+          if (skippedCount > 0) {
+            results.push(`*Note: ${skippedCount} file(s) were skipped because they are not Claude artifacts.*`);
+          }
+          return {
+            success: errorCount === 0,
+            message: `Migrated ${updatedCount} artifact(s) with ${warningCount} warning(s) and ${errorCount} error(s)`,
+            details: results
+          };
+        } catch (error) {
+          return {
+            success: false,
+            message: `Migration failed: ${error.message}`,
+            details: results
+          };
+        }
+      }
+      /**
+       * Extract artifact create_time from conversation note
+       */
+      async extractArtifactCreateTime(artifactFm, conversationFolder, plugin, artifactFile) {
+        var _a, _b, _c;
+        const artifactId = artifactFm.artifact_id;
+        const versionNumber = artifactFm.version_number;
+        const conversationId = artifactFm.conversation_id;
+        const artifactRef = `${artifactId}_v${versionNumber}`;
+        try {
+          if (!conversationId) {
+            console.warn(`Artifact ${artifactRef}: No conversation_id in frontmatter`);
+            return { value: "", source: "none" };
+          }
+          const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
+          if (!conversationFile) {
+            console.warn(`Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
+            return { value: "", source: "none" };
+          }
+          const content = await plugin.app.vault.read(conversationFile);
+          if (!artifactId || !versionNumber) {
+            console.warn(`Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
+            const fm2 = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
+            if (fm2 == null ? void 0 : fm2.create_time) {
+              return { value: fm2.create_time, source: "conversation" };
+            }
+            return { value: "", source: "none" };
+          }
+          const artifactLinkPath = artifactFile.path.replace(/\.md$/, "");
+          const escapedPath = artifactLinkPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const linkPattern = new RegExp(`\\[\\[${escapedPath}\\|View Artifact\\]\\]`, "m");
+          const linkMatch = content.match(linkPattern);
+          if (!linkMatch || linkMatch.index === void 0) {
+            console.warn(`Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
+            const fm2 = (_b = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _b.frontmatter;
+            if (fm2 == null ? void 0 : fm2.create_time) {
+              return { value: fm2.create_time, source: "conversation" };
+            }
+            return { value: "", source: "none" };
+          }
+          const linkIndex = linkMatch.index;
+          const textBeforeLink = content.substring(0, linkIndex);
+          const contextStart = Math.max(0, linkIndex - 300);
+          const contextText = content.substring(contextStart, linkIndex);
+          const agentPattern = />\[!nexus_agent\] \*\*Assistant\*\* - ([^\n]+)/gm;
+          let lastMatch = null;
+          let match;
+          let matchCount = 0;
+          while ((match = agentPattern.exec(textBeforeLink)) !== null) {
+            matchCount++;
+            lastMatch = match;
+          }
+          if (lastMatch && lastMatch[1]) {
+            const timestampStr = lastMatch[1];
+            const timestamp = DateParser.parseDate(timestampStr, artifactRef);
+            if (timestamp > 0) {
+              const isoDate = new Date(timestamp * 1e3).toISOString();
+              return {
+                value: isoDate,
+                source: "message"
+              };
+            } else {
+              console.warn(`Artifact ${artifactRef}: \u274C Timestamp parsing FAILED (returned 0), using conversation fallback`);
+              console.warn(`Artifact ${artifactRef}: Failed timestamp string was: "${timestampStr}"`);
+            }
+          } else {
+            console.warn(`Artifact ${artifactRef}: \u274C No agent callout found before artifact link, using conversation fallback`);
+            const sampleText = textBeforeLink.substring(Math.max(0, textBeforeLink.length - 500));
+            console.warn(`Artifact ${artifactRef}: Last 500 chars of search text:
+${sampleText}`);
+          }
+          const fm = (_c = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _c.frontmatter;
+          if (fm == null ? void 0 : fm.create_time) {
+            return { value: fm.create_time, source: "conversation" };
+          }
+          console.warn(`Artifact ${artifactRef}: No create_time available`);
+          return { value: "", source: "none" };
+        } catch (error) {
+          console.error(`Artifact ${artifactRef}: Exception during create_time extraction:`, error);
+          return { value: "", source: "none" };
+        }
+      }
+      /**
+       * Find conversation file by ID
+       */
+      async findConversationFile(conversationId, conversationFolder, plugin) {
+        var _a;
+        const allFiles = plugin.app.vault.getMarkdownFiles();
+        const claudePath = `${conversationFolder}/claude`;
+        for (const file of allFiles) {
+          if (!file.path.startsWith(claudePath))
+            continue;
+          const fm = (_a = plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+          if ((fm == null ? void 0 : fm.conversation_id) === conversationId) {
+            return file;
+          }
+        }
+        return null;
+      }
+      /**
+       * Find and generate conversation link
+       */
+      async findConversationLink(conversationId, conversationFolder, plugin) {
+        var _a;
+        const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
+        if (!conversationFile) {
+          return null;
+        }
+        const fm = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
+        const title = (fm == null ? void 0 : fm.aliases) || conversationFile.basename;
+        const linkPath = conversationFile.path.replace(/\.md$/, "");
+        return `[[${linkPath}|${title}]]`;
+      }
+      async verify(context) {
+        var _a;
+        try {
+          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+          for (const file of artifactFiles) {
+            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+            if ((fm == null ? void 0 : fm.provider) === "claude" && !fm.create_time) {
+              return false;
+            }
+          }
+          return true;
+        } catch (error) {
+          console.error(`MigrateClaudeArtifacts.verify failed:`, error);
+          return false;
+        }
+      }
+    };
+    __name(MigrateClaudeArtifactsOperation, "MigrateClaudeArtifactsOperation");
+    ConfigureFolderLocationsOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "configure-folder-locations";
+        this.name = "Configure Folder Locations";
+        this.description = "Configure separate folder locations for conversations, reports, and attachments. Optionally migrate existing files to new locations.";
+        this.type = "automatic";
+      }
+      async canRun(_context) {
+        return true;
+      }
+      async execute(context) {
+        return new Promise((resolve) => {
+          const dialog = new ConfigureFolderLocationsDialog(
+            context.plugin,
+            async (result) => {
+              const details = [];
+              if (result.reportFolder.changed) {
+                details.push(`\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath}`);
+              } else {
+                details.push(`\u2139\uFE0F  Report folder: ${result.reportFolder.newPath} (unchanged)`);
+              }
+              resolve({
+                success: true,
+                message: "Report folder location configured successfully",
+                details
+              });
+            }
+          );
+          dialog.open();
+        });
+      }
+    };
+    __name(ConfigureFolderLocationsOperation, "ConfigureFolderLocationsOperation");
+    Upgrade130 = class extends VersionUpgrade {
+      constructor() {
+        super(...arguments);
+        this.version = "1.3.0";
+        this.automaticOperations = [
+          new MigrateToSeparateFoldersOperation(),
+          new ConvertToISO8601TimestampsOperation(),
+          new FixFrontmatterAliasesOperation(),
+          new MigrateClaudeArtifactsOperation(),
+          new ConfigureFolderLocationsOperation()
+        ];
+        this.manualOperations = [
+          // No manual operations for this version
+        ];
+      }
+    };
+    __name(Upgrade130, "Upgrade130");
+  }
+});
+
+// src/dialogs/upgrade-complete-modal.ts
+var upgrade_complete_modal_exports = {};
+__export(upgrade_complete_modal_exports, {
+  UpgradeCompleteModal: () => UpgradeCompleteModal
+});
+var import_obsidian24, UpgradeCompleteModal;
+var init_upgrade_complete_modal = __esm({
+  "src/dialogs/upgrade-complete-modal.ts"() {
+    "use strict";
+    import_obsidian24 = require("obsidian");
+    init_kofi_support_box();
+    UpgradeCompleteModal = class extends import_obsidian24.Modal {
+      constructor(app, plugin, version) {
+        super(app);
+        this.plugin = plugin;
+        this.version = version;
+      }
+      onOpen() {
+        const { containerEl, titleEl, modalEl } = this;
+        modalEl.classList.add("nexus-upgrade-complete-modal");
+        modalEl.style.width = "800px";
+        modalEl.style.maxWidth = "90vw";
+        titleEl.setText(`\u2705 Upgrade Complete - v${this.version}`);
+        this.createContent();
+      }
+      onClose() {
+        this.contentEl.empty();
+      }
+      async createContent() {
+        const { contentEl } = this;
+        this.addKofiSection();
+        await this.addReleaseNotes();
+        this.addCloseButton();
+        this.addStyles();
+      }
+      addKofiSection() {
+        createKofiSupportBox(
+          this.contentEl,
+          "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users, but only $10 in donations while paying $200/month in expenses. If this plugin helps you, please consider supporting it. Even $5 makes a difference! \u{1F64F}"
+        );
+      }
+      async addReleaseNotes() {
+        let content = `## \u2728 What's New
+
+- **\u{1F5C2}\uFE0F Separate Reports Folder** - Better organization, easier to exclude from sync
+- **\u{1F30D} International Date Support** - Works in all languages, no more MM/DD confusion
+- **\u{1F333} Visual Folder Browser** - Tree-based navigation, create folders on the fly
+- **\u{1F3AF} Enhanced Selective Import** - Better preview, duplicate detection across ZIPs
+- **\u{1F4CE} Improved Attachments** - DALL-E images with prompts, better formatting
+
+## \u{1F3A8} Improvements
+
+- Redesigned Settings page - easier to find what you need
+- Faster imports - especially for large collections
+- Better progress messages - know exactly what's happening
+- More detailed reports - see exactly what was imported
+- Clearer dialogs - less confusing text
+
+## \u{1F41B} Bug Fixes
+
+- Fixed timestamp parsing for non-US locales
+- Fixed folder deletion after migration
+- Fixed link updates in Claude artifacts
+- Fixed duplicate conversations in multi-ZIP imports
+- Fixed special characters in conversation titles
+- Fixed DALL-E images display
+- Fixed progress modal accuracy
+- Fixed UI elements overflow
+- And many more...`;
+        try {
+          const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v${this.version}`);
+          if (response.ok) {
+            const release = await response.json();
+            if (release.body) {
+              content = release.body;
+            }
+          }
+        } catch (error) {
+        }
+        const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-notes" });
+        await import_obsidian24.MarkdownRenderer.render(
+          this.app,
+          content,
+          contentDiv,
+          "",
+          this.plugin
+        );
+      }
+      addCloseButton() {
+        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
+        const button = buttonContainer.createEl("button", {
+          text: "Got it!",
+          cls: "mod-cta nexus-upgrade-button"
+        });
+        button.addEventListener("click", () => {
+          this.close();
+        });
+      }
+      addStyles() {
+        const style = document.createElement("style");
+        style.textContent = `
+            /* Modal sizing - LARGE by default */
+            .nexus-upgrade-complete-modal .modal {
+                width: 800px !important;
+                max-width: 90vw !important;
+                max-height: 85vh;
+            }
+
+            .nexus-upgrade-complete-modal .modal-content {
+                padding: 0;
+                overflow-y: auto;
+                max-height: calc(85vh - 100px);
+            }
+
+            /* Release notes content */
+            .nexus-upgrade-notes {
+                padding: 0 1em;
+                margin-bottom: 2em;
+            }
+
+            .nexus-upgrade-notes h2 {
+                color: var(--text-accent);
+                margin-top: 1.5em;
+                margin-bottom: 0.8em;
+                border-bottom: 2px solid var(--background-modifier-border);
+                padding-bottom: 0.3em;
+            }
+
+            .nexus-upgrade-notes h2:first-child {
+                margin-top: 0;
+            }
+
+            .nexus-upgrade-notes ul {
+                margin-left: 1.5em;
+                line-height: 1.8;
+            }
+
+            .nexus-upgrade-notes li {
+                margin: 0.5em 0;
+            }
+
+            /* Close button */
+            .nexus-upgrade-button-container {
+                text-align: center;
+                padding: 1.5em 0;
+                border-top: 1px solid var(--background-modifier-border);
+                margin-top: 1em;
+            }
+
+            .nexus-upgrade-button {
+                padding: 0.8em 3em;
+                font-size: 1.1em;
+                font-weight: 600;
+                border-radius: 8px;
+            }
+        `;
+        document.head.appendChild(style);
+      }
+    };
+    __name(UpgradeCompleteModal, "UpgradeCompleteModal");
+  }
+});
+
+// src/dialogs/upgrade-modal-1.3.0.ts
+var upgrade_modal_1_3_0_exports = {};
+__export(upgrade_modal_1_3_0_exports, {
+  NexusUpgradeModal130: () => NexusUpgradeModal130
+});
+var import_obsidian25, NexusUpgradeModal130;
+var init_upgrade_modal_1_3_0 = __esm({
+  "src/dialogs/upgrade-modal-1.3.0.ts"() {
+    "use strict";
+    import_obsidian25 = require("obsidian");
+    init_kofi_support_box();
+    NexusUpgradeModal130 = class extends import_obsidian25.Modal {
+      constructor(app, plugin, version, resolve) {
+        super(app);
+        this.hasResolved = false;
+        this.plugin = plugin;
+        this.version = version;
+        this.resolve = resolve;
+      }
+      onOpen() {
+        var _a;
+        const { containerEl, titleEl, modalEl } = this;
+        modalEl.classList.add("nexus-upgrade-modal-130");
+        titleEl.setText(`\u{1F389} Nexus AI Chat Importer ${this.version}`);
+        (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
+        this.createForm();
+      }
+      onClose() {
+        if (!this.hasResolved) {
+          this.resolve("cancel");
+        }
+      }
+      async onClose() {
+        this.contentEl.empty();
+      }
+      async createForm() {
+        createKofiSupportBox(this.contentEl);
+        this.addMigrationSection();
+        this.addMigrationButton();
+        let message = `## \u2728 What's New in v1.3.0
+
+- **\u{1F3AF} Selective Conversation Import**: Interactive dialog to choose which conversations to import
+- **\u{1F4CA} Enhanced Reports**: Per-file statistics with detailed breakdown
+- **\u{1F5C2}\uFE0F Flexible Folders**: Separate settings for conversations, attachments, and reports
+- **\u{1F30D} International Support**: ISO 8601 timestamps work with all locales
+- **\u{1F41B} 26 Bug Fixes**: Improved stability and reliability
+
+---
+
+### \u{1F4A1} Tip
+
+Try the new **selective import** feature on your next import - you'll love the control it gives you!`;
+        try {
+          const response = await fetch("https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.3.0");
+          if (response.ok) {
+            const release = await response.json();
+            if (release.body) {
+              message = release.body;
+            }
+          }
+        } catch (error) {
+        }
+        const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
+        await import_obsidian25.MarkdownRenderer.render(
+          this.app,
+          message,
+          contentDiv,
+          "",
+          this.plugin
+        );
+        this.addStyles();
+      }
+      addMigrationSection() {
+        const migrationSection = this.contentEl.createDiv({ cls: "nexus-migration-section" });
+        const header = migrationSection.createDiv({ cls: "nexus-migration-header" });
+        header.innerHTML = `
+            <div class="nexus-migration-title">
+                \u{1F504} <strong>Migration Required</strong>
+            </div>
+        `;
+        const message = migrationSection.createDiv({ cls: "nexus-migration-message" });
+        message.innerHTML = `
+            <p>The following tasks will run automatically to upgrade your data to v1.3.0:</p>
+        `;
+        const taskList = migrationSection.createDiv({ cls: "nexus-migration-tasks" });
+        taskList.innerHTML = `
+            <ul>
+                <li>\u2713 Migrate folder settings to new structure</li>
+                <li>\u2713 Update timestamps to ISO 8601 format</li>
+                <li>\u2713 Fix frontmatter aliases</li>
+                <li>\u2713 Move Reports folder to proper location</li>
+                <li>\u2713 Update artifact metadata</li>
+            </ul>
+        `;
+        const estimate = migrationSection.createDiv({ cls: "nexus-migration-estimate" });
+        estimate.innerHTML = `
+            <p><em>This will take a few seconds.</em></p>
+        `;
+      }
+      addMigrationButton() {
+        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-migration-button-container" });
+        const migrationButton = buttonContainer.createEl("button", {
+          text: "\u{1F680} Run Migration Tasks",
+          cls: "mod-cta nexus-migration-button"
+        });
+        migrationButton.onclick = () => {
+          this.hasResolved = true;
+          this.resolve("ok");
+          this.close();
+        };
+      }
+      addStyles() {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = `
+            .modal.nexus-upgrade-modal-130 {
+                max-width: 1050px !important;
+                width: 1050px !important;
+            }
+
+            .nexus-upgrade-content {
+                margin-bottom: 20px;
+                line-height: 1.6;
+            }
+
+            /* Migration Section Styles */
+            .nexus-migration-section {
+                background: var(--background-secondary);
+                border: 2px solid var(--interactive-accent);
+                border-radius: 12px;
+                padding: 24px;
+                margin: 24px 0;
+            }
+
+            .nexus-migration-header {
+                margin-bottom: 16px;
+            }
+
+            .nexus-migration-title {
+                font-size: 1.3em;
+                text-align: center;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-title strong {
+                color: var(--interactive-accent);
+            }
+
+            .nexus-migration-message {
+                text-align: center;
+                margin-bottom: 16px;
+                color: var(--text-muted);
+            }
+
+            .nexus-migration-tasks {
+                margin: 16px 0;
+            }
+
+            .nexus-migration-tasks ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .nexus-migration-tasks li {
+                padding: 8px 0;
+                font-size: 0.95em;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-estimate {
+                text-align: center;
+                margin-top: 16px;
+                color: var(--text-muted);
+                font-size: 0.9em;
+            }
+
+            /* Migration Button Styles */
+            .nexus-migration-button-container {
+                text-align: center;
+                margin: 32px 0;
+            }
+
+            .nexus-migration-button {
+                padding: 16px 48px !important;
+                font-size: 1.2em !important;
+                font-weight: 700 !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .nexus-migration-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+            }
+        `;
+        document.head.appendChild(styleEl);
+      }
+    };
+    __name(NexusUpgradeModal130, "NexusUpgradeModal130");
   }
 });
 
@@ -4264,37 +7803,13 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian18 = require("obsidian");
-
-// src/config/constants.ts
-var DEFAULT_SETTINGS = {
-  archiveFolder: "Nexus/Conversations",
-  // Default only for first install; preserved if user already set
-  addDatePrefix: false,
-  dateFormat: "YYYY-MM-DD",
-  hasShownUpgradeNotice: false,
-  hasCompletedUpgrade: false,
-  // Version tracking - will be set from manifest in main.ts
-  currentVersion: "0.0.0",
-  previousVersion: "0.0.0",
-  // Attachment defaults
-  importAttachments: true,
-  attachmentFolder: "Nexus_attachments",
-  // Default only for first install; preserved if user already set
-  reportFolder: "",
-  // Will be computed as <archiveFolder>/Reports on load
-  skipMissingAttachments: false,
-  showAttachmentDetails: true
-};
-var GITHUB = {
-  RAW_BASE: "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer",
-  REPO_BASE: "https://github.com/Superkikim/nexus-ai-chat-importer"
-};
+var import_obsidian32 = require("obsidian");
+init_constants();
 
 // src/ui/settings-tab.ts
-var import_obsidian4 = require("obsidian");
+var import_obsidian11 = require("obsidian");
 
-// src/ui/settings/conversation-settings-section.ts
+// src/ui/settings/support-section.ts
 var import_obsidian = require("obsidian");
 
 // src/ui/settings/base-settings-section.ts
@@ -4321,31 +7836,552 @@ var BaseSettingsSection = class {
     }
   }
 };
+__name(BaseSettingsSection, "BaseSettingsSection");
 
-// src/ui/settings/conversation-settings-section.ts
-var ConversationSettingsSection = class extends BaseSettingsSection {
+// src/ui/settings/support-section.ts
+init_kofi_support_box();
+var SupportSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
-    this.title = "Conversation Settings";
+    this.title = "\u{1F49D} Support & Help";
+    this.order = 5;
+  }
+  render(containerEl) {
+    const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
+    createKofiSupportBox(supportContainer);
+    new import_obsidian.Setting(supportContainer).setName("\u{1F4DA} Resources").setDesc("Documentation, release notes, and community links").addButton(
+      (button) => button.setButtonText("\u{1F4D6} README").onClick(() => {
+        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
+      })
+    ).addButton(
+      (button) => button.setButtonText("\u{1F4DD} Changelog").onClick(() => {
+        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
+      })
+    ).addButton(
+      (button) => button.setButtonText("\u{1F41B} Issues").onClick(() => {
+        window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
+      })
+    ).addButton(
+      (button) => button.setButtonText("\u{1F4AC} Forum").onClick(() => {
+        window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
+      })
+    );
+  }
+};
+__name(SupportSection, "SupportSection");
+
+// src/ui/settings/folder-settings-section.ts
+var import_obsidian8 = require("obsidian");
+
+// src/dialogs/folder-migration-dialog.ts
+var import_obsidian2 = require("obsidian");
+var FolderMigrationDialog = class extends import_obsidian2.Modal {
+  constructor(plugin, oldPath, newPath, folderType, onComplete) {
+    super(plugin.app);
+    this.oldPath = oldPath;
+    this.newPath = newPath;
+    this.folderType = folderType;
+    this.onComplete = onComplete;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", {
+      text: "Move Existing Files?",
+      cls: "nexus-migration-title"
+    });
+    const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
+    messageContainer.createEl("p", {
+      text: `You are changing the ${this.folderType} folder location:`
+    });
+    const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
+    pathContainer.createEl("div", {
+      text: `From: ${this.oldPath}`,
+      cls: "nexus-migration-path-old"
+    });
+    pathContainer.createEl("div", {
+      text: `To: ${this.newPath}`,
+      cls: "nexus-migration-path-new"
+    });
+    messageContainer.createEl("p", {
+      text: "Do you want to move existing files to the new location?"
+    });
+    const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
+    warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
+    warningBox.createEl("p", {
+      text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
+    });
+    const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
+    const cancelButton = buttonContainer.createEl("button", {
+      text: "Cancel",
+      cls: "nexus-migration-button-cancel"
+    });
+    cancelButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete("cancel");
+        new import_obsidian2.Notice(`Change cancelled. Folder setting reverted.`);
+      } catch (error) {
+        new import_obsidian2.Notice(`Failed to revert setting: ${error.message}`);
+      }
+    });
+    const keepButton = buttonContainer.createEl("button", {
+      text: "No, keep files in old location",
+      cls: "nexus-migration-button-keep"
+    });
+    keepButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete("keep");
+        new import_obsidian2.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+      } catch (error) {
+        new import_obsidian2.Notice(`Failed to update setting: ${error.message}`);
+      }
+    });
+    const moveButton = buttonContainer.createEl("button", {
+      text: "Yes, move files",
+      cls: "mod-cta nexus-migration-button-move"
+    });
+    moveButton.addEventListener("click", async () => {
+      this.close();
+      try {
+        await this.onComplete("move");
+        new import_obsidian2.Notice(`Files moved to ${this.newPath}`);
+      } catch (error) {
+        new import_obsidian2.Notice(`Failed to move files: ${error.message}`);
+      }
+    });
+    this.addStyles();
+  }
+  addStyles() {
+    const styleEl = document.createElement("style");
+    styleEl.textContent = `
+            .nexus-migration-title {
+                margin-bottom: 1em;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-message {
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+            }
+
+            .nexus-migration-paths {
+                background-color: var(--background-secondary);
+                padding: 1em;
+                margin: 1em 0;
+                border-radius: 4px;
+                font-family: var(--font-monospace);
+                font-size: 0.9em;
+            }
+
+            .nexus-migration-path-old {
+                color: var(--text-muted);
+                margin-bottom: 0.5em;
+            }
+
+            .nexus-migration-path-new {
+                color: var(--interactive-accent);
+                font-weight: 500;
+            }
+
+            .nexus-migration-warning {
+                background-color: var(--background-modifier-error-hover);
+                border-left: 4px solid var(--text-error);
+                padding: 1em;
+                margin-bottom: 1.5em;
+                border-radius: 4px;
+            }
+
+            .nexus-migration-warning strong {
+                display: block;
+                margin-bottom: 0.5em;
+                color: var(--text-error);
+            }
+
+            .nexus-migration-warning p {
+                margin: 0;
+                color: var(--text-normal);
+            }
+
+            .nexus-migration-buttons {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .nexus-migration-buttons button {
+                padding: 8px 16px;
+                flex: 1;
+            }
+
+            .nexus-migration-button-cancel {
+                background-color: var(--background-modifier-border);
+                color: var(--text-muted);
+            }
+
+            .nexus-migration-button-keep {
+                background-color: var(--background-modifier-border);
+            }
+
+            .nexus-migration-button-move {
+                /* Uses mod-cta class for primary styling */
+            }
+        `;
+    document.head.appendChild(styleEl);
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+__name(FolderMigrationDialog, "FolderMigrationDialog");
+
+// src/ui/settings/folder-settings-section.ts
+init_folder_tree_browser_modal();
+init_folder_validation();
+init_utils();
+var FolderSettingsSection = class extends BaseSettingsSection {
+  constructor() {
+    super(...arguments);
+    this.title = "\u{1F4C1} Folder Structure";
     this.order = 10;
   }
   render(containerEl) {
-    new import_obsidian.Setting(containerEl).setName("Conversations folder").setDesc("Choose a folder to store AI chat conversations and import reports").addText(
-      (text) => text.setPlaceholder("Enter folder name").setValue(this.plugin.settings.archiveFolder).onChange(async (value) => {
-        this.plugin.settings.archiveFolder = value;
-        this.plugin.settings.reportFolder = `${value}/Reports`;
-        await this.plugin.saveSettings();
-      })
+    let conversationFolderTextComponent;
+    new import_obsidian8.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
+      conversationFolderTextComponent = text;
+      text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder);
+      text.inputEl.addClass("nexus-folder-path-input");
+      text.inputEl.addClass("nexus-conversation-folder-input");
+      text.inputEl.readOnly = true;
+      text.inputEl.style.cursor = "default";
+    }).addButton((button) => {
+      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
+        const modal = new FolderTreeBrowserModal(
+          this.plugin.app,
+          async (path) => {
+            if (conversationFolderTextComponent) {
+              conversationFolderTextComponent.setValue(path);
+              await this.handleFolderChange("conversationFolder", path, "conversations", conversationFolderTextComponent);
+            }
+          },
+          this.plugin.settings.conversationFolder,
+          (path) => validateFolderNesting(
+            "conversationFolder",
+            path,
+            this.plugin.settings.conversationFolder,
+            this.plugin.settings.reportFolder,
+            this.plugin.settings.attachmentFolder
+          )
+        );
+        modal.open();
+      });
+    });
+    let reportFolderTextComponent;
+    new import_obsidian8.Setting(containerEl).setName("Reports folder").setDesc("Where import reports are stored").addText((text) => {
+      reportFolderTextComponent = text;
+      text.setPlaceholder("Nexus Reports").setValue(this.plugin.settings.reportFolder);
+      text.inputEl.addClass("nexus-folder-path-input");
+      text.inputEl.addClass("nexus-report-folder-input");
+      text.inputEl.readOnly = true;
+      text.inputEl.style.cursor = "default";
+    }).addButton((button) => {
+      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
+        const modal = new FolderTreeBrowserModal(
+          this.plugin.app,
+          async (path) => {
+            if (reportFolderTextComponent) {
+              reportFolderTextComponent.setValue(path);
+              await this.handleFolderChange("reportFolder", path, "reports", reportFolderTextComponent);
+            }
+          },
+          this.plugin.settings.reportFolder,
+          (path) => validateFolderNesting(
+            "reportFolder",
+            path,
+            this.plugin.settings.conversationFolder,
+            this.plugin.settings.reportFolder,
+            this.plugin.settings.attachmentFolder
+          )
+        );
+        modal.open();
+      });
+    });
+    let attachmentFolderTextComponent;
+    new import_obsidian8.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
+      attachmentFolderTextComponent = text;
+      text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder);
+      text.inputEl.addClass("nexus-folder-path-input");
+      text.inputEl.addClass("nexus-attachment-folder-input");
+      text.inputEl.readOnly = true;
+      text.inputEl.style.cursor = "default";
+    }).addButton((button) => {
+      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
+        const modal = new FolderTreeBrowserModal(
+          this.plugin.app,
+          async (path) => {
+            if (attachmentFolderTextComponent) {
+              attachmentFolderTextComponent.setValue(path);
+              await this.handleFolderChange("attachmentFolder", path, "attachments", attachmentFolderTextComponent);
+            }
+          },
+          this.plugin.settings.attachmentFolder,
+          (path) => validateFolderNesting(
+            "attachmentFolder",
+            path,
+            this.plugin.settings.conversationFolder,
+            this.plugin.settings.reportFolder,
+            this.plugin.settings.attachmentFolder
+          )
+        );
+        modal.open();
+      });
+    });
+  }
+  async handleFolderChange(settingKey, newPath, folderType, textComponent) {
+    var _a;
+    const oldPath = this.plugin.settings[settingKey];
+    if (oldPath === newPath) {
+      return;
+    }
+    const validation = validateFolderNesting(
+      settingKey,
+      newPath,
+      this.plugin.settings.conversationFolder,
+      this.plugin.settings.reportFolder,
+      this.plugin.settings.attachmentFolder
     );
-    new import_obsidian.Setting(containerEl).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames").addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.addDatePrefix).onChange(async (value) => {
-        this.plugin.settings.addDatePrefix = value;
-        await this.plugin.saveSettings();
-        this.redraw();
-      })
-    );
+    if (!validation.valid) {
+      this.showErrorDialog("Invalid Folder Location", (_a = validation.error) != null ? _a : "Invalid folder configuration");
+      textComponent.setValue(oldPath);
+      return;
+    }
+    const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
+    if (!oldFolder || !(oldFolder instanceof import_obsidian8.TFolder)) {
+      this.plugin.settings[settingKey] = newPath;
+      await this.plugin.saveSettings();
+      return;
+    }
+    const hasContent = oldFolder.children.length > 0;
+    if (!hasContent) {
+      this.plugin.settings[settingKey] = newPath;
+      await this.plugin.saveSettings();
+      return;
+    }
+    const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
+    if (newFolder && newFolder instanceof import_obsidian8.TFolder && newFolder.children.length > 0) {
+      this.showErrorDialog(
+        "Target Folder Not Empty",
+        `The folder "${newPath}" already contains files.
+
+To change the folder location:
+\u2022 Move existing files manually in Obsidian, OR
+\u2022 Choose an empty folder or create a new one`
+      );
+      textComponent.setValue(oldPath);
+      return;
+    }
+    const useEnhancedDialog = settingKey === "attachmentFolder" || settingKey === "conversationFolder";
+    if (useEnhancedDialog) {
+      Promise.resolve().then(() => (init_enhanced_folder_migration_dialog(), enhanced_folder_migration_dialog_exports)).then(({ EnhancedFolderMigrationDialog: EnhancedFolderMigrationDialog2 }) => {
+        const dialog = new EnhancedFolderMigrationDialog2(
+          this.plugin,
+          oldPath,
+          newPath,
+          folderType,
+          async (action) => {
+            await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
+          }
+        );
+        dialog.open();
+      }).catch((error) => {
+        this.plugin.logger.error("Failed to load enhanced dialog:", error);
+        const dialog = new FolderMigrationDialog(
+          this.plugin,
+          oldPath,
+          newPath,
+          folderType,
+          async (action) => {
+            await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
+          }
+        );
+        dialog.open();
+      });
+    } else {
+      const dialog = new FolderMigrationDialog(
+        this.plugin,
+        oldPath,
+        newPath,
+        folderType,
+        async (action) => {
+          await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
+        }
+      );
+      dialog.open();
+    }
+  }
+  /**
+   * Handle migration action (extracted for reuse between dialog types)
+   */
+  async handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent) {
+    if (action === "cancel") {
+      textComponent.setValue(oldPath);
+      return;
+    }
+    if (action === "move") {
+      try {
+        const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
+        if (settingKey === "conversationFolder" || settingKey === "attachmentFolder") {
+          await this.updateLinksAfterMove(settingKey, oldPath, newPath);
+        }
+        if (result.success && result.skipped === 0) {
+          new import_obsidian8.Notice(`\u2705 Files moved to ${newPath}`);
+        } else {
+          this.showMergeResultDialog(result, oldPath, newPath);
+        }
+      } catch (error) {
+        this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
+        this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
+        throw error;
+      }
+    }
+    this.plugin.settings[settingKey] = newPath;
+    await this.plugin.saveSettings();
+  }
+  /**
+   * Update links after moving conversations or attachments
+   */
+  async updateLinksAfterMove(settingKey, oldPath, newPath) {
+    try {
+      const { LinkUpdateService: LinkUpdateService2 } = await Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports));
+      const linkUpdateService = new LinkUpdateService2(this.plugin);
+      if (settingKey === "conversationFolder") {
+        await linkUpdateService.updateConversationLinks(oldPath, newPath);
+      } else if (settingKey === "attachmentFolder") {
+        await linkUpdateService.updateAttachmentLinks(oldPath, newPath);
+      }
+    } catch (error) {
+      this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
+      new import_obsidian8.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
+    }
+  }
+  /**
+   * Show dialog with merge result details when files were skipped or errors occurred
+   */
+  showMergeResultDialog(result, _oldPath, _newPath) {
+    const modal = new import_obsidian8.Modal(this.plugin.app);
+    modal.titleEl.setText("Folder Migration Result");
+    const { contentEl } = modal;
+    const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
+    summary.createEl("h3", { text: "Migration Summary" });
+    const stats = summary.createDiv({ cls: "nexus-merge-stats" });
+    stats.createEl("p", { text: `\u2705 Successfully moved: ${result.moved} file(s)` });
+    if (result.skipped > 0) {
+      stats.createEl("p", {
+        text: `\u26A0\uFE0F Skipped (already exist): ${result.skipped} file(s)`,
+        cls: "nexus-merge-warning"
+      });
+    }
+    if (result.errors > 0) {
+      stats.createEl("p", {
+        text: `\u274C Errors: ${result.errors} file(s)`,
+        cls: "nexus-merge-error"
+      });
+    }
+    const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
+    explanation.createEl("p", {
+      text: "Files that already existed in the destination were not overwritten to preserve your data."
+    });
+    if (result.errorDetails && result.errorDetails.length > 0) {
+      const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
+      errorSection.createEl("h4", { text: "Error Details:" });
+      const errorList = errorSection.createEl("ul");
+      for (const error of result.errorDetails) {
+        errorList.createEl("li", { text: error });
+      }
+    }
+    const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
+    const closeButton = buttonContainer.createEl("button", { text: "OK", cls: "mod-cta" });
+    closeButton.addEventListener("click", () => modal.close());
+    const styleEl = document.createElement("style");
+    styleEl.textContent = `
+            .nexus-merge-summary {
+                margin-bottom: 20px;
+            }
+            .nexus-merge-stats p {
+                margin: 8px 0;
+                font-size: 14px;
+            }
+            .nexus-merge-warning {
+                color: var(--text-warning);
+            }
+            .nexus-merge-error {
+                color: var(--text-error);
+            }
+            .nexus-merge-explanation {
+                padding: 12px;
+                background: var(--background-secondary);
+                border-radius: 4px;
+                margin: 16px 0;
+            }
+            .nexus-merge-errors {
+                margin-top: 16px;
+                padding: 12px;
+                background: var(--background-modifier-error);
+                border-radius: 4px;
+            }
+            .nexus-merge-errors ul {
+                margin: 8px 0;
+                padding-left: 20px;
+            }
+            .nexus-merge-errors li {
+                margin: 4px 0;
+                font-size: 12px;
+                font-family: var(--font-monospace);
+            }
+        `;
+    document.head.appendChild(styleEl);
+    modal.open();
+  }
+  showErrorDialog(title, message) {
+    const modal = new import_obsidian8.Modal(this.plugin.app);
+    modal.titleEl.setText(title);
+    modal.contentEl.createEl("p", {
+      text: message,
+      cls: "nexus-error-message"
+    });
+    const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.marginTop = "1em";
+    const okButton = buttonContainer.createEl("button", {
+      text: "OK",
+      cls: "mod-cta"
+    });
+    okButton.addEventListener("click", () => modal.close());
+    modal.open();
+  }
+};
+__name(FolderSettingsSection, "FolderSettingsSection");
+
+// src/ui/settings/display-settings-section.ts
+var import_obsidian9 = require("obsidian");
+var DisplaySettingsSection = class extends BaseSettingsSection {
+  constructor() {
+    super(...arguments);
+    this.title = "\u{1F4C5} Date Prefix";
+    this.order = 20;
+  }
+  render(containerEl) {
+    const sectionContainer = containerEl.createDiv({ cls: "nexus-date-prefix-section" });
+    const setting = new import_obsidian9.Setting(sectionContainer).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames");
     if (this.plugin.settings.addDatePrefix) {
-      new import_obsidian.Setting(containerEl).setName("Date format").setDesc("Choose the format for the date prefix").addDropdown(
+      setting.controlEl.createSpan({
+        text: "Select date format: ",
+        cls: "date-format-label"
+      });
+      setting.addDropdown(
         (dropdown) => dropdown.addOption("YYYY-MM-DD", "YYYY-MM-DD").addOption("YYYYMMDD", "YYYYMMDD").setValue(this.plugin.settings.dateFormat).onChange(async (value) => {
           if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {
             this.plugin.settings.dateFormat = value;
@@ -4354,242 +8390,74 @@ var ConversationSettingsSection = class extends BaseSettingsSection {
         })
       );
     }
-  }
-};
-
-// src/ui/settings/attachment-settings-section.ts
-var import_obsidian2 = require("obsidian");
-var AttachmentSettingsSection = class extends BaseSettingsSection {
-  constructor() {
-    super(...arguments);
-    this.title = "Attachment Settings";
-    this.order = 20;
-  }
-  render(containerEl) {
-    new import_obsidian2.Setting(containerEl).setName("Import attachments").setDesc("Save attachment files to disk and link them in conversations (uses 'best effort' strategy)").addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.importAttachments).onChange(async (value) => {
-        this.plugin.settings.importAttachments = value;
+    setting.addToggle(
+      (toggle) => toggle.setValue(this.plugin.settings.addDatePrefix).onChange(async (value) => {
+        this.plugin.settings.addDatePrefix = value;
         await this.plugin.saveSettings();
         this.redraw();
       })
     );
-    if (this.plugin.settings.importAttachments) {
-      this.renderAttachmentOptions(containerEl);
-      this.renderAttachmentInfo(containerEl);
-    }
-  }
-  renderAttachmentOptions(containerEl) {
-    new import_obsidian2.Setting(containerEl).setName("Attachment folder").setDesc("Choose a folder to store attachment files").addText(
-      (text) => text.setPlaceholder("Enter attachment folder path").setValue(this.plugin.settings.attachmentFolder).onChange(async (value) => {
-        this.plugin.settings.attachmentFolder = value;
-        await this.plugin.saveSettings();
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("Handle missing attachments").setDesc("When attachments are missing from exports, create informative notes instead of skipping them").addToggle(
-      (toggle) => toggle.setValue(!this.plugin.settings.skipMissingAttachments).onChange(async (value) => {
-        this.plugin.settings.skipMissingAttachments = !value;
-        await this.plugin.saveSettings();
-      })
-    );
-    new import_obsidian2.Setting(containerEl).setName("Show attachment details in reports").setDesc("Include detailed attachment processing statistics in import reports").addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.showAttachmentDetails).onChange(async (value) => {
-        this.plugin.settings.showAttachmentDetails = value;
-        await this.plugin.saveSettings();
-      })
-    );
-  }
-  renderAttachmentInfo(containerEl) {
-    const noteEl = containerEl.createDiv({ cls: "setting-item-description" });
-    noteEl.style.marginTop = "15px";
-    noteEl.style.padding = "15px";
-    noteEl.style.backgroundColor = "var(--background-secondary)";
-    noteEl.style.borderRadius = "8px";
-    noteEl.style.border = "1px solid var(--background-modifier-border)";
-    noteEl.createEl("h4", { text: "\u{1F4CE} About Attachment Handling", cls: "setting-item-name" });
-    const infoList = noteEl.createEl("ul");
-    infoList.style.marginTop = "10px";
-    infoList.style.paddingLeft = "20px";
-    infoList.createEl("li").innerHTML = "<strong>Best Effort Strategy:</strong> Files found in exports are extracted and linked; missing files get informative notes.";
-    infoList.createEl("li").innerHTML = "<strong>Platform Differences:</strong> ChatGPT exports may not include all attachments, especially from older conversations.";
-    infoList.createEl("li").innerHTML = "<strong>Simple Organization:</strong> Files organized as <code>attachments/provider/category/</code> (e.g., <code>attachments/chatgpt/images/</code>).";
-    infoList.createEl("li").innerHTML = "<strong>Sync Tip:</strong> Consider excluding the attachment folder from sync to avoid uploading large files.";
-    const tipEl = noteEl.createDiv();
-    tipEl.style.marginTop = "10px";
-    tipEl.style.fontStyle = "italic";
-    tipEl.innerHTML = "\u{1F4A1} <strong>Tip:</strong> Enable 'Show attachment details' to see exactly which files were found, missing, or failed during import.";
   }
 };
+__name(DisplaySettingsSection, "DisplaySettingsSection");
 
-// src/ui/settings/migrations-settings-section.ts
-var import_obsidian3 = require("obsidian");
-var MigrationsSettingsSection = class extends BaseSettingsSection {
+// src/ui/settings/message-date-format-section.ts
+var import_obsidian10 = require("obsidian");
+init_constants();
+init_utils();
+var MessageDateFormatSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
-    this.title = "Migrations";
-    this.order = 30;
+    this.title = "\u{1F4C5} Message Date Format";
+    this.order = 21;
   }
-  async render(containerEl) {
-    const migrationsDesc = containerEl.createDiv({ cls: "setting-item-description" });
-    migrationsDesc.style.marginBottom = "20px";
-    migrationsDesc.innerHTML = `
-            <p><strong>Manual Operations:</strong> Optional upgrade operations that can be run when convenient.</p>
-            <p>Automatic operations (like removing old data) run automatically during upgrade and are not shown here.</p>
-        `;
-    try {
-      const upgradeManager = this.plugin.getUpgradeManager();
-      if (!(upgradeManager == null ? void 0 : upgradeManager.getManualOperationsForSettings)) {
-        this.showNoMigrationsMessage(containerEl);
-        return;
-      }
-      const operationsData = await this.getOperationsWithPersistentStatus(upgradeManager);
-      if (operationsData.length === 0) {
-        this.showNoMigrationsMessage(containerEl);
-        return;
-      }
-      for (const versionData of operationsData) {
-        await this.renderVersionOperations(containerEl, versionData, upgradeManager);
-      }
-    } catch (error) {
-      console.error("[NEXUS-DEBUG] Error loading migrations:", error);
-      this.showErrorMessage(containerEl, error);
+  render(containerEl) {
+    const sectionContainer = containerEl.createDiv({ cls: "nexus-message-date-section" });
+    new import_obsidian10.Setting(sectionContainer).setName("Custom message timestamp format").setDesc("Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced.").addToggle(
+      (toggle) => toggle.setValue(this.plugin.settings.useCustomMessageTimestampFormat).onChange(async (value) => {
+        this.plugin.settings.useCustomMessageTimestampFormat = value;
+        await this.plugin.saveSettings();
+        this.redraw();
+      })
+    );
+    if (this.plugin.settings.useCustomMessageTimestampFormat) {
+      new import_obsidian10.Setting(sectionContainer).setName("Timestamp format").setDesc("Choose the format for message timestamps in conversation notes").addDropdown((dropdown) => {
+        Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
+          dropdown.addOption(key, config.label);
+        });
+        dropdown.setValue(this.plugin.settings.messageTimestampFormat).onChange(async (value) => {
+          this.plugin.settings.messageTimestampFormat = value;
+          await this.plugin.saveSettings();
+          this.updateTimestampPreview(previewContainer, value);
+        });
+      });
+      const previewContainer = sectionContainer.createDiv({ cls: "nexus-timestamp-preview" });
+      this.updateTimestampPreview(previewContainer, this.plugin.settings.messageTimestampFormat);
     }
   }
   /**
-   * Get operations status with persistent flags from plugin data
+   * Update timestamp format preview
    */
-  async getOperationsWithPersistentStatus(upgradeManager) {
-    var _a, _b, _c;
-    const operationsData = await upgradeManager.getManualOperationsForSettings();
-    const pluginData = await this.plugin.loadData();
-    for (const versionData of operationsData) {
-      for (const operation of versionData.operations) {
-        const operationKey = `operation_${versionData.version.replace(/\./g, "_")}_${operation.id}`;
-        const isCompleted = ((_c = (_b = (_a = pluginData == null ? void 0 : pluginData.upgradeHistory) == null ? void 0 : _a.completedOperations) == null ? void 0 : _b[operationKey]) == null ? void 0 : _c.completed) || false;
-        operation.completed = isCompleted;
-        operation.canRun = !isCompleted && operation.canRun;
-      }
+  updateTimestampPreview(container, format) {
+    const now = Date.now() / 1e3;
+    const preview = formatMessageTimestamp(now, format);
+    container.empty();
+    const previewLine = container.createDiv({ cls: "nexus-preview-line" });
+    previewLine.createEl("strong", { text: "Preview: " });
+    previewLine.createEl("code", { text: preview, cls: "nexus-preview-code" });
+    const config = MESSAGE_TIMESTAMP_FORMATS[format];
+    if (config) {
+      container.createEl("div", {
+        text: config.description,
+        cls: "nexus-format-description"
+      });
     }
-    return operationsData;
-  }
-  async renderVersionOperations(containerEl, versionData, upgradeManager) {
-    const versionHeader = containerEl.createEl("h3", {
-      text: `Version ${versionData.version}`,
-      cls: "migrations-version-header"
-    });
-    versionHeader.style.marginTop = "25px";
-    versionHeader.style.marginBottom = "15px";
-    versionHeader.style.color = "var(--text-accent)";
-    for (const operation of versionData.operations) {
-      await this.renderOperation(containerEl, operation, versionData.version, upgradeManager);
-    }
-  }
-  async renderOperation(containerEl, operation, version, upgradeManager) {
-    new import_obsidian3.Setting(containerEl).setName(operation.name).setDesc(operation.description + (operation.completed ? " \u2705 Completed" : "")).addButton((button) => {
-      if (operation.completed) {
-        button.setButtonText("\u2705 Completed").setDisabled(true).setTooltip("This operation has been completed");
-        button.buttonEl.addClass("mod-muted");
-      } else if (!operation.canRun) {
-        button.setButtonText("Cannot Run").setDisabled(true).setTooltip("Prerequisites not met for this operation");
-      } else {
-        button.setButtonText("Run").setTooltip(`Execute ${operation.name}`).onClick(async () => {
-          await this.executeOperation(button, operation, version, upgradeManager);
-        });
-        button.buttonEl.addClass("mod-cta");
-      }
-    });
-  }
-  async executeOperation(buttonEl, operation, version, upgradeManager) {
-    const originalText = buttonEl.buttonEl.textContent;
-    buttonEl.setButtonText("Running...").setDisabled(true);
-    try {
-      console.debug(`[NEXUS-DEBUG] Executing manual operation: ${operation.id} (v${version})`);
-      const result = await upgradeManager.executeManualOperation(version, operation.id);
-      console.debug(`[NEXUS-DEBUG] Operation result:`, result);
-      if (result.success) {
-        buttonEl.setButtonText("\u2705 Completed");
-        buttonEl.setTooltip("This operation has been completed");
-        const buttonElement = buttonEl.buttonEl || buttonEl;
-        if (buttonElement && buttonElement.removeClass) {
-          buttonElement.removeClass("mod-cta");
-          buttonElement.addClass("mod-muted");
-        }
-        operation.completed = true;
-        operation.canRun = false;
-      } else {
-        buttonEl.setButtonText(originalText).setDisabled(false);
-        this.showOperationResult(
-          buttonEl.buttonEl.closest(".setting-item"),
-          result.message,
-          "error"
-        );
-      }
-    } catch (error) {
-      console.error(`[NEXUS-DEBUG] Operation execution failed:`, error);
-      buttonEl.setButtonText(originalText).setDisabled(false);
-      this.showOperationResult(
-        buttonEl.buttonEl.closest(".setting-item"),
-        `Operation failed: ${error}`,
-        "error"
-      );
-    }
-  }
-  showOperationResult(settingEl, message, type) {
-    if (!settingEl)
-      return;
-    const existingMsg = settingEl.querySelector(".operation-result");
-    if (existingMsg)
-      existingMsg.remove();
-    const resultEl = document.createElement("div");
-    resultEl.className = "operation-result";
-    resultEl.textContent = message;
-    resultEl.style.cssText = `
-            margin-top: 8px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            background: ${type === "success" ? "var(--background-modifier-success)" : "var(--background-modifier-error)"};
-            color: ${type === "success" ? "var(--text-success)" : "var(--text-error)"};
-            border: 1px solid ${type === "success" ? "var(--text-success)" : "var(--text-error)"};
-        `;
-    settingEl.appendChild(resultEl);
-    setTimeout(() => {
-      if (resultEl.parentNode) {
-        resultEl.remove();
-      }
-    }, 5e3);
-  }
-  showNoMigrationsMessage(containerEl) {
-    const noMigrationsEl = containerEl.createDiv({ cls: "setting-item-description" });
-    noMigrationsEl.style.marginTop = "15px";
-    noMigrationsEl.style.padding = "15px";
-    noMigrationsEl.style.backgroundColor = "var(--background-secondary)";
-    noMigrationsEl.style.borderRadius = "8px";
-    noMigrationsEl.style.textAlign = "center";
-    noMigrationsEl.innerHTML = `
-            <p style="margin: 0; color: var(--text-muted);">
-                <strong>No manual operations available</strong><br>
-                All upgrade operations have been completed automatically.
-            </p>
-        `;
-  }
-  showErrorMessage(containerEl, error) {
-    const errorEl = containerEl.createDiv({ cls: "setting-item-description" });
-    errorEl.style.marginTop = "15px";
-    errorEl.style.padding = "15px";
-    errorEl.style.backgroundColor = "var(--background-modifier-error)";
-    errorEl.style.color = "var(--text-error)";
-    errorEl.style.borderRadius = "8px";
-    errorEl.innerHTML = `
-            <p style="margin: 0;">
-                <strong>Error loading migrations:</strong><br>
-                ${error.message || error}
-            </p>
-        `;
   }
 };
+__name(MessageDateFormatSection, "MessageDateFormatSection");
 
 // src/ui/settings-tab.ts
-var NexusAiChatImporterPluginSettingTab = class extends import_obsidian4.PluginSettingTab {
+var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -4598,9 +8466,10 @@ var NexusAiChatImporterPluginSettingTab = class extends import_obsidian4.PluginS
   }
   initializeSections() {
     this.sections = [
-      new ConversationSettingsSection(this.plugin),
-      new AttachmentSettingsSection(this.plugin),
-      new MigrationsSettingsSection(this.plugin)
+      new SupportSection(this.plugin),
+      new FolderSettingsSection(this.plugin),
+      new DisplaySettingsSection(this.plugin),
+      new MessageDateFormatSection(this.plugin)
     ].sort((a, b) => a.order - b.order);
     this.sections.forEach((section) => {
       section.setRedrawCallback(() => this.display());
@@ -4620,9 +8489,10 @@ var NexusAiChatImporterPluginSettingTab = class extends import_obsidian4.PluginS
     }
   }
 };
+__name(NexusAiChatImporterPluginSettingTab, "NexusAiChatImporterPluginSettingTab");
 
 // src/commands/command-registry.ts
-var import_obsidian5 = require("obsidian");
+var import_obsidian12 = require("obsidian");
 var CommandRegistry = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -4637,7 +8507,7 @@ var CommandRegistry = class {
     });
   }
   showResetConfirmation() {
-    const modal = new import_obsidian5.Modal(this.plugin.app);
+    const modal = new import_obsidian12.Modal(this.plugin.app);
     modal.contentEl.createEl("p", {
       text: "This will reset all import catalogs. This action cannot be undone."
     });
@@ -4652,9 +8522,10 @@ var CommandRegistry = class {
     modal.open();
   }
 };
+__name(CommandRegistry, "CommandRegistry");
 
 // src/events/event-handlers.ts
-var import_obsidian6 = require("obsidian");
+var import_obsidian13 = require("obsidian");
 var EventHandlers = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -4662,7 +8533,7 @@ var EventHandlers = class {
   registerEvents() {
     this.plugin.registerEvent(
       this.plugin.app.vault.on("delete", async (file) => {
-        if (file instanceof import_obsidian6.TFile) {
+        if (file instanceof import_obsidian13.TFile) {
           await this.plugin.getFileService().handleConversationFileDeletion(file);
         }
       })
@@ -4671,128 +8542,410 @@ var EventHandlers = class {
   cleanup() {
   }
 };
+__name(EventHandlers, "EventHandlers");
 
 // src/services/import-service.ts
-var import_obsidian13 = require("obsidian");
+var import_obsidian18 = require("obsidian");
 var import_jszip = __toESM(require_jszip_min());
 init_utils();
 init_dialogs();
 
 // src/models/import-report.ts
+init_utils();
 var ImportReport = class {
   constructor() {
-    this.created = [];
-    this.updated = [];
-    this.skipped = [];
-    this.failed = [];
+    this.fileSections = /* @__PURE__ */ new Map();
+    this.currentFileName = "";
     this.globalErrors = [];
-    this.summary = "";
     this.providerSpecificColumnHeader = "Attachments";
+    this.operationStartTime = Date.now();
+  }
+  // Custom format for report dates
+  /**
+   * Start a new file section for multi-file imports
+   */
+  startFileSection(fileName) {
+    this.currentFileName = fileName;
+    if (!this.fileSections.has(fileName)) {
+      this.fileSections.set(fileName, {
+        fileName,
+        created: [],
+        updated: [],
+        skipped: [],
+        failed: [],
+        counters: {
+          totalConversationsProcessed: 0,
+          totalNewConversationsSuccessfullyImported: 0,
+          totalConversationsActuallyUpdated: 0,
+          totalNonEmptyMessagesAdded: 0
+        }
+      });
+    }
+  }
+  /**
+   * Set counters for the current file section
+   */
+  setFileCounters(counters) {
+    const section = this.getCurrentSection();
+    if (section) {
+      section.counters = counters;
+    }
+  }
+  getCurrentSection() {
+    return this.fileSections.get(this.currentFileName);
   }
   setProviderSpecificColumnHeader(header) {
     this.providerSpecificColumnHeader = header;
   }
+  setCustomTimestampFormat(format) {
+    this.customTimestampFormat = format;
+  }
+  /**
+   * Legacy method for backward compatibility (single file imports)
+   */
   addSummary(zipFileName, counters) {
-    const totalAttachments = this.getTotalAttachmentStats();
-    const attachmentSummary = totalAttachments.total > 0 ? `
-- **Attachments**: ${totalAttachments.found}/${totalAttachments.total} extracted (${totalAttachments.missing} missing, ${totalAttachments.failed} failed)` : "";
-    this.summary = `## Summary
-- **ZIP File**: ${zipFileName}
-- **Created**: ${this.created.length} new conversations
-- **Updated**: ${this.updated.length} conversations with ${counters.totalNonEmptyMessagesAdded} new messages
-- **Skipped**: ${this.skipped.length} conversations (no changes)
-- **Failed**: ${this.failed.length} conversations
-- **Errors**: ${this.globalErrors.length} global errors${attachmentSummary}`;
+    this.startFileSection(zipFileName);
+    this.setFileCounters(counters);
   }
   getTotalAttachmentStats() {
     const total = { total: 0, found: 0, missing: 0, failed: 0 };
-    [...this.created, ...this.updated].forEach((entry) => {
+    this.fileSections.forEach((section) => {
+      [...section.created, ...section.updated].forEach((entry) => {
+        if (entry.attachmentStats) {
+          total.total += entry.attachmentStats.total;
+          total.found += entry.attachmentStats.found;
+          total.missing += entry.attachmentStats.missing;
+          total.failed += entry.attachmentStats.failed;
+        }
+        if (entry.providerSpecificCount) {
+          total.total += entry.providerSpecificCount;
+          total.found += entry.providerSpecificCount;
+        }
+      });
+    });
+    return total;
+  }
+  getFileSectionAttachmentStats(section) {
+    const total = { total: 0, found: 0, missing: 0, failed: 0 };
+    [...section.created, ...section.updated].forEach((entry) => {
       if (entry.attachmentStats) {
         total.total += entry.attachmentStats.total;
         total.found += entry.attachmentStats.found;
         total.missing += entry.attachmentStats.missing;
         total.failed += entry.attachmentStats.failed;
       }
+      if (entry.providerSpecificCount) {
+        total.total += entry.providerSpecificCount;
+        total.found += entry.providerSpecificCount;
+      }
     });
     return total;
   }
-  addCreated(title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount) {
-    this.created.push({ title, filePath, createDate, updateDate, messageCount, attachmentStats, providerSpecificCount });
+  getGlobalStats() {
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+    let totalProcessed = 0;
+    let newMessages = 0;
+    this.fileSections.forEach((section) => {
+      created += section.created.length;
+      updated += section.updated.length;
+      skipped += section.skipped.length;
+      failed += section.failed.length;
+      totalProcessed += section.counters.totalConversationsProcessed;
+      newMessages += section.counters.totalNonEmptyMessagesAdded;
+    });
+    return { created, updated, skipped, failed, totalProcessed, newMessages };
   }
-  addUpdated(title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount) {
-    this.updated.push({ title, filePath, createDate, updateDate, newMessageCount, attachmentStats, providerSpecificCount });
+  addCreated(title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount) {
+    const section = this.getCurrentSection();
+    if (section) {
+      section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+    }
   }
-  addSkipped(title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount) {
-    this.skipped.push({ title, filePath, createDate, updateDate, messageCount, reason, attachmentStats, providerSpecificCount });
+  addUpdated(title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount) {
+    const section = this.getCurrentSection();
+    if (section) {
+      section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+    }
   }
-  addFailed(title, filePath, createDate, updateDate, errorMessage) {
-    this.failed.push({ title, filePath, createDate, updateDate, errorMessage });
+  addSkipped(title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount) {
+    const section = this.getCurrentSection();
+    if (section) {
+      section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+    }
+  }
+  addFailed(title, filePath, createTime, updateTime, errorMessage) {
+    const section = this.getCurrentSection();
+    if (section) {
+      section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
+    }
   }
   addError(message, details) {
     this.globalErrors.push({ message, details });
   }
-  generateReportContent() {
+  generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) {
     let content = "# Nexus AI Chat Importer Report\n\n";
-    if (this.summary) {
-      content += this.summary + "\n\n";
+    content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) + "\n\n";
+    if (skippedFiles && skippedFiles.length > 0) {
+      content += this.generateSkippedFilesSection(skippedFiles, isSelectiveImport) + "\n\n";
     }
-    if (this.created.length > 0) {
-      content += this.generateCreatedTable();
-    }
-    if (this.updated.length > 0) {
-      content += this.generateUpdatedTable();
-    }
-    if (this.failed.length > 0) {
-      content += this.generateFailedTable();
+    const fileNames = Array.from(this.fileSections.keys());
+    if (fileNames.length === 0) {
+      content += "## Result\n\n";
+      content += "No conversations were imported. All conversations are already up to date.\n\n";
+    } else if (fileNames.length === 1) {
+      const section = this.fileSections.get(fileNames[0]);
+      content += this.generateFileContent(section, false);
+    } else {
+      content += "---\n\n";
+      content += "## Processed Files\n\n";
+      fileNames.forEach((fileName, index) => {
+        const section = this.fileSections.get(fileName);
+        content += `### File ${index + 1}: ${fileName}
+
+`;
+        content += this.generateFileSummary(section) + "\n\n";
+        content += this.generateFileContent(section, true);
+        if (index < fileNames.length - 1) {
+          content += "\n";
+        }
+      });
     }
     if (this.globalErrors.length > 0) {
+      content += `---
+
+`;
       content += this.generateErrorTable();
     }
     return content;
   }
-  generateCreatedTable() {
-    let table = `## \u2728 Created Notes
+  generateSkippedFilesSection(skippedFiles, isSelectiveImport) {
+    const title = isSelectiveImport ? "\u23ED\uFE0F Skipped Files (No Selected Conversations)" : "\u23ED\uFE0F Skipped Files (Already Up to Date)";
+    const explanation = isSelectiveImport ? "Files not processed because they contain no selected conversations" : "Files analyzed but not processed because all conversations are already up to date";
+    let section = `> [!note]- ${title}
+`;
+    section += `> ${explanation}
+`;
+    section += `> 
+`;
+    section += `> **Total:** ${skippedFiles.length} files
+`;
+    section += `> 
+`;
+    section += `> <details>
+`;
+    section += `> <summary>View file list</summary>
+`;
+    section += `> 
+`;
+    skippedFiles.forEach((fileName) => {
+      section += `> - \`${fileName}\`
+`;
+    });
+    section += `> 
+`;
+    section += `> </details>
+`;
+    return section;
+  }
+  generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) {
+    const stats = this.getGlobalStats();
+    const totalAttachments = this.getTotalAttachmentStats();
+    const fileCount = this.fileSections.size;
+    const totalFilesAnalyzed = allFiles ? allFiles.length : fileCount;
+    const filesSkipped = skippedFiles ? skippedFiles.length : 0;
+    let summary = `## \u{1F4CA} Import Summary
+
+`;
+    if (allFiles && allFiles.length > 0) {
+      summary += `### \u{1F4E6} Files Analyzed
+
+`;
+      summary += `| File | Conversations | Duplicates | Skipped | Selected | Created | Updated |
+`;
+      summary += `|:---|---:|---:|---:|---:|---:|---:|
+`;
+      const fileInfos = [];
+      allFiles.forEach((file) => {
+        fileInfos.push({
+          name: file.name,
+          file
+        });
+      });
+      fileInfos.sort((a, b) => {
+        var _a, _b;
+        const timeA = ((_a = a.file) == null ? void 0 : _a.lastModified) || 0;
+        const timeB = ((_b = b.file) == null ? void 0 : _b.lastModified) || 0;
+        return timeA - timeB;
+      });
+      fileInfos.forEach((info) => {
+        const stats2 = fileStats == null ? void 0 : fileStats.get(info.name);
+        const section = this.fileSections.get(info.name);
+        if (stats2) {
+          const created = (section == null ? void 0 : section.created.length) || 0;
+          const updated = (section == null ? void 0 : section.updated.length) || 0;
+          const skipped = stats2.skippedConversations || 0;
+          summary += `| \`${info.name}\` | ${stats2.totalConversations} | ${stats2.duplicates} | ${skipped} | ${stats2.selectedForImport} | ${created} | ${updated} |
+`;
+        } else {
+          summary += `| \`${info.name}\` | - | - | - | - | 0 | 0 |
+`;
+        }
+      });
+      summary += `
+`;
+    }
+    if (analysisInfo && !isSelectiveImport) {
+      summary += `> [!info]- \u{1F50D} Global Statistics
+`;
+      summary += `> 
+`;
+      summary += `> | Metric | Count |
+`;
+      summary += `> |:---|---:|
+`;
+      summary += `> | Total Conversations Found | ${analysisInfo.totalConversationsFound || 0} |
+`;
+      summary += `> | Unique Conversations | ${analysisInfo.uniqueConversationsKept || 0} |
+`;
+      if (analysisInfo.duplicatesRemoved > 0) {
+        summary += `> | Duplicates Removed | ${analysisInfo.duplicatesRemoved} |
+`;
+      }
+      summary += `> | New | ${analysisInfo.conversationsNew || 0} |
+`;
+      summary += `> | Updated | ${analysisInfo.conversationsUpdated || 0} |
+`;
+      summary += `> | Skipped | ${analysisInfo.conversationsIgnored || 0} |
+`;
+      summary += `
+`;
+    }
+    summary += `### \u{1F4E5} Import Summary
+
+`;
+    summary += `| Category | Count |
+`;
+    summary += `|:---|---:|
+`;
+    summary += `| **Total Imported** | **${stats.created + stats.updated}** |
+`;
+    summary += `| \u2728 Created | ${stats.created} |
+`;
+    summary += `| \u{1F504} Updated | ${stats.updated}`;
+    if (stats.newMessages > 0) {
+      summary += ` (${stats.newMessages} new messages)`;
+    }
+    summary += ` |
+`;
+    if (stats.skipped > 0) {
+      summary += `| \u23ED\uFE0F Skipped (unchanged) | ${stats.skipped} |
+`;
+    }
+    if (stats.failed > 0) {
+      summary += `| \u274C Failed | ${stats.failed} |
+`;
+    }
+    if (this.globalErrors.length > 0) {
+      summary += `| \u26A0\uFE0F Errors | ${this.globalErrors.length} |
+`;
+    }
+    if (totalAttachments.total > 0) {
+      const attachmentIcon = totalAttachments.found === totalAttachments.total ? "\u2705" : totalAttachments.found === 0 ? "\u274C" : "\u26A0\uFE0F";
+      summary += `| ${attachmentIcon} Attachments | ${totalAttachments.found}/${totalAttachments.total} |
+`;
+      if (totalAttachments.missing > 0 || totalAttachments.failed > 0) {
+        summary += `| \u2514\u2500 Missing | ${totalAttachments.missing} |
+`;
+        summary += `| \u2514\u2500 Failed | ${totalAttachments.failed} |
+`;
+      }
+    }
+    return summary;
+  }
+  generateFileSummary(section) {
+    const attachmentStats = this.getFileSectionAttachmentStats(section);
+    const attachmentSummary = attachmentStats.total > 0 ? `
+- **Attachments**: ${attachmentStats.found}/${attachmentStats.total} extracted` : "";
+    return `### Statistics
+- **Created**: ${section.created.length}
+- **Updated**: ${section.updated.length} (${section.counters.totalNonEmptyMessagesAdded} new messages)
+- **Skipped**: ${section.skipped.length}
+- **Failed**: ${section.failed.length}${attachmentSummary}`;
+  }
+  generateFileContent(section, isMultiFile) {
+    let content = "";
+    if (section.created.length > 0) {
+      content += this.generateCreatedTable(section.created, isMultiFile);
+    }
+    if (section.updated.length > 0) {
+      content += this.generateUpdatedTable(section.updated, isMultiFile);
+    }
+    if (section.failed.length > 0) {
+      content += this.generateFailedTable(section.failed, isMultiFile);
+    }
+    return content;
+  }
+  generateCreatedTable(entries, isMultiFile) {
+    const header = isMultiFile ? "### \u2728 Created Notes" : "## \u2728 Created Notes";
+    let table = `${header}
 
 `;
     table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
-    this.created.forEach((entry) => {
+    const sortedEntries = [...entries].sort((a, b) => {
+      return a.createTime - b.createTime;
+    });
+    sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
+      const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
       const providerSpecificDisplay = providerSpecificValue > 0 ? `\u2705 ${providerSpecificValue}` : providerSpecificValue;
-      table += `| \u2728 | ${titleLink} | ${entry.createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |
+      table += `| \u2728 | ${titleLink} | ${createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |
 `;
     });
     return table + "\n\n";
   }
-  generateUpdatedTable() {
-    let table = `## \u{1F504} Updated Notes
+  generateUpdatedTable(entries, isMultiFile) {
+    const header = isMultiFile ? "### \u{1F504} Updated Notes" : "## \u{1F504} Updated Notes";
+    let table = `${header}
 
 `;
     table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |
 `;
     table += "|:---:|:---|:---:|:---:|:---:|\n";
-    this.updated.forEach((entry) => {
+    const sortedEntries = [...entries].sort((a, b) => {
+      return a.updateTime - b.updateTime;
+    });
+    sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
+      const updateDate = formatMessageTimestamp(entry.updateTime, this.customTimestampFormat);
       const providerSpecificDisplay = providerSpecificValue > 0 ? `\u2705 ${providerSpecificValue}` : providerSpecificValue;
-      table += `| \u{1F504} | ${titleLink} | ${entry.updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |
+      table += `| \u{1F504} | ${titleLink} | ${updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |
 `;
     });
     return table + "\n\n";
   }
-  generateFailedTable() {
-    let table = `## \u{1F6AB} Failed Imports
+  generateFailedTable(entries, isMultiFile) {
+    const header = isMultiFile ? "### \u{1F6AB} Failed Imports" : "## \u{1F6AB} Failed Imports";
+    let table = `${header}
 
 `;
     table += "| | Title | Date | Error |\n";
     table += "|:---:|:---|:---:|:---|\n";
-    this.failed.forEach((entry) => {
+    const sortedEntries = [...entries].sort((a, b) => {
+      return a.createTime - b.createTime;
+    });
+    sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
-      table += `| \u{1F6AB} | ${sanitizedTitle} | ${entry.createDate} | ${entry.errorMessage || "Unknown error"} |
+      const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
+      table += `| \u{1F6AB} | ${sanitizedTitle} | ${createDate} | ${entry.errorMessage || "Unknown error"} |
 `;
     });
     return table + "\n\n";
@@ -4823,37 +8976,119 @@ var ImportReport = class {
     }
   }
   hasErrors() {
-    return this.failed.length > 0 || this.globalErrors.length > 0;
+    let hasFailed = false;
+    this.fileSections.forEach((section) => {
+      if (section.failed.length > 0) {
+        hasFailed = true;
+      }
+    });
+    return hasFailed || this.globalErrors.length > 0;
   }
   getCreatedCount() {
-    return this.created.length;
+    let count = 0;
+    this.fileSections.forEach((section) => {
+      count += section.created.length;
+    });
+    return count;
   }
   getUpdatedCount() {
-    return this.updated.length;
+    let count = 0;
+    this.fileSections.forEach((section) => {
+      count += section.updated.length;
+    });
+    return count;
   }
   getSkippedCount() {
-    return this.skipped.length;
+    let count = 0;
+    this.fileSections.forEach((section) => {
+      count += section.skipped.length;
+    });
+    return count;
+  }
+  getFailedCount() {
+    let count = 0;
+    this.fileSections.forEach((section) => {
+      count += section.failed.length;
+    });
+    return count;
+  }
+  /**
+   * Store file analysis stats for duplicate counting
+   */
+  setFileStats(fileStats) {
+    this.fileStats = fileStats;
+  }
+  /**
+   * Store analysis info for completion stats
+   */
+  setAnalysisInfo(analysisInfo) {
+    this.analysisInfo = analysisInfo;
+  }
+  /**
+   * Calculate total duplicates from file stats
+   */
+  getTotalDuplicates() {
+    if (!this.fileStats)
+      return 0;
+    let totalDuplicates = 0;
+    this.fileStats.forEach((stats) => {
+      totalDuplicates += stats.duplicates || 0;
+    });
+    return totalDuplicates;
+  }
+  /**
+   * Get statistics for the completion dialog
+   */
+  getCompletionStats() {
+    var _a, _b, _c, _d, _e, _f;
+    const globalStats = this.getGlobalStats();
+    const attachmentStats = this.getTotalAttachmentStats();
+    const totalConversations = (_b = (_a = this.analysisInfo) == null ? void 0 : _a.uniqueConversationsKept) != null ? _b : globalStats.totalProcessed;
+    const duplicates = (_d = (_c = this.analysisInfo) == null ? void 0 : _c.duplicatesRemoved) != null ? _d : this.getTotalDuplicates();
+    const skipped = (_f = (_e = this.analysisInfo) == null ? void 0 : _e.conversationsIgnored) != null ? _f : globalStats.skipped;
+    return {
+      totalFiles: this.fileSections.size,
+      totalConversations,
+      duplicates,
+      created: globalStats.created,
+      updated: globalStats.updated,
+      skipped,
+      failed: globalStats.failed,
+      attachmentsFound: attachmentStats.found,
+      attachmentsTotal: attachmentStats.total,
+      attachmentsMissing: attachmentStats.missing,
+      attachmentsFailed: attachmentStats.failed
+    };
+  }
+  /**
+   * Get list of processed file names
+   */
+  getProcessedFileNames() {
+    return Array.from(this.fileSections.keys());
   }
 };
+__name(ImportReport, "ImportReport");
 
 // src/services/conversation-processor.ts
-var import_obsidian11 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 
 // src/formatters/message-formatter.ts
 init_utils();
 var _MessageFormatter = class {
-  constructor(logger4) {
-    this.logger = logger4;
+  constructor(logger6, plugin) {
+    this.logger = logger6;
+    this.plugin = plugin;
   }
   formatMessages(messages) {
-    return messages.filter((message) => message !== void 0).map((message) => this.formatMessage(message)).filter((formattedMessage) => formattedMessage !== "").join("\n\n");
+    return messages.filter((message) => message !== void 0).map((message) => this.formatMessage(message)).filter((formattedMessage) => formattedMessage !== "").join("\n");
   }
   formatMessage(message) {
     if (!message) {
       this.logger.error("Message is null or undefined:", message);
       return "";
     }
-    const messageTime = formatTimestamp(message.timestamp, "date") + " at " + formatTimestamp(message.timestamp, "time");
+    const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
+    const messageTime = formatMessageTimestamp(message.timestamp, customFormat);
     const authorName = message.role === "user" ? "User" : "Assistant";
     const calloutType = message.role === "user" ? _MessageFormatter.CALLOUTS.USER : _MessageFormatter.CALLOUTS.AGENT;
     let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}
@@ -4864,15 +9099,14 @@ var _MessageFormatter = class {
       messageContent += `> [No content found]`;
     }
     if (message.attachments && message.attachments.length > 0) {
-      messageContent += "\n\n" + this.formatAttachments(message.attachments);
+      messageContent += "\n" + this.formatAttachments(message.attachments);
     }
     messageContent += `
-<!-- UID: ${message.id} -->
-`;
+<!-- UID: ${message.id} -->`;
     if (message.role === "assistant") {
-      messageContent += "\n---\n";
+      messageContent += "\n\n---";
     }
-    return messageContent + "\n\n";
+    return messageContent;
   }
   formatAttachments(attachments) {
     return attachments.map((attachment) => {
@@ -4881,13 +9115,16 @@ var _MessageFormatter = class {
   }
   /**
    * Format single attachment with Nexus callout styling
+   *
+   * Provider-formatted attachments (with extractedContent) are displayed as-is.
+   * Generic attachments get basic formatting.
    */
   formatSingleAttachment(attachment) {
-    var _a, _b, _c;
-    if (attachment.extractedContent && attachment.extractedContent.includes("nexus_attachment")) {
+    var _a, _b;
+    if (attachment.extractedContent) {
       return attachment.extractedContent;
     }
-    let content = `>[!${_MessageFormatter.CALLOUTS.ATTACHMENT}] `;
+    let content = `>>[!${_MessageFormatter.CALLOUTS.ATTACHMENT}] `;
     if ((_a = attachment.status) == null ? void 0 : _a.found) {
       content += `**${attachment.fileName}**`;
     } else {
@@ -4903,47 +9140,32 @@ var _MessageFormatter = class {
     if (((_b = attachment.status) == null ? void 0 : _b.found) && attachment.url) {
       if (!attachment.url.startsWith("sandbox://")) {
         if (this.isImageFile(attachment)) {
-          content += `> ![[${attachment.url}]]`;
+          content += `>> ![[${attachment.url}]]`;
         } else {
-          content += `> [[${attachment.url}]]`;
+          content += `>> [[${attachment.url}]]`;
         }
       } else {
-        content += `> \u26A0\uFE0F File not available in archive. Visit the original conversation to access it`;
+        content += `>> \u26A0\uFE0F File not available in archive. Visit the original conversation to access it`;
       }
     } else if (attachment.status && !attachment.status.found) {
-      content += `> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
+      content += `>> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
       if (attachment.status.note) {
         content += `
-> **Note:** ${attachment.status.note}`;
+>> **Note:** ${attachment.status.note}`;
       }
       if (attachment.status.reason === "missing_from_export") {
-        const conversationUrl = ((_c = attachment.url) == null ? void 0 : _c.includes("chatgpt.com")) ? attachment.url : "https://chatgpt.com/";
-        content += `
-> [Open original conversation](${conversationUrl})`;
+        if (attachment.url) {
+          content += `
+>> [Open original conversation](${attachment.url})`;
+        } else {
+          content += `
+>> Original conversation link not available`;
+        }
       }
-    } else if (attachment.extractedContent && this.isDalleImage(attachment)) {
-      content += `> ${this.isImageFile(attachment) ? "![[" + attachment.url + "]]" : "[[" + attachment.url + "]]"}`;
-    } else if (attachment.extractedContent) {
-      content += `> ${attachment.extractedContent}`;
-    } else if (attachment.content && !attachment.extractedContent) {
-      content += `> ${attachment.content}`;
+    } else if (attachment.content) {
+      content += `>> ${attachment.content}`;
     }
-    let dallePrompt = "";
-    if (attachment.extractedContent && this.isDalleImage(attachment)) {
-      dallePrompt = `
-
->[!${_MessageFormatter.CALLOUTS.PROMPT}] **DALL-E Prompt**
-> \`\`\`
-> ${attachment.extractedContent}
-> \`\`\``;
-    }
-    return content + dallePrompt;
-  }
-  /**
-   * Check if attachment is a DALL-E generated image
-   */
-  isDalleImage(attachment) {
-    return attachment.fileName.startsWith("dalle_") && attachment.fileName.includes("_") && attachment.fileType === "image/png";
+    return content;
   }
   /**
    * Get user-friendly status message
@@ -4983,6 +9205,7 @@ var _MessageFormatter = class {
   }
 };
 var MessageFormatter = _MessageFormatter;
+__name(MessageFormatter, "MessageFormatter");
 // Nexus custom callouts with icons
 MessageFormatter.CALLOUTS = {
   USER: "nexus_user",
@@ -5003,7 +9226,7 @@ init_utils();
 // src/types/standard.ts
 var URL_GENERATORS = {
   chatgpt: {
-    generateChatUrl: (id) => `https://chat.openai.com/c/${id}`
+    generateChatUrl: (id) => `https://chatgpt.com/c/${id}`
   },
   claude: {
     generateChatUrl: (id) => `https://claude.ai/chat/${id}`
@@ -5012,21 +9235,24 @@ var URL_GENERATORS = {
 
 // src/formatters/note-formatter.ts
 var NoteFormatter = class {
-  constructor(logger4, pluginId, pluginVersion) {
-    this.logger = logger4;
+  constructor(logger6, pluginId, pluginVersion, plugin) {
+    this.logger = logger6;
     this.pluginId = pluginId;
     this.pluginVersion = pluginVersion;
-    this.messageFormatter = new MessageFormatter(logger4);
+    this.plugin = plugin;
+    this.messageFormatter = new MessageFormatter(logger6, plugin);
   }
   generateMarkdownContent(conversation) {
-    const formattedTitle = formatTitle(conversation.title);
-    const createTimeStr = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
-    const updateTimeStr = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
-    let content = this.generateHeader(formattedTitle, conversation.id, createTimeStr, updateTimeStr, conversation);
+    const safeTitle = generateSafeAlias(conversation.title);
+    const createTimeStr = new Date(conversation.createTime * 1e3).toISOString();
+    const updateTimeStr = new Date(conversation.updateTime * 1e3).toISOString();
+    const createTimeDisplay = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
+    const updateTimeDisplay = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
+    let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation);
     content += this.generateMessagesContent(conversation);
     return content;
   }
-  generateHeader(title, conversationId, createTimeStr, updateTimeStr, conversation) {
+  generateHeader(title, conversationId, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation) {
     let chatUrl = conversation.chatUrl;
     if (!chatUrl && URL_GENERATORS[conversation.provider]) {
       chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(conversationId);
@@ -5035,19 +9261,19 @@ var NoteFormatter = class {
 nexus: ${this.pluginId}
 plugin_version: "${this.pluginVersion}"
 provider: ${conversation.provider}
-aliases: "${title}"
+aliases: ${title}
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
 ---
 
 `;
-    let header = `# Title: ${title}
+    let header = `# Title: ${conversation.title}
 
 `;
-    header += `Created: ${createTimeStr}
+    header += `Created: ${createTimeDisplay}
 `;
-    header += `Last Updated: ${updateTimeStr}
+    header += `Last Updated: ${updateTimeDisplay}
 `;
     if (chatUrl) {
       header += `Chat URL: ${chatUrl}
@@ -5060,9 +9286,10 @@ update_time: ${updateTimeStr}
     return this.messageFormatter.formatMessages(conversation.messages);
   }
 };
+__name(NoteFormatter, "NoteFormatter");
 
 // src/services/file-service.ts
-var import_obsidian10 = require("obsidian");
+var import_obsidian15 = require("obsidian");
 var FileService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -5070,9 +9297,9 @@ var FileService = class {
   async writeToFile(filePath, content) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian10.TFile) {
+      if (file instanceof import_obsidian15.TFile) {
         await this.plugin.app.vault.modify(file, content);
-      } else if (file instanceof import_obsidian10.TFolder) {
+      } else if (file instanceof import_obsidian15.TFolder) {
         throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
       } else {
         await this.plugin.app.vault.create(filePath, content);
@@ -5088,15 +9315,6 @@ var FileService = class {
       const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
       if (!(frontmatter == null ? void 0 : frontmatter.conversation_id) || (frontmatter == null ? void 0 : frontmatter.nexus) !== this.plugin.manifest.id) {
         return;
-      }
-      const storage = this.plugin.getStorageService();
-      const catalog = storage.getConversationCatalog();
-      for (const [id, record] of Object.entries(catalog)) {
-        if (record.conversationId === frontmatter.conversation_id) {
-          storage.deleteFromConversationCatalog(id);
-          await this.plugin.saveSettings();
-          break;
-        }
       }
     } catch (error) {
       this.plugin.logger.error("Error handling conversation file deletion:", error);
@@ -5114,6 +9332,7 @@ var FileService = class {
   //     // Implementation for deleting attachments when conversation is deleted
   // }
 };
+__name(FileService, "FileService");
 
 // src/services/conversation-processor.ts
 init_utils();
@@ -5132,9 +9351,9 @@ var ConversationProcessor = class {
       totalNonEmptyMessagesAdded: 0
     };
     this.currentProvider = "unknown";
-    this.messageFormatter = new MessageFormatter(plugin.logger);
+    this.messageFormatter = new MessageFormatter(plugin.logger, plugin);
     this.fileService = new FileService(plugin);
-    this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id, plugin.manifest.version);
+    this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id, plugin.manifest.version, plugin);
     this.providerRegistry = providerRegistry;
   }
   /**
@@ -5185,6 +9404,12 @@ var ConversationProcessor = class {
   async processSingleChat(adapter, chat, existingConversations, importReport, zip, isReprocess = false) {
     try {
       const chatId = adapter.getId(chat);
+      const chatTitle = adapter.getTitle(chat) || "Untitled";
+      if (!chatId || chatId.trim() === "") {
+        this.plugin.logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
+        importReport.addFailed(chatTitle, "N/A", 0, 0, "Missing conversation ID");
+        return;
+      }
       const existingEntry = existingConversations.get(chatId);
       if (existingEntry) {
         await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess);
@@ -5210,17 +9435,17 @@ var ConversationProcessor = class {
       return;
     }
     if (isReprocess) {
-      this.plugin.logger.info(`Reprocessing conversation: ${chatTitle}`);
       this.counters.totalExistingConversationsToUpdate++;
       await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true);
       return;
     }
-    if (existingRecord.updateTime >= updateTime) {
+    const comparison = compareTimestampsIgnoringSeconds(updateTime, existingRecord.updateTime);
+    if (comparison <= 0) {
       importReport.addSkipped(
         chatTitle,
         existingRecord.path,
-        formatTimestamp(createTime, "date"),
-        formatTimestamp(updateTime, "date"),
+        createTime,
+        updateTime,
         totalMessageCount,
         "No Updates"
       );
@@ -5267,19 +9492,18 @@ var ConversationProcessor = class {
   async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian11.TFile) {
+      if (file instanceof import_obsidian16.TFile) {
         let content = await this.plugin.app.vault.read(file);
         const originalContent = content;
         const chatUpdateTime = adapter.getUpdateTime(chat);
         const chatCreateTime = adapter.getCreateTime(chat);
         const chatTitle = adapter.getTitle(chat);
-        content = this.updateMetadata(content, chatUpdateTime);
         const existingMessageIds = this.extractMessageUIDsFromNote(content);
         const newMessages = adapter.getNewMessages(chat, existingMessageIds);
         let attachmentStats = void 0;
         if (forceUpdate) {
           let standardConversation = await adapter.convertChat(chat);
-          if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+          if (zip && adapter.processMessageAttachments) {
             standardConversation.messages = await adapter.processMessageAttachments(
               standardConversation.messages,
               adapter.getId(chat),
@@ -5292,8 +9516,8 @@ var ConversationProcessor = class {
           importReport.addUpdated(
             chatTitle,
             filePath,
-            `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-            `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+            chatCreateTime,
+            chatUpdateTime,
             totalMessageCount,
             attachmentStats
           );
@@ -5301,16 +9525,21 @@ var ConversationProcessor = class {
           return;
         }
         if (newMessages.length > 0) {
-          let standardMessages = await adapter.convertMessages(newMessages, adapter.getId(chat));
-          if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
-            standardMessages = await adapter.processMessageAttachments(
-              standardMessages,
+          content = this.updateMetadata(content, chatUpdateTime);
+          let standardConversation = await adapter.convertChat(chat);
+          const newStandardMessages = standardConversation.messages.filter(
+            (msg) => newMessages.some((newMsg) => newMsg.id === msg.id)
+          );
+          let processedNewMessages = newStandardMessages;
+          if (zip && adapter.processMessageAttachments) {
+            processedNewMessages = await adapter.processMessageAttachments(
+              newStandardMessages,
               adapter.getId(chat),
               zip
             );
           }
-          attachmentStats = this.calculateAttachmentStats(standardMessages);
-          content += "\n\n" + this.messageFormatter.formatMessages(standardMessages);
+          attachmentStats = this.calculateAttachmentStats(processedNewMessages);
+          content += "\n\n" + this.messageFormatter.formatMessages(processedNewMessages);
           this.counters.totalConversationsActuallyUpdated++;
           this.counters.totalNonEmptyMessagesAdded += newMessages.length;
         }
@@ -5319,8 +9548,8 @@ var ConversationProcessor = class {
           importReport.addUpdated(
             chatTitle,
             filePath,
-            `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-            `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+            chatCreateTime,
+            chatUpdateTime,
             newMessages.length,
             attachmentStats
           );
@@ -5328,8 +9557,8 @@ var ConversationProcessor = class {
           importReport.addSkipped(
             chatTitle,
             filePath,
-            `${formatTimestamp(chatCreateTime, "date")} ${formatTimestamp(chatCreateTime, "time")}`,
-            `${formatTimestamp(chatUpdateTime, "date")} ${formatTimestamp(chatUpdateTime, "time")}`,
+            chatCreateTime,
+            chatUpdateTime,
             totalMessageCount,
             "No changes needed"
           );
@@ -5348,7 +9577,7 @@ var ConversationProcessor = class {
       }
       let standardConversation = await adapter.convertChat(chat);
       let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
-      if (zip && this.plugin.settings.importAttachments && adapter.processMessageAttachments) {
+      if (zip && adapter.processMessageAttachments) {
         standardConversation.messages = await adapter.processMessageAttachments(
           standardConversation.messages,
           adapter.getId(chat),
@@ -5366,8 +9595,8 @@ var ConversationProcessor = class {
       importReport.addCreated(
         chatTitle,
         filePath,
-        `${formatTimestamp(createTime, "date")} ${formatTimestamp(createTime, "time")}`,
-        `${formatTimestamp(updateTime, "date")} ${formatTimestamp(updateTime, "time")}`,
+        createTime,
+        updateTime,
         messageCount,
         attachmentStats,
         providerSpecificCount
@@ -5382,15 +9611,15 @@ var ConversationProcessor = class {
       importReport.addFailed(
         chatTitle,
         filePath,
-        formatTimestamp(createTime, "date") + " " + formatTimestamp(createTime, "time"),
-        formatTimestamp(updateTime, "date") + " " + formatTimestamp(updateTime, "time"),
+        createTime,
+        updateTime,
         error.message
       );
       throw error;
     }
   }
   updateMetadata(content, updateTime) {
-    const updateTimeStr = `${formatTimestamp(updateTime, "date")} at ${formatTimestamp(updateTime, "time")}`;
+    const updateTimeStr = new Date(updateTime * 1e3).toISOString();
     content = content.replace(/^update_time: .*$/m, `update_time: ${updateTimeStr}`);
     content = content.replace(/^Last Updated: .*$/m, `Last Updated: ${updateTimeStr}`);
     return content;
@@ -5411,7 +9640,7 @@ var ConversationProcessor = class {
     const date = new Date(createTime * 1e3);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
-    const folderPath = `${this.plugin.settings.archiveFolder}/${providerName}/${year}/${month}`;
+    const folderPath = `${this.plugin.settings.conversationFolder}/${providerName}/${year}/${month}`;
     const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       throw new Error(folderResult.error || "Failed to ensure folder exists.");
@@ -5430,6 +9659,22 @@ var ConversationProcessor = class {
   }
   getCounters() {
     return this.counters;
+  }
+  /**
+   * Reset counters for processing a new file
+   */
+  resetCounters() {
+    this.counters = {
+      totalExistingConversations: 0,
+      totalNewConversationsToImport: 0,
+      totalExistingConversationsToUpdate: 0,
+      totalNewConversationsSuccessfullyImported: 0,
+      totalConversationsActuallyUpdated: 0,
+      totalConversationsProcessed: 0,
+      totalNonEmptyMessagesToImport: 0,
+      totalNonEmptyMessagesToAdd: 0,
+      totalNonEmptyMessagesAdded: 0
+    };
   }
   /**
    * Calculate attachment statistics from processed messages
@@ -5454,6 +9699,7 @@ var ConversationProcessor = class {
     return stats;
   }
 };
+__name(ConversationProcessor, "ConversationProcessor");
 
 // src/models/errors.ts
 var NexusAiChatImporterError = class extends Error {
@@ -5463,6 +9709,7 @@ var NexusAiChatImporterError = class extends Error {
     this.name = "NexusAiChatImporterError";
   }
 };
+__name(NexusAiChatImporterError, "NexusAiChatImporterError");
 
 // src/providers/provider-adapter.ts
 var DefaultProviderRegistry = class {
@@ -5486,9 +9733,328 @@ var DefaultProviderRegistry = class {
     return "unknown";
   }
 };
+__name(DefaultProviderRegistry, "DefaultProviderRegistry");
+
+// src/providers/chatgpt/chatgpt-dalle-processor.ts
+var ChatGPTDalleProcessor = class {
+  /**
+   * Extract DALL-E prompts from chat mapping using recursive descendant search
+   * Returns both matched prompts (image found) and orphaned prompts (no image found)
+   */
+  static extractDallePromptsFromMapping(chat) {
+    var _a;
+    const imagePrompts = /* @__PURE__ */ new Map();
+    const orphanedPrompts = /* @__PURE__ */ new Map();
+    let promptMessagesFound = 0;
+    let promptsWithImages = 0;
+    let orphanedPromptsCount = 0;
+    for (const messageObj of Object.values(chat.mapping)) {
+      const message = messageObj == null ? void 0 : messageObj.message;
+      if (!message || ((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
+        continue;
+      if (this.isDallePromptMessage(message)) {
+        promptMessagesFound++;
+        const prompt = this.extractPromptFromJson(message);
+        if (prompt) {
+          const imageMessageId = this.findDalleImageInDescendants(
+            chat.mapping,
+            messageObj.id || ""
+          );
+          if (imageMessageId) {
+            promptsWithImages++;
+            imagePrompts.set(imageMessageId, {
+              prompt,
+              timestamp: message.create_time || 0
+            });
+          } else {
+            orphanedPromptsCount++;
+            orphanedPrompts.set(messageObj.id || "", prompt);
+          }
+        } else {
+        }
+      }
+    }
+    return { imagePrompts, orphanedPrompts };
+  }
+  /**
+   * Recursively search for DALL-E image in descendants
+   * Stops at first user message encountered (limit to prevent going too far)
+   */
+  static findDalleImageInDescendants(mapping, startId) {
+    var _a, _b;
+    const queue = [startId];
+    const visited = /* @__PURE__ */ new Set();
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      if (visited.has(currentId))
+        continue;
+      visited.add(currentId);
+      const currentObj = mapping[currentId];
+      if (!currentObj)
+        continue;
+      const message = currentObj.message;
+      if (((_a = message == null ? void 0 : message.author) == null ? void 0 : _a.role) === "user") {
+        return null;
+      }
+      if (((_b = message == null ? void 0 : message.author) == null ? void 0 : _b.role) === "tool" && this.hasRealDalleImage(message)) {
+        return currentId;
+      }
+      const children = currentObj.children || [];
+      queue.push(...children);
+    }
+    return null;
+  }
+  /**
+   * Check if message is a DALL-E JSON prompt message
+   * Handles both formats:
+   * - content_type: "text" with parts[0] containing JSON
+   * - content_type: "code" with text containing JSON
+   */
+  static isDallePromptMessage(message) {
+    var _a, _b, _c, _d;
+    if (((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
+      return false;
+    if (((_b = message.content) == null ? void 0 : _b.parts) && Array.isArray(message.content.parts) && message.content.parts.length === 1 && typeof message.content.parts[0] === "string") {
+      const content = message.content.parts[0].trim();
+      if (content.startsWith("{") && content.includes('"prompt"')) {
+        return true;
+      }
+    }
+    if (((_c = message.content) == null ? void 0 : _c.content_type) === "code" && ((_d = message.content) == null ? void 0 : _d.text) && typeof message.content.text === "string") {
+      const content = message.content.text.trim();
+      if (content.startsWith("{") && content.includes('"prompt"')) {
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * Extract prompt from DALL-E JSON message
+   * Handles both formats:
+   * - content_type: "text" with parts[0] containing JSON
+   * - content_type: "code" with text containing JSON
+   */
+  static extractPromptFromJson(message) {
+    var _a, _b, _c;
+    try {
+      let jsonStr = null;
+      if (((_a = message.content) == null ? void 0 : _a.parts) && message.content.parts[0]) {
+        jsonStr = message.content.parts[0];
+      } else if (((_b = message.content) == null ? void 0 : _b.content_type) === "code" && ((_c = message.content) == null ? void 0 : _c.text)) {
+        jsonStr = message.content.text;
+      }
+      if (jsonStr) {
+        const parsed = JSON.parse(jsonStr);
+        const extractedPrompt = parsed.prompt || null;
+        return extractedPrompt;
+      }
+    } catch (error) {
+    }
+    return null;
+  }
+  /**
+   * Check if message contains REAL DALL-E image (not user upload)
+   */
+  static hasRealDalleImage(message) {
+    var _a;
+    if (!((_a = message.content) == null ? void 0 : _a.parts) || !Array.isArray(message.content.parts)) {
+      return false;
+    }
+    return message.content.parts.some((part) => {
+      var _a2;
+      if (typeof part !== "object" || part === null)
+        return false;
+      const contentPart = part;
+      return contentPart.content_type === "image_asset_pointer" && contentPart.asset_pointer && ((_a2 = contentPart.metadata) == null ? void 0 : _a2.dalle) && contentPart.metadata.dalle !== null;
+    });
+  }
+  /**
+   * Create StandardAttachment for DALL-E image with provider-agnostic metadata
+   * The prompt will be embedded in extractedContent for display
+   */
+  static createDalleAttachment(contentPart, associatedPrompt, hasImage = true) {
+    const fileId = contentPart.asset_pointer.includes("://") ? contentPart.asset_pointer.split("://")[1] : contentPart.asset_pointer;
+    const genId = contentPart.metadata.dalle.gen_id || "unknown";
+    const width = contentPart.width || 1024;
+    const height = contentPart.height || 1024;
+    const fileName = `dalle_${genId}_${width}x${height}.png`;
+    const prompt = associatedPrompt || contentPart.metadata.dalle.prompt;
+    let extractedContent = "";
+    if (prompt) {
+      const formattedPrompt = prompt.split("\n").join("\n>> ");
+      extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
+>
+>>[!nexus_attachment] **{{FILENAME}}** ({{FILETYPE}}) - {{FILESIZE}}
+>> ![[{{URL}}]]`;
+      if (!hasImage) {
+        extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
+>
+>>[!nexus_attachment] **Image Not Found**
+>> \u26A0\uFE0F Image could not be found. Perhaps it was not generated or is missing from the archive.`;
+      }
+    } else {
+    }
+    return {
+      fileName,
+      fileSize: contentPart.size_bytes,
+      fileType: "image/png",
+      // Will be corrected dynamically by extractor
+      fileId,
+      extractedContent,
+      // Provider-agnostic metadata
+      attachmentType: "generated_image",
+      generationPrompt: prompt,
+      // Provider-specific metadata
+      providerMetadata: {
+        dalle: {
+          gen_id: contentPart.metadata.dalle.gen_id,
+          seed: contentPart.metadata.dalle.seed,
+          parent_gen_id: contentPart.metadata.dalle.parent_gen_id,
+          edit_op: contentPart.metadata.dalle.edit_op
+        }
+      }
+    };
+  }
+  /**
+   * Create Assistant (DALL-E) message from tool message with associated prompt
+   */
+  static createDalleAssistantMessage(toolMessage, associatedPrompt, promptTimestamp) {
+    var _a, _b;
+    if (!((_a = toolMessage.content) == null ? void 0 : _a.parts) || !Array.isArray(toolMessage.content.parts)) {
+      return null;
+    }
+    const attachments = [];
+    for (const part of toolMessage.content.parts) {
+      if (typeof part === "object" && part !== null) {
+        const contentPart = part;
+        if (contentPart.content_type === "image_asset_pointer" && contentPart.asset_pointer && ((_b = contentPart.metadata) == null ? void 0 : _b.dalle) && contentPart.metadata.dalle !== null) {
+          const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt, true);
+          attachments.push(dalleAttachment);
+        }
+      }
+    }
+    if (attachments.length === 0) {
+      return null;
+    }
+    return {
+      id: toolMessage.id || "",
+      role: "assistant",
+      content: "DALL-E Generated Image",
+      // Use prompt timestamp if available, otherwise fall back to tool message timestamp
+      timestamp: promptTimestamp || toolMessage.create_time || 0,
+      attachments
+    };
+  }
+  /**
+   * Create informational message for orphaned DALL-E prompt (no image found)
+   * Creates a "phantom" attachment with the prompt and warning
+   */
+  static createOrphanedPromptMessage(promptMessage, prompt) {
+    const formattedPrompt = prompt.split("\n").join("\n>> ");
+    const phantomAttachment = {
+      fileName: "dalle_image_not_found.png",
+      fileType: "image/png",
+      attachmentType: "generated_image",
+      generationPrompt: prompt,
+      extractedContent: `>>[!nexus_prompt] **DALL-E Prompt** (Image Generation Failed or Interrupted)
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
+>
+>>[!nexus_attachment] **Image Not Found**
+>> \u26A0\uFE0F Image generation may have failed or been interrupted. The prompt was saved but no image was found in the export.`,
+      status: {
+        processed: true,
+        found: false,
+        reason: "missing_from_export",
+        note: "DALL-E generation was requested but the image was not found in the archive"
+      }
+    };
+    return {
+      id: promptMessage.id || "",
+      role: "assistant",
+      content: "DALL-E Image Generation (Failed/Interrupted)",
+      timestamp: promptMessage.create_time || 0,
+      attachments: [phantomAttachment]
+    };
+  }
+};
+__name(ChatGPTDalleProcessor, "ChatGPTDalleProcessor");
+
+// src/providers/chatgpt/chatgpt-message-filter.ts
+init_utils();
+var ChatGPTMessageFilter = class {
+  /**
+   * Determine if a message should be included in the conversation
+   */
+  static shouldIncludeMessage(message) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    if (!message || !message.author) {
+      return false;
+    }
+    if (message.author.role === "system") {
+      return false;
+    }
+    if (message.author.role === "tool") {
+      return false;
+    }
+    if (((_a = message.metadata) == null ? void 0 : _a.is_visually_hidden_from_conversation) === true) {
+      return false;
+    }
+    if (((_b = message.metadata) == null ? void 0 : _b.is_user_system_message) === true) {
+      return false;
+    }
+    if (((_c = message.content) == null ? void 0 : _c.content_type) === "user_editable_context") {
+      return false;
+    }
+    if (message.author.role === "assistant") {
+      if (((_d = message.content) == null ? void 0 : _d.parts) && Array.isArray(message.content.parts) && message.content.parts.every(
+        (part) => typeof part === "string" && part.trim() === ""
+      )) {
+        return false;
+      }
+      if (ChatGPTDalleProcessor.isDallePromptMessage(message)) {
+        return false;
+      }
+      const excludedContentTypes = ["code", "system_error", "execution_output"];
+      if (((_e = message.content) == null ? void 0 : _e.content_type) && excludedContentTypes.includes(message.content.content_type)) {
+        return false;
+      }
+      if (((_f = message.content) == null ? void 0 : _f.content_type) === "multimodal_text") {
+        if (((_g = message.content) == null ? void 0 : _g.parts) && Array.isArray(message.content.parts)) {
+          const hasTextContent = message.content.parts.some((part) => {
+            if (typeof part === "string" && part.trim() !== "") {
+              return true;
+            }
+            if (typeof part === "object" && part !== null && "text" in part) {
+              return typeof part.text === "string" && part.text.trim() !== "";
+            }
+            return false;
+          });
+          if (!hasTextContent) {
+            return false;
+          }
+        }
+      }
+    }
+    if (message.author.role === "user") {
+      const excludedContentTypes = ["user_editable_context"];
+      if (((_h = message.content) == null ? void 0 : _h.content_type) && excludedContentTypes.includes(message.content.content_type)) {
+        return false;
+      }
+    }
+    return isValidMessage(message);
+  }
+};
+__name(ChatGPTMessageFilter, "ChatGPTMessageFilter");
 
 // src/providers/chatgpt/chatgpt-converter.ts
-init_utils();
 var ChatGPTConverter = class {
   /**
    * Convert ChatGPT Chat to StandardConversation
@@ -5515,12 +10081,6 @@ var ChatGPTConverter = class {
     };
   }
   /**
-   * Convert array of ChatGPT ChatMessages to StandardMessages
-   */
-  static convertMessages(chatMessages, conversationId) {
-    return chatMessages.filter((msg) => isValidMessage(msg)).map((msg) => this.convertMessage(msg, conversationId));
-  }
-  /**
    * Convert single ChatGPT ChatMessage to StandardMessage
    */
   static convertMessage(chatMessage, conversationId) {
@@ -5538,40 +10098,31 @@ var ChatGPTConverter = class {
    * Extract messages from ChatGPT mapping structure with DALL-E prompt association
    */
   static extractMessagesFromMapping(chat) {
-    var _a, _b, _c, _d;
+    var _a;
     const messages = [];
-    const dallePrompts = /* @__PURE__ */ new Map();
     const conversationId = chat.id;
-    const mappingValues = Object.values(chat.mapping);
-    for (const messageObj of mappingValues) {
-      const message = messageObj == null ? void 0 : messageObj.message;
-      if (!message || ((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
-        continue;
-      if (this.isDallePromptMessage(message)) {
-        const prompt = this.extractPromptFromJson(message);
-        if (prompt) {
-          const children = messageObj.children || [];
-          for (const childId of children) {
-            const childObj = chat.mapping[childId];
-            if (((_c = (_b = childObj == null ? void 0 : childObj.message) == null ? void 0 : _b.author) == null ? void 0 : _c.role) === "tool" && this.hasRealDalleImage(childObj.message)) {
-              dallePrompts.set(childId, prompt);
-              break;
-            }
-          }
-        }
-      }
-    }
-    for (const messageObj of mappingValues) {
+    const { imagePrompts, orphanedPrompts } = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
+    for (const messageObj of Object.values(chat.mapping)) {
       const message = messageObj == null ? void 0 : messageObj.message;
       if (!message)
         continue;
-      if (((_d = message.author) == null ? void 0 : _d.role) === "tool" && this.hasRealDalleImage(message)) {
-        const prompt = dallePrompts.get(messageObj.id || "");
-        const dalleMessage = this.createDalleAssistantMessage(message, prompt);
+      if (((_a = message.author) == null ? void 0 : _a.role) === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
+        const promptData = imagePrompts.get(messageObj.id || "");
+        const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(
+          message,
+          promptData == null ? void 0 : promptData.prompt,
+          promptData == null ? void 0 : promptData.timestamp
+        );
         if (dalleMessage) {
           messages.push(dalleMessage);
         }
-      } else if (this.shouldIncludeMessage(message)) {
+      } else if (orphanedPrompts.has(messageObj.id || "")) {
+        const prompt = orphanedPrompts.get(messageObj.id || "");
+        if (prompt) {
+          const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(message, prompt);
+          messages.push(orphanedMessage);
+        }
+      } else if (ChatGPTMessageFilter.shouldIncludeMessage(message)) {
         messages.push(this.convertMessage(message, conversationId));
       }
     }
@@ -5583,163 +10134,6 @@ var ChatGPTConverter = class {
       }
       return a.id.localeCompare(b.id);
     });
-  }
-  /**
-   * Check if message is a DALL-E JSON prompt message
-   */
-  static isDallePromptMessage(message) {
-    var _a, _b;
-    if (((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
-      return false;
-    if (((_b = message.content) == null ? void 0 : _b.parts) && Array.isArray(message.content.parts) && message.content.parts.length === 1 && typeof message.content.parts[0] === "string") {
-      const content = message.content.parts[0].trim();
-      return content.startsWith("{") && content.includes('"prompt"');
-    }
-    return false;
-  }
-  /**
-   * Extract prompt from DALL-E JSON message
-   */
-  static extractPromptFromJson(message) {
-    var _a;
-    try {
-      if (((_a = message.content) == null ? void 0 : _a.parts) && message.content.parts[0]) {
-        const jsonStr = message.content.parts[0];
-        const parsed = JSON.parse(jsonStr);
-        return parsed.prompt || null;
-      }
-    } catch (error) {
-    }
-    return null;
-  }
-  /**
-   * Determine if a message should be included in the conversation - ENHANCED VERSION
-   */
-  static shouldIncludeMessage(message) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
-    if (!message || !message.author) {
-      return false;
-    }
-    if (message.author.role === "system") {
-      return false;
-    }
-    if (message.author.role === "tool") {
-      return false;
-    }
-    if (((_a = message.metadata) == null ? void 0 : _a.is_visually_hidden_from_conversation) === true) {
-      return false;
-    }
-    if (((_b = message.metadata) == null ? void 0 : _b.is_user_system_message) === true) {
-      return false;
-    }
-    if (((_c = message.content) == null ? void 0 : _c.content_type) === "user_editable_context") {
-      return false;
-    }
-    if (message.author.role === "assistant") {
-      if (((_d = message.content) == null ? void 0 : _d.parts) && Array.isArray(message.content.parts) && message.content.parts.every(
-        (part) => typeof part === "string" && part.trim() === ""
-      )) {
-        return false;
-      }
-      if (this.isDallePromptMessage(message)) {
-        return false;
-      }
-      if (((_e = message.content) == null ? void 0 : _e.content_type) === "code") {
-        return false;
-      }
-      if (((_f = message.content) == null ? void 0 : _f.content_type) === "system_error") {
-        return false;
-      }
-      if (((_g = message.content) == null ? void 0 : _g.content_type) === "execution_output") {
-        return false;
-      }
-      if (((_h = message.content) == null ? void 0 : _h.content_type) === "multimodal_text") {
-        if (((_i = message.content) == null ? void 0 : _i.parts) && Array.isArray(message.content.parts)) {
-          const hasTextContent = message.content.parts.some((part) => {
-            if (typeof part === "string" && part.trim() !== "") {
-              return true;
-            }
-            if (typeof part === "object" && part !== null && "text" in part) {
-              return typeof part.text === "string" && part.text.trim() !== "";
-            }
-            return false;
-          });
-          if (!hasTextContent) {
-            return false;
-          }
-        }
-      }
-    }
-    if (message.author.role === "user") {
-      const excludedContentTypes = [
-        "user_editable_context"
-        // Already covered above but double-check
-      ];
-      if (((_j = message.content) == null ? void 0 : _j.content_type) && excludedContentTypes.includes(message.content.content_type)) {
-        return false;
-      }
-    }
-    return isValidMessage(message);
-  }
-  /**
-   * Check if message contains REAL DALL-E image (not user upload)
-   */
-  static hasRealDalleImage(message) {
-    var _a;
-    if (!((_a = message.content) == null ? void 0 : _a.parts) || !Array.isArray(message.content.parts)) {
-      return false;
-    }
-    return message.content.parts.some((part) => {
-      var _a2;
-      if (typeof part !== "object" || part === null)
-        return false;
-      const contentPart = part;
-      return contentPart.content_type === "image_asset_pointer" && contentPart.asset_pointer && ((_a2 = contentPart.metadata) == null ? void 0 : _a2.dalle) && contentPart.metadata.dalle !== null;
-    });
-  }
-  /**
-   * Create Assistant (DALL-E) message from tool message with associated prompt
-   */
-  static createDalleAssistantMessage(toolMessage, associatedPrompt) {
-    var _a, _b;
-    if (!((_a = toolMessage.content) == null ? void 0 : _a.parts) || !Array.isArray(toolMessage.content.parts)) {
-      return null;
-    }
-    const attachments = [];
-    for (const part of toolMessage.content.parts) {
-      if (typeof part === "object" && part !== null) {
-        const contentPart = part;
-        if (contentPart.content_type === "image_asset_pointer" && contentPart.asset_pointer && ((_b = contentPart.metadata) == null ? void 0 : _b.dalle) && contentPart.metadata.dalle !== null) {
-          let fileId = contentPart.asset_pointer;
-          if (fileId.includes("://")) {
-            fileId = fileId.split("://")[1];
-          }
-          const genId = contentPart.metadata.dalle.gen_id || "unknown";
-          const width = contentPart.width || 1024;
-          const height = contentPart.height || 1024;
-          const fileName = `dalle_${genId}_${width}x${height}.png`;
-          const dalleAttachment = {
-            fileName,
-            fileSize: contentPart.size_bytes,
-            fileType: "image/png",
-            fileId,
-            // Use associated prompt from JSON message, fallback to metadata
-            extractedContent: associatedPrompt || contentPart.metadata.dalle.prompt
-          };
-          attachments.push(dalleAttachment);
-        }
-      }
-    }
-    if (attachments.length === 0) {
-      return null;
-    }
-    return {
-      id: toolMessage.id || "",
-      role: "assistant",
-      content: "Image g\xE9n\xE9r\xE9e par DALL-E",
-      timestamp: toolMessage.create_time || 0,
-      attachments
-    };
   }
   /**
    * Extract content and attachments from ChatGPT message parts
@@ -5854,7 +10248,7 @@ ${codeContent}
   static cleanChatGPTArtifacts(text, conversationId) {
     if (!text || typeof text !== "string")
       return "";
-    const chatUrl = conversationId ? `https://chat.openai.com/c/${conversationId}` : "https://chat.openai.com";
+    const chatUrl = conversationId ? `https://chatgpt.com/c/${conversationId}` : "https://chatgpt.com";
     let cleanText = text;
     for (const { pattern, replacement } of this.CLEANUP_PATTERNS) {
       cleanText = cleanText.replace(pattern, replacement(chatUrl));
@@ -5862,6 +10256,7 @@ ${codeContent}
     return cleanText.trim();
   }
 };
+__name(ChatGPTConverter, "ChatGPTConverter");
 // Pre-compiled regex patterns for performance
 ChatGPTConverter.CLEANUP_PATTERNS = [
   // SMART: Replace sandbox links with actual links to original conversation
@@ -5884,29 +10279,50 @@ ChatGPTConverter.CLEANUP_PATTERNS = [
 // src/providers/chatgpt/chatgpt-attachment-extractor.ts
 init_utils();
 var ChatGPTAttachmentExtractor = class {
-  // Cache for ZIP file lookups
-  constructor(plugin, logger4) {
+  // All opened ZIPs for multi-ZIP fallback
+  constructor(plugin, logger6) {
     this.plugin = plugin;
-    this.logger = logger4;
+    this.logger = logger6;
     this.zipFileCache = /* @__PURE__ */ new Map();
+    // Cache for ZIP file lookups
+    this.attachmentMap = null;
+    // Multi-ZIP attachment map
+    this.allZips = [];
+  }
+  /**
+   * Set attachment map for multi-ZIP support
+   * This enables fallback to older ZIPs when files are missing in recent exports
+   */
+  setAttachmentMap(attachmentMap, allZips) {
+    this.attachmentMap = attachmentMap;
+    this.allZips = allZips;
+  }
+  /**
+   * Clear attachment map and ZIPs (call after import completes)
+   */
+  clearAttachmentMap() {
+    this.attachmentMap = null;
+    this.allZips = [];
+    this.zipFileCache.clear();
   }
   /**
    * Extract and save ChatGPT attachments using "best effort" strategy
    * - If file exists in ZIP: extract and link
    * - If file missing: create informative note
    */
-  async extractAttachments(zip, conversationId, attachments) {
-    if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+  async extractAttachments(zip, conversationId, attachments, messageId) {
+    if (attachments.length === 0) {
       return attachments.map((att) => ({ ...att, status: { processed: false, found: false } }));
     }
     const processedAttachments = [];
     for (const attachment of attachments) {
       try {
-        const result = await this.processAttachmentBestEffort(zip, conversationId, attachment);
+        const result = await this.processAttachmentBestEffort(zip, conversationId, attachment, messageId);
         processedAttachments.push(result);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName}`, errorMessage);
+        const context = messageId ? `conversation: ${conversationId}, message: ${messageId}` : `conversation: ${conversationId}`;
+        this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
         processedAttachments.push({
           ...attachment,
           status: {
@@ -5923,11 +10339,19 @@ var ChatGPTAttachmentExtractor = class {
   /**
    * Process single attachment with best effort strategy
    */
-  async processAttachmentBestEffort(zip, conversationId, attachment) {
-    const zipFile = await this.findChatGPTFileById(zip, attachment);
+  async processAttachmentBestEffort(zip, conversationId, attachment, messageId) {
+    const zipFile = await this.findChatGPTFileById(zip, attachment, conversationId, messageId);
     if (!zipFile) {
+      let finalExtractedContent = attachment.extractedContent;
+      if (attachment.attachmentType === "generated_image" && attachment.extractedContent) {
+        finalExtractedContent = attachment.extractedContent.replace(
+          />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
+          ">>[!nexus_attachment] **Image Not Found**\n>> \u26A0\uFE0F Image could not be found. Perhaps it was not generated or is missing from the archive."
+        );
+      }
       return {
         ...attachment,
+        extractedContent: finalExtractedContent,
         status: {
           processed: true,
           found: false,
@@ -5939,6 +10363,10 @@ var ChatGPTAttachmentExtractor = class {
     try {
       const extractResult = await this.extractSingleAttachment(zip, conversationId, attachment, zipFile);
       if (extractResult) {
+        let finalExtractedContent = attachment.extractedContent;
+        if (attachment.attachmentType === "generated_image" && attachment.extractedContent) {
+          finalExtractedContent = attachment.extractedContent.replace("{{FILENAME}}", extractResult.finalFileName).replace("{{FILETYPE}}", extractResult.actualFileType).replace("{{FILESIZE}}", this.formatFileSize(attachment.fileSize || 0)).replace("{{URL}}", extractResult.localPath);
+        }
         return {
           ...attachment,
           fileName: extractResult.finalFileName,
@@ -5946,6 +10374,8 @@ var ChatGPTAttachmentExtractor = class {
           fileType: extractResult.actualFileType,
           // Update with detected file type
           url: extractResult.localPath,
+          extractedContent: finalExtractedContent,
+          // Update with replaced placeholders
           status: {
             processed: true,
             found: true,
@@ -5953,8 +10383,16 @@ var ChatGPTAttachmentExtractor = class {
           }
         };
       } else {
+        let finalExtractedContent = attachment.extractedContent;
+        if (attachment.attachmentType === "generated_image" && attachment.extractedContent) {
+          finalExtractedContent = attachment.extractedContent.replace(
+            />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
+            ">>[!nexus_attachment] **Image Not Found**\n>> \u26A0\uFE0F File was found in export but could not be extracted to disk."
+          );
+        }
         return {
           ...attachment,
+          extractedContent: finalExtractedContent,
           status: {
             processed: true,
             found: false,
@@ -5965,9 +10403,19 @@ var ChatGPTAttachmentExtractor = class {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName}`, errorMessage);
+      const context = messageId ? `conversation: ${conversationId}, message: ${messageId}` : `conversation: ${conversationId}`;
+      this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
+      let finalExtractedContent = attachment.extractedContent;
+      if (attachment.attachmentType === "generated_image" && attachment.extractedContent) {
+        finalExtractedContent = attachment.extractedContent.replace(
+          />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
+          `>>[!nexus_attachment] **Extraction Failed**
+>> \u26A0\uFE0F ${errorMessage}`
+        );
+      }
       return {
         ...attachment,
+        extractedContent: finalExtractedContent,
         status: {
           processed: true,
           found: true,
@@ -5985,14 +10433,16 @@ var ChatGPTAttachmentExtractor = class {
     const fileContent = await zipFile.async("uint8array");
     const formatInfo = this.detectFileFormat(fileContent);
     let finalFileName = attachment.fileName;
-    if (zipFile.name.endsWith(".dat") && formatInfo.extension) {
+    let finalFileType = attachment.fileType;
+    if (attachment.attachmentType === "generated_image" && formatInfo.extension) {
       const baseName = attachment.fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, "");
       finalFileName = `${baseName}.${formatInfo.extension}`;
+      finalFileType = formatInfo.mimeType || attachment.fileType;
     }
     let targetPath = this.generateLocalPath(conversationId, {
       ...attachment,
       fileName: finalFileName,
-      fileType: formatInfo.mimeType || attachment.fileType
+      fileType: finalFileType
     });
     const folderPath = targetPath.substring(0, targetPath.lastIndexOf("/"));
     const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
@@ -6000,11 +10450,11 @@ var ChatGPTAttachmentExtractor = class {
       throw new Error(`Failed to create ChatGPT attachment folder: ${folderResult.error}`);
     }
     targetPath = await this.resolveFileConflict(targetPath);
-    await this.plugin.app.vault.adapter.writeBinary(targetPath, fileContent);
+    await this.plugin.app.vault.adapter.writeBinary(targetPath, fileContent.buffer);
     return {
       localPath: targetPath,
       finalFileName,
-      actualFileType: formatInfo.mimeType || attachment.fileType || "application/octet-stream"
+      actualFileType: finalFileType || "application/octet-stream"
     };
   }
   /**
@@ -6053,28 +10503,62 @@ var ChatGPTAttachmentExtractor = class {
     return finalPath;
   }
   /**
-   * Find file in ZIP - ENHANCED WITH COMPREHENSIVE SEARCH + CACHING
+   * Find file in ZIP - ENHANCED WITH MULTI-ZIP FALLBACK + COMPREHENSIVE SEARCH + CACHING
    */
-  async findChatGPTFileById(zip, attachment) {
+  async findChatGPTFileById(zip, attachment, conversationId, messageId) {
     if (!attachment.fileId) {
-      this.logger.warn("No fileId provided for attachment:", attachment.fileName);
+      const context = conversationId && messageId ? `conversation: ${conversationId}, message: ${messageId}` : conversationId ? `conversation: ${conversationId}` : "unknown context";
+      this.logger.warn(`No fileId provided for attachment: ${attachment.fileName} (${context})`);
+      const zipFile2 = zip.file(attachment.fileName);
+      if (zipFile2) {
+        return zipFile2;
+      }
       return null;
     }
     const cacheKey = `${attachment.fileId}_${attachment.fileName}`;
     if (this.zipFileCache.has(cacheKey)) {
       return this.zipFileCache.get(cacheKey);
     }
+    if (this.attachmentMap && this.allZips.length > 0) {
+      const result = await this.findFileUsingAttachmentMap(attachment, conversationId, messageId);
+      if (result) {
+        this.zipFileCache.set(cacheKey, result);
+        return result;
+      }
+    }
     let zipFile = zip.file(attachment.fileName);
     if (zipFile) {
       this.zipFileCache.set(cacheKey, zipFile);
       return zipFile;
+    }
+    if (attachment.fileName.startsWith("dalle_")) {
+      const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
+      if (dalleFiles.length > 0) {
+        this.zipFileCache.set(cacheKey, dalleFiles[0]);
+        return dalleFiles[0];
+      }
+    }
+    const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
+    zipFile = zip.file(fileIdPattern);
+    if (zipFile) {
+      this.zipFileCache.set(cacheKey, zipFile);
+      return zipFile;
+    }
+    const extension = this.getFileExtension(attachment.fileName);
+    if (extension) {
+      const fileIdExtPattern = `${attachment.fileId}.${extension}`;
+      zipFile = zip.file(fileIdExtPattern);
+      if (zipFile) {
+        this.zipFileCache.set(cacheKey, zipFile);
+        return zipFile;
+      }
     }
     const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
     this.zipFileCache.set(cacheKey, foundFile);
     return foundFile;
   }
   /**
-   * Search entire ZIP for file by exact ID
+   * Search entire ZIP for file by exact ID with enhanced DALL-E support
    */
   async searchZipByFileId(zip, fileId) {
     for (const [path, file] of Object.entries(zip.files)) {
@@ -6083,8 +10567,94 @@ var ChatGPTAttachmentExtractor = class {
       if (path.includes(fileId)) {
         return file;
       }
+      const fileName = path.split("/").pop() || "";
+      if (fileName.includes(fileId) || fileName.startsWith(`file-${fileId}`) || fileName.startsWith(fileId)) {
+        return file;
+      }
     }
     return null;
+  }
+  /**
+   * Find file using attachment map (multi-ZIP fallback)
+   * Tries to find the file in any of the available ZIPs, preferring newer exports
+   */
+  async findFileUsingAttachmentMap(attachment, conversationId, messageId) {
+    if (!this.attachmentMap || this.allZips.length === 0) {
+      return null;
+    }
+    const context = conversationId && messageId ? `conversation: ${conversationId}, message: ${messageId}` : conversationId ? `conversation: ${conversationId}` : "unknown context";
+    const fileId = attachment.fileId || "";
+    if (!fileId) {
+      return null;
+    }
+    const locations = this.attachmentMap.get(fileId);
+    if (!locations || locations.length === 0) {
+      const alternativeIds = this.getAlternativeFileIds(fileId);
+      for (const altId of alternativeIds) {
+        const altLocations = this.attachmentMap.get(altId);
+        if (altLocations && altLocations.length > 0) {
+          return this.getFileFromLocation(altLocations[altLocations.length - 1]);
+        }
+      }
+      return null;
+    }
+    const bestLocation = locations[locations.length - 1];
+    return this.getFileFromLocation(bestLocation);
+  }
+  /**
+   * Get alternative file ID formats for fallback matching
+   */
+  getAlternativeFileIds(fileId) {
+    const alternatives = [];
+    if (fileId.startsWith("file_")) {
+      alternatives.push(fileId.substring(5));
+    } else if (!fileId.startsWith("file-")) {
+      alternatives.push(`file_${fileId}`);
+    }
+    if (fileId.includes("_")) {
+      alternatives.push(fileId.replace(/_/g, "-"));
+    }
+    if (fileId.includes("-")) {
+      alternatives.push(fileId.replace(/-/g, "_"));
+    }
+    return alternatives;
+  }
+  /**
+   * Get JSZip file object from attachment location
+   */
+  getFileFromLocation(location) {
+    if (location.zipIndex >= this.allZips.length) {
+      this.logger.error(`Invalid ZIP index ${location.zipIndex} (only ${this.allZips.length} ZIPs available)`);
+      return null;
+    }
+    const zip = this.allZips[location.zipIndex];
+    const zipFile = zip.file(location.path);
+    if (!zipFile) {
+      this.logger.error(`File not found in ZIP ${location.zipIndex}: ${location.path}`);
+      return null;
+    }
+    return zipFile;
+  }
+  /**
+   * Search specifically in dalle-generations/ folder (restored from v1.2.0)
+   */
+  async searchDalleGenerations(zip, fileId) {
+    const matches = [];
+    for (const [path, file] of Object.entries(zip.files)) {
+      if (!file.dir && path.toLowerCase().includes("dalle")) {
+        if (path.includes(fileId) || path.includes(fileId.replace("file_", "")) || path.includes(fileId.replace("file-", ""))) {
+          matches.push(file);
+        }
+      }
+    }
+    return matches;
+  }
+  /**
+   * Get file extension from filename (restored from v1.2.0)
+   */
+  getFileExtension(fileName) {
+    const lastDot = fileName.lastIndexOf(".");
+    return lastDot === -1 ? "" : fileName.substring(lastDot + 1).toLowerCase();
   }
   /**
    * Generate local path for ChatGPT attachment using attachmentFolder setting
@@ -6133,6 +10703,16 @@ var ChatGPTAttachmentExtractor = class {
     return cleanName;
   }
   /**
+   * Format file size in human-readable format
+   */
+  formatFileSize(bytes) {
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    if (bytes === 0)
+      return "0 Bytes";
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + " " + sizes[i];
+  }
+  /**
    * Clear ZIP file cache (call between different ZIP files)
    */
   clearCache() {
@@ -6159,6 +10739,7 @@ var ChatGPTAttachmentExtractor = class {
     };
   }
 };
+__name(ChatGPTAttachmentExtractor, "ChatGPTAttachmentExtractor");
 
 // src/providers/chatgpt/chatgpt-report-naming.ts
 var ChatGPTReportNamingStrategy = class {
@@ -6199,9 +10780,17 @@ var ChatGPTReportNamingStrategy = class {
         let attachmentCount = 0;
         if (chat.mapping) {
           Object.values(chat.mapping).forEach((node) => {
-            var _a, _b;
+            var _a, _b, _c, _d;
             if ((_b = (_a = node.message) == null ? void 0 : _a.metadata) == null ? void 0 : _b.attachments) {
               attachmentCount += node.message.metadata.attachments.length;
+            }
+            if ((_d = (_c = node.message) == null ? void 0 : _c.content) == null ? void 0 : _d.parts) {
+              node.message.content.parts.forEach((part) => {
+                var _a2;
+                if (part.content_type === "image_asset_pointer" && part.asset_pointer && ((_a2 = part.metadata) == null ? void 0 : _a2.dalle) && part.metadata.dalle !== null) {
+                  attachmentCount++;
+                }
+              });
             }
           });
         }
@@ -6210,9 +10799,9 @@ var ChatGPTReportNamingStrategy = class {
     };
   }
 };
+__name(ChatGPTReportNamingStrategy, "ChatGPTReportNamingStrategy");
 
 // src/providers/chatgpt/chatgpt-adapter.ts
-init_utils();
 var ChatGPTAdapter = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -6240,26 +10829,53 @@ var ChatGPTAdapter = class {
   convertChat(chat) {
     return ChatGPTConverter.convertChat(chat);
   }
-  convertMessages(messages, conversationId) {
-    return ChatGPTConverter.convertMessages(messages, conversationId);
-  }
   getProviderName() {
     return "chatgpt";
   }
   getNewMessages(chat, existingMessageIds) {
-    var _a;
+    var _a, _b;
     const newMessages = [];
+    const { imagePrompts, orphanedPrompts } = ChatGPTDalleProcessor.extractDallePromptsFromMapping(chat);
     for (const messageObj of Object.values(chat.mapping)) {
       if ((messageObj == null ? void 0 : messageObj.id) && !existingMessageIds.includes(messageObj.id)) {
         const message = messageObj.message;
         if (!message)
           continue;
-        if (((_a = message.author) == null ? void 0 : _a.role) === "tool" && this.hasRealDalleImage(message)) {
-          const dalleMessage = this.createDalleAssistantMessage(message);
+        if (((_a = message.author) == null ? void 0 : _a.role) === "tool" && ChatGPTDalleProcessor.hasRealDalleImage(message)) {
+          const promptData = imagePrompts.get(messageObj.id || "");
+          const dalleMessage = ChatGPTDalleProcessor.createDalleAssistantMessage(
+            message,
+            promptData == null ? void 0 : promptData.prompt,
+            promptData == null ? void 0 : promptData.timestamp
+          );
           if (dalleMessage) {
-            newMessages.push(dalleMessage);
+            const chatMessage = {
+              id: dalleMessage.id,
+              author: { role: dalleMessage.role },
+              content: { parts: [dalleMessage.content] },
+              create_time: dalleMessage.timestamp,
+              attachments: (_b = dalleMessage.attachments) == null ? void 0 : _b.map((att) => ({
+                file_name: att.fileName,
+                file_size: att.fileSize,
+                file_type: att.fileType,
+                extracted_content: att.extractedContent
+              }))
+            };
+            newMessages.push(chatMessage);
           }
-        } else if (this.shouldIncludeMessage(message)) {
+        } else if (orphanedPrompts.has(messageObj.id || "")) {
+          const prompt = orphanedPrompts.get(messageObj.id || "");
+          if (prompt) {
+            const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(message, prompt);
+            const chatMessage = {
+              id: orphanedMessage.id,
+              author: { role: orphanedMessage.role },
+              content: { parts: [orphanedMessage.content] },
+              create_time: orphanedMessage.timestamp
+            };
+            newMessages.push(chatMessage);
+          }
+        } else if (ChatGPTMessageFilter.shouldIncludeMessage(message)) {
           newMessages.push(message);
         }
       }
@@ -6273,7 +10889,9 @@ var ChatGPTAdapter = class {
         const processedAttachments = await this.attachmentExtractor.extractAttachments(
           zip,
           conversationId,
-          message.attachments
+          message.attachments,
+          message.id
+          // Pass message ID for better logging
         );
         processedMessages.push({
           ...message,
@@ -6288,146 +10906,34 @@ var ChatGPTAdapter = class {
   getReportNamingStrategy() {
     return this.reportNamingStrategy;
   }
-  getProviderName() {
-    return "chatgpt";
+  /**
+   * Set attachment map for multi-ZIP support
+   */
+  setAttachmentMap(attachmentMap, allZips) {
+    this.attachmentExtractor.setAttachmentMap(attachmentMap, allZips);
   }
   /**
-   * Check if message contains REAL DALL-E image (not user upload)
+   * Clear attachment map after import completes
    */
-  hasRealDalleImage(message) {
-    var _a;
-    if (!((_a = message.content) == null ? void 0 : _a.parts) || !Array.isArray(message.content.parts)) {
-      return false;
-    }
-    return message.content.parts.some((part) => {
-      var _a2;
-      if (typeof part !== "object" || part === null)
-        return false;
-      return part.content_type === "image_asset_pointer" && part.asset_pointer && ((_a2 = part.metadata) == null ? void 0 : _a2.dalle) && part.metadata.dalle !== null;
-    });
-  }
-  /**
-   * Create Assistant (DALL-E) message from tool message
-   */
-  createDalleAssistantMessage(toolMessage) {
-    var _a, _b;
-    if (!((_a = toolMessage.content) == null ? void 0 : _a.parts) || !Array.isArray(toolMessage.content.parts)) {
-      return null;
-    }
-    const attachments = [];
-    for (const part of toolMessage.content.parts) {
-      if (typeof part === "object" && part !== null) {
-        if (part.content_type === "image_asset_pointer" && part.asset_pointer && ((_b = part.metadata) == null ? void 0 : _b.dalle) && part.metadata.dalle !== null) {
-          let fileId = part.asset_pointer;
-          if (fileId.includes("://")) {
-            fileId = fileId.split("://")[1];
-          }
-          const genId = part.metadata.dalle.gen_id || "unknown";
-          const width = part.width || 1024;
-          const height = part.height || 1024;
-          const fileName = `dalle_${genId}_${width}x${height}.png`;
-          const dalleAttachment = {
-            fileName,
-            fileSize: part.size_bytes,
-            fileType: "image/png",
-            fileId,
-            extractedContent: part.metadata.dalle.prompt
-          };
-          attachments.push(dalleAttachment);
-        }
-      }
-    }
-    if (attachments.length === 0) {
-      return null;
-    }
-    return {
-      id: toolMessage.id || "",
-      author: { role: "assistant" },
-      content: {
-        parts: ["Image g\xE9n\xE9r\xE9e par DALL-E"],
-        content_type: "text"
-      },
-      create_time: toolMessage.create_time || 0,
-      attachments
-    };
-  }
-  /**
-   * Determine if a message should be included - same logic as ChatGPTConverter
-   */
-  shouldIncludeMessage(message) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i;
-    if (!message || !message.author) {
-      return false;
-    }
-    if (message.author.role === "system") {
-      return false;
-    }
-    if (message.author.role === "tool") {
-      return false;
-    }
-    if (((_a = message.metadata) == null ? void 0 : _a.is_visually_hidden_from_conversation) === true) {
-      return false;
-    }
-    if (((_b = message.metadata) == null ? void 0 : _b.is_user_system_message) === true) {
-      return false;
-    }
-    if (((_c = message.content) == null ? void 0 : _c.content_type) === "user_editable_context") {
-      return false;
-    }
-    if (message.author.role === "assistant") {
-      if (((_d = message.content) == null ? void 0 : _d.parts) && Array.isArray(message.content.parts) && message.content.parts.every(
-        (part) => typeof part === "string" && part.trim() === ""
-      )) {
-        return false;
-      }
-      if (((_e = message.content) == null ? void 0 : _e.parts) && Array.isArray(message.content.parts) && message.content.parts.length === 1 && typeof message.content.parts[0] === "string") {
-        const content = message.content.parts[0].trim();
-        if (content.startsWith("{") && content.includes('"prompt"')) {
-          return false;
-        }
-      }
-      const excludedContentTypes = ["code", "system_error", "execution_output"];
-      if (((_f = message.content) == null ? void 0 : _f.content_type) && excludedContentTypes.includes(message.content.content_type)) {
-        return false;
-      }
-      if (((_g = message.content) == null ? void 0 : _g.content_type) === "multimodal_text") {
-        if (((_h = message.content) == null ? void 0 : _h.parts) && Array.isArray(message.content.parts)) {
-          const hasTextContent = message.content.parts.some((part) => {
-            if (typeof part === "string" && part.trim() !== "") {
-              return true;
-            }
-            if (typeof part === "object" && part !== null && "text" in part) {
-              return typeof part.text === "string" && part.text.trim() !== "";
-            }
-            return false;
-          });
-          if (!hasTextContent) {
-            return false;
-          }
-        }
-      }
-    }
-    if (message.author.role === "user") {
-      const excludedContentTypes = ["user_editable_context"];
-      if (((_i = message.content) == null ? void 0 : _i.content_type) && excludedContentTypes.includes(message.content.content_type)) {
-        return false;
-      }
-    }
-    return isValidMessage(message);
+  clearAttachmentMap() {
+    this.attachmentExtractor.clearAttachmentMap();
   }
 };
+__name(ChatGPTAdapter, "ChatGPTAdapter");
 
 // src/providers/claude/claude-converter.ts
+init_utils();
 var ClaudeConverter = class {
   static setPlugin(plugin) {
     this.plugin = plugin;
   }
   static async convertChat(chat) {
     const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0;
-    const messages = await this.convertMessages(chat.chat_messages, chat.uuid, chat.name, createTime);
+    const conversationTitle = chat.name || "Untitled";
+    const messages = await this.convertMessages(chat.chat_messages, chat.uuid, conversationTitle, createTime);
     return {
       id: chat.uuid,
-      title: chat.name || "Untitled",
+      title: conversationTitle,
       createTime: chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0,
       updateTime: chat.updated_at ? Math.floor(new Date(chat.updated_at).getTime() / 1e3) : 0,
       messages,
@@ -6457,10 +10963,12 @@ var ClaudeConverter = class {
             const command = block.input.command || "create";
             const versionUuid = block.input.version_uuid;
             if (command !== "view" && versionUuid) {
+              const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
               allArtifacts.push({
                 artifact: block.input,
                 messageIndex: msgIndex,
-                blockIndex
+                blockIndex,
+                messageTimestamp
               });
             }
           }
@@ -6521,8 +11029,7 @@ var ClaudeConverter = class {
     const versionCounters = /* @__PURE__ */ new Map();
     const artifactContents = /* @__PURE__ */ new Map();
     const artifactLanguages = /* @__PURE__ */ new Map();
-    console.log(`Claude converter: Processing ${allArtifacts.length} artifacts from entire conversation`);
-    for (const { artifact } of allArtifacts) {
+    for (const { artifact, messageTimestamp } of allArtifacts) {
       const artifactId = artifact.id || "unknown";
       const command = artifact.command || "create";
       const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
@@ -6555,14 +11062,15 @@ var ClaudeConverter = class {
           conversationId,
           conversationTitle,
           conversationCreateTime,
-          languageToUse
+          languageToUse,
+          messageTimestamp
         );
         artifactVersionMap.set(artifact.version_uuid, {
           versionNumber: currentVersion,
           title: artifact.title || artifactId
         });
       } catch (error) {
-        console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+        logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
       }
     }
     return artifactVersionMap;
@@ -6638,13 +11146,10 @@ ${code}
         }
         const isSignificant = command === "create" || command === "rewrite" || command === "update" && content.length > 100;
         if (isSignificant && versionUuid) {
-          console.log(`Claude converter: Found significant artifact version - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, UUID: ${versionUuid}`);
           if (!artifactVersionsMap.has(artifactId)) {
             artifactVersionsMap.set(artifactId, []);
           }
           artifactVersionsMap.get(artifactId).push(block.input);
-        } else {
-          console.log(`Claude converter: Skipped artifact - ID: ${artifactId}, Command: ${command}, Content length: ${content.length}, Significant: ${isSignificant}, Has UUID: ${!!versionUuid}`);
         }
       }
     }
@@ -6691,7 +11196,6 @@ ${code}
                 }
                 artifactContents.set(artifactId, finalContent);
               }
-              console.log(`Processing ${artifactId} v${currentVersion} (${command}, ${finalContent.length} chars)`);
               try {
                 await this.saveSingleArtifactVersionWithContent(
                   artifactId,
@@ -6709,7 +11213,7 @@ ${code}
 > \u{1F3A8} [[${versionFile}|View Artifact]]`;
                 textParts.push(specificLink);
               } catch (error) {
-                console.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+                logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
                 textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${block.input.title || artifactId}** v${currentVersion}
 > \u274C Error saving artifact`);
               }
@@ -6778,7 +11282,7 @@ ${code}
   /**
    * Save a single artifact version with computed content
    */
-  static async saveSingleArtifactVersionWithContent(artifactId, artifactData, versionNumber, finalContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage) {
+  static async saveSingleArtifactVersionWithContent(artifactId, artifactData, versionNumber, finalContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage, messageTimestamp) {
     if (!this.plugin) {
       throw new Error("Plugin not available");
     }
@@ -6803,39 +11307,8 @@ ${code}
       conversationId,
       conversationTitle,
       conversationCreateTime,
-      forcedLanguage
-    );
-  }
-  /**
-   * Save a single artifact version (legacy method)
-   */
-  static async saveSingleArtifactVersion(artifactId, artifactData, versionNumber, conversationId, conversationTitle, conversationCreateTime) {
-    if (!this.plugin) {
-      throw new Error("Plugin not available");
-    }
-    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
-    if (!folderResult.success) {
-      throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
-    }
-    const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
-    const fileName = `${safeArtifactId}_v${versionNumber}.md`;
-    const filePath = `${conversationFolder}/${fileName}`;
-    const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
-    if (shouldSkip) {
-      return;
-    }
-    await this.saveIndividualArtifactVersion(
-      artifactData,
-      filePath,
-      versionNumber,
-      artifactData.content || "",
-      conversationId,
-      conversationTitle,
-      conversationCreateTime,
-      void 0
-      // No forced language for legacy method
+      forcedLanguage,
+      messageTimestamp
     );
   }
   /**
@@ -6861,135 +11334,13 @@ ${code}
     return summary;
   }
   /**
-   * Save ALL versions of an artifact (legacy method)
-   */
-  static async saveAllArtifactVersions(artifactId, versions, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c;
-    if (!this.plugin) {
-      console.error("Claude converter: Plugin not available for artifact saving");
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_a = versions[0]) == null ? void 0 : _a.title) || artifactId}** (Error: Plugin not available)</div>`;
-    }
-    if (versions.length === 0) {
-      console.error("Claude converter: No versions provided for artifact", artifactId);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${artifactId}** (Error: No versions found)</div>`;
-    }
-    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
-    if (!folderResult.success) {
-      console.error("Claude converter: Failed to create artifacts folder", folderResult.error);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_b = versions[0]) == null ? void 0 : _b.title) || artifactId}** (Error: Could not create folder)</div>`;
-    }
-    const savedVersions = [];
-    let latestVersion = "";
-    let currentContent = "";
-    for (let i = 0; i < versions.length; i++) {
-      const version = versions[i];
-      const versionNumber = i + 1;
-      const fileName = `${artifactId}_v${versionNumber}.md`;
-      const filePath = `${conversationFolder}/${fileName}`;
-      try {
-        const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
-        if (shouldSkip) {
-          console.log(`Skipping existing artifact version: ${filePath}`);
-          savedVersions.push(filePath);
-          latestVersion = filePath;
-          if (version.command === "create" || version.command === "rewrite") {
-            currentContent = version.content || "";
-          }
-          continue;
-        }
-        let versionContent = "";
-        if (version.command === "create" || version.command === "rewrite") {
-          versionContent = version.content || "";
-          currentContent = versionContent;
-        } else if (version.command === "update") {
-          if (version.content && version.content.length > 0) {
-            versionContent = version.content;
-            currentContent = versionContent;
-          } else {
-            versionContent = currentContent;
-          }
-        }
-        await this.saveIndividualArtifactVersion(
-          version,
-          filePath,
-          versionNumber,
-          versionContent,
-          conversationId,
-          conversationTitle,
-          conversationCreateTime,
-          void 0
-          // No forced language for legacy method
-        );
-        savedVersions.push(filePath);
-        latestVersion = filePath;
-      } catch (error) {
-        console.error(`Failed to save artifact version ${versionNumber} to ${filePath}:`, error);
-      }
-    }
-    if (savedVersions.length === 0) {
-      console.error("Claude converter: No versions were saved for artifact", artifactId);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_c = versions[0]) == null ? void 0 : _c.title) || artifactId}** (Error: No versions could be saved)</div>`;
-    }
-    return this.formatArtifactSummary(versions[0], savedVersions, latestVersion, conversationFolder);
-  }
-  /**
-   * Save all versions of an artifact and return summary for conversation (legacy method)
-   */
-  static async saveArtifactVersions(artifactId, versions, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c;
-    if (!this.plugin) {
-      console.error("Claude converter: Plugin not available for artifact saving");
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_a = versions[0]) == null ? void 0 : _a.title) || artifactId}** (Error: Plugin not available)</div>`;
-    }
-    if (versions.length === 0) {
-      console.error("Claude converter: No versions provided for artifact", artifactId);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${artifactId}** (Error: No versions found)</div>`;
-    }
-    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
-    if (!folderResult.success) {
-      console.error("Claude converter: Failed to create artifacts folder", folderResult.error);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_b = versions[0]) == null ? void 0 : _b.title) || artifactId}** (Error: Could not create folder)</div>`;
-    }
-    const savedVersions = [];
-    let latestVersion = "";
-    for (let i = 0; i < versions.length; i++) {
-      const version = versions[i];
-      const versionNumber = i + 1;
-      const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
-      const fileName = `${safeArtifactId}_v${versionNumber}.md`;
-      const filePath = `${conversationFolder}/${fileName}`;
-      try {
-        const shouldSkip = await this.shouldSkipArtifactVersion(filePath, version.version_uuid);
-        if (shouldSkip) {
-          savedVersions.push(filePath);
-          latestVersion = filePath;
-          continue;
-        }
-        await this.saveArtifactVersion(version, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime);
-        savedVersions.push(filePath);
-        latestVersion = filePath;
-      } catch (error) {
-        console.error(`Failed to save artifact version ${versionNumber} to ${filePath}:`, error);
-      }
-    }
-    if (savedVersions.length === 0) {
-      console.error("Claude converter: No versions were saved for artifact", artifactId);
-      return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${((_c = versions[0]) == null ? void 0 : _c.title) || artifactId}** (Error: No versions could be saved)</div>`;
-    }
-    return this.formatArtifactSummary(versions[0], savedVersions, latestVersion, conversationFolder);
-  }
-  /**
    * Format artifact summary for conversation display
    */
   static formatArtifactSummary(firstVersion, savedVersions, latestVersion, conversationFolder) {
     const title = (firstVersion == null ? void 0 : firstVersion.title) || "Untitled Artifact";
     const versionCount = savedVersions.length;
     if (!latestVersion) {
-      console.error("Claude converter: No latest version available for artifact summary");
+      logger.error("Claude converter: No latest version available for artifact summary");
       return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}** (Error: No accessible version)</div>`;
     }
     let formattedContent = `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}**`;
@@ -7007,62 +11358,9 @@ ${code}
     return formattedContent;
   }
   /**
-   * Format Claude artifacts as links to separate files only (legacy method for single artifacts)
-   */
-  static async formatArtifact(artifactInput, conversationId, conversationTitle, conversationCreateTime) {
-    const title = artifactInput.title || "Untitled Artifact";
-    let language = artifactInput.language || "text";
-    const command = artifactInput.command || "create";
-    const artifactId = artifactInput.id || "unknown";
-    const content = artifactInput.content || "";
-    if ((language.toLowerCase() === "text" || !language || language === "undefined") && content) {
-      const detectedLanguage = this.detectLanguageFromContent(content, artifactInput.type);
-      if (detectedLanguage !== "text") {
-        language = detectedLanguage;
-      }
-    }
-    let formattedContent = `<div class="nexus-artifact-box">
-
-**\u{1F3A8} Artifact: ${title}**
-
-`;
-    if (command === "edit") {
-      formattedContent += `*[Artifact edited]*
-
-`;
-    }
-    formattedContent += `> **Language:** ${language}`;
-    if (artifactInput.language !== language) {
-      formattedContent += ` (detected from content, original: ${artifactInput.language})`;
-    }
-    formattedContent += `
-`;
-    formattedContent += `> **Type:** ${artifactInput.type || "code"}
-`;
-    formattedContent += `> **ID:** ${artifactId}
-
-`;
-    if (content && this.plugin) {
-      try {
-        const filePath = await this.saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle, conversationCreateTime);
-        formattedContent += `\u{1F4CE} **[View Artifact](${filePath})**
-
-`;
-      } catch (error) {
-        formattedContent += `\u274C **Error saving artifact:** ${error instanceof Error ? error.message : "Unknown error"}
-
-`;
-      }
-    }
-    formattedContent += `</div>
-
-`;
-    return formattedContent;
-  }
-  /**
    * Save a single artifact version with specific content
    */
-  static async saveIndividualArtifactVersion(artifactInput, filePath, versionNumber, versionContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage) {
+  static async saveIndividualArtifactVersion(artifactInput, filePath, versionNumber, versionContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage, messageTimestamp) {
     const title = artifactInput.title || "Untitled Artifact";
     let language = artifactInput.language || "text";
     const command = artifactInput.command || "create";
@@ -7088,41 +11386,36 @@ ${code}
         this.plugin.settings.addDatePrefix,
         this.plugin.settings.dateFormat
       );
-      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
+      const conversationPath = `${this.plugin.settings.conversationFolder}/claude/${year}/${month}/${fileName}`;
       conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
     }
+    const safeArtifactTitle = generateSafeAlias(title);
+    const safeArtifactAlias = generateSafeAlias(`${artifactId}_v${versionNumber}`);
+    const artifactCreateTime = messageTimestamp || conversationCreateTime || 0;
+    const createTimeStr = artifactCreateTime > 0 ? new Date(artifactCreateTime * 1e3).toISOString() : "unknown";
     let markdownContent = `---
 nexus: nexus-ai-chat-importer
-plugin_version: ${this.plugin.manifest.version}
+plugin_version: "${this.plugin.manifest.version}"
 provider: claude
 artifact_id: ${artifactId}
 version_uuid: ${versionUuid}
 version_number: ${versionNumber}
 command: ${command}
 conversation_id: ${conversationId || "unknown"}
+create_time: ${createTimeStr}
 format: ${language}
-aliases: ["${title}", "${artifactId}_v${versionNumber}"]
+aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
 ---
 
 # ${title} (Version ${versionNumber})
-
-**Type:** Claude Artifact
-**Language:** ${language}`;
-    if (artifactInput.language !== language) {
-      markdownContent += ` (detected from content, original: ${artifactInput.language})`;
-    }
-    markdownContent += `
-**Command:** ${command}
-**Version:** ${versionNumber}
-**ID:** ${artifactId}
-**UUID:** ${versionUuid}`;
+`;
     if (conversationLink) {
       markdownContent += `
-**Conversation:** ${conversationLink}`;
-    }
-    markdownContent += `
+**Conversation:** ${conversationLink}
 
-## Content
+`;
+    }
+    markdownContent += `## Content
 
 `;
     if (language.toLowerCase() === "markdown") {
@@ -7135,149 +11428,9 @@ ${versionContent}
     try {
       await this.plugin.app.vault.create(filePath, markdownContent);
     } catch (error) {
-      console.error(`Failed to create artifact file ${filePath}:`, error);
+      logger.error(`Failed to create artifact file ${filePath}:`, error);
       throw error;
     }
-  }
-  /**
-   * Save a single artifact version (legacy method)
-   */
-  static async saveArtifactVersion(artifactInput, filePath, versionNumber, conversationId, conversationTitle, conversationCreateTime) {
-    const title = artifactInput.title || "Untitled Artifact";
-    let language = artifactInput.language || "text";
-    const command = artifactInput.command || "create";
-    const artifactId = artifactInput.id || "unknown";
-    const content = artifactInput.content || "";
-    const versionUuid = artifactInput.version_uuid;
-    if ((language.toLowerCase() === "text" || !language || language === "undefined") && content) {
-      const detectedLanguage = this.detectLanguageFromContent(content, artifactInput.type);
-      if (detectedLanguage !== "text") {
-        language = detectedLanguage;
-      }
-    }
-    let conversationLink = "";
-    if (conversationId && conversationTitle && conversationCreateTime) {
-      const createDate = new Date(conversationCreateTime * 1e3);
-      const year = createDate.getFullYear();
-      const month = String(createDate.getMonth() + 1).padStart(2, "0");
-      const { generateConversationFileName: generateConversationFileName2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-      const fileName = generateConversationFileName2(
-        conversationTitle,
-        conversationCreateTime,
-        this.plugin.settings.addDatePrefix,
-        this.plugin.settings.dateFormat
-      );
-      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName}`;
-      conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
-    }
-    let markdownContent = `---
-nexus: nexus-ai-chat-importer
-plugin_version: ${this.plugin.manifest.version}
-provider: claude
-artifact_id: ${artifactId}
-version_uuid: ${versionUuid}
-version_number: ${versionNumber}
-command: ${command}
-conversation_id: ${conversationId || "unknown"}
-format: ${language}
-aliases: ["${title}", "${artifactId}_v${versionNumber}"]
----
-
-# ${title} (Version ${versionNumber})
-
-**Type:** Claude Artifact
-**Language:** ${language}`;
-    if (artifactInput.language !== language) {
-      markdownContent += ` (detected from content, original: ${artifactInput.language})`;
-    }
-    markdownContent += `
-**Command:** ${command}
-**Version:** ${versionNumber}
-**ID:** ${artifactId}
-**UUID:** ${versionUuid}`;
-    if (conversationLink) {
-      markdownContent += `
-**Conversation:** ${conversationLink}`;
-    }
-    markdownContent += `
-
-## Content
-
-`;
-    if (language.toLowerCase() === "markdown") {
-      markdownContent += content;
-    } else {
-      markdownContent += `\`\`\`${language}
-${content}
-\`\`\``;
-    }
-    try {
-      await this.plugin.app.vault.create(filePath, markdownContent);
-    } catch (error) {
-      console.error(`Failed to create artifact file ${filePath}:`, error);
-      throw error;
-    }
-  }
-  /**
-   * Save artifact as markdown note in attachments/artifacts/ folder (legacy method)
-   */
-  static async saveArtifactToFile(artifactId, title, language, content, conversationId, conversationTitle, conversationCreateTime) {
-    const safeTitle = title.replace(/[^a-zA-Z0-9\-_]/g, "_");
-    const fileName = `${safeTitle}_${artifactId}.md`;
-    const artifactFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts`;
-    const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const folderResult = await ensureFolderExists2(artifactFolder, this.plugin.app.vault);
-    if (!folderResult.success) {
-      throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
-    }
-    const filePath = `${artifactFolder}/${fileName}`;
-    let conversationLink = "";
-    if (conversationId && conversationTitle && conversationCreateTime) {
-      const createDate = new Date(conversationCreateTime * 1e3);
-      const year = createDate.getFullYear();
-      const month = String(createDate.getMonth() + 1).padStart(2, "0");
-      const { generateConversationFileName: generateConversationFileName2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-      const fileName2 = generateConversationFileName2(
-        conversationTitle,
-        conversationCreateTime,
-        this.plugin.settings.addDatePrefix,
-        this.plugin.settings.dateFormat
-      );
-      const conversationPath = `${this.plugin.settings.archiveFolder}/claude/${year}/${month}/${fileName2}`;
-      conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
-    }
-    let markdownContent = `---
-nexus: nexus-ai-chat-importer
-plugin_version: ${this.plugin.manifest.version}
-provider: claude
-aliases: ["${title}", "${artifactId}"]
-conversation_id: ${conversationId || "unknown"}
-format: ${language}
----
-
-# ${title}
-
-**Type:** Claude Artifact
-**Language:** ${language}
-**ID:** ${artifactId}`;
-    if (conversationLink) {
-      markdownContent += `
-**Conversation:** ${conversationLink}`;
-    }
-    markdownContent += `
-
-## Content
-
-`;
-    if (language.toLowerCase() === "markdown") {
-      markdownContent += content;
-    } else {
-      markdownContent += `\`\`\`${language}
-${content}
-\`\`\``;
-    }
-    await this.plugin.app.vault.create(filePath, markdownContent);
-    return filePath;
   }
   /**
    * Check if we should skip saving this artifact version (already exists)
@@ -7436,6 +11589,7 @@ ${content}
     return uniqueArtifacts.size;
   }
 };
+__name(ClaudeConverter, "ClaudeConverter");
 // Nexus custom callouts with icons
 ClaudeConverter.CALLOUTS = {
   USER: "nexus_user",
@@ -7452,9 +11606,9 @@ ClaudeConverter.CALLOUTS = {
 
 // src/providers/claude/claude-attachment-extractor.ts
 var ClaudeAttachmentExtractor = class {
-  constructor(plugin, logger4) {
+  constructor(plugin, logger6) {
     this.plugin = plugin;
-    this.logger = logger4;
+    this.logger = logger6;
   }
   /**
    * Extract attachments from Claude ZIP archive
@@ -7462,10 +11616,10 @@ var ClaudeAttachmentExtractor = class {
    * This method handles the "files not found" case gracefully
    */
   async extractAttachments(zip, conversationId, attachments) {
-    if (!this.plugin.settings.importAttachments || attachments.length === 0) {
+    if (attachments.length === 0) {
       return attachments.map((att) => ({
         ...att,
-        extractedContent: `File: ${att.fileName} (attachment import disabled)`
+        extractedContent: `File: ${att.fileName} (no attachments to process)`
       }));
     }
     const processedAttachments = [];
@@ -7510,8 +11664,8 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     const fileName = attachment.fileName;
     const conversationUrl = `https://claude.ai/chat/${conversationId}`;
     const fileType = this.getFileTypeFromExtension(fileName);
-    const placeholder = `>[!nexus_attachment] **${fileName}** (${fileType})
-> \u26A0\uFE0F Not included in archive. [Open original conversation](${conversationUrl})`;
+    const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})
+>> \u26A0\uFE0F Not included in archive. [Open original conversation](${conversationUrl})`;
     return {
       ...attachment,
       extractedContent: placeholder
@@ -7571,19 +11725,12 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     try {
       const imageData = await zipFile.async("base64");
       const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-      if (this.plugin.settings.importAttachments) {
-        const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
-        return {
-          ...attachment,
-          fileName,
-          extractedContent: `![${attachment.fileName}](${filePath})`
-        };
-      } else {
-        return {
-          ...attachment,
-          extractedContent: `Image: ${attachment.fileName} (not imported - attachment import disabled)`
-        };
-      }
+      const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
+      return {
+        ...attachment,
+        fileName,
+        extractedContent: `![${attachment.fileName}](${filePath})`
+      };
     } catch (error) {
       this.logger.error(`Error processing Claude image ${attachment.fileName}:`, error);
       return {
@@ -7617,21 +11764,14 @@ ${textContent}
    */
   async processBinaryAttachment(zipFile, attachment, conversationId) {
     try {
-      if (this.plugin.settings.importAttachments) {
-        const binaryData = await zipFile.async("base64");
-        const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-        const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
-        return {
-          ...attachment,
-          fileName,
-          extractedContent: `[${attachment.fileName}](${filePath})`
-        };
-      } else {
-        return {
-          ...attachment,
-          extractedContent: `File: ${attachment.fileName} (not imported - attachment import disabled)`
-        };
-      }
+      const binaryData = await zipFile.async("base64");
+      const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
+      const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
+      return {
+        ...attachment,
+        fileName,
+        extractedContent: `[${attachment.fileName}](${filePath})`
+      };
     } catch (error) {
       this.logger.error(`Error processing Claude binary file ${attachment.fileName}:`, error);
       return {
@@ -7688,6 +11828,7 @@ ${textContent}
     return filePath;
   }
 };
+__name(ClaudeAttachmentExtractor, "ClaudeAttachmentExtractor");
 
 // src/providers/claude/claude-report-naming.ts
 var ClaudeReportNamingStrategy = class {
@@ -7723,6 +11864,7 @@ var ClaudeReportNamingStrategy = class {
     };
   }
 };
+__name(ClaudeReportNamingStrategy, "ClaudeReportNamingStrategy");
 
 // src/providers/claude/claude-adapter.ts
 var ClaudeAdapter = class {
@@ -7735,7 +11877,7 @@ var ClaudeAdapter = class {
     if (rawConversations.length === 0)
       return false;
     const sample = rawConversations[0];
-    return !!(sample.uuid && "name" in sample && sample.chat_messages && Array.isArray(sample.chat_messages) && sample.created_at && sample.updated_at && sample.account);
+    return !!(sample.uuid && "name" in sample && sample.chat_messages && Array.isArray(sample.chat_messages) && sample.created_at && sample.updated_at);
   }
   getId(chat) {
     return chat.uuid || "";
@@ -7809,6 +11951,7 @@ var ClaudeAdapter = class {
     return false;
   }
 };
+__name(ClaudeAdapter, "ClaudeAdapter");
 
 // src/providers/provider-registry.ts
 function createProviderRegistry(plugin) {
@@ -7817,14 +11960,18 @@ function createProviderRegistry(plugin) {
   registry.register("claude", new ClaudeAdapter(plugin));
   return registry;
 }
+__name(createProviderRegistry, "createProviderRegistry");
 
 // src/ui/import-progress-modal.ts
-var import_obsidian12 = require("obsidian");
-var ImportProgressModal = class extends import_obsidian12.Modal {
+var import_obsidian17 = require("obsidian");
+var ImportProgressModal = class extends import_obsidian17.Modal {
   constructor(app, fileName) {
     super(app);
     this.totalConversations = 0;
     this.currentConversation = 0;
+    this.isSelectiveImport = false;
+    this.selectedCount = 0;
+    this.totalAvailable = 0;
     this.isComplete = false;
     this.fileName = fileName;
   }
@@ -7843,6 +11990,18 @@ var ImportProgressModal = class extends import_obsidian12.Modal {
             font-weight: 600;
             color: var(--text-accent);
             font-size: 1.1em;
+        `;
+    this.importModeEl = contentContainer.createEl("div", { cls: "import-mode" });
+    this.importModeEl.style.cssText = `
+            text-align: center;
+            margin: 5px 0 10px 0;
+            font-weight: 500;
+            color: var(--text-accent);
+            font-size: 0.85em;
+            padding: 4px 8px;
+            background: var(--background-secondary);
+            border-radius: 4px;
+            display: none;
         `;
     this.conversationCountEl = contentContainer.createEl("div", { cls: "conversation-counter" });
     this.conversationCountEl.style.cssText = `
@@ -7910,7 +12069,11 @@ var ImportProgressModal = class extends import_obsidian12.Modal {
       this.currentConversation = step.current;
     }
     if (this.totalConversations > 0) {
-      this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} conversations`;
+      if (this.isSelectiveImport) {
+        this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} selected conversations`;
+      } else {
+        this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} conversations`;
+      }
     } else {
       this.conversationCountEl.textContent = "";
     }
@@ -7970,6 +12133,16 @@ var ImportProgressModal = class extends import_obsidian12.Modal {
     }, delay);
   }
   /**
+   * Set selective import mode
+   */
+  setSelectiveImportMode(selectedCount, totalAvailable) {
+    this.isSelectiveImport = true;
+    this.selectedCount = selectedCount;
+    this.totalAvailable = totalAvailable;
+    this.importModeEl.style.display = "block";
+    this.importModeEl.textContent = `\u{1F4CB} Selective Import: ${selectedCount} of ${totalAvailable} conversations`;
+  }
+  /**
    * Get progress callback function
    */
   getProgressCallback() {
@@ -7982,13 +12155,106 @@ var ImportProgressModal = class extends import_obsidian12.Modal {
     contentEl.empty();
   }
 };
+__name(ImportProgressModal, "ImportProgressModal");
+
+// src/services/attachment-map-builder.ts
+var AttachmentMapBuilder = class {
+  constructor(logger6) {
+    this.logger = logger6;
+  }
+  /**
+   * Scan all ZIP files and build a map of available attachments
+   * Processes ZIPs in order (oldest to newest) so newer versions are at the end
+   */
+  async buildAttachmentMap(files) {
+    var _a;
+    const attachmentMap = /* @__PURE__ */ new Map();
+    const JSZipModule = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        const zip = new JSZipModule();
+        const zipContent = await zip.loadAsync(file);
+        for (const [path, zipFile] of Object.entries(zipContent.files)) {
+          if (zipFile.dir)
+            continue;
+          const fileIds = this.extractFileIds(path);
+          for (const fileId of fileIds) {
+            if (!attachmentMap.has(fileId)) {
+              attachmentMap.set(fileId, []);
+            }
+            const locations = attachmentMap.get(fileId);
+            locations.push({
+              zipIndex: i,
+              path,
+              size: ((_a = zipFile._data) == null ? void 0 : _a.uncompressedSize) || 0,
+              zipFileName: file.name
+            });
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Failed to scan attachments in ${file.name}:`, error);
+      }
+    }
+    return attachmentMap;
+  }
+  /**
+   * Extract all possible file IDs from a file path
+   * Handles various ChatGPT export formats:
+   * - file_XXXXX.dat → ["file_XXXXX", "XXXXX"]
+   * - user-xxx/file_XXXXX-uuid.png → ["file_XXXXX", "XXXXX"]
+   * - dalle-generations/xxx.png → ["xxx"]
+   */
+  extractFileIds(path) {
+    const fileIds = [];
+    const fileName = path.split("/").pop() || "";
+    const filePattern = /file_([a-f0-9]+)/i;
+    const fileMatch = fileName.match(filePattern);
+    if (fileMatch) {
+      fileIds.push(`file_${fileMatch[1]}`);
+      fileIds.push(fileMatch[1]);
+    }
+    const hashPattern = /^([a-f0-9]{32,})(?:[-.]|$)/i;
+    const hashMatch = fileName.match(hashPattern);
+    if (hashMatch && !fileMatch) {
+      fileIds.push(hashMatch[1]);
+    }
+    const baseFileName = fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, "");
+    if (baseFileName && !fileIds.includes(baseFileName)) {
+      fileIds.push(baseFileName);
+    }
+    return fileIds;
+  }
+  /**
+   * Find the best location for a file ID
+   * Returns the NEWEST available location (last in array)
+   * Falls back to older locations if needed
+   */
+  findBestLocation(attachmentMap, fileId) {
+    const locations = attachmentMap.get(fileId);
+    if (!locations || locations.length === 0) {
+      return null;
+    }
+    return locations[locations.length - 1];
+  }
+  /**
+   * Find all locations for a file ID (for debugging/logging)
+   */
+  findAllLocations(attachmentMap, fileId) {
+    return attachmentMap.get(fileId) || [];
+  }
+};
+__name(AttachmentMapBuilder, "AttachmentMapBuilder");
 
 // src/services/import-service.ts
 var ImportService = class {
   constructor(plugin) {
     this.plugin = plugin;
     this.importReport = new ImportReport();
+    this.currentAttachmentMap = null;
+    this.currentZips = [];
     this.providerRegistry = createProviderRegistry(plugin);
+    this.attachmentMapBuilder = new AttachmentMapBuilder(plugin.logger);
     this.conversationProcessor = new ConversationProcessor(plugin, this.providerRegistry);
   }
   async selectZipFile() {
@@ -8010,60 +12276,77 @@ var ImportService = class {
   sortFilesByTimestamp(files) {
     return files.sort((a, b) => {
       const timestampRegex = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
-      const getTimestamp = (filename) => {
+      const getTimestamp = /* @__PURE__ */ __name((filename) => {
         const match = filename.match(timestampRegex);
         if (!match) {
           this.plugin.logger.warn(`No timestamp found in filename: ${filename}`);
           return "0";
         }
         return match[1];
-      };
+      }, "getTimestamp");
       return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
     });
   }
-  async handleZipFile(file, forcedProvider) {
-    this.importReport = new ImportReport();
+  async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport) {
+    const isSharedReport = !!sharedReport;
+    this.importReport = sharedReport || new ImportReport();
+    if (!isSharedReport && this.plugin.settings.useCustomMessageTimestampFormat) {
+      this.importReport.setCustomTimestampFormat(this.plugin.settings.messageTimestampFormat);
+    }
+    this.importReport.startFileSection(file.name);
+    this.conversationProcessor.resetCounters();
     const storage = this.plugin.getStorageService();
+    let processingStarted = false;
     const progressModal = new ImportProgressModal(this.plugin.app, file.name);
     const progressCallback = progressModal.getProgressCallback();
     progressModal.open();
+    if (selectedConversationIds && selectedConversationIds.length > 0) {
+    }
     try {
-      progressCallback({
-        phase: "validation",
-        title: "Validating file...",
-        detail: "Checking file hash and import history"
-      });
-      const fileHash = await getFileHash(file);
-      const foundByHash = storage.isArchiveImported(fileHash);
-      const foundByName = storage.isArchiveImported(file.name);
-      const isReprocess = foundByHash || foundByName;
-      if (isReprocess) {
-        progressModal.close();
-        const shouldReimport = await showDialog(
-          this.plugin.app,
-          "confirmation",
-          "Already processed",
-          [
-            `File ${file.name} has already been imported.`,
-            `Do you want to reprocess it?`,
-            `**Note:** This will recreate notes from before v1.1.0 to add attachment support.`
-          ],
-          void 0,
-          { button1: "Let's do this", button2: "Forget it" }
-        );
-        if (!shouldReimport) {
-          new import_obsidian13.Notice("Import cancelled.");
-          return;
-        }
-        progressModal.open();
-      }
       progressCallback({
         phase: "validation",
         title: "Validating ZIP structure...",
         detail: "Checking file format and contents"
       });
       const zip = await this.validateZipFile(file, forcedProvider);
-      await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback);
+      let isReprocess = false;
+      let fileHash = "";
+      if (!isSharedReport) {
+        progressCallback({
+          phase: "validation",
+          title: "Validating file...",
+          detail: "Checking file hash and import history"
+        });
+        fileHash = await getFileHash(file);
+        const foundByHash = storage.isArchiveImported(fileHash);
+        const foundByName = storage.isArchiveImported(file.name);
+        isReprocess = foundByHash || foundByName;
+        if (isReprocess) {
+          progressModal.close();
+          const shouldReimport = await showDialog(
+            this.plugin.app,
+            "confirmation",
+            "Already processed",
+            [
+              `File ${file.name} has already been imported.`,
+              `Do you want to reprocess it?`,
+              `**Note:** This will recreate notes from before v1.1.0 to add attachment support.`
+            ],
+            void 0,
+            { button1: "Let's do this", button2: "Skip this file" }
+          );
+          if (!shouldReimport) {
+            new import_obsidian18.Notice(`Skipping ${file.name} (already imported).`);
+            progressModal.close();
+            return;
+          }
+          progressModal.open();
+        }
+      } else {
+        fileHash = await getFileHash(file);
+      }
+      processingStarted = true;
+      await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
       storage.addImportedArchive(fileHash, file.name);
       await this.plugin.saveSettings();
       progressCallback({
@@ -8081,11 +12364,13 @@ var ImportService = class {
       });
       setTimeout(() => progressModal.close(), 5e3);
     } finally {
-      await this.writeImportReport(file.name);
-      if (!progressModal.isComplete) {
-        new import_obsidian13.Notice(
-          this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
-        );
+      if (processingStarted && !isSharedReport) {
+        await this.writeImportReport(file.name);
+        if (!progressModal.isComplete) {
+          new import_obsidian18.Notice(
+            this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
+          );
+        }
       }
     }
   }
@@ -8126,14 +12411,27 @@ var ImportService = class {
       }
     }
   }
-  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback) {
+  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal) {
     try {
       progressCallback == null ? void 0 : progressCallback({
         phase: "scanning",
         title: "Extracting conversations...",
         detail: "Reading conversation data from ZIP file"
       });
-      const rawConversations = await this.extractRawConversationsFromZip(zip);
+      let rawConversations = await this.extractRawConversationsFromZip(zip);
+      if (selectedConversationIds && selectedConversationIds.length > 0) {
+        const originalCount = rawConversations.length;
+        rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
+        if (progressModal) {
+          progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
+        }
+        progressCallback == null ? void 0 : progressCallback({
+          phase: "scanning",
+          title: "Filtering conversations...",
+          detail: `Selected ${rawConversations.length} of ${originalCount} conversations for import`,
+          total: rawConversations.length
+        });
+      }
       progressCallback == null ? void 0 : progressCallback({
         phase: "scanning",
         title: "Scanning existing conversations...",
@@ -8159,8 +12457,7 @@ var ImportService = class {
         progressCallback
       );
       this.importReport = report;
-      this.importReport.addSummary(
-        file.name,
+      this.importReport.setFileCounters(
         this.conversationProcessor.getCounters()
       );
       progressCallback == null ? void 0 : progressCallback({
@@ -8171,20 +12468,56 @@ var ImportService = class {
     } catch (error) {
       if (error instanceof NexusAiChatImporterError) {
         this.plugin.logger.error("Error processing conversations", error.message);
+        this.plugin.logger.error("Full NexusAiChatImporterError:", error);
       } else if (typeof error === "object" && error instanceof Error) {
         this.plugin.logger.error("General error processing conversations", error.message);
+        this.plugin.logger.error("Full Error:", error);
+        this.plugin.logger.error("Stack trace:", error.stack);
       } else {
         this.plugin.logger.error("Unknown error processing conversations", "An unknown error occurred");
+        this.plugin.logger.error("Unknown error:", error);
       }
+      throw error;
     }
   }
   /**
    * Extract raw conversation data without knowing provider specifics
-   * TODO: Make this provider-aware when adding Claude support
    */
   async extractRawConversationsFromZip(zip) {
-    const conversationsJson = await zip.file("conversations.json").async("string");
-    return JSON.parse(conversationsJson);
+    const conversationsFile = zip.file("conversations.json");
+    if (!conversationsFile) {
+      throw new NexusAiChatImporterError(
+        "Missing conversations.json",
+        "The ZIP file does not contain a conversations.json file"
+      );
+    }
+    const conversationsJson = await conversationsFile.async("string");
+    const parsedData = JSON.parse(conversationsJson);
+    if (Array.isArray(parsedData)) {
+      return parsedData;
+    } else if (parsedData.conversations && Array.isArray(parsedData.conversations)) {
+      return parsedData.conversations;
+    } else {
+      throw new NexusAiChatImporterError(
+        "Invalid conversations.json structure",
+        "The conversations.json file does not contain a valid conversation array"
+      );
+    }
+  }
+  /**
+   * Filter conversations by selected IDs
+   */
+  filterConversationsByIds(rawConversations, selectedIds, forcedProvider) {
+    const selectedIdsSet = new Set(selectedIds);
+    return rawConversations.filter((conversation) => {
+      let conversationId;
+      if (forcedProvider === "claude" || conversation.uuid && conversation.name) {
+        conversationId = conversation.uuid || "";
+      } else {
+        conversationId = conversation.id || "";
+      }
+      return selectedIdsSet.has(conversationId);
+    });
   }
   /**
    * Validate that the forced provider matches the actual content structure
@@ -8213,14 +12546,53 @@ var ImportService = class {
     const currentProvider = this.conversationProcessor.getCurrentProvider();
     await reportWriter.writeReport(this.importReport, zipFileName, currentProvider);
   }
+  /**
+   * Build attachment map for multi-ZIP import
+   * Opens all ZIPs and scans for available attachments
+   */
+  async buildAttachmentMapForMultiZip(files) {
+    try {
+      this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMap(files);
+      const JSZipModule = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
+      this.currentZips = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const zip = new JSZipModule();
+          const zipContent = await zip.loadAsync(file);
+          this.currentZips.push(zipContent);
+        } catch (error) {
+          this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
+        }
+      }
+      const chatgptAdapter = this.providerRegistry.getAdapter("chatgpt");
+      if (chatgptAdapter && this.currentAttachmentMap) {
+        chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, this.currentZips);
+      }
+    } catch (error) {
+      this.plugin.logger.error("Error building attachment map:", error);
+      throw error;
+    }
+  }
+  /**
+   * Clear attachment map and close ZIPs after import completes
+   */
+  clearAttachmentMap() {
+    this.currentAttachmentMap = null;
+    this.currentZips = [];
+    const chatgptAdapter = this.providerRegistry.getAdapter("chatgpt");
+    if (chatgptAdapter) {
+      chatgptAdapter.clearAttachmentMap();
+    }
+  }
 };
+__name(ImportService, "ImportService");
 var ReportWriter = class {
   constructor(plugin, providerRegistry) {
     this.plugin = plugin;
     this.providerRegistry = providerRegistry;
   }
   async writeReport(report, zipFileName, provider) {
-    const { ensureFolderExists: ensureFolderExists2, formatTimestamp: formatTimestamp2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
     const reportInfo = this.getReportGenerationInfo(zipFileName, provider);
     const adapter = this.providerRegistry.getAdapter(provider);
     if (adapter) {
@@ -8228,10 +12600,10 @@ var ReportWriter = class {
       const columnInfo = strategy.getProviderSpecificColumn();
       report.setProviderSpecificColumnHeader(columnInfo.header);
     }
-    const folderResult = await ensureFolderExists2(reportInfo.folderPath, this.plugin.app.vault);
+    const folderResult = await ensureFolderExists(reportInfo.folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
-      new import_obsidian13.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian18.Notice("Failed to create log file. Check console for details.");
       return;
     }
     let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
@@ -8241,7 +12613,7 @@ var ReportWriter = class {
       logFilePath = `${reportInfo.folderPath}/${baseName}-${counter} - import report.md`;
       counter++;
     }
-    const currentDate = `${formatTimestamp2(Date.now() / 1e3, "date")} ${formatTimestamp2(Date.now() / 1e3, "time")}`;
+    const currentDate = new Date().toISOString();
     const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
     const logContent = `---
 importdate: ${currentDate}
@@ -8259,7 +12631,7 @@ ${report.generateReportContent()}
       await this.plugin.app.vault.create(logFilePath, logContent);
     } catch (error) {
       this.plugin.logger.error(`Failed to write import log`, error.message);
-      new import_obsidian13.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian18.Notice("Failed to create log file. Check console for details.");
     }
   }
   getReportGenerationInfo(zipFileName, provider) {
@@ -8293,8 +12665,10 @@ ${report.generateReportContent()}
     return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
   }
 };
+__name(ReportWriter, "ReportWriter");
 
 // src/services/storage-service.ts
+init_date_parser();
 var StorageService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -8307,11 +12681,6 @@ var StorageService = class {
       const data = await this.plugin.loadData();
       this.importedArchives = (data == null ? void 0 : data.importedArchives) || {};
       this.isDirty = false;
-      if (data == null ? void 0 : data.conversationCatalog) {
-        const catalogSize = Object.keys(data.conversationCatalog).length;
-        this.plugin.logger.info("Legacy conversation catalog detected - will be migrated in upgrade process");
-      }
-      this.plugin.logger.info("Storage data loaded successfully");
     } catch (error) {
       this.plugin.logger.error("loadData failed:", error);
       throw error;
@@ -8374,15 +12743,14 @@ var StorageService = class {
    * 3. Fallback to manual parsing for problematic files
    */
   async scanExistingConversations() {
-    const startTime = Date.now();
     await this.waitForCacheClean(1e3);
     const conversations = /* @__PURE__ */ new Map();
-    const archiveFolder = this.plugin.settings.archiveFolder;
+    const conversationFolder = this.plugin.settings.conversationFolder || this.plugin.settings.archiveFolder || "Nexus/Conversations";
     const allFiles = this.plugin.app.vault.getMarkdownFiles();
     const conversationFiles = allFiles.filter((file) => {
-      if (!file.path.startsWith(archiveFolder))
+      if (!file.path.startsWith(conversationFolder))
         return false;
-      const relativePath = file.path.substring(archiveFolder.length + 1);
+      const relativePath = file.path.substring(conversationFolder.length + 1);
       if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
         return false;
       }
@@ -8411,16 +12779,13 @@ var StorageService = class {
           }
         } catch (error) {
           errors++;
-          console.warn(`Error parsing conversation file ${file.path}:`, error);
+          this.plugin.logger.warn(`Error parsing conversation file ${file.path}:`, error);
         }
       }
       if (i + batchSize < conversationFiles.length) {
         await new Promise((resolve) => setTimeout(resolve, 1));
       }
     }
-    const duration = Date.now() - startTime;
-    const total = foundViaCache + foundViaManual;
-    this.plugin.logger.info(`Scanned vault: found ${total} conversations in ${duration}ms`);
     return conversations;
   }
   /**
@@ -8443,14 +12808,24 @@ var StorageService = class {
     var _a;
     try {
       const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-      if (!(frontmatter == null ? void 0 : frontmatter.nexus) || frontmatter.nexus !== this.plugin.manifest.id) {
+      if (!frontmatter) {
+        this.plugin.logger.warn(`[parseWithCache] No frontmatter found for ${file.path}`);
+        return null;
+      }
+      if (!frontmatter.nexus || frontmatter.nexus !== this.plugin.manifest.id) {
+        this.plugin.logger.warn(`[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`);
         return null;
       }
       if (!frontmatter.conversation_id) {
+        this.plugin.logger.warn(`[parseWithCache] No conversation_id for ${file.path}`);
         return null;
       }
       const createTime = this.parseTimeString(frontmatter.create_time);
       const updateTime = this.parseTimeString(frontmatter.update_time);
+      if (createTime === 0 || updateTime === 0) {
+        this.plugin.logger.warn(`[parseWithCache] Failed to parse timestamps for ${file.path}: create=${frontmatter.create_time} (${createTime}), update=${frontmatter.update_time} (${updateTime})`);
+        return null;
+      }
       return {
         conversationId: frontmatter.conversation_id,
         provider: frontmatter.provider || "unknown",
@@ -8460,6 +12835,7 @@ var StorageService = class {
         update_time: updateTime
       };
     } catch (error) {
+      this.plugin.logger.warn(`[parseWithCache] Exception parsing ${file.path}:`, error);
       return null;
     }
   }
@@ -8505,28 +12881,21 @@ var StorageService = class {
         update_time: updateTime
       };
     } catch (error) {
-      console.error(`Error manually parsing ${file.path}:`, error);
+      this.plugin.logger.error(`Error manually parsing ${file.path}:`, error);
       return null;
     }
   }
   /**
    * Parse time string from frontmatter (handle multiple formats)
+   * Supports all formats: ISO 8601, US, EU, DE, JP, and locale-based
+   * Uses intelligent format detection from DateParser utility
    */
   parseTimeString(timeStr) {
-    if (!timeStr)
-      return 0;
-    try {
-      let dateStr = timeStr.replace(" at ", " ");
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
-        console.warn(`Could not parse date: ${timeStr}`);
-        return 0;
-      }
-      return Math.floor(date.getTime() / 1e3);
-    } catch (error) {
-      console.warn(`Date parsing error for "${timeStr}":`, error);
-      return 0;
+    const result = DateParser.parseDate(timeStr);
+    if (result === 0) {
+      this.plugin.logger.warn(`[parseTimeString] Failed to parse: "${timeStr}"`);
     }
+    return result;
   }
   /**
    * Fast check if a specific conversation exists
@@ -8564,7 +12933,6 @@ var StorageService = class {
         settings: this.plugin.settings
         // Note: No conversation catalog to reset - it's now vault-based
       });
-      this.plugin.logger.info("Reset archive catalog (conversation tracking is now vault-based)");
     } catch (error) {
       this.plugin.logger.error("resetCatalogs failed:", error);
     }
@@ -8601,26 +12969,28 @@ var StorageService = class {
   /**
    * @deprecated Conversations are now tracked via vault frontmatter
    */
-  updateConversationCatalog(id, entry) {
+  updateConversationCatalog(_id, _entry) {
     this.plugin.logger.warn("updateConversationCatalog() is deprecated - conversations tracked via frontmatter");
   }
   /**
-   * @deprecated Conversations are now tracked via vault frontmatter  
+   * @deprecated Conversations are now tracked via vault frontmatter
    */
-  deleteFromConversationCatalog(id) {
+  deleteFromConversationCatalog(_id) {
     this.plugin.logger.warn("deleteFromConversationCatalog() is deprecated - files tracked via vault");
   }
 };
+__name(StorageService, "StorageService");
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian16 = require("obsidian");
+var import_obsidian26 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
+init_constants();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
-var import_obsidian14 = require("obsidian");
-var MultiOperationProgressModal = class extends import_obsidian14.Modal {
+var import_obsidian20 = require("obsidian");
+var MultiOperationProgressModal = class extends import_obsidian20.Modal {
   constructor(app, title, operations) {
     super(app);
     this.canClose = false;
@@ -8836,9 +13206,11 @@ var MultiOperationProgressModal = class extends import_obsidian14.Modal {
     contentEl.empty();
   }
 };
+__name(MultiOperationProgressModal, "MultiOperationProgressModal");
 
 // src/upgrade/incremental-upgrade-manager.ts
-var logger3 = new Logger();
+init_utils();
+var logger5 = new Logger();
 var IncrementalUpgradeManager = class {
   constructor(plugin) {
     this.availableUpgrades = [];
@@ -8851,15 +13223,16 @@ var IncrementalUpgradeManager = class {
   registerUpgrades() {
     const { Upgrade110: Upgrade1102 } = (init_upgrade_1_1_0(), __toCommonJS(upgrade_1_1_0_exports));
     const { Upgrade120: Upgrade1202 } = (init_upgrade_1_2_0(), __toCommonJS(upgrade_1_2_0_exports));
+    const { Upgrade130: Upgrade1302 } = (init_upgrade_1_3_0(), __toCommonJS(upgrade_1_3_0_exports));
     this.availableUpgrades = [
       new Upgrade1102(),
-      new Upgrade1202()
-      // Future: new Upgrade121(), new Upgrade130(), etc.
+      new Upgrade1202(),
+      new Upgrade1302()
+      // Future: new Upgrade131(), new Upgrade140(), etc.
     ];
     this.availableUpgrades.sort((a, b) => {
       return VersionUtils.compareVersions(a.version, b.version);
     });
-    logger3.info(`Registered ${this.availableUpgrades.length} version upgrades`);
   }
   /**
    * Main incremental upgrade check and execution
@@ -8869,39 +13242,30 @@ var IncrementalUpgradeManager = class {
     try {
       const currentVersion = this.plugin.manifest.version;
       const previousVersion = this.plugin.settings.previousVersion;
-      console.debug(`[NEXUS-DEBUG] Incremental upgrade check: ${previousVersion} \u2192 ${currentVersion}`);
-      if (previousVersion === currentVersion) {
-        console.debug(`[NEXUS-DEBUG] No version change - SKIPPING ALL`);
-        logger3.info(`No version change (${currentVersion}), skipping upgrade checks`);
-        return null;
-      }
       const data = await this.plugin.loadData();
       const versionKey = currentVersion.replace(/\./g, "_");
       const hasCompletedThisUpgrade = (_c = (_b = (_a = data == null ? void 0 : data.upgradeHistory) == null ? void 0 : _a.completedUpgrades) == null ? void 0 : _b[versionKey]) == null ? void 0 : _c.completed;
-      console.debug(`[NEXUS-DEBUG] Upgrade history check for '${versionKey}': ${hasCompletedThisUpgrade}`);
       if (hasCompletedThisUpgrade) {
-        console.debug(`[NEXUS-DEBUG] Upgrade already completed - SKIPPING ALL`);
-        logger3.info(`Already completed upgrade to ${currentVersion}, skipping`);
         return null;
       }
       const isFreshInstall = await this.detectFreshInstall();
-      console.debug(`[NEXUS-DEBUG] Fresh install detection: ${isFreshInstall}`);
       if (isFreshInstall) {
-        console.debug(`[NEXUS-DEBUG] Fresh install detected - marking as complete without upgrades`);
         await this.markUpgradeComplete(currentVersion);
-        logger3.info(`Fresh installation detected - marked as up-to-date v${currentVersion}`);
         return {
           success: true,
           upgradesExecuted: 0,
           upgradesSkipped: 0,
           upgradesFailed: 0,
+          isFreshInstall: true,
+          // Flag for showing installation welcome dialog
           results: []
         };
       }
+      if (previousVersion === currentVersion) {
+        return null;
+      }
       const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
-      console.debug(`[NEXUS-DEBUG] Upgrade chain:`, upgradeChain.map((u) => u.version));
       if (upgradeChain.length === 0) {
-        console.debug(`[NEXUS-DEBUG] No upgrades needed - marking complete`);
         await this.markUpgradeComplete(currentVersion);
         await this.showUpgradeDialog(currentVersion, previousVersion, []);
         return {
@@ -8912,17 +13276,29 @@ var IncrementalUpgradeManager = class {
           results: []
         };
       }
-      console.debug(`[NEXUS-DEBUG] Need to execute ${upgradeChain.length} upgrades - showing dialog first`);
-      await this.showUpgradeDialog(currentVersion, previousVersion, upgradeChain);
-      console.debug(`[NEXUS-DEBUG] Executing upgrades with modal...`);
       const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
-      console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);
       await this.markUpgradeComplete(currentVersion);
+      try {
+        await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
+      } catch (e) {
+        logger5.error("Failed to write upgrade report:", e);
+      }
+      await this.showUpgradeCompleteDialog(currentVersion);
       return result;
     } catch (error) {
-      console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
-      logger3.error("Error during incremental upgrade:", error);
-      new import_obsidian16.Notice("Upgrade failed - see console for details");
+      logger5.error("Incremental upgrade failed:", error);
+      if (error instanceof Error && error.message === "User cancelled upgrade") {
+        new import_obsidian26.Notice("Migration cancelled. Please complete the migration before importing.");
+        return {
+          success: false,
+          upgradesExecuted: 0,
+          upgradesSkipped: 0,
+          upgradesFailed: 0,
+          results: []
+        };
+      }
+      logger5.error("Error during incremental upgrade:", error);
+      new import_obsidian26.Notice("Upgrade failed - see console for details");
       return {
         success: false,
         upgradesExecuted: 0,
@@ -8940,13 +13316,13 @@ var IncrementalUpgradeManager = class {
       const data = await this.plugin.loadData();
       const hasLegacyData = !!((data == null ? void 0 : data.conversationCatalog) && Object.keys(data.conversationCatalog).length > 0);
       const hasImportedArchives = !!((data == null ? void 0 : data.importedArchives) && Object.keys(data.importedArchives).length > 0);
-      const archiveFolder = this.plugin.settings.archiveFolder;
+      const conversationFolder = this.plugin.settings.conversationFolder;
       const allFiles = this.plugin.app.vault.getMarkdownFiles();
       const existingConversations = allFiles.filter((file) => {
         var _a;
-        if (!file.path.startsWith(archiveFolder))
+        if (!file.path.startsWith(conversationFolder))
           return false;
-        const relativePath = file.path.substring(archiveFolder.length + 1);
+        const relativePath = file.path.substring(conversationFolder.length + 1);
         if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
           return false;
         }
@@ -8955,15 +13331,9 @@ var IncrementalUpgradeManager = class {
       });
       const hasExistingConversations = existingConversations.length > 0;
       const isFreshInstall = !hasLegacyData && !hasImportedArchives && !hasExistingConversations;
-      console.debug(`[NEXUS-DEBUG] Fresh install detection:`, {
-        hasLegacyData,
-        hasImportedArchives,
-        hasExistingConversations,
-        isFreshInstall
-      });
       return isFreshInstall;
     } catch (error) {
-      console.error(`[NEXUS-DEBUG] Error detecting fresh install:`, error);
+      logger5.error("Error detecting fresh install:", error);
       return false;
     }
   }
@@ -9001,7 +13371,6 @@ var IncrementalUpgradeManager = class {
     let upgradesFailed = 0;
     try {
       for (const upgrade of upgradeChain) {
-        console.debug(`[NEXUS-DEBUG] Executing upgrade ${upgrade.version}...`);
         const context = await this.createUpgradeContext(upgrade, fromVersion, toVersion);
         const automaticResults = await this.executeOperationsWithProgress(
           upgrade.automaticOperations,
@@ -9009,7 +13378,6 @@ var IncrementalUpgradeManager = class {
           upgrade.version,
           progressModal
         );
-        console.debug(`[NEXUS-DEBUG] Automatic operations for ${upgrade.version}:`, automaticResults);
         const manualResults = { success: true, results: [] };
         results.push({
           version: upgrade.version,
@@ -9020,7 +13388,6 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
-      new import_obsidian16.Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -9029,7 +13396,7 @@ var IncrementalUpgradeManager = class {
         results
       };
     } catch (error) {
-      console.error(`[NEXUS-DEBUG] Modal upgrade execution failed:`, error);
+      logger5.error("Modal upgrade execution failed:", error);
       progressModal.showError(`Upgrade failed: ${error}`);
       throw error;
     }
@@ -9125,17 +13492,11 @@ var IncrementalUpgradeManager = class {
    * Execute single operation with progress callbacks
    */
   async executeOperationWithProgress(operation, context, modalOperationId, progressModal) {
-    var _a;
     const result = await operation.execute(context);
-    const steps = 5;
-    for (let i = 1; i <= steps; i++) {
-      progressModal.updateOperation(modalOperationId, {
-        status: "running",
-        progress: i / steps * 100,
-        currentDetail: ((_a = result.details) == null ? void 0 : _a.processed) ? `Processing... ${i}/${steps}` : void 0
-      });
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
+    progressModal.updateOperation(modalOperationId, {
+      status: "running",
+      progress: 100
+    });
     return result;
   }
   /**
@@ -9174,10 +13535,149 @@ var IncrementalUpgradeManager = class {
       data.versionTrackingEnabled = true;
     }
     await this.plugin.saveData(data);
-    logger3.info(`Marked overall upgrade to ${version} as complete`);
+  }
+  /**
+   * Write a consolidated upgrade report per run
+   */
+  async writeUpgradeReport(fromVersion, toVersion, upgradeChain, result) {
+    var _a, _b, _c, _d, _e;
+    const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
+    const upgradesFolder = `${reportRoot}/Upgrades`;
+    const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
+    if (!folderResult.success) {
+      logger5.error(`\u274C Failed to create folder: ${folderResult.error}`);
+      throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
+    }
+    const now = new Date();
+    const pad = /* @__PURE__ */ __name((n) => n.toString().padStart(2, "0"), "pad");
+    const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const fileName = `${ts} - Upgrade to ${toVersion}.md`;
+    const filePath = `${upgradesFolder}/${fileName}`;
+    const opsByVersion = {};
+    for (const up of upgradeChain) {
+      opsByVersion[up.version] = {};
+      for (const op of up.automaticOperations) {
+        opsByVersion[up.version][op.id] = op.name;
+      }
+    }
+    const readmeUrl = `${GITHUB.REPO_BASE}#readme`;
+    const issuesUrl = `${GITHUB.REPO_BASE}/issues`;
+    const totalVersions = result.results.length;
+    const totalOps = result.results.reduce((acc, v) => {
+      var _a2, _b2;
+      return acc + (((_b2 = (_a2 = v.automaticResults) == null ? void 0 : _a2.results) == null ? void 0 : _b2.length) || 0);
+    }, 0);
+    let md = `# Upgrade to v${toVersion}
+
+`;
+    md += `From v${fromVersion} \u2192 v${toVersion}
+
+`;
+    md += `- Versions processed: ${totalVersions}
+`;
+    md += `- Operations executed: ${totalOps}
+
+`;
+    md += `See the latest README and release notes: ${readmeUrl}
+
+`;
+    md += `Report or review issues: ${issuesUrl}
+
+`;
+    for (const entry of result.results) {
+      md += `## ${entry.version}
+
+`;
+      const ops = ((_a = entry.automaticResults) == null ? void 0 : _a.results) || [];
+      if (!ops.length) {
+        md += `- No automatic operations
+
+`;
+        continue;
+      }
+      for (const opRes of ops) {
+        const opId = opRes.operationId;
+        const opName = ((_b = opsByVersion[entry.version]) == null ? void 0 : _b[opId]) || opId;
+        const ok = ((_c = opRes.result) == null ? void 0 : _c.success) === true;
+        const status = ok ? "\u2705" : "\u26A0\uFE0F";
+        const msg = ((_d = opRes.result) == null ? void 0 : _d.message) || "";
+        md += `### ${opName} ${status}
+
+`;
+        if (msg)
+          md += `${msg}
+
+`;
+        const details = (_e = opRes.result) == null ? void 0 : _e.details;
+        if (details) {
+          if (Array.isArray(details)) {
+            if (details.length > 0) {
+              for (const item of details) {
+                if (typeof item === "string") {
+                  md += `${item}
+`;
+                }
+              }
+              md += `
+`;
+            }
+          } else if (typeof details === "object") {
+            const keys = Object.keys(details);
+            if (keys.length > 0 && !keys.every((k) => /^\d+$/.test(k))) {
+              md += `**Statistics:**
+
+`;
+              for (const key of keys) {
+                const value = details[key];
+                md += `- ${key}: ${String(value)}
+`;
+              }
+              md += `
+`;
+            }
+          }
+        }
+      }
+    }
+    try {
+      await this.plugin.app.vault.create(filePath, md);
+    } catch (error) {
+      logger5.error(`\u274C Failed to write report file:`, error);
+      logger5.error(`Error details:`, {
+        message: error instanceof Error ? error.message : String(error),
+        filePath,
+        contentLength: md.length
+      });
+      throw error;
+    }
+  }
+  /**
+   * Show upgrade complete dialog AFTER migrations
+   * Displays Ko-fi + What's New + Improvements + Bug Fixes
+   */
+  async showUpgradeCompleteDialog(version) {
+    try {
+      const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
+      if (isV130OrLater) {
+        const { UpgradeCompleteModal: UpgradeCompleteModal2 } = await Promise.resolve().then(() => (init_upgrade_complete_modal(), upgrade_complete_modal_exports));
+        await new Promise((resolve) => {
+          const modal = new UpgradeCompleteModal2(this.plugin.app, this.plugin, version);
+          modal.onClose = () => {
+            resolve();
+          };
+          modal.open();
+        });
+      } else {
+        new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+      }
+    } catch (error) {
+      logger5.error("Error showing upgrade complete dialog:", error);
+      new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+    }
   }
   /**
    * Show upgrade dialog - INFORMATION ONLY (no cancel)
+   * @deprecated - No longer used in v1.3.0+, kept for compatibility
    */
   async showUpgradeDialog(currentVersion, lastVersion, upgradeChain) {
     try {
@@ -9204,7 +13704,16 @@ var IncrementalUpgradeManager = class {
       }
       if (upgradeChain.length > 0) {
         const isV120Upgrade = upgradeChain.some((upgrade) => upgrade.version === "1.2.0");
-        if (isV120Upgrade) {
+        const isV130Upgrade = upgradeChain.some((upgrade) => upgrade.version === "1.3.0");
+        if (isV130Upgrade) {
+          const { NexusUpgradeModal130: NexusUpgradeModal1302 } = await Promise.resolve().then(() => (init_upgrade_modal_1_3_0(), upgrade_modal_1_3_0_exports));
+          const userChoice = await new Promise((resolve) => {
+            new NexusUpgradeModal1302(this.plugin.app, this.plugin, "1.3.0", resolve).open();
+          });
+          if (userChoice !== "ok") {
+            throw new Error("User cancelled upgrade");
+          }
+        } else if (isV120Upgrade) {
           const { NexusUpgradeModal: NexusUpgradeModal2 } = (init_upgrade_1_2_0(), __toCommonJS(upgrade_1_2_0_exports));
           await new Promise((resolve) => {
             new NexusUpgradeModal2(this.plugin.app, this.plugin, "1.2.0", resolve).open();
@@ -9231,8 +13740,8 @@ var IncrementalUpgradeManager = class {
         );
       }
     } catch (error) {
-      logger3.error("Error showing upgrade dialog:", error);
-      new import_obsidian16.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      logger5.error("Error showing upgrade dialog:", error);
+      new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
   }
   /**
@@ -9263,7 +13772,6 @@ var IncrementalUpgradeManager = class {
       completed: true
     };
     await this.plugin.saveData(data);
-    logger3.info(`Marked operation ${operationId} (v${version}) as completed`);
   }
   /**
    * Get documentation links
@@ -9301,9 +13809,26 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
       const match = response.text.match(overviewRegex);
       return match ? match[1].trim() : null;
     } catch (error) {
-      logger3.warn("Could not fetch release overview:", error);
+      logger5.warn("Could not fetch release overview:", error);
       return null;
     }
+  }
+  /**
+   * Compare two version strings
+   * Returns: -1 if v1 < v2, 0 if equal, 1 if v1 > v2
+   */
+  compareVersions(v1, v2) {
+    const parts1 = v1.split(".").map(Number);
+    const parts2 = v2.split(".").map(Number);
+    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+      const num1 = parts1[i] || 0;
+      const num2 = parts2[i] || 0;
+      if (num1 < num2)
+        return -1;
+      if (num1 > num2)
+        return 1;
+    }
+    return 0;
   }
   /**
    * Get manual operations status for settings UI
@@ -9344,13 +13869,14 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
     };
   }
 };
+__name(IncrementalUpgradeManager, "IncrementalUpgradeManager");
 
 // src/main.ts
 init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
-var import_obsidian17 = require("obsidian");
-var ProviderSelectionDialog = class extends import_obsidian17.Modal {
+var import_obsidian27 = require("obsidian");
+var ProviderSelectionDialog = class extends import_obsidian27.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
     this.selectedProvider = null;
@@ -9382,7 +13908,7 @@ var ProviderSelectionDialog = class extends import_obsidian17.Modal {
     contentEl.empty();
     contentEl.createEl("h2", { text: "Select Archive Provider" });
     this.providers.forEach((provider) => {
-      new import_obsidian17.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
+      new import_obsidian27.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
         button.setButtonText("Select").setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
@@ -9405,9 +13931,1886 @@ var ProviderSelectionDialog = class extends import_obsidian17.Modal {
     contentEl.empty();
   }
 };
+__name(ProviderSelectionDialog, "ProviderSelectionDialog");
+
+// src/dialogs/enhanced-file-selection-dialog.ts
+var import_obsidian28 = require("obsidian");
+var EnhancedFileSelectionDialog = class extends import_obsidian28.Modal {
+  constructor(app, provider, onFileSelectionComplete, plugin) {
+    super(app);
+    this.plugin = plugin;
+    this.selectedFiles = [];
+    this.importMode = "all";
+    this.dragCounter = 0;
+    this.lastImportMode = null;
+    this.provider = provider;
+    this.onFileSelectionComplete = onFileSelectionComplete;
+    this.setInitialImportMode();
+  }
+  onOpen() {
+    const { contentEl, modalEl, titleEl } = this;
+    contentEl.empty();
+    modalEl.addClass("nexus-file-selection-dialog");
+    contentEl.addClass("nexus-file-selection-dialog");
+    titleEl.setText(`Import ${this.provider.charAt(0).toUpperCase() + this.provider.slice(1)} Conversations`);
+    this.createImportModeSection(contentEl);
+    this.createFileSelectionArea(contentEl);
+    this.createFilePreviewArea(contentEl);
+    this.createActionButtons(contentEl);
+    this.addCustomStyles();
+  }
+  createImportModeSection(container) {
+    const section = container.createDiv("import-mode-section");
+    section.style.marginBottom = "20px";
+    const sectionTitle = section.createEl("h3", { text: "Import Mode" });
+    sectionTitle.style.marginTop = "0";
+    sectionTitle.style.marginBottom = "12px";
+    sectionTitle.style.fontSize = "1em";
+    const optionsContainer = section.createDiv("import-options-container");
+    optionsContainer.style.display = "grid";
+    optionsContainer.style.gridTemplateColumns = "1fr 1fr";
+    optionsContainer.style.gap = "12px";
+    const allOption = optionsContainer.createDiv("import-option-box");
+    allOption.style.padding = "14px 16px";
+    allOption.style.border = "1px solid var(--background-modifier-border)";
+    allOption.style.borderRadius = "6px";
+    allOption.style.cursor = "pointer";
+    allOption.style.transition = "all 0.2s";
+    allOption.style.display = "flex";
+    allOption.style.alignItems = "center";
+    allOption.style.gap = "10px";
+    allOption.style.backgroundColor = "var(--background-primary)";
+    if (this.importMode === "all") {
+      allOption.style.borderColor = "var(--interactive-accent)";
+      allOption.style.borderWidth = "2px";
+    }
+    const allRadio = allOption.createEl("input", { type: "radio" });
+    allRadio.name = "importMode";
+    allRadio.value = "all";
+    allRadio.checked = this.importMode === "all";
+    allRadio.id = "import-all";
+    allRadio.addEventListener("change", () => {
+      this.importMode = "all";
+      this.updateImportModeDescription();
+      this.updateImportModeBoxes();
+    });
+    const allContent = allOption.createDiv();
+    allContent.style.flex = "1";
+    const allLabel = allContent.createEl("label");
+    allLabel.htmlFor = "import-all";
+    allLabel.style.display = "block";
+    allLabel.style.fontWeight = "500";
+    allLabel.style.marginBottom = "4px";
+    allLabel.style.cursor = "pointer";
+    allLabel.style.color = "var(--text-normal)";
+    allLabel.textContent = "Import All";
+    const allDesc = allContent.createDiv();
+    allDesc.style.fontSize = "0.85em";
+    allDesc.style.color = "var(--text-muted)";
+    allDesc.textContent = "Import all conversations (faster)";
+    allOption.addEventListener("click", () => {
+      allRadio.checked = true;
+      this.importMode = "all";
+      this.updateImportModeDescription();
+      this.updateImportModeBoxes();
+    });
+    const selectOption = optionsContainer.createDiv("import-option-box");
+    selectOption.style.padding = "14px 16px";
+    selectOption.style.border = "1px solid var(--background-modifier-border)";
+    selectOption.style.borderRadius = "6px";
+    selectOption.style.cursor = "pointer";
+    selectOption.style.transition = "all 0.2s";
+    selectOption.style.display = "flex";
+    selectOption.style.alignItems = "center";
+    selectOption.style.gap = "10px";
+    selectOption.style.backgroundColor = "var(--background-primary)";
+    if (this.importMode === "selective") {
+      selectOption.style.borderColor = "var(--interactive-accent)";
+      selectOption.style.borderWidth = "2px";
+    }
+    const selectRadio = selectOption.createEl("input", { type: "radio" });
+    selectRadio.name = "importMode";
+    selectRadio.value = "selective";
+    selectRadio.checked = this.importMode === "selective";
+    selectRadio.id = "import-selective";
+    selectRadio.addEventListener("change", () => {
+      this.importMode = "selective";
+      this.updateImportModeDescription();
+      this.updateImportModeBoxes();
+    });
+    const selectContent = selectOption.createDiv();
+    selectContent.style.flex = "1";
+    const selectLabel = selectContent.createEl("label");
+    selectLabel.htmlFor = "import-selective";
+    selectLabel.style.display = "block";
+    selectLabel.style.fontWeight = "500";
+    selectLabel.style.marginBottom = "4px";
+    selectLabel.style.cursor = "pointer";
+    selectLabel.style.color = "var(--text-normal)";
+    selectLabel.textContent = "Select Specific";
+    const selectDesc = selectContent.createDiv();
+    selectDesc.style.fontSize = "0.85em";
+    selectDesc.style.color = "var(--text-muted)";
+    selectDesc.textContent = "Preview and choose conversations";
+    selectOption.addEventListener("click", () => {
+      selectRadio.checked = true;
+      this.importMode = "selective";
+      this.updateImportModeDescription();
+      this.updateImportModeBoxes();
+    });
+  }
+  updateImportModeBoxes() {
+    const boxes = this.contentEl.querySelectorAll(".import-option-box");
+    boxes.forEach((box, index) => {
+      const isSelected = index === 0 && this.importMode === "all" || index === 1 && this.importMode === "selective";
+      if (isSelected) {
+        box.style.borderColor = "var(--interactive-accent)";
+        box.style.borderWidth = "2px";
+      } else {
+        box.style.borderColor = "var(--background-modifier-border)";
+        box.style.borderWidth = "1px";
+      }
+    });
+  }
+  createFileSelectionArea(container) {
+    const section = container.createDiv("file-selection-section");
+    section.style.marginBottom = "20px";
+    const sectionTitle = section.createEl("h3", { text: "Select Files" });
+    sectionTitle.style.marginBottom = "10px";
+    sectionTitle.style.fontSize = "1em";
+    const dropZone = section.createDiv("drop-zone");
+    dropZone.style.border = "2px dashed var(--background-modifier-border)";
+    dropZone.style.borderRadius = "8px";
+    dropZone.style.padding = "24px 20px";
+    dropZone.style.textAlign = "center";
+    dropZone.style.cursor = "pointer";
+    dropZone.style.transition = "all 0.2s ease";
+    const dropIcon = dropZone.createEl("div");
+    dropIcon.style.fontSize = "48px";
+    dropIcon.style.marginBottom = "15px";
+    dropIcon.textContent = "\u{1F4C1}";
+    const dropText = dropZone.createEl("div");
+    dropText.style.fontSize = "16px";
+    dropText.style.marginBottom = "10px";
+    dropText.textContent = "Drop ZIP files here or click to browse";
+    const dropSubtext = dropZone.createEl("div");
+    dropSubtext.style.fontSize = "14px";
+    dropSubtext.style.color = "var(--text-muted)";
+    dropSubtext.textContent = "Supports multiple file selection";
+    const fileInput = section.createEl("input", { type: "file" });
+    fileInput.accept = ".zip";
+    fileInput.multiple = true;
+    fileInput.style.display = "none";
+    dropZone.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", (e) => this.handleFileSelection(e));
+    dropZone.addEventListener("dragover", (e) => this.handleDragOver(e, dropZone));
+    dropZone.addEventListener("dragenter", (e) => this.handleDragEnter(e, dropZone));
+    dropZone.addEventListener("dragleave", (e) => this.handleDragLeave(e, dropZone));
+    dropZone.addEventListener("drop", (e) => this.handleDrop(e, dropZone));
+  }
+  createFilePreviewArea(container) {
+    const section = container.createDiv("file-preview-section");
+    section.id = "file-preview-section";
+    section.style.marginBottom = "20px";
+    section.style.display = "none";
+    const sectionTitle = section.createEl("h3", { text: "Selected Files" });
+    sectionTitle.style.marginBottom = "15px";
+    const fileListContainer = section.createDiv("file-list-container");
+    fileListContainer.style.maxHeight = "300px";
+    fileListContainer.style.overflowY = "auto";
+    fileListContainer.style.border = "1px solid var(--background-modifier-border)";
+    fileListContainer.style.borderRadius = "6px";
+    fileListContainer.style.padding = "8px";
+    const fileList = fileListContainer.createDiv("file-list");
+    fileList.id = "file-list";
+  }
+  createActionButtons(container) {
+    const buttonContainer = container.createDiv("action-buttons");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.gap = "10px";
+    buttonContainer.style.marginTop = "20px";
+    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelButton.style.padding = "8px 16px";
+    cancelButton.addEventListener("click", () => this.close());
+    const importButton = buttonContainer.createEl("button", { text: "Continue" });
+    importButton.id = "import-button";
+    importButton.style.padding = "8px 16px";
+    importButton.classList.add("mod-cta");
+    importButton.disabled = true;
+    importButton.addEventListener("click", () => this.handleImport());
+  }
+  handleFileSelection(event) {
+    const input = event.target;
+    if (input.files) {
+      this.selectedFiles = Array.from(input.files);
+      this.updateFilePreview();
+      this.updateImportButton();
+    }
+  }
+  handleDragOver(event, dropZone) {
+    event.preventDefault();
+    dropZone.style.borderColor = "var(--interactive-accent)";
+    dropZone.style.backgroundColor = "var(--background-modifier-hover)";
+  }
+  handleDragEnter(event, dropZone) {
+    event.preventDefault();
+    this.dragCounter++;
+  }
+  handleDragLeave(event, dropZone) {
+    event.preventDefault();
+    this.dragCounter--;
+    if (this.dragCounter === 0) {
+      dropZone.style.borderColor = "var(--background-modifier-border)";
+      dropZone.style.backgroundColor = "transparent";
+    }
+  }
+  handleDrop(event, dropZone) {
+    var _a;
+    event.preventDefault();
+    this.dragCounter = 0;
+    dropZone.style.borderColor = "var(--background-modifier-border)";
+    dropZone.style.backgroundColor = "transparent";
+    if ((_a = event.dataTransfer) == null ? void 0 : _a.files) {
+      const files = Array.from(event.dataTransfer.files).filter(
+        (file) => file.name.toLowerCase().endsWith(".zip")
+      );
+      if (files.length > 0) {
+        this.selectedFiles = files;
+        this.updateFilePreview();
+        this.updateImportButton();
+      }
+    }
+  }
+  updateFilePreview() {
+    const previewSection = this.contentEl.querySelector("#file-preview-section");
+    const fileList = this.contentEl.querySelector("#file-list");
+    if (this.selectedFiles.length > 0) {
+      previewSection.style.display = "block";
+      fileList.empty();
+      this.selectedFiles.forEach((file, index) => {
+        const fileItem = fileList.createDiv("file-item");
+        fileItem.style.display = "flex";
+        fileItem.style.justifyContent = "space-between";
+        fileItem.style.alignItems = "center";
+        fileItem.style.padding = "8px 12px";
+        fileItem.style.border = "1px solid var(--background-modifier-border)";
+        fileItem.style.borderRadius = "4px";
+        fileItem.style.marginBottom = "8px";
+        const fileInfo = fileItem.createDiv();
+        fileInfo.style.display = "flex";
+        fileInfo.style.flexDirection = "column";
+        const fileName = fileInfo.createEl("span");
+        fileName.textContent = file.name;
+        fileName.style.fontWeight = "500";
+        const fileSize = fileInfo.createEl("span");
+        fileSize.textContent = this.formatFileSize(file.size);
+        fileSize.style.fontSize = "0.9em";
+        fileSize.style.color = "var(--text-muted)";
+        const removeButton = fileItem.createEl("button", { text: "Remove" });
+        removeButton.style.padding = "4px 8px";
+        removeButton.style.fontSize = "0.9em";
+        removeButton.addEventListener("click", () => this.removeFile(index));
+      });
+    } else {
+      previewSection.style.display = "none";
+    }
+  }
+  removeFile(index) {
+    this.selectedFiles.splice(index, 1);
+    this.updateFilePreview();
+    this.updateImportButton();
+  }
+  updateImportButton() {
+    const importButton = this.contentEl.querySelector("#import-button");
+    importButton.disabled = this.selectedFiles.length === 0;
+  }
+  updateImportModeDescription() {
+  }
+  async handleImport() {
+    var _a, _b;
+    if (this.selectedFiles.length > 0) {
+      if ((_b = (_a = this.plugin) == null ? void 0 : _a.settings) == null ? void 0 : _b.rememberLastImportMode) {
+        this.plugin.settings.defaultImportMode = this.importMode;
+        await this.plugin.saveSettings();
+      }
+      const result = {
+        files: this.selectedFiles,
+        mode: this.importMode,
+        provider: this.provider
+      };
+      this.close();
+      this.onFileSelectionComplete(result);
+    }
+  }
+  setInitialImportMode() {
+    var _a;
+    if (!((_a = this.plugin) == null ? void 0 : _a.settings)) {
+      this.importMode = "all";
+      return;
+    }
+    if (this.plugin.settings.rememberLastImportMode && this.lastImportMode) {
+      this.importMode = this.lastImportMode;
+    } else {
+      this.importMode = this.plugin.settings.defaultImportMode || "all";
+    }
+  }
+  formatFileSize(bytes) {
+    if (bytes === 0)
+      return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+  addCustomStyles() {
+    const style = document.createElement("style");
+    style.textContent = `
+            /* Modal sizing - wider and responsive */
+            .modal.nexus-file-selection-dialog {
+                max-width: min(800px, 90vw) !important;
+                width: min(800px, 90vw) !important;
+                height: auto !important;
+                padding: 0 !important;
+            }
+
+            /* Modal title spacing */
+            .modal.nexus-file-selection-dialog .modal-title {
+                padding: 16px 24px !important;
+                margin: 0 !important;
+            }
+
+            .modal.nexus-file-selection-dialog .modal-content {
+                max-width: 100% !important;
+                width: 100% !important;
+                max-height: 85vh;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                padding: 20px 24px 24px 24px;
+            }
+
+            /* Import mode boxes hover effect */
+            .nexus-file-selection-dialog .import-option-box:hover {
+                background-color: var(--background-modifier-hover);
+            }
+
+            /* Drop zone hover effect */
+            .nexus-file-selection-dialog .drop-zone:hover {
+                border-color: var(--interactive-accent);
+                background-color: var(--background-modifier-hover);
+            }
+
+            /* File list container with custom scrollbar */
+            .nexus-file-selection-dialog .file-list-container {
+                scrollbar-width: thin;
+                scrollbar-color: var(--background-modifier-border) transparent;
+            }
+
+            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar {
+                width: 10px;
+            }
+
+            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-thumb {
+                background-color: var(--background-modifier-border);
+                border-radius: 5px;
+            }
+
+            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-thumb:hover {
+                background-color: var(--text-muted);
+            }
+        `;
+    document.head.appendChild(style);
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+__name(EnhancedFileSelectionDialog, "EnhancedFileSelectionDialog");
+
+// src/dialogs/conversation-selection-dialog.ts
+var import_obsidian29 = require("obsidian");
+var ConversationSelectionDialog = class extends import_obsidian29.Modal {
+  // Information about analysis and filtering
+  constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
+    var _a, _b;
+    super(app);
+    this.onSelectionComplete = onSelectionComplete;
+    this.plugin = plugin;
+    this.analysisInfo = analysisInfo;
+    const pageSize = ((_a = plugin == null ? void 0 : plugin.settings) == null ? void 0 : _a.lastConversationsPerPage) || 50;
+    this.state = {
+      allConversations: conversations,
+      filteredConversations: conversations,
+      selectedIds: /* @__PURE__ */ new Set(),
+      pagination: {
+        pageSize,
+        currentPage: 1,
+        totalPages: Math.ceil(conversations.length / pageSize),
+        totalItems: conversations.length
+      },
+      sort: {
+        field: "updateTime",
+        direction: "desc"
+      },
+      filter: {
+        existenceStatus: "all"
+        // Default to show all conversations
+      },
+      isLoading: false
+    };
+    if ((_b = plugin == null ? void 0 : plugin.settings) == null ? void 0 : _b.autoSelectAllOnOpen) {
+      conversations.forEach((conv) => {
+        this.state.selectedIds.add(conv.id);
+      });
+    }
+    this.applyFiltersAndSort();
+  }
+  onOpen() {
+    const { contentEl, modalEl, titleEl } = this;
+    contentEl.empty();
+    modalEl.addClass("nexus-conversation-selection-dialog");
+    contentEl.addClass("nexus-conversation-selection-dialog");
+    titleEl.setText("Select Conversations to Import");
+    this.createSummarySection(contentEl);
+    this.createControlsSection(contentEl);
+    this.createConversationListSection(contentEl);
+    this.createPaginationSection(contentEl);
+    this.createActionButtons(contentEl);
+    this.addCustomStyles();
+    this.renderConversationList();
+    this.updateSummary();
+    this.updatePagination();
+  }
+  createSummarySection(container) {
+    const section = container.createDiv("summary-section");
+    section.id = "conversation-summary";
+    section.style.marginBottom = "20px";
+    section.style.display = "grid";
+    section.style.gridTemplateColumns = "repeat(4, 1fr)";
+    section.style.gap = "12px";
+  }
+  createControlsSection(container) {
+    const section = container.createDiv("controls-section");
+    section.style.marginBottom = "20px";
+    section.style.display = "flex";
+    section.style.gap = "12px";
+    section.style.alignItems = "center";
+    const selectAllBtn = section.createEl("button", { text: "Select All" });
+    selectAllBtn.style.padding = "8px 16px";
+    selectAllBtn.style.whiteSpace = "nowrap";
+    selectAllBtn.addEventListener("click", () => {
+      this.state.filteredConversations.forEach((conv) => {
+        this.state.selectedIds.add(conv.id);
+      });
+      this.renderConversationList();
+      this.updateSummary();
+    });
+    const selectNoneBtn = section.createEl("button", { text: "Select None" });
+    selectNoneBtn.style.padding = "8px 16px";
+    selectNoneBtn.style.whiteSpace = "nowrap";
+    selectNoneBtn.addEventListener("click", () => {
+      this.state.selectedIds.clear();
+      this.renderConversationList();
+      this.updateSummary();
+    });
+    const searchInput = section.createEl("input", { type: "text" });
+    searchInput.placeholder = "Search conversations...";
+    searchInput.style.flex = "1";
+    searchInput.style.minWidth = "200px";
+    searchInput.style.padding = "8px 12px";
+    searchInput.style.border = "1px solid var(--background-modifier-border)";
+    searchInput.style.borderRadius = "4px";
+    searchInput.addEventListener("input", (e) => {
+      const target = e.target;
+      this.state.filter.searchTerm = target.value;
+      this.applyFiltersAndSort();
+      this.renderConversationList();
+      this.updateSummary();
+      this.updatePagination();
+    });
+    const statusLabel = section.createEl("label");
+    statusLabel.textContent = "Status:";
+    statusLabel.style.marginRight = "4px";
+    statusLabel.style.fontSize = "14px";
+    statusLabel.style.whiteSpace = "nowrap";
+    const statusSelect = section.createEl("select");
+    statusSelect.style.padding = "8px 12px";
+    statusSelect.style.paddingRight = "28px";
+    statusSelect.style.border = "1px solid var(--background-modifier-border)";
+    statusSelect.style.borderRadius = "4px";
+    statusSelect.style.fontSize = "14px";
+    statusSelect.style.backgroundColor = "var(--background-primary)";
+    statusSelect.style.color = "var(--text-normal)";
+    statusSelect.classList.add("nexus-custom-select");
+    const statusOptions = [
+      { value: "all", text: "All" },
+      { value: "new", text: "New" },
+      { value: "updated", text: "Updated" },
+      { value: "unchanged", text: "Unchanged" }
+    ];
+    statusOptions.forEach((option) => {
+      const optionEl = statusSelect.createEl("option");
+      optionEl.value = option.value;
+      optionEl.textContent = option.text;
+    });
+    statusSelect.value = this.state.filter.existenceStatus || "all";
+    statusSelect.addEventListener("change", (e) => {
+      const target = e.target;
+      this.state.filter.existenceStatus = target.value;
+      this.applyFiltersAndSort();
+      this.renderConversationList();
+      this.updateSummary();
+      this.updatePagination();
+    });
+    const pageSizeLabel = section.createEl("label");
+    pageSizeLabel.textContent = "Show:";
+    pageSizeLabel.style.marginRight = "4px";
+    pageSizeLabel.style.fontSize = "14px";
+    pageSizeLabel.style.whiteSpace = "nowrap";
+    const pageSizeSelect = section.createEl("select");
+    pageSizeSelect.style.padding = "8px 12px";
+    pageSizeSelect.style.paddingRight = "28px";
+    pageSizeSelect.style.border = "1px solid var(--background-modifier-border)";
+    pageSizeSelect.style.borderRadius = "4px";
+    pageSizeSelect.style.fontSize = "14px";
+    pageSizeSelect.style.backgroundColor = "var(--background-primary)";
+    pageSizeSelect.style.color = "var(--text-normal)";
+    pageSizeSelect.classList.add("nexus-custom-select");
+    const pageSizeOptions = [10, 20, 50, 100];
+    pageSizeOptions.forEach((size) => {
+      const optionEl = pageSizeSelect.createEl("option");
+      optionEl.value = size.toString();
+      optionEl.textContent = size.toString();
+    });
+    pageSizeSelect.value = this.state.pagination.pageSize.toString();
+    pageSizeSelect.addEventListener("change", async (e) => {
+      const target = e.target;
+      const newPageSize = parseInt(target.value);
+      this.state.pagination.pageSize = newPageSize;
+      this.state.pagination.currentPage = 1;
+      if (this.plugin) {
+        this.plugin.settings.lastConversationsPerPage = newPageSize;
+        await this.plugin.saveSettings();
+      }
+      this.updatePagination();
+      this.renderConversationList();
+    });
+  }
+  createConversationListSection(container) {
+    const section = container.createDiv("conversation-list-section");
+    section.style.marginBottom = "20px";
+    const tableContainer = section.createDiv("table-container");
+    tableContainer.classList.add("nexus-table-container");
+    const table = tableContainer.createEl("table");
+    table.id = "conversation-table";
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+    const thead = table.createEl("thead");
+    const headerRow = thead.createEl("tr");
+    headerRow.style.backgroundColor = "var(--background-secondary)";
+    headerRow.style.position = "sticky";
+    headerRow.style.top = "0";
+    headerRow.style.zIndex = "10";
+    const headers = [
+      { text: "", width: "40px", sortField: null },
+      // Checkbox - plus compact
+      { text: "Title", width: "45%", sortField: "title" },
+      // Plus d'espace
+      { text: "Created", width: "110px", sortField: "createTime" },
+      // Réduit
+      { text: "Updated", width: "110px", sortField: "updateTime" },
+      // Réduit
+      { text: "Messages", width: "80px", sortField: "messageCount" },
+      // Réduit
+      { text: "Status", width: "100px", sortField: null }
+      // Réduit
+    ];
+    headers.forEach((header) => {
+      const th = headerRow.createEl("th");
+      th.style.padding = "12px 8px";
+      th.style.textAlign = "left";
+      th.style.borderBottom = "2px solid var(--background-modifier-border)";
+      th.style.fontWeight = "600";
+      th.style.backgroundColor = "var(--background-secondary)";
+      th.style.userSelect = "none";
+      if (header.width !== "auto") {
+        th.style.width = header.width;
+      }
+      if (header.sortField) {
+        th.style.cursor = "pointer";
+        th.classList.add("sortable-header");
+        const headerContent = th.createSpan();
+        headerContent.textContent = header.text;
+        const sortIndicator = th.createSpan();
+        sortIndicator.classList.add("sort-indicator");
+        sortIndicator.style.marginLeft = "6px";
+        sortIndicator.style.fontSize = "0.8em";
+        sortIndicator.style.opacity = "0.5";
+        if (this.state.sort.field === header.sortField) {
+          sortIndicator.textContent = this.state.sort.direction === "asc" ? "\u25B2" : "\u25BC";
+          sortIndicator.style.opacity = "1";
+        } else {
+          sortIndicator.textContent = "\u25BC";
+        }
+        th.addEventListener("click", () => {
+          if (this.state.sort.field === header.sortField) {
+            this.state.sort.direction = this.state.sort.direction === "asc" ? "desc" : "asc";
+          } else {
+            this.state.sort.field = header.sortField;
+            this.state.sort.direction = "desc";
+          }
+          this.applyFiltersAndSort();
+          this.renderConversationList();
+        });
+      } else {
+        th.textContent = header.text;
+      }
+    });
+    const tbody = table.createEl("tbody");
+    tbody.id = "conversation-table-body";
+  }
+  createPaginationSection(container) {
+    const section = container.createDiv("pagination-section");
+    section.id = "pagination-section";
+    section.style.marginBottom = "20px";
+    section.style.display = "flex";
+    section.style.justifyContent = "space-between";
+    section.style.alignItems = "center";
+    const pageInfo = section.createDiv();
+    pageInfo.id = "page-info";
+    pageInfo.style.fontSize = "0.9em";
+    pageInfo.style.color = "var(--text-muted)";
+    const pageControls = section.createDiv();
+    pageControls.id = "page-controls";
+    pageControls.style.display = "flex";
+    pageControls.style.gap = "8px";
+  }
+  createActionButtons(container) {
+    const buttonContainer = container.createDiv("action-buttons");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.gap = "10px";
+    buttonContainer.style.marginTop = "20px";
+    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    cancelButton.style.padding = "8px 16px";
+    cancelButton.addEventListener("click", () => this.close());
+    const importButton = buttonContainer.createEl("button", { text: "Import Selected" });
+    importButton.id = "import-selected-button";
+    importButton.style.padding = "8px 16px";
+    importButton.classList.add("mod-cta");
+    importButton.addEventListener("click", () => this.handleImportSelected());
+  }
+  applyFiltersAndSort() {
+    let filtered = [...this.state.allConversations];
+    if (this.state.filter.searchTerm) {
+      const searchTerm = this.state.filter.searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (conv) => conv.title.toLowerCase().includes(searchTerm)
+      );
+    }
+    if (this.state.filter.existenceStatus && this.state.filter.existenceStatus !== "all") {
+      filtered = filtered.filter(
+        (conv) => conv.existenceStatus === this.state.filter.existenceStatus
+      );
+    }
+    filtered.sort((a, b) => {
+      const { field, direction } = this.state.sort;
+      let aVal = a[field];
+      let bVal = b[field];
+      if (field === "title") {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+      if (aVal < bVal)
+        return direction === "asc" ? -1 : 1;
+      if (aVal > bVal)
+        return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+    this.state.filteredConversations = filtered;
+    this.updatePagination();
+  }
+  updatePagination() {
+    const totalItems = this.state.filteredConversations.length;
+    const totalPages = Math.ceil(totalItems / this.state.pagination.pageSize);
+    this.state.pagination = {
+      ...this.state.pagination,
+      totalItems,
+      totalPages,
+      currentPage: Math.min(this.state.pagination.currentPage, totalPages || 1)
+    };
+  }
+  renderConversationList() {
+    const tbody = this.contentEl.querySelector("#conversation-table-body");
+    if (!tbody)
+      return;
+    tbody.empty();
+    const { currentPage, pageSize } = this.state.pagination;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageConversations = this.state.filteredConversations.slice(startIndex, endIndex);
+    pageConversations.forEach((conversation) => {
+      const row = tbody.createEl("tr");
+      const checkboxCell = row.createEl("td");
+      const checkbox = checkboxCell.createEl("input", { type: "checkbox" });
+      checkbox.checked = this.state.selectedIds.has(conversation.id);
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          this.state.selectedIds.add(conversation.id);
+        } else {
+          this.state.selectedIds.delete(conversation.id);
+        }
+        this.updateSummary();
+      });
+      const titleCell = row.createEl("td");
+      titleCell.style.fontWeight = "500";
+      titleCell.textContent = conversation.title;
+      if (conversation.sourceFile) {
+        const sourceInfo = titleCell.createEl("div");
+        sourceInfo.style.fontSize = "0.8em";
+        sourceInfo.style.color = "var(--text-muted)";
+        sourceInfo.style.marginTop = "4px";
+        sourceInfo.textContent = `\u{1F4C1} ${conversation.sourceFile}`;
+      }
+      const createdCell = row.createEl("td");
+      createdCell.style.fontSize = "0.9em";
+      createdCell.textContent = this.formatDate(conversation.createTime);
+      const updatedCell = row.createEl("td");
+      updatedCell.style.fontSize = "0.9em";
+      updatedCell.textContent = this.formatDate(conversation.updateTime);
+      const messagesCell = row.createEl("td");
+      messagesCell.style.textAlign = "center";
+      messagesCell.textContent = conversation.messageCount.toString();
+      const statusCell = row.createEl("td");
+      statusCell.style.textAlign = "center";
+      const statusBadge = this.createStatusBadge(conversation);
+      statusCell.appendChild(statusBadge);
+    });
+    this.renderPaginationControls();
+  }
+  createStatusBadge(conversation) {
+    const badge = document.createElement("span");
+    badge.classList.add("status-badge");
+    switch (conversation.existenceStatus) {
+      case "new":
+        badge.textContent = "New";
+        badge.classList.add("status-new");
+        badge.title = "This conversation is not in your vault";
+        break;
+      case "updated":
+        badge.textContent = "Updated";
+        badge.classList.add("status-updated");
+        badge.title = `This conversation has newer content than your vault (${this.formatDate(conversation.existingUpdateTime || 0)} \u2192 ${this.formatDate(conversation.updateTime)})`;
+        break;
+      case "unchanged":
+        badge.textContent = "Unchanged";
+        badge.classList.add("status-unchanged");
+        badge.title = "This conversation is the same as in your vault";
+        break;
+      default:
+        badge.textContent = "Unknown";
+        badge.classList.add("status-unchanged");
+        break;
+    }
+    return badge;
+  }
+  renderPaginationControls() {
+    const pageInfo = this.contentEl.querySelector("#page-info");
+    const pageControls = this.contentEl.querySelector("#page-controls");
+    if (!pageInfo || !pageControls)
+      return;
+    const { currentPage, totalPages, totalItems, pageSize } = this.state.pagination;
+    const startItem = (currentPage - 1) * pageSize + 1;
+    const endItem = Math.min(currentPage * pageSize, totalItems);
+    pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} conversations`;
+    pageControls.empty();
+    const prevBtn = pageControls.createEl("button", { text: "Previous" });
+    prevBtn.disabled = currentPage <= 1;
+    prevBtn.style.padding = "6px 12px";
+    prevBtn.addEventListener("click", () => {
+      if (currentPage > 1) {
+        this.state.pagination.currentPage--;
+        this.renderConversationList();
+      }
+    });
+    const pageSpan = pageControls.createEl("span");
+    pageSpan.textContent = `Page ${currentPage} of ${totalPages}`;
+    pageSpan.style.padding = "6px 12px";
+    const nextBtn = pageControls.createEl("button", { text: "Next" });
+    nextBtn.disabled = currentPage >= totalPages;
+    nextBtn.style.padding = "6px 12px";
+    nextBtn.addEventListener("click", () => {
+      if (currentPage < totalPages) {
+        this.state.pagination.currentPage++;
+        this.renderConversationList();
+      }
+    });
+  }
+  updateSummary() {
+    const summary = this.contentEl.querySelector("#conversation-summary");
+    if (!summary)
+      return;
+    const selectedCount = this.state.selectedIds.size;
+    const totalCount = this.state.filteredConversations.length;
+    const statusCounts = {
+      new: 0,
+      updated: 0,
+      unchanged: 0,
+      unknown: 0
+    };
+    this.state.filteredConversations.forEach((conv) => {
+      const status = conv.existenceStatus || "unknown";
+      statusCounts[status]++;
+    });
+    summary.innerHTML = this.buildComprehensiveSummary(selectedCount, totalCount, statusCounts);
+    const importButton = this.contentEl.querySelector("#import-selected-button");
+    if (importButton) {
+      importButton.disabled = selectedCount === 0;
+      importButton.textContent = selectedCount > 0 ? `Import ${selectedCount} Selected` : "Import Selected";
+    }
+  }
+  buildComprehensiveSummary(selectedCount, totalCount, statusCounts) {
+    if (this.analysisInfo) {
+      const info = this.analysisInfo;
+      const uniqueCount = info.uniqueConversationsKept;
+      return `
+                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <div style="font-weight: 600; font-size: 1.4em; color: var(--text-accent);">${uniqueCount}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Unique Conversations</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <div style="font-weight: 600; font-size: 1.4em; color: var(--color-green);">${info.conversationsNew}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">New</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <div style="font-weight: 600; font-size: 1.4em; color: var(--color-orange);">${info.conversationsUpdated}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Updated</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <div style="font-weight: 600; font-size: 1.4em; color: var(--text-muted);">${info.conversationsIgnored}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Unchanged</div>
+                </div>
+            `;
+    }
+    return `
+            <div style="text-align: center; padding: 12px;">
+                <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> selected
+            </div>
+        `;
+  }
+  handleImportSelected() {
+    const selectedIds = Array.from(this.state.selectedIds);
+    if (selectedIds.length === 0) {
+      return;
+    }
+    const result = {
+      selectedIds,
+      totalAvailable: this.state.allConversations.length,
+      mode: "selective"
+    };
+    this.close();
+    this.onSelectionComplete(result);
+  }
+  formatDate(timestamp) {
+    if (!timestamp)
+      return "Unknown";
+    const date = new Date(timestamp * 1e3);
+    return date.toLocaleDateString();
+  }
+  addCustomStyles() {
+    const style = document.createElement("style");
+    style.textContent = `
+            /* Modal sizing - CRITICAL: Override Obsidian's default constraints */
+            .modal.nexus-conversation-selection-dialog {
+                max-width: min(1000px, 90vw) !important;
+                width: min(1000px, 90vw) !important;
+                height: auto !important;
+                padding: 0 !important;
+            }
+
+            /* Modal title spacing */
+            .modal.nexus-conversation-selection-dialog .modal-title {
+                padding: 16px 24px !important;
+                margin: 0 !important;
+            }
+
+            .modal.nexus-conversation-selection-dialog .modal-content {
+                max-width: 100% !important;
+                width: 100% !important;
+                max-height: 85vh;
+                overflow-y: visible;
+                overflow-x: visible;
+                display: flex;
+                flex-direction: column;
+                padding: 20px 24px 24px 24px;
+            }
+
+            /* Table container with independent scroll */
+            .nexus-conversation-selection-dialog .nexus-table-container {
+                max-height: 450px;
+                overflow-y: auto;
+                overflow-x: auto;
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Table styling */
+            .nexus-conversation-selection-dialog table {
+                font-size: 0.9em;
+                width: 100%;
+                min-width: 900px;
+                border-collapse: collapse;
+            }
+
+            /* Table header - sticky */
+            .nexus-conversation-selection-dialog thead {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            .nexus-conversation-selection-dialog th {
+                background-color: var(--background-secondary);
+                font-weight: 600;
+                white-space: nowrap;
+                position: sticky;
+                top: 0;
+            }
+
+            /* Sortable headers */
+            .nexus-conversation-selection-dialog th.sortable-header {
+                cursor: pointer;
+                user-select: none;
+                transition: background-color 0.2s;
+            }
+
+            .nexus-conversation-selection-dialog th.sortable-header:hover {
+                background-color: var(--background-modifier-hover);
+            }
+
+            .nexus-conversation-selection-dialog .sort-indicator {
+                display: inline-block;
+                margin-left: 6px;
+                font-size: 0.8em;
+                transition: opacity 0.2s;
+            }
+
+            /* Table cells */
+            .nexus-conversation-selection-dialog td {
+                padding: 10px 8px;
+                border-bottom: 1px solid var(--background-modifier-border);
+                vertical-align: middle;
+            }
+
+            /* Title column - allow wrapping */
+            .nexus-conversation-selection-dialog th:nth-child(2),
+            .nexus-conversation-selection-dialog td:nth-child(2) {
+                max-width: 500px;
+                white-space: normal;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            /* Other columns - no wrapping */
+            .nexus-conversation-selection-dialog th:not(:nth-child(2)),
+            .nexus-conversation-selection-dialog td:not(:nth-child(2)) {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Row hover effect */
+            .nexus-conversation-selection-dialog tbody tr:hover {
+                background-color: var(--background-modifier-hover);
+                cursor: pointer;
+            }
+
+            /* Checkbox column */
+            .nexus-conversation-selection-dialog td:first-child {
+                text-align: center;
+            }
+
+            /* Status badges */
+            .nexus-conversation-selection-dialog .status-badge {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 0.85em;
+                font-weight: 500;
+                text-align: center;
+            }
+
+            .nexus-conversation-selection-dialog .status-new {
+                background-color: var(--interactive-accent);
+                color: var(--text-on-accent);
+            }
+
+            .nexus-conversation-selection-dialog .status-updated {
+                background-color: var(--text-warning);
+                color: var(--text-on-accent);
+            }
+
+            .nexus-conversation-selection-dialog .status-unchanged {
+                background-color: var(--background-modifier-border);
+                color: var(--text-muted);
+            }
+
+            /* Select dropdowns */
+            .nexus-conversation-selection-dialog select {
+                font-size: 14px;
+                line-height: 1.4;
+                height: auto;
+                min-height: 36px;
+                background-color: var(--background-primary);
+                color: var(--text-normal);
+                font-family: var(--font-interface);
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+                padding: 8px 12px;
+                cursor: pointer;
+            }
+
+            .nexus-conversation-selection-dialog select option {
+                padding: 4px 8px;
+                line-height: 1.4;
+            }
+
+            /* Custom select dropdowns with theme-aware arrows */
+            .nexus-conversation-selection-dialog .nexus-custom-select {
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                padding-right: 32px;
+                background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+                                  linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+                background-position: calc(100% - 14px) calc(50% - 2px),
+                                     calc(100% - 10px) calc(50% - 2px);
+                background-size: 4px 4px,
+                                 4px 4px;
+                background-repeat: no-repeat;
+            }
+
+            /* Buttons */
+            .nexus-conversation-selection-dialog button {
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .nexus-conversation-selection-dialog button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Summary section */
+            .nexus-conversation-selection-dialog .summary-section {
+                background-color: var(--background-secondary);
+                padding: 12px 16px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+
+            /* Controls section */
+            .nexus-conversation-selection-dialog .controls-section {
+                background-color: var(--background-primary);
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid var(--background-modifier-border);
+            }
+
+            /* Scrollbar styling for table container */
+            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-track {
+                background: var(--background-secondary);
+                border-radius: 5px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-thumb {
+                background: var(--background-modifier-border);
+                border-radius: 5px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-thumb:hover {
+                background: var(--text-muted);
+            }
+        `;
+    document.head.appendChild(style);
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+__name(ConversationSelectionDialog, "ConversationSelectionDialog");
+
+// src/dialogs/installation-welcome-dialog.ts
+var import_obsidian30 = require("obsidian");
+init_kofi_support_box();
+var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
+  constructor(app, version) {
+    super(app);
+    this.version = version;
+  }
+  onOpen() {
+    const { contentEl, modalEl, titleEl } = this;
+    contentEl.empty();
+    modalEl.addClass("nexus-installation-welcome-dialog");
+    contentEl.addClass("nexus-installation-welcome-dialog");
+    modalEl.style.width = "600px";
+    modalEl.style.maxWidth = "90vw";
+    titleEl.setText(`Nexus AI Chat Importer ${this.version}`);
+    const welcomeSection = contentEl.createDiv("welcome-section");
+    welcomeSection.style.cssText = `
+            text-align: center;
+            margin-bottom: 24px;
+        `;
+    const welcomeIcon = welcomeSection.createDiv();
+    welcomeIcon.innerHTML = "\u{1F389}";
+    welcomeIcon.style.cssText = `
+            font-size: 48px;
+            margin-bottom: 12px;
+        `;
+    const welcomeTitle = welcomeSection.createEl("h2");
+    welcomeTitle.textContent = "Thank you for installing Nexus AI Chat Importer!";
+    welcomeTitle.style.cssText = `
+            margin: 0 0 12px 0;
+            color: var(--text-normal);
+        `;
+    const welcomeText = welcomeSection.createDiv();
+    welcomeText.textContent = "Import and manage your ChatGPT and Claude conversations directly in your Obsidian vault.";
+    welcomeText.style.cssText = `
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 1.05em;
+        `;
+    createKofiSupportBox(contentEl);
+    const resourcesSection = contentEl.createDiv("resources-section");
+    resourcesSection.style.cssText = `
+            margin-top: 24px;
+        `;
+    const resourcesTitle = resourcesSection.createEl("h3");
+    resourcesTitle.textContent = "Resources";
+    resourcesTitle.style.cssText = `
+            margin: 0 0 16px 0;
+            color: var(--text-normal);
+            font-size: 1.1em;
+        `;
+    const resourcesGrid = resourcesSection.createDiv("resources-grid");
+    resourcesGrid.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        `;
+    const resources = [
+      {
+        icon: "\u{1F4D6}",
+        title: "Documentation",
+        description: "Learn how to use the plugin",
+        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md"
+      },
+      {
+        icon: "\u{1F4DD}",
+        title: "Release Notes",
+        description: "What's new in this version",
+        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md"
+      },
+      {
+        icon: "\u{1F41B}",
+        title: "Report Issues",
+        description: "Found a bug? Let us know",
+        url: "https://github.com/superkikim/nexus-ai-chat-importer/issues"
+      },
+      {
+        icon: "\u{1F4AC}",
+        title: "Community Forum",
+        description: "Join the discussion",
+        url: "https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664"
+      }
+    ];
+    resources.forEach((resource) => {
+      const card = this.createResourceCard(resourcesGrid, resource);
+      resourcesGrid.appendChild(card);
+    });
+    const buttonContainer = contentEl.createDiv("button-container");
+    buttonContainer.style.cssText = `
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        `;
+    const closeButton = buttonContainer.createEl("button", {
+      text: "Get Started"
+    });
+    closeButton.addClass("mod-cta");
+    closeButton.style.cssText = `
+            padding: 10px 32px;
+            font-size: 1.05em;
+        `;
+    closeButton.addEventListener("click", () => {
+      this.close();
+    });
+  }
+  /**
+   * Create a resource card
+   */
+  createResourceCard(container, resource) {
+    const card = container.createEl("a", {
+      href: resource.url
+    });
+    card.style.cssText = `
+            display: block;
+            padding: 16px;
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-normal);
+            transition: all 0.2s;
+            background: var(--background-secondary);
+        `;
+    card.addEventListener("mouseenter", () => {
+      card.style.borderColor = "var(--interactive-accent)";
+      card.style.transform = "translateY(-2px)";
+      card.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+    });
+    card.addEventListener("mouseleave", () => {
+      card.style.borderColor = "var(--background-modifier-border)";
+      card.style.transform = "translateY(0)";
+      card.style.boxShadow = "none";
+    });
+    const icon = card.createDiv();
+    icon.innerHTML = resource.icon;
+    icon.style.cssText = `
+            font-size: 32px;
+            margin-bottom: 8px;
+        `;
+    const title = card.createDiv();
+    title.textContent = resource.title;
+    title.style.cssText = `
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-normal);
+        `;
+    const description = card.createDiv();
+    description.textContent = resource.description;
+    description.style.cssText = `
+            font-size: 0.9em;
+            color: var(--text-muted);
+            line-height: 1.4;
+        `;
+    card.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.open(resource.url, "_blank");
+    });
+    return card;
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+__name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
+
+// src/services/conversation-metadata-extractor.ts
+init_utils();
+var ConversationMetadataExtractor = class {
+  constructor(providerRegistry, plugin) {
+    this.providerRegistry = providerRegistry;
+    this.plugin = plugin;
+  }
+  /**
+   * Extract conversation metadata from ZIP file
+   */
+  async extractMetadataFromZip(zip, forcedProvider, sourceFileName, sourceFileIndex, existingConversations) {
+    try {
+      const rawConversations = await this.extractRawConversationsFromZip(zip);
+      if (rawConversations.length === 0) {
+        return [];
+      }
+      const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
+      if (provider === "unknown") {
+        throw new Error("Could not detect conversation provider from data structure");
+      }
+      const metadata = this.extractMetadataByProvider(rawConversations, provider);
+      return metadata.map((conv) => {
+        const enhanced = {
+          ...conv,
+          sourceFile: sourceFileName,
+          sourceFileIndex
+        };
+        if (existingConversations) {
+          const existing = existingConversations.get(conv.id);
+          if (existing) {
+            enhanced.existingUpdateTime = existing.updateTime;
+            const comparison = compareTimestampsIgnoringSeconds(conv.updateTime, existing.updateTime);
+            if (comparison > 0) {
+              enhanced.existenceStatus = "updated";
+              enhanced.hasNewerContent = true;
+            } else {
+              enhanced.existenceStatus = "unchanged";
+              enhanced.hasNewerContent = false;
+            }
+          } else {
+            enhanced.existenceStatus = "new";
+            enhanced.hasNewerContent = true;
+          }
+        } else {
+          enhanced.existenceStatus = "unknown";
+        }
+        return enhanced;
+      });
+    } catch (error) {
+      throw new Error(`Failed to extract conversation metadata: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  /**
+   * Extract raw conversation data from ZIP (provider-agnostic)
+   */
+  async extractRawConversationsFromZip(zip) {
+    const conversationsFile = zip.file("conversations.json");
+    if (!conversationsFile) {
+      throw new Error("Missing conversations.json file in ZIP archive");
+    }
+    const conversationsJson = await conversationsFile.async("string");
+    const parsedData = JSON.parse(conversationsJson);
+    if (Array.isArray(parsedData)) {
+      return parsedData;
+    } else if (parsedData.conversations && Array.isArray(parsedData.conversations)) {
+      return parsedData.conversations;
+    } else {
+      throw new Error("Invalid conversations.json structure");
+    }
+  }
+  /**
+   * Extract metadata based on detected provider
+   */
+  extractMetadataByProvider(rawConversations, provider) {
+    switch (provider) {
+      case "chatgpt":
+        return this.extractChatGPTMetadata(rawConversations);
+      case "claude":
+        return this.extractClaudeMetadata(rawConversations);
+      default:
+        throw new Error(`Unsupported provider: ${provider}`);
+    }
+  }
+  /**
+   * Extract metadata from ChatGPT conversations
+   */
+  extractChatGPTMetadata(conversations) {
+    return conversations.filter((chat) => {
+      if (!chat.id || chat.id.trim() === "") {
+        logger.warn("Skipping ChatGPT conversation with missing ID:", chat.title || "Untitled");
+        return false;
+      }
+      if (!chat.create_time || !chat.update_time) {
+        logger.warn("Skipping ChatGPT conversation with missing timestamps:", chat.id, chat.title || "Untitled");
+        return false;
+      }
+      return true;
+    }).map((chat) => ({
+      id: chat.id,
+      title: chat.title || "Untitled",
+      createTime: chat.create_time,
+      updateTime: chat.update_time,
+      messageCount: this.countChatGPTMessages(chat),
+      provider: "chatgpt",
+      isStarred: chat.is_starred || false,
+      isArchived: chat.is_archived || false
+    })).filter((metadata) => {
+      if (metadata.messageCount === 0) {
+        return false;
+      }
+      return true;
+    });
+  }
+  /**
+   * Extract metadata from Claude conversations
+   */
+  extractClaudeMetadata(conversations) {
+    return conversations.filter((chat) => {
+      if (!chat.uuid || chat.uuid.trim() === "") {
+        logger.warn("Skipping Claude conversation with missing UUID:", chat.name || "Untitled");
+        return false;
+      }
+      if (!chat.created_at || !chat.updated_at) {
+        logger.warn("Skipping Claude conversation with missing timestamps:", chat.uuid, chat.name || "Untitled");
+        return false;
+      }
+      return true;
+    }).map((chat) => ({
+      id: chat.uuid,
+      title: chat.name || "Untitled",
+      createTime: Math.floor(new Date(chat.created_at).getTime() / 1e3),
+      updateTime: Math.floor(new Date(chat.updated_at).getTime() / 1e3),
+      messageCount: this.countClaudeMessages(chat),
+      provider: "claude",
+      isStarred: chat.is_starred || false,
+      isArchived: false
+      // Claude doesn't have archived status
+    })).filter((metadata) => {
+      if (metadata.messageCount === 0) {
+        return false;
+      }
+      return true;
+    });
+  }
+  /**
+   * Count messages in ChatGPT conversation (lightweight version)
+   */
+  countChatGPTMessages(chat) {
+    if (!chat.mapping) {
+      return 0;
+    }
+    let count = 0;
+    for (const messageObj of Object.values(chat.mapping)) {
+      const message = messageObj == null ? void 0 : messageObj.message;
+      if (!message)
+        continue;
+      if (this.shouldIncludeChatGPTMessage(message)) {
+        count++;
+      }
+    }
+    return count;
+  }
+  /**
+   * Count messages in Claude conversation (lightweight version)
+   */
+  countClaudeMessages(chat) {
+    if (!chat.chat_messages || !Array.isArray(chat.chat_messages)) {
+      return 0;
+    }
+    let count = 0;
+    for (const message of chat.chat_messages) {
+      if (this.shouldIncludeClaudeMessage(message)) {
+        count++;
+      }
+    }
+    return count;
+  }
+  /**
+   * Lightweight version of ChatGPT message filtering
+   */
+  shouldIncludeChatGPTMessage(message) {
+    var _a;
+    if (!message || !message.author) {
+      return false;
+    }
+    if (message.author.role === "system" || message.author.role === "tool") {
+      return false;
+    }
+    if (((_a = message.metadata) == null ? void 0 : _a.is_visually_hidden_from_conversation) === true) {
+      return false;
+    }
+    return isValidMessage(message);
+  }
+  /**
+   * Lightweight version of Claude message filtering
+   */
+  shouldIncludeClaudeMessage(message) {
+    if (!message || !message.uuid || !message.sender) {
+      return false;
+    }
+    return message.sender === "human" || message.sender === "assistant";
+  }
+  /**
+   * Extract metadata from multiple ZIP files (for multi-file selective import)
+   * Follows the same logic as the working import process:
+   * 1. Process files chronologically
+   * 2. Build map of best versions per conversation ID
+   * 3. Compare with vault and filter out unchanged conversations
+   * 4. Only return NEW and UPDATED conversations for selection
+   */
+  async extractMetadataFromMultipleZips(files, forcedProvider, existingConversations) {
+    const conversationMap = /* @__PURE__ */ new Map();
+    const allConversationsFound = [];
+    const fileStatsMap = /* @__PURE__ */ new Map();
+    const conversationToFileMap = /* @__PURE__ */ new Map();
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        const JSZip2 = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
+        const zip = new JSZip2();
+        const zipContent = await zip.loadAsync(file);
+        const metadata = await this.extractMetadataFromZip(
+          zipContent,
+          forcedProvider,
+          file.name,
+          i,
+          void 0
+          // Don't compare with vault yet
+        );
+        allConversationsFound.push(...metadata);
+        const totalInFile = metadata.length;
+        let duplicatesInFile = 0;
+        let uniqueFromFile = 0;
+        for (const conversation of metadata) {
+          const existing = conversationMap.get(conversation.id);
+          if (!existing) {
+            uniqueFromFile++;
+            conversationMap.set(conversation.id, conversation);
+            conversationToFileMap.set(conversation.id, file.name);
+          } else {
+            let shouldReplace = false;
+            const comparison = compareTimestampsIgnoringSeconds(conversation.updateTime, existing.updateTime);
+            if (comparison > 0) {
+              shouldReplace = true;
+            } else if (comparison === 0) {
+              const currentFileIndex = conversation.sourceFileIndex || 0;
+              const existingFileIndex = existing.sourceFileIndex || 0;
+              if (currentFileIndex > existingFileIndex) {
+                shouldReplace = true;
+              }
+            }
+            if (shouldReplace) {
+              const oldFileName = conversationToFileMap.get(conversation.id);
+              const oldFileStats = fileStatsMap.get(oldFileName);
+              if (oldFileStats) {
+                oldFileStats.uniqueContributed--;
+                oldFileStats.duplicates++;
+              }
+              uniqueFromFile++;
+              conversationMap.set(conversation.id, conversation);
+              conversationToFileMap.set(conversation.id, file.name);
+            } else {
+              duplicatesInFile++;
+            }
+          }
+        }
+        fileStatsMap.set(file.name, {
+          fileName: file.name,
+          totalConversations: totalInFile,
+          duplicates: duplicatesInFile,
+          uniqueContributed: uniqueFromFile,
+          selectedForImport: 0,
+          newConversations: 0,
+          updatedConversations: 0,
+          skippedConversations: 0
+        });
+      } catch (error) {
+        logger.error(`Error extracting metadata from ${file.name}:`, error);
+      }
+    }
+    const filterResult = this.filterConversationsForSelection(
+      Array.from(conversationMap.values()),
+      existingConversations
+    );
+    for (const conversation of filterResult.conversations) {
+      const fileName = conversation.sourceFile;
+      if (fileName && fileStatsMap.has(fileName)) {
+        const stats = fileStatsMap.get(fileName);
+        stats.selectedForImport++;
+        if (conversation.existenceStatus === "new") {
+          stats.newConversations++;
+        } else if (conversation.existenceStatus === "updated") {
+          stats.updatedConversations++;
+        }
+      }
+    }
+    for (const conversation of filterResult.ignoredConversations) {
+      const fileName = conversation.sourceFile;
+      if (fileName && fileStatsMap.has(fileName)) {
+        const stats = fileStatsMap.get(fileName);
+        stats.skippedConversations++;
+      }
+    }
+    const analysisInfo = {
+      totalConversationsFound: allConversationsFound.length,
+      uniqueConversationsKept: conversationMap.size,
+      duplicatesRemoved: allConversationsFound.length - conversationMap.size,
+      hasMultipleFiles: files.length > 1,
+      conversationsNew: filterResult.newCount,
+      conversationsUpdated: filterResult.updatedCount,
+      conversationsIgnored: filterResult.ignoredCount
+    };
+    return {
+      conversations: filterResult.conversations,
+      analysisInfo,
+      fileStats: fileStatsMap
+    };
+  }
+  /**
+   * @deprecated - Old deduplication methods, replaced by new chronological approach
+   * Kept for compatibility but no longer used in the main flow
+   */
+  deduplicateConversations(conversations) {
+    return conversations;
+  }
+  /**
+   * Filter conversations for selection dialog (same logic as working import process)
+   * Only returns NEW and UPDATED conversations - filters out UNCHANGED completely
+   */
+  filterConversationsForSelection(bestVersions, existingConversations) {
+    const conversationsForSelection = [];
+    const ignoredConversations = [];
+    let newCount = 0;
+    let updatedCount = 0;
+    let ignoredCount = 0;
+    for (const conversation of bestVersions) {
+      if (!existingConversations) {
+        conversation.existenceStatus = "new";
+        conversation.hasNewerContent = true;
+        conversationsForSelection.push(conversation);
+        newCount++;
+        continue;
+      }
+      const vaultConversation = existingConversations.get(conversation.id);
+      if (!vaultConversation) {
+        conversation.existenceStatus = "new";
+        conversation.hasNewerContent = true;
+        conversationsForSelection.push(conversation);
+        newCount++;
+      } else {
+        conversation.existingUpdateTime = vaultConversation.updateTime;
+        const { moment: moment3 } = require("obsidian");
+        const zipUpdateTimeISO = new Date(conversation.updateTime * 1e3).toISOString();
+        const normalizedZipUpdateTime = moment3(zipUpdateTimeISO, moment3.ISO_8601, true).unix();
+        const comparison = compareTimestampsIgnoringSeconds(normalizedZipUpdateTime, vaultConversation.updateTime);
+        if (comparison > 0) {
+          conversation.existenceStatus = "updated";
+          conversation.hasNewerContent = true;
+          conversationsForSelection.push(conversation);
+          updatedCount++;
+        } else {
+          conversation.existenceStatus = "unchanged";
+          ignoredConversations.push(conversation);
+          ignoredCount++;
+        }
+      }
+    }
+    return {
+      conversations: conversationsForSelection,
+      ignoredConversations,
+      newCount,
+      updatedCount,
+      ignoredCount
+    };
+  }
+  /**
+   * @deprecated - Old deduplication logic, replaced by new chronological approach
+   */
+  ensureCorrectExistenceStatus(keptConversation, currentConversation, existingConversation) {
+    return keptConversation;
+  }
+  /**
+   * Get total conversation count from ZIP without extracting all metadata
+   */
+  async getConversationCount(zip) {
+    try {
+      const rawConversations = await this.extractRawConversationsFromZip(zip);
+      return rawConversations.length;
+    } catch (error) {
+      return 0;
+    }
+  }
+};
+__name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
+
+// src/dialogs/import-completion-dialog.ts
+var import_obsidian31 = require("obsidian");
+init_kofi_support_box();
+var ImportCompletionDialog = class extends import_obsidian31.Modal {
+  constructor(app, stats, reportFilePath) {
+    super(app);
+    this.stats = stats;
+    this.reportFilePath = reportFilePath;
+  }
+  onOpen() {
+    const { contentEl, modalEl, titleEl } = this;
+    contentEl.empty();
+    modalEl.addClass("nexus-import-completion-dialog");
+    contentEl.addClass("nexus-import-completion-dialog");
+    titleEl.setText("Import Completed");
+    const successMsg = contentEl.createDiv("success-message");
+    successMsg.style.textAlign = "center";
+    successMsg.style.marginBottom = "20px";
+    successMsg.style.fontSize = "1.1em";
+    successMsg.style.color = "var(--color-green)";
+    successMsg.innerHTML = "\u2705 Successfully imported conversations";
+    this.createStatsSection(contentEl);
+    if (this.stats.attachmentsTotal > 0) {
+      this.createAttachmentsSection(contentEl);
+    }
+    this.createReportSection(contentEl);
+    createKofiSupportBox(contentEl);
+    this.createActionButtons(contentEl);
+    this.addCustomStyles();
+  }
+  createStatsSection(container) {
+    const section = container.createDiv("stats-section");
+    section.style.marginBottom = "20px";
+    section.style.display = "grid";
+    section.style.gridTemplateColumns = "repeat(3, 1fr)";
+    section.style.gap = "12px";
+    this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), "ZIP Files Processed");
+    this.createStatCartouche(section, "\u{1F4AC}", this.stats.totalConversations.toString(), "Unique Conversations");
+    this.createStatCartouche(section, "\u{1F501}", this.stats.duplicates.toString(), "Duplicates", "var(--text-muted)");
+    this.createStatCartouche(section, "\u2728", this.stats.created.toString(), "New", "var(--color-green)");
+    this.createStatCartouche(section, "\u{1F504}", this.stats.updated.toString(), "Updated", "var(--color-orange)");
+    this.createStatCartouche(section, "\u23ED\uFE0F", this.stats.skipped.toString(), "Skipped", "var(--text-muted)");
+    if (this.stats.failed > 0) {
+      this.createStatCartouche(section, "\u274C", this.stats.failed.toString(), "Failed", "var(--color-red)");
+    }
+  }
+  createStatCartouche(container, icon, value, label, color) {
+    const cartouche = container.createDiv("stat-cartouche");
+    cartouche.style.textAlign = "center";
+    cartouche.style.padding = "12px";
+    cartouche.style.backgroundColor = "var(--background-primary)";
+    cartouche.style.borderRadius = "8px";
+    cartouche.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+    const iconEl = cartouche.createDiv();
+    iconEl.textContent = icon;
+    iconEl.style.fontSize = "1.5em";
+    iconEl.style.marginBottom = "4px";
+    const valueEl = cartouche.createDiv();
+    valueEl.textContent = value;
+    valueEl.style.fontWeight = "600";
+    valueEl.style.fontSize = "1.4em";
+    valueEl.style.color = color || "var(--text-accent)";
+    valueEl.style.marginBottom = "4px";
+    const labelEl = cartouche.createDiv();
+    labelEl.textContent = label;
+    labelEl.style.fontSize = "0.85em";
+    labelEl.style.color = "var(--text-muted)";
+  }
+  createAttachmentsSection(container) {
+    const section = container.createDiv("attachments-section");
+    section.style.marginBottom = "20px";
+    section.style.padding = "12px";
+    section.style.backgroundColor = "var(--background-secondary)";
+    section.style.borderRadius = "6px";
+    section.style.textAlign = "center";
+    const percentage = Math.round(this.stats.attachmentsFound / this.stats.attachmentsTotal * 100);
+    const icon = percentage === 100 ? "\u2705" : percentage > 50 ? "\u26A0\uFE0F" : "\u274C";
+    const color = percentage === 100 ? "var(--color-green)" : percentage > 50 ? "var(--color-orange)" : "var(--color-red)";
+    const attachmentText = section.createDiv();
+    attachmentText.innerHTML = `${icon} <strong>Attachments:</strong> ${this.stats.attachmentsFound}/${this.stats.attachmentsTotal} extracted (${percentage}%)`;
+    attachmentText.style.color = color;
+    if (this.stats.attachmentsMissing > 0 || this.stats.attachmentsFailed > 0) {
+      const details = section.createDiv();
+      details.style.fontSize = "0.85em";
+      details.style.color = "var(--text-muted)";
+      details.style.marginTop = "4px";
+      details.textContent = `${this.stats.attachmentsMissing} missing, ${this.stats.attachmentsFailed} failed`;
+    }
+  }
+  createReportSection(container) {
+    const section = container.createDiv("report-section");
+    section.style.marginBottom = "20px";
+    section.style.padding = "12px";
+    section.style.backgroundColor = "var(--background-secondary)";
+    section.style.borderRadius = "6px";
+    const label = section.createDiv();
+    label.textContent = "\u{1F4C4} Detailed report:";
+    label.style.fontSize = "0.9em";
+    label.style.color = "var(--text-muted)";
+    label.style.marginBottom = "6px";
+    const link = section.createEl("a");
+    link.textContent = this.reportFilePath;
+    link.style.color = "var(--text-accent)";
+    link.style.textDecoration = "none";
+    link.style.cursor = "pointer";
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.openReport();
+    });
+    link.addEventListener("mouseenter", () => {
+      link.style.textDecoration = "underline";
+    });
+    link.addEventListener("mouseleave", () => {
+      link.style.textDecoration = "none";
+    });
+  }
+  createActionButtons(container) {
+    const buttonContainer = container.createDiv("action-buttons");
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.gap = "10px";
+    buttonContainer.style.marginTop = "20px";
+    const viewReportBtn = buttonContainer.createEl("button", { text: "View Report" });
+    viewReportBtn.style.padding = "8px 16px";
+    viewReportBtn.addEventListener("click", () => {
+      this.openReport();
+      this.close();
+    });
+    const okBtn = buttonContainer.createEl("button", { text: "OK" });
+    okBtn.classList.add("mod-cta");
+    okBtn.style.padding = "8px 16px";
+    okBtn.addEventListener("click", () => this.close());
+  }
+  async openReport() {
+    try {
+      const file = this.app.vault.getAbstractFileByPath(this.reportFilePath);
+      if (file) {
+        await this.app.workspace.getLeaf(false).openFile(file);
+      }
+    } catch (error) {
+      logger.error("Failed to open report:", error);
+    }
+  }
+  addCustomStyles() {
+    const style = document.createElement("style");
+    style.textContent = `
+            /* Modal sizing */
+            .modal.nexus-import-completion-dialog {
+                max-width: min(700px, 90vw) !important;
+                width: min(700px, 90vw) !important;
+            }
+
+            /* Modal title spacing */
+            .modal.nexus-import-completion-dialog .modal-title {
+                padding: 16px 24px !important;
+                margin: 0 !important;
+            }
+
+            .modal.nexus-import-completion-dialog .modal-content {
+                padding: 20px 24px 24px 24px;
+            }
+
+            /* Stat cartouches hover effect */
+            .nexus-import-completion-dialog .stat-cartouche {
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+
+            .nexus-import-completion-dialog .stat-cartouche:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            /* Button hover effects */
+            .nexus-import-completion-dialog button {
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .nexus-import-completion-dialog button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+        `;
+    document.head.appendChild(style);
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+__name(ImportCompletionDialog, "ImportCompletionDialog");
 
 // src/main.ts
-var NexusAiChatImporterPlugin = class extends import_obsidian18.Plugin {
+init_utils();
+var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -9430,7 +15833,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian18.Plugin {
         () => this.showProviderSelectionDialog()
       );
       ribbonIconEl.addClass("nexus-ai-chat-ribbon");
-      await this.upgradeManager.checkAndPerformUpgrade();
+      const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
+      if (upgradeResult == null ? void 0 : upgradeResult.isFreshInstall) {
+        new InstallationWelcomeDialog(this.app, this.manifest.version).open();
+      }
     } catch (error) {
       this.logger.error("Plugin loading failed:", error);
       throw error;
@@ -9448,7 +15854,6 @@ var NexusAiChatImporterPlugin = class extends import_obsidian18.Plugin {
     try {
       const data = await this.loadData();
       this.settings = Object.assign({}, DEFAULT_SETTINGS, (data == null ? void 0 : data.settings) || {});
-      this.settings.reportFolder = `${this.settings.archiveFolder}/Reports`;
       const currentVersion = this.manifest.version;
       const storedCurrentVersion = this.settings.currentVersion;
       if (!storedCurrentVersion || storedCurrentVersion === "0.0.0") {
@@ -9536,35 +15941,323 @@ var NexusAiChatImporterPlugin = class extends import_obsidian18.Plugin {
   }
   /**
    * Show provider selection dialog and then file selection
+   * Ensures migration is complete before allowing import
    */
-  showProviderSelectionDialog() {
+  async showProviderSelectionDialog() {
+    const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
+    if (upgradeResult !== null && !upgradeResult.success) {
+      return;
+    }
     const providerRegistry = createProviderRegistry(this);
     new ProviderSelectionDialog(
       this.app,
       providerRegistry,
       (selectedProvider) => {
-        this.selectZipFilesForProvider(selectedProvider);
+        this.showEnhancedFileSelectionDialog(selectedProvider);
       }
     ).open();
   }
   /**
-   * Select ZIP files for a specific provider
+   * Show enhanced file selection dialog with import mode choice
    */
-  selectZipFilesForProvider(provider) {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".zip";
-    input.multiple = true;
-    input.onchange = async (e) => {
-      const files = Array.from(e.target.files || []);
-      if (files.length > 0) {
-        const sortedFiles = this.sortFilesByTimestamp(files);
-        for (const file of sortedFiles) {
-          await this.importService.handleZipFile(file, provider);
+  showEnhancedFileSelectionDialog(provider) {
+    new EnhancedFileSelectionDialog(
+      this.app,
+      provider,
+      (result) => {
+        this.handleFileSelectionResult(result);
+      },
+      this
+    ).open();
+  }
+  /**
+   * Handle the result from enhanced file selection dialog
+   */
+  async handleFileSelectionResult(result) {
+    const { files, mode, provider } = result;
+    if (files.length === 0) {
+      return;
+    }
+    const sortedFiles = this.sortFilesByTimestamp(files);
+    if (mode === "all") {
+      await this.handleImportAll(sortedFiles, provider);
+    } else {
+      await this.handleSelectiveImport(sortedFiles, provider);
+    }
+  }
+  /**
+   * Handle "Import All" mode with analysis and auto-selection
+   */
+  async handleImportAll(files, provider) {
+    var _a, _b, _c, _d;
+    try {
+      new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      const providerRegistry = createProviderRegistry(this);
+      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
+      const storage = this.getStorageService();
+      const existingConversations = await storage.scanExistingConversations();
+      const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
+        files,
+        provider,
+        existingConversations
+      );
+      const operationReport = new ImportReport();
+      if (this.settings.useCustomMessageTimestampFormat) {
+        operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+      }
+      if (extractionResult.conversations.length === 0) {
+        new import_obsidian32.Notice("No new or updated conversations found. All conversations are already up to date.");
+        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
+        if (reportPath2) {
+          this.showImportCompletionDialog(operationReport, reportPath2);
+        }
+        return;
+      }
+      const allIds = extractionResult.conversations.map((c) => c.id);
+      const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
+      const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
+      new import_obsidian32.Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
+      const conversationsByFile = /* @__PURE__ */ new Map();
+      extractionResult.conversations.forEach((conv) => {
+        if (conv.sourceFile) {
+          if (!conversationsByFile.has(conv.sourceFile)) {
+            conversationsByFile.set(conv.sourceFile, []);
+          }
+          conversationsByFile.get(conv.sourceFile).push(conv.id);
+        }
+      });
+      if (provider === "chatgpt" && files.length > 1) {
+        await this.importService.buildAttachmentMapForMultiZip(files);
+      }
+      for (const file of files) {
+        const conversationsForFile = conversationsByFile.get(file.name);
+        if (conversationsForFile && conversationsForFile.length > 0) {
+          try {
+            await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+          } catch (error) {
+            this.logger.error(`Error processing file ${file.name}:`, error);
+          }
         }
       }
-    };
-    input.click();
+      if (provider === "chatgpt" && files.length > 1) {
+        this.importService.clearAttachmentMap();
+      }
+      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
+      if (reportPath) {
+        this.showImportCompletionDialog(operationReport, reportPath);
+      } else {
+        new import_obsidian32.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      }
+    } catch (error) {
+      this.logger.error("[IMPORT-ALL] Error in import all:", error);
+      if (error instanceof Error) {
+        this.logger.error("[IMPORT-ALL] Error message:", error.message);
+        this.logger.error("[IMPORT-ALL] Error name:", error.name);
+        this.logger.error("[IMPORT-ALL] Error stack:", error.stack);
+      } else {
+        this.logger.error("[IMPORT-ALL] Error (not Error instance):", String(error));
+      }
+      new import_obsidian32.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  /**
+   * Handle selective import workflow
+   */
+  async handleSelectiveImport(files, provider) {
+    try {
+      new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      const providerRegistry = createProviderRegistry(this);
+      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
+      const storage = this.getStorageService();
+      const existingConversations = await storage.scanExistingConversations();
+      const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
+        files,
+        provider,
+        existingConversations
+      );
+      if (extractionResult.conversations.length === 0) {
+        new import_obsidian32.Notice("No conversations found in the selected files.");
+        return;
+      }
+      new ConversationSelectionDialog(
+        this.app,
+        extractionResult.conversations,
+        (result) => {
+          this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo, extractionResult.fileStats);
+        },
+        this,
+        extractionResult.analysisInfo
+      ).open();
+    } catch (error) {
+      this.logger.error("[SELECTIVE-IMPORT] Error in selective import:", error);
+      this.logger.error("[SELECTIVE-IMPORT] Full error details:", error);
+      if (error instanceof Error) {
+        this.logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
+      }
+      new import_obsidian32.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  /**
+   * Handle the result from conversation selection dialog
+   */
+  async handleConversationSelectionResult(result, files, provider, analysisInfo, fileStats) {
+    const operationReport = new ImportReport();
+    if (this.settings.useCustomMessageTimestampFormat) {
+      operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+    }
+    if (result.selectedIds.length === 0) {
+      new import_obsidian32.Notice("No conversations selected for import.");
+      const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+      if (reportPath2) {
+        this.showImportCompletionDialog(operationReport, reportPath2);
+      }
+      return;
+    }
+    new import_obsidian32.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    const conversationsByFile = await this.groupConversationsByFile(result, files);
+    if (provider === "chatgpt" && files.length > 1) {
+      try {
+        await this.importService.buildAttachmentMapForMultiZip(files);
+      } catch (error) {
+        this.logger.error("Failed to build attachment map:", error);
+        new import_obsidian32.Notice("Failed to build attachment map. Check console for details.");
+      }
+    }
+    for (const file of files) {
+      const conversationsForFile = conversationsByFile.get(file.name);
+      if (conversationsForFile && conversationsForFile.length > 0) {
+        try {
+          await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+        } catch (error) {
+          this.logger.error(`Error processing file ${file.name}:`, error);
+          new import_obsidian32.Notice(`Error processing ${file.name}. Check console for details.`);
+        }
+      }
+    }
+    if (provider === "chatgpt" && files.length > 1) {
+      this.importService.clearAttachmentMap();
+    }
+    const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+    if (reportPath) {
+      this.showImportCompletionDialog(operationReport, reportPath);
+    } else {
+      new import_obsidian32.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+    }
+  }
+  /**
+   * Write consolidated report for multi-file import
+   */
+  async writeConsolidatedReport(report, provider, files, analysisInfo, fileStats, isSelectiveImport) {
+    const reportFolder = this.settings.reportFolder;
+    const providerRegistry = createProviderRegistry(this);
+    const adapter = providerRegistry.getAdapter(provider);
+    let providerName = provider;
+    if (adapter) {
+      const strategy = adapter.getReportNamingStrategy();
+      providerName = strategy.getProviderName();
+      const columnInfo = strategy.getProviderSpecificColumn();
+      report.setProviderSpecificColumnHeader(columnInfo.header);
+    }
+    const folderPath = `${reportFolder}/${providerName}`;
+    const folderResult = await ensureFolderExists(folderPath, this.app.vault);
+    if (!folderResult.success) {
+      this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
+      new import_obsidian32.Notice("Failed to create log file. Check console for details.");
+      return "";
+    }
+    const now = Date.now() / 1e3;
+    const datePrefix = formatTimestamp(now, "prefix");
+    const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, "");
+    let logFilePath = `${folderPath}/${datePrefix}-${timeStr} - import report.md`;
+    let counter = 2;
+    while (await this.app.vault.adapter.exists(logFilePath)) {
+      logFilePath = `${folderPath}/${datePrefix}-${timeStr}-${counter} - import report.md`;
+      counter++;
+    }
+    const currentDate = new Date().toISOString();
+    if (fileStats) {
+      report.setFileStats(fileStats);
+    }
+    if (analysisInfo) {
+      report.setAnalysisInfo(analysisInfo);
+    }
+    const stats = report.getCompletionStats();
+    const processedFiles = [];
+    const skippedFiles = [];
+    if (stats.totalFiles > 0) {
+      report.getProcessedFileNames().forEach((name) => processedFiles.push(name));
+    }
+    files.forEach((file) => {
+      if (!processedFiles.includes(file.name)) {
+        skippedFiles.push(file.name);
+      }
+    });
+    const logContent = `---
+importdate: ${currentDate}
+provider: ${provider}
+totalFilesAnalyzed: ${files.length}
+totalFilesProcessed: ${processedFiles.length}
+totalFilesSkipped: ${skippedFiles.length}
+totalConversations: ${stats.totalConversations}
+totalCreated: ${stats.created}
+totalUpdated: ${stats.updated}
+totalSkipped: ${stats.skipped}
+totalFailed: ${stats.failed}
+---
+
+${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport)}
+`;
+    try {
+      await this.app.vault.create(logFilePath, logContent);
+      return logFilePath;
+    } catch (error) {
+      this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
+      this.logger.error("Full error:", error);
+      this.logger.error("Log content length:", logContent.length);
+      new import_obsidian32.Notice("Failed to create log file. Check console for details.");
+      return "";
+    }
+  }
+  /**
+   * Show import completion dialog
+   */
+  showImportCompletionDialog(report, reportPath) {
+    const stats = report.getCompletionStats();
+    new ImportCompletionDialog(
+      this.app,
+      stats,
+      reportPath
+    ).open();
+  }
+  /**
+   * Group selected conversations by their source file for multi-file import
+   */
+  async groupConversationsByFile(result, files) {
+    const conversationsByFile = /* @__PURE__ */ new Map();
+    try {
+      const providerRegistry = createProviderRegistry(this);
+      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
+      const storage = this.getStorageService();
+      const existingConversations = await storage.scanExistingConversations();
+      const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
+        files,
+        void 0,
+        // Let it auto-detect provider
+        existingConversations
+      );
+      const selectedIdsSet = new Set(result.selectedIds);
+      for (const conversation of extractionResult.conversations) {
+        if (selectedIdsSet.has(conversation.id) && conversation.sourceFile) {
+          const fileConversations = conversationsByFile.get(conversation.sourceFile) || [];
+          fileConversations.push(conversation.id);
+          conversationsByFile.set(conversation.sourceFile, fileConversations);
+        }
+      }
+    } catch (error) {
+      this.logger.error("Error grouping conversations by file:", error);
+      conversationsByFile.set(files[0].name, result.selectedIds);
+    }
+    return conversationsByFile;
   }
   /**
    * Sort files by timestamp (same logic as ImportService)
@@ -9572,18 +16265,19 @@ var NexusAiChatImporterPlugin = class extends import_obsidian18.Plugin {
   sortFilesByTimestamp(files) {
     return files.sort((a, b) => {
       const timestampRegex = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
-      const getTimestamp = (filename) => {
+      const getTimestamp = /* @__PURE__ */ __name((filename) => {
         const match = filename.match(timestampRegex);
         if (!match) {
           this.logger.warn(`No timestamp found in filename: ${filename}`);
           return "0";
         }
         return match[1];
-      };
+      }, "getTimestamp");
       return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
     });
   }
 };
+__name(NexusAiChatImporterPlugin, "NexusAiChatImporterPlugin");
 /*! Bundled license information:
 
 jszip/dist/jszip.min.js:

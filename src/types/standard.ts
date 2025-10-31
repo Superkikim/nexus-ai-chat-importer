@@ -1,3 +1,22 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/types/standard.ts
 
 /**
@@ -12,6 +31,18 @@ export interface AttachmentStatus {
 }
 
 /**
+ * Attachment type enumeration for provider-agnostic classification
+ */
+export type AttachmentType =
+    | 'file'              // File uploaded by user
+    | 'generated_image'   // Generated image (DALL-E, Midjourney, etc.)
+    | 'artifact'          // Generated code/document (Claude artifacts, etc.)
+    | 'transcription'     // Audio/video transcription
+    | 'analysis'          // Document/image analysis
+    | 'audio'             // Audio files (voice conversations)
+    | 'link';             // External link
+
+/**
  * Provider-agnostic attachment interface with status tracking
  */
 export interface StandardAttachment {
@@ -22,9 +53,14 @@ export interface StandardAttachment {
     extractedContent?: string; // For processed content (OCR, transcriptions)
     url?: string; // For linked attachments
     fileId?: string; // Provider-specific file ID (for ZIP lookup)
-    
+
     // Attachment processing status
     status?: AttachmentStatus;
+
+    // Provider-agnostic metadata
+    attachmentType?: AttachmentType;
+    generationPrompt?: string; // For generated content (images, artifacts, etc.)
+    providerMetadata?: Record<string, any>; // Provider-specific data
 }
 
 /**
@@ -65,7 +101,7 @@ export interface UrlGenerator {
  */
 export const URL_GENERATORS: Record<string, UrlGenerator> = {
     chatgpt: {
-        generateChatUrl: (id: string) => `https://chat.openai.com/c/${id}`
+        generateChatUrl: (id: string) => `https://chatgpt.com/c/${id}`
     },
     claude: {
         generateChatUrl: (id: string) => `https://claude.ai/chat/${id}`

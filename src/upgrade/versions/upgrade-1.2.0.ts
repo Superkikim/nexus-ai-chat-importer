@@ -1,7 +1,27 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/upgrade/versions/upgrade-1.2.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import NexusAiChatImporterPlugin from "../../main";
+import { logger } from "../../logger";
 
 /**
  * Convert indentations to callouts (automatic operation)
@@ -14,14 +34,14 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -42,29 +62,28 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
                         return true;
                     }
                 } catch (error) {
-                    console.error(`Error checking file ${file.path}:`, error);
+                    logger.error(`Error checking file ${file.path}:`, error);
                 }
             }
 
             return false;
         } catch (error) {
-            console.error(`ConvertToCallouts.canRun failed:`, error);
+            logger.error(`ConvertToCallouts.canRun failed:`, error);
             return false;
         }
     }
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            console.debug(`[NEXUS-DEBUG] ConvertToCallouts.execute starting`);
 
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Filter conversation files (exclude Reports/Attachments)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -79,7 +98,6 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
             let converted = 0;
             let errors = 0;
 
-            console.debug(`[NEXUS-DEBUG] ConvertToCallouts: Processing ${conversationFiles.length} files`);
 
             // Process files in smaller batches to avoid blocking
             const batchSize = 10;
@@ -108,7 +126,7 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
                     } catch (error) {
                         errors++;
-                        console.error(`[NEXUS-DEBUG] Error converting ${file.path}:`, error);
+                        logger.error(`Error converting ${file.path}:`, error);
                     }
                 }
 
@@ -118,7 +136,6 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] ConvertToCallouts: Completed - processed:${processed}, converted:${converted}, errors:${errors}`);
 
             return {
                 success: errors === 0,
@@ -127,7 +144,7 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] ConvertToCallouts.execute failed:`, error);
+            logger.error(`ConvertToCallouts.execute failed:`, error);
             return {
                 success: false,
                 message: `Callout conversion failed: ${error}`,
@@ -251,14 +268,14 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
 
             // Check conversation files (sample verification)
             const conversationFiles = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
+                if (!file.path.startsWith(conversationFolder)) return false;
 
-                const relativePath = file.path.substring(archiveFolder.length + 1);
+                const relativePath = file.path.substring(conversationFolder.length + 1);
                 if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
@@ -275,25 +292,23 @@ class ConvertToCalloutsOperation extends UpgradeOperation {
 
                     // Check if still has old format
                     if (this.hasOldIndentationFormat(content)) {
-                        console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Still has old format in ${file.path}`);
                         return false;
                     }
 
                     // Check if plugin_version was updated
                     if (!content.includes('plugin_version: "1.2.0"')) {
-                        console.debug(`[NEXUS-DEBUG] ConvertToCallouts.verify: Missing v1.2.0 in ${file.path}`);
                         return false;
                     }
 
                 } catch (error) {
-                    console.error(`Error verifying file ${file.path}:`, error);
+                    logger.error(`Error verifying file ${file.path}:`, error);
                     return false;
                 }
             }
 
             return true;
         } catch (error) {
-            console.error(`ConvertToCallouts.verify failed:`, error);
+            logger.error(`ConvertToCallouts.verify failed:`, error);
             return false;
         }
     }
@@ -328,10 +343,9 @@ class MoveReportsToProviderOperation extends UpgradeOperation {
                     return f.name.includes('import report') || f.name.includes('import_');
                 });
 
-            console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun: found ${reportFiles.length} reports in root folder`);
             return reportFiles.length > 0;
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.canRun failed:`, error);
+            logger.error(`MoveReportsToProviderOperation.canRun failed:`, error);
             return false;
         }
     }
@@ -368,27 +382,24 @@ class MoveReportsToProviderOperation extends UpgradeOperation {
 
                     // Check if target already exists
                     if (await context.plugin.app.vault.adapter.exists(newPath)) {
-                        console.debug(`[NEXUS-DEBUG] Target already exists, skipping: ${newPath}`);
                         continue;
                     }
 
                     await context.plugin.app.vault.adapter.rename(file.path, newPath);
                     moved++;
-                    console.debug(`[NEXUS-DEBUG] Moved report: ${file.path} → ${newPath}`);
                 } catch (error) {
                     errors++;
-                    console.error(`[NEXUS-DEBUG] Error moving report ${file.path}:`, error);
+                    logger.error(`Error moving report ${file.path}:`, error);
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] MoveReportsToProviderOperation: processed=${processed}, moved=${moved}, errors=${errors}`);
             return {
                 success: errors === 0,
                 message: `Reports organized: ${moved} files moved to provider structure, ${errors} errors`,
                 details: { processed, moved, errors }
             };
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] MoveReportsToProviderOperation.execute failed:`, error);
+            logger.error(`MoveReportsToProviderOperation.execute failed:`, error);
             return {
                 success: false,
                 message: `Report organization failed: ${error}`,
@@ -425,8 +436,8 @@ class UpdateReportLinksOperation extends UpgradeOperation {
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
             const reportFolder = context.plugin.settings.reportFolder;
-            const archiveFolder = context.plugin.settings.archiveFolder;
-            const escapedArchive = this.escapeRegExp(archiveFolder);
+            const conversationFolder = context.plugin.settings.conversationFolder;
+            const escapedArchive = this.escapeRegExp(conversationFolder);
 
             let processed = 0;
             let updated = 0;
@@ -454,7 +465,7 @@ class UpdateReportLinksOperation extends UpgradeOperation {
                     return false;
                 });
 
-            // Regex: [[<archiveFolder>/YYYY/MM/ ...]] -> insert chatgpt/
+            // Regex: [[<conversationFolder>/YYYY/MM/ ...]] -> insert chatgpt/
             const linkPattern = new RegExp(`(\\[\\[${escapedArchive}/)(\\d{4}/\\d{2}/)`, 'g');
 
             for (const file of reportFiles) {
@@ -468,18 +479,17 @@ class UpdateReportLinksOperation extends UpgradeOperation {
                     }
                 } catch (e) {
                     errors++;
-                    console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation error in ${file.path}:`, e);
+                    logger.error(`UpdateReportLinksOperation error in ${file.path}:`, e);
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] UpdateReportLinksOperation: processed=${processed}, updated=${updated}, errors=${errors}`);
             return {
                 success: errors === 0,
                 message: `Report links updated: ${updated} files changed, ${errors} errors`,
                 details: { processed, updated, errors }
             };
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] UpdateReportLinksOperation.execute failed:`, error);
+            logger.error(`UpdateReportLinksOperation.execute failed:`, error);
             return {
                 success: false,
                 message: `Report link update failed: ${error}`,
@@ -507,49 +517,46 @@ class MoveYearFoldersOperation extends UpgradeOperation {
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
 
-            // Check if year folders exist directly in archive (not in chatgpt subfolder)
-            const yearFolders = await this.findYearFolders(context, archiveFolder);
+            // Check if year folders exist directly in conversation folder (not in chatgpt subfolder)
+            const yearFolders = await this.findYearFolders(context, conversationFolder);
 
             return yearFolders.length > 0;
         } catch (error) {
-            console.error(`MoveYearFolders.canRun failed:`, error);
+            logger.error(`MoveYearFolders.canRun failed:`, error);
             return false;
         }
     }
 
     async execute(context: UpgradeContext): Promise<OperationResult> {
         try {
-            console.debug(`[NEXUS-DEBUG] MoveYearFolders.execute starting`);
 
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
 
             let movedFolders = 0;
             let errors = 0;
 
             // Move <yyyy> folders to chatgpt/<yyyy>
-            const yearFolders = await this.findYearFolders(context, archiveFolder);
+            const yearFolders = await this.findYearFolders(context, conversationFolder);
 
             for (const yearFolder of yearFolders) {
                 try {
-                    const chatgptFolder = `${archiveFolder}/chatgpt`;
+                    const chatgptFolder = `${conversationFolder}/chatgpt`;
                     await context.plugin.app.vault.adapter.mkdir(chatgptFolder);
 
                     const newPath = `${chatgptFolder}/${yearFolder}`;
-                    const oldPath = `${archiveFolder}/${yearFolder}`;
+                    const oldPath = `${conversationFolder}/${yearFolder}`;
 
                     await context.plugin.app.vault.adapter.rename(oldPath, newPath);
                     movedFolders++;
 
-                    console.debug(`[NEXUS-DEBUG] Moved ${yearFolder} to chatgpt/${yearFolder}`);
                 } catch (error) {
                     errors++;
-                    console.error(`[NEXUS-DEBUG] Error moving year folder ${yearFolder}:`, error);
+                    logger.error(`Error moving year folder ${yearFolder}:`, error);
                 }
             }
 
-            console.debug(`[NEXUS-DEBUG] MoveYearFolders: Completed - moved:${movedFolders}, errors:${errors}`);
 
             return {
                 success: errors === 0,
@@ -558,7 +565,7 @@ class MoveYearFoldersOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] MoveYearFolders.execute failed:`, error);
+            logger.error(`MoveYearFolders.execute failed:`, error);
             return {
                 success: false,
                 message: `Conversation organization failed: ${error}`,
@@ -569,29 +576,28 @@ class MoveYearFoldersOperation extends UpgradeOperation {
 
     async verify(context: UpgradeContext): Promise<boolean> {
         try {
-            const archiveFolder = context.plugin.settings.archiveFolder;
+            const conversationFolder = context.plugin.settings.conversationFolder;
 
             // Check that year folders are now in chatgpt structure
-            const remainingYearFolders = await this.findYearFolders(context, archiveFolder);
+            const remainingYearFolders = await this.findYearFolders(context, conversationFolder);
 
             if (remainingYearFolders.length > 0) {
-                console.debug(`[NEXUS-DEBUG] MoveYearFolders.verify: Still ${remainingYearFolders.length} year folders in old structure`);
                 return false;
             }
 
             return true;
         } catch (error) {
-            console.error(`MoveYearFolders.verify failed:`, error);
+            logger.error(`MoveYearFolders.verify failed:`, error);
             return false;
         }
     }
 
     /**
-     * Find year folders (YYYY) directly in archive folder
+     * Find year folders (YYYY) directly in conversation folder
      */
-    private async findYearFolders(context: UpgradeContext, archiveFolder: string): Promise<string[]> {
+    private async findYearFolders(context: UpgradeContext, conversationFolder: string): Promise<string[]> {
         try {
-            const folders = await context.plugin.app.vault.adapter.list(archiveFolder);
+            const folders = await context.plugin.app.vault.adapter.list(conversationFolder);
             return folders.folders.filter(folder => {
                 const folderName = folder.split('/').pop() || '';
                 return /^\d{4}$/.test(folderName) && folderName !== 'chatgpt';
@@ -659,7 +665,6 @@ Your conversations will be reorganized with provider structure and modern callou
             }
         } catch (error) {
             // Use fallback message if GitHub fetch fails
-            console.debug('[NEXUS-DEBUG] Could not fetch release notes from GitHub, using fallback');
         }
 
         // Render markdown content
@@ -715,7 +720,7 @@ class OfferReimportOperation extends UpgradeOperation {
             };
 
         } catch (error) {
-            console.error(`OfferReimport.execute failed:`, error);
+            logger.error(`OfferReimport.execute failed:`, error);
             return {
                 success: false,
                 message: `Failed to complete reimport operation: ${error}`,

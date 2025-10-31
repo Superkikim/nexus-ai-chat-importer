@@ -1,7 +1,27 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/formatters/message-formatter.ts
 import { StandardMessage, StandardAttachment } from "../types/standard";
-import { formatTimestamp } from "../utils";
+import { formatMessageTimestamp } from "../utils";
 import { Logger } from "../logger";
+import type NexusAiChatImporterPlugin from "../main";
 
 export class MessageFormatter {
     // Nexus custom callouts with icons
@@ -13,14 +33,17 @@ export class MessageFormatter {
         PROMPT: 'nexus_prompt'          // 💭 System prompts
     };
 
-    constructor(private logger: Logger) {}
+    constructor(
+        private logger: Logger,
+        private plugin: NexusAiChatImporterPlugin
+    ) {}
 
     formatMessages(messages: StandardMessage[]): string {
         return messages
             .filter(message => message !== undefined)
             .map(message => this.formatMessage(message))
             .filter(formattedMessage => formattedMessage !== "")
-            .join("\n\n");
+            .join("\n");
     }
 
     formatMessage(message: StandardMessage): string {
@@ -29,10 +52,12 @@ export class MessageFormatter {
             return "";
         }
 
-        const messageTime =
-            formatTimestamp(message.timestamp, "date") +
-            " at " +
-            formatTimestamp(message.timestamp, "time");
+        // Get custom format if enabled
+        const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+            ? this.plugin.settings.messageTimestampFormat
+            : undefined;
+
+        const messageTime = formatMessageTimestamp(message.timestamp, customFormat);
 
         const authorName = message.role === "user" ? "User" : "Assistant";
         const calloutType = message.role === "user" ? MessageFormatter.CALLOUTS.USER : MessageFormatter.CALLOUTS.AGENT;
@@ -50,18 +75,18 @@ export class MessageFormatter {
 
         // Format attachments if any
         if (message.attachments && message.attachments.length > 0) {
-            messageContent += "\n\n" + this.formatAttachments(message.attachments);
+            messageContent += "\n" + this.formatAttachments(message.attachments);
         }
 
         // Add UID for update tracking
-        messageContent += `\n<!-- UID: ${message.id} -->\n`;
+        messageContent += `\n<!-- UID: ${message.id} -->`;
 
         // Add separator for assistant messages
         if (message.role === "assistant") {
-            messageContent += "\n---\n";
+            messageContent += "\n\n---";
         }
 
-        return messageContent + "\n\n";
+        return messageContent;
     }
 
     private formatAttachments(attachments: StandardAttachment[]): string {
@@ -72,15 +97,18 @@ export class MessageFormatter {
 
     /**
      * Format single attachment with Nexus callout styling
+     *
+     * Provider-formatted attachments (with extractedContent) are displayed as-is.
+     * Generic attachments get basic formatting.
      */
     private formatSingleAttachment(attachment: StandardAttachment): string {
-        // For Claude attachments, check if already formatted as callout
-        if (attachment.extractedContent && attachment.extractedContent.includes('nexus_attachment')) {
+        // If extractedContent exists, display it as-is (already formatted by provider)
+        if (attachment.extractedContent) {
             return attachment.extractedContent;
         }
 
-        // Create attachment callout
-        let content = `>[!${MessageFormatter.CALLOUTS.ATTACHMENT}] `;
+        // Generic formatting for attachments without extractedContent (nested in message callout)
+        let content = `>>[!${MessageFormatter.CALLOUTS.ATTACHMENT}] `;
 
         // Status-aware header
         if (attachment.status?.found) {
@@ -105,65 +133,41 @@ export class MessageFormatter {
             // Skip sandbox:// URLs - they don't work in Obsidian
             if (!attachment.url.startsWith('sandbox://')) {
                 if (this.isImageFile(attachment)) {
-                    content += `> ![[${attachment.url}]]`; // Embed images
+                    content += `>> ![[${attachment.url}]]`; // Embed images
                 } else {
-                    content += `> [[${attachment.url}]]`; // Link documents
+                    content += `>> [[${attachment.url}]]`; // Link documents
                 }
             } else {
                 // Sandbox URL - explain to user
-                content += `> ⚠️ File not available in archive. Visit the original conversation to access it`;
+                content += `>> ⚠️ File not available in archive. Visit the original conversation to access it`;
             }
         }
 
         // Handle missing/failed attachments with informative notes
         else if (attachment.status && !attachment.status.found) {
-            content += `> ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
+            content += `>> ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
 
             if (attachment.status.note) {
-                content += `\n> **Note:** ${attachment.status.note}`;
+                content += `\n>> **Note:** ${attachment.status.note}`;
             }
 
             // Add link to original conversation for missing attachments
             if (attachment.status.reason === 'missing_from_export') {
-                // Try to extract conversation URL from attachment or use generic ChatGPT link
-                const conversationUrl = attachment.url?.includes('chatgpt.com')
-                    ? attachment.url
-                    : 'https://chatgpt.com/';
-                content += `\n> [Open original conversation](${conversationUrl})`;
+                // Try to extract conversation URL from attachment or use generic provider link
+                if (attachment.url) {
+                    content += `\n>> [Open original conversation](${attachment.url})`;
+                } else {
+                    content += `\n>> Original conversation link not available`;
+                }
             }
         }
 
-        // Add DALL-E prompt as separate callout (special case for DALL-E images)
-        else if (attachment.extractedContent && this.isDalleImage(attachment)) {
-            content += `> ${this.isImageFile(attachment) ? '![[' + attachment.url + ']]' : '[[' + attachment.url + ']]'}`;
-        }
-        // Add extracted content for other types (transcriptions, OCR, code, etc.)
-        else if (attachment.extractedContent) {
-            content += `> ${attachment.extractedContent}`;
+        // Add raw content for text files
+        else if (attachment.content) {
+            content += `>> ${attachment.content}`;
         }
 
-        // Add raw content for text files - always show if available
-        else if (attachment.content && !attachment.extractedContent) {
-            content += `> ${attachment.content}`;
-        }
-
-        // Add DALL-E prompt as separate callout after the attachment
-        let dallePrompt = '';
-        if (attachment.extractedContent && this.isDalleImage(attachment)) {
-            dallePrompt = `\n\n>[!${MessageFormatter.CALLOUTS.PROMPT}] **DALL-E Prompt**\n> \`\`\`\n> ${attachment.extractedContent}\n> \`\`\``;
-        }
-
-        return content + dallePrompt;
-    }
-
-    /**
-     * Check if attachment is a DALL-E generated image
-     */
-    private isDalleImage(attachment: StandardAttachment): boolean {
-        // Check if filename follows DALL-E pattern: dalle_genId_widthxheight.png
-        return attachment.fileName.startsWith('dalle_') && 
-               attachment.fileName.includes('_') && 
-               attachment.fileType === 'image/png';
+        return content;
     }
 
     /**

@@ -1,10 +1,30 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/ui/settings-tab.ts
 import { App, PluginSettingTab } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { BaseSettingsSection } from "./settings/base-settings-section";
-import { ConversationSettingsSection } from "./settings/conversation-settings-section";
-import { AttachmentSettingsSection } from "./settings/attachment-settings-section";
-import { MigrationsSettingsSection } from "./settings/migrations-settings-section";
+import { SupportSection } from "./settings/support-section";
+import { FolderSettingsSection } from "./settings/folder-settings-section";
+import { DisplaySettingsSection } from "./settings/display-settings-section";
+import { MessageDateFormatSection } from "./settings/message-date-format-section";
 
 export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
     private sections: BaseSettingsSection[] = [];
@@ -16,9 +36,10 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
 
     private initializeSections(): void {
         this.sections = [
-            new ConversationSettingsSection(this.plugin),
-            new AttachmentSettingsSection(this.plugin),
-            new MigrationsSettingsSection(this.plugin)
+            new SupportSection(this.plugin),
+            new FolderSettingsSection(this.plugin),
+            new DisplaySettingsSection(this.plugin),
+            new MessageDateFormatSection(this.plugin)
         ].sort((a, b) => a.order - b.order);
 
         // Set redraw callback for each section
@@ -39,7 +60,7 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
             if (section.title) {
                 containerEl.createEl("h2", { text: section.title });
             }
-            
+
             await section.render(containerEl);
         }
     }

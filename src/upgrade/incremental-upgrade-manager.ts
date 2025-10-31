@@ -1,3 +1,22 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/upgrade/incremental-upgrade-manager.ts
 import { Notice } from "obsidian";
 import { VersionUpgrade, UpgradeContext } from "./upgrade-interface";
@@ -7,6 +26,7 @@ import { Logger } from "../logger";
 import { GITHUB } from "../config/constants";
 import { MultiOperationProgressModal, OperationStatus } from "./utils/multi-operation-progress-modal";
 import type NexusAiChatImporterPlugin from "../main";
+import { ensureFolderExists } from "../utils";
 
 const logger = new Logger();
 
@@ -15,6 +35,7 @@ export interface IncrementalUpgradeResult {
     upgradesExecuted: number;
     upgradesSkipped: number;
     upgradesFailed: number;
+    isFreshInstall?: boolean; // Flag to indicate if this is a fresh installation
     results: Array<{
         version: string;
         automaticResults: any;
@@ -38,19 +59,19 @@ export class IncrementalUpgradeManager {
         // Import and register upgrades
         const { Upgrade110 } = require("./versions/upgrade-1.1.0");
         const { Upgrade120 } = require("./versions/upgrade-1.2.0");
+        const { Upgrade130 } = require("./versions/upgrade-1.3.0");
 
         this.availableUpgrades = [
             new Upgrade110(),
             new Upgrade120(),
-            // Future: new Upgrade121(), new Upgrade130(), etc.
+            new Upgrade130(),
+            // Future: new Upgrade131(), new Upgrade140(), etc.
         ];
 
         // Sort by version for incremental execution
         this.availableUpgrades.sort((a, b) => {
             return VersionUtils.compareVersions(a.version, b.version);
         });
-
-        logger.info(`Registered ${this.availableUpgrades.length} version upgrades`);
     }
 
     /**
@@ -60,52 +81,41 @@ export class IncrementalUpgradeManager {
         try {
             const currentVersion = this.plugin.manifest.version;
             const previousVersion = this.plugin.settings.previousVersion; // ← Use settings instead of data
-            
-            console.debug(`[NEXUS-DEBUG] Incremental upgrade check: ${previousVersion} → ${currentVersion}`);
-
-            // Skip if no version change
-            if (previousVersion === currentVersion) {
-                console.debug(`[NEXUS-DEBUG] No version change - SKIPPING ALL`);
-                logger.info(`No version change (${currentVersion}), skipping upgrade checks`);
-                return null;
-            }
 
             // Check if already completed upgrade to this version using new structure
+            // This check MUST come BEFORE fresh install detection to prevent welcome dialog on reload
             const data = await this.plugin.loadData();
             const versionKey = currentVersion.replace(/\./g, '_');
             const hasCompletedThisUpgrade = data?.upgradeHistory?.completedUpgrades?.[versionKey]?.completed;
 
-            console.debug(`[NEXUS-DEBUG] Upgrade history check for '${versionKey}': ${hasCompletedThisUpgrade}`);
-
             if (hasCompletedThisUpgrade) {
-                console.debug(`[NEXUS-DEBUG] Upgrade already completed - SKIPPING ALL`);
-                logger.info(`Already completed upgrade to ${currentVersion}, skipping`);
                 return null;
             }
 
-            // FRESH INSTALL DETECTION - Skip upgrades if this is a new installation
+            // FRESH INSTALL DETECTION - Check AFTER upgrade completion check
             const isFreshInstall = await this.detectFreshInstall();
-            console.debug(`[NEXUS-DEBUG] Fresh install detection: ${isFreshInstall}`);
 
             if (isFreshInstall) {
-                console.debug(`[NEXUS-DEBUG] Fresh install detected - marking as complete without upgrades`);
                 await this.markUpgradeComplete(currentVersion);
-                logger.info(`Fresh installation detected - marked as up-to-date v${currentVersion}`);
                 return {
                     success: true,
                     upgradesExecuted: 0,
                     upgradesSkipped: 0,
                     upgradesFailed: 0,
+                    isFreshInstall: true, // Flag for showing installation welcome dialog
                     results: []
                 };
             }
 
+            // Skip if no version change
+            if (previousVersion === currentVersion) {
+                return null;
+            }
+
             // Get upgrade chain: all upgrades between previousVersion and currentVersion
             const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
-            console.debug(`[NEXUS-DEBUG] Upgrade chain:`, upgradeChain.map(u => u.version));
 
             if (upgradeChain.length === 0) {
-                console.debug(`[NEXUS-DEBUG] No upgrades needed - marking complete`);
                 await this.markUpgradeComplete(currentVersion);
                 await this.showUpgradeDialog(currentVersion, previousVersion, []);
                 return {
@@ -117,23 +127,46 @@ export class IncrementalUpgradeManager {
                 };
             }
 
-            console.debug(`[NEXUS-DEBUG] Need to execute ${upgradeChain.length} upgrades - showing dialog first`);
 
-            // Show upgrade dialog FIRST - INFORMATION ONLY (no cancel option)
-            await this.showUpgradeDialog(currentVersion, previousVersion, upgradeChain);
-
-            // Execute upgrade chain with modal (no user choice - automatic)
-            console.debug(`[NEXUS-DEBUG] Executing upgrades with modal...`);
+            // PHASE 1: Execute migrations directly (no dialog before)
+            // Show progress modal automatically
             const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
 
             // Mark overall upgrade complete - ALWAYS (even if some operations were "no-op")
-            console.debug(`[NEXUS-DEBUG] Upgrade process completed - marking overall upgrade complete`);
             await this.markUpgradeComplete(currentVersion);
+
+            // Write consolidated upgrade report
+            try {
+                await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
+            } catch (e) {
+                logger.error("Failed to write upgrade report:", e);
+            }
+
+            // PHASE 2: Show completion dialog AFTER migrations
+            // Display Ko-fi + What's New + Improvements + Bug Fixes
+            await this.showUpgradeCompleteDialog(currentVersion);
 
             return result;
 
+
+
+
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] Incremental upgrade FAILED:`, error);
+            logger.error("Incremental upgrade failed:", error);
+
+            // Check if user cancelled
+            if (error instanceof Error && error.message === "User cancelled upgrade") {
+                new Notice("Migration cancelled. Please complete the migration before importing.");
+                return {
+                    success: false,
+                    upgradesExecuted: 0,
+                    upgradesSkipped: 0,
+                    upgradesFailed: 0,
+                    results: []
+                };
+            }
+
+            // Other errors
             logger.error("Error during incremental upgrade:", error);
             new Notice("Upgrade failed - see console for details");
             return {
@@ -155,23 +188,23 @@ export class IncrementalUpgradeManager {
             const data = await this.plugin.loadData();
             const hasLegacyData = !!(data?.conversationCatalog && Object.keys(data.conversationCatalog).length > 0);
             const hasImportedArchives = !!(data?.importedArchives && Object.keys(data.importedArchives).length > 0);
-            
+
             // Check 2: No existing conversations in vault
-            const archiveFolder = this.plugin.settings.archiveFolder;
+            const conversationFolder = this.plugin.settings.conversationFolder;
             const allFiles = this.plugin.app.vault.getMarkdownFiles();
-            
+
             const existingConversations = allFiles.filter(file => {
-                if (!file.path.startsWith(archiveFolder)) return false;
-                
+                if (!file.path.startsWith(conversationFolder)) return false;
+
                 // Exclude Reports and Attachments folders
-                const relativePath = file.path.substring(archiveFolder.length + 1);
-                if (relativePath.startsWith('Reports/') || 
+                const relativePath = file.path.substring(conversationFolder.length + 1);
+                if (relativePath.startsWith('Reports/') ||
                     relativePath.startsWith('Attachments/') ||
                     relativePath.startsWith('reports/') ||
                     relativePath.startsWith('attachments/')) {
                     return false;
                 }
-                
+
                 // Check if it's a Nexus conversation file
                 const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
                 return frontmatter?.nexus === this.plugin.manifest.id;
@@ -182,17 +215,10 @@ export class IncrementalUpgradeManager {
             // Fresh install criteria: no legacy data AND no imported archives AND no existing conversations
             const isFreshInstall = !hasLegacyData && !hasImportedArchives && !hasExistingConversations;
 
-            console.debug(`[NEXUS-DEBUG] Fresh install detection:`, {
-                hasLegacyData,
-                hasImportedArchives,
-                hasExistingConversations,
-                isFreshInstall
-            });
-
             return isFreshInstall;
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] Error detecting fresh install:`, error);
+            logger.error("Error detecting fresh install:", error);
             // If we can't determine, assume it's not fresh (safer to run upgrades)
             return false;
         }
@@ -202,7 +228,7 @@ export class IncrementalUpgradeManager {
      * Get chain of upgrades to execute incrementally
      */
     private getUpgradeChain(fromVersion: string, toVersion: string): VersionUpgrade[] {
-        return this.availableUpgrades.filter(upgrade => 
+        return this.availableUpgrades.filter(upgrade =>
             upgrade.shouldRun(fromVersion, toVersion)
         );
     }
@@ -215,7 +241,7 @@ export class IncrementalUpgradeManager {
         fromVersion: string,
         toVersion: string
     ): Promise<IncrementalUpgradeResult> {
-        
+
         // Collect all operations from all upgrades
         const allOperations: OperationStatus[] = [];
         for (const upgrade of upgradeChain) {
@@ -243,10 +269,9 @@ export class IncrementalUpgradeManager {
 
         try {
             for (const upgrade of upgradeChain) {
-                console.debug(`[NEXUS-DEBUG] Executing upgrade ${upgrade.version}...`);
-                
+
                 const context = await this.createUpgradeContext(upgrade, fromVersion, toVersion);
-                
+
                 // Execute automatic operations with progress updates
                 const automaticResults = await this.executeOperationsWithProgress(
                     upgrade.automaticOperations,
@@ -254,8 +279,7 @@ export class IncrementalUpgradeManager {
                     upgrade.version,
                     progressModal
                 );
-                
-                console.debug(`[NEXUS-DEBUG] Automatic operations for ${upgrade.version}:`, automaticResults);
+
 
                 // Manual operations will be handled separately if any exist
                 const manualResults = { success: true, results: [] };
@@ -271,9 +295,9 @@ export class IncrementalUpgradeManager {
             }
 
             const overallSuccess = true; // Always success for automatic operations
-            
+
             progressModal.markComplete(`All operations completed successfully!`);
-            new Notice(`Upgrade completed: ${upgradesExecuted} versions processed successfully`);
+            // No Notice here - completion dialog will be shown after
 
             return {
                 success: overallSuccess,
@@ -284,7 +308,7 @@ export class IncrementalUpgradeManager {
             };
 
         } catch (error) {
-            console.error(`[NEXUS-DEBUG] Modal upgrade execution failed:`, error);
+            logger.error("Modal upgrade execution failed:", error);
             progressModal.showError(`Upgrade failed: ${error}`);
             throw error;
         }
@@ -304,7 +328,7 @@ export class IncrementalUpgradeManager {
 
         for (const operation of operations) {
             const modalOperationId = `${version}_${operation.id}`;
-            
+
             try {
                 // Check if already completed
                 if (await this.isOperationCompleted(operation.id, version)) {
@@ -347,7 +371,7 @@ export class IncrementalUpgradeManager {
                     modalOperationId,
                     progressModal
                 );
-                
+
                 results.push({ operationId: operation.id, result });
 
                 if (result.success) {
@@ -411,21 +435,15 @@ export class IncrementalUpgradeManager {
         modalOperationId: string,
         progressModal: MultiOperationProgressModal
     ): Promise<any> {
-        // For now, just execute the operation normally
-        // In the future, we could modify operations to accept progress callbacks
+        // Execute the operation
         const result = await operation.execute(context);
-        
-        // Simulate progress for demo (remove this in production)
-        const steps = 5;
-        for (let i = 1; i <= steps; i++) {
-            progressModal.updateOperation(modalOperationId, {
-                status: 'running',
-                progress: (i / steps) * 100,
-                currentDetail: result.details?.processed ? `Processing... ${i}/${steps}` : undefined
-            });
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        
+
+        // Update progress to 100% when complete
+        progressModal.updateOperation(modalOperationId, {
+            status: 'running',
+            progress: 100
+        });
+
         return result;
     }
 
@@ -438,7 +456,7 @@ export class IncrementalUpgradeManager {
         toVersion: string
     ): Promise<UpgradeContext> {
         const pluginData = await this.plugin.loadData();
-        
+
         return {
             plugin: this.plugin,
             fromVersion,
@@ -452,7 +470,7 @@ export class IncrementalUpgradeManager {
      */
     private async markUpgradeComplete(version: string): Promise<void> {
         const data = await this.plugin.loadData() || {};
-        
+
         // Initialize upgrade history structure if needed
         if (!data.upgradeHistory) {
             data.upgradeHistory = {
@@ -460,7 +478,7 @@ export class IncrementalUpgradeManager {
                 completedOperations: {}
             };
         }
-        
+
         // Mark upgrade as completed in structured format
         const versionKey = version.replace(/\./g, '_');
         data.upgradeHistory.completedUpgrades[versionKey] = {
@@ -468,44 +486,184 @@ export class IncrementalUpgradeManager {
             date: new Date().toISOString(),
             completed: true
         };
-        
+
         // Legacy fields for compatibility (can be removed in future versions)
         data.lastVersion = version;
         data.hasCompletedUpgrade = true;
         data.upgradeDate = new Date().toISOString();
-        
+
         // Version tracking
         if (VersionUtils.compareVersions(version, "1.1.0") >= 0) {
             data.versionTrackingEnabled = true;
         }
-        
+
         await this.plugin.saveData(data);
-        logger.info(`Marked overall upgrade to ${version} as complete`);
+    }
+
+    /**
+     * Write a consolidated upgrade report per run
+     */
+    private async writeUpgradeReport(
+        fromVersion: string,
+        toVersion: string,
+        upgradeChain: VersionUpgrade[],
+        result: IncrementalUpgradeResult
+    ): Promise<void> {
+
+        const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
+
+        const upgradesFolder = `${reportRoot}/Upgrades`;
+
+        const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
+
+        if (!folderResult.success) {
+            logger.error(`❌ Failed to create folder: ${folderResult.error}`);
+            throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
+        }
+
+        const now = new Date();
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const fileName = `${ts} - Upgrade to ${toVersion}.md`;
+        const filePath = `${upgradesFolder}/${fileName}`;
+
+        // Build a map to resolve operation names per version
+        const opsByVersion: Record<string, Record<string, string>> = {};
+        for (const up of upgradeChain) {
+            opsByVersion[up.version] = {};
+            for (const op of up.automaticOperations) {
+                opsByVersion[up.version][op.id] = op.name;
+            }
+        }
+
+        // Overview
+        const readmeUrl = `${GITHUB.REPO_BASE}#readme`;
+        const issuesUrl = `${GITHUB.REPO_BASE}/issues`;
+
+        const totalVersions = result.results.length;
+        const totalOps = result.results.reduce((acc, v) => acc + (v.automaticResults?.results?.length || 0), 0);
+
+        let md = `# Upgrade to v${toVersion}\n\n`;
+        md += `From v${fromVersion} → v${toVersion}\n\n`;
+        md += `- Versions processed: ${totalVersions}\n`;
+        md += `- Operations executed: ${totalOps}\n\n`;
+        md += `See the latest README and release notes: ${readmeUrl}\n\n`;
+        md += `Report or review issues: ${issuesUrl}\n\n`;
+
+        // Sections per upgrade version and operation
+        for (const entry of result.results) {
+            md += `## ${entry.version}\n\n`;
+            const ops = entry.automaticResults?.results || [];
+
+            if (!ops.length) {
+                md += `- No automatic operations\n\n`;
+                continue;
+            }
+            for (const opRes of ops) {
+                const opId = opRes.operationId;
+                const opName = opsByVersion[entry.version]?.[opId] || opId;
+                const ok = opRes.result?.success === true;
+                const status = ok ? '✅' : '⚠️';
+                const msg = opRes.result?.message || '';
+                md += `### ${opName} ${status}\n\n`;
+                if (msg) md += `${msg}\n\n`;
+
+                const details = opRes.result?.details;
+                if (details) {
+                    // Format details based on type
+                    if (Array.isArray(details)) {
+                        // Array of strings (e.g., migration results)
+                        if (details.length > 0) {
+                            for (const item of details) {
+                                if (typeof item === 'string') {
+                                    md += `${item}\n`;
+                                }
+                            }
+                            md += `\n`;
+                        }
+                    } else if (typeof details === 'object') {
+                        // Object with key-value pairs (e.g., statistics)
+                        const keys = Object.keys(details);
+                        if (keys.length > 0 && !keys.every(k => /^\d+$/.test(k))) {
+                            // Only show if not array-like keys (0, 1, 2...)
+                            md += `**Statistics:**\n\n`;
+                            for (const key of keys) {
+                                const value = details[key as keyof typeof details];
+                                md += `- ${key}: ${String(value)}\n`;
+                            }
+                            md += `\n`;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        try {
+            await this.plugin.app.vault.create(filePath, md);
+        } catch (error) {
+            logger.error(`❌ Failed to write report file:`, error);
+            logger.error(`Error details:`, {
+                message: error instanceof Error ? error.message : String(error),
+                filePath,
+                contentLength: md.length
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Show upgrade complete dialog AFTER migrations
+     * Displays Ko-fi + What's New + Improvements + Bug Fixes
+     */
+    private async showUpgradeCompleteDialog(version: string): Promise<void> {
+        try {
+            // Check if this is v1.3.0 or later - use new completion modal
+            const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
+
+            if (isV130OrLater) {
+                const { UpgradeCompleteModal } = await import("../dialogs/upgrade-complete-modal");
+                await new Promise<void>((resolve) => {
+                    const modal = new UpgradeCompleteModal(this.plugin.app, this.plugin, version);
+                    modal.onClose = () => {
+                        resolve();
+                    };
+                    modal.open();
+                });
+            } else {
+                // For older versions, just show a simple notice
+                new Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+            }
+        } catch (error) {
+            logger.error("Error showing upgrade complete dialog:", error);
+            new Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+        }
     }
 
     /**
      * Show upgrade dialog - INFORMATION ONLY (no cancel)
+     * @deprecated - No longer used in v1.3.0+, kept for compatibility
      */
     private async showUpgradeDialog(currentVersion: string, lastVersion: string, upgradeChain: VersionUpgrade[]): Promise<void> {
         try {
             // Get overview content
             const overview = await this.fetchReleaseOverview(currentVersion);
             const baseMessage = overview || `Nexus AI Chat Importer has been upgraded to version ${currentVersion}.`;
-            
+
             // Build paragraphs array with proper spacing
             const paragraphs: string[] = [];
-            
+
             // Overview section
             paragraphs.push(baseMessage);
             paragraphs.push(this.getDocLinks(currentVersion));
-            
+
             if (upgradeChain.length > 0) {
                 // Add information about operations that will run
                 paragraphs.push(""); // Empty paragraph for spacing
                 paragraphs.push("**Upgrade Operations Required**");
                 paragraphs.push("The following operations will be performed automatically:");
                 paragraphs.push(""); // Empty paragraph for spacing
-                
+
                 // List operations from all upgrades
                 const operationsList: string[] = [];
                 for (const upgrade of upgradeChain) {
@@ -519,13 +677,25 @@ export class IncrementalUpgradeManager {
                 paragraphs.push(""); // Empty paragraph for spacing
                 paragraphs.push("All systems are up to date. No operations required.");
             }
-            
+
             // INFORMATION DIALOG - no cancel option
             if (upgradeChain.length > 0) {
-                // Check if this is the v1.2.0 upgrade - use beautiful modal
+                // Check if this is the v1.2.0 or v1.3.0 upgrade - use beautiful modal
                 const isV120Upgrade = upgradeChain.some(upgrade => upgrade.version === "1.2.0");
+                const isV130Upgrade = upgradeChain.some(upgrade => upgrade.version === "1.3.0");
 
-                if (isV120Upgrade) {
+                if (isV130Upgrade) {
+                    // Use beautiful upgrade modal for v1.3.0
+                    const { NexusUpgradeModal130 } = await import("../dialogs/upgrade-modal-1.3.0");
+                    const userChoice = await new Promise<string>((resolve) => {
+                        new NexusUpgradeModal130(this.plugin.app, this.plugin, "1.3.0", resolve).open();
+                    });
+
+                    // If user cancelled/closed dialog, throw error to abort upgrade
+                    if (userChoice !== "ok") {
+                        throw new Error("User cancelled upgrade");
+                    }
+                } else if (isV120Upgrade) {
                     // Use beautiful upgrade modal for v1.2.0
                     const { NexusUpgradeModal } = require("./versions/upgrade-1.2.0");
                     await new Promise<void>((resolve) => {
@@ -546,7 +716,7 @@ export class IncrementalUpgradeManager {
                 // Rien à faire
                 await showDialog(
                     this.plugin.app,
-                    "information", 
+                    "information",
                     `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
                     paragraphs,
                     this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
@@ -573,7 +743,7 @@ export class IncrementalUpgradeManager {
      */
     private async markOperationCompleted(operationId: string, version: string): Promise<void> {
         const data = await this.plugin.loadData() || {};
-        
+
         // Initialize upgrade history structure if needed
         if (!data.upgradeHistory) {
             data.upgradeHistory = {
@@ -581,7 +751,7 @@ export class IncrementalUpgradeManager {
                 completedOperations: {}
             };
         }
-        
+
         // Mark operation as completed in structured format
         const operationKey = `operation_${version.replace(/\./g, '_')}_${operationId}`;
         data.upgradeHistory.completedOperations[operationKey] = {
@@ -590,10 +760,8 @@ export class IncrementalUpgradeManager {
             date: new Date().toISOString(),
             completed: true
         };
-        
+
         await this.plugin.saveData(data);
-        
-        logger.info(`Marked operation ${operationId} (v${version}) as completed`);
     }
 
     /**
@@ -631,7 +799,7 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
                 url: `${GITHUB.RAW_BASE}/${version}/RELEASE_NOTES.md`,
                 method: 'GET'
             });
-            
+
             const overviewRegex = /## Overview\s+(.*?)(?=##|$)/s;
             const match = response.text.match(overviewRegex);
             return match ? match[1].trim() : null;
@@ -639,6 +807,25 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
             logger.warn("Could not fetch release overview:", error);
             return null;
         }
+    }
+
+    /**
+     * Compare two version strings
+     * Returns: -1 if v1 < v2, 0 if equal, 1 if v1 > v2
+     */
+    private compareVersions(v1: string, v2: string): number {
+        const parts1 = v1.split('.').map(Number);
+        const parts2 = v2.split('.').map(Number);
+
+        for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+            const num1 = parts1[i] || 0;
+            const num2 = parts2[i] || 0;
+
+            if (num1 < num2) return -1;
+            if (num1 > num2) return 1;
+        }
+
+        return 0;
     }
 
     /**
@@ -655,11 +842,11 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
         }>;
     }>> {
         const results = [];
-        
+
         for (const upgrade of this.availableUpgrades) {
             const context = await this.createUpgradeContext(upgrade, "0.0.0", this.plugin.manifest.version);
             const operationsStatus = await upgrade.getManualOperationsStatus(context);
-            
+
             if (operationsStatus.length > 0) {
                 results.push({
                     version: upgrade.version,
@@ -673,7 +860,7 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
                 });
             }
         }
-        
+
         return results;
     }
 
@@ -688,7 +875,7 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
 
         const context = await this.createUpgradeContext(upgrade, "0.0.0", this.plugin.manifest.version);
         const result = await upgrade.executeManualOperation(operationId, context);
-        
+
         return {
             success: result.success,
             message: result.message

@@ -1,0 +1,352 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
+// src/providers/chatgpt/chatgpt-dalle-processor.ts
+import { Chat, ChatMessage } from "./chatgpt-types";
+import { StandardMessage, StandardAttachment } from "../../types/standard";
+
+/**
+ * Centralized processor for ChatGPT DALL-E image generation handling
+ * Manages prompt association, image detection, and attachment creation
+ */
+export class ChatGPTDalleProcessor {
+    /**
+     * Extract DALL-E prompts from chat mapping using recursive descendant search
+     * Returns both matched prompts (image found) and orphaned prompts (no image found)
+     */
+    static extractDallePromptsFromMapping(chat: Chat): {
+        imagePrompts: Map<string, { prompt: string; timestamp: number }>;
+        orphanedPrompts: Map<string, string>;
+    } {
+        const imagePrompts = new Map<string, { prompt: string; timestamp: number }>();
+        const orphanedPrompts = new Map<string, string>();
+
+        let promptMessagesFound = 0;
+        let promptsWithImages = 0;
+        let orphanedPromptsCount = 0;
+
+        for (const messageObj of Object.values(chat.mapping)) {
+            const message = messageObj?.message;
+            if (!message || message.author?.role !== "assistant") continue;
+
+            if (this.isDallePromptMessage(message)) {
+                promptMessagesFound++;
+                const prompt = this.extractPromptFromJson(message);
+
+
+                if (prompt) {
+                    // Recursive search in descendants until we find image or hit user message
+                    const imageMessageId = this.findDalleImageInDescendants(
+                        chat.mapping,
+                        messageObj.id || ""
+                    );
+
+
+                    if (imageMessageId) {
+                        promptsWithImages++;
+                        // Store prompt with timestamp from prompt message
+                        imagePrompts.set(imageMessageId, {
+                            prompt,
+                            timestamp: message.create_time || 0
+                        });
+                    } else {
+                        orphanedPromptsCount++;
+                        // No image found - store as orphaned prompt
+                        orphanedPrompts.set(messageObj.id || "", prompt);
+                    }
+                } else {
+                }
+            }
+        }
+
+        return { imagePrompts, orphanedPrompts };
+    }
+
+    /**
+     * Recursively search for DALL-E image in descendants
+     * Stops at first user message encountered (limit to prevent going too far)
+     */
+    private static findDalleImageInDescendants(
+        mapping: Record<string, any>,
+        startId: string
+    ): string | null {
+        const queue = [startId];
+        const visited = new Set<string>();
+
+        while (queue.length > 0) {
+            const currentId = queue.shift()!;
+
+            if (visited.has(currentId)) continue;
+            visited.add(currentId);
+
+            const currentObj = mapping[currentId];
+            if (!currentObj) continue;
+
+            const message = currentObj.message;
+
+            // LIMIT: Stop if we encounter a user message
+            if (message?.author?.role === "user") {
+                return null;
+            }
+
+            // Check if this is a DALL-E image
+            if (message?.author?.role === "tool" && this.hasRealDalleImage(message)) {
+                return currentId;
+            }
+
+            // Continue with children
+            const children = currentObj.children || [];
+            queue.push(...children);
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if message is a DALL-E JSON prompt message
+     * Handles both formats:
+     * - content_type: "text" with parts[0] containing JSON
+     * - content_type: "code" with text containing JSON
+     */
+    static isDallePromptMessage(message: ChatMessage): boolean {
+        if (message.author?.role !== "assistant") return false;
+
+        // Format 1: content_type "text" with parts array
+        if (message.content?.parts &&
+            Array.isArray(message.content.parts) &&
+            message.content.parts.length === 1 &&
+            typeof message.content.parts[0] === "string") {
+
+            const content = message.content.parts[0].trim();
+            if (content.startsWith('{') && content.includes('"prompt"')) {
+                return true;
+            }
+        }
+
+        // Format 2: content_type "code" with text field (OpenAI inconsistency)
+        if (message.content?.content_type === "code" &&
+            message.content?.text &&
+            typeof message.content.text === "string") {
+
+            const content = message.content.text.trim();
+            if (content.startsWith('{') && content.includes('"prompt"')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Extract prompt from DALL-E JSON message
+     * Handles both formats:
+     * - content_type: "text" with parts[0] containing JSON
+     * - content_type: "code" with text containing JSON
+     */
+    static extractPromptFromJson(message: ChatMessage): string | null {
+        try {
+            let jsonStr: string | null = null;
+
+            // Format 1: content_type "text" with parts array
+            if (message.content?.parts && message.content.parts[0]) {
+                jsonStr = message.content.parts[0] as string;
+            }
+            // Format 2: content_type "code" with text field
+            else if (message.content?.content_type === "code" && message.content?.text) {
+                jsonStr = message.content.text as string;
+            }
+
+            if (jsonStr) {
+                const parsed = JSON.parse(jsonStr);
+                const extractedPrompt = parsed.prompt || null;
+                return extractedPrompt;
+            }
+        } catch (error) {
+        }
+        return null;
+    }
+
+    /**
+     * Check if message contains REAL DALL-E image (not user upload)
+     */
+    static hasRealDalleImage(message: ChatMessage): boolean {
+        if (!message.content?.parts || !Array.isArray(message.content.parts)) {
+            return false;
+        }
+        
+        return message.content.parts.some(part => {
+            if (typeof part !== "object" || part === null) return false;
+            
+            const contentPart = part as any;
+            return contentPart.content_type === "image_asset_pointer" && 
+                   contentPart.asset_pointer &&
+                   contentPart.metadata?.dalle && 
+                   contentPart.metadata.dalle !== null;
+        });
+    }
+
+    /**
+     * Create StandardAttachment for DALL-E image with provider-agnostic metadata
+     * The prompt will be embedded in extractedContent for display
+     */
+    static createDalleAttachment(contentPart: any, associatedPrompt?: string, hasImage: boolean = true): StandardAttachment {
+        const fileId = contentPart.asset_pointer.includes('://')
+            ? contentPart.asset_pointer.split('://')[1]
+            : contentPart.asset_pointer;
+
+        const genId = contentPart.metadata.dalle.gen_id || 'unknown';
+        const width = contentPart.width || 1024;
+        const height = contentPart.height || 1024;
+        const fileName = `dalle_${genId}_${width}x${height}.png`;
+
+        const prompt = associatedPrompt || contentPart.metadata.dalle.prompt;
+
+
+        // Create extracted content with prompt + image callouts (provider-formatted)
+        let extractedContent = '';
+
+        if (prompt) {
+            // Format prompt in code block with nested callout
+            const formattedPrompt = prompt.split('\n').join('\n>> ');
+            extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
+>
+>>[!nexus_attachment] **{{FILENAME}}** ({{FILETYPE}}) - {{FILESIZE}}
+>> ![[{{URL}}]]`;
+
+            if (!hasImage) {
+                // Image not found - replace image callout with warning
+                extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
+>
+>>[!nexus_attachment] **Image Not Found**
+>> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`;
+            }
+
+        } else {
+        }
+
+        return {
+            fileName,
+            fileSize: contentPart.size_bytes,
+            fileType: "image/png", // Will be corrected dynamically by extractor
+            fileId,
+            extractedContent,
+
+            // Provider-agnostic metadata
+            attachmentType: 'generated_image',
+            generationPrompt: prompt,
+
+            // Provider-specific metadata
+            providerMetadata: {
+                dalle: {
+                    gen_id: contentPart.metadata.dalle.gen_id,
+                    seed: contentPart.metadata.dalle.seed,
+                    parent_gen_id: contentPart.metadata.dalle.parent_gen_id,
+                    edit_op: contentPart.metadata.dalle.edit_op
+                }
+            }
+        };
+    }
+
+    /**
+     * Create Assistant (DALL-E) message from tool message with associated prompt
+     */
+    static createDalleAssistantMessage(
+        toolMessage: ChatMessage,
+        associatedPrompt?: string,
+        promptTimestamp?: number
+    ): StandardMessage | null {
+
+        if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
+            return null;
+        }
+
+        const attachments: StandardAttachment[] = [];
+
+        for (const part of toolMessage.content.parts) {
+            if (typeof part === "object" && part !== null) {
+                const contentPart = part as any;
+                if (contentPart.content_type === "image_asset_pointer" &&
+                    contentPart.asset_pointer &&
+                    contentPart.metadata?.dalle &&
+                    contentPart.metadata.dalle !== null) {
+
+                    const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt, true);
+                    attachments.push(dalleAttachment);
+                }
+            }
+        }
+
+        if (attachments.length === 0) {
+            return null;
+        }
+
+        return {
+            id: toolMessage.id || "",
+            role: "assistant",
+            content: "DALL-E Generated Image",
+            // Use prompt timestamp if available, otherwise fall back to tool message timestamp
+            timestamp: promptTimestamp || toolMessage.create_time || 0,
+            attachments: attachments
+        };
+    }
+
+    /**
+     * Create informational message for orphaned DALL-E prompt (no image found)
+     * Creates a "phantom" attachment with the prompt and warning
+     */
+    static createOrphanedPromptMessage(promptMessage: ChatMessage, prompt: string): StandardMessage {
+        // Format prompt with nested callouts (provider-formatted)
+        const formattedPrompt = prompt.split('\n').join('\n>> ');
+
+        // Create a phantom attachment with prompt and warning
+        const phantomAttachment: StandardAttachment = {
+            fileName: 'dalle_image_not_found.png',
+            fileType: 'image/png',
+            attachmentType: 'generated_image',
+            generationPrompt: prompt,
+            extractedContent: `>>[!nexus_prompt] **DALL-E Prompt** (Image Generation Failed or Interrupted)
+>> \`\`\`
+>> ${formattedPrompt}
+>> \`\`\`
+>
+>>[!nexus_attachment] **Image Not Found**
+>> ⚠️ Image generation may have failed or been interrupted. The prompt was saved but no image was found in the export.`,
+            status: {
+                processed: true,
+                found: false,
+                reason: 'missing_from_export',
+                note: 'DALL-E generation was requested but the image was not found in the archive'
+            }
+        };
+
+        return {
+            id: promptMessage.id || "",
+            role: "assistant",
+            content: "DALL-E Image Generation (Failed/Interrupted)",
+            timestamp: promptMessage.create_time || 0,
+            attachments: [phantomAttachment]
+        };
+    }
+}

@@ -1,21 +1,65 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/types/plugin.ts
 export interface PluginSettings {
-    archiveFolder: string;
+    // ========================================
+    // 📁 FOLDER STRUCTURE
+    // ========================================
+    conversationFolder: string;
+    reportFolder: string;
+    attachmentFolder: string;
+
+    // ========================================
+    // 🎨 DISPLAY OPTIONS
+    // ========================================
     addDatePrefix: boolean;
     dateFormat: 'YYYY-MM-DD' | 'YYYYMMDD';
+
+    // Message timestamp format
+    useCustomMessageTimestampFormat: boolean;
+    messageTimestampFormat: MessageTimestampFormat;
+
+    // ========================================
+    // 🔧 INTERNAL SETTINGS (not shown in UI)
+    // ========================================
+    lastConversationsPerPage: number;
+
+    // ========================================
+    // 🔄 MIGRATION FLAGS
+    // ========================================
     hasShownUpgradeNotice: boolean;
     hasCompletedUpgrade: boolean;
-    
-    // Version tracking for migrations
     currentVersion: string;
     previousVersion: string;
-    
-    // Attachment settings
-    importAttachments: boolean;
-    attachmentFolder: string;
-    reportFolder: string;
-    skipMissingAttachments: boolean;
-    showAttachmentDetails: boolean;
+
+    // ========================================
+    // 🗑️ DEPRECATED (will be removed in migration)
+    // ========================================
+    archiveFolder?: string;  // Renamed to conversationFolder
+    importAttachments?: boolean;  // Always true now
+    skipMissingAttachments?: boolean;  // Always handle attachments
+    showAttachmentDetails?: boolean;  // Removed
+    defaultImportMode?: 'all' | 'selective';  // Removed
+    rememberLastImportMode?: boolean;  // Removed
+    conversationPageSize?: number;  // Replaced by lastConversationsPerPage
+    autoSelectAllOnOpen?: boolean;  // Removed
 }
 
 export interface ConversationRecord {
@@ -66,3 +110,14 @@ export interface AttachmentStats {
     missing: number;
     failed: number;
 }
+
+/**
+ * Available message timestamp formats
+ */
+export type MessageTimestampFormat =
+    | 'locale'    // Auto (follows Obsidian language)
+    | 'iso'       // YYYY-MM-DD HH:mm:ss
+    | 'us'        // MM/DD/YYYY h:mm:ss A
+    | 'eu'        // DD/MM/YYYY HH:mm:ss
+    | 'de'        // DD.MM.YYYY HH:mm:ss
+    | 'jp';       // YYYY/MM/DD HH:mm:ss

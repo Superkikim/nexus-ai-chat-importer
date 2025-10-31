@@ -1,3 +1,22 @@
+/**
+ * Nexus AI Chat Importer - Obsidian Plugin
+ * Copyright (C) 2024 Akim Sissaoui
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 // src/dialogs.ts
 import { Modal, App } from "obsidian";
 
@@ -202,10 +221,12 @@ class BeautifulUpgradeDialog extends Modal {
         const supportSection = container.createDiv('nexus-support-section');
         supportSection.innerHTML = `
             <div class="nexus-support-text">
-                I build this plugin in my free time, as a labor of love. If you find it valuable, say THANK YOU or…
+                I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses.
+
+                If these plugins help you, even a small donation would mean the world and help keep them alive.
             </div>
             <div class="nexus-coffee-div">
-                <a href="https://ko-fi.com/superkikim" target="_blank">
+                <a href="https://ko-fi.com/nexusplugins" target="_blank">
                     <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45">
                 </a>
             </div>

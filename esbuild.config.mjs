@@ -76,6 +76,8 @@ async function build() {
         sourcemap: prod ? false : "inline",
         treeShaking: true,
         outfile: "dist/main.js",
+        drop: prod ? ["debugger"] : [], // Remove debugger statements in production
+        keepNames: true, // Preserve function/class names for better debugging
     });
 
     if (prod || ios) {
