@@ -19,6 +19,7 @@
 
 // src/dialogs/import-completion-dialog.ts
 import { App, Modal } from "obsidian";
+import { createKofiSupportBox } from "../ui/components/kofi-support-box";
 
 export interface ImportCompletionStats {
     totalFiles: number;
@@ -78,8 +79,8 @@ export class ImportCompletionDialog extends Modal {
         // Report link section
         this.createReportSection(contentEl);
 
-        // Ko-fi support section (subtle but visible)
-        this.createKofiSection(contentEl);
+        // Ko-fi support section (using reusable component)
+        createKofiSupportBox(contentEl);
 
         // Action buttons
         this.createActionButtons(contentEl);
@@ -207,49 +208,7 @@ export class ImportCompletionDialog extends Modal {
         });
     }
 
-    private createKofiSection(container: HTMLElement) {
-        const section = container.createDiv('kofi-section');
-        section.style.marginBottom = "20px";
-        section.style.padding = "16px";
-        section.style.background = "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)";
-        section.style.borderRadius = "8px";
-        section.style.border = "1px solid rgba(102, 126, 234, 0.3)";
-        section.style.textAlign = "center";
 
-        const message = section.createDiv();
-        message.innerHTML = `
-            <div style="margin-bottom: 12px; font-size: 0.95em;">
-                I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses.
-
-                If these plugins help you, even a small donation would mean the world and help keep them alive.
-            </div>
-        `;
-
-        const buttonContainer = section.createDiv();
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.justifyContent = "center";
-        buttonContainer.style.alignItems = "center";
-        buttonContainer.style.gap = "12px";
-
-        const kofiLink = buttonContainer.createEl("a");
-        kofiLink.href = "https://ko-fi.com/nexusplugins";
-        kofiLink.target = "_blank";
-        kofiLink.style.display = "inline-block";
-        kofiLink.style.transition = "transform 0.2s ease";
-        kofiLink.innerHTML = `<img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" alt="Buy Me a Coffee" height="36" style="border-radius: 4px;">`;
-        kofiLink.addEventListener('mouseenter', () => {
-            kofiLink.style.transform = "scale(1.05)";
-        });
-        kofiLink.addEventListener('mouseleave', () => {
-            kofiLink.style.transform = "scale(1)";
-        });
-
-        const amounts = section.createDiv();
-        amounts.style.marginTop = "10px";
-        amounts.style.fontSize = "0.8em";
-        amounts.style.color = "var(--text-muted)";
-        amounts.innerHTML = `<em>$5 ☕ • $25 🤖 • $75 🚀</em>`;
-    }
 
     private createActionButtons(container: HTMLElement) {
         const buttonContainer = container.createDiv('action-buttons');

@@ -56,7 +56,7 @@ export class InstallationWelcomeDialog extends Modal {
             font-size: 1.05em;
         `;
 
-        // Ko-fi support box
+        // Ko-fi support box (using reusable component)
         createKofiSupportBox(contentEl);
 
         // Resources section

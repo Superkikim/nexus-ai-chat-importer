@@ -157,7 +157,7 @@ function createKofiSupportBox(container, message) {
         line-height: 1.5;
         opacity: 0.95;
     `;
-  messageEl.textContent = message || "If you find this plugin useful, consider supporting its development. Your support helps maintain and improve the plugin!";
+  messageEl.textContent = message || "I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses. If these plugins help you, even a small donation would mean the world and help keep them alive.";
   const buttonContainer = supportBox.createDiv();
   buttonContainer.style.textAlign = "center";
   const kofiButton = buttonContainer.createEl("a", {
@@ -7587,6 +7587,7 @@ var init_upgrade_modal_1_3_0 = __esm({
   "src/dialogs/upgrade-modal-1.3.0.ts"() {
     "use strict";
     import_obsidian25 = require("obsidian");
+    init_kofi_support_box();
     NexusUpgradeModal130 = class extends import_obsidian25.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
@@ -7612,7 +7613,7 @@ var init_upgrade_modal_1_3_0 = __esm({
         this.contentEl.empty();
       }
       async createForm() {
-        this.addKofiSection();
+        createKofiSupportBox(this.contentEl);
         this.addMigrationSection();
         this.addMigrationButton();
         let message = `## \u2728 What's New in v1.3.0
@@ -7647,42 +7648,6 @@ Try the new **selective import** feature on your next import - you'll love the c
           this.plugin
         );
         this.addStyles();
-      }
-      addKofiSection() {
-        const kofiSection = this.contentEl.createDiv({ cls: "nexus-kofi-section" });
-        const header = kofiSection.createDiv({ cls: "nexus-kofi-header" });
-        header.innerHTML = `
-            <div class="nexus-kofi-title">
-                \u2615 <strong>Support This Plugin</strong>
-            </div>
-        `;
-        const message = kofiSection.createDiv({ cls: "nexus-kofi-message" });
-        message.innerHTML = `
-            <p>I'm working on Nexus projects full-time while unemployed and dealing with health issues.</p>
-            <p><strong>Over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses.</strong></p>
-            <p>If this plugin makes your life easier, a donation would mean the world and help keep it alive.</p>
-        `;
-        const buttonContainer = kofiSection.createDiv({ cls: "nexus-kofi-button-container" });
-        buttonContainer.innerHTML = `
-            <a href="https://ko-fi.com/nexusplugins" target="_blank" class="nexus-kofi-link">
-                <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" alt="Buy Me a Coffee at ko-fi.com" height="50">
-            </a>
-        `;
-        const amounts = kofiSection.createDiv({ cls: "nexus-kofi-amounts" });
-        amounts.innerHTML = `
-            <div class="nexus-kofi-amounts-title">Suggested amounts:</div>
-            <div class="nexus-kofi-amounts-list">
-                <span class="nexus-kofi-amount">\u2615 $5 - Coffee</span>
-                <span class="nexus-kofi-amount">\u{1F916} $25 - AI Tools</span>
-                <span class="nexus-kofi-amount">\u{1F680} $75 - Dev Toolkit</span>
-            </div>
-        `;
-        const stats = kofiSection.createDiv({ cls: "nexus-kofi-stats" });
-        stats.innerHTML = `
-            <p class="nexus-kofi-stats-text">
-                <em>Reality check: Thousands of downloads, but only 2 donations totaling $10. If you use it regularly, please consider contributing. Even $5 makes a difference! \u{1F64F}</em>
-            </p>
-        `;
       }
       addMigrationSection() {
         const migrationSection = this.contentEl.createDiv({ cls: "nexus-migration-section" });
@@ -7734,106 +7699,6 @@ Try the new **selective import** feature on your next import - you'll love the c
             .nexus-upgrade-content {
                 margin-bottom: 20px;
                 line-height: 1.6;
-            }
-
-            /* Ko-fi Section Styles */
-            .nexus-kofi-section {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 12px;
-                padding: 24px;
-                margin: 24px 0;
-                color: white;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            }
-
-            .nexus-kofi-header {
-                margin-bottom: 16px;
-            }
-
-            .nexus-kofi-title {
-                font-size: 1.3em;
-                text-align: center;
-                color: white;
-            }
-
-            .nexus-kofi-title strong {
-                color: #FFD700;
-            }
-
-            .nexus-kofi-message {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-
-            .nexus-kofi-message p {
-                margin: 8px 0;
-                color: rgba(255, 255, 255, 0.95);
-            }
-
-            .nexus-kofi-message strong {
-                color: #FFD700;
-                font-size: 1.05em;
-            }
-
-            .nexus-kofi-button-container {
-                text-align: center;
-                margin: 20px 0;
-            }
-
-            .nexus-kofi-link {
-                display: inline-block;
-                transition: transform 0.2s ease;
-            }
-
-            .nexus-kofi-link:hover {
-                transform: scale(1.05);
-            }
-
-            .nexus-kofi-link img {
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            }
-
-            .nexus-kofi-amounts {
-                margin-top: 16px;
-                padding-top: 16px;
-                border-top: 1px solid rgba(255, 255, 255, 0.3);
-            }
-
-            .nexus-kofi-amounts-title {
-                text-align: center;
-                font-size: 0.9em;
-                margin-bottom: 12px;
-                color: rgba(255, 255, 255, 0.9);
-            }
-
-            .nexus-kofi-amounts-list {
-                display: flex;
-                justify-content: center;
-                gap: 16px;
-                flex-wrap: wrap;
-            }
-
-            .nexus-kofi-amount {
-                background: rgba(255, 255, 255, 0.2);
-                padding: 8px 16px;
-                border-radius: 20px;
-                font-size: 0.9em;
-                font-weight: 500;
-                backdrop-filter: blur(10px);
-            }
-
-            .nexus-kofi-stats {
-                margin-top: 16px;
-                padding-top: 16px;
-                border-top: 1px solid rgba(255, 255, 255, 0.3);
-            }
-
-            .nexus-kofi-stats-text {
-                text-align: center;
-                font-size: 0.9em;
-                color: rgba(255, 255, 255, 0.85);
-                margin: 0;
             }
 
             /* Migration Section Styles */
@@ -15714,6 +15579,7 @@ __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
 var import_obsidian31 = require("obsidian");
+init_kofi_support_box();
 var ImportCompletionDialog = class extends import_obsidian31.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
@@ -15737,7 +15603,7 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
       this.createAttachmentsSection(contentEl);
     }
     this.createReportSection(contentEl);
-    this.createKofiSection(contentEl);
+    createKofiSupportBox(contentEl);
     this.createActionButtons(contentEl);
     this.addCustomStyles();
   }
@@ -15826,45 +15692,6 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     link.addEventListener("mouseleave", () => {
       link.style.textDecoration = "none";
     });
-  }
-  createKofiSection(container) {
-    const section = container.createDiv("kofi-section");
-    section.style.marginBottom = "20px";
-    section.style.padding = "16px";
-    section.style.background = "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)";
-    section.style.borderRadius = "8px";
-    section.style.border = "1px solid rgba(102, 126, 234, 0.3)";
-    section.style.textAlign = "center";
-    const message = section.createDiv();
-    message.innerHTML = `
-            <div style="margin-bottom: 12px; font-size: 0.95em;">
-                I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses.
-
-                If these plugins help you, even a small donation would mean the world and help keep them alive.
-            </div>
-        `;
-    const buttonContainer = section.createDiv();
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.justifyContent = "center";
-    buttonContainer.style.alignItems = "center";
-    buttonContainer.style.gap = "12px";
-    const kofiLink = buttonContainer.createEl("a");
-    kofiLink.href = "https://ko-fi.com/nexusplugins";
-    kofiLink.target = "_blank";
-    kofiLink.style.display = "inline-block";
-    kofiLink.style.transition = "transform 0.2s ease";
-    kofiLink.innerHTML = `<img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" alt="Buy Me a Coffee" height="36" style="border-radius: 4px;">`;
-    kofiLink.addEventListener("mouseenter", () => {
-      kofiLink.style.transform = "scale(1.05)";
-    });
-    kofiLink.addEventListener("mouseleave", () => {
-      kofiLink.style.transform = "scale(1)";
-    });
-    const amounts = section.createDiv();
-    amounts.style.marginTop = "10px";
-    amounts.style.fontSize = "0.8em";
-    amounts.style.color = "var(--text-muted)";
-    amounts.innerHTML = `<em>$5 \u2615 \u2022 $25 \u{1F916} \u2022 $75 \u{1F680}</em>`;
   }
   createActionButtons(container) {
     const buttonContainer = container.createDiv("action-buttons");

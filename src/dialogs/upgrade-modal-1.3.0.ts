@@ -19,6 +19,7 @@
 
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
+import { createKofiSupportBox } from "../ui/components/kofi-support-box";
 
 /**
  * Beautiful upgrade modal for v1.3.0 with prominent Ko-fi support
@@ -61,8 +62,8 @@ export class NexusUpgradeModal130 extends Modal {
     }
 
     async createForm() {
-        // Add Ko-fi support section FIRST (at the top)
-        this.addKofiSection();
+        // Add Ko-fi support section FIRST (at the top) - using reusable component
+        createKofiSupportBox(this.contentEl);
 
         // Add migration info section
         this.addMigrationSection();
@@ -112,52 +113,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         this.addStyles();
     }
 
-    private addKofiSection() {
-        const kofiSection = this.contentEl.createDiv({ cls: "nexus-kofi-section" });
 
-        // Header with emoji
-        const header = kofiSection.createDiv({ cls: "nexus-kofi-header" });
-        header.innerHTML = `
-            <div class="nexus-kofi-title">
-                ☕ <strong>Support This Plugin</strong>
-            </div>
-        `;
-
-        // Message with reality check
-        const message = kofiSection.createDiv({ cls: "nexus-kofi-message" });
-        message.innerHTML = `
-            <p>I'm working on Nexus projects full-time while unemployed and dealing with health issues.</p>
-            <p><strong>Over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses.</strong></p>
-            <p>If this plugin makes your life easier, a donation would mean the world and help keep it alive.</p>
-        `;
-
-        // Ko-fi button (larger and more prominent)
-        const buttonContainer = kofiSection.createDiv({ cls: "nexus-kofi-button-container" });
-        buttonContainer.innerHTML = `
-            <a href="https://ko-fi.com/nexusplugins" target="_blank" class="nexus-kofi-link">
-                <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" alt="Buy Me a Coffee at ko-fi.com" height="50">
-            </a>
-        `;
-
-        // Suggested amounts
-        const amounts = kofiSection.createDiv({ cls: "nexus-kofi-amounts" });
-        amounts.innerHTML = `
-            <div class="nexus-kofi-amounts-title">Suggested amounts:</div>
-            <div class="nexus-kofi-amounts-list">
-                <span class="nexus-kofi-amount">☕ $5 - Coffee</span>
-                <span class="nexus-kofi-amount">🤖 $25 - AI Tools</span>
-                <span class="nexus-kofi-amount">🚀 $75 - Dev Toolkit</span>
-            </div>
-        `;
-
-        // Reality check
-        const stats = kofiSection.createDiv({ cls: "nexus-kofi-stats" });
-        stats.innerHTML = `
-            <p class="nexus-kofi-stats-text">
-                <em>Reality check: Thousands of downloads, but only 2 donations totaling $10. If you use it regularly, please consider contributing. Even $5 makes a difference! 🙏</em>
-            </p>
-        `;
-    }
 
     private addMigrationSection() {
         const migrationSection = this.contentEl.createDiv({ cls: "nexus-migration-section" });
@@ -221,106 +177,6 @@ Try the new **selective import** feature on your next import - you'll love the c
             .nexus-upgrade-content {
                 margin-bottom: 20px;
                 line-height: 1.6;
-            }
-
-            /* Ko-fi Section Styles */
-            .nexus-kofi-section {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 12px;
-                padding: 24px;
-                margin: 24px 0;
-                color: white;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            }
-
-            .nexus-kofi-header {
-                margin-bottom: 16px;
-            }
-
-            .nexus-kofi-title {
-                font-size: 1.3em;
-                text-align: center;
-                color: white;
-            }
-
-            .nexus-kofi-title strong {
-                color: #FFD700;
-            }
-
-            .nexus-kofi-message {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-
-            .nexus-kofi-message p {
-                margin: 8px 0;
-                color: rgba(255, 255, 255, 0.95);
-            }
-
-            .nexus-kofi-message strong {
-                color: #FFD700;
-                font-size: 1.05em;
-            }
-
-            .nexus-kofi-button-container {
-                text-align: center;
-                margin: 20px 0;
-            }
-
-            .nexus-kofi-link {
-                display: inline-block;
-                transition: transform 0.2s ease;
-            }
-
-            .nexus-kofi-link:hover {
-                transform: scale(1.05);
-            }
-
-            .nexus-kofi-link img {
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            }
-
-            .nexus-kofi-amounts {
-                margin-top: 16px;
-                padding-top: 16px;
-                border-top: 1px solid rgba(255, 255, 255, 0.3);
-            }
-
-            .nexus-kofi-amounts-title {
-                text-align: center;
-                font-size: 0.9em;
-                margin-bottom: 12px;
-                color: rgba(255, 255, 255, 0.9);
-            }
-
-            .nexus-kofi-amounts-list {
-                display: flex;
-                justify-content: center;
-                gap: 16px;
-                flex-wrap: wrap;
-            }
-
-            .nexus-kofi-amount {
-                background: rgba(255, 255, 255, 0.2);
-                padding: 8px 16px;
-                border-radius: 20px;
-                font-size: 0.9em;
-                font-weight: 500;
-                backdrop-filter: blur(10px);
-            }
-
-            .nexus-kofi-stats {
-                margin-top: 16px;
-                padding-top: 16px;
-                border-top: 1px solid rgba(255, 255, 255, 0.3);
-            }
-
-            .nexus-kofi-stats-text {
-                text-align: center;
-                font-size: 0.9em;
-                color: rgba(255, 255, 255, 0.85);
-                margin: 0;
             }
 
             /* Migration Section Styles */
