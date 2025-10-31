@@ -94,7 +94,7 @@ export class InstallationWelcomeDialog extends Modal {
                 icon: '📝',
                 title: 'Release Notes',
                 description: 'What\'s new in this version',
-                url: 'https://github.com/superkikim/nexus-ai-chat-importer/releases'
+                url: 'https://github.com/superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md'
             },
             {
                 icon: '🐛',
