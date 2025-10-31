@@ -14,7 +14,7 @@ const prod = (process.argv[2] === "production");
 const ios = (process.argv[2] === "ios");
 
 async function copyFiles() {
-    const filesToCopy = ["manifest.json", "styles.css", "support_me_on_kofi_red.png"];
+    const filesToCopy = ["manifest.json", "styles.css"];
 
     for (const file of filesToCopy) {
         const srcPath = path.join(process.cwd(), file);
