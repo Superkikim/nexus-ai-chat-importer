@@ -35,7 +35,7 @@
 2. **Export** your chats:
    - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
    - **Claude**: Settings → Export data → Download ZIP
-3. **Import**: Click the 💬➕ ribbon icon in the left sidebar or use command palette → "Import AI conversations"
+3. **Import**: Click the <img src="https://api.iconify.design/lucide:message-square-plus.svg" width="16" height="16" alt="message-square-plus" /> ribbon icon in the left sidebar or use command palette → "Import AI conversations"
 4. **Select** your ZIP file(s) → Choose import mode (all or selective)
 5. **Done!** Your conversations are now in `Nexus/Conversations/`
 
