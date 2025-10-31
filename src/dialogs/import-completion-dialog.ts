@@ -20,6 +20,9 @@
 // src/dialogs/import-completion-dialog.ts
 import { App, Modal } from "obsidian";
 import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { Logger } from "../logger";
+
+const logger = new Logger();
 
 export interface ImportCompletionStats {
     totalFiles: number;

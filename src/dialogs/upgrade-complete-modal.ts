@@ -35,10 +35,11 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     onOpen(): void {
-        const { containerEl, titleEl, modalEl } = this;
+        const { contentEl, titleEl, modalEl } = this;
 
-        // Add custom CSS class
+        // Add custom CSS classes
         modalEl.classList.add('nexus-upgrade-complete-modal');
+        contentEl.classList.add('nexus-ai-chat-importer-modal');
 
         // Set modal width IMMEDIATELY (before content loads)
         modalEl.style.width = '800px';
@@ -57,8 +58,8 @@ export class UpgradeCompleteModal extends Modal {
     async createContent() {
         const { contentEl } = this;
 
-        // Ko-fi section (top)
-        this.addKofiSection();
+        // Ko-fi support section (using reusable component)
+        createKofiSupportBox(contentEl);
 
         // Release notes content
         await this.addReleaseNotes();
@@ -68,11 +69,6 @@ export class UpgradeCompleteModal extends Modal {
 
         // Add custom styles
         this.addStyles();
-    }
-
-    private addKofiSection() {
-// Ko-fi support section (using reusable component)
-        createKofiSupportBox(this.contentEl);
     }
 
     private async addReleaseNotes() {
@@ -155,71 +151,6 @@ export class UpgradeCompleteModal extends Modal {
                 padding: 0;
                 overflow-y: auto;
                 max-height: calc(85vh - 100px);
-            }
-
-            /* Ko-fi section */
-            .nexus-kofi-section {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 2em;
-                border-radius: 8px;
-                margin-bottom: 2em;
-                text-align: center;
-            }
-
-            .nexus-kofi-header {
-                margin-bottom: 1em;
-            }
-
-            .nexus-kofi-title {
-                font-size: 1.5em;
-                font-weight: bold;
-            }
-
-            .nexus-kofi-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-kofi-message p {
-                margin: 0.5em 0;
-            }
-
-            .nexus-kofi-button-container {
-                margin: 1.5em 0;
-            }
-
-            .nexus-kofi-link {
-                display: inline-block;
-                transition: transform 0.2s;
-            }
-
-            .nexus-kofi-link:hover {
-                transform: scale(1.05);
-            }
-
-            .nexus-kofi-amounts {
-                margin-top: 1em;
-                font-size: 0.95em;
-            }
-
-            .nexus-kofi-amounts-title {
-                margin-bottom: 0.5em;
-                opacity: 0.9;
-            }
-
-            .nexus-kofi-amounts-list {
-                display: flex;
-                justify-content: center;
-                gap: 1.5em;
-                flex-wrap: wrap;
-            }
-
-            .nexus-kofi-amount {
-                background: rgba(255, 255, 255, 0.2);
-                padding: 0.5em 1em;
-                border-radius: 20px;
-                font-weight: 500;
             }
 
             /* Release notes content */
