@@ -46,7 +46,6 @@ export interface PluginSettings {
     // ========================================
     hasShownUpgradeNotice: boolean;
     hasCompletedUpgrade: boolean;
-    hasShownWelcomeDialog: boolean; // Track if welcome dialog was shown (fresh install)
     currentVersion: string;
     previousVersion: string;
 

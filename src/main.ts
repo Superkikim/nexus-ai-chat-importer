@@ -82,10 +82,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             // Show installation welcome dialog for fresh installs
             if (upgradeResult?.isFreshInstall) {
                 new InstallationWelcomeDialog(this.app, this.manifest.version).open();
-
-                // Mark that welcome dialog has been shown
-                this.settings.hasShownWelcomeDialog = true;
-                await this.saveSettings();
             }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);

@@ -82,7 +82,17 @@ export class IncrementalUpgradeManager {
             const currentVersion = this.plugin.manifest.version;
             const previousVersion = this.plugin.settings.previousVersion; // ← Use settings instead of data
 
-            // FRESH INSTALL DETECTION - Check BEFORE version comparison
+            // Check if already completed upgrade to this version using new structure
+            // This check MUST come BEFORE fresh install detection to prevent welcome dialog on reload
+            const data = await this.plugin.loadData();
+            const versionKey = currentVersion.replace(/\./g, '_');
+            const hasCompletedThisUpgrade = data?.upgradeHistory?.completedUpgrades?.[versionKey]?.completed;
+
+            if (hasCompletedThisUpgrade) {
+                return null;
+            }
+
+            // FRESH INSTALL DETECTION - Check AFTER upgrade completion check
             const isFreshInstall = await this.detectFreshInstall();
 
             if (isFreshInstall) {
@@ -99,16 +109,6 @@ export class IncrementalUpgradeManager {
 
             // Skip if no version change
             if (previousVersion === currentVersion) {
-                return null;
-            }
-
-            // Check if already completed upgrade to this version using new structure
-            const data = await this.plugin.loadData();
-            const versionKey = currentVersion.replace(/\./g, '_');
-            const hasCompletedThisUpgrade = data?.upgradeHistory?.completedUpgrades?.[versionKey]?.completed;
-
-
-            if (hasCompletedThisUpgrade) {
                 return null;
             }
 
@@ -184,11 +184,6 @@ export class IncrementalUpgradeManager {
      */
     private async detectFreshInstall(): Promise<boolean> {
         try {
-            // Check 0: If welcome dialog was already shown, this is NOT a fresh install
-            if (this.plugin.settings.hasShownWelcomeDialog) {
-                return false;
-            }
-
             // Check 1: No plugin data or very minimal data
             const data = await this.plugin.loadData();
             const hasLegacyData = !!(data?.conversationCatalog && Object.keys(data.conversationCatalog).length > 0);
