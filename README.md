@@ -4,19 +4,26 @@
 
 ## 📑 Table of Contents
 
-- [⚡ Quickstart](#-quickstart)
-- [Overview](#overview)
-- [☕ Support My Work](#-support-my-work)
-- [✨ Key Features](#-key-features)
-- [📥 Installation & Settings](#-installation--settings)
-- [📤 Exporting Your Chats](#-exporting-your-chats)
-- [📥 Importing Conversations](#-importing-conversations)
-- [📊 Understanding Import Reports](#-understanding-import-reports)
-- [📁 File Organization](#-file-organization)
-- [🎨 Conversation Format](#-conversation-format)
-- [📎 Complete Attachment Handling](#-complete-attachment-handling)
-- [🔧 Troubleshooting](#-troubleshooting)
-- [📜 License](#-license)
+### 🚀 Getting Started
+- [⚡ Quickstart](#-quickstart) - Get up and running in 2 minutes
+- [📥 Installation](#-installation--settings) - Install from Community Plugins
+- [📤 Export Your Chats](#-importing-conversations) - Get your data from ChatGPT/Claude
+
+### 💡 Using the Plugin
+- [📥 Import Conversations](#-importing-conversations) - Quick or selective import
+- [📊 Import Reports](#-understanding-import-reports) - Understand what was imported
+- [📁 File Organization](#-data-organization) - Where your files are stored
+- [🎨 Conversation Format](#-conversation-format) - How conversations look
+
+### 🔧 Advanced
+- [📎 Attachments](#-complete-attachment-handling) - Images, DALL-E, artifacts
+- [⚙️ Settings](#plugin-settings) - Customize folders and formatting
+- [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
+
+### 📚 More
+- [✨ What's New](#-new-in-v130) - v1.3.0 features
+- [☕ Support](#-support-my-work) - Help keep this plugin alive
+- [📜 License](#-license) - GPL-3.0
 
 ---
 
@@ -28,7 +35,7 @@
 2. **Export** your chats:
    - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
    - **Claude**: Settings → Export data → Download ZIP
-3. **Import**: Click the ribbon icon <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg> or use command palette → "Import AI conversations"
+3. **Import**: Click the ribbon icon (message bubble with plus) or use command palette → "Import AI conversations"
 4. **Select** your ZIP file(s) → Choose import mode (all or selective)
 5. **Done!** Your conversations are now in `Nexus/Conversations/`
 
@@ -210,8 +217,8 @@ Want to reorganize? No problem!
 ### Step 2: Import to Obsidian
 
 **Two ways to start:**
-- Click the **💬+** icon in the left sidebar, OR
-- Press **Ctrl/Cmd+P** → type "**Nexus**" → select "**Select zip file to process**"
+- Click the **ribbon icon** (message bubble with plus) in the left sidebar, OR
+- Press **Ctrl/Cmd+P** → type "**Import AI conversations**"
 
 ### Step 3: Choose Your Import Style
 
@@ -230,19 +237,28 @@ Perfect when you want control:
 
 1. Select **ChatGPT** or **Claude**
 2. Choose your ZIP file(s)
-3. **Review the list** - you'll see:
+3. Click **Select Conversations**
+4. **Review the list** - you'll see:
    - 📝 Conversation title and date
    - 💬 Number of messages
    - 🆕 **New** / 🔄 **Updated** / ✅ **Already imported**
    - 📎 Attachments info
-4. **Check the ones you want**
-5. Click **Import Selected**
+5. **Filter conversations** (optional):
+   - 🔍 **Search by keyword** - Type in the search box to filter by title
+   - 📊 **Filter by status** - Show only New, Updated, or Already imported
+   - 📅 **Sort** - By date, title, or status
+6. **Select conversations**:
+   - ✅ Check individual conversations
+   - ✅ Use "Select All" / "Deselect All" buttons
+   - ✅ Use "Select New Only" to import only new conversations
+7. Click **Import Selected**
 
 **Cool features:**
-- ✅ Process multiple ZIP files at once
-- ✅ Automatically finds duplicates
-- ✅ Sort by date, title, or status
-- ✅ Select all / deselect all buttons
+- ✅ **Keyword search** - Find conversations by title instantly
+- ✅ **Smart filtering** - Show only what you need
+- ✅ **Multi-ZIP support** - Process multiple exports at once
+- ✅ **Duplicate detection** - Automatically finds duplicates across ZIPs
+- ✅ **Flexible sorting** - Organize by date, title, or status
 
 ### Step 4: Check Your Report
 
