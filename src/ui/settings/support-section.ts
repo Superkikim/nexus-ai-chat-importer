@@ -30,7 +30,7 @@ export class SupportSection extends BaseSettingsSection {
         const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
 
         // Use reusable Ko-fi support box component
-        createKofiSupportBox(supportContainer, this.plugin.app);
+        createKofiSupportBox(supportContainer);
 
         // Separator
         supportContainer.createEl("hr", { cls: "nexus-section-separator" });

@@ -125,8 +125,7 @@ var init_constants = __esm({
 });
 
 // src/ui/components/kofi-support-box.ts
-function createKofiSupportBox(container, app, message) {
-  var _a;
+function createKofiSupportBox(container, message) {
   const supportBox = container.createDiv("kofi-support-box");
   const header = supportBox.createDiv("kofi-header");
   header.innerHTML = `\u2615 <span class="kofi-header-highlight">Support This Plugin</span>`;
@@ -151,9 +150,7 @@ function createKofiSupportBox(container, app, message) {
         <strong>Reality check:</strong> Thousands of hours of work, over 4'300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! \u{1F64F}
     `;
   const buttonContainer = supportBox.createDiv("kofi-button-container");
-  const plugin = app.plugins.plugins["nexus-ai-chat-importer"];
-  const pluginDir = ((_a = plugin == null ? void 0 : plugin.manifest) == null ? void 0 : _a.dir) || "";
-  const buttonImagePath = `app://local/${pluginDir}/support_me_on_kofi_red.png`;
+  const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/support_me_on_kofi_red.png";
   buttonContainer.innerHTML = `
         <a href="https://ko-fi.com/nexusplugins" target="_blank">
             <img src="${buttonImagePath}" alt="Support me on Ko-fi" height="50">
@@ -7424,7 +7421,6 @@ var init_upgrade_complete_modal = __esm({
       addKofiSection() {
         createKofiSupportBox(
           this.contentEl,
-          this.plugin.app,
           "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users, but only $10 in donations while paying $200/month in expenses. If this plugin helps you, please consider supporting it. Even $5 makes a difference! \u{1F64F}"
         );
       }
@@ -7586,7 +7582,7 @@ var init_upgrade_modal_1_3_0 = __esm({
         this.contentEl.empty();
       }
       async createForm() {
-        createKofiSupportBox(this.contentEl, this.app);
+        createKofiSupportBox(this.contentEl);
         this.addMigrationSection();
         this.addMigrationButton();
         let message = `## \u2728 What's New in v1.3.0
@@ -7804,7 +7800,7 @@ var SupportSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
-    createKofiSupportBox(supportContainer, this.plugin.app);
+    createKofiSupportBox(supportContainer);
     supportContainer.createEl("hr", { cls: "nexus-section-separator" });
     const resourcesTitle = supportContainer.createEl("h3", { text: "\u{1F4DA} Resources" });
     resourcesTitle.style.cssText = `
@@ -15058,7 +15054,7 @@ var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
             line-height: 1.6;
             font-size: 1.05em;
         `;
-    createKofiSupportBox(contentEl, this.app);
+    createKofiSupportBox(contentEl);
     const resourcesSection = contentEl.createDiv("resources-section");
     resourcesSection.style.cssText = `
             margin-top: 24px;
@@ -15594,7 +15590,7 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
       this.createAttachmentsSection(contentEl);
     }
     this.createReportSection(contentEl);
-    createKofiSupportBox(contentEl, this.app);
+    createKofiSupportBox(contentEl);
     this.createActionButtons(contentEl);
     this.addCustomStyles();
   }

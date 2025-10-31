@@ -63,7 +63,7 @@ export class NexusUpgradeModal130 extends Modal {
 
     async createForm() {
         // Add Ko-fi support section FIRST (at the top) - using reusable component
-        createKofiSupportBox(this.contentEl, this.app);
+        createKofiSupportBox(this.contentEl);
 
         // Add migration info section
         this.addMigrationSection();

@@ -80,7 +80,7 @@ export class ImportCompletionDialog extends Modal {
         this.createReportSection(contentEl);
 
         // Ko-fi support section (using reusable component)
-        createKofiSupportBox(contentEl, this.app);
+        createKofiSupportBox(contentEl);
 
         // Action buttons
         this.createActionButtons(contentEl);

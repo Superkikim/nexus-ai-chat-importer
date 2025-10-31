@@ -1,5 +1,3 @@
-import { App } from "obsidian";
-
 /**
  * Reusable Ko-fi support box component
  * Used in upgrade dialogs, installation dialog, etc.
@@ -9,10 +7,9 @@ import { App } from "obsidian";
 /**
  * Create a Ko-fi support callout box
  * @param container - The HTML element to append the box to
- * @param app - Obsidian App instance (needed to get plugin resource path)
  * @param message - Optional custom message (default: standard support message)
  */
-export function createKofiSupportBox(container: HTMLElement, app: App, message?: string): void {
+export function createKofiSupportBox(container: HTMLElement, message?: string): void {
     const supportBox = container.createDiv('kofi-support-box');
 
     // Header
@@ -47,13 +44,9 @@ export function createKofiSupportBox(container: HTMLElement, app: App, message?:
         <strong>Reality check:</strong> Thousands of hours of work, over 4'300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! 🙏
     `;
 
-    // Ko-fi button
+    // Ko-fi button (using GitHub raw link from tag 1.3.0)
     const buttonContainer = supportBox.createDiv('kofi-button-container');
-
-    // Get plugin folder path
-    const plugin = (app as any).plugins.plugins['nexus-ai-chat-importer'];
-    const pluginDir = plugin?.manifest?.dir || '';
-    const buttonImagePath = `app://local/${pluginDir}/support_me_on_kofi_red.png`;
+    const buttonImagePath = 'https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/support_me_on_kofi_red.png';
 
     buttonContainer.innerHTML = `
         <a href="https://ko-fi.com/nexusplugins" target="_blank">
