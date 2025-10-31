@@ -184,6 +184,11 @@ export class IncrementalUpgradeManager {
      */
     private async detectFreshInstall(): Promise<boolean> {
         try {
+            // Check 0: If welcome dialog was already shown, this is NOT a fresh install
+            if (this.plugin.settings.hasShownWelcomeDialog) {
+                return false;
+            }
+
             // Check 1: No plugin data or very minimal data
             const data = await this.plugin.loadData();
             const hasLegacyData = !!(data?.conversationCatalog && Object.keys(data.conversationCatalog).length > 0);

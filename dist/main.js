@@ -68,6 +68,7 @@ var init_constants = __esm({
       // ========================================
       hasShownUpgradeNotice: false,
       hasCompletedUpgrade: false,
+      hasShownWelcomeDialog: false,
       currentVersion: "0.0.0",
       previousVersion: "0.0.0"
     };
@@ -13286,6 +13287,9 @@ var IncrementalUpgradeManager = class {
    */
   async detectFreshInstall() {
     try {
+      if (this.plugin.settings.hasShownWelcomeDialog) {
+        return false;
+      }
       const data = await this.plugin.loadData();
       const hasLegacyData = !!((data == null ? void 0 : data.conversationCatalog) && Object.keys(data.conversationCatalog).length > 0);
       const hasImportedArchives = !!((data == null ? void 0 : data.importedArchives) && Object.keys(data.importedArchives).length > 0);
@@ -15797,6 +15801,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
       if (upgradeResult == null ? void 0 : upgradeResult.isFreshInstall) {
         new InstallationWelcomeDialog(this.app, this.manifest.version).open();
+        this.settings.hasShownWelcomeDialog = true;
+        await this.saveSettings();
       }
     } catch (error) {
       this.logger.error("Plugin loading failed:", error);

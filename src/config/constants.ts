@@ -48,6 +48,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     // ========================================
     hasShownUpgradeNotice: false,
     hasCompletedUpgrade: false,
+    hasShownWelcomeDialog: false,
     currentVersion: "0.0.0",
     previousVersion: "0.0.0",
 };
