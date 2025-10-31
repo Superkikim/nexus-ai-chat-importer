@@ -67,6 +67,18 @@ export class SupportSection extends BaseSettingsSection {
                     })
             );
 
+        // Report Issues
+        new Setting(supportContainer)
+            .setName("🐛 Report Issues")
+            .setDesc("Found a bug? Let us know on GitHub")
+            .addButton((button) =>
+                button
+                    .setButtonText("Open Issues")
+                    .onClick(() => {
+                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
+                    })
+            );
+
         // Community Forum
         new Setting(supportContainer)
             .setName("💬 Community Forum")

@@ -7826,6 +7826,11 @@ var SupportSection = class extends BaseSettingsSection {
         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
       })
     );
+    new import_obsidian.Setting(supportContainer).setName("\u{1F41B} Report Issues").setDesc("Found a bug? Let us know on GitHub").addButton(
+      (button) => button.setButtonText("Open Issues").onClick(() => {
+        window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
+      })
+    );
     new import_obsidian.Setting(supportContainer).setName("\u{1F4AC} Community Forum").setDesc("Join the discussion and connect with other users").addButton(
       (button) => button.setButtonText("Open Forum").onClick(() => {
         window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
