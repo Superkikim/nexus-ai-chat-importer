@@ -96,7 +96,11 @@ After installing the plugin:
    - **Conversations**: Where your chat notes will be saved
    - **Attachments**: Where images and files will be stored
    - **Reports**: Where import summaries will be created
-3. **That's it!** You're ready to import
+3. **Configure filename options** (important for first import):
+   - **Add Date Prefix**: Enable to add dates to conversation filenames (e.g., `2024-01-15 - My Chat.md`)
+   - **Date Format**: Choose between `YYYY-MM-DD` (2024-01-15) or `YYYYMMDD` (20240115)
+   - 💡 **Tip**: Set these **before your first import** to avoid reorganizing files later
+4. **That's it!** You're ready to import
 
 ### Upgrading from Previous Versions
 
