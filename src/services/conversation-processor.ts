@@ -145,25 +145,16 @@ export class ConversationProcessor {
 
             // Validate conversation has required fields
             if (!chatId || chatId.trim() === '') {
-                logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
-                importReport.addFailed(
-                    chatTitle,
-                    "N/A",
-                    "N/A",
-                    "N/A",
-                    0,
-                    "Missing conversation ID"
-                );
+                this.plugin.logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
+                importReport.addFailed(chatTitle, "N/A", 0, 0, "Missing conversation ID");
                 return;
             }
 
             const existingEntry = existingConversations.get(chatId);
 
             if (existingEntry) {
-                this.plugin.logger.debug(`[processSingleChat] Found existing conversation: ${chatTitle} (${chatId}) at ${existingEntry.path}`);
                 await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess);
             } else {
-                this.plugin.logger.debug(`[processSingleChat] New conversation: ${chatTitle} (${chatId})`);
                 const filePath = await this.generateFilePathForChat(adapter, chat);
                 await this.handleNewChat(adapter, chat, filePath, importReport, zip);
             }
@@ -201,7 +192,6 @@ export class ConversationProcessor {
 
         // REPROCESS LOGIC: Force update if this is a reprocess operation
         if (isReprocess) {
-            this.plugin.logger.info(`Reprocessing conversation: ${chatTitle}`);
             this.counters.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true); // Force update
             return;
@@ -342,8 +332,8 @@ export class ConversationProcessor {
                     let standardConversation = await adapter.convertChat(chat);
 
                     // Filter only new messages for formatting
-                    const newStandardMessages = standardConversation.messages.filter(msg =>
-                        newMessages.some(newMsg => newMsg.id === msg.id)
+                    const newStandardMessages = standardConversation.messages.filter((msg: StandardMessage) =>
+                        newMessages.some((newMsg: StandardMessage) => newMsg.id === msg.id)
                     );
 
                     // Process attachments on new messages only

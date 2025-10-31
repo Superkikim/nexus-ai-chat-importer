@@ -9336,23 +9336,14 @@ var ConversationProcessor = class {
       const chatId = adapter.getId(chat);
       const chatTitle = adapter.getTitle(chat) || "Untitled";
       if (!chatId || chatId.trim() === "") {
-        logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
-        importReport.addFailed(
-          chatTitle,
-          "N/A",
-          "N/A",
-          "N/A",
-          0,
-          "Missing conversation ID"
-        );
+        this.plugin.logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
+        importReport.addFailed(chatTitle, "N/A", 0, 0, "Missing conversation ID");
         return;
       }
       const existingEntry = existingConversations.get(chatId);
       if (existingEntry) {
-        this.plugin.logger.debug(`[processSingleChat] Found existing conversation: ${chatTitle} (${chatId}) at ${existingEntry.path}`);
         await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess);
       } else {
-        this.plugin.logger.debug(`[processSingleChat] New conversation: ${chatTitle} (${chatId})`);
         const filePath = await this.generateFilePathForChat(adapter, chat);
         await this.handleNewChat(adapter, chat, filePath, importReport, zip);
       }
@@ -9374,7 +9365,6 @@ var ConversationProcessor = class {
       return;
     }
     if (isReprocess) {
-      this.plugin.logger.info(`Reprocessing conversation: ${chatTitle}`);
       this.counters.totalExistingConversationsToUpdate++;
       await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true);
       return;
@@ -12621,11 +12611,6 @@ var StorageService = class {
       const data = await this.plugin.loadData();
       this.importedArchives = (data == null ? void 0 : data.importedArchives) || {};
       this.isDirty = false;
-      if (data == null ? void 0 : data.conversationCatalog) {
-        const catalogSize = Object.keys(data.conversationCatalog).length;
-        this.plugin.logger.info("Legacy conversation catalog detected - will be migrated in upgrade process");
-      }
-      this.plugin.logger.info("Storage data loaded successfully");
     } catch (error) {
       this.plugin.logger.error("loadData failed:", error);
       throw error;
@@ -12688,13 +12673,10 @@ var StorageService = class {
    * 3. Fallback to manual parsing for problematic files
    */
   async scanExistingConversations() {
-    const startTime = Date.now();
     await this.waitForCacheClean(1e3);
     const conversations = /* @__PURE__ */ new Map();
     const conversationFolder = this.plugin.settings.conversationFolder || this.plugin.settings.archiveFolder || "Nexus/Conversations";
     const allFiles = this.plugin.app.vault.getMarkdownFiles();
-    this.plugin.logger.debug(`[scanExistingConversations] Total markdown files in vault: ${allFiles.length}`);
-    this.plugin.logger.debug(`[scanExistingConversations] Conversation folder: ${conversationFolder}`);
     const conversationFiles = allFiles.filter((file) => {
       if (!file.path.startsWith(conversationFolder))
         return false;
@@ -12704,7 +12686,6 @@ var StorageService = class {
       }
       return true;
     });
-    this.plugin.logger.debug(`[scanExistingConversations] Filtered conversation files: ${conversationFiles.length}`);
     let processed = 0;
     let foundViaCache = 0;
     let foundViaManual = 0;
@@ -12728,16 +12709,13 @@ var StorageService = class {
           }
         } catch (error) {
           errors++;
-          logger.warn(`Error parsing conversation file ${file.path}:`, error);
+          this.plugin.logger.warn(`Error parsing conversation file ${file.path}:`, error);
         }
       }
       if (i + batchSize < conversationFiles.length) {
         await new Promise((resolve) => setTimeout(resolve, 1));
       }
     }
-    const duration = Date.now() - startTime;
-    const total = foundViaCache + foundViaManual;
-    this.plugin.logger.info(`Scanned vault: found ${total} conversations (${foundViaCache} via cache, ${foundViaManual} via manual, ${errors} errors) in ${duration}ms from ${conversationFiles.length} files`);
     return conversations;
   }
   /**
@@ -12761,15 +12739,15 @@ var StorageService = class {
     try {
       const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
       if (!frontmatter) {
-        this.plugin.logger.debug(`[parseWithCache] No frontmatter found for ${file.path}`);
+        this.plugin.logger.warn(`[parseWithCache] No frontmatter found for ${file.path}`);
         return null;
       }
       if (!frontmatter.nexus || frontmatter.nexus !== this.plugin.manifest.id) {
-        this.plugin.logger.debug(`[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`);
+        this.plugin.logger.warn(`[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`);
         return null;
       }
       if (!frontmatter.conversation_id) {
-        this.plugin.logger.debug(`[parseWithCache] No conversation_id for ${file.path}`);
+        this.plugin.logger.warn(`[parseWithCache] No conversation_id for ${file.path}`);
         return null;
       }
       const createTime = this.parseTimeString(frontmatter.create_time);
@@ -12833,7 +12811,7 @@ var StorageService = class {
         update_time: updateTime
       };
     } catch (error) {
-      logger.error(`Error manually parsing ${file.path}:`, error);
+      this.plugin.logger.error(`Error manually parsing ${file.path}:`, error);
       return null;
     }
   }
@@ -12885,7 +12863,6 @@ var StorageService = class {
         settings: this.plugin.settings
         // Note: No conversation catalog to reset - it's now vault-based
       });
-      this.plugin.logger.info("Reset archive catalog (conversation tracking is now vault-based)");
     } catch (error) {
       this.plugin.logger.error("resetCatalogs failed:", error);
     }
@@ -12922,13 +12899,13 @@ var StorageService = class {
   /**
    * @deprecated Conversations are now tracked via vault frontmatter
    */
-  updateConversationCatalog(id, entry) {
+  updateConversationCatalog(_id, _entry) {
     this.plugin.logger.warn("updateConversationCatalog() is deprecated - conversations tracked via frontmatter");
   }
   /**
-   * @deprecated Conversations are now tracked via vault frontmatter  
+   * @deprecated Conversations are now tracked via vault frontmatter
    */
-  deleteFromConversationCatalog(id) {
+  deleteFromConversationCatalog(_id) {
     this.plugin.logger.warn("deleteFromConversationCatalog() is deprecated - files tracked via vault");
   }
 };

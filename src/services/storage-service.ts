@@ -37,12 +37,8 @@ export class StorageService {
             this.isDirty = false;
             
             // Migration: If old catalog exists, we ignore it (migration handled in upgrade.ts)
-            if (data?.conversationCatalog) {
-                const catalogSize = Object.keys(data.conversationCatalog).length;
-                this.plugin.logger.info("Legacy conversation catalog detected - will be migrated in upgrade process");
-            }
+            // Old catalog is no longer used
             
-            this.plugin.logger.info("Storage data loaded successfully");
         } catch (error) {
             this.plugin.logger.error("loadData failed:", error);
             throw error;
@@ -123,8 +119,6 @@ export class StorageService {
      * 3. Fallback to manual parsing for problematic files
      */
     async scanExistingConversations(): Promise<Map<string, ConversationCatalogEntry>> {
-        const startTime = Date.now();
-
         // Step 1: Wait for cache to be clean (with timeout)
         await this.waitForCacheClean(1000); // Max 1 second wait
 
@@ -136,8 +130,6 @@ export class StorageService {
                                   "Nexus/Conversations";
 
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
-        this.plugin.logger.debug(`[scanExistingConversations] Total markdown files in vault: ${allFiles.length}`);
-        this.plugin.logger.debug(`[scanExistingConversations] Conversation folder: ${conversationFolder}`);
 
         // Filter conversation files (exclude Reports/Attachments)
         const conversationFiles = allFiles.filter(file => {
@@ -153,8 +145,6 @@ export class StorageService {
 
             return true;
         });
-
-        this.plugin.logger.debug(`[scanExistingConversations] Filtered conversation files: ${conversationFiles.length}`);
 
         let processed = 0;
         let foundViaCache = 0;
@@ -187,7 +177,7 @@ export class StorageService {
 
                 } catch (error) {
                     errors++;
-                    logger.warn(`Error parsing conversation file ${file.path}:`, error);
+                    this.plugin.logger.warn(`Error parsing conversation file ${file.path}:`, error);
                 }
             }
 
@@ -196,11 +186,6 @@ export class StorageService {
                 await new Promise(resolve => setTimeout(resolve, 1));
             }
         }
-
-        const duration = Date.now() - startTime;
-        const total = foundViaCache + foundViaManual;
-
-        this.plugin.logger.info(`Scanned vault: found ${total} conversations (${foundViaCache} via cache, ${foundViaManual} via manual, ${errors} errors) in ${duration}ms from ${conversationFiles.length} files`);
 
         return conversations;
     }
@@ -230,17 +215,17 @@ export class StorageService {
             const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
 
             if (!frontmatter) {
-                this.plugin.logger.debug(`[parseWithCache] No frontmatter found for ${file.path}`);
+                this.plugin.logger.warn(`[parseWithCache] No frontmatter found for ${file.path}`);
                 return null;
             }
 
             if (!frontmatter.nexus || frontmatter.nexus !== this.plugin.manifest.id) {
-                this.plugin.logger.debug(`[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`);
+                this.plugin.logger.warn(`[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`);
                 return null;
             }
 
             if (!frontmatter.conversation_id) {
-                this.plugin.logger.debug(`[parseWithCache] No conversation_id for ${file.path}`);
+                this.plugin.logger.warn(`[parseWithCache] No conversation_id for ${file.path}`);
                 return null;
             }
 
@@ -326,7 +311,7 @@ export class StorageService {
             };
 
         } catch (error) {
-            logger.error(`Error manually parsing ${file.path}:`, error);
+            this.plugin.logger.error(`Error manually parsing ${file.path}:`, error);
             return null;
         }
     }
@@ -387,7 +372,6 @@ export class StorageService {
                 // Note: No conversation catalog to reset - it's now vault-based
             });
             
-            this.plugin.logger.info("Reset archive catalog (conversation tracking is now vault-based)");
         } catch (error) {
             this.plugin.logger.error("resetCatalogs failed:", error);
         }
@@ -429,15 +413,15 @@ export class StorageService {
     /**
      * @deprecated Conversations are now tracked via vault frontmatter
      */
-    updateConversationCatalog(id: string, entry: ConversationCatalogEntry) {
+    updateConversationCatalog(_id: string, _entry: ConversationCatalogEntry) {
         this.plugin.logger.warn("updateConversationCatalog() is deprecated - conversations tracked via frontmatter");
         // No-op - frontmatter is the source of truth now
     }
 
     /**
-     * @deprecated Conversations are now tracked via vault frontmatter  
+     * @deprecated Conversations are now tracked via vault frontmatter
      */
-    deleteFromConversationCatalog(id: string) {
+    deleteFromConversationCatalog(_id: string) {
         this.plugin.logger.warn("deleteFromConversationCatalog() is deprecated - files tracked via vault");
         // No-op - file deletion is handled by event handlers
     }
