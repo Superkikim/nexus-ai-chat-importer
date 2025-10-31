@@ -124,6 +124,77 @@ var init_constants = __esm({
   }
 });
 
+// src/ui/components/kofi-support-box.ts
+function createKofiSupportBox(container, message) {
+  const supportBox = container.createDiv("kofi-support-box");
+  supportBox.style.cssText = `
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    `;
+  const header = supportBox.createDiv();
+  header.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    `;
+  const icon = header.createSpan();
+  icon.innerHTML = "\u2615";
+  icon.style.fontSize = "28px";
+  const title = header.createSpan();
+  title.textContent = "Support Development";
+  title.style.cssText = `
+        font-size: 1.2em;
+        font-weight: 600;
+    `;
+  const messageEl = supportBox.createDiv();
+  messageEl.style.cssText = `
+        margin-bottom: 16px;
+        line-height: 1.5;
+        opacity: 0.95;
+    `;
+  messageEl.textContent = message || "If you find this plugin useful, consider supporting its development. Your support helps maintain and improve the plugin!";
+  const buttonContainer = supportBox.createDiv();
+  buttonContainer.style.textAlign = "center";
+  const kofiButton = buttonContainer.createEl("a", {
+    text: "\u2615 Support on Ko-fi",
+    href: "https://ko-fi.com/superkikim"
+  });
+  kofiButton.style.cssText = `
+        display: inline-block;
+        background: white;
+        color: #667eea;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    `;
+  kofiButton.addEventListener("mouseenter", () => {
+    kofiButton.style.transform = "translateY(-2px)";
+    kofiButton.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
+  });
+  kofiButton.addEventListener("mouseleave", () => {
+    kofiButton.style.transform = "translateY(0)";
+    kofiButton.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.2)";
+  });
+  kofiButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.open("https://ko-fi.com/superkikim", "_blank");
+  });
+}
+var init_kofi_support_box = __esm({
+  "src/ui/components/kofi-support-box.ts"() {
+    "use strict";
+    __name(createKofiSupportBox, "createKofiSupportBox");
+  }
+});
+
 // src/dialogs/folder-tree-browser-modal.ts
 var import_obsidian3, FolderTreeBrowserModal;
 var init_folder_tree_browser_modal = __esm({
@@ -7353,6 +7424,7 @@ var init_upgrade_complete_modal = __esm({
   "src/dialogs/upgrade-complete-modal.ts"() {
     "use strict";
     import_obsidian24 = require("obsidian");
+    init_kofi_support_box();
     UpgradeCompleteModal = class extends import_obsidian24.Modal {
       constructor(app, plugin, version) {
         super(app);
@@ -7378,34 +7450,10 @@ var init_upgrade_complete_modal = __esm({
         this.addStyles();
       }
       addKofiSection() {
-        const kofiSection = this.contentEl.createDiv({ cls: "nexus-kofi-section" });
-        const header = kofiSection.createDiv({ cls: "nexus-kofi-header" });
-        header.innerHTML = `
-            <div class="nexus-kofi-title">
-                \u2615 <strong>Support This Plugin</strong>
-            </div>
-        `;
-        const message = kofiSection.createDiv({ cls: "nexus-kofi-message" });
-        message.innerHTML = `
-            <p>I'm working on Nexus projects full-time while unemployed and dealing with health issues.</p>
-            <p><strong>Over 1,000 users, but only $10 in donations while paying $200/month in expenses.</strong></p>
-            <p>If this plugin helps you, please consider supporting it. Even $5 makes a difference! \u{1F64F}</p>
-        `;
-        const buttonContainer = kofiSection.createDiv({ cls: "nexus-kofi-button-container" });
-        buttonContainer.innerHTML = `
-            <a href="https://ko-fi.com/nexusplugins" target="_blank" class="nexus-kofi-link">
-                <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" alt="Buy Me a Coffee at ko-fi.com" height="50">
-            </a>
-        `;
-        const amounts = kofiSection.createDiv({ cls: "nexus-kofi-amounts" });
-        amounts.innerHTML = `
-            <div class="nexus-kofi-amounts-title">Suggested amounts:</div>
-            <div class="nexus-kofi-amounts-list">
-                <span class="nexus-kofi-amount">\u2615 $5 - Coffee</span>
-                <span class="nexus-kofi-amount">\u{1F916} $25 - AI Tools</span>
-                <span class="nexus-kofi-amount">\u{1F680} $75 - Dev Toolkit</span>
-            </div>
-        `;
+        createKofiSupportBox(
+          this.contentEl,
+          "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users, but only $10 in donations while paying $200/month in expenses. If this plugin helps you, please consider supporting it. Even $5 makes a difference! \u{1F64F}"
+        );
       }
       async addReleaseNotes() {
         let content = `## \u2728 What's New
@@ -7478,71 +7526,6 @@ var init_upgrade_complete_modal = __esm({
                 padding: 0;
                 overflow-y: auto;
                 max-height: calc(85vh - 100px);
-            }
-
-            /* Ko-fi section */
-            .nexus-kofi-section {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 2em;
-                border-radius: 8px;
-                margin-bottom: 2em;
-                text-align: center;
-            }
-
-            .nexus-kofi-header {
-                margin-bottom: 1em;
-            }
-
-            .nexus-kofi-title {
-                font-size: 1.5em;
-                font-weight: bold;
-            }
-
-            .nexus-kofi-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-kofi-message p {
-                margin: 0.5em 0;
-            }
-
-            .nexus-kofi-button-container {
-                margin: 1.5em 0;
-            }
-
-            .nexus-kofi-link {
-                display: inline-block;
-                transition: transform 0.2s;
-            }
-
-            .nexus-kofi-link:hover {
-                transform: scale(1.05);
-            }
-
-            .nexus-kofi-amounts {
-                margin-top: 1em;
-                font-size: 0.95em;
-            }
-
-            .nexus-kofi-amounts-title {
-                margin-bottom: 0.5em;
-                opacity: 0.9;
-            }
-
-            .nexus-kofi-amounts-list {
-                display: flex;
-                justify-content: center;
-                gap: 1.5em;
-                flex-wrap: wrap;
-            }
-
-            .nexus-kofi-amount {
-                background: rgba(255, 255, 255, 0.2);
-                padding: 0.5em 1em;
-                border-radius: 20px;
-                font-weight: 500;
             }
 
             /* Release notes content */
@@ -7973,73 +7956,8 @@ var BaseSettingsSection = class {
 };
 __name(BaseSettingsSection, "BaseSettingsSection");
 
-// src/ui/components/kofi-support-box.ts
-function createKofiSupportBox(container, message) {
-  const supportBox = container.createDiv("kofi-support-box");
-  supportBox.style.cssText = `
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
-        padding: 20px;
-        margin: 20px 0;
-        color: white;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    `;
-  const header = supportBox.createDiv();
-  header.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
-    `;
-  const icon = header.createSpan();
-  icon.innerHTML = "\u2615";
-  icon.style.fontSize = "28px";
-  const title = header.createSpan();
-  title.textContent = "Support Development";
-  title.style.cssText = `
-        font-size: 1.2em;
-        font-weight: 600;
-    `;
-  const messageEl = supportBox.createDiv();
-  messageEl.style.cssText = `
-        margin-bottom: 16px;
-        line-height: 1.5;
-        opacity: 0.95;
-    `;
-  messageEl.textContent = message || "If you find this plugin useful, consider supporting its development. Your support helps maintain and improve the plugin!";
-  const buttonContainer = supportBox.createDiv();
-  buttonContainer.style.textAlign = "center";
-  const kofiButton = buttonContainer.createEl("a", {
-    text: "\u2615 Support on Ko-fi",
-    href: "https://ko-fi.com/superkikim"
-  });
-  kofiButton.style.cssText = `
-        display: inline-block;
-        background: white;
-        color: #667eea;
-        padding: 12px 24px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: transform 0.2s, box-shadow 0.2s;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    `;
-  kofiButton.addEventListener("mouseenter", () => {
-    kofiButton.style.transform = "translateY(-2px)";
-    kofiButton.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
-  });
-  kofiButton.addEventListener("mouseleave", () => {
-    kofiButton.style.transform = "translateY(0)";
-    kofiButton.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.2)";
-  });
-  kofiButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    window.open("https://ko-fi.com/superkikim", "_blank");
-  });
-}
-__name(createKofiSupportBox, "createKofiSupportBox");
-
 // src/ui/settings/support-section.ts
+init_kofi_support_box();
 var SupportSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
@@ -15246,6 +15164,7 @@ __name(ConversationSelectionDialog, "ConversationSelectionDialog");
 
 // src/dialogs/installation-welcome-dialog.ts
 var import_obsidian30 = require("obsidian");
+init_kofi_support_box();
 var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
   constructor(app, version) {
     super(app);
