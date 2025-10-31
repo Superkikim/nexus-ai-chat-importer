@@ -147,7 +147,7 @@ function createKofiSupportBox(container, message) {
   }
   const realityCheck = supportBox.createDiv("kofi-reality-check");
   realityCheck.innerHTML = `
-        <strong>Reality check:</strong> Thousands of hours of work, over 4'300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! \u{1F64F}
+        <strong>Reality check:</strong> Thousands of hours of work over the year, more than 4'300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! \u{1F64F}
     `;
   const buttonContainer = supportBox.createDiv("kofi-button-container");
   const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/support_me_on_kofi_red.png";
