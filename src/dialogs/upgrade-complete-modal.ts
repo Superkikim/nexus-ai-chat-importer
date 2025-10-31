@@ -74,6 +74,7 @@ export class UpgradeCompleteModal extends Modal {
         // Use reusable Ko-fi support box component
         createKofiSupportBox(
             this.contentEl,
+            this.plugin.app,
             "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users, but only $10 in donations while paying $200/month in expenses. If this plugin helps you, please consider supporting it. Even $5 makes a difference! 🙏"
         );
     }

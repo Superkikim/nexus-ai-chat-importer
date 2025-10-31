@@ -57,7 +57,7 @@ export class InstallationWelcomeDialog extends Modal {
         `;
 
         // Ko-fi support box (using reusable component)
-        createKofiSupportBox(contentEl);
+        createKofiSupportBox(contentEl, this.app);
 
         // Resources section
         const resourcesSection = contentEl.createDiv('resources-section');
