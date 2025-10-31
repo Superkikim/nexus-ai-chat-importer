@@ -31,7 +31,6 @@ export class EnhancedFolderMigrationDialog extends Modal {
     private newPath: string;
     private folderType: string;
     private estimatedTime: number = 0;
-    private fileCount: number = 0;
 
     constructor(
         plugin: NexusAiChatImporterPlugin,
@@ -109,11 +108,9 @@ export class EnhancedFolderMigrationDialog extends Modal {
 
             if (this.folderType === 'attachments') {
                 const estimate = await linkUpdateService.estimateUpdateTime('attachments');
-                this.fileCount = estimate.fileCount;
                 this.estimatedTime = estimate.estimatedSeconds;
             } else if (this.folderType === 'conversations') {
                 const estimate = await linkUpdateService.estimateUpdateTime('conversations');
-                this.fileCount = estimate.fileCount;
                 this.estimatedTime = estimate.estimatedSeconds;
             }
         } catch (error) {
@@ -128,24 +125,24 @@ export class EnhancedFolderMigrationDialog extends Modal {
     private createLinkUpdateInfo(contentEl: HTMLElement): void {
         const linkUpdateBox = contentEl.createDiv({ cls: "nexus-link-update-info" });
         linkUpdateBox.createEl("strong", { text: "🔗 Link Updates:" });
-        
+
         const infoText = linkUpdateBox.createDiv();
-        
+
         if (this.folderType === 'attachments') {
             infoText.createEl("p", {
-                text: `Moving attachments will also update ${this.fileCount} conversation files to fix attachment links.`
+                text: "Moving attachments will also update all conversation notes that reference them."
             });
         } else if (this.folderType === 'conversations') {
             infoText.createEl("p", {
-                text: `Moving conversations will also update ${this.fileCount} files (reports and attachments) to fix conversation links.`
+                text: "Moving conversations will also update all reports and attachments that reference them."
             });
         }
 
         if (this.estimatedTime > 0) {
-            const timeText = this.estimatedTime < 60 
+            const timeText = this.estimatedTime < 60
                 ? `~${this.estimatedTime} seconds`
                 : `~${Math.ceil(this.estimatedTime / 60)} minute(s)`;
-            
+
             infoText.createEl("p", {
                 text: `Estimated time: ${timeText}`,
                 cls: "nexus-time-estimate"

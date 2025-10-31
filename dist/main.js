@@ -1419,7 +1419,6 @@ var init_enhanced_folder_migration_dialog = __esm({
       constructor(plugin, oldPath, newPath, folderType, onComplete) {
         super(plugin.app);
         this.estimatedTime = 0;
-        this.fileCount = 0;
         this.plugin = plugin;
         this.oldPath = oldPath;
         this.newPath = newPath;
@@ -1467,11 +1466,9 @@ var init_enhanced_folder_migration_dialog = __esm({
           const linkUpdateService = new LinkUpdateService2(this.plugin);
           if (this.folderType === "attachments") {
             const estimate = await linkUpdateService.estimateUpdateTime("attachments");
-            this.fileCount = estimate.fileCount;
             this.estimatedTime = estimate.estimatedSeconds;
           } else if (this.folderType === "conversations") {
             const estimate = await linkUpdateService.estimateUpdateTime("conversations");
-            this.fileCount = estimate.fileCount;
             this.estimatedTime = estimate.estimatedSeconds;
           }
         } catch (error) {
@@ -1487,11 +1484,11 @@ var init_enhanced_folder_migration_dialog = __esm({
         const infoText = linkUpdateBox.createDiv();
         if (this.folderType === "attachments") {
           infoText.createEl("p", {
-            text: `Moving attachments will also update ${this.fileCount} conversation files to fix attachment links.`
+            text: "Moving attachments will also update all conversation notes that reference them."
           });
         } else if (this.folderType === "conversations") {
           infoText.createEl("p", {
-            text: `Moving conversations will also update ${this.fileCount} files (reports and attachments) to fix conversation links.`
+            text: "Moving conversations will also update all reports and attachments that reference them."
           });
         }
         if (this.estimatedTime > 0) {
