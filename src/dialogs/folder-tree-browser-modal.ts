@@ -24,14 +24,21 @@ import { App, Modal, Notice, TFolder } from "obsidian";
  */
 export class FolderTreeBrowserModal extends Modal {
     private onSubmit: (path: string) => void;
+    private validatePath?: (path: string) => { valid: boolean; error?: string };
     private selectedFolder: TFolder | null = null;
     private expandedFolders: Set<string> = new Set();
     private treeContainer: HTMLElement;
 
-    constructor(app: App, onSubmit: (path: string) => void, initialPath?: string) {
+    constructor(
+        app: App,
+        onSubmit: (path: string) => void,
+        initialPath?: string,
+        validatePath?: (path: string) => { valid: boolean; error?: string }
+    ) {
         super(app);
         this.onSubmit = onSubmit;
-        
+        this.validatePath = validatePath;
+
         // Pre-expand and select the initial path if provided
         if (initialPath) {
             const folder = this.app.vault.getAbstractFileByPath(initialPath);
@@ -259,6 +266,15 @@ export class FolderTreeBrowserModal extends Modal {
             return;
         }
 
+        // Validate the path BEFORE creating the folder
+        if (this.validatePath) {
+            const validation = this.validatePath(newFolderPath);
+            if (!validation.valid) {
+                new Notice(`❌ ${validation.error ?? "Invalid folder location"}`);
+                return;
+            }
+        }
+
         // Create the folder
         try {
             await this.app.vault.createFolder(newFolderPath);
@@ -334,6 +350,16 @@ export class FolderTreeBrowserModal extends Modal {
         }
 
         const path = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
+
+        // Validate the path before submitting
+        if (this.validatePath) {
+            const validation = this.validatePath(path);
+            if (!validation.valid) {
+                new Notice(`❌ ${validation.error ?? "Invalid folder location"}`);
+                return;
+            }
+        }
+
         this.onSubmit(path);
         this.close();
     }

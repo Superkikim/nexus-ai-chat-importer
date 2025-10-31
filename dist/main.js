@@ -171,11 +171,12 @@ var init_folder_tree_browser_modal = __esm({
     "use strict";
     import_obsidian3 = require("obsidian");
     FolderTreeBrowserModal = class extends import_obsidian3.Modal {
-      constructor(app, onSubmit, initialPath) {
+      constructor(app, onSubmit, initialPath, validatePath) {
         super(app);
         this.selectedFolder = null;
         this.expandedFolders = /* @__PURE__ */ new Set();
         this.onSubmit = onSubmit;
+        this.validatePath = validatePath;
         if (initialPath) {
           const folder = this.app.vault.getAbstractFileByPath(initialPath);
           if (folder instanceof import_obsidian3.TFolder) {
@@ -319,6 +320,7 @@ var init_folder_tree_browser_modal = __esm({
         }
       }
       async handleCreateFolder() {
+        var _a;
         if (!this.selectedFolder) {
           new import_obsidian3.Notice("\u26A0\uFE0F Please select a parent folder first");
           return;
@@ -337,6 +339,13 @@ var init_folder_tree_browser_modal = __esm({
         if (exists) {
           new import_obsidian3.Notice("\u274C Folder already exists");
           return;
+        }
+        if (this.validatePath) {
+          const validation = this.validatePath(newFolderPath);
+          if (!validation.valid) {
+            new import_obsidian3.Notice(`\u274C ${(_a = validation.error) != null ? _a : "Invalid folder location"}`);
+            return;
+          }
         }
         try {
           await this.app.vault.createFolder(newFolderPath);
@@ -393,11 +402,19 @@ var init_folder_tree_browser_modal = __esm({
         });
       }
       handleSelect() {
+        var _a;
         if (!this.selectedFolder) {
           new import_obsidian3.Notice("\u26A0\uFE0F Please select a folder first");
           return;
         }
         const path = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
+        if (this.validatePath) {
+          const validation = this.validatePath(path);
+          if (!validation.valid) {
+            new import_obsidian3.Notice(`\u274C ${(_a = validation.error) != null ? _a : "Invalid folder location"}`);
+            return;
+          }
+        }
         this.onSubmit(path);
         this.close();
       }
@@ -8028,7 +8045,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
               await this.handleFolderChange("conversationFolder", path, "conversations", conversationFolderTextComponent);
             }
           },
-          this.plugin.settings.conversationFolder
+          this.plugin.settings.conversationFolder,
+          (path) => validateFolderNesting(
+            "conversationFolder",
+            path,
+            this.plugin.settings.conversationFolder,
+            this.plugin.settings.reportFolder,
+            this.plugin.settings.attachmentFolder
+          )
         );
         modal.open();
       });
@@ -8051,7 +8075,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
               await this.handleFolderChange("reportFolder", path, "reports", reportFolderTextComponent);
             }
           },
-          this.plugin.settings.reportFolder
+          this.plugin.settings.reportFolder,
+          (path) => validateFolderNesting(
+            "reportFolder",
+            path,
+            this.plugin.settings.conversationFolder,
+            this.plugin.settings.reportFolder,
+            this.plugin.settings.attachmentFolder
+          )
         );
         modal.open();
       });
@@ -8074,7 +8105,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
               await this.handleFolderChange("attachmentFolder", path, "attachments", attachmentFolderTextComponent);
             }
           },
-          this.plugin.settings.attachmentFolder
+          this.plugin.settings.attachmentFolder,
+          (path) => validateFolderNesting(
+            "attachmentFolder",
+            path,
+            this.plugin.settings.conversationFolder,
+            this.plugin.settings.reportFolder,
+            this.plugin.settings.attachmentFolder
+          )
         );
         modal.open();
       });
@@ -8210,7 +8248,7 @@ To change the folder location:
   /**
    * Show dialog with merge result details when files were skipped or errors occurred
    */
-  showMergeResultDialog(result, oldPath, newPath) {
+  showMergeResultDialog(result, _oldPath, _newPath) {
     const modal = new import_obsidian8.Modal(this.plugin.app);
     modal.titleEl.setText("Folder Migration Result");
     const { contentEl } = modal;

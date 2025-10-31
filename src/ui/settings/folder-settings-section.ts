@@ -63,7 +63,14 @@ export class FolderSettingsSection extends BaseSettingsSection {
                                     await this.handleFolderChange('conversationFolder', path, 'conversations', conversationFolderTextComponent);
                                 }
                             },
-                            this.plugin.settings.conversationFolder
+                            this.plugin.settings.conversationFolder,
+                            (path: string) => validateFolderNesting(
+                                'conversationFolder',
+                                path,
+                                this.plugin.settings.conversationFolder,
+                                this.plugin.settings.reportFolder,
+                                this.plugin.settings.attachmentFolder
+                            )
                         );
                         modal.open();
                     });
@@ -102,7 +109,14 @@ export class FolderSettingsSection extends BaseSettingsSection {
                                     await this.handleFolderChange('reportFolder', path, 'reports', reportFolderTextComponent);
                                 }
                             },
-                            this.plugin.settings.reportFolder
+                            this.plugin.settings.reportFolder,
+                            (path: string) => validateFolderNesting(
+                                'reportFolder',
+                                path,
+                                this.plugin.settings.conversationFolder,
+                                this.plugin.settings.reportFolder,
+                                this.plugin.settings.attachmentFolder
+                            )
                         );
                         modal.open();
                     });
@@ -141,7 +155,14 @@ export class FolderSettingsSection extends BaseSettingsSection {
                                     await this.handleFolderChange('attachmentFolder', path, 'attachments', attachmentFolderTextComponent);
                                 }
                             },
-                            this.plugin.settings.attachmentFolder
+                            this.plugin.settings.attachmentFolder,
+                            (path: string) => validateFolderNesting(
+                                'attachmentFolder',
+                                path,
+                                this.plugin.settings.conversationFolder,
+                                this.plugin.settings.reportFolder,
+                                this.plugin.settings.attachmentFolder
+                            )
                         );
                         modal.open();
                     });
@@ -327,7 +348,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
     /**
      * Show dialog with merge result details when files were skipped or errors occurred
      */
-    private showMergeResultDialog(result: FolderMergeResult, oldPath: string, newPath: string): void {
+    private showMergeResultDialog(result: FolderMergeResult, _oldPath: string, _newPath: string): void {
         const modal = new Modal(this.plugin.app);
         modal.titleEl.setText("Folder Migration Result");
 
