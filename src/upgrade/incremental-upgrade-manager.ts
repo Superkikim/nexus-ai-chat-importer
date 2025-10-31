@@ -36,6 +36,8 @@ export interface IncrementalUpgradeResult {
     upgradesSkipped: number;
     upgradesFailed: number;
     isFreshInstall?: boolean; // Flag to indicate if this is a fresh installation
+    showCompletionDialog?: boolean; // Flag to show completion dialog from main.ts
+    upgradedToVersion?: string; // Version that was upgraded to
     results: Array<{
         version: string;
         automaticResults: any;
@@ -142,11 +144,14 @@ export class IncrementalUpgradeManager {
                 logger.error("Failed to write upgrade report:", e);
             }
 
-            // PHASE 2: Show completion dialog AFTER migrations
-            // Display Ko-fi + What's New + Improvements + Bug Fixes
-            await this.showUpgradeCompleteDialog(currentVersion);
-
-            return result;
+            // PHASE 2: Return result with flag to show completion dialog
+            // The dialog will be shown from main.ts AFTER checkAndPerformUpgrade() returns
+            // This ensures styles.css is fully loaded by Obsidian
+            return {
+                ...result,
+                showCompletionDialog: true,
+                upgradedToVersion: currentVersion
+            };
 
 
 
@@ -297,6 +302,9 @@ export class IncrementalUpgradeManager {
             const overallSuccess = true; // Always success for automatic operations
 
             progressModal.markComplete(`All operations completed successfully!`);
+            // Laisser apparaître le message "Completed!" brièvement avant de fermer automatiquement
+            await new Promise((resolve) => setTimeout(resolve, 450));
+            progressModal.close();
             // No Notice here - completion dialog will be shown after
 
             return {
@@ -616,20 +624,19 @@ export class IncrementalUpgradeManager {
      * Show upgrade complete dialog AFTER migrations
      * Displays Ko-fi + What's New + Improvements + Bug Fixes
      */
-    private async showUpgradeCompleteDialog(version: string): Promise<void> {
+    /**
+     * Show upgrade completion dialog
+     * PUBLIC method - called from main.ts after checkAndPerformUpgrade() returns
+     * This ensures styles.css is fully loaded by Obsidian
+     */
+    async showUpgradeCompleteDialog(version: string): Promise<void> {
         try {
             // Check if this is v1.3.0 or later - use new completion modal
             const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
 
             if (isV130OrLater) {
                 const { UpgradeCompleteModal } = await import("../dialogs/upgrade-complete-modal");
-                await new Promise<void>((resolve) => {
-                    const modal = new UpgradeCompleteModal(this.plugin.app, this.plugin, version);
-                    modal.onClose = () => {
-                        resolve();
-                    };
-                    modal.open();
-                });
+                new UpgradeCompleteModal(this.plugin.app, this.plugin, version).open();
             } else {
                 // For older versions, just show a simple notice
                 new Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
@@ -727,6 +734,47 @@ export class IncrementalUpgradeManager {
             logger.error("Error showing upgrade dialog:", error);
             new Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
         }
+    }
+
+    /**
+     * Wait until a CSS rule (selectorText contains 'selector') is present in document.styleSheets
+     * Returns false on timeout, true if found
+     */
+    private async waitForCssRule(selector: string, timeoutMs: number = 2000): Promise<boolean> {
+        const start = Date.now();
+        const hasRule = (): boolean => {
+            for (const sheet of Array.from(document.styleSheets)) {
+                let rules: CSSRuleList | undefined;
+                try {
+                    rules = (sheet as CSSStyleSheet).cssRules;
+                } catch {
+                    // Some stylesheets may be cross-origin or not yet accessible
+                    continue;
+                }
+                if (!rules) continue;
+                for (let i = 0; i < rules.length; i++) {
+                    const rule = rules[i] as CSSStyleRule;
+                    if ((rule as any).selectorText && rule.selectorText.includes(selector)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        if (hasRule()) return true;
+
+        return await new Promise<boolean>((resolve) => {
+            const interval = window.setInterval(() => {
+                if (hasRule()) {
+                    window.clearInterval(interval);
+                    resolve(true);
+                } else if (Date.now() - start > timeoutMs) {
+                    window.clearInterval(interval);
+                    resolve(false);
+                }
+            }, 50);
+        });
     }
 
     /**

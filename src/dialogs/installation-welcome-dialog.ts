@@ -16,13 +16,9 @@ export class InstallationWelcomeDialog extends Modal {
         const { contentEl, modalEl, titleEl } = this;
         contentEl.empty();
 
-        // Add class to modal
+        // Add class to modal (width is set in styles.css)
         modalEl.addClass('nexus-installation-welcome-dialog');
         contentEl.addClass('nexus-installation-welcome-dialog');
-
-        // Set modal width
-        modalEl.style.width = '600px';
-        modalEl.style.maxWidth = '90vw';
 
         // Set title
         titleEl.setText(`Nexus AI Chat Importer ${this.version}`);

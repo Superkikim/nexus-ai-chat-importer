@@ -147,10 +147,10 @@ function createKofiSupportBox(container, message) {
   }
   const realityCheck = supportBox.createDiv("kofi-reality-check");
   realityCheck.innerHTML = `
-        <strong>Reality check:</strong> Thousands of hours of work over the year, more than 4'300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! \u{1F64F}
+        <strong>Reality check:</strong> Thousands of hours of work over the year, more than 4'300 downloads, but only $20 in donations over two months. If this plugin makes your life easier, please consider supporting me.
     `;
   const buttonContainer = supportBox.createDiv("kofi-button-container");
-  const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/support_me_on_kofi_red.png";
+  const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/assets/support_me_on_kofi_red.png";
   buttonContainer.innerHTML = `
         <a href="https://ko-fi.com/nexusplugins" target="_blank">
             <img src="${buttonImagePath}" alt="Support me on Ko-fi" height="50">
@@ -7449,10 +7449,9 @@ var init_upgrade_complete_modal = __esm({
         this.version = version;
       }
       onOpen() {
-        const { containerEl, titleEl, modalEl } = this;
+        const { contentEl, titleEl, modalEl } = this;
         modalEl.classList.add("nexus-upgrade-complete-modal");
-        modalEl.style.width = "800px";
-        modalEl.style.maxWidth = "90vw";
+        contentEl.classList.add("nexus-ai-chat-importer-modal");
         titleEl.setText(`\u2705 Upgrade Complete - v${this.version}`);
         this.createContent();
       }
@@ -7461,16 +7460,10 @@ var init_upgrade_complete_modal = __esm({
       }
       async createContent() {
         const { contentEl } = this;
-        this.addKofiSection();
+        createKofiSupportBox(contentEl);
         await this.addReleaseNotes();
         this.addCloseButton();
         this.addStyles();
-      }
-      addKofiSection() {
-        createKofiSupportBox(
-          this.contentEl,
-          "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users, but only $10 in donations while paying $200/month in expenses. If this plugin helps you, please consider supporting it. Even $5 makes a difference! \u{1F64F}"
-        );
       }
       async addReleaseNotes() {
         let content = `## \u2728 What's New
@@ -7501,11 +7494,12 @@ var init_upgrade_complete_modal = __esm({
 - Fixed UI elements overflow
 - And many more...`;
         try {
-          const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v${this.version}`);
+          const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
           if (response.ok) {
-            const release = await response.json();
-            if (release.body) {
-              content = release.body;
+            const readme = await response.text();
+            const overviewMatch = readme.match(/## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/);
+            if (overviewMatch && overviewMatch[1]) {
+              content = overviewMatch[1].trim();
             }
           }
         } catch (error) {
@@ -7532,15 +7526,13 @@ var init_upgrade_complete_modal = __esm({
       addStyles() {
         const style = document.createElement("style");
         style.textContent = `
-            /* Modal sizing - LARGE by default */
+            /* Modal sizing */
             .nexus-upgrade-complete-modal .modal {
-                width: 800px !important;
-                max-width: 90vw !important;
                 max-height: 85vh;
             }
 
             .nexus-upgrade-complete-modal .modal-content {
-                padding: 0;
+                padding: 20px 24px;
                 overflow-y: auto;
                 max-height: calc(85vh - 100px);
             }
@@ -9075,8 +9067,8 @@ var import_obsidian16 = require("obsidian");
 // src/formatters/message-formatter.ts
 init_utils();
 var _MessageFormatter = class {
-  constructor(logger6, plugin) {
-    this.logger = logger6;
+  constructor(logger7, plugin) {
+    this.logger = logger7;
     this.plugin = plugin;
   }
   formatMessages(messages) {
@@ -9235,12 +9227,12 @@ var URL_GENERATORS = {
 
 // src/formatters/note-formatter.ts
 var NoteFormatter = class {
-  constructor(logger6, pluginId, pluginVersion, plugin) {
-    this.logger = logger6;
+  constructor(logger7, pluginId, pluginVersion, plugin) {
+    this.logger = logger7;
     this.pluginId = pluginId;
     this.pluginVersion = pluginVersion;
     this.plugin = plugin;
-    this.messageFormatter = new MessageFormatter(logger6, plugin);
+    this.messageFormatter = new MessageFormatter(logger7, plugin);
   }
   generateMarkdownContent(conversation) {
     const safeTitle = generateSafeAlias(conversation.title);
@@ -10280,9 +10272,9 @@ ChatGPTConverter.CLEANUP_PATTERNS = [
 init_utils();
 var ChatGPTAttachmentExtractor = class {
   // All opened ZIPs for multi-ZIP fallback
-  constructor(plugin, logger6) {
+  constructor(plugin, logger7) {
     this.plugin = plugin;
-    this.logger = logger6;
+    this.logger = logger7;
     this.zipFileCache = /* @__PURE__ */ new Map();
     // Cache for ZIP file lookups
     this.attachmentMap = null;
@@ -11606,9 +11598,9 @@ ClaudeConverter.CALLOUTS = {
 
 // src/providers/claude/claude-attachment-extractor.ts
 var ClaudeAttachmentExtractor = class {
-  constructor(plugin, logger6) {
+  constructor(plugin, logger7) {
     this.plugin = plugin;
-    this.logger = logger6;
+    this.logger = logger7;
   }
   /**
    * Extract attachments from Claude ZIP archive
@@ -12159,8 +12151,8 @@ __name(ImportProgressModal, "ImportProgressModal");
 
 // src/services/attachment-map-builder.ts
 var AttachmentMapBuilder = class {
-  constructor(logger6) {
-    this.logger = logger6;
+  constructor(logger7) {
+    this.logger = logger7;
   }
   /**
    * Scan all ZIP files and build a map of available attachments
@@ -13283,8 +13275,11 @@ var IncrementalUpgradeManager = class {
       } catch (e) {
         logger5.error("Failed to write upgrade report:", e);
       }
-      await this.showUpgradeCompleteDialog(currentVersion);
-      return result;
+      return {
+        ...result,
+        showCompletionDialog: true,
+        upgradedToVersion: currentVersion
+      };
     } catch (error) {
       logger5.error("Incremental upgrade failed:", error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
@@ -13388,6 +13383,8 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      progressModal.close();
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -13655,18 +13652,17 @@ var IncrementalUpgradeManager = class {
    * Show upgrade complete dialog AFTER migrations
    * Displays Ko-fi + What's New + Improvements + Bug Fixes
    */
+  /**
+   * Show upgrade completion dialog
+   * PUBLIC method - called from main.ts after checkAndPerformUpgrade() returns
+   * This ensures styles.css is fully loaded by Obsidian
+   */
   async showUpgradeCompleteDialog(version) {
     try {
       const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
       if (isV130OrLater) {
         const { UpgradeCompleteModal: UpgradeCompleteModal2 } = await Promise.resolve().then(() => (init_upgrade_complete_modal(), upgrade_complete_modal_exports));
-        await new Promise((resolve) => {
-          const modal = new UpgradeCompleteModal2(this.plugin.app, this.plugin, version);
-          modal.onClose = () => {
-            resolve();
-          };
-          modal.open();
-        });
+        new UpgradeCompleteModal2(this.plugin.app, this.plugin, version).open();
       } else {
         new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
       }
@@ -13743,6 +13739,45 @@ var IncrementalUpgradeManager = class {
       logger5.error("Error showing upgrade dialog:", error);
       new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
+  }
+  /**
+   * Wait until a CSS rule (selectorText contains 'selector') is present in document.styleSheets
+   * Returns false on timeout, true if found
+   */
+  async waitForCssRule(selector, timeoutMs = 2e3) {
+    const start = Date.now();
+    const hasRule = /* @__PURE__ */ __name(() => {
+      for (const sheet of Array.from(document.styleSheets)) {
+        let rules;
+        try {
+          rules = sheet.cssRules;
+        } catch (e) {
+          continue;
+        }
+        if (!rules)
+          continue;
+        for (let i = 0; i < rules.length; i++) {
+          const rule = rules[i];
+          if (rule.selectorText && rule.selectorText.includes(selector)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }, "hasRule");
+    if (hasRule())
+      return true;
+    return await new Promise((resolve) => {
+      const interval = window.setInterval(() => {
+        if (hasRule()) {
+          window.clearInterval(interval);
+          resolve(true);
+        } else if (Date.now() - start > timeoutMs) {
+          window.clearInterval(interval);
+          resolve(false);
+        }
+      }, 50);
+    });
   }
   /**
    * Check if operation was completed using new upgrade history structure
@@ -15067,8 +15102,6 @@ var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
     contentEl.empty();
     modalEl.addClass("nexus-installation-welcome-dialog");
     contentEl.addClass("nexus-installation-welcome-dialog");
-    modalEl.style.width = "600px";
-    modalEl.style.maxWidth = "90vw";
     titleEl.setText(`Nexus AI Chat Importer ${this.version}`);
     const welcomeSection = contentEl.createDiv("welcome-section");
     welcomeSection.style.cssText = `
@@ -15619,6 +15652,8 @@ __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 // src/dialogs/import-completion-dialog.ts
 var import_obsidian31 = require("obsidian");
 init_kofi_support_box();
+init_logger();
+var logger6 = new Logger();
 var ImportCompletionDialog = class extends import_obsidian31.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
@@ -15756,7 +15791,7 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
         await this.app.workspace.getLeaf(false).openFile(file);
       }
     } catch (error) {
-      logger.error("Failed to open report:", error);
+      logger6.error("Failed to open report:", error);
     }
   }
   addCustomStyles() {
@@ -15836,6 +15871,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
       if (upgradeResult == null ? void 0 : upgradeResult.isFreshInstall) {
         new InstallationWelcomeDialog(this.app, this.manifest.version).open();
+      }
+      if ((upgradeResult == null ? void 0 : upgradeResult.showCompletionDialog) && (upgradeResult == null ? void 0 : upgradeResult.upgradedToVersion)) {
+        await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
       }
     } catch (error) {
       this.logger.error("Plugin loading failed:", error);

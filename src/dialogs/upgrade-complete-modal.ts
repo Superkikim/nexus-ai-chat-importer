@@ -35,14 +35,11 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     onOpen(): void {
-        const { containerEl, titleEl, modalEl } = this;
+        const { contentEl, titleEl, modalEl } = this;
 
-        // Add custom CSS class
+        // Add custom CSS classes (width is set in styles.css)
         modalEl.classList.add('nexus-upgrade-complete-modal');
-
-        // Set modal width IMMEDIATELY (before content loads)
-        modalEl.style.width = '800px';
-        modalEl.style.maxWidth = '90vw';
+        contentEl.classList.add('nexus-ai-chat-importer-modal');
 
         // Set title
         titleEl.setText(`✅ Upgrade Complete - v${this.version}`);
@@ -57,8 +54,8 @@ export class UpgradeCompleteModal extends Modal {
     async createContent() {
         const { contentEl } = this;
 
-        // Ko-fi section (top)
-        this.addKofiSection();
+        // Ko-fi support section (using reusable component)
+        createKofiSupportBox(contentEl);
 
         // Release notes content
         await this.addReleaseNotes();
@@ -68,14 +65,6 @@ export class UpgradeCompleteModal extends Modal {
 
         // Add custom styles
         this.addStyles();
-    }
-
-    private addKofiSection() {
-        // Use reusable Ko-fi support box component
-        createKofiSupportBox(
-            this.contentEl,
-            "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users, but only $10 in donations while paying $200/month in expenses. If this plugin helps you, please consider supporting it. Even $5 makes a difference! 🙏"
-        );
     }
 
     private async addReleaseNotes() {
@@ -109,12 +98,15 @@ export class UpgradeCompleteModal extends Modal {
 - And many more...`;
 
         try {
-            // Try to fetch from GitHub release
-            const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v${this.version}`);
+            // Try to fetch Overview section from README
+            const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
             if (response.ok) {
-                const release = await response.json();
-                if (release.body) {
-                    content = release.body;
+                const readme = await response.text();
+
+                // Extract Overview section (between ## Overview and next ##)
+                const overviewMatch = readme.match(/## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/);
+                if (overviewMatch && overviewMatch[1]) {
+                    content = overviewMatch[1].trim();
                 }
             }
         } catch (error) {
@@ -147,15 +139,13 @@ export class UpgradeCompleteModal extends Modal {
     private addStyles() {
         const style = document.createElement("style");
         style.textContent = `
-            /* Modal sizing - LARGE by default */
+            /* Modal sizing */
             .nexus-upgrade-complete-modal .modal {
-                width: 800px !important;
-                max-width: 90vw !important;
                 max-height: 85vh;
             }
 
             .nexus-upgrade-complete-modal .modal-content {
-                padding: 0;
+                padding: 20px 24px;
                 overflow-y: auto;
                 max-height: calc(85vh - 100px);
             }

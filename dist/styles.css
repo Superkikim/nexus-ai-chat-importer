@@ -187,9 +187,19 @@
     margin: 8px 0;
     border-left: 4px solid var(--interactive-accent);
 }
+/* Global modal sizing for all plugin modals */
+.modal.nexus-installation-welcome-dialog,
+.modal.nexus-upgrade-complete-modal,
+.modal.nexus-provider-selection-dialog,
+.modal.nexus-file-selection-dialog,
+.modal.nexus-conversation-selection-dialog {
+    width: 800px !important;
+    max-width: 90vw !important;
+}
+
 .nexus-ai-chat-importer-modal {
     min-width: 450px;
-    max-width: 650px;
+    max-width: 800px;
     border-radius: var(--radius-m);
     box-shadow: var(--shadow-l);
 }

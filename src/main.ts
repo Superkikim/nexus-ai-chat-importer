@@ -83,6 +83,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             if (upgradeResult?.isFreshInstall) {
                 new InstallationWelcomeDialog(this.app, this.manifest.version).open();
             }
+
+            // Show upgrade completion dialog if upgrade was performed
+            // Called AFTER checkAndPerformUpgrade() returns to ensure styles.css is loaded
+            if (upgradeResult?.showCompletionDialog && upgradeResult?.upgradedToVersion) {
+                await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
+            }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);
             throw error;
