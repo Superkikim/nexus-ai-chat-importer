@@ -25,6 +25,7 @@ import type NexusAiChatImporterPlugin from "../main";
  * Enhanced dialog for folder migration with link update capabilities
  */
 export class EnhancedFolderMigrationDialog extends Modal {
+    private plugin: NexusAiChatImporterPlugin;
     private onComplete: (action: 'move' | 'keep' | 'cancel') => Promise<void>;
     private oldPath: string;
     private newPath: string;
@@ -40,6 +41,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
         onComplete: (action: 'move' | 'keep' | 'cancel') => Promise<void>
     ) {
         super(plugin.app);
+        this.plugin = plugin;
         this.oldPath = oldPath;
         this.newPath = newPath;
         this.folderType = folderType;
@@ -103,7 +105,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
         try {
             // Lazy import LinkUpdateService
             const { LinkUpdateService } = await import("../services/link-update-service");
-            const linkUpdateService = new LinkUpdateService(this.app.plugins.plugins['nexus-ai-chat-importer'] as any);
+            const linkUpdateService = new LinkUpdateService(this.plugin);
 
             if (this.folderType === 'attachments') {
                 const estimate = await linkUpdateService.estimateUpdateTime('attachments');
@@ -115,7 +117,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 this.estimatedTime = estimate.estimatedSeconds;
             }
         } catch (error) {
-            logger.warn("Failed to load link update estimates:", error);
+            this.plugin.logger.warn("Failed to load link update estimates:", error);
         }
     }
 
@@ -165,7 +167,8 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 await this.onComplete('cancel');
                 new Notice(`Change cancelled. Folder setting reverted.`);
             } catch (error) {
-                new Notice(`Failed to revert setting: ${error.message}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                new Notice(`Failed to revert setting: ${errorMessage}`);
             }
         });
 
@@ -180,7 +183,8 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 await this.onComplete('keep');
                 new Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
             } catch (error) {
-                new Notice(`Failed to update setting: ${error.message}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                new Notice(`Failed to update setting: ${errorMessage}`);
             }
         });
 
@@ -199,13 +203,15 @@ export class EnhancedFolderMigrationDialog extends Modal {
                     await this.onComplete('move');
                     new Notice(`Files moved to ${this.newPath}`);
                 } catch (error) {
-                    new Notice(`Failed to move files: ${error.message}`);
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    new Notice(`Failed to move files: ${errorMessage}`);
                 }
             }
         });
     }
 
     private async handleMoveWithLinkUpdates(): Promise<void> {
+        let progressModal: any = null;
         try {
             // Lazy import dependencies
             const [{ UpgradeProgressModal }, { LinkUpdateService }, { moveAndMergeFolders }] = await Promise.all([
@@ -215,7 +221,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
             ]);
 
             // Show progress modal for the operation
-            const progressModal = new UpgradeProgressModal(
+            progressModal = new UpgradeProgressModal(
                 this.app,
                 `Moving ${this.folderType} and updating links`,
                 100
@@ -257,7 +263,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 progress: 30
             });
 
-            const linkUpdateService = new LinkUpdateService(this.app.plugins.plugins['nexus-ai-chat-importer'] as any);
+            const linkUpdateService = new LinkUpdateService(this.plugin);
             let stats;
 
             // Step 2: Update links (30-100%)
@@ -316,8 +322,11 @@ export class EnhancedFolderMigrationDialog extends Modal {
             await this.onComplete('move');
 
         } catch (error) {
-            progressModal.close();
-            this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${error.message}`);
+            if (progressModal) {
+                progressModal.close();
+            }
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${errorMessage}`);
         }
     }
 

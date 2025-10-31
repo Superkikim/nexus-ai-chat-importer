@@ -1403,6 +1403,7 @@ var init_enhanced_folder_migration_dialog = __esm({
         super(plugin.app);
         this.estimatedTime = 0;
         this.fileCount = 0;
+        this.plugin = plugin;
         this.oldPath = oldPath;
         this.newPath = newPath;
         this.folderType = folderType;
@@ -1446,7 +1447,7 @@ var init_enhanced_folder_migration_dialog = __esm({
       async loadEstimates() {
         try {
           const { LinkUpdateService: LinkUpdateService2 } = await Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports));
-          const linkUpdateService = new LinkUpdateService2(this.app.plugins.plugins["nexus-ai-chat-importer"]);
+          const linkUpdateService = new LinkUpdateService2(this.plugin);
           if (this.folderType === "attachments") {
             const estimate = await linkUpdateService.estimateUpdateTime("attachments");
             this.fileCount = estimate.fileCount;
@@ -1457,7 +1458,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             this.estimatedTime = estimate.estimatedSeconds;
           }
         } catch (error) {
-          logger.warn("Failed to load link update estimates:", error);
+          this.plugin.logger.warn("Failed to load link update estimates:", error);
         }
       }
       shouldShowLinkUpdateInfo() {
@@ -1496,7 +1497,8 @@ var init_enhanced_folder_migration_dialog = __esm({
             await this.onComplete("cancel");
             new import_obsidian7.Notice(`Change cancelled. Folder setting reverted.`);
           } catch (error) {
-            new import_obsidian7.Notice(`Failed to revert setting: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            new import_obsidian7.Notice(`Failed to revert setting: ${errorMessage}`);
           }
         });
         const keepButton = buttonContainer.createEl("button", {
@@ -1509,7 +1511,8 @@ var init_enhanced_folder_migration_dialog = __esm({
             await this.onComplete("keep");
             new import_obsidian7.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
           } catch (error) {
-            new import_obsidian7.Notice(`Failed to update setting: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            new import_obsidian7.Notice(`Failed to update setting: ${errorMessage}`);
           }
         });
         const moveButton = buttonContainer.createEl("button", {
@@ -1525,25 +1528,27 @@ var init_enhanced_folder_migration_dialog = __esm({
               await this.onComplete("move");
               new import_obsidian7.Notice(`Files moved to ${this.newPath}`);
             } catch (error) {
-              new import_obsidian7.Notice(`Failed to move files: ${error.message}`);
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              new import_obsidian7.Notice(`Failed to move files: ${errorMessage}`);
             }
           }
         });
       }
       async handleMoveWithLinkUpdates() {
+        let progressModal = null;
         try {
           const [{ UpgradeProgressModal: UpgradeProgressModal2 }, { LinkUpdateService: LinkUpdateService2 }, { moveAndMergeFolders: moveAndMergeFolders2 }] = await Promise.all([
             Promise.resolve().then(() => (init_progress_modal(), progress_modal_exports)),
             Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports)),
             Promise.resolve().then(() => (init_utils(), utils_exports))
           ]);
-          const progressModal2 = new UpgradeProgressModal2(
+          progressModal = new UpgradeProgressModal2(
             this.app,
             `Moving ${this.folderType} and updating links`,
             100
           );
-          progressModal2.open();
-          progressModal2.updateProgress({
+          progressModal.open();
+          progressModal.updateProgress({
             title: "Moving files...",
             detail: `Moving from ${this.oldPath} to ${this.newPath}`,
             progress: 5
@@ -1558,19 +1563,19 @@ var init_enhanced_folder_migration_dialog = __esm({
             this.app.vault,
             (current, total) => {
               const percentage = 5 + Math.round(current / total * 25);
-              progressModal2.updateProgress({
+              progressModal.updateProgress({
                 title: "Moving files...",
                 detail: `${current} / ${total} files processed`,
                 progress: percentage
               });
             }
           );
-          progressModal2.updateProgress({
+          progressModal.updateProgress({
             title: "Files moved",
             detail: `${moveResult.moved} files moved, ${moveResult.skipped} skipped. Preparing to update links...`,
             progress: 30
           });
-          const linkUpdateService = new LinkUpdateService2(this.app.plugins.plugins["nexus-ai-chat-importer"]);
+          const linkUpdateService = new LinkUpdateService2(this.plugin);
           let stats;
           if (this.folderType === "attachments") {
             stats = await linkUpdateService.updateAttachmentLinks(
@@ -1578,7 +1583,7 @@ var init_enhanced_folder_migration_dialog = __esm({
               this.newPath,
               (progress) => {
                 const percentage = 30 + Math.round(progress.current / progress.total * 70);
-                progressModal2.updateProgress({
+                progressModal.updateProgress({
                   title: "Updating attachment links...",
                   detail: progress.detail,
                   progress: percentage
@@ -1597,7 +1602,7 @@ var init_enhanced_folder_migration_dialog = __esm({
                 } else if (progress.phase === "updating-artifacts") {
                   title = "Updating links in artifacts...";
                 }
-                progressModal2.updateProgress({
+                progressModal.updateProgress({
                   title,
                   detail: progress.detail,
                   progress: percentage
@@ -1606,15 +1611,18 @@ var init_enhanced_folder_migration_dialog = __esm({
             );
           }
           const linksUpdated = this.folderType === "attachments" ? (stats == null ? void 0 : stats.attachmentLinksUpdated) || 0 : (stats == null ? void 0 : stats.conversationLinksUpdated) || 0;
-          progressModal2.showComplete(
+          progressModal.showComplete(
             `${moveResult.moved} files moved. ${linksUpdated} links updated successfully`
           );
-          progressModal2.closeAfterDelay(3e3);
+          progressModal.closeAfterDelay(3e3);
           new import_obsidian7.Notice(`\u2705 ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
           await this.onComplete("move");
         } catch (error) {
-          progressModal.close();
-          this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${error.message}`);
+          if (progressModal) {
+            progressModal.close();
+          }
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${errorMessage}`);
         }
       }
       addStyles() {
@@ -12227,9 +12235,9 @@ var ImportService = class {
     this.conversationProcessor.resetCounters();
     const storage = this.plugin.getStorageService();
     let processingStarted = false;
-    const progressModal2 = new ImportProgressModal(this.plugin.app, file.name);
-    const progressCallback = progressModal2.getProgressCallback();
-    progressModal2.open();
+    const progressModal = new ImportProgressModal(this.plugin.app, file.name);
+    const progressCallback = progressModal.getProgressCallback();
+    progressModal.open();
     if (selectedConversationIds && selectedConversationIds.length > 0) {
     }
     try {
@@ -12252,7 +12260,7 @@ var ImportService = class {
         const foundByName = storage.isArchiveImported(file.name);
         isReprocess = foundByHash || foundByName;
         if (isReprocess) {
-          progressModal2.close();
+          progressModal.close();
           const shouldReimport = await showDialog(
             this.plugin.app,
             "confirmation",
@@ -12267,16 +12275,16 @@ var ImportService = class {
           );
           if (!shouldReimport) {
             new import_obsidian18.Notice(`Skipping ${file.name} (already imported).`);
-            progressModal2.close();
+            progressModal.close();
             return;
           }
-          progressModal2.open();
+          progressModal.open();
         }
       } else {
         fileHash = await getFileHash(file);
       }
       processingStarted = true;
-      await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal2);
+      await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
       storage.addImportedArchive(fileHash, file.name);
       await this.plugin.saveSettings();
       progressCallback({
@@ -12292,11 +12300,11 @@ var ImportService = class {
         title: "Import failed",
         detail: message
       });
-      setTimeout(() => progressModal2.close(), 5e3);
+      setTimeout(() => progressModal.close(), 5e3);
     } finally {
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
-        if (!progressModal2.isComplete) {
+        if (!progressModal.isComplete) {
           new import_obsidian18.Notice(
             this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
           );
@@ -12341,7 +12349,7 @@ var ImportService = class {
       }
     }
   }
-  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal2) {
+  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal) {
     try {
       progressCallback == null ? void 0 : progressCallback({
         phase: "scanning",
@@ -12352,8 +12360,8 @@ var ImportService = class {
       if (selectedConversationIds && selectedConversationIds.length > 0) {
         const originalCount = rawConversations.length;
         rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
-        if (progressModal2) {
-          progressModal2.setSelectiveImportMode(rawConversations.length, originalCount);
+        if (progressModal) {
+          progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
         }
         progressCallback == null ? void 0 : progressCallback({
           phase: "scanning",
@@ -13289,12 +13297,12 @@ var IncrementalUpgradeManager = class {
         });
       }
     }
-    const progressModal2 = new MultiOperationProgressModal(
+    const progressModal = new MultiOperationProgressModal(
       this.plugin.app,
       `Upgrading to v${toVersion}`,
       allOperations
     );
-    progressModal2.open();
+    progressModal.open();
     const results = [];
     let upgradesExecuted = 0;
     let upgradesSkipped = 0;
@@ -13306,7 +13314,7 @@ var IncrementalUpgradeManager = class {
           upgrade.automaticOperations,
           context,
           upgrade.version,
-          progressModal2
+          progressModal
         );
         const manualResults = { success: true, results: [] };
         results.push({
@@ -13317,7 +13325,7 @@ var IncrementalUpgradeManager = class {
         upgradesExecuted++;
       }
       const overallSuccess = true;
-      progressModal2.markComplete(`All operations completed successfully!`);
+      progressModal.markComplete(`All operations completed successfully!`);
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -13327,21 +13335,21 @@ var IncrementalUpgradeManager = class {
       };
     } catch (error) {
       logger5.error("Modal upgrade execution failed:", error);
-      progressModal2.showError(`Upgrade failed: ${error}`);
+      progressModal.showError(`Upgrade failed: ${error}`);
       throw error;
     }
   }
   /**
    * Execute operations with progress updates to modal
    */
-  async executeOperationsWithProgress(operations, context, version, progressModal2) {
+  async executeOperationsWithProgress(operations, context, version, progressModal) {
     const results = [];
     let criticalFailures = 0;
     for (const operation of operations) {
       const modalOperationId = `${version}_${operation.id}`;
       try {
         if (await this.isOperationCompleted(operation.id, version)) {
-          progressModal2.updateOperation(modalOperationId, {
+          progressModal.updateOperation(modalOperationId, {
             status: "completed",
             progress: 100
           });
@@ -13351,12 +13359,12 @@ var IncrementalUpgradeManager = class {
           });
           continue;
         }
-        progressModal2.updateOperation(modalOperationId, {
+        progressModal.updateOperation(modalOperationId, {
           status: "running",
           progress: 0
         });
         if (!await operation.canRun(context)) {
-          progressModal2.updateOperation(modalOperationId, {
+          progressModal.updateOperation(modalOperationId, {
             status: "completed",
             progress: 100,
             currentDetail: "Nothing to process"
@@ -13371,12 +13379,12 @@ var IncrementalUpgradeManager = class {
           operation,
           context,
           modalOperationId,
-          progressModal2
+          progressModal
         );
         results.push({ operationId: operation.id, result });
         if (result.success) {
           await this.markOperationCompleted(operation.id, version);
-          progressModal2.updateOperation(modalOperationId, {
+          progressModal.updateOperation(modalOperationId, {
             status: "completed",
             progress: 100
           });
@@ -13384,12 +13392,12 @@ var IncrementalUpgradeManager = class {
           const isCritical = this.isCriticalFailure(result);
           if (isCritical) {
             criticalFailures++;
-            progressModal2.updateOperation(modalOperationId, {
+            progressModal.updateOperation(modalOperationId, {
               status: "failed",
               error: result.message
             });
           } else {
-            progressModal2.updateOperation(modalOperationId, {
+            progressModal.updateOperation(modalOperationId, {
               status: "completed",
               progress: 100,
               currentDetail: "Completed with warnings"
@@ -13403,7 +13411,7 @@ var IncrementalUpgradeManager = class {
           details: { error: String(error) }
         };
         results.push({ operationId: operation.id, result: errorResult });
-        progressModal2.updateOperation(modalOperationId, {
+        progressModal.updateOperation(modalOperationId, {
           status: "failed",
           error: String(error)
         });
@@ -13421,9 +13429,9 @@ var IncrementalUpgradeManager = class {
   /**
    * Execute single operation with progress callbacks
    */
-  async executeOperationWithProgress(operation, context, modalOperationId, progressModal2) {
+  async executeOperationWithProgress(operation, context, modalOperationId, progressModal) {
     const result = await operation.execute(context);
-    progressModal2.updateOperation(modalOperationId, {
+    progressModal.updateOperation(modalOperationId, {
       status: "running",
       progress: 100
     });
