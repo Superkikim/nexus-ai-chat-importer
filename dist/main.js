@@ -9353,7 +9353,7 @@ init_utils();
 // src/types/standard.ts
 var URL_GENERATORS = {
   chatgpt: {
-    generateChatUrl: (id) => `https://chat.openai.com/c/${id}`
+    generateChatUrl: (id) => `https://chatgpt.com/c/${id}`
   },
   claude: {
     generateChatUrl: (id) => `https://claude.ai/chat/${id}`
@@ -10385,7 +10385,7 @@ ${codeContent}
   static cleanChatGPTArtifacts(text, conversationId) {
     if (!text || typeof text !== "string")
       return "";
-    const chatUrl = conversationId ? `https://chat.openai.com/c/${conversationId}` : "https://chat.openai.com";
+    const chatUrl = conversationId ? `https://chatgpt.com/c/${conversationId}` : "https://chatgpt.com";
     let cleanText = text;
     for (const { pattern, replacement } of this.CLEANUP_PATTERNS) {
       cleanText = cleanText.replace(pattern, replacement(chatUrl));

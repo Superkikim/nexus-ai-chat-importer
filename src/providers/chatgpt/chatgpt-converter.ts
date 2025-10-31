@@ -283,7 +283,7 @@ export class ChatGPTConverter {
     private static cleanChatGPTArtifacts(text: string, conversationId?: string): string {
         if (!text || typeof text !== 'string') return '';
 
-        const chatUrl = conversationId ? `https://chat.openai.com/c/${conversationId}` : "https://chat.openai.com";
+        const chatUrl = conversationId ? `https://chatgpt.com/c/${conversationId}` : "https://chatgpt.com";
 
         let cleanText = text;
 

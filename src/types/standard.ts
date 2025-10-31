@@ -101,7 +101,7 @@ export interface UrlGenerator {
  */
 export const URL_GENERATORS: Record<string, UrlGenerator> = {
     chatgpt: {
-        generateChatUrl: (id: string) => `https://chat.openai.com/c/${id}`
+        generateChatUrl: (id: string) => `https://chatgpt.com/c/${id}`
     },
     claude: {
         generateChatUrl: (id: string) => `https://claude.ai/chat/${id}`
