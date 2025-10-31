@@ -37,13 +37,9 @@ export class UpgradeCompleteModal extends Modal {
     onOpen(): void {
         const { contentEl, titleEl, modalEl } = this;
 
-        // Add custom CSS classes
+        // Add custom CSS classes (width is set in styles.css)
         modalEl.classList.add('nexus-upgrade-complete-modal');
         contentEl.classList.add('nexus-ai-chat-importer-modal');
-
-        // Set modal width IMMEDIATELY (before content loads)
-        modalEl.style.width = '800px';
-        modalEl.style.maxWidth = '90vw';
 
         // Set title
         titleEl.setText(`✅ Upgrade Complete - v${this.version}`);
@@ -103,7 +99,7 @@ export class UpgradeCompleteModal extends Modal {
 
         try {
             // Try to fetch from GitHub release
-            const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v${this.version}`);
+            const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/${this.version}`);
             if (response.ok) {
                 const release = await response.json();
                 if (release.body) {
@@ -140,15 +136,13 @@ export class UpgradeCompleteModal extends Modal {
     private addStyles() {
         const style = document.createElement("style");
         style.textContent = `
-            /* Modal sizing - LARGE by default */
+            /* Modal sizing */
             .nexus-upgrade-complete-modal .modal {
-                width: 800px !important;
-                max-width: 90vw !important;
                 max-height: 85vh;
             }
 
             .nexus-upgrade-complete-modal .modal-content {
-                padding: 0;
+                padding: 20px 24px;
                 overflow-y: auto;
                 max-height: calc(85vh - 100px);
             }

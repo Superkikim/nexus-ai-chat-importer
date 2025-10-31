@@ -147,7 +147,7 @@ function createKofiSupportBox(container, message) {
   }
   const realityCheck = supportBox.createDiv("kofi-reality-check");
   realityCheck.innerHTML = `
-        <strong>Reality check:</strong> Thousands of hours of work over the year, more than 4'300 downloads, but only $20 in donations over two months. If this plugin makes your life easier, please consider supporting me. \u{1F64F}
+        <strong>Reality check:</strong> Thousands of hours of work over the year, more than 4'300 downloads, but only $20 in donations over two months. If this plugin makes your life easier, please consider supporting me.
     `;
   const buttonContainer = supportBox.createDiv("kofi-button-container");
   const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/support_me_on_kofi_red.png";
@@ -7449,10 +7449,9 @@ var init_upgrade_complete_modal = __esm({
         this.version = version;
       }
       onOpen() {
-        const { containerEl, titleEl, modalEl } = this;
+        const { contentEl, titleEl, modalEl } = this;
         modalEl.classList.add("nexus-upgrade-complete-modal");
-        modalEl.style.width = "800px";
-        modalEl.style.maxWidth = "90vw";
+        contentEl.classList.add("nexus-ai-chat-importer-modal");
         titleEl.setText(`\u2705 Upgrade Complete - v${this.version}`);
         this.createContent();
       }
@@ -7495,7 +7494,7 @@ var init_upgrade_complete_modal = __esm({
 - Fixed UI elements overflow
 - And many more...`;
         try {
-          const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v${this.version}`);
+          const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/${this.version}`);
           if (response.ok) {
             const release = await response.json();
             if (release.body) {
@@ -7526,82 +7525,15 @@ var init_upgrade_complete_modal = __esm({
       addStyles() {
         const style = document.createElement("style");
         style.textContent = `
-            /* Modal sizing - LARGE by default */
+            /* Modal sizing */
             .nexus-upgrade-complete-modal .modal {
-                width: 800px !important;
-                max-width: 90vw !important;
                 max-height: 85vh;
             }
 
             .nexus-upgrade-complete-modal .modal-content {
-                padding: 0;
+                padding: 20px 24px;
                 overflow-y: auto;
                 max-height: calc(85vh - 100px);
-            }
-
-            /* Ko-fi section */
-            .nexus-kofi-section {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 2em;
-                border-radius: 8px;
-                margin-bottom: 2em;
-                text-align: center;
-            }
-
-            .nexus-kofi-header {
-                margin-bottom: 1em;
-            }
-
-            .nexus-kofi-title {
-                font-size: 1.5em;
-                font-weight: bold;
-            }
-
-            .nexus-kofi-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-kofi-message p {
-                margin: 0.5em 0;
-            }
-
-            .nexus-kofi-button-container {
-                margin: 1.5em 0;
-            }
-
-            .nexus-kofi-link {
-                display: inline-block;
-                transition: transform 0.2s;
-            }
-
-            .nexus-kofi-link:hover {
-                transform: scale(1.05);
-            }
-
-            .nexus-kofi-amounts {
-                margin-top: 1em;
-                font-size: 0.95em;
-            }
-
-            .nexus-kofi-amounts-title {
-                margin-bottom: 0.5em;
-                opacity: 0.9;
-            }
-
-            .nexus-kofi-amounts-list {
-                display: flex;
-                justify-content: center;
-                gap: 1.5em;
-                flex-wrap: wrap;
-            }
-
-            .nexus-kofi-amount {
-                background: rgba(255, 255, 255, 0.2);
-                padding: 0.5em 1em;
-                border-radius: 20px;
-                font-weight: 500;
             }
 
             /* Release notes content */
@@ -13342,8 +13274,11 @@ var IncrementalUpgradeManager = class {
       } catch (e) {
         logger5.error("Failed to write upgrade report:", e);
       }
-      await this.showUpgradeCompleteDialog(currentVersion);
-      return result;
+      return {
+        ...result,
+        showCompletionDialog: true,
+        upgradedToVersion: currentVersion
+      };
     } catch (error) {
       logger5.error("Incremental upgrade failed:", error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
@@ -13447,6 +13382,8 @@ var IncrementalUpgradeManager = class {
       }
       const overallSuccess = true;
       progressModal.markComplete(`All operations completed successfully!`);
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      progressModal.close();
       return {
         success: overallSuccess,
         upgradesExecuted,
@@ -13714,18 +13651,17 @@ var IncrementalUpgradeManager = class {
    * Show upgrade complete dialog AFTER migrations
    * Displays Ko-fi + What's New + Improvements + Bug Fixes
    */
+  /**
+   * Show upgrade completion dialog
+   * PUBLIC method - called from main.ts after checkAndPerformUpgrade() returns
+   * This ensures styles.css is fully loaded by Obsidian
+   */
   async showUpgradeCompleteDialog(version) {
     try {
       const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
       if (isV130OrLater) {
         const { UpgradeCompleteModal: UpgradeCompleteModal2 } = await Promise.resolve().then(() => (init_upgrade_complete_modal(), upgrade_complete_modal_exports));
-        await new Promise((resolve) => {
-          const modal = new UpgradeCompleteModal2(this.plugin.app, this.plugin, version);
-          modal.onClose = () => {
-            resolve();
-          };
-          modal.open();
-        });
+        new UpgradeCompleteModal2(this.plugin.app, this.plugin, version).open();
       } else {
         new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
       }
@@ -13802,6 +13738,45 @@ var IncrementalUpgradeManager = class {
       logger5.error("Error showing upgrade dialog:", error);
       new import_obsidian26.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
     }
+  }
+  /**
+   * Wait until a CSS rule (selectorText contains 'selector') is present in document.styleSheets
+   * Returns false on timeout, true if found
+   */
+  async waitForCssRule(selector, timeoutMs = 2e3) {
+    const start = Date.now();
+    const hasRule = /* @__PURE__ */ __name(() => {
+      for (const sheet of Array.from(document.styleSheets)) {
+        let rules;
+        try {
+          rules = sheet.cssRules;
+        } catch (e) {
+          continue;
+        }
+        if (!rules)
+          continue;
+        for (let i = 0; i < rules.length; i++) {
+          const rule = rules[i];
+          if (rule.selectorText && rule.selectorText.includes(selector)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }, "hasRule");
+    if (hasRule())
+      return true;
+    return await new Promise((resolve) => {
+      const interval = window.setInterval(() => {
+        if (hasRule()) {
+          window.clearInterval(interval);
+          resolve(true);
+        } else if (Date.now() - start > timeoutMs) {
+          window.clearInterval(interval);
+          resolve(false);
+        }
+      }, 50);
+    });
   }
   /**
    * Check if operation was completed using new upgrade history structure
@@ -15126,8 +15101,6 @@ var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
     contentEl.empty();
     modalEl.addClass("nexus-installation-welcome-dialog");
     contentEl.addClass("nexus-installation-welcome-dialog");
-    modalEl.style.width = "600px";
-    modalEl.style.maxWidth = "90vw";
     titleEl.setText(`Nexus AI Chat Importer ${this.version}`);
     const welcomeSection = contentEl.createDiv("welcome-section");
     welcomeSection.style.cssText = `
@@ -15897,6 +15870,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
       if (upgradeResult == null ? void 0 : upgradeResult.isFreshInstall) {
         new InstallationWelcomeDialog(this.app, this.manifest.version).open();
+      }
+      if ((upgradeResult == null ? void 0 : upgradeResult.showCompletionDialog) && (upgradeResult == null ? void 0 : upgradeResult.upgradedToVersion)) {
+        await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
       }
     } catch (error) {
       this.logger.error("Plugin loading failed:", error);
