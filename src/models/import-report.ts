@@ -310,8 +310,8 @@ export class ImportReport {
         // Files analyzed table - show all files with their status
         if (allFiles && allFiles.length > 0) {
             summary += `### 📦 Files Analyzed\n\n`;
-            summary += `| File | Conversations | Duplicates | Selected | Created | Updated |\n`;
-            summary += `|:---|---:|---:|---:|---:|---:|\n`;
+            summary += `| File | Conversations | Duplicates | Skipped | Selected | Created | Updated |\n`;
+            summary += `|:---|---:|---:|---:|---:|---:|---:|\n`;
 
             // Combine all files (processed and skipped) with their stats
             interface FileInfo {
@@ -345,11 +345,12 @@ export class ImportReport {
                     // Use analysis stats from metadata extraction
                     const created = section?.created.length || 0;
                     const updated = section?.updated.length || 0;
+                    const skipped = stats.skippedConversations || 0;
 
-                    summary += `| \`${info.name}\` | ${stats.totalConversations} | ${stats.duplicates} | ${stats.selectedForImport} | ${created} | ${updated} |\n`;
+                    summary += `| \`${info.name}\` | ${stats.totalConversations} | ${stats.duplicates} | ${skipped} | ${stats.selectedForImport} | ${created} | ${updated} |\n`;
                 } else {
                     // File was skipped or no stats available
-                    summary += `| \`${info.name}\` | - | - | - | 0 | 0 |\n`;
+                    summary += `| \`${info.name}\` | - | - | - | - | 0 | 0 |\n`;
                 }
             });
 

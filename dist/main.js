@@ -8763,9 +8763,9 @@ var ImportReport = class {
       summary += `### \u{1F4E6} Files Analyzed
 
 `;
-      summary += `| File | Conversations | Duplicates | Selected | Created | Updated |
+      summary += `| File | Conversations | Duplicates | Skipped | Selected | Created | Updated |
 `;
-      summary += `|:---|---:|---:|---:|---:|---:|
+      summary += `|:---|---:|---:|---:|---:|---:|---:|
 `;
       const fileInfos = [];
       allFiles.forEach((file) => {
@@ -8786,10 +8786,11 @@ var ImportReport = class {
         if (stats2) {
           const created = (section == null ? void 0 : section.created.length) || 0;
           const updated = (section == null ? void 0 : section.updated.length) || 0;
-          summary += `| \`${info.name}\` | ${stats2.totalConversations} | ${stats2.duplicates} | ${stats2.selectedForImport} | ${created} | ${updated} |
+          const skipped = stats2.skippedConversations || 0;
+          summary += `| \`${info.name}\` | ${stats2.totalConversations} | ${stats2.duplicates} | ${skipped} | ${stats2.selectedForImport} | ${created} | ${updated} |
 `;
         } else {
-          summary += `| \`${info.name}\` | - | - | - | 0 | 0 |
+          summary += `| \`${info.name}\` | - | - | - | - | 0 | 0 |
 `;
         }
       });
@@ -15491,7 +15492,8 @@ var ConversationMetadataExtractor = class {
           uniqueContributed: uniqueFromFile,
           selectedForImport: 0,
           newConversations: 0,
-          updatedConversations: 0
+          updatedConversations: 0,
+          skippedConversations: 0
         });
       } catch (error) {
         logger.error(`Error extracting metadata from ${file.name}:`, error);
@@ -15511,6 +15513,13 @@ var ConversationMetadataExtractor = class {
         } else if (conversation.existenceStatus === "updated") {
           stats.updatedConversations++;
         }
+      }
+    }
+    for (const conversation of filterResult.ignoredConversations) {
+      const fileName = conversation.sourceFile;
+      if (fileName && fileStatsMap.has(fileName)) {
+        const stats = fileStatsMap.get(fileName);
+        stats.skippedConversations++;
       }
     }
     const analysisInfo = {
@@ -15541,6 +15550,7 @@ var ConversationMetadataExtractor = class {
    */
   filterConversationsForSelection(bestVersions, existingConversations) {
     const conversationsForSelection = [];
+    const ignoredConversations = [];
     let newCount = 0;
     let updatedCount = 0;
     let ignoredCount = 0;
@@ -15570,12 +15580,15 @@ var ConversationMetadataExtractor = class {
           conversationsForSelection.push(conversation);
           updatedCount++;
         } else {
+          conversation.existenceStatus = "unchanged";
+          ignoredConversations.push(conversation);
           ignoredCount++;
         }
       }
     }
     return {
       conversations: conversationsForSelection,
+      ignoredConversations,
       newCount,
       updatedCount,
       ignoredCount

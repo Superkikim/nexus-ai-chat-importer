@@ -79,6 +79,7 @@ export interface FileAnalysisStats {
     selectedForImport: number;          // Selected for import (new + updated)
     newConversations: number;           // New (not in vault)
     updatedConversations: number;       // Updated (newer than vault)
+    skippedConversations: number;       // Skipped (unchanged in vault)
 }
 
 /**
@@ -448,7 +449,7 @@ export class ConversationMetadataExtractor {
                     }
                 }
 
-                // Store stats for this file (will complete selected/new/updated after filtering)
+                // Store stats for this file (will complete selected/new/updated/skipped after filtering)
                 fileStatsMap.set(file.name, {
                     fileName: file.name,
                     totalConversations: totalInFile,
@@ -456,7 +457,8 @@ export class ConversationMetadataExtractor {
                     uniqueContributed: uniqueFromFile,
                     selectedForImport: 0,
                     newConversations: 0,
-                    updatedConversations: 0
+                    updatedConversations: 0,
+                    skippedConversations: 0
                 });
             } catch (error) {
                 logger.error(`Error extracting metadata from ${file.name}:`, error);
@@ -470,7 +472,7 @@ export class ConversationMetadataExtractor {
             existingConversations
         );
 
-        // Step 4: Complete file stats with selected/new/updated counts
+        // Step 4: Complete file stats with selected/new/updated/skipped counts
         for (const conversation of filterResult.conversations) {
             const fileName = conversation.sourceFile;
             if (fileName && fileStatsMap.has(fileName)) {
@@ -482,6 +484,15 @@ export class ConversationMetadataExtractor {
                 } else if (conversation.existenceStatus === 'updated') {
                     stats.updatedConversations++;
                 }
+            }
+        }
+
+        // Count skipped conversations per file
+        for (const conversation of filterResult.ignoredConversations) {
+            const fileName = conversation.sourceFile;
+            if (fileName && fileStatsMap.has(fileName)) {
+                const stats = fileStatsMap.get(fileName)!;
+                stats.skippedConversations++;
             }
         }
 
@@ -519,8 +530,15 @@ export class ConversationMetadataExtractor {
     private filterConversationsForSelection(
         bestVersions: ConversationMetadata[],
         existingConversations?: Map<string, any>
-    ): { conversations: ConversationMetadata[], newCount: number, updatedCount: number, ignoredCount: number } {
+    ): {
+        conversations: ConversationMetadata[],
+        ignoredConversations: ConversationMetadata[],
+        newCount: number,
+        updatedCount: number,
+        ignoredCount: number
+    } {
         const conversationsForSelection: ConversationMetadata[] = [];
+        const ignoredConversations: ConversationMetadata[] = [];
         let newCount = 0;
         let updatedCount = 0;
         let ignoredCount = 0;
@@ -568,8 +586,9 @@ export class ConversationMetadataExtractor {
                     updatedCount++;
                 } else {
                     // ZIP identique ou plus ancien que vault → UNCHANGED (IGNORER)
-                    // Ne pas ajouter à conversationsForSelection
-                    // Cette conversation ne sera pas proposée dans la sélection
+                    // Ne pas ajouter à conversationsForSelection mais tracker pour stats
+                    conversation.existenceStatus = 'unchanged';
+                    ignoredConversations.push(conversation);
                     ignoredCount++;
                 }
             }
@@ -577,6 +596,7 @@ export class ConversationMetadataExtractor {
 
         return {
             conversations: conversationsForSelection,
+            ignoredConversations,
             newCount,
             updatedCount,
             ignoredCount
