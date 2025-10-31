@@ -48,19 +48,8 @@ export function createKofiSupportBox(container: HTMLElement, message?: string): 
     const buttonContainer = supportBox.createDiv('kofi-button-container');
     buttonContainer.innerHTML = `
         <a href="https://ko-fi.com/nexusplugins" target="_blank">
-            <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" alt="Buy Me a Coffee at ko-fi.com" height="50">
+            <img src="app://local/ui/components/support_me_on_kofi_red.png" alt="Support me on Ko-fi" height="50">
         </a>
-    `;
-
-    // Suggested amounts
-    const amounts = supportBox.createDiv('kofi-amounts');
-    amounts.innerHTML = `
-        <div class="kofi-amounts-title">Suggested amounts:</div>
-        <div class="kofi-amounts-list">
-            <span class="kofi-amount-badge">☕ $5 - Coffee</span>
-            <span class="kofi-amount-badge">🤖 $25 - AI Tools</span>
-            <span class="kofi-amount-badge">🚀 $75 - Dev Toolkit</span>
-        </div>
     `;
 }
 

@@ -152,17 +152,8 @@ function createKofiSupportBox(container, message) {
   const buttonContainer = supportBox.createDiv("kofi-button-container");
   buttonContainer.innerHTML = `
         <a href="https://ko-fi.com/nexusplugins" target="_blank">
-            <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" alt="Buy Me a Coffee at ko-fi.com" height="50">
+            <img src="app://local/ui/components/support_me_on_kofi_red.png" alt="Support me on Ko-fi" height="50">
         </a>
-    `;
-  const amounts = supportBox.createDiv("kofi-amounts");
-  amounts.innerHTML = `
-        <div class="kofi-amounts-title">Suggested amounts:</div>
-        <div class="kofi-amounts-list">
-            <span class="kofi-amount-badge">\u2615 $5 - Coffee</span>
-            <span class="kofi-amount-badge">\u{1F916} $25 - AI Tools</span>
-            <span class="kofi-amount-badge">\u{1F680} $75 - Dev Toolkit</span>
-        </div>
     `;
 }
 var init_kofi_support_box = __esm({
@@ -7818,12 +7809,12 @@ var SupportSection = class extends BaseSettingsSection {
         `;
     new import_obsidian.Setting(supportContainer).setName("\u{1F4D6} Documentation").setDesc("Learn how to use the plugin and explore all features").addButton(
       (button) => button.setButtonText("Open README").onClick(() => {
-        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/README.md", "_blank");
+        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
       })
     );
     new import_obsidian.Setting(supportContainer).setName("\u{1F4DD} Release Notes").setDesc("What's new in this version and previous updates").addButton(
       (button) => button.setButtonText("View Changelog").onClick(() => {
-        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
+        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
       })
     );
     new import_obsidian.Setting(supportContainer).setName("\u{1F41B} Report Issues").setDesc("Found a bug? Let us know on GitHub").addButton(
@@ -7836,7 +7827,6 @@ var SupportSection = class extends BaseSettingsSection {
         window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
       })
     );
-    supportContainer.createEl("hr", { cls: "nexus-section-separator" });
   }
 };
 __name(SupportSection, "SupportSection");
@@ -15087,13 +15077,13 @@ var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
         icon: "\u{1F4D6}",
         title: "Documentation",
         description: "Learn how to use the plugin",
-        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/master/README.md"
+        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md"
       },
       {
         icon: "\u{1F4DD}",
         title: "Release Notes",
         description: "What's new in this version",
-        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md"
+        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md"
       },
       {
         icon: "\u{1F41B}",

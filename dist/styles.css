@@ -686,35 +686,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.kofi-amounts {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.kofi-amounts-title {
-    text-align: center;
-    font-size: 0.9em;
-    margin-bottom: 12px;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.kofi-amounts-list {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.kofi-amount-badge {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.9em;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-}
-
 /* ========================================
    KO-FI SUPPORT BOX
    ======================================== */
@@ -787,36 +758,3 @@
     transform: scale(1.05);
 }
 
-.kofi-button-container img {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.kofi-amounts {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.kofi-amounts-title {
-    text-align: center;
-    font-size: 0.9em;
-    margin-bottom: 12px;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.kofi-amounts-list {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.kofi-amount-badge {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.9em;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-}

@@ -51,7 +51,7 @@ export class SupportSection extends BaseSettingsSection {
                 button
                     .setButtonText("Open README")
                     .onClick(() => {
-                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/README.md", "_blank");
+                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
                     })
             );
 
@@ -63,7 +63,7 @@ export class SupportSection extends BaseSettingsSection {
                 button
                     .setButtonText("View Changelog")
                     .onClick(() => {
-                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
+                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
                     })
             );
 
@@ -90,9 +90,6 @@ export class SupportSection extends BaseSettingsSection {
                         window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
                     })
             );
-
-        // Separator
-        supportContainer.createEl("hr", { cls: "nexus-section-separator" });
     }
 }
 
