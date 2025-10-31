@@ -157,12 +157,12 @@ function createKofiSupportBox(container, message) {
         line-height: 1.5;
         opacity: 0.95;
     `;
-  messageEl.textContent = message || "I'm working on Nexus projects full-time while unemployed and dealing with health issues - over 1,000 users so far, but I've received just $10 in donations while paying $200/month out of pocket in expenses. If these plugins help you, even a small donation would mean the world and help keep them alive.";
+  messageEl.textContent = message || "I'm working on Nexus projects full-time while unemployed and dealing with health issues.\n\nOver 4'300 downloads so far, yet I've received only $20 in donations in the last two months while paying about $200/month out of pocket in expenses.\n\nIf this plugin makes your life easier, a donation would mean the world to me and help keep them alive.";
   const buttonContainer = supportBox.createDiv();
   buttonContainer.style.textAlign = "center";
   const kofiButton = buttonContainer.createEl("a", {
     text: "\u2615 Support on Ko-fi",
-    href: "https://ko-fi.com/superkikim"
+    href: "https://ko-fi.com//nexusplugins"
   });
   kofiButton.style.cssText = `
         display: inline-block;
@@ -185,7 +185,7 @@ function createKofiSupportBox(container, message) {
   });
   kofiButton.addEventListener("click", (e) => {
     e.preventDefault();
-    window.open("https://ko-fi.com/superkikim", "_blank");
+    window.open("https://ko-fi.com/nexusplugins", "_blank");
   });
 }
 var init_kofi_support_box = __esm({
@@ -15097,7 +15097,7 @@ var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
         icon: "\u{1F4DD}",
         title: "Release Notes",
         description: "What's new in this version",
-        url: "https://github.com/superkikim/nexus-ai-chat-importer/releases"
+        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md"
       },
       {
         icon: "\u{1F41B}",
