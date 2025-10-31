@@ -171,10 +171,12 @@ var init_folder_tree_browser_modal = __esm({
     "use strict";
     import_obsidian3 = require("obsidian");
     FolderTreeBrowserModal = class extends import_obsidian3.Modal {
+      // Track folders created during this session
       constructor(app, onSubmit, initialPath, validatePath) {
         super(app);
         this.selectedFolder = null;
         this.expandedFolders = /* @__PURE__ */ new Set();
+        this.createdFolders = /* @__PURE__ */ new Set();
         this.onSubmit = onSubmit;
         this.validatePath = validatePath;
         if (initialPath) {
@@ -208,7 +210,7 @@ var init_folder_tree_browser_modal = __esm({
         const createButton = buttonContainer.createEl("button", { text: "Create New Folder" });
         createButton.addEventListener("click", () => this.handleCreateFolder());
         const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
-        cancelButton.addEventListener("click", () => this.close());
+        cancelButton.addEventListener("click", () => this.handleCancel());
         const selectButton = buttonContainer.createEl("button", {
           text: "Select",
           cls: "mod-cta"
@@ -349,6 +351,7 @@ var init_folder_tree_browser_modal = __esm({
         }
         try {
           await this.app.vault.createFolder(newFolderPath);
+          this.createdFolders.add(newFolderPath);
           new import_obsidian3.Notice(`\u2705 Created folder: ${folderName}`);
           this.expandedFolders.add(this.selectedFolder.path);
           const newFolder = this.app.vault.getAbstractFileByPath(newFolderPath);
@@ -415,8 +418,29 @@ var init_folder_tree_browser_modal = __esm({
             return;
           }
         }
+        this.createdFolders.clear();
         this.onSubmit(path);
         this.close();
+      }
+      async handleCancel() {
+        await this.cleanupCreatedFolders();
+        this.close();
+      }
+      async cleanupCreatedFolders() {
+        const sortedFolders = Array.from(this.createdFolders).sort((a, b) => {
+          const depthA = a.split("/").length;
+          const depthB = b.split("/").length;
+          return depthB - depthA;
+        });
+        for (const folderPath of sortedFolders) {
+          try {
+            const folder = this.app.vault.getAbstractFileByPath(folderPath);
+            if (folder instanceof import_obsidian3.TFolder && folder.children.length === 0) {
+              await this.app.vault.delete(folder);
+            }
+          } catch (error) {
+          }
+        }
       }
       onClose() {
         const { contentEl } = this;

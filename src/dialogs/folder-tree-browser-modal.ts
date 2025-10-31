@@ -28,6 +28,7 @@ export class FolderTreeBrowserModal extends Modal {
     private selectedFolder: TFolder | null = null;
     private expandedFolders: Set<string> = new Set();
     private treeContainer: HTMLElement;
+    private createdFolders: Set<string> = new Set(); // Track folders created during this session
 
     constructor(
         app: App,
@@ -82,7 +83,7 @@ export class FolderTreeBrowserModal extends Modal {
         createButton.addEventListener("click", () => this.handleCreateFolder());
 
         const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
-        cancelButton.addEventListener("click", () => this.close());
+        cancelButton.addEventListener("click", () => this.handleCancel());
 
         const selectButton = buttonContainer.createEl("button", {
             text: "Select",
@@ -278,6 +279,10 @@ export class FolderTreeBrowserModal extends Modal {
         // Create the folder
         try {
             await this.app.vault.createFolder(newFolderPath);
+
+            // Track this folder as created during this session
+            this.createdFolders.add(newFolderPath);
+
             new Notice(`✅ Created folder: ${folderName}`);
 
             // Expand parent and select the new folder
@@ -360,8 +365,37 @@ export class FolderTreeBrowserModal extends Modal {
             }
         }
 
+        // Clear created folders list since user is selecting a folder
+        this.createdFolders.clear();
+
         this.onSubmit(path);
         this.close();
+    }
+
+    private async handleCancel(): Promise<void> {
+        // Delete all empty folders created during this session
+        await this.cleanupCreatedFolders();
+        this.close();
+    }
+
+    private async cleanupCreatedFolders(): Promise<void> {
+        // Sort folders by depth (deepest first) to delete children before parents
+        const sortedFolders = Array.from(this.createdFolders).sort((a, b) => {
+            const depthA = a.split('/').length;
+            const depthB = b.split('/').length;
+            return depthB - depthA; // Descending order
+        });
+
+        for (const folderPath of sortedFolders) {
+            try {
+                const folder = this.app.vault.getAbstractFileByPath(folderPath);
+                if (folder instanceof TFolder && folder.children.length === 0) {
+                    await this.app.vault.delete(folder);
+                }
+            } catch (error) {
+                // Silently ignore errors (folder might have been deleted already)
+            }
+        }
     }
 
     onClose(): void {
