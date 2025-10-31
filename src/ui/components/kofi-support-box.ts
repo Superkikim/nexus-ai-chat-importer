@@ -46,7 +46,7 @@ export function createKofiSupportBox(container: HTMLElement, message?: string): 
 
     // Ko-fi button (using GitHub raw link from tag 1.3.0)
     const buttonContainer = supportBox.createDiv('kofi-button-container');
-    const buttonImagePath = 'https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/support_me_on_kofi_red.png';
+    const buttonImagePath = 'https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/assets/support_me_on_kofi_red.png';
 
     buttonContainer.innerHTML = `
         <a href="https://ko-fi.com/nexusplugins" target="_blank">
