@@ -608,3 +608,215 @@
     opacity: 1 !important;
     cursor: default !important;
 }
+
+/* ========================================
+   KO-FI SUPPORT BOX
+   ======================================== */
+
+.kofi-support-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.kofi-header {
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.kofi-header-highlight {
+    color: #FFD700;
+}
+
+.kofi-message {
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.kofi-message p {
+    margin: 8px 0;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.kofi-message-emphasis {
+    color: #FFD700;
+    font-weight: 600;
+    font-size: 1.05em;
+}
+
+.kofi-reality-check {
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    text-align: center;
+    font-size: 0.95em;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.5;
+}
+
+.kofi-reality-check strong {
+    color: #FFD700;
+    font-weight: 600;
+}
+
+.kofi-button-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.kofi-button-container a {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.kofi-button-container a:hover {
+    transform: scale(1.05);
+}
+
+.kofi-button-container img {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.kofi-amounts {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.kofi-amounts-title {
+    text-align: center;
+    font-size: 0.9em;
+    margin-bottom: 12px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.kofi-amounts-list {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.kofi-amount-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+/* ========================================
+   KO-FI SUPPORT BOX
+   ======================================== */
+
+.kofi-support-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.kofi-header {
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.kofi-header-highlight {
+    color: #FFD700;
+}
+
+.kofi-message {
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.kofi-message p {
+    margin: 8px 0;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.kofi-message-emphasis {
+    color: #FFD700;
+    font-weight: 600;
+    font-size: 1.05em;
+}
+
+.kofi-reality-check {
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    text-align: center;
+    font-size: 0.95em;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.5;
+}
+
+.kofi-reality-check strong {
+    color: #FFD700;
+    font-weight: 600;
+}
+
+.kofi-button-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.kofi-button-container a {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.kofi-button-container a:hover {
+    transform: scale(1.05);
+}
+
+.kofi-button-container img {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.kofi-amounts {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.kofi-amounts-title {
+    text-align: center;
+    font-size: 0.9em;
+    margin-bottom: 12px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.kofi-amounts-list {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.kofi-amount-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
