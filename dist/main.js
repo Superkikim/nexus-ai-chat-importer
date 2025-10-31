@@ -8048,10 +8048,10 @@ var SupportSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
-    const kofiBox = createKofiSupportBox({
-      message: "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users so far, but only $10 in donations while paying $200/month in expenses. A donation would mean the world and help keep these plugins alive."
-    });
-    supportContainer.appendChild(kofiBox);
+    createKofiSupportBox(
+      supportContainer,
+      "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users so far, but only $10 in donations while paying $200/month in expenses. A donation would mean the world and help keep these plugins alive."
+    );
     supportContainer.createEl("hr", { cls: "nexus-section-separator" });
     new import_obsidian.Setting(supportContainer).setName("\u{1F41B} Report Issues & Request Features").setDesc("Found a bug or have a feature request? Open an issue on GitHub to help improve the plugin.").addButton(
       (button) => button.setButtonText("Open GitHub Issues").onClick(() => {
@@ -13432,15 +13432,6 @@ var IncrementalUpgradeManager = class {
     try {
       const currentVersion = this.plugin.manifest.version;
       const previousVersion = this.plugin.settings.previousVersion;
-      if (previousVersion === currentVersion) {
-        return null;
-      }
-      const data = await this.plugin.loadData();
-      const versionKey = currentVersion.replace(/\./g, "_");
-      const hasCompletedThisUpgrade = (_c = (_b = (_a = data == null ? void 0 : data.upgradeHistory) == null ? void 0 : _a.completedUpgrades) == null ? void 0 : _b[versionKey]) == null ? void 0 : _c.completed;
-      if (hasCompletedThisUpgrade) {
-        return null;
-      }
       const isFreshInstall = await this.detectFreshInstall();
       if (isFreshInstall) {
         await this.markUpgradeComplete(currentVersion);
@@ -13453,6 +13444,15 @@ var IncrementalUpgradeManager = class {
           // Flag for showing installation welcome dialog
           results: []
         };
+      }
+      if (previousVersion === currentVersion) {
+        return null;
+      }
+      const data = await this.plugin.loadData();
+      const versionKey = currentVersion.replace(/\./g, "_");
+      const hasCompletedThisUpgrade = (_c = (_b = (_a = data == null ? void 0 : data.upgradeHistory) == null ? void 0 : _a.completedUpgrades) == null ? void 0 : _b[versionKey]) == null ? void 0 : _c.completed;
+      if (hasCompletedThisUpgrade) {
+        return null;
       }
       const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
       if (upgradeChain.length === 0) {

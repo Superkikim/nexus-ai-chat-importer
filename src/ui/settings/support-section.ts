@@ -30,10 +30,10 @@ export class SupportSection extends BaseSettingsSection {
         const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
 
         // Use reusable Ko-fi support box component
-        const kofiBox = createKofiSupportBox({
-            message: "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users so far, but only $10 in donations while paying $200/month in expenses. A donation would mean the world and help keep these plugins alive."
-        });
-        supportContainer.appendChild(kofiBox);
+        createKofiSupportBox(
+            supportContainer,
+            "I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users so far, but only $10 in donations while paying $200/month in expenses. A donation would mean the world and help keep these plugins alive."
+        );
 
         // Separator
         supportContainer.createEl("hr", { cls: "nexus-section-separator" });

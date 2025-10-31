@@ -82,6 +82,20 @@ export class IncrementalUpgradeManager {
             const currentVersion = this.plugin.manifest.version;
             const previousVersion = this.plugin.settings.previousVersion; // ← Use settings instead of data
 
+            // FRESH INSTALL DETECTION - Check BEFORE version comparison
+            const isFreshInstall = await this.detectFreshInstall();
+
+            if (isFreshInstall) {
+                await this.markUpgradeComplete(currentVersion);
+                return {
+                    success: true,
+                    upgradesExecuted: 0,
+                    upgradesSkipped: 0,
+                    upgradesFailed: 0,
+                    isFreshInstall: true, // Flag for showing installation welcome dialog
+                    results: []
+                };
+            }
 
             // Skip if no version change
             if (previousVersion === currentVersion) {
@@ -96,21 +110,6 @@ export class IncrementalUpgradeManager {
 
             if (hasCompletedThisUpgrade) {
                 return null;
-            }
-
-            // FRESH INSTALL DETECTION - Skip upgrades if this is a new installation
-            const isFreshInstall = await this.detectFreshInstall();
-
-            if (isFreshInstall) {
-                await this.markUpgradeComplete(currentVersion);
-                return {
-                    success: true,
-                    upgradesExecuted: 0,
-                    upgradesSkipped: 0,
-                    upgradesFailed: 0,
-                    isFreshInstall: true, // Flag for showing installation welcome dialog
-                    results: []
-                };
             }
 
             // Get upgrade chain: all upgrades between previousVersion and currentVersion
