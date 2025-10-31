@@ -21,6 +21,7 @@
 import JSZip from "jszip";
 import { StandardAttachment } from "../../types/standard";
 import { ensureFolderExists } from "../../utils";
+import { formatFileSize, detectFileFormat, getFileCategory, sanitizeFileName } from "../../utils/file-utils";
 import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
 import { AttachmentMap, AttachmentLocation } from "../../services/attachment-map-builder";
@@ -143,7 +144,7 @@ export class ChatGPTAttachmentExtractor {
                     finalExtractedContent = attachment.extractedContent
                         .replace('{{FILENAME}}', extractResult.finalFileName)
                         .replace('{{FILETYPE}}', extractResult.actualFileType)
-                        .replace('{{FILESIZE}}', this.formatFileSize(attachment.fileSize || 0))
+                        .replace('{{FILESIZE}}', formatFileSize(attachment.fileSize || 0))
                         .replace('{{URL}}', extractResult.localPath);
                 }
 
@@ -224,9 +225,9 @@ export class ChatGPTAttachmentExtractor {
     ): Promise<{localPath: string, finalFileName: string, actualFileType: string} | null> {
         // Get file content for format detection
         const fileContent = await zipFile.async("uint8array");
-        
+
         // Detect actual file format (especially for .dat files)
-        const formatInfo = this.detectFileFormat(fileContent);
+        const formatInfo = detectFileFormat(fileContent);
         
         // Update filename with correct extension if needed (for all generated images)
         let finalFileName = attachment.fileName;
@@ -266,45 +267,7 @@ export class ChatGPTAttachmentExtractor {
         };
     }
 
-    /**
-     * Detect file format from magic bytes (especially for .dat files)
-     */
-    private detectFileFormat(fileContent: Uint8Array): {extension: string | null, mimeType: string | null} {
-        if (fileContent.length < 4) {
-            this.logger.warn('File too small for format detection');
-            return {extension: null, mimeType: null};
-        }
 
-        // Check magic bytes
-        const header = Array.from(fileContent.slice(0, 12)).map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        // PNG: 89 50 4E 47 0D 0A 1A 0A
-        if (header.startsWith('89504e47')) {
-            return {extension: 'png', mimeType: 'image/png'};
-        }
-        
-        // JPEG: FF D8 FF
-        if (header.startsWith('ffd8ff')) {
-            return {extension: 'jpg', mimeType: 'image/jpeg'};
-        }
-        
-        // GIF: 47 49 46 38
-        if (header.startsWith('47494638')) {
-            return {extension: 'gif', mimeType: 'image/gif'};
-        }
-        
-        // WebP: 52 49 46 46 [4 bytes] 57 45 42 50
-        if (header.startsWith('52494646') && header.substring(16, 24) === '57454250') {
-            return {extension: 'webp', mimeType: 'image/webp'};
-        }
-        
-        // RIFF (could be WebP or other formats)
-        if (header.startsWith('52494646')) {
-            return {extension: 'webp', mimeType: 'image/webp'}; // Assume WebP for RIFF in DALL-E context
-        }
-
-        return {extension: null, mimeType: null};
-    }
 
     /**
      * Resolve file conflicts by adding numeric suffix
@@ -570,7 +533,7 @@ export class ChatGPTAttachmentExtractor {
         const category = this.categorizeFile(attachment);
 
         // Clean filename for filesystem - keep original name since it should be unique
-        const safeFileName = this.sanitizeFileName(attachment.fileName);
+        const safeFileName = sanitizeFileName(attachment.fileName);
 
         // Use attachmentFolder setting: <attachmentFolder>/chatgpt/<category>/filename.jpg
         return `${this.plugin.settings.attachmentFolder}/chatgpt/${category}/${safeFileName}`;
@@ -605,29 +568,7 @@ export class ChatGPTAttachmentExtractor {
         return 'files';
     }
 
-    /**
-     * Sanitize filename and handle potential conflicts
-     */
-    private sanitizeFileName(fileName: string): string {
-        let cleanName = fileName
-            .replace(/[<>:"\/\\|?*]/g, '_')
-            .replace(/\s+/g, '_')
-            .trim();
-            
-        // If filename conflicts might occur, we could add a timestamp prefix
-        // but for now, ChatGPT file IDs should make names unique enough
-        return cleanName;
-    }
 
-    /**
-     * Format file size in human-readable format
-     */
-    private formatFileSize(bytes: number): string {
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        if (bytes === 0) return '0 Bytes';
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-    }
 
     /**
      * Clear ZIP file cache (call between different ZIP files)

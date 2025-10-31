@@ -398,31 +398,4 @@ export class StorageService {
         }
     }
 
-    // ========================================
-    // DEPRECATED METHODS (For Compatibility)
-    // ========================================
-
-    /**
-     * @deprecated Use scanExistingConversations() instead
-     */
-    getConversationCatalog(): Record<string, ConversationCatalogEntry> {
-        this.plugin.logger.warn("getConversationCatalog() is deprecated - use scanExistingConversations()");
-        return {}; // Return empty - forces use of new scan method
-    }
-
-    /**
-     * @deprecated Conversations are now tracked via vault frontmatter
-     */
-    updateConversationCatalog(_id: string, _entry: ConversationCatalogEntry) {
-        this.plugin.logger.warn("updateConversationCatalog() is deprecated - conversations tracked via frontmatter");
-        // No-op - frontmatter is the source of truth now
-    }
-
-    /**
-     * @deprecated Conversations are now tracked via vault frontmatter
-     */
-    deleteFromConversationCatalog(_id: string) {
-        this.plugin.logger.warn("deleteFromConversationCatalog() is deprecated - files tracked via vault");
-        // No-op - file deletion is handled by event handlers
-    }
 }

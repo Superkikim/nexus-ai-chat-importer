@@ -20,6 +20,7 @@
 // src/dialogs/enhanced-file-selection-dialog.ts
 import { App, Modal, Setting } from "obsidian";
 import { FileSelectionResult, ImportMode } from "../types/conversation-selection";
+import { formatFileSize } from "../utils/file-utils";
 
 export class EnhancedFileSelectionDialog extends Modal {
     private selectedFiles: File[] = [];
@@ -371,7 +372,7 @@ export class EnhancedFileSelectionDialog extends Modal {
                 fileName.style.fontWeight = "500";
 
                 const fileSize = fileInfo.createEl("span");
-                fileSize.textContent = this.formatFileSize(file.size);
+                fileSize.textContent = formatFileSize(file.size);
                 fileSize.style.fontSize = "0.9em";
                 fileSize.style.color = "var(--text-muted)";
 
@@ -432,13 +433,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         }
     }
 
-    private formatFileSize(bytes: number): string {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
+
 
     private addCustomStyles() {
         const style = document.createElement('style');

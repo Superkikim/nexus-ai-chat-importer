@@ -58,6 +58,41 @@ export const GITHUB = {
 } as const;
 
 /**
+ * Provider-specific URLs
+ */
+export const PROVIDER_URLS = {
+    CHATGPT: {
+        BASE: 'https://chatgpt.com',
+        CHAT: (id: string) => `https://chatgpt.com/c/${id}`
+    },
+    CLAUDE: {
+        BASE: 'https://claude.ai',
+        CHAT: (id: string) => `https://claude.ai/chat/${id}`
+    }
+} as const;
+
+/**
+ * Provider names as constants
+ */
+export const PROVIDERS = {
+    CHATGPT: 'chatgpt',
+    CLAUDE: 'claude'
+} as const;
+
+export type Provider = typeof PROVIDERS[keyof typeof PROVIDERS];
+
+/**
+ * Nexus custom callout types
+ */
+export const NEXUS_CALLOUTS = {
+    USER: 'nexus_user',
+    AGENT: 'nexus_agent',
+    ATTACHMENT: 'nexus_attachment',
+    ARTIFACT: 'nexus_artifact',
+    PROMPT: 'nexus_prompt'
+} as const;
+
+/**
  * Message timestamp format definitions
  */
 export const MESSAGE_TIMESTAMP_FORMATS: Record<MessageTimestampFormat, {
