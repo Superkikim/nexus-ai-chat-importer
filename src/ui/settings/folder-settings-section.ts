@@ -171,7 +171,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
         );
 
         if (!validation.valid) {
-            this.showErrorDialog("Invalid Folder Location", validation.error);
+            this.showErrorDialog("Invalid Folder Location", validation.error ?? "Invalid folder configuration");
             // Restore old value in the text field
             textComponent.setValue(oldPath);
             return;

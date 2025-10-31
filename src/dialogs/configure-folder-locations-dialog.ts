@@ -184,7 +184,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
         );
 
         if (!validation.valid) {
-            this.showErrorDialog("Invalid Folder Location", validation.error);
+            this.showErrorDialog("Invalid Folder Location", validation.error ?? "Invalid folder configuration");
             return; // Don't close dialog, let user fix the path
         }
 
@@ -275,7 +275,8 @@ export class ConfigureFolderLocationsDialog extends Modal {
                         }
                     } catch (error) {
                         this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
-                        this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
+                        const errorMessage = error instanceof Error ? error.message : String(error);
+                        this.showErrorDialog("Migration Failed", `Failed to move files: ${errorMessage}`);
                     }
                 } else if (action === 'cancel') {
                     // Revert setting

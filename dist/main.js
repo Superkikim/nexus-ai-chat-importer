@@ -6115,6 +6115,7 @@ var init_configure_folder_locations_dialog = __esm({
         this.addStyles();
       }
       async handleSave() {
+        var _a;
         if (this.completed)
           return;
         if (!this.reportFolderInput) {
@@ -6149,7 +6150,7 @@ var init_configure_folder_locations_dialog = __esm({
           this.plugin.settings.attachmentFolder
         );
         if (!validation.valid) {
-          this.showErrorDialog("Invalid Folder Location", validation.error);
+          this.showErrorDialog("Invalid Folder Location", (_a = validation.error) != null ? _a : "Invalid folder configuration");
           return;
         }
         const result = {
@@ -6212,7 +6213,8 @@ To change the folder location:
                 }
               } catch (error) {
                 this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
-                this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.showErrorDialog("Migration Failed", `Failed to move files: ${errorMessage}`);
               }
             } else if (action === "cancel") {
               this.plugin.settings[folderType] = oldPath;
@@ -8071,6 +8073,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     });
   }
   async handleFolderChange(settingKey, newPath, folderType, textComponent) {
+    var _a;
     const oldPath = this.plugin.settings[settingKey];
     if (oldPath === newPath) {
       return;
@@ -8083,7 +8086,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       this.plugin.settings.attachmentFolder
     );
     if (!validation.valid) {
-      this.showErrorDialog("Invalid Folder Location", validation.error);
+      this.showErrorDialog("Invalid Folder Location", (_a = validation.error) != null ? _a : "Invalid folder configuration");
       textComponent.setValue(oldPath);
       return;
     }
