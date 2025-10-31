@@ -331,7 +331,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             // Auto-select ALL conversations (NEW + UPDATED)
             const allIds = extractionResult.conversations.map(c => c.id);
 
-            new Notice(`Importing ${allIds.length} conversations (${extractionResult.analysisInfo.conversationsNew} new, ${extractionResult.analysisInfo.conversationsUpdated} updated)...`);
+            const newCount = extractionResult.analysisInfo?.conversationsNew ?? 0;
+            const updatedCount = extractionResult.analysisInfo?.conversationsUpdated ?? 0;
+            new Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
 
             // Group conversations by file and import
             const conversationsByFile = new Map<string, string[]>();
