@@ -7801,30 +7801,20 @@ var SupportSection = class extends BaseSettingsSection {
   render(containerEl) {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
     createKofiSupportBox(supportContainer);
-    supportContainer.createEl("hr", { cls: "nexus-section-separator" });
-    const resourcesTitle = supportContainer.createEl("h3", { text: "\u{1F4DA} Resources" });
-    resourcesTitle.style.cssText = `
-            margin: 1.5em 0 1em 0;
-            color: var(--text-normal);
-            font-size: 1.1em;
-        `;
-    new import_obsidian.Setting(supportContainer).setName("\u{1F4D6} Documentation").setDesc("Learn how to use the plugin and explore all features").addButton(
-      (button) => button.setButtonText("Open README").onClick(() => {
+    new import_obsidian.Setting(supportContainer).setName("\u{1F4DA} Resources").setDesc("Documentation, release notes, and community links").addButton(
+      (button) => button.setButtonText("\u{1F4D6} README").onClick(() => {
         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
       })
-    );
-    new import_obsidian.Setting(supportContainer).setName("\u{1F4DD} Release Notes").setDesc("What's new in this version and previous updates").addButton(
-      (button) => button.setButtonText("View Changelog").onClick(() => {
+    ).addButton(
+      (button) => button.setButtonText("\u{1F4DD} Changelog").onClick(() => {
         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
       })
-    );
-    new import_obsidian.Setting(supportContainer).setName("\u{1F41B} Report Issues").setDesc("Found a bug? Let us know on GitHub").addButton(
-      (button) => button.setButtonText("Open Issues").onClick(() => {
+    ).addButton(
+      (button) => button.setButtonText("\u{1F41B} Issues").onClick(() => {
         window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
       })
-    );
-    new import_obsidian.Setting(supportContainer).setName("\u{1F4AC} Community Forum").setDesc("Join the discussion and connect with other users").addButton(
-      (button) => button.setButtonText("Open Forum").onClick(() => {
+    ).addButton(
+      (button) => button.setButtonText("\u{1F4AC} Forum").onClick(() => {
         window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
       })
     );

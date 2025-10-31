@@ -32,60 +32,34 @@ export class SupportSection extends BaseSettingsSection {
         // Use reusable Ko-fi support box component
         createKofiSupportBox(supportContainer);
 
-        // Separator
-        supportContainer.createEl("hr", { cls: "nexus-section-separator" });
-
-        // Resources section
-        const resourcesTitle = supportContainer.createEl("h3", { text: "📚 Resources" });
-        resourcesTitle.style.cssText = `
-            margin: 1.5em 0 1em 0;
-            color: var(--text-normal);
-            font-size: 1.1em;
-        `;
-
-        // Documentation
+        // Resources section - ONE Setting with multiple buttons
         new Setting(supportContainer)
-            .setName("📖 Documentation")
-            .setDesc("Learn how to use the plugin and explore all features")
+            .setName("📚 Resources")
+            .setDesc("Documentation, release notes, and community links")
             .addButton((button) =>
                 button
-                    .setButtonText("Open README")
+                    .setButtonText("📖 README")
                     .onClick(() => {
                         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
                     })
-            );
-
-        // Release Notes
-        new Setting(supportContainer)
-            .setName("📝 Release Notes")
-            .setDesc("What's new in this version and previous updates")
+            )
             .addButton((button) =>
                 button
-                    .setButtonText("View Changelog")
+                    .setButtonText("📝 Changelog")
                     .onClick(() => {
                         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
                     })
-            );
-
-        // Report Issues
-        new Setting(supportContainer)
-            .setName("🐛 Report Issues")
-            .setDesc("Found a bug? Let us know on GitHub")
+            )
             .addButton((button) =>
                 button
-                    .setButtonText("Open Issues")
+                    .setButtonText("🐛 Issues")
                     .onClick(() => {
                         window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
                     })
-            );
-
-        // Community Forum
-        new Setting(supportContainer)
-            .setName("💬 Community Forum")
-            .setDesc("Join the discussion and connect with other users")
+            )
             .addButton((button) =>
                 button
-                    .setButtonText("Open Forum")
+                    .setButtonText("💬 Forum")
                     .onClick(() => {
                         window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
                     })
