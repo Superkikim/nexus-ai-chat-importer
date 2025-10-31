@@ -1473,7 +1473,7 @@ var init_enhanced_folder_migration_dialog = __esm({
           });
         } else if (this.folderType === "conversations") {
           infoText.createEl("p", {
-            text: `Moving conversations will also update ${this.fileCount} report files to fix conversation links.`
+            text: `Moving conversations will also update ${this.fileCount} files (reports and attachments) to fix conversation links.`
           });
         }
         if (this.estimatedTime > 0) {
