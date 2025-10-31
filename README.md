@@ -35,7 +35,7 @@
 2. **Export** your chats:
    - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
    - **Claude**: Settings → Export data → Download ZIP
-3. **Import**: Click the ribbon icon (message bubble with plus) or use command palette → "Import AI conversations"
+3. **Import**: Click the 💬➕ ribbon icon in the left sidebar or use command palette → "Import AI conversations"
 4. **Select** your ZIP file(s) → Choose import mode (all or selective)
 5. **Done!** Your conversations are now in `Nexus/Conversations/`
 
@@ -217,7 +217,7 @@ Want to reorganize? No problem!
 ### Step 2: Import to Obsidian
 
 **Two ways to start:**
-- Click the **ribbon icon** (message bubble with plus) in the left sidebar, OR
+- Click the **💬➕ ribbon icon** in the left sidebar, OR
 - Press **Ctrl/Cmd+P** → type "**Import AI conversations**"
 
 ### Step 3: Choose Your Import Style
