@@ -9096,7 +9096,7 @@ function detectFileFormat(fileContent) {
 }
 __name(detectFileFormat, "detectFileFormat");
 function sanitizeFileName(fileName) {
-  return fileName.replace(/[<>:"\/\\|?*]/g, "_").replace(/\s+/g, "_").trim();
+  return fileName.trim().replace(/[<>:"\/\\|?*]/g, "_").replace(/\s+/g, "_");
 }
 __name(sanitizeFileName, "sanitizeFileName");
 

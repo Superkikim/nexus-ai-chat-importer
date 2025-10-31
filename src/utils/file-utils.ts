@@ -133,9 +133,9 @@ export function detectFileFormat(fileContent: Uint8Array): {extension: string | 
  */
 export function sanitizeFileName(fileName: string): string {
     return fileName
+        .trim()
         .replace(/[<>:"\/\\|?*]/g, '_')
-        .replace(/\s+/g, '_')
-        .trim();
+        .replace(/\s+/g, '_');
 }
 
 /**
