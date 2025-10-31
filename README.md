@@ -217,7 +217,7 @@ Want to reorganize? No problem!
 ### Step 2: Import to Obsidian
 
 **Two ways to start:**
-- Click the **💬➕ ribbon icon** in the left sidebar, OR
+- Click the ** <picture><source media="(prefers-color-scheme: dark)" srcset="https://api.iconify.design/lucide:message-square-plus.svg?color=%23ffffff"><source media="(prefers-color-scheme: light)" srcset="https://api.iconify.design/lucide:message-square-plus.svg?color=%23000000"><img src="https://api.iconify.design/lucide:message-square-plus.svg" width="16" height="16" alt="message-square-plus" style="vertical-align: middle;" /></picture> ribbon icon** in the left sidebar, OR
 - Press **Ctrl/Cmd+P** → type "**Import AI conversations**"
 
 ### Step 3: Choose Your Import Style
