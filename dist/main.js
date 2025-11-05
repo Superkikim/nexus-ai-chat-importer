@@ -10063,6 +10063,20 @@ var ChatGPTMessageFilter = class {
 };
 __name(ChatGPTMessageFilter, "ChatGPTMessageFilter");
 
+// src/utils/message-utils.ts
+function sortMessagesByTimestamp(messages) {
+  if (messages.length <= 1) {
+    return messages;
+  }
+  return messages.sort((a, b) => {
+    if (a.timestamp !== b.timestamp) {
+      return a.timestamp - b.timestamp;
+    }
+    return a.id.localeCompare(b.id);
+  });
+}
+__name(sortMessagesByTimestamp, "sortMessagesByTimestamp");
+
 // src/providers/chatgpt/chatgpt-converter.ts
 var ChatGPTConverter = class {
   /**
@@ -10137,12 +10151,7 @@ var ChatGPTConverter = class {
     }
     if (messages.length <= 1)
       return messages;
-    return messages.sort((a, b) => {
-      if (a.timestamp !== b.timestamp) {
-        return a.timestamp - b.timestamp;
-      }
-      return a.id.localeCompare(b.id);
-    });
+    return sortMessagesByTimestamp(messages);
   }
   /**
    * Extract content and attachments from ChatGPT message parts
@@ -10707,6 +10716,38 @@ var ChatGPTAttachmentExtractor = class {
 };
 __name(ChatGPTAttachmentExtractor, "ChatGPTAttachmentExtractor");
 
+// src/utils/report-naming-utils.ts
+function getCurrentImportDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}.${month}.${day}`;
+}
+__name(getCurrentImportDate, "getCurrentImportDate");
+function extractArchiveDateFromFilename(fileName, patterns) {
+  for (const pattern of patterns) {
+    const match = fileName.match(pattern);
+    if (match && match.length >= 4) {
+      const [, year, month, day] = match;
+      return `${year}.${month}.${day}`;
+    }
+  }
+  return null;
+}
+__name(extractArchiveDateFromFilename, "extractArchiveDateFromFilename");
+function generateReportPrefix(importDate, archiveDate) {
+  return `imported-${importDate}-archive-${archiveDate}`;
+}
+__name(generateReportPrefix, "generateReportPrefix");
+function extractReportPrefixFromZip(zipFileName, patterns) {
+  const importDate = getCurrentImportDate();
+  const archiveDate = extractArchiveDateFromFilename(zipFileName, patterns);
+  const finalArchiveDate = archiveDate || importDate;
+  return generateReportPrefix(importDate, finalArchiveDate);
+}
+__name(extractReportPrefixFromZip, "extractReportPrefixFromZip");
+
 // src/providers/chatgpt/chatgpt-report-naming.ts
 var ChatGPTReportNamingStrategy = class {
   /**
@@ -10717,21 +10758,8 @@ var ChatGPTReportNamingStrategy = class {
    * - "conversations-2025-04-25-14-40-42.zip"
    */
   extractReportPrefix(zipFileName) {
-    const now = new Date();
-    const importYear = now.getFullYear();
-    const importMonth = String(now.getMonth() + 1).padStart(2, "0");
-    const importDay = String(now.getDate()).padStart(2, "0");
-    const importDate = `${importYear}.${importMonth}.${importDay}`;
-    const dateRegex = /(\d{4})-(\d{2})-(\d{2})/;
-    const match = zipFileName.match(dateRegex);
-    let archiveDate;
-    if (match) {
-      const [, year, month, day] = match;
-      archiveDate = `${year}.${month}.${day}`;
-    } else {
-      archiveDate = importDate;
-    }
-    return `imported-${importDate}-archive-${archiveDate}`;
+    const patterns = [/(\d{4})-(\d{2})-(\d{2})/];
+    return extractReportPrefixFromZip(zipFileName, patterns);
   }
   /**
    * Get ChatGPT provider name
@@ -10767,9 +10795,51 @@ var ChatGPTReportNamingStrategy = class {
 };
 __name(ChatGPTReportNamingStrategy, "ChatGPTReportNamingStrategy");
 
+// src/providers/base/base-provider-adapter.ts
+var BaseProviderAdapter = class {
+  /**
+   * Process message attachments - COMMON IMPLEMENTATION
+   * 
+   * This method is shared by all providers and handles:
+   * - Iterating through messages
+   * - Extracting attachments using provider-specific extractor
+   * - Preserving message structure
+   * 
+   * Subclasses only need to provide their attachment extractor via getAttachmentExtractor()
+   * 
+   * @param messages - Array of messages to process
+   * @param conversationId - ID of the conversation
+   * @param zip - JSZip instance containing attachments
+   * @returns Array of messages with processed attachments
+   */
+  async processMessageAttachments(messages, conversationId, zip) {
+    const processedMessages = [];
+    for (const message of messages) {
+      if (message.attachments && message.attachments.length > 0) {
+        const processedAttachments = await this.getAttachmentExtractor().extractAttachments(
+          zip,
+          conversationId,
+          message.attachments,
+          message.id
+          // Pass message ID for better logging (optional parameter)
+        );
+        processedMessages.push({
+          ...message,
+          attachments: processedAttachments
+        });
+      } else {
+        processedMessages.push(message);
+      }
+    }
+    return processedMessages;
+  }
+};
+__name(BaseProviderAdapter, "BaseProviderAdapter");
+
 // src/providers/chatgpt/chatgpt-adapter.ts
-var ChatGPTAdapter = class {
+var ChatGPTAdapter = class extends BaseProviderAdapter {
   constructor(plugin) {
+    super();
     this.plugin = plugin;
     this.attachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
     this.reportNamingStrategy = new ChatGPTReportNamingStrategy();
@@ -10848,26 +10918,12 @@ var ChatGPTAdapter = class {
     }
     return newMessages;
   }
-  async processMessageAttachments(messages, conversationId, zip) {
-    const processedMessages = [];
-    for (const message of messages) {
-      if (message.attachments && message.attachments.length > 0) {
-        const processedAttachments = await this.attachmentExtractor.extractAttachments(
-          zip,
-          conversationId,
-          message.attachments,
-          message.id
-          // Pass message ID for better logging
-        );
-        processedMessages.push({
-          ...message,
-          attachments: processedAttachments
-        });
-      } else {
-        processedMessages.push(message);
-      }
-    }
-    return processedMessages;
+  /**
+   * Provide ChatGPT-specific attachment extractor
+   * The actual processMessageAttachments() logic is inherited from BaseProviderAdapter
+   */
+  getAttachmentExtractor() {
+    return this.attachmentExtractor;
   }
   getReportNamingStrategy() {
     return this.reportNamingStrategy;
@@ -10980,12 +11036,7 @@ var ClaudeConverter = class {
   static sortMessagesByTimestamp(messages) {
     if (messages.length <= 1)
       return messages;
-    return messages.sort((a, b) => {
-      if (a.timestamp !== b.timestamp) {
-        return a.timestamp - b.timestamp;
-      }
-      return a.id.localeCompare(b.id);
-    });
+    return sortMessagesByTimestamp(messages);
   }
   /**
    * Process ALL artifacts from entire conversation and create files
@@ -11788,26 +11839,13 @@ var ClaudeReportNamingStrategy = class {
     return "claude";
   }
   extractReportPrefix(zipFileName) {
-    const now = new Date();
-    const importYear = now.getFullYear();
-    const importMonth = String(now.getMonth() + 1).padStart(2, "0");
-    const importDay = String(now.getDate()).padStart(2, "0");
-    const importDate = `${importYear}.${importMonth}.${importDay}`;
-    const claudeBatchPattern = /data-(\d{4})-(\d{2})-(\d{2})-\d{2}-\d{2}-\d{2}-batch-\d{4}/;
-    const batchMatch = zipFileName.match(claudeBatchPattern);
-    if (batchMatch) {
-      const [, year, month, day] = batchMatch;
-      const archiveDate = `${year}.${month}.${day}`;
-      return `imported-${importDate}-archive-${archiveDate}`;
-    }
-    const legacyPattern = /(\d{4})-(\d{2})-(\d{2})/;
-    const legacyMatch = zipFileName.match(legacyPattern);
-    if (legacyMatch) {
-      const [, year, month, day] = legacyMatch;
-      const archiveDate = `${year}.${month}.${day}`;
-      return `imported-${importDate}-archive-${archiveDate}`;
-    }
-    return `imported-${importDate}-archive-${importDate}`;
+    const patterns = [
+      // Pattern 1: data-YYYY-MM-DD-HH-MM-SS-batch-NNNN.zip
+      /data-(\d{4})-(\d{2})-(\d{2})-\d{2}-\d{2}-\d{2}-batch-\d{4}/,
+      // Pattern 2: Legacy Claude format (generic YYYY-MM-DD)
+      /(\d{4})-(\d{2})-(\d{2})/
+    ];
+    return extractReportPrefixFromZip(zipFileName, patterns);
   }
   getProviderSpecificColumn() {
     return {
@@ -11819,8 +11857,9 @@ var ClaudeReportNamingStrategy = class {
 __name(ClaudeReportNamingStrategy, "ClaudeReportNamingStrategy");
 
 // src/providers/claude/claude-adapter.ts
-var ClaudeAdapter = class {
+var ClaudeAdapter = class extends BaseProviderAdapter {
   constructor(plugin) {
+    super();
     this.plugin = plugin;
     this.attachmentExtractor = new ClaudeAttachmentExtractor(plugin, plugin.logger);
     this.reportNamingStrategy = new ClaudeReportNamingStrategy();
@@ -11865,30 +11904,15 @@ var ClaudeAdapter = class {
     }
     return newMessages;
   }
-  async processMessageAttachments(messages, conversationId, zip) {
-    const processedMessages = [];
-    for (const message of messages) {
-      if (message.attachments && message.attachments.length > 0) {
-        const processedAttachments = await this.attachmentExtractor.extractAttachments(
-          zip,
-          conversationId,
-          message.attachments
-        );
-        processedMessages.push({
-          ...message,
-          attachments: processedAttachments
-        });
-      } else {
-        processedMessages.push(message);
-      }
-    }
-    return processedMessages;
+  /**
+   * Provide Claude-specific attachment extractor
+   * The actual processMessageAttachments() logic is inherited from BaseProviderAdapter
+   */
+  getAttachmentExtractor() {
+    return this.attachmentExtractor;
   }
   getReportNamingStrategy() {
     return this.reportNamingStrategy;
-  }
-  getProviderName() {
-    return "claude";
   }
   countArtifacts(chat) {
     return ClaudeConverter.countArtifacts(chat);

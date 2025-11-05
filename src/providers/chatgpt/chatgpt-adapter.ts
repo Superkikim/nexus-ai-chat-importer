@@ -19,7 +19,6 @@
 
 // src/providers/chatgpt/chatgpt-adapter.ts
 import JSZip from "jszip";
-import { ProviderAdapter } from "../provider-adapter";
 import { StandardConversation, StandardMessage } from "../../types/standard";
 import { ChatGPTConverter } from "./chatgpt-converter";
 import { ChatGPTAttachmentExtractor } from "./chatgpt-attachment-extractor";
@@ -28,12 +27,14 @@ import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
 import { ChatGPTMessageFilter } from "./chatgpt-message-filter";
 import { Chat, ChatMessage } from "./chatgpt-types";
 import type NexusAiChatImporterPlugin from "../../main";
+import { BaseProviderAdapter, AttachmentExtractor } from "../base/base-provider-adapter";
 
-export class ChatGPTAdapter implements ProviderAdapter<Chat> {
+export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
     private attachmentExtractor: ChatGPTAttachmentExtractor;
     private reportNamingStrategy: ChatGPTReportNamingStrategy;
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
+        super(); // Call parent constructor
         this.attachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
         this.reportNamingStrategy = new ChatGPTReportNamingStrategy();
     }
@@ -133,32 +134,12 @@ export class ChatGPTAdapter implements ProviderAdapter<Chat> {
         return newMessages;
     }
 
-    async processMessageAttachments(
-        messages: StandardMessage[],
-        conversationId: string,
-        zip: JSZip
-    ): Promise<StandardMessage[]> {
-        const processedMessages: StandardMessage[] = [];
-
-        for (const message of messages) {
-            if (message.attachments && message.attachments.length > 0) {
-                const processedAttachments = await this.attachmentExtractor.extractAttachments(
-                    zip,
-                    conversationId,
-                    message.attachments,
-                    message.id // Pass message ID for better logging
-                );
-
-                processedMessages.push({
-                    ...message,
-                    attachments: processedAttachments
-                });
-            } else {
-                processedMessages.push(message);
-            }
-        }
-
-        return processedMessages;
+    /**
+     * Provide ChatGPT-specific attachment extractor
+     * The actual processMessageAttachments() logic is inherited from BaseProviderAdapter
+     */
+    protected getAttachmentExtractor(): AttachmentExtractor {
+        return this.attachmentExtractor;
     }
 
     getReportNamingStrategy() {

@@ -22,6 +22,7 @@ import { StandardConversation, StandardMessage, StandardAttachment } from "../..
 import { ClaudeConversation, ClaudeMessage, ClaudeContentBlock } from "./claude-types";
 import { generateSafeAlias } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
+import { sortMessagesByTimestamp } from "../../utils/message-utils";
 
 export class ClaudeConverter {
     private static plugin: NexusAiChatImporterPlugin;
@@ -157,16 +158,7 @@ export class ClaudeConverter {
         if (messages.length <= 1) return messages;
 
         // Use native sort with proper comparison function
-        return messages.sort((a, b) => {
-            // Primary sort: timestamp
-            if (a.timestamp !== b.timestamp) {
-                return a.timestamp - b.timestamp;
-            }
-
-            // Secondary sort: UUID (lexicographic order for same timestamp)
-            // This ensures consistent ordering when messages have identical timestamps
-            return a.id.localeCompare(b.id);
-        });
+        return sortMessagesByTimestamp(messages);
     }
 
     /**
