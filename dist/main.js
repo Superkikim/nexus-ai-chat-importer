@@ -83,6 +83,10 @@ var init_constants = __esm({
       CLAUDE: {
         BASE: "https://claude.ai",
         CHAT: (id) => `https://claude.ai/chat/${id}`
+      },
+      LECHAT: {
+        BASE: "https://chat.mistral.ai",
+        CHAT: (id) => `https://chat.mistral.ai/chat/${id}`
       }
     };
     MESSAGE_TIMESTAMP_FORMATS = {
@@ -551,7 +555,11 @@ var init_logger = __esm({
         console.warn(message);
       }
       error(message, details) {
-        console.error(message);
+        if (details !== void 0) {
+          console.error(message, details);
+        } else {
+          console.error(message);
+        }
       }
     };
     __name(Logger, "Logger");
@@ -9072,6 +9080,13 @@ function isTextFile(fileName) {
   return textExtensions.some((ext) => fileName.toLowerCase().endsWith(ext));
 }
 __name(isTextFile, "isTextFile");
+function getFileExtension(fileName) {
+  const lastDot = fileName.lastIndexOf(".");
+  if (lastDot === -1)
+    return "";
+  return fileName.substring(lastDot + 1).toLowerCase();
+}
+__name(getFileExtension, "getFileExtension");
 function detectFileFormat(fileContent) {
   if (fileContent.length < 4) {
     return { extension: null, mimeType: null };
@@ -9099,6 +9114,33 @@ function sanitizeFileName(fileName) {
   return fileName.trim().replace(/[<>:"\/\\|?*]/g, "_").replace(/\s+/g, "_");
 }
 __name(sanitizeFileName, "sanitizeFileName");
+function getFileCategory(fileName, fileType) {
+  if (fileType) {
+    if (fileType.startsWith("image/"))
+      return "images";
+    if (fileType.startsWith("audio/"))
+      return "audio";
+    if (fileType.startsWith("video/"))
+      return "video";
+    if (fileType.startsWith("text/") || fileType.includes("document"))
+      return "documents";
+  }
+  const ext = getFileExtension(fileName);
+  const audioExts = ["wav", "mp3", "ogg", "m4a", "flac"];
+  const imageExts = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
+  const docExts = ["pdf", "doc", "docx", "txt", "md", "rtf"];
+  const videoExts = ["mp4", "avi", "mov", "mkv"];
+  if (audioExts.includes(ext))
+    return "audio";
+  if (imageExts.includes(ext))
+    return "images";
+  if (docExts.includes(ext))
+    return "documents";
+  if (videoExts.includes(ext))
+    return "video";
+  return "files";
+}
+__name(getFileCategory, "getFileCategory");
 
 // src/formatters/message-formatter.ts
 var _MessageFormatter = class {
@@ -11929,11 +11971,539 @@ var ClaudeAdapter = class extends BaseProviderAdapter {
 };
 __name(ClaudeAdapter, "ClaudeAdapter");
 
+// src/providers/lechat/lechat-converter.ts
+var LeChatConverter = class {
+  /**
+   * Convert Le Chat conversation to StandardConversation
+   * 
+   * Note: Le Chat exports are arrays of messages without conversation-level metadata.
+   * We derive conversation metadata from the messages themselves.
+   */
+  static convertChat(chat) {
+    var _a;
+    if (!chat || chat.length === 0) {
+      throw new Error("Le Chat conversation is empty");
+    }
+    const sortedChat = this.sortMessagesByTimestamp(chat);
+    const chatId = ((_a = sortedChat[0]) == null ? void 0 : _a.chatId) || "";
+    const title = this.deriveConversationTitle(sortedChat);
+    const createTime = this.getMinTimestamp(sortedChat);
+    const updateTime = this.getMaxTimestamp(sortedChat);
+    const messages = this.convertMessages(sortedChat);
+    return {
+      id: chatId,
+      title,
+      provider: "lechat",
+      createTime,
+      updateTime,
+      messages,
+      chatUrl: `https://chat.mistral.ai/chat/${chatId}`,
+      metadata: {}
+    };
+  }
+  /**
+   * Convert Le Chat messages to StandardMessage array
+   *
+   * IMPORTANT: Assumes messages are already sorted chronologically
+   */
+  static convertMessages(messages) {
+    const standardMessages = [];
+    for (const message of messages) {
+      const standardMessage = this.convertMessage(message);
+      if (standardMessage) {
+        standardMessages.push(standardMessage);
+      }
+    }
+    return standardMessages;
+  }
+  /**
+   * Convert single Le Chat message to StandardMessage
+   */
+  static convertMessage(message) {
+    if (!message.id || !message.role) {
+      return null;
+    }
+    const content = this.extractContent(message);
+    const attachments = this.extractAttachments(message);
+    const timestamp = this.parseTimestamp(message.createdAt);
+    return {
+      id: message.id,
+      role: message.role,
+      content,
+      timestamp,
+      attachments
+    };
+  }
+  /**
+   * Extract content from Le Chat message
+   * Combines content field and contentChunks
+   */
+  static extractContent(message) {
+    const parts = [];
+    if (message.content && message.content.trim()) {
+      parts.push(message.content);
+    }
+    if (message.contentChunks && message.contentChunks.length > 0) {
+      const chunksContent = this.processContentChunks(message.contentChunks);
+      if (chunksContent) {
+        parts.push(chunksContent);
+      }
+    }
+    return parts.join("\n\n").trim() || "(Empty message)";
+  }
+  /**
+   * Process contentChunks array
+   * Handles text, tool_call, reference, and custom_element types
+   */
+  static processContentChunks(chunks) {
+    const parts = [];
+    for (const chunk of chunks) {
+      if (chunk.type === "text" && "text" in chunk && chunk.text) {
+        parts.push(chunk.text);
+      } else if (chunk.type === "tool_call") {
+        continue;
+      } else if (chunk.type === "reference" && "referenceIds" in chunk && chunk.referenceIds) {
+        const refMarkers = chunk.referenceIds.map((id) => `[^${id}]`).join("");
+        if (refMarkers) {
+          parts.push(refMarkers);
+        }
+      }
+    }
+    return parts.join("\n").trim();
+  }
+  /**
+   * Extract attachments from Le Chat message files array
+   */
+  static extractAttachments(message) {
+    const attachments = [];
+    if (!message.files || message.files.length === 0) {
+      return attachments;
+    }
+    for (const file of message.files) {
+      const attachment = {
+        fileName: file.name,
+        fileType: this.getFileTypeFromLeChatType(file.type),
+        fileSize: void 0,
+        // Size not available in Le Chat export
+        status: {
+          found: false,
+          extracted: false
+        }
+      };
+      attachments.push(attachment);
+    }
+    return attachments;
+  }
+  /**
+   * Convert Le Chat file type to MIME type
+   */
+  static getFileTypeFromLeChatType(type) {
+    switch (type) {
+      case "image":
+        return "image/*";
+      case "text":
+        return "text/plain";
+      case "document":
+        return "application/octet-stream";
+      default:
+        return "application/octet-stream";
+    }
+  }
+  /**
+   * Sort messages by timestamp (chronological order)
+   * CRITICAL: Le Chat exports messages in random order, not chronological!
+   * Uses MILLISECOND precision for accurate sorting (even for sub-second responses)
+   */
+  static sortMessagesByTimestamp(chat) {
+    return [...chat].sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return timeA - timeB;
+    });
+  }
+  /**
+   * Derive conversation title from first user message (chronologically)
+   * Truncates to 50 characters if needed
+   *
+   * IMPORTANT: Assumes messages are already sorted chronologically
+   */
+  static deriveConversationTitle(chat) {
+    const firstUserMessage = chat.find((msg) => msg.role === "user");
+    if (firstUserMessage && firstUserMessage.content) {
+      const content = firstUserMessage.content.trim();
+      if (content.length > 50) {
+        return content.substring(0, 50).trim() + "...";
+      }
+      return content;
+    }
+    return "Untitled";
+  }
+  /**
+   * Get minimum timestamp from messages (conversation create time)
+   */
+  static getMinTimestamp(chat) {
+    const timestamps = chat.map((msg) => this.parseTimestamp(msg.createdAt)).filter((ts) => ts > 0);
+    return timestamps.length > 0 ? Math.min(...timestamps) : 0;
+  }
+  /**
+   * Get maximum timestamp from messages (conversation update time)
+   */
+  static getMaxTimestamp(chat) {
+    const timestamps = chat.map((msg) => this.parseTimestamp(msg.createdAt)).filter((ts) => ts > 0);
+    return timestamps.length > 0 ? Math.max(...timestamps) : 0;
+  }
+  /**
+   * Parse ISO 8601 timestamp to Unix seconds
+   */
+  static parseTimestamp(isoString) {
+    try {
+      const date = new Date(isoString);
+      return Math.floor(date.getTime() / 1e3);
+    } catch (error) {
+      return 0;
+    }
+  }
+};
+__name(LeChatConverter, "LeChatConverter");
+
+// src/providers/lechat/lechat-attachment-extractor.ts
+init_utils();
+var LeChatAttachmentExtractor = class {
+  constructor(plugin, logger7) {
+    this.plugin = plugin;
+    this.logger = logger7;
+    this.zipFileCache = /* @__PURE__ */ new Map();
+    this.attachmentMap = null;
+    this.allZips = [];
+  }
+  /**
+   * Set attachment map for multi-ZIP support
+   */
+  setAttachmentMap(attachmentMap, allZips) {
+    this.attachmentMap = attachmentMap;
+    this.allZips = allZips;
+  }
+  /**
+   * Clear attachment map and ZIPs
+   */
+  clearAttachmentMap() {
+    this.attachmentMap = null;
+    this.allZips = [];
+    this.zipFileCache.clear();
+  }
+  /**
+   * Extract and save Le Chat attachments
+   */
+  async extractAttachments(zip, conversationId, attachments, messageId) {
+    if (attachments.length === 0) {
+      return attachments;
+    }
+    const processedAttachments = [];
+    for (const attachment of attachments) {
+      try {
+        const result = await this.processAttachment(zip, conversationId, attachment, messageId);
+        processedAttachments.push(result);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const context = messageId ? `conversation: ${conversationId}, message: ${messageId}` : `conversation: ${conversationId}`;
+        this.logger.error(`Failed to process Le Chat attachment: ${attachment.fileName} (${context})`, errorMessage);
+        processedAttachments.push({
+          ...attachment,
+          status: {
+            processed: false,
+            found: false,
+            reason: "extraction_failed",
+            note: `Processing failed: ${errorMessage}`
+          }
+        });
+      }
+    }
+    return processedAttachments;
+  }
+  /**
+   * Process single attachment
+   */
+  async processAttachment(zip, conversationId, attachment, messageId) {
+    const zipPath = `chat-${conversationId}-files/${attachment.fileName}`;
+    let zipFile = this.findFileInZip(zip, zipPath);
+    if (!zipFile && this.attachmentMap) {
+      const locations = this.attachmentMap.get(attachment.fileName);
+      if (locations && locations.length > 0) {
+        for (const location of locations) {
+          const zipIndex = this.allZips.indexOf(zip);
+          if (zipIndex !== -1 && location.zipIndex < this.allZips.length) {
+            const targetZip = this.allZips[location.zipIndex];
+            zipFile = this.findFileInZip(targetZip, location.path);
+            if (zipFile)
+              break;
+          }
+        }
+      }
+    }
+    if (!zipFile) {
+      return {
+        ...attachment,
+        status: {
+          processed: false,
+          found: false,
+          reason: "not_in_zip",
+          note: `File not found in ZIP: ${zipPath}`
+        }
+      };
+    }
+    const fileContent = await zipFile.async("uint8array");
+    let finalFileName = attachment.fileName;
+    let finalFileType = attachment.fileType;
+    if (!finalFileType || finalFileType === "application/octet-stream") {
+      const detected = detectFileFormat(fileContent);
+      if (detected.extension && detected.mimeType) {
+        finalFileType = detected.mimeType;
+        if (!finalFileName.includes(".")) {
+          finalFileName = `${finalFileName}.${detected.extension}`;
+        }
+      }
+    }
+    const uniqueFileName = this.generateUniqueFileName(finalFileName, conversationId, messageId);
+    const category = getFileCategory(uniqueFileName, finalFileType);
+    const attachmentFolder = this.plugin.settings.attachmentFolder;
+    let vaultPath = `${attachmentFolder}/lechat/${category}/${sanitizeFileName(uniqueFileName)}`;
+    const folderPath = vaultPath.substring(0, vaultPath.lastIndexOf("/"));
+    await ensureFolderExists(folderPath, this.plugin.app.vault);
+    vaultPath = await this.resolveFileConflict(vaultPath);
+    await this.plugin.app.vault.adapter.writeBinary(vaultPath, fileContent.buffer);
+    this.logger.info(`Extracted Le Chat attachment: ${finalFileName} \u2192 ${vaultPath}`);
+    return {
+      ...attachment,
+      fileName: finalFileName,
+      fileType: finalFileType,
+      fileSize: fileContent.length,
+      url: vaultPath,
+      status: {
+        processed: true,
+        found: true,
+        extracted: true
+      }
+    };
+  }
+  /**
+   * Find file in ZIP with caching
+   */
+  findFileInZip(zip, path) {
+    const cacheKey = `${zip}:${path}`;
+    if (this.zipFileCache.has(cacheKey)) {
+      return this.zipFileCache.get(cacheKey) || null;
+    }
+    let file = zip.file(path);
+    if (!file) {
+      const lowerPath = path.toLowerCase();
+      const allFiles = Object.keys(zip.files);
+      const matchingPath = allFiles.find((p) => p.toLowerCase() === lowerPath);
+      if (matchingPath) {
+        file = zip.file(matchingPath);
+      }
+    }
+    this.zipFileCache.set(cacheKey, file);
+    return file;
+  }
+  /**
+   * Generate unique filename to avoid conflicts
+   * Strategy: lechat_{conversationId}_{messageId}_{timestamp}_{originalName}
+   */
+  generateUniqueFileName(originalFileName, conversationId, messageId) {
+    const timestamp = Date.now();
+    const shortConversationId = conversationId.substring(0, 8);
+    const shortMessageId = messageId ? messageId.substring(0, 8) : "unknown";
+    const extension = originalFileName.includes(".") ? originalFileName.split(".").pop() : "";
+    const baseName = originalFileName.replace(/\.[^/.]+$/, "");
+    const safeBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const uniqueName = `lechat_${shortConversationId}_${shortMessageId}_${timestamp}_${safeBaseName}`;
+    return extension ? `${uniqueName}.${extension}` : uniqueName;
+  }
+  /**
+   * Resolve file conflicts by adding numeric suffix
+   * Same strategy as ChatGPT provider
+   */
+  async resolveFileConflict(originalPath) {
+    let finalPath = originalPath;
+    let counter = 1;
+    while (await this.plugin.app.vault.adapter.exists(finalPath)) {
+      const lastDot = originalPath.lastIndexOf(".");
+      if (lastDot === -1) {
+        finalPath = `${originalPath}_${counter}`;
+      } else {
+        const nameWithoutExt = originalPath.substring(0, lastDot);
+        const extension = originalPath.substring(lastDot);
+        finalPath = `${nameWithoutExt}_${counter}${extension}`;
+      }
+      counter++;
+    }
+    return finalPath;
+  }
+};
+__name(LeChatAttachmentExtractor, "LeChatAttachmentExtractor");
+
+// src/providers/lechat/lechat-report-naming.ts
+var LeChatReportNamingStrategy = class {
+  /**
+   * Extract date prefix from Le Chat ZIP filename
+   * 
+   * Le Chat ZIP format: chat-export-{timestamp}.zip
+   * Example: chat-export-1760124530481.zip
+   * 
+   * The timestamp is in milliseconds since Unix epoch.
+   */
+  extractReportPrefix(zipFileName) {
+    const importDate = getCurrentImportDate();
+    const timestampPattern = /chat-export-(\d{10,13})/;
+    const match = zipFileName.match(timestampPattern);
+    if (match) {
+      const timestamp = parseInt(match[1]);
+      const date = new Date(timestamp);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const archiveDate = `${year}.${month}.${day}`;
+      return generateReportPrefix(importDate, archiveDate);
+    }
+    return generateReportPrefix(importDate, importDate);
+  }
+  /**
+   * Get Le Chat provider name
+   */
+  getProviderName() {
+    return "lechat";
+  }
+  /**
+   * Provider-specific column: Attachments
+   * Counts the number of file attachments (images, documents) in the conversation
+   */
+  getProviderSpecificColumn() {
+    return {
+      header: "Attachments",
+      getValue: (adapter, chat) => {
+        let attachmentCount = 0;
+        if (!Array.isArray(chat)) {
+          return 0;
+        }
+        for (const message of chat) {
+          if (message.files && Array.isArray(message.files)) {
+            attachmentCount += message.files.length;
+          }
+        }
+        return attachmentCount;
+      }
+    };
+  }
+};
+__name(LeChatReportNamingStrategy, "LeChatReportNamingStrategy");
+
+// src/providers/lechat/lechat-adapter.ts
+var LeChatAdapter = class extends BaseProviderAdapter {
+  constructor(plugin) {
+    super();
+    this.plugin = plugin;
+    this.attachmentExtractor = new LeChatAttachmentExtractor(plugin, plugin.logger);
+    this.reportNamingStrategy = new LeChatReportNamingStrategy();
+  }
+  /**
+   * Detect if raw data is from Le Chat
+   * 
+   * Le Chat format:
+   * - Array of messages (not wrapped in conversation object)
+   * - Each message has: chatId, contentChunks, createdAt, role
+   */
+  detect(rawConversations) {
+    if (rawConversations.length === 0)
+      return false;
+    const sample = rawConversations[0];
+    return Array.isArray(sample) && sample.length > 0 && sample[0].chatId !== void 0 && sample[0].contentChunks !== void 0 && sample[0].createdAt !== void 0 && sample[0].role !== void 0;
+  }
+  /**
+   * Get conversation ID from first message's chatId field
+   */
+  getId(chat) {
+    var _a;
+    return ((_a = chat[0]) == null ? void 0 : _a.chatId) || "";
+  }
+  /**
+   * Get conversation title
+   * Derived from first user message (truncated to 50 chars)
+   */
+  getTitle(chat) {
+    const firstUserMessage = chat.find((msg) => msg.role === "user");
+    if (firstUserMessage && firstUserMessage.content) {
+      const content = firstUserMessage.content.trim();
+      if (content.length > 50) {
+        return content.substring(0, 50).trim() + "...";
+      }
+      return content;
+    }
+    return "Untitled";
+  }
+  /**
+   * Get conversation creation time (minimum message timestamp)
+   */
+  getCreateTime(chat) {
+    const timestamps = chat.map((msg) => this.parseTimestamp(msg.createdAt)).filter((ts) => ts > 0);
+    return timestamps.length > 0 ? Math.min(...timestamps) : 0;
+  }
+  /**
+   * Get conversation update time (maximum message timestamp)
+   */
+  getUpdateTime(chat) {
+    const timestamps = chat.map((msg) => this.parseTimestamp(msg.createdAt)).filter((ts) => ts > 0);
+    return timestamps.length > 0 ? Math.max(...timestamps) : 0;
+  }
+  /**
+   * Convert Le Chat conversation to StandardConversation
+   */
+  convertChat(chat) {
+    return LeChatConverter.convertChat(chat);
+  }
+  /**
+   * Get provider name
+   */
+  getProviderName() {
+    return "lechat";
+  }
+  /**
+   * Get new messages not in existing message IDs
+   */
+  getNewMessages(chat, existingMessageIds) {
+    return chat.filter((msg) => !existingMessageIds.includes(msg.id));
+  }
+  /**
+   * Get report naming strategy
+   */
+  getReportNamingStrategy() {
+    return this.reportNamingStrategy;
+  }
+  /**
+   * Get attachment extractor (required by BaseProviderAdapter)
+   */
+  getAttachmentExtractor() {
+    return this.attachmentExtractor;
+  }
+  /**
+   * Parse ISO 8601 timestamp to Unix seconds
+   */
+  parseTimestamp(isoString) {
+    try {
+      const date = new Date(isoString);
+      return Math.floor(date.getTime() / 1e3);
+    } catch (error) {
+      return 0;
+    }
+  }
+};
+__name(LeChatAdapter, "LeChatAdapter");
+
 // src/providers/provider-registry.ts
 function createProviderRegistry(plugin) {
   const registry = new DefaultProviderRegistry();
   registry.register("chatgpt", new ChatGPTAdapter(plugin));
   registry.register("claude", new ClaudeAdapter(plugin));
+  registry.register("lechat", new LeChatAdapter(plugin));
   return registry;
 }
 __name(createProviderRegistry, "createProviderRegistry");
@@ -12356,22 +12926,34 @@ var ImportService = class {
       const content = await zip.loadAsync(file);
       const fileNames = Object.keys(content.files);
       if (forcedProvider) {
-        if (!fileNames.includes("conversations.json")) {
-          throw new NexusAiChatImporterError(
-            "Invalid ZIP structure",
-            `Missing required file: conversations.json for ${forcedProvider} provider.`
-          );
+        if (forcedProvider === "lechat") {
+          const hasLeChatFiles = fileNames.some((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
+          if (!hasLeChatFiles) {
+            throw new NexusAiChatImporterError(
+              "Invalid ZIP structure",
+              `Missing required files: chat-<uuid>.json files for Le Chat provider.`
+            );
+          }
+        } else {
+          if (!fileNames.includes("conversations.json")) {
+            throw new NexusAiChatImporterError(
+              "Invalid ZIP structure",
+              `Missing required file: conversations.json for ${forcedProvider} provider.`
+            );
+          }
         }
       } else {
         const hasConversationsJson = fileNames.includes("conversations.json");
         const hasUsersJson = fileNames.includes("users.json");
         const hasProjectsJson = fileNames.includes("projects.json");
+        const hasLeChatFiles = fileNames.some((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
         const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
         const isClaudeFormat = hasConversationsJson && hasUsersJson;
-        if (!isChatGPTFormat && !isClaudeFormat) {
+        const isLeChatFormat = hasLeChatFiles && !hasConversationsJson;
+        if (!isChatGPTFormat && !isClaudeFormat && !isLeChatFormat) {
           throw new NexusAiChatImporterError(
             "Invalid ZIP structure",
-            "This ZIP file doesn't match any supported chat export format. Expected either ChatGPT format (conversations.json) or Claude format (conversations.json + users.json)."
+            "This ZIP file doesn't match any supported chat export format. Expected either ChatGPT format (conversations.json), Claude format (conversations.json + users.json), or Le Chat format (chat-<uuid>.json files)."
           );
         }
       }
@@ -12460,11 +13042,25 @@ var ImportService = class {
    * Extract raw conversation data without knowing provider specifics
    */
   async extractRawConversationsFromZip(zip) {
+    const fileNames = Object.keys(zip.files);
+    const leChatFiles = fileNames.filter((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
+    if (leChatFiles.length > 0) {
+      const conversations = [];
+      for (const fileName of leChatFiles) {
+        const file = zip.file(fileName);
+        if (file) {
+          const content = await file.async("string");
+          const parsedConversation = JSON.parse(content);
+          conversations.push(parsedConversation);
+        }
+      }
+      return conversations;
+    }
     const conversationsFile = zip.file("conversations.json");
     if (!conversationsFile) {
       throw new NexusAiChatImporterError(
         "Missing conversations.json",
-        "The ZIP file does not contain a conversations.json file"
+        "The ZIP file does not contain a conversations.json file or chat-{uuid}.json files"
       );
     }
     const conversationsJson = await conversationsFile.async("string");
@@ -12486,8 +13082,11 @@ var ImportService = class {
   filterConversationsByIds(rawConversations, selectedIds, forcedProvider) {
     const selectedIdsSet = new Set(selectedIds);
     return rawConversations.filter((conversation) => {
+      var _a, _b;
       let conversationId;
-      if (forcedProvider === "claude" || conversation.uuid && conversation.name) {
+      if (forcedProvider === "lechat" || Array.isArray(conversation) && ((_a = conversation[0]) == null ? void 0 : _a.chatId)) {
+        conversationId = ((_b = conversation[0]) == null ? void 0 : _b.chatId) || "";
+      } else if (forcedProvider === "claude" || conversation.uuid && conversation.name) {
         conversationId = conversation.uuid || "";
       } else {
         conversationId = conversation.id || "";
@@ -12504,16 +13103,23 @@ var ImportService = class {
     const firstConversation = rawConversations[0];
     const isChatGPT = firstConversation.mapping !== void 0;
     const isClaude = firstConversation.chat_messages !== void 0 || firstConversation.name !== void 0 || firstConversation.summary !== void 0;
+    const isLeChat = Array.isArray(firstConversation) && firstConversation.length > 0 && firstConversation[0].chatId !== void 0 && firstConversation[0].contentChunks !== void 0;
     if (forcedProvider === "chatgpt" && !isChatGPT) {
       throw new NexusAiChatImporterError(
         "Provider Mismatch",
-        "You selected ChatGPT but this archive appears to be from Claude. The structure doesn't match ChatGPT exports."
+        "You selected ChatGPT but this archive appears to be from another provider. The structure doesn't match ChatGPT exports."
       );
     }
     if (forcedProvider === "claude" && !isClaude) {
       throw new NexusAiChatImporterError(
         "Provider Mismatch",
-        "You selected Claude but this archive appears to be from ChatGPT. The structure doesn't match Claude exports."
+        "You selected Claude but this archive appears to be from another provider. The structure doesn't match Claude exports."
+      );
+    }
+    if (forcedProvider === "lechat" && !isLeChat) {
+      throw new NexusAiChatImporterError(
+        "Provider Mismatch",
+        "You selected Le Chat but this archive appears to be from another provider. The structure doesn't match Le Chat exports."
       );
     }
   }
@@ -13898,6 +14504,14 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
         fileFormats: ["conversations.json + users.json", "projects.json (optional)"]
       });
     }
+    if (registry.getAdapter("lechat")) {
+      providers.push({
+        id: "lechat",
+        name: "Le Chat",
+        description: "Mistral AI Le Chat conversation exports",
+        fileFormats: ["chat-<uuid>.json files"]
+      });
+    }
     return providers;
   }
   onOpen() {
@@ -15264,9 +15878,23 @@ var ConversationMetadataExtractor = class {
    * Extract raw conversation data from ZIP (provider-agnostic)
    */
   async extractRawConversationsFromZip(zip) {
+    const fileNames = Object.keys(zip.files);
+    const leChatFiles = fileNames.filter((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
+    if (leChatFiles.length > 0) {
+      const conversations = [];
+      for (const fileName of leChatFiles) {
+        const file = zip.file(fileName);
+        if (file) {
+          const content = await file.async("string");
+          const parsedConversation = JSON.parse(content);
+          conversations.push(parsedConversation);
+        }
+      }
+      return conversations;
+    }
     const conversationsFile = zip.file("conversations.json");
     if (!conversationsFile) {
-      throw new Error("Missing conversations.json file in ZIP archive");
+      throw new Error("Missing conversations.json file or chat-{uuid}.json files in ZIP archive");
     }
     const conversationsJson = await conversationsFile.async("string");
     const parsedData = JSON.parse(conversationsJson);
@@ -15287,6 +15915,8 @@ var ConversationMetadataExtractor = class {
         return this.extractChatGPTMetadata(rawConversations);
       case "claude":
         return this.extractClaudeMetadata(rawConversations);
+      case "lechat":
+        return this.extractLeChatMetadata(rawConversations);
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
@@ -15346,6 +15976,54 @@ var ConversationMetadataExtractor = class {
       isArchived: false
       // Claude doesn't have archived status
     })).filter((metadata) => {
+      if (metadata.messageCount === 0) {
+        return false;
+      }
+      return true;
+    });
+  }
+  /**
+   * Extract metadata from Le Chat conversations
+   */
+  extractLeChatMetadata(conversations) {
+    return conversations.filter((chat) => {
+      if (!Array.isArray(chat) || chat.length === 0) {
+        logger.warn("Skipping invalid Le Chat conversation: not an array or empty");
+        return false;
+      }
+      const firstMessage = chat[0];
+      if (!firstMessage.chatId || !firstMessage.createdAt) {
+        logger.warn("Skipping Le Chat conversation with missing chatId or createdAt");
+        return false;
+      }
+      return true;
+    }).map((chat) => {
+      const sortedChat = [...chat].sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        return timeA - timeB;
+      });
+      const chatId = sortedChat[0].chatId;
+      const firstUserMessage = sortedChat.find((msg) => msg.role === "user");
+      let title = "Untitled";
+      if (firstUserMessage && firstUserMessage.content) {
+        const content = firstUserMessage.content.trim();
+        title = content.length > 50 ? content.substring(0, 50).trim() + "..." : content;
+      }
+      const timestamps = sortedChat.map((msg) => new Date(msg.createdAt).getTime() / 1e3);
+      const createTime = Math.floor(Math.min(...timestamps));
+      const updateTime = Math.floor(Math.max(...timestamps));
+      return {
+        id: chatId,
+        title,
+        createTime,
+        updateTime,
+        messageCount: sortedChat.length,
+        provider: "lechat",
+        isStarred: false,
+        isArchived: false
+      };
+    }).filter((metadata) => {
       if (metadata.messageCount === 0) {
         return false;
       }

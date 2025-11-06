@@ -219,20 +219,32 @@ export class ImportService {
             const content = await zip.loadAsync(file);
             const fileNames = Object.keys(content.files);
 
-            // If provider is forced, skip format validation
+            // If provider is forced, validate provider-specific format
             if (forcedProvider) {
-                // Basic validation: must have conversations.json
-                if (!fileNames.includes("conversations.json")) {
-                    throw new NexusAiChatImporterError(
-                        "Invalid ZIP structure",
-                        `Missing required file: conversations.json for ${forcedProvider} provider.`
-                    );
+                if (forcedProvider === 'lechat') {
+                    // Le Chat format: individual chat-{uuid}.json files
+                    const hasLeChatFiles = fileNames.some(name => name.match(/^chat-[a-f0-9-]+\.json$/));
+                    if (!hasLeChatFiles) {
+                        throw new NexusAiChatImporterError(
+                            "Invalid ZIP structure",
+                            `Missing required files: chat-<uuid>.json files for Le Chat provider.`
+                        );
+                    }
+                } else {
+                    // ChatGPT/Claude: must have conversations.json
+                    if (!fileNames.includes("conversations.json")) {
+                        throw new NexusAiChatImporterError(
+                            "Invalid ZIP structure",
+                            `Missing required file: conversations.json for ${forcedProvider} provider.`
+                        );
+                    }
                 }
             } else {
                 // Auto-detection mode (legacy behavior)
                 const hasConversationsJson = fileNames.includes("conversations.json");
                 const hasUsersJson = fileNames.includes("users.json");
                 const hasProjectsJson = fileNames.includes("projects.json");
+                const hasLeChatFiles = fileNames.some(name => name.match(/^chat-[a-f0-9-]+\.json$/));
 
                 // ChatGPT format: conversations.json only
                 const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
@@ -240,12 +252,16 @@ export class ImportService {
                 // Claude format: conversations.json + users.json (projects.json optional for legacy)
                 const isClaudeFormat = hasConversationsJson && hasUsersJson;
 
-                if (!isChatGPTFormat && !isClaudeFormat) {
+                // Le Chat format: individual chat-{uuid}.json files
+                const isLeChatFormat = hasLeChatFiles && !hasConversationsJson;
+
+                if (!isChatGPTFormat && !isClaudeFormat && !isLeChatFormat) {
                     throw new NexusAiChatImporterError(
                         "Invalid ZIP structure",
                         "This ZIP file doesn't match any supported chat export format. " +
-                        "Expected either ChatGPT format (conversations.json) or " +
-                        "Claude format (conversations.json + users.json)."
+                        "Expected either ChatGPT format (conversations.json), " +
+                        "Claude format (conversations.json + users.json), or " +
+                        "Le Chat format (chat-<uuid>.json files)."
                     );
                 }
             }
@@ -353,11 +369,32 @@ export class ImportService {
      * Extract raw conversation data without knowing provider specifics
      */
     private async extractRawConversationsFromZip(zip: JSZip): Promise<any[]> {
+        // Check for Le Chat format first (individual chat-{uuid}.json files)
+        const fileNames = Object.keys(zip.files);
+        const leChatFiles = fileNames.filter(name => name.match(/^chat-[a-f0-9-]+\.json$/));
+
+        if (leChatFiles.length > 0) {
+            // Le Chat format: load each individual conversation file
+            const conversations: any[] = [];
+
+            for (const fileName of leChatFiles) {
+                const file = zip.file(fileName);
+                if (file) {
+                    const content = await file.async("string");
+                    const parsedConversation = JSON.parse(content);
+                    conversations.push(parsedConversation);
+                }
+            }
+
+            return conversations;
+        }
+
+        // ChatGPT/Claude format: conversations.json
         const conversationsFile = zip.file("conversations.json");
         if (!conversationsFile) {
             throw new NexusAiChatImporterError(
                 "Missing conversations.json",
-                "The ZIP file does not contain a conversations.json file"
+                "The ZIP file does not contain a conversations.json file or chat-{uuid}.json files"
             );
         }
 
@@ -389,7 +426,10 @@ export class ImportService {
             let conversationId: string;
 
             // Get conversation ID based on provider format
-            if (forcedProvider === 'claude' || (conversation.uuid && conversation.name)) {
+            if (forcedProvider === 'lechat' || (Array.isArray(conversation) && conversation[0]?.chatId)) {
+                // Le Chat format: array of messages, ID is in first message's chatId
+                conversationId = conversation[0]?.chatId || "";
+            } else if (forcedProvider === 'claude' || (conversation.uuid && conversation.name)) {
                 // Claude format
                 conversationId = conversation.uuid || "";
             } else {
@@ -417,17 +457,30 @@ export class ImportService {
                         firstConversation.name !== undefined ||
                         firstConversation.summary !== undefined;
 
+        // Check for Le Chat structure (array of messages)
+        const isLeChat = Array.isArray(firstConversation) &&
+                        firstConversation.length > 0 &&
+                        firstConversation[0].chatId !== undefined &&
+                        firstConversation[0].contentChunks !== undefined;
+
         if (forcedProvider === 'chatgpt' && !isChatGPT) {
             throw new NexusAiChatImporterError(
                 "Provider Mismatch",
-                "You selected ChatGPT but this archive appears to be from Claude. The structure doesn't match ChatGPT exports."
+                "You selected ChatGPT but this archive appears to be from another provider. The structure doesn't match ChatGPT exports."
             );
         }
 
         if (forcedProvider === 'claude' && !isClaude) {
             throw new NexusAiChatImporterError(
                 "Provider Mismatch",
-                "You selected Claude but this archive appears to be from ChatGPT. The structure doesn't match Claude exports."
+                "You selected Claude but this archive appears to be from another provider. The structure doesn't match Claude exports."
+            );
+        }
+
+        if (forcedProvider === 'lechat' && !isLeChat) {
+            throw new NexusAiChatImporterError(
+                "Provider Mismatch",
+                "You selected Le Chat but this archive appears to be from another provider. The structure doesn't match Le Chat exports."
             );
         }
     }

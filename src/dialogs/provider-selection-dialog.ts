@@ -56,7 +56,7 @@ export class ProviderSelectionDialog extends Modal {
                 fileFormats: ["conversations.json only"]
             });
         }
-        
+
         // Claude
         if (registry.getAdapter("claude")) {
             providers.push({
@@ -66,7 +66,17 @@ export class ProviderSelectionDialog extends Modal {
                 fileFormats: ["conversations.json + users.json", "projects.json (optional)"]
             });
         }
-        
+
+        // Le Chat
+        if (registry.getAdapter("lechat")) {
+            providers.push({
+                id: "lechat",
+                name: "Le Chat",
+                description: "Mistral AI Le Chat conversation exports",
+                fileFormats: ["chat-<uuid>.json files"]
+            });
+        }
+
         return providers;
     }
 
