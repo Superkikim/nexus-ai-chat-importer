@@ -170,9 +170,30 @@ export class ConversationMetadataExtractor {
      * Extract raw conversation data from ZIP (provider-agnostic)
      */
     private async extractRawConversationsFromZip(zip: JSZip): Promise<any[]> {
+        // Check for Le Chat format first (individual chat-{uuid}.json files)
+        const fileNames = Object.keys(zip.files);
+        const leChatFiles = fileNames.filter(name => name.match(/^chat-[a-f0-9-]+\.json$/));
+
+        if (leChatFiles.length > 0) {
+            // Le Chat format: load each individual conversation file
+            const conversations: any[] = [];
+
+            for (const fileName of leChatFiles) {
+                const file = zip.file(fileName);
+                if (file) {
+                    const content = await file.async("string");
+                    const parsedConversation = JSON.parse(content);
+                    conversations.push(parsedConversation);
+                }
+            }
+
+            return conversations;
+        }
+
+        // ChatGPT/Claude format: conversations.json
         const conversationsFile = zip.file("conversations.json");
         if (!conversationsFile) {
-            throw new Error("Missing conversations.json file in ZIP archive");
+            throw new Error("Missing conversations.json file or chat-{uuid}.json files in ZIP archive");
         }
 
         const conversationsJson = await conversationsFile.async("string");
@@ -199,6 +220,8 @@ export class ConversationMetadataExtractor {
                 return this.extractChatGPTMetadata(rawConversations);
             case 'claude':
                 return this.extractClaudeMetadata(rawConversations);
+            case 'lechat':
+                return this.extractLeChatMetadata(rawConversations);
             default:
                 throw new Error(`Unsupported provider: ${provider}`);
         }
@@ -267,6 +290,71 @@ export class ConversationMetadataExtractor {
                 isStarred: chat.is_starred || false,
                 isArchived: false // Claude doesn't have archived status
             }))
+            .filter(metadata => {
+                // Filter out empty conversations (0 messages)
+                if (metadata.messageCount === 0) {
+                    return false;
+                }
+                return true;
+            });
+    }
+
+    /**
+     * Extract metadata from Le Chat conversations
+     */
+    private extractLeChatMetadata(conversations: any[]): ConversationMetadata[] {
+        return conversations
+            .filter(chat => {
+                // Le Chat format: array of messages
+                if (!Array.isArray(chat) || chat.length === 0) {
+                    logger.warn('Skipping invalid Le Chat conversation: not an array or empty');
+                    return false;
+                }
+
+                const firstMessage = chat[0];
+                if (!firstMessage.chatId || !firstMessage.createdAt) {
+                    logger.warn('Skipping Le Chat conversation with missing chatId or createdAt');
+                    return false;
+                }
+
+                return true;
+            })
+            .map(chat => {
+                // CRITICAL: Le Chat messages are NOT in chronological order!
+                // Sort by timestamp first using MILLISECOND precision for accurate ordering
+                const sortedChat = [...chat].sort((a: any, b: any) => {
+                    const timeA = new Date(a.createdAt).getTime();  // Milliseconds
+                    const timeB = new Date(b.createdAt).getTime();  // Milliseconds
+                    return timeA - timeB;
+                });
+
+                const chatId = sortedChat[0].chatId;
+
+                // Derive title from first user message (chronologically)
+                const firstUserMessage = sortedChat.find((msg: any) => msg.role === 'user');
+                let title = "Untitled";
+                if (firstUserMessage && firstUserMessage.content) {
+                    const content = firstUserMessage.content.trim();
+                    title = content.length > 50 ? content.substring(0, 50).trim() + '...' : content;
+                }
+
+                // Calculate create and update times from sorted messages
+                // Convert to SECONDS for consistency with other providers
+                const timestamps = sortedChat.map((msg: any) => new Date(msg.createdAt).getTime() / 1000);
+                const createTime = Math.floor(Math.min(...timestamps));
+                const updateTime = Math.floor(Math.max(...timestamps));
+
+                return {
+                    id: chatId,
+                    title: title,
+                    createTime: createTime,
+                    updateTime: updateTime,
+                    messageCount: sortedChat.length,
+                    provider: "lechat",
+                    isStarred: false,
+                    isArchived: false
+                };
+            })
             .filter(metadata => {
                 // Filter out empty conversations (0 messages)
                 if (metadata.messageCount === 0) {
