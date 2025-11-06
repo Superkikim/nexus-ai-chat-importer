@@ -17,6 +17,7 @@
 
 ### 🔧 Advanced
 - [📎 Attachments](#-complete-attachment-handling) - Images, DALL-E, artifacts
+- [🤖 Provider Differences](#-provider-specific-features--limitations) - ChatGPT, Claude, Le Chat specifics
 - [⚙️ Settings](#plugin-settings) - Customize folders and formatting
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
@@ -469,7 +470,50 @@ Some attachments may be missing from exports:
 
 The plugin continues importing even with missing attachments. Check import reports for details.
 
+## 🤖 Provider-Specific Features & Limitations
 
+Each AI provider has unique characteristics in how they export conversations. Here's what you need to know:
+
+### ChatGPT (OpenAI)
+
+**✅ Fully Supported**:
+- Conversation titles (exported in JSON)
+- User-uploaded attachments (images, documents)
+- DALL-E generated images with prompts
+- Complete message history
+- Custom instructions and model information
+
+**Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
+
+### Claude (Anthropic)
+
+**✅ Fully Supported**:
+- Conversation titles (exported in JSON)
+- User-uploaded attachments (images, documents)
+- Artifacts (code, documents, generated content) with versioning
+- Complete message history
+- Web search results (filtered out as not useful)
+
+**Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
+
+### Le Chat (Mistral AI)
+
+**✅ Supported**:
+- User-uploaded attachments (images, documents)
+- Complete message history
+- References and citations
+- Custom elements
+
+**⚠️ Limitations**:
+- **No conversation titles**: Le Chat exports don't include conversation titles. The plugin automatically generates titles from the first user message (truncated to 50 characters)
+- **No generated images**: Images created by Le Chat's image generation tool are **not included in exports**. Only external URLs are provided, which may expire. The plugin will show the generation prompt but cannot download the images
+- **Tool calls filtered**: Internal tool calls (web_search, etc.) are filtered out as they're not useful for users
+
+**Export Format**: Individual `chat-{uuid}.json` files (one per conversation) + attachments in `chat-{uuid}-files/` directories
+
+**💡 Tip for Le Chat Users**:
+- If you want to preserve generated images, download them manually before exporting
+- Consider adding custom titles to your conversations by editing the imported notes' frontmatter
 
 ## 🔄 Reimporting & Updates
 
