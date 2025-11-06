@@ -32,7 +32,11 @@ export class Logger {
     }
 
     error(message: string, details?: any) {
-        console.error(message);
+        if (details !== undefined) {
+            console.error(message, details);
+        } else {
+            console.error(message);
+        }
     }
 }
 
