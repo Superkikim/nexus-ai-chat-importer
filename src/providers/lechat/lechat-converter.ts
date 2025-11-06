@@ -106,25 +106,22 @@ export class LeChatConverter {
 
     /**
      * Extract content from Le Chat message
-     * Combines content field and contentChunks
+     * IMPORTANT: message.content is a duplicate of text chunks combined
+     * We use EITHER contentChunks OR content, not both!
      */
     private static extractContent(message: LeChatMessage): string {
-        const parts: string[] = [];
-
-        // Add main content if present
-        if (message.content && message.content.trim()) {
-            parts.push(message.content);
-        }
-
-        // Process contentChunks if present
+        // If contentChunks exist, use them (they contain text + references + custom elements)
         if (message.contentChunks && message.contentChunks.length > 0) {
             const chunksContent = this.processContentChunks(message.contentChunks);
-            if (chunksContent) {
-                parts.push(chunksContent);
-            }
+            return chunksContent || "(Empty message)";
         }
 
-        return parts.join('\n\n').trim() || "(Empty message)";
+        // Fallback to simple content if no contentChunks
+        if (message.content && message.content.trim()) {
+            return message.content;
+        }
+
+        return "(Empty message)";
     }
 
     /**
