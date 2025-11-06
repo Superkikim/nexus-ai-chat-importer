@@ -35,6 +35,7 @@
 2. **Export** your chats:
    - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
    - **Claude**: Settings → Export data → Download ZIP
+   - **Le Chat**: Click your name → Profile → Export your personal data → Le Chat → Download
 3. **Import**: Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar or use command palette → "Import AI conversations"
 4. **Select** your ZIP file(s) → Choose import mode (all or selective)
 5. **Done!** Your conversations are now in `Nexus/Conversations/`
@@ -45,7 +46,14 @@
 
 ## Overview
 
-Import your AI chat conversations from **ChatGPT** and **Claude** exports into Obsidian as beautifully formatted Markdown files.
+Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** exports into Obsidian as beautifully formatted Markdown files.
+
+### ✨ New in v1.4.0
+
+- **🤖 Le Chat Support** - Full integration for Mistral AI's Le Chat conversations
+- **📎 Smart Attachment Handling** - Unique filenames prevent collisions across imports
+- **⏱️ Millisecond Precision** - Accurate chronological sorting even for rapid-fire messages
+- **🔍 Enhanced Detection** - Automatic provider detection for Le Chat exports
 
 ### ✨ New in v1.3.0
 
@@ -213,6 +221,11 @@ Want to reorganize? No problem!
 1. Open Claude → **Settings** → **Privacy** → **Export data**
 2. Check your email (arrives in a few minutes)
 3. Download the ZIP file
+
+**Le Chat**:
+1. Click your name → **Profile** → **Export your personal data** → **Le Chat**
+2. Wait for the button to change from "Export" to "Download"
+3. Click **Download** to get the ZIP file
 
 ### Step 2: Import to Obsidian
 
@@ -539,8 +552,7 @@ We're constantly working to improve the plugin. Here's what's planned for future
 ### Upcoming Features
 
 **🤖 New Provider Support**:
-- **Mistral Le Chat**: Full integration for Mistral AI conversations
-- **Other Providers**: Support for any AI provider that offers easily exploitable conversation export files
+- **Other Providers**: Support for additional AI providers (Gemini, Perplexity, etc.)
 
 **🌍 Localization**:
 - **Multi-language UI**: Plugin interface translated into multiple languages
