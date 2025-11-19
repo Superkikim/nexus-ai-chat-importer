@@ -79,6 +79,28 @@ export class ImportService {
     }
 
     async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[], sharedReport?: ImportReport) {
+        // Validate file extension before processing
+        const fileName = file.name.toLowerCase();
+        if (!fileName.endsWith('.zip')) {
+            const errorMessage = `Invalid file format: "${file.name}"\n\n` +
+                `Only ZIP files are supported. The file must have a .zip extension.\n\n` +
+                `📝 Known Issue: When downloading Claude exports with Firefox on Mac, ` +
+                `the file may have a .dat extension instead of .zip. ` +
+                `Simply rename the file to change the extension from .dat to .zip, ` +
+                `then try importing again.\n\n` +
+                `Do NOT extract and re-compress the file - just rename it!`;
+
+            new Notice(errorMessage, 10000); // Show for 10 seconds
+            this.plugin.logger.error('Invalid file extension', {
+                fileName: file.name,
+                expectedExtension: '.zip'
+            });
+            throw new NexusAiChatImporterError(
+                'Invalid file format',
+                errorMessage
+            );
+        }
+
         // Use shared report if provided, otherwise create a new one
         const isSharedReport = !!sharedReport;
         this.importReport = sharedReport || new ImportReport();
@@ -219,6 +241,14 @@ export class ImportService {
             const content = await zip.loadAsync(file);
             const fileNames = Object.keys(content.files);
 
+            // Check if ZIP is empty
+            if (fileNames.length === 0) {
+                throw new NexusAiChatImporterError(
+                    "Empty ZIP file",
+                    "The ZIP file contains no files. Please check that you selected the correct export file."
+                );
+            }
+
             // If provider is forced, validate provider-specific format
             if (forcedProvider) {
                 if (forcedProvider === 'lechat') {
@@ -270,12 +300,23 @@ export class ImportService {
         } catch (error: any) {
             if (error instanceof NexusAiChatImporterError) {
                 throw error;
-            } else {
+            }
+
+            // Handle JSZip-specific errors
+            if (error.message && error.message.includes('corrupted')) {
                 throw new NexusAiChatImporterError(
-                    "Error validating zip file",
-                    error.message
+                    "Corrupted ZIP file",
+                    "The file appears to be corrupted or is not a valid ZIP file. " +
+                    "Please try downloading the export again from your AI provider."
                 );
             }
+
+            // Generic ZIP loading error
+            throw new NexusAiChatImporterError(
+                "Error reading ZIP file",
+                `Failed to read the ZIP file: ${error.message || 'Unknown error'}. ` +
+                "Please ensure the file is a valid ZIP export from ChatGPT, Claude, or Le Chat."
+            );
         }
     }
 

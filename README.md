@@ -561,6 +561,13 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 
 ## 🐛 Troubleshooting
 
+**"Invalid file format" error**:
+- Only ZIP files are supported (must have `.zip` extension)
+- **Known Issue (Claude + Firefox on Mac)**: The downloaded file may have a `.dat` extension instead of `.zip`
+  - **Solution**: Simply rename the file to change `.dat` to `.zip` (do NOT extract and re-compress!)
+  - This is a browser/server issue that has been reported to Anthropic
+- If you manually compressed a folder, make sure it's a valid ZIP format
+
 **Import stuck or slow**:
 - Large archives take 5-10 minutes
 - Check progress dialog
