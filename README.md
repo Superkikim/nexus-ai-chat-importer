@@ -514,6 +514,16 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 - Check ZIP file is valid export
 - Review import report for errors
 
+**Safari users (Mac) - ZIP file issues**:
+- Safari automatically unzips downloaded files by default
+- This creates a folder instead of keeping the ZIP file
+- **Solution**: Disable auto-unzip in Safari:
+  - Safari → Preferences → General
+  - Uncheck "Open 'safe' files after downloading"
+  - Re-download the export from ChatGPT/Claude/Le Chat
+- **Note**: This is a Safari feature, not a plugin bug
+- **Do NOT manually re-compress** unzipped folders (creates incorrect structure)
+
 **Missing attachments**:
 - Check import report for details
 - Older exports may not include all files
