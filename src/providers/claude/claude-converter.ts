@@ -72,6 +72,7 @@ export class ClaudeConverter {
         }
 
         // PHASE 1: Collect ALL artifacts from entire conversation with message timestamps
+        // Support BOTH old format (artifacts) and new format (create_file + str_replace)
         const allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number, messageTimestamp: number}> = [];
 
         for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
@@ -79,6 +80,8 @@ export class ClaudeConverter {
             if (message.content) {
                 for (let blockIndex = 0; blockIndex < message.content.length; blockIndex++) {
                     const block = message.content[blockIndex];
+
+                    // OLD FORMAT: artifacts with version_uuid
                     if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
                         const command = block.input.command || 'create';
                         const versionUuid = block.input.version_uuid;
@@ -97,6 +100,42 @@ export class ClaudeConverter {
                                 messageTimestamp: messageTimestamp
                             });
                         }
+                    }
+
+                    // NEW FORMAT: create_file (initial creation)
+                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path && block.input?.file_text) {
+                        const messageTimestamp = message.created_at
+                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
+                            : 0;
+
+                        allArtifacts.push({
+                            artifact: {
+                                ...block.input,
+                                _format: 'create_file', // Mark as new format
+                                command: 'create'
+                            },
+                            messageIndex: msgIndex,
+                            blockIndex: blockIndex,
+                            messageTimestamp: messageTimestamp
+                        });
+                    }
+
+                    // NEW FORMAT: str_replace (edits)
+                    if (block.type === 'tool_use' && block.name === 'str_replace' && block.input?.path) {
+                        const messageTimestamp = message.created_at
+                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
+                            : 0;
+
+                        allArtifacts.push({
+                            artifact: {
+                                ...block.input,
+                                _format: 'str_replace', // Mark as new format
+                                command: 'update'
+                            },
+                            messageIndex: msgIndex,
+                            blockIndex: blockIndex,
+                            messageTimestamp: messageTimestamp
+                        });
                     }
                 }
             }
@@ -177,7 +216,11 @@ export class ClaudeConverter {
         const artifactLanguages = new Map<string, string>(); // Track language per artifact ID
 
         for (const {artifact, messageTimestamp} of allArtifacts) {
-            const artifactId = artifact.id || 'unknown';
+            // Detect format and extract artifact ID
+            const isNewFormat = artifact._format === 'create_file' || artifact._format === 'str_replace';
+            const artifactId = isNewFormat
+                ? this.extractArtifactIdFromPath(artifact.path)
+                : (artifact.id || 'unknown');
             const command = artifact.command || 'create';
 
             // Increment version number for this artifact ID
@@ -188,21 +231,29 @@ export class ClaudeConverter {
 
             if (command === 'create' || command === 'rewrite') {
                 // Complete content provided - RESET cumulative content
-                finalContent = artifact.content || '';
+                if (isNewFormat && artifact._format === 'create_file') {
+                    // NEW FORMAT: extract from file_text
+                    finalContent = artifact.file_text || '';
+                } else {
+                    // OLD FORMAT: extract from content
+                    finalContent = artifact.content || '';
+                }
                 artifactContents.set(artifactId, finalContent);
 
                 // For create/rewrite: detect and store the language
-                const detectedLanguage = this.detectLanguageFromContent(finalContent, artifact.type);
+                const detectedLanguage = isNewFormat
+                    ? this.detectLanguageFromPath(artifact.path)
+                    : this.detectLanguageFromContent(finalContent, artifact.type);
                 artifactLanguages.set(artifactId, detectedLanguage);
             } else if (command === 'update') {
                 // Apply update to PREVIOUS content
                 const previousContent = artifactContents.get(artifactId) || '';
 
                 if (artifact.old_str && artifact.new_str) {
-                    // sed-like replacement on previous content
+                    // sed-like replacement on previous content (both old and new format)
                     finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
                 } else if (artifact.content && artifact.content.length > 0) {
-                    // Complete updated content provided
+                    // Complete updated content provided (old format only)
                     finalContent = artifact.content;
                 } else {
                     // Empty update - keep previous content
@@ -232,9 +283,15 @@ export class ClaudeConverter {
                 );
 
                 // Track version info for linking
-                artifactVersionMap.set(artifact.version_uuid, {
+                // For old format: use version_uuid
+                // For new format: use path + version number as key
+                const versionKey = isNewFormat
+                    ? `${artifact.path}::v${currentVersion}`
+                    : artifact.version_uuid;
+
+                artifactVersionMap.set(versionKey, {
                     versionNumber: currentVersion,
-                    title: artifact.title || artifactId
+                    title: artifact.title || artifact.description || artifactId
                 });
 
             } catch (error) {
@@ -277,7 +334,7 @@ export class ClaudeConverter {
                     break;
 
                 case 'tool_use':
-                    // Create specific artifact links
+                    // OLD FORMAT: artifacts with version_uuid
                     if (block.name === 'artifacts' && block.input) {
                         const command = block.input.command || 'create';
                         const versionUuid = block.input.version_uuid;
@@ -295,7 +352,48 @@ export class ClaudeConverter {
                             const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}\n> 🎨 [[${versionFile}|View Artifact]]`;
                             textParts.push(specificLink);
                         }
-                    } else if (block.name === 'web_search') {
+                    }
+                    // NEW FORMAT: create_file
+                    else if (block.name === 'create_file' && block.input?.path && block.input?.file_text) {
+                        // Find version number for this path
+                        let versionInfo = null;
+                        for (const [key, info] of artifactVersionMap.entries()) {
+                            if (key.startsWith(block.input.path + '::')) {
+                                versionInfo = info;
+                                break;
+                            }
+                        }
+
+                        if (versionInfo) {
+                            const artifactId = this.extractArtifactIdFromPath(block.input.path);
+                            const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+                            const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
+                            const title = block.input.description || artifactId;
+                            const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionInfo.versionNumber}\n> 🎨 [[${versionFile}|View Artifact]]`;
+                            textParts.push(specificLink);
+                        }
+                    }
+                    // NEW FORMAT: str_replace (show as update)
+                    else if (block.name === 'str_replace' && block.input?.path) {
+                        // Find version number for this path
+                        let versionInfo = null;
+                        for (const [key, info] of artifactVersionMap.entries()) {
+                            if (key.startsWith(block.input.path + '::')) {
+                                versionInfo = info;
+                                break;
+                            }
+                        }
+
+                        if (versionInfo) {
+                            const artifactId = this.extractArtifactIdFromPath(block.input.path);
+                            const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+                            const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
+                            const title = block.input.description || artifactId;
+                            const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionInfo.versionNumber}\n> 🎨 [[${versionFile}|View Artifact]]`;
+                            textParts.push(specificLink);
+                        }
+                    }
+                    else if (block.name === 'web_search') {
                         // Filter out web_search tools - not useful for users
                         break;
                     } else if (block.name && block.input) {
@@ -652,11 +750,23 @@ export class ClaudeConverter {
         forcedLanguage?: string,
         messageTimestamp?: number
     ): Promise<void> {
-        const title = artifactInput.title || 'Untitled Artifact';
-        let language = artifactInput.language || 'text';
+        // Detect format
+        const isNewFormat = artifactInput._format === 'create_file' || artifactInput._format === 'str_replace';
+
+        // Extract metadata based on format
+        const title = isNewFormat
+            ? (artifactInput.description || this.extractArtifactIdFromPath(artifactInput.path))
+            : (artifactInput.title || 'Untitled Artifact');
+        let language = isNewFormat
+            ? 'text' // Will be detected from path or content
+            : (artifactInput.language || 'text');
         const command = artifactInput.command || 'create';
-        const artifactId = artifactInput.id || 'unknown';
-        const versionUuid = artifactInput.version_uuid;
+        const artifactId = isNewFormat
+            ? this.extractArtifactIdFromPath(artifactInput.path)
+            : (artifactInput.id || 'unknown');
+        const versionUuid = isNewFormat
+            ? `${artifactInput.path}::v${versionNumber}` // Generate synthetic UUID for new format
+            : artifactInput.version_uuid;
 
         // Use forced language (from create/rewrite) or auto-detect
         if (forcedLanguage) {
@@ -810,6 +920,71 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
     }
 
     /**
+     * Extract artifact ID from file path (new format)
+     * Example: "/home/claude/lettre_table.js" → "lettre_table"
+     */
+    private static extractArtifactIdFromPath(path: string): string {
+        if (!path) return 'unknown';
+
+        // Extract filename from path
+        const parts = path.split('/');
+        const filename = parts[parts.length - 1] || 'unknown';
+
+        // Remove extension
+        const dotIndex = filename.lastIndexOf('.');
+        if (dotIndex > 0) {
+            return filename.substring(0, dotIndex);
+        }
+
+        return filename;
+    }
+
+    /**
+     * Detect language from file path extension (new format)
+     * Example: "/home/claude/script.py" → "python"
+     */
+    private static detectLanguageFromPath(path: string): string {
+        if (!path) return 'text';
+
+        const extension = path.split('.').pop()?.toLowerCase() || '';
+
+        switch (extension) {
+            case 'py': return 'python';
+            case 'js': return 'javascript';
+            case 'ts': return 'typescript';
+            case 'jsx': return 'jsx';
+            case 'tsx': return 'tsx';
+            case 'html': return 'html';
+            case 'css': return 'css';
+            case 'scss': return 'scss';
+            case 'md': return 'markdown';
+            case 'json': return 'json';
+            case 'yaml':
+            case 'yml': return 'yaml';
+            case 'xml': return 'xml';
+            case 'svg': return 'xml';
+            case 'sql': return 'sql';
+            case 'sh':
+            case 'bash': return 'bash';
+            case 'php': return 'php';
+            case 'rb': return 'ruby';
+            case 'go': return 'go';
+            case 'rs': return 'rust';
+            case 'java': return 'java';
+            case 'c': return 'c';
+            case 'cpp':
+            case 'cc':
+            case 'cxx': return 'cpp';
+            case 'cs': return 'csharp';
+            case 'swift': return 'swift';
+            case 'kt': return 'kotlin';
+            case 'r': return 'r';
+            case 'txt': return 'text';
+            default: return 'text';
+        }
+    }
+
+    /**
      * Auto-detect language from content and artifact type
      */
     private static detectLanguageFromContent(content: string, artifactType?: string): string {
@@ -914,6 +1089,7 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
 
     /**
      * Count unique artifacts in a conversation (by artifact ID, not versions)
+     * Supports both old format (artifacts) and new format (create_file)
      */
     static countArtifacts(chat: ClaudeConversation): number {
         const uniqueArtifacts = new Set<string>();
@@ -921,8 +1097,14 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
         for (const message of chat.chat_messages) {
             if (message.content) {
                 for (const block of message.content) {
+                    // OLD FORMAT: artifacts with id
                     if (block.type === 'tool_use' && block.name === 'artifacts' && block.input?.id) {
                         uniqueArtifacts.add(block.input.id);
+                    }
+                    // NEW FORMAT: create_file with path
+                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path) {
+                        const artifactId = this.extractArtifactIdFromPath(block.input.path);
+                        uniqueArtifacts.add(artifactId);
                     }
                 }
             }

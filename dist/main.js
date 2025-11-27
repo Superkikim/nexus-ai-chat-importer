@@ -551,7 +551,11 @@ var init_logger = __esm({
         console.warn(message);
       }
       error(message, details) {
-        console.error(message);
+        if (details !== void 0) {
+          console.error(message, details);
+        } else {
+          console.error(message);
+        }
       }
     };
     __name(Logger, "Logger");
@@ -10971,6 +10975,7 @@ var ClaudeConverter = class {
     };
   }
   static async convertMessages(messages, conversationId, conversationTitle, conversationCreateTime) {
+    var _a, _b, _c;
     const standardMessages = [];
     if (!messages || messages.length === 0) {
       return standardMessages;
@@ -10993,6 +10998,34 @@ var ClaudeConverter = class {
                 messageTimestamp
               });
             }
+          }
+          if (block.type === "tool_use" && block.name === "create_file" && ((_a = block.input) == null ? void 0 : _a.path) && ((_b = block.input) == null ? void 0 : _b.file_text)) {
+            const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+            allArtifacts.push({
+              artifact: {
+                ...block.input,
+                _format: "create_file",
+                // Mark as new format
+                command: "create"
+              },
+              messageIndex: msgIndex,
+              blockIndex,
+              messageTimestamp
+            });
+          }
+          if (block.type === "tool_use" && block.name === "str_replace" && ((_c = block.input) == null ? void 0 : _c.path)) {
+            const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+            allArtifacts.push({
+              artifact: {
+                ...block.input,
+                _format: "str_replace",
+                // Mark as new format
+                command: "update"
+              },
+              messageIndex: msgIndex,
+              blockIndex,
+              messageTimestamp
+            });
           }
         }
       }
@@ -11047,15 +11080,20 @@ var ClaudeConverter = class {
     const artifactContents = /* @__PURE__ */ new Map();
     const artifactLanguages = /* @__PURE__ */ new Map();
     for (const { artifact, messageTimestamp } of allArtifacts) {
-      const artifactId = artifact.id || "unknown";
+      const isNewFormat = artifact._format === "create_file" || artifact._format === "str_replace";
+      const artifactId = isNewFormat ? this.extractArtifactIdFromPath(artifact.path) : artifact.id || "unknown";
       const command = artifact.command || "create";
       const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
       versionCounters.set(artifactId, currentVersion);
       let finalContent = "";
       if (command === "create" || command === "rewrite") {
-        finalContent = artifact.content || "";
+        if (isNewFormat && artifact._format === "create_file") {
+          finalContent = artifact.file_text || "";
+        } else {
+          finalContent = artifact.content || "";
+        }
         artifactContents.set(artifactId, finalContent);
-        const detectedLanguage = this.detectLanguageFromContent(finalContent, artifact.type);
+        const detectedLanguage = isNewFormat ? this.detectLanguageFromPath(artifact.path) : this.detectLanguageFromContent(finalContent, artifact.type);
         artifactLanguages.set(artifactId, detectedLanguage);
       } else if (command === "update") {
         const previousContent = artifactContents.get(artifactId) || "";
@@ -11082,9 +11120,10 @@ var ClaudeConverter = class {
           languageToUse,
           messageTimestamp
         );
-        artifactVersionMap.set(artifact.version_uuid, {
+        const versionKey = isNewFormat ? `${artifact.path}::v${currentVersion}` : artifact.version_uuid;
+        artifactVersionMap.set(versionKey, {
           versionNumber: currentVersion,
-          title: artifact.title || artifactId
+          title: artifact.title || artifact.description || artifactId
         });
       } catch (error) {
         logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
@@ -11096,6 +11135,7 @@ var ClaudeConverter = class {
    * Process content blocks for display (with artifact links)
    */
   static async processContentBlocksForDisplay(contentBlocks, artifactVersionMap, conversationId, conversationTitle, conversationCreateTime) {
+    var _a, _b, _c;
     const textParts = [];
     const attachments = [];
     if (!contentBlocks || contentBlocks.length === 0) {
@@ -11123,6 +11163,40 @@ var ClaudeConverter = class {
               const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
               const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
               const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}
+> \u{1F3A8} [[${versionFile}|View Artifact]]`;
+              textParts.push(specificLink);
+            }
+          } else if (block.name === "create_file" && ((_a = block.input) == null ? void 0 : _a.path) && ((_b = block.input) == null ? void 0 : _b.file_text)) {
+            let versionInfo = null;
+            for (const [key, info] of artifactVersionMap.entries()) {
+              if (key.startsWith(block.input.path + "::")) {
+                versionInfo = info;
+                break;
+              }
+            }
+            if (versionInfo) {
+              const artifactId = this.extractArtifactIdFromPath(block.input.path);
+              const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+              const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
+              const title = block.input.description || artifactId;
+              const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionInfo.versionNumber}
+> \u{1F3A8} [[${versionFile}|View Artifact]]`;
+              textParts.push(specificLink);
+            }
+          } else if (block.name === "str_replace" && ((_c = block.input) == null ? void 0 : _c.path)) {
+            let versionInfo = null;
+            for (const [key, info] of artifactVersionMap.entries()) {
+              if (key.startsWith(block.input.path + "::")) {
+                versionInfo = info;
+                break;
+              }
+            }
+            if (versionInfo) {
+              const artifactId = this.extractArtifactIdFromPath(block.input.path);
+              const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+              const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
+              const title = block.input.description || artifactId;
+              const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionInfo.versionNumber}
 > \u{1F3A8} [[${versionFile}|View Artifact]]`;
               textParts.push(specificLink);
             }
@@ -11378,11 +11452,12 @@ ${code}
    * Save a single artifact version with specific content
    */
   static async saveIndividualArtifactVersion(artifactInput, filePath, versionNumber, versionContent, conversationId, conversationTitle, conversationCreateTime, forcedLanguage, messageTimestamp) {
-    const title = artifactInput.title || "Untitled Artifact";
-    let language = artifactInput.language || "text";
+    const isNewFormat = artifactInput._format === "create_file" || artifactInput._format === "str_replace";
+    const title = isNewFormat ? artifactInput.description || this.extractArtifactIdFromPath(artifactInput.path) : artifactInput.title || "Untitled Artifact";
+    let language = isNewFormat ? "text" : artifactInput.language || "text";
     const command = artifactInput.command || "create";
-    const artifactId = artifactInput.id || "unknown";
-    const versionUuid = artifactInput.version_uuid;
+    const artifactId = isNewFormat ? this.extractArtifactIdFromPath(artifactInput.path) : artifactInput.id || "unknown";
+    const versionUuid = isNewFormat ? `${artifactInput.path}::v${versionNumber}` : artifactInput.version_uuid;
     if (forcedLanguage) {
       language = forcedLanguage;
     } else if ((language.toLowerCase() === "text" || !language || language === "undefined") && versionContent) {
@@ -11493,6 +11568,93 @@ ${versionContent}
     return false;
   }
   /**
+   * Extract artifact ID from file path (new format)
+   * Example: "/home/claude/lettre_table.js" → "lettre_table"
+   */
+  static extractArtifactIdFromPath(path) {
+    if (!path)
+      return "unknown";
+    const parts = path.split("/");
+    const filename = parts[parts.length - 1] || "unknown";
+    const dotIndex = filename.lastIndexOf(".");
+    if (dotIndex > 0) {
+      return filename.substring(0, dotIndex);
+    }
+    return filename;
+  }
+  /**
+   * Detect language from file path extension (new format)
+   * Example: "/home/claude/script.py" → "python"
+   */
+  static detectLanguageFromPath(path) {
+    var _a;
+    if (!path)
+      return "text";
+    const extension = ((_a = path.split(".").pop()) == null ? void 0 : _a.toLowerCase()) || "";
+    switch (extension) {
+      case "py":
+        return "python";
+      case "js":
+        return "javascript";
+      case "ts":
+        return "typescript";
+      case "jsx":
+        return "jsx";
+      case "tsx":
+        return "tsx";
+      case "html":
+        return "html";
+      case "css":
+        return "css";
+      case "scss":
+        return "scss";
+      case "md":
+        return "markdown";
+      case "json":
+        return "json";
+      case "yaml":
+      case "yml":
+        return "yaml";
+      case "xml":
+        return "xml";
+      case "svg":
+        return "xml";
+      case "sql":
+        return "sql";
+      case "sh":
+      case "bash":
+        return "bash";
+      case "php":
+        return "php";
+      case "rb":
+        return "ruby";
+      case "go":
+        return "go";
+      case "rs":
+        return "rust";
+      case "java":
+        return "java";
+      case "c":
+        return "c";
+      case "cpp":
+      case "cc":
+      case "cxx":
+        return "cpp";
+      case "cs":
+        return "csharp";
+      case "swift":
+        return "swift";
+      case "kt":
+        return "kotlin";
+      case "r":
+        return "r";
+      case "txt":
+        return "text";
+      default:
+        return "text";
+    }
+  }
+  /**
    * Auto-detect language from content and artifact type
    */
   static detectLanguageFromContent(content, artifactType) {
@@ -11590,15 +11752,20 @@ ${versionContent}
   }
   /**
    * Count unique artifacts in a conversation (by artifact ID, not versions)
+   * Supports both old format (artifacts) and new format (create_file)
    */
   static countArtifacts(chat) {
-    var _a;
+    var _a, _b;
     const uniqueArtifacts = /* @__PURE__ */ new Set();
     for (const message of chat.chat_messages) {
       if (message.content) {
         for (const block of message.content) {
           if (block.type === "tool_use" && block.name === "artifacts" && ((_a = block.input) == null ? void 0 : _a.id)) {
             uniqueArtifacts.add(block.input.id);
+          }
+          if (block.type === "tool_use" && block.name === "create_file" && ((_b = block.input) == null ? void 0 : _b.path)) {
+            const artifactId = this.extractArtifactIdFromPath(block.input.path);
+            uniqueArtifacts.add(artifactId);
           }
         }
       }
