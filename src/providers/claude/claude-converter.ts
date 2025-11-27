@@ -1193,8 +1193,12 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
             const [fullMatch, linkText, filePath] = match;
             const fileName = filePath.split('/').pop() || 'file';
 
-            // Add text before this match
-            replacements.push(text.substring(lastIndex, match.index));
+            // Add text before this match (trimmed)
+            const textBefore = text.substring(lastIndex, match.index).trim();
+            // Skip if it's just a separator (|) or empty
+            if (textBefore && textBefore !== '|') {
+                replacements.push(textBefore);
+            }
 
             // If this file is an artifact, replace with artifact callout
             if (artifactCalloutMap && artifactCalloutMap.has(fileName)) {
@@ -1217,8 +1221,11 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
             lastIndex = match.index + fullMatch.length;
         }
 
-        // Add remaining text
-        replacements.push(text.substring(lastIndex));
+        // Add remaining text (trimmed)
+        const remainingText = text.substring(lastIndex).trim();
+        if (remainingText && remainingText !== '|') {
+            replacements.push(remainingText);
+        }
 
         return replacements.join('\n\n');
     }

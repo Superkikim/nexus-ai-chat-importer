@@ -11860,7 +11860,10 @@ ${versionContent}
     while ((match = computerLinkRegex.exec(text)) !== null) {
       const [fullMatch, linkText, filePath] = match;
       const fileName = filePath.split("/").pop() || "file";
-      replacements.push(text.substring(lastIndex, match.index));
+      const textBefore = text.substring(lastIndex, match.index).trim();
+      if (textBefore && textBefore !== "|") {
+        replacements.push(textBefore);
+      }
       if (artifactCalloutMap && artifactCalloutMap.has(fileName)) {
         const artifactCallout = artifactCalloutMap.get(fileName);
         replacements.push(artifactCallout);
@@ -11875,7 +11878,10 @@ ${versionContent}
       replacements.push(callout);
       lastIndex = match.index + fullMatch.length;
     }
-    replacements.push(text.substring(lastIndex));
+    const remainingText = text.substring(lastIndex).trim();
+    if (remainingText && remainingText !== "|") {
+      replacements.push(remainingText);
+    }
     return replacements.join("\n\n");
   }
   /**
