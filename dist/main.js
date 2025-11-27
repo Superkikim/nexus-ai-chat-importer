@@ -11208,7 +11208,7 @@ var ClaudeConverter = class {
       switch (block.type) {
         case "text":
           if (block.text) {
-            const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap);
+            const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap, true);
             textParts.push(processedText);
           }
           break;
@@ -11850,8 +11850,9 @@ ${versionContent}
    * Replace computer:/// links with artifact or attachment callouts
    * These are internal Anthropic server files not included in exports
    * @param artifactCalloutMap - Map of artifact file names to their callouts
+   * @param insideCallout - If true, use quote-preserving separators for nested callouts
    */
-  static replaceComputerLinks(text, conversationId, artifactCalloutMap) {
+  static replaceComputerLinks(text, conversationId, artifactCalloutMap, insideCallout = false) {
     var _a;
     const computerLinkRegex = /\[([^\]]+)\]\(computer:\/\/\/([^)]+)\)/g;
     const replacements = [];
@@ -11882,7 +11883,8 @@ ${versionContent}
     if (remainingText && remainingText !== "|") {
       replacements.push(remainingText);
     }
-    return replacements.join("\n\n");
+    const separator = insideCallout ? "\n>\n" : "\n\n";
+    return replacements.join(separator);
   }
   /**
    * Count unique artifacts in a conversation (by artifact ID, not versions)

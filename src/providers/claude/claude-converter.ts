@@ -415,7 +415,8 @@ export class ClaudeConverter {
                 case 'text':
                     if (block.text) {
                         // Replace computer:/// links with artifact callouts or attachment callouts
-                        const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap);
+                        // insideCallout=true because this text will be inside a message callout
+                        const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap, true);
                         textParts.push(processedText);
                     }
                     break;
@@ -1179,8 +1180,9 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
      * Replace computer:/// links with artifact or attachment callouts
      * These are internal Anthropic server files not included in exports
      * @param artifactCalloutMap - Map of artifact file names to their callouts
+     * @param insideCallout - If true, use quote-preserving separators for nested callouts
      */
-    private static replaceComputerLinks(text: string, conversationId?: string, artifactCalloutMap?: Map<string, string>): string {
+    private static replaceComputerLinks(text: string, conversationId?: string, artifactCalloutMap?: Map<string, string>, insideCallout: boolean = false): string {
         // Pattern: [View your ...](computer:///path/to/file.ext)
         // or: [Voir ...](computer:///path/to/file.ext)
         const computerLinkRegex = /\[([^\]]+)\]\(computer:\/\/\/([^)]+)\)/g;
@@ -1227,7 +1229,11 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
             replacements.push(remainingText);
         }
 
-        return replacements.join('\n\n');
+        // Use appropriate separator based on context
+        // Inside callout: use >\n> to preserve quote level
+        // Outside callout: use \n\n for normal spacing
+        const separator = insideCallout ? '\n>\n' : '\n\n';
+        return replacements.join(separator);
     }
 
     /**
