@@ -10975,10 +10975,24 @@ var ClaudeConverter = class {
     };
   }
   static async convertMessages(messages, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     const standardMessages = [];
     if (!messages || messages.length === 0) {
       return standardMessages;
+    }
+    const finalProductLinks = /* @__PURE__ */ new Set();
+    for (const message of messages) {
+      if (message.content) {
+        for (const block of message.content) {
+          if (block.type === "text" && block.text) {
+            const computerLinkRegex = /computer:\/\/\/([^\)]+)/g;
+            let match;
+            while ((match = computerLinkRegex.exec(block.text)) !== null) {
+              finalProductLinks.add(match[1]);
+            }
+          }
+        }
+      }
     }
     const allArtifacts = [];
     for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
@@ -11002,28 +11016,47 @@ var ClaudeConverter = class {
           if (block.type === "tool_use" && block.name === "create_file" && ((_a = block.input) == null ? void 0 : _a.path) && ((_b = block.input) == null ? void 0 : _b.file_text)) {
             const fileText = block.input.file_text || "";
             const MIN_CONTENT_LENGTH = 200;
+            const filePath = block.input.path;
+            const fileName = filePath.split("/").pop() || "";
             if (fileText.length >= MIN_CONTENT_LENGTH) {
-              const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
-              allArtifacts.push({
-                artifact: {
-                  ...block.input,
-                  _format: "create_file",
-                  // Mark as new format
-                  command: "create"
-                },
-                messageIndex: msgIndex,
-                blockIndex,
-                messageTimestamp
-              });
+              const hasFinalProductLink = Array.from(finalProductLinks).some((link) => link.includes(fileName));
+              if (hasFinalProductLink) {
+                const fileExtension = ((_c = fileName.split(".").pop()) == null ? void 0 : _c.toLowerCase()) || "";
+                const isTextExploitable = this.isTextExploitableExtension(fileExtension);
+                if (isTextExploitable) {
+                  const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+                  allArtifacts.push({
+                    artifact: {
+                      ...block.input,
+                      _format: "create_file",
+                      command: "create"
+                    },
+                    messageIndex: msgIndex,
+                    blockIndex,
+                    messageTimestamp
+                  });
+                }
+              } else {
+                const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+                allArtifacts.push({
+                  artifact: {
+                    ...block.input,
+                    _format: "create_file",
+                    command: "create"
+                  },
+                  messageIndex: msgIndex,
+                  blockIndex,
+                  messageTimestamp
+                });
+              }
             }
           }
-          if (block.type === "tool_use" && block.name === "str_replace" && ((_c = block.input) == null ? void 0 : _c.path)) {
+          if (block.type === "tool_use" && block.name === "str_replace" && ((_d = block.input) == null ? void 0 : _d.path)) {
             const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
             allArtifacts.push({
               artifact: {
                 ...block.input,
                 _format: "str_replace",
-                // Mark as new format
                 command: "update"
               },
               messageIndex: msgIndex,
@@ -11139,94 +11172,37 @@ var ClaudeConverter = class {
    * Process content blocks for display (with artifact links)
    */
   static async processContentBlocksForDisplay(contentBlocks, artifactVersionMap, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c, _d;
     const textParts = [];
     const attachments = [];
     if (!contentBlocks || contentBlocks.length === 0) {
       return { text: "", attachments: [] };
     }
+    const artifactCalloutMap = /* @__PURE__ */ new Map();
+    for (const [key, value] of artifactVersionMap.entries()) {
+      const path = key.split("::")[0];
+      const fileName = path.split("/").pop();
+      if (fileName) {
+        const artifactId = this.extractArtifactIdFromPath(path);
+        const versionNumber = value.versionNumber;
+        const title = value.title || "Artifact";
+        const artifactFileName = `${artifactId}_v${versionNumber}.md`;
+        const artifactPath = `Nexus/Attachments/claude/artifacts/${conversationId}/${artifactFileName}`;
+        const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}
+> \u{1F3A8} [[${artifactPath}|View Artifact]]`;
+        artifactCalloutMap.set(fileName, callout);
+      }
+    }
     for (const block of contentBlocks) {
       switch (block.type) {
         case "text":
           if (block.text) {
-            const processedText = this.replaceComputerLinks(block.text, conversationId);
+            const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap);
             textParts.push(processedText);
           }
           break;
         case "thinking":
           break;
         case "tool_use":
-          if (block.name === "artifacts" && block.input) {
-            const command = block.input.command || "create";
-            const versionUuid = block.input.version_uuid;
-            if (command === "view") {
-              break;
-            }
-            if (versionUuid && artifactVersionMap.has(versionUuid)) {
-              const versionInfo = artifactVersionMap.get(versionUuid);
-              const artifactId = block.input.id || "unknown";
-              const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-              const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
-              const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}
-> \u{1F3A8} [[${versionFile}|View Artifact]]`;
-              textParts.push(specificLink);
-            }
-          } else if (block.name === "create_file" && ((_a = block.input) == null ? void 0 : _a.path) && ((_b = block.input) == null ? void 0 : _b.file_text)) {
-            const fileText = block.input.file_text || "";
-            const MIN_CONTENT_LENGTH = 200;
-            if (fileText.length >= MIN_CONTENT_LENGTH) {
-              let versionInfo = null;
-              for (const [key, info] of artifactVersionMap.entries()) {
-                if (key.startsWith(block.input.path + "::")) {
-                  versionInfo = info;
-                  break;
-                }
-              }
-              if (versionInfo) {
-                const artifactId = this.extractArtifactIdFromPath(block.input.path);
-                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-                const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
-                const title = block.input.description || artifactId;
-                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionInfo.versionNumber}
-> \u{1F3A8} [[${versionFile}|View Artifact]]`;
-                textParts.push(specificLink);
-              }
-            } else {
-              const fileName = block.input.path.split("/").pop() || "file";
-              const fileExtension = ((_c = fileName.split(".").pop()) == null ? void 0 : _c.toLowerCase()) || "";
-              const fileType = this.getFileTypeFromExtension(fileExtension);
-              const conversationUrl = `https://claude.ai/chat/${conversationId}`;
-              const description = block.input.description || "File generated on server";
-              const attachmentCallout = `>[!${this.CALLOUTS.ATTACHMENT}] **${fileName}** (${fileType})
-> \u26A0\uFE0F ${description}. [Open original conversation](${conversationUrl})`;
-              textParts.push(attachmentCallout);
-            }
-          } else if (block.name === "str_replace" && ((_d = block.input) == null ? void 0 : _d.path)) {
-            let versionInfo = null;
-            for (const [key, info] of artifactVersionMap.entries()) {
-              if (key.startsWith(block.input.path + "::")) {
-                versionInfo = info;
-                break;
-              }
-            }
-            if (versionInfo) {
-              const artifactId = this.extractArtifactIdFromPath(block.input.path);
-              const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-              const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
-              const title = block.input.description || artifactId;
-              const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionInfo.versionNumber}
-> \u{1F3A8} [[${versionFile}|View Artifact]]`;
-              textParts.push(specificLink);
-            }
-          } else if (block.name === "web_search") {
-            break;
-          } else if (block.name && block.input) {
-            const code = block.input.code || JSON.stringify(block.input, null, 2);
-            textParts.push(`**[Tool: ${block.name}]**
-\`\`\`
-${code}
-\`\`\``);
-          }
           break;
         case "tool_result":
           break;
@@ -11769,52 +11745,126 @@ ${versionContent}
     }
   }
   /**
+   * Check if file extension is text exploitable (can be used as artifact in Obsidian)
+   */
+  static isTextExploitableExtension(extension) {
+    const textExploitableExtensions = [
+      // Code
+      "py",
+      "js",
+      "ts",
+      "java",
+      "cpp",
+      "c",
+      "h",
+      "cs",
+      "go",
+      "rs",
+      "php",
+      "rb",
+      "swift",
+      "kt",
+      "scala",
+      "r",
+      "sh",
+      "bash",
+      // Web
+      "html",
+      "css",
+      "scss",
+      "sass",
+      "less",
+      "vue",
+      "jsx",
+      "tsx",
+      // Config/Data
+      "json",
+      "xml",
+      "yaml",
+      "yml",
+      "toml",
+      "ini",
+      "env",
+      // Documentation
+      "md",
+      "txt",
+      "rst",
+      "adoc",
+      // SQL
+      "sql"
+    ];
+    return textExploitableExtensions.includes(extension);
+  }
+  /**
    * Get file type from extension (for binary file callouts)
    */
-  getFileTypeFromExtension(extension) {
+  static getFileTypeFromExtension(extension) {
     switch (extension) {
+      case "svg":
+        return "SVG Image";
       case "png":
+        return "PNG Image";
       case "jpg":
       case "jpeg":
+        return "JPEG Image";
       case "gif":
+        return "GIF Image";
       case "webp":
-        return `image/${extension}`;
+        return "WebP Image";
       case "pdf":
-        return "application/pdf";
-      case "txt":
-        return "text/plain";
-      case "md":
-        return "text/markdown";
-      case "json":
-        return "application/json";
-      case "xlsx":
-      case "xls":
-        return "application/vnd.ms-excel";
+        return "PDF Document";
       case "docx":
       case "doc":
-        return "application/msword";
+        return "Word Document";
+      case "pptx":
+      case "ppt":
+        return "PowerPoint Presentation";
+      case "xlsx":
+      case "xls":
+        return "Excel Spreadsheet";
+      case "txt":
+        return "Text File";
+      case "md":
+        return "Markdown Document";
+      case "json":
+        return "JSON File";
       case "csv":
-        return "text/csv";
+        return "CSV File";
       default:
-        return "application/octet-stream";
+        return extension.toUpperCase();
     }
   }
   /**
-   * Replace computer:/// links with attachment callouts
+   * Replace computer:/// links with artifact or attachment callouts
    * These are internal Anthropic server files not included in exports
+   * @param artifactCalloutMap - Map of artifact file names to their callouts
    */
-  static replaceComputerLinks(text, conversationId) {
+  static replaceComputerLinks(text, conversationId, artifactCalloutMap) {
+    var _a;
     const computerLinkRegex = /\[([^\]]+)\]\(computer:\/\/\/([^)]+)\)/g;
-    return text.replace(computerLinkRegex, (match, linkText, filePath) => {
-      var _a;
+    const replacements = [];
+    let lastIndex = 0;
+    let match;
+    while ((match = computerLinkRegex.exec(text)) !== null) {
+      const [fullMatch, linkText, filePath] = match;
       const fileName = filePath.split("/").pop() || "file";
+      replacements.push(text.substring(lastIndex, match.index));
+      if (artifactCalloutMap && artifactCalloutMap.has(fileName)) {
+        const artifactCallout = artifactCalloutMap.get(fileName);
+        replacements.push(artifactCallout);
+        lastIndex = match.index + fullMatch.length;
+        continue;
+      }
       const fileExtension = ((_a = fileName.split(".").pop()) == null ? void 0 : _a.toLowerCase()) || "";
       const fileType = this.getFileTypeFromExtension(fileExtension);
       const conversationUrl = conversationId ? `https://claude.ai/chat/${conversationId}` : "https://claude.ai";
       const callout = `>[!${this.CALLOUTS.ATTACHMENT}] **${fileName}** (${fileType})
 > \u26A0\uFE0F File generated on Anthropic server, not included in archive. [Open original conversation](${conversationUrl})`;
-      return callout;
-    });
+      replacements.push(callout);
+      lastIndex = match.index + fullMatch.length;
+    }
+    replacements.push(text.substring(lastIndex));
+    return replacements.join("\n\n");
   }
   /**
    * Count unique artifacts in a conversation (by artifact ID, not versions)
