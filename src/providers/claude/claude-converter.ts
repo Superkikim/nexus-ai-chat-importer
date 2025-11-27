@@ -71,19 +71,26 @@ export class ClaudeConverter {
             return standardMessages;
         }
 
-        // PHASE 1A: Extract all computer:/// links from entire conversation to identify final products
-        const finalProductLinks = new Set<string>();
-        for (const message of messages) {
+        // PHASE 1A: Build map of message index to computer:/// links in that message
+        const messageComputerLinks = new Map<number, Set<string>>();
+        for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
+            const message = messages[msgIndex];
+            const linksInMessage = new Set<string>();
+
             if (message.content) {
                 for (const block of message.content) {
                     if (block.type === 'text' && block.text) {
                         const computerLinkRegex = /computer:\/\/\/([^\)]+)/g;
                         let match;
                         while ((match = computerLinkRegex.exec(block.text)) !== null) {
-                            finalProductLinks.add(match[1]); // Store the full path
+                            linksInMessage.add(match[1]); // Store the full path
                         }
                     }
                 }
+            }
+
+            if (linksInMessage.size > 0) {
+                messageComputerLinks.set(msgIndex, linksInMessage);
             }
         }
 
@@ -127,16 +134,25 @@ export class ClaudeConverter {
 
                         // Only process if file_text contains actual content (not just a short description)
                         if (fileText.length >= MIN_CONTENT_LENGTH) {
-                            // Check if this file has a computer:/// link (final product)
-                            const hasFinalProductLink = Array.from(finalProductLinks).some(link => link.includes(fileName));
+                            // Check if this message has computer:/// links (workflow with final product)
+                            const computerLinksInMessage = messageComputerLinks.get(msgIndex);
 
-                            if (hasFinalProductLink) {
-                                // Check extension of final product
-                                const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-                                const isTextExploitable = this.isTextExploitableExtension(fileExtension);
+                            if (computerLinksInMessage && computerLinksInMessage.size > 0) {
+                                // This message has computer:/// links → workflow with final product
+                                // Check if ANY of the final products is text exploitable
+                                let hasTextExploitableFinalProduct = false;
 
-                                // Only extract as artifact if text exploitable
-                                if (isTextExploitable) {
+                                for (const link of computerLinksInMessage) {
+                                    const finalProductName = link.split('/').pop() || '';
+                                    const finalProductExtension = finalProductName.split('.').pop()?.toLowerCase() || '';
+                                    if (this.isTextExploitableExtension(finalProductExtension)) {
+                                        hasTextExploitableFinalProduct = true;
+                                        break;
+                                    }
+                                }
+
+                                // Only extract as artifact if final product is text exploitable
+                                if (hasTextExploitableFinalProduct) {
                                     const messageTimestamp = message.created_at
                                         ? Math.floor(new Date(message.created_at).getTime() / 1000)
                                         : 0;
@@ -152,9 +168,9 @@ export class ClaudeConverter {
                                         messageTimestamp: messageTimestamp
                                     });
                                 }
-                                // If binary/visual extension, skip (will be handled as callout)
+                                // If all final products are binary, skip (script is just a tool)
                             } else {
-                                // No computer:/// link = user explicitly requested → extract as artifact
+                                // No computer:/// link in this message = user explicitly requested → extract as artifact
                                 const messageTimestamp = message.created_at
                                     ? Math.floor(new Date(message.created_at).getTime() / 1000)
                                     : 0;

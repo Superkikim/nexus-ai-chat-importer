@@ -10980,18 +10980,23 @@ var ClaudeConverter = class {
     if (!messages || messages.length === 0) {
       return standardMessages;
     }
-    const finalProductLinks = /* @__PURE__ */ new Set();
-    for (const message of messages) {
+    const messageComputerLinks = /* @__PURE__ */ new Map();
+    for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
+      const message = messages[msgIndex];
+      const linksInMessage = /* @__PURE__ */ new Set();
       if (message.content) {
         for (const block of message.content) {
           if (block.type === "text" && block.text) {
             const computerLinkRegex = /computer:\/\/\/([^\)]+)/g;
             let match;
             while ((match = computerLinkRegex.exec(block.text)) !== null) {
-              finalProductLinks.add(match[1]);
+              linksInMessage.add(match[1]);
             }
           }
         }
+      }
+      if (linksInMessage.size > 0) {
+        messageComputerLinks.set(msgIndex, linksInMessage);
       }
     }
     const allArtifacts = [];
@@ -11019,11 +11024,18 @@ var ClaudeConverter = class {
             const filePath = block.input.path;
             const fileName = filePath.split("/").pop() || "";
             if (fileText.length >= MIN_CONTENT_LENGTH) {
-              const hasFinalProductLink = Array.from(finalProductLinks).some((link) => link.includes(fileName));
-              if (hasFinalProductLink) {
-                const fileExtension = ((_c = fileName.split(".").pop()) == null ? void 0 : _c.toLowerCase()) || "";
-                const isTextExploitable = this.isTextExploitableExtension(fileExtension);
-                if (isTextExploitable) {
+              const computerLinksInMessage = messageComputerLinks.get(msgIndex);
+              if (computerLinksInMessage && computerLinksInMessage.size > 0) {
+                let hasTextExploitableFinalProduct = false;
+                for (const link of computerLinksInMessage) {
+                  const finalProductName = link.split("/").pop() || "";
+                  const finalProductExtension = ((_c = finalProductName.split(".").pop()) == null ? void 0 : _c.toLowerCase()) || "";
+                  if (this.isTextExploitableExtension(finalProductExtension)) {
+                    hasTextExploitableFinalProduct = true;
+                    break;
+                  }
+                }
+                if (hasTextExploitableFinalProduct) {
                   const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
                   allArtifacts.push({
                     artifact: {
