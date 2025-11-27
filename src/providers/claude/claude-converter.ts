@@ -103,21 +103,32 @@ export class ClaudeConverter {
                     }
 
                     // NEW FORMAT: create_file (initial creation)
+                    // IMPORTANT: Only extract if file_text contains actual content (not just a description)
+                    // Binary files (xlsx, png, etc.) have short descriptions like "Creating multiplication table using openpyxl"
+                    // Text files (js, py, md, svg) have full content (hundreds/thousands of characters)
                     if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path && block.input?.file_text) {
-                        const messageTimestamp = message.created_at
-                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
-                            : 0;
+                        const fileText = block.input.file_text || '';
+                        const MIN_CONTENT_LENGTH = 200; // Threshold to distinguish real content from descriptions
 
-                        allArtifacts.push({
-                            artifact: {
-                                ...block.input,
-                                _format: 'create_file', // Mark as new format
-                                command: 'create'
-                            },
-                            messageIndex: msgIndex,
-                            blockIndex: blockIndex,
-                            messageTimestamp: messageTimestamp
-                        });
+                        // Only process if file_text contains actual content (not just a short description)
+                        if (fileText.length >= MIN_CONTENT_LENGTH) {
+                            const messageTimestamp = message.created_at
+                                ? Math.floor(new Date(message.created_at).getTime() / 1000)
+                                : 0;
+
+                            allArtifacts.push({
+                                artifact: {
+                                    ...block.input,
+                                    _format: 'create_file', // Mark as new format
+                                    command: 'create'
+                                },
+                                messageIndex: msgIndex,
+                                blockIndex: blockIndex,
+                                messageTimestamp: messageTimestamp
+                            });
+                        }
+                        // If file_text is short (< 200 chars), it's a binary/server file - skip it
+                        // These will be handled by attachment system with placeholder callouts
                     }
 
                     // NEW FORMAT: str_replace (edits)
@@ -355,22 +366,37 @@ export class ClaudeConverter {
                     }
                     // NEW FORMAT: create_file
                     else if (block.name === 'create_file' && block.input?.path && block.input?.file_text) {
-                        // Find version number for this path
-                        let versionInfo = null;
-                        for (const [key, info] of artifactVersionMap.entries()) {
-                            if (key.startsWith(block.input.path + '::')) {
-                                versionInfo = info;
-                                break;
-                            }
-                        }
+                        const fileText = block.input.file_text || '';
+                        const MIN_CONTENT_LENGTH = 200;
 
-                        if (versionInfo) {
-                            const artifactId = this.extractArtifactIdFromPath(block.input.path);
-                            const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-                            const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
-                            const title = block.input.description || artifactId;
-                            const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionInfo.versionNumber}\n> 🎨 [[${versionFile}|View Artifact]]`;
-                            textParts.push(specificLink);
+                        // Check if this is a real artifact (long content) or binary file (short description)
+                        if (fileText.length >= MIN_CONTENT_LENGTH) {
+                            // Real artifact with content - create artifact link
+                            let versionInfo = null;
+                            for (const [key, info] of artifactVersionMap.entries()) {
+                                if (key.startsWith(block.input.path + '::')) {
+                                    versionInfo = info;
+                                    break;
+                                }
+                            }
+
+                            if (versionInfo) {
+                                const artifactId = this.extractArtifactIdFromPath(block.input.path);
+                                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+                                const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
+                                const title = block.input.description || artifactId;
+                                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionInfo.versionNumber}\n> 🎨 [[${versionFile}|View Artifact]]`;
+                                textParts.push(specificLink);
+                            }
+                        } else {
+                            // Binary/server file - create attachment callout with link to original conversation
+                            const fileName = block.input.path.split('/').pop() || 'file';
+                            const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+                            const fileType = this.getFileTypeFromExtension(fileExtension);
+                            const conversationUrl = `https://claude.ai/chat/${conversationId}`;
+                            const description = block.input.description || 'File generated on server';
+                            const attachmentCallout = `>[!${this.CALLOUTS.ATTACHMENT}] **${fileName}** (${fileType})\n> ⚠️ ${description}. [Open original conversation](${conversationUrl})`;
+                            textParts.push(attachmentCallout);
                         }
                     }
                     // NEW FORMAT: str_replace (show as update)
@@ -1088,11 +1114,45 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
     }
 
     /**
+     * Get file type from extension (for binary file callouts)
+     */
+    private getFileTypeFromExtension(extension: string): string {
+        switch (extension) {
+            case 'png':
+            case 'jpg':
+            case 'jpeg':
+            case 'gif':
+            case 'webp':
+                return `image/${extension}`;
+            case 'pdf':
+                return 'application/pdf';
+            case 'txt':
+                return 'text/plain';
+            case 'md':
+                return 'text/markdown';
+            case 'json':
+                return 'application/json';
+            case 'xlsx':
+            case 'xls':
+                return 'application/vnd.ms-excel';
+            case 'docx':
+            case 'doc':
+                return 'application/msword';
+            case 'csv':
+                return 'text/csv';
+            default:
+                return 'application/octet-stream';
+        }
+    }
+
+    /**
      * Count unique artifacts in a conversation (by artifact ID, not versions)
      * Supports both old format (artifacts) and new format (create_file)
+     * Only counts files with actual content (not binary/server files)
      */
     static countArtifacts(chat: ClaudeConversation): number {
         const uniqueArtifacts = new Set<string>();
+        const MIN_CONTENT_LENGTH = 200;
 
         for (const message of chat.chat_messages) {
             if (message.content) {
@@ -1102,9 +1162,13 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
                         uniqueArtifacts.add(block.input.id);
                     }
                     // NEW FORMAT: create_file with path
-                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path) {
-                        const artifactId = this.extractArtifactIdFromPath(block.input.path);
-                        uniqueArtifacts.add(artifactId);
+                    // Only count if file_text contains actual content (not just a short description)
+                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path && block.input?.file_text) {
+                        const fileText = block.input.file_text || '';
+                        if (fileText.length >= MIN_CONTENT_LENGTH) {
+                            const artifactId = this.extractArtifactIdFromPath(block.input.path);
+                            uniqueArtifacts.add(artifactId);
+                        }
                     }
                 }
             }
