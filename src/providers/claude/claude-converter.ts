@@ -385,8 +385,8 @@ export class ClaudeConverter {
                 const artifactId = this.extractArtifactIdFromPath(path);
                 const versionNumber = value.versionNumber;
                 const title = value.title || 'Artifact';
-                const artifactFileName = `${artifactId}_v${versionNumber}.md`;
-                const artifactPath = `Nexus/Attachments/claude/artifacts/${conversationId}/${artifactFileName}`;
+                const artifactFileName = `${artifactId}_v${versionNumber}`;
+                const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
 
                 const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}\n> 🎨 [[${artifactPath}|View Artifact]]`;
                 artifactCalloutMap.set(fileName, callout);
