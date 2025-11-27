@@ -336,7 +336,9 @@ export class ClaudeConverter {
             switch (block.type) {
                 case 'text':
                     if (block.text) {
-                        textParts.push(block.text);
+                        // Replace computer:/// links with attachment callouts
+                        const processedText = this.replaceComputerLinks(block.text, conversationId);
+                        textParts.push(processedText);
                     }
                     break;
 
@@ -1143,6 +1145,31 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
             default:
                 return 'application/octet-stream';
         }
+    }
+
+    /**
+     * Replace computer:/// links with attachment callouts
+     * These are internal Anthropic server files not included in exports
+     */
+    private static replaceComputerLinks(text: string, conversationId?: string): string {
+        // Pattern: [View your ...](computer:///path/to/file.ext)
+        // or: [Voir ...](computer:///path/to/file.ext)
+        const computerLinkRegex = /\[([^\]]+)\]\(computer:\/\/\/([^)]+)\)/g;
+
+        return text.replace(computerLinkRegex, (match, linkText, filePath) => {
+            // Extract filename from path
+            const fileName = filePath.split('/').pop() || 'file';
+            const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+            const fileType = this.getFileTypeFromExtension(fileExtension);
+            const conversationUrl = conversationId
+                ? `https://claude.ai/chat/${conversationId}`
+                : 'https://claude.ai';
+
+            // Create attachment callout
+            const callout = `>[!${this.CALLOUTS.ATTACHMENT}] **${fileName}** (${fileType})\n> ⚠️ File generated on Anthropic server, not included in archive. [Open original conversation](${conversationUrl})`;
+
+            return callout;
+        });
     }
 
     /**

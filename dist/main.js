@@ -11149,7 +11149,8 @@ var ClaudeConverter = class {
       switch (block.type) {
         case "text":
           if (block.text) {
-            textParts.push(block.text);
+            const processedText = this.replaceComputerLinks(block.text, conversationId);
+            textParts.push(processedText);
           }
           break;
         case "thinking":
@@ -11797,6 +11798,23 @@ ${versionContent}
       default:
         return "application/octet-stream";
     }
+  }
+  /**
+   * Replace computer:/// links with attachment callouts
+   * These are internal Anthropic server files not included in exports
+   */
+  static replaceComputerLinks(text, conversationId) {
+    const computerLinkRegex = /\[([^\]]+)\]\(computer:\/\/\/([^)]+)\)/g;
+    return text.replace(computerLinkRegex, (match, linkText, filePath) => {
+      var _a;
+      const fileName = filePath.split("/").pop() || "file";
+      const fileExtension = ((_a = fileName.split(".").pop()) == null ? void 0 : _a.toLowerCase()) || "";
+      const fileType = this.getFileTypeFromExtension(fileExtension);
+      const conversationUrl = conversationId ? `https://claude.ai/chat/${conversationId}` : "https://claude.ai";
+      const callout = `>[!${this.CALLOUTS.ATTACHMENT}] **${fileName}** (${fileType})
+> \u26A0\uFE0F File generated on Anthropic server, not included in archive. [Open original conversation](${conversationUrl})`;
+      return callout;
+    });
   }
   /**
    * Count unique artifacts in a conversation (by artifact ID, not versions)
