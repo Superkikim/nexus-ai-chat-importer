@@ -19,6 +19,7 @@
 
 // src/dialogs/enhanced-folder-migration-dialog.ts
 import { Modal, Notice, TFolder } from "obsidian";
+import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**

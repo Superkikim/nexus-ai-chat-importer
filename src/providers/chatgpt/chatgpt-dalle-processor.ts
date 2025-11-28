@@ -123,9 +123,24 @@ export class ChatGPTDalleProcessor {
      * Handles both formats:
      * - content_type: "text" with parts[0] containing JSON
      * - content_type: "code" with text containing JSON
+     *
+     * IMPORTANT: Excludes research prompts which also have content_type "code" + "prompt"
+     * Research prompts have recipient: "research_kickoff_tool.start_research_task"
      */
     static isDallePromptMessage(message: ChatMessage): boolean {
         if (message.author?.role !== "assistant") return false;
+
+        // EXCLUDE research prompts (they also have content_type "code" + "prompt")
+        if (message.recipient && typeof message.recipient === "string") {
+            if (message.recipient.includes("research_kickoff_tool")) {
+                return false;
+            }
+        }
+
+        // EXCLUDE if metadata indicates research task
+        if (message.metadata?.async_task_type === "research") {
+            return false;
+        }
 
         // Format 1: content_type "text" with parts array
         if (message.content?.parts &&

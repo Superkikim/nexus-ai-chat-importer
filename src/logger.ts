@@ -18,18 +18,7 @@
 
 
 // logger.ts
-enum LogLevel {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-}
-
 export class Logger {
-    private logToConsole(level: LogLevel, message: string, details?: any) {
-        console.log(`[${LogLevel[level]}] ${message}`);
-    }
-
     debug(message: string, details?: any) {
         console.debug(message, details || '');
     }
@@ -43,9 +32,13 @@ export class Logger {
     }
 
     error(message: string, details?: any) {
-        console.error(message);
+        if (details !== undefined) {
+            console.error(message, details);
+        } else {
+            console.error(message);
+        }
     }
 }
 
-// Export singleton instance
+// Export singleton instance for backward compatibility
 export const logger = new Logger();

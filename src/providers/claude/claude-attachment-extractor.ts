@@ -21,6 +21,7 @@
 import JSZip from "jszip";
 import { StandardAttachment } from "../../types/standard";
 import { Logger } from "../../types/plugin";
+import { isImageFile, isTextFile } from "../../utils/file-utils";
 import type NexusAiChatImporterPlugin from "../../main";
 
 export class ClaudeAttachmentExtractor {
@@ -85,9 +86,9 @@ export class ClaudeAttachmentExtractor {
         }
 
         // If file is found (rare), extract it
-        if (this.isImageFile(fileName)) {
+        if (isImageFile(fileName)) {
             return await this.processImageAttachment(zipFile, attachment, conversationId);
-        } else if (this.isTextFile(fileName)) {
+        } else if (isTextFile(fileName)) {
             return await this.processTextAttachment(zipFile, attachment);
         } else {
             return await this.processBinaryAttachment(zipFile, attachment, conversationId);
@@ -242,21 +243,7 @@ export class ClaudeAttachmentExtractor {
         }
     }
 
-    /**
-     * Check if file is an image
-     */
-    private isImageFile(fileName: string): boolean {
-        const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'];
-        return imageExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
-    }
 
-    /**
-     * Check if file is a text file
-     */
-    private isTextFile(fileName: string): boolean {
-        const textExtensions = ['.txt', '.md', '.json', '.csv', '.xml', '.html', '.css', '.js', '.ts', '.py', '.java', '.cpp', '.c', '.h'];
-        return textExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
-    }
 
     /**
      * Generate unique filename to avoid conflicts

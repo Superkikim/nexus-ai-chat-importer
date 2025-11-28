@@ -20,6 +20,7 @@
 // src/formatters/message-formatter.ts
 import { StandardMessage, StandardAttachment } from "../types/standard";
 import { formatMessageTimestamp } from "../utils";
+import { formatFileSize, isImageFile } from "../utils/file-utils";
 import { Logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 
@@ -123,7 +124,7 @@ export class MessageFormatter {
         }
 
         if (attachment.fileSize) {
-            content += ` - ${this.formatFileSize(attachment.fileSize)}`;
+            content += ` - ${formatFileSize(attachment.fileSize)}`;
         }
 
         content += '\n';
@@ -132,7 +133,7 @@ export class MessageFormatter {
         if (attachment.status?.found && attachment.url) {
             // Skip sandbox:// URLs - they don't work in Obsidian
             if (!attachment.url.startsWith('sandbox://')) {
-                if (this.isImageFile(attachment)) {
+                if (isImageFile(attachment)) {
                     content += `>> ![[${attachment.url}]]`; // Embed images
                 } else {
                     content += `>> [[${attachment.url}]]`; // Link documents
@@ -188,25 +189,4 @@ export class MessageFormatter {
         }
     }
 
-    /**
-     * Check if attachment is an image file for embedding
-     */
-    private isImageFile(attachment: StandardAttachment): boolean {
-        // Check MIME type first (most reliable)
-        if (attachment.fileType?.startsWith('image/')) {
-            return true;
-        }
-        
-        // Fall back to file extension
-        const fileName = attachment.fileName.toLowerCase();
-        const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.tiff'];
-        return imageExtensions.some(ext => fileName.endsWith(ext));
-    }
-
-    private formatFileSize(bytes: number): string {
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        if (bytes === 0) return '0 Bytes';
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-    }
 }

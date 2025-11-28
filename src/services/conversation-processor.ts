@@ -27,6 +27,7 @@ import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
 import { ProviderRegistry } from "../providers/provider-adapter";
 import { ImportProgressCallback } from "../ui/import-progress-modal";
+import { logger } from "../logger";
 import JSZip from "jszip";
 import {
     isValidMessage,

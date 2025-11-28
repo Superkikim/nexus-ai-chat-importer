@@ -22,6 +22,7 @@ import { StandardConversation, StandardMessage, StandardAttachment } from "../..
 import { ClaudeConversation, ClaudeMessage, ClaudeContentBlock } from "./claude-types";
 import { generateSafeAlias } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
+import { sortMessagesByTimestamp } from "../../utils/message-utils";
 
 export class ClaudeConverter {
     private static plugin: NexusAiChatImporterPlugin;
@@ -70,7 +71,31 @@ export class ClaudeConverter {
             return standardMessages;
         }
 
-        // PHASE 1: Collect ALL artifacts from entire conversation with message timestamps
+        // PHASE 1A: Build map of message index to computer:/// links in that message
+        const messageComputerLinks = new Map<number, Set<string>>();
+        for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
+            const message = messages[msgIndex];
+            const linksInMessage = new Set<string>();
+
+            if (message.content) {
+                for (const block of message.content) {
+                    if (block.type === 'text' && block.text) {
+                        const computerLinkRegex = /computer:\/\/\/([^\)]+)/g;
+                        let match;
+                        while ((match = computerLinkRegex.exec(block.text)) !== null) {
+                            linksInMessage.add(match[1]); // Store the full path
+                        }
+                    }
+                }
+            }
+
+            if (linksInMessage.size > 0) {
+                messageComputerLinks.set(msgIndex, linksInMessage);
+            }
+        }
+
+        // PHASE 1B: Collect ALL artifacts from entire conversation with message timestamps
+        // Support BOTH old format (artifacts) and new format (create_file + str_replace)
         const allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number, messageTimestamp: number}> = [];
 
         for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
@@ -78,6 +103,8 @@ export class ClaudeConverter {
             if (message.content) {
                 for (let blockIndex = 0; blockIndex < message.content.length; blockIndex++) {
                     const block = message.content[blockIndex];
+
+                    // OLD FORMAT: artifacts with version_uuid
                     if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
                         const command = block.input.command || 'create';
                         const versionUuid = block.input.version_uuid;
@@ -96,6 +123,92 @@ export class ClaudeConverter {
                                 messageTimestamp: messageTimestamp
                             });
                         }
+                    }
+
+                    // NEW FORMAT: create_file (initial creation)
+                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path && block.input?.file_text) {
+                        const fileText = block.input.file_text || '';
+                        const MIN_CONTENT_LENGTH = 200;
+                        const filePath = block.input.path;
+                        const fileName = filePath.split('/').pop() || '';
+
+                        // Only process if file_text contains actual content (not just a short description)
+                        if (fileText.length >= MIN_CONTENT_LENGTH) {
+                            // Check if this message has computer:/// links (workflow with final product)
+                            const computerLinksInMessage = messageComputerLinks.get(msgIndex);
+
+                            if (computerLinksInMessage && computerLinksInMessage.size > 0) {
+                                // This message has computer:/// links → check if created file matches computer:/// link
+                                // If same file + exploitable → ARTIFACT
+                                // If different file → created file is just a tool → SKIP
+
+                                let matchingLink: string | null = null;
+                                for (const link of computerLinksInMessage) {
+                                    const linkFileName = link.split('/').pop() || '';
+                                    // Check if link points to the same file (exact match or base name match)
+                                    if (linkFileName === fileName || linkFileName.startsWith(fileName.replace(/\.[^.]+$/, ''))) {
+                                        matchingLink = linkFileName;
+                                        break;
+                                    }
+                                }
+
+                                // If computer:/// link matches created file AND it's exploitable → extract as artifact
+                                if (matchingLink) {
+                                    const extension = matchingLink.split('.').pop()?.toLowerCase() || '';
+                                    if (this.isTextExploitableExtension(extension)) {
+                                        const messageTimestamp = message.created_at
+                                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
+                                            : 0;
+
+                                        allArtifacts.push({
+                                            artifact: {
+                                                ...block.input,
+                                                _format: 'create_file',
+                                                command: 'create'
+                                            },
+                                            messageIndex: msgIndex,
+                                            blockIndex: blockIndex,
+                                            messageTimestamp: messageTimestamp
+                                        });
+                                    }
+                                }
+                                // If no matching link OR link is binary → skip (script is just a tool)
+                            } else {
+                                // No computer:/// link in this message = user explicitly requested → extract as artifact
+                                const messageTimestamp = message.created_at
+                                    ? Math.floor(new Date(message.created_at).getTime() / 1000)
+                                    : 0;
+
+                                allArtifacts.push({
+                                    artifact: {
+                                        ...block.input,
+                                        _format: 'create_file',
+                                        command: 'create'
+                                    },
+                                    messageIndex: msgIndex,
+                                    blockIndex: blockIndex,
+                                    messageTimestamp: messageTimestamp
+                                });
+                            }
+                        }
+                    }
+
+                    // NEW FORMAT: str_replace (edits)
+                    if (block.type === 'tool_use' && block.name === 'str_replace' && block.input?.path) {
+                        const messageTimestamp = message.created_at
+                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
+                            : 0;
+
+                        allArtifacts.push({
+                            artifact: {
+                                ...block.input,
+                                _format: 'str_replace',
+                                command: 'update'
+                            },
+                            messageIndex: msgIndex,
+                            blockIndex: blockIndex,
+                            messageTimestamp: messageTimestamp
+                        });
                     }
                 }
             }
@@ -157,16 +270,7 @@ export class ClaudeConverter {
         if (messages.length <= 1) return messages;
 
         // Use native sort with proper comparison function
-        return messages.sort((a, b) => {
-            // Primary sort: timestamp
-            if (a.timestamp !== b.timestamp) {
-                return a.timestamp - b.timestamp;
-            }
-
-            // Secondary sort: UUID (lexicographic order for same timestamp)
-            // This ensures consistent ordering when messages have identical timestamps
-            return a.id.localeCompare(b.id);
-        });
+        return sortMessagesByTimestamp(messages);
     }
 
     /**
@@ -185,7 +289,11 @@ export class ClaudeConverter {
         const artifactLanguages = new Map<string, string>(); // Track language per artifact ID
 
         for (const {artifact, messageTimestamp} of allArtifacts) {
-            const artifactId = artifact.id || 'unknown';
+            // Detect format and extract artifact ID
+            const isNewFormat = artifact._format === 'create_file' || artifact._format === 'str_replace';
+            const artifactId = isNewFormat
+                ? this.extractArtifactIdFromPath(artifact.path)
+                : (artifact.id || 'unknown');
             const command = artifact.command || 'create';
 
             // Increment version number for this artifact ID
@@ -196,21 +304,29 @@ export class ClaudeConverter {
 
             if (command === 'create' || command === 'rewrite') {
                 // Complete content provided - RESET cumulative content
-                finalContent = artifact.content || '';
+                if (isNewFormat && artifact._format === 'create_file') {
+                    // NEW FORMAT: extract from file_text
+                    finalContent = artifact.file_text || '';
+                } else {
+                    // OLD FORMAT: extract from content
+                    finalContent = artifact.content || '';
+                }
                 artifactContents.set(artifactId, finalContent);
 
                 // For create/rewrite: detect and store the language
-                const detectedLanguage = this.detectLanguageFromContent(finalContent, artifact.type);
+                const detectedLanguage = isNewFormat
+                    ? this.detectLanguageFromPath(artifact.path)
+                    : this.detectLanguageFromContent(finalContent, artifact.type);
                 artifactLanguages.set(artifactId, detectedLanguage);
             } else if (command === 'update') {
                 // Apply update to PREVIOUS content
                 const previousContent = artifactContents.get(artifactId) || '';
 
                 if (artifact.old_str && artifact.new_str) {
-                    // sed-like replacement on previous content
+                    // sed-like replacement on previous content (both old and new format)
                     finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
                 } else if (artifact.content && artifact.content.length > 0) {
-                    // Complete updated content provided
+                    // Complete updated content provided (old format only)
                     finalContent = artifact.content;
                 } else {
                     // Empty update - keep previous content
@@ -240,9 +356,15 @@ export class ClaudeConverter {
                 );
 
                 // Track version info for linking
-                artifactVersionMap.set(artifact.version_uuid, {
+                // For old format: use version_uuid
+                // For new format: use path + version number as key
+                const versionKey = isNewFormat
+                    ? `${artifact.path}::v${currentVersion}`
+                    : artifact.version_uuid;
+
+                artifactVersionMap.set(versionKey, {
                     versionNumber: currentVersion,
-                    title: artifact.title || artifactId
+                    title: artifact.title || artifact.description || artifactId
                 });
 
             } catch (error) {
@@ -271,12 +393,35 @@ export class ClaudeConverter {
             return { text: "", attachments: [] };
         }
 
+        // Build map of artifact file names to their callouts
+        const artifactCalloutMap = new Map<string, string>();
+
+        for (const [key, value] of artifactVersionMap.entries()) {
+            // Extract path from key (format: "path::vN")
+            const path = key.split('::')[0];
+            const fileName = path.split('/').pop();
+            if (fileName) {
+                // Create artifact callout
+                const artifactId = this.extractArtifactIdFromPath(path);
+                const versionNumber = value.versionNumber;
+                const title = value.title || 'Artifact';
+                const artifactFileName = `${artifactId}_v${versionNumber}`;
+                const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
+
+                const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}\n> 🎨 [[${artifactPath}|View Artifact]]`;
+                artifactCalloutMap.set(fileName, callout);
+            }
+        }
+
         // Process content blocks for display
         for (const block of contentBlocks) {
             switch (block.type) {
                 case 'text':
                     if (block.text) {
-                        textParts.push(block.text);
+                        // Replace computer:/// links with artifact callouts or attachment callouts
+                        // insideCallout=true because this text will be inside a message callout
+                        const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap, true);
+                        textParts.push(processedText);
                     }
                     break;
 
@@ -285,32 +430,10 @@ export class ClaudeConverter {
                     break;
 
                 case 'tool_use':
-                    // Create specific artifact links
-                    if (block.name === 'artifacts' && block.input) {
-                        const command = block.input.command || 'create';
-                        const versionUuid = block.input.version_uuid;
-
-                        // Skip view commands
-                        if (command === 'view') {
-                            break;
-                        }
-
-                        if (versionUuid && artifactVersionMap.has(versionUuid)) {
-                            const versionInfo = artifactVersionMap.get(versionUuid)!;
-                            const artifactId = block.input.id || 'unknown';
-                            const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-                            const versionFile = `${conversationFolder}/${artifactId}_v${versionInfo.versionNumber}`;
-                            const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${versionInfo.title}** v${versionInfo.versionNumber}\n> 🎨 [[${versionFile}|View Artifact]]`;
-                            textParts.push(specificLink);
-                        }
-                    } else if (block.name === 'web_search') {
-                        // Filter out web_search tools - not useful for users
-                        break;
-                    } else if (block.name && block.input) {
-                        // Other tools (keep for now, can be filtered later if needed)
-                        const code = block.input.code || JSON.stringify(block.input, null, 2);
-                        textParts.push(`**[Tool: ${block.name}]**\n\`\`\`\n${code}\n\`\`\``);
-                    }
+                    // FILTER ALL tool_use blocks - users don't care about internal tools!
+                    // Users only want to see the final result in text blocks
+                    // Artifacts are already extracted in Phase 1 and saved as files
+                    // computer:/// links in text blocks will show callouts for binary files
                     break;
 
                 case 'tool_result':
@@ -660,11 +783,23 @@ export class ClaudeConverter {
         forcedLanguage?: string,
         messageTimestamp?: number
     ): Promise<void> {
-        const title = artifactInput.title || 'Untitled Artifact';
-        let language = artifactInput.language || 'text';
+        // Detect format
+        const isNewFormat = artifactInput._format === 'create_file' || artifactInput._format === 'str_replace';
+
+        // Extract metadata based on format
+        const title = isNewFormat
+            ? (artifactInput.description || this.extractArtifactIdFromPath(artifactInput.path))
+            : (artifactInput.title || 'Untitled Artifact');
+        let language = isNewFormat
+            ? 'text' // Will be detected from path or content
+            : (artifactInput.language || 'text');
         const command = artifactInput.command || 'create';
-        const artifactId = artifactInput.id || 'unknown';
-        const versionUuid = artifactInput.version_uuid;
+        const artifactId = isNewFormat
+            ? this.extractArtifactIdFromPath(artifactInput.path)
+            : (artifactInput.id || 'unknown');
+        const versionUuid = isNewFormat
+            ? `${artifactInput.path}::v${versionNumber}` // Generate synthetic UUID for new format
+            : artifactInput.version_uuid;
 
         // Use forced language (from create/rewrite) or auto-detect
         if (forcedLanguage) {
@@ -818,6 +953,71 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
     }
 
     /**
+     * Extract artifact ID from file path (new format)
+     * Example: "/home/claude/lettre_table.js" → "lettre_table"
+     */
+    private static extractArtifactIdFromPath(path: string): string {
+        if (!path) return 'unknown';
+
+        // Extract filename from path
+        const parts = path.split('/');
+        const filename = parts[parts.length - 1] || 'unknown';
+
+        // Remove extension
+        const dotIndex = filename.lastIndexOf('.');
+        if (dotIndex > 0) {
+            return filename.substring(0, dotIndex);
+        }
+
+        return filename;
+    }
+
+    /**
+     * Detect language from file path extension (new format)
+     * Example: "/home/claude/script.py" → "python"
+     */
+    private static detectLanguageFromPath(path: string): string {
+        if (!path) return 'text';
+
+        const extension = path.split('.').pop()?.toLowerCase() || '';
+
+        switch (extension) {
+            case 'py': return 'python';
+            case 'js': return 'javascript';
+            case 'ts': return 'typescript';
+            case 'jsx': return 'jsx';
+            case 'tsx': return 'tsx';
+            case 'html': return 'html';
+            case 'css': return 'css';
+            case 'scss': return 'scss';
+            case 'md': return 'markdown';
+            case 'json': return 'json';
+            case 'yaml':
+            case 'yml': return 'yaml';
+            case 'xml': return 'xml';
+            case 'svg': return 'xml';
+            case 'sql': return 'sql';
+            case 'sh':
+            case 'bash': return 'bash';
+            case 'php': return 'php';
+            case 'rb': return 'ruby';
+            case 'go': return 'go';
+            case 'rs': return 'rust';
+            case 'java': return 'java';
+            case 'c': return 'c';
+            case 'cpp':
+            case 'cc':
+            case 'cxx': return 'cpp';
+            case 'cs': return 'csharp';
+            case 'swift': return 'swift';
+            case 'kt': return 'kotlin';
+            case 'r': return 'r';
+            case 'txt': return 'text';
+            default: return 'text';
+        }
+    }
+
+    /**
      * Auto-detect language from content and artifact type
      */
     private static detectLanguageFromContent(content: string, artifactType?: string): string {
@@ -921,16 +1121,149 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
     }
 
     /**
+     * Check if file extension is text exploitable (can be used as artifact in Obsidian)
+     */
+    private static isTextExploitableExtension(extension: string): boolean {
+        const textExploitableExtensions = [
+            // Code
+            'py', 'js', 'ts', 'java', 'cpp', 'c', 'h', 'cs', 'go', 'rs',
+            'php', 'rb', 'swift', 'kt', 'scala', 'r', 'sh', 'bash',
+            // Web
+            'html', 'css', 'scss', 'sass', 'less', 'vue', 'jsx', 'tsx',
+            // Config/Data
+            'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'env',
+            // Documentation
+            'md', 'txt', 'rst', 'adoc',
+            // SQL
+            'sql'
+        ];
+        return textExploitableExtensions.includes(extension);
+    }
+
+    /**
+     * Get file type from extension (for binary file callouts)
+     */
+    private static getFileTypeFromExtension(extension: string): string {
+        switch (extension) {
+            case 'svg':
+                return 'SVG Image';
+            case 'png':
+                return 'PNG Image';
+            case 'jpg':
+            case 'jpeg':
+                return 'JPEG Image';
+            case 'gif':
+                return 'GIF Image';
+            case 'webp':
+                return 'WebP Image';
+            case 'pdf':
+                return 'PDF Document';
+            case 'docx':
+            case 'doc':
+                return 'Word Document';
+            case 'pptx':
+            case 'ppt':
+                return 'PowerPoint Presentation';
+            case 'xlsx':
+            case 'xls':
+                return 'Excel Spreadsheet';
+            case 'txt':
+                return 'Text File';
+            case 'md':
+                return 'Markdown Document';
+            case 'json':
+                return 'JSON File';
+            case 'csv':
+                return 'CSV File';
+            default:
+                return extension.toUpperCase();
+        }
+    }
+
+    /**
+     * Replace computer:/// links with artifact or attachment callouts
+     * These are internal Anthropic server files not included in exports
+     * @param artifactCalloutMap - Map of artifact file names to their callouts
+     * @param insideCallout - If true, use quote-preserving separators for nested callouts
+     */
+    private static replaceComputerLinks(text: string, conversationId?: string, artifactCalloutMap?: Map<string, string>, insideCallout: boolean = false): string {
+        // Pattern: [View your ...](computer:///path/to/file.ext)
+        // or: [Voir ...](computer:///path/to/file.ext)
+        const computerLinkRegex = /\[([^\]]+)\]\(computer:\/\/\/([^)]+)\)/g;
+
+        const replacements: string[] = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = computerLinkRegex.exec(text)) !== null) {
+            const [fullMatch, linkText, filePath] = match;
+            const fileName = filePath.split('/').pop() || 'file';
+
+            // Add text before this match (trimmed)
+            const textBefore = text.substring(lastIndex, match.index).trim();
+            // Skip if it's just a separator (|) or empty
+            if (textBefore && textBefore !== '|') {
+                replacements.push(textBefore);
+            }
+
+            // If this file is an artifact, replace with artifact callout
+            if (artifactCalloutMap && artifactCalloutMap.has(fileName)) {
+                const artifactCallout = artifactCalloutMap.get(fileName)!;
+                replacements.push(artifactCallout);
+                lastIndex = match.index + fullMatch.length;
+                continue;
+            }
+
+            // Create callout for binary/server file
+            const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+            const fileType = this.getFileTypeFromExtension(fileExtension);
+            const conversationUrl = conversationId
+                ? `https://claude.ai/chat/${conversationId}`
+                : 'https://claude.ai';
+
+            const callout = `>[!${this.CALLOUTS.ATTACHMENT}] **${fileName}** (${fileType})\n> ⚠️ File generated on Anthropic server, not included in archive. [Open original conversation](${conversationUrl})`;
+
+            replacements.push(callout);
+            lastIndex = match.index + fullMatch.length;
+        }
+
+        // Add remaining text (trimmed)
+        const remainingText = text.substring(lastIndex).trim();
+        if (remainingText && remainingText !== '|') {
+            replacements.push(remainingText);
+        }
+
+        // Use appropriate separator based on context
+        // Inside callout: use >\n> to preserve quote level
+        // Outside callout: use \n\n for normal spacing
+        const separator = insideCallout ? '\n>\n' : '\n\n';
+        return replacements.join(separator);
+    }
+
+    /**
      * Count unique artifacts in a conversation (by artifact ID, not versions)
+     * Supports both old format (artifacts) and new format (create_file)
+     * Only counts files with actual content (not binary/server files)
      */
     static countArtifacts(chat: ClaudeConversation): number {
         const uniqueArtifacts = new Set<string>();
+        const MIN_CONTENT_LENGTH = 200;
 
         for (const message of chat.chat_messages) {
             if (message.content) {
                 for (const block of message.content) {
+                    // OLD FORMAT: artifacts with id
                     if (block.type === 'tool_use' && block.name === 'artifacts' && block.input?.id) {
                         uniqueArtifacts.add(block.input.id);
+                    }
+                    // NEW FORMAT: create_file with path
+                    // Only count if file_text contains actual content (not just a short description)
+                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path && block.input?.file_text) {
+                        const fileText = block.input.file_text || '';
+                        if (fileText.length >= MIN_CONTENT_LENGTH) {
+                            const artifactId = this.extractArtifactIdFromPath(block.input.path);
+                            uniqueArtifacts.add(artifactId);
+                        }
                     }
                 }
             }

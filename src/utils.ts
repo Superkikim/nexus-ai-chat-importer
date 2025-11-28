@@ -21,7 +21,7 @@
 import { moment, App, TFile, TFolder, Vault } from "obsidian";
 import { Logger } from "./logger";
 import { requestUrl } from "obsidian";
-import { MESSAGE_TIMESTAMP_FORMATS } from "./config/constants";
+import { MESSAGE_TIMESTAMP_FORMATS, PROVIDER_URLS } from "./config/constants";
 import type { MessageTimestampFormat } from "./types/plugin";
 
 const logger = new Logger();
@@ -399,14 +399,14 @@ export async function checkConversationLink(
     conversationId: string,
     provider: string = 'chatgpt'
 ): Promise<boolean> {
-    // Generate provider-specific URL
+    // Generate provider-specific URL using centralized constants
     let url: string;
     switch (provider) {
         case 'chatgpt':
-            url = `https://chatgpt.com/c/${conversationId}`;
+            url = PROVIDER_URLS.CHATGPT.CHAT(conversationId);
             break;
         case 'claude':
-            url = `https://claude.ai/chat/${conversationId}`;
+            url = PROVIDER_URLS.CLAUDE.CHAT(conversationId);
             break;
         default:
             logger.error(`Unknown provider for link checking: ${provider}`);
@@ -426,35 +426,9 @@ export async function checkConversationLink(
     }
 }
 
-export function old_getConversationId(app: App): string | undefined {
-    const activeFile = app.workspace.getActiveFile();
-    if (activeFile) {
-        const frontmatter =
-            app.metadataCache.getFileCache(activeFile)?.frontmatter;
-        return frontmatter?.conversation_id;
-    }
-    return undefined; // Return undefined if there is no active file
-}
-
-// REMOVED: getConversationId() - no longer needed (click handler removed)
-// REMOVED: getProvider() - no longer needed (click handler removed)
-
 export function isNexusRelated(file: TFile, app: App): boolean {
     const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
     return frontmatter?.nexus === "nexus-ai-chat-importer"; // Return true if the nexus matches
-}
-
-interface CustomError {
-    message: string;
-    name?: string;
-}
-
-interface ChatMessage {
-    id: string;
-    content?: {
-        parts: any[];
-        content_type?: string;
-    };
 }
 
 /**

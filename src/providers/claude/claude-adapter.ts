@@ -19,19 +19,20 @@
 
 // src/providers/claude/claude-adapter.ts
 import JSZip from "jszip";
-import { ProviderAdapter } from "../provider-adapter";
 import { StandardConversation, StandardMessage } from "../../types/standard";
 import { ClaudeConverter } from "./claude-converter";
 import { ClaudeAttachmentExtractor } from "./claude-attachment-extractor";
 import { ClaudeReportNamingStrategy } from "./claude-report-naming";
 import { ClaudeConversation, ClaudeMessage } from "./claude-types";
 import type NexusAiChatImporterPlugin from "../../main";
+import { BaseProviderAdapter, AttachmentExtractor } from "../base/base-provider-adapter";
 
-export class ClaudeAdapter implements ProviderAdapter<ClaudeConversation> {
+export class ClaudeAdapter extends BaseProviderAdapter<ClaudeConversation> {
     private attachmentExtractor: ClaudeAttachmentExtractor;
     private reportNamingStrategy: ClaudeReportNamingStrategy;
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
+        super(); // Call parent constructor
         this.attachmentExtractor = new ClaudeAttachmentExtractor(plugin, plugin.logger);
         this.reportNamingStrategy = new ClaudeReportNamingStrategy();
     }
@@ -93,39 +94,16 @@ export class ClaudeAdapter implements ProviderAdapter<ClaudeConversation> {
         return newMessages;
     }
 
-    async processMessageAttachments(
-        messages: StandardMessage[],
-        conversationId: string,
-        zip: JSZip
-    ): Promise<StandardMessage[]> {
-        const processedMessages: StandardMessage[] = [];
-
-        for (const message of messages) {
-            if (message.attachments && message.attachments.length > 0) {
-                const processedAttachments = await this.attachmentExtractor.extractAttachments(
-                    zip,
-                    conversationId,
-                    message.attachments
-                );
-
-                processedMessages.push({
-                    ...message,
-                    attachments: processedAttachments
-                });
-            } else {
-                processedMessages.push(message);
-            }
-        }
-
-        return processedMessages;
+    /**
+     * Provide Claude-specific attachment extractor
+     * The actual processMessageAttachments() logic is inherited from BaseProviderAdapter
+     */
+    protected getAttachmentExtractor(): AttachmentExtractor {
+        return this.attachmentExtractor;
     }
 
     getReportNamingStrategy() {
         return this.reportNamingStrategy;
-    }
-
-    getProviderName(): string {
-        return "claude";
     }
 
     countArtifacts(chat: ClaudeConversation): number {

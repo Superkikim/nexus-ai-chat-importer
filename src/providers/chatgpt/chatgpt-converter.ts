@@ -22,6 +22,7 @@ import { Chat, ChatMessage } from "./chatgpt-types";
 import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
 import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
 import { ChatGPTMessageFilter } from "./chatgpt-message-filter";
+import { sortMessagesByTimestamp } from "../../utils/message-utils";
 
 export class ChatGPTConverter {
     /**
@@ -112,16 +113,7 @@ export class ChatGPTConverter {
         if (messages.length <= 1) return messages;
 
         // Use native sort with proper comparison function
-        return messages.sort((a, b) => {
-            // Primary sort: timestamp
-            if (a.timestamp !== b.timestamp) {
-                return a.timestamp - b.timestamp;
-            }
-
-            // Secondary sort: ID (lexicographic order for same timestamp)
-            // This ensures consistent ordering when messages have identical timestamps
-            return a.id.localeCompare(b.id);
-        });
+        return sortMessagesByTimestamp(messages);
     }
 
 

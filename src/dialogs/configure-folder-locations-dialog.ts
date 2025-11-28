@@ -19,6 +19,7 @@
 
 // src/dialogs/configure-folder-locations-dialog.ts
 import { Modal, Setting, TFolder, Notice } from "obsidian";
+import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 import { FolderMigrationDialog } from "./folder-migration-dialog";
 import { EnhancedFolderMigrationDialog } from "./enhanced-folder-migration-dialog";

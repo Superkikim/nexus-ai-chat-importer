@@ -89,6 +89,16 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             if (upgradeResult?.showCompletionDialog && upgradeResult?.upgradedToVersion) {
                 await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
             }
+
+            // Show notice for users upgrading from 1.3.0 (new Claude format support)
+            if (this.settings.previousVersion === "1.3.0") {
+                new Notice(
+                    "Nexus v1.3.2: Claude format updated!\n\n" +
+                    "Missing code files from Claude? Re-import your conversations to get them back.\n\n" +
+                    "See release notes for details.",
+                    12000
+                );
+            }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);
             throw error;
@@ -422,7 +432,24 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
 
             if (extractionResult.conversations.length === 0) {
-                new Notice("No conversations found in the selected files.");
+                // No conversations to import - same logic as full import
+                new Notice("No new or updated conversations found. All conversations are already up to date.");
+
+                // Write report showing what was analyzed
+                const operationReport = new ImportReport();
+                const reportPath = await this.writeConsolidatedReport(
+                    operationReport,
+                    provider,
+                    files,
+                    extractionResult.analysisInfo,
+                    extractionResult.fileStats,
+                    true // isSelective
+                );
+
+                // Show completion dialog with 0 imports
+                if (reportPath) {
+                    this.showImportCompletionDialog(operationReport, reportPath);
+                }
                 return;
             }
 

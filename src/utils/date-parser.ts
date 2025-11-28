@@ -18,6 +18,7 @@
 
 // src/utils/date-parser.ts
 import { moment } from "obsidian";
+import { logger } from "../logger";
 
 /**
  * Date format information

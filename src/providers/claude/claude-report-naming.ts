@@ -19,6 +19,7 @@
 
 // src/providers/claude/claude-report-naming.ts
 import { ReportNamingStrategy } from "../../types/standard";
+import { extractReportPrefixFromZip } from "../../utils/report-naming-utils";
 
 export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
     getProviderName(): string {
@@ -26,36 +27,14 @@ export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
     }
 
     extractReportPrefix(zipFileName: string): string {
-        // Get current import date
-        const now = new Date();
-        const importYear = now.getFullYear();
-        const importMonth = String(now.getMonth() + 1).padStart(2, '0');
-        const importDay = String(now.getDate()).padStart(2, '0');
-        const importDate = `${importYear}.${importMonth}.${importDay}`;
-
-        // Try to extract archive date from Claude filename patterns
-        // Pattern 1: data-YYYY-MM-DD-HH-MM-SS-batch-NNNN.zip
-        const claudeBatchPattern = /data-(\d{4})-(\d{2})-(\d{2})-\d{2}-\d{2}-\d{2}-batch-\d{4}/;
-        const batchMatch = zipFileName.match(claudeBatchPattern);
-
-        if (batchMatch) {
-            const [, year, month, day] = batchMatch;
-            const archiveDate = `${year}.${month}.${day}`;
-            return `imported-${importDate}-archive-${archiveDate}`;
-        }
-
-        // Pattern 2: Legacy Claude format (no batch suffix)
-        const legacyPattern = /(\d{4})-(\d{2})-(\d{2})/;
-        const legacyMatch = zipFileName.match(legacyPattern);
-
-        if (legacyMatch) {
-            const [, year, month, day] = legacyMatch;
-            const archiveDate = `${year}.${month}.${day}`;
-            return `imported-${importDate}-archive-${archiveDate}`;
-        }
-
-        // Fallback: use current date if no date found in filename
-        return `imported-${importDate}-archive-${importDate}`;
+        // Claude date patterns (in priority order)
+        const patterns = [
+            // Pattern 1: data-YYYY-MM-DD-HH-MM-SS-batch-NNNN.zip
+            /data-(\d{4})-(\d{2})-(\d{2})-\d{2}-\d{2}-\d{2}-batch-\d{4}/,
+            // Pattern 2: Legacy Claude format (generic YYYY-MM-DD)
+            /(\d{4})-(\d{2})-(\d{2})/
+        ];
+        return extractReportPrefixFromZip(zipFileName, patterns);
     }
 
     getProviderSpecificColumn(): { header: string; getValue: (adapter: any, chat: any) => number } {
