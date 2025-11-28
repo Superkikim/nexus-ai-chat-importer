@@ -422,7 +422,24 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
 
             if (extractionResult.conversations.length === 0) {
-                new Notice("No conversations found in the selected files.");
+                // No conversations to import - same logic as full import
+                new Notice("No new or updated conversations found. All conversations are already up to date.");
+
+                // Write report showing what was analyzed
+                const operationReport = new ImportReport();
+                const reportPath = await this.writeConsolidatedReport(
+                    operationReport,
+                    provider,
+                    files,
+                    extractionResult.analysisInfo,
+                    extractionResult.fileStats,
+                    true // isSelective
+                );
+
+                // Show completion dialog with 0 imports
+                if (reportPath) {
+                    this.showImportCompletionDialog(operationReport, reportPath);
+                }
                 return;
             }
 

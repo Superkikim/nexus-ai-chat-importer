@@ -16376,7 +16376,20 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian31.Notice("No conversations found in the selected files.");
+        new import_obsidian31.Notice("No new or updated conversations found. All conversations are already up to date.");
+        const operationReport = new ImportReport();
+        const reportPath = await this.writeConsolidatedReport(
+          operationReport,
+          provider,
+          files,
+          extractionResult.analysisInfo,
+          extractionResult.fileStats,
+          true
+          // isSelective
+        );
+        if (reportPath) {
+          this.showImportCompletionDialog(operationReport, reportPath);
+        }
         return;
       }
       new ConversationSelectionDialog(
