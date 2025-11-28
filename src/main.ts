@@ -93,7 +93,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Show upgrade notice dialog for users upgrading from 1.3.0 (new Claude format support)
             if (this.settings.previousVersion === "1.3.0") {
-                new UpgradeNotice132Dialog(this.app, this).open();
+                UpgradeNotice132Dialog.open(this.app, this);
             }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);

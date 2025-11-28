@@ -15530,113 +15530,132 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
 };
 __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 
-// src/dialogs/upgrade-notice-1.3.2-dialog.ts
+// src/dialogs/new-version-modal.ts
 var import_obsidian30 = require("obsidian");
 init_kofi_support_box();
-var UpgradeNotice132Dialog = class extends import_obsidian30.Modal {
-  constructor(app, plugin) {
+var NewVersionModal = class extends import_obsidian30.Modal {
+  constructor(app, plugin, version, fallbackMessage, githubTag) {
     super(app);
     this.plugin = plugin;
+    this.version = version;
+    this.fallbackMessage = fallbackMessage;
+    this.githubTag = githubTag || version;
   }
   onOpen() {
-    const { contentEl, titleEl, modalEl } = this;
-    modalEl.classList.add("nexus-upgrade-notice-modal");
-    contentEl.classList.add("nexus-ai-chat-importer-modal");
-    titleEl.setText(`\u{1F504} Nexus v1.3.2 - Claude Format Update`);
-    this.createContent();
+    const { titleEl, modalEl } = this;
+    modalEl.classList.add("nexus-new-version-modal");
+    titleEl.setText(`\u{1F389} Nexus AI Chat Importer ${this.version}`);
+    this.createForm();
   }
   onClose() {
     this.contentEl.empty();
   }
-  createContent() {
-    const { contentEl } = this;
-    createKofiSupportBox(contentEl);
-    const messageSection = contentEl.createDiv({ cls: "nexus-upgrade-message-section" });
-    const whatsNew = messageSection.createDiv({ cls: "nexus-upgrade-section" });
-    whatsNew.createEl("h3", { text: "\u{1F504} What Changed" });
-    whatsNew.createEl("p", {
-      text: "Claude changed their export format. If you imported Claude conversations recently and noticed missing code files or strange links, v1.3.2 fixes this."
-    });
-    const whatToDo = messageSection.createDiv({ cls: "nexus-upgrade-section" });
-    whatToDo.createEl("h3", { text: "\u2705 What To Do" });
-    const instructions = whatToDo.createEl("p");
-    instructions.innerHTML = `
-            <strong>If you have missing Claude artifacts:</strong><br>
-            1. Delete the affected conversations from your vault<br>
-            2. Re-import the same ZIP file<br>
-            3. Everything will be there now \u2705
-        `;
-    const bugFixes = messageSection.createDiv({ cls: "nexus-upgrade-section" });
-    bugFixes.createEl("h3", { text: "\u{1F41B} Other Fixes" });
-    const fixList = bugFixes.createEl("ul");
-    fixList.innerHTML = `
-            <li>Fixed crashes during import (missing logger errors)</li>
-            <li>Fixed weird formatting in conversations with multiple attachments</li>
-            <li>Better messages when re-importing conversations</li>
-        `;
+  async createForm() {
+    createKofiSupportBox(this.contentEl);
+    let message = this.fallbackMessage;
+    try {
+      const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/${this.githubTag}`);
+      if (response.ok) {
+        const release = await response.json();
+        if (release.body) {
+          message = release.body;
+        }
+      }
+    } catch (error) {
+    }
+    const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
+    await import_obsidian30.MarkdownRenderer.render(
+      this.app,
+      message,
+      contentDiv,
+      "",
+      this.plugin
+    );
     this.addCloseButton();
     this.addStyles();
   }
   addCloseButton() {
-    const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
-    const button = buttonContainer.createEl("button", {
+    const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container" });
+    const closeButton = buttonContainer.createEl("button", {
       text: "Got it!",
-      cls: "mod-cta nexus-upgrade-button"
+      cls: "mod-cta nexus-close-button"
     });
-    button.addEventListener("click", () => {
+    closeButton.onclick = () => {
       this.close();
-    });
+    };
   }
   addStyles() {
-    const style = document.createElement("style");
-    style.textContent = `
-            .nexus-upgrade-notice-modal .modal {
-                max-width: 600px;
+    const styleEl = document.createElement("style");
+    styleEl.textContent = `
+            .modal.nexus-new-version-modal {
+                max-width: 1050px !important;
+                width: 1050px !important;
             }
 
-            .nexus-upgrade-message-section {
-                margin-top: 20px;
-            }
-
-            .nexus-upgrade-section {
+            .nexus-upgrade-content {
                 margin-bottom: 20px;
-            }
-
-            .nexus-upgrade-section h3 {
-                margin-top: 0;
-                margin-bottom: 10px;
-                color: var(--text-normal);
-            }
-
-            .nexus-upgrade-section p,
-            .nexus-upgrade-section ul {
-                color: var(--text-muted);
                 line-height: 1.6;
             }
 
-            .nexus-upgrade-section ul {
-                margin-left: 20px;
+            /* Close Button Styles */
+            .nexus-close-button-container {
+                text-align: center;
+                margin: 32px 0;
             }
 
-            .nexus-upgrade-section ul li {
-                margin-bottom: 8px;
+            .nexus-close-button {
+                padding: 16px 48px !important;
+                font-size: 1.2em !important;
+                font-weight: 700 !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+                transition: all 0.2s ease !important;
             }
 
-            .nexus-upgrade-button-container {
-                display: flex;
-                justify-content: center;
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 1px solid var(--background-modifier-border);
-            }
-
-            .nexus-upgrade-button {
-                padding: 12px 32px;
-                font-size: 16px;
-                font-weight: 600;
+            .nexus-close-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
             }
         `;
-    document.head.appendChild(style);
+    document.head.appendChild(styleEl);
+  }
+};
+__name(NewVersionModal, "NewVersionModal");
+
+// src/dialogs/upgrade-notice-1.3.2-dialog.ts
+var UpgradeNotice132Dialog = class {
+  static open(app, plugin) {
+    const fallbackMessage = `## \u{1F504} What Changed
+
+**Claude changed their export format.** If you imported Claude conversations recently and noticed missing code files or strange links, v1.3.2 fixes this.
+
+**To get your missing files back:**
+1. Delete the affected conversations from your vault
+2. Re-import the same ZIP file
+3. Everything will be there now \u2705
+
+---
+
+## \u{1F41B} Bug Fixes
+
+- **Claude artifacts now work with the new export format**
+- **Fixed crashes during import** (missing logger errors)
+- **Fixed weird formatting** in conversations with multiple attachments
+- **Better messages** when re-importing conversations
+
+---
+
+## \u{1F64F} Questions?
+
+If something doesn't work as expected, please report it on the [forum thread](https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664).`;
+    new NewVersionModal(
+      app,
+      plugin,
+      "1.3.2",
+      fallbackMessage,
+      "1.3.2"
+      // GitHub tag
+    ).open();
   }
 };
 __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
@@ -16264,7 +16283,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
       }
       if (this.settings.previousVersion === "1.3.0") {
-        new UpgradeNotice132Dialog(this.app, this).open();
+        UpgradeNotice132Dialog.open(this.app, this);
       }
     } catch (error) {
       this.logger.error("Plugin loading failed:", error);
