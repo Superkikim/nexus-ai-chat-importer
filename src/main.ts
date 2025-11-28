@@ -32,6 +32,7 @@ import { ProviderSelectionDialog } from "./dialogs/provider-selection-dialog";
 import { EnhancedFileSelectionDialog } from "./dialogs/enhanced-file-selection-dialog";
 import { ConversationSelectionDialog } from "./dialogs/conversation-selection-dialog";
 import { InstallationWelcomeDialog } from "./dialogs/installation-welcome-dialog";
+import { UpgradeNotice132Dialog } from "./dialogs/upgrade-notice-1.3.2-dialog";
 import { createProviderRegistry } from "./providers/provider-registry";
 import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
 import { ConversationMetadataExtractor } from "./services/conversation-metadata-extractor";
@@ -88,6 +89,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             // Called AFTER checkAndPerformUpgrade() returns to ensure styles.css is loaded
             if (upgradeResult?.showCompletionDialog && upgradeResult?.upgradedToVersion) {
                 await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
+            }
+
+            // Show upgrade notice dialog for users upgrading from 1.3.0 (new Claude format support)
+            if (this.settings.previousVersion === "1.3.0") {
+                UpgradeNotice132Dialog.open(this.app, this);
             }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);
@@ -422,7 +428,24 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
 
             if (extractionResult.conversations.length === 0) {
-                new Notice("No conversations found in the selected files.");
+                // No conversations to import - same logic as full import
+                new Notice("No new or updated conversations found. All conversations are already up to date.");
+
+                // Write report showing what was analyzed
+                const operationReport = new ImportReport();
+                const reportPath = await this.writeConsolidatedReport(
+                    operationReport,
+                    provider,
+                    files,
+                    extractionResult.analysisInfo,
+                    extractionResult.fileStats,
+                    true // isSelective
+                );
+
+                // Show completion dialog with 0 imports
+                if (reportPath) {
+                    this.showImportCompletionDialog(operationReport, reportPath);
+                }
                 return;
             }
 

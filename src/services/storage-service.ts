@@ -20,6 +20,7 @@
 // src/services/storage-service.ts
 import { ConversationCatalogEntry } from "../types/plugin";
 import { TFile } from "obsidian";
+import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 import { DateParser } from "../utils/date-parser";
 

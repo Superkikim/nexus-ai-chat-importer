@@ -68,8 +68,30 @@ export class MessageFormatter {
 
         // Format main message content
         if (message.content) {
-            // Add content inside the callout (no need for quote chars)
-            messageContent += `> ${message.content.split("\n").join("\n> ")}`;
+            // Add content inside the callout.
+            // IMPORTANT: avoid patterns like `> >[!nexus_artifact]` which break
+            // nested callouts in Obsidian. When a content line already starts
+            // with `>`, we add only one extra `>` (no space) so that
+            // `>[!callout]` becomes `>>[!callout]` instead of `> >[!callout]`.
+            const lines = message.content.split("\n");
+            const formattedLines = lines.map(line => {
+                // Preserve empty lines inside the callout
+                if (line.trim() === "") {
+                    return ">";
+                }
+
+                // Lines that already start with a quote / callout marker
+                if (line.startsWith(">")) {
+                    // Nested quote: add a single leading `>` with no space
+                    // Example: ">[!nexus_artifact]" -> ">>[!nexus_artifact]"
+                    return ">" + line;
+                }
+
+                // Normal content line inside the callout
+                return `> ${line}`;
+            });
+
+            messageContent += formattedLines.join("\n");
         } else {
             messageContent += `> [No content found]`;
         }
@@ -109,6 +131,10 @@ export class MessageFormatter {
         }
 
         // Generic formatting for attachments without extractedContent (nested in message callout)
+        // We treat this as a proper nested callout block:
+        //   >>[!nexus_attachment] Header
+        //   >>
+        //   >> Content lines...
         let content = `>>[!${MessageFormatter.CALLOUTS.ATTACHMENT}] `;
 
         // Status-aware header
@@ -127,7 +153,9 @@ export class MessageFormatter {
             content += ` - ${formatFileSize(attachment.fileSize)}`;
         }
 
-        content += '\n';
+        // Add a blank line that REMAINS inside the nested callout
+        // (no completely empty line without >> while the callout is open)
+        content += '\n>>\n';
 
         // Handle successful extraction
         if (attachment.status?.found && attachment.url) {

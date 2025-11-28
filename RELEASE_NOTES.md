@@ -1,5 +1,47 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.3.2 - Bug Fixes & Claude Format Update
+
+![Version](https://img.shields.io/badge/version-1.3.2-blue) ![Bug Fixes](https://img.shields.io/badge/bug_fixes-critical-red)
+
+### 🔄 What Changed
+
+**Claude changed their export format.** If you imported Claude conversations recently and noticed missing code files or strange links, v1.3.2 fixes this.
+
+**To get your missing files back:**
+1. Delete the affected conversations from your vault
+2. Re-import the same ZIP file
+3. Everything will be there now ✅
+
+---
+
+### 🐛 Bug Fixes
+
+#### **Critical Fixes**
+- **Claude artifacts now work with the new export format**
+  - Anthropic changed from `tool_use` blocks to `create_file`/`str_replace` tool calls
+  - All text-based artifacts (code, markdown, etc.) are now properly extracted
+  - Binary files show as attachment callouts with proper links
+- **Fixed crashes during import** (missing logger errors in 9 files)
+  - Added missing logger imports across the codebase
+  - Prevents `ReferenceError: logger is not defined` crashes
+
+#### **Other Fixes**
+- **Fixed weird formatting** in conversations with multiple attachments
+  - Removed orphaned separators between messages
+  - Fixed nested callout quote breaking
+- **Better messages** when re-importing conversations
+  - Consistent messaging for selective import mode
+- **Fixed ChatGPT research prompts** incorrectly detected as DALL-E prompts
+
+---
+
+### 🙏 Questions?
+
+If something doesn't work as expected, please report it on the [forum thread](https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664).
+
+---
+
 ## Version 1.3.0 - Major Update: Selective Import & Enhanced User Experience
 
 ![Version](https://img.shields.io/badge/version-1.3.0-blue) ![Selective Import](https://img.shields.io/badge/selective_import-enabled-green) ![UX](https://img.shields.io/badge/UX-enhanced-purple)

@@ -19,6 +19,7 @@
 
 // src/services/link-update-service.ts
 import { TFile } from "obsidian";
+import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 import { UpgradeProgressModal } from "../upgrade/utils/progress-modal";
 

@@ -28,6 +28,7 @@ import { ConversationProcessor } from "./conversation-processor";
 import { NexusAiChatImporterError } from "../models/errors";
 import { createProviderRegistry } from "../providers/provider-registry";
 import { ProviderRegistry } from "../providers/provider-adapter";
+import { logger } from "../logger";
 import { ImportProgressModal, ImportProgressCallback } from "../ui/import-progress-modal";
 import { AttachmentMapBuilder, AttachmentMap } from "./attachment-map-builder";
 import type NexusAiChatImporterPlugin from "../main";
