@@ -138,21 +138,21 @@ export class ClaudeConverter {
                             const computerLinksInMessage = messageComputerLinks.get(msgIndex);
 
                             if (computerLinksInMessage && computerLinksInMessage.size > 0) {
-                                // This message has computer:/// links → workflow with final product
-                                // Check if ANY of the final products is text exploitable
-                                let hasTextExploitableFinalProduct = false;
+                                // This message has computer:/// links → check if THIS FILE is the final product
+                                // If the created file itself appears in computer:/// links → it's the final product → extract
+                                // If OTHER files appear in computer:/// links → this file is just a tool → skip
 
+                                let thisFileIsInLinks = false;
                                 for (const link of computerLinksInMessage) {
-                                    const finalProductName = link.split('/').pop() || '';
-                                    const finalProductExtension = finalProductName.split('.').pop()?.toLowerCase() || '';
-                                    if (this.isTextExploitableExtension(finalProductExtension)) {
-                                        hasTextExploitableFinalProduct = true;
+                                    const linkFileName = link.split('/').pop() || '';
+                                    if (linkFileName === fileName || link.includes(fileName)) {
+                                        thisFileIsInLinks = true;
                                         break;
                                     }
                                 }
 
-                                // Only extract as artifact if final product is text exploitable
-                                if (hasTextExploitableFinalProduct) {
+                                // Only extract as artifact if THIS file is referenced in computer:/// links
+                                if (thisFileIsInLinks) {
                                     const messageTimestamp = message.created_at
                                         ? Math.floor(new Date(message.created_at).getTime() / 1000)
                                         : 0;

@@ -10975,7 +10975,7 @@ var ClaudeConverter = class {
     };
   }
   static async convertMessages(messages, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c;
     const standardMessages = [];
     if (!messages || messages.length === 0) {
       return standardMessages;
@@ -11026,16 +11026,15 @@ var ClaudeConverter = class {
             if (fileText.length >= MIN_CONTENT_LENGTH) {
               const computerLinksInMessage = messageComputerLinks.get(msgIndex);
               if (computerLinksInMessage && computerLinksInMessage.size > 0) {
-                let hasTextExploitableFinalProduct = false;
+                let thisFileIsInLinks = false;
                 for (const link of computerLinksInMessage) {
-                  const finalProductName = link.split("/").pop() || "";
-                  const finalProductExtension = ((_c = finalProductName.split(".").pop()) == null ? void 0 : _c.toLowerCase()) || "";
-                  if (this.isTextExploitableExtension(finalProductExtension)) {
-                    hasTextExploitableFinalProduct = true;
+                  const linkFileName = link.split("/").pop() || "";
+                  if (linkFileName === fileName || link.includes(fileName)) {
+                    thisFileIsInLinks = true;
                     break;
                   }
                 }
-                if (hasTextExploitableFinalProduct) {
+                if (thisFileIsInLinks) {
                   const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
                   allArtifacts.push({
                     artifact: {
@@ -11063,7 +11062,7 @@ var ClaudeConverter = class {
               }
             }
           }
-          if (block.type === "tool_use" && block.name === "str_replace" && ((_d = block.input) == null ? void 0 : _d.path)) {
+          if (block.type === "tool_use" && block.name === "str_replace" && ((_c = block.input) == null ? void 0 : _c.path)) {
             const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
             allArtifacts.push({
               artifact: {
