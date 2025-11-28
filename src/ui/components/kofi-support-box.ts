@@ -38,10 +38,10 @@ export function createKofiSupportBox(container: HTMLElement, message?: string): 
         `;
     }
 
-    // Reality check (more visible, with thousands of hours)
+    // Support message (more visible, with thousands of hours)
     const realityCheck = supportBox.createDiv('kofi-reality-check');
     realityCheck.innerHTML = `
-        <strong>Reality check:</strong> Thousands of hours of work over the year, more than 4'300 downloads, but only $20 in donations over two months. If this plugin makes your life easier, please consider supporting me.
+        <strong>Thank you to everyone who has supported this project!</strong> Thousands of hours of work, more than 4'300 downloads. If this plugin makes your life easier, please consider supporting its continued development.
     `;
 
     // Ko-fi button (using GitHub raw link from tag 1.3.0)

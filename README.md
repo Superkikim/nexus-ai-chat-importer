@@ -85,9 +85,9 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 
 I'm working on Nexus projects full-time while unemployed and dealing with health issues.
 
-**Over 4,300 downloads so far, yet I've received only $20 in donations in the last two months while paying about $200/month out of pocket in expenses.**
+**Over 4,300 downloads so far! Thank you to everyone who has supported this project.**
 
-**If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.**
+**If this plugin makes your life easier, a donation would mean the world to me and help keep development going strong.**
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
 
@@ -102,7 +102,7 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 - **$25** - Power my AI development tools 🤖 (Amazing!)
 - **$75** - Supercharge my entire dev toolkit 🚀 (You're a hero!)
 
-> **Reality check**: Over 4,300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! 🙏
+> **Your support matters**: If you use this plugin regularly, please consider contributing. Even $5 makes a real difference and helps keep development active! 🙏
 
 ## ✨ Key Features
 
