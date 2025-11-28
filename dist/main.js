@@ -9126,7 +9126,17 @@ var _MessageFormatter = class {
     let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}
 `;
     if (message.content) {
-      messageContent += `> ${message.content.split("\n").join("\n> ")}`;
+      const lines = message.content.split("\n");
+      const formattedLines = lines.map((line) => {
+        if (line.trim() === "") {
+          return ">";
+        }
+        if (line.startsWith(">")) {
+          return ">" + line;
+        }
+        return `> ${line}`;
+      });
+      messageContent += formattedLines.join("\n");
     } else {
       messageContent += `> [No content found]`;
     }
@@ -9168,7 +9178,7 @@ var _MessageFormatter = class {
     if (attachment.fileSize) {
       content += ` - ${formatFileSize(attachment.fileSize)}`;
     }
-    content += "\n";
+    content += "\n>>\n";
     if (((_b = attachment.status) == null ? void 0 : _b.found) && attachment.url) {
       if (!attachment.url.startsWith("sandbox://")) {
         if (isImageFile(attachment)) {
