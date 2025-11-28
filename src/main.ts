@@ -32,6 +32,7 @@ import { ProviderSelectionDialog } from "./dialogs/provider-selection-dialog";
 import { EnhancedFileSelectionDialog } from "./dialogs/enhanced-file-selection-dialog";
 import { ConversationSelectionDialog } from "./dialogs/conversation-selection-dialog";
 import { InstallationWelcomeDialog } from "./dialogs/installation-welcome-dialog";
+import { UpgradeNotice132Dialog } from "./dialogs/upgrade-notice-1.3.2-dialog";
 import { createProviderRegistry } from "./providers/provider-registry";
 import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
 import { ConversationMetadataExtractor } from "./services/conversation-metadata-extractor";
@@ -90,14 +91,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
             }
 
-            // Show notice for users upgrading from 1.3.0 (new Claude format support)
+            // Show upgrade notice dialog for users upgrading from 1.3.0 (new Claude format support)
             if (this.settings.previousVersion === "1.3.0") {
-                new Notice(
-                    "Nexus v1.3.2: Claude format updated!\n\n" +
-                    "Missing code files from Claude? Re-import your conversations to get them back.\n\n" +
-                    "See release notes for details.",
-                    12000
-                );
+                new UpgradeNotice132Dialog(this.app, this).open();
             }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);
