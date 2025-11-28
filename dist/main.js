@@ -10975,7 +10975,7 @@ var ClaudeConverter = class {
     };
   }
   static async convertMessages(messages, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     const standardMessages = [];
     if (!messages || messages.length === 0) {
       return standardMessages;
@@ -11026,26 +11026,29 @@ var ClaudeConverter = class {
             if (fileText.length >= MIN_CONTENT_LENGTH) {
               const computerLinksInMessage = messageComputerLinks.get(msgIndex);
               if (computerLinksInMessage && computerLinksInMessage.size > 0) {
-                let thisFileIsInLinks = false;
+                let matchingLink = null;
                 for (const link of computerLinksInMessage) {
                   const linkFileName = link.split("/").pop() || "";
-                  if (linkFileName === fileName || link.includes(fileName)) {
-                    thisFileIsInLinks = true;
+                  if (linkFileName === fileName || linkFileName.startsWith(fileName.replace(/\.[^.]+$/, ""))) {
+                    matchingLink = linkFileName;
                     break;
                   }
                 }
-                if (thisFileIsInLinks) {
-                  const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
-                  allArtifacts.push({
-                    artifact: {
-                      ...block.input,
-                      _format: "create_file",
-                      command: "create"
-                    },
-                    messageIndex: msgIndex,
-                    blockIndex,
-                    messageTimestamp
-                  });
+                if (matchingLink) {
+                  const extension = ((_c = matchingLink.split(".").pop()) == null ? void 0 : _c.toLowerCase()) || "";
+                  if (this.isTextExploitableExtension(extension)) {
+                    const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+                    allArtifacts.push({
+                      artifact: {
+                        ...block.input,
+                        _format: "create_file",
+                        command: "create"
+                      },
+                      messageIndex: msgIndex,
+                      blockIndex,
+                      messageTimestamp
+                    });
+                  }
                 }
               } else {
                 const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
@@ -11062,7 +11065,7 @@ var ClaudeConverter = class {
               }
             }
           }
-          if (block.type === "tool_use" && block.name === "str_replace" && ((_c = block.input) == null ? void 0 : _c.path)) {
+          if (block.type === "tool_use" && block.name === "str_replace" && ((_d = block.input) == null ? void 0 : _d.path)) {
             const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
             allArtifacts.push({
               artifact: {

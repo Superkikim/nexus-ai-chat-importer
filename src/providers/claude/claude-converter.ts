@@ -138,37 +138,41 @@ export class ClaudeConverter {
                             const computerLinksInMessage = messageComputerLinks.get(msgIndex);
 
                             if (computerLinksInMessage && computerLinksInMessage.size > 0) {
-                                // This message has computer:/// links → check if THIS FILE is the final product
-                                // If the created file itself appears in computer:/// links → it's the final product → extract
-                                // If OTHER files appear in computer:/// links → this file is just a tool → skip
+                                // This message has computer:/// links → check if created file matches computer:/// link
+                                // If same file + exploitable → ARTIFACT
+                                // If different file → created file is just a tool → SKIP
 
-                                let thisFileIsInLinks = false;
+                                let matchingLink: string | null = null;
                                 for (const link of computerLinksInMessage) {
                                     const linkFileName = link.split('/').pop() || '';
-                                    if (linkFileName === fileName || link.includes(fileName)) {
-                                        thisFileIsInLinks = true;
+                                    // Check if link points to the same file (exact match or base name match)
+                                    if (linkFileName === fileName || linkFileName.startsWith(fileName.replace(/\.[^.]+$/, ''))) {
+                                        matchingLink = linkFileName;
                                         break;
                                     }
                                 }
 
-                                // Only extract as artifact if THIS file is referenced in computer:/// links
-                                if (thisFileIsInLinks) {
-                                    const messageTimestamp = message.created_at
-                                        ? Math.floor(new Date(message.created_at).getTime() / 1000)
-                                        : 0;
+                                // If computer:/// link matches created file AND it's exploitable → extract as artifact
+                                if (matchingLink) {
+                                    const extension = matchingLink.split('.').pop()?.toLowerCase() || '';
+                                    if (this.isTextExploitableExtension(extension)) {
+                                        const messageTimestamp = message.created_at
+                                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
+                                            : 0;
 
-                                    allArtifacts.push({
-                                        artifact: {
-                                            ...block.input,
-                                            _format: 'create_file',
-                                            command: 'create'
-                                        },
-                                        messageIndex: msgIndex,
-                                        blockIndex: blockIndex,
-                                        messageTimestamp: messageTimestamp
-                                    });
+                                        allArtifacts.push({
+                                            artifact: {
+                                                ...block.input,
+                                                _format: 'create_file',
+                                                command: 'create'
+                                            },
+                                            messageIndex: msgIndex,
+                                            blockIndex: blockIndex,
+                                            messageTimestamp: messageTimestamp
+                                        });
+                                    }
                                 }
-                                // If all final products are binary, skip (script is just a tool)
+                                // If no matching link OR link is binary → skip (script is just a tool)
                             } else {
                                 // No computer:/// link in this message = user explicitly requested → extract as artifact
                                 const messageTimestamp = message.created_at
