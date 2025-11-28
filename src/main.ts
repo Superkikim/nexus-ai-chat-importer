@@ -89,6 +89,16 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             if (upgradeResult?.showCompletionDialog && upgradeResult?.upgradedToVersion) {
                 await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
             }
+
+            // Show notice for users upgrading from 1.3.0 or 1.3.1 (critical bug fixes)
+            if (this.settings.previousVersion === "1.3.0" || this.settings.previousVersion === "1.3.1") {
+                new Notice(
+                    "Nexus AI Chat Importer v1.3.2: Critical bugs fixed!\n\n" +
+                    "If you imported Claude conversations with v1.3.0/1.3.1, please re-import them to get missing artifacts.\n\n" +
+                    "See release notes for details.",
+                    15000
+                );
+            }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);
             throw error;

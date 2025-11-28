@@ -16152,6 +16152,12 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
       if ((upgradeResult == null ? void 0 : upgradeResult.showCompletionDialog) && (upgradeResult == null ? void 0 : upgradeResult.upgradedToVersion)) {
         await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
       }
+      if (this.settings.previousVersion === "1.3.0" || this.settings.previousVersion === "1.3.1") {
+        new import_obsidian31.Notice(
+          "Nexus AI Chat Importer v1.3.2: Critical bugs fixed!\n\nIf you imported Claude conversations with v1.3.0/1.3.1, please re-import them to get missing artifacts.\n\nSee release notes for details.",
+          15e3
+        );
+      }
     } catch (error) {
       this.logger.error("Plugin loading failed:", error);
       throw error;
