@@ -9823,18 +9823,29 @@ var ChatGPTDalleProcessor = class {
    * Handles both formats:
    * - content_type: "text" with parts[0] containing JSON
    * - content_type: "code" with text containing JSON
+   *
+   * IMPORTANT: Excludes research prompts which also have content_type "code" + "prompt"
+   * Research prompts have recipient: "research_kickoff_tool.start_research_task"
    */
   static isDallePromptMessage(message) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     if (((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
       return false;
-    if (((_b = message.content) == null ? void 0 : _b.parts) && Array.isArray(message.content.parts) && message.content.parts.length === 1 && typeof message.content.parts[0] === "string") {
+    if (message.recipient && typeof message.recipient === "string") {
+      if (message.recipient.includes("research_kickoff_tool")) {
+        return false;
+      }
+    }
+    if (((_b = message.metadata) == null ? void 0 : _b.async_task_type) === "research") {
+      return false;
+    }
+    if (((_c = message.content) == null ? void 0 : _c.parts) && Array.isArray(message.content.parts) && message.content.parts.length === 1 && typeof message.content.parts[0] === "string") {
       const content = message.content.parts[0].trim();
       if (content.startsWith("{") && content.includes('"prompt"')) {
         return true;
       }
     }
-    if (((_c = message.content) == null ? void 0 : _c.content_type) === "code" && ((_d = message.content) == null ? void 0 : _d.text) && typeof message.content.text === "string") {
+    if (((_d = message.content) == null ? void 0 : _d.content_type) === "code" && ((_e = message.content) == null ? void 0 : _e.text) && typeof message.content.text === "string") {
       const content = message.content.text.trim();
       if (content.startsWith("{") && content.includes('"prompt"')) {
         return true;
