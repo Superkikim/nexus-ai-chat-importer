@@ -7789,7 +7789,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian31 = require("obsidian");
+var import_obsidian32 = require("obsidian");
 init_constants();
 
 // src/ui/settings-tab.ts
@@ -15530,6 +15530,117 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
 };
 __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 
+// src/dialogs/upgrade-notice-1.3.2-dialog.ts
+var import_obsidian30 = require("obsidian");
+init_kofi_support_box();
+var UpgradeNotice132Dialog = class extends import_obsidian30.Modal {
+  constructor(app, plugin) {
+    super(app);
+    this.plugin = plugin;
+  }
+  onOpen() {
+    const { contentEl, titleEl, modalEl } = this;
+    modalEl.classList.add("nexus-upgrade-notice-modal");
+    contentEl.classList.add("nexus-ai-chat-importer-modal");
+    titleEl.setText(`\u{1F504} Nexus v1.3.2 - Claude Format Update`);
+    this.createContent();
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+  createContent() {
+    const { contentEl } = this;
+    createKofiSupportBox(contentEl);
+    const messageSection = contentEl.createDiv({ cls: "nexus-upgrade-message-section" });
+    const whatsNew = messageSection.createDiv({ cls: "nexus-upgrade-section" });
+    whatsNew.createEl("h3", { text: "\u{1F504} What Changed" });
+    whatsNew.createEl("p", {
+      text: "Claude changed their export format. If you imported Claude conversations recently and noticed missing code files or strange links, v1.3.2 fixes this."
+    });
+    const whatToDo = messageSection.createDiv({ cls: "nexus-upgrade-section" });
+    whatToDo.createEl("h3", { text: "\u2705 What To Do" });
+    const instructions = whatToDo.createEl("p");
+    instructions.innerHTML = `
+            <strong>If you have missing Claude artifacts:</strong><br>
+            1. Delete the affected conversations from your vault<br>
+            2. Re-import the same ZIP file<br>
+            3. Everything will be there now \u2705
+        `;
+    const bugFixes = messageSection.createDiv({ cls: "nexus-upgrade-section" });
+    bugFixes.createEl("h3", { text: "\u{1F41B} Other Fixes" });
+    const fixList = bugFixes.createEl("ul");
+    fixList.innerHTML = `
+            <li>Fixed crashes during import (missing logger errors)</li>
+            <li>Fixed weird formatting in conversations with multiple attachments</li>
+            <li>Better messages when re-importing conversations</li>
+        `;
+    this.addCloseButton();
+    this.addStyles();
+  }
+  addCloseButton() {
+    const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
+    const button = buttonContainer.createEl("button", {
+      text: "Got it!",
+      cls: "mod-cta nexus-upgrade-button"
+    });
+    button.addEventListener("click", () => {
+      this.close();
+    });
+  }
+  addStyles() {
+    const style = document.createElement("style");
+    style.textContent = `
+            .nexus-upgrade-notice-modal .modal {
+                max-width: 600px;
+            }
+
+            .nexus-upgrade-message-section {
+                margin-top: 20px;
+            }
+
+            .nexus-upgrade-section {
+                margin-bottom: 20px;
+            }
+
+            .nexus-upgrade-section h3 {
+                margin-top: 0;
+                margin-bottom: 10px;
+                color: var(--text-normal);
+            }
+
+            .nexus-upgrade-section p,
+            .nexus-upgrade-section ul {
+                color: var(--text-muted);
+                line-height: 1.6;
+            }
+
+            .nexus-upgrade-section ul {
+                margin-left: 20px;
+            }
+
+            .nexus-upgrade-section ul li {
+                margin-bottom: 8px;
+            }
+
+            .nexus-upgrade-button-container {
+                display: flex;
+                justify-content: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid var(--background-modifier-border);
+            }
+
+            .nexus-upgrade-button {
+                padding: 12px 32px;
+                font-size: 16px;
+                font-weight: 600;
+            }
+        `;
+    document.head.appendChild(style);
+  }
+};
+__name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
+
 // src/services/conversation-metadata-extractor.ts
 init_utils();
 init_logger();
@@ -15927,11 +16038,11 @@ var ConversationMetadataExtractor = class {
 __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian30 = require("obsidian");
+var import_obsidian31 = require("obsidian");
 init_kofi_support_box();
 init_logger();
 var logger6 = new Logger();
-var ImportCompletionDialog = class extends import_obsidian30.Modal {
+var ImportCompletionDialog = class extends import_obsidian31.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -16122,7 +16233,7 @@ __name(ImportCompletionDialog, "ImportCompletionDialog");
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -16153,10 +16264,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
         await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
       }
       if (this.settings.previousVersion === "1.3.0") {
-        new import_obsidian31.Notice(
-          "Nexus v1.3.2: Claude format updated!\n\nMissing code files from Claude? Re-import your conversations to get them back.\n\nSee release notes for details.",
-          12e3
-        );
+        new UpgradeNotice132Dialog(this.app, this).open();
       }
     } catch (error) {
       this.logger.error("Plugin loading failed:", error);
@@ -16312,7 +16420,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
   async handleImportAll(files, provider) {
     var _a, _b, _c, _d;
     try {
-      new import_obsidian31.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -16327,7 +16435,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian31.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian32.Notice("No new or updated conversations found. All conversations are already up to date.");
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -16337,7 +16445,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
       const allIds = extractionResult.conversations.map((c) => c.id);
       const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
       const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
-      new import_obsidian31.Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
+      new import_obsidian32.Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -16367,7 +16475,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian31.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian32.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
       }
     } catch (error) {
       this.logger.error("[IMPORT-ALL] Error in import all:", error);
@@ -16378,7 +16486,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
       } else {
         this.logger.error("[IMPORT-ALL] Error (not Error instance):", String(error));
       }
-      new import_obsidian31.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian32.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -16386,7 +16494,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
-      new import_obsidian31.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -16397,7 +16505,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian31.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian32.Notice("No new or updated conversations found. All conversations are already up to date.");
         const operationReport = new ImportReport();
         const reportPath = await this.writeConsolidatedReport(
           operationReport,
@@ -16428,7 +16536,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
       if (error instanceof Error) {
         this.logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
       }
-      new import_obsidian31.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian32.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -16440,21 +16548,21 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
       operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
     }
     if (result.selectedIds.length === 0) {
-      new import_obsidian31.Notice("No conversations selected for import.");
+      new import_obsidian32.Notice("No conversations selected for import.");
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian31.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian32.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     if (provider === "chatgpt" && files.length > 1) {
       try {
         await this.importService.buildAttachmentMapForMultiZip(files);
       } catch (error) {
         this.logger.error("Failed to build attachment map:", error);
-        new import_obsidian31.Notice("Failed to build attachment map. Check console for details.");
+        new import_obsidian32.Notice("Failed to build attachment map. Check console for details.");
       }
     }
     for (const file of files) {
@@ -16464,7 +16572,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
           await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
         } catch (error) {
           this.logger.error(`Error processing file ${file.name}:`, error);
-          new import_obsidian31.Notice(`Error processing ${file.name}. Check console for details.`);
+          new import_obsidian32.Notice(`Error processing ${file.name}. Check console for details.`);
         }
       }
     }
@@ -16475,7 +16583,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian31.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian32.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
     }
   }
   /**
@@ -16496,7 +16604,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian31.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian31.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian32.Notice("Failed to create log file. Check console for details.");
       return "";
     }
     const now = Date.now() / 1e3;
@@ -16548,7 +16656,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       this.logger.error("Full error:", error);
       this.logger.error("Log content length:", logContent.length);
-      new import_obsidian31.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian32.Notice("Failed to create log file. Check console for details.");
       return "";
     }
   }
