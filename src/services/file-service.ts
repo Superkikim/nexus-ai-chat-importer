@@ -20,6 +20,7 @@
 // src/services/file-service.ts
 import { TFile, TFolder } from "obsidian";
 import { ConversationCatalogEntry } from "../types/plugin";
+import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 
 export class FileService {

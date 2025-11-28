@@ -4677,6 +4677,7 @@ var init_date_parser = __esm({
   "src/utils/date-parser.ts"() {
     "use strict";
     import_obsidian18 = require("obsidian");
+    init_logger();
     DateParser = class {
       /**
        * Parse a date string with automatic format detection
@@ -4696,16 +4697,16 @@ var init_date_parser = __esm({
           }
           const format = this.detectFormat(dateStr);
           if (!format) {
-            logger.warn(`${ctx}parseDate - FAILED: could not detect format`);
+            logger2.warn(`${ctx}parseDate - FAILED: could not detect format`);
             return 0;
           }
           const parsed = this.parseWithFormat(dateStr, format);
           if (parsed === 0) {
-            logger.warn(`${ctx}parseDate - FAILED: parsing returned 0`);
+            logger2.warn(`${ctx}parseDate - FAILED: parsing returned 0`);
           }
           return parsed;
         } catch (error) {
-          logger.warn(`${ctx}parseDate - FAILED: exception:`, error);
+          logger2.warn(`${ctx}parseDate - FAILED: exception:`, error);
           return 0;
         }
       }
@@ -4869,7 +4870,7 @@ var init_date_parser = __esm({
       static convertToISO8601(dateStr) {
         const unixTime = this.parseDate(dateStr);
         if (unixTime === 0) {
-          logger.warn(`convertToISO8601 - parsing returned 0`);
+          logger2.warn(`convertToISO8601 - parsing returned 0`);
           return null;
         }
         return new Date(unixTime * 1e3).toISOString();
@@ -15520,6 +15521,7 @@ __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 
 // src/services/conversation-metadata-extractor.ts
 init_utils();
+init_logger();
 var ConversationMetadataExtractor = class {
   constructor(providerRegistry, plugin) {
     this.providerRegistry = providerRegistry;
@@ -15607,11 +15609,11 @@ var ConversationMetadataExtractor = class {
   extractChatGPTMetadata(conversations) {
     return conversations.filter((chat) => {
       if (!chat.id || chat.id.trim() === "") {
-        logger.warn("Skipping ChatGPT conversation with missing ID:", chat.title || "Untitled");
+        logger2.warn("Skipping ChatGPT conversation with missing ID:", chat.title || "Untitled");
         return false;
       }
       if (!chat.create_time || !chat.update_time) {
-        logger.warn("Skipping ChatGPT conversation with missing timestamps:", chat.id, chat.title || "Untitled");
+        logger2.warn("Skipping ChatGPT conversation with missing timestamps:", chat.id, chat.title || "Untitled");
         return false;
       }
       return true;
@@ -15637,11 +15639,11 @@ var ConversationMetadataExtractor = class {
   extractClaudeMetadata(conversations) {
     return conversations.filter((chat) => {
       if (!chat.uuid || chat.uuid.trim() === "") {
-        logger.warn("Skipping Claude conversation with missing UUID:", chat.name || "Untitled");
+        logger2.warn("Skipping Claude conversation with missing UUID:", chat.name || "Untitled");
         return false;
       }
       if (!chat.created_at || !chat.updated_at) {
-        logger.warn("Skipping Claude conversation with missing timestamps:", chat.uuid, chat.name || "Untitled");
+        logger2.warn("Skipping Claude conversation with missing timestamps:", chat.uuid, chat.name || "Untitled");
         return false;
       }
       return true;
@@ -15795,7 +15797,7 @@ var ConversationMetadataExtractor = class {
           skippedConversations: 0
         });
       } catch (error) {
-        logger.error(`Error extracting metadata from ${file.name}:`, error);
+        logger2.error(`Error extracting metadata from ${file.name}:`, error);
       }
     }
     const filterResult = this.filterConversationsForSelection(

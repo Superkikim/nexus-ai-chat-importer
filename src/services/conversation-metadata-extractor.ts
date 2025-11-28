@@ -23,6 +23,7 @@ import { ProviderRegistry } from "../providers/provider-adapter";
 import { Chat } from "../providers/chatgpt/chatgpt-types";
 import { ClaudeConversation, ClaudeExportData } from "../providers/claude/claude-types";
 import { isValidMessage, compareTimestampsIgnoringSeconds } from "../utils";
+import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**
