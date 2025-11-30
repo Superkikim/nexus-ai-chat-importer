@@ -18,11 +18,14 @@
 
 
 // src/utils.ts
-import { moment, App, TFile, TFolder, Vault } from "obsidian";
+import { App, TFile, TFolder, Vault } from "obsidian";
 import { Logger } from "./logger";
 import { requestUrl } from "obsidian";
 import { MESSAGE_TIMESTAMP_FORMATS, PROVIDER_URLS } from "./config/constants";
 import type { MessageTimestampFormat } from "./types/plugin";
+
+// Use window.moment instead of importing from obsidian
+const moment = (window as any).moment;
 
 const logger = new Logger();
 
@@ -143,14 +146,17 @@ export function generateFileName(title: string): string {
     return fileName;
 }
 
+/**
+ * @deprecated Use generateConversationFileName instead
+ */
 export function addPrefix(
     filename: string,
     timeStamp: number,
     dateFormat: string
 ): string {
-    const timeStampStr = formatTimestamp(timeStamp, dateFormat); // Use the specified format
-    if (timeStampStr) {
-        filename = `${timeStampStr} - ${filename}`;
+    const prefix = createDatePrefix(timeStamp, dateFormat);
+    if (prefix) {
+        filename = `${prefix} - ${filename}`;
     }
     return filename; // Return the filename with prefix if applicable
 }
@@ -357,6 +363,10 @@ export function isValidMessage(message: any): boolean {
             }
         )
     );
+}
+
+export interface CustomError {
+    message: string;
 }
 
 export function isCustomError(error: any): error is CustomError {
