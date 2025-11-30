@@ -240,7 +240,7 @@ export class ConversationMetadataExtractor {
                     return false;
                 }
                 if (!chat.create_time || !chat.update_time) {
-                    logger.warn('Skipping ChatGPT conversation with missing timestamps:', chat.id, chat.title || 'Untitled');
+                    logger.warn('Skipping ChatGPT conversation with missing timestamps:', chat.id);
                     return false;
                 }
                 return true;
@@ -276,7 +276,7 @@ export class ConversationMetadataExtractor {
                     return false;
                 }
                 if (!chat.created_at || !chat.updated_at) {
-                    logger.warn('Skipping Claude conversation with missing timestamps:', chat.uuid, chat.name || 'Untitled');
+                    logger.warn('Skipping Claude conversation with missing timestamps:', chat.uuid);
                     return false;
                 }
                 return true;

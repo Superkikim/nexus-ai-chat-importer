@@ -117,7 +117,7 @@ export class LinkUpdateService {
                 phase: 'error',
                 current: 0,
                 total: 0,
-                detail: `Error: ${error.message}`
+                detail: `Error: ${error instanceof Error ? error.message : String(error)}`
             });
             throw error;
         }
@@ -238,7 +238,7 @@ export class LinkUpdateService {
                 phase: 'error',
                 current: 0,
                 total: 0,
-                detail: `Error: ${error.message}`
+                detail: `Error: ${error instanceof Error ? error.message : String(error)}`
             });
             throw error;
         }
