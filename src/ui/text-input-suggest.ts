@@ -31,17 +31,17 @@ function wrapAround(value: number, size: number): number {
  */
 class Suggest<T> {
     private owner: ISuggestOwner<T>;
-    private values: T[];
-    private suggestions: HTMLDivElement[];
-    private selectedItem: number;
+    private values!: T[];
+    private suggestions!: HTMLDivElement[];
+    private selectedItem!: number;
     private containerEl: HTMLElement;
 
     constructor(owner: ISuggestOwner<T>, containerEl: HTMLElement, scope: Scope) {
         this.owner = owner;
         this.containerEl = containerEl;
 
-        containerEl.on("click", ".suggestion-item", this.onSuggestionClick.bind(this));
-        containerEl.on("mousemove", ".suggestion-item", this.onSuggestionMouseover.bind(this));
+        containerEl.on("click", ".suggestion-item", this.onSuggestionClick.bind(this) as any);
+        containerEl.on("mousemove", ".suggestion-item", this.onSuggestionMouseover.bind(this) as any);
 
         scope.register([], "ArrowUp", (event) => {
             if (!event.isComposing) {
@@ -124,7 +124,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
     protected app: App;
     protected inputEl: HTMLInputElement;
 
-    private popper: PopperInstance;
+    private popper!: PopperInstance;
     private scope: Scope;
     private suggestEl: HTMLElement;
     private suggest: Suggest<T>;

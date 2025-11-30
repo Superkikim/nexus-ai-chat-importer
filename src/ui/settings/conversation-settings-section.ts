@@ -13,7 +13,7 @@ export class ConversationSettingsSection extends BaseSettingsSection {
             .addText((text) =>
                 text
                     .setPlaceholder("Enter folder name")
-                    .setValue(this.plugin.settings.archiveFolder)
+                    .setValue(this.plugin.settings.archiveFolder ?? "")
                     .onChange(async (value) => {
                         this.plugin.settings.archiveFolder = value;
                         // Keep reports under the archive folder

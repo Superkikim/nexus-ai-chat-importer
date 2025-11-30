@@ -41,13 +41,13 @@ export class ImportProgressModal extends Modal {
     private selectedCount: number = 0;
     private totalAvailable: number = 0;
 
-    private modalTitleEl: HTMLElement;
-    private phaseEl: HTMLElement;
-    private progressBarEl: HTMLElement;
-    private statusEl: HTMLElement;
-    private detailEl: HTMLElement;
-    private conversationCountEl: HTMLElement;
-    private importModeEl: HTMLElement;
+    private modalTitleEl!: HTMLElement;
+    private phaseEl!: HTMLElement;
+    private progressBarEl!: HTMLElement;
+    private statusEl!: HTMLElement;
+    private detailEl!: HTMLElement;
+    private conversationCountEl!: HTMLElement;
+    private importModeEl!: HTMLElement;
     public isComplete: boolean = false;
 
     constructor(app: App, fileName: string) {

@@ -55,9 +55,6 @@ export class NexusUpgradeModal130 extends Modal {
         if (!this.hasResolved) {
             this.resolve("cancel");
         }
-    }
-
-    async onClose() {
         this.contentEl.empty();
     }
 

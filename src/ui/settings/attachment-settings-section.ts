@@ -12,7 +12,7 @@ export class AttachmentSettingsSection extends BaseSettingsSection {
             .setDesc("Save attachment files to disk and link them in conversations (uses 'best effort' strategy)")
             .addToggle((toggle) =>
                 toggle
-                    .setValue(this.plugin.settings.importAttachments)
+                    .setValue(this.plugin.settings.importAttachments ?? true)
                     .onChange(async (value) => {
                         this.plugin.settings.importAttachments = value;
                         await this.plugin.saveSettings();
@@ -20,7 +20,7 @@ export class AttachmentSettingsSection extends BaseSettingsSection {
                     })
             );
 
-        if (this.plugin.settings.importAttachments) {
+        if (this.plugin.settings.importAttachments ?? true) {
             this.renderAttachmentOptions(containerEl);
             this.renderAttachmentInfo(containerEl);
         }
@@ -57,7 +57,7 @@ export class AttachmentSettingsSection extends BaseSettingsSection {
             .setDesc("Include detailed attachment processing statistics in import reports")
             .addToggle((toggle) =>
                 toggle
-                    .setValue(this.plugin.settings.showAttachmentDetails)
+                    .setValue(this.plugin.settings.showAttachmentDetails ?? false)
                     .onChange(async (value) => {
                         this.plugin.settings.showAttachmentDetails = value;
                         await this.plugin.saveSettings();

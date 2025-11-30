@@ -192,8 +192,8 @@ export class EnhancedFileSelectionDialog extends Modal {
     }
 
     private updateImportModeBoxes() {
-        const boxes = this.contentEl.querySelectorAll('.import-option-box');
-        boxes.forEach((box: HTMLElement, index: number) => {
+        const boxes = this.contentEl.querySelectorAll<HTMLElement>('.import-option-box');
+        boxes.forEach((box, index) => {
             const isSelected = (index === 0 && this.importMode === 'all') ||
                              (index === 1 && this.importMode === 'selective');
 
