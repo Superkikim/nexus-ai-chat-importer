@@ -170,8 +170,8 @@ export class LeChatConverter {
                 fileType: this.getFileTypeFromLeChatType(file.type),
                 fileSize: undefined, // Size not available in Le Chat export
                 status: {
-                    found: false,
-                    extracted: false
+                    processed: false,
+                    found: false
                 }
             };
 

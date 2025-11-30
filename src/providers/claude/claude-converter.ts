@@ -368,7 +368,7 @@ export class ClaudeConverter {
                 });
 
             } catch (error) {
-                logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+                this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
             }
         }
 
@@ -581,7 +581,7 @@ export class ClaudeConverter {
                                 textParts.push(specificLink);
 
                             } catch (error) {
-                                logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+                                this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
                                 textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${block.input.title || artifactId}** v${currentVersion}\n> ❌ Error saving artifact`);
                             }
                         }
@@ -745,7 +745,7 @@ export class ClaudeConverter {
         const versionCount = savedVersions.length;
 
         if (!latestVersion) {
-            logger.error('Claude converter: No latest version available for artifact summary');
+            this.plugin.logger.error('Claude converter: No latest version available for artifact summary');
             return `<div class="nexus-artifact-box">**🎨 Artifact: ${title}** (Error: No accessible version)</div>`;
         }
 
@@ -883,7 +883,7 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
         try {
             await this.plugin.app.vault.create(filePath, markdownContent);
         } catch (error) {
-            logger.error(`Failed to create artifact file ${filePath}:`, error);
+            this.plugin.logger.error(`Failed to create artifact file ${filePath}:`, error);
             throw error;
         }
     }

@@ -332,8 +332,8 @@ describe('LeChatConverter', () => {
 
             expect(result).toHaveLength(1);
             expect(result[0].attachments).toHaveLength(1);
-            expect(result[0].attachments[0].fileName).toBe('test-image.png');
-            expect(result[0].attachments[0].fileType).toBe('image/*');
+            expect(result[0].attachments?.[0].fileName).toBe('test-image.png');
+            expect(result[0].attachments?.[0].fileType).toBe('image/*');
         });
 
         it('should handle messages with references', () => {

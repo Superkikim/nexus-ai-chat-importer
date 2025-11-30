@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { LeChatReportNamingStrategy } from './lechat-report-naming';
 import { LeChatConversation } from './lechat-types';
 
@@ -112,10 +112,8 @@ describe('LeChatReportNamingStrategy', () => {
                     quotes: [],
                     files: [
                         {
-                            id: 'file-1',
                             name: 'image.png',
-                            type: 'image',
-                            size: 12345
+                            type: 'image'
                         }
                     ]
                 },
@@ -137,16 +135,12 @@ describe('LeChatReportNamingStrategy', () => {
                     quotes: [],
                     files: [
                         {
-                            id: 'file-2',
                             name: 'document1.pdf',
-                            type: 'document',
-                            size: 54321
+                            type: 'document'
                         },
                         {
-                            id: 'file-3',
                             name: 'document2.docx',
-                            type: 'document',
-                            size: 98765
+                            type: 'document'
                         }
                     ]
                 }

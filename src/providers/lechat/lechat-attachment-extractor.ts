@@ -133,7 +133,7 @@ export class LeChatAttachmentExtractor {
                 status: {
                     processed: false,
                     found: false,
-                    reason: 'not_in_zip',
+                    reason: 'missing_from_export',
                     note: `File not found in ZIP: ${zipPath}`
                 }
             };
@@ -177,8 +177,6 @@ export class LeChatAttachmentExtractor {
         // Save file to vault
         await this.plugin.app.vault.adapter.writeBinary(vaultPath, fileContent.buffer as ArrayBuffer);
 
-        this.logger.info(`Extracted Le Chat attachment: ${finalFileName} → ${vaultPath}`);
-
         return {
             ...attachment,
             fileName: finalFileName,
@@ -188,7 +186,7 @@ export class LeChatAttachmentExtractor {
             status: {
                 processed: true,
                 found: true,
-                extracted: true
+                localPath: vaultPath
             }
         };
     }
