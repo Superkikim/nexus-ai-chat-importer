@@ -1,6 +1,6 @@
 # Nexus AI Chat Importer
 
-[![Version](https://img.shields.io/badge/version-1.3.2-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.2) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads (v1.3.2)](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/1.3.2/total?label=downloads%20(v1.3.2))](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.2) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
+[![Version](https://img.shields.io/badge/version-1.3.3-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.3) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads (v1.3.3)](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/1.3.3/total?label=downloads%20(v1.3.3))](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.3) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
 
 ## 📑 Table of Contents
 
@@ -47,6 +47,11 @@
 
 Import your AI chat conversations from **ChatGPT** and **Claude** exports into Obsidian as beautifully formatted Markdown files.
 
+The **1.3.x** series brings:
+- Powerful selective import and better organization (**v1.3.0**)
+- Fixes for Claude's new export format (**v1.3.2**)
+- A tiny quality-of-life patch for the upgrade notice (**v1.3.3**)
+
 ### ✨ New in v1.3.0
 
 - **[Selective Import](#-importing-conversations)** - Choose exactly which conversations to import with interactive preview
@@ -71,6 +76,15 @@ Import your AI chat conversations from **ChatGPT** and **Claude** exports into O
 - Fixed duplicate conversations in multi-ZIP imports
 - Fixed special characters in conversation titles
 - And many more...
+
+### 🐛 Fixed in v1.3.2
+
+- Claude changed their export format; the plugin now understands the new structure so Claude artifacts and attachments import correctly again.
+- If you had missing Claude files, delete the affected Claude notes and re-import the same ZIP after upgrading.
+
+### 🔹 Quick patch v1.3.3
+
+- Fixed the v1.3.2 upgrade notice so it only appears **once** per vault instead of at every restart.
 
 ## ☕ Support My Work
 

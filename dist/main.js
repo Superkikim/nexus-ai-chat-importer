@@ -67,6 +67,7 @@ var init_constants = __esm({
       // 🔄 MIGRATION FLAGS
       // ========================================
       hasShownUpgradeNotice: false,
+      hasSeenClaude132UpgradeNotice: false,
       hasCompletedUpgrade: false,
       currentVersion: "0.0.0",
       previousVersion: "0.0.0"
@@ -157,8 +158,8 @@ function createKofiSupportBox(container, message) {
   }
   const realityCheck = supportBox.createDiv("kofi-reality-check");
   realityCheck.innerHTML = `
-        <strong>Reality check:</strong> Thousands of hours of work over the year, more than 4'300 downloads, but only $20 in donations over two months. If this plugin makes your life easier, please consider supporting me.
-    `;
+	        <strong>Thank you!</strong> Thousands of hours of work have gone into these plugins, and every coffee helps me keep improving them while managing ongoing health issues. If this plugin makes your life easier, please consider supporting me.
+	    `;
   const buttonContainer = supportBox.createDiv("kofi-button-container");
   const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/assets/support_me_on_kofi_red.png";
   buttonContainer.innerHTML = `
@@ -13553,12 +13554,13 @@ var IncrementalUpgradeManager = class {
       const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
       if (upgradeChain.length === 0) {
         await this.markUpgradeComplete(currentVersion);
-        await this.showUpgradeDialog(currentVersion, previousVersion, []);
         return {
           success: true,
           upgradesExecuted: 0,
           upgradesSkipped: 0,
           upgradesFailed: 0,
+          showCompletionDialog: true,
+          upgradedToVersion: currentVersion,
           results: []
         };
       }
@@ -15543,13 +15545,13 @@ __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 // src/dialogs/new-version-modal.ts
 var import_obsidian30 = require("obsidian");
 init_kofi_support_box();
+init_constants();
 var NewVersionModal = class extends import_obsidian30.Modal {
-  constructor(app, plugin, version, fallbackMessage, githubTag) {
+  constructor(app, plugin, version, fallbackMessage) {
     super(app);
     this.plugin = plugin;
     this.version = version;
     this.fallbackMessage = fallbackMessage;
-    this.githubTag = githubTag || version;
   }
   onOpen() {
     const { titleEl, modalEl } = this;
@@ -15564,11 +15566,12 @@ var NewVersionModal = class extends import_obsidian30.Modal {
     createKofiSupportBox(this.contentEl);
     let message = this.fallbackMessage;
     try {
-      const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/${this.githubTag}`);
+      const response = await fetch(`${GITHUB.RAW_BASE}/${this.version}/README.md`);
       if (response.ok) {
-        const release = await response.json();
-        if (release.body) {
-          message = release.body;
+        const readmeText = await response.text();
+        const overview = this.extractOverviewFromReadme(readmeText);
+        if (overview) {
+          message = overview;
         }
       }
     } catch (error) {
@@ -15583,6 +15586,15 @@ var NewVersionModal = class extends import_obsidian30.Modal {
     );
     this.addCloseButton();
     this.addStyles();
+  }
+  /**
+   * Extract the "## Overview" section from README content.
+   * Returns only the body under the heading (excluding the heading line itself).
+   */
+  extractOverviewFromReadme(readmeText) {
+    const overviewRegex = /## Overview\s+([\s\S]*?)(?=^##\s|\Z)/m;
+    const match = readmeText.match(overviewRegex);
+    return match ? match[1].trim() : null;
   }
   addCloseButton() {
     const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container" });
@@ -15646,14 +15658,15 @@ var UpgradeNotice132Dialog = class {
 
 ---
 
-## \u{1F41B} Bug Fixes
-
-- **Claude artifacts now work with the new export format**
-- **Fixed crashes during import** (missing logger errors)
-- **Fixed weird formatting** in conversations with multiple attachments
-- **Better messages** when re-importing conversations
-
----
+	## \u{1F41B} Bug Fixes
+	
+	- **Claude artifacts now work with the new export format**
+	- **Fixed crashes during import** (missing logger errors)
+	- **Fixed weird formatting** in conversations with multiple attachments
+	- **Better messages** when re-importing conversations
+	- **Minor fix in v1.3.3** \u2013 upgrade notice now only appears once per vault
+	
+	---
 
 ## \u{1F64F} Questions?
 
@@ -15661,10 +15674,8 @@ If something doesn't work as expected, please report it on the [forum thread](ht
     new NewVersionModal(
       app,
       plugin,
-      "1.3.2",
-      fallbackMessage,
-      "1.3.2"
-      // GitHub tag
+      plugin.manifest.version,
+      fallbackMessage
     ).open();
   }
 };
@@ -16292,8 +16303,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if ((upgradeResult == null ? void 0 : upgradeResult.showCompletionDialog) && (upgradeResult == null ? void 0 : upgradeResult.upgradedToVersion)) {
         await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
       }
-      if (this.settings.previousVersion === "1.3.0") {
+      if (this.settings.previousVersion === "1.3.0" && !this.settings.hasSeenClaude132UpgradeNotice) {
         UpgradeNotice132Dialog.open(this.app, this);
+        this.settings.hasSeenClaude132UpgradeNotice = true;
+        await this.saveSettings();
       }
     } catch (error) {
       this.logger.error("Plugin loading failed:", error);
