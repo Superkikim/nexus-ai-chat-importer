@@ -20,6 +20,7 @@
 // src/models/import-report.ts
 import { AttachmentStats } from "../types/plugin";
 import { formatMessageTimestamp, MessageTimestampFormat } from "../utils";
+import { MAX_REPORT_DETAILED_ENTRIES } from "../config/constants";
 
 interface ReportEntry {
     title: string;
@@ -60,6 +61,12 @@ export class ImportReport {
     private fileStats?: Map<string, any>; // Store file analysis stats for duplicate counting
     private analysisInfo?: any; // Store analysis info for completion stats
     private customTimestampFormat?: MessageTimestampFormat; // Custom format for report dates
+    private totalCreated: number = 0;
+    private totalUpdated: number = 0;
+    private totalSkipped: number = 0;
+    private totalFailed: number = 0;
+    private totalDetailedEntries: number = 0;
+    private detailedEntriesTruncated: boolean = false;
 
     /**
      * Start a new file section for multi-file imports
@@ -161,18 +168,14 @@ export class ImportReport {
     }
 
     private getGlobalStats() {
-        let created = 0;
-        let updated = 0;
-        let skipped = 0;
-        let failed = 0;
+        let created = this.totalCreated;
+        let updated = this.totalUpdated;
+        let skipped = this.totalSkipped;
+        let failed = this.totalFailed;
         let totalProcessed = 0;
         let newMessages = 0;
 
         this.fileSections.forEach(section => {
-            created += section.created.length;
-            updated += section.updated.length;
-            skipped += section.skipped.length;
-            failed += section.failed.length;
             totalProcessed += section.counters.totalConversationsProcessed;
             newMessages += section.counters.totalNonEmptyMessagesAdded;
         });
@@ -183,33 +186,54 @@ export class ImportReport {
     addCreated(title: string, filePath: string, createTime: number, updateTime: number, messageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
         const section = this.getCurrentSection();
         if (section) {
-            section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            this.totalCreated++;
+            if (this.canAddDetailedEntry()) {
+                section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            }
         }
     }
 
     addUpdated(title: string, filePath: string, createTime: number, updateTime: number, newMessageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
         const section = this.getCurrentSection();
         if (section) {
-            section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            this.totalUpdated++;
+            if (this.canAddDetailedEntry()) {
+                section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            }
         }
     }
 
     addSkipped(title: string, filePath: string, createTime: number, updateTime: number, messageCount: number, reason: string, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
         const section = this.getCurrentSection();
         if (section) {
-            section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            this.totalSkipped++;
+            if (this.canAddDetailedEntry()) {
+                section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            }
         }
     }
 
     addFailed(title: string, filePath: string, createTime: number, updateTime: number, errorMessage: string) {
         const section = this.getCurrentSection();
         if (section) {
-            section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
+            this.totalFailed++;
+            if (this.canAddDetailedEntry()) {
+                section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
+            }
         }
     }
 
     addError(message: string, details: string) {
         this.globalErrors.push({ message, details });
+    }
+
+    private canAddDetailedEntry(): boolean {
+        if (this.totalDetailedEntries < MAX_REPORT_DETAILED_ENTRIES) {
+            this.totalDetailedEntries++;
+            return true;
+        }
+        this.detailedEntriesTruncated = true;
+        return false;
     }
 
     generateReportContent(
@@ -221,6 +245,10 @@ export class ImportReport {
         isSelectiveImport?: boolean
     ): string {
         let content = "# Nexus AI Chat Importer Report\n\n";
+
+        if (this.detailedEntriesTruncated) {
+            content += `> Detailed rows truncated after ${MAX_REPORT_DETAILED_ENTRIES} entries to keep the report responsive. Counts below include truncated items.\n\n`;
+        }
 
         // Generate global summary
         content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) + "\n\n";
@@ -546,6 +574,10 @@ export class ImportReport {
     }
 
     hasErrors(): boolean {
+        if (this.totalFailed > 0) {
+            return true;
+        }
+
         let hasFailed = false;
         this.fileSections.forEach(section => {
             if (section.failed.length > 0) {
@@ -556,35 +588,19 @@ export class ImportReport {
     }
 
     getCreatedCount(): number {
-        let count = 0;
-        this.fileSections.forEach(section => {
-            count += section.created.length;
-        });
-        return count;
+        return this.totalCreated;
     }
 
     getUpdatedCount(): number {
-        let count = 0;
-        this.fileSections.forEach(section => {
-            count += section.updated.length;
-        });
-        return count;
+        return this.totalUpdated;
     }
 
     getSkippedCount(): number {
-        let count = 0;
-        this.fileSections.forEach(section => {
-            count += section.skipped.length;
-        });
-        return count;
+        return this.totalSkipped;
     }
 
     getFailedCount(): number {
-        let count = 0;
-        this.fileSections.forEach(section => {
-            count += section.failed.length;
-        });
-        return count;
+        return this.totalFailed;
     }
 
     /**

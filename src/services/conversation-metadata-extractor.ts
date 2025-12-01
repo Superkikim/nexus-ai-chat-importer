@@ -25,6 +25,8 @@ import { ClaudeConversation, ClaudeExportData } from "../providers/claude/claude
 import { isValidMessage, compareTimestampsIgnoringSeconds } from "../utils";
 import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
+import { parseConversationsJson, streamConversationsFromZip } from "../utils/conversations-json-parser";
+import { LARGE_ARCHIVE_THRESHOLD_BYTES } from "../config/constants";
 
 /**
  * Conversation existence status for import preview
@@ -113,6 +115,17 @@ export class ConversationMetadataExtractor {
         existingConversations?: Map<string, any>
     ): Promise<ConversationMetadata[]> {
         try {
+            const conversationsFile = zip.file("conversations.json");
+            if (!conversationsFile) {
+                throw new Error("Missing conversations.json file in ZIP archive");
+            }
+
+            const size = (conversationsFile as any)?._data?.uncompressedSize as number | undefined;
+
+            if (size && size > LARGE_ARCHIVE_THRESHOLD_BYTES) {
+                return await this.extractMetadataFromZipStreaming(zip, forcedProvider, sourceFileName, sourceFileIndex, existingConversations);
+            }
+
             // Extract raw conversation data
             const rawConversations = await this.extractRawConversationsFromZip(zip);
 
@@ -130,41 +143,64 @@ export class ConversationMetadataExtractor {
             // Extract metadata based on provider
             const metadata = this.extractMetadataByProvider(rawConversations, provider);
 
-            // Add source file information and existence status
-            return metadata.map(conv => {
-                const enhanced: ConversationMetadata = {
-                    ...conv,
-                    sourceFile: sourceFileName,
-                    sourceFileIndex: sourceFileIndex
-                };
-
-                // Check existence status if existing conversations provided
-                if (existingConversations) {
-                    const existing = existingConversations.get(conv.id);
-                    if (existing) {
-                        enhanced.existingUpdateTime = existing.updateTime;
-                        // Compare timestamps ignoring seconds (v1.2.0 → v1.3.0 compatibility)
-                        const comparison = compareTimestampsIgnoringSeconds(conv.updateTime, existing.updateTime);
-                        if (comparison > 0) {
-                            enhanced.existenceStatus = 'updated';
-                            enhanced.hasNewerContent = true;
-                        } else {
-                            enhanced.existenceStatus = 'unchanged';
-                            enhanced.hasNewerContent = false;
-                        }
-                    } else {
-                        enhanced.existenceStatus = 'new';
-                        enhanced.hasNewerContent = true;
-                    }
-                } else {
-                    enhanced.existenceStatus = 'unknown';
-                }
-
-                return enhanced;
-            });
+            return metadata.map(conv => this.applySourceAndExistence(conv, sourceFileName, sourceFileIndex, existingConversations));
         } catch (error) {
             throw new Error(`Failed to extract conversation metadata: ${error instanceof Error ? error.message : String(error)}`);
         }
+    }
+
+    private async extractMetadataFromZipStreaming(
+        zip: JSZip,
+        forcedProvider?: string,
+        sourceFileName?: string,
+        sourceFileIndex?: number,
+        existingConversations?: Map<string, any>
+    ): Promise<ConversationMetadata[]> {
+        const conversationsFile = zip.file("conversations.json");
+        if (!conversationsFile) {
+            throw new Error("Missing conversations.json file in ZIP archive");
+        }
+
+        const generator = streamConversationsFromZip(conversationsFile, {
+            shape: forcedProvider === 'claude' ? 'claude' : forcedProvider === 'chatgpt' ? 'chatgpt' : 'auto'
+        });
+
+        const iterator = generator[Symbol.asyncIterator]();
+        const first = await iterator.next();
+
+        if (first.done) {
+            return [];
+        }
+
+        const provider = forcedProvider || this.providerRegistry.detectProvider([first.value]);
+        if (provider === 'unknown') {
+            throw new Error('Could not detect conversation provider from data structure');
+        }
+
+        const metadata: ConversationMetadata[] = [];
+
+        const processConversation = (chat: any) => {
+            let meta: ConversationMetadata | null = null;
+            if (provider === 'chatgpt') {
+                meta = this.extractChatGPTMetadataForConversation(chat as Chat);
+            } else if (provider === 'claude') {
+                meta = this.extractClaudeMetadataForConversation(chat as ClaudeConversation);
+            }
+
+            if (!meta) return;
+
+            metadata.push(
+                this.applySourceAndExistence(meta, sourceFileName, sourceFileIndex, existingConversations)
+            );
+        };
+
+        processConversation(first.value);
+
+        for (let next = await iterator.next(); !next.done; next = await iterator.next()) {
+            processConversation(next.value);
+        }
+
+        return metadata;
     }
 
     /**
@@ -176,8 +212,7 @@ export class ConversationMetadataExtractor {
             throw new Error("Missing conversations.json file in ZIP archive");
         }
 
-        const conversationsJson = await conversationsFile.async("string");
-        const parsedData = JSON.parse(conversationsJson);
+        const parsedData = await parseConversationsJson(conversationsFile);
 
         // Handle different data structures
         if (Array.isArray(parsedData)) {
@@ -197,84 +232,77 @@ export class ConversationMetadataExtractor {
     private extractMetadataByProvider(rawConversations: any[], provider: string): ConversationMetadata[] {
         switch (provider) {
             case 'chatgpt':
-                return this.extractChatGPTMetadata(rawConversations);
+                return rawConversations
+                    .map(chat => this.extractChatGPTMetadataForConversation(chat as Chat))
+                    .filter(Boolean) as ConversationMetadata[];
             case 'claude':
-                return this.extractClaudeMetadata(rawConversations);
+                return rawConversations
+                    .map(chat => this.extractClaudeMetadataForConversation(chat as ClaudeConversation))
+                    .filter(Boolean) as ConversationMetadata[];
             default:
                 throw new Error(`Unsupported provider: ${provider}`);
         }
     }
 
     /**
-     * Extract metadata from ChatGPT conversations
+     * Extract metadata from a single ChatGPT conversation
      */
-    private extractChatGPTMetadata(conversations: Chat[]): ConversationMetadata[] {
-        return conversations
-            .filter(chat => {
-                // Filter out invalid conversations (missing ID or timestamps)
-                if (!chat.id || chat.id.trim() === '') {
-                    logger.warn('Skipping ChatGPT conversation with missing ID:', chat.title || 'Untitled');
-                    return false;
-                }
-                if (!chat.create_time || !chat.update_time) {
-                    logger.warn('Skipping ChatGPT conversation with missing timestamps:', chat.id, chat.title || 'Untitled');
-                    return false;
-                }
-                return true;
-            })
-            .map(chat => ({
-                id: chat.id,
-                title: chat.title || "Untitled",
-                createTime: chat.create_time,
-                updateTime: chat.update_time,
-                messageCount: this.countChatGPTMessages(chat),
-                provider: "chatgpt",
-                isStarred: chat.is_starred || false,
-                isArchived: chat.is_archived || false
-            }))
-            .filter(metadata => {
-                // Filter out empty conversations (0 messages)
-                if (metadata.messageCount === 0) {
-                    return false;
-                }
-                return true;
-            });
+    private extractChatGPTMetadataForConversation(chat: Chat): ConversationMetadata | null {
+        // Filter out invalid conversations (missing ID or timestamps)
+        if (!chat?.id || chat.id.trim() === '') {
+            logger.warn('Skipping ChatGPT conversation with missing ID:', chat?.title || 'Untitled');
+            return null;
+        }
+        if (!chat.create_time || !chat.update_time) {
+            logger.warn('Skipping ChatGPT conversation with missing timestamps:', { id: chat.id, title: chat.title || 'Untitled' });
+            return null;
+        }
+
+        const messageCount = this.countChatGPTMessages(chat);
+        if (messageCount === 0) {
+            return null;
+        }
+
+        return {
+            id: chat.id,
+            title: chat.title || "Untitled",
+            createTime: chat.create_time,
+            updateTime: chat.update_time,
+            messageCount,
+            provider: "chatgpt",
+            isStarred: chat.is_starred || false,
+            isArchived: chat.is_archived || false
+        };
     }
 
     /**
-     * Extract metadata from Claude conversations
+     * Extract metadata from a single Claude conversation
      */
-    private extractClaudeMetadata(conversations: ClaudeConversation[]): ConversationMetadata[] {
-        return conversations
-            .filter(chat => {
-                // Filter out invalid conversations (missing ID or timestamps)
-                if (!chat.uuid || chat.uuid.trim() === '') {
-                    logger.warn('Skipping Claude conversation with missing UUID:', chat.name || 'Untitled');
-                    return false;
-                }
-                if (!chat.created_at || !chat.updated_at) {
-                    logger.warn('Skipping Claude conversation with missing timestamps:', chat.uuid, chat.name || 'Untitled');
-                    return false;
-                }
-                return true;
-            })
-            .map(chat => ({
-                id: chat.uuid,
-                title: chat.name || "Untitled",
-                createTime: Math.floor(new Date(chat.created_at).getTime() / 1000),
-                updateTime: Math.floor(new Date(chat.updated_at).getTime() / 1000),
-                messageCount: this.countClaudeMessages(chat),
-                provider: "claude",
-                isStarred: chat.is_starred || false,
-                isArchived: false // Claude doesn't have archived status
-            }))
-            .filter(metadata => {
-                // Filter out empty conversations (0 messages)
-                if (metadata.messageCount === 0) {
-                    return false;
-                }
-                return true;
-            });
+    private extractClaudeMetadataForConversation(chat: ClaudeConversation): ConversationMetadata | null {
+        if (!chat?.uuid || chat.uuid.trim() === '') {
+            logger.warn('Skipping Claude conversation with missing UUID:', chat?.name || 'Untitled');
+            return null;
+        }
+        if (!chat.created_at || !chat.updated_at) {
+            logger.warn('Skipping Claude conversation with missing timestamps:', { id: chat.uuid, title: chat.name || 'Untitled' });
+            return null;
+        }
+
+        const messageCount = this.countClaudeMessages(chat);
+        if (messageCount === 0) {
+            return null;
+        }
+
+        return {
+            id: chat.uuid,
+            title: chat.name || "Untitled",
+            createTime: Math.floor(new Date(chat.created_at).getTime() / 1000),
+            updateTime: Math.floor(new Date(chat.updated_at).getTime() / 1000),
+            messageCount,
+            provider: "claude",
+            isStarred: chat.is_starred || false,
+            isArchived: false
+        };
     }
 
     /**
@@ -349,6 +377,41 @@ export class ConversationMetadataExtractor {
 
         // Include both human and assistant messages
         return message.sender === 'human' || message.sender === 'assistant';
+    }
+
+    private applySourceAndExistence(
+        metadata: ConversationMetadata,
+        sourceFileName?: string,
+        sourceFileIndex?: number,
+        existingConversations?: Map<string, any>
+    ): ConversationMetadata {
+        const enhanced: ConversationMetadata = {
+            ...metadata,
+            sourceFile: sourceFileName,
+            sourceFileIndex: sourceFileIndex
+        };
+
+        if (existingConversations) {
+            const existing = existingConversations.get(metadata.id);
+            if (existing) {
+                enhanced.existingUpdateTime = existing.updateTime;
+                const comparison = compareTimestampsIgnoringSeconds(metadata.updateTime, existing.updateTime);
+                if (comparison > 0) {
+                    enhanced.existenceStatus = 'updated';
+                    enhanced.hasNewerContent = true;
+                } else {
+                    enhanced.existenceStatus = 'unchanged';
+                    enhanced.hasNewerContent = false;
+                }
+            } else {
+                enhanced.existenceStatus = 'new';
+                enhanced.hasNewerContent = true;
+            }
+        } else {
+            enhanced.existenceStatus = 'unknown';
+        }
+
+        return enhanced;
     }
 
     /**

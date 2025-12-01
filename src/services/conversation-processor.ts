@@ -66,19 +66,31 @@ export class ConversationProcessor {
     /**
      * Process raw conversations (provider agnostic entry point)
      */
-    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false, forcedProvider?: string, progressCallback?: ImportProgressCallback): Promise<ImportReport> {
-        // Use forced provider or detect from raw data structure
-        const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
+    async processRawConversations(
+        rawConversations: any[],
+        importReport: ImportReport,
+        zip?: JSZip,
+        isReprocess: boolean = false,
+        forcedProvider?: string,
+        progressCallback?: ImportProgressCallback,
+        existingConversations?: Map<string, ConversationCatalogEntry>
+    ): Promise<ImportReport> {
+        const asGenerator = async function* (arr: any[]) {
+            for (const item of arr) {
+                yield item;
+            }
+        };
 
-        if (provider === 'unknown') {
-            const errorMsg = forcedProvider
-                ? `Forced provider '${forcedProvider}' is not available or registered`
-                : `Could not detect conversation provider from data structure`;
-            importReport.addError("Unknown provider", errorMsg);
-            return importReport;
-        }
-
-        return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess, progressCallback);
+        return this.processRawConversationsStreaming(
+            forcedProvider,
+            asGenerator(rawConversations),
+            importReport,
+            zip,
+            isReprocess,
+            progressCallback,
+            existingConversations,
+            rawConversations.length
+        );
     }
 
     /**
@@ -93,40 +105,63 @@ export class ConversationProcessor {
     /**
      * Process conversations using the detected provider
      */
-    private async processConversationsWithProvider(
-        provider: string,
-        rawConversations: any[],
+    async processRawConversationsStreaming(
+        providerHint: string | undefined,
+        conversations: AsyncGenerator<any, void, unknown>,
         importReport: ImportReport,
         zip?: JSZip,
         isReprocess: boolean = false,
-        progressCallback?: ImportProgressCallback
+        progressCallback?: ImportProgressCallback,
+        existingConversations?: Map<string, ConversationCatalogEntry>,
+        totalCountHint?: number
     ): Promise<ImportReport> {
+        // Peek first conversation to detect provider when not forced
+        const first = await conversations.next();
+        if (first.done) {
+            return importReport;
+        }
+
+        const provider = providerHint || this.providerRegistry.detectProvider([first.value]);
+
+        if (provider === 'unknown') {
+            const errorMsg = providerHint
+                ? `Forced provider '${providerHint}' is not available or registered`
+                : `Could not detect conversation provider from data structure`;
+            importReport.addError("Unknown provider", errorMsg);
+            return importReport;
+        }
+
         this.currentProvider = provider;
         const adapter = this.providerRegistry.getAdapter(provider);
-
         if (!adapter) {
             importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
             return importReport;
         }
 
         const storage = this.plugin.getStorageService();
-
-        // Scan existing conversations from vault instead of loading catalog
-        const existingConversationsMap = await storage.scanExistingConversations();
+        const existingConversationsMap = existingConversations || await storage.scanExistingConversations();
         this.counters.totalExistingConversations = existingConversationsMap.size;
 
         let processedCount = 0;
-        for (const chat of rawConversations) {
-            await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
 
+        const processChat = async (chat: any) => {
+            await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
             processedCount++;
             progressCallback?.({
                 phase: 'processing',
                 title: 'Processing conversations...',
-                detail: `Processing conversation ${processedCount} of ${rawConversations.length}`,
+                detail: totalCountHint
+                    ? `Processing conversation ${processedCount} of ${totalCountHint}`
+                    : `Processing conversation ${processedCount}`,
                 current: processedCount,
-                total: rawConversations.length
+                total: totalCountHint
             });
+        };
+
+        await processChat(first.value);
+
+        for await (const chat of conversations) {
+            await processChat(chat);
         }
 
         return importReport;

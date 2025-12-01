@@ -52,6 +52,12 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     previousVersion: "0.0.0",
 };
 
+// Internal threshold for switching to streaming/large-archive mode (100 MB uncompressed)
+export const LARGE_ARCHIVE_THRESHOLD_BYTES = 100 * 1024 * 1024;
+
+// Limit detailed rows in very large import reports to avoid generating huge markdown files
+export const MAX_REPORT_DETAILED_ENTRIES = 1000;
+
 export const GITHUB = {
     RAW_BASE: "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer",
     REPO_BASE: "https://github.com/Superkikim/nexus-ai-chat-importer"

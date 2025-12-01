@@ -18,7 +18,7 @@
 
 // src/main.ts
 import { Plugin, App, PluginManifest, Notice } from "obsidian";
-import { DEFAULT_SETTINGS } from "./config/constants";
+import { DEFAULT_SETTINGS, LARGE_ARCHIVE_THRESHOLD_BYTES } from "./config/constants";
 import { PluginSettings } from "./types/plugin";
 import { NexusAiChatImporterPluginSettingTab } from "./ui/settings-tab";
 import { CommandRegistry } from "./commands/command-registry";
@@ -303,6 +303,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             new Notice(`Analyzing conversations from ${files.length} file(s)...`);
 
+            const largeArchiveMode = this.isLargeArchive(files);
+
             // Create metadata extractor
             const providerRegistry = createProviderRegistry(this);
             const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
@@ -311,12 +313,14 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const storage = this.getStorageService();
             const existingConversations = await storage.scanExistingConversations();
 
-            // Extract metadata from all ZIP files (same as selective mode)
-            const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
-                files,
-                provider,
-                existingConversations
-            );
+            // For very large archives, skip metadata pre-pass and stream directly
+            const extractionResult = largeArchiveMode
+                ? { conversations: [], analysisInfo: undefined, fileStats: undefined }
+                : await metadataExtractor.extractMetadataFromMultipleZips(
+                    files,
+                    provider,
+                    existingConversations
+                );
 
             // Create shared report for the entire operation
             const operationReport = new ImportReport();
@@ -326,59 +330,86 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
             }
 
-            if (extractionResult.conversations.length === 0) {
-                // No conversations to import, but still generate report and show dialog
-                new Notice("No new or updated conversations found. All conversations are already up to date.");
+            if (!largeArchiveMode) {
+                if (extractionResult.conversations.length === 0) {
+                    // No conversations to import, but still generate report and show dialog
+                    new Notice("No new or updated conversations found. All conversations are already up to date.");
 
-                // Write report showing what was analyzed
-                const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
+                    // Write report showing what was analyzed
+                    const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
 
-                // Show completion dialog with 0 imports
-                if (reportPath) {
-                    this.showImportCompletionDialog(operationReport, reportPath);
-                }
-                return;
-            }
-
-            // Auto-select ALL conversations (NEW + UPDATED)
-            const allIds = extractionResult.conversations.map(c => c.id);
-
-            const newCount = extractionResult.analysisInfo?.conversationsNew ?? 0;
-            const updatedCount = extractionResult.analysisInfo?.conversationsUpdated ?? 0;
-            new Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
-
-            // Group conversations by file and import
-            const conversationsByFile = new Map<string, string[]>();
-            extractionResult.conversations.forEach(conv => {
-                if (conv.sourceFile) {
-                    if (!conversationsByFile.has(conv.sourceFile)) {
-                        conversationsByFile.set(conv.sourceFile, []);
+                    // Show completion dialog with 0 imports
+                    if (reportPath) {
+                        this.showImportCompletionDialog(operationReport, reportPath);
                     }
-                    conversationsByFile.get(conv.sourceFile)!.push(conv.id);
+                    return;
                 }
-            });
 
-            // Build attachment map for multi-ZIP fallback (ChatGPT only)
-            if (provider === 'chatgpt' && files.length > 1) {
-                await this.importService.buildAttachmentMapForMultiZip(files);
-            }
+                // Auto-select ALL conversations (NEW + UPDATED)
+                const allIds = extractionResult.conversations.map(c => c.id);
 
-            // Process files sequentially with shared report
-            for (const file of files) {
-                const conversationsForFile = conversationsByFile.get(file.name);
-                if (conversationsForFile && conversationsForFile.length > 0) {
+                const newCount = extractionResult.analysisInfo?.conversationsNew ?? 0;
+                const updatedCount = extractionResult.analysisInfo?.conversationsUpdated ?? 0;
+                new Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
+
+                // Group conversations by file and import
+                const conversationsByFile = new Map<string, string[]>();
+                extractionResult.conversations.forEach(conv => {
+                    if (conv.sourceFile) {
+                        if (!conversationsByFile.has(conv.sourceFile)) {
+                            conversationsByFile.set(conv.sourceFile, []);
+                        }
+                        conversationsByFile.get(conv.sourceFile)!.push(conv.id);
+                    }
+                });
+
+                // Build attachment map for multi-ZIP fallback (ChatGPT only)
+                if (provider === 'chatgpt' && files.length > 1) {
+                    await this.importService.buildAttachmentMapForMultiZip(files);
+                }
+
+                // Process files sequentially with shared report
+                for (const file of files) {
+                    const conversationsForFile = conversationsByFile.get(file.name);
+                    if (conversationsForFile && conversationsForFile.length > 0) {
+                        try {
+                            await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport, {
+                                existingConversations,
+                                largeArchiveMode: false
+                            });
+                        } catch (error) {
+                            this.logger.error(`Error processing file ${file.name}:`, error);
+                            // Continue with other files even if one fails
+                        }
+                    }
+                }
+
+                // Clear attachment map after import completes
+                if (provider === 'chatgpt' && files.length > 1) {
+                    this.importService.clearAttachmentMap();
+                }
+            } else {
+                new Notice("Large archive detected (>=100MB). Skipping metadata analysis and streaming import directly.");
+
+                // Build attachment map for multi-ZIP fallback (ChatGPT only)
+                if (provider === 'chatgpt' && files.length > 1) {
+                    await this.importService.buildAttachmentMapForMultiZip(files);
+                }
+
+                for (const file of files) {
                     try {
-                        await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                        await this.importService.handleZipFile(file, provider, undefined, operationReport, {
+                            existingConversations,
+                            largeArchiveMode: true
+                        });
                     } catch (error) {
                         this.logger.error(`Error processing file ${file.name}:`, error);
-                        // Continue with other files even if one fails
                     }
                 }
-            }
 
-            // Clear attachment map after import completes
-            if (provider === 'chatgpt' && files.length > 1) {
-                this.importService.clearAttachmentMap();
+                if (provider === 'chatgpt' && files.length > 1) {
+                    this.importService.clearAttachmentMap();
+                }
             }
 
             // Write the consolidated report (always, even if some files failed)
@@ -411,6 +442,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
             new Notice(`Analyzing conversations from ${files.length} file(s)...`);
+
+            if (this.isLargeArchive(files)) {
+                new Notice("Selected ZIP is very large. Selective import is unavailable. Please split the export or use Import All.");
+                return;
+            }
 
             // Create metadata extractor
             const providerRegistry = createProviderRegistry(this);
@@ -454,7 +490,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this.app,
                 extractionResult.conversations,
                 (result: ConversationSelectionResult) => {
-                    this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo, extractionResult.fileStats);
+                    this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo, extractionResult.fileStats, existingConversations);
                 },
                 this,
                 extractionResult.analysisInfo
@@ -470,6 +506,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
     }
 
+    private isLargeArchive(files: File[]): boolean {
+        return files.some(f => f.size >= LARGE_ARCHIVE_THRESHOLD_BYTES);
+    }
+
     /**
      * Handle the result from conversation selection dialog
      */
@@ -478,7 +518,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         files: File[],
         provider: string,
         analysisInfo?: any,
-        fileStats?: Map<string, any>
+        fileStats?: Map<string, any>,
+        existingConversations?: Map<string, any>
     ): Promise<void> {
         // Create shared report for the entire operation
         const operationReport = new ImportReport();
@@ -519,7 +560,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const conversationsForFile = conversationsByFile.get(file.name);
             if (conversationsForFile && conversationsForFile.length > 0) {
                 try {
-                    await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                    await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport, {
+                        existingConversations,
+                        largeArchiveMode: false
+                    });
                 } catch (error) {
                     this.logger.error(`Error processing file ${file.name}:`, error);
                     new Notice(`Error processing ${file.name}. Check console for details.`);
