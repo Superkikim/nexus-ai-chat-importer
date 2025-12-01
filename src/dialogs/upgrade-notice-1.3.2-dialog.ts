@@ -51,13 +51,12 @@ export class UpgradeNotice132Dialog {
 
 If something doesn't work as expected, please report it on the [forum thread](https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664).`;
 
-	        new NewVersionModal(
-	            app,
-	            plugin,
-	            plugin.manifest.version,
-	            fallbackMessage,
-	            "1.3.2" // GitHub tag (v1.3.2 release notes)
-	        ).open();
+		        new NewVersionModal(
+		            app,
+		            plugin,
+		            plugin.manifest.version,
+		            fallbackMessage
+		        ).open();
     }
 }
 
