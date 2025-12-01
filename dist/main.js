@@ -40,7 +40,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/config/constants.ts
-var DEFAULT_SETTINGS, GITHUB, PROVIDER_URLS, MESSAGE_TIMESTAMP_FORMATS;
+var DEFAULT_SETTINGS, LARGE_ARCHIVE_THRESHOLD_BYTES, MAX_REPORT_DETAILED_ENTRIES, GITHUB, PROVIDER_URLS, MESSAGE_TIMESTAMP_FORMATS;
 var init_constants = __esm({
   "src/config/constants.ts"() {
     "use strict";
@@ -71,6 +71,8 @@ var init_constants = __esm({
       currentVersion: "0.0.0",
       previousVersion: "0.0.0"
     };
+    LARGE_ARCHIVE_THRESHOLD_BYTES = 100 * 1024 * 1024;
+    MAX_REPORT_DETAILED_ENTRIES = 1e3;
     GITHUB = {
       RAW_BASE: "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer",
       REPO_BASE: "https://github.com/Superkikim/nexus-ai-chat-importer"
@@ -8522,6 +8524,7 @@ init_dialogs();
 
 // src/models/import-report.ts
 init_utils();
+init_constants();
 var ImportReport = class {
   constructor() {
     this.fileSections = /* @__PURE__ */ new Map();
@@ -8529,8 +8532,14 @@ var ImportReport = class {
     this.globalErrors = [];
     this.providerSpecificColumnHeader = "Attachments";
     this.operationStartTime = Date.now();
+    // Custom format for report dates
+    this.totalCreated = 0;
+    this.totalUpdated = 0;
+    this.totalSkipped = 0;
+    this.totalFailed = 0;
+    this.totalDetailedEntries = 0;
+    this.detailedEntriesTruncated = false;
   }
-  // Custom format for report dates
   /**
    * Start a new file section for multi-file imports
    */
@@ -8612,17 +8621,13 @@ var ImportReport = class {
     return total;
   }
   getGlobalStats() {
-    let created = 0;
-    let updated = 0;
-    let skipped = 0;
-    let failed = 0;
+    let created = this.totalCreated;
+    let updated = this.totalUpdated;
+    let skipped = this.totalSkipped;
+    let failed = this.totalFailed;
     let totalProcessed = 0;
     let newMessages = 0;
     this.fileSections.forEach((section) => {
-      created += section.created.length;
-      updated += section.updated.length;
-      skipped += section.skipped.length;
-      failed += section.failed.length;
       totalProcessed += section.counters.totalConversationsProcessed;
       newMessages += section.counters.totalNonEmptyMessagesAdded;
     });
@@ -8631,32 +8636,57 @@ var ImportReport = class {
   addCreated(title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      this.totalCreated++;
+      if (this.canAddDetailedEntry()) {
+        section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      }
     }
   }
   addUpdated(title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      this.totalUpdated++;
+      if (this.canAddDetailedEntry()) {
+        section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      }
     }
   }
   addSkipped(title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      this.totalSkipped++;
+      if (this.canAddDetailedEntry()) {
+        section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      }
     }
   }
   addFailed(title, filePath, createTime, updateTime, errorMessage) {
     const section = this.getCurrentSection();
     if (section) {
-      section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
+      this.totalFailed++;
+      if (this.canAddDetailedEntry()) {
+        section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
+      }
     }
   }
   addError(message, details) {
     this.globalErrors.push({ message, details });
   }
+  canAddDetailedEntry() {
+    if (this.totalDetailedEntries < MAX_REPORT_DETAILED_ENTRIES) {
+      this.totalDetailedEntries++;
+      return true;
+    }
+    this.detailedEntriesTruncated = true;
+    return false;
+  }
   generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) {
     let content = "# Nexus AI Chat Importer Report\n\n";
+    if (this.detailedEntriesTruncated) {
+      content += `> Detailed rows truncated after ${MAX_REPORT_DETAILED_ENTRIES} entries to keep the report responsive. Counts below include truncated items.
+
+`;
+    }
     content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) + "\n\n";
     if (skippedFiles && skippedFiles.length > 0) {
       content += this.generateSkippedFilesSection(skippedFiles, isSelectiveImport) + "\n\n";
@@ -8946,6 +8976,9 @@ var ImportReport = class {
     }
   }
   hasErrors() {
+    if (this.totalFailed > 0) {
+      return true;
+    }
     let hasFailed = false;
     this.fileSections.forEach((section) => {
       if (section.failed.length > 0) {
@@ -8955,32 +8988,16 @@ var ImportReport = class {
     return hasFailed || this.globalErrors.length > 0;
   }
   getCreatedCount() {
-    let count = 0;
-    this.fileSections.forEach((section) => {
-      count += section.created.length;
-    });
-    return count;
+    return this.totalCreated;
   }
   getUpdatedCount() {
-    let count = 0;
-    this.fileSections.forEach((section) => {
-      count += section.updated.length;
-    });
-    return count;
+    return this.totalUpdated;
   }
   getSkippedCount() {
-    let count = 0;
-    this.fileSections.forEach((section) => {
-      count += section.skipped.length;
-    });
-    return count;
+    return this.totalSkipped;
   }
   getFailedCount() {
-    let count = 0;
-    this.fileSections.forEach((section) => {
-      count += section.failed.length;
-    });
-    return count;
+    return this.totalFailed;
   }
   /**
    * Store file analysis stats for duplicate counting
@@ -9328,6 +9345,7 @@ var FileService = class {
       } else {
         await this.plugin.app.vault.create(filePath, content);
       }
+      this.plugin.getStorageService().invalidateScanCache("conversation file written");
     } catch (error) {
       this.plugin.logger.error(`Error creating or modifying file '${filePath}'`, error.message);
       throw error;
@@ -9383,14 +9401,22 @@ var ConversationProcessor = class {
   /**
    * Process raw conversations (provider agnostic entry point)
    */
-  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider, progressCallback) {
-    const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
-    if (provider === "unknown") {
-      const errorMsg = forcedProvider ? `Forced provider '${forcedProvider}' is not available or registered` : `Could not detect conversation provider from data structure`;
-      importReport.addError("Unknown provider", errorMsg);
-      return importReport;
-    }
-    return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess, progressCallback);
+  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider, progressCallback, existingConversations) {
+    const asGenerator = /* @__PURE__ */ __name(async function* (arr) {
+      for (const item of arr) {
+        yield item;
+      }
+    }, "asGenerator");
+    return this.processRawConversationsStreaming(
+      forcedProvider,
+      asGenerator(rawConversations),
+      importReport,
+      zip,
+      isReprocess,
+      progressCallback,
+      existingConversations,
+      rawConversations.length
+    );
   }
   /**
    * Get provider name for current processing session
@@ -9401,7 +9427,17 @@ var ConversationProcessor = class {
   /**
    * Process conversations using the detected provider
    */
-  async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false, progressCallback) {
+  async processRawConversationsStreaming(providerHint, conversations, importReport, zip, isReprocess = false, progressCallback, existingConversations, totalCountHint) {
+    const first = await conversations.next();
+    if (first.done) {
+      return importReport;
+    }
+    const provider = providerHint || this.providerRegistry.detectProvider([first.value]);
+    if (provider === "unknown") {
+      const errorMsg = providerHint ? `Forced provider '${providerHint}' is not available or registered` : `Could not detect conversation provider from data structure`;
+      importReport.addError("Unknown provider", errorMsg);
+      return importReport;
+    }
     this.currentProvider = provider;
     const adapter = this.providerRegistry.getAdapter(provider);
     if (!adapter) {
@@ -9409,19 +9445,23 @@ var ConversationProcessor = class {
       return importReport;
     }
     const storage = this.plugin.getStorageService();
-    const existingConversationsMap = await storage.scanExistingConversations();
+    const existingConversationsMap = existingConversations || await storage.scanExistingConversations();
     this.counters.totalExistingConversations = existingConversationsMap.size;
     let processedCount = 0;
-    for (const chat of rawConversations) {
+    const processChat = /* @__PURE__ */ __name(async (chat) => {
       await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
       processedCount++;
       progressCallback == null ? void 0 : progressCallback({
         phase: "processing",
         title: "Processing conversations...",
-        detail: `Processing conversation ${processedCount} of ${rawConversations.length}`,
+        detail: totalCountHint ? `Processing conversation ${processedCount} of ${totalCountHint}` : `Processing conversation ${processedCount}`,
         current: processedCount,
-        total: rawConversations.length
+        total: totalCountHint
       });
+    }, "processChat");
+    await processChat(first.value);
+    for await (const chat of conversations) {
+      await processChat(chat);
     }
     return importReport;
   }
@@ -12471,11 +12511,41 @@ var AttachmentMapBuilder = class {
     this.logger = logger7;
   }
   /**
+   * Build attachment map from already-opened JSZip instances
+   */
+  async buildAttachmentMapFromZips(zips, fileNames = []) {
+    const attachmentMap = /* @__PURE__ */ new Map();
+    for (let i = 0; i < zips.length; i++) {
+      const zip = zips[i];
+      const fileName = fileNames[i] || `archive-${i + 1}.zip`;
+      try {
+        for (const [path, zipFile] of Object.entries(zip.files)) {
+          if (zipFile.dir)
+            continue;
+          const fileIds = this.extractFileIds(path);
+          for (const fileId of fileIds) {
+            if (!attachmentMap.has(fileId)) {
+              attachmentMap.set(fileId, []);
+            }
+            attachmentMap.get(fileId).push({
+              zipIndex: i,
+              path,
+              size: this.getUncompressedSize(zipFile),
+              zipFileName: fileName
+            });
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Failed to scan attachments in ${fileName}:`, error);
+      }
+    }
+    return attachmentMap;
+  }
+  /**
    * Scan all ZIP files and build a map of available attachments
    * Processes ZIPs in order (oldest to newest) so newer versions are at the end
    */
   async buildAttachmentMap(files) {
-    var _a;
     const attachmentMap = /* @__PURE__ */ new Map();
     const JSZipModule = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
     for (let i = 0; i < files.length; i++) {
@@ -12495,7 +12565,7 @@ var AttachmentMapBuilder = class {
             locations.push({
               zipIndex: i,
               path,
-              size: ((_a = zipFile._data) == null ? void 0 : _a.uncompressedSize) || 0,
+              size: this.getUncompressedSize(zipFile),
               zipFileName: file.name
             });
           }
@@ -12505,6 +12575,10 @@ var AttachmentMapBuilder = class {
       }
     }
     return attachmentMap;
+  }
+  getUncompressedSize(zipFile) {
+    var _a;
+    return ((_a = zipFile._data) == null ? void 0 : _a.uncompressedSize) || 0;
   }
   /**
    * Extract all possible file IDs from a file path
@@ -12554,6 +12628,377 @@ var AttachmentMapBuilder = class {
 };
 __name(AttachmentMapBuilder, "AttachmentMapBuilder");
 
+// src/utils/conversations-json-parser.ts
+var STRING_LIMIT = 536870888;
+var DEFAULT_CHUNK_SIZE = 1024 * 1024 * 4;
+var DEFAULT_YIELD_BYTES = 1024 * 1024 * 32;
+var STREAM_BUFFER_SAFETY_MARGIN = 1024 * 1024 * 8;
+var DEFAULT_MAX_BUFFER_CHARS = 1024 * 1024 * 256;
+async function parseConversationsJson(conversationsFile) {
+  var _a;
+  const size = (_a = conversationsFile._data) == null ? void 0 : _a.uncompressedSize;
+  if (size && size > STRING_LIMIT) {
+    const data = await conversationsFile.async("uint8array");
+    return await parseWithStreamingFallback(data);
+  }
+  try {
+    const content = await conversationsFile.async("string");
+    return JSON.parse(content);
+  } catch (error) {
+    if (isStringTooLongError(error)) {
+      const data = await conversationsFile.async("uint8array");
+      return await parseWithStreamingFallback(data);
+    }
+    throw error;
+  }
+}
+__name(parseConversationsJson, "parseConversationsJson");
+async function* iterJsonArray(data) {
+  const queue = [];
+  let done = false;
+  let thrown = null;
+  const parsePromise = streamJsonArray(data, async (item) => {
+    queue.push(item);
+  }).catch((err) => {
+    thrown = err;
+  }).finally(() => {
+    done = true;
+  });
+  while (!done || queue.length > 0) {
+    if (thrown) {
+      throw thrown;
+    }
+    if (queue.length > 0) {
+      yield queue.shift();
+      continue;
+    }
+    await yieldToEventLoop();
+  }
+  await parsePromise;
+  if (thrown) {
+    throw thrown;
+  }
+}
+__name(iterJsonArray, "iterJsonArray");
+async function parseWithStreamingFallback(data) {
+  const firstChar = getFirstNonWhitespaceChar(data);
+  if (firstChar === "[") {
+    return streamParseJsonArrayAsync(data);
+  }
+  const generator = streamConversationsFromData(data, { shape: "claude" });
+  const collected = [];
+  for await (const item of generator) {
+    collected.push(item);
+  }
+  return { conversations: collected };
+}
+__name(parseWithStreamingFallback, "parseWithStreamingFallback");
+async function streamParseJsonArrayAsync(data) {
+  const results = [];
+  await streamJsonArray(data, (item) => {
+    results.push(item);
+  });
+  return results;
+}
+__name(streamParseJsonArrayAsync, "streamParseJsonArrayAsync");
+async function streamJsonArray(data, handler) {
+  const decoder = new TextDecoder("utf-8");
+  const chunkSize = DEFAULT_CHUNK_SIZE;
+  const yieldEveryBytes = DEFAULT_YIELD_BYTES;
+  const maxBufferChars = Math.min(
+    STRING_LIMIT - STREAM_BUFFER_SAFETY_MARGIN,
+    Math.max(DEFAULT_MAX_BUFFER_CHARS, data.length + STREAM_BUFFER_SAFETY_MARGIN)
+  );
+  let buffer = "";
+  let depth = 0;
+  let inString = false;
+  let escaping = false;
+  let objectStart = -1;
+  let sawArrayStart = false;
+  let index = 0;
+  let cursor = 0;
+  const trimBufferStart = /* @__PURE__ */ __name(() => {
+    let idx = 0;
+    while (idx < buffer.length) {
+      const ch = buffer.charCodeAt(idx);
+      if (ch === 32 || ch === 10 || ch === 13 || ch === 9 || ch === 44 || ch === 91 || ch === 93) {
+        idx++;
+        continue;
+      }
+      break;
+    }
+    if (idx > 0) {
+      buffer = buffer.slice(idx);
+    }
+  }, "trimBufferStart");
+  const processBuffer = /* @__PURE__ */ __name(async () => {
+    for (let i = cursor; i < buffer.length; i++) {
+      const char = buffer[i];
+      if (inString) {
+        if (escaping) {
+          escaping = false;
+          continue;
+        }
+        if (char === "\\") {
+          escaping = true;
+          continue;
+        }
+        if (char === '"') {
+          inString = false;
+        }
+        continue;
+      }
+      if (char === '"') {
+        inString = true;
+        continue;
+      }
+      if (!sawArrayStart) {
+        if (char === "[") {
+          sawArrayStart = true;
+          continue;
+        } else if (/\s/.test(char)) {
+          continue;
+        } else {
+          throw new Error("Expected '[' at start of conversations.json");
+        }
+      }
+      if (char === "{") {
+        if (depth === 0) {
+          objectStart = i;
+        }
+        depth++;
+      } else if (char === "}") {
+        depth--;
+        if (depth === 0 && objectStart !== -1) {
+          const objStr = buffer.slice(objectStart, i + 1);
+          await handler(JSON.parse(objStr), index++);
+          buffer = buffer.slice(i + 1);
+          objectStart = -1;
+          cursor = 0;
+          i = -1;
+          trimBufferStart();
+        }
+      }
+    }
+    cursor = buffer.length;
+  }, "processBuffer");
+  let bytesSinceYield = 0;
+  const decodeAndProcess = /* @__PURE__ */ __name(async (chunk, stream) => {
+    try {
+      buffer += decoder.decode(chunk, { stream });
+    } catch (err) {
+      if (isStringTooLongError(err)) {
+        throw new Error("Streaming parser hit string size limit while decoding. Try splitting the export into smaller files.");
+      }
+      throw err;
+    }
+    if (buffer.length > maxBufferChars) {
+      const limitMb = Math.floor(maxBufferChars / (1024 * 1024));
+      throw new Error(
+        `Streaming parser buffer exceeded safe size (~${limitMb} MB). The export may contain an extremely large single conversation. Split the export and retry.`
+      );
+    }
+    await processBuffer();
+  }, "decodeAndProcess");
+  for (let offset = 0; offset < data.length; offset += chunkSize) {
+    const chunk = data.subarray(offset, offset + chunkSize);
+    await decodeAndProcess(chunk, true);
+    bytesSinceYield += chunk.length;
+    if (bytesSinceYield >= yieldEveryBytes) {
+      bytesSinceYield = 0;
+      await yieldToEventLoop();
+    }
+  }
+  await decodeAndProcess(new Uint8Array(), false);
+  if (!sawArrayStart) {
+    throw new Error("conversations.json did not start with an array");
+  }
+  if (depth !== 0 || inString) {
+    throw new Error("Invalid JSON array structure in conversations.json");
+  }
+  return index;
+}
+__name(streamJsonArray, "streamJsonArray");
+async function* streamConversationsFromZip(conversationsFile, options) {
+  const data = await conversationsFile.async("uint8array");
+  yield* streamConversationsFromData(data, options);
+}
+__name(streamConversationsFromZip, "streamConversationsFromZip");
+async function* streamConversationsFromData(data, options) {
+  var _a;
+  const shape = (_a = options == null ? void 0 : options.shape) != null ? _a : "auto";
+  if (shape === "chatgpt") {
+    yield* iterJsonArray(data);
+    return;
+  }
+  if (shape === "claude") {
+    const startIndex2 = findConversationsArrayStart(data);
+    if (startIndex2 === null) {
+      throw new Error("Could not locate conversations array in Claude export");
+    }
+    const endIndex = findMatchingArrayEnd(data, startIndex2);
+    const slice = data.subarray(startIndex2, endIndex + 1);
+    yield* iterJsonArray(slice);
+    return;
+  }
+  const firstChar = getFirstNonWhitespaceChar(data);
+  if (firstChar === "[") {
+    yield* iterJsonArray(data);
+    return;
+  }
+  const startIndex = findConversationsArrayStart(data);
+  if (startIndex !== null) {
+    const endIndex = findMatchingArrayEnd(data, startIndex);
+    const slice = data.subarray(startIndex, endIndex + 1);
+    yield* iterJsonArray(slice);
+    return;
+  }
+  throw new Error("Unsupported conversations.json structure for streaming");
+}
+__name(streamConversationsFromData, "streamConversationsFromData");
+async function yieldToEventLoop() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+__name(yieldToEventLoop, "yieldToEventLoop");
+function isStringTooLongError(error) {
+  if (!error)
+    return false;
+  const message = typeof error.message === "string" ? error.message : "";
+  return error instanceof RangeError || error.code === "ERR_STRING_TOO_LONG" || message.includes("Invalid string length") || message.includes("Cannot create a string longer");
+}
+__name(isStringTooLongError, "isStringTooLongError");
+function getFirstNonWhitespaceChar(data) {
+  for (let i = 0; i < data.length; i++) {
+    const code = data[i];
+    if (code === 32 || code === 10 || code === 13 || code === 9) {
+      continue;
+    }
+    return String.fromCharCode(code);
+  }
+  return null;
+}
+__name(getFirstNonWhitespaceChar, "getFirstNonWhitespaceChar");
+function findConversationsArrayStart(data) {
+  const decoder = new TextDecoder("utf-8");
+  const pattern = /"conversations"\s*:/;
+  const maxBuffer = 512 * 1024;
+  let buffer = "";
+  let consumed = 0;
+  for (let offset = 0; offset < data.length; offset += DEFAULT_CHUNK_SIZE) {
+    const chunk = data.subarray(offset, offset + DEFAULT_CHUNK_SIZE);
+    buffer += decoder.decode(chunk, { stream: true });
+    const matchIndex2 = buffer.search(pattern);
+    if (matchIndex2 !== -1) {
+      const bracketIndex = buffer.indexOf("[", matchIndex2);
+      if (bracketIndex !== -1) {
+        return consumed + bracketIndex;
+      }
+    }
+    if (buffer.length > maxBuffer) {
+      const drop = buffer.length - maxBuffer;
+      buffer = buffer.slice(drop);
+      consumed += drop;
+    }
+  }
+  buffer += decoder.decode(new Uint8Array(), { stream: false });
+  const matchIndex = buffer.search(pattern);
+  if (matchIndex !== -1) {
+    const bracketIndex = buffer.indexOf("[", matchIndex);
+    if (bracketIndex !== -1) {
+      return consumed + bracketIndex;
+    }
+  }
+  return null;
+}
+__name(findConversationsArrayStart, "findConversationsArrayStart");
+function findMatchingArrayEnd(data, startIndex) {
+  let inString = false;
+  let escaping = false;
+  let depth = 0;
+  for (let i = startIndex; i < data.length; i++) {
+    const ch = data[i];
+    if (inString) {
+      if (escaping) {
+        escaping = false;
+        continue;
+      }
+      if (ch === 92) {
+        escaping = true;
+        continue;
+      }
+      if (ch === 34) {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === 34) {
+      inString = true;
+      continue;
+    }
+    if (ch === 91) {
+      depth++;
+    } else if (ch === 93) {
+      depth--;
+      if (depth === 0) {
+        return i;
+      }
+    }
+  }
+  throw new Error("Could not find end of conversations array");
+}
+__name(findMatchingArrayEnd, "findMatchingArrayEnd");
+
+// src/services/import-service.ts
+init_constants();
+
+// src/services/session-logger.ts
+init_utils();
+var SessionLogger = class {
+  constructor(plugin, sessionName) {
+    this.plugin = plugin;
+    this.initialized = false;
+    const reportFolder = this.plugin.settings.reportFolder || "Nexus/Reports";
+    this.logFilePath = `${reportFolder}/debug/${sessionName}.log`;
+  }
+  static async create(plugin, sessionName) {
+    const logger7 = new SessionLogger(plugin, sessionName);
+    await logger7.init();
+    return logger7;
+  }
+  async init() {
+    if (this.initialized)
+      return;
+    const folderPath = this.logFilePath.substring(0, this.logFilePath.lastIndexOf("/"));
+    await ensureFolderExists(folderPath, this.plugin.app.vault);
+    const header = `
+
+===== Import session ${new Date().toISOString()} =====
+`;
+    await this.appendRaw(header);
+    this.initialized = true;
+  }
+  async log(level, message, details) {
+    const timestamp = new Date().toISOString();
+    let line = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+    if (details !== void 0) {
+      try {
+        line += ` | details=${JSON.stringify(details, null, 2)}`;
+      } catch (err) {
+        line += ` | details=<unserializable>`;
+      }
+    }
+    line += "\n";
+    await this.appendRaw(line);
+  }
+  getPath() {
+    return this.logFilePath;
+  }
+  async appendRaw(text) {
+    await this.plugin.app.vault.adapter.append(this.logFilePath, text);
+  }
+};
+__name(SessionLogger, "SessionLogger");
+
 // src/services/import-service.ts
 var ImportService = class {
   constructor(plugin) {
@@ -12561,6 +13006,7 @@ var ImportService = class {
     this.importReport = new ImportReport();
     this.currentAttachmentMap = null;
     this.currentZips = [];
+    this.sessionLogger = null;
     this.providerRegistry = createProviderRegistry(plugin);
     this.attachmentMapBuilder = new AttachmentMapBuilder(plugin.logger);
     this.conversationProcessor = new ConversationProcessor(plugin, this.providerRegistry);
@@ -12595,9 +13041,23 @@ var ImportService = class {
       return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
     });
   }
-  async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport) {
+  async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport, options) {
+    var _a, _b, _c, _d, _e, _f;
     const isSharedReport = !!sharedReport;
     this.importReport = sharedReport || new ImportReport();
+    const sessionId = `import-${Date.now()}`;
+    try {
+      this.sessionLogger = await SessionLogger.create(this.plugin, sessionId);
+      await this.sessionLogger.log("info", `Starting import for ${file.name}`, { fileSize: file.size, forcedProvider });
+    } catch (err) {
+      this.plugin.logger.warn("Failed to initialize session logger", err);
+      this.sessionLogger = null;
+    }
+    const largeArchiveMode = (_a = options == null ? void 0 : options.largeArchiveMode) != null ? _a : file.size >= LARGE_ARCHIVE_THRESHOLD_BYTES;
+    const effectiveOptions = {
+      ...options,
+      largeArchiveMode
+    };
     if (!isSharedReport && this.plugin.settings.useCustomMessageTimestampFormat) {
       this.importReport.setCustomTimestampFormat(this.plugin.settings.messageTimestampFormat);
     }
@@ -12617,6 +13077,20 @@ var ImportService = class {
         detail: "Checking file format and contents"
       });
       const zip = await this.validateZipFile(file, forcedProvider);
+      await ((_b = this.sessionLogger) == null ? void 0 : _b.log("info", "ZIP validated", { fileName: file.name, largeArchiveMode }));
+      if (forcedProvider === "chatgpt" && largeArchiveMode && !this.currentAttachmentMap) {
+        try {
+          this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMapFromZips([zip], [file.name]);
+          const chatgptAdapter = this.providerRegistry.getAdapter("chatgpt");
+          if (chatgptAdapter && this.currentAttachmentMap) {
+            chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, [zip]);
+          }
+          await ((_d = this.sessionLogger) == null ? void 0 : _d.log("info", "Built single-zip attachment index", { entries: (_c = this.currentAttachmentMap) == null ? void 0 : _c.size }));
+        } catch (err) {
+          this.plugin.logger.error("Failed to build attachment index for large archive", err);
+          await ((_e = this.sessionLogger) == null ? void 0 : _e.log("error", "Failed to build attachment index", { error: String(err) }));
+        }
+      }
       let isReprocess = false;
       let fileHash = "";
       if (!isSharedReport) {
@@ -12654,7 +13128,16 @@ var ImportService = class {
         fileHash = await getFileHash(file);
       }
       processingStarted = true;
-      await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
+      await this.processConversations(
+        zip,
+        file,
+        isReprocess,
+        forcedProvider,
+        progressCallback,
+        selectedConversationIds,
+        progressModal,
+        effectiveOptions
+      );
       storage.addImportedArchive(fileHash, file.name);
       await this.plugin.saveSettings();
       progressCallback({
@@ -12665,6 +13148,7 @@ var ImportService = class {
     } catch (error) {
       const message = error instanceof NexusAiChatImporterError ? error.message : error instanceof Error ? error.message : "An unknown error occurred";
       this.plugin.logger.error("Error handling zip file", { message });
+      await ((_f = this.sessionLogger) == null ? void 0 : _f.log("error", "Error handling zip file", { message, stack: error == null ? void 0 : error.stack }));
       progressCallback({
         phase: "error",
         title: "Import failed",
@@ -12672,6 +13156,9 @@ var ImportService = class {
       });
       setTimeout(() => progressModal.close(), 5e3);
     } finally {
+      if (this.sessionLogger) {
+        await this.sessionLogger.log("info", "Import finished", { file: file.name });
+      }
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
         if (!progressModal.isComplete) {
@@ -12679,6 +13166,9 @@ var ImportService = class {
             this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
           );
         }
+      }
+      if (processingStarted) {
+        storage.invalidateScanCache("import completed");
       }
     }
   }
@@ -12719,60 +13209,75 @@ var ImportService = class {
       }
     }
   }
-  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal) {
+  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal, options) {
     try {
       progressCallback == null ? void 0 : progressCallback({
         phase: "scanning",
         title: "Extracting conversations...",
         detail: "Reading conversation data from ZIP file"
       });
-      let rawConversations = await this.extractRawConversationsFromZip(zip);
-      if (selectedConversationIds && selectedConversationIds.length > 0) {
-        const originalCount = rawConversations.length;
-        rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
-        if (progressModal) {
-          progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
+      const largeArchiveMode = (options == null ? void 0 : options.largeArchiveMode) === true;
+      if (largeArchiveMode) {
+        await this.processConversationsStreaming(
+          zip,
+          file,
+          isReprocess,
+          forcedProvider,
+          progressCallback,
+          selectedConversationIds,
+          progressModal,
+          options
+        );
+      } else {
+        let rawConversations = await this.extractRawConversationsFromZip(zip);
+        if (selectedConversationIds && selectedConversationIds.length > 0) {
+          const originalCount = rawConversations.length;
+          rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
+          if (progressModal) {
+            progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
+          }
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "scanning",
+            title: "Filtering conversations...",
+            detail: `Selected ${rawConversations.length} of ${originalCount} conversations for import`,
+            total: rawConversations.length
+          });
         }
         progressCallback == null ? void 0 : progressCallback({
           phase: "scanning",
-          title: "Filtering conversations...",
-          detail: `Selected ${rawConversations.length} of ${originalCount} conversations for import`,
+          title: "Scanning existing conversations...",
+          detail: "Checking vault for existing conversations",
           total: rawConversations.length
         });
+        if (forcedProvider) {
+          this.validateProviderMatch(rawConversations, forcedProvider);
+        }
+        progressCallback == null ? void 0 : progressCallback({
+          phase: "processing",
+          title: "Processing conversations...",
+          detail: "Converting and importing conversations",
+          current: 0,
+          total: rawConversations.length
+        });
+        const report = await this.conversationProcessor.processRawConversations(
+          rawConversations,
+          this.importReport,
+          zip,
+          isReprocess,
+          forcedProvider,
+          progressCallback,
+          options == null ? void 0 : options.existingConversations
+        );
+        this.importReport = report;
+        this.importReport.setFileCounters(
+          this.conversationProcessor.getCounters()
+        );
+        progressCallback == null ? void 0 : progressCallback({
+          phase: "writing",
+          title: "Finalizing import...",
+          detail: "Saving settings and generating report"
+        });
       }
-      progressCallback == null ? void 0 : progressCallback({
-        phase: "scanning",
-        title: "Scanning existing conversations...",
-        detail: "Checking vault for existing conversations",
-        total: rawConversations.length
-      });
-      if (forcedProvider) {
-        this.validateProviderMatch(rawConversations, forcedProvider);
-      }
-      progressCallback == null ? void 0 : progressCallback({
-        phase: "processing",
-        title: "Processing conversations...",
-        detail: "Converting and importing conversations",
-        current: 0,
-        total: rawConversations.length
-      });
-      const report = await this.conversationProcessor.processRawConversations(
-        rawConversations,
-        this.importReport,
-        zip,
-        isReprocess,
-        forcedProvider,
-        progressCallback
-      );
-      this.importReport = report;
-      this.importReport.setFileCounters(
-        this.conversationProcessor.getCounters()
-      );
-      progressCallback == null ? void 0 : progressCallback({
-        phase: "writing",
-        title: "Finalizing import...",
-        detail: "Saving settings and generating report"
-      });
     } catch (error) {
       if (error instanceof NexusAiChatImporterError) {
         this.plugin.logger.error("Error processing conversations", error.message);
@@ -12799,8 +13304,7 @@ var ImportService = class {
         "The ZIP file does not contain a conversations.json file"
       );
     }
-    const conversationsJson = await conversationsFile.async("string");
-    const parsedData = JSON.parse(conversationsJson);
+    const parsedData = await parseConversationsJson(conversationsFile);
     if (Array.isArray(parsedData)) {
       return parsedData;
     } else if (parsedData.conversations && Array.isArray(parsedData.conversations)) {
@@ -12811,6 +13315,58 @@ var ImportService = class {
         "The conversations.json file does not contain a valid conversation array"
       );
     }
+  }
+  /**
+   * Streaming processing path used for very large archives
+   */
+  async processConversationsStreaming(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal, options) {
+    var _a;
+    const conversationsFile = zip.file("conversations.json");
+    if (!conversationsFile) {
+      throw new NexusAiChatImporterError(
+        "Missing conversations.json",
+        "The ZIP file does not contain a conversations.json file"
+      );
+    }
+    const providerShape = forcedProvider === "claude" ? "claude" : forcedProvider === "chatgpt" ? "chatgpt" : "auto";
+    let conversationsGenerator = streamConversationsFromZip(conversationsFile, { shape: providerShape });
+    (_a = this.sessionLogger) == null ? void 0 : _a.log("info", "Streaming conversations", { providerShape, largeArchiveMode: options == null ? void 0 : options.largeArchiveMode }).catch(() => {
+    });
+    if (selectedConversationIds && selectedConversationIds.length > 0) {
+      const selectedSet = new Set(selectedConversationIds);
+      const filtered = /* @__PURE__ */ __name(async function* (iter) {
+        for await (const chat of iter) {
+          const chatId = chat.id || chat.uuid;
+          if (selectedSet.has(chatId)) {
+            yield chat;
+          }
+        }
+      }, "filtered");
+      conversationsGenerator = filtered(conversationsGenerator);
+      if (progressModal) {
+        progressModal.setSelectiveImportMode(selectedConversationIds.length, selectedConversationIds.length);
+      }
+    }
+    progressCallback == null ? void 0 : progressCallback({
+      phase: "processing",
+      title: "Processing conversations...",
+      detail: "Streaming conversations (size too large for full parse)"
+    });
+    await this.conversationProcessor.processRawConversationsStreaming(
+      forcedProvider,
+      conversationsGenerator,
+      this.importReport,
+      zip,
+      isReprocess,
+      progressCallback,
+      options == null ? void 0 : options.existingConversations
+    );
+    this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+    progressCallback == null ? void 0 : progressCallback({
+      phase: "writing",
+      title: "Finalizing import...",
+      detail: "Saving settings and generating report"
+    });
   }
   /**
    * Filter conversations by selected IDs
@@ -12983,6 +13539,9 @@ var StorageService = class {
     this.importedArchives = {};
     this.isDirty = false;
     this.saveTimeout = null;
+    this.lastScanResult = null;
+    this.lastScanTimestamp = null;
+    this.lastInvalidationReason = null;
   }
   async loadData() {
     try {
@@ -13050,7 +13609,10 @@ var StorageService = class {
    * 2. Use metadataCache (optimal performance)  
    * 3. Fallback to manual parsing for problematic files
    */
-  async scanExistingConversations() {
+  async scanExistingConversations(forceRescan = false) {
+    if (!forceRescan && this.lastScanResult) {
+      return this.lastScanResult;
+    }
     await this.waitForCacheClean(1e3);
     const conversations = /* @__PURE__ */ new Map();
     const conversationFolder = this.plugin.settings.conversationFolder || this.plugin.settings.archiveFolder || "Nexus/Conversations";
@@ -13094,7 +13656,24 @@ var StorageService = class {
         await new Promise((resolve) => setTimeout(resolve, 1));
       }
     }
+    this.lastScanResult = conversations;
+    this.lastScanTimestamp = Date.now();
+    this.lastInvalidationReason = null;
     return conversations;
+  }
+  /**
+   * Explicitly invalidate the cached scan so the next lookup re-reads the vault.
+   * Use after creating/updating/deleting conversation files or when external
+   * changes may have occurred (e.g., sync, mobile edits).
+   */
+  invalidateScanCache(reason) {
+    if (this.lastScanResult || this.lastScanTimestamp) {
+      const detail = reason ? ` (${reason})` : "";
+      this.plugin.logger.info(`[StorageService] Invalidated conversation cache${detail}`);
+    }
+    this.lastScanResult = null;
+    this.lastScanTimestamp = null;
+    this.lastInvalidationReason = reason || null;
   }
   /**
    * Wait for metadata cache to be clean with timeout
@@ -15673,6 +16252,7 @@ __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
 // src/services/conversation-metadata-extractor.ts
 init_utils();
 init_logger();
+init_constants();
 var ConversationMetadataExtractor = class {
   constructor(providerRegistry, plugin) {
     this.providerRegistry = providerRegistry;
@@ -15682,7 +16262,16 @@ var ConversationMetadataExtractor = class {
    * Extract conversation metadata from ZIP file
    */
   async extractMetadataFromZip(zip, forcedProvider, sourceFileName, sourceFileIndex, existingConversations) {
+    var _a;
     try {
+      const conversationsFile = zip.file("conversations.json");
+      if (!conversationsFile) {
+        throw new Error("Missing conversations.json file in ZIP archive");
+      }
+      const size = (_a = conversationsFile == null ? void 0 : conversationsFile._data) == null ? void 0 : _a.uncompressedSize;
+      if (size && size > LARGE_ARCHIVE_THRESHOLD_BYTES) {
+        return await this.extractMetadataFromZipStreaming(zip, forcedProvider, sourceFileName, sourceFileIndex, existingConversations);
+      }
       const rawConversations = await this.extractRawConversationsFromZip(zip);
       if (rawConversations.length === 0) {
         return [];
@@ -15692,36 +16281,47 @@ var ConversationMetadataExtractor = class {
         throw new Error("Could not detect conversation provider from data structure");
       }
       const metadata = this.extractMetadataByProvider(rawConversations, provider);
-      return metadata.map((conv) => {
-        const enhanced = {
-          ...conv,
-          sourceFile: sourceFileName,
-          sourceFileIndex
-        };
-        if (existingConversations) {
-          const existing = existingConversations.get(conv.id);
-          if (existing) {
-            enhanced.existingUpdateTime = existing.updateTime;
-            const comparison = compareTimestampsIgnoringSeconds(conv.updateTime, existing.updateTime);
-            if (comparison > 0) {
-              enhanced.existenceStatus = "updated";
-              enhanced.hasNewerContent = true;
-            } else {
-              enhanced.existenceStatus = "unchanged";
-              enhanced.hasNewerContent = false;
-            }
-          } else {
-            enhanced.existenceStatus = "new";
-            enhanced.hasNewerContent = true;
-          }
-        } else {
-          enhanced.existenceStatus = "unknown";
-        }
-        return enhanced;
-      });
+      return metadata.map((conv) => this.applySourceAndExistence(conv, sourceFileName, sourceFileIndex, existingConversations));
     } catch (error) {
       throw new Error(`Failed to extract conversation metadata: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+  async extractMetadataFromZipStreaming(zip, forcedProvider, sourceFileName, sourceFileIndex, existingConversations) {
+    const conversationsFile = zip.file("conversations.json");
+    if (!conversationsFile) {
+      throw new Error("Missing conversations.json file in ZIP archive");
+    }
+    const generator = streamConversationsFromZip(conversationsFile, {
+      shape: forcedProvider === "claude" ? "claude" : forcedProvider === "chatgpt" ? "chatgpt" : "auto"
+    });
+    const iterator = generator[Symbol.asyncIterator]();
+    const first = await iterator.next();
+    if (first.done) {
+      return [];
+    }
+    const provider = forcedProvider || this.providerRegistry.detectProvider([first.value]);
+    if (provider === "unknown") {
+      throw new Error("Could not detect conversation provider from data structure");
+    }
+    const metadata = [];
+    const processConversation = /* @__PURE__ */ __name((chat) => {
+      let meta = null;
+      if (provider === "chatgpt") {
+        meta = this.extractChatGPTMetadataForConversation(chat);
+      } else if (provider === "claude") {
+        meta = this.extractClaudeMetadataForConversation(chat);
+      }
+      if (!meta)
+        return;
+      metadata.push(
+        this.applySourceAndExistence(meta, sourceFileName, sourceFileIndex, existingConversations)
+      );
+    }, "processConversation");
+    processConversation(first.value);
+    for (let next = await iterator.next(); !next.done; next = await iterator.next()) {
+      processConversation(next.value);
+    }
+    return metadata;
   }
   /**
    * Extract raw conversation data from ZIP (provider-agnostic)
@@ -15731,8 +16331,7 @@ var ConversationMetadataExtractor = class {
     if (!conversationsFile) {
       throw new Error("Missing conversations.json file in ZIP archive");
     }
-    const conversationsJson = await conversationsFile.async("string");
-    const parsedData = JSON.parse(conversationsJson);
+    const parsedData = await parseConversationsJson(conversationsFile);
     if (Array.isArray(parsedData)) {
       return parsedData;
     } else if (parsedData.conversations && Array.isArray(parsedData.conversations)) {
@@ -15747,73 +16346,66 @@ var ConversationMetadataExtractor = class {
   extractMetadataByProvider(rawConversations, provider) {
     switch (provider) {
       case "chatgpt":
-        return this.extractChatGPTMetadata(rawConversations);
+        return rawConversations.map((chat) => this.extractChatGPTMetadataForConversation(chat)).filter(Boolean);
       case "claude":
-        return this.extractClaudeMetadata(rawConversations);
+        return rawConversations.map((chat) => this.extractClaudeMetadataForConversation(chat)).filter(Boolean);
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
   }
   /**
-   * Extract metadata from ChatGPT conversations
+   * Extract metadata from a single ChatGPT conversation
    */
-  extractChatGPTMetadata(conversations) {
-    return conversations.filter((chat) => {
-      if (!chat.id || chat.id.trim() === "") {
-        logger2.warn("Skipping ChatGPT conversation with missing ID:", chat.title || "Untitled");
-        return false;
-      }
-      if (!chat.create_time || !chat.update_time) {
-        logger2.warn("Skipping ChatGPT conversation with missing timestamps:", chat.id, chat.title || "Untitled");
-        return false;
-      }
-      return true;
-    }).map((chat) => ({
+  extractChatGPTMetadataForConversation(chat) {
+    if (!(chat == null ? void 0 : chat.id) || chat.id.trim() === "") {
+      logger2.warn("Skipping ChatGPT conversation with missing ID:", (chat == null ? void 0 : chat.title) || "Untitled");
+      return null;
+    }
+    if (!chat.create_time || !chat.update_time) {
+      logger2.warn("Skipping ChatGPT conversation with missing timestamps:", { id: chat.id, title: chat.title || "Untitled" });
+      return null;
+    }
+    const messageCount = this.countChatGPTMessages(chat);
+    if (messageCount === 0) {
+      return null;
+    }
+    return {
       id: chat.id,
       title: chat.title || "Untitled",
       createTime: chat.create_time,
       updateTime: chat.update_time,
-      messageCount: this.countChatGPTMessages(chat),
+      messageCount,
       provider: "chatgpt",
       isStarred: chat.is_starred || false,
       isArchived: chat.is_archived || false
-    })).filter((metadata) => {
-      if (metadata.messageCount === 0) {
-        return false;
-      }
-      return true;
-    });
+    };
   }
   /**
-   * Extract metadata from Claude conversations
+   * Extract metadata from a single Claude conversation
    */
-  extractClaudeMetadata(conversations) {
-    return conversations.filter((chat) => {
-      if (!chat.uuid || chat.uuid.trim() === "") {
-        logger2.warn("Skipping Claude conversation with missing UUID:", chat.name || "Untitled");
-        return false;
-      }
-      if (!chat.created_at || !chat.updated_at) {
-        logger2.warn("Skipping Claude conversation with missing timestamps:", chat.uuid, chat.name || "Untitled");
-        return false;
-      }
-      return true;
-    }).map((chat) => ({
+  extractClaudeMetadataForConversation(chat) {
+    if (!(chat == null ? void 0 : chat.uuid) || chat.uuid.trim() === "") {
+      logger2.warn("Skipping Claude conversation with missing UUID:", (chat == null ? void 0 : chat.name) || "Untitled");
+      return null;
+    }
+    if (!chat.created_at || !chat.updated_at) {
+      logger2.warn("Skipping Claude conversation with missing timestamps:", { id: chat.uuid, title: chat.name || "Untitled" });
+      return null;
+    }
+    const messageCount = this.countClaudeMessages(chat);
+    if (messageCount === 0) {
+      return null;
+    }
+    return {
       id: chat.uuid,
       title: chat.name || "Untitled",
       createTime: Math.floor(new Date(chat.created_at).getTime() / 1e3),
       updateTime: Math.floor(new Date(chat.updated_at).getTime() / 1e3),
-      messageCount: this.countClaudeMessages(chat),
+      messageCount,
       provider: "claude",
       isStarred: chat.is_starred || false,
       isArchived: false
-      // Claude doesn't have archived status
-    })).filter((metadata) => {
-      if (metadata.messageCount === 0) {
-        return false;
-      }
-      return true;
-    });
+    };
   }
   /**
    * Count messages in ChatGPT conversation (lightweight version)
@@ -15872,6 +16464,33 @@ var ConversationMetadataExtractor = class {
       return false;
     }
     return message.sender === "human" || message.sender === "assistant";
+  }
+  applySourceAndExistence(metadata, sourceFileName, sourceFileIndex, existingConversations) {
+    const enhanced = {
+      ...metadata,
+      sourceFile: sourceFileName,
+      sourceFileIndex
+    };
+    if (existingConversations) {
+      const existing = existingConversations.get(metadata.id);
+      if (existing) {
+        enhanced.existingUpdateTime = existing.updateTime;
+        const comparison = compareTimestampsIgnoringSeconds(metadata.updateTime, existing.updateTime);
+        if (comparison > 0) {
+          enhanced.existenceStatus = "updated";
+          enhanced.hasNewerContent = true;
+        } else {
+          enhanced.existenceStatus = "unchanged";
+          enhanced.hasNewerContent = false;
+        }
+      } else {
+        enhanced.existenceStatus = "new";
+        enhanced.hasNewerContent = true;
+      }
+    } else {
+      enhanced.existenceStatus = "unknown";
+    }
+    return enhanced;
   }
   /**
    * Extract metadata from multiple ZIP files (for multi-file selective import)
@@ -16450,11 +17069,12 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     var _a, _b, _c, _d;
     try {
       new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      const largeArchiveMode = this.isLargeArchive(files);
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
-      const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
+      const extractionResult = largeArchiveMode ? { conversations: [], analysisInfo: void 0, fileStats: void 0 } : await metadataExtractor.extractMetadataFromMultipleZips(
         files,
         provider,
         existingConversations
@@ -16463,42 +17083,65 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (this.settings.useCustomMessageTimestampFormat) {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
-      if (extractionResult.conversations.length === 0) {
-        new import_obsidian32.Notice("No new or updated conversations found. All conversations are already up to date.");
-        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
-        if (reportPath2) {
-          this.showImportCompletionDialog(operationReport, reportPath2);
-        }
-        return;
-      }
-      const allIds = extractionResult.conversations.map((c) => c.id);
-      const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
-      const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
-      new import_obsidian32.Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
-      const conversationsByFile = /* @__PURE__ */ new Map();
-      extractionResult.conversations.forEach((conv) => {
-        if (conv.sourceFile) {
-          if (!conversationsByFile.has(conv.sourceFile)) {
-            conversationsByFile.set(conv.sourceFile, []);
+      if (!largeArchiveMode) {
+        if (extractionResult.conversations.length === 0) {
+          new import_obsidian32.Notice("No new or updated conversations found. All conversations are already up to date.");
+          const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
+          if (reportPath2) {
+            this.showImportCompletionDialog(operationReport, reportPath2);
           }
-          conversationsByFile.get(conv.sourceFile).push(conv.id);
+          return;
         }
-      });
-      if (provider === "chatgpt" && files.length > 1) {
-        await this.importService.buildAttachmentMapForMultiZip(files);
-      }
-      for (const file of files) {
-        const conversationsForFile = conversationsByFile.get(file.name);
-        if (conversationsForFile && conversationsForFile.length > 0) {
+        const allIds = extractionResult.conversations.map((c) => c.id);
+        const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
+        const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
+        new import_obsidian32.Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
+        const conversationsByFile = /* @__PURE__ */ new Map();
+        extractionResult.conversations.forEach((conv) => {
+          if (conv.sourceFile) {
+            if (!conversationsByFile.has(conv.sourceFile)) {
+              conversationsByFile.set(conv.sourceFile, []);
+            }
+            conversationsByFile.get(conv.sourceFile).push(conv.id);
+          }
+        });
+        if (provider === "chatgpt" && files.length > 1) {
+          await this.importService.buildAttachmentMapForMultiZip(files);
+        }
+        for (const file of files) {
+          const conversationsForFile = conversationsByFile.get(file.name);
+          if (conversationsForFile && conversationsForFile.length > 0) {
+            try {
+              await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport, {
+                existingConversations,
+                largeArchiveMode: false
+              });
+            } catch (error) {
+              this.logger.error(`Error processing file ${file.name}:`, error);
+            }
+          }
+        }
+        if (provider === "chatgpt" && files.length > 1) {
+          this.importService.clearAttachmentMap();
+        }
+      } else {
+        new import_obsidian32.Notice("Large archive detected (>=100MB). Skipping metadata analysis and streaming import directly.");
+        if (provider === "chatgpt" && files.length > 1) {
+          await this.importService.buildAttachmentMapForMultiZip(files);
+        }
+        for (const file of files) {
           try {
-            await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+            await this.importService.handleZipFile(file, provider, void 0, operationReport, {
+              existingConversations,
+              largeArchiveMode: true
+            });
           } catch (error) {
             this.logger.error(`Error processing file ${file.name}:`, error);
           }
         }
-      }
-      if (provider === "chatgpt" && files.length > 1) {
-        this.importService.clearAttachmentMap();
+        if (provider === "chatgpt" && files.length > 1) {
+          this.importService.clearAttachmentMap();
+        }
       }
       const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
       if (reportPath) {
@@ -16524,6 +17167,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   async handleSelectiveImport(files, provider) {
     try {
       new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      if (this.isLargeArchive(files)) {
+        new import_obsidian32.Notice("Selected ZIP is very large. Selective import is unavailable. Please split the export or use Import All.");
+        return;
+      }
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -16554,7 +17201,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         this.app,
         extractionResult.conversations,
         (result) => {
-          this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo, extractionResult.fileStats);
+          this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo, extractionResult.fileStats, existingConversations);
         },
         this,
         extractionResult.analysisInfo
@@ -16568,10 +17215,13 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       new import_obsidian32.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+  isLargeArchive(files) {
+    return files.some((f) => f.size >= LARGE_ARCHIVE_THRESHOLD_BYTES);
+  }
   /**
    * Handle the result from conversation selection dialog
    */
-  async handleConversationSelectionResult(result, files, provider, analysisInfo, fileStats) {
+  async handleConversationSelectionResult(result, files, provider, analysisInfo, fileStats, existingConversations) {
     const operationReport = new ImportReport();
     if (this.settings.useCustomMessageTimestampFormat) {
       operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
@@ -16598,7 +17248,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const conversationsForFile = conversationsByFile.get(file.name);
       if (conversationsForFile && conversationsForFile.length > 0) {
         try {
-          await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+          await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport, {
+            existingConversations,
+            largeArchiveMode: false
+          });
         } catch (error) {
           this.logger.error(`Error processing file ${file.name}:`, error);
           new import_obsidian32.Notice(`Error processing ${file.name}. Check console for details.`);
