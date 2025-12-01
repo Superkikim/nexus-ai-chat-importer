@@ -13554,12 +13554,13 @@ var IncrementalUpgradeManager = class {
       const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
       if (upgradeChain.length === 0) {
         await this.markUpgradeComplete(currentVersion);
-        await this.showUpgradeDialog(currentVersion, previousVersion, []);
         return {
           success: true,
           upgradesExecuted: 0,
           upgradesSkipped: 0,
           upgradesFailed: 0,
+          showCompletionDialog: true,
+          upgradedToVersion: currentVersion,
           results: []
         };
       }

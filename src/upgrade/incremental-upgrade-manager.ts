@@ -115,19 +115,23 @@ export class IncrementalUpgradeManager {
             }
 
             // Get upgrade chain: all upgrades between previousVersion and currentVersion
-            const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
+	            const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
 
-            if (upgradeChain.length === 0) {
-                await this.markUpgradeComplete(currentVersion);
-                await this.showUpgradeDialog(currentVersion, previousVersion, []);
-                return {
-                    success: true,
-                    upgradesExecuted: 0,
-                    upgradesSkipped: 0,
-                    upgradesFailed: 0,
-                    results: []
-                };
-            }
+	            if (upgradeChain.length === 0) {
+	                await this.markUpgradeComplete(currentVersion);
+	                // No migrations needed for this upgrade path, but we still
+	                // want to show the "new version" dialog with Ko-fi and
+	                // README Overview (same UX as when migrations ran).
+	                return {
+	                    success: true,
+	                    upgradesExecuted: 0,
+	                    upgradesSkipped: 0,
+	                    upgradesFailed: 0,
+	                    showCompletionDialog: true,
+	                    upgradedToVersion: currentVersion,
+	                    results: []
+	                };
+	            }
 
 
             // PHASE 1: Execute migrations directly (no dialog before)
