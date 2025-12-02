@@ -41,13 +41,14 @@ export interface PluginSettings {
     // ========================================
     lastConversationsPerPage: number;
 
-    // ========================================
-    // 🔄 MIGRATION FLAGS
-    // ========================================
-    hasShownUpgradeNotice: boolean;
-    hasCompletedUpgrade: boolean;
-    currentVersion: string;
-    previousVersion: string;
+	// ========================================
+	// 🔄 MIGRATION FLAGS
+	// ========================================
+	hasShownUpgradeNotice: boolean;
+	hasSeenClaude132UpgradeNotice: boolean;
+	hasCompletedUpgrade: boolean;
+	currentVersion: string;
+	previousVersion: string;
 
     // ========================================
     // 🗑️ DEPRECATED (will be removed in migration)

@@ -25,8 +25,8 @@ import { NewVersionModal } from "./new-version-modal";
  * Uses the universal NewVersionModal template
  */
 export class UpgradeNotice132Dialog {
-    static open(app: App, plugin: NexusAiChatImporterPlugin): void {
-        const fallbackMessage = `## 🔄 What Changed
+	    static open(app: App, plugin: NexusAiChatImporterPlugin): void {
+	        const fallbackMessage = `## 🔄 What Changed
 
 **Claude changed their export format.** If you imported Claude conversations recently and noticed missing code files or strange links, v1.3.2 fixes this.
 
@@ -37,26 +37,26 @@ export class UpgradeNotice132Dialog {
 
 ---
 
-## 🐛 Bug Fixes
-
-- **Claude artifacts now work with the new export format**
-- **Fixed crashes during import** (missing logger errors)
-- **Fixed weird formatting** in conversations with multiple attachments
-- **Better messages** when re-importing conversations
-
----
+	## 🐛 Bug Fixes
+	
+	- **Claude artifacts now work with the new export format**
+	- **Fixed crashes during import** (missing logger errors)
+	- **Fixed weird formatting** in conversations with multiple attachments
+	- **Better messages** when re-importing conversations
+	- **Minor fix in v1.3.3** – upgrade notice now only appears once per vault
+	
+	---
 
 ## 🙏 Questions?
 
 If something doesn't work as expected, please report it on the [forum thread](https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664).`;
 
-        new NewVersionModal(
-            app,
-            plugin,
-            "1.3.2",
-            fallbackMessage,
-            "1.3.2" // GitHub tag
-        ).open();
+		        new NewVersionModal(
+		            app,
+		            plugin,
+		            plugin.manifest.version,
+		            fallbackMessage
+		        ).open();
     }
 }
 

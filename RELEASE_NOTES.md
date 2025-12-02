@@ -1,5 +1,29 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.3.3 - Quick Patch: Upgrade Dialog & Claude Notice
+
+![Version](https://img.shields.io/badge/version-1.3.3-blue) ![Patch](https://img.shields.io/badge/type-quick_patch-orange)
+
+### 🔧 What’s fixed
+
+- **Claude 1.3.2 upgrade notice no longer spams on every Obsidian restart.**
+  - It is shown **once per vault** for users coming from 1.3.0.
+  - A new internal flag remembers that you’ve seen it.
+- **Upgrade experience is now consistent for all 1.3.x updates.**
+  - The old short “upgrade” popup has been removed.
+  - You now always see the full **Upgrade Complete** dialog with Ko-fi and the **README → Overview** content, even when there are no migrations (for example 1.3.2 → 1.3.3).
+- **Claude notice content is clearer and shorter.**
+  - It reuses the same Overview content from README.
+  - The text focuses on the Claude export change and what to do.
+
+### ✅ Recommended action
+
+- If you saw the Claude warning on **every startup** in 1.3.2, simply upgrade to **1.3.3**:
+  - The notice will appear once, then stop.
+  - All import behavior remains the same as 1.3.2.
+
+---
+
 ## Version 1.3.2 - Bug Fixes & Claude Format Update
 
 ![Version](https://img.shields.io/badge/version-1.3.2-blue) ![Bug Fixes](https://img.shields.io/badge/bug_fixes-critical-red)

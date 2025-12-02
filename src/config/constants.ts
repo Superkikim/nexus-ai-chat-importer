@@ -43,13 +43,14 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     // ========================================
     lastConversationsPerPage: 50,
 
-    // ========================================
-    // 🔄 MIGRATION FLAGS
-    // ========================================
-    hasShownUpgradeNotice: false,
-    hasCompletedUpgrade: false,
-    currentVersion: "0.0.0",
-    previousVersion: "0.0.0",
+	    // ========================================
+	    // 🔄 MIGRATION FLAGS
+	    // ========================================
+	    hasShownUpgradeNotice: false,
+	    hasSeenClaude132UpgradeNotice: false,
+	    hasCompletedUpgrade: false,
+	    currentVersion: "0.0.0",
+	    previousVersion: "0.0.0",
 };
 
 // Internal threshold for switching to streaming/large-archive mode (100 MB uncompressed)

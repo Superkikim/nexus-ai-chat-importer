@@ -19,6 +19,7 @@
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { GITHUB } from "../config/constants";
 
 /**
  * Universal template for new version announcements
@@ -28,20 +29,17 @@ export class NewVersionModal extends Modal {
     private plugin: NexusAiChatImporterPlugin;
     private version: string;
     private fallbackMessage: string;
-    private githubTag: string;
 
     constructor(
         app: App, 
         plugin: NexusAiChatImporterPlugin, 
         version: string, 
-        fallbackMessage: string,
-        githubTag?: string
+	        fallbackMessage: string
     ) {
         super(app);
         this.plugin = plugin;
         this.version = version;
         this.fallbackMessage = fallbackMessage;
-        this.githubTag = githubTag || version; // Default to version if not specified
     }
 
     onOpen(): void {
@@ -67,16 +65,17 @@ export class NewVersionModal extends Modal {
         let message = this.fallbackMessage;
 
         try {
-            // Try to fetch release notes from GitHub
-            const response = await fetch(`https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/${this.githubTag}`);
-            if (response.ok) {
-                const release = await response.json();
-                if (release.body) {
-                    message = release.body;
-                }
-            }
+	            // Try to fetch the README for the current version and extract the Overview section
+	            const response = await fetch(`${GITHUB.RAW_BASE}/${this.version}/README.md`);
+	            if (response.ok) {
+	                const readmeText = await response.text();
+	                const overview = this.extractOverviewFromReadme(readmeText);
+	                if (overview) {
+	                    message = overview;
+	                }
+	            }
         } catch (error) {
-            // Use fallback message if GitHub fetch fails
+	            // Use fallback message if GitHub fetch fails
         }
 
         // Render markdown content
@@ -95,6 +94,16 @@ export class NewVersionModal extends Modal {
         // Add custom styles
         this.addStyles();
     }
+
+	    /**
+	     * Extract the "## Overview" section from README content.
+	     * Returns only the body under the heading (excluding the heading line itself).
+	     */
+	    private extractOverviewFromReadme(readmeText: string): string | null {
+	        const overviewRegex = /## Overview\s+([\s\S]*?)(?=^##\s|\Z)/m;
+	        const match = readmeText.match(overviewRegex);
+	        return match ? match[1].trim() : null;
+	    }
 
     private addCloseButton() {
         const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container" });
