@@ -32,6 +32,15 @@ import { logger } from "../logger";
 import { ImportProgressModal, ImportProgressCallback } from "../ui/import-progress-modal";
 import { AttachmentMapBuilder, AttachmentMap } from "./attachment-map-builder";
 import type NexusAiChatImporterPlugin from "../main";
+import { parseConversationsJson, streamConversationsFromZip } from "../utils/conversations-json-parser";
+import { LARGE_ARCHIVE_THRESHOLD_BYTES } from "../config/constants";
+import { ConversationCatalogEntry } from "../types/plugin";
+import { SessionLogger } from "./session-logger";
+
+type HandleZipOptions = {
+    existingConversations?: Map<string, ConversationCatalogEntry>;
+    largeArchiveMode?: boolean;
+};
 
 export class ImportService {
     private importReport: ImportReport = new ImportReport();
@@ -40,6 +49,7 @@ export class ImportService {
     private attachmentMapBuilder: AttachmentMapBuilder;
     private currentAttachmentMap: AttachmentMap | null = null;
     private currentZips: JSZip[] = [];
+    private sessionLogger: SessionLogger | null = null;
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
         this.providerRegistry = createProviderRegistry(plugin);
@@ -79,10 +89,27 @@ export class ImportService {
         });
     }
 
-    async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[], sharedReport?: ImportReport) {
+    async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[], sharedReport?: ImportReport, options?: HandleZipOptions) {
         // Use shared report if provided, otherwise create a new one
         const isSharedReport = !!sharedReport;
         this.importReport = sharedReport || new ImportReport();
+
+        // Create per-run file logger (best-effort)
+        const sessionId = `import-${Date.now()}`;
+        try {
+            this.sessionLogger = await SessionLogger.create(this.plugin, sessionId);
+            await this.sessionLogger.log("info", `Starting import for ${file.name}`, { fileSize: file.size, forcedProvider });
+        } catch (err) {
+            // Non-fatal: fall back to console only
+            this.plugin.logger.warn("Failed to initialize session logger", err);
+            this.sessionLogger = null;
+        }
+
+        const largeArchiveMode = options?.largeArchiveMode ?? (file.size >= LARGE_ARCHIVE_THRESHOLD_BYTES);
+        const effectiveOptions: HandleZipOptions = {
+            ...options,
+            largeArchiveMode
+        };
 
         // Set custom timestamp format if enabled (only if creating new report)
         if (!isSharedReport && this.plugin.settings.useCustomMessageTimestampFormat) {
@@ -117,6 +144,22 @@ export class ImportService {
             });
 
             const zip = await this.validateZipFile(file, forcedProvider);
+            await this.sessionLogger?.log("info", "ZIP validated", { fileName: file.name, largeArchiveMode });
+
+            // For large ChatGPT archives, build a single-ZIP attachment index to avoid repeated scans
+            if (forcedProvider === 'chatgpt' && largeArchiveMode && !this.currentAttachmentMap) {
+                try {
+                    this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMapFromZips([zip], [file.name]);
+                    const chatgptAdapter = this.providerRegistry.getAdapter('chatgpt') as any;
+                    if (chatgptAdapter && this.currentAttachmentMap) {
+                        chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, [zip]);
+                    }
+                    await this.sessionLogger?.log("info", "Built single-zip attachment index", { entries: this.currentAttachmentMap?.size });
+                } catch (err) {
+                    this.plugin.logger.error("Failed to build attachment index for large archive", err);
+                    await this.sessionLogger?.log("error", "Failed to build attachment index", { error: String(err) });
+                }
+            }
 
             // When using shared report (new workflow), skip the "already imported" check
             // because the analysis already determined what needs to be imported
@@ -167,7 +210,16 @@ export class ImportService {
             }
 
             processingStarted = true;
-            await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
+            await this.processConversations(
+                zip,
+                file,
+                isReprocess,
+                forcedProvider,
+                progressCallback,
+                selectedConversationIds,
+                progressModal,
+                effectiveOptions
+            );
 
             // Track imported archive
             storage.addImportedArchive(fileHash, file.name);
@@ -187,6 +239,7 @@ export class ImportService {
                 : "An unknown error occurred";
 
             this.plugin.logger.error("Error handling zip file", { message });
+            await this.sessionLogger?.log("error", "Error handling zip file", { message, stack: (error as any)?.stack });
 
             progressCallback({
                 phase: 'error',
@@ -197,6 +250,9 @@ export class ImportService {
             // Keep modal open for error state
             setTimeout(() => progressModal.close(), 5000);
         } finally {
+            if (this.sessionLogger) {
+                await this.sessionLogger.log("info", "Import finished", { file: file.name });
+            }
             // Only write report if processing actually started AND this is NOT a shared report
             // (shared reports are written by the caller after all files are processed)
             if (processingStarted && !isSharedReport) {
@@ -210,6 +266,11 @@ export class ImportService {
                             : "Import completed. Log file created in the archive folder."
                     );
                 }
+            }
+
+            // Any imports that completed will have created/updated notes; invalidate scan cache
+            if (processingStarted) {
+                storage.invalidateScanCache("import completed");
             }
         }
     }
@@ -264,7 +325,16 @@ export class ImportService {
         }
     }
 
-    private async processConversations(zip: JSZip, file: File, isReprocess: boolean, forcedProvider?: string, progressCallback?: ImportProgressCallback, selectedConversationIds?: string[], progressModal?: ImportProgressModal): Promise<void> {
+    private async processConversations(
+        zip: JSZip,
+        file: File,
+        isReprocess: boolean,
+        forcedProvider?: string,
+        progressCallback?: ImportProgressCallback,
+        selectedConversationIds?: string[],
+        progressModal?: ImportProgressModal,
+        options?: HandleZipOptions
+    ): Promise<void> {
         try {
             progressCallback?.({
                 phase: 'scanning',
@@ -272,67 +342,83 @@ export class ImportService {
                 detail: 'Reading conversation data from ZIP file'
             });
 
-            // Extract raw conversation data (provider agnostic)
-            let rawConversations = await this.extractRawConversationsFromZip(zip);
+            const largeArchiveMode = options?.largeArchiveMode === true;
 
-            // Filter conversations if specific IDs are selected
-            if (selectedConversationIds && selectedConversationIds.length > 0) {
-                const originalCount = rawConversations.length;
-                rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
+            if (largeArchiveMode) {
+                await this.processConversationsStreaming(
+                    zip,
+                    file,
+                    isReprocess,
+                    forcedProvider,
+                    progressCallback,
+                    selectedConversationIds,
+                    progressModal,
+                    options
+                );
+            } else {
+                // Extract raw conversation data (provider agnostic)
+                let rawConversations = await this.extractRawConversationsFromZip(zip);
 
-                // Set selective import mode in progress modal
-                if (progressModal) {
-                    progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
+                // Filter conversations if specific IDs are selected
+                if (selectedConversationIds && selectedConversationIds.length > 0) {
+                    const originalCount = rawConversations.length;
+                    rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
+
+                    // Set selective import mode in progress modal
+                    if (progressModal) {
+                        progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
+                    }
+
+                    progressCallback?.({
+                        phase: 'scanning',
+                        title: 'Filtering conversations...',
+                        detail: `Selected ${rawConversations.length} of ${originalCount} conversations for import`,
+                        total: rawConversations.length
+                    });
                 }
 
                 progressCallback?.({
                     phase: 'scanning',
-                    title: 'Filtering conversations...',
-                    detail: `Selected ${rawConversations.length} of ${originalCount} conversations for import`,
+                    title: 'Scanning existing conversations...',
+                    detail: 'Checking vault for existing conversations',
                     total: rawConversations.length
                 });
+
+                // Validate provider if forced
+                if (forcedProvider) {
+                    this.validateProviderMatch(rawConversations, forcedProvider);
+                }
+
+                progressCallback?.({
+                    phase: 'processing',
+                    title: 'Processing conversations...',
+                    detail: 'Converting and importing conversations',
+                    current: 0,
+                    total: rawConversations.length
+                });
+
+                // Process through conversation processor (handles provider detection/conversion)
+                const report = await this.conversationProcessor.processRawConversations(
+                    rawConversations,
+                    this.importReport,
+                    zip,
+                    isReprocess,
+                    forcedProvider,
+                    progressCallback,
+                    options?.existingConversations
+                );
+
+                this.importReport = report;
+                this.importReport.setFileCounters(
+                    this.conversationProcessor.getCounters()
+                );
+
+                progressCallback?.({
+                    phase: 'writing',
+                    title: 'Finalizing import...',
+                    detail: 'Saving settings and generating report'
+                });
             }
-
-            progressCallback?.({
-                phase: 'scanning',
-                title: 'Scanning existing conversations...',
-                detail: 'Checking vault for existing conversations',
-                total: rawConversations.length
-            });
-
-            // Validate provider if forced
-            if (forcedProvider) {
-                this.validateProviderMatch(rawConversations, forcedProvider);
-            }
-
-            progressCallback?.({
-                phase: 'processing',
-                title: 'Processing conversations...',
-                detail: 'Converting and importing conversations',
-                current: 0,
-                total: rawConversations.length
-            });
-
-            // Process through conversation processor (handles provider detection/conversion)
-            const report = await this.conversationProcessor.processRawConversations(
-                rawConversations,
-                this.importReport,
-                zip,
-                isReprocess,
-                forcedProvider,
-                progressCallback
-            );
-
-            this.importReport = report;
-            this.importReport.setFileCounters(
-                this.conversationProcessor.getCounters()
-            );
-
-            progressCallback?.({
-                phase: 'writing',
-                title: 'Finalizing import...',
-                detail: 'Saving settings and generating report'
-            });
         } catch (error: unknown) {
             if (error instanceof NexusAiChatImporterError) {
                 this.plugin.logger.error("Error processing conversations", error.message);
@@ -362,8 +448,7 @@ export class ImportService {
             );
         }
 
-        const conversationsJson = await conversationsFile.async("string");
-        const parsedData = JSON.parse(conversationsJson);
+        const parsedData = await parseConversationsJson(conversationsFile);
 
         // Handle different data structures
         if (Array.isArray(parsedData)) {
@@ -378,6 +463,80 @@ export class ImportService {
                 "The conversations.json file does not contain a valid conversation array"
             );
         }
+    }
+
+    /**
+     * Streaming processing path used for very large archives
+     */
+    private async processConversationsStreaming(
+        zip: JSZip,
+        file: File,
+        isReprocess: boolean,
+        forcedProvider?: string,
+        progressCallback?: ImportProgressCallback,
+        selectedConversationIds?: string[],
+        progressModal?: ImportProgressModal,
+        options?: HandleZipOptions
+    ): Promise<void> {
+        const conversationsFile = zip.file("conversations.json");
+        if (!conversationsFile) {
+            throw new NexusAiChatImporterError(
+                "Missing conversations.json",
+                "The ZIP file does not contain a conversations.json file"
+            );
+        }
+
+        const providerShape = forcedProvider === 'claude'
+            ? 'claude'
+            : forcedProvider === 'chatgpt'
+            ? 'chatgpt'
+            : 'auto';
+
+        let conversationsGenerator = streamConversationsFromZip(conversationsFile, { shape: providerShape as any });
+
+        this.sessionLogger?.log("info", "Streaming conversations", { providerShape, largeArchiveMode: options?.largeArchiveMode }).catch(() => {});
+
+        // Apply filtering for selective imports if IDs are provided (best-effort without metadata pre-pass)
+        if (selectedConversationIds && selectedConversationIds.length > 0) {
+            const selectedSet = new Set(selectedConversationIds);
+            const filtered = async function* (iter: AsyncGenerator<any, void, unknown>) {
+                for await (const chat of iter) {
+                    const chatId = chat.id || chat.uuid;
+                    if (selectedSet.has(chatId)) {
+                        yield chat;
+                    }
+                }
+            };
+            conversationsGenerator = filtered(conversationsGenerator);
+
+            if (progressModal) {
+                progressModal.setSelectiveImportMode(selectedConversationIds.length, selectedConversationIds.length);
+            }
+        }
+
+        progressCallback?.({
+            phase: 'processing',
+            title: 'Processing conversations...',
+            detail: 'Streaming conversations (size too large for full parse)'
+        });
+
+        await this.conversationProcessor.processRawConversationsStreaming(
+            forcedProvider,
+            conversationsGenerator,
+            this.importReport,
+            zip,
+            isReprocess,
+            progressCallback,
+            options?.existingConversations
+        );
+
+        this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+
+        progressCallback?.({
+            phase: 'writing',
+            title: 'Finalizing import...',
+            detail: 'Saving settings and generating report'
+        });
     }
 
     /**

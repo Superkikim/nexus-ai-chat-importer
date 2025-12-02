@@ -37,6 +37,9 @@ export class FileService {
             } else {
                 await this.plugin.app.vault.create(filePath, content);
             }
+
+            // Conversation files were created/updated, so cached scans are now stale
+            this.plugin.getStorageService().invalidateScanCache("conversation file written");
         } catch (error: any) {
             this.plugin.logger.error(`Error creating or modifying file '${filePath}'`, error.message);
             throw error;

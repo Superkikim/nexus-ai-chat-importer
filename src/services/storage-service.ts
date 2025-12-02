@@ -28,6 +28,9 @@ export class StorageService {
     private importedArchives: Record<string, { fileName: string; date: string }> = {};
     private isDirty = false;
     private saveTimeout: number | null = null;
+    private lastScanResult: Map<string, ConversationCatalogEntry> | null = null;
+    private lastScanTimestamp: number | null = null;
+    private lastInvalidationReason: string | null = null;
 
     constructor(private plugin: NexusAiChatImporterPlugin) {}
 
@@ -119,7 +122,11 @@ export class StorageService {
      * 2. Use metadataCache (optimal performance)  
      * 3. Fallback to manual parsing for problematic files
      */
-    async scanExistingConversations(): Promise<Map<string, ConversationCatalogEntry>> {
+    async scanExistingConversations(forceRescan: boolean = false): Promise<Map<string, ConversationCatalogEntry>> {
+        if (!forceRescan && this.lastScanResult) {
+            return this.lastScanResult;
+        }
+
         // Step 1: Wait for cache to be clean (with timeout)
         await this.waitForCacheClean(1000); // Max 1 second wait
 
@@ -188,7 +195,25 @@ export class StorageService {
             }
         }
 
+        this.lastScanResult = conversations;
+        this.lastScanTimestamp = Date.now();
+        this.lastInvalidationReason = null;
         return conversations;
+    }
+
+    /**
+     * Explicitly invalidate the cached scan so the next lookup re-reads the vault.
+     * Use after creating/updating/deleting conversation files or when external
+     * changes may have occurred (e.g., sync, mobile edits).
+     */
+    invalidateScanCache(reason?: string) {
+        if (this.lastScanResult || this.lastScanTimestamp) {
+            const detail = reason ? ` (${reason})` : "";
+            this.plugin.logger.info(`[StorageService] Invalidated conversation cache${detail}`);
+        }
+        this.lastScanResult = null;
+        this.lastScanTimestamp = null;
+        this.lastInvalidationReason = reason || null;
     }
 
     /**

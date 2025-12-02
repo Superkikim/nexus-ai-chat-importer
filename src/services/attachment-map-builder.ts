@@ -30,6 +30,43 @@ export class AttachmentMapBuilder {
     constructor(private logger: Logger) {}
 
     /**
+     * Build attachment map from already-opened JSZip instances
+     */
+    async buildAttachmentMapFromZips(zips: JSZip[], fileNames: string[] = []): Promise<AttachmentMap> {
+        const attachmentMap: AttachmentMap = new Map();
+
+        for (let i = 0; i < zips.length; i++) {
+            const zip = zips[i];
+            const fileName = fileNames[i] || `archive-${i + 1}.zip`;
+
+            try {
+                for (const [path, zipFile] of Object.entries(zip.files)) {
+                    if (zipFile.dir) continue;
+
+                    const fileIds = this.extractFileIds(path);
+
+                    for (const fileId of fileIds) {
+                        if (!attachmentMap.has(fileId)) {
+                            attachmentMap.set(fileId, []);
+                        }
+
+                        attachmentMap.get(fileId)!.push({
+                            zipIndex: i,
+                            path,
+                            size: this.getUncompressedSize(zipFile),
+                            zipFileName: fileName
+                        });
+                    }
+                }
+            } catch (error) {
+                this.logger.error(`Failed to scan attachments in ${fileName}:`, error);
+            }
+        }
+
+        return attachmentMap;
+    }
+
+    /**
      * Scan all ZIP files and build a map of available attachments
      * Processes ZIPs in order (oldest to newest) so newer versions are at the end
      */
@@ -57,12 +94,12 @@ export class AttachmentMapBuilder {
                         }
 
                         const locations = attachmentMap.get(fileId)!;
-                        
+
                         // Add this location (will be in chronological order)
                         locations.push({
                             zipIndex: i,
                             path: path,
-                            size: zipFile._data?.uncompressedSize || 0,
+                            size: this.getUncompressedSize(zipFile),
                             zipFileName: file.name
                         });
                     }
@@ -73,6 +110,10 @@ export class AttachmentMapBuilder {
         }
 
         return attachmentMap;
+    }
+
+    private getUncompressedSize(zipFile: JSZip.JSZipObject): number {
+        return (zipFile as any)._data?.uncompressedSize || 0;
     }
 
     /**
@@ -132,4 +173,3 @@ export class AttachmentMapBuilder {
         return attachmentMap.get(fileId) || [];
     }
 }
-
