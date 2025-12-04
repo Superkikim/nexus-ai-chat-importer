@@ -25,6 +25,7 @@ import { ClaudeConversation, ClaudeExportData } from "../providers/claude/claude
 import { isValidMessage, compareTimestampsIgnoringSeconds } from "../utils";
 import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
+import { StreamingJsonArrayParser } from "../utils/streaming-json-array-parser";
 
 /**
  * Conversation existence status for import preview
@@ -191,25 +192,29 @@ export class ConversationMetadataExtractor {
             return conversations;
         }
 
-        // ChatGPT/Claude format: conversations.json
-        const conversationsFile = zip.file("conversations.json");
-        if (!conversationsFile) {
-            throw new Error("Missing conversations.json file or chat-{uuid}.json files in ZIP archive");
-        }
+	        // ChatGPT/Claude format: conversations.json
+	        const conversationsFile = zip.file("conversations.json");
+	        if (!conversationsFile) {
+	            throw new Error("Missing conversations.json file or chat-{uuid}.json files in ZIP archive");
+	        }
 
-        const conversationsJson = await conversationsFile.async("string");
-        const parsedData = JSON.parse(conversationsJson);
+	        const conversationsJson = await conversationsFile.async("string");
 
-        // Handle different data structures
-        if (Array.isArray(parsedData)) {
-            // Direct array of conversations (ChatGPT format)
-            return parsedData;
-        } else if (parsedData.conversations && Array.isArray(parsedData.conversations)) {
-            // Nested structure (Claude format)
-            return parsedData.conversations;
-        } else {
-            throw new Error("Invalid conversations.json structure");
-        }
+	        try {
+	            const conversations: any[] = [];
+	            for (const conversation of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
+	                conversations.push(conversation);
+	            }
+
+	            if (conversations.length === 0) {
+	                throw new Error("No conversations found in conversations.json");
+	            }
+
+	            return conversations;
+	        } catch (error) {
+	            logger.error("Failed to parse conversations.json in metadata extractor", error);
+	            throw new Error("Invalid conversations.json structure");
+	        }
     }
 
     /**

@@ -32,6 +32,8 @@ import { logger } from "../logger";
 import { ImportProgressModal, ImportProgressCallback } from "../ui/import-progress-modal";
 import { AttachmentMapBuilder, AttachmentMap } from "./attachment-map-builder";
 import type NexusAiChatImporterPlugin from "../main";
+import { StreamingJsonArrayParser } from "../utils/streaming-json-array-parser";
+import { filterConversationsByIds as filterConversationsByIdsUsingAdapters } from "../utils/conversation-filter";
 
 export class ImportService {
     private importReport: ImportReport = new ImportReport();
@@ -440,47 +442,38 @@ export class ImportService {
             );
         }
 
-        const conversationsJson = await conversationsFile.async("string");
-        const parsedData = JSON.parse(conversationsJson);
+	        const conversationsJson = await conversationsFile.async("string");
 
-        // Handle different data structures
-        if (Array.isArray(parsedData)) {
-            // Direct array of conversations (ChatGPT format)
-            return parsedData;
-        } else if (parsedData.conversations && Array.isArray(parsedData.conversations)) {
-            // Nested structure (Claude format)
-            return parsedData.conversations;
-        } else {
-            throw new NexusAiChatImporterError(
-                "Invalid conversations.json structure",
-                "The conversations.json file does not contain a valid conversation array"
-            );
-        }
+	        try {
+	            const conversations: any[] = [];
+	            for (const conversation of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
+	                conversations.push(conversation);
+	            }
+
+	            if (conversations.length === 0) {
+	                throw new Error("No conversations found in conversations.json");
+	            }
+
+	            return conversations;
+	        } catch (error) {
+	            this.plugin.logger.error("Failed to parse conversations.json using streaming parser", error);
+	            throw new NexusAiChatImporterError(
+	                "Invalid conversations.json structure",
+	                "The conversations.json file does not contain a valid conversation array"
+	            );
+	        }
     }
 
     /**
      * Filter conversations by selected IDs
      */
     private filterConversationsByIds(rawConversations: any[], selectedIds: string[], forcedProvider?: string): any[] {
-        const selectedIdsSet = new Set(selectedIds);
-
-        return rawConversations.filter(conversation => {
-            let conversationId: string;
-
-            // Get conversation ID based on provider format
-            if (forcedProvider === 'lechat' || (Array.isArray(conversation) && conversation[0]?.chatId)) {
-                // Le Chat format: array of messages, ID is in first message's chatId
-                conversationId = conversation[0]?.chatId || "";
-            } else if (forcedProvider === 'claude' || (conversation.uuid && conversation.name)) {
-                // Claude format
-                conversationId = conversation.uuid || "";
-            } else {
-                // ChatGPT format (default)
-                conversationId = conversation.id || "";
-            }
-
-            return selectedIdsSet.has(conversationId);
-        });
+	        return filterConversationsByIdsUsingAdapters(
+	            rawConversations,
+	            selectedIds,
+	            this.providerRegistry,
+	            forcedProvider
+	        );
     }
 
     /**
