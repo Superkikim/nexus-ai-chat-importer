@@ -26,6 +26,7 @@ import { isValidMessage, compareTimestampsIgnoringSeconds } from "../utils";
 import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 import { StreamingJsonArrayParser } from "../utils/streaming-json-array-parser";
+import { decideArchiveMode } from "./archive-mode-decider";
 
 /**
  * Conversation existence status for import preview
@@ -465,13 +466,19 @@ export class ConversationMetadataExtractor {
         // Track which file contributed each conversation to the final map
         const conversationToFileMap = new Map<string, string>(); // conversationId → fileName
 
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            try {
-                // Load ZIP
-                const JSZip = (await import('jszip')).default;
-                const zip = new JSZip();
-                const zipContent = await zip.loadAsync(file);
+	        for (let i = 0; i < files.length; i++) {
+	            const file = files[i];
+	            try {
+	                const archiveModeDecision = decideArchiveMode({ zipSizeBytes: file.size });
+	                if (archiveModeDecision.mode === "large-archive") {
+	                    logger.info(
+	                        `Metadata extraction: large archive detected for ${file.name} (reason: ${archiveModeDecision.reason}, size=${file.size})`
+	                    );
+	                }
+	                // Load ZIP
+	                const JSZip = (await import('jszip')).default;
+	                const zip = new JSZip();
+	                const zipContent = await zip.loadAsync(file);
 
                 // Extract metadata WITHOUT vault comparison (we'll do that later)
                 const metadata = await this.extractMetadataFromZip(

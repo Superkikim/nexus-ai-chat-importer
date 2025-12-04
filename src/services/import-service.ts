@@ -31,6 +31,7 @@ import { ProviderRegistry } from "../providers/provider-adapter";
 import { logger } from "../logger";
 import { ImportProgressModal, ImportProgressCallback } from "../ui/import-progress-modal";
 import { AttachmentMapBuilder, AttachmentMap } from "./attachment-map-builder";
+import { decideArchiveMode, ArchiveModeDecision } from "./archive-mode-decider";
 import type NexusAiChatImporterPlugin from "../main";
 import { StreamingJsonArrayParser } from "../utils/streaming-json-array-parser";
 import { filterConversationsByIds as filterConversationsByIdsUsingAdapters } from "../utils/conversation-filter";
@@ -190,8 +191,17 @@ export class ImportService {
                 fileHash = await getFileHash(file);
             }
 
-            processingStarted = true;
-            await this.processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal);
+	            processingStarted = true;
+	            await this.processConversations(
+	                zip,
+	                file,
+	                isReprocess,
+	                forcedProvider,
+	                progressCallback,
+	                selectedConversationIds,
+	                progressModal,
+	                file.size
+	            );
 
             // Track imported archive
             storage.addImportedArchive(fileHash, file.name);
@@ -323,7 +333,7 @@ export class ImportService {
         }
     }
 
-    private async processConversations(zip: JSZip, file: File, isReprocess: boolean, forcedProvider?: string, progressCallback?: ImportProgressCallback, selectedConversationIds?: string[], progressModal?: ImportProgressModal): Promise<void> {
+	    private async processConversations(zip: JSZip, file: File, isReprocess: boolean, forcedProvider?: string, progressCallback?: ImportProgressCallback, selectedConversationIds?: string[], progressModal?: ImportProgressModal, zipSizeBytes?: number): Promise<void> {
         try {
             progressCallback?.({
                 phase: 'scanning',
@@ -332,7 +342,9 @@ export class ImportService {
             });
 
             // Extract raw conversation data (provider agnostic)
-            let rawConversations = await this.extractRawConversationsFromZip(zip);
+	            const extractionResult = await this.extractRawConversationsFromZip(zip, zipSizeBytes);
+	            let rawConversations = extractionResult.conversations;
+	            const archiveModeDecision = extractionResult.archiveModeDecision;
 
             // Filter conversations if specific IDs are selected
             if (selectedConversationIds && selectedConversationIds.length > 0) {
@@ -364,13 +376,17 @@ export class ImportService {
                 this.validateProviderMatch(rawConversations, forcedProvider);
             }
 
-            progressCallback?.({
-                phase: 'processing',
-                title: 'Processing conversations...',
-                detail: 'Converting and importing conversations',
-                current: 0,
-                total: rawConversations.length
-            });
+	            const processingDetail = archiveModeDecision?.mode === "large-archive"
+	                ? 'Processing a large archive using a streaming-safe pipeline'
+	                : 'Converting and importing conversations';
+	
+	            progressCallback?.({
+	                phase: 'processing',
+	                title: 'Processing conversations...',
+	                detail: processingDetail,
+	                current: 0,
+	                total: rawConversations.length
+	            });
 
             // Process through conversation processor (handles provider detection/conversion)
             const report = await this.conversationProcessor.processRawConversations(
@@ -409,60 +425,92 @@ export class ImportService {
         }
     }
 
-    /**
-     * Extract raw conversation data without knowing provider specifics
-     */
-    private async extractRawConversationsFromZip(zip: JSZip): Promise<any[]> {
-        // Check for Le Chat format first (individual chat-{uuid}.json files)
-        const fileNames = Object.keys(zip.files);
-        const leChatFiles = fileNames.filter(name => name.match(/^chat-[a-f0-9-]+\.json$/));
-
-        if (leChatFiles.length > 0) {
-            // Le Chat format: load each individual conversation file
-            const conversations: any[] = [];
-
-            for (const fileName of leChatFiles) {
-                const file = zip.file(fileName);
-                if (file) {
-                    const content = await file.async("string");
-                    const parsedConversation = JSON.parse(content);
-                    conversations.push(parsedConversation);
-                }
-            }
-
-            return conversations;
-        }
-
-        // ChatGPT/Claude format: conversations.json
-        const conversationsFile = zip.file("conversations.json");
-        if (!conversationsFile) {
-            throw new NexusAiChatImporterError(
-                "Missing conversations.json",
-                "The ZIP file does not contain a conversations.json file or chat-{uuid}.json files"
-            );
-        }
-
+	    /**
+	     * Extract raw conversation data without knowing provider specifics
+	     * and decide archive mode based on ZIP and uncompressed sizes.
+	     */
+	    private async extractRawConversationsFromZip(
+	        zip: JSZip,
+	        zipSizeBytes?: number
+	    ): Promise<{ conversations: any[]; archiveModeDecision?: ArchiveModeDecision }> {
+	        // Check for Le Chat format first (individual chat-{uuid}.json files)
+	        const fileNames = Object.keys(zip.files);
+	        const leChatFiles = fileNames.filter(name => name.match(/^chat-[a-f0-9-]+\.json$/));
+	
+	        if (leChatFiles.length > 0) {
+	            // Le Chat format: load each individual conversation file
+	            const conversations: any[] = [];
+	
+	            for (const fileName of leChatFiles) {
+	                const file = zip.file(fileName);
+	                if (file) {
+	                    const content = await file.async("string");
+	                    const parsedConversation = JSON.parse(content);
+	                    conversations.push(parsedConversation);
+	                }
+	            }
+	
+	            let archiveModeDecision: ArchiveModeDecision | undefined;
+	            if (typeof zipSizeBytes === "number") {
+	                archiveModeDecision = decideArchiveMode({ zipSizeBytes });
+	                if (archiveModeDecision.mode === "large-archive") {
+	                    this.plugin.logger.info(
+	                        `Large archive detected for Le Chat ZIP (reason: ${archiveModeDecision.reason}, zipSizeBytes=${zipSizeBytes})`
+	                    );
+	                }
+	            }
+	
+	            return { conversations, archiveModeDecision };
+	        }
+	
+	        // ChatGPT/Claude format: conversations.json
+	        const conversationsFile = zip.file("conversations.json");
+	        if (!conversationsFile) {
+	            throw new NexusAiChatImporterError(
+	                "Missing conversations.json",
+	                "The ZIP file does not contain a conversations.json file or chat-{uuid}.json files"
+	            );
+	        }
+	
 	        const conversationsJson = await conversationsFile.async("string");
-
+	
 	        try {
 	            const conversations: any[] = [];
 	            for (const conversation of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
 	                conversations.push(conversation);
 	            }
-
+	
 	            if (conversations.length === 0) {
 	                throw new Error("No conversations found in conversations.json");
 	            }
-
-	            return conversations;
+	
+	            let archiveModeDecision: ArchiveModeDecision | undefined;
+	            if (typeof zipSizeBytes === "number") {
+	                const uncompressedBytesApprox = conversationsJson.length;
+	                archiveModeDecision = decideArchiveMode({
+	                    zipSizeBytes,
+	                    conversationsUncompressedBytes: uncompressedBytesApprox
+	                });
+	
+	                if (archiveModeDecision.mode === "large-archive") {
+	                    this.plugin.logger.info(
+	                        `Large archive detected for conversations.json (reason: ${archiveModeDecision.reason}, zipSizeBytes=${zipSizeBytes}, uncompressedBytesApprox=${uncompressedBytesApprox})`
+	                    );
+	                }
+	            }
+	
+	            return { conversations, archiveModeDecision };
 	        } catch (error) {
-	            this.plugin.logger.error("Failed to parse conversations.json using streaming parser", error);
+	            this.plugin.logger.error(
+	                "Failed to parse conversations.json using streaming parser",
+	                error
+	            );
 	            throw new NexusAiChatImporterError(
 	                "Invalid conversations.json structure",
 	                "The conversations.json file does not contain a valid conversation array"
 	            );
 	        }
-    }
+	    }
 
     /**
      * Filter conversations by selected IDs
