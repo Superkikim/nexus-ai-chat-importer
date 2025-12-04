@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.ts'],
     coverage: {
       provider: 'v8',
@@ -20,6 +21,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Use a lightweight stub for Obsidian so tests can import modules that
+      // depend on the Obsidian API (Vault, App, requestUrl, etc.) without
+      // requiring a real Obsidian runtime.
+      'obsidian': path.resolve(__dirname, './src/obsidian-mock.ts'),
     },
   },
 });
