@@ -22,6 +22,7 @@ import { DefaultProviderRegistry } from "./provider-adapter";
 import { ChatGPTAdapter } from "./chatgpt/chatgpt-adapter";
 import { ClaudeAdapter } from "./claude/claude-adapter";
 import { LeChatAdapter } from "./lechat/lechat-adapter";
+import { GeminiAdapter } from "./gemini/gemini-adapter";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**
@@ -39,8 +40,8 @@ export function createProviderRegistry(plugin: NexusAiChatImporterPlugin): Defau
     // Register Le Chat provider
     registry.register("lechat", new LeChatAdapter(plugin));
 
-    // Future providers will be registered here:
-    // registry.register("gemini", new GeminiAdapter(plugin));
+    // Register Gemini provider
+    registry.register("gemini", new GeminiAdapter(plugin));
 
     return registry;
 }
