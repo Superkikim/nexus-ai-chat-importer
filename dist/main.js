@@ -13053,6 +13053,7 @@ var GeminiAttachmentExtractor = class {
       fileName: finalFileName,
       fileType: finalFileType,
       fileSize: fileContent.length,
+      url: vaultPath,
       status: {
         processed: true,
         found: true,

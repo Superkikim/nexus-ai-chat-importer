@@ -103,6 +103,7 @@ export class GeminiAttachmentExtractor implements AttachmentExtractor {
 			fileName: finalFileName,
 			fileType: finalFileType,
 			fileSize: fileContent.length,
+			url: vaultPath,
 			status: {
 				processed: true,
 				found: true,
