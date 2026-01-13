@@ -12928,10 +12928,7 @@ var GeminiConverter = class {
       const html = entry.safeHtmlItem[0].html;
       return this.htmlToText(html);
     }
-    if (entry.attachedFiles && entry.attachedFiles.length > 0) {
-      return `*[Response with ${entry.attachedFiles.length} attachment(s)]*`;
-    }
-    return "*[No response content]*";
+    return "";
   }
   /**
    * Convert HTML to plain text (simple implementation)

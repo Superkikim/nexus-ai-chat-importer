@@ -114,12 +114,8 @@ export class GeminiConverter {
 			return this.htmlToText(html);
 		}
 
-		// If no HTML content but has attachments, indicate that
-		if (entry.attachedFiles && entry.attachedFiles.length > 0) {
-			return `*[Response with ${entry.attachedFiles.length} attachment(s)]*`;
-		}
-
-		return "*[No response content]*";
+		// Return empty string - formatter will handle attachments-only messages
+		return "";
 	}
 
 	/**
