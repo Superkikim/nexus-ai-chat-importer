@@ -12869,13 +12869,13 @@ var GeminiConverter = class {
     return (0, import_crypto.createHash)("sha256").update(composite).digest("hex").substring(0, 16);
   }
   /**
-   * Extract title from entry
+   * Extract title from entry (for conversation title - truncated)
    */
   extractTitle(entry) {
     let title = entry.title || "Untitled Gemini Activity";
-    title = title.replace(/^(Prompted|Asked)\s+Gemini:\s*/i, "");
-    if (title.length > 100) {
-      title = title.substring(0, 97) + "...";
+    title = title.replace(/^(Prompted|Asked)\s+/i, "");
+    if (title.length > 60) {
+      title = title.substring(0, 57) + "...";
     }
     return title;
   }
@@ -12915,10 +12915,13 @@ var GeminiConverter = class {
     return messages;
   }
   /**
-   * Extract user prompt from entry
+   * Extract user prompt from entry (full text, not truncated)
    */
   extractUserPrompt(entry) {
-    return this.extractTitle(entry);
+    if (!entry.title) {
+      return "";
+    }
+    return entry.title.replace(/^(Prompted|Asked)\s+/i, "").trim();
   }
   /**
    * Extract assistant response from safeHtmlItem
@@ -12938,29 +12941,48 @@ var GeminiConverter = class {
     return html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
   }
   /**
-   * Extract user attachments (currently none expected in Gemini exports)
+   * Extract user attachments (from imageFile field)
    */
   extractUserAttachments(entry) {
-    return [];
+    const attachments = [];
+    if (entry.imageFile) {
+      attachments.push({
+        fileName: entry.imageFile,
+        fileSize: 0,
+        fileType: this.guessFileType(entry.imageFile),
+        attachmentType: "file",
+        status: {
+          processed: false,
+          found: false
+        }
+      });
+    }
+    return attachments;
   }
   /**
-   * Extract assistant attachments from attachedFiles
+   * Extract assistant attachments (from safeHtmlItem images)
    */
   extractAssistantAttachments(entry) {
-    if (!entry.attachedFiles || entry.attachedFiles.length === 0) {
-      return [];
-    }
-    return entry.attachedFiles.map((fileName, index) => ({
-      fileName,
-      fileSize: 0,
-      // Unknown from JSON
-      fileType: this.guessFileType(fileName),
-      attachmentType: "file",
-      status: {
-        processed: false,
-        found: false
+    const attachments = [];
+    if (entry.safeHtmlItem && entry.safeHtmlItem.length > 0) {
+      const html = entry.safeHtmlItem[0].html;
+      const imgRegex = /<img[^>]+src="([^"]+)"/gi;
+      let match;
+      while ((match = imgRegex.exec(html)) !== null) {
+        const fileName = match[1];
+        attachments.push({
+          fileName,
+          fileSize: 0,
+          fileType: this.guessFileType(fileName),
+          attachmentType: "file",
+          status: {
+            processed: false,
+            found: false
+          }
+        });
       }
-    }));
+    }
+    return attachments;
   }
   /**
    * Guess file type from extension

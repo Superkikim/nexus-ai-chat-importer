@@ -42,6 +42,11 @@ export interface GeminiActivityEntry {
 	attachedFiles?: string[];
 
 	/**
+	 * User-uploaded image file name (if any)
+	 */
+	imageFile?: string;
+
+	/**
 	 * Google products associated with this activity
 	 */
 	products?: string[];

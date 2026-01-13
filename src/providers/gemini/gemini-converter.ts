@@ -41,17 +41,17 @@ export class GeminiConverter {
 	}
 
 	/**
-	 * Extract title from entry
+	 * Extract title from entry (for conversation title - truncated)
 	 */
 	private extractTitle(entry: GeminiActivityEntry): string {
 		let title = entry.title || "Untitled Gemini Activity";
 
-		// Remove common prefixes like "Prompted Gemini: " or "Asked Gemini: "
-		title = title.replace(/^(Prompted|Asked)\s+Gemini:\s*/i, "");
+		// Remove common prefixes like "Prompted " or "Asked "
+		title = title.replace(/^(Prompted|Asked)\s+/i, "");
 
-		// Truncate if too long
-		if (title.length > 100) {
-			title = title.substring(0, 97) + "...";
+		// Truncate to 60 characters for readability
+		if (title.length > 60) {
+			title = title.substring(0, 57) + "...";
 		}
 
 		return title;
@@ -99,10 +99,15 @@ export class GeminiConverter {
 	}
 
 	/**
-	 * Extract user prompt from entry
+	 * Extract user prompt from entry (full text, not truncated)
 	 */
 	private extractUserPrompt(entry: GeminiActivityEntry): string {
-		return this.extractTitle(entry);
+		if (!entry.title) {
+			return "";
+		}
+
+		// Remove common prefixes like "Prompted " or "Asked "
+		return entry.title.replace(/^(Prompted|Asked)\s+/i, "").trim();
 	}
 
 	/**
@@ -138,31 +143,56 @@ export class GeminiConverter {
 	}
 
 	/**
-	 * Extract user attachments (currently none expected in Gemini exports)
+	 * Extract user attachments (from imageFile field)
 	 */
 	private extractUserAttachments(entry: GeminiActivityEntry): StandardAttachment[] {
-		// Gemini exports don't typically include user-uploaded files in My Activity
-		return [];
+		const attachments: StandardAttachment[] = [];
+
+		// User-uploaded image (imageFile field)
+		if (entry.imageFile) {
+			attachments.push({
+				fileName: entry.imageFile,
+				fileSize: 0,
+				fileType: this.guessFileType(entry.imageFile),
+				attachmentType: "file",
+				status: {
+					processed: false,
+					found: false,
+				},
+			});
+		}
+
+		return attachments;
 	}
 
 	/**
-	 * Extract assistant attachments from attachedFiles
+	 * Extract assistant attachments (from safeHtmlItem images)
 	 */
 	private extractAssistantAttachments(entry: GeminiActivityEntry): StandardAttachment[] {
-		if (!entry.attachedFiles || entry.attachedFiles.length === 0) {
-			return [];
+		const attachments: StandardAttachment[] = [];
+
+		// Extract images from safeHtmlItem (generated images)
+		if (entry.safeHtmlItem && entry.safeHtmlItem.length > 0) {
+			const html = entry.safeHtmlItem[0].html;
+			// Extract image sources from <img src="...">
+			const imgRegex = /<img[^>]+src="([^"]+)"/gi;
+			let match;
+			while ((match = imgRegex.exec(html)) !== null) {
+				const fileName = match[1];
+				attachments.push({
+					fileName,
+					fileSize: 0,
+					fileType: this.guessFileType(fileName),
+					attachmentType: "file",
+					status: {
+						processed: false,
+						found: false,
+					},
+				});
+			}
 		}
 
-		return entry.attachedFiles.map((fileName, index) => ({
-			fileName,
-			fileSize: 0, // Unknown from JSON
-			fileType: this.guessFileType(fileName),
-			attachmentType: "file",
-			status: {
-				processed: false,
-				found: false,
-			},
-		}));
+		return attachments;
 	}
 
 	/**
