@@ -46,8 +46,8 @@ export class GeminiConverter {
 	private extractTitle(entry: GeminiActivityEntry): string {
 		let title = entry.title || "Untitled Gemini Activity";
 
-		// Remove common prefixes like "Prompted " or "Asked "
-		title = title.replace(/^(Prompted|Asked)\s+/i, "");
+		// Remove common prefixes like "Prompted ", "Live Prompt ", "Asked "
+		title = title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "");
 
 		// Truncate to 60 characters for readability
 		if (title.length > 60) {
@@ -106,8 +106,8 @@ export class GeminiConverter {
 			return "";
 		}
 
-		// Remove common prefixes like "Prompted " or "Asked "
-		return entry.title.replace(/^(Prompted|Asked)\s+/i, "").trim();
+		// Remove common prefixes like "Prompted ", "Live Prompt ", "Asked "
+		return entry.title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "").trim();
 	}
 
 	/**

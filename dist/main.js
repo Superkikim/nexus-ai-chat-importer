@@ -12873,7 +12873,7 @@ var GeminiConverter = class {
    */
   extractTitle(entry) {
     let title = entry.title || "Untitled Gemini Activity";
-    title = title.replace(/^(Prompted|Asked)\s+/i, "");
+    title = title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "");
     if (title.length > 60) {
       title = title.substring(0, 57) + "...";
     }
@@ -12921,7 +12921,7 @@ var GeminiConverter = class {
     if (!entry.title) {
       return "";
     }
-    return entry.title.replace(/^(Prompted|Asked)\s+/i, "").trim();
+    return entry.title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "").trim();
   }
   /**
    * Extract assistant response from safeHtmlItem
