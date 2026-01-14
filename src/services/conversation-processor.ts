@@ -109,6 +109,22 @@ export class ConversationProcessor {
             return importReport;
         }
 
+        // Gemini-specific preprocessing: If adapter has index, convert all entries to grouped conversations
+        let conversationsToProcess = rawConversations;
+        if (provider === 'gemini' && (adapter as any).hasIndex?.()) {
+            progressCallback?.({
+                phase: 'processing',
+                title: 'Grouping Gemini conversations...',
+                detail: 'Using index to reconstruct full conversations'
+            });
+
+            // Convert all Takeout entries to grouped StandardConversations
+            const groupedConversations = (adapter as any).convertAllWithIndex(rawConversations);
+            conversationsToProcess = groupedConversations;
+
+            this.plugin.logger.info(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
+        }
+
         const storage = this.plugin.getStorageService();
 
         // Scan existing conversations from vault instead of loading catalog
@@ -116,16 +132,16 @@ export class ConversationProcessor {
         this.counters.totalExistingConversations = existingConversationsMap.size;
 
         let processedCount = 0;
-        for (const chat of rawConversations) {
+        for (const chat of conversationsToProcess) {
             await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
 
             processedCount++;
             progressCallback?.({
                 phase: 'processing',
                 title: 'Processing conversations...',
-                detail: `Processing conversation ${processedCount} of ${rawConversations.length}`,
+                detail: `Processing conversation ${processedCount} of ${conversationsToProcess.length}`,
                 current: processedCount,
-                total: rawConversations.length
+                total: conversationsToProcess.length
             });
         }
 
@@ -141,8 +157,11 @@ export class ConversationProcessor {
         isReprocess: boolean = false
     ): Promise<void> {
         try {
-            const chatId = adapter.getId(chat);
-            const chatTitle = adapter.getTitle(chat) || 'Untitled';
+            // Check if chat is already a StandardConversation (from Gemini index preprocessing)
+            const isStandardConversation = this.isStandardConversation(chat);
+
+            const chatId = isStandardConversation ? chat.id : adapter.getId(chat);
+            const chatTitle = isStandardConversation ? chat.title : (adapter.getTitle(chat) || 'Untitled');
 
             // Validate conversation has required fields
             if (!chatId || chatId.trim() === '') {
@@ -154,17 +173,31 @@ export class ConversationProcessor {
             const existingEntry = existingConversations.get(chatId);
 
             if (existingEntry) {
-                await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess);
+                await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess, isStandardConversation);
             } else {
-                const filePath = await this.generateFilePathForChat(adapter, chat);
-                await this.handleNewChat(adapter, chat, filePath, importReport, zip);
+                const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
+                await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
             }
             this.counters.totalConversationsProcessed++;
         } catch (error: any) {
             const errorMessage = error.message || "Unknown error occurred";
-            const chatTitle = adapter.getTitle(chat) || "Untitled";
+            const isStandardConversation = this.isStandardConversation(chat);
+            const chatTitle = isStandardConversation ? chat.title : (adapter.getTitle(chat) || "Untitled");
             importReport.addError(`Error processing chat: ${chatTitle}`, errorMessage);
         }
+    }
+
+    /**
+     * Check if a chat object is already a StandardConversation
+     */
+    private isStandardConversation(chat: any): boolean {
+        return chat &&
+               typeof chat.id === 'string' &&
+               typeof chat.title === 'string' &&
+               typeof chat.provider === 'string' &&
+               typeof chat.createTime === 'number' &&
+               typeof chat.updateTime === 'number' &&
+               Array.isArray(chat.messages);
     }
 
     private async handleExistingChat(
@@ -173,28 +206,29 @@ export class ConversationProcessor {
         existingRecord: ConversationCatalogEntry,
         importReport: ImportReport,
         zip?: JSZip,
-        isReprocess: boolean = false
+        isReprocess: boolean = false,
+        isStandardConversation: boolean = false
     ): Promise<void> {
-        const chatTitle = adapter.getTitle(chat);
-        const createTime = adapter.getCreateTime(chat);
-        const updateTime = adapter.getUpdateTime(chat);
+        const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
+        const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+        const updateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
 
         // Count messages using provider-specific logic
-        const totalMessageCount = await this.countMessages(adapter, chat);
+        const totalMessageCount = await this.countMessages(adapter, chat, isStandardConversation);
 
         // Check if the file actually exists
         const fileExists = await this.plugin.app.vault.adapter.exists(existingRecord.path);
 
         if (!fileExists) {
             // File was deleted, recreate it
-            await this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip);
+            await this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip, isStandardConversation);
             return;
         }
 
         // REPROCESS LOGIC: Force update if this is a reprocess operation
         if (isReprocess) {
             this.counters.totalExistingConversationsToUpdate++;
-            await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true); // Force update
+            await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true, isStandardConversation); // Force update
             return;
         }
 
@@ -213,7 +247,7 @@ export class ConversationProcessor {
         } else {
             // ZIP is newer than vault → Update
             this.counters.totalExistingConversationsToUpdate++;
-            await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip);
+            await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, false, isStandardConversation);
         }
     }
 
@@ -222,16 +256,22 @@ export class ConversationProcessor {
         chat: any,
         filePath: string,
         importReport: ImportReport,
-        zip?: JSZip
+        zip?: JSZip,
+        isStandardConversation: boolean = false
     ): Promise<void> {
         this.counters.totalNewConversationsToImport++;
-        await this.createNewNote(adapter, chat, filePath, importReport, zip);
+        await this.createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation);
     }
 
     /**
      * Count messages in a chat using provider-specific logic
      */
-    private async countMessages(adapter: any, chat: any): Promise<number> {
+    private async countMessages(adapter: any, chat: any, isStandardConversation: boolean = false): Promise<number> {
+        // If already a StandardConversation, just count messages directly
+        if (isStandardConversation) {
+            return chat.messages?.length || 0;
+        }
+
         // Try to get a standard conversation and count its messages
         try {
             const standardConversation = await adapter.convertChat(chat);
@@ -273,7 +313,8 @@ export class ConversationProcessor {
         totalMessageCount: number,
         importReport: ImportReport,
         zip?: JSZip,
-        forceUpdate: boolean = false
+        forceUpdate: boolean = false,
+        isStandardConversation: boolean = false
     ): Promise<void> {
         try {
             const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
@@ -281,25 +322,40 @@ export class ConversationProcessor {
                 let content = await this.plugin.app.vault.read(file);
                 const originalContent = content;
 
-                const chatUpdateTime = adapter.getUpdateTime(chat);
-                const chatCreateTime = adapter.getCreateTime(chat);
-                const chatTitle = adapter.getTitle(chat);
+                const chatUpdateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
+                const chatCreateTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+                const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
+                const chatId = isStandardConversation ? chat.id : adapter.getId(chat);
 
                 const existingMessageIds = this.extractMessageUIDsFromNote(content);
-                const newMessages = adapter.getNewMessages(chat, existingMessageIds);
+
+                // For StandardConversation, get new messages directly; otherwise use adapter
+                let newMessages: any[];
+                if (isStandardConversation) {
+                    newMessages = chat.messages.filter((msg: StandardMessage) =>
+                        !existingMessageIds.includes(msg.id)
+                    );
+                } else {
+                    newMessages = adapter.getNewMessages(chat, existingMessageIds);
+                }
 
                 let attachmentStats: { total: number; found: number; missing: number; failed: number } | undefined = undefined;
 
                 // REPROCESS LOGIC: If forced update, recreate the entire note with attachment support
                 if (forceUpdate) {
-                    // Convert entire chat to standard format with attachments
-                    let standardConversation = await adapter.convertChat(chat);
+                    // Get or convert to standard format
+                    let standardConversation: StandardConversation;
+                    if (isStandardConversation) {
+                        standardConversation = chat;
+                    } else {
+                        standardConversation = await adapter.convertChat(chat);
+                    }
 
                     // Process attachments if ZIP provided
                     if (zip && adapter.processMessageAttachments) {
                         standardConversation.messages = await adapter.processMessageAttachments(
                             standardConversation.messages,
-                            adapter.getId(chat),
+                            chatId,
                             zip
                         );
 
@@ -329,8 +385,13 @@ export class ConversationProcessor {
                     // Update metadata only when there are new messages
                     content = this.updateMetadata(content, chatUpdateTime);
 
-                    // Convert full conversation to get consistent processing
-                    let standardConversation = await adapter.convertChat(chat);
+                    // Get or convert to standard conversation
+                    let standardConversation: StandardConversation;
+                    if (isStandardConversation) {
+                        standardConversation = chat;
+                    } else {
+                        standardConversation = await adapter.convertChat(chat);
+                    }
 
                     // Filter only new messages for formatting
                     const newStandardMessages = standardConversation.messages.filter((msg: StandardMessage) =>
@@ -342,7 +403,7 @@ export class ConversationProcessor {
                     if (zip && adapter.processMessageAttachments) {
                         processedNewMessages = await adapter.processMessageAttachments(
                             newStandardMessages,
-                            adapter.getId(chat),
+                            chatId,
                             zip
                         );
                     }
@@ -387,7 +448,8 @@ export class ConversationProcessor {
         chat: any,
         filePath: string,
         importReport: ImportReport,
-        zip?: JSZip
+        zip?: JSZip,
+        isStandardConversation: boolean = false
     ): Promise<void> {
         try {
             // Ensure the folder exists (in case it was deleted)
@@ -397,15 +459,22 @@ export class ConversationProcessor {
                 throw new Error(folderResult.error || "Failed to ensure folder exists.");
             }
 
-            // Convert to standard format
-            let standardConversation = await adapter.convertChat(chat);
+            // Get or convert to standard format
+            let standardConversation: StandardConversation;
+            if (isStandardConversation) {
+                standardConversation = chat;
+            } else {
+                standardConversation = await adapter.convertChat(chat);
+            }
+
+            const chatId = standardConversation.id;
 
             // Process attachments if ZIP provided
             let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
             if (zip && adapter.processMessageAttachments) {
                 standardConversation.messages = await adapter.processMessageAttachments(
                     standardConversation.messages,
-                    adapter.getId(chat),
+                    chatId,
                     zip
                 );
 
@@ -417,10 +486,10 @@ export class ConversationProcessor {
 
             await this.fileService.writeToFile(filePath, content);
 
-            const messageCount = await this.countMessages(adapter, chat);
-            const createTime = adapter.getCreateTime(chat);
-            const updateTime = adapter.getUpdateTime(chat);
-            const chatTitle = adapter.getTitle(chat);
+            const messageCount = standardConversation.messages.length;
+            const createTime = standardConversation.createTime;
+            const updateTime = standardConversation.updateTime;
+            const chatTitle = standardConversation.title;
 
             // Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
             const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
@@ -440,9 +509,9 @@ export class ConversationProcessor {
 
         } catch (error: any) {
             this.plugin.logger.error("Error creating new note", error.message);
-            const createTime = adapter.getCreateTime(chat);
-            const updateTime = adapter.getUpdateTime(chat);
-            const chatTitle = adapter.getTitle(chat);
+            const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+            const updateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
+            const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
 
             importReport.addFailed(
                 chatTitle,
@@ -479,10 +548,10 @@ export class ConversationProcessor {
         return uids;
     }
 
-    private async generateFilePathForChat(adapter: any, chat: any): Promise<string> {
-        const createTime = adapter.getCreateTime(chat);
-        const chatTitle = adapter.getTitle(chat);
-        const providerName = adapter.getProviderName();
+    private async generateFilePathForChat(adapter: any, chat: any, isStandardConversation: boolean = false): Promise<string> {
+        const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+        const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
+        const providerName = isStandardConversation ? chat.provider : adapter.getProviderName();
 
         const date = new Date(createTime * 1000);
         const year = date.getFullYear();

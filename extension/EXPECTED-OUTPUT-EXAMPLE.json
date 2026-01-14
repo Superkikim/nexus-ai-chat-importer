@@ -1,0 +1,53 @@
+{
+  "conversations": [
+    {
+      "conversationId": "1a2b3c4d5e6f7g8h",
+      "title": "Simpsons Character Transformation",
+      "url": "https://gemini.google.com/app/1a2b3c4d5e6f7g8h",
+      "messages": [
+        {
+          "timestamp": "2025-12-28T00:33:59.851Z",
+          "promptPreview": "Please turn us into Simpsons cha..."
+        },
+        {
+          "timestamp": "2025-12-28T00:35:12.234Z",
+          "promptPreview": "Now make it black and white line..."
+        },
+        {
+          "timestamp": "2025-12-28T00:36:45.678Z",
+          "promptPreview": "Can you add speech bubbles with ..."
+        }
+      ]
+    },
+    {
+      "conversationId": "9z8y7x6w5v4u3t2s",
+      "title": "Python Data Analysis Help",
+      "url": "https://gemini.google.com/app/9z8y7x6w5v4u3t2s",
+      "messages": [
+        {
+          "timestamp": "2025-12-27T14:22:10.123Z",
+          "promptPreview": "How do I read a CSV file with pa..."
+        },
+        {
+          "timestamp": "2025-12-27T14:25:33.456Z",
+          "promptPreview": "Can you show me how to handle mi..."
+        }
+      ]
+    },
+    {
+      "conversationId": "abcdef123456",
+      "title": "Recipe for Chocolate Cake",
+      "url": "https://gemini.google.com/app/abcdef123456",
+      "messages": [
+        {
+          "timestamp": "2025-12-26T10:15:00.000Z",
+          "promptPreview": "Give me a recipe for chocolate c..."
+        }
+      ]
+    }
+  ],
+  "exportDate": "2025-01-14T12:30:45.678Z",
+  "totalConversations": 3,
+  "source": "gemini-api"
+}
+

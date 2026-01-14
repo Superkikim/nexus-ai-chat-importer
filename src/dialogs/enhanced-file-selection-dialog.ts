@@ -232,16 +232,34 @@ export class EnhancedFileSelectionDialog extends Modal {
         const dropText = dropZone.createEl("div");
         dropText.style.fontSize = "16px";
         dropText.style.marginBottom = "10px";
-        dropText.textContent = "Drop ZIP files here or click to browse";
+
+        // Different text for Gemini (supports JSON index)
+        if (this.provider === 'gemini') {
+            dropText.textContent = "Drop ZIP and JSON files here or click to browse";
+        } else {
+            dropText.textContent = "Drop ZIP files here or click to browse";
+        }
 
         const dropSubtext = dropZone.createEl("div");
         dropSubtext.style.fontSize = "14px";
         dropSubtext.style.color = "var(--text-muted)";
-        dropSubtext.textContent = "Supports multiple file selection";
+
+        if (this.provider === 'gemini') {
+            dropSubtext.textContent = "ZIP (Takeout) + optional JSON (index from extension)";
+        } else {
+            dropSubtext.textContent = "Supports multiple file selection";
+        }
 
         // File input (hidden)
         const fileInput = section.createEl("input", { type: "file" });
-        fileInput.accept = ".zip";
+
+        // For Gemini, accept both ZIP and JSON
+        if (this.provider === 'gemini') {
+            fileInput.accept = ".zip,.json";
+        } else {
+            fileInput.accept = ".zip";
+        }
+
         fileInput.multiple = true;
         fileInput.style.display = "none";
 
@@ -334,9 +352,15 @@ export class EnhancedFileSelectionDialog extends Modal {
         dropZone.style.backgroundColor = "transparent";
 
         if (event.dataTransfer?.files) {
-            const files = Array.from(event.dataTransfer.files).filter(file => 
-                file.name.toLowerCase().endsWith('.zip')
-            );
+            const files = Array.from(event.dataTransfer.files).filter(file => {
+                const fileName = file.name.toLowerCase();
+                // For Gemini, allow both ZIP and JSON files
+                if (this.provider === 'gemini') {
+                    return fileName.endsWith('.zip') || fileName.endsWith('.json');
+                }
+                // For other providers, only ZIP
+                return fileName.endsWith('.zip');
+            });
             if (files.length > 0) {
                 this.selectedFiles = files;
                 this.updateFilePreview();

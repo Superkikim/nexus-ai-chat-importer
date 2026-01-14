@@ -1,0 +1,22 @@
+# Build output
+build/
+dist/
+*.zip
+*.xpi
+
+# Development
+node_modules/
+.DS_Store
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test data
+test-data/
+*.json
+!manifest.json
+

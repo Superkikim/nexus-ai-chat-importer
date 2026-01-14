@@ -1,0 +1,36 @@
+═══════════════════════════════════════════════════════════════════════════════
+  TL;DR - EXTENSION GEMINI
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 OBJECTIF
+  Extraire les IDs de conversation Gemini pour grouper les interactions du Takeout
+
+📦 CE QUI A ÉTÉ CRÉÉ
+  ✅ Extension Firefox complète (fonctionne aussi sur Chrome)
+  ✅ Script de test console (pour tester sans installer)
+  ✅ Documentation complète
+  ✅ Exemples de sortie
+
+🧪 CE QUE TU DOIS FAIRE MAINTENANT
+  1. Ouvrir gemini.google.com
+  2. F12 → Console
+  3. Copier extension/firefox/test-console-script.js
+  4. Coller dans console
+  5. Attendre 10 secondes
+  6. Noter les résultats
+
+📊 RÉSULTATS POSSIBLES
+  ✅ Conversations extraites → Build l'extension et continue
+  ❌ Rien extrait → Partage les réponses API, on adapte
+
+📁 FICHIERS IMPORTANTS
+  📖 START-HERE.md              ← Commence par lire ça
+  📖 SUMMARY.md                 ← Vue d'ensemble complète
+  📖 NEXT-STEPS.md              ← Prochaines étapes
+  🧪 firefox/test-console-script.js  ← Script à tester
+
+🚀 ACTION IMMÉDIATE
+  Teste le script console MAINTENANT !
+
+═══════════════════════════════════════════════════════════════════════════════
+

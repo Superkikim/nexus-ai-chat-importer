@@ -5,21 +5,51 @@ import { BaseProviderAdapter, AttachmentExtractor } from "../base/base-provider-
 import { GeminiConverter } from "./gemini-converter";
 import { GeminiAttachmentExtractor } from "./gemini-attachment-extractor";
 import { GeminiReportNamingStrategy } from "./gemini-report-naming";
-import type { GeminiActivityEntry } from "./gemini-types";
+import { GeminiIndexMerger } from "./gemini-index-merger";
+import type { GeminiActivityEntry, GeminiIndex } from "./gemini-types";
 
 /**
  * Provider adapter for Google Gemini (Takeout My Activity) exports
+ *
+ * Supports two modes:
+ * 1. Without index: Each Takeout entry becomes a standalone conversation (1 prompt + 1 response)
+ * 2. With index: Entries are grouped into full conversations using browser extension index
  */
 export class GeminiAdapter extends BaseProviderAdapter<GeminiActivityEntry> {
 	private converter: GeminiConverter;
 	private attachmentExtractor: GeminiAttachmentExtractor;
 	private reportNamingStrategy: GeminiReportNamingStrategy;
+	private indexMerger: GeminiIndexMerger;
+	private geminiIndex: GeminiIndex | null = null;
 
 	constructor(private plugin: NexusAiChatImporterPlugin) {
 		super();
 		this.converter = new GeminiConverter();
 		this.attachmentExtractor = new GeminiAttachmentExtractor(plugin);
 		this.reportNamingStrategy = new GeminiReportNamingStrategy();
+		this.indexMerger = new GeminiIndexMerger();
+	}
+
+	/**
+	 * Set the Gemini index for conversation reconstruction
+	 * Must be called before processing if index-based grouping is desired
+	 */
+	setIndex(index: GeminiIndex | null): void {
+		this.geminiIndex = index;
+	}
+
+	/**
+	 * Get the current index (if any)
+	 */
+	getIndex(): GeminiIndex | null {
+		return this.geminiIndex;
+	}
+
+	/**
+	 * Check if adapter is in index mode
+	 */
+	hasIndex(): boolean {
+		return this.geminiIndex !== null;
 	}
 
 	/**
@@ -74,9 +104,31 @@ export class GeminiAdapter extends BaseProviderAdapter<GeminiActivityEntry> {
 
 	/**
 	 * Convert Gemini entry to StandardConversation
+	 *
+	 * Note: When index is set, this returns a standalone conversation for this single entry.
+	 * Use convertAllWithIndex() to get properly grouped conversations.
 	 */
 	convertChat(chat: GeminiActivityEntry): StandardConversation {
 		return this.converter.convertEntry(chat);
+	}
+
+	/**
+	 * Convert all Takeout entries to StandardConversations
+	 *
+	 * If index is set, entries are grouped into full conversations.
+	 * Otherwise, each entry becomes a standalone conversation.
+	 *
+	 * @param entries - All Takeout entries to convert
+	 * @returns Array of StandardConversations (grouped if index available)
+	 */
+	convertAllWithIndex(entries: GeminiActivityEntry[]): StandardConversation[] {
+		if (this.geminiIndex) {
+			// Index mode: group entries into conversations
+			return this.indexMerger.mergeIndexWithTakeout(entries, this.geminiIndex);
+		} else {
+			// Fallback mode: each entry is a standalone conversation
+			return entries.map(entry => this.converter.convertEntry(entry));
+		}
 	}
 
 	/**

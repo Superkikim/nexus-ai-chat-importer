@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus Gemini Indexer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Nexus Gemini Indexer</h1>
+      <p class="subtitle">Extract conversation index for Obsidian</p>
+    </div>
+    
+    <div class="status" id="status">
+      <p>Open a Gemini conversation page to start</p>
+    </div>
+    
+    <div class="actions">
+      <button id="extractCurrentBtn" class="btn-primary" disabled>
+        📄 Extract Current Conversation
+      </button>
+      <button id="generateBtn" class="btn-secondary" disabled>
+        📚 Generate Full Index
+      </button>
+      <button id="testBtn" class="btn-secondary">
+        🔧 Test API Detection
+      </button>
+    </div>
+    
+    <div class="info">
+      <p class="small">
+        This extension extracts conversation IDs and timestamps from Gemini
+        to help group your Google Takeout exports in Obsidian.
+      </p>
+    </div>
+    
+    <div class="results" id="results" style="display: none;">
+      <h3>Results</h3>
+      <pre id="resultsContent"></pre>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
+
