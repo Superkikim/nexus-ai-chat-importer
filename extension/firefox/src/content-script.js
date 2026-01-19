@@ -107,6 +107,45 @@ function extractMessageContent(container) {
 }
 
 /**
+ * Extrait tous les messages utilisateur de la conversation courante,
+ * avec leur hash. Peut optionnellement inclure le contenu complet pour le debug.
+ *
+ * @param {boolean} includeFullContent - Inclure ou non le texte complet dans chaque entrée
+ * @returns {Promise<Array<{messageId: string, messageHash: string, contentPreview: string, contentLength: number, fullContent?: string}>>}
+ */
+async function extractHashedMessagesForCurrentConversation(includeFullContent = false) {
+  console.log('💬 Extraction des messages utilisateur avec hash...');
+
+  const results = [];
+  const messageContainers = document.querySelectorAll('.conversation-container[id]');
+
+  for (const container of messageContainers) {
+    const messageId = container.id;
+    const messageContent = extractMessageContent(container);
+
+    if (!messageContent) continue;
+
+    const messageHash = await hashText(messageContent);
+    const base = {
+      messageId, // ID DOM (ex: "f92cc12dfbfa6748")
+      messageHash, // Hash SHA-256 du contenu
+      contentPreview:
+        messageContent.substring(0, 100) + (messageContent.length > 100 ? '...' : ''),
+      contentLength: messageContent.length
+    };
+
+    if (includeFullContent) {
+      base.fullContent = messageContent;
+    }
+
+    results.push(base);
+  }
+
+  console.log(`✅ ${results.length} messages extraits et hashés`);
+  return results;
+}
+
+/**
  * Extrait les données d'une conversation Gemini avec hachage des messages
  * @returns {Promise<Object|null>} Données de la conversation avec hashes
  */
@@ -138,30 +177,8 @@ async function extractGeminiConversationData() {
   console.log(`📌 Conversation ID: ${conversationId}`);
   console.log(`📝 Titre: ${title}`);
 
-  // 2. Récupérer tous les messages de la conversation
-  console.log('💬 Extraction des messages...');
-  const messages = [];
-  const messageContainers = document.querySelectorAll('.conversation-container[id]');
-
-  for (const container of messageContainers) {
-    const messageId = container.id;
-    const messageContent = extractMessageContent(container);
-
-    if (messageContent) {
-      // Calculer le hash du message complet
-      const messageHash = await hashText(messageContent);
-
-      messages.push({
-        messageId,           // ID du DOM (ex: "f92cc12dfbfa6748")
-        messageHash,         // Hash SHA-256 du contenu
-        contentPreview: messageContent.substring(0, 100) + (messageContent.length > 100 ? '...' : ''),
-        contentLength: messageContent.length,
-        fullContent: messageContent  // Contenu complet pour debug
-      });
-    }
-  }
-
-  console.log(`✅ ${messages.length} messages extraits et hashés`);
+  // 2. Récupérer tous les messages de la conversation avec hash + contenu complet
+  const messages = await extractHashedMessagesForCurrentConversation(true);
 
   // 3. Construire l'objet final
   const conversationData = {
@@ -379,6 +396,7 @@ async function extractAllConversationsWithMessages() {
 
     const loadSuccess = await waitForMessageChange(previousMessageId, 5000);
     const firstMessageData = extractFirstMessage();
+    const hashedMessages = await extractHashedMessagesForCurrentConversation(false);
 
     results.push({
       index: conv.index,
@@ -387,6 +405,7 @@ async function extractAllConversationsWithMessages() {
       firstMessageId: firstMessageData.messageId,
       firstMessagePreview: firstMessageData.preview,
       firstMessageLength: firstMessageData.length,
+      messages: hashedMessages,
       loadSuccess
     });
 
@@ -431,6 +450,12 @@ async function extractAllConversationsWithMessages() {
         preview: r.firstMessagePreview,
         length: r.firstMessageLength
       },
+      // Nouvel index détaillé : tous les messages utilisateur avec hash
+      messages: (r.messages || []).map((m) => ({
+        messageId: m.messageId,
+        messageHash: m.messageHash,
+        length: m.contentLength
+      })),
       loadSuccess: r.loadSuccess
     }))
   };
