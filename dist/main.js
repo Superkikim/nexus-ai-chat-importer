@@ -9439,33 +9439,46 @@ var ConversationProcessor = class {
    * Process conversations using the detected provider
    */
   async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false, progressCallback) {
+    var _a;
     this.currentProvider = provider;
     const adapter = this.providerRegistry.getAdapter(provider);
     if (!adapter) {
       importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
       return importReport;
     }
+    let conversationsToProcess = rawConversations;
+    if (provider === "gemini" && ((_a = adapter.hasIndex) == null ? void 0 : _a.call(adapter))) {
+      progressCallback == null ? void 0 : progressCallback({
+        phase: "processing",
+        title: "Grouping Gemini conversations...",
+        detail: "Using index to reconstruct full conversations"
+      });
+      const groupedConversations = adapter.convertAllWithIndex(rawConversations);
+      conversationsToProcess = groupedConversations;
+      this.plugin.logger.info(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
+    }
     const storage = this.plugin.getStorageService();
     const existingConversationsMap = await storage.scanExistingConversations();
     this.counters.totalExistingConversations = existingConversationsMap.size;
     let processedCount = 0;
-    for (const chat of rawConversations) {
+    for (const chat of conversationsToProcess) {
       await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
       processedCount++;
       progressCallback == null ? void 0 : progressCallback({
         phase: "processing",
         title: "Processing conversations...",
-        detail: `Processing conversation ${processedCount} of ${rawConversations.length}`,
+        detail: `Processing conversation ${processedCount} of ${conversationsToProcess.length}`,
         current: processedCount,
-        total: rawConversations.length
+        total: conversationsToProcess.length
       });
     }
     return importReport;
   }
   async processSingleChat(adapter, chat, existingConversations, importReport, zip, isReprocess = false) {
     try {
-      const chatId = adapter.getId(chat);
-      const chatTitle = adapter.getTitle(chat) || "Untitled";
+      const isStandardConversation = this.isStandardConversation(chat);
+      const chatId = isStandardConversation ? chat.id : adapter.getId(chat);
+      const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat) || "Untitled";
       if (!chatId || chatId.trim() === "") {
         this.plugin.logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
         importReport.addFailed(chatTitle, "N/A", 0, 0, "Missing conversation ID");
@@ -9473,31 +9486,38 @@ var ConversationProcessor = class {
       }
       const existingEntry = existingConversations.get(chatId);
       if (existingEntry) {
-        await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess);
+        await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess, isStandardConversation);
       } else {
-        const filePath = await this.generateFilePathForChat(adapter, chat);
-        await this.handleNewChat(adapter, chat, filePath, importReport, zip);
+        const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
+        await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
       }
       this.counters.totalConversationsProcessed++;
     } catch (error) {
       const errorMessage = error.message || "Unknown error occurred";
-      const chatTitle = adapter.getTitle(chat) || "Untitled";
+      const isStandardConversation = this.isStandardConversation(chat);
+      const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat) || "Untitled";
       importReport.addError(`Error processing chat: ${chatTitle}`, errorMessage);
     }
   }
-  async handleExistingChat(adapter, chat, existingRecord, importReport, zip, isReprocess = false) {
-    const chatTitle = adapter.getTitle(chat);
-    const createTime = adapter.getCreateTime(chat);
-    const updateTime = adapter.getUpdateTime(chat);
-    const totalMessageCount = await this.countMessages(adapter, chat);
+  /**
+   * Check if a chat object is already a StandardConversation
+   */
+  isStandardConversation(chat) {
+    return chat && typeof chat.id === "string" && typeof chat.title === "string" && typeof chat.provider === "string" && typeof chat.createTime === "number" && typeof chat.updateTime === "number" && Array.isArray(chat.messages);
+  }
+  async handleExistingChat(adapter, chat, existingRecord, importReport, zip, isReprocess = false, isStandardConversation = false) {
+    const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
+    const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+    const updateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
+    const totalMessageCount = await this.countMessages(adapter, chat, isStandardConversation);
     const fileExists = await this.plugin.app.vault.adapter.exists(existingRecord.path);
     if (!fileExists) {
-      await this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip);
+      await this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip, isStandardConversation);
       return;
     }
     if (isReprocess) {
       this.counters.totalExistingConversationsToUpdate++;
-      await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true);
+      await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true, isStandardConversation);
       return;
     }
     const comparison = compareTimestampsIgnoringSeconds(updateTime, existingRecord.updateTime);
@@ -9512,21 +9532,24 @@ var ConversationProcessor = class {
       );
     } else {
       this.counters.totalExistingConversationsToUpdate++;
-      await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip);
+      await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, false, isStandardConversation);
     }
   }
-  async handleNewChat(adapter, chat, filePath, importReport, zip) {
+  async handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation = false) {
     this.counters.totalNewConversationsToImport++;
-    await this.createNewNote(adapter, chat, filePath, importReport, zip);
+    await this.createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation);
   }
   /**
    * Count messages in a chat using provider-specific logic
    */
-  async countMessages(adapter, chat) {
-    var _a;
+  async countMessages(adapter, chat, isStandardConversation = false) {
+    var _a, _b;
+    if (isStandardConversation) {
+      return ((_a = chat.messages) == null ? void 0 : _a.length) || 0;
+    }
     try {
       const standardConversation = await adapter.convertChat(chat);
-      return ((_a = standardConversation.messages) == null ? void 0 : _a.length) || 0;
+      return ((_b = standardConversation.messages) == null ? void 0 : _b.length) || 0;
     } catch (error) {
       if (chat.mapping) {
         return Object.values(chat.mapping).filter((msg) => isValidMessage(msg.message)).length;
@@ -9550,24 +9573,37 @@ var ConversationProcessor = class {
     }
     return 0;
   }
-  async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false) {
+  async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false, isStandardConversation = false) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
       if (file instanceof import_obsidian15.TFile) {
         let content = await this.plugin.app.vault.read(file);
         const originalContent = content;
-        const chatUpdateTime = adapter.getUpdateTime(chat);
-        const chatCreateTime = adapter.getCreateTime(chat);
-        const chatTitle = adapter.getTitle(chat);
+        const chatUpdateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
+        const chatCreateTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+        const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
+        const chatId = isStandardConversation ? chat.id : adapter.getId(chat);
         const existingMessageIds = this.extractMessageUIDsFromNote(content);
-        const newMessages = adapter.getNewMessages(chat, existingMessageIds);
+        let newMessages;
+        if (isStandardConversation) {
+          newMessages = chat.messages.filter(
+            (msg) => !existingMessageIds.includes(msg.id)
+          );
+        } else {
+          newMessages = adapter.getNewMessages(chat, existingMessageIds);
+        }
         let attachmentStats = void 0;
         if (forceUpdate) {
-          let standardConversation = await adapter.convertChat(chat);
+          let standardConversation;
+          if (isStandardConversation) {
+            standardConversation = chat;
+          } else {
+            standardConversation = await adapter.convertChat(chat);
+          }
           if (zip && adapter.processMessageAttachments) {
             standardConversation.messages = await adapter.processMessageAttachments(
               standardConversation.messages,
-              adapter.getId(chat),
+              chatId,
               zip
             );
             attachmentStats = this.calculateAttachmentStats(standardConversation.messages);
@@ -9587,7 +9623,12 @@ var ConversationProcessor = class {
         }
         if (newMessages.length > 0) {
           content = this.updateMetadata(content, chatUpdateTime);
-          let standardConversation = await adapter.convertChat(chat);
+          let standardConversation;
+          if (isStandardConversation) {
+            standardConversation = chat;
+          } else {
+            standardConversation = await adapter.convertChat(chat);
+          }
           const newStandardMessages = standardConversation.messages.filter(
             (msg) => newMessages.some((newMsg) => newMsg.id === msg.id)
           );
@@ -9595,7 +9636,7 @@ var ConversationProcessor = class {
           if (zip && adapter.processMessageAttachments) {
             processedNewMessages = await adapter.processMessageAttachments(
               newStandardMessages,
-              adapter.getId(chat),
+              chatId,
               zip
             );
           }
@@ -9629,29 +9670,35 @@ var ConversationProcessor = class {
       this.plugin.logger.error("Error updating note", error.message);
     }
   }
-  async createNewNote(adapter, chat, filePath, importReport, zip) {
+  async createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation = false) {
     try {
       const folderPath = filePath.substring(0, filePath.lastIndexOf("/"));
       const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
       if (!folderResult.success) {
         throw new Error(folderResult.error || "Failed to ensure folder exists.");
       }
-      let standardConversation = await adapter.convertChat(chat);
+      let standardConversation;
+      if (isStandardConversation) {
+        standardConversation = chat;
+      } else {
+        standardConversation = await adapter.convertChat(chat);
+      }
+      const chatId = standardConversation.id;
       let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
       if (zip && adapter.processMessageAttachments) {
         standardConversation.messages = await adapter.processMessageAttachments(
           standardConversation.messages,
-          adapter.getId(chat),
+          chatId,
           zip
         );
         attachmentStats = this.calculateAttachmentStats(standardConversation.messages);
       }
       const content = this.noteFormatter.generateMarkdownContent(standardConversation);
       await this.fileService.writeToFile(filePath, content);
-      const messageCount = await this.countMessages(adapter, chat);
-      const createTime = adapter.getCreateTime(chat);
-      const updateTime = adapter.getUpdateTime(chat);
-      const chatTitle = adapter.getTitle(chat);
+      const messageCount = standardConversation.messages.length;
+      const createTime = standardConversation.createTime;
+      const updateTime = standardConversation.updateTime;
+      const chatTitle = standardConversation.title;
       const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
       importReport.addCreated(
         chatTitle,
@@ -9666,9 +9713,9 @@ var ConversationProcessor = class {
       this.counters.totalNonEmptyMessagesToImport += messageCount;
     } catch (error) {
       this.plugin.logger.error("Error creating new note", error.message);
-      const createTime = adapter.getCreateTime(chat);
-      const updateTime = adapter.getUpdateTime(chat);
-      const chatTitle = adapter.getTitle(chat);
+      const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+      const updateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
+      const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
       importReport.addFailed(
         chatTitle,
         filePath,
@@ -9694,10 +9741,10 @@ var ConversationProcessor = class {
     }
     return uids;
   }
-  async generateFilePathForChat(adapter, chat) {
-    const createTime = adapter.getCreateTime(chat);
-    const chatTitle = adapter.getTitle(chat);
-    const providerName = adapter.getProviderName();
+  async generateFilePathForChat(adapter, chat, isStandardConversation = false) {
+    const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+    const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
+    const providerName = isStandardConversation ? chat.provider : adapter.getProviderName();
     const date = new Date(createTime * 1e3);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -12873,7 +12920,7 @@ var GeminiConverter = class {
    */
   extractTitle(entry) {
     let title = entry.title || "Untitled Gemini Activity";
-    title = title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "");
+    title = this.stripPromptPrefix(title);
     if (title.length > 60) {
       title = title.substring(0, 57) + "...";
     }
@@ -12921,7 +12968,33 @@ var GeminiConverter = class {
     if (!entry.title) {
       return "";
     }
-    return entry.title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "").trim();
+    return this.stripPromptPrefix(entry.title).trim();
+  }
+  /**
+   * Compute a stable SHA-256 hash of the user prompt, after applying
+   * the same curation rules as the Gemini UI (no "Prompted" / "Live Prompt" prefixes).
+   *
+   * This hash is intended to match the hashes produced by the browser
+   * extension from the live Gemini DOM, so we MUST keep the text
+   * normalization logic in sync with the extension.
+   */
+  computeUserPromptHash(entry) {
+    const prompt = this.extractUserPrompt(entry);
+    return (0, import_crypto.createHash)("sha256").update(prompt, "utf8").digest("hex");
+  }
+  /**
+   * Remove a variety of "prompt" prefixes used in My Activity titles,
+   * in both English and French locales.
+   *
+   * Examples handled:
+   * - "Prompted How do I ..."
+   * - "Live Prompt Can you ..."
+   * - "Asked What is ..."
+   * - "Prompt: Pourquoi ..."
+   * - "Prompt : Pourquoi ..." (with optional non-breaking space)
+   */
+  stripPromptPrefix(rawTitle) {
+    return rawTitle.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "").replace(/^Prompt\s*:?\s+/i, "").trim();
   }
   /**
    * Extract assistant response from safeHtmlItem
@@ -13163,14 +13236,303 @@ var GeminiReportNamingStrategy = class {
 };
 __name(GeminiReportNamingStrategy, "GeminiReportNamingStrategy");
 
+// src/providers/gemini/gemini-index-merger.ts
+var GeminiIndexMerger = class {
+  constructor() {
+    this.converter = new GeminiConverter();
+  }
+  /**
+   * Merge Takeout entries with index to create grouped conversations
+   */
+  mergeIndexWithTakeout(takeoutEntries, index) {
+    const hasHashedMessages = index.conversations.some(
+      (conv) => Array.isArray(conv.messages) && conv.messages.length > 0
+    );
+    if (hasHashedMessages) {
+      return this.mergeUsingMessageHashes(takeoutEntries, index);
+    }
+    const conversations = /* @__PURE__ */ new Map();
+    const unmatchedEntries = [];
+    for (const entry of takeoutEntries) {
+      const match = this.findMatchingConversation(entry, index);
+      if (match) {
+        const convId = match.conversationId;
+        if (!conversations.has(convId)) {
+          conversations.set(convId, this.createConversationFromIndex(match, entry));
+        }
+        const conversation = conversations.get(convId);
+        const messages = this.converter["convertMessages"](entry);
+        conversation.messages.push(...messages);
+        const entryTime = this.converter["parseTimestamp"](entry.time);
+        if (entryTime < conversation.createTime) {
+          conversation.createTime = entryTime;
+        }
+        if (entryTime > conversation.updateTime) {
+          conversation.updateTime = entryTime;
+        }
+      } else {
+        unmatchedEntries.push(entry);
+      }
+    }
+    for (const entry of unmatchedEntries) {
+      const standalone = this.converter.convertEntry(entry);
+      conversations.set(standalone.id, standalone);
+    }
+    return Array.from(conversations.values());
+  }
+  /**
+   * Robust reconstruction when the index provides per-message hashes.
+   *
+   * Strategy:
+   *   1. For every Takeout entry, compute the curated prompt hash
+   *      (same logic as the extension) and build a hash -> entries map.
+   *   2. For each conversation in the index, walk its messages[] in order
+   *      and, for each messageHash, pick the corresponding Takeout entry.
+   *   3. Convert those entries to StandardMessages and append them to a
+   *      single StandardConversation, preserving the DOM order from the index.
+   *   4. Any Takeout entries that were not consumed are turned into
+   *      standalone conversations.
+   */
+  mergeUsingMessageHashes(takeoutEntries, index) {
+    const hashToEntries = /* @__PURE__ */ new Map();
+    for (const entry of takeoutEntries) {
+      const hash = this.converter.computeUserPromptHash(entry);
+      if (!hash)
+        continue;
+      let list = hashToEntries.get(hash);
+      if (!list) {
+        list = [];
+        hashToEntries.set(hash, list);
+      }
+      list.push(entry);
+    }
+    const usedEntries = /* @__PURE__ */ new Set();
+    const groupedConversations = [];
+    for (const indexConv of index.conversations) {
+      if (!indexConv.messages || indexConv.messages.length === 0) {
+        continue;
+      }
+      const entriesForConversation = [];
+      for (const msg of indexConv.messages) {
+        const candidates = hashToEntries.get(msg.messageHash);
+        if (!candidates || candidates.length === 0) {
+          continue;
+        }
+        let chosen;
+        for (let i = 0; i < candidates.length; i++) {
+          const candidate = candidates[i];
+          if (!usedEntries.has(candidate)) {
+            chosen = candidate;
+            candidates.splice(i, 1);
+            break;
+          }
+        }
+        if (!chosen) {
+          continue;
+        }
+        usedEntries.add(chosen);
+        entriesForConversation.push(chosen);
+      }
+      if (entriesForConversation.length === 0) {
+        continue;
+      }
+      const firstEntry = entriesForConversation[0];
+      const conversation = this.createConversationFromIndex(indexConv, firstEntry);
+      for (const entry of entriesForConversation) {
+        const messages = this.converter["convertMessages"](entry);
+        conversation.messages.push(...messages);
+        const entryTime = this.converter["parseTimestamp"](entry.time);
+        if (entryTime < conversation.createTime) {
+          conversation.createTime = entryTime;
+        }
+        if (entryTime > conversation.updateTime) {
+          conversation.updateTime = entryTime;
+        }
+      }
+      groupedConversations.push(conversation);
+    }
+    for (const entry of takeoutEntries) {
+      if (usedEntries.has(entry))
+        continue;
+      groupedConversations.push(this.converter.convertEntry(entry));
+    }
+    return groupedConversations;
+  }
+  /**
+   * Find matching conversation in index for a Takeout entry.
+   *
+   * New primary strategy (robust):
+   *   - Compute a SHA-256 hash of the curated user prompt from Takeout
+   *   - Look for the same hash in index.conversations[*].messages[*].messageHash
+   *
+   * Legacy fallback (when index has no hashes yet):
+   *   - Use heuristic title/prompt matching as before.
+   */
+  findMatchingConversation(entry, index) {
+    const hashedMatch = this.findByMessageHash(entry, index);
+    if (hashedMatch) {
+      return hashedMatch;
+    }
+    return this.findByHeuristics(entry, index);
+  }
+  /**
+   * Robust matching using message hashes from the index.
+   */
+  findByMessageHash(entry, index) {
+    const hasHashedMessages = index.conversations.some((conv) => Array.isArray(conv.messages) && conv.messages.length > 0);
+    if (!hasHashedMessages) {
+      return null;
+    }
+    const hash = this.converter.computeUserPromptHash(entry);
+    for (const conv of index.conversations) {
+      if (!conv.messages)
+        continue;
+      for (const msg of conv.messages) {
+        if (msg.messageHash === hash) {
+          return conv;
+        }
+      }
+    }
+    return null;
+  }
+  /**
+   * Legacy heuristic-based matching, kept as a fallback for compatibility
+   * with older index exports that don't include message hashes.
+   */
+  findByHeuristics(entry, index) {
+    const entryTime = entry.time;
+    const entryPrompt = this.extractPromptForMatching(entry);
+    const entryTitle = this.converter["extractTitle"](entry);
+    for (const conv of index.conversations) {
+      if (this.titlesMatch(entryTitle, conv.title)) {
+        return conv;
+      }
+    }
+    for (const conv of index.conversations) {
+      const promptMatch = this.promptsMatch(entryPrompt, conv.firstMessage.preview);
+      if (promptMatch) {
+        return conv;
+      }
+    }
+    for (const conv of index.conversations) {
+      const timeDiff = this.getTimeDifference(entryTime, entryTime);
+      if (timeDiff < 5e3) {
+        return conv;
+      }
+    }
+    return null;
+  }
+  /**
+   * Create initial StandardConversation from index metadata
+   */
+  createConversationFromIndex(indexConv, firstEntry) {
+    const timestamp = this.converter["parseTimestamp"](firstEntry.time);
+    return {
+      id: indexConv.conversationId,
+      title: indexConv.title,
+      provider: "gemini",
+      createTime: timestamp,
+      updateTime: timestamp,
+      messages: [],
+      chatUrl: indexConv.url,
+      metadata: {
+        indexSource: true,
+        loadSuccess: indexConv.loadSuccess
+      }
+    };
+  }
+  /**
+   * Extract prompt text for matching purposes
+   */
+  extractPromptForMatching(entry) {
+    if (!entry.title)
+      return "";
+    const cleaned = entry.title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "").replace(/^Prompt\s*:?\s+/i, "");
+    return cleaned.trim().toLowerCase().substring(0, 50);
+  }
+  /**
+   * Check if timestamps match (exact ISO string comparison)
+   */
+  timestampsMatch(time1, time2) {
+    return time1 === time2;
+  }
+  /**
+   * Calculate time difference in milliseconds
+   */
+  getTimeDifference(time1, time2) {
+    try {
+      const date1 = new Date(time1).getTime();
+      const date2 = new Date(time2).getTime();
+      return Math.abs(date1 - date2);
+    } catch (e) {
+      return Infinity;
+    }
+  }
+  /**
+   * Check if prompts match (fuzzy comparison)
+   */
+  promptsMatch(prompt1, prompt2) {
+    const normalized1 = prompt1.toLowerCase().trim();
+    const normalized2 = prompt2.toLowerCase().trim();
+    if (normalized1.startsWith(normalized2.substring(0, 20)) || normalized2.startsWith(normalized1.substring(0, 20))) {
+      return true;
+    }
+    const minLength = Math.min(normalized1.length, normalized2.length);
+    if (minLength < 10)
+      return false;
+    const compareLength = Math.min(30, minLength);
+    const substring1 = normalized1.substring(0, compareLength);
+    const substring2 = normalized2.substring(0, compareLength);
+    return substring1 === substring2;
+  }
+  /**
+   * Check if titles match (fuzzy comparison)
+   */
+  titlesMatch(title1, title2) {
+    const normalized1 = title1.toLowerCase().trim();
+    const normalized2 = title2.toLowerCase().trim();
+    if (normalized1 === normalized2)
+      return true;
+    if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
+      return true;
+    }
+    const compareLength = Math.min(40, normalized1.length, normalized2.length);
+    if (compareLength < 10)
+      return false;
+    return normalized1.substring(0, compareLength) === normalized2.substring(0, compareLength);
+  }
+};
+__name(GeminiIndexMerger, "GeminiIndexMerger");
+
 // src/providers/gemini/gemini-adapter.ts
 var GeminiAdapter = class extends BaseProviderAdapter {
   constructor(plugin) {
     super();
     this.plugin = plugin;
+    this.geminiIndex = null;
     this.converter = new GeminiConverter();
     this.attachmentExtractor = new GeminiAttachmentExtractor(plugin);
     this.reportNamingStrategy = new GeminiReportNamingStrategy();
+    this.indexMerger = new GeminiIndexMerger();
+  }
+  /**
+   * Set the Gemini index for conversation reconstruction
+   * Must be called before processing if index-based grouping is desired
+   */
+  setIndex(index) {
+    this.geminiIndex = index;
+  }
+  /**
+   * Get the current index (if any)
+   */
+  getIndex() {
+    return this.geminiIndex;
+  }
+  /**
+   * Check if adapter is in index mode
+   */
+  hasIndex() {
+    return this.geminiIndex !== null;
   }
   /**
    * Detect if raw conversations are Gemini activity entries
@@ -13208,9 +13570,28 @@ var GeminiAdapter = class extends BaseProviderAdapter {
   }
   /**
    * Convert Gemini entry to StandardConversation
+   *
+   * Note: When index is set, this returns a standalone conversation for this single entry.
+   * Use convertAllWithIndex() to get properly grouped conversations.
    */
   convertChat(chat) {
     return this.converter.convertEntry(chat);
+  }
+  /**
+   * Convert all Takeout entries to StandardConversations
+   *
+   * If index is set, entries are grouped into full conversations.
+   * Otherwise, each entry becomes a standalone conversation.
+   *
+   * @param entries - All Takeout entries to convert
+   * @returns Array of StandardConversations (grouped if index available)
+   */
+  convertAllWithIndex(entries) {
+    if (this.geminiIndex) {
+      return this.indexMerger.mergeIndexWithTakeout(entries, this.geminiIndex);
+    } else {
+      return entries.map((entry) => this.converter.convertEntry(entry));
+    }
   }
   /**
    * Get provider name
@@ -15825,13 +16206,25 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     const dropText = dropZone.createEl("div");
     dropText.style.fontSize = "16px";
     dropText.style.marginBottom = "10px";
-    dropText.textContent = "Drop ZIP files here or click to browse";
+    if (this.provider === "gemini") {
+      dropText.textContent = "Drop ZIP and JSON files here or click to browse";
+    } else {
+      dropText.textContent = "Drop ZIP files here or click to browse";
+    }
     const dropSubtext = dropZone.createEl("div");
     dropSubtext.style.fontSize = "14px";
     dropSubtext.style.color = "var(--text-muted)";
-    dropSubtext.textContent = "Supports multiple file selection";
+    if (this.provider === "gemini") {
+      dropSubtext.textContent = "ZIP (Takeout) + optional JSON (index from extension)";
+    } else {
+      dropSubtext.textContent = "Supports multiple file selection";
+    }
     const fileInput = section.createEl("input", { type: "file" });
-    fileInput.accept = ".zip";
+    if (this.provider === "gemini") {
+      fileInput.accept = ".zip,.json";
+    } else {
+      fileInput.accept = ".zip";
+    }
     fileInput.multiple = true;
     fileInput.style.display = "none";
     dropZone.addEventListener("click", () => fileInput.click());
@@ -15905,9 +16298,13 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     dropZone.style.borderColor = "var(--background-modifier-border)";
     dropZone.style.backgroundColor = "transparent";
     if ((_a = event.dataTransfer) == null ? void 0 : _a.files) {
-      const files = Array.from(event.dataTransfer.files).filter(
-        (file) => file.name.toLowerCase().endsWith(".zip")
-      );
+      const files = Array.from(event.dataTransfer.files).filter((file) => {
+        const fileName = file.name.toLowerCase();
+        if (this.provider === "gemini") {
+          return fileName.endsWith(".zip") || fileName.endsWith(".json");
+        }
+        return fileName.endsWith(".zip");
+      });
       if (files.length > 0) {
         this.selectedFiles = files;
         this.updateFilePreview();

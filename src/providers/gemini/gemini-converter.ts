@@ -40,22 +40,23 @@ export class GeminiConverter {
 		return createHash("sha256").update(composite).digest("hex").substring(0, 16);
 	}
 
-	/**
-	 * Extract title from entry (for conversation title - truncated)
-	 */
-	private extractTitle(entry: GeminiActivityEntry): string {
-		let title = entry.title || "Untitled Gemini Activity";
+		/**
+		 * Extract title from entry (for conversation title - truncated)
+		 */
+		private extractTitle(entry: GeminiActivityEntry): string {
+			let title = entry.title || "Untitled Gemini Activity";
 
-		// Remove common prefixes like "Prompted ", "Live Prompt ", "Asked "
-		title = title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "");
+			// Remove common prefixes like "Prompted ", "Live Prompt ", "Asked " or
+			// localized variants like "Prompt :" / "Prompt:"
+			title = this.stripPromptPrefix(title);
 
-		// Truncate to 60 characters for readability
-		if (title.length > 60) {
-			title = title.substring(0, 57) + "...";
+			// Truncate to 60 characters for readability
+			if (title.length > 60) {
+				title = title.substring(0, 57) + "...";
+			}
+
+			return title;
 		}
-
-		return title;
-	}
 
 	/**
 	 * Parse ISO 8601 timestamp to Unix seconds
@@ -98,17 +99,47 @@ export class GeminiConverter {
 		return messages;
 	}
 
-	/**
-	 * Extract user prompt from entry (full text, not truncated)
-	 */
-	private extractUserPrompt(entry: GeminiActivityEntry): string {
-		if (!entry.title) {
-			return "";
+		/**
+		 * Extract user prompt from entry (full text, not truncated)
+		 */
+		private extractUserPrompt(entry: GeminiActivityEntry): string {
+			if (!entry.title) {
+				return "";
+			}
+
+			return this.stripPromptPrefix(entry.title).trim();
 		}
 
-		// Remove common prefixes like "Prompted ", "Live Prompt ", "Asked "
-		return entry.title.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "").trim();
-	}
+		/**
+		 * Compute a stable SHA-256 hash of the user prompt, after applying
+		 * the same curation rules as the Gemini UI (no "Prompted" / "Live Prompt" prefixes).
+		 *
+		 * This hash is intended to match the hashes produced by the browser
+		 * extension from the live Gemini DOM, so we MUST keep the text
+		 * normalization logic in sync with the extension.
+		 */
+		public computeUserPromptHash(entry: GeminiActivityEntry): string {
+			const prompt = this.extractUserPrompt(entry);
+			return createHash("sha256").update(prompt, "utf8").digest("hex");
+		}
+
+		/**
+		 * Remove a variety of "prompt" prefixes used in My Activity titles,
+		 * in both English and French locales.
+		 *
+		 * Examples handled:
+		 * - "Prompted How do I ..."
+		 * - "Live Prompt Can you ..."
+		 * - "Asked What is ..."
+		 * - "Prompt: Pourquoi ..."
+		 * - "Prompt : Pourquoi ..." (with optional non-breaking space)
+		 */
+		private stripPromptPrefix(rawTitle: string): string {
+			return rawTitle
+				.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "")
+				.replace(/^Prompt\s*:?\s+/i, "")
+				.trim();
+		}
 
 	/**
 	 * Extract assistant response from safeHtmlItem

@@ -109,49 +109,81 @@ export interface GeminiIndex {
  * Single conversation entry in the Gemini index
  */
 export interface IndexConversation {
-	/**
-	 * Unique conversation ID from Gemini (e.g., "c_785f8f69017f7c11")
-	 */
-	conversationId: string;
+    /**
+     * Unique conversation ID from Gemini (e.g., "c_785f8f69017f7c11")
+     */
+    conversationId: string;
 
-	/**
-	 * Conversation title
-	 */
-	title: string;
+    /**
+     * Conversation title
+     */
+    title: string;
 
-	/**
-	 * Full URL to the conversation in Gemini web app
-	 */
-	url: string;
+    /**
+     * Full URL to the conversation in Gemini web app
+     */
+    url: string;
 
-	/**
-	 * First message metadata (used for matching with Takeout entries)
-	 */
-	firstMessage: IndexMessage;
+    /**
+     * First message metadata (used for matching with Takeout entries)
+     */
+    firstMessage: IndexMessage;
 
-	/**
-	 * Whether the conversation was successfully loaded during extraction
-	 */
-	loadSuccess: boolean;
+    /**
+     * Optional detailed messages with hashes, when provided by the extension.
+     * This allows robust matching with Takeout entries using messageHash.
+     */
+    messages?: IndexHashedMessage[];
+
+    /**
+     * Whether the conversation was successfully loaded during extraction
+     */
+    loadSuccess: boolean;
 }
 
 /**
- * Message metadata in the index (lightweight, for matching purposes)
+ * Message metadata for the first message (legacy/lightweight, no hash)
  */
 export interface IndexMessage {
-	/**
-	 * Message ID from Gemini
-	 */
-	messageId: string;
+    /**
+     * Message ID from Gemini
+     */
+    messageId: string;
 
-	/**
-	 * Preview of message content (first ~20 characters)
-	 */
-	preview: string;
+    /**
+     * Preview of message content (first ~20 characters)
+     */
+    preview: string;
 
-	/**
-	 * Full length of the message content
-	 */
-	length: number;
+    /**
+     * Full length of the message content
+     */
+    length: number;
+}
+
+/**
+ * Detailed message metadata with hash, used for matching Takeout entries.
+ */
+export interface IndexHashedMessage {
+    /**
+     * Message ID from Gemini DOM
+     */
+    messageId: string;
+
+    /**
+     * SHA-256 hash of the full user prompt content (after normalization)
+     */
+    messageHash: string;
+
+    /**
+     * Full length of the message content
+     */
+    length: number;
+
+    /**
+     * Optional timestamp string (reserved for future use if we can
+     * reliably extract it from the live Gemini UI).
+     */
+    timestamp?: string;
 }
 

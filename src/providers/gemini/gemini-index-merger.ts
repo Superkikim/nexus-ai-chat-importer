@@ -22,6 +22,17 @@ export class GeminiIndexMerger {
 		takeoutEntries: GeminiActivityEntry[],
 		index: GeminiIndex
 	): StandardConversation[] {
+			// If the index provides per-message hashes, use them as the primary
+			// source of truth to reconstruct full conversations in DOM order.
+			const hasHashedMessages = index.conversations.some(
+				(conv) => Array.isArray(conv.messages) && conv.messages.length > 0
+			);
+			if (hasHashedMessages) {
+				return this.mergeUsingMessageHashes(takeoutEntries, index);
+			}
+
+			// Fallback path for older index versions without detailed message hashes:
+			// group entries by matching them to conversations using heuristics.
 		const conversations = new Map<string, StandardConversation>();
 		const unmatchedEntries: GeminiActivityEntry[] = [];
 
@@ -66,47 +77,193 @@ export class GeminiIndexMerger {
 		return Array.from(conversations.values());
 	}
 
-	/**
-	 * Find matching conversation in index for a Takeout entry
-	 * Uses multiple strategies: exact timestamp match, fuzzy timestamp + prompt match
-	 */
-	private findMatchingConversation(
-		entry: GeminiActivityEntry,
-		index: GeminiIndex
-	): IndexConversation | null {
-		const entryTime = entry.time;
-		const entryPrompt = this.extractPromptForMatching(entry);
-
-		// Strategy 1: Exact timestamp match
-		for (const conv of index.conversations) {
-			// Check if first message timestamp matches
-			// Note: Current index only has firstMessage, but future versions may have full message arrays
-			if (this.timestampsMatch(entryTime, conv.firstMessage.preview)) {
-				return conv;
+		/**
+		 * Robust reconstruction when the index provides per-message hashes.
+		 *
+		 * Strategy:
+		 *   1. For every Takeout entry, compute the curated prompt hash
+		 *      (same logic as the extension) and build a hash -> entries map.
+		 *   2. For each conversation in the index, walk its messages[] in order
+		 *      and, for each messageHash, pick the corresponding Takeout entry.
+		 *   3. Convert those entries to StandardMessages and append them to a
+		 *      single StandardConversation, preserving the DOM order from the index.
+		 *   4. Any Takeout entries that were not consumed are turned into
+		 *      standalone conversations.
+		 */
+		private mergeUsingMessageHashes(
+			takeoutEntries: GeminiActivityEntry[],
+			index: GeminiIndex
+		): StandardConversation[] {
+			// Build hash -> queue of Takeout entries
+			const hashToEntries = new Map<string, GeminiActivityEntry[]>();
+			for (const entry of takeoutEntries) {
+				const hash = this.converter.computeUserPromptHash(entry);
+				if (!hash) continue;
+				let list = hashToEntries.get(hash);
+				if (!list) {
+					list = [];
+					hashToEntries.set(hash, list);
+				}
+				list.push(entry);
 			}
+
+			const usedEntries = new Set<GeminiActivityEntry>();
+			const groupedConversations: StandardConversation[] = [];
+
+			for (const indexConv of index.conversations) {
+				if (!indexConv.messages || indexConv.messages.length === 0) {
+					continue;
+				}
+
+				const entriesForConversation: GeminiActivityEntry[] = [];
+
+				for (const msg of indexConv.messages) {
+					const candidates = hashToEntries.get(msg.messageHash);
+					if (!candidates || candidates.length === 0) {
+						continue;
+					}
+
+					// Take the first unused entry for this hash
+					let chosen: GeminiActivityEntry | undefined;
+					for (let i = 0; i < candidates.length; i++) {
+						const candidate = candidates[i];
+						if (!usedEntries.has(candidate)) {
+							chosen = candidate;
+							candidates.splice(i, 1);
+							break;
+						}
+					}
+
+					if (!chosen) {
+						continue;
+					}
+
+					usedEntries.add(chosen);
+					entriesForConversation.push(chosen);
+				}
+
+				if (entriesForConversation.length === 0) {
+					continue;
+				}
+
+				// Create conversation seeded with the first matched entry
+				const firstEntry = entriesForConversation[0];
+				const conversation = this.createConversationFromIndex(indexConv, firstEntry);
+
+				for (const entry of entriesForConversation) {
+					const messages = this.converter["convertMessages"](entry);
+					conversation.messages.push(...messages);
+
+					const entryTime = this.converter["parseTimestamp"](entry.time);
+					if (entryTime < conversation.createTime) {
+						conversation.createTime = entryTime;
+					}
+					if (entryTime > conversation.updateTime) {
+						conversation.updateTime = entryTime;
+					}
+				}
+
+				groupedConversations.push(conversation);
+			}
+
+			// Any Takeout entries that didn't match the index hashes become standalone
+			for (const entry of takeoutEntries) {
+				if (usedEntries.has(entry)) continue;
+				groupedConversations.push(this.converter.convertEntry(entry));
+			}
+
+			return groupedConversations;
 		}
 
-		// Strategy 2: Fuzzy match (timestamp proximity + prompt similarity)
-		for (const conv of index.conversations) {
-			const timeDiff = this.getTimeDifference(entryTime, entryTime); // Will be enhanced when we have message timestamps
-			const promptMatch = this.promptsMatch(entryPrompt, conv.firstMessage.preview);
-
-			// Match if within 5 seconds and prompts are similar
-			if (timeDiff < 5000 && promptMatch) {
-				return conv;
+		/**
+		 * Find matching conversation in index for a Takeout entry.
+		 *
+		 * New primary strategy (robust):
+		 *   - Compute a SHA-256 hash of the curated user prompt from Takeout
+		 *   - Look for the same hash in index.conversations[*].messages[*].messageHash
+		 *
+		 * Legacy fallback (when index has no hashes yet):
+		 *   - Use heuristic title/prompt matching as before.
+		 */
+		private findMatchingConversation(
+			entry: GeminiActivityEntry,
+			index: GeminiIndex
+		): IndexConversation | null {
+			// Preferred path: hash-based matching when the index provides detailed messages
+			const hashedMatch = this.findByMessageHash(entry, index);
+			if (hashedMatch) {
+				return hashedMatch;
 			}
+
+			// Fallback for older index versions: use legacy fuzzy matching
+			return this.findByHeuristics(entry, index);
 		}
 
-		// Strategy 3: Title-based matching (fallback)
-		const entryTitle = this.converter["extractTitle"](entry);
-		for (const conv of index.conversations) {
-			if (this.titlesMatch(entryTitle, conv.title)) {
-				return conv;
+		/**
+		 * Robust matching using message hashes from the index.
+		 */
+		private findByMessageHash(
+			entry: GeminiActivityEntry,
+			index: GeminiIndex
+		): IndexConversation | null {
+			// If the index doesn't have detailed messages yet, we can't use this strategy
+			const hasHashedMessages = index.conversations.some((conv) => Array.isArray(conv.messages) && conv.messages.length > 0);
+			if (!hasHashedMessages) {
+				return null;
 			}
+
+			const hash = this.converter.computeUserPromptHash(entry);
+
+			for (const conv of index.conversations) {
+				if (!conv.messages) continue;
+
+				for (const msg of conv.messages) {
+					if (msg.messageHash === hash) {
+						return conv;
+					}
+				}
+			}
+
+			return null;
 		}
 
-		return null;
-	}
+		/**
+		 * Legacy heuristic-based matching, kept as a fallback for compatibility
+		 * with older index exports that don't include message hashes.
+		 */
+		private findByHeuristics(
+			entry: GeminiActivityEntry,
+			index: GeminiIndex
+		): IndexConversation | null {
+			const entryTime = entry.time;
+			const entryPrompt = this.extractPromptForMatching(entry);
+
+			// Strategy 1: Title-based matching (primary heuristic)
+			const entryTitle = this.converter["extractTitle"](entry);
+			for (const conv of index.conversations) {
+				if (this.titlesMatch(entryTitle, conv.title)) {
+					return conv;
+				}
+			}
+
+			// Strategy 2: Fuzzy prompt match against first message preview
+			for (const conv of index.conversations) {
+				const promptMatch = this.promptsMatch(entryPrompt, conv.firstMessage.preview);
+				if (promptMatch) {
+					return conv;
+				}
+			}
+
+			// Strategy 3: Timestamp proximity (very weak signal, last resort)
+			for (const conv of index.conversations) {
+				const timeDiff = this.getTimeDifference(entryTime, entryTime); // Placeholder: no timestamps in legacy index
+				if (timeDiff < 5000) {
+					return conv;
+				}
+			}
+
+			return null;
+		}
 
 	/**
 	 * Create initial StandardConversation from index metadata
@@ -135,16 +292,19 @@ export class GeminiIndexMerger {
 	/**
 	 * Extract prompt text for matching purposes
 	 */
-	private extractPromptForMatching(entry: GeminiActivityEntry): string {
-		if (!entry.title) return "";
-		
-		// Remove common prefixes and normalize
-		return entry.title
-			.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "")
-			.trim()
-			.toLowerCase()
-			.substring(0, 50); // First 50 chars for matching
-	}
+		private extractPromptForMatching(entry: GeminiActivityEntry): string {
+			if (!entry.title) return "";
+			
+			// Keep logic in sync with GeminiConverter.stripPromptPrefix
+			const cleaned = entry.title
+				.replace(/^(Prompted|Live Prompt|Asked)\s+/i, "")
+				.replace(/^Prompt\s*:?\s+/i, "");
+
+			return cleaned
+				.trim()
+				.toLowerCase()
+				.substring(0, 50); // First 50 chars for matching
+		}
 
 	/**
 	 * Check if timestamps match (exact ISO string comparison)
