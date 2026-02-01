@@ -40,6 +40,57 @@ export class ClaudeConverter {
         this.plugin = plugin;
     }
 
+    /**
+     * Sanitize a string for use in file/folder names.
+     * Allows spaces but removes characters that break filesystems.
+     */
+    private static sanitizeForPath(name: string): string {
+        return name.replace(/[\/\\:*?"<>|#^[\].''""']/g, '_').replace(/\s+/g, ' ').trim();
+    }
+
+    /**
+     * Build the artifact folder path for a conversation, using date prefix if enabled.
+     */
+    private static getArtifactFolderPath(conversationTitle?: string, conversationId?: string, conversationCreateTime?: number): string {
+        let folderName = conversationTitle
+            ? this.sanitizeForPath(conversationTitle)
+            : (conversationId || 'unknown');
+
+        if (conversationTitle && conversationCreateTime && this.plugin.settings.addDatePrefix) {
+            const date = new Date(conversationCreateTime * 1000);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const prefix = this.plugin.settings.dateFormat === 'YYYYMMDD'
+                ? `${year}${month}${day}`
+                : `${year}-${month}-${day}`;
+            folderName = `${prefix} - ${folderName}`;
+        }
+
+        return `${this.plugin.settings.attachmentFolder}/claude/artifacts/${folderName}`;
+    }
+
+    /**
+     * Build the artifact file base name (without .md extension).
+     */
+    private static getArtifactFileName(title: string, versionNumber: number, timestamp?: number): string {
+        const safeName = this.sanitizeForPath(title);
+        let name = versionNumber > 1 ? `${safeName} v${versionNumber}` : safeName;
+
+        if (timestamp && this.plugin.settings.addDatePrefix) {
+            const date = new Date(timestamp * 1000);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const prefix = this.plugin.settings.dateFormat === 'YYYYMMDD'
+                ? `${year}${month}${day}`
+                : `${year}-${month}-${day}`;
+            name = `${prefix} - ${name}`;
+        }
+
+        return name;
+    }
+
     static async convertChat(chat: ClaudeConversation): Promise<StandardConversation> {
         const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1000) : 0;
         // Normalize title to "Untitled" if missing (fix for artifact conversation links)
@@ -296,9 +347,9 @@ export class ClaudeConverter {
         conversationId?: string,
         conversationTitle?: string,
         conversationCreateTime?: number
-    ): Promise<Map<string, {versionNumber: number, title: string}>> {
+    ): Promise<Map<string, {versionNumber: number, title: string, timestamp?: number}>> {
 
-        const artifactVersionMap = new Map<string, {versionNumber: number, title: string}>();
+        const artifactVersionMap = new Map<string, {versionNumber: number, title: string, timestamp?: number}>();
         const versionCounters = new Map<string, number>();
         const artifactContents = new Map<string, string>();
         const artifactLanguages = new Map<string, string>(); // Track language per artifact ID
@@ -379,7 +430,8 @@ export class ClaudeConverter {
 
                 artifactVersionMap.set(versionKey, {
                     versionNumber: currentVersion,
-                    title: artifact.title || artifact.description || artifactId
+                    title: artifact.title || artifact.description || artifactId,
+                    timestamp: messageTimestamp
                 });
 
             } catch (error) {
@@ -395,7 +447,7 @@ export class ClaudeConverter {
      */
     private static async processContentBlocksForDisplay(
         contentBlocks: ClaudeContentBlock[],
-        artifactVersionMap: Map<string, {versionNumber: number, title: string}>,
+        artifactVersionMap: Map<string, {versionNumber: number, title: string, timestamp?: number}>,
         conversationId?: string,
         conversationTitle?: string,
         conversationCreateTime?: number
@@ -416,14 +468,13 @@ export class ClaudeConverter {
             const path = key.split('::')[0];
             const fileName = path.split('/').pop();
             if (fileName) {
-                // Create artifact callout
-                const artifactId = this.extractArtifactIdFromPath(path);
                 const versionNumber = value.versionNumber;
                 const title = value.title || 'Artifact';
-                const artifactFileName = `${artifactId}_v${versionNumber}`;
-                const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
+                const conversationFolder = this.getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime);
+                const artifactFileName = this.getArtifactFileName(title, versionNumber, value.timestamp);
+                const artifactPath = `${conversationFolder}/${artifactFileName}`;
 
-                const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}\n> 🎨 [[${artifactPath}|View Artifact]]`;
+                const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}**${versionNumber > 1 ? ` v${versionNumber}` : ''}\n> ![[${artifactPath}|View Artifact]]`;
                 artifactCalloutMap.set(fileName, callout);
             }
         }
@@ -445,10 +496,18 @@ export class ClaudeConverter {
                     break;
 
                 case 'tool_use':
-                    // FILTER ALL tool_use blocks - users don't care about internal tools!
-                    // Users only want to see the final result in text blocks
-                    // Artifacts are already extracted in Phase 1 and saved as files
-                    // computer:/// links in text blocks will show callouts for binary files
+                    // Emit callouts for artifact tool_use blocks (old format)
+                    if (block.name === 'artifacts' && block.input?.version_uuid && block.input?.command !== 'view') {
+                        const versionInfo = artifactVersionMap.get(block.input.version_uuid);
+                        if (versionInfo) {
+                            const title = block.input.title || block.input.id || 'Artifact';
+                            const conversationFolder = this.getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime);
+                            const artifactFileName = this.getArtifactFileName(title, versionInfo.versionNumber, versionInfo.timestamp);
+                            const artifactPath = `${conversationFolder}/${artifactFileName}`;
+                            textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${title}**${versionInfo.versionNumber > 1 ? ` v${versionInfo.versionNumber}` : ''}\n> ![[${artifactPath}|View Artifact]]`);
+                        }
+                    }
+                    // All other tool_use blocks are filtered - users don't need internal tool details
                     break;
 
                 case 'tool_result':
@@ -590,9 +649,9 @@ export class ClaudeConverter {
 
                                 // Create specific link for THIS version
                                 const title = block.input.title || artifactId;
-                                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-                                const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
-                                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}\n> 🎨 [[${versionFile}|View Artifact]]`;
+                                const cvFolder = this.getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime);
+                                const versionFile = `${cvFolder}/${this.getArtifactFileName(title, currentVersion)}`;
+                                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}**${currentVersion > 1 ? ` v${currentVersion}` : ''}\n> ![[${versionFile}|View Artifact]]`;
                                 textParts.push(specificLink);
 
                             } catch (error) {
@@ -688,17 +747,17 @@ export class ClaudeConverter {
 
         const { ensureFolderExists } = await import("../../utils");
 
-        // Create conversation-specific artifact folder
-        const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+        // Create conversation-specific artifact folder using conversation title
+        const conversationFolder = this.getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime);
         const folderResult = await ensureFolderExists(conversationFolder, this.plugin.app.vault);
         if (!folderResult.success) {
             throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
         }
 
-        // Sanitize artifactId to avoid filesystem issues
-        const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, '_');
-        const fileName = `${safeArtifactId}_v${versionNumber}.md`;
-        const filePath = `${conversationFolder}/${fileName}`;
+        // Use human-readable artifact title for filename
+        const artifactTitle = artifactData.title || artifactData.description || artifactId;
+        const artifactFileName = this.getArtifactFileName(artifactTitle, versionNumber, messageTimestamp);
+        const filePath = `${conversationFolder}/${artifactFileName}.md`;
 
         // Check if already exists
         const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);

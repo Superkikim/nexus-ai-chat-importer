@@ -40,9 +40,9 @@ export class NoteFormatter {
     generateMarkdownContent(conversation: StandardConversation): string {
         const safeTitle = generateSafeAlias(conversation.title);
 
-        // Generate ISO 8601 timestamps for frontmatter (v1.3.0+)
-        const createTimeStr = new Date(conversation.createTime * 1000).toISOString();
-        const updateTimeStr = new Date(conversation.updateTime * 1000).toISOString();
+        // Generate local ISO 8601 timestamps for frontmatter (Obsidian format: YYYY-MM-DDTHH:mm:ss)
+        const createTimeStr = this.toLocalISOString(new Date(conversation.createTime * 1000));
+        const updateTimeStr = this.toLocalISOString(new Date(conversation.updateTime * 1000));
 
         // Generate user-friendly timestamps for note body
         const createTimeDisplay = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
@@ -78,24 +78,23 @@ provider: ${conversation.provider}
 aliases: ${title}
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
-update_time: ${updateTimeStr}
----
-
-`;
-
-        // Build header content - use original title for display, safe title for frontmatter
-        // Display timestamps in user-friendly format
-        let header = `# Title: ${conversation.title}\n\n`;
-        header += `Created: ${createTimeDisplay}\n`;
-        header += `Last Updated: ${updateTimeDisplay}\n`;
+update_time: ${updateTimeStr}`;
 
         if (chatUrl) {
-            header += `Chat URL: ${chatUrl}\n`;
+            frontmatter += `\nchat_url: ${chatUrl}`;
         }
 
-        header += '\n\n';
+        frontmatter += `\n---\n`;
+
+        // Build header content
+        let header = `# ${conversation.title}\n\n`;
 
         return frontmatter + header;
+    }
+
+    private toLocalISOString(date: Date): string {
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
     }
 
     private generateMessagesContent(conversation: StandardConversation): string {

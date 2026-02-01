@@ -9269,8 +9269,8 @@ var NoteFormatter = class {
   }
   generateMarkdownContent(conversation) {
     const safeTitle = generateSafeAlias(conversation.title);
-    const createTimeStr = new Date(conversation.createTime * 1e3).toISOString();
-    const updateTimeStr = new Date(conversation.updateTime * 1e3).toISOString();
+    const createTimeStr = this.toLocalISOString(new Date(conversation.createTime * 1e3));
+    const updateTimeStr = this.toLocalISOString(new Date(conversation.updateTime * 1e3));
     const createTimeDisplay = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
     const updateTimeDisplay = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
     let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation);
@@ -9289,23 +9289,22 @@ provider: ${conversation.provider}
 aliases: ${title}
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
-update_time: ${updateTimeStr}
----
-
-`;
-    let header = `# Title: ${conversation.title}
-
-`;
-    header += `Created: ${createTimeDisplay}
-`;
-    header += `Last Updated: ${updateTimeDisplay}
-`;
+update_time: ${updateTimeStr}`;
     if (chatUrl) {
-      header += `Chat URL: ${chatUrl}
-`;
+      frontmatter += `
+chat_url: ${chatUrl}`;
     }
-    header += "\n\n";
+    frontmatter += `
+---
+`;
+    let header = `# ${conversation.title}
+
+`;
     return frontmatter + header;
+  }
+  toLocalISOString(date) {
+    const pad = /* @__PURE__ */ __name((n) => String(n).padStart(2, "0"), "pad");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
   generateMessagesContent(conversation) {
     return this.messageFormatter.formatMessages(conversation.messages);
@@ -10976,6 +10975,44 @@ var ClaudeConverter = class {
   static setPlugin(plugin) {
     this.plugin = plugin;
   }
+  /**
+   * Sanitize a string for use in file/folder names.
+   * Allows spaces but removes characters that break filesystems.
+   */
+  static sanitizeForPath(name) {
+    return name.replace(/[\/\\:*?"<>|#^[\]]/g, "_").replace(/\s+/g, " ").trim();
+  }
+  /**
+   * Build the artifact folder path for a conversation, using date prefix if enabled.
+   */
+  static getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime) {
+    let folderName = conversationTitle ? this.sanitizeForPath(conversationTitle) : conversationId || "unknown";
+    if (conversationTitle && conversationCreateTime && this.plugin.settings.addDatePrefix) {
+      const date = new Date(conversationCreateTime * 1e3);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const prefix = this.plugin.settings.dateFormat === "YYYYMMDD" ? `${year}${month}${day}` : `${year}-${month}-${day}`;
+      folderName = `${prefix} - ${folderName}`;
+    }
+    return `${this.plugin.settings.attachmentFolder}/claude/artifacts/${folderName}`;
+  }
+  /**
+   * Build the artifact file base name (without .md extension).
+   */
+  static getArtifactFileName(title, versionNumber, timestamp) {
+    const safeName = this.sanitizeForPath(title);
+    let name = versionNumber > 1 ? `${safeName} v${versionNumber}` : safeName;
+    if (timestamp && this.plugin.settings.addDatePrefix) {
+      const date = new Date(timestamp * 1e3);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const prefix = this.plugin.settings.dateFormat === "YYYYMMDD" ? `${year}${month}${day}` : `${year}-${month}-${day}`;
+      name = `${prefix} - ${name}`;
+    }
+    return name;
+  }
   static async convertChat(chat) {
     const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0;
     const conversationTitle = chat.name || "Untitled";
@@ -11117,10 +11154,24 @@ var ClaudeConverter = class {
         conversationCreateTime
       );
       const fileAttachments = this.processFileAttachments(message.files);
+      let messageContent = text || message.text || "";
+      if (!messageContent && message.attachments && message.attachments.length > 0) {
+        const extractedParts = [];
+        for (const att of message.attachments) {
+          if (att.extracted_content) {
+            const label = att.file_name ? `**${att.file_name}:**
+` : "";
+            extractedParts.push(label + att.extracted_content);
+          }
+        }
+        if (extractedParts.length > 0) {
+          messageContent = extractedParts.join("\n\n");
+        }
+      }
       const standardMessage = {
         id: message.uuid,
         role: message.sender === "human" ? "user" : "assistant",
-        content: text || message.text || "",
+        content: messageContent,
         timestamp: Math.floor(new Date(message.created_at).getTime() / 1e3),
         attachments: [...attachments, ...fileAttachments]
       };
@@ -11197,7 +11248,8 @@ var ClaudeConverter = class {
         const versionKey = isNewFormat ? `${artifact.path}::v${currentVersion}` : artifact.version_uuid;
         artifactVersionMap.set(versionKey, {
           versionNumber: currentVersion,
-          title: artifact.title || artifact.description || artifactId
+          title: artifact.title || artifact.description || artifactId,
+          timestamp: messageTimestamp
         });
       } catch (error) {
         logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
@@ -11209,6 +11261,7 @@ var ClaudeConverter = class {
    * Process content blocks for display (with artifact links)
    */
   static async processContentBlocksForDisplay(contentBlocks, artifactVersionMap, conversationId, conversationTitle, conversationCreateTime) {
+    var _a, _b;
     const textParts = [];
     const attachments = [];
     if (!contentBlocks || contentBlocks.length === 0) {
@@ -11219,13 +11272,13 @@ var ClaudeConverter = class {
       const path = key.split("::")[0];
       const fileName = path.split("/").pop();
       if (fileName) {
-        const artifactId = this.extractArtifactIdFromPath(path);
         const versionNumber = value.versionNumber;
         const title = value.title || "Artifact";
-        const artifactFileName = `${artifactId}_v${versionNumber}`;
-        const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
-        const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}
-> \u{1F3A8} [[${artifactPath}|View Artifact]]`;
+        const conversationFolder = this.getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime);
+        const artifactFileName = this.getArtifactFileName(title, versionNumber, value.timestamp);
+        const artifactPath = `${conversationFolder}/${artifactFileName}`;
+        const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}**${versionNumber > 1 ? ` v${versionNumber}` : ""}
+> ![[${artifactPath}|View Artifact]]`;
         artifactCalloutMap.set(fileName, callout);
       }
     }
@@ -11240,6 +11293,17 @@ var ClaudeConverter = class {
         case "thinking":
           break;
         case "tool_use":
+          if (block.name === "artifacts" && ((_a = block.input) == null ? void 0 : _a.version_uuid) && ((_b = block.input) == null ? void 0 : _b.command) !== "view") {
+            const versionInfo = artifactVersionMap.get(block.input.version_uuid);
+            if (versionInfo) {
+              const title = block.input.title || block.input.id || "Artifact";
+              const conversationFolder = this.getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime);
+              const artifactFileName = this.getArtifactFileName(title, versionInfo.versionNumber, versionInfo.timestamp);
+              const artifactPath = `${conversationFolder}/${artifactFileName}`;
+              textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${title}**${versionInfo.versionNumber > 1 ? ` v${versionInfo.versionNumber}` : ""}
+> ![[${artifactPath}|View Artifact]]`);
+            }
+          }
           break;
         case "tool_result":
           break;
@@ -11329,10 +11393,10 @@ var ClaudeConverter = class {
                   conversationCreateTime
                 );
                 const title = block.input.title || artifactId;
-                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
-                const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
-                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}
-> \u{1F3A8} [[${versionFile}|View Artifact]]`;
+                const cvFolder = this.getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime);
+                const versionFile = `${cvFolder}/${this.getArtifactFileName(title, currentVersion)}`;
+                const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}**${currentVersion > 1 ? ` v${currentVersion}` : ""}
+> ![[${versionFile}|View Artifact]]`;
                 textParts.push(specificLink);
               } catch (error) {
                 logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
@@ -11409,14 +11473,14 @@ ${code}
       throw new Error("Plugin not available");
     }
     const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+    const conversationFolder = this.getArtifactFolderPath(conversationTitle, conversationId, conversationCreateTime);
     const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
     if (!folderResult.success) {
       throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
     }
-    const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
-    const fileName = `${safeArtifactId}_v${versionNumber}.md`;
-    const filePath = `${conversationFolder}/${fileName}`;
+    const artifactTitle = artifactData.title || artifactData.description || artifactId;
+    const artifactFileName = this.getArtifactFileName(artifactTitle, versionNumber, messageTimestamp);
+    const filePath = `${conversationFolder}/${artifactFileName}.md`;
     const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
     if (shouldSkip) {
       return;
