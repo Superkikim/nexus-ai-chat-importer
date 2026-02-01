@@ -234,11 +234,26 @@ export class ClaudeConverter {
             
             // Add file attachments
             const fileAttachments = this.processFileAttachments(message.files);
-            
+
+            // Fall back to extracted_content from attachments when message text is empty
+            let messageContent = text || message.text || "";
+            if (!messageContent && message.attachments && message.attachments.length > 0) {
+                const extractedParts: string[] = [];
+                for (const att of message.attachments) {
+                    if (att.extracted_content) {
+                        const label = att.file_name ? `**${att.file_name}:**\n` : "";
+                        extractedParts.push(label + att.extracted_content);
+                    }
+                }
+                if (extractedParts.length > 0) {
+                    messageContent = extractedParts.join("\n\n");
+                }
+            }
+
             const standardMessage: StandardMessage = {
                 id: message.uuid,
                 role: message.sender === 'human' ? 'user' : 'assistant',
-                content: text || message.text || "",
+                content: messageContent,
                 timestamp: Math.floor(new Date(message.created_at).getTime() / 1000),
                 attachments: [...attachments, ...fileAttachments]
             };
