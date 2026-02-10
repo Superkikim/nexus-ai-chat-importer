@@ -77,15 +77,16 @@ export class ProviderSelectionDialog extends Modal {
             });
         }
 
-        // Gemini
-        if (registry.getAdapter("gemini")) {
-            providers.push({
-                id: "gemini",
-                name: "Gemini",
-                description: "Google Gemini Apps (Takeout My Activity) exports",
-                fileFormats: ["Takeout/.../Gemini.../My Activity.json"]
-            });
-        }
+        // Gemini - Temporarily disabled for v1.4.0 (complex export format)
+        // Will be re-enabled in future release after additional testing and validation
+        // if (registry.getAdapter("gemini")) {
+        //     providers.push({
+        //         id: "gemini",
+        //         name: "Gemini",
+        //         description: "Google Gemini Apps (Takeout My Activity) exports",
+        //         fileFormats: ["Takeout/.../Gemini.../My Activity.json"]
+        //     });
+        // }
 
         return providers;
     }

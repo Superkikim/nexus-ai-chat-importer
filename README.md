@@ -1,6 +1,6 @@
 # Nexus AI Chat Importer
 
-[![Version](https://img.shields.io/badge/version-1.3.2-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.2) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads (v1.3.2)](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/1.3.2/total?label=downloads%20(v1.3.2))](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.2) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.4.0) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads (v1.4.0)](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/1.4.0/total?label=downloads%20(v1.4.0))](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.4.0) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
 
 ## 📑 Table of Contents
 
@@ -55,6 +55,8 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - **📎 Smart Attachment Handling** - Unique filenames prevent collisions across imports
 - **⏱️ Millisecond Precision** - Accurate chronological sorting even for rapid-fire messages
 - **🔍 Enhanced Detection** - Automatic provider detection for Le Chat exports
+
+> 📝 **Note:** Gemini support is under development and will be available in a future release once additional validation is complete.
 
 ### ✨ New in v1.3.0
 

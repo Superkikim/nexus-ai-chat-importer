@@ -40,8 +40,9 @@ export function createProviderRegistry(plugin: NexusAiChatImporterPlugin): Defau
     // Register Le Chat provider
     registry.register("lechat", new LeChatAdapter(plugin));
 
-    // Register Gemini provider
-    registry.register("gemini", new GeminiAdapter(plugin));
+    // Register Gemini provider (disabled for v1.4.0 - complex format requiring additional validation)
+    // Will be re-enabled in future release
+    // registry.register("gemini", new GeminiAdapter(plugin));
 
     return registry;
 }
