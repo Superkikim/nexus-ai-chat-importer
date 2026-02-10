@@ -440,9 +440,11 @@ export class ClaudeConverter {
             switch (block.type) {
                 case 'text':
                     if (block.text) {
-                        // Replace computer:/// links with artifact callouts or attachment callouts
+                        // Filter mobile artifact placeholders first
+                        let processedText = this.filterArtifactPlaceholders(block.text, conversationId);
+                        // Then replace computer:/// links with artifact callouts or attachment callouts
                         // insideCallout=true because this text will be inside a message callout
-                        const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap, true);
+                        processedText = this.replaceComputerLinks(processedText, conversationId, artifactCalloutMap, true);
                         textParts.push(processedText);
                     }
                     break;
@@ -527,7 +529,9 @@ export class ClaudeConverter {
             switch (block.type) {
                 case 'text':
                     if (block.text) {
-                        textParts.push(block.text);
+                        // Filter mobile artifact placeholders
+                        const processedText = this.filterArtifactPlaceholders(block.text, conversationId);
+                        textParts.push(processedText);
                     }
                     break;
 
@@ -1200,6 +1204,37 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
             default:
                 return extension.toUpperCase();
         }
+    }
+
+    /**
+     * Filter mobile artifact placeholder messages and replace with Nexus callout
+     * Claude.ai shows placeholder text on mobile instead of artifacts
+     * This text gets exported in the JSON and needs to be replaced
+     */
+    private static filterArtifactPlaceholders(text: string, conversationId?: string): string {
+        const mobileArtifactPlaceholder = 'Viewing artifacts created via the Analysis Tool web feature preview isn\'t yet supported on mobile.';
+
+        // Check if text contains the mobile artifact placeholder
+        if (!text.includes(mobileArtifactPlaceholder)) {
+            return text;
+        }
+
+        const conversationUrl = conversationId
+            ? `https://claude.ai/chat/${conversationId}`
+            : 'https://claude.ai';
+
+        // Replace placeholder with Nexus callout
+        const replacementCallout = `>[!${this.CALLOUTS.ARTIFACT}] **Artifact** (Code/Document)\n> ⚠️ Artifact not included in Claude export. [Open original conversation](${conversationUrl})`;
+
+        // Replace all occurrences (text may contain multiple artifacts)
+        // Handle both plain text and code block wrapped versions
+        const codeBlockPattern = /```\s*\n?Viewing artifacts created via the Analysis Tool web feature preview isn't yet supported on mobile\.\s*\n?```/g;
+        let result = text.replace(codeBlockPattern, replacementCallout);
+
+        // Also handle plain text version (without code blocks)
+        result = result.replace(new RegExp(mobileArtifactPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replacementCallout);
+
+        return result;
     }
 
     /**

@@ -11329,7 +11329,8 @@ var ClaudeConverter = class {
       switch (block.type) {
         case "text":
           if (block.text) {
-            const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap, true);
+            let processedText = this.filterArtifactPlaceholders(block.text, conversationId);
+            processedText = this.replaceComputerLinks(processedText, conversationId, artifactCalloutMap, true);
             textParts.push(processedText);
           }
           break;
@@ -11380,7 +11381,8 @@ var ClaudeConverter = class {
       switch (block.type) {
         case "text":
           if (block.text) {
-            textParts.push(block.text);
+            const processedText = this.filterArtifactPlaceholders(block.text, conversationId);
+            textParts.push(processedText);
           }
           break;
         case "thinking":
@@ -11966,6 +11968,24 @@ ${versionContent}
       default:
         return extension.toUpperCase();
     }
+  }
+  /**
+   * Filter mobile artifact placeholder messages and replace with Nexus callout
+   * Claude.ai shows placeholder text on mobile instead of artifacts
+   * This text gets exported in the JSON and needs to be replaced
+   */
+  static filterArtifactPlaceholders(text, conversationId) {
+    const mobileArtifactPlaceholder = "Viewing artifacts created via the Analysis Tool web feature preview isn't yet supported on mobile.";
+    if (!text.includes(mobileArtifactPlaceholder)) {
+      return text;
+    }
+    const conversationUrl = conversationId ? `https://claude.ai/chat/${conversationId}` : "https://claude.ai";
+    const replacementCallout = `>[!${this.CALLOUTS.ARTIFACT}] **Artifact** (Code/Document)
+> \u26A0\uFE0F Artifact not included in Claude export. [Open original conversation](${conversationUrl})`;
+    const codeBlockPattern = /```\s*\n?Viewing artifacts created via the Analysis Tool web feature preview isn't yet supported on mobile\.\s*\n?```/g;
+    let result = text.replace(codeBlockPattern, replacementCallout);
+    result = result.replace(new RegExp(mobileArtifactPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), replacementCallout);
+    return result;
   }
   /**
    * Replace computer:/// links with artifact or attachment callouts
