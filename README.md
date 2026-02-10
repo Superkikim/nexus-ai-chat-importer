@@ -35,8 +35,8 @@
 1. **Install** the plugin from Obsidian Community Plugins (search "Nexus AI Chat Importer")
 2. **Export** your chats:
    - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
-   - **Claude**: Settings → Export data → Download ZIP
-   - **Le Chat**: Click your name → Profile → Export your personal data → Le Chat → Download
+   - **Claude**: Settings → Privacy → Export data → Download ZIP
+   - **Le Chat**: Click your name → Profile → Le Chat: Export → Download
 3. **Import**: Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar or use command palette → "Import AI conversations"
 4. **Select** your ZIP file(s) → Choose import mode (all or selective)
 5. **Done!** Your conversations are now in `Nexus/Conversations/`
@@ -224,7 +224,7 @@ Want to reorganize? No problem!
 3. Download the ZIP file
 
 **Le Chat**:
-1. Click your name → **Profile** → **Export your personal data** → **Le Chat**
+1. Click your name → **Profile** → **Le Chat: Export**
 2. Wait for the button to change from "Export" to "Download"
 3. Click **Download** to get the ZIP file
 
