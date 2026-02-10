@@ -22,7 +22,7 @@
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
 ### 📚 More
-- [✨ What's New](#-new-in-v130) - v1.3.0 features
+- [✨ What's New](#-new-in-v140) - v1.4.0 features
 - [☕ Support](#-support-my-work) - Help keep this plugin alive
 - [📜 License](#-license) - GPL-3.0
 
@@ -55,8 +55,6 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - **📎 Smart Attachment Handling** - Unique filenames prevent collisions across imports
 - **⏱️ Millisecond Precision** - Accurate chronological sorting even for rapid-fire messages
 - **🔍 Enhanced Detection** - Automatic provider detection for Le Chat exports
-
-> 📝 **Note:** Gemini support is under development and will be available in a future release once additional validation is complete.
 
 ### ✨ New in v1.3.0
 
@@ -109,7 +107,7 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 ## ✨ Key Features
 
 - 🎯 **Selective Import**: Choose exactly which conversations to import with interactive preview
-- 💬 **Multi-Provider Support**: Full support for ChatGPT and Claude conversations
+- 💬 **Multi-Provider Support**: Full support for ChatGPT, Claude, and Le Chat conversations
 - 🎨 **Beautiful Formatting**: Custom callouts with role-specific colors and icons
 - 📎 **Complete Attachment Handling**: Images, documents, DALL-E creations with prompts
 - 🎨 **Claude Artifact Versioning**: Separate files for each artifact modification
@@ -517,6 +515,30 @@ Each AI provider has unique characteristics in how they export conversations. He
 - If you want to preserve generated images, download them manually before exporting
 - Consider adding custom titles to your conversations by editing the imported notes' frontmatter
 
+---
+
+## 🧪 Experimental: Gemini Support
+
+### Google Gemini
+
+**⚠️ Not Currently Supported - Research Stage**
+
+Google Gemini exports present unique technical challenges that may make full support impractical. Unlike other providers, Gemini Takeout data lacks conversation IDs, making it impossible to reconstruct conversations from the export alone.
+
+**Why It's So Hard:**
+- Takeout provides messages without conversation identifiers
+- No way to group related messages into conversations
+- Requires external metadata that Google doesn't include
+
+**Experimental Approach:**
+I'm exploring a solution using a browser extension to capture conversation metadata directly from the Gemini web UI, which would then be combined with Takeout data to reconstruct conversations. However, this is complex, fragile, and may never reach production quality.
+
+**Status:** Research only. No timeline, no guarantees, no promises - just experimentation.
+
+You may notice Gemini code in the repository - it's experimental and disabled in v1.4.0.
+
+---
+
 ## 🔄 Reimporting & Updates
 
 You can safely reimport the same ZIP file multiple times. The plugin intelligently handles updates:
@@ -610,12 +632,12 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 
 ## 🚀 Future Plans
 
-We're constantly working to improve the plugin. Here's what's planned for future releases:
+I'm constantly working to improve the plugin. Here's what's planned for future releases:
 
 ### Upcoming Features
 
 **🤖 New Provider Support**:
-- **Other Providers**: Support for additional AI providers (Gemini, Perplexity, etc.)
+- **Other Providers**: Support for additional AI providers (Perplexity, etc.)
 
 **🌍 Localization**:
 - **Multi-language UI**: Plugin interface translated into multiple languages
