@@ -456,10 +456,11 @@ Attachments are organized by provider:
 - PDFs, text files, code files
 - Linked in conversation notes
 
-**Claude Artifacts**:
+**Claude Artifacts** (when included in export):
 - Code, documents, and AI-generated content
-- Saved as separate versioned files
+- Saved as separate versioned files when content is available
 - Each modification creates a new version (v1, v2, v3...)
+- ⚠️ Note: Claude exports often don't include artifact content - see [Provider Limitations](#-provider-specific-features--limitations)
 
 #### Missing Attachments
 
@@ -490,11 +491,18 @@ Each AI provider has unique characteristics in how they export conversations. He
 **✅ Fully Supported**:
 - Conversation titles (exported in JSON)
 - User-uploaded attachments (images, documents)
-- Artifacts (code, documents, generated content) with versioning
 - Complete message history
-- Web search results (filtered out as not useful)
+- Artifact metadata and structure
+
+**⚠️ Limitations**:
+- **Artifacts not exported**: Claude.ai exports do **not include artifact content** (code, documents, generated files). Only metadata about artifacts is included. The plugin will show a placeholder callout with a link to the original conversation where you can view the artifact
+- **Mobile artifact placeholders**: Conversations viewed on mobile may show placeholder text instead of artifact content in exports. The plugin automatically filters these and replaces them with proper callouts
 
 **Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
+
+**💡 Tip for Claude Users**:
+- To preserve artifacts, copy them from the web UI before they expire or are no longer accessible
+- The plugin tracks artifact versions and structure, but content must be accessed through the original conversation link
 
 ### Le Chat (Mistral AI)
 
