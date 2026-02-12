@@ -315,6 +315,8 @@ export class ClaudeConverter {
 	    conversationCreateTime?: number
 	): Promise<Map<string, {versionNumber: number, title: string}>> {
 
+        console.log('[DEBUG-PA] processAllArtifacts called with', allArtifacts.length, 'artifacts');
+
         const artifactVersionMap = new Map<string, {versionNumber: number, title: string}>();
         const versionCounters = new Map<string, number>();
         const artifactContents = new Map<string, string>();
@@ -327,6 +329,8 @@ export class ClaudeConverter {
                 ? this.extractArtifactIdFromPath(artifact.path)
                 : (artifact.id || 'unknown');
             const command = artifact.command || 'create';
+
+            console.log('[DEBUG-PA] Processing artifact:', artifactId, 'format:', artifact._format, 'command:', command, 'path:', artifact.path);
 
             // Increment version number for this artifact ID
             const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
@@ -394,16 +398,19 @@ export class ClaudeConverter {
                     ? `${artifact.path}::v${currentVersion}`
                     : artifact.version_uuid;
 
+                console.log('[DEBUG-PA] Setting versionKey:', versionKey, 'version:', currentVersion, 'title:', artifact.title || artifact.description || artifactId);
                 artifactVersionMap.set(versionKey, {
                     versionNumber: currentVersion,
                     title: artifact.title || artifact.description || artifactId
                 });
 
             } catch (error) {
+                console.log('[DEBUG-PA] ERROR saving artifact:', artifactId, error);
                 this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
             }
         }
 
+        console.log('[DEBUG-PA] Returning artifactVersionMap with', artifactVersionMap.size, 'entries');
         return artifactVersionMap;
     }
 
