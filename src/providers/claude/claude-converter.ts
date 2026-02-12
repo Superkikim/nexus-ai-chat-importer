@@ -131,21 +131,16 @@ export class ClaudeConverter {
 
 	                    // NEW FORMAT: create_file (initial creation)
 	                    if (block.type === 'tool_use' && block.name === 'create_file') {
-	                        console.log('[DEBUG-CF] create_file detected - path:', block.input?.path, 'has file_text:', !!block.input?.file_text);
-
 	                        if (block.input?.path && block.input?.file_text) {
 	                            const fileText = block.input.file_text || '';
 	                            const MIN_CONTENT_LENGTH = 200;
 	                            const filePath = block.input.path;
 	                            const fileName = filePath.split('/').pop() || '';
 
-	                            console.log('[DEBUG-CF] fileText length:', fileText.length, 'MIN:', MIN_CONTENT_LENGTH, 'fileName:', fileName);
-
 	                            // Only process if file_text contains actual content (not just a short description)
 	                            if (fileText.length >= MIN_CONTENT_LENGTH) {
 	                                // Check if this message has computer:/// links (workflow with final product)
 	                                const computerLinksInMessage = messageComputerLinks.get(msgIndex);
-	                                console.log('[DEBUG-CF] computerLinks for message', msgIndex, ':', computerLinksInMessage?.size || 0);
 
                             if (computerLinksInMessage && computerLinksInMessage.size > 0) {
                                 // This message has computer:/// links → check if created file matches computer:/// link
@@ -195,7 +190,6 @@ export class ClaudeConverter {
                                     ? Math.floor(new Date(message.created_at).getTime() / 1000)
                                     : 0;
 
-                                console.log('[DEBUG-CF] Adding artifact - no computer links, msgIndex:', msgIndex, 'fileName:', fileName);
                                 allArtifacts.push({
                                     artifact: {
                                         ...block.input,
@@ -208,8 +202,6 @@ export class ClaudeConverter {
                                 });
                             }
                         }
-                    } else {
-                        console.log('[DEBUG-CF] Skipped - missing path or file_text');
                     }
                 }
 
@@ -315,8 +307,6 @@ export class ClaudeConverter {
 	    conversationCreateTime?: number
 	): Promise<Map<string, {versionNumber: number, title: string}>> {
 
-        console.log('[DEBUG-PA] processAllArtifacts called with', allArtifacts.length, 'artifacts');
-
         const artifactVersionMap = new Map<string, {versionNumber: number, title: string}>();
         const versionCounters = new Map<string, number>();
         const artifactContents = new Map<string, string>();
@@ -329,8 +319,6 @@ export class ClaudeConverter {
                 ? this.extractArtifactIdFromPath(artifact.path)
                 : (artifact.id || 'unknown');
             const command = artifact.command || 'create';
-
-            console.log('[DEBUG-PA] Processing artifact:', artifactId, 'format:', artifact._format, 'command:', command, 'path:', artifact.path);
 
             // Increment version number for this artifact ID
             const currentVersion = (versionCounters.get(artifactId) || 0) + 1;
@@ -398,19 +386,16 @@ export class ClaudeConverter {
                     ? `${artifact.path}::v${currentVersion}`
                     : artifact.version_uuid;
 
-                console.log('[DEBUG-PA] Setting versionKey:', versionKey, 'version:', currentVersion, 'title:', artifact.title || artifact.description || artifactId);
                 artifactVersionMap.set(versionKey, {
                     versionNumber: currentVersion,
                     title: artifact.title || artifact.description || artifactId
                 });
 
             } catch (error) {
-                console.log('[DEBUG-PA] ERROR saving artifact:', artifactId, error);
                 this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
             }
         }
 
-        console.log('[DEBUG-PA] Returning artifactVersionMap with', artifactVersionMap.size, 'entries');
         return artifactVersionMap;
     }
 
@@ -435,9 +420,6 @@ export class ClaudeConverter {
         // Build map of artifact file names to their callouts
         const artifactCalloutMap = new Map<string, string>();
 
-        console.log('[DEBUG] processContentBlocksForDisplay - artifactVersionMap size:', artifactVersionMap.size);
-        console.log('[DEBUG] artifactVersionMap keys:', Array.from(artifactVersionMap.keys()));
-
         for (const [key, value] of artifactVersionMap.entries()) {
             // Extract path from key (format: "path::vN")
             const path = key.split('::')[0];
@@ -452,18 +434,11 @@ export class ClaudeConverter {
 
                 const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}\n> 🎨 [[${artifactPath}|View Artifact]]`;
                 artifactCalloutMap.set(fileName, callout);
-                console.log('[DEBUG] Added to artifactCalloutMap - fileName:', fileName, 'artifactId:', artifactId);
             }
         }
 
-        console.log('[DEBUG] artifactCalloutMap size:', artifactCalloutMap.size);
-        console.log('[DEBUG] artifactCalloutMap keys:', Array.from(artifactCalloutMap.keys()));
-
         // Process content blocks for display
-        console.log('[DEBUG] Processing', contentBlocks.length, 'content blocks');
         for (const block of contentBlocks) {
-            console.log('[DEBUG] Block type:', block.type, block.name ? `name: ${block.name}` : '');
-
             switch (block.type) {
                 case 'text':
                     if (block.text) {
@@ -481,21 +456,39 @@ export class ClaudeConverter {
                     break;
 
                 case 'tool_use':
-                    // FILTER ALL tool_use blocks - users don't care about internal tools!
+                    // Handle OLD FORMAT artifacts (name='artifacts')
+                    if (block.name === 'artifacts' && block.input?.version_uuid) {
+                        const versionInfo = artifactVersionMap.get(block.input.version_uuid);
+                        if (versionInfo) {
+                            const artifactId = block.input.id || 'unknown';
+                            const versionNumber = versionInfo.versionNumber;
+                            const title = versionInfo.title || 'Artifact';
+                            const artifactFileName = `${artifactId}_v${versionNumber}`;
+                            const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
+
+                            const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}\n> 🎨 [[${artifactPath}|View Artifact]]`;
+                            textParts.push(callout);
+                        }
+                    }
+                    // FILTER all other tool_use blocks - users don't care about internal tools!
                     // Users only want to see the final result in text blocks
                     // Artifacts are already extracted in Phase 1 and saved as files
                     // computer:/// links in text blocks will show callouts for binary files
                     break;
 
                 case 'tool_result':
-                    // Filter out all tool results - not useful for users
-                    console.log('[DEBUG] tool_result found - name:', block.name, 'content length:', block.content?.length);
+                    // Handle present_files tool results - create callouts for created artifacts
                     if (block.name === 'present_files' && block.content) {
-                        console.log('[DEBUG] present_files tool_result detected');
                         for (const contentItem of block.content) {
-                            console.log('[DEBUG] content item type:', contentItem.type);
-                            if (contentItem.type === 'local_resource') {
-                                console.log('[DEBUG] local_resource found:', contentItem.name, contentItem.file_path);
+                            if (contentItem.type === 'local_resource' && contentItem.file_path) {
+                                // Extract fileName from file_path (includes extension like .md)
+                                const fileName = contentItem.file_path.split('/').pop();
+                                if (fileName) {
+                                    const callout = artifactCalloutMap.get(fileName);
+                                    if (callout) {
+                                        textParts.push(callout);
+                                    }
+                                }
                             }
                         }
                     }
