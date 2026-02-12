@@ -1,6 +1,6 @@
 {
-	"name": "nexus-ai-chat-importer",
-	"version": "1.3.3",
+    "name": "nexus-ai-chat-importer",
+    "version": "1.4.0",
     "description": "This plugin allows to import ChatGPT conversation from the export files downloaded from your account",
     "main": "main.js",
     "scripts": {
