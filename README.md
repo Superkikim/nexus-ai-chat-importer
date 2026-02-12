@@ -1,6 +1,6 @@
 # Nexus AI Chat Importer
 
-[![Version](https://img.shields.io/badge/version-1.3.3-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.3) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads (v1.3.3)](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/1.3.3/total?label=downloads%20(v1.3.3))](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.3.3) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.4.0) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads (v1.4.0)](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/1.4.0/total?label=downloads%20(v1.4.0))](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.4.0) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
 
 ## 📑 Table of Contents
 
@@ -17,11 +17,12 @@
 
 ### 🔧 Advanced
 - [📎 Attachments](#-complete-attachment-handling) - Images, DALL-E, artifacts
+- [🤖 Provider Differences](#-provider-specific-features--limitations) - ChatGPT, Claude, Le Chat specifics
 - [⚙️ Settings](#plugin-settings) - Customize folders and formatting
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
 ### 📚 More
-- [✨ What's New](#-new-in-v130) - v1.3.0 features
+- [✨ What's New](#-new-in-v140) - v1.4.0 features
 - [☕ Support](#-support-my-work) - Help keep this plugin alive
 - [📜 License](#-license) - GPL-3.0
 
@@ -34,7 +35,8 @@
 1. **Install** the plugin from Obsidian Community Plugins (search "Nexus AI Chat Importer")
 2. **Export** your chats:
    - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
-   - **Claude**: Settings → Export data → Download ZIP
+   - **Claude**: Settings → Privacy → Export data → Download ZIP
+   - **Le Chat**: Click your name → Profile → Le Chat: Export → Download
 3. **Import**: Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar or use command palette → "Import AI conversations"
 4. **Select** your ZIP file(s) → Choose import mode (all or selective)
 5. **Done!** Your conversations are now in `Nexus/Conversations/`
@@ -45,12 +47,14 @@
 
 ## Overview
 
-Import your AI chat conversations from **ChatGPT** and **Claude** exports into Obsidian as beautifully formatted Markdown files.
+Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** exports into Obsidian as beautifully formatted Markdown files.
 
-The **1.3.x** series brings:
-- Powerful selective import and better organization (**v1.3.0**)
-- Fixes for Claude's new export format (**v1.3.2**)
-- A tiny quality-of-life patch for the upgrade notice (**v1.3.3**)
+### ✨ New in v1.4.0
+
+- **🤖 Le Chat Support** - Full integration for Mistral AI's Le Chat conversations
+- **📎 Smart Attachment Handling** - Unique filenames prevent collisions across imports
+- **⏱️ Millisecond Precision** - Accurate chronological sorting even for rapid-fire messages
+- **🔍 Enhanced Detection** - Automatic provider detection for Le Chat exports
 
 ### ✨ New in v1.3.0
 
@@ -77,22 +81,13 @@ The **1.3.x** series brings:
 - Fixed special characters in conversation titles
 - And many more...
 
-### 🐛 Fixed in v1.3.2
-
-- Claude changed their export format; the plugin now understands the new structure so Claude artifacts and attachments import correctly again.
-- If you had missing Claude files, delete the affected Claude notes and re-import the same ZIP after upgrading.
-
-### 🔹 Quick patch v1.3.3
-
-- Fixed the v1.3.2 upgrade notice so it only appears **once** per vault instead of at every restart.
-
 ## ☕ Support My Work
 
 I'm working on Nexus projects full-time while unemployed and dealing with health issues.
 
-**Over 4,300 downloads so far, yet I've received only $20 in donations in the last two months while paying about $200/month out of pocket in expenses.**
+**Over 4,300 downloads so far! Thank you to everyone who has supported this project.**
 
-**If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.**
+**If this plugin makes your life easier, a donation would mean the world to me and help keep development going strong.**
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
 
@@ -107,12 +102,12 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 - **$25** - Power my AI development tools 🤖 (Amazing!)
 - **$75** - Supercharge my entire dev toolkit 🚀 (You're a hero!)
 
-> **Reality check**: Over 4,300 downloads, but only $20 in donations over two months. If you use this plugin regularly, please consider contributing. Even $5 makes a real difference! 🙏
+> **Your support matters**: If you use this plugin regularly, please consider contributing. Even $5 makes a real difference and helps keep development active! 🙏
 
 ## ✨ Key Features
 
 - 🎯 **Selective Import**: Choose exactly which conversations to import with interactive preview
-- 💬 **Multi-Provider Support**: Full support for ChatGPT and Claude conversations
+- 💬 **Multi-Provider Support**: Full support for ChatGPT, Claude, and Le Chat conversations
 - 🎨 **Beautiful Formatting**: Custom callouts with role-specific colors and icons
 - 📎 **Complete Attachment Handling**: Images, documents, DALL-E creations with prompts
 - 🎨 **Claude Artifact Versioning**: Separate files for each artifact modification
@@ -227,6 +222,11 @@ Want to reorganize? No problem!
 1. Open Claude → **Settings** → **Privacy** → **Export data**
 2. Check your email (arrives in a few minutes)
 3. Download the ZIP file
+
+**Le Chat**:
+1. Click your name → **Profile** → **Le Chat: Export**
+2. Wait for the button to change from "Export" to "Download"
+3. Click **Download** to get the ZIP file
 
 ### Step 2: Import to Obsidian
 
@@ -456,10 +456,11 @@ Attachments are organized by provider:
 - PDFs, text files, code files
 - Linked in conversation notes
 
-**Claude Artifacts**:
+**Claude Artifacts** (when included in export):
 - Code, documents, and AI-generated content
-- Saved as separate versioned files
+- Saved as separate versioned files when content is available
 - Each modification creates a new version (v1, v2, v3...)
+- ⚠️ Note: Claude exports often don't include artifact content - see [Provider Limitations](#-provider-specific-features--limitations)
 
 #### Missing Attachments
 
@@ -470,7 +471,80 @@ Some attachments may be missing from exports:
 
 The plugin continues importing even with missing attachments. Check import reports for details.
 
+## 🤖 Provider-Specific Features & Limitations
 
+Each AI provider has unique characteristics in how they export conversations. Here's what you need to know:
+
+### ChatGPT (OpenAI)
+
+**✅ Fully Supported**:
+- Conversation titles (exported in JSON)
+- User-uploaded attachments (images, documents)
+- DALL-E generated images with prompts
+- Complete message history
+- Custom instructions and model information
+
+**Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
+
+### Claude (Anthropic)
+
+**✅ Fully Supported**:
+- Conversation titles (exported in JSON)
+- User-uploaded attachments (images, documents)
+- Complete message history
+- Artifacts with full content and versioning
+
+**⚠️ Limitations**:
+- **Mobile view limitations**: Conversations viewed on mobile show placeholder text instead of displaying artifacts inline. While artifact files are extracted correctly to the artifacts folder, these mobile placeholders cannot be automatically linked to their corresponding artifact files in the conversation view
+
+**Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
+
+**💡 Tip for Claude Users**:
+- Artifacts are fully extracted and saved with versioning - check your artifacts folder
+- For conversations viewed on mobile, artifact files are still created but inline callouts may not show in messages
+
+### Le Chat (Mistral AI)
+
+**✅ Supported**:
+- User-uploaded attachments (images, documents)
+- Complete message history
+- References and citations
+- Custom elements
+
+**⚠️ Limitations**:
+- **No conversation titles**: Le Chat exports don't include conversation titles. The plugin automatically generates titles from the first user message (truncated to 50 characters)
+- **No generated images**: Images created by Le Chat's image generation tool are **not included in exports**. Only external URLs are provided, which may expire. The plugin will show the generation prompt but cannot download the images
+- **Tool calls filtered**: Internal tool calls (web_search, etc.) are filtered out as they're not useful for users
+
+**Export Format**: Individual `chat-{uuid}.json` files (one per conversation) + attachments in `chat-{uuid}-files/` directories
+
+**💡 Tip for Le Chat Users**:
+- If you want to preserve generated images, download them manually before exporting
+- Consider adding custom titles to your conversations by editing the imported notes' frontmatter
+
+---
+
+## 🧪 Experimental: Gemini Support
+
+### Google Gemini
+
+**⚠️ Not Currently Supported - Research Stage**
+
+Google Gemini exports present unique technical challenges that may make full support impractical. Unlike other providers, Gemini Takeout data lacks conversation IDs, making it impossible to reconstruct conversations from the export alone.
+
+**Why It's So Hard:**
+- Takeout provides messages without conversation identifiers
+- No way to group related messages into conversations
+- Requires external metadata that Google doesn't include
+
+**Experimental Approach:**
+I'm exploring a solution using a browser extension to capture conversation metadata directly from the Gemini web UI, which would then be combined with Takeout data to reconstruct conversations. However, this is complex, fragile, and may never reach production quality.
+
+**Status:** Research only. No timeline, no guarantees, no promises - just experimentation.
+
+You may notice Gemini code in the repository - it's experimental and disabled in v1.4.0.
+
+---
 
 ## 🔄 Reimporting & Updates
 
@@ -518,6 +592,13 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 
 ## 🐛 Troubleshooting
 
+**"Invalid file format" error**:
+- Only ZIP files are supported (must have `.zip` extension)
+- **Known Issue (Claude + Firefox on Mac)**: The downloaded file may have a `.dat` extension instead of `.zip`
+  - **Solution**: Simply rename the file to change `.dat` to `.zip` (do NOT extract and re-compress!)
+  - This is a browser/server issue that has been reported to Anthropic
+- If you manually compressed a folder, make sure it's a valid ZIP format
+
 **Import stuck or slow**:
 - Large archives take 5-10 minutes
 - Check progress dialog
@@ -558,13 +639,12 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 
 ## 🚀 Future Plans
 
-We're constantly working to improve the plugin. Here's what's planned for future releases:
+I'm constantly working to improve the plugin. Here's what's planned for future releases:
 
 ### Upcoming Features
 
 **🤖 New Provider Support**:
-- **Mistral Le Chat**: Full integration for Mistral AI conversations
-- **Other Providers**: Support for any AI provider that offers easily exploitable conversation export files
+- **Other Providers**: Support for additional AI providers (Perplexity, etc.)
 
 **🌍 Localization**:
 - **Multi-language UI**: Plugin interface translated into multiple languages
