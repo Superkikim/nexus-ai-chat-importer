@@ -93,10 +93,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
             }
 
-            // Show upgrade notice dialog for users upgrading from 1.3.0 (new Claude format support)
-            if (this.settings.previousVersion === "1.3.0") {
-                UpgradeNotice132Dialog.open(this.app, this);
-            }
+	            // Show upgrade notice dialog for users upgrading from 1.3.0 (new Claude format support)
+	            if (
+	                this.settings.previousVersion === "1.3.0" &&
+	                !this.settings.hasSeenClaude132UpgradeNotice
+	            ) {
+	                UpgradeNotice132Dialog.open(this.app, this);
+	                this.settings.hasSeenClaude132UpgradeNotice = true;
+	                await this.saveSettings();
+	            }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);
             throw error;
