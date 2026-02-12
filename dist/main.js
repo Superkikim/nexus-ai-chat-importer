@@ -11082,7 +11082,7 @@ var ClaudeConverter = class {
     };
   }
   static async convertMessages(messages, conversationId, conversationTitle, conversationCreateTime) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f;
     const standardMessages = [];
     if (!messages || messages.length === 0) {
       return standardMessages;
@@ -11126,57 +11126,65 @@ var ClaudeConverter = class {
               });
             }
           }
-          if (block.type === "tool_use" && block.name === "create_file" && ((_a = block.input) == null ? void 0 : _a.path) && ((_b = block.input) == null ? void 0 : _b.file_text)) {
-            const fileText = block.input.file_text || "";
-            const MIN_CONTENT_LENGTH = 200;
-            const filePath = block.input.path;
-            const fileName = filePath.split("/").pop() || "";
-            if (fileText.length >= MIN_CONTENT_LENGTH) {
-              const computerLinksInMessage = messageComputerLinks.get(msgIndex);
-              if (computerLinksInMessage && computerLinksInMessage.size > 0) {
-                let matchingLink = null;
-                for (const link of computerLinksInMessage) {
-                  const linkFileName = link.split("/").pop() || "";
-                  if (linkFileName === fileName || linkFileName.startsWith(fileName.replace(/\.[^.]+$/, ""))) {
-                    matchingLink = linkFileName;
-                    break;
+          if (block.type === "tool_use" && block.name === "create_file") {
+            console.log("[DEBUG-CF] create_file detected - path:", (_a = block.input) == null ? void 0 : _a.path, "has file_text:", !!((_b = block.input) == null ? void 0 : _b.file_text));
+            if (((_c = block.input) == null ? void 0 : _c.path) && ((_d = block.input) == null ? void 0 : _d.file_text)) {
+              const fileText = block.input.file_text || "";
+              const MIN_CONTENT_LENGTH = 200;
+              const filePath = block.input.path;
+              const fileName = filePath.split("/").pop() || "";
+              console.log("[DEBUG-CF] fileText length:", fileText.length, "MIN:", MIN_CONTENT_LENGTH, "fileName:", fileName);
+              if (fileText.length >= MIN_CONTENT_LENGTH) {
+                const computerLinksInMessage = messageComputerLinks.get(msgIndex);
+                console.log("[DEBUG-CF] computerLinks for message", msgIndex, ":", (computerLinksInMessage == null ? void 0 : computerLinksInMessage.size) || 0);
+                if (computerLinksInMessage && computerLinksInMessage.size > 0) {
+                  let matchingLink = null;
+                  for (const link of computerLinksInMessage) {
+                    const linkFileName = link.split("/").pop() || "";
+                    if (linkFileName === fileName || linkFileName.startsWith(fileName.replace(/\.[^.]+$/, ""))) {
+                      matchingLink = linkFileName;
+                      break;
+                    }
                   }
-                }
-                if (matchingLink) {
-                  const extension = ((_c = matchingLink.split(".").pop()) == null ? void 0 : _c.toLowerCase()) || "";
-                  if (this.isTextExploitableExtension(extension)) {
-                    const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
-                    allArtifacts.push({
-                      artifact: {
-                        ...block.input,
-                        _format: "create_file",
-                        command: "create"
-                      },
-                      messageIndex: msgIndex,
-                      blockIndex,
-                      messageTimestamp
-                    });
-                  } else {
-                    const toolOnlyId = this.extractArtifactIdFromPath(filePath);
-                    toolOnlyArtifactIds.add(toolOnlyId);
+                  if (matchingLink) {
+                    const extension = ((_e = matchingLink.split(".").pop()) == null ? void 0 : _e.toLowerCase()) || "";
+                    if (this.isTextExploitableExtension(extension)) {
+                      const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+                      allArtifacts.push({
+                        artifact: {
+                          ...block.input,
+                          _format: "create_file",
+                          command: "create"
+                        },
+                        messageIndex: msgIndex,
+                        blockIndex,
+                        messageTimestamp
+                      });
+                    } else {
+                      const toolOnlyId = this.extractArtifactIdFromPath(filePath);
+                      toolOnlyArtifactIds.add(toolOnlyId);
+                    }
                   }
+                } else {
+                  const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+                  console.log("[DEBUG-CF] Adding artifact - no computer links, msgIndex:", msgIndex, "fileName:", fileName);
+                  allArtifacts.push({
+                    artifact: {
+                      ...block.input,
+                      _format: "create_file",
+                      command: "create"
+                    },
+                    messageIndex: msgIndex,
+                    blockIndex,
+                    messageTimestamp
+                  });
                 }
-              } else {
-                const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
-                allArtifacts.push({
-                  artifact: {
-                    ...block.input,
-                    _format: "create_file",
-                    command: "create"
-                  },
-                  messageIndex: msgIndex,
-                  blockIndex,
-                  messageTimestamp
-                });
               }
+            } else {
+              console.log("[DEBUG-CF] Skipped - missing path or file_text");
             }
           }
-          if (block.type === "tool_use" && block.name === "str_replace" && ((_d = block.input) == null ? void 0 : _d.path)) {
+          if (block.type === "tool_use" && block.name === "str_replace" && ((_f = block.input) == null ? void 0 : _f.path)) {
             const artifactIdFromPath = this.extractArtifactIdFromPath(block.input.path);
             if (toolOnlyArtifactIds.has(artifactIdFromPath)) {
               continue;

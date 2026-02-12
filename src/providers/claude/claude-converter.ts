@@ -130,16 +130,22 @@ export class ClaudeConverter {
                     }
 
 	                    // NEW FORMAT: create_file (initial creation)
-	                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path && block.input?.file_text) {
-	                        const fileText = block.input.file_text || '';
-	                        const MIN_CONTENT_LENGTH = 200;
-	                        const filePath = block.input.path;
-	                        const fileName = filePath.split('/').pop() || '';
+	                    if (block.type === 'tool_use' && block.name === 'create_file') {
+	                        console.log('[DEBUG-CF] create_file detected - path:', block.input?.path, 'has file_text:', !!block.input?.file_text);
 
-	                        // Only process if file_text contains actual content (not just a short description)
-	                        if (fileText.length >= MIN_CONTENT_LENGTH) {
-	                            // Check if this message has computer:/// links (workflow with final product)
-                            const computerLinksInMessage = messageComputerLinks.get(msgIndex);
+	                        if (block.input?.path && block.input?.file_text) {
+	                            const fileText = block.input.file_text || '';
+	                            const MIN_CONTENT_LENGTH = 200;
+	                            const filePath = block.input.path;
+	                            const fileName = filePath.split('/').pop() || '';
+
+	                            console.log('[DEBUG-CF] fileText length:', fileText.length, 'MIN:', MIN_CONTENT_LENGTH, 'fileName:', fileName);
+
+	                            // Only process if file_text contains actual content (not just a short description)
+	                            if (fileText.length >= MIN_CONTENT_LENGTH) {
+	                                // Check if this message has computer:/// links (workflow with final product)
+	                                const computerLinksInMessage = messageComputerLinks.get(msgIndex);
+	                                console.log('[DEBUG-CF] computerLinks for message', msgIndex, ':', computerLinksInMessage?.size || 0);
 
                             if (computerLinksInMessage && computerLinksInMessage.size > 0) {
                                 // This message has computer:/// links → check if created file matches computer:/// link
@@ -189,6 +195,7 @@ export class ClaudeConverter {
                                     ? Math.floor(new Date(message.created_at).getTime() / 1000)
                                     : 0;
 
+                                console.log('[DEBUG-CF] Adding artifact - no computer links, msgIndex:', msgIndex, 'fileName:', fileName);
                                 allArtifacts.push({
                                     artifact: {
                                         ...block.input,
@@ -201,7 +208,10 @@ export class ClaudeConverter {
                                 });
                             }
                         }
+                    } else {
+                        console.log('[DEBUG-CF] Skipped - missing path or file_text');
                     }
+                }
 
 	                    // NEW FORMAT: str_replace (edits)
 	                    if (block.type === 'tool_use' && block.name === 'str_replace' && block.input?.path) {
