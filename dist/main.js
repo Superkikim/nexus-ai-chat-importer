@@ -11305,12 +11305,15 @@ var ClaudeConverter = class {
    * Process content blocks for display (with artifact links)
    */
   static async processContentBlocksForDisplay(contentBlocks, artifactVersionMap, conversationId, conversationTitle, conversationCreateTime) {
+    var _a;
     const textParts = [];
     const attachments = [];
     if (!contentBlocks || contentBlocks.length === 0) {
       return { text: "", attachments: [] };
     }
     const artifactCalloutMap = /* @__PURE__ */ new Map();
+    console.log("[DEBUG] processContentBlocksForDisplay - artifactVersionMap size:", artifactVersionMap.size);
+    console.log("[DEBUG] artifactVersionMap keys:", Array.from(artifactVersionMap.keys()));
     for (const [key, value] of artifactVersionMap.entries()) {
       const path = key.split("::")[0];
       const fileName = path.split("/").pop();
@@ -11323,9 +11326,14 @@ var ClaudeConverter = class {
         const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}
 > \u{1F3A8} [[${artifactPath}|View Artifact]]`;
         artifactCalloutMap.set(fileName, callout);
+        console.log("[DEBUG] Added to artifactCalloutMap - fileName:", fileName, "artifactId:", artifactId);
       }
     }
+    console.log("[DEBUG] artifactCalloutMap size:", artifactCalloutMap.size);
+    console.log("[DEBUG] artifactCalloutMap keys:", Array.from(artifactCalloutMap.keys()));
+    console.log("[DEBUG] Processing", contentBlocks.length, "content blocks");
     for (const block of contentBlocks) {
+      console.log("[DEBUG] Block type:", block.type, block.name ? `name: ${block.name}` : "");
       switch (block.type) {
         case "text":
           if (block.text) {
@@ -11339,6 +11347,16 @@ var ClaudeConverter = class {
         case "tool_use":
           break;
         case "tool_result":
+          console.log("[DEBUG] tool_result found - name:", block.name, "content length:", (_a = block.content) == null ? void 0 : _a.length);
+          if (block.name === "present_files" && block.content) {
+            console.log("[DEBUG] present_files tool_result detected");
+            for (const contentItem of block.content) {
+              console.log("[DEBUG] content item type:", contentItem.type);
+              if (contentItem.type === "local_resource") {
+                console.log("[DEBUG] local_resource found:", contentItem.name, contentItem.file_path);
+              }
+            }
+          }
           break;
       }
     }
@@ -11348,6 +11366,7 @@ var ClaudeConverter = class {
     };
   }
   static async processContentBlocks(contentBlocks, conversationId, conversationTitle, conversationCreateTime, versionCounters, artifactSummaries) {
+    var _a;
     const textParts = [];
     const attachments = [];
     const artifactVersionsMap = /* @__PURE__ */ new Map();
@@ -11369,6 +11388,52 @@ var ClaudeConverter = class {
             artifactVersionsMap.set(artifactId, []);
           }
           artifactVersionsMap.get(artifactId).push(block.input);
+        }
+      }
+    }
+    console.log("[DEBUG] processContentBlocks - checking for create_file blocks");
+    for (const block of contentBlocks) {
+      if (block.type === "tool_use" && block.name === "create_file" && block.input) {
+        const filePath = block.input.path || "";
+        const fileText = block.input.file_text || "";
+        const description = block.input.description || "";
+        if (filePath && fileText) {
+          const fileName = filePath.split("/").pop() || "";
+          const artifactId = fileName.replace(/\.(md|py|js|ts|html|css|txt|json|java|cpp|c|go|rs|rb|php|swift|kt)$/, "");
+          console.log("[DEBUG] create_file detected - artifactId:", artifactId, "path:", filePath);
+          const ext = ((_a = fileName.split(".").pop()) == null ? void 0 : _a.toLowerCase()) || "text";
+          const languageMap = {
+            "md": "markdown",
+            "py": "python",
+            "js": "javascript",
+            "ts": "typescript",
+            "html": "html",
+            "css": "css",
+            "json": "json",
+            "java": "java",
+            "cpp": "cpp",
+            "c": "c",
+            "go": "go",
+            "rs": "rust",
+            "rb": "ruby",
+            "php": "php",
+            "swift": "swift",
+            "kt": "kotlin"
+          };
+          const language = languageMap[ext] || "text";
+          const artifactInput = {
+            id: artifactId,
+            version_uuid: block.id || `create_file_${artifactId}`,
+            title: description || fileName,
+            content: fileText,
+            command: "create",
+            language
+          };
+          if (!artifactVersionsMap.has(artifactId)) {
+            artifactVersionsMap.set(artifactId, []);
+          }
+          artifactVersionsMap.get(artifactId).push(artifactInput);
+          console.log("[DEBUG] Added create_file artifact to map - artifactId:", artifactId, "versions:", artifactVersionsMap.get(artifactId).length);
         }
       }
     }
@@ -11980,8 +12045,8 @@ ${versionContent}
       return text;
     }
     const conversationUrl = conversationId ? `https://claude.ai/chat/${conversationId}` : "https://claude.ai";
-    const replacementCallout = `>[!${this.CALLOUTS.ARTIFACT}] **Artifact** (Code/Document)
-> \u26A0\uFE0F Artifact not included in Claude export. [Open original conversation](${conversationUrl})`;
+    const replacementCallout = `>[!${this.CALLOUTS.ARTIFACT}] **Artifact** (Mobile View)
+> \u26A0\uFE0F Artifact content not displayed in mobile view. Check the artifacts folder for extracted files, or [open original conversation](${conversationUrl}) to view artifacts.`;
     const codeBlockPattern = /```\s*\n?Viewing artifacts created via the Analysis Tool web feature preview isn't yet supported on mobile\.\s*\n?```/g;
     let result = text.replace(codeBlockPattern, replacementCallout);
     result = result.replace(new RegExp(mobileArtifactPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), replacementCallout);

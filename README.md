@@ -492,17 +492,16 @@ Each AI provider has unique characteristics in how they export conversations. He
 - Conversation titles (exported in JSON)
 - User-uploaded attachments (images, documents)
 - Complete message history
-- Artifact metadata and structure
+- Artifacts with full content and versioning
 
 **⚠️ Limitations**:
-- **Artifacts not exported**: Claude.ai exports do **not include artifact content** (code, documents, generated files). Only metadata about artifacts is included. The plugin will show a placeholder callout with a link to the original conversation where you can view the artifact
-- **Mobile artifact placeholders**: Conversations viewed on mobile may show placeholder text instead of artifact content in exports. The plugin automatically filters these and replaces them with proper callouts
+- **Mobile view limitations**: Conversations viewed on mobile show placeholder text instead of displaying artifacts inline. While artifact files are extracted correctly to the artifacts folder, these mobile placeholders cannot be automatically linked to their corresponding artifact files in the conversation view
 
 **Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
 
 **💡 Tip for Claude Users**:
-- To preserve artifacts, copy them from the web UI before they expire or are no longer accessible
-- The plugin tracks artifact versions and structure, but content must be accessed through the original conversation link
+- Artifacts are fully extracted and saved with versioning - check your artifacts folder
+- For conversations viewed on mobile, artifact files are still created but inline callouts may not show in messages
 
 ### Le Chat (Mistral AI)
 
