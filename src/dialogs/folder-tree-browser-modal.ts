@@ -27,7 +27,7 @@ export class FolderTreeBrowserModal extends Modal {
     private validatePath?: (path: string) => { valid: boolean; error?: string };
     private selectedFolder: TFolder | null = null;
     private expandedFolders: Set<string> = new Set();
-    private treeContainer: HTMLElement;
+    private treeContainer!: HTMLElement;
     private createdFolders: Set<string> = new Set(); // Track folders created during this session
 
     constructor(

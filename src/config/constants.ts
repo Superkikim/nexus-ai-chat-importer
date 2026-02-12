@@ -69,6 +69,10 @@ export const PROVIDER_URLS = {
     CLAUDE: {
         BASE: 'https://claude.ai',
         CHAT: (id: string) => `https://claude.ai/chat/${id}`
+    },
+    LECHAT: {
+        BASE: 'https://chat.mistral.ai',
+        CHAT: (id: string) => `https://chat.mistral.ai/chat/${id}`
     }
 } as const;
 
@@ -77,7 +81,8 @@ export const PROVIDER_URLS = {
  */
 export const PROVIDERS = {
     CHATGPT: 'chatgpt',
-    CLAUDE: 'claude'
+    CLAUDE: 'claude',
+    LECHAT: 'lechat'
 } as const;
 
 export type Provider = typeof PROVIDERS[keyof typeof PROVIDERS];

@@ -21,6 +21,8 @@
 import { DefaultProviderRegistry } from "./provider-adapter";
 import { ChatGPTAdapter } from "./chatgpt/chatgpt-adapter";
 import { ClaudeAdapter } from "./claude/claude-adapter";
+import { LeChatAdapter } from "./lechat/lechat-adapter";
+import { GeminiAdapter } from "./gemini/gemini-adapter";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**
@@ -35,7 +37,11 @@ export function createProviderRegistry(plugin: NexusAiChatImporterPlugin): Defau
     // Register Claude provider
     registry.register("claude", new ClaudeAdapter(plugin));
 
-    // Future providers will be registered here:
+    // Register Le Chat provider
+    registry.register("lechat", new LeChatAdapter(plugin));
+
+    // Register Gemini provider (disabled for v1.4.0 - complex format requiring additional validation)
+    // Will be re-enabled in future release
     // registry.register("gemini", new GeminiAdapter(plugin));
 
     return registry;

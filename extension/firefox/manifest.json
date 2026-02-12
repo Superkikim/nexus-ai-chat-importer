@@ -1,0 +1,47 @@
+{
+  "manifest_version": 2,
+  "name": "Nexus Gemini Indexer",
+  "version": "0.1.0",
+  "description": "Extract Gemini conversation index for Obsidian Nexus AI Chat Importer",
+  "author": "Superkikim",
+  
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "https://gemini.google.com/*"
+  ],
+  
+  "browser_action": {
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["src/content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "background": {
+    "scripts": ["src/background.js"]
+  },
+  
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "nexus-gemini-indexer@superkikim.com"
+    }
+  },
+  
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
+

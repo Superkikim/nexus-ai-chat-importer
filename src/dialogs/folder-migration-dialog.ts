@@ -96,7 +96,7 @@ export class FolderMigrationDialog extends Modal {
                 await this.onComplete('cancel');
                 new Notice(`Change cancelled. Folder setting reverted.`);
             } catch (error) {
-                new Notice(`Failed to revert setting: ${error.message}`);
+                new Notice(`Failed to revert setting: ${error instanceof Error ? error.message : String(error)}`);
             }
         });
 
@@ -111,7 +111,7 @@ export class FolderMigrationDialog extends Modal {
                 await this.onComplete('keep');
                 new Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
             } catch (error) {
-                new Notice(`Failed to update setting: ${error.message}`);
+                new Notice(`Failed to update setting: ${error instanceof Error ? error.message : String(error)}`);
             }
         });
 
@@ -126,7 +126,7 @@ export class FolderMigrationDialog extends Modal {
                 await this.onComplete('move');
                 new Notice(`Files moved to ${this.newPath}`);
             } catch (error) {
-                new Notice(`Failed to move files: ${error.message}`);
+                new Notice(`Failed to move files: ${error instanceof Error ? error.message : String(error)}`);
             }
         });
 

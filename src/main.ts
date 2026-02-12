@@ -39,6 +39,7 @@ import { ConversationMetadataExtractor } from "./services/conversation-metadata-
 import { ImportReport } from "./models/import-report";
 import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
 import { ensureFolderExists, formatTimestamp } from "./utils";
+import type { GeminiIndex } from "./providers/gemini/gemini-types";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
@@ -48,8 +49,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private importService: ImportService;
     private fileService: FileService;
     private commandRegistry: CommandRegistry;
-    private eventHandlers: EventHandlers;
-    private upgradeManager: IncrementalUpgradeManager;
+	    private eventHandlers: EventHandlers;
+	    private upgradeManager: IncrementalUpgradeManager;
+	    private currentGeminiIndex: GeminiIndex | null = null;
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
@@ -282,24 +284,88 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     /**
      * Handle the result from enhanced file selection dialog
      */
-    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
-        const { files, mode, provider } = result;
+	    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
+	        const { files, mode, provider } = result;
 
-        if (files.length === 0) {
-            return;
-        }
+	        if (files.length === 0) {
+	            return;
+	        }
 
-        // Sort files by timestamp
-        const sortedFiles = this.sortFilesByTimestamp(files);
+	        // Separate ZIP exports from optional JSON files
+	        const zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
+	        const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
 
-        if (mode === 'all') {
-            // Import all conversations with analysis (new optimized workflow)
-            await this.handleImportAll(sortedFiles, provider);
-        } else {
-            // Selective import - show conversation selection dialog
-            await this.handleSelectiveImport(sortedFiles, provider);
-        }
-    }
+	        if (provider === "gemini") {
+	            if (zipFiles.length === 0) {
+	                new Notice("Please select at least one Gemini Takeout ZIP file (plus optional JSON index from the extension).");
+	                this.logger.warn("[Gemini] No ZIP files selected for import");
+	                return;
+	            }
+
+	            // Load index from the latest JSON file, if provided
+	            let index: GeminiIndex | null = null;
+	            if (jsonFiles.length > 0) {
+	                // Prefer the most recently modified JSON file when multiple are selected
+	                const latestIndexFile = jsonFiles.reduce((latest, current) => {
+	                    return current.lastModified > latest.lastModified ? current : latest;
+	                });
+
+	                try {
+	                    const content = await latestIndexFile.text();
+	                    const parsed = JSON.parse(content);
+
+	                    if (parsed && typeof parsed === "object" && Array.isArray((parsed as any).conversations)) {
+	                        index = parsed as GeminiIndex;
+	                        this.logger.info(
+	                            `[Gemini] Loaded index file "${latestIndexFile.name}" with ${(parsed as any).conversations.length} conversations`
+	                        );
+	                    } else {
+	                        this.logger.warn(
+	                            `[Gemini] JSON index file "${latestIndexFile.name}" does not look like a valid GeminiIndex (missing conversations array)`
+	                        );
+	                    }
+	                } catch (error) {
+	                    this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
+	                    new Notice("Failed to read Gemini index JSON. Continuing without index.");
+	                }
+	            }
+
+	            // Store on plugin and push into ImportService adapter
+	            this.currentGeminiIndex = index;
+	            this.importService.setGeminiIndex(index);
+
+	            // Sort only the ZIP exports by timestamp
+	            const sortedZipFiles = this.sortFilesByTimestamp(zipFiles);
+
+	            if (mode === "all") {
+	                // Import all conversations with analysis (new optimized workflow)
+	                await this.handleImportAll(sortedZipFiles, provider);
+	            } else {
+	                // Selective import - show conversation selection dialog
+	                await this.handleSelectiveImport(sortedZipFiles, provider);
+	            }
+	        } else {
+	            // Non-Gemini providers: ensure we do not keep a stale Gemini index
+	            if (this.currentGeminiIndex) {
+	                this.currentGeminiIndex = null;
+	                this.importService.setGeminiIndex(null);
+	            }
+
+	            if (zipFiles.length === 0) {
+	                new Notice("Please select at least one ZIP export file.");
+	                this.logger.warn(`[${provider}] No ZIP files selected for import`);
+	                return;
+	            }
+
+	            const sortedZipFiles = this.sortFilesByTimestamp(zipFiles);
+
+	            if (mode === "all") {
+	                await this.handleImportAll(sortedZipFiles, provider);
+	            } else {
+	                await this.handleSelectiveImport(sortedZipFiles, provider);
+	            }
+	        }
+	    }
 
     /**
      * Handle "Import All" mode with analysis and auto-selection

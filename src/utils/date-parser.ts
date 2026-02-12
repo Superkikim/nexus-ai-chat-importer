@@ -17,8 +17,10 @@
  */
 
 // src/utils/date-parser.ts
-import { moment } from "obsidian";
 import { logger } from "../logger";
+
+// Use window.moment instead of importing from obsidian
+const moment = (window as any).moment;
 
 /**
  * Date format information

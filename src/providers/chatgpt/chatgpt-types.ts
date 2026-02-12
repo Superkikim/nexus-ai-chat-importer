@@ -43,6 +43,7 @@ export interface ChatMessage {
         text?: string; // Used when content_type is "code" (OpenAI inconsistency)
     };
     create_time: number;
+    recipient?: string; // Used to identify tool recipients (e.g., research_kickoff_tool)
     attachments?: ChatGPTAttachment[]; // Added attachment support
     files?: ChatGPTFile[]; // Added file reference support
     metadata?: {
@@ -54,6 +55,7 @@ export interface ChatMessage {
             width?: number;
             height?: number;
         }>;
+        async_task_type?: string; // Used to identify research tasks
         [key: string]: any;
     };
 }

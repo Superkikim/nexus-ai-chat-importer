@@ -18,8 +18,8 @@
 
 
 // src/models/import-report.ts
-import { AttachmentStats } from "../types/plugin";
-import { formatMessageTimestamp, MessageTimestampFormat } from "../utils";
+import { AttachmentStats, MessageTimestampFormat } from "../types/plugin";
+import { formatMessageTimestamp } from "../utils";
 
 interface ReportEntry {
     title: string;

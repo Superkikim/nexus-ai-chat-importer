@@ -94,15 +94,19 @@ export class ClaudeConverter {
             }
         }
 
-        // PHASE 1B: Collect ALL artifacts from entire conversation with message timestamps
-        // Support BOTH old format (artifacts) and new format (create_file + str_replace)
-        const allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number, messageTimestamp: number}> = [];
+	    // PHASE 1B: Collect ALL artifacts from entire conversation with message timestamps
+	    // Support BOTH old format (artifacts) and new format (create_file + str_replace)
+	    const allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number, messageTimestamp: number}> = [];
+	    // Track artifacts that are just tools used to generate binary outputs (e.g. scripts
+	    // that only exist to produce a PDF). For ces IDs, on ne crée AUCUN artifact, ni pour
+	    // le create_file ni pour les str_replace associés.
+	    const toolOnlyArtifactIds = new Set<string>();
 
-        for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
+	        for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
             const message = messages[msgIndex];
             if (message.content) {
-                for (let blockIndex = 0; blockIndex < message.content.length; blockIndex++) {
-                    const block = message.content[blockIndex];
+	                for (let blockIndex = 0; blockIndex < message.content.length; blockIndex++) {
+	                    const block = message.content[blockIndex];
 
                     // OLD FORMAT: artifacts with version_uuid
                     if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
@@ -125,16 +129,16 @@ export class ClaudeConverter {
                         }
                     }
 
-                    // NEW FORMAT: create_file (initial creation)
-                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path && block.input?.file_text) {
-                        const fileText = block.input.file_text || '';
-                        const MIN_CONTENT_LENGTH = 200;
-                        const filePath = block.input.path;
-                        const fileName = filePath.split('/').pop() || '';
+	                    // NEW FORMAT: create_file (initial creation)
+	                    if (block.type === 'tool_use' && block.name === 'create_file' && block.input?.path && block.input?.file_text) {
+	                        const fileText = block.input.file_text || '';
+	                        const MIN_CONTENT_LENGTH = 200;
+	                        const filePath = block.input.path;
+	                        const fileName = filePath.split('/').pop() || '';
 
-                        // Only process if file_text contains actual content (not just a short description)
-                        if (fileText.length >= MIN_CONTENT_LENGTH) {
-                            // Check if this message has computer:/// links (workflow with final product)
+	                        // Only process if file_text contains actual content (not just a short description)
+	                        if (fileText.length >= MIN_CONTENT_LENGTH) {
+	                            // Check if this message has computer:/// links (workflow with final product)
                             const computerLinksInMessage = messageComputerLinks.get(msgIndex);
 
                             if (computerLinksInMessage && computerLinksInMessage.size > 0) {
@@ -152,27 +156,33 @@ export class ClaudeConverter {
                                     }
                                 }
 
-                                // If computer:/// link matches created file AND it's exploitable → extract as artifact
-                                if (matchingLink) {
-                                    const extension = matchingLink.split('.').pop()?.toLowerCase() || '';
-                                    if (this.isTextExploitableExtension(extension)) {
-                                        const messageTimestamp = message.created_at
-                                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
-                                            : 0;
+	                                // If computer:/// link matches created file → decide based on extension
+	                                if (matchingLink) {
+	                                    const extension = matchingLink.split('.').pop()?.toLowerCase() || '';
+	                                    if (this.isTextExploitableExtension(extension)) {
+	                                        // Textual final product (md, txt, py, ...): on crée un artifact normal
+	                                        const messageTimestamp = message.created_at
+	                                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
+	                                            : 0;
 
-                                        allArtifacts.push({
-                                            artifact: {
-                                                ...block.input,
-                                                _format: 'create_file',
-                                                command: 'create'
-                                            },
-                                            messageIndex: msgIndex,
-                                            blockIndex: blockIndex,
-                                            messageTimestamp: messageTimestamp
-                                        });
-                                    }
-                                }
-                                // If no matching link OR link is binary → skip (script is just a tool)
+	                                        allArtifacts.push({
+	                                            artifact: {
+	                                                ...block.input,
+	                                                _format: 'create_file',
+	                                                command: 'create'
+	                                            },
+	                                            messageIndex: msgIndex,
+	                                            blockIndex: blockIndex,
+	                                            messageTimestamp: messageTimestamp
+	                                        });
+	                                    } else {
+	                                        // Binaire final (pdf, png, ...) : le script est un outil interne.
+	                                        // On ne créera JAMAIS d'artifact pour cet id (ni create_file ni str_replace).
+	                                        const toolOnlyId = this.extractArtifactIdFromPath(filePath);
+	                                        toolOnlyArtifactIds.add(toolOnlyId);
+	                                    }
+	                                }
+	                                // If no matching link OR link is binary → skip (script is just a tool)
                             } else {
                                 // No computer:/// link in this message = user explicitly requested → extract as artifact
                                 const messageTimestamp = message.created_at
@@ -193,29 +203,41 @@ export class ClaudeConverter {
                         }
                     }
 
-                    // NEW FORMAT: str_replace (edits)
-                    if (block.type === 'tool_use' && block.name === 'str_replace' && block.input?.path) {
-                        const messageTimestamp = message.created_at
-                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
-                            : 0;
+	                    // NEW FORMAT: str_replace (edits)
+	                    if (block.type === 'tool_use' && block.name === 'str_replace' && block.input?.path) {
+	                        const artifactIdFromPath = this.extractArtifactIdFromPath(block.input.path);
+	                        // Si ce chemin a été marqué comme "tool-only" (script pour PDF/PNG),
+	                        // on ignore complètement ces updates : aucun artifact ne doit exister.
+	                        if (toolOnlyArtifactIds.has(artifactIdFromPath)) {
+	                            continue;
+	                        }
 
-                        allArtifacts.push({
-                            artifact: {
-                                ...block.input,
-                                _format: 'str_replace',
-                                command: 'update'
-                            },
-                            messageIndex: msgIndex,
-                            blockIndex: blockIndex,
-                            messageTimestamp: messageTimestamp
-                        });
-                    }
+	                        const messageTimestamp = message.created_at
+	                            ? Math.floor(new Date(message.created_at).getTime() / 1000)
+	                            : 0;
+
+	                        allArtifacts.push({
+	                            artifact: {
+	                                ...block.input,
+	                                _format: 'str_replace',
+	                                command: 'update'
+	                            },
+	                            messageIndex: msgIndex,
+	                            blockIndex: blockIndex,
+	                            messageTimestamp: messageTimestamp
+	                        });
+	                    }
                 }
             }
         }
 
-        // PHASE 2: Process ALL artifacts and create files
-        const artifactVersionMap = await this.processAllArtifacts(allArtifacts, conversationId, conversationTitle, conversationCreateTime);
+	        // PHASE 2: Process ALL artifacts and create files
+	        const artifactVersionMap = await this.processAllArtifacts(
+	            allArtifacts,
+	            conversationId,
+	            conversationTitle,
+	            conversationCreateTime
+	        );
 
         // PHASE 3: Process messages and replace artifacts with links
         for (const message of messages) {
@@ -276,12 +298,12 @@ export class ClaudeConverter {
     /**
      * Process ALL artifacts from entire conversation and create files
      */
-    private static async processAllArtifacts(
-        allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number, messageTimestamp: number}>,
-        conversationId?: string,
-        conversationTitle?: string,
-        conversationCreateTime?: number
-    ): Promise<Map<string, {versionNumber: number, title: string}>> {
+	private static async processAllArtifacts(
+	    allArtifacts: Array<{artifact: any, messageIndex: number, blockIndex: number, messageTimestamp: number}>,
+	    conversationId?: string,
+	    conversationTitle?: string,
+	    conversationCreateTime?: number
+	): Promise<Map<string, {versionNumber: number, title: string}>> {
 
         const artifactVersionMap = new Map<string, {versionNumber: number, title: string}>();
         const versionCounters = new Map<string, number>();
@@ -318,24 +340,24 @@ export class ClaudeConverter {
                     ? this.detectLanguageFromPath(artifact.path)
                     : this.detectLanguageFromContent(finalContent, artifact.type);
                 artifactLanguages.set(artifactId, detectedLanguage);
-            } else if (command === 'update') {
-                // Apply update to PREVIOUS content
-                const previousContent = artifactContents.get(artifactId) || '';
-
-                if (artifact.old_str && artifact.new_str) {
-                    // sed-like replacement on previous content (both old and new format)
-                    finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
-                } else if (artifact.content && artifact.content.length > 0) {
-                    // Complete updated content provided (old format only)
-                    finalContent = artifact.content;
-                } else {
-                    // Empty update - keep previous content
-                    finalContent = previousContent;
-                }
-
-                // Update cumulative content for next version
-                artifactContents.set(artifactId, finalContent);
-            }
+	            } else if (command === 'update') {
+	                // Apply update to PREVIOUS content
+	                const previousContent = artifactContents.get(artifactId) || '';
+	
+	                if (artifact.old_str && artifact.new_str) {
+	                    // sed-like replacement on previous content (both old and new format)
+	                    finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
+	                } else if (artifact.content && artifact.content.length > 0) {
+	                    // Complete updated content provided (old format only)
+	                    finalContent = artifact.content;
+	                } else {
+	                    // Empty update - keep previous content
+	                    finalContent = previousContent;
+	                }
+	
+	                // Update cumulative content for next version
+	                artifactContents.set(artifactId, finalContent);
+	            }
 
             try {
                 // Get stored language (from create/rewrite) or detect for this version
@@ -368,7 +390,7 @@ export class ClaudeConverter {
                 });
 
             } catch (error) {
-                logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+                this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
             }
         }
 
@@ -396,6 +418,9 @@ export class ClaudeConverter {
         // Build map of artifact file names to their callouts
         const artifactCalloutMap = new Map<string, string>();
 
+        console.log('[DEBUG] processContentBlocksForDisplay - artifactVersionMap size:', artifactVersionMap.size);
+        console.log('[DEBUG] artifactVersionMap keys:', Array.from(artifactVersionMap.keys()));
+
         for (const [key, value] of artifactVersionMap.entries()) {
             // Extract path from key (format: "path::vN")
             const path = key.split('::')[0];
@@ -410,17 +435,26 @@ export class ClaudeConverter {
 
                 const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}\n> 🎨 [[${artifactPath}|View Artifact]]`;
                 artifactCalloutMap.set(fileName, callout);
+                console.log('[DEBUG] Added to artifactCalloutMap - fileName:', fileName, 'artifactId:', artifactId);
             }
         }
 
+        console.log('[DEBUG] artifactCalloutMap size:', artifactCalloutMap.size);
+        console.log('[DEBUG] artifactCalloutMap keys:', Array.from(artifactCalloutMap.keys()));
+
         // Process content blocks for display
+        console.log('[DEBUG] Processing', contentBlocks.length, 'content blocks');
         for (const block of contentBlocks) {
+            console.log('[DEBUG] Block type:', block.type, block.name ? `name: ${block.name}` : '');
+
             switch (block.type) {
                 case 'text':
                     if (block.text) {
-                        // Replace computer:/// links with artifact callouts or attachment callouts
+                        // Filter mobile artifact placeholders first
+                        let processedText = this.filterArtifactPlaceholders(block.text, conversationId);
+                        // Then replace computer:/// links with artifact callouts or attachment callouts
                         // insideCallout=true because this text will be inside a message callout
-                        const processedText = this.replaceComputerLinks(block.text, conversationId, artifactCalloutMap, true);
+                        processedText = this.replaceComputerLinks(processedText, conversationId, artifactCalloutMap, true);
                         textParts.push(processedText);
                     }
                     break;
@@ -438,6 +472,16 @@ export class ClaudeConverter {
 
                 case 'tool_result':
                     // Filter out all tool results - not useful for users
+                    console.log('[DEBUG] tool_result found - name:', block.name, 'content length:', block.content?.length);
+                    if (block.name === 'present_files' && block.content) {
+                        console.log('[DEBUG] present_files tool_result detected');
+                        for (const contentItem of block.content) {
+                            console.log('[DEBUG] content item type:', contentItem.type);
+                            if (contentItem.type === 'local_resource') {
+                                console.log('[DEBUG] local_resource found:', contentItem.name, contentItem.file_path);
+                            }
+                        }
+                    }
                     break;
             }
         }
@@ -465,7 +509,7 @@ export class ClaudeConverter {
             return { text: "", attachments: [] };
         }
 
-        // First pass: collect ALL significant artifact versions
+        // First pass: collect ALL significant artifact versions (OLD FORMAT: name='artifacts')
         for (const block of contentBlocks) {
             if (block.type === 'tool_use' && block.name === 'artifacts' && block.input) {
                 const artifactId = block.input.id || 'unknown';
@@ -492,6 +536,62 @@ export class ClaudeConverter {
             }
         }
 
+        // First pass (NEW FORMAT): collect artifacts from create_file tool usage
+        console.log('[DEBUG] processContentBlocks - checking for create_file blocks');
+        for (const block of contentBlocks) {
+            if (block.type === 'tool_use' && block.name === 'create_file' && block.input) {
+                const filePath = block.input.path || '';
+                const fileText = block.input.file_text || '';
+                const description = block.input.description || '';
+
+                if (filePath && fileText) {
+                    // Extract artifact ID from file path (e.g., "/mnt/user-data/outputs/resume-piste-consulting-pme.md" → "resume-piste-consulting-pme")
+                    const fileName = filePath.split('/').pop() || '';
+                    const artifactId = fileName.replace(/\.(md|py|js|ts|html|css|txt|json|java|cpp|c|go|rs|rb|php|swift|kt)$/, '');
+
+                    console.log('[DEBUG] create_file detected - artifactId:', artifactId, 'path:', filePath);
+
+                    // Detect language/type from file extension
+                    const ext = fileName.split('.').pop()?.toLowerCase() || 'text';
+                    const languageMap: {[key: string]: string} = {
+                        'md': 'markdown',
+                        'py': 'python',
+                        'js': 'javascript',
+                        'ts': 'typescript',
+                        'html': 'html',
+                        'css': 'css',
+                        'json': 'json',
+                        'java': 'java',
+                        'cpp': 'cpp',
+                        'c': 'c',
+                        'go': 'go',
+                        'rs': 'rust',
+                        'rb': 'ruby',
+                        'php': 'php',
+                        'swift': 'swift',
+                        'kt': 'kotlin'
+                    };
+                    const language = languageMap[ext] || 'text';
+
+                    // Create artifact input compatible with old format
+                    const artifactInput = {
+                        id: artifactId,
+                        version_uuid: block.id || `create_file_${artifactId}`,
+                        title: description || fileName,
+                        content: fileText,
+                        command: 'create',
+                        language: language
+                    };
+
+                    if (!artifactVersionsMap.has(artifactId)) {
+                        artifactVersionsMap.set(artifactId, []);
+                    }
+                    artifactVersionsMap.get(artifactId)!.push(artifactInput);
+                    console.log('[DEBUG] Added create_file artifact to map - artifactId:', artifactId, 'versions:', artifactVersionsMap.get(artifactId)!.length);
+                }
+            }
+        }
+
         // Second pass: process artifacts in messages and create specific links
         // Use provided counters or create new ones (for backward compatibility)
         if (!versionCounters) versionCounters = new Map<string, number>();
@@ -505,7 +605,9 @@ export class ClaudeConverter {
             switch (block.type) {
                 case 'text':
                     if (block.text) {
-                        textParts.push(block.text);
+                        // Filter mobile artifact placeholders
+                        const processedText = this.filterArtifactPlaceholders(block.text, conversationId);
+                        textParts.push(processedText);
                     }
                     break;
 
@@ -581,7 +683,7 @@ export class ClaudeConverter {
                                 textParts.push(specificLink);
 
                             } catch (error) {
-                                logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+                                this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
                                 textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${block.input.title || artifactId}** v${currentVersion}\n> ❌ Error saving artifact`);
                             }
                         }
@@ -745,7 +847,7 @@ export class ClaudeConverter {
         const versionCount = savedVersions.length;
 
         if (!latestVersion) {
-            logger.error('Claude converter: No latest version available for artifact summary');
+            this.plugin.logger.error('Claude converter: No latest version available for artifact summary');
             return `<div class="nexus-artifact-box">**🎨 Artifact: ${title}** (Error: No accessible version)</div>`;
         }
 
@@ -883,7 +985,7 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
         try {
             await this.plugin.app.vault.create(filePath, markdownContent);
         } catch (error) {
-            logger.error(`Failed to create artifact file ${filePath}:`, error);
+            this.plugin.logger.error(`Failed to create artifact file ${filePath}:`, error);
             throw error;
         }
     }
@@ -1181,6 +1283,38 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
     }
 
     /**
+     * Filter mobile artifact placeholder messages and replace with Nexus callout
+     * Claude.ai shows placeholder text on mobile instead of artifacts
+     * This text gets exported in the JSON and needs to be replaced
+     */
+    private static filterArtifactPlaceholders(text: string, conversationId?: string): string {
+        const mobileArtifactPlaceholder = 'Viewing artifacts created via the Analysis Tool web feature preview isn\'t yet supported on mobile.';
+
+        // Check if text contains the mobile artifact placeholder
+        if (!text.includes(mobileArtifactPlaceholder)) {
+            return text;
+        }
+
+        const conversationUrl = conversationId
+            ? `https://claude.ai/chat/${conversationId}`
+            : 'https://claude.ai';
+
+        // Replace placeholder with Nexus callout explaining the mobile limitation
+        // Note: Artifacts are likely extracted and saved as files - this is just the mobile UI message
+        const replacementCallout = `>[!${this.CALLOUTS.ARTIFACT}] **Artifact** (Mobile View)\n> ⚠️ Artifact content not displayed in mobile view. Check the artifacts folder for extracted files, or [open original conversation](${conversationUrl}) to view artifacts.`;
+
+        // Replace all occurrences (text may contain multiple artifacts)
+        // Handle both plain text and code block wrapped versions
+        const codeBlockPattern = /```\s*\n?Viewing artifacts created via the Analysis Tool web feature preview isn't yet supported on mobile\.\s*\n?```/g;
+        let result = text.replace(codeBlockPattern, replacementCallout);
+
+        // Also handle plain text version (without code blocks)
+        result = result.replace(new RegExp(mobileArtifactPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replacementCallout);
+
+        return result;
+    }
+
+    /**
      * Replace computer:/// links with artifact or attachment callouts
      * These are internal Anthropic server files not included in exports
      * @param artifactCalloutMap - Map of artifact file names to their callouts
@@ -1234,9 +1368,19 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
         }
 
         // Use appropriate separator based on context
-        // Inside callout: use >\n> to preserve quote level
-        // Outside callout: use \n\n for normal spacing
-        const separator = insideCallout ? '\n>\n' : '\n\n';
+        // NOTE: We deliberately avoid inserting raw ">" quote markers here.
+        // MessageFormatter is responsible for adding the correct number of
+        // leading ">" characters so that:
+        //   - normal lines stay at the main callout level (`>`)
+        //   - nested attachment/artifact callouts become `>>[!nexus_*]`
+        // If we inject lines that already contain just ">" here, they will be
+        // transformed into ">>" by MessageFormatter, which in turn makes the
+        // *line before* a nested callout start with ">>", breaking Obsidian's
+        // callout detection (the bug reported by the user).
+        //
+        // Inside or outside a callout we therefore just separate blocks with a
+        // blank line; the formatter will handle quote prefixes.
+        const separator = '\n\n';
         return replacements.join(separator);
     }
 

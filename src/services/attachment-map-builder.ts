@@ -62,7 +62,7 @@ export class AttachmentMapBuilder {
                         locations.push({
                             zipIndex: i,
                             path: path,
-                            size: zipFile._data?.uncompressedSize || 0,
+                            size: (zipFile as any)._data?.uncompressedSize || 0,
                             zipFileName: file.name
                         });
                     }

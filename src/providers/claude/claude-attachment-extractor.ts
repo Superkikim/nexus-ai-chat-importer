@@ -20,7 +20,7 @@
 // src/providers/claude/claude-attachment-extractor.ts
 import JSZip from "jszip";
 import { StandardAttachment } from "../../types/standard";
-import { Logger } from "../../types/plugin";
+import { Logger } from "../../logger";
 import { isImageFile, isTextFile } from "../../utils/file-utils";
 import type NexusAiChatImporterPlugin from "../../main";
 
