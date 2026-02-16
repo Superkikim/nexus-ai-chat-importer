@@ -234,7 +234,7 @@ export class ClaudeConverter {
         }
 
 	        // PHASE 2: Process ALL artifacts and create files
-	        const artifactVersionMap = await this.processAllArtifacts(
+	        const { artifactVersionMap, messageArtifactCallouts } = await this.processAllArtifacts(
 	            allArtifacts,
 	            conversationId,
 	            conversationTitle,
@@ -242,15 +242,20 @@ export class ClaudeConverter {
 	        );
 
         // PHASE 3: Process messages and replace artifacts with links
-        for (const message of messages) {
+        for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
+            const message = messages[msgIndex];
             if (!this.shouldIncludeMessage(message)) {
                 continue;
             }
+
+            // Get per-message artifact callout map for new format artifacts
+            const perMessageCalloutMap = messageArtifactCallouts.get(msgIndex) || new Map<string, string>();
 
             // Process content blocks to create message text and attachments
             const { text, attachments } = await this.processContentBlocksForDisplay(
                 message.content,
                 artifactVersionMap,
+                perMessageCalloutMap,
                 conversationId,
                 conversationTitle,
                 conversationCreateTime
@@ -305,14 +310,18 @@ export class ClaudeConverter {
 	    conversationId?: string,
 	    conversationTitle?: string,
 	    conversationCreateTime?: number
-	): Promise<Map<string, {versionNumber: number, title: string}>> {
+	): Promise<{
+	    artifactVersionMap: Map<string, {versionNumber: number, title: string}>,
+	    messageArtifactCallouts: Map<number, Map<string, string>>
+	}> {
 
         const artifactVersionMap = new Map<string, {versionNumber: number, title: string}>();
+        const messageArtifactCallouts = new Map<number, Map<string, string>>();
         const versionCounters = new Map<string, number>();
         const artifactContents = new Map<string, string>();
         const artifactLanguages = new Map<string, string>(); // Track language per artifact ID
 
-        for (const {artifact, messageTimestamp} of allArtifacts) {
+        for (const {artifact, messageIndex, messageTimestamp} of allArtifacts) {
             // Detect format and extract artifact ID
             const isNewFormat = artifact._format === 'create_file' || artifact._format === 'str_replace';
             const artifactId = isNewFormat
@@ -388,15 +397,31 @@ export class ClaudeConverter {
 
                 artifactVersionMap.set(versionKey, {
                     versionNumber: currentVersion,
-                    title: artifact.title || artifact.description || artifactId
+                    title: artifact.title || artifactId
                 });
+
+                // Build per-message callout map for new format artifacts
+                if (isNewFormat) {
+                    const fileName = artifact.path.split('/').pop();
+                    if (fileName) {
+                        const title = artifact.title || artifactId;
+                        const artifactFileName = `${artifactId}_v${currentVersion}`;
+                        const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
+                        const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}\n> 🎨 [[${artifactPath}|View Artifact]]`;
+
+                        if (!messageArtifactCallouts.has(messageIndex)) {
+                            messageArtifactCallouts.set(messageIndex, new Map());
+                        }
+                        messageArtifactCallouts.get(messageIndex)!.set(fileName, callout);
+                    }
+                }
 
             } catch (error) {
                 this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
             }
         }
 
-        return artifactVersionMap;
+        return { artifactVersionMap, messageArtifactCallouts };
     }
 
     /**
@@ -405,6 +430,7 @@ export class ClaudeConverter {
     private static async processContentBlocksForDisplay(
         contentBlocks: ClaudeContentBlock[],
         artifactVersionMap: Map<string, {versionNumber: number, title: string}>,
+        artifactCalloutMap: Map<string, string>,
         conversationId?: string,
         conversationTitle?: string,
         conversationCreateTime?: number
@@ -415,26 +441,6 @@ export class ClaudeConverter {
         // Handle empty or null content blocks
         if (!contentBlocks || contentBlocks.length === 0) {
             return { text: "", attachments: [] };
-        }
-
-        // Build map of artifact file names to their callouts
-        const artifactCalloutMap = new Map<string, string>();
-
-        for (const [key, value] of artifactVersionMap.entries()) {
-            // Extract path from key (format: "path::vN")
-            const path = key.split('::')[0];
-            const fileName = path.split('/').pop();
-            if (fileName) {
-                // Create artifact callout
-                const artifactId = this.extractArtifactIdFromPath(path);
-                const versionNumber = value.versionNumber;
-                const title = value.title || 'Artifact';
-                const artifactFileName = `${artifactId}_v${versionNumber}`;
-                const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
-
-                const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}\n> 🎨 [[${artifactPath}|View Artifact]]`;
-                artifactCalloutMap.set(fileName, callout);
-            }
         }
 
         // Process content blocks for display
@@ -547,7 +553,6 @@ export class ClaudeConverter {
         }
 
         // First pass (NEW FORMAT): collect artifacts from create_file tool usage
-        console.log('[DEBUG] processContentBlocks - checking for create_file blocks');
         for (const block of contentBlocks) {
             if (block.type === 'tool_use' && block.name === 'create_file' && block.input) {
                 const filePath = block.input.path || '';
@@ -558,8 +563,6 @@ export class ClaudeConverter {
                     // Extract artifact ID from file path (e.g., "/mnt/user-data/outputs/resume-piste-consulting-pme.md" → "resume-piste-consulting-pme")
                     const fileName = filePath.split('/').pop() || '';
                     const artifactId = fileName.replace(/\.(md|py|js|ts|html|css|txt|json|java|cpp|c|go|rs|rb|php|swift|kt)$/, '');
-
-                    console.log('[DEBUG] create_file detected - artifactId:', artifactId, 'path:', filePath);
 
                     // Detect language/type from file extension
                     const ext = fileName.split('.').pop()?.toLowerCase() || 'text';
@@ -597,7 +600,6 @@ export class ClaudeConverter {
                         artifactVersionsMap.set(artifactId, []);
                     }
                     artifactVersionsMap.get(artifactId)!.push(artifactInput);
-                    console.log('[DEBUG] Added create_file artifact to map - artifactId:', artifactId, 'versions:', artifactVersionsMap.get(artifactId)!.length);
                 }
             }
         }
@@ -900,7 +902,7 @@ export class ClaudeConverter {
 
         // Extract metadata based on format
         const title = isNewFormat
-            ? (artifactInput.description || this.extractArtifactIdFromPath(artifactInput.path))
+            ? this.extractArtifactIdFromPath(artifactInput.path)
             : (artifactInput.title || 'Untitled Artifact');
         let language = isNewFormat
             ? 'text' // Will be detected from path or content
