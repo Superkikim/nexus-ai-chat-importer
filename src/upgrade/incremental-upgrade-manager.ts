@@ -62,12 +62,13 @@ export class IncrementalUpgradeManager {
         const { Upgrade110 } = require("./versions/upgrade-1.1.0");
         const { Upgrade120 } = require("./versions/upgrade-1.2.0");
         const { Upgrade130 } = require("./versions/upgrade-1.3.0");
+        const { Upgrade140 } = require("./versions/upgrade-1.4.0");
 
         this.availableUpgrades = [
             new Upgrade110(),
             new Upgrade120(),
             new Upgrade130(),
-            // Future: new Upgrade131(), new Upgrade140(), etc.
+            new Upgrade140(),
         ];
 
         // Sort by version for incremental execution
