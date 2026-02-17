@@ -27,7 +27,7 @@ Version 1.4.0 adds **Mistral AI Le Chat** as a fully supported provider, introdu
 
 #### 💻 Command-Line Interface (CLI)
 - **Import from the terminal**: A standalone CLI tool lets you import conversations without opening Obsidian — useful for automation, large archives, or headless setups
-- **Supports ChatGPT and Claude**: Specify `--provider chatgpt` or `--provider claude`
+- **All providers supported**: Specify `--provider chatgpt`, `--provider claude`, or `--provider lechat`
 - **Dry run mode**: Preview what would be imported with `--dry-run`
 - **Full feature parity**: Deduplication, date prefixes, custom folder paths, and all plugin settings
 - *Contributed by [@caseyg](https://github.com/caseyg) via [PR #33](https://github.com/Superkikim/nexus-ai-chat-importer/pull/33)*

@@ -579,8 +579,6 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 
 Import conversations without opening Obsidian — useful for automation, large archives, or headless setups.
 
-> **Note**: The CLI currently supports **ChatGPT** and **Claude** exports. Le Chat is not yet supported via CLI.
-
 ### Installation
 
 The CLI is included in the plugin source. To use it:
@@ -601,7 +599,7 @@ nexus-cli import --vault /path/to/vault --input export.zip --provider chatgpt [o
 |--------|-------------|
 | `--vault <path>` | Path to your Obsidian vault (required) |
 | `--input <files...>` | One or more ZIP export files (required) |
-| `--provider <name>` | Provider to use: `chatgpt` or `claude` (auto-detected from ZIP if omitted) |
+| `--provider <name>` | Provider: `chatgpt`, `claude`, or `lechat` (required) |
 | `--conversation-folder <path>` | Override conversation folder |
 | `--attachment-folder <path>` | Override attachment folder |
 | `--report-folder <path>` | Override report folder |

@@ -12,7 +12,7 @@ const program = new Command();
 
 program
   .name("nexus-cli")
-  .description("Import ChatGPT/Claude chat exports into an Obsidian vault")
+  .description("Import ChatGPT/Claude/Le Chat exports into an Obsidian vault")
   .version("1.0.0");
 
 program
@@ -23,9 +23,9 @@ program
     "--input <files...>",
     "One or more ZIP export files to import"
   )
-  .option(
+  .requiredOption(
     "--provider <provider>",
-    "Provider: chatgpt or claude (auto-detected if omitted)"
+    "Provider: chatgpt, claude, or lechat"
   )
   .option(
     "--conversation-folder <folder>",
@@ -54,7 +54,7 @@ program
     try {
       // Validate provider if explicitly given
       if (opts.provider) {
-        const validProviders = ["chatgpt", "claude"];
+        const validProviders = ["chatgpt", "claude", "lechat"];
         if (!validProviders.includes(opts.provider)) {
           console.error(
             `Error: Invalid provider "${opts.provider}". Must be one of: ${validProviders.join(", ")}`

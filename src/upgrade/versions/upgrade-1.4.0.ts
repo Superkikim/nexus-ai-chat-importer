@@ -19,7 +19,7 @@
 
 // src/upgrade/versions/upgrade-1.4.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
-import { TFolder } from "obsidian";
+import { TFile, TFolder } from "obsidian";
 import { StorageService } from "../../services/storage-service";
 import { LinkUpdateService } from "../../services/link-update-service";
 
@@ -173,13 +173,99 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
 }
 
 /**
+ * Fix nested callout empty lines in conversation notes created by v1.3.x.
+ *
+ * In v1.3.x, the empty line before a nested callout used ">>" which breaks
+ * the callout rendering in Obsidian. The correct pattern is ">" (single quote).
+ *
+ * Before: >>\n>>[!nexus_attachment]
+ * After:  >\n>>[!nexus_attachment]
+ */
+class FixCalloutEmptyLinesOperation extends UpgradeOperation {
+    readonly id = "fix-callout-empty-lines";
+    readonly name = "Fix Callout Empty Lines";
+    readonly description = "Fixes nested callout rendering in conversation notes created by previous versions.";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        try {
+            const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+            const folder = context.plugin.app.vault.getAbstractFileByPath(conversationFolder);
+            return !!(folder && folder instanceof TFolder);
+        } catch {
+            return false;
+        }
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        let fixedCount = 0;
+        let scannedCount = 0;
+        let errorCount = 0;
+        const details: string[] = [];
+
+        try {
+            const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+
+            // Get all markdown files under the conversation folder
+            const allFiles = context.plugin.app.vault.getMarkdownFiles();
+            const conversationFiles = allFiles.filter(f => f.path.startsWith(conversationFolder));
+
+            // Pattern: ">>" on its own line followed by ">>[!nexus_"
+            const brokenPattern = /^>>$/gm;
+
+            for (const file of conversationFiles) {
+                scannedCount++;
+                try {
+                    const content = await context.plugin.app.vault.read(file);
+
+                    // Check if this file has the broken pattern
+                    if (!brokenPattern.test(content)) {
+                        continue;
+                    }
+                    // Reset regex lastIndex after test()
+                    brokenPattern.lastIndex = 0;
+
+                    // Replace ">>" empty lines with ">" — only when followed by a nexus callout
+                    const fixed = content.replace(/^>>(\n>>\[!nexus_)/gm, '>$1');
+
+                    if (fixed !== content) {
+                        await context.plugin.app.vault.modify(file, fixed);
+                        fixedCount++;
+                        details.push(`Fixed: ${file.path}`);
+                    }
+                } catch (error) {
+                    errorCount++;
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    details.push(`Error: ${file.path} — ${errorMsg}`);
+                }
+            }
+
+            const summary = `Scanned ${scannedCount} file(s), fixed ${fixedCount}, errors ${errorCount}.`;
+            return {
+                success: errorCount === 0,
+                message: summary,
+                details: details
+            };
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            return {
+                success: false,
+                message: `Migration failed: ${errorMsg}`,
+                details: details
+            };
+        }
+    }
+}
+
+/**
  * Version 1.4.0 Upgrade Definition
  */
 export class Upgrade140 extends VersionUpgrade {
     readonly version = "1.4.0";
 
     readonly automaticOperations = [
-        new RenameClaudeArtifactFoldersOperation()
+        new RenameClaudeArtifactFoldersOperation(),
+        new FixCalloutEmptyLinesOperation()
     ];
 
     readonly manualOperations = [

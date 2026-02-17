@@ -1,5 +1,6 @@
 /**
- * Orchestrates the import using plugin services with the obsidian shim.
+ * Orchestrates the import using plugin services with the Obsidian shim.
+ * Supports ChatGPT, Claude, and Le Chat providers.
  */
 
 import * as fs from "fs";
@@ -71,32 +72,6 @@ JSZip.prototype.loadAsync = function (data: any, options?: any) {
   }
   return origLoadAsync.call(this, data, options);
 };
-
-/**
- * Detect provider by peeking inside the ZIP for structural hints.
- * - Claude exports contain conversations.json + users.json
- * - ChatGPT exports contain conversations.json only (as a top-level array)
- */
-async function detectProviderFromZip(filePath: string): Promise<string> {
-  const buffer = fs.readFileSync(filePath);
-  const zip = new JSZip();
-  await origLoadAsync.call(zip, buffer);
-
-  const fileNames = Object.keys(zip.files);
-  const hasConversations = fileNames.includes("conversations.json");
-  const hasUsers = fileNames.includes("users.json");
-
-  if (!hasConversations) {
-    throw new Error(
-      `Cannot detect provider: ${path.basename(filePath)} has no conversations.json`
-    );
-  }
-
-  if (hasUsers) {
-    return "claude";
-  }
-  return "chatgpt";
-}
 
 /**
  * Read saved plugin settings from the vault's data.json.
@@ -221,14 +196,7 @@ export async function runImport(opts: ImportOptions): Promise<void> {
     }
   }
 
-  // Auto-detect provider from the first ZIP if not specified
-  let provider = opts.provider;
-  if (!provider) {
-    provider = await detectProviderFromZip(path.resolve(opts.input[0]));
-    if (opts.verbose) {
-      console.error(`Auto-detected provider: ${provider}`);
-    }
-  }
+  const provider = opts.provider!;
 
   if (opts.verbose) {
     // Show effective config sources

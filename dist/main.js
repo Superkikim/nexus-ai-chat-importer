@@ -7734,7 +7734,7 @@ var upgrade_1_4_0_exports = {};
 __export(upgrade_1_4_0_exports, {
   Upgrade140: () => Upgrade140
 });
-var import_obsidian22, UUID_REGEX, RenameClaudeArtifactFoldersOperation, Upgrade140;
+var import_obsidian22, UUID_REGEX, RenameClaudeArtifactFoldersOperation, FixCalloutEmptyLinesOperation, Upgrade140;
 var init_upgrade_1_4_0 = __esm({
   "src/upgrade/versions/upgrade-1.4.0.ts"() {
     "use strict";
@@ -7851,12 +7851,77 @@ var init_upgrade_1_4_0 = __esm({
       }
     };
     __name(RenameClaudeArtifactFoldersOperation, "RenameClaudeArtifactFoldersOperation");
+    FixCalloutEmptyLinesOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "fix-callout-empty-lines";
+        this.name = "Fix Callout Empty Lines";
+        this.description = "Fixes nested callout rendering in conversation notes created by previous versions.";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        try {
+          const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+          const folder = context.plugin.app.vault.getAbstractFileByPath(conversationFolder);
+          return !!(folder && folder instanceof import_obsidian22.TFolder);
+        } catch (e) {
+          return false;
+        }
+      }
+      async execute(context) {
+        let fixedCount = 0;
+        let scannedCount = 0;
+        let errorCount = 0;
+        const details = [];
+        try {
+          const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+          const allFiles = context.plugin.app.vault.getMarkdownFiles();
+          const conversationFiles = allFiles.filter((f) => f.path.startsWith(conversationFolder));
+          const brokenPattern = /^>>$/gm;
+          for (const file of conversationFiles) {
+            scannedCount++;
+            try {
+              const content = await context.plugin.app.vault.read(file);
+              if (!brokenPattern.test(content)) {
+                continue;
+              }
+              brokenPattern.lastIndex = 0;
+              const fixed = content.replace(/^>>(\n>>\[!nexus_)/gm, ">$1");
+              if (fixed !== content) {
+                await context.plugin.app.vault.modify(file, fixed);
+                fixedCount++;
+                details.push(`Fixed: ${file.path}`);
+              }
+            } catch (error) {
+              errorCount++;
+              const errorMsg = error instanceof Error ? error.message : String(error);
+              details.push(`Error: ${file.path} \u2014 ${errorMsg}`);
+            }
+          }
+          const summary = `Scanned ${scannedCount} file(s), fixed ${fixedCount}, errors ${errorCount}.`;
+          return {
+            success: errorCount === 0,
+            message: summary,
+            details
+          };
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          return {
+            success: false,
+            message: `Migration failed: ${errorMsg}`,
+            details
+          };
+        }
+      }
+    };
+    __name(FixCalloutEmptyLinesOperation, "FixCalloutEmptyLinesOperation");
     Upgrade140 = class extends VersionUpgrade {
       constructor() {
         super(...arguments);
         this.version = "1.4.0";
         this.automaticOperations = [
-          new RenameClaudeArtifactFoldersOperation()
+          new RenameClaudeArtifactFoldersOperation(),
+          new FixCalloutEmptyLinesOperation()
         ];
         this.manualOperations = [
           // No manual operations for this version
