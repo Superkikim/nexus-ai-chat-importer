@@ -448,8 +448,20 @@ export class IncrementalUpgradeManager {
         modalOperationId: string,
         progressModal: MultiOperationProgressModal
     ): Promise<any> {
-        // Execute the operation
-        const result = await operation.execute(context);
+        // Wire up progress callback so operations can report incremental progress
+        const contextWithProgress: UpgradeContext = {
+            ...context,
+            onProgress: (progress: number, detail?: string) => {
+                progressModal.updateOperation(modalOperationId, {
+                    status: 'running',
+                    progress,
+                    currentDetail: detail
+                });
+            }
+        };
+
+        // Execute the operation with progress reporting
+        const result = await operation.execute(contextWithProgress);
 
         // Update progress to 100% when complete
         progressModal.updateOperation(modalOperationId, {

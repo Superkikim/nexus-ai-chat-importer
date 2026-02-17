@@ -245,6 +245,117 @@ export class LinkUpdateService {
     }
 
     /**
+     * Update attachment links for multiple old→new path mappings in a single pass.
+     * Reads each conversation file only ONCE and applies all replacements together.
+     * Used as a fallback when Obsidian's "Automatically update internal links" is disabled.
+     */
+    async updateAttachmentLinksBatch(
+        pathMappings: Array<{oldPath: string, newPath: string}>,
+        progressCallback?: (progress: LinkUpdateProgress) => void
+    ): Promise<LinkUpdateStats> {
+        const stats: LinkUpdateStats = {
+            conversationsScanned: 0,
+            reportsScanned: 0,
+            attachmentLinksUpdated: 0,
+            conversationLinksUpdated: 0,
+            filesModified: 0,
+            errors: 0
+        };
+
+        if (pathMappings.length === 0) {
+            return stats;
+        }
+
+        try {
+            const conversationFiles = await this.getConversationFiles();
+            stats.conversationsScanned = conversationFiles.length;
+
+            progressCallback?.({
+                phase: 'scanning',
+                current: 0,
+                total: conversationFiles.length,
+                detail: `Checking links: ${pathMappings.length} path(s) across ${conversationFiles.length} file(s)`
+            });
+
+            // Pre-build regex patterns for all mappings
+            const mappingPatterns = pathMappings.map(({oldPath, newPath}) => {
+                const normalizedOld = oldPath.replace(/\/+$/, '');
+                const normalizedNew = newPath.replace(/\/+$/, '');
+                const escaped = this.escapeRegExp(normalizedOld);
+                return {
+                    patterns: [
+                        { regex: new RegExp(`(!\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`, 'g'), replacement: `$1${normalizedNew}$2` },
+                        { regex: new RegExp(`(\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`, 'g'), replacement: `$1${normalizedNew}$2` },
+                        { regex: new RegExp(`(!\\[\\[)${escaped}(/[^\\]]+\\]\\])`, 'g'), replacement: `$1${normalizedNew}$2` },
+                        { regex: new RegExp(`(\\[\\[)${escaped}(/[^\\]]+\\]\\])`, 'g'), replacement: `$1${normalizedNew}$2` },
+                    ]
+                };
+            });
+
+            // Single pass through all files
+            const batchSize = 10;
+            for (let i = 0; i < conversationFiles.length; i += batchSize) {
+                const batch = conversationFiles.slice(i, i + batchSize);
+
+                if (i % 50 === 0 || i + batchSize >= conversationFiles.length) {
+                    progressCallback?.({
+                        phase: 'updating-attachments',
+                        current: i,
+                        total: conversationFiles.length,
+                        detail: `Checking links: ${i}/${conversationFiles.length} files`
+                    });
+                }
+
+                for (const file of batch) {
+                    try {
+                        const content = await this.plugin.app.vault.read(file);
+                        let updatedContent = content;
+                        let fileLinksUpdated = 0;
+
+                        for (const mapping of mappingPatterns) {
+                            for (const {regex, replacement} of mapping.patterns) {
+                                regex.lastIndex = 0;
+                                const before = updatedContent;
+                                updatedContent = updatedContent.replace(regex, replacement);
+                                if (updatedContent !== before) {
+                                    regex.lastIndex = 0;
+                                    const matches = before.match(regex);
+                                    fileLinksUpdated += matches ? matches.length : 1;
+                                }
+                            }
+                        }
+
+                        stats.attachmentLinksUpdated += fileLinksUpdated;
+                        if (content !== updatedContent) {
+                            await this.plugin.app.vault.modify(file, updatedContent);
+                            stats.filesModified++;
+                        }
+                    } catch (error) {
+                        stats.errors++;
+                        this.plugin.logger.error(`Error updating attachment links in ${file.path}:`, error);
+                    }
+                }
+
+                if (i + batchSize < conversationFiles.length) {
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+            }
+
+            progressCallback?.({
+                phase: 'complete',
+                current: conversationFiles.length,
+                total: conversationFiles.length,
+                detail: `Fixed ${stats.attachmentLinksUpdated} stale link(s) in ${stats.filesModified} file(s)`
+            });
+
+            return stats;
+        } catch (error) {
+            this.plugin.logger.error("Error in batch attachment link update:", error);
+            throw error;
+        }
+    }
+
+    /**
      * Estimate time for link updates based on file count
      */
     async estimateUpdateTime(folderType: 'attachments' | 'conversations'): Promise<{ fileCount: number; estimatedSeconds: number }> {

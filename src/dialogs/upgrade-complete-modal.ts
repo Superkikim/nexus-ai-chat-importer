@@ -68,34 +68,20 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     private async addReleaseNotes() {
-        // Fallback content for v1.3.0
+        // Fallback content for v1.4.0
         let content = `## ✨ What's New
 
-- **🗂️ Separate Reports Folder** - Better organization, easier to exclude from sync
-- **🌍 International Date Support** - Works in all languages, no more MM/DD confusion
-- **🌳 Visual Folder Browser** - Tree-based navigation, create folders on the fly
-- **🎯 Enhanced Selective Import** - Better preview, duplicate detection across ZIPs
-- **📎 Improved Attachments** - DALL-E images with prompts, better formatting
-
-## 🎨 Improvements
-
-- Redesigned Settings page - easier to find what you need
-- Faster imports - especially for large collections
-- Better progress messages - know exactly what's happening
-- More detailed reports - see exactly what was imported
-- Clearer dialogs - less confusing text
+- **🤖 Le Chat Support** - Import your Mistral AI Le Chat conversations with attachments and references
+- **💻 CLI for Bulk Import** - Import conversations from the command line without opening Obsidian
+- **📁 Human-Readable Artifact Folders** - Claude artifacts now stored in folders named after the conversation, not UUIDs
+- **📐 LaTeX Math Conversion** - Math equations automatically converted to Obsidian's math syntax
 
 ## 🐛 Bug Fixes
 
-- Fixed timestamp parsing for non-US locales
-- Fixed folder deletion after migration
-- Fixed link updates in Claude artifacts
-- Fixed duplicate conversations in multi-ZIP imports
-- Fixed special characters in conversation titles
-- Fixed DALL-E images display
-- Fixed progress modal accuracy
-- Fixed UI elements overflow
-- And many more...`;
+- Multiple attachments in a single message no longer break out of the parent callout
+- Claude artifacts now render correctly for both old and new export formats
+- Conversations on mobile no longer show raw placeholder text instead of artifact links
+- Binary files referenced by Claude scripts are no longer saved as empty artifacts`;
 
         try {
             // Try to fetch Overview section from README

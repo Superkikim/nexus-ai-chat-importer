@@ -36,6 +36,8 @@ export interface UpgradeContext {
     fromVersion: string;
     toVersion: string;
     pluginData: any;
+    /** Optional callback for operations to report progress (0-100) and detail text */
+    onProgress?: (progress: number, detail?: string) => void;
 }
 
 export abstract class UpgradeOperation {

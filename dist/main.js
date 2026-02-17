@@ -1142,6 +1142,99 @@ var init_link_update_service = __esm({
         }
       }
       /**
+       * Update attachment links for multiple old→new path mappings in a single pass.
+       * Reads each conversation file only ONCE and applies all replacements together.
+       * Used as a fallback when Obsidian's "Automatically update internal links" is disabled.
+       */
+      async updateAttachmentLinksBatch(pathMappings, progressCallback) {
+        const stats = {
+          conversationsScanned: 0,
+          reportsScanned: 0,
+          attachmentLinksUpdated: 0,
+          conversationLinksUpdated: 0,
+          filesModified: 0,
+          errors: 0
+        };
+        if (pathMappings.length === 0) {
+          return stats;
+        }
+        try {
+          const conversationFiles = await this.getConversationFiles();
+          stats.conversationsScanned = conversationFiles.length;
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "scanning",
+            current: 0,
+            total: conversationFiles.length,
+            detail: `Checking links: ${pathMappings.length} path(s) across ${conversationFiles.length} file(s)`
+          });
+          const mappingPatterns = pathMappings.map(({ oldPath, newPath }) => {
+            const normalizedOld = oldPath.replace(/\/+$/, "");
+            const normalizedNew = newPath.replace(/\/+$/, "");
+            const escaped = this.escapeRegExp(normalizedOld);
+            return {
+              patterns: [
+                { regex: new RegExp(`(!\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`, "g"), replacement: `$1${normalizedNew}$2` },
+                { regex: new RegExp(`(\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`, "g"), replacement: `$1${normalizedNew}$2` },
+                { regex: new RegExp(`(!\\[\\[)${escaped}(/[^\\]]+\\]\\])`, "g"), replacement: `$1${normalizedNew}$2` },
+                { regex: new RegExp(`(\\[\\[)${escaped}(/[^\\]]+\\]\\])`, "g"), replacement: `$1${normalizedNew}$2` }
+              ]
+            };
+          });
+          const batchSize = 10;
+          for (let i = 0; i < conversationFiles.length; i += batchSize) {
+            const batch = conversationFiles.slice(i, i + batchSize);
+            if (i % 50 === 0 || i + batchSize >= conversationFiles.length) {
+              progressCallback == null ? void 0 : progressCallback({
+                phase: "updating-attachments",
+                current: i,
+                total: conversationFiles.length,
+                detail: `Checking links: ${i}/${conversationFiles.length} files`
+              });
+            }
+            for (const file of batch) {
+              try {
+                const content = await this.plugin.app.vault.read(file);
+                let updatedContent = content;
+                let fileLinksUpdated = 0;
+                for (const mapping of mappingPatterns) {
+                  for (const { regex, replacement } of mapping.patterns) {
+                    regex.lastIndex = 0;
+                    const before = updatedContent;
+                    updatedContent = updatedContent.replace(regex, replacement);
+                    if (updatedContent !== before) {
+                      regex.lastIndex = 0;
+                      const matches = before.match(regex);
+                      fileLinksUpdated += matches ? matches.length : 1;
+                    }
+                  }
+                }
+                stats.attachmentLinksUpdated += fileLinksUpdated;
+                if (content !== updatedContent) {
+                  await this.plugin.app.vault.modify(file, updatedContent);
+                  stats.filesModified++;
+                }
+              } catch (error) {
+                stats.errors++;
+                this.plugin.logger.error(`Error updating attachment links in ${file.path}:`, error);
+              }
+            }
+            if (i + batchSize < conversationFiles.length) {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+          }
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "complete",
+            current: conversationFiles.length,
+            total: conversationFiles.length,
+            detail: `Fixed ${stats.attachmentLinksUpdated} stale link(s) in ${stats.filesModified} file(s)`
+          });
+          return stats;
+        } catch (error) {
+          this.plugin.logger.error("Error in batch attachment link update:", error);
+          throw error;
+        }
+      }
+      /**
        * Estimate time for link updates based on file count
        */
       async estimateUpdateTime(folderType) {
@@ -7748,7 +7841,7 @@ var init_upgrade_1_4_0 = __esm({
         super(...arguments);
         this.id = "rename-claude-artifact-folders";
         this.name = "Rename Claude Artifact Folders";
-        this.description = "Renames Claude artifact folders from UUID to human-readable names matching the conversation file, and updates all wikilinks.";
+        this.description = "Renames Claude artifact folders from UUID to human-readable names matching the conversation file.";
         this.type = "automatic";
       }
       async canRun(context) {
@@ -7771,6 +7864,7 @@ var init_upgrade_1_4_0 = __esm({
         }
       }
       async execute(context) {
+        var _a, _b, _c, _d, _e, _f, _g;
         let renamedCount = 0;
         let skippedCount = 0;
         let errorCount = 0;
@@ -7797,15 +7891,21 @@ var init_upgrade_1_4_0 = __esm({
               message: "No UUID-named artifact folders found."
             };
           }
+          (_a = context.onProgress) == null ? void 0 : _a.call(context, 0, "Scanning conversation catalog...");
           const storageService = new StorageService(context.plugin);
-          const linkUpdateService = new LinkUpdateService(context.plugin);
-          for (const folder of uuidFolders) {
+          const conversationMap = await storageService.scanExistingConversations();
+          const total = uuidFolders.length;
+          const pathMappings = [];
+          for (let i = 0; i < uuidFolders.length; i++) {
+            const folder = uuidFolders[i];
             const conversationId = folder.name;
+            const progress = Math.round((i + 1) / total * 80);
             try {
-              const entry = await storageService.getConversationById(conversationId);
+              const entry = conversationMap.get(conversationId) || null;
               if (!entry || !entry.path) {
                 skippedCount++;
                 details.push(`Skipped: ${conversationId} (conversation not found in vault)`);
+                (_b = context.onProgress) == null ? void 0 : _b.call(context, progress, `Skipped ${i + 1}/${total}`);
                 continue;
               }
               const pathParts = entry.path.split("/");
@@ -7814,6 +7914,7 @@ var init_upgrade_1_4_0 = __esm({
               if (!conversationFileName) {
                 skippedCount++;
                 details.push(`Skipped: ${conversationId} (could not determine file name)`);
+                (_c = context.onProgress) == null ? void 0 : _c.call(context, progress, `Skipped ${i + 1}/${total}`);
                 continue;
               }
               const newFolderPath = `${claudeArtifactsPath}/${conversationFileName}`;
@@ -7821,17 +7922,32 @@ var init_upgrade_1_4_0 = __esm({
               if (existingTarget) {
                 skippedCount++;
                 details.push(`Skipped: ${conversationId} \u2192 "${conversationFileName}" (target folder already exists)`);
+                (_d = context.onProgress) == null ? void 0 : _d.call(context, progress, `Skipped ${i + 1}/${total}`);
                 continue;
               }
               const oldFolderPath = folder.path;
+              (_e = context.onProgress) == null ? void 0 : _e.call(context, progress, `Renaming ${i + 1}/${total}: ${conversationFileName}`);
               await context.plugin.app.vault.rename(folder, newFolderPath);
-              await linkUpdateService.updateAttachmentLinks(oldFolderPath, newFolderPath);
+              pathMappings.push({ oldPath: oldFolderPath, newPath: newFolderPath });
               renamedCount++;
               details.push(`Renamed: ${conversationId} \u2192 "${conversationFileName}"`);
             } catch (error) {
               errorCount++;
               const errorMsg = error instanceof Error ? error.message : String(error);
               details.push(`Error: ${conversationId} \u2014 ${errorMsg}`);
+              (_f = context.onProgress) == null ? void 0 : _f.call(context, progress, `Error ${i + 1}/${total}`);
+            }
+          }
+          if (pathMappings.length > 0) {
+            (_g = context.onProgress) == null ? void 0 : _g.call(context, 80, "Verifying wikilinks...");
+            const linkUpdateService = new LinkUpdateService(context.plugin);
+            const linkStats = await linkUpdateService.updateAttachmentLinksBatch(pathMappings, (progress) => {
+              var _a2;
+              const overallProgress = 80 + Math.round(progress.current / Math.max(progress.total, 1) * 20);
+              (_a2 = context.onProgress) == null ? void 0 : _a2.call(context, overallProgress, progress.detail);
+            });
+            if (linkStats.filesModified > 0) {
+              details.push(`Fixed ${linkStats.attachmentLinksUpdated} stale link(s) in ${linkStats.filesModified} file(s)`);
             }
           }
           const summary = `Renamed ${renamedCount} folder(s), skipped ${skippedCount}, errors ${errorCount}.`;
@@ -7869,6 +7985,7 @@ var init_upgrade_1_4_0 = __esm({
         }
       }
       async execute(context) {
+        var _a, _b;
         let fixedCount = 0;
         let scannedCount = 0;
         let errorCount = 0;
@@ -7878,8 +7995,14 @@ var init_upgrade_1_4_0 = __esm({
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
           const conversationFiles = allFiles.filter((f) => f.path.startsWith(conversationFolder));
           const brokenPattern = /^>>$/gm;
-          for (const file of conversationFiles) {
+          const total = conversationFiles.length;
+          for (let i = 0; i < conversationFiles.length; i++) {
+            const file = conversationFiles[i];
             scannedCount++;
+            const progress = Math.round((i + 1) / total * 100);
+            if (i % 10 === 0 || i === total - 1) {
+              (_a = context.onProgress) == null ? void 0 : _a.call(context, progress, `Scanning ${i + 1}/${total}: ${file.name}`);
+            }
             try {
               const content = await context.plugin.app.vault.read(file);
               if (!brokenPattern.test(content)) {
@@ -7891,6 +8014,7 @@ var init_upgrade_1_4_0 = __esm({
                 await context.plugin.app.vault.modify(file, fixed);
                 fixedCount++;
                 details.push(`Fixed: ${file.path}`);
+                (_b = context.onProgress) == null ? void 0 : _b.call(context, progress, `Fixed: ${file.name}`);
               }
             } catch (error) {
               errorCount++;
@@ -7969,31 +8093,17 @@ var init_upgrade_complete_modal = __esm({
       async addReleaseNotes() {
         let content = `## \u2728 What's New
 
-- **\u{1F5C2}\uFE0F Separate Reports Folder** - Better organization, easier to exclude from sync
-- **\u{1F30D} International Date Support** - Works in all languages, no more MM/DD confusion
-- **\u{1F333} Visual Folder Browser** - Tree-based navigation, create folders on the fly
-- **\u{1F3AF} Enhanced Selective Import** - Better preview, duplicate detection across ZIPs
-- **\u{1F4CE} Improved Attachments** - DALL-E images with prompts, better formatting
-
-## \u{1F3A8} Improvements
-
-- Redesigned Settings page - easier to find what you need
-- Faster imports - especially for large collections
-- Better progress messages - know exactly what's happening
-- More detailed reports - see exactly what was imported
-- Clearer dialogs - less confusing text
+- **\u{1F916} Le Chat Support** - Import your Mistral AI Le Chat conversations with attachments and references
+- **\u{1F4BB} CLI for Bulk Import** - Import conversations from the command line without opening Obsidian
+- **\u{1F4C1} Human-Readable Artifact Folders** - Claude artifacts now stored in folders named after the conversation, not UUIDs
+- **\u{1F4D0} LaTeX Math Conversion** - Math equations automatically converted to Obsidian's math syntax
 
 ## \u{1F41B} Bug Fixes
 
-- Fixed timestamp parsing for non-US locales
-- Fixed folder deletion after migration
-- Fixed link updates in Claude artifacts
-- Fixed duplicate conversations in multi-ZIP imports
-- Fixed special characters in conversation titles
-- Fixed DALL-E images display
-- Fixed progress modal accuracy
-- Fixed UI elements overflow
-- And many more...`;
+- Multiple attachments in a single message no longer break out of the parent callout
+- Claude artifacts now render correctly for both old and new export formats
+- Conversations on mobile no longer show raw placeholder text instead of artifact links
+- Binary files referenced by Claude scripts are no longer saved as empty artifacts`;
         try {
           const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
           if (response.ok) {
@@ -15182,7 +15292,17 @@ var IncrementalUpgradeManager = class {
    * Execute single operation with progress callbacks
    */
   async executeOperationWithProgress(operation, context, modalOperationId, progressModal) {
-    const result = await operation.execute(context);
+    const contextWithProgress = {
+      ...context,
+      onProgress: (progress, detail) => {
+        progressModal.updateOperation(modalOperationId, {
+          status: "running",
+          progress,
+          currentDetail: detail
+        });
+      }
+    };
+    const result = await operation.execute(contextWithProgress);
     progressModal.updateOperation(modalOperationId, {
       status: "running",
       progress: 100

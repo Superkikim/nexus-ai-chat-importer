@@ -19,7 +19,7 @@
 
 // src/upgrade/versions/upgrade-1.4.0.ts
 import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
-import { TFile, TFolder } from "obsidian";
+import { TFolder } from "obsidian";
 import { StorageService } from "../../services/storage-service";
 import { LinkUpdateService } from "../../services/link-update-service";
 
@@ -38,7 +38,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
     readonly id = "rename-claude-artifact-folders";
     readonly name = "Rename Claude Artifact Folders";
-    readonly description = "Renames Claude artifact folders from UUID to human-readable names matching the conversation file, and updates all wikilinks.";
+    readonly description = "Renames Claude artifact folders from UUID to human-readable names matching the conversation file.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
@@ -98,20 +98,27 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
                 };
             }
 
-            // Build conversation lookup
+            // Build conversation lookup ONCE (avoid repeated full vault scans)
+            context.onProgress?.(0, "Scanning conversation catalog...");
             const storageService = new StorageService(context.plugin);
-            const linkUpdateService = new LinkUpdateService(context.plugin);
+            const conversationMap = await storageService.scanExistingConversations();
 
-            for (const folder of uuidFolders) {
+            const total = uuidFolders.length;
+            const pathMappings: Array<{oldPath: string, newPath: string}> = [];
+
+            for (let i = 0; i < uuidFolders.length; i++) {
+                const folder = uuidFolders[i];
                 const conversationId = folder.name;
+                const progress = Math.round(((i + 1) / total) * 80); // 0-80% for renames
 
                 try {
-                    // Look up conversation file path
-                    const entry = await storageService.getConversationById(conversationId);
+                    // Look up conversation file path from pre-built map
+                    const entry = conversationMap.get(conversationId) || null;
 
                     if (!entry || !entry.path) {
                         skippedCount++;
                         details.push(`Skipped: ${conversationId} (conversation not found in vault)`);
+                        context.onProgress?.(progress, `Skipped ${i + 1}/${total}`);
                         continue;
                     }
 
@@ -123,6 +130,7 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
                     if (!conversationFileName) {
                         skippedCount++;
                         details.push(`Skipped: ${conversationId} (could not determine file name)`);
+                        context.onProgress?.(progress, `Skipped ${i + 1}/${total}`);
                         continue;
                     }
 
@@ -133,16 +141,16 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
                     if (existingTarget) {
                         skippedCount++;
                         details.push(`Skipped: ${conversationId} → "${conversationFileName}" (target folder already exists)`);
+                        context.onProgress?.(progress, `Skipped ${i + 1}/${total}`);
                         continue;
                     }
 
-                    // Rename the folder
+                    // Rename the folder — vault.rename() updates internal links if Obsidian setting is enabled
                     const oldFolderPath = folder.path;
+                    context.onProgress?.(progress, `Renaming ${i + 1}/${total}: ${conversationFileName}`);
                     await context.plugin.app.vault.rename(folder, newFolderPath);
 
-                    // Update all wikilinks pointing to the old folder path
-                    await linkUpdateService.updateAttachmentLinks(oldFolderPath, newFolderPath);
-
+                    pathMappings.push({ oldPath: oldFolderPath, newPath: newFolderPath });
                     renamedCount++;
                     details.push(`Renamed: ${conversationId} → "${conversationFileName}"`);
 
@@ -150,6 +158,23 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
                     errorCount++;
                     const errorMsg = error instanceof Error ? error.message : String(error);
                     details.push(`Error: ${conversationId} — ${errorMsg}`);
+                    context.onProgress?.(progress, `Error ${i + 1}/${total}`);
+                }
+            }
+
+            // Fallback: fix any stale links in case "Automatically update internal links" is disabled.
+            // Single pass through conversation files — no-op if Obsidian already updated the links.
+            if (pathMappings.length > 0) {
+                context.onProgress?.(80, "Verifying wikilinks...");
+
+                const linkUpdateService = new LinkUpdateService(context.plugin);
+                const linkStats = await linkUpdateService.updateAttachmentLinksBatch(pathMappings, (progress) => {
+                    const overallProgress = 80 + Math.round((progress.current / Math.max(progress.total, 1)) * 20);
+                    context.onProgress?.(overallProgress, progress.detail);
+                });
+
+                if (linkStats.filesModified > 0) {
+                    details.push(`Fixed ${linkStats.attachmentLinksUpdated} stale link(s) in ${linkStats.filesModified} file(s)`);
                 }
             }
 
@@ -212,9 +237,18 @@ class FixCalloutEmptyLinesOperation extends UpgradeOperation {
 
             // Pattern: ">>" on its own line followed by ">>[!nexus_"
             const brokenPattern = /^>>$/gm;
+            const total = conversationFiles.length;
 
-            for (const file of conversationFiles) {
+            for (let i = 0; i < conversationFiles.length; i++) {
+                const file = conversationFiles[i];
                 scannedCount++;
+                const progress = Math.round(((i + 1) / total) * 100);
+
+                // Report progress every 10 files or on last file to avoid excessive UI updates
+                if (i % 10 === 0 || i === total - 1) {
+                    context.onProgress?.(progress, `Scanning ${i + 1}/${total}: ${file.name}`);
+                }
+
                 try {
                     const content = await context.plugin.app.vault.read(file);
 
@@ -232,6 +266,7 @@ class FixCalloutEmptyLinesOperation extends UpgradeOperation {
                         await context.plugin.app.vault.modify(file, fixed);
                         fixedCount++;
                         details.push(`Fixed: ${file.path}`);
+                        context.onProgress?.(progress, `Fixed: ${file.name}`);
                     }
                 } catch (error) {
                     errorCount++;
