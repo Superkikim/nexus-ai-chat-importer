@@ -20,7 +20,7 @@
 // src/providers/claude/claude-converter.ts
 import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
 import { ClaudeConversation, ClaudeMessage, ClaudeContentBlock } from "./claude-types";
-import { generateSafeAlias } from "../../utils";
+import { generateSafeAlias, generateConversationFileName } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
 import { sortMessagesByTimestamp } from "../../utils/message-utils";
 
@@ -38,6 +38,19 @@ export class ClaudeConverter {
 
     static setPlugin(plugin: NexusAiChatImporterPlugin) {
         this.plugin = plugin;
+    }
+
+    /**
+     * Get artifact folder name matching the conversation file name (without .md)
+     */
+    private static getArtifactFolderName(conversationTitle?: string, conversationCreateTime?: number): string {
+        if (!conversationTitle) return 'unknown';
+        return generateConversationFileName(
+            conversationTitle,
+            conversationCreateTime || 0,
+            this.plugin.settings.addDatePrefix,
+            this.plugin.settings.dateFormat
+        );
     }
 
     static async convertChat(chat: ClaudeConversation): Promise<StandardConversation> {
@@ -406,7 +419,7 @@ export class ClaudeConverter {
                     if (fileName) {
                         const title = artifact.title || artifactId;
                         const artifactFileName = `${artifactId}_v${currentVersion}`;
-                        const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
+                        const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}/${artifactFileName}`;
                         const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}\n> 🎨 [[${artifactPath}|View Artifact]]`;
 
                         if (!messageArtifactCallouts.has(messageIndex)) {
@@ -470,7 +483,7 @@ export class ClaudeConverter {
                             const versionNumber = versionInfo.versionNumber;
                             const title = versionInfo.title || 'Artifact';
                             const artifactFileName = `${artifactId}_v${versionNumber}`;
-                            const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}/${artifactFileName}`;
+                            const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}/${artifactFileName}`;
 
                             const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}\n> 🎨 [[${artifactPath}|View Artifact]]`;
                             textParts.push(callout);
@@ -689,7 +702,7 @@ export class ClaudeConverter {
 
                                 // Create specific link for THIS version
                                 const title = block.input.title || artifactId;
-                                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+                                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}`;
                                 const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
                                 const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}\n> 🎨 [[${versionFile}|View Artifact]]`;
                                 textParts.push(specificLink);
@@ -788,7 +801,7 @@ export class ClaudeConverter {
         const { ensureFolderExists } = await import("../../utils");
 
         // Create conversation-specific artifact folder
-        const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+        const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}`;
         const folderResult = await ensureFolderExists(conversationFolder, this.plugin.app.vault);
         if (!folderResult.success) {
             throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
@@ -823,12 +836,12 @@ export class ClaudeConverter {
     /**
      * Create artifact summary for conversation
      */
-    private static createArtifactSummary(artifactId: string, info: any, conversationId?: string): string {
+    private static createArtifactSummary(artifactId: string, info: any, conversationTitle?: string, conversationCreateTime?: number): string {
         const title = info.title || artifactId;
         const totalVersions = info.totalVersions || 1;
         const latestVersion = info.latestVersion || 1;
 
-        const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${conversationId}`;
+        const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}`;
         const latestFile = `${conversationFolder}/${artifactId}_v${latestVersion}`;
 
         let summary = `<div class="nexus-artifact-box">**🎨 Artifact: ${title}**`;
