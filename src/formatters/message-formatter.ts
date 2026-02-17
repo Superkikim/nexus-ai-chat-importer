@@ -118,7 +118,7 @@ export class MessageFormatter {
     private formatAttachments(attachments: StandardAttachment[]): string {
         return attachments.map(attachment => {
             return this.formatSingleAttachment(attachment);
-        }).join("\n\n");
+        }).join("\n>\n");
     }
 
     /**
