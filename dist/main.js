@@ -11631,6 +11631,7 @@ var ClaudeConverter = class {
                         artifact: {
                           ...block.input,
                           _format: "create_file",
+                          _blockId: block.id,
                           command: "create"
                         },
                         messageIndex: msgIndex,
@@ -11648,6 +11649,7 @@ var ClaudeConverter = class {
                     artifact: {
                       ...block.input,
                       _format: "create_file",
+                      _blockId: block.id,
                       command: "create"
                     },
                     messageIndex: msgIndex,
@@ -11668,6 +11670,7 @@ var ClaudeConverter = class {
               artifact: {
                 ...block.input,
                 _format: "str_replace",
+                _blockId: block.id,
                 command: "update"
               },
               messageIndex: msgIndex,
@@ -12143,7 +12146,7 @@ ${code}
     let language = isNewFormat ? "text" : artifactInput.language || "text";
     const command = artifactInput.command || "create";
     const artifactId = isNewFormat ? this.extractArtifactIdFromPath(artifactInput.path) : artifactInput.id || "unknown";
-    const versionUuid = isNewFormat ? `${artifactInput.path}::v${versionNumber}` : artifactInput.version_uuid;
+    const versionUuid = isNewFormat ? artifactInput._blockId || `${artifactInput.path}::v${versionNumber}` : artifactInput.version_uuid;
     if (forcedLanguage) {
       language = forcedLanguage;
     } else if ((language.toLowerCase() === "text" || !language || language === "undefined") && versionContent) {

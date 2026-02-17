@@ -183,6 +183,7 @@ export class ClaudeConverter {
 	                                            artifact: {
 	                                                ...block.input,
 	                                                _format: 'create_file',
+	                                                _blockId: block.id,
 	                                                command: 'create'
 	                                            },
 	                                            messageIndex: msgIndex,
@@ -207,6 +208,7 @@ export class ClaudeConverter {
                                     artifact: {
                                         ...block.input,
                                         _format: 'create_file',
+                                        _blockId: block.id,
                                         command: 'create'
                                     },
                                     messageIndex: msgIndex,
@@ -235,6 +237,7 @@ export class ClaudeConverter {
 	                            artifact: {
 	                                ...block.input,
 	                                _format: 'str_replace',
+	                                _blockId: block.id,
 	                                command: 'update'
 	                            },
 	                            messageIndex: msgIndex,
@@ -925,7 +928,7 @@ export class ClaudeConverter {
             ? this.extractArtifactIdFromPath(artifactInput.path)
             : (artifactInput.id || 'unknown');
         const versionUuid = isNewFormat
-            ? `${artifactInput.path}::v${versionNumber}` // Generate synthetic UUID for new format
+            ? (artifactInput._blockId || `${artifactInput.path}::v${versionNumber}`)
             : artifactInput.version_uuid;
 
         // Use forced language (from create/rewrite) or auto-detect
