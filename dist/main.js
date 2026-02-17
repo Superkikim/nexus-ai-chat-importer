@@ -8099,18 +8099,17 @@ var init_upgrade_1_4_0 = __esm({
                 const idCmp = a.artifactId.localeCompare(b.artifactId);
                 return idCmp !== 0 ? idCmp : a.versionNumber - b.versionNumber;
               });
-              const calloutLines = artifactEntries.map(
-                (art) => `>[!nexus_artifact] **${art.title}** v${art.versionNumber}
-> \u{1F3A8} [[${art.filePath}|View Artifact]]`
+              const nestedCalloutLines = artifactEntries.map(
+                (art) => `>>[!nexus_artifact] **${art.title}** v${art.versionNumber}
+>> \u{1F3A8} [[${art.filePath}|View Artifact]]`
               );
               const section = [
                 "",
-                "---",
                 "> [!info] Restored Artifacts",
                 "> Due to a change in Anthropic's Claude export format, artifact references were not included when this conversation was originally imported. The artifacts below have been restored during the v1.4.0 migration.",
                 "> To get artifacts positioned inline within messages, delete this note and re-import from your Claude export ZIP.",
-                "",
-                ...calloutLines
+                ">",
+                nestedCalloutLines.join("\n>\n")
               ].join("\n");
               let updatedContent = noteContent + section + "\n";
               updatedContent = updatePluginVersion(updatedContent, TARGET_VERSION);
