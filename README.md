@@ -617,6 +617,9 @@ nexus-cli import --vault ~/my-vault --input chatgpt-export.zip --provider chatgp
 # Import a Claude export
 nexus-cli import --vault ~/my-vault --input claude-export.zip --provider claude
 
+# Import a Le Chat export
+nexus-cli import --vault ~/my-vault --input lechat-export.zip --provider lechat
+
 # Import multiple files with date prefix
 nexus-cli import --vault ~/my-vault --input export1.zip export2.zip --provider chatgpt --date-prefix
 
