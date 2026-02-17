@@ -1,5 +1,60 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.4.0 - Le Chat Support, CLI, & Claude Improvements
+
+![Version](https://img.shields.io/badge/version-1.4.0-blue) ![New Provider](https://img.shields.io/badge/new_provider-Le_Chat-green) ![CLI](https://img.shields.io/badge/CLI-new-purple)
+
+### Overview
+
+Version 1.4.0 adds **Mistral AI Le Chat** as a fully supported provider, introduces a **command-line interface** for importing without Obsidian, and brings significant improvements to Claude artifact handling — including **human-readable folder names** and full support for Claude's new export format.
+
+---
+
+### ☕ Support This Project
+
+**This plugin is free and always will be.** If you find it valuable, please consider supporting its development:
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+
+---
+
+### 🚀 New Features
+
+#### 🤖 Le Chat (Mistral AI) Support
+- **Full Le Chat integration**: Import your Mistral AI conversations with attachments, references, and citations
+- **Auto-generated titles**: Since Le Chat exports don't include conversation titles, the plugin generates one from the first user message
+- **Attachment support**: User-uploaded images and documents are extracted and linked
+
+#### 💻 Command-Line Interface (CLI)
+- **Import from the terminal**: A standalone CLI tool lets you import conversations without opening Obsidian — useful for automation, large archives, or headless setups
+- **Supports ChatGPT and Claude**: Specify `--provider chatgpt` or `--provider claude`
+- **Dry run mode**: Preview what would be imported with `--dry-run`
+- **Full feature parity**: Deduplication, date prefixes, custom folder paths, and all plugin settings
+- *Contributed by [@caseyg](https://github.com/caseyg) via [PR #33](https://github.com/Superkikim/nexus-ai-chat-importer/pull/33)*
+
+#### 📁 Human-Readable Artifact Folders
+- **Artifact folders named after conversations**: Claude artifacts are now stored in folders that match the conversation filename instead of cryptic UUIDs
+- **Example**: `Attachments/claude/artifacts/2026-02-10 - My Conversation/script_v1.md`
+- **Automatic migration**: Existing UUID-based folders are renamed on first launch, and all wikilinks are updated automatically
+
+#### 📐 LaTeX Math Conversion
+- **Automatic conversion**: `\[...\]` and `\(...\)` delimiters in messages are converted to Obsidian's `$$...$$` and `$...$` math syntax
+- **Code-aware**: Content inside code blocks and inline code is preserved as-is
+
+### 🐛 Bug Fixes
+
+- **Multi-attachment callout breakout**: Multiple attachments in a single message no longer break out of the parent callout
+- **Claude artifact callouts**: Artifacts now render correctly for both old and new Claude export formats
+- **Mobile artifact placeholders**: Conversations viewed on mobile no longer show raw placeholder text instead of artifact links
+- **Binary artifact handling**: PDF, PNG, and other binary files referenced by Claude scripts are no longer incorrectly saved as empty artifacts
+
+### 🙏 Credits
+
+- [@caseyg](https://github.com/caseyg) — CLI for bulk importing ([PR #33](https://github.com/Superkikim/nexus-ai-chat-importer/pull/33)) and Claude formatting feedback ([PR #34](https://github.com/Superkikim/nexus-ai-chat-importer/pull/34))
+- [@chuckfs](https://github.com/chuckfs) — iOS support ([PR #15](https://github.com/Superkikim/nexus-ai-chat-importer/pull/15))
+
+---
+
 ## Version 1.3.3 - Quick Patch: Upgrade Dialog & Claude Notice
 
 ![Version](https://img.shields.io/badge/version-1.3.3-blue) ![Patch](https://img.shields.io/badge/type-quick_patch-orange)

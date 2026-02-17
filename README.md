@@ -18,6 +18,7 @@
 ### 🔧 Advanced
 - [📎 Attachments](#-complete-attachment-handling) - Images, DALL-E, artifacts
 - [🤖 Provider Differences](#-provider-specific-features--limitations) - ChatGPT, Claude, Le Chat specifics
+- [💻 CLI](#-command-line-interface-cli) - Import from command line
 - [⚙️ Settings](#plugin-settings) - Customize folders and formatting
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
@@ -51,10 +52,11 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 
 ### ✨ New in v1.4.0
 
-- **🤖 Le Chat Support** - Full integration for Mistral AI's Le Chat conversations
-- **📎 Smart Attachment Handling** - Unique filenames prevent collisions across imports
-- **⏱️ Millisecond Precision** - Accurate chronological sorting even for rapid-fire messages
-- **🔍 Enhanced Detection** - Automatic provider detection for Le Chat exports
+- **🤖 Le Chat Support** - Import your Mistral AI Le Chat conversations with attachments and references
+- **💻 CLI for Bulk Import** - Import conversations from the command line without opening Obsidian ([see CLI docs](#-command-line-interface-cli))
+- **📁 Human-Readable Artifact Folders** - Claude artifacts are now stored in folders named after the conversation, not UUIDs
+- **📐 LaTeX Math Conversion** - Math equations using `\[...\]` and `\(...\)` are automatically converted to Obsidian's math syntax
+- **🔧 Claude Format Fixes** - Full support for both old and new Claude artifact export formats
 
 ### ✨ New in v1.3.0
 
@@ -573,6 +575,61 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 - Existing attachments
 - Folder structure
 
+## 💻 Command-Line Interface (CLI)
+
+Import conversations without opening Obsidian — useful for automation, large archives, or headless setups.
+
+> **Note**: The CLI currently supports **ChatGPT** and **Claude** exports. Le Chat is not yet supported via CLI.
+
+### Installation
+
+The CLI is included in the plugin source. To use it:
+
+1. Clone or download the [repository](https://github.com/Superkikim/nexus-ai-chat-importer)
+2. Run `npm install` then `npm run build`
+3. Use the CLI from the `cli/` directory
+
+### Usage
+
+```bash
+nexus-cli import --vault /path/to/vault --input export.zip --provider chatgpt [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--vault <path>` | Path to your Obsidian vault (required) |
+| `--input <files...>` | One or more ZIP export files (required) |
+| `--provider <name>` | Provider to use: `chatgpt` or `claude` (auto-detected from ZIP if omitted) |
+| `--conversation-folder <path>` | Override conversation folder |
+| `--attachment-folder <path>` | Override attachment folder |
+| `--report-folder <path>` | Override report folder |
+| `--date-prefix` | Add date prefix to filenames |
+| `--date-format <fmt>` | Date format: `YYYY-MM-DD` or `YYYYMMDD` |
+| `--dry-run` | Preview what would be imported without writing files |
+| `--verbose` | Show detailed import progress |
+
+### Examples
+
+```bash
+# Import a ChatGPT export
+nexus-cli import --vault ~/my-vault --input chatgpt-export.zip --provider chatgpt
+
+# Import a Claude export
+nexus-cli import --vault ~/my-vault --input claude-export.zip --provider claude
+
+# Import multiple files with date prefix
+nexus-cli import --vault ~/my-vault --input export1.zip export2.zip --provider chatgpt --date-prefix
+
+# Preview without writing (dry run)
+nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-run
+```
+
+> **Note**: The CLI reuses the same import engine as the plugin. Conversations imported via CLI are fully compatible with the plugin and vice versa.
+
+---
+
 ## ⚠️ Important Notes
 
 **Projects**:
@@ -689,7 +746,9 @@ See [LICENSE.md](LICENSE.md) for full details.
 ## 🙏 Credits
 
 - **Developer**: [Superkikim](https://github.com/Superkikim)
-- **Contributors**: See [GitHub Contributors](https://github.com/Superkikim/nexus-ai-chat-importer/graphs/contributors)
+- **Contributors**:
+  - [@caseyg](https://github.com/caseyg) — CLI for bulk importing (PR #33), Claude formatting feedback (PR #34)
+  - [@chuckfs](https://github.com/chuckfs) — iOS support (PR #15)
 - **Special Thanks**: To all users who report issues and suggest improvements
 
 ## 🔗 Resources
