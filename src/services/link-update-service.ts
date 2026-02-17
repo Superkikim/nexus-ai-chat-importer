@@ -251,7 +251,8 @@ export class LinkUpdateService {
      */
     async updateAttachmentLinksBatch(
         pathMappings: Array<{oldPath: string, newPath: string}>,
-        progressCallback?: (progress: LinkUpdateProgress) => void
+        progressCallback?: (progress: LinkUpdateProgress) => void,
+        pluginVersion?: string
     ): Promise<LinkUpdateStats> {
         const stats: LinkUpdateStats = {
             conversationsScanned: 0,
@@ -327,6 +328,10 @@ export class LinkUpdateService {
 
                         stats.attachmentLinksUpdated += fileLinksUpdated;
                         if (content !== updatedContent) {
+                            // Update plugin_version in frontmatter if requested
+                            if (pluginVersion) {
+                                updatedContent = this.updatePluginVersion(updatedContent, pluginVersion);
+                            }
                             await this.plugin.app.vault.modify(file, updatedContent);
                             stats.filesModified++;
                         }
@@ -574,6 +579,23 @@ export class LinkUpdateService {
         }
 
         return { linksUpdated, fileModified };
+    }
+
+    /**
+     * Update plugin_version in frontmatter
+     */
+    private updatePluginVersion(content: string, version: string): string {
+        if (content.includes('plugin_version:')) {
+            return content.replace(
+                /^plugin_version: .*$/m,
+                `plugin_version: "${version}"`
+            );
+        }
+        // Add plugin_version before the closing --- of frontmatter
+        return content.replace(
+            /\n---\n/,
+            `\nplugin_version: "${version}"\n---\n`
+        );
     }
 
     /**

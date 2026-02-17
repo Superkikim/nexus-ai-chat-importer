@@ -1146,7 +1146,7 @@ var init_link_update_service = __esm({
        * Reads each conversation file only ONCE and applies all replacements together.
        * Used as a fallback when Obsidian's "Automatically update internal links" is disabled.
        */
-      async updateAttachmentLinksBatch(pathMappings, progressCallback) {
+      async updateAttachmentLinksBatch(pathMappings, progressCallback, pluginVersion) {
         const stats = {
           conversationsScanned: 0,
           reportsScanned: 0,
@@ -1210,6 +1210,9 @@ var init_link_update_service = __esm({
                 }
                 stats.attachmentLinksUpdated += fileLinksUpdated;
                 if (content !== updatedContent) {
+                  if (pluginVersion) {
+                    updatedContent = this.updatePluginVersion(updatedContent, pluginVersion);
+                  }
                   await this.plugin.app.vault.modify(file, updatedContent);
                   stats.filesModified++;
                 }
@@ -1383,6 +1386,24 @@ var init_link_update_service = __esm({
           await this.plugin.app.vault.modify(file, updatedContent);
         }
         return { linksUpdated, fileModified };
+      }
+      /**
+       * Update plugin_version in frontmatter
+       */
+      updatePluginVersion(content, version) {
+        if (content.includes("plugin_version:")) {
+          return content.replace(
+            /^plugin_version: .*$/m,
+            `plugin_version: "${version}"`
+          );
+        }
+        return content.replace(
+          /\n---\n/,
+          `
+plugin_version: "${version}"
+---
+`
+        );
       }
       /**
        * Escape special regex characters
@@ -7827,7 +7848,22 @@ var upgrade_1_4_0_exports = {};
 __export(upgrade_1_4_0_exports, {
   Upgrade140: () => Upgrade140
 });
-var import_obsidian22, UUID_REGEX, RenameClaudeArtifactFoldersOperation, FixCalloutEmptyLinesOperation, Upgrade140;
+function updatePluginVersion(content, version) {
+  if (content.includes("plugin_version:")) {
+    return content.replace(
+      /^plugin_version: .*$/m,
+      `plugin_version: "${version}"`
+    );
+  }
+  return content.replace(
+    /\n---\n/,
+    `
+plugin_version: "${version}"
+---
+`
+  );
+}
+var import_obsidian22, UUID_REGEX, TARGET_VERSION, RenameClaudeArtifactFoldersOperation, RestoreMissingArtifactCalloutsOperation, FixCalloutEmptyLinesOperation, Upgrade140;
 var init_upgrade_1_4_0 = __esm({
   "src/upgrade/versions/upgrade-1.4.0.ts"() {
     "use strict";
@@ -7836,6 +7872,8 @@ var init_upgrade_1_4_0 = __esm({
     init_storage_service();
     init_link_update_service();
     UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    TARGET_VERSION = "1.4.0";
+    __name(updatePluginVersion, "updatePluginVersion");
     RenameClaudeArtifactFoldersOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -7945,7 +7983,7 @@ var init_upgrade_1_4_0 = __esm({
               var _a2;
               const overallProgress = 80 + Math.round(progress.current / Math.max(progress.total, 1) * 20);
               (_a2 = context.onProgress) == null ? void 0 : _a2.call(context, overallProgress, progress.detail);
-            });
+            }, TARGET_VERSION);
             if (linkStats.filesModified > 0) {
               details.push(`Fixed ${linkStats.attachmentLinksUpdated} stale link(s) in ${linkStats.filesModified} file(s)`);
             }
@@ -7967,6 +8005,157 @@ var init_upgrade_1_4_0 = __esm({
       }
     };
     __name(RenameClaudeArtifactFoldersOperation, "RenameClaudeArtifactFoldersOperation");
+    RestoreMissingArtifactCalloutsOperation = class extends UpgradeOperation {
+      constructor() {
+        super(...arguments);
+        this.id = "restore-missing-artifact-callouts";
+        this.name = "Restore Missing Artifact Callouts";
+        this.description = "Restores artifact links in Claude conversation notes affected by Anthropic's export format change.";
+        this.type = "automatic";
+      }
+      async canRun(context) {
+        try {
+          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+          const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
+          return !!(folder && folder instanceof import_obsidian22.TFolder && folder.children.length > 0);
+        } catch (e) {
+          return false;
+        }
+      }
+      async execute(context) {
+        var _a, _b, _c;
+        let restoredCount = 0;
+        let skippedCount = 0;
+        let errorCount = 0;
+        const details = [];
+        try {
+          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+          const artifactsRoot = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
+          if (!artifactsRoot || !(artifactsRoot instanceof import_obsidian22.TFolder)) {
+            return { success: true, message: "No Claude artifacts folder found." };
+          }
+          const artifactFolders = [];
+          for (const child of artifactsRoot.children) {
+            if (child instanceof import_obsidian22.TFolder) {
+              artifactFolders.push(child);
+            }
+          }
+          if (artifactFolders.length === 0) {
+            return { success: true, message: "No artifact folders found." };
+          }
+          (_a = context.onProgress) == null ? void 0 : _a.call(context, 0, "Scanning conversation catalog...");
+          const storageService = new StorageService(context.plugin);
+          const conversationMap = await storageService.scanExistingConversations();
+          const total = artifactFolders.length;
+          for (let i = 0; i < artifactFolders.length; i++) {
+            const folder = artifactFolders[i];
+            const progress = Math.round((i + 1) / total * 100);
+            if (i % 10 === 0 || i === total - 1) {
+              (_b = context.onProgress) == null ? void 0 : _b.call(context, progress, `Checking ${i + 1}/${total}: ${folder.name}`);
+            }
+            try {
+              const artifactFiles = folder.children.filter(
+                (f) => f instanceof import_obsidian22.TFile && f.extension === "md"
+              );
+              if (artifactFiles.length === 0) {
+                continue;
+              }
+              const sampleContent = await context.plugin.app.vault.read(artifactFiles[0]);
+              const conversationId = this.extractFrontmatterField(sampleContent, "conversation_id");
+              if (!conversationId) {
+                skippedCount++;
+                details.push(`Skipped: ${folder.name} (no conversation_id in artifact)`);
+                continue;
+              }
+              const entry = conversationMap.get(conversationId);
+              if (!entry || !entry.path) {
+                skippedCount++;
+                details.push(`Skipped: ${folder.name} (conversation not found in vault)`);
+                continue;
+              }
+              const noteFile = context.plugin.app.vault.getAbstractFileByPath(entry.path);
+              if (!noteFile || !(noteFile instanceof import_obsidian22.TFile)) {
+                skippedCount++;
+                continue;
+              }
+              const noteContent = await context.plugin.app.vault.read(noteFile);
+              if (noteContent.includes("nexus_artifact")) {
+                skippedCount++;
+                continue;
+              }
+              const artifactEntries = [];
+              for (const artFile of artifactFiles) {
+                const artContent = await context.plugin.app.vault.read(artFile);
+                const artifactId = this.extractFrontmatterField(artContent, "artifact_id") || "unknown";
+                const versionStr = this.extractFrontmatterField(artContent, "version_number");
+                const versionNumber = versionStr ? parseInt(versionStr, 10) : 1;
+                const title = this.extractArtifactTitle(artContent, artifactId);
+                const filePath = artFile.path.replace(/\.md$/, "");
+                artifactEntries.push({ artifactId, versionNumber, title, filePath });
+              }
+              artifactEntries.sort((a, b) => {
+                const idCmp = a.artifactId.localeCompare(b.artifactId);
+                return idCmp !== 0 ? idCmp : a.versionNumber - b.versionNumber;
+              });
+              const calloutLines = artifactEntries.map(
+                (art) => `>[!nexus_artifact] **${art.title}** v${art.versionNumber}
+> \u{1F3A8} [[${art.filePath}|View Artifact]]`
+              );
+              const section = [
+                "",
+                "---",
+                "> [!info] Restored Artifacts",
+                "> Due to a change in Anthropic's Claude export format, artifact references were not included when this conversation was originally imported. The artifacts below have been restored during the v1.4.0 migration.",
+                "> To get artifacts positioned inline within messages, delete this note and re-import from your Claude export ZIP.",
+                "",
+                ...calloutLines
+              ].join("\n");
+              let updatedContent = noteContent + section + "\n";
+              updatedContent = updatePluginVersion(updatedContent, TARGET_VERSION);
+              await context.plugin.app.vault.modify(noteFile, updatedContent);
+              restoredCount++;
+              details.push(`Restored ${artifactEntries.length} artifact(s): ${entry.path}`);
+              (_c = context.onProgress) == null ? void 0 : _c.call(context, progress, `Restored: ${noteFile.name}`);
+            } catch (error) {
+              errorCount++;
+              const errorMsg = error instanceof Error ? error.message : String(error);
+              details.push(`Error: ${folder.name} \u2014 ${errorMsg}`);
+            }
+          }
+          const summary = `Restored artifacts in ${restoredCount} note(s), skipped ${skippedCount}, errors ${errorCount}.`;
+          return {
+            success: errorCount === 0,
+            message: summary,
+            details
+          };
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          return {
+            success: false,
+            message: `Migration failed: ${errorMsg}`,
+            details
+          };
+        }
+      }
+      extractFrontmatterField(content, field) {
+        const match = content.match(new RegExp(`^${field}:\\s*"?([^"\\n]+)"?`, "m"));
+        return match ? match[1].trim() : null;
+      }
+      extractArtifactTitle(content, fallbackId) {
+        const aliasMatch = content.match(/^aliases:\s*\[([^\]]+)\]/m);
+        if (aliasMatch) {
+          const firstAlias = aliasMatch[1].split(",")[0].trim();
+          const cleaned = firstAlias.replace(/^["']|["']$/g, "");
+          if (cleaned && cleaned !== "Untitled Artifact") {
+            return cleaned;
+          }
+        }
+        return fallbackId;
+      }
+    };
+    __name(RestoreMissingArtifactCalloutsOperation, "RestoreMissingArtifactCalloutsOperation");
     FixCalloutEmptyLinesOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -8009,8 +8198,9 @@ var init_upgrade_1_4_0 = __esm({
                 continue;
               }
               brokenPattern.lastIndex = 0;
-              const fixed = content.replace(/^>>(\n>>\[!nexus_)/gm, ">$1");
+              let fixed = content.replace(/^>>(\n>>\[!nexus_)/gm, ">$1");
               if (fixed !== content) {
+                fixed = updatePluginVersion(fixed, TARGET_VERSION);
                 await context.plugin.app.vault.modify(file, fixed);
                 fixedCount++;
                 details.push(`Fixed: ${file.path}`);
@@ -8045,6 +8235,7 @@ var init_upgrade_1_4_0 = __esm({
         this.version = "1.4.0";
         this.automaticOperations = [
           new RenameClaudeArtifactFoldersOperation(),
+          new RestoreMissingArtifactCalloutsOperation(),
           new FixCalloutEmptyLinesOperation()
         ];
         this.manualOperations = [
@@ -8097,6 +8288,10 @@ var init_upgrade_complete_modal = __esm({
 - **\u{1F4BB} CLI for Bulk Import** - Import conversations from the command line without opening Obsidian
 - **\u{1F4C1} Human-Readable Artifact Folders** - Claude artifacts now stored in folders named after the conversation, not UUIDs
 - **\u{1F4D0} LaTeX Math Conversion** - Math equations automatically converted to Obsidian's math syntax
+
+## \u{1F504} Migration: Artifact Callout Restoration
+
+Anthropic changed the structure of their Claude export format. Conversations imported with v1.3.x may be missing inline artifact callouts. The migration has restored artifact links at the end of affected notes. To get artifacts inline within messages, delete the note and re-import from your Claude export ZIP.
 
 ## \u{1F41B} Bug Fixes
 

@@ -41,6 +41,12 @@ Version 1.4.0 adds **Mistral AI Le Chat** as a fully supported provider, introdu
 - **Automatic conversion**: `\[...\]` and `\(...\)` delimiters in messages are converted to Obsidian's `$$...$$` and `$...$` math syntax
 - **Code-aware**: Content inside code blocks and inline code is preserved as-is
 
+### 🔄 Migration: Artifact Callout Restoration
+
+Anthropic changed the structure of their Claude export format. Conversations imported with v1.3.x using the previous format may be missing inline artifact callouts — even though the artifact files themselves were correctly extracted to disk. **This is not a plugin bug**, but a consequence of the export format change.
+
+The v1.4.0 migration automatically detects affected conversation notes and restores artifact links at the end of each note. To get artifacts positioned inline within messages, delete the affected note and re-import from your Claude export ZIP.
+
 ### 🐛 Bug Fixes
 
 - **Multi-attachment callout breakout**: Multiple attachments in a single message no longer break out of the parent callout

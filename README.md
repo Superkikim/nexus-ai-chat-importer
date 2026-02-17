@@ -498,12 +498,14 @@ Each AI provider has unique characteristics in how they export conversations. He
 
 **⚠️ Limitations**:
 - **Mobile view limitations**: Conversations viewed on mobile show placeholder text instead of displaying artifacts inline. While artifact files are extracted correctly to the artifacts folder, these mobile placeholders cannot be automatically linked to their corresponding artifact files in the conversation view
+- **Export format change**: Anthropic changed the Claude export format structure over time. Conversations imported with plugin v1.3.x may be missing inline artifact callouts. The v1.4.0 migration automatically restores artifact links at the end of affected notes. To get artifacts positioned inline within messages, delete the note and re-import from your Claude export ZIP
 
 **Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
 
 **💡 Tip for Claude Users**:
 - Artifacts are fully extracted and saved with versioning - check your artifacts folder
 - For conversations viewed on mobile, artifact files are still created but inline callouts may not show in messages
+- If you upgraded from v1.3.x and are missing artifact links, they have been restored at the bottom of affected notes during the v1.4.0 migration
 
 ### Le Chat (Mistral AI)
 

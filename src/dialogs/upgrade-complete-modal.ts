@@ -76,6 +76,10 @@ export class UpgradeCompleteModal extends Modal {
 - **📁 Human-Readable Artifact Folders** - Claude artifacts now stored in folders named after the conversation, not UUIDs
 - **📐 LaTeX Math Conversion** - Math equations automatically converted to Obsidian's math syntax
 
+## 🔄 Migration: Artifact Callout Restoration
+
+Anthropic changed the structure of their Claude export format. Conversations imported with v1.3.x may be missing inline artifact callouts. The migration has restored artifact links at the end of affected notes. To get artifacts inline within messages, delete the note and re-import from your Claude export ZIP.
+
 ## 🐛 Bug Fixes
 
 - Multiple attachments in a single message no longer break out of the parent callout
