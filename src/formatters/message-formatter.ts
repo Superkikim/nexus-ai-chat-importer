@@ -68,12 +68,15 @@ export class MessageFormatter {
 
         // Format main message content
         if (message.content) {
+            // Convert LaTeX delimiters to Obsidian math syntax before processing
+            const contentWithMath = MessageFormatter.convertLatexDelimiters(message.content);
+
             // Add content inside the callout.
             // IMPORTANT: avoid patterns like `> >[!nexus_artifact]` which break
             // nested callouts in Obsidian. When a content line already starts
             // with `>`, we add only one extra `>` (no space) so that
             // `>[!callout]` becomes `>>[!callout]` instead of `> >[!callout]`.
-            const lines = message.content.split("\n");
+            const lines = contentWithMath.split("\n");
             const formattedLines = lines.map(line => {
                 // Preserve empty lines inside the callout
                 if (line.trim() === "") {
@@ -197,6 +200,48 @@ export class MessageFormatter {
         }
 
         return content;
+    }
+
+    /**
+     * Convert LaTeX delimiters to Obsidian math syntax.
+     * \[...\] → $$...$$ (display math)
+     * \(...\) → $...$ (inline math)
+     * Preserves content inside fenced code blocks and inline code.
+     */
+    static convertLatexDelimiters(text: string): string {
+        // Split text into code and non-code segments
+        // Match fenced code blocks (```...```) and inline code (`...`)
+        const codePattern = /(```[\s\S]*?```|`[^`]+`)/g;
+        const segments: { text: string; isCode: boolean }[] = [];
+        let lastIndex = 0;
+        let match: RegExpExecArray | null;
+
+        while ((match = codePattern.exec(text)) !== null) {
+            // Non-code segment before this match
+            if (match.index > lastIndex) {
+                segments.push({ text: text.slice(lastIndex, match.index), isCode: false });
+            }
+            // Code segment
+            segments.push({ text: match[0], isCode: true });
+            lastIndex = match.index + match[0].length;
+        }
+        // Remaining non-code segment
+        if (lastIndex < text.length) {
+            segments.push({ text: text.slice(lastIndex), isCode: false });
+        }
+
+        // Apply conversions only on non-code segments
+        return segments.map(segment => {
+            if (segment.isCode) return segment.text;
+
+            let result = segment.text;
+            // Display math: \[...\] → $$...$$  (can be multiline)
+            // Negative lookbehind: don't match \\[ (escaped backslash)
+            result = result.replace(/(?<!\\)\\\[([\s\S]*?)(?<!\\)\\\]/g, '$$$$$1$$$$');
+            // Inline math: \(...\) → $...$  (single line, non-greedy)
+            result = result.replace(/(?<!\\)\\\((.*?)(?<!\\)\\\)/g, '$$$1$$');
+            return result;
+        }).join('');
     }
 
     /**
