@@ -9164,7 +9164,8 @@ var _MessageFormatter = class {
     let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}
 `;
     if (message.content) {
-      const lines = message.content.split("\n");
+      const contentWithMath = _MessageFormatter.convertLatexDelimiters(message.content);
+      const lines = contentWithMath.split("\n");
       const formattedLines = lines.map((line) => {
         if (line.trim() === "") {
           return ">";
@@ -9191,7 +9192,7 @@ var _MessageFormatter = class {
   formatAttachments(attachments) {
     return attachments.map((attachment) => {
       return this.formatSingleAttachment(attachment);
-    }).join("\n\n");
+    }).join("\n>\n");
   }
   /**
    * Format single attachment with Nexus callout styling
@@ -9246,6 +9247,36 @@ var _MessageFormatter = class {
       content += `>> ${attachment.content}`;
     }
     return content;
+  }
+  /**
+   * Convert LaTeX delimiters to Obsidian math syntax.
+   * \[...\] → $$...$$ (display math)
+   * \(...\) → $...$ (inline math)
+   * Preserves content inside fenced code blocks and inline code.
+   */
+  static convertLatexDelimiters(text) {
+    const codePattern = /(```[\s\S]*?```|`[^`]+`)/g;
+    const segments = [];
+    let lastIndex = 0;
+    let match;
+    while ((match = codePattern.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        segments.push({ text: text.slice(lastIndex, match.index), isCode: false });
+      }
+      segments.push({ text: match[0], isCode: true });
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < text.length) {
+      segments.push({ text: text.slice(lastIndex), isCode: false });
+    }
+    return segments.map((segment) => {
+      if (segment.isCode)
+        return segment.text;
+      let result = segment.text;
+      result = result.replace(/(?<!\\)\\\[([\s\S]*?)(?<!\\)\\\]/g, "$$$$$1$$$$");
+      result = result.replace(/(?<!\\)\\\((.*?)(?<!\\)\\\)/g, "$$$1$$");
+      return result;
+    }).join("");
   }
   /**
    * Get user-friendly status message
