@@ -1,0 +1,293 @@
+{
+  "common": {
+    "buttons": {
+      "cancel": "Cancelar",
+      "ok": "OK",
+      "select": "Seleccionar",
+      "browse": "Explorar",
+      "continue": "Continuar",
+      "proceed": "Proceder",
+      "close": "¡Entendido!",
+      "create": "Crear",
+      "remove": "Eliminar",
+      "run": "Ejecutar",
+      "complete": "Finalizar",
+      "view_report": "Ver informe",
+      "get_started": "Comenzar",
+      "create_new_folder": "Crear nueva carpeta"
+    },
+    "status": {
+      "new": "Nuevo",
+      "updated": "Actualizado",
+      "unchanged": "Sin cambios",
+      "unknown": "Desconocido"
+    },
+    "progress": {
+      "phase_validation": "🔍 Validación",
+      "phase_scanning": "📋 Escaneo",
+      "phase_processing": "⚙️ Procesando",
+      "phase_writing": "💾 Escribiendo",
+      "phase_complete": "✅ Completado",
+      "phase_error": "❌ Error"
+    }
+  },
+  "provider_selection": {
+    "title": "Seleccionar proveedor de archivo",
+    "providers": {
+      "chatgpt": { "name": "ChatGPT", "description": "Exportaciones de conversaciones OpenAI ChatGPT" },
+      "claude": { "name": "Claude", "description": "Exportaciones de conversaciones Anthropic Claude" },
+      "lechat": { "name": "Le Chat", "description": "Exportaciones de conversaciones Mistral AI Le Chat" }
+    },
+    "buttons": { "select": "Seleccionar", "cancel": "Cancelar" }
+  },
+  "file_selection": {
+    "title": "Importar conversaciones de {{provider}}",
+    "import_mode": {
+      "section_title": "Modo de importación",
+      "all_label": "Importar todo",
+      "all_description": "Importar todas las conversaciones (más rápido)",
+      "selective_label": "Selección específica",
+      "selective_description": "Vista previa y selección de conversaciones"
+    },
+    "file_area": {
+      "section_title": "Seleccionar archivos",
+      "drop_text_default": "Suelte archivos ZIP aquí o haga clic para explorar",
+      "drop_text_gemini": "Suelte archivos ZIP y JSON aquí o haga clic para explorar",
+      "drop_subtext_default": "Admite selección múltiple de archivos",
+      "drop_subtext_gemini": "ZIP (Takeout) + JSON opcional (índice desde la extensión)"
+    },
+    "selected_files": { "section_title": "Archivos seleccionados", "remove_button": "Eliminar" },
+    "buttons": { "cancel": "Cancelar", "continue": "Continuar" }
+  },
+  "conversation_selection": {
+    "title": "Seleccionar conversaciones para importar",
+    "controls": {
+      "select_all": "Seleccionar todo",
+      "select_none": "Deseleccionar todo",
+      "search_placeholder": "Buscar conversaciones...",
+      "status_label": "Estado:",
+      "show_label": "Mostrar:"
+    },
+    "status_filter_options": { "all": "Todos", "new": "Nuevo", "updated": "Actualizado", "unchanged": "Sin cambios" },
+    "table_headers": { "title": "Título", "created": "Creado", "updated": "Actualizado", "messages": "Mensajes", "status": "Estado" },
+    "status_badges": {
+      "new": "Nuevo", "updated": "Actualizado", "unchanged": "Sin cambios", "unknown": "Desconocido",
+      "tooltip_new": "Esta conversación no está en su Vault",
+      "tooltip_updated": "Esta conversación tiene contenido más reciente que su Vault ({{existing_date}} → {{new_date}})",
+      "tooltip_unchanged": "Esta conversación es igual a la de su Vault"
+    },
+    "pagination": {
+      "showing": "Mostrando {{start}}-{{end}} de {{total}} conversaciones",
+      "page_of": "Página {{current}} de {{total}}",
+      "previous": "Anterior",
+      "next": "Siguiente"
+    },
+    "summary": {
+      "unique_conversations": "Conversaciones únicas",
+      "new": "Nuevo", "updated": "Actualizado", "unchanged": "Sin cambios",
+      "selected_of": "{{selected}} de {{total}} seleccionadas"
+    },
+    "buttons": { "cancel": "Cancelar", "import_selected": "Importar selección", "import_selected_count": "Importar {{count}} seleccionadas" },
+    "date_unknown": "Desconocido"
+  },
+  "import_progress": {
+    "title": "Importando {{filename}}",
+    "initial": { "title": "Preparando la importación...", "detail": "Validando la estructura del archivo ZIP" },
+    "conversation_counter": "{{current}}/{{total}} conversaciones",
+    "conversation_counter_selective": "{{current}}/{{total}} conversaciones seleccionadas",
+    "selective_mode_indicator": "📋 Importación selectiva: {{selected}} de {{total}} conversaciones",
+    "complete": { "message": "Importación completada con éxito", "detail": "Puede cerrar este cuadro de diálogo" },
+    "error": { "message": "Se produjo un error durante la importación", "detail": "Consulte la consola para más detalles" }
+  },
+  "import_completion": {
+    "title": "Importación completada",
+    "success_message": "✅ Conversaciones importadas con éxito",
+    "stats": {
+      "zip_files_processed": "Archivos ZIP procesados",
+      "unique_conversations": "Conversaciones únicas",
+      "duplicates": "Duplicados",
+      "new": "Nuevo", "updated": "Actualizado", "skipped": "Omitidos", "failed": "Fallidos"
+    },
+    "attachments": {
+      "label": "Adjuntos:",
+      "summary": "{{found}}/{{total}} extraídos ({{percentage}}%)",
+      "missing_failed": "{{missing}} faltantes, {{failed}} fallidos"
+    },
+    "report": { "label": "📄 Informe detallado:" },
+    "buttons": { "view_report": "Ver informe", "ok": "OK" }
+  },
+  "settings": {
+    "tab_title": "Nexus AI Chat Importer",
+    "folders": {
+      "section_title": "📁 Estructura de carpetas",
+      "conversation_folder": { "name": "Carpeta de conversaciones", "desc": "Dónde se almacenan las conversaciones importadas", "placeholder": "Nexus/Conversations", "browse_tooltip": "Explorar carpetas o crear una nueva" },
+      "reports_folder": { "name": "Carpeta de informes", "desc": "Dónde se almacenan los informes de importación", "placeholder": "Nexus Reports", "browse_tooltip": "Explorar carpetas o crear una nueva" },
+      "attachment_folder": { "name": "Carpeta de adjuntos", "desc": "Dónde se almacenan los adjuntos (⚠️ Excluir de la sincronización para ahorrar espacio)", "placeholder": "Nexus/Attachments", "browse_tooltip": "Explorar carpetas o crear una nueva" }
+    },
+    "display": {
+      "section_title": "📅 Prefijo de fecha",
+      "add_date_prefix": { "name": "Añadir prefijo de fecha a los nombres de archivo", "desc": "Añadir la fecha de creación como prefijo a los nombres de archivo de conversación", "format_label": "Seleccionar formato de fecha: " }
+    },
+    "timestamps": {
+      "section_title": "📅 Formato de fecha de mensajes",
+      "custom_format": { "name": "Formato de marca de tiempo personalizado para mensajes", "desc": "Reemplazar el formato de marca de tiempo predeterminado basado en la configuración regional en los encabezados de mensajes. Cuando está desactivado, las marcas de tiempo siguen la configuración de idioma de Obsidian. Si Obsidian está en inglés, se aplica el formato estadounidense (YYYY/DD/MM)." },
+      "timestamp_format": { "name": "Formato de marca de tiempo", "desc": "Elegir el formato para las marcas de tiempo de mensajes en las notas de conversación" },
+      "preview_label": "Vista previa: "
+    },
+    "attachments": {
+      "section_title": "Configuración de adjuntos",
+      "import_attachments": { "name": "Importar adjuntos", "desc": "Guardar archivos adjuntos en disco y vincularlos en las conversaciones (utiliza una estrategia de «mejor esfuerzo»)" },
+      "handle_missing": { "name": "Gestionar adjuntos faltantes", "desc": "Cuando faltan adjuntos en las exportaciones, crear notas informativas en lugar de omitirlos" },
+      "show_details": { "name": "Mostrar detalles de adjuntos en informes", "desc": "Incluir estadísticas detalladas del procesamiento de adjuntos en los informes de importación" },
+      "info_box": {
+        "title": "📎 Acerca del manejo de adjuntos",
+        "best_effort": "Estrategia de mejor esfuerzo: Los archivos encontrados en las exportaciones se extraen y vinculan; los archivos faltantes reciben notas informativas.",
+        "platform_diff": "Diferencias entre plataformas: Las exportaciones de ChatGPT pueden no incluir todos los adjuntos, especialmente de conversaciones más antiguas.",
+        "organization": "Organización sencilla: Los archivos se organizan en attachments/proveedor/categoría/ (p. ej., attachments/chatgpt/images/).",
+        "sync_tip": "Consejo de sincronización: Considere excluir la carpeta de adjuntos de la sincronización para evitar subir archivos grandes.",
+        "tip": "💡 Consejo: Active «Mostrar detalles de adjuntos» para ver exactamente qué archivos se encontraron, faltaron o fallaron durante la importación."
+      }
+    },
+    "migrations": {
+      "section_title": "Migraciones",
+      "description_manual": "Operaciones manuales: Operaciones de actualización opcionales que se pueden ejecutar cuando sea conveniente.",
+      "description_automatic": "Las operaciones automáticas (como eliminar datos antiguos) se ejecutan automáticamente durante la actualización y no se muestran aquí.",
+      "version_header": "Versión {{version}}",
+      "no_migrations": { "title": "No hay operaciones manuales disponibles", "desc": "Todas las operaciones de actualización se han completado automáticamente." },
+      "operation_completed_suffix": " ✅ Completado",
+      "buttons": { "completed": "✅ Completado", "cannot_run": "No se puede ejecutar", "run": "Ejecutar", "running": "Ejecutando..." },
+      "tooltips": { "completed": "Esta operación ha sido completada", "cannot_run": "Los requisitos previos no se cumplen para esta operación", "run": "Ejecutar {{operation_name}}" },
+      "error_loading": "Error al cargar las migraciones:"
+    },
+    "support": {
+      "section_title": "💝 Soporte y ayuda",
+      "resources": { "name": "📚 Recursos", "desc": "Documentación, notas de versión y enlaces de la comunidad", "readme": "📖 README", "changelog": "📝 Changelog", "issues": "🐛 Problemas", "forum": "💬 Foro" }
+    }
+  },
+  "upgrade": {
+    "progress_modal": { "starting": "Iniciando...", "progress_label": "Progreso: {{percentage}}%", "step_label": "Paso {{current}}/{{total}}", "complete_label": "Completado", "complete_message": "Completado con éxito", "error_message": "Se produjo un error" },
+    "multi_operation_modal": {
+      "progress_label": "Progreso: {{completed}}/{{total}} operaciones",
+      "progress_with_failures": "Progreso: {{completed}}/{{total}} operaciones ({{failed}} fallidas)",
+      "all_completed": "Las {{total}} operaciones se completaron con éxito",
+      "mark_complete_default": "Todas las operaciones se completaron con éxito",
+      "buttons": { "complete": "Finalizar", "close": "Cerrar" }
+    },
+    "modal_130": {
+      "title": "🎉 Nexus AI Chat Importer {{version}}",
+      "migration_section": {
+        "title": "🔄 Migración requerida",
+        "message": "Las siguientes tareas se ejecutarán automáticamente para actualizar sus datos a v1.3.0:",
+        "tasks": { "folder_settings": "✓ Migrar la configuración de carpetas a la nueva estructura", "timestamps": "✓ Actualizar marcas de tiempo al formato ISO 8601", "aliases": "✓ Corregir alias del frontmatter", "reports": "✓ Mover la carpeta de informes a la ubicación correcta", "artifacts": "✓ Actualizar metadatos de artefactos" },
+        "estimate": "Esto tomará unos segundos."
+      },
+      "buttons": { "run_migration": "🚀 Ejecutar tareas de migración" }
+    },
+    "complete_modal": { "title": "✅ Actualización completada - v{{version}}", "buttons": { "got_it": "¡Entendido!" } },
+    "new_version_modal": { "title": "🎉 Nexus AI Chat Importer {{version}}", "buttons": { "got_it": "¡Entendido!" } }
+  },
+  "folder_migration": {
+    "title": "¿Mover archivos existentes?",
+    "message_intro": "Está cambiando la ubicación de la carpeta {{folder_type}}:",
+    "path_from": "Desde: {{path}}",
+    "path_to": "Hacia: {{path}}",
+    "question": "¿Desea mover los archivos existentes a la nueva ubicación?",
+    "link_updates": {
+      "title": "🔗 Actualizaciones de enlaces:",
+      "attachments_text": "Mover los adjuntos también actualizará todas las notas de conversación que hagan referencia a ellos.",
+      "conversations_text": "Mover las conversaciones también actualizará todos los informes y adjuntos que hagan referencia a ellas.",
+      "estimated_time_seconds": "Tiempo estimado: ~{{seconds}} segundos",
+      "estimated_time_minutes": "Tiempo estimado: ~{{minutes}} minuto(s)"
+    },
+    "warning": { "title": "⚠️ Importante:", "text": "Si elige «No», los archivos existentes permanecerán en la ubicación anterior y no serán afectados por futuras actualizaciones." },
+    "buttons": { "cancel": "Cancelar", "keep": "No, conservar los archivos en la ubicación anterior", "move": "Sí, mover los archivos", "move_with_links": "Sí, mover los archivos y actualizar enlaces" },
+    "progress": {
+      "title_moving": "Moviendo {{folder_type}} y actualizando enlaces",
+      "step_moving_title": "Moviendo archivos...",
+      "step_moving_detail": "Moviendo de {{old_path}} a {{new_path}}",
+      "step_moving_count": "{{current}} / {{total}} archivos procesados",
+      "step_moved_title": "Archivos movidos",
+      "step_moved_detail": "{{moved}} archivos movidos, {{skipped}} omitidos. Preparando actualización de enlaces...",
+      "step_updating_attachment_links": "Actualizando enlaces de adjuntos...",
+      "step_updating_conversation_links": "Actualizando enlaces de conversaciones...",
+      "step_updating_report_links": "Actualizando enlaces en informes...",
+      "step_updating_artifact_links": "Actualizando enlaces en artefactos...",
+      "complete_message": "{{moved}} archivos movidos. {{links}} enlaces actualizados con éxito"
+    },
+    "result_dialog": {
+      "title": "Resultado de la migración de carpetas",
+      "summary_title": "Resumen de la migración",
+      "moved": "✅ Movidos con éxito: {{count}} archivo(s)",
+      "skipped": "⚠️ Omitidos (ya existían): {{count}} archivo(s)",
+      "errors": "❌ Errores: {{count}} archivo(s)",
+      "explanation": "Los archivos que ya existían en el destino no fueron sobrescritos para preservar sus datos.",
+      "error_details_title": "Detalles del error:"
+    },
+    "error_target_not_empty": { "title": "La carpeta de destino no está vacía", "message": "La carpeta «{{path}}» ya contiene archivos.\n\nPara cambiar la ubicación de la carpeta:\n• Mueva los archivos existentes manualmente en Obsidian, O\n• Elija una carpeta vacía o cree una nueva" },
+    "error_migration_failed": { "title": "La migración ha fallado", "message_move": "Error al mover archivos: {{error}}", "message_links": "Error al mover archivos o actualizar enlaces: {{error}}" }
+  },
+  "folder_browser": {
+    "title": "Seleccionar carpeta",
+    "vault_root": "Raíz del Vault (/)",
+    "buttons": { "create_new_folder": "Crear nueva carpeta", "cancel": "Cancelar", "select": "Seleccionar" },
+    "create_folder_dialog": { "title": "Crear nueva carpeta", "folder_name_label": "Nombre de la carpeta:", "buttons": { "cancel": "Cancelar", "create": "Crear" } },
+    "notices": {
+      "select_parent_first": "⚠️ Por favor, seleccione primero una carpeta principal",
+      "invalid_name": "❌ Nombre de carpeta no válido: contiene caracteres no permitidos",
+      "already_exists": "❌ La carpeta ya existe",
+      "invalid_location": "❌ {{error}}",
+      "created_success": "✅ Carpeta creada: {{name}}",
+      "create_failed": "❌ Error al crear la carpeta: {{error}}",
+      "select_first": "⚠️ Por favor, seleccione primero una carpeta"
+    }
+  },
+  "configure_folder_dialog": {
+    "title": "🎉 Nexus AI Chat Importer v1.3.0",
+    "description": "En la versión 1.3.0, puede especificar una carpeta para los informes. Moveremos los informes existentes a {{folder}}, o puede seleccionar su carpeta preferida a continuación.",
+    "note": "Nota: La carpeta no puede estar dentro de Conversations o Attachments.",
+    "report_folder_label": "📊 Carpeta de informes",
+    "report_folder_placeholder": "Nexus Reports",
+    "buttons": { "browse": "Explorar", "proceed": "Proceder" },
+    "error_invalid_folder": { "title": "Ubicación de carpeta no válida", "message": "{{error}}" }
+  },
+  "welcome": {
+    "title": "Nexus AI Chat Importer {{version}}",
+    "icon": "🎉",
+    "heading": "¡Gracias por instalar Nexus AI Chat Importer!",
+    "description": "Importe y gestione sus conversaciones de ChatGPT y Claude directamente en su Vault de Obsidian.",
+    "resources_title": "Recursos",
+    "resources": {
+      "documentation": { "title": "Documentación", "description": "Aprenda a usar el plugin" },
+      "release_notes": { "title": "Notas de versión", "description": "Novedades en esta versión" },
+      "report_issues": { "title": "Reportar problemas", "description": "¿Encontró un error? Háganoslo saber" },
+      "community_forum": { "title": "Foro de la comunidad", "description": "Únase a la discusión" }
+    },
+    "buttons": { "get_started": "Comenzar" }
+  },
+  "notices": {
+    "import_analyzing": "Analizando conversaciones de {{count}} archivo(s)...",
+    "import_no_new": "No se encontraron conversaciones nuevas o actualizadas. Todas las conversaciones ya están al día.",
+    "import_starting": "Importando {{count}} conversaciones ({{new}} nuevas, {{updated}} actualizadas)...",
+    "import_starting_selected": "Importando {{count}} conversaciones seleccionadas de {{files}} archivo(s)...",
+    "import_completed_fallback": "Importación completada. {{created}} creadas, {{updated}} actualizadas.",
+    "import_error": "Error durante la importación: {{error}}",
+    "import_error_analyzing": "Error al analizar las conversaciones: {{error}}",
+    "import_error_file": "Error al procesar {{filename}}. Consulte la consola para más detalles.",
+    "import_no_selected": "No se han seleccionado conversaciones para importar.",
+    "import_no_zip_gemini": "Por favor, seleccione al menos un archivo ZIP de Gemini Takeout (más un JSON opcional desde la extensión).",
+    "import_no_zip": "Por favor, seleccione al menos un archivo ZIP de exportación.",
+    "import_gemini_json_failed": "No se pudo leer el JSON de índice de Gemini. Continuando sin índice.",
+    "report_failed": "No se pudo crear el archivo de registro. Consulte la consola para más detalles.",
+    "attachment_map_failed": "No se pudo construir el mapa de adjuntos. Consulte la consola para más detalles.",
+    "ribbon_tooltip": "Nexus AI Chat Importer - Importar nuevo archivo"
+  },
+  "commands": { "import_conversations": { "name": "Importar conversaciones de IA" } },
+  "kofi_support": {
+    "header": "☕ Apoyar este plugin",
+    "header_highlight": "Apoyar este plugin",
+    "default_message_emphasis": "Trabajo a tiempo completo en los proyectos Nexus estando desempleado y enfrentando problemas de salud.",
+    "default_message": "Si este plugin te facilita la vida, una donación significaría muchísimo para mí y ayudaría a mantenerlos activos.",
+    "reality_check": "¡Gracias! Miles de horas de trabajo han ido a estos plugins, y cada café me ayuda a seguir mejorándolos mientras gestiono problemas de salud continuos. Si este plugin te facilita la vida, por favor considera apoyarme.",
+    "button_alt": "Apoyarme en Ko-fi"
+  }
+}
