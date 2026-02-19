@@ -20,6 +20,7 @@ import { App, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createKofiSupportBox } from "../ui/components/kofi-support-box";
 import { GITHUB } from "../config/constants";
+import { t } from '../i18n';
 
 /**
  * Universal template for new version announcements
@@ -49,7 +50,7 @@ export class NewVersionModal extends Modal {
         modalEl.classList.add('nexus-new-version-modal');
 
         // Set title
-        titleEl.setText(`🎉 Nexus AI Chat Importer ${this.version}`);
+        titleEl.setText(t('upgrade.new_version_modal.title', { version: this.version }));
 
         this.createForm();
     }
@@ -109,7 +110,7 @@ export class NewVersionModal extends Modal {
         const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container" });
 
         const closeButton = buttonContainer.createEl("button", {
-            text: "Got it!",
+            text: t('upgrade.new_version_modal.buttons.got_it'),
             cls: "mod-cta nexus-close-button"
         });
 

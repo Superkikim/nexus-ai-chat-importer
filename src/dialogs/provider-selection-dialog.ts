@@ -20,6 +20,7 @@
 // src/dialogs/provider-selection-dialog.ts
 import { App, Modal, Setting } from "obsidian";
 import { ProviderRegistry } from "../providers/provider-adapter";
+import { t } from '../i18n';
 
 export interface ProviderInfo {
     id: string;
@@ -51,8 +52,8 @@ export class ProviderSelectionDialog extends Modal {
         if (registry.getAdapter("chatgpt")) {
             providers.push({
                 id: "chatgpt",
-                name: "ChatGPT",
-                description: "OpenAI ChatGPT conversation exports",
+                name: t('provider_selection.providers.chatgpt.name'),
+                description: t('provider_selection.providers.chatgpt.description'),
                 fileFormats: ["conversations.json only"]
             });
         }
@@ -61,8 +62,8 @@ export class ProviderSelectionDialog extends Modal {
         if (registry.getAdapter("claude")) {
             providers.push({
                 id: "claude",
-                name: "Claude",
-                description: "Anthropic Claude conversation exports",
+                name: t('provider_selection.providers.claude.name'),
+                description: t('provider_selection.providers.claude.description'),
                 fileFormats: ["conversations.json + users.json", "projects.json (optional)"]
             });
         }
@@ -71,8 +72,8 @@ export class ProviderSelectionDialog extends Modal {
         if (registry.getAdapter("lechat")) {
             providers.push({
                 id: "lechat",
-                name: "Le Chat",
-                description: "Mistral AI Le Chat conversation exports",
+                name: t('provider_selection.providers.lechat.name'),
+                description: t('provider_selection.providers.lechat.description'),
                 fileFormats: ["chat-<uuid>.json files"]
             });
         }
@@ -96,7 +97,7 @@ export class ProviderSelectionDialog extends Modal {
         contentEl.empty();
 
         // Title
-        contentEl.createEl("h2", { text: "Select Archive Provider" });
+        contentEl.createEl("h2", { text: t('provider_selection.title') });
 
         // Provider selection
         this.providers.forEach(provider => {
@@ -105,7 +106,7 @@ export class ProviderSelectionDialog extends Modal {
                 .setDesc(this.createProviderDescription(provider))
                 .addButton(button => {
                     button
-                        .setButtonText("Select")
+                        .setButtonText(t('provider_selection.buttons.select'))
                         .setCta()
                         .onClick(() => {
                             this.selectedProvider = provider.id;
@@ -119,8 +120,8 @@ export class ProviderSelectionDialog extends Modal {
         const buttonContainer = contentEl.createDiv();
         buttonContainer.style.textAlign = "center";
         buttonContainer.style.marginTop = "20px";
-        
-        const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+
+        const cancelButton = buttonContainer.createEl("button", { text: t('provider_selection.buttons.cancel') });
         cancelButton.style.marginRight = "10px";
         cancelButton.onclick = () => this.close();
     }

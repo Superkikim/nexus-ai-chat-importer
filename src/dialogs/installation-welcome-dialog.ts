@@ -1,5 +1,6 @@
 import { App, Modal } from "obsidian";
 import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { t } from '../i18n';
 
 /**
  * Welcome dialog shown on first installation
@@ -21,7 +22,7 @@ export class InstallationWelcomeDialog extends Modal {
         contentEl.addClass('nexus-installation-welcome-dialog');
 
         // Set title
-        titleEl.setText(`Nexus AI Chat Importer ${this.version}`);
+        titleEl.setText(t('welcome.title', { version: this.version }));
 
         // Welcome message
         const welcomeSection = contentEl.createDiv('welcome-section');
@@ -31,21 +32,21 @@ export class InstallationWelcomeDialog extends Modal {
         `;
 
         const welcomeIcon = welcomeSection.createDiv();
-        welcomeIcon.innerHTML = '🎉';
+        welcomeIcon.innerHTML = t('welcome.icon');
         welcomeIcon.style.cssText = `
             font-size: 48px;
             margin-bottom: 12px;
         `;
 
         const welcomeTitle = welcomeSection.createEl('h2');
-        welcomeTitle.textContent = 'Thank you for installing Nexus AI Chat Importer!';
+        welcomeTitle.textContent = t('welcome.heading');
         welcomeTitle.style.cssText = `
             margin: 0 0 12px 0;
             color: var(--text-normal);
         `;
 
         const welcomeText = welcomeSection.createDiv();
-        welcomeText.textContent = 'Import and manage your ChatGPT and Claude conversations directly in your Obsidian vault.';
+        welcomeText.textContent = t('welcome.description');
         welcomeText.style.cssText = `
             color: var(--text-muted);
             line-height: 1.6;
@@ -62,7 +63,7 @@ export class InstallationWelcomeDialog extends Modal {
         `;
 
         const resourcesTitle = resourcesSection.createEl('h3');
-        resourcesTitle.textContent = 'Resources';
+        resourcesTitle.textContent = t('welcome.resources_title');
         resourcesTitle.style.cssText = `
             margin: 0 0 16px 0;
             color: var(--text-normal);
@@ -82,26 +83,26 @@ export class InstallationWelcomeDialog extends Modal {
         const resources = [
             {
                 icon: '📖',
-                title: 'Documentation',
-                description: 'Learn how to use the plugin',
+                title: t('welcome.resources.documentation.title'),
+                description: t('welcome.resources.documentation.description'),
                 url: 'https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md'
             },
             {
                 icon: '📝',
-                title: 'Release Notes',
-                description: 'What\'s new in this version',
+                title: t('welcome.resources.release_notes.title'),
+                description: t('welcome.resources.release_notes.description'),
                 url: 'https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md'
             },
             {
                 icon: '🐛',
-                title: 'Report Issues',
-                description: 'Found a bug? Let us know',
+                title: t('welcome.resources.report_issues.title'),
+                description: t('welcome.resources.report_issues.description'),
                 url: 'https://github.com/superkikim/nexus-ai-chat-importer/issues'
             },
             {
                 icon: '💬',
-                title: 'Community Forum',
-                description: 'Join the discussion',
+                title: t('welcome.resources.community_forum.title'),
+                description: t('welcome.resources.community_forum.description'),
                 url: 'https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664'
             }
         ];
@@ -120,7 +121,7 @@ export class InstallationWelcomeDialog extends Modal {
         `;
 
         const closeButton = buttonContainer.createEl('button', {
-            text: 'Get Started'
+            text: t('welcome.buttons.get_started')
         });
         closeButton.addClass('mod-cta');
         closeButton.style.cssText = `

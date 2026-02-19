@@ -20,6 +20,7 @@
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { t } from '../i18n';
 
 /**
  * Beautiful upgrade modal for v1.3.0 with prominent Ko-fi support
@@ -44,7 +45,7 @@ export class NexusUpgradeModal130 extends Modal {
         modalEl.classList.add('nexus-upgrade-modal-130');
 
         // Set title
-        titleEl.setText(`🎉 Nexus AI Chat Importer ${this.version}`);
+        titleEl.setText(t('upgrade.modal_130.title', { version: this.version }));
         this.modalEl.querySelector('.modal-close-button')?.remove();
 
         this.createForm();
@@ -119,32 +120,32 @@ Try the new **selective import** feature on your next import - you'll love the c
         const header = migrationSection.createDiv({ cls: "nexus-migration-header" });
         header.innerHTML = `
             <div class="nexus-migration-title">
-                🔄 <strong>Migration Required</strong>
+                ${t('upgrade.modal_130.migration_section.title')}
             </div>
         `;
 
         // Message
         const message = migrationSection.createDiv({ cls: "nexus-migration-message" });
         message.innerHTML = `
-            <p>The following tasks will run automatically to upgrade your data to v1.3.0:</p>
+            <p>${t('upgrade.modal_130.migration_section.message')}</p>
         `;
 
         // Task list
         const taskList = migrationSection.createDiv({ cls: "nexus-migration-tasks" });
         taskList.innerHTML = `
             <ul>
-                <li>✓ Migrate folder settings to new structure</li>
-                <li>✓ Update timestamps to ISO 8601 format</li>
-                <li>✓ Fix frontmatter aliases</li>
-                <li>✓ Move Reports folder to proper location</li>
-                <li>✓ Update artifact metadata</li>
+                <li>${t('upgrade.modal_130.migration_section.tasks.folder_settings')}</li>
+                <li>${t('upgrade.modal_130.migration_section.tasks.timestamps')}</li>
+                <li>${t('upgrade.modal_130.migration_section.tasks.aliases')}</li>
+                <li>${t('upgrade.modal_130.migration_section.tasks.reports')}</li>
+                <li>${t('upgrade.modal_130.migration_section.tasks.artifacts')}</li>
             </ul>
         `;
 
         // Estimated time
         const estimate = migrationSection.createDiv({ cls: "nexus-migration-estimate" });
         estimate.innerHTML = `
-            <p><em>This will take a few seconds.</em></p>
+            <p><em>${t('upgrade.modal_130.migration_section.estimate')}</em></p>
         `;
     }
 
@@ -152,7 +153,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         const buttonContainer = this.contentEl.createDiv({ cls: "nexus-migration-button-container" });
 
         const migrationButton = buttonContainer.createEl("button", {
-            text: "🚀 Run Migration Tasks",
+            text: t('upgrade.modal_130.buttons.run_migration'),
             cls: "mod-cta nexus-migration-button"
         });
 

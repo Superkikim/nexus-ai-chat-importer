@@ -19,6 +19,7 @@
 
 // src/commands/command-registry.ts
 import type NexusAiChatImporterPlugin from "../main";
+import { t } from "../i18n";
 
 export class CommandRegistry {
     constructor(private plugin: NexusAiChatImporterPlugin) {}
@@ -26,7 +27,7 @@ export class CommandRegistry {
     registerCommands() {
         this.plugin.addCommand({
             id: "nexus-ai-chat-importer-select-zip",
-            name: "Import AI conversations",
+            name: t('commands.import_conversations.name'),
             callback: () => {
                 // Use the new provider selection workflow
                 this.plugin.showProviderSelectionDialog();

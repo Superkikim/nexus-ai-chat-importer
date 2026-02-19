@@ -19,6 +19,7 @@
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { t } from '../i18n';
 
 /**
  * Upgrade complete modal - shown AFTER migrations are done
@@ -42,7 +43,7 @@ export class UpgradeCompleteModal extends Modal {
         contentEl.classList.add('nexus-ai-chat-importer-modal');
 
         // Set title
-        titleEl.setText(`✅ Upgrade Complete - v${this.version}`);
+        titleEl.setText(t('upgrade.complete_modal.title', { version: this.version }));
 
         this.createContent();
     }
@@ -117,7 +118,7 @@ Anthropic changed the structure of their Claude export format. Conversations imp
     private addCloseButton() {
         const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
         const button = buttonContainer.createEl("button", {
-            text: "Got it!",
+            text: t('upgrade.complete_modal.buttons.got_it'),
             cls: "mod-cta nexus-upgrade-button"
         });
 
