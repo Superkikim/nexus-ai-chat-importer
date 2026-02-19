@@ -13195,23 +13195,24 @@ var init_upgrade_complete_modal = __esm({
         this.addStyles();
       }
       async addReleaseNotes() {
-        let content = `## \u2728 What's New
+        let content = `## \u2728 What's New in v1.5.0
 
-- **\u{1F916} Le Chat Support** - Import your Mistral AI Le Chat conversations with attachments and references
-- **\u{1F4BB} CLI for Bulk Import** - Import conversations from the command line without opening Obsidian
-- **\u{1F4C1} Human-Readable Artifact Folders** - Claude artifacts now stored in folders named after the conversation, not UUIDs
-- **\u{1F4D0} LaTeX Math Conversion** - Math equations automatically converted to Obsidian's math syntax
+### \u{1F30D} Full UI Localization \u2014 10 Languages
 
-## \u{1F504} Migration: Artifact Callout Restoration
+- **Automatic language detection** \u2014 the plugin UI matches your Obsidian interface language, no configuration needed
+- **10 supported languages**: English, French, German, Spanish, Italian, Russian, Chinese (Simplified), Japanese, Portuguese, Korean
+- **Complete coverage** \u2014 all dialogs, settings panels, progress modals, notices, and status labels are translated
+- **English fallback** \u2014 any missing key falls back to English automatically
 
-Anthropic changed the structure of their Claude export format. Conversations imported with v1.3.x may be missing inline artifact callouts. The migration has restored artifact links at the end of affected notes. To get artifacts inline within messages, delete the note and re-import from your Claude export ZIP.
+> Import reports and conversation notes remain in English \u2014 only the plugin UI is localized.
 
-## \u{1F41B} Bug Fixes
+## v1.4.0 in brief
 
-- Multiple attachments in a single message no longer break out of the parent callout
-- Claude artifacts now render correctly for both old and new export formats
-- Conversations on mobile no longer show raw placeholder text instead of artifact links
-- Binary files referenced by Claude scripts are no longer saved as empty artifacts`;
+- **\u{1F916} Le Chat (Mistral AI)** \u2014 Full support with attachments, references, and citations
+- **\u{1F4BB} CLI for Bulk Import** \u2014 Import from the terminal without opening Obsidian
+- **\u{1F4C1} Human-readable artifact folders** \u2014 Claude artifacts stored in folders named after the conversation, not UUIDs
+- **\u{1F4D0} LaTeX math** \u2014 Math equations converted to Obsidian \`$$...$$\` / \`$...$\` syntax
+- **\u{1F41B} Bug fixes** \u2014 Multi-attachment callouts, Claude format changes, mobile placeholders, binary artifacts`;
         try {
           const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
           if (response.ok) {
