@@ -1,6 +1,6 @@
 # Nexus AI Chat Importer
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.4.0) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads (v1.4.0)](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/1.4.0/total?label=downloads%20(v1.4.0))](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.4.0) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.5.0) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads (v1.5.0)](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/1.5.0/total?label=downloads%20(v1.5.0))](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.5.0) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
 
 ## 📑 Table of Contents
 
@@ -23,7 +23,7 @@
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
 ### 📚 More
-- [✨ What's New](#-new-in-v140) - v1.4.0 features
+- [✨ What's New](#-whats-new-in-v150) - v1.5.0 features
 - [☕ Support](#-support-my-work) - Help keep this plugin alive
 - [📜 License](#-license) - GPL-3.0
 
@@ -61,33 +61,28 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - CLI for automation and headless setups
 - Beautiful formatting with role-specific callouts
 - Detailed import reports
-- International date support
+- Full UI localization in 10 languages
 
-### ✨ What's New in v1.4.0
+### ✨ What's New in v1.5.0
 
-#### 🚀 Features
+#### 🌍 Full UI Localization — 10 Languages
 
-- **🤖 Le Chat (Mistral AI)** — Full support with attachments, references, and citations
-- **💻 CLI for Bulk Import** — Import from the terminal without opening Obsidian ([see docs](#-command-line-interface-cli))
+- **Automatic language detection** — the plugin UI matches your Obsidian interface language, no configuration needed
+- **10 supported languages**: English, French, German, Spanish, Italian, Russian, Chinese (Simplified), Japanese, Portuguese, Korean
+- **Complete coverage** — all dialogs, settings panels, progress modals, import notices, and status labels are translated
+- **English fallback** — any missing key gracefully falls back to English
 
-#### 🎨 Improvements
+> Note: Import reports and conversation note content remain in English — only the plugin UI is localized.
 
-- **Human-readable artifact folders** — Claude artifacts now stored in folders named after the conversation, not UUIDs
-- **LaTeX math** — Math equations are properly handled and converted to Obsidian syntax
-- **Large archive support** — All providers now handle very large exports reliably
+#### v1.4.0 in brief
 
-#### 🐛 Bug Fixes
-
-- Multiple attachments in a single message no longer break out of the parent callout
-- Claude artifacts render correctly for both old and new export formats
-- Mobile artifact placeholders no longer show raw text
-- Binary files referenced by Claude scripts no longer saved as empty artifacts
+Le Chat (Mistral AI) support · CLI for bulk import · Human-readable Claude artifact folders · LaTeX math conversion · Bug fixes
 
 ---
 
 > Upgrading from a previous version triggers required migration tasks automatically.
 
-*For v1.3.x and earlier release notes, see [RELEASE_NOTES.md](RELEASE_NOTES.md)*
+*For full release history, see [RELEASE_NOTES.md](RELEASE_NOTES.md)*
 
 ## ☕ Support My Work
 
@@ -545,7 +540,7 @@ I'm exploring a solution using a browser extension to capture conversation metad
 
 **Status:** Research only. No timeline, no guarantees, no promises - just experimentation.
 
-You may notice Gemini code in the repository - it's experimental and disabled in v1.4.0.
+You may notice Gemini code in the repository - it's experimental and disabled in v1.5.0.
 
 ---
 

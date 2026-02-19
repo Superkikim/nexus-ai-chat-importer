@@ -1,5 +1,57 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.5.0 — Full UI Localization
+
+![Version](https://img.shields.io/badge/version-1.5.0-blue) ![i18n](https://img.shields.io/badge/i18n-10_languages-green)
+
+### Overview
+
+Version 1.5.0 brings complete internationalization to the Nexus AI Chat Importer UI. Every dialog, settings panel, progress modal, and import notice is now available in 10 languages, automatically matching your Obsidian interface language — no configuration required.
+
+---
+
+### ☕ Support This Project
+
+**This plugin is free and always will be.** If you find it valuable, please consider supporting its development:
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+
+---
+
+### 🌍 Localization
+
+#### Supported Languages
+
+| Language | Code |
+|---|---|
+| English | `en` (base / fallback) |
+| French | `fr` |
+| German | `de` |
+| Spanish | `es` |
+| Italian | `it` |
+| Russian | `ru` |
+| Chinese Simplified | `zh` |
+| Japanese | `ja` |
+| Portuguese | `pt` |
+| Korean | `ko` |
+
+#### What's Translated
+
+- All dialogs: provider selection, file selection, conversation selection, import completion, welcome, upgrade
+- Settings tab and all settings sections (folders, display, timestamps, attachments, migrations)
+- Import progress modals and real-time notices
+- Status badges and labels (New, Updated, Already Imported)
+
+#### What Stays in English
+
+Import reports and conversation note content are not translated — only the plugin UI is localized. This keeps your vault content consistent regardless of the interface language.
+
+#### How It Works
+
+The plugin reads `window.moment.locale()` at startup (the same locale Obsidian uses) and loads the matching translation file. English is always used as a fallback for any key not present in the target language.
+
+---
+
 ## Version 1.4.0 - Le Chat Support, CLI, & Claude Improvements
 
 ![Version](https://img.shields.io/badge/version-1.4.0-blue) ![New Provider](https://img.shields.io/badge/new_provider-Le_Chat-green) ![CLI](https://img.shields.io/badge/CLI-new-purple)
