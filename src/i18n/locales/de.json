@@ -199,7 +199,7 @@
       "estimated_time_seconds": "Geschätzte Zeit: ~{{seconds}} Sekunden",
       "estimated_time_minutes": "Geschätzte Zeit: ~{{minutes}} Minute(n)"
     },
-    "warning": { "title": "⚠️ Wichtig:", "text": "Wenn Sie „Nein\" wählen, verbleiben vorhandene Dateien am alten Speicherort und werden von zukünftigen Updates nicht beeinflusst." },
+    "warning": { "title": "⚠️ Wichtig:", "text": "Wenn Sie „Nein" wählen, verbleiben vorhandene Dateien am alten Speicherort und werden von zukünftigen Updates nicht beeinflusst." },
     "buttons": { "cancel": "Abbrechen", "keep": "Nein, Dateien am alten Speicherort behalten", "move": "Ja, Dateien verschieben", "move_with_links": "Ja, Dateien verschieben und Links aktualisieren" },
     "progress": {
       "title_moving": "{{folder_type}} wird verschoben und Links werden aktualisiert",
@@ -223,7 +223,7 @@
       "explanation": "Dateien, die am Zielort bereits vorhanden waren, wurden zum Schutz Ihrer Daten nicht überschrieben.",
       "error_details_title": "Fehlerdetails:"
     },
-    "error_target_not_empty": { "title": "Zielordner ist nicht leer", "message": "Der Ordner „{{path}}\" enthält bereits Dateien.\n\nUm den Ordnerspeicherort zu ändern:\n• Vorhandene Dateien manuell in Obsidian verschieben, ODER\n• Einen leeren Ordner wählen oder einen neuen erstellen" },
+    "error_target_not_empty": { "title": "Zielordner ist nicht leer", "message": "Der Ordner „{{path}}" enthält bereits Dateien.\n\nUm den Ordnerspeicherort zu ändern:\n• Vorhandene Dateien manuell in Obsidian verschieben, ODER\n• Einen leeren Ordner wählen oder einen neuen erstellen" },
     "error_migration_failed": { "title": "Migration fehlgeschlagen", "message_move": "Dateien konnten nicht verschoben werden: {{error}}", "message_links": "Dateien konnten nicht verschoben oder Links nicht aktualisiert werden: {{error}}" }
   },
   "folder_browser": {
