@@ -7,7 +7,7 @@
 ### 🚀 Getting Started
 - [⚡ Quickstart](#-quickstart) - Get up and running in 2 minutes
 - [📥 Installation](#-installation--settings) - Install from Community Plugins
-- [📤 Export Your Chats](#-importing-conversations) - Get your data from ChatGPT/Claude
+- [📤 Export Your Chats](#-importing-conversations) - Get your data from ChatGPT/Claude/Le Chat
 
 ### 💡 Using the Plugin
 - [📥 Import Conversations](#-importing-conversations) - Quick or selective import
@@ -241,7 +241,7 @@ Want to reorganize? No problem!
 
 Perfect when you want everything imported fast:
 
-1. Select **ChatGPT** or **Claude**
+1. Select **ChatGPT**, **Claude**, or **Le Chat**
 2. Choose your ZIP file(s)
 3. Click **Import All**
 4. Done! ✨
@@ -250,7 +250,7 @@ Perfect when you want everything imported fast:
 
 Perfect when you want control:
 
-1. Select **ChatGPT** or **Claude**
+1. Select **ChatGPT**, **Claude**, or **Le Chat**
 2. Choose your ZIP file(s)
 3. Click **Select Conversations**
 4. **Review the list** - you'll see:
@@ -326,7 +326,7 @@ Each conversation note contains:
 ```yaml
 ---
 conversation_id: "abc123..."          # Unique identifier
-provider: "chatgpt"                   # chatgpt or claude
+provider: "chatgpt"                   # chatgpt, claude, or lechat
 title: "Conversation Title"           # Original title
 create_time: "2024-01-15T14:30:22Z"  # Creation timestamp (UTC, ISO 8601)
 update_time: "2024-01-15T16:45:10Z"  # Last update timestamp (UTC, ISO 8601)
@@ -693,7 +693,7 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 2. Verify settings are correct
 3. Open issue on [GitHub](https://github.com/Superkikim/nexus-ai-chat-importer/issues) with:
    - Plugin & Obsidian versions
-   - Provider (ChatGPT/Claude)
+   - Provider (ChatGPT/Claude/Le Chat)
    - Problem description
 
 ## 🚀 Future Plans
