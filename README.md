@@ -162,7 +162,7 @@ After installing the plugin:
 
 **Good news:** The plugin handles everything automatically!
 
-When you upgrade to v1.3.0:
+When you upgrade to a new version:
 - ✅ Your settings are migrated to the new format
 - ✅ Your existing conversations are updated with new features
 - ✅ Folders are reorganized if needed (with your permission)
@@ -172,7 +172,7 @@ When you upgrade to v1.3.0:
 
 ### Plugin Settings
 
-#### **📁 Folder Organization** (NEW in v1.3.0)
+#### **📁 Folder Organization**
 
 Choose where your files are stored:
 
@@ -194,7 +194,7 @@ Customize how your conversations look:
   - With dashes: `2024-01-15`
   - Without: `20240115`
 
-- **Message Timestamps** (NEW in v1.3.0): Choose how dates appear in messages
+- **Message Timestamps**: Choose how dates appear in messages
   - **Auto** (default): Matches your Obsidian language
   - **Custom**: Pick from ISO 8601, US, European, UK, German, or Japanese
 
@@ -246,7 +246,7 @@ Perfect when you want everything imported fast:
 3. Click **Import All**
 4. Done! ✨
 
-#### 🎯 **Selective Import** (Pick & Choose) - NEW in v1.3.0
+#### 🎯 **Selective Import** (Pick & Choose)
 
 Perfect when you want control:
 
@@ -398,7 +398,7 @@ The timestamps shown in each message can be customized:
   - French → `15/01/2024 14:30:22`
   - German → `15.01.2024 14:30:22`
 
-- **Custom (NEW in v1.3.0)**: Pick your favorite format in Settings
+- **Custom**: Pick your favorite format in Settings
   - **Universal**: `2024-01-15 14:30:22` (same everywhere, easy to sort)
   - **US**: `01/15/2024 2:30:22 PM`
   - **European**: `15/01/2024 14:30:22`
@@ -415,7 +415,7 @@ The timestamps shown in each message can be customized:
 #### Recommendations
 
 **✅ DO**:
-- Add your own frontmatter fields (v1.3.0+) - the plugin won't touch them
+- Add your own frontmatter fields - the plugin won't touch them
 - Edit message content as needed
 - Use Reading View for best experience
 
