@@ -50,44 +50,50 @@
 
 Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** exports into Obsidian as beautifully formatted Markdown files.
 
-### ✨ New in v1.4.0
+### 🔍 Features in a Glance
 
-- **🤖 Le Chat Support** - Import your Mistral AI Le Chat conversations with attachments and references
-- **💻 CLI for Bulk Import** - Import conversations from the command line without opening Obsidian ([see CLI docs](#-command-line-interface-cli))
-- **📁 Human-Readable Artifact Folders** - Claude artifacts are now stored in folders named after the conversation, not UUIDs
-- **📐 LaTeX Math Conversion** - Math equations using `\[...\]` and `\(...\)` are automatically converted to Obsidian's math syntax
-- **🔧 Claude Format Fixes** - Full support for both old and new Claude artifact export formats
+- Multi-provider support (ChatGPT, Claude, Le Chat)
+- Selective import with interactive preview
+- Smart deduplication across multiple ZIPs
+- Attachment handling — images, documents, DALL-E, artifacts (provider-dependent)
+- Claude artifact versioning
+- LaTeX math support
+- CLI for automation and headless setups
+- Beautiful formatting with role-specific callouts
+- Detailed import reports
+- International date support
 
-### ✨ New in v1.3.0
+### ✨ What's New in v1.4.0
 
-- **[Selective Import](#-importing-conversations)** - Choose exactly which conversations to import with interactive preview
-- **[Separate Reports Folder](#-folder-organization-new-in-v130)** - Better organization, easier to exclude from sync
-- **[International Date Support](#-date--time-formats)** - ISO 8601 timestamps work in all languages
-- **[Visual Folder Browser](#first-time-setup)** - Tree-based navigation, create folders on the fly
-- **[Enhanced Attachments](#-complete-attachment-handling)** - DALL-E images with prompts, better formatting
+#### 🚀 Features
 
-### 🎨 Improvements in v1.3.0
+- **🤖 Le Chat (Mistral AI)** — Full support with attachments, references, and citations
+- **💻 CLI for Bulk Import** — Import from the terminal without opening Obsidian ([see docs](#-command-line-interface-cli))
 
-- Redesigned Settings page - easier to find what you need
-- Faster imports - especially for large collections
-- Better progress messages - know exactly what's happening
-- More detailed reports - see exactly what was imported
-- Clearer dialogs - less confusing text
+#### 🎨 Improvements
 
-### 🐛 Fixed in v1.3.0
+- **Human-readable artifact folders** — Claude artifacts now stored in folders named after the conversation, not UUIDs
+- **LaTeX math** — Math equations are properly handled and converted to Obsidian syntax
+- **Large archive support** — All providers now handle very large exports reliably
 
-- Fixed timestamp parsing for non-US locales
-- Fixed folder deletion after migration
-- Fixed link updates in Claude artifacts
-- Fixed duplicate conversations in multi-ZIP imports
-- Fixed special characters in conversation titles
-- And many more...
+#### 🐛 Bug Fixes
+
+- Multiple attachments in a single message no longer break out of the parent callout
+- Claude artifacts render correctly for both old and new export formats
+- Mobile artifact placeholders no longer show raw text
+- Binary files referenced by Claude scripts no longer saved as empty artifacts
+
+---
+
+> Upgrading from a previous version triggers required migration tasks automatically.
+
+*For v1.3.x and earlier release notes, see [RELEASE_NOTES.md](RELEASE_NOTES.md)*
 
 ## ☕ Support My Work
 
 I'm working on Nexus projects full-time while unemployed and dealing with health issues.
 
-**Over 4,300 downloads so far! Thank you to everyone who has supported this project.**
+**Over 6,500 downloads so far! Thank you to everyone who has supported this project.**
 
 **If this plugin makes your life easier, a donation would mean the world to me and help keep development going strong.**
 
@@ -98,13 +104,6 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 - 🐛 **Better support** - Quicker bug fixes and responses
 - 💡 **New features** - Your suggestions become reality
 - ❤️ **Motivation** - Shows that my work is appreciated
-
-**Suggested amounts:**
-- **$5** - Buy me a coffee ☕ (Thank you!)
-- **$25** - Power my AI development tools 🤖 (Amazing!)
-- **$75** - Supercharge my entire dev toolkit 🚀 (You're a hero!)
-
-> **Your support matters**: If you use this plugin regularly, please consider contributing. Even $5 makes a real difference and helps keep development active! 🙏
 
 ## ✨ Key Features
 
@@ -701,20 +700,6 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 
 I'm constantly working to improve the plugin. Here's what's planned for future releases:
 
-### Upcoming Features
-
-**🤖 New Provider Support**:
-- **Other Providers**: Support for additional AI providers (Perplexity, etc.)
-
-**🌍 Localization**:
-- **Multi-language UI**: Plugin interface translated into multiple languages
-- **Locale-Aware Formatting**: Respect your system locale settings
-
-**🎙️ Audio Support**:
-- **Voice Conversations**: Optional import of audio files from ChatGPT voice conversations
-- **Audio Embedding**: Link audio files directly in conversation notes
-- **Transcript Integration**: Combine audio with text transcripts
-
 ### How You Can Help
 
 - 💡 **Suggest Features**: Open an issue on GitHub with your ideas
@@ -752,6 +737,7 @@ See [LICENSE.md](LICENSE.md) for full details.
 - **Contributors**:
   - [@caseyg](https://github.com/caseyg) — CLI for bulk importing (PR #33), Claude formatting feedback (PR #34)
   - [@chuckfs](https://github.com/chuckfs) — iOS support (PR #15)
+  - [@baron](https://github.com/baron) — Large archive handling research (PR #27)
 - **Special Thanks**: To all users who report issues and suggest improvements
 
 ## 🔗 Resources

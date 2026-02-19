@@ -58,6 +58,7 @@ The v1.4.0 migration automatically detects affected conversation notes and resto
 
 - [@caseyg](https://github.com/caseyg) — CLI for bulk importing ([PR #33](https://github.com/Superkikim/nexus-ai-chat-importer/pull/33)) and Claude formatting feedback ([PR #34](https://github.com/Superkikim/nexus-ai-chat-importer/pull/34))
 - [@chuckfs](https://github.com/chuckfs) — iOS support ([PR #15](https://github.com/Superkikim/nexus-ai-chat-importer/pull/15))
+- [@baron](https://github.com/baron) — Large archive handling research ([PR #27](https://github.com/Superkikim/nexus-ai-chat-importer/pull/27))
 
 ---
 
