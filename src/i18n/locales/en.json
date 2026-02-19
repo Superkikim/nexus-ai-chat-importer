@@ -31,7 +31,6 @@
       "phase_error": "❌ Error"
     }
   },
-
   "provider_selection": {
     "title": "Select Archive Provider",
     "providers": {
@@ -53,7 +52,6 @@
       "cancel": "Cancel"
     }
   },
-
   "file_selection": {
     "title": "Import {{provider}} Conversations",
     "import_mode": {
@@ -79,7 +77,6 @@
       "continue": "Continue"
     }
   },
-
   "conversation_selection": {
     "title": "Select Conversations to Import",
     "controls": {
@@ -131,7 +128,6 @@
     },
     "date_unknown": "Unknown"
   },
-
   "import_progress": {
     "title": "Importing {{filename}}",
     "initial": {
@@ -150,7 +146,6 @@
       "detail": "Check the console for more details"
     }
   },
-
   "import_completion": {
     "title": "Import Completed",
     "success_message": "✅ Successfully imported conversations",
@@ -176,7 +171,6 @@
       "ok": "OK"
     }
   },
-
   "settings": {
     "tab_title": "Nexus AI Chat Importer",
     "folders": {
@@ -278,7 +272,6 @@
       }
     }
   },
-
   "upgrade": {
     "progress_modal": {
       "starting": "Starting...",
@@ -329,7 +322,6 @@
       }
     }
   },
-
   "folder_migration": {
     "title": "Move Existing Files?",
     "message_intro": "You are changing the {{folder_type}} folder location:",
@@ -385,7 +377,6 @@
       "message_links": "Failed to move files or update links: {{error}}"
     }
   },
-
   "folder_browser": {
     "title": "Select Folder",
     "vault_root": "Vault Root (/)",
@@ -412,7 +403,6 @@
       "select_first": "⚠️ Please select a folder first"
     }
   },
-
   "configure_folder_dialog": {
     "title": "🎉 Nexus AI Chat Importer v1.3.0",
     "description": "In version 1.3.0, you can specify a folder for Reports. We will move existing reports to {{folder}}, or you can select your preferred folder below.",
@@ -428,12 +418,11 @@
       "message": "{{error}}"
     }
   },
-
   "welcome": {
     "title": "Nexus AI Chat Importer {{version}}",
     "icon": "🎉",
     "heading": "Thank you for installing Nexus AI Chat Importer!",
-    "description": "Import and manage your ChatGPT and Claude conversations directly in your Obsidian vault.",
+    "description": "Import and manage your ChatGPT, Claude, and Le Chat conversations directly in your Obsidian vault.",
     "resources_title": "Resources",
     "resources": {
       "documentation": {
@@ -457,7 +446,6 @@
       "get_started": "Get Started"
     }
   },
-
   "notices": {
     "import_analyzing": "Analyzing conversations from {{count}} file(s)...",
     "import_no_new": "No new or updated conversations found. All conversations are already up to date.",
@@ -475,13 +463,11 @@
     "attachment_map_failed": "Failed to build attachment map. Check console for details.",
     "ribbon_tooltip": "Nexus AI Chat Importer - Import new file"
   },
-
   "commands": {
     "import_conversations": {
       "name": "Import AI conversations"
     }
   },
-
   "kofi_support": {
     "header": "☕ Support This Plugin",
     "header_highlight": "Support This Plugin",

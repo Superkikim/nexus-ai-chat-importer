@@ -31,7 +31,6 @@
       "phase_error": "❌ 错误"
     }
   },
-
   "provider_selection": {
     "title": "选择存档来源",
     "providers": {
@@ -53,7 +52,6 @@
       "cancel": "取消"
     }
   },
-
   "file_selection": {
     "title": "导入 {{provider}} 对话",
     "import_mode": {
@@ -79,7 +77,6 @@
       "continue": "继续"
     }
   },
-
   "conversation_selection": {
     "title": "选择要导入的对话",
     "controls": {
@@ -131,7 +128,6 @@
     },
     "date_unknown": "未知"
   },
-
   "import_progress": {
     "title": "正在导入 {{filename}}",
     "initial": {
@@ -150,7 +146,6 @@
       "detail": "请查看控制台获取详细信息"
     }
   },
-
   "import_completion": {
     "title": "导入完成",
     "success_message": "✅ 对话已成功导入",
@@ -176,7 +171,6 @@
       "ok": "确定"
     }
   },
-
   "settings": {
     "tab_title": "Nexus AI Chat Importer",
     "folders": {
@@ -278,7 +272,6 @@
       }
     }
   },
-
   "upgrade": {
     "progress_modal": {
       "starting": "正在启动...",
@@ -329,7 +322,6 @@
       }
     }
   },
-
   "folder_migration": {
     "title": "移动现有文件？",
     "message_intro": "您正在更改 {{folder_type}} 文件夹的位置：",
@@ -385,7 +377,6 @@
       "message_links": "移动文件或更新链接失败：{{error}}"
     }
   },
-
   "folder_browser": {
     "title": "选择文件夹",
     "vault_root": "Vault 根目录（/）",
@@ -412,7 +403,6 @@
       "select_first": "⚠️ 请先选择一个文件夹"
     }
   },
-
   "configure_folder_dialog": {
     "title": "🎉 Nexus AI Chat Importer v1.3.0",
     "description": "在 1.3.0 版本中，您可以为报告指定专用文件夹。我们将把现有报告移至 {{folder}}，您也可以在下方选择您偏好的文件夹。",
@@ -428,12 +418,11 @@
       "message": "{{error}}"
     }
   },
-
   "welcome": {
     "title": "Nexus AI Chat Importer {{version}}",
     "icon": "🎉",
     "heading": "感谢安装 Nexus AI Chat Importer！",
-    "description": "直接在您的 Obsidian Vault 中导入和管理 ChatGPT 及 Claude 对话。",
+    "description": "直接在您的 Obsidian Vault 中导入和管理 ChatGPT、Claude 及 Le Chat 对话。",
     "resources_title": "资源",
     "resources": {
       "documentation": {
@@ -457,7 +446,6 @@
       "get_started": "开始使用"
     }
   },
-
   "notices": {
     "import_analyzing": "正在分析来自 {{count}} 个文件的对话...",
     "import_no_new": "未发现新的或已更新的对话，所有对话均已是最新状态。",
@@ -475,13 +463,11 @@
     "attachment_map_failed": "构建附件映射失败，请查看控制台获取详细信息。",
     "ribbon_tooltip": "Nexus AI Chat Importer - 导入新文件"
   },
-
   "commands": {
     "import_conversations": {
       "name": "导入 AI 对话"
     }
   },
-
   "kofi_support": {
     "header": "☕ 支持此插件",
     "header_highlight": "支持此插件",

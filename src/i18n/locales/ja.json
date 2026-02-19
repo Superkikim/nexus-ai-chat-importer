@@ -31,7 +31,6 @@
       "phase_error": "❌ エラー"
     }
   },
-
   "provider_selection": {
     "title": "アーカイブのプロバイダーを選択",
     "providers": {
@@ -53,7 +52,6 @@
       "cancel": "キャンセル"
     }
   },
-
   "file_selection": {
     "title": "{{provider}} の会話をインポート",
     "import_mode": {
@@ -79,7 +77,6 @@
       "continue": "続行"
     }
   },
-
   "conversation_selection": {
     "title": "インポートする会話を選択",
     "controls": {
@@ -131,7 +128,6 @@
     },
     "date_unknown": "不明"
   },
-
   "import_progress": {
     "title": "{{filename}} をインポート中",
     "initial": {
@@ -150,7 +146,6 @@
       "detail": "詳細はコンソールをご確認ください"
     }
   },
-
   "import_completion": {
     "title": "インポート完了",
     "success_message": "✅ 会話が正常にインポートされました",
@@ -176,7 +171,6 @@
       "ok": "OK"
     }
   },
-
   "settings": {
     "tab_title": "Nexus AI Chat Importer",
     "folders": {
@@ -278,7 +272,6 @@
       }
     }
   },
-
   "upgrade": {
     "progress_modal": {
       "starting": "開始中...",
@@ -329,7 +322,6 @@
       }
     }
   },
-
   "folder_migration": {
     "title": "既存のファイルを移動しますか？",
     "message_intro": "{{folder_type}} フォルダーの場所を変更しています：",
@@ -385,7 +377,6 @@
       "message_links": "ファイルの移動またはリンクの更新に失敗しました：{{error}}"
     }
   },
-
   "folder_browser": {
     "title": "フォルダーを選択",
     "vault_root": "Vault のルート（/）",
@@ -412,7 +403,6 @@
       "select_first": "⚠️ 最初にフォルダーを選択してください"
     }
   },
-
   "configure_folder_dialog": {
     "title": "🎉 Nexus AI Chat Importer v1.3.0",
     "description": "バージョン 1.3.0 では、レポート用のフォルダーを指定できるようになりました。既存のレポートは {{folder}} に移動されます。または、以下から希望のフォルダーを選択してください。",
@@ -428,12 +418,11 @@
       "message": "{{error}}"
     }
   },
-
   "welcome": {
     "title": "Nexus AI Chat Importer {{version}}",
     "icon": "🎉",
     "heading": "Nexus AI Chat Importer をインストールいただきありがとうございます！",
-    "description": "ChatGPT や Claude の会話を Obsidian Vault に直接インポートして管理できます。",
+    "description": "ChatGPT、Claude、Le Chat の会話を Obsidian Vault に直接インポートして管理できます。",
     "resources_title": "リソース",
     "resources": {
       "documentation": {
@@ -457,7 +446,6 @@
       "get_started": "始める"
     }
   },
-
   "notices": {
     "import_analyzing": "{{count}} 件のファイルから会話を分析中...",
     "import_no_new": "新規または更新された会話は見つかりませんでした。すべての会話は最新の状態です。",
@@ -475,13 +463,11 @@
     "attachment_map_failed": "添付ファイルマップの構築に失敗しました。詳細はコンソールをご確認ください。",
     "ribbon_tooltip": "Nexus AI Chat Importer - 新しいファイルをインポート"
   },
-
   "commands": {
     "import_conversations": {
       "name": "AI 会話をインポート"
     }
   },
-
   "kofi_support": {
     "header": "☕ このプラグインを支援する",
     "header_highlight": "このプラグインを支援する",

@@ -31,7 +31,6 @@
       "phase_error": "❌ 오류"
     }
   },
-
   "provider_selection": {
     "title": "아카이브 제공자 선택",
     "providers": {
@@ -53,7 +52,6 @@
       "cancel": "취소"
     }
   },
-
   "file_selection": {
     "title": "{{provider}} 대화 가져오기",
     "import_mode": {
@@ -79,7 +77,6 @@
       "continue": "계속"
     }
   },
-
   "conversation_selection": {
     "title": "가져올 대화 선택",
     "controls": {
@@ -131,7 +128,6 @@
     },
     "date_unknown": "알 수 없음"
   },
-
   "import_progress": {
     "title": "{{filename}} 가져오는 중",
     "initial": {
@@ -150,7 +146,6 @@
       "detail": "자세한 내용은 콘솔을 확인하세요"
     }
   },
-
   "import_completion": {
     "title": "가져오기 완료",
     "success_message": "✅ 대화를 성공적으로 가져왔습니다",
@@ -176,7 +171,6 @@
       "ok": "확인"
     }
   },
-
   "settings": {
     "tab_title": "Nexus AI Chat Importer",
     "folders": {
@@ -278,7 +272,6 @@
       }
     }
   },
-
   "upgrade": {
     "progress_modal": {
       "starting": "시작 중...",
@@ -329,7 +322,6 @@
       }
     }
   },
-
   "folder_migration": {
     "title": "기존 파일을 이동하시겠습니까?",
     "message_intro": "{{folder_type}} 폴더 위치를 변경하고 있습니다:",
@@ -385,7 +377,6 @@
       "message_links": "파일 이동 또는 링크 업데이트 실패: {{error}}"
     }
   },
-
   "folder_browser": {
     "title": "폴더 선택",
     "vault_root": "보관함 루트 (/)",
@@ -412,7 +403,6 @@
       "select_first": "⚠️ 먼저 폴더를 선택하세요"
     }
   },
-
   "configure_folder_dialog": {
     "title": "🎉 Nexus AI Chat Importer v1.3.0",
     "description": "버전 1.3.0에서는 보고서 폴더를 지정할 수 있습니다. 기존 보고서는 {{folder}}로 이동되며, 아래에서 원하는 폴더를 선택할 수도 있습니다.",
@@ -428,12 +418,11 @@
       "message": "{{error}}"
     }
   },
-
   "welcome": {
     "title": "Nexus AI Chat Importer {{version}}",
     "icon": "🎉",
     "heading": "Nexus AI Chat Importer를 설치해 주셔서 감사합니다!",
-    "description": "ChatGPT와 Claude의 대화를 Obsidian 보관함에서 바로 가져오고 관리하세요.",
+    "description": "ChatGPT, Claude, Le Chat의 대화를 Obsidian 보관함에서 바로 가져오고 관리하세요.",
     "resources_title": "리소스",
     "resources": {
       "documentation": {
@@ -457,7 +446,6 @@
       "get_started": "시작하기"
     }
   },
-
   "notices": {
     "import_analyzing": "{{count}}개 파일에서 대화를 분석하는 중...",
     "import_no_new": "새로운 대화나 업데이트된 대화가 없습니다. 모든 대화가 이미 최신 상태입니다.",
@@ -475,13 +463,11 @@
     "attachment_map_failed": "첨부 파일 맵을 만들지 못했습니다. 자세한 내용은 콘솔을 확인하세요.",
     "ribbon_tooltip": "Nexus AI Chat Importer - 새 파일 가져오기"
   },
-
   "commands": {
     "import_conversations": {
       "name": "AI 대화 가져오기"
     }
   },
-
   "kofi_support": {
     "header": "☕ 이 플러그인 후원하기",
     "header_highlight": "이 플러그인 후원하기",

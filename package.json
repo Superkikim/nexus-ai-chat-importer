@@ -1,7 +1,7 @@
 {
     "name": "nexus-ai-chat-importer",
     "version": "1.5.0",
-    "description": "This plugin allows to import ChatGPT conversation from the export files downloaded from your account",
+    "description": "Import AI conversations from ChatGPT, Claude, and Le Chat exports into your Obsidian vault.",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs && cp styles.css build/styles.css && chokidar \"styles.css\" -c \"cp styles.css build/styles.css\"",
