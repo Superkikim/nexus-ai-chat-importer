@@ -1046,7 +1046,7 @@ var init_de = __esm({
           estimated_time_seconds: "Gesch\xE4tzte Zeit: ~{{seconds}} Sekunden",
           estimated_time_minutes: "Gesch\xE4tzte Zeit: ~{{minutes}} Minute(n)"
         },
-        warning: { title: "\u26A0\uFE0F Wichtig:", text: 'Wenn Sie \u201ENein" w\xE4hlen, verbleiben vorhandene Dateien am alten Speicherort und werden von zuk\xFCnftigen Updates nicht beeinflusst.' },
+        warning: { title: "\u26A0\uFE0F Wichtig:", text: "Wenn Sie \u201ENein\u201C w\xE4hlen, verbleiben vorhandene Dateien am alten Speicherort und werden von zuk\xFCnftigen Updates nicht beeinflusst." },
         buttons: { cancel: "Abbrechen", keep: "Nein, Dateien am alten Speicherort behalten", move: "Ja, Dateien verschieben", move_with_links: "Ja, Dateien verschieben und Links aktualisieren" },
         progress: {
           title_moving: "{{folder_type}} wird verschoben und Links werden aktualisiert",
@@ -1070,7 +1070,7 @@ var init_de = __esm({
           explanation: "Dateien, die am Zielort bereits vorhanden waren, wurden zum Schutz Ihrer Daten nicht \xFCberschrieben.",
           error_details_title: "Fehlerdetails:"
         },
-        error_target_not_empty: { title: "Zielordner ist nicht leer", message: 'Der Ordner \u201E{{path}}" enth\xE4lt bereits Dateien.\n\nUm den Ordnerspeicherort zu \xE4ndern:\n\u2022 Vorhandene Dateien manuell in Obsidian verschieben, ODER\n\u2022 Einen leeren Ordner w\xE4hlen oder einen neuen erstellen' },
+        error_target_not_empty: { title: "Zielordner ist nicht leer", message: "Der Ordner \u201E{{path}}\u201C enth\xE4lt bereits Dateien.\n\nUm den Ordnerspeicherort zu \xE4ndern:\n\u2022 Vorhandene Dateien manuell in Obsidian verschieben, ODER\n\u2022 Einen leeren Ordner w\xE4hlen oder einen neuen erstellen" },
         error_migration_failed: { title: "Migration fehlgeschlagen", message_move: "Dateien konnten nicht verschoben werden: {{error}}", message_links: "Dateien konnten nicht verschoben oder Links nicht aktualisiert werden: {{error}}" }
       },
       folder_browser: {
@@ -2467,7 +2467,7 @@ var init_zh = __esm({
           section_title: "\u9644\u4EF6\u8BBE\u7F6E",
           import_attachments: {
             name: "\u5BFC\u5165\u9644\u4EF6",
-            desc: '\u5C06\u9644\u4EF6\u6587\u4EF6\u4FDD\u5B58\u5230\u78C1\u76D8\u5E76\u5728\u5BF9\u8BDD\u4E2D\u94FE\u63A5\uFF08\u91C7\u7528"\u5C3D\u529B\u800C\u4E3A"\u7B56\u7565\uFF09'
+            desc: "\u5C06\u9644\u4EF6\u6587\u4EF6\u4FDD\u5B58\u5230\u78C1\u76D8\u5E76\u5728\u5BF9\u8BDD\u4E2D\u94FE\u63A5\uFF08\u91C7\u7528\u201C\u5C3D\u529B\u800C\u4E3A\u201D\u7B56\u7565\uFF09"
           },
           handle_missing: {
             name: "\u5904\u7406\u7F3A\u5931\u9644\u4EF6",
@@ -2586,7 +2586,7 @@ var init_zh = __esm({
         },
         warning: {
           title: "\u26A0\uFE0F \u91CD\u8981\u63D0\u793A\uFF1A",
-          text: '\u82E5\u9009\u62E9"\u5426"\uFF0C\u73B0\u6709\u6587\u4EF6\u5C06\u4FDD\u7559\u5728\u539F\u4F4D\u7F6E\uFF0C\u4E0D\u53D7\u672A\u6765\u66F4\u65B0\u7684\u5F71\u54CD\u3002'
+          text: "\u82E5\u9009\u62E9\u201C\u5426\u201D\uFF0C\u73B0\u6709\u6587\u4EF6\u5C06\u4FDD\u7559\u5728\u539F\u4F4D\u7F6E\uFF0C\u4E0D\u53D7\u672A\u6765\u66F4\u65B0\u7684\u5F71\u54CD\u3002"
         },
         buttons: {
           cancel: "\u53D6\u6D88",
@@ -3724,7 +3724,7 @@ var init_ko = __esm({
           create_new_folder: "\uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30"
         },
         status: {
-          new: "\uC0C8\uB85C \uB9CC\uB4E4\uAE30",
+          new: "\uC2E0\uADDC",
           updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
           unchanged: "\uBCC0\uACBD \uC5C6\uC74C",
           unknown: "\uC54C \uC218 \uC5C6\uC74C"
@@ -3795,7 +3795,7 @@ var init_ko = __esm({
         },
         status_filter_options: {
           all: "\uC804\uCCB4",
-          new: "\uC0C8\uB85C \uB9CC\uB4E4\uAE30",
+          new: "\uC2E0\uADDC",
           updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
           unchanged: "\uBCC0\uACBD \uC5C6\uC74C"
         },
@@ -3807,7 +3807,7 @@ var init_ko = __esm({
           status: "\uC0C1\uD0DC"
         },
         status_badges: {
-          new: "\uC0C8\uB85C \uB9CC\uB4E4\uAE30",
+          new: "\uC2E0\uADDC",
           updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
           unchanged: "\uBCC0\uACBD \uC5C6\uC74C",
           unknown: "\uC54C \uC218 \uC5C6\uC74C",
@@ -3823,7 +3823,7 @@ var init_ko = __esm({
         },
         summary: {
           unique_conversations: "\uACE0\uC720 \uB300\uD654",
-          new: "\uC0C8\uB85C \uB9CC\uB4E4\uAE30",
+          new: "\uC2E0\uADDC",
           updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
           unchanged: "\uBCC0\uACBD \uC5C6\uC74C",
           selected_of: "{{total}}\uAC1C \uC911 {{selected}}\uAC1C \uC120\uD0DD\uB428"
@@ -3860,7 +3860,7 @@ var init_ko = __esm({
           zip_files_processed: "\uCC98\uB9AC\uB41C ZIP \uD30C\uC77C",
           unique_conversations: "\uACE0\uC720 \uB300\uD654",
           duplicates: "\uC911\uBCF5",
-          new: "\uC0C8\uB85C \uB9CC\uB4E4\uAE30",
+          new: "\uC2E0\uADDC",
           updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
           skipped: "\uAC74\uB108\uB700",
           failed: "\uC2E4\uD328"
@@ -4156,7 +4156,7 @@ var init_ko = __esm({
       notices: {
         import_analyzing: "{{count}}\uAC1C \uD30C\uC77C\uC5D0\uC11C \uB300\uD654\uB97C \uBD84\uC11D\uD558\uB294 \uC911...",
         import_no_new: "\uC0C8\uB85C\uC6B4 \uB300\uD654\uB098 \uC5C5\uB370\uC774\uD2B8\uB41C \uB300\uD654\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uBAA8\uB4E0 \uB300\uD654\uAC00 \uC774\uBBF8 \uCD5C\uC2E0 \uC0C1\uD0DC\uC785\uB2C8\uB2E4.",
-        import_starting: "{{count}}\uAC1C \uB300\uD654\uB97C \uAC00\uC838\uC624\uB294 \uC911 (\uC0C8\uB85C \uB9CC\uB4E4\uAE30 {{new}}\uAC1C, \uC5C5\uB370\uC774\uD2B8\uB428 {{updated}}\uAC1C)...",
+        import_starting: "{{count}}\uAC1C \uB300\uD654\uB97C \uAC00\uC838\uC624\uB294 \uC911 (\uC2E0\uADDC {{new}}\uAC1C, \uC5C5\uB370\uC774\uD2B8\uB428 {{updated}}\uAC1C)...",
         import_starting_selected: "{{files}}\uAC1C \uD30C\uC77C\uC5D0\uC11C \uC120\uD0DD\uD55C {{count}}\uAC1C \uB300\uD654\uB97C \uAC00\uC838\uC624\uB294 \uC911...",
         import_completed_fallback: "\uAC00\uC838\uC624\uAE30 \uC644\uB8CC. {{created}}\uAC1C \uC0DD\uC131\uB428, {{updated}}\uAC1C \uC5C5\uB370\uC774\uD2B8\uB428.",
         import_error: "\uAC00\uC838\uC624\uB294 \uC911 \uC624\uB958 \uBC1C\uC0DD: {{error}}",
