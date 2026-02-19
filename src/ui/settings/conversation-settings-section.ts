@@ -1,6 +1,7 @@
 // src/ui/settings/conversation-settings-section.ts
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
+import { t } from '../../i18n';
 
 export class ConversationSettingsSection extends BaseSettingsSection {
     readonly title = "Conversation Settings";
@@ -23,8 +24,8 @@ export class ConversationSettingsSection extends BaseSettingsSection {
             );
 
         new Setting(containerEl)
-            .setName("Add date prefix to filenames")
-            .setDesc("Add creation date as a prefix to conversation filenames")
+            .setName(t('settings.display.add_date_prefix.name'))
+            .setDesc(t('settings.display.add_date_prefix.desc'))
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.addDatePrefix)

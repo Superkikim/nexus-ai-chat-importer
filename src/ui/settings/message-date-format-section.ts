@@ -23,9 +23,10 @@ import { BaseSettingsSection } from "./base-settings-section";
 import { MESSAGE_TIMESTAMP_FORMATS } from "../../config/constants";
 import { formatMessageTimestamp } from "../../utils";
 import type { MessageTimestampFormat } from "../../types/plugin";
+import { t } from '../../i18n';
 
 export class MessageDateFormatSection extends BaseSettingsSection {
-    readonly title = "📅 Message Date Format";
+    get title() { return t('settings.timestamps.section_title'); }
     readonly order = 21;
 
     render(containerEl: HTMLElement): void {
@@ -34,8 +35,8 @@ export class MessageDateFormatSection extends BaseSettingsSection {
 
         // Custom Message Timestamp Format
         new Setting(sectionContainer)
-            .setName("Custom message timestamp format")
-            .setDesc("Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced.")
+            .setName(t('settings.timestamps.custom_format.name'))
+            .setDesc(t('settings.timestamps.custom_format.desc'))
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.useCustomMessageTimestampFormat)
@@ -49,8 +50,8 @@ export class MessageDateFormatSection extends BaseSettingsSection {
         // Message Timestamp Format Dropdown (only shown if custom format is enabled)
         if (this.plugin.settings.useCustomMessageTimestampFormat) {
             new Setting(sectionContainer)
-                .setName("Timestamp format")
-                .setDesc("Choose the format for message timestamps in conversation notes")
+                .setName(t('settings.timestamps.timestamp_format.name'))
+                .setDesc(t('settings.timestamps.timestamp_format.desc'))
                 .addDropdown((dropdown) => {
                     // Add all available formats
                     Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
@@ -88,7 +89,7 @@ export class MessageDateFormatSection extends BaseSettingsSection {
 
         // Create preview with better styling
         const previewLine = container.createDiv({ cls: "nexus-preview-line" });
-        previewLine.createEl("strong", { text: "Preview: " });
+        previewLine.createEl("strong", { text: t('settings.timestamps.preview_label') });
         previewLine.createEl("code", { text: preview, cls: "nexus-preview-code" });
 
         // Add format description

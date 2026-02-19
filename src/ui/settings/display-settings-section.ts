@@ -20,9 +20,10 @@
 // src/ui/settings/display-settings-section.ts
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
+import { t } from '../../i18n';
 
 export class DisplaySettingsSection extends BaseSettingsSection {
-    readonly title = "📅 Date Prefix";
+    get title() { return t('settings.display.section_title'); }
     readonly order = 20;
 
     render(containerEl: HTMLElement): void {
@@ -31,13 +32,13 @@ export class DisplaySettingsSection extends BaseSettingsSection {
 
         // Add Date Prefix with inline format dropdown
         const setting = new Setting(sectionContainer)
-            .setName("Add date prefix to filenames")
-            .setDesc("Add creation date as a prefix to conversation filenames");
+            .setName(t('settings.display.add_date_prefix.name'))
+            .setDesc(t('settings.display.add_date_prefix.desc'));
 
         // Add dropdown BEFORE toggle (shown only when enabled)
         if (this.plugin.settings.addDatePrefix) {
-            setting.controlEl.createSpan({ 
-                text: "Select date format: ",
+            setting.controlEl.createSpan({
+                text: t('settings.display.add_date_prefix.format_label'),
                 cls: "date-format-label"
             });
 

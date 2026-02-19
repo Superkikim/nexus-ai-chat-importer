@@ -1,17 +1,18 @@
 // src/ui/settings/migrations-settings-section.ts
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
+import { t } from '../../i18n';
 
 export class MigrationsSettingsSection extends BaseSettingsSection {
-    readonly title = "Migrations";
+    get title() { return t('settings.migrations.section_title'); }
     readonly order = 30;
 
     async render(containerEl: HTMLElement): Promise<void> {
         const migrationsDesc = containerEl.createDiv({ cls: "setting-item-description" });
         migrationsDesc.style.marginBottom = "20px";
         migrationsDesc.innerHTML = `
-            <p><strong>Manual Operations:</strong> Optional upgrade operations that can be run when convenient.</p>
-            <p>Automatic operations (like removing old data) run automatically during upgrade and are not shown here.</p>
+            <p><strong>${t('settings.migrations.description_manual')}</strong></p>
+            <p>${t('settings.migrations.description_automatic')}</p>
         `;
 
         try {
@@ -65,8 +66,8 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
         versionData: any,
         upgradeManager: any
     ): Promise<void> {
-        const versionHeader = containerEl.createEl("h3", { 
-            text: `Version ${versionData.version}`,
+        const versionHeader = containerEl.createEl("h3", {
+            text: t('settings.migrations.version_header', { version: versionData.version }),
             cls: "migrations-version-header"
         });
         versionHeader.style.marginTop = "25px";
@@ -86,23 +87,23 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
     ): Promise<void> {
         new Setting(containerEl)
             .setName(operation.name)
-            .setDesc(operation.description + (operation.completed ? " ✅ Completed" : ""))
+            .setDesc(operation.description + (operation.completed ? t('settings.migrations.operation_completed_suffix') : ""))
             .addButton(button => {
                 if (operation.completed) {
                     button
-                        .setButtonText("✅ Completed")
+                        .setButtonText(t('settings.migrations.buttons.completed'))
                         .setDisabled(true)
-                        .setTooltip("This operation has been completed");
+                        .setTooltip(t('settings.migrations.tooltips.completed'));
                     button.buttonEl.addClass("mod-muted");
                 } else if (!operation.canRun) {
                     button
-                        .setButtonText("Cannot Run")
+                        .setButtonText(t('settings.migrations.buttons.cannot_run'))
                         .setDisabled(true)
-                        .setTooltip("Prerequisites not met for this operation");
+                        .setTooltip(t('settings.migrations.tooltips.cannot_run'));
                 } else {
                     button
-                        .setButtonText("Run")
-                        .setTooltip(`Execute ${operation.name}`)
+                        .setButtonText(t('settings.migrations.buttons.run'))
+                        .setTooltip(t('settings.migrations.tooltips.run', { operation_name: operation.name }))
                         .onClick(async () => {
                             await this.executeOperation(button, operation, version, upgradeManager);
                         });
@@ -118,7 +119,7 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
         upgradeManager: any
     ): Promise<void> {
         const originalText = buttonEl.buttonEl.textContent;
-        buttonEl.setButtonText("Running...").setDisabled(true);
+        buttonEl.setButtonText(t('settings.migrations.buttons.running')).setDisabled(true);
 
         try {
             console.debug(`[NEXUS-DEBUG] Executing manual operation: ${operation.id} (v${version})`);
@@ -129,8 +130,8 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
 
             if (result.success) {
                 // Update UI to show completed state
-                buttonEl.setButtonText("✅ Completed");
-                buttonEl.setTooltip("This operation has been completed");
+                buttonEl.setButtonText(t('settings.migrations.buttons.completed'));
+                buttonEl.setTooltip(t('settings.migrations.tooltips.completed'));
                 
                 // Fix CSS class manipulation
                 const buttonElement = buttonEl.buttonEl || buttonEl;
@@ -202,8 +203,8 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
         noMigrationsEl.style.textAlign = "center";
         noMigrationsEl.innerHTML = `
             <p style="margin: 0; color: var(--text-muted);">
-                <strong>No manual operations available</strong><br>
-                All upgrade operations have been completed automatically.
+                <strong>${t('settings.migrations.no_migrations.title')}</strong><br>
+                ${t('settings.migrations.no_migrations.desc')}
             </p>
         `;
     }
@@ -217,7 +218,7 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
         errorEl.style.borderRadius = "8px";
         errorEl.innerHTML = `
             <p style="margin: 0;">
-                <strong>Error loading migrations:</strong><br>
+                <strong>${t('settings.migrations.error_loading')}</strong><br>
                 ${error.message || error}
             </p>
         `;

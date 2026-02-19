@@ -19,6 +19,7 @@
 
 // src/ui/import-progress-modal.ts
 import { Modal, App } from "obsidian";
+import { t } from '../i18n';
 
 export interface ImportProgressStep {
     phase: 'validation' | 'scanning' | 'processing' | 'writing' | 'complete' | 'error';
@@ -60,9 +61,9 @@ export class ImportProgressModal extends Modal {
         contentEl.addClass("nexus-import-progress-modal");
 
         // Title
-        this.modalTitleEl = contentEl.createEl("h2", { 
-            text: `Importing ${this.fileName}`, 
-            cls: "modal-title" 
+        this.modalTitleEl = contentEl.createEl("h2", {
+            text: t('import_progress.title', { filename: this.fileName }),
+            cls: "modal-title"
         });
 
         const contentContainer = contentEl.createDiv({ cls: "modal-content" });
@@ -144,8 +145,8 @@ export class ImportProgressModal extends Modal {
         // Initial state
         this.updateProgress({
             phase: 'validation',
-            title: 'Preparing import...',
-            detail: 'Validating ZIP file structure'
+            title: t('import_progress.initial.title'),
+            detail: t('import_progress.initial.detail')
         });
     }
 
@@ -155,12 +156,12 @@ export class ImportProgressModal extends Modal {
     updateProgress(step: ImportProgressStep) {
         // Update phase
         const phaseLabels = {
-            'validation': '🔍 Validation',
-            'scanning': '📋 Scanning',
-            'processing': '⚙️ Processing',
-            'writing': '💾 Writing',
-            'complete': '✅ Complete',
-            'error': '❌ Error'
+            'validation': t('common.progress.phase_validation'),
+            'scanning': t('common.progress.phase_scanning'),
+            'processing': t('common.progress.phase_processing'),
+            'writing': t('common.progress.phase_writing'),
+            'complete': t('common.progress.phase_complete'),
+            'error': t('common.progress.phase_error')
         };
         
         this.phaseEl.textContent = phaseLabels[step.phase] || step.phase;
@@ -176,9 +177,9 @@ export class ImportProgressModal extends Modal {
         // Update conversation counter display
         if (this.totalConversations > 0) {
             if (this.isSelectiveImport) {
-                this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} selected conversations`;
+                this.conversationCountEl.textContent = t('import_progress.conversation_counter_selective', { current: String(this.currentConversation), total: String(this.totalConversations) });
             } else {
-                this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} conversations`;
+                this.conversationCountEl.textContent = t('import_progress.conversation_counter', { current: String(this.currentConversation), total: String(this.totalConversations) });
             }
         } else {
             this.conversationCountEl.textContent = '';
@@ -221,12 +222,12 @@ export class ImportProgressModal extends Modal {
     /**
      * Show completion state
      */
-    showComplete(message: string = "Import completed successfully") {
+    showComplete(message: string = t('import_progress.complete.message')) {
         this.isComplete = true;
         this.progressBarEl.style.width = "100%";
         this.progressBarEl.style.background = "var(--text-success)";
         this.statusEl.textContent = message;
-        this.detailEl.textContent = "You can close this dialog";
+        this.detailEl.textContent = t('import_progress.complete.detail');
         
         // Auto-close after delay
         this.closeAfterDelay(3000);
@@ -235,10 +236,10 @@ export class ImportProgressModal extends Modal {
     /**
      * Show error state
      */
-    showError(message: string = "An error occurred during import") {
+    showError(message: string = t('import_progress.error.message')) {
         this.progressBarEl.style.background = "var(--text-error)";
         this.statusEl.textContent = message;
-        this.detailEl.textContent = "Check the console for more details";
+        this.detailEl.textContent = t('import_progress.error.detail');
     }
 
     /**
@@ -262,7 +263,7 @@ export class ImportProgressModal extends Modal {
 
         // Show import mode indicator
         this.importModeEl.style.display = 'block';
-        this.importModeEl.textContent = `📋 Selective Import: ${selectedCount} of ${totalAvailable} conversations`;
+        this.importModeEl.textContent = t('import_progress.selective_mode_indicator', { selected: String(selectedCount), total: String(totalAvailable) });
     }
 
     /**
