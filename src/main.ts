@@ -18,6 +18,7 @@
 
 // src/main.ts
 import { Plugin, App, PluginManifest, Notice } from "obsidian";
+import { initLocale, t } from "./i18n";
 import { DEFAULT_SETTINGS } from "./config/constants";
 import { PluginSettings } from "./types/plugin";
 import { NexusAiChatImporterPluginSettingTab } from "./ui/settings-tab";
@@ -66,6 +67,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     async onload() {
         try {
+            initLocale();
             await this.loadSettings();
 
             this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
@@ -74,7 +76,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             const ribbonIconEl = this.addRibbonIcon(
                 "message-square-plus",
-                "Nexus AI Chat Importer - Import new file",
+                t('notices.ribbon_tooltip'),
                 () => this.showProviderSelectionDialog()
             );
             ribbonIconEl.addClass("nexus-ai-chat-ribbon");
@@ -297,7 +299,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
 	        if (provider === "gemini") {
 	            if (zipFiles.length === 0) {
-	                new Notice("Please select at least one Gemini Takeout ZIP file (plus optional JSON index from the extension).");
+	                new Notice(t('notices.import_no_zip_gemini'));
 	                this.logger.warn("[Gemini] No ZIP files selected for import");
 	                return;
 	            }
@@ -326,7 +328,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 	                    }
 	                } catch (error) {
 	                    this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
-	                    new Notice("Failed to read Gemini index JSON. Continuing without index.");
+	                    new Notice(t('notices.import_gemini_json_failed'));
 	                }
 	            }
 
@@ -352,7 +354,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 	            }
 
 	            if (zipFiles.length === 0) {
-	                new Notice("Please select at least one ZIP export file.");
+	                new Notice(t('notices.import_no_zip'));
 	                this.logger.warn(`[${provider}] No ZIP files selected for import`);
 	                return;
 	            }
@@ -372,7 +374,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(files: File[], provider: string): Promise<void> {
         try {
-            new Notice(`Analyzing conversations from ${files.length} file(s)...`);
+            new Notice(t('notices.import_analyzing', { count: String(files.length) }));
 
             // Create metadata extractor
             const providerRegistry = createProviderRegistry(this);
@@ -399,7 +401,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             if (extractionResult.conversations.length === 0) {
                 // No conversations to import, but still generate report and show dialog
-                new Notice("No new or updated conversations found. All conversations are already up to date.");
+                new Notice(t('notices.import_no_new'));
 
                 // Write report showing what was analyzed
                 const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
@@ -416,7 +418,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             const newCount = extractionResult.analysisInfo?.conversationsNew ?? 0;
             const updatedCount = extractionResult.analysisInfo?.conversationsUpdated ?? 0;
-            new Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
+            new Notice(t('notices.import_starting', { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
 
             // Group conversations by file and import
             const conversationsByFile = new Map<string, string[]>();
@@ -460,7 +462,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this.showImportCompletionDialog(operationReport, reportPath);
             } else {
                 // Fallback if report writing failed
-                new Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+                new Notice(t('notices.import_completed_fallback', { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
             }
 
         } catch (error) {
@@ -472,7 +474,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             } else {
                 this.logger.error("[IMPORT-ALL] Error (not Error instance):", String(error));
             }
-            new Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+            new Notice(t('notices.import_error', { error: error instanceof Error ? error.message : String(error) }));
         }
     }
 
@@ -481,7 +483,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
-            new Notice(`Analyzing conversations from ${files.length} file(s)...`);
+            new Notice(t('notices.import_analyzing', { count: String(files.length) }));
 
             // Create metadata extractor
             const providerRegistry = createProviderRegistry(this);
@@ -500,7 +502,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             if (extractionResult.conversations.length === 0) {
                 // No conversations to import - same logic as full import
-                new Notice("No new or updated conversations found. All conversations are already up to date.");
+                new Notice(t('notices.import_no_new'));
 
                 // Write report showing what was analyzed
                 const operationReport = new ImportReport();
@@ -537,7 +539,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             if (error instanceof Error) {
                 this.logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
             }
-            new Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+            new Notice(t('notices.import_error_analyzing', { error: error instanceof Error ? error.message : String(error) }));
         }
     }
 
@@ -560,7 +562,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         if (result.selectedIds.length === 0) {
-            new Notice("No conversations selected for import.");
+            new Notice(t('notices.import_no_selected'));
 
             // Still write report and show dialog
             const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
@@ -570,7 +572,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             return;
         }
 
-        new Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+        new Notice(t('notices.import_starting_selected', { count: String(result.selectedIds.length), files: String(files.length) }));
 
         // Group selected conversations by source file for efficient processing
         const conversationsByFile = await this.groupConversationsByFile(result, files);
@@ -581,7 +583,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await this.importService.buildAttachmentMapForMultiZip(files);
             } catch (error) {
                 this.logger.error('Failed to build attachment map:', error);
-                new Notice('Failed to build attachment map. Check console for details.');
+                new Notice(t('notices.attachment_map_failed'));
             }
         }
 
@@ -593,7 +595,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
                 } catch (error) {
                     this.logger.error(`Error processing file ${file.name}:`, error);
-                    new Notice(`Error processing ${file.name}. Check console for details.`);
+                    new Notice(t('notices.import_error_file', { filename: file.name }));
                 }
             }
         }
@@ -611,7 +613,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.showImportCompletionDialog(operationReport, reportPath);
         } else {
             // Fallback if report writing failed
-            new Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+            new Notice(t('notices.import_completed_fallback', { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
         }
     }
 
@@ -646,7 +648,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         const folderResult = await ensureFolderExists(folderPath, this.app.vault);
         if (!folderResult.success) {
             this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-            new Notice("Failed to create log file. Check console for details.");
+            new Notice(t('notices.report_failed'));
             return "";
         }
 
@@ -717,7 +719,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
             this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
             this.logger.error("Full error:", error);
             this.logger.error("Log content length:", logContent.length);
-            new Notice("Failed to create log file. Check console for details.");
+            new Notice(t('notices.report_failed'));
             return "";
         }
     }
