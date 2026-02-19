@@ -13,6 +13,9 @@ data.json
 # Windows system files
 Thumbs.db
 
+# Claude Code local settings
+.claude/
+
 # Editor configuration files
 .vscode/
 .idea/
