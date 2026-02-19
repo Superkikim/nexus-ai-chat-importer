@@ -76,7 +76,11 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 
 #### v1.4.0 in brief
 
-Le Chat (Mistral AI) support · CLI for bulk import · Human-readable Claude artifact folders · LaTeX math conversion · Bug fixes
+- **🤖 Le Chat (Mistral AI)** — Full support with attachments, references, and citations
+- **💻 CLI for Bulk Import** — Import from the terminal without opening Obsidian
+- **📁 Human-readable artifact folders** — Claude artifacts stored in folders named after the conversation, not UUIDs
+- **📐 LaTeX math** — Math equations converted to Obsidian `$$...$$` / `$...$` syntax
+- **🐛 Bug fixes** — Multi-attachment callouts, Claude format changes, mobile placeholders, binary artifacts
 
 ---
 
