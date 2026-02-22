@@ -2,6 +2,8 @@
 
 [![Version](https://img.shields.io/badge/version-1.5.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.5.0) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads](https://img.shields.io/github/downloads/superkikim/nexus-ai-chat-importer/total?label=downloads)](https://github.com/Superkikim/nexus-ai-chat-importer/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
 
+[![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/fr/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/de/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/es/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/it/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/ru/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/zh/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/ja/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/pt/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/ko/)
+
 ## 📑 Table of Contents
 
 ### 🚀 Getting Started
