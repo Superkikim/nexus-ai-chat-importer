@@ -177,19 +177,14 @@ export class MessageFormatter {
 
         // Handle missing/failed attachments with informative notes
         else if (attachment.status && !attachment.status.found) {
-            content += `>> ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
-
-            if (attachment.status.note) {
-                content += `\n>> **Note:** ${attachment.status.note}`;
-            }
-
-            // Add link to original conversation for missing attachments
             if (attachment.status.reason === 'missing_from_export') {
-                // Try to extract conversation URL from attachment or use generic provider link
-                if (attachment.url) {
-                    content += `\n>> [Open original conversation](${attachment.url})`;
-                } else {
-                    content += `\n>> Original conversation link not available`;
+                // Single clean line: status message + optional link
+                const link = attachment.url ? ` [Open original conversation](${attachment.url})` : '';
+                content += `>> ⚠️ ${this.getStatusMessage(attachment.status.reason)}.${link}`;
+            } else {
+                content += `>> ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
+                if (attachment.status.note) {
+                    content += `\n>> **Note:** ${attachment.status.note}`;
                 }
             }
         }

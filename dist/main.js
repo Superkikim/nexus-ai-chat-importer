@@ -14968,18 +14968,14 @@ var _MessageFormatter = class {
         content += `>> \u26A0\uFE0F File not available in archive. Visit the original conversation to access it`;
       }
     } else if (attachment.status && !attachment.status.found) {
-      content += `>> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
-      if (attachment.status.note) {
-        content += `
->> **Note:** ${attachment.status.note}`;
-      }
       if (attachment.status.reason === "missing_from_export") {
-        if (attachment.url) {
+        const link = attachment.url ? ` [Open original conversation](${attachment.url})` : "";
+        content += `>> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}.${link}`;
+      } else {
+        content += `>> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
+        if (attachment.status.note) {
           content += `
->> [Open original conversation](${attachment.url})`;
-        } else {
-          content += `
->> Original conversation link not available`;
+>> **Note:** ${attachment.status.note}`;
         }
       }
     } else if (attachment.content) {
@@ -16251,11 +16247,11 @@ var ChatGPTAttachmentExtractor = class {
       return {
         ...attachment,
         extractedContent: finalExtractedContent,
+        url: attachment.url || `https://chatgpt.com/c/${conversationId}`,
         status: {
           processed: true,
           found: false,
-          reason: "missing_from_export",
-          note: "This file was referenced in the conversation but not included in the ChatGPT export. This can happen with older conversations or certain file types."
+          reason: "missing_from_export"
         }
       };
     }
@@ -18294,7 +18290,10 @@ var LeChatConverter = class {
       return null;
     }
     const content = this.extractContent(message);
-    const attachments = this.extractAttachments(message);
+    const attachments = [
+      ...this.extractAttachments(message),
+      ...this.extractImageUrlAttachments(message)
+    ];
     const timestamp = this.parseTimestamp(message.createdAt);
     return {
       id: message.id,
@@ -18361,6 +18360,42 @@ var LeChatConverter = class {
       attachments.push(attachment);
     }
     return attachments;
+  }
+  /**
+   * Extract assistant-generated images from image_url content chunks.
+   * These images are hosted on Mistral servers and never included in the ZIP export.
+   * We pre-format the callout via extractedContent so the attachment extractor cannot
+   * overwrite the note with an ugly internal ZIP path.
+   */
+  static extractImageUrlAttachments(message) {
+    if (!message.contentChunks)
+      return [];
+    const chatUrl = `https://chat.mistral.ai/chat/${message.chatId}`;
+    const imageChunks = message.contentChunks.filter((chunk) => chunk.type === "image_url" && "imageUrl" in chunk);
+    return imageChunks.map((chunk, index) => {
+      var _a;
+      const urlPath = chunk.imageUrl.split("?")[0];
+      const urlExt = ((_a = urlPath.split(".").pop()) == null ? void 0 : _a.toLowerCase()) || "";
+      const validExts = ["jpg", "jpeg", "png", "gif", "webp"];
+      const ext = validExts.includes(urlExt) ? urlExt : "jpg";
+      const fileName = imageChunks.length === 1 ? `generated-image.${ext}` : `generated-image-${index + 1}.${ext}`;
+      const fileType = ext === "png" ? "image/png" : "image/jpeg";
+      const extractedContent = `>>[!nexus_attachment] **${fileName}** *(missing)* (${fileType})
+>>
+>> \u26A0\uFE0F Not included in export. [Open original conversation](${chatUrl})`;
+      return {
+        fileName,
+        fileType,
+        attachmentType: "generated_image",
+        url: chatUrl,
+        extractedContent,
+        status: {
+          processed: true,
+          found: false,
+          reason: "missing_from_export"
+        }
+      };
+    });
   }
   /**
    * Convert Le Chat file type to MIME type
@@ -19027,6 +19062,18 @@ var AttachmentMapBuilder = class {
     if (fileMatch) {
       fileIds.push(`file_${fileMatch[1]}`);
       fileIds.push(fileMatch[1]);
+    }
+    const modernPattern = /^(file-[A-Za-z0-9]+)-/;
+    const modernMatch = fileName.match(modernPattern);
+    if (modernMatch) {
+      const fullId = modernMatch[1];
+      if (!fileIds.includes(fullId)) {
+        fileIds.push(fullId);
+      }
+      const idOnly = fullId.substring(5);
+      if (idOnly && !fileIds.includes(idOnly)) {
+        fileIds.push(idOnly);
+      }
     }
     const hashPattern = /^([a-f0-9]{32,})(?:[-.]|$)/i;
     const hashMatch = fileName.match(hashPattern);

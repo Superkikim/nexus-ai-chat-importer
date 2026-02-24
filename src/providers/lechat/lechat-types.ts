@@ -63,11 +63,17 @@ export interface LeChatCustomElementChunk {
     [key: string]: any;
 }
 
-export type LeChatContentChunk = 
-    | LeChatTextChunk 
-    | LeChatToolCallChunk 
-    | LeChatReferenceChunk 
-    | LeChatCustomElementChunk;
+export interface LeChatImageUrlChunk {
+    type: 'image_url';
+    imageUrl: string;
+}
+
+export type LeChatContentChunk =
+    | LeChatTextChunk
+    | LeChatToolCallChunk
+    | LeChatReferenceChunk
+    | LeChatCustomElementChunk
+    | LeChatImageUrlChunk;
 
 /**
  * File attachment in Le Chat message
