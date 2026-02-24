@@ -18,13 +18,13 @@
 
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
-import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { createSupportBox } from "../ui/components/support-box";
 import { GITHUB } from "../config/constants";
 import { t } from '../i18n';
 
 /**
  * Universal template for new version announcements
- * Shows Ko-fi + What's New + Close button
+ * Shows support section + What's New + Close button
  */
 export class NewVersionModal extends Modal {
     private plugin: NexusAiChatImporterPlugin;
@@ -60,8 +60,8 @@ export class NewVersionModal extends Modal {
     }
 
     async createForm() {
-        // Add Ko-fi support section FIRST (at the top) - using reusable component
-        createKofiSupportBox(this.contentEl);
+        // Add support section FIRST (at the top) - using reusable component
+        createSupportBox(this.contentEl);
 
         let message = this.fallbackMessage;
 

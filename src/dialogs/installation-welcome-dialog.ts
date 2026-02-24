@@ -1,5 +1,5 @@
 import { App, Modal } from "obsidian";
-import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { createSupportBox } from "../ui/components/support-box";
 import { t } from '../i18n';
 
 /**
@@ -53,8 +53,8 @@ export class InstallationWelcomeDialog extends Modal {
             font-size: 1.05em;
         `;
 
-        // Ko-fi support box (using reusable component)
-        createKofiSupportBox(contentEl);
+        // Support box (using reusable component)
+        createSupportBox(contentEl);
 
         // Resources section
         const resourcesSection = contentEl.createDiv('resources-section');

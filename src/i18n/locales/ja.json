@@ -468,7 +468,7 @@
       "name": "AI 会話をインポート"
     }
   },
-  "kofi_support": {
+  "support_box": {
     "header": "☕ このプラグインを支援する",
     "header_highlight": "このプラグインを支援する",
     "default_message_emphasis": "私は失業中で健康上の問題を抱えながら、Nexus プロジェクトにフルタイムで取り組んでいます。",

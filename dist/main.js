@@ -513,7 +513,7 @@ var init_en = __esm({
           name: "Import AI conversations"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 Support This Plugin",
         header_highlight: "Support This Plugin",
         default_message_emphasis: "I'm working on Nexus projects full-time while unemployed and dealing with health issues.",
@@ -999,7 +999,7 @@ var init_fr = __esm({
           name: "Importer des conversations IA"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 Soutenir ce plugin",
         header_highlight: "Soutenir ce plugin",
         default_message_emphasis: "Je travaille \xE0 temps plein sur les projets Nexus tout en \xE9tant sans emploi et en faisant face \xE0 des probl\xE8mes de sant\xE9.",
@@ -1485,7 +1485,7 @@ var init_de = __esm({
           name: "KI-Gespr\xE4che importieren"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 Dieses Plugin unterst\xFCtzen",
         header_highlight: "Dieses Plugin unterst\xFCtzen",
         default_message_emphasis: "Ich arbeite Vollzeit an Nexus-Projekten, bin arbeitslos und k\xE4mpfe mit gesundheitlichen Problemen.",
@@ -1971,7 +1971,7 @@ var init_es = __esm({
           name: "Importar conversaciones de IA"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 Apoyar este plugin",
         header_highlight: "Apoyar este plugin",
         default_message_emphasis: "Trabajo a tiempo completo en los proyectos Nexus estando desempleado y enfrentando problemas de salud.",
@@ -2457,7 +2457,7 @@ var init_it = __esm({
           name: "Importa conversazioni IA"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 Supporta questo plugin",
         header_highlight: "Supporta questo plugin",
         default_message_emphasis: "Lavoro a tempo pieno sui progetti Nexus mentre sono disoccupato e affronto problemi di salute.",
@@ -2943,7 +2943,7 @@ var init_ru = __esm({
           name: "\u0418\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u0418\u0418"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 \u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
         header_highlight: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
         default_message_emphasis: "\u042F \u0440\u0430\u0431\u043E\u0442\u0430\u044E \u043D\u0430\u0434 \u043F\u0440\u043E\u0435\u043A\u0442\u0430\u043C\u0438 Nexus \u043D\u0430 \u043F\u043E\u043B\u043D\u0443\u044E \u0441\u0442\u0430\u0432\u043A\u0443, \u0431\u0443\u0434\u0443\u0447\u0438 \u0431\u0435\u0437\u0440\u0430\u0431\u043E\u0442\u043D\u044B\u043C \u0438 \u0431\u043E\u0440\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C.",
@@ -3429,7 +3429,7 @@ var init_zh = __esm({
           name: "\u5BFC\u5165 AI \u5BF9\u8BDD"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 \u652F\u6301\u6B64\u63D2\u4EF6",
         header_highlight: "\u652F\u6301\u6B64\u63D2\u4EF6",
         default_message_emphasis: "\u6211\u5728\u5931\u4E1A\u5E76\u4E0E\u5065\u5EB7\u95EE\u9898\u6297\u4E89\u7684\u540C\u65F6\uFF0C\u5168\u804C\u6295\u5165\u4E8E Nexus \u9879\u76EE\u7684\u5F00\u53D1\u3002",
@@ -3915,7 +3915,7 @@ var init_ja = __esm({
           name: "AI \u4F1A\u8A71\u3092\u30A4\u30F3\u30DD\u30FC\u30C8"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 \u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
         header_highlight: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
         default_message_emphasis: "\u79C1\u306F\u5931\u696D\u4E2D\u3067\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3092\u62B1\u3048\u306A\u304C\u3089\u3001Nexus \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306B\u30D5\u30EB\u30BF\u30A4\u30E0\u3067\u53D6\u308A\u7D44\u3093\u3067\u3044\u307E\u3059\u3002",
@@ -4401,7 +4401,7 @@ var init_pt = __esm({
           name: "Importar conversas de IA"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 Apoiar este plugin",
         header_highlight: "Apoiar este plugin",
         default_message_emphasis: "Estou a trabalhar nos projetos Nexus a tempo inteiro enquanto estou desempregado e a lidar com problemas de sa\xFAde.",
@@ -4887,7 +4887,7 @@ var init_ko = __esm({
           name: "AI \uB300\uD654 \uAC00\uC838\uC624\uAE30"
         }
       },
-      kofi_support: {
+      support_box: {
         header: "\u2615 \uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
         header_highlight: "\uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
         default_message_emphasis: "\uC800\uB294 \uC2E4\uC9C1 \uC0C1\uD0DC\uC5D0\uC11C \uAC74\uAC15 \uBB38\uC81C\uB97C \uACAA\uC73C\uBA74\uC11C\uB3C4 Nexus \uD504\uB85C\uC81D\uD2B8\uC5D0 \uD480\uD0C0\uC784\uC73C\uB85C \uC784\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
@@ -5048,43 +5048,42 @@ var init_constants = __esm({
   }
 });
 
-// src/ui/components/kofi-support-box.ts
-function createKofiSupportBox(container, message) {
-  const supportBox = container.createDiv("kofi-support-box");
-  const header = supportBox.createDiv("kofi-header");
-  header.innerHTML = `\u2615 <span class="kofi-header-highlight">Support This Plugin</span>`;
-  const messageEl = supportBox.createDiv("kofi-message");
+// src/ui/components/support-box.ts
+function createSupportBox(container, message) {
+  const supportBox = container.createDiv("nexus-support-box");
+  const header = supportBox.createDiv("nexus-support-header");
+  header.innerHTML = `\u2615 <span class="nexus-support-header-highlight">Support This Plugin</span>`;
+  const messageEl = supportBox.createDiv("nexus-support-message");
   if (message) {
     const paragraphs = message.split("\n\n");
     messageEl.innerHTML = paragraphs.map((p) => {
       const hasStats = /\d{1,3}[',]\d{3}|\$\d+/.test(p);
       if (hasStats) {
-        return `<p><span class="kofi-message-emphasis">${p}</span></p>`;
+        return `<p><span class="nexus-support-message-emphasis">${p}</span></p>`;
       }
       return `<p>${p}</p>`;
     }).join("");
   } else {
     messageEl.innerHTML = `
-            <p><span class="kofi-message-emphasis">I'm working on Nexus projects full-time while unemployed and dealing with health issues.</span></p>
+            <p><span class="nexus-support-message-emphasis">I'm working on Nexus projects full-time while unemployed and dealing with health issues.</span></p>
             <p>If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.</p>
         `;
   }
-  const realityCheck = supportBox.createDiv("kofi-reality-check");
+  const realityCheck = supportBox.createDiv("nexus-support-reality-check");
   realityCheck.innerHTML = `
 	        <strong>Thank you!</strong> Thousands of hours of work have gone into these plugins, and every coffee helps me keep improving them while managing ongoing health issues. If this plugin makes your life easier, please consider supporting me.
 	    `;
-  const buttonContainer = supportBox.createDiv("kofi-button-container");
-  const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/assets/support_me_on_kofi_red.png";
+  const buttonContainer = supportBox.createDiv("nexus-support-button-container");
   buttonContainer.innerHTML = `
-        <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank">
-            <img src="${buttonImagePath}" alt="Support my work" height="50">
+        <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank" class="nexus-support-link">
+            \u2615 Support my work
         </a>
     `;
 }
-var init_kofi_support_box = __esm({
-  "src/ui/components/kofi-support-box.ts"() {
+var init_support_box = __esm({
+  "src/ui/components/support-box.ts"() {
     "use strict";
-    __name(createKofiSupportBox, "createKofiSupportBox");
+    __name(createSupportBox, "createSupportBox");
   }
 });
 
@@ -13169,7 +13168,7 @@ var init_upgrade_complete_modal = __esm({
   "src/dialogs/upgrade-complete-modal.ts"() {
     "use strict";
     import_obsidian23 = require("obsidian");
-    init_kofi_support_box();
+    init_support_box();
     init_i18n();
     UpgradeCompleteModal = class extends import_obsidian23.Modal {
       constructor(app, plugin, version) {
@@ -13189,7 +13188,7 @@ var init_upgrade_complete_modal = __esm({
       }
       async createContent() {
         const { contentEl } = this;
-        createKofiSupportBox(contentEl);
+        createSupportBox(contentEl);
         await this.addReleaseNotes();
         this.addCloseButton();
         this.addStyles();
@@ -13316,7 +13315,7 @@ var init_upgrade_modal_1_3_0 = __esm({
   "src/dialogs/upgrade-modal-1.3.0.ts"() {
     "use strict";
     import_obsidian24 = require("obsidian");
-    init_kofi_support_box();
+    init_support_box();
     init_i18n();
     NexusUpgradeModal130 = class extends import_obsidian24.Modal {
       constructor(app, plugin, version, resolve) {
@@ -13341,7 +13340,7 @@ var init_upgrade_modal_1_3_0 = __esm({
         this.contentEl.empty();
       }
       async createForm() {
-        createKofiSupportBox(this.contentEl);
+        createSupportBox(this.contentEl);
         this.addMigrationSection();
         this.addMigrationButton();
         let message = `## \u2728 What's New in v1.3.0
@@ -13551,7 +13550,7 @@ var BaseSettingsSection = class {
 __name(BaseSettingsSection, "BaseSettingsSection");
 
 // src/ui/settings/support-section.ts
-init_kofi_support_box();
+init_support_box();
 init_i18n();
 var SupportSection = class extends BaseSettingsSection {
   constructor() {
@@ -13563,7 +13562,7 @@ var SupportSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
-    createKofiSupportBox(supportContainer);
+    createSupportBox(supportContainer);
     new import_obsidian.Setting(supportContainer).setName(t("settings.support.resources.name")).setDesc(t("settings.support.resources.desc")).addButton(
       (button) => button.setButtonText(t("settings.support.resources.readme")).onClick(() => {
         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
@@ -20586,7 +20585,7 @@ var IncrementalUpgradeManager = class {
   }
   /**
    * Show upgrade complete dialog AFTER migrations
-   * Displays Ko-fi + What's New + Improvements + Bug Fixes
+   * Displays support section + What's New + Improvements + Bug Fixes
    */
   /**
    * Show upgrade completion dialog
@@ -22046,7 +22045,7 @@ __name(ConversationSelectionDialog, "ConversationSelectionDialog");
 
 // src/dialogs/installation-welcome-dialog.ts
 var import_obsidian29 = require("obsidian");
-init_kofi_support_box();
+init_support_box();
 init_i18n();
 var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
   constructor(app, version) {
@@ -22083,7 +22082,7 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
             line-height: 1.6;
             font-size: 1.05em;
         `;
-    createKofiSupportBox(contentEl);
+    createSupportBox(contentEl);
     const resourcesSection = contentEl.createDiv("resources-section");
     resourcesSection.style.cssText = `
             margin-top: 24px;
@@ -22212,7 +22211,7 @@ __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 
 // src/dialogs/new-version-modal.ts
 var import_obsidian30 = require("obsidian");
-init_kofi_support_box();
+init_support_box();
 init_constants();
 init_i18n();
 var NewVersionModal = class extends import_obsidian30.Modal {
@@ -22232,7 +22231,7 @@ var NewVersionModal = class extends import_obsidian30.Modal {
     this.contentEl.empty();
   }
   async createForm() {
-    createKofiSupportBox(this.contentEl);
+    createSupportBox(this.contentEl);
     let message = this.fallbackMessage;
     try {
       const response = await fetch(`${GITHUB.RAW_BASE}/${this.version}/README.md`);
@@ -22901,7 +22900,7 @@ __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
 var import_obsidian31 = require("obsidian");
-init_kofi_support_box();
+init_support_box();
 init_logger();
 init_i18n();
 var logger5 = new Logger();
@@ -22928,7 +22927,7 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
       this.createAttachmentsSection(contentEl);
     }
     this.createReportSection(contentEl);
-    createKofiSupportBox(contentEl);
+    createSupportBox(contentEl);
     this.createActionButtons(contentEl);
     this.addCustomStyles();
   }

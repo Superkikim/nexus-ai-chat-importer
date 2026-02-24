@@ -468,7 +468,7 @@
       "name": "Importar conversaciones de IA"
     }
   },
-  "kofi_support": {
+  "support_box": {
     "header": "☕ Apoyar este plugin",
     "header_highlight": "Apoyar este plugin",
     "default_message_emphasis": "Trabajo a tiempo completo en los proyectos Nexus estando desempleado y enfrentando problemas de salud.",
