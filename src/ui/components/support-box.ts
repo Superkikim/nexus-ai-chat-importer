@@ -15,7 +15,7 @@ export function createSupportBox(container: HTMLElement, message?: string): void
 
     // Header
     const header = supportBox.createDiv('nexus-support-header');
-    header.innerHTML = `☕ <span class="nexus-support-header-highlight">${t('support_box.header_highlight')}</span>`;
+    header.innerHTML = `<span class="nexus-support-header-highlight">${t('support_box.header_highlight')}</span>`;
 
     // Message with emphasis on unemployment + health issues
     const messageEl = supportBox.createDiv('nexus-support-message');
@@ -43,10 +43,16 @@ export function createSupportBox(container: HTMLElement, message?: string): void
 	    const realityCheck = supportBox.createDiv('nexus-support-reality-check');
 	    realityCheck.innerHTML = t('support_box.reality_check');
 
+    const locale = window.moment.locale();
+    const supported = ['fr','de','es','it','ru','zh','ja','pt','ko'];
+    const supportUrl = supported.includes(locale)
+        ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer/support`
+        : 'https://nexus-prod.dev/nexus-ai-chat-importer/support';
+
     const buttonContainer = supportBox.createDiv('nexus-support-button-container');
     buttonContainer.innerHTML = `
-        <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank" class="nexus-support-link">
-            ☕ ${t('support_box.button_alt')}
+        <a href="${supportUrl}" target="_blank" class="nexus-support-link">
+            ${t('support_box.button_alt')}
         </a>
     `;
 }

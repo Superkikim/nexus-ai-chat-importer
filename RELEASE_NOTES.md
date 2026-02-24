@@ -1,10 +1,10 @@
 # Release Notes for Nexus AI Chat Importer
 
-## Version 1.5.3 — UI & Branding Polish
+## Version 1.5.4 — UI & Branding Polish
 
-![Version](https://img.shields.io/badge/version-1.5.3-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+![Version](https://img.shields.io/badge/version-1.5.4-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
 
-A series of cosmetic fixes and UI improvements following 1.5.0: support links updated to nexus-prod.dev, Ko-fi branding removed from plugin internals, resource buttons renamed and linked correctly, support box fully localized, and documentation links now adapt to your Obsidian language.
+A series of cosmetic fixes and UI improvements following 1.5.0: support links updated to nexus-prod.dev, Ko-fi branding removed from plugin internals, resource buttons renamed and linked correctly, support box fully localized, documentation and support links now adapt to your Obsidian language, and coffee messaging replaced with donation language throughout.
 
 ---
 

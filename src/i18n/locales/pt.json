@@ -469,11 +469,11 @@
     }
   },
   "support_box": {
-    "header": "☕ Apoiar este plugin",
+    "header": "Apoiar este plugin",
     "header_highlight": "Apoiar este plugin",
     "default_message_emphasis": "Estou a trabalhar nos projetos Nexus a tempo inteiro enquanto estou desempregado e a lidar com problemas de saúde.",
     "default_message": "Se este plugin facilita a sua vida, uma doação significaria muito para mim e ajudaria a mantê-los vivos.",
-    "reality_check": "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada café ajuda-me a continuar a melhorá-los enquanto lido com problemas de saúde contínuos. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
+    "reality_check": "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada doação ajuda-me a continuar a melhorá-los enquanto lido com problemas de saúde contínuos. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
     "button_alt": "Apoiar o meu trabalho"
   }
 }

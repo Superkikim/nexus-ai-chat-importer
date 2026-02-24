@@ -218,6 +218,12 @@ class BeautifulUpgradeDialog extends Modal {
         content.innerHTML = this.options.message;
 
         // Support section
+        const supportLocale = window.moment.locale();
+        const supportedLocales = ['fr','de','es','it','ru','zh','ja','pt','ko'];
+        const supportUrl = supportedLocales.includes(supportLocale)
+            ? `https://nexus-prod.dev/${supportLocale}/nexus-ai-chat-importer/support`
+            : 'https://nexus-prod.dev/nexus-ai-chat-importer/support';
+
         const supportSection = container.createDiv('nexus-support-section');
         supportSection.innerHTML = `
             <div class="nexus-support-text">
@@ -225,9 +231,9 @@ class BeautifulUpgradeDialog extends Modal {
 
                 If these plugins help you, even a small donation would mean the world and help keep them alive.
             </div>
-            <div class="nexus-coffee-div">
-                <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank" class="nexus-support-link">
-                    ☕ Support my work
+            <div class="nexus-support-button-div">
+                <a href="${supportUrl}" target="_blank" class="nexus-support-link">
+                    Support my work
                 </a>
             </div>
         `;
