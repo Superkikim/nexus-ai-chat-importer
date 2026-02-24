@@ -17,7 +17,7 @@
  */
 
 import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
-import { LeChatConversation, LeChatMessage, LeChatContentChunk, LeChatToolCallChunk } from "./lechat-types";
+import { LeChatConversation, LeChatMessage, LeChatContentChunk, LeChatToolCallChunk, LeChatImageUrlChunk } from "./lechat-types";
 
 /**
  * Converter for Le Chat (Mistral AI) export format
@@ -88,9 +88,12 @@ export class LeChatConverter {
 
         // Extract content from message
         const content = this.extractContent(message);
-        
-        // Extract attachments from files array
-        const attachments = this.extractAttachments(message);
+
+        // Extract attachments: user uploads from files array + assistant-generated images from content chunks
+        const attachments = [
+            ...this.extractAttachments(message),
+            ...this.extractImageUrlAttachments(message)
+        ];
 
         // Parse timestamp (ISO 8601 to Unix seconds)
         const timestamp = this.parseTimestamp(message.createdAt);
@@ -179,6 +182,51 @@ export class LeChatConverter {
         }
 
         return attachments;
+    }
+
+    /**
+     * Extract assistant-generated images from image_url content chunks.
+     * These images are hosted on Mistral servers and never included in the ZIP export.
+     * We pre-format the callout via extractedContent so the attachment extractor cannot
+     * overwrite the note with an ugly internal ZIP path.
+     */
+    private static extractImageUrlAttachments(message: LeChatMessage): StandardAttachment[] {
+        if (!message.contentChunks) return [];
+
+        const chatUrl = `https://chat.mistral.ai/chat/${message.chatId}`;
+        const imageChunks = message.contentChunks
+            .filter((chunk): chunk is LeChatImageUrlChunk => chunk.type === 'image_url' && 'imageUrl' in chunk);
+
+        return imageChunks.map((chunk, index) => {
+            // Derive extension from URL (strip query params first)
+            const urlPath = chunk.imageUrl.split('?')[0];
+            const urlExt = urlPath.split('.').pop()?.toLowerCase() || '';
+            const validExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            const ext = validExts.includes(urlExt) ? urlExt : 'jpg';
+
+            // Clean filename — no UUIDs, numbered only when multiple images
+            const fileName = imageChunks.length === 1
+                ? `generated-image.${ext}`
+                : `generated-image-${index + 1}.${ext}`;
+            const fileType = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+            // Pre-format the callout: formatter returns extractedContent immediately,
+            // bypassing any status.note rewriting by the attachment extractor
+            const extractedContent = `>>[!nexus_attachment] **${fileName}** *(missing)* (${fileType})\n>>\n>> ⚠️ Not included in export. [Open original conversation](${chatUrl})`;
+
+            return {
+                fileName,
+                fileType,
+                attachmentType: 'generated_image' as const,
+                url: chatUrl,
+                extractedContent,
+                status: {
+                    processed: true,
+                    found: false,
+                    reason: 'missing_from_export' as const
+                }
+            };
+        });
     }
 
     /**

@@ -4,7 +4,7 @@
 
 ![Version](https://img.shields.io/badge/version-1.5.4-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
 
-A series of cosmetic fixes and UI improvements following 1.5.0: support links updated to nexus-prod.dev, Ko-fi branding removed from plugin internals, resource buttons renamed and linked correctly, support box fully localized, documentation and support links now adapt to your Obsidian language, and coffee messaging replaced with donation language throughout.
+A series of cosmetic fixes, UI improvements, and bug fixes following 1.5.0: support links updated to nexus-prod.dev, Ko-fi branding removed from plugin internals, resource buttons renamed and linked correctly, support box fully localized, documentation and support links now adapt to your Obsidian language, donation language replaces coffee messaging throughout, Le Chat assistant-generated images now show a proper "not included in export" callout with a link to the original conversation, missing attachment callouts simplified to a single clean line across all providers, and a regression fix restoring ChatGPT user-uploaded image extraction when importing multiple ZIP archives simultaneously.
 
 ---
 

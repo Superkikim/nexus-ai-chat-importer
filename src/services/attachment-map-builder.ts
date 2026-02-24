@@ -86,12 +86,27 @@ export class AttachmentMapBuilder {
         const fileIds: string[] = [];
         const fileName = path.split('/').pop() || '';
 
-        // Pattern 1: file_XXXXX.dat or file_XXXXX-uuid.ext
+        // Pattern 1: file_XXXXX.dat or file_XXXXX-uuid.ext (old .dat format, hex IDs)
         const filePattern = /file_([a-f0-9]+)/i;
         const fileMatch = fileName.match(filePattern);
         if (fileMatch) {
             fileIds.push(`file_${fileMatch[1]}`); // Full ID with prefix
             fileIds.push(fileMatch[1]); // ID without prefix
+        }
+
+        // Pattern 4: file-{ID}-{description}.ext (modern ChatGPT format, base-62 IDs)
+        // Examples: file-EtspPqHms32ek1BF5bG1F2-image.png, file-1ij34pnCRziwnDjEPSehV3-Nouvelle Ere Business Card 1.png
+        const modernPattern = /^(file-[A-Za-z0-9]+)-/;
+        const modernMatch = fileName.match(modernPattern);
+        if (modernMatch) {
+            const fullId = modernMatch[1]; // "file-EtspPqHms32ek1BF5bG1F2"
+            if (!fileIds.includes(fullId)) {
+                fileIds.push(fullId);
+            }
+            const idOnly = fullId.substring(5); // "EtspPqHms32ek1BF5bG1F2"
+            if (idOnly && !fileIds.includes(idOnly)) {
+                fileIds.push(idOnly);
+            }
         }
 
         // Pattern 2: XXXXX.dat (just the hash)

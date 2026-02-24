@@ -123,12 +123,11 @@ export class ChatGPTAttachmentExtractor {
             return {
                 ...attachment,
                 extractedContent: finalExtractedContent,
+                url: attachment.url || `https://chatgpt.com/c/${conversationId}`,
                 status: {
                     processed: true,
                     found: false,
-                    reason: 'missing_from_export',
-                    note: 'This file was referenced in the conversation but not included in the ChatGPT export. ' +
-                          'This can happen with older conversations or certain file types.'
+                    reason: 'missing_from_export'
                 }
             };
         }
