@@ -5052,7 +5052,7 @@ var init_constants = __esm({
 function createSupportBox(container, message) {
   const supportBox = container.createDiv("nexus-support-box");
   const header = supportBox.createDiv("nexus-support-header");
-  header.innerHTML = `\u2615 <span class="nexus-support-header-highlight">Support This Plugin</span>`;
+  header.innerHTML = `\u2615 <span class="nexus-support-header-highlight">${t("support_box.header_highlight")}</span>`;
   const messageEl = supportBox.createDiv("nexus-support-message");
   if (message) {
     const paragraphs = message.split("\n\n");
@@ -5065,24 +5065,23 @@ function createSupportBox(container, message) {
     }).join("");
   } else {
     messageEl.innerHTML = `
-            <p><span class="nexus-support-message-emphasis">I'm working on Nexus projects full-time while unemployed and dealing with health issues.</span></p>
-            <p>If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.</p>
+            <p><span class="nexus-support-message-emphasis">${t("support_box.default_message_emphasis")}</span></p>
+            <p>${t("support_box.default_message")}</p>
         `;
   }
   const realityCheck = supportBox.createDiv("nexus-support-reality-check");
-  realityCheck.innerHTML = `
-	        <strong>Thank you!</strong> Thousands of hours of work have gone into these plugins, and every coffee helps me keep improving them while managing ongoing health issues. If this plugin makes your life easier, please consider supporting me.
-	    `;
+  realityCheck.innerHTML = t("support_box.reality_check");
   const buttonContainer = supportBox.createDiv("nexus-support-button-container");
   buttonContainer.innerHTML = `
         <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank" class="nexus-support-link">
-            \u2615 Support my work
+            \u2615 ${t("support_box.button_alt")}
         </a>
     `;
 }
 var init_support_box = __esm({
   "src/ui/components/support-box.ts"() {
     "use strict";
+    init_i18n();
     __name(createSupportBox, "createSupportBox");
   }
 });
@@ -13565,7 +13564,10 @@ var SupportSection = class extends BaseSettingsSection {
     createSupportBox(supportContainer);
     new import_obsidian.Setting(supportContainer).setName(t("settings.support.resources.name")).setDesc(t("settings.support.resources.desc")).addButton(
       (button) => button.setButtonText(t("settings.support.resources.documentation")).onClick(() => {
-        window.open("https://nexus-prod.dev/nexus-ai-chat-importer", "_blank");
+        const locale = window.moment.locale();
+        const supported = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
+        const docUrl = supported.includes(locale) ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer` : "https://nexus-prod.dev/nexus-ai-chat-importer";
+        window.open(docUrl, "_blank");
       })
     ).addButton(
       (button) => button.setButtonText(t("settings.support.resources.release_notes")).onClick(() => {
@@ -22101,12 +22103,15 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
             gap: 12px;
             margin-bottom: 24px;
         `;
+    const locale = window.moment.locale();
+    const supported = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
+    const docUrl = supported.includes(locale) ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer` : "https://nexus-prod.dev/nexus-ai-chat-importer";
     const resources = [
       {
         icon: "\u{1F4D6}",
         title: t("welcome.resources.documentation.title"),
         description: t("welcome.resources.documentation.description"),
-        url: "https://nexus-prod.dev/nexus-ai-chat-importer"
+        url: docUrl
       },
       {
         icon: "\u{1F4DD}",

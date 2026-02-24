@@ -80,12 +80,18 @@ export class InstallationWelcomeDialog extends Modal {
         `;
 
         // Resource links
+        const locale = window.moment.locale();
+        const supported = ['fr','de','es','it','ru','zh','ja','pt','ko'];
+        const docUrl = supported.includes(locale)
+            ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer`
+            : 'https://nexus-prod.dev/nexus-ai-chat-importer';
+
         const resources = [
             {
                 icon: '📖',
                 title: t('welcome.resources.documentation.title'),
                 description: t('welcome.resources.documentation.description'),
-                url: 'https://nexus-prod.dev/nexus-ai-chat-importer'
+                url: docUrl
             },
             {
                 icon: '📝',
