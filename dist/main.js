@@ -310,8 +310,8 @@ var init_en = __esm({
           resources: {
             name: "\u{1F4DA} Resources",
             desc: "Documentation, release notes, and community links",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} Changelog",
+            documentation: "\u{1F4D6} Documentation",
+            release_notes: "\u{1F4DD} Release Notes",
             issues: "\u{1F41B} Issues",
             forum: "\u{1F4AC} Forum"
           }
@@ -796,8 +796,8 @@ var init_fr = __esm({
           resources: {
             name: "\u{1F4DA} Ressources",
             desc: "Documentation, notes de version et liens communautaires",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} Changelog",
+            documentation: "\u{1F4D6} Documentation",
+            release_notes: "\u{1F4DD} Notes de version",
             issues: "\u{1F41B} Probl\xE8mes",
             forum: "\u{1F4AC} Forum"
           }
@@ -1282,8 +1282,8 @@ var init_de = __esm({
           resources: {
             name: "\u{1F4DA} Ressourcen",
             desc: "Dokumentation, Versionshinweise und Community-Links",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} Changelog",
+            documentation: "\u{1F4D6} Dokumentation",
+            release_notes: "\u{1F4DD} Versionshinweise",
             issues: "\u{1F41B} Fehler melden",
             forum: "\u{1F4AC} Forum"
           }
@@ -1768,8 +1768,8 @@ var init_es = __esm({
           resources: {
             name: "\u{1F4DA} Recursos",
             desc: "Documentaci\xF3n, notas de versi\xF3n y enlaces de la comunidad",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} Changelog",
+            documentation: "\u{1F4D6} Documentaci\xF3n",
+            release_notes: "\u{1F4DD} Notas de versi\xF3n",
             issues: "\u{1F41B} Problemas",
             forum: "\u{1F4AC} Foro"
           }
@@ -2254,8 +2254,8 @@ var init_it = __esm({
           resources: {
             name: "\u{1F4DA} Risorse",
             desc: "Documentazione, note di rilascio e link alla community",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} Changelog",
+            documentation: "\u{1F4D6} Documentazione",
+            release_notes: "\u{1F4DD} Note di versione",
             issues: "\u{1F41B} Segnalazioni",
             forum: "\u{1F4AC} Forum"
           }
@@ -2740,8 +2740,8 @@ var init_ru = __esm({
           resources: {
             name: "\u{1F4DA} \u0420\u0435\u0441\u0443\u0440\u0441\u044B",
             desc: "\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F, \u043F\u0440\u0438\u043C\u0435\u0447\u0430\u043D\u0438\u044F \u043A \u0432\u044B\u043F\u0443\u0441\u043A\u0443 \u0438 \u0441\u0441\u044B\u043B\u043A\u0438 \u043D\u0430 \u0441\u043E\u043E\u0431\u0449\u0435\u0441\u0442\u0432\u043E",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} \u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439",
+            documentation: "\u{1F4D6} \u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F",
+            release_notes: "\u{1F4DD} \u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0432\u0435\u0440\u0441\u0438\u0439",
             issues: "\u{1F41B} \u041F\u0440\u043E\u0431\u043B\u0435\u043C\u044B",
             forum: "\u{1F4AC} \u0424\u043E\u0440\u0443\u043C"
           }
@@ -3226,8 +3226,8 @@ var init_zh = __esm({
           resources: {
             name: "\u{1F4DA} \u8D44\u6E90",
             desc: "\u6587\u6863\u3001\u53D1\u5E03\u8BF4\u660E\u53CA\u793E\u533A\u94FE\u63A5",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} \u66F4\u65B0\u65E5\u5FD7",
+            documentation: "\u{1F4D6} \u6587\u6863",
+            release_notes: "\u{1F4DD} \u7248\u672C\u8BF4\u660E",
             issues: "\u{1F41B} \u95EE\u9898\u53CD\u9988",
             forum: "\u{1F4AC} \u8BBA\u575B"
           }
@@ -3712,8 +3712,8 @@ var init_ja = __esm({
           resources: {
             name: "\u{1F4DA} \u30EA\u30BD\u30FC\u30B9",
             desc: "\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u3001\u30EA\u30EA\u30FC\u30B9\u30CE\u30FC\u30C8\u3001\u30B3\u30DF\u30E5\u30CB\u30C6\u30A3\u30EA\u30F3\u30AF",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} \u5909\u66F4\u5C65\u6B74",
+            documentation: "\u{1F4D6} \u30C9\u30AD\u30E5\u30E1\u30F3\u30C8",
+            release_notes: "\u{1F4DD} \u30EA\u30EA\u30FC\u30B9\u30CE\u30FC\u30C8",
             issues: "\u{1F41B} \u554F\u984C\u5831\u544A",
             forum: "\u{1F4AC} \u30D5\u30A9\u30FC\u30E9\u30E0"
           }
@@ -4198,8 +4198,8 @@ var init_pt = __esm({
           resources: {
             name: "\u{1F4DA} Recursos",
             desc: "Documenta\xE7\xE3o, notas de vers\xE3o e liga\xE7\xF5es para a comunidade",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} Registo de altera\xE7\xF5es",
+            documentation: "\u{1F4D6} Documenta\xE7\xE3o",
+            release_notes: "\u{1F4DD} Notas de vers\xE3o",
             issues: "\u{1F41B} Problemas",
             forum: "\u{1F4AC} F\xF3rum"
           }
@@ -4684,8 +4684,8 @@ var init_ko = __esm({
           resources: {
             name: "\u{1F4DA} \uB9AC\uC18C\uC2A4",
             desc: "\uBB38\uC11C, \uB9B4\uB9AC\uC2A4 \uB178\uD2B8, \uCEE4\uBBA4\uB2C8\uD2F0 \uB9C1\uD06C",
-            readme: "\u{1F4D6} README",
-            changelog: "\u{1F4DD} \uBCC0\uACBD \uC774\uB825",
+            documentation: "\u{1F4D6} \uBB38\uC11C",
+            release_notes: "\u{1F4DD} \uB9B4\uB9AC\uC2A4 \uB178\uD2B8",
             issues: "\u{1F41B} \uBB38\uC81C \uBCF4\uACE0",
             forum: "\u{1F4AC} \uD3EC\uB7FC"
           }
@@ -13564,12 +13564,12 @@ var SupportSection = class extends BaseSettingsSection {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
     createSupportBox(supportContainer);
     new import_obsidian.Setting(supportContainer).setName(t("settings.support.resources.name")).setDesc(t("settings.support.resources.desc")).addButton(
-      (button) => button.setButtonText(t("settings.support.resources.readme")).onClick(() => {
-        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
+      (button) => button.setButtonText(t("settings.support.resources.documentation")).onClick(() => {
+        window.open("https://nexus-prod.dev/nexus-ai-chat-importer", "_blank");
       })
     ).addButton(
-      (button) => button.setButtonText(t("settings.support.resources.changelog")).onClick(() => {
-        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
+      (button) => button.setButtonText(t("settings.support.resources.release_notes")).onClick(() => {
+        window.open("https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
       })
     ).addButton(
       (button) => button.setButtonText(t("settings.support.resources.issues")).onClick(() => {
@@ -22106,13 +22106,13 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
         icon: "\u{1F4D6}",
         title: t("welcome.resources.documentation.title"),
         description: t("welcome.resources.documentation.description"),
-        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md"
+        url: "https://nexus-prod.dev/nexus-ai-chat-importer"
       },
       {
         icon: "\u{1F4DD}",
         title: t("welcome.resources.release_notes.title"),
         description: t("welcome.resources.release_notes.description"),
-        url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md"
+        url: "https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md"
       },
       {
         icon: "\u{1F41B}",

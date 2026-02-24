@@ -39,16 +39,16 @@ export class SupportSection extends BaseSettingsSection {
             .setDesc(t('settings.support.resources.desc'))
             .addButton((button) =>
                 button
-                    .setButtonText(t('settings.support.resources.readme'))
+                    .setButtonText(t('settings.support.resources.documentation'))
                     .onClick(() => {
-                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
+                        window.open("https://nexus-prod.dev/nexus-ai-chat-importer", "_blank");
                     })
             )
             .addButton((button) =>
                 button
-                    .setButtonText(t('settings.support.resources.changelog'))
+                    .setButtonText(t('settings.support.resources.release_notes'))
                     .onClick(() => {
-                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
+                        window.open("https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
                     })
             )
             .addButton((button) =>

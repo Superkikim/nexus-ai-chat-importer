@@ -265,8 +265,8 @@
       "resources": {
         "name": "📚 リソース",
         "desc": "ドキュメント、リリースノート、コミュニティリンク",
-        "readme": "📖 README",
-        "changelog": "📝 変更履歴",
+        "documentation": "📖 ドキュメント",
+        "release_notes": "📝 リリースノート",
         "issues": "🐛 問題報告",
         "forum": "💬 フォーラム"
       }
