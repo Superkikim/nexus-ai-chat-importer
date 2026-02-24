@@ -101,7 +101,7 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 
 **If this plugin makes your life easier, a donation would mean the world to me and help keep development going strong.**
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)
 
 **Why support?**
 - 🚀 **Faster development** - More time for features and improvements
@@ -708,7 +708,7 @@ I'm constantly working to improve the plugin. Here's what's planned for future r
 
 - 💡 **Suggest Features**: Open an issue on GitHub with your ideas
 - 🐛 **Report Bugs**: Help us improve by reporting issues
-- ☕ **Support Development**: [Buy me a coffee](https://ko-fi.com/nexusplugins) to speed up development
+- ☕ **Support Development**: [Support my work](https://nexus-prod.dev/nexus-ai-chat-importer/support) to speed up development
 - ⭐ **Star the Repo**: Show your support on GitHub
 
 Your feedback and support directly influence what features get prioritized!
@@ -758,7 +758,7 @@ See [LICENSE.md](LICENSE.md) for full details.
 
 [![Report Issues](https://img.shields.io/badge/🐛_Report_Issues-GitHub-red?style=for-the-badge)](https://github.com/Superkikim/nexus-ai-chat-importer/issues)
 [![Obsidian Forum](https://img.shields.io/badge/💬_Community-Obsidian_Forum-purple?style=for-the-badge)](https://forum.obsidian.md/)
-[![Ko-fi](https://img.shields.io/badge/☕_Support-Ko--fi-ff5e5b?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/nexusplugins)
+[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)
 
 ### 📦 Repository
 

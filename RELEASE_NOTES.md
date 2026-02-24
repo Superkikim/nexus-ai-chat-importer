@@ -14,7 +14,7 @@ Version 1.5.0 brings complete internationalization to the Nexus AI Chat Importer
 
 **This plugin is free and always will be.** If you find it valuable, please consider supporting its development:
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)
 
 ---
 
@@ -66,7 +66,7 @@ Version 1.4.0 adds **Mistral AI Le Chat** as a fully supported provider, introdu
 
 **This plugin is free and always will be.** If you find it valuable, please consider supporting its development:
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)
 
 ---
 
@@ -194,7 +194,7 @@ Version 1.3.0 introduces **selective conversation import**, allowing you to choo
 
 **This plugin is free and always will be.** If you find it valuable, please consider supporting its development:
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)
 
 Your support helps me dedicate more time to:
 - 🚀 Adding new features
