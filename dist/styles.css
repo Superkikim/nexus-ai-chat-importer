@@ -682,17 +682,21 @@
     margin: 0px 0;
 }
 
-.kofi-button-container a {
+.kofi-support-link {
     display: inline-block;
-    transition: transform 0.2s ease;
-}
-
-.kofi-button-container a:hover {
-    transform: scale(1.05);
-}
-
-.kofi-button-container img {
+    padding: 10px 28px;
+    background-color: #FF5E5B;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 1em;
     border-radius: 8px;
+    text-decoration: none !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.kofi-support-link:hover {
+    background-color: #e04a47;
+    transform: scale(1.05);
 }
 

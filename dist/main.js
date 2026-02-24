@@ -5074,10 +5074,9 @@ function createKofiSupportBox(container, message) {
 	        <strong>Thank you!</strong> Thousands of hours of work have gone into these plugins, and every coffee helps me keep improving them while managing ongoing health issues. If this plugin makes your life easier, please consider supporting me.
 	    `;
   const buttonContainer = supportBox.createDiv("kofi-button-container");
-  const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/assets/support_me_on_kofi_red.png";
   buttonContainer.innerHTML = `
-        <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank">
-            <img src="${buttonImagePath}" alt="Support my work" height="50">
+        <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank" class="kofi-support-link">
+            \u2615 Support my work
         </a>
     `;
 }
