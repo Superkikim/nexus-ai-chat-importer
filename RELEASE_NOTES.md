@@ -1,35 +1,10 @@
 # Release Notes for Nexus AI Chat Importer
 
-## Version 1.5.2 — Fix Resource Links in Settings
+## Version 1.5.3 — UI & Branding Polish
 
-![Version](https://img.shields.io/badge/version-1.5.2-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+![Version](https://img.shields.io/badge/version-1.5.3-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
 
-### 🔧 Changes
-
-- **Documentation button**: Now links to [nexus-prod.dev/nexus-ai-chat-importer](https://nexus-prod.dev/nexus-ai-chat-importer) instead of the old hardcoded GitHub README for v1.3.0
-- **"Changelog" renamed to "Release Notes"**: Button label updated across all 10 languages and now links to the master branch RELEASE_NOTES.md (no hardcoded version tag)
-- Welcome dialog resource links updated to match
-
----
-
-## Version 1.5.1 — Support Link & Branding Cleanup
-
-![Version](https://img.shields.io/badge/version-1.5.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
-
-### Overview
-
-Version 1.5.1 is a maintenance release that replaces all Ko-fi references with the new [nexus-prod.dev](https://nexus-prod.dev/nexus-ai-chat-importer/support) support page and removes Ko-fi branding from the plugin internals.
-
----
-
-### 🔧 Changes
-
-- **Support link updated**: All Ko-fi URLs replaced with `nexus-prod.dev/nexus-ai-chat-importer/support`
-- **Support button redesigned**: The Ko-fi image button is replaced by a clean, self-hosted styled button
-- **Internal branding removed**: All `kofi-*` CSS class names, the `kofi-support-box.ts` file, the `createKofiSupportBox` function, and the `kofi_support` i18n key have been renamed to neutral `nexus-support-*` / `support_box` equivalents
-- **Obsolete CSS removed**: Dead CSS selectors for the removed Ko-fi image are deleted
-
-No behavior change for end users — only the support destination and visual button style change.
+A series of cosmetic fixes and UI improvements following 1.5.0: support links updated to nexus-prod.dev, Ko-fi branding removed from plugin internals, resource buttons renamed and linked correctly, support box fully localized, and documentation links now adapt to your Obsidian language.
 
 ---
 

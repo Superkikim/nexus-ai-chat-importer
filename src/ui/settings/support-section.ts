@@ -41,7 +41,12 @@ export class SupportSection extends BaseSettingsSection {
                 button
                     .setButtonText(t('settings.support.resources.documentation'))
                     .onClick(() => {
-                        window.open("https://nexus-prod.dev/nexus-ai-chat-importer", "_blank");
+                        const locale = window.moment.locale();
+                        const supported = ['fr','de','es','it','ru','zh','ja','pt','ko'];
+                        const docUrl = supported.includes(locale)
+                            ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer`
+                            : 'https://nexus-prod.dev/nexus-ai-chat-importer';
+                        window.open(docUrl, "_blank");
                     })
             )
             .addButton((button) =>
