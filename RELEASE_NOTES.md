@@ -1,5 +1,17 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.5.2 — Fix Resource Links in Settings
+
+![Version](https://img.shields.io/badge/version-1.5.2-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🔧 Changes
+
+- **Documentation button**: Now links to [nexus-prod.dev/nexus-ai-chat-importer](https://nexus-prod.dev/nexus-ai-chat-importer) instead of the old hardcoded GitHub README for v1.3.0
+- **"Changelog" renamed to "Release Notes"**: Button label updated across all 10 languages and now links to the master branch RELEASE_NOTES.md (no hardcoded version tag)
+- Welcome dialog resource links updated to match
+
+---
+
 ## Version 1.5.1 — Support Link & Branding Cleanup
 
 ![Version](https://img.shields.io/badge/version-1.5.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)

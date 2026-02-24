@@ -85,13 +85,13 @@ export class InstallationWelcomeDialog extends Modal {
                 icon: '📖',
                 title: t('welcome.resources.documentation.title'),
                 description: t('welcome.resources.documentation.description'),
-                url: 'https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md'
+                url: 'https://nexus-prod.dev/nexus-ai-chat-importer'
             },
             {
                 icon: '📝',
                 title: t('welcome.resources.release_notes.title'),
                 description: t('welcome.resources.release_notes.description'),
-                url: 'https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md'
+                url: 'https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md'
             },
             {
                 icon: '🐛',

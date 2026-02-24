@@ -265,8 +265,8 @@
       "resources": {
         "name": "📚 Recursos",
         "desc": "Documentación, notas de versión y enlaces de la comunidad",
-        "readme": "📖 README",
-        "changelog": "📝 Changelog",
+        "documentation": "📖 Documentación",
+        "release_notes": "📝 Notas de versión",
         "issues": "🐛 Problemas",
         "forum": "💬 Foro"
       }
