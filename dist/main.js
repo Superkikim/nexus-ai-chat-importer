@@ -39,6 +39,4915 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// src/i18n/locales/en.json
+var en_default;
+var init_en = __esm({
+  "src/i18n/locales/en.json"() {
+    en_default = {
+      common: {
+        buttons: {
+          cancel: "Cancel",
+          ok: "OK",
+          select: "Select",
+          browse: "Browse",
+          continue: "Continue",
+          proceed: "Proceed",
+          close: "Got it!",
+          create: "Create",
+          remove: "Remove",
+          run: "Run",
+          complete: "Complete",
+          view_report: "View Report",
+          get_started: "Get Started",
+          create_new_folder: "Create New Folder"
+        },
+        status: {
+          new: "New",
+          updated: "Updated",
+          unchanged: "Unchanged",
+          unknown: "Unknown"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} Validation",
+          phase_scanning: "\u{1F4CB} Scanning",
+          phase_processing: "\u2699\uFE0F Processing",
+          phase_writing: "\u{1F4BE} Writing",
+          phase_complete: "\u2705 Complete",
+          phase_error: "\u274C Error"
+        }
+      },
+      provider_selection: {
+        title: "Select Archive Provider",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "OpenAI ChatGPT conversation exports"
+          },
+          claude: {
+            name: "Claude",
+            description: "Anthropic Claude conversation exports"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Mistral AI Le Chat conversation exports"
+          }
+        },
+        buttons: {
+          select: "Select",
+          cancel: "Cancel"
+        }
+      },
+      file_selection: {
+        title: "Import {{provider}} Conversations",
+        import_mode: {
+          section_title: "Import Mode",
+          all_label: "Import All",
+          all_description: "Import all conversations (faster)",
+          selective_label: "Select Specific",
+          selective_description: "Preview and choose conversations"
+        },
+        file_area: {
+          section_title: "Select Files",
+          drop_text_default: "Drop ZIP files here or click to browse",
+          drop_text_gemini: "Drop ZIP and JSON files here or click to browse",
+          drop_subtext_default: "Supports multiple file selection",
+          drop_subtext_gemini: "ZIP (Takeout) + optional JSON (index from extension)"
+        },
+        selected_files: {
+          section_title: "Selected Files",
+          remove_button: "Remove"
+        },
+        buttons: {
+          cancel: "Cancel",
+          continue: "Continue"
+        }
+      },
+      conversation_selection: {
+        title: "Select Conversations to Import",
+        controls: {
+          select_all: "Select All",
+          select_none: "Select None",
+          search_placeholder: "Search conversations...",
+          status_label: "Status:",
+          show_label: "Show:"
+        },
+        status_filter_options: {
+          all: "All",
+          new: "New",
+          updated: "Updated",
+          unchanged: "Unchanged"
+        },
+        table_headers: {
+          title: "Title",
+          created: "Created",
+          updated: "Updated",
+          messages: "Messages",
+          status: "Status"
+        },
+        status_badges: {
+          new: "New",
+          updated: "Updated",
+          unchanged: "Unchanged",
+          unknown: "Unknown",
+          tooltip_new: "This conversation is not in your vault",
+          tooltip_updated: "This conversation has newer content than your vault ({{existing_date}} \u2192 {{new_date}})",
+          tooltip_unchanged: "This conversation is the same as in your vault"
+        },
+        pagination: {
+          showing: "Showing {{start}}-{{end}} of {{total}} conversations",
+          page_of: "Page {{current}} of {{total}}",
+          previous: "Previous",
+          next: "Next"
+        },
+        summary: {
+          unique_conversations: "Unique Conversations",
+          new: "New",
+          updated: "Updated",
+          unchanged: "Unchanged",
+          selected_of: "{{selected}} of {{total}} selected"
+        },
+        buttons: {
+          cancel: "Cancel",
+          import_selected: "Import Selected",
+          import_selected_count: "Import {{count}} Selected"
+        },
+        date_unknown: "Unknown"
+      },
+      import_progress: {
+        title: "Importing {{filename}}",
+        initial: {
+          title: "Preparing import...",
+          detail: "Validating ZIP file structure"
+        },
+        conversation_counter: "{{current}}/{{total}} conversations",
+        conversation_counter_selective: "{{current}}/{{total}} selected conversations",
+        selective_mode_indicator: "\u{1F4CB} Selective Import: {{selected}} of {{total}} conversations",
+        complete: {
+          message: "Import completed successfully",
+          detail: "You can close this dialog"
+        },
+        error: {
+          message: "An error occurred during import",
+          detail: "Check the console for more details"
+        }
+      },
+      import_completion: {
+        title: "Import Completed",
+        success_message: "\u2705 Successfully imported conversations",
+        stats: {
+          zip_files_processed: "ZIP Files Processed",
+          unique_conversations: "Unique Conversations",
+          duplicates: "Duplicates",
+          new: "New",
+          updated: "Updated",
+          skipped: "Skipped",
+          failed: "Failed"
+        },
+        attachments: {
+          label: "Attachments:",
+          summary: "{{found}}/{{total}} extracted ({{percentage}}%)",
+          missing_failed: "{{missing}} missing, {{failed}} failed"
+        },
+        report: {
+          label: "\u{1F4C4} Detailed report:"
+        },
+        buttons: {
+          view_report: "View Report",
+          ok: "OK"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} Folder Structure",
+          conversation_folder: {
+            name: "Conversation folder",
+            desc: "Where imported conversations are stored",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "Browse folders or create a new one"
+          },
+          reports_folder: {
+            name: "Reports folder",
+            desc: "Where import reports are stored",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "Browse folders or create a new one"
+          },
+          attachment_folder: {
+            name: "Attachment folder",
+            desc: "Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "Browse folders or create a new one"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} Date Prefix",
+          add_date_prefix: {
+            name: "Add date prefix to filenames",
+            desc: "Add creation date as a prefix to conversation filenames",
+            format_label: "Select date format: "
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} Message Date Format",
+          custom_format: {
+            name: "Custom message timestamp format",
+            desc: "Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced."
+          },
+          timestamp_format: {
+            name: "Timestamp format",
+            desc: "Choose the format for message timestamps in conversation notes"
+          },
+          preview_label: "Preview: "
+        },
+        attachments: {
+          section_title: "Attachment Settings",
+          import_attachments: {
+            name: "Import attachments",
+            desc: "Save attachment files to disk and link them in conversations (uses 'best effort' strategy)"
+          },
+          handle_missing: {
+            name: "Handle missing attachments",
+            desc: "When attachments are missing from exports, create informative notes instead of skipping them"
+          },
+          show_details: {
+            name: "Show attachment details in reports",
+            desc: "Include detailed attachment processing statistics in import reports"
+          },
+          info_box: {
+            title: "\u{1F4CE} About Attachment Handling",
+            best_effort: "Best Effort Strategy: Files found in exports are extracted and linked; missing files get informative notes.",
+            platform_diff: "Platform Differences: ChatGPT exports may not include all attachments, especially from older conversations.",
+            organization: "Simple Organization: Files organized as attachments/provider/category/ (e.g., attachments/chatgpt/images/).",
+            sync_tip: "Sync Tip: Consider excluding the attachment folder from sync to avoid uploading large files.",
+            tip: "\u{1F4A1} Tip: Enable 'Show attachment details' to see exactly which files were found, missing, or failed during import."
+          }
+        },
+        migrations: {
+          section_title: "Migrations",
+          description_manual: "Manual Operations: Optional upgrade operations that can be run when convenient.",
+          description_automatic: "Automatic operations (like removing old data) run automatically during upgrade and are not shown here.",
+          version_header: "Version {{version}}",
+          no_migrations: {
+            title: "No manual operations available",
+            desc: "All upgrade operations have been completed automatically."
+          },
+          operation_completed_suffix: " \u2705 Completed",
+          buttons: {
+            completed: "\u2705 Completed",
+            cannot_run: "Cannot Run",
+            run: "Run",
+            running: "Running..."
+          },
+          tooltips: {
+            completed: "This operation has been completed",
+            cannot_run: "Prerequisites not met for this operation",
+            run: "Execute {{operation_name}}"
+          },
+          error_loading: "Error loading migrations:"
+        },
+        support: {
+          section_title: "\u{1F49D} Support & Help",
+          resources: {
+            name: "\u{1F4DA} Resources",
+            desc: "Documentation, release notes, and community links",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} Changelog",
+            issues: "\u{1F41B} Issues",
+            forum: "\u{1F4AC} Forum"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "Starting...",
+          progress_label: "Progress: {{percentage}}%",
+          step_label: "Step {{current}}/{{total}}",
+          complete_label: "Complete",
+          complete_message: "Completed successfully",
+          error_message: "An error occurred"
+        },
+        multi_operation_modal: {
+          progress_label: "Progress: {{completed}}/{{total}} operations",
+          progress_with_failures: "Progress: {{completed}}/{{total}} operations ({{failed}} failed)",
+          all_completed: "All {{total}} operations completed successfully",
+          mark_complete_default: "All operations completed successfully",
+          buttons: {
+            complete: "Complete",
+            close: "Close"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} Migration Required",
+            message: "The following tasks will run automatically to upgrade your data to v1.3.0:",
+            tasks: {
+              folder_settings: "\u2713 Migrate folder settings to new structure",
+              timestamps: "\u2713 Update timestamps to ISO 8601 format",
+              aliases: "\u2713 Fix frontmatter aliases",
+              reports: "\u2713 Move Reports folder to proper location",
+              artifacts: "\u2713 Update artifact metadata"
+            },
+            estimate: "This will take a few seconds."
+          },
+          buttons: {
+            run_migration: "\u{1F680} Run Migration Tasks"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 Upgrade Complete - v{{version}}",
+          buttons: {
+            got_it: "Got it!"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "Got it!"
+          }
+        }
+      },
+      folder_migration: {
+        title: "Move Existing Files?",
+        message_intro: "You are changing the {{folder_type}} folder location:",
+        path_from: "From: {{path}}",
+        path_to: "To: {{path}}",
+        question: "Do you want to move existing files to the new location?",
+        link_updates: {
+          title: "\u{1F517} Link Updates:",
+          attachments_text: "Moving attachments will also update all conversation notes that reference them.",
+          conversations_text: "Moving conversations will also update all reports and attachments that reference them.",
+          estimated_time_seconds: "Estimated time: ~{{seconds}} seconds",
+          estimated_time_minutes: "Estimated time: ~{{minutes}} minute(s)"
+        },
+        warning: {
+          title: "\u26A0\uFE0F Important:",
+          text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
+        },
+        buttons: {
+          cancel: "Cancel",
+          keep: "No, keep files in old location",
+          move: "Yes, move files",
+          move_with_links: "Yes, move files and update links"
+        },
+        progress: {
+          title_moving: "Moving {{folder_type}} and updating links",
+          step_moving_title: "Moving files...",
+          step_moving_detail: "Moving from {{old_path}} to {{new_path}}",
+          step_moving_count: "{{current}} / {{total}} files processed",
+          step_moved_title: "Files moved",
+          step_moved_detail: "{{moved}} files moved, {{skipped}} skipped. Preparing to update links...",
+          step_updating_attachment_links: "Updating attachment links...",
+          step_updating_conversation_links: "Updating conversation links...",
+          step_updating_report_links: "Updating links in reports...",
+          step_updating_artifact_links: "Updating links in artifacts...",
+          complete_message: "{{moved}} files moved. {{links}} links updated successfully"
+        },
+        result_dialog: {
+          title: "Folder Migration Result",
+          summary_title: "Migration Summary",
+          moved: "\u2705 Successfully moved: {{count}} file(s)",
+          skipped: "\u26A0\uFE0F Skipped (already exist): {{count}} file(s)",
+          errors: "\u274C Errors: {{count}} file(s)",
+          explanation: "Files that already existed in the destination were not overwritten to preserve your data.",
+          error_details_title: "Error Details:"
+        },
+        error_target_not_empty: {
+          title: "Target Folder Not Empty",
+          message: 'The folder "{{path}}" already contains files.\n\nTo change the folder location:\n\u2022 Move existing files manually in Obsidian, OR\n\u2022 Choose an empty folder or create a new one'
+        },
+        error_migration_failed: {
+          title: "Migration Failed",
+          message_move: "Failed to move files: {{error}}",
+          message_links: "Failed to move files or update links: {{error}}"
+        }
+      },
+      folder_browser: {
+        title: "Select Folder",
+        vault_root: "Vault Root (/)",
+        buttons: {
+          create_new_folder: "Create New Folder",
+          cancel: "Cancel",
+          select: "Select"
+        },
+        create_folder_dialog: {
+          title: "Create New Folder",
+          folder_name_label: "Folder name:",
+          buttons: {
+            cancel: "Cancel",
+            create: "Create"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F Please select a parent folder first",
+          invalid_name: "\u274C Invalid folder name: contains illegal characters",
+          already_exists: "\u274C Folder already exists",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 Created folder: {{name}}",
+          create_failed: "\u274C Failed to create folder: {{error}}",
+          select_first: "\u26A0\uFE0F Please select a folder first"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "In version 1.3.0, you can specify a folder for Reports. We will move existing reports to {{folder}}, or you can select your preferred folder below.",
+        note: "Note: The folder cannot be inside Conversations or Attachments.",
+        report_folder_label: "\u{1F4CA} Report Folder",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "Browse",
+          proceed: "Proceed"
+        },
+        error_invalid_folder: {
+          title: "Invalid Folder Location",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "Thank you for installing Nexus AI Chat Importer!",
+        description: "Import and manage your ChatGPT, Claude, and Le Chat conversations directly in your Obsidian vault.",
+        resources_title: "Resources",
+        resources: {
+          documentation: {
+            title: "Documentation",
+            description: "Learn how to use the plugin"
+          },
+          release_notes: {
+            title: "Release Notes",
+            description: "What's new in this version"
+          },
+          report_issues: {
+            title: "Report Issues",
+            description: "Found a bug? Let us know"
+          },
+          community_forum: {
+            title: "Community Forum",
+            description: "Join the discussion"
+          }
+        },
+        buttons: {
+          get_started: "Get Started"
+        }
+      },
+      notices: {
+        import_analyzing: "Analyzing conversations from {{count}} file(s)...",
+        import_no_new: "No new or updated conversations found. All conversations are already up to date.",
+        import_starting: "Importing {{count}} conversations ({{new}} new, {{updated}} updated)...",
+        import_starting_selected: "Importing {{count}} selected conversations from {{files}} file(s)...",
+        import_completed_fallback: "Import completed. {{created}} created, {{updated}} updated.",
+        import_error: "Error during import: {{error}}",
+        import_error_analyzing: "Error analyzing conversations: {{error}}",
+        import_error_file: "Error processing {{filename}}. Check console for details.",
+        import_no_selected: "No conversations selected for import.",
+        import_no_zip_gemini: "Please select at least one Gemini Takeout ZIP file (plus optional JSON index from the extension).",
+        import_no_zip: "Please select at least one ZIP export file.",
+        import_gemini_json_failed: "Failed to read Gemini index JSON. Continuing without index.",
+        report_failed: "Failed to create log file. Check console for details.",
+        attachment_map_failed: "Failed to build attachment map. Check console for details.",
+        ribbon_tooltip: "Nexus AI Chat Importer - Import new file"
+      },
+      commands: {
+        import_conversations: {
+          name: "Import AI conversations"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 Support This Plugin",
+        header_highlight: "Support This Plugin",
+        default_message_emphasis: "I'm working on Nexus projects full-time while unemployed and dealing with health issues.",
+        default_message: "If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.",
+        reality_check: "Thank you! Thousands of hours of work have gone into these plugins, and every coffee helps me keep improving them while managing ongoing health issues. If this plugin makes your life easier, please consider supporting me.",
+        button_alt: "Support my work"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/fr.json
+var fr_default;
+var init_fr = __esm({
+  "src/i18n/locales/fr.json"() {
+    fr_default = {
+      common: {
+        buttons: {
+          cancel: "Annuler",
+          ok: "OK",
+          select: "S\xE9lectionner",
+          browse: "Parcourir",
+          continue: "Continuer",
+          proceed: "Proc\xE9der",
+          close: "Compris !",
+          create: "Cr\xE9er",
+          remove: "Supprimer",
+          run: "Ex\xE9cuter",
+          complete: "Terminer",
+          view_report: "Voir le rapport",
+          get_started: "Commencer",
+          create_new_folder: "Cr\xE9er un nouveau dossier"
+        },
+        status: {
+          new: "Nouveau",
+          updated: "Mis \xE0 jour",
+          unchanged: "Inchang\xE9",
+          unknown: "Inconnu"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} Validation",
+          phase_scanning: "\u{1F4CB} Analyse",
+          phase_processing: "\u2699\uFE0F Traitement",
+          phase_writing: "\u{1F4BE} \xC9criture",
+          phase_complete: "\u2705 Termin\xE9",
+          phase_error: "\u274C Erreur"
+        }
+      },
+      provider_selection: {
+        title: "S\xE9lectionner le fournisseur d'archive",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "Exports de conversations OpenAI ChatGPT"
+          },
+          claude: {
+            name: "Claude",
+            description: "Exports de conversations Anthropic Claude"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Exports de conversations Mistral AI Le Chat"
+          }
+        },
+        buttons: {
+          select: "S\xE9lectionner",
+          cancel: "Annuler"
+        }
+      },
+      file_selection: {
+        title: "Importer les conversations {{provider}}",
+        import_mode: {
+          section_title: "Mode d'importation",
+          all_label: "Tout importer",
+          all_description: "Importer toutes les conversations (plus rapide)",
+          selective_label: "S\xE9lection sp\xE9cifique",
+          selective_description: "Pr\xE9visualiser et choisir les conversations"
+        },
+        file_area: {
+          section_title: "S\xE9lectionner les fichiers",
+          drop_text_default: "D\xE9posez des fichiers ZIP ici ou cliquez pour parcourir",
+          drop_text_gemini: "D\xE9posez des fichiers ZIP et JSON ici ou cliquez pour parcourir",
+          drop_subtext_default: "Prend en charge la s\xE9lection multiple de fichiers",
+          drop_subtext_gemini: "ZIP (Takeout) + JSON optionnel (index depuis l'extension)"
+        },
+        selected_files: {
+          section_title: "Fichiers s\xE9lectionn\xE9s",
+          remove_button: "Supprimer"
+        },
+        buttons: {
+          cancel: "Annuler",
+          continue: "Continuer"
+        }
+      },
+      conversation_selection: {
+        title: "S\xE9lectionner les conversations \xE0 importer",
+        controls: {
+          select_all: "Tout s\xE9lectionner",
+          select_none: "Tout d\xE9s\xE9lectionner",
+          search_placeholder: "Rechercher des conversations...",
+          status_label: "Statut :",
+          show_label: "Afficher :"
+        },
+        status_filter_options: {
+          all: "Tous",
+          new: "Nouveau",
+          updated: "Mis \xE0 jour",
+          unchanged: "Inchang\xE9"
+        },
+        table_headers: {
+          title: "Titre",
+          created: "Cr\xE9\xE9",
+          updated: "Mis \xE0 jour",
+          messages: "Messages",
+          status: "Statut"
+        },
+        status_badges: {
+          new: "Nouveau",
+          updated: "Mis \xE0 jour",
+          unchanged: "Inchang\xE9",
+          unknown: "Inconnu",
+          tooltip_new: "Cette conversation n'est pas dans votre Vault",
+          tooltip_updated: "Cette conversation a un contenu plus r\xE9cent que votre Vault ({{existing_date}} \u2192 {{new_date}})",
+          tooltip_unchanged: "Cette conversation est identique \xE0 celle de votre Vault"
+        },
+        pagination: {
+          showing: "Affichage de {{start}}-{{end}} sur {{total}} conversations",
+          page_of: "Page {{current}} sur {{total}}",
+          previous: "Pr\xE9c\xE9dent",
+          next: "Suivant"
+        },
+        summary: {
+          unique_conversations: "Conversations uniques",
+          new: "Nouveau",
+          updated: "Mis \xE0 jour",
+          unchanged: "Inchang\xE9",
+          selected_of: "{{selected}} sur {{total}} s\xE9lectionn\xE9es"
+        },
+        buttons: {
+          cancel: "Annuler",
+          import_selected: "Importer la s\xE9lection",
+          import_selected_count: "Importer {{count}} s\xE9lectionn\xE9es"
+        },
+        date_unknown: "Inconnu"
+      },
+      import_progress: {
+        title: "Importation de {{filename}}",
+        initial: {
+          title: "Pr\xE9paration de l'importation...",
+          detail: "Validation de la structure du fichier ZIP"
+        },
+        conversation_counter: "{{current}}/{{total}} conversations",
+        conversation_counter_selective: "{{current}}/{{total}} conversations s\xE9lectionn\xE9es",
+        selective_mode_indicator: "\u{1F4CB} Importation s\xE9lective : {{selected}} sur {{total}} conversations",
+        complete: {
+          message: "Importation termin\xE9e avec succ\xE8s",
+          detail: "Vous pouvez fermer cette fen\xEAtre"
+        },
+        error: {
+          message: "Une erreur s'est produite lors de l'importation",
+          detail: "Consultez la console pour plus de d\xE9tails"
+        }
+      },
+      import_completion: {
+        title: "Importation termin\xE9e",
+        success_message: "\u2705 Conversations import\xE9es avec succ\xE8s",
+        stats: {
+          zip_files_processed: "Fichiers ZIP trait\xE9s",
+          unique_conversations: "Conversations uniques",
+          duplicates: "Doublons",
+          new: "Nouveau",
+          updated: "Mis \xE0 jour",
+          skipped: "Ignor\xE9s",
+          failed: "\xC9chou\xE9s"
+        },
+        attachments: {
+          label: "Pi\xE8ces jointes :",
+          summary: "{{found}}/{{total}} extraites ({{percentage}}%)",
+          missing_failed: "{{missing}} manquantes, {{failed}} \xE9chou\xE9es"
+        },
+        report: {
+          label: "\u{1F4C4} Rapport d\xE9taill\xE9 :"
+        },
+        buttons: {
+          view_report: "Voir le rapport",
+          ok: "OK"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} Structure des dossiers",
+          conversation_folder: {
+            name: "Dossier des conversations",
+            desc: "O\xF9 les conversations import\xE9es sont stock\xE9es",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "Parcourir les dossiers ou en cr\xE9er un nouveau"
+          },
+          reports_folder: {
+            name: "Dossier des rapports",
+            desc: "O\xF9 les rapports d'importation sont stock\xE9s",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "Parcourir les dossiers ou en cr\xE9er un nouveau"
+          },
+          attachment_folder: {
+            name: "Dossier des pi\xE8ces jointes",
+            desc: "O\xF9 les pi\xE8ces jointes sont stock\xE9es (\u26A0\uFE0F Exclure de la synchronisation pour \xE9conomiser de l'espace)",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "Parcourir les dossiers ou en cr\xE9er un nouveau"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} Pr\xE9fixe de date",
+          add_date_prefix: {
+            name: "Ajouter un pr\xE9fixe de date aux noms de fichiers",
+            desc: "Ajouter la date de cr\xE9ation comme pr\xE9fixe aux noms de fichiers de conversation",
+            format_label: "S\xE9lectionner le format de date : "
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} Format de date des messages",
+          custom_format: {
+            name: "Format d'horodatage personnalis\xE9 des messages",
+            desc: "Remplacer le format d'horodatage par d\xE9faut bas\xE9 sur la locale dans les en-t\xEAtes de messages. Lorsque d\xE9sactiv\xE9, les horodatages suivent le param\xE8tre de langue d'Obsidian. Si Obsidian est en anglais, le format am\xE9ricain (YYYY/DD/MM) est appliqu\xE9."
+          },
+          timestamp_format: {
+            name: "Format d'horodatage",
+            desc: "Choisir le format des horodatages de messages dans les notes de conversation"
+          },
+          preview_label: "Aper\xE7u : "
+        },
+        attachments: {
+          section_title: "Param\xE8tres des pi\xE8ces jointes",
+          import_attachments: {
+            name: "Importer les pi\xE8ces jointes",
+            desc: "Enregistrer les fichiers joints sur le disque et les lier dans les conversations (utilise une strat\xE9gie de \xAB meilleur effort \xBB)"
+          },
+          handle_missing: {
+            name: "G\xE9rer les pi\xE8ces jointes manquantes",
+            desc: "Lorsque des pi\xE8ces jointes sont absentes des exports, cr\xE9er des notes informatives plut\xF4t que de les ignorer"
+          },
+          show_details: {
+            name: "Afficher les d\xE9tails des pi\xE8ces jointes dans les rapports",
+            desc: "Inclure des statistiques d\xE9taill\xE9es sur le traitement des pi\xE8ces jointes dans les rapports d'importation"
+          },
+          info_box: {
+            title: "\u{1F4CE} \xC0 propos de la gestion des pi\xE8ces jointes",
+            best_effort: "Strat\xE9gie de meilleur effort : Les fichiers trouv\xE9s dans les exports sont extraits et li\xE9s ; les fichiers manquants re\xE7oivent des notes informatives.",
+            platform_diff: "Diff\xE9rences selon les plateformes : Les exports ChatGPT peuvent ne pas inclure toutes les pi\xE8ces jointes, notamment celles des conversations plus anciennes.",
+            organization: "Organisation simple : Les fichiers sont organis\xE9s sous attachments/fournisseur/cat\xE9gorie/ (ex. : attachments/chatgpt/images/).",
+            sync_tip: "Conseil de synchronisation : Envisagez d'exclure le dossier des pi\xE8ces jointes de la synchronisation pour \xE9viter d'envoyer de gros fichiers.",
+            tip: "\u{1F4A1} Conseil : Activez \xAB Afficher les d\xE9tails des pi\xE8ces jointes \xBB pour voir exactement quels fichiers ont \xE9t\xE9 trouv\xE9s, manquants ou \xE9chou\xE9s lors de l'importation."
+          }
+        },
+        migrations: {
+          section_title: "Migrations",
+          description_manual: "Op\xE9rations manuelles : Op\xE9rations de mise \xE0 niveau optionnelles pouvant \xEAtre ex\xE9cut\xE9es \xE0 votre convenance.",
+          description_automatic: "Les op\xE9rations automatiques (comme la suppression des anciennes donn\xE9es) s'ex\xE9cutent automatiquement lors de la mise \xE0 niveau et ne sont pas affich\xE9es ici.",
+          version_header: "Version {{version}}",
+          no_migrations: {
+            title: "Aucune op\xE9ration manuelle disponible",
+            desc: "Toutes les op\xE9rations de mise \xE0 niveau ont \xE9t\xE9 effectu\xE9es automatiquement."
+          },
+          operation_completed_suffix: " \u2705 Termin\xE9",
+          buttons: {
+            completed: "\u2705 Termin\xE9",
+            cannot_run: "Impossible d'ex\xE9cuter",
+            run: "Ex\xE9cuter",
+            running: "En cours..."
+          },
+          tooltips: {
+            completed: "Cette op\xE9ration a \xE9t\xE9 effectu\xE9e",
+            cannot_run: "Les pr\xE9requis ne sont pas remplis pour cette op\xE9ration",
+            run: "Ex\xE9cuter {{operation_name}}"
+          },
+          error_loading: "Erreur lors du chargement des migrations :"
+        },
+        support: {
+          section_title: "\u{1F49D} Support et aide",
+          resources: {
+            name: "\u{1F4DA} Ressources",
+            desc: "Documentation, notes de version et liens communautaires",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} Changelog",
+            issues: "\u{1F41B} Probl\xE8mes",
+            forum: "\u{1F4AC} Forum"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "D\xE9marrage...",
+          progress_label: "Progression : {{percentage}}%",
+          step_label: "\xC9tape {{current}}/{{total}}",
+          complete_label: "Termin\xE9",
+          complete_message: "Termin\xE9 avec succ\xE8s",
+          error_message: "Une erreur s'est produite"
+        },
+        multi_operation_modal: {
+          progress_label: "Progression : {{completed}}/{{total}} op\xE9rations",
+          progress_with_failures: "Progression : {{completed}}/{{total}} op\xE9rations ({{failed}} \xE9chou\xE9es)",
+          all_completed: "Les {{total}} op\xE9rations ont \xE9t\xE9 effectu\xE9es avec succ\xE8s",
+          mark_complete_default: "Toutes les op\xE9rations ont \xE9t\xE9 effectu\xE9es avec succ\xE8s",
+          buttons: {
+            complete: "Terminer",
+            close: "Fermer"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} Migration requise",
+            message: "Les t\xE2ches suivantes s'ex\xE9cuteront automatiquement pour mettre \xE0 niveau vos donn\xE9es vers la v1.3.0 :",
+            tasks: {
+              folder_settings: "\u2713 Migrer les param\xE8tres de dossiers vers la nouvelle structure",
+              timestamps: "\u2713 Mettre \xE0 jour les horodatages au format ISO 8601",
+              aliases: "\u2713 Corriger les alias du frontmatter",
+              reports: "\u2713 D\xE9placer le dossier des rapports vers le bon emplacement",
+              artifacts: "\u2713 Mettre \xE0 jour les m\xE9tadonn\xE9es des artefacts"
+            },
+            estimate: "Cela prendra quelques secondes."
+          },
+          buttons: {
+            run_migration: "\u{1F680} Lancer les t\xE2ches de migration"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 Mise \xE0 niveau termin\xE9e - v{{version}}",
+          buttons: {
+            got_it: "Compris !"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "Compris !"
+          }
+        }
+      },
+      folder_migration: {
+        title: "D\xE9placer les fichiers existants ?",
+        message_intro: "Vous modifiez l'emplacement du dossier {{folder_type}} :",
+        path_from: "De : {{path}}",
+        path_to: "Vers : {{path}}",
+        question: "Voulez-vous d\xE9placer les fichiers existants vers le nouvel emplacement ?",
+        link_updates: {
+          title: "\u{1F517} Mises \xE0 jour des liens :",
+          attachments_text: "D\xE9placer les pi\xE8ces jointes mettra \xE9galement \xE0 jour toutes les notes de conversation qui y font r\xE9f\xE9rence.",
+          conversations_text: "D\xE9placer les conversations mettra \xE9galement \xE0 jour tous les rapports et pi\xE8ces jointes qui y font r\xE9f\xE9rence.",
+          estimated_time_seconds: "Dur\xE9e estim\xE9e : ~{{seconds}} secondes",
+          estimated_time_minutes: "Dur\xE9e estim\xE9e : ~{{minutes}} minute(s)"
+        },
+        warning: {
+          title: "\u26A0\uFE0F Important :",
+          text: "Si vous choisissez \xAB Non \xBB, les fichiers existants resteront \xE0 l'ancien emplacement et ne seront pas affect\xE9s par les futures mises \xE0 jour."
+        },
+        buttons: {
+          cancel: "Annuler",
+          keep: "Non, conserver les fichiers \xE0 l'ancien emplacement",
+          move: "Oui, d\xE9placer les fichiers",
+          move_with_links: "Oui, d\xE9placer les fichiers et mettre \xE0 jour les liens"
+        },
+        progress: {
+          title_moving: "D\xE9placement de {{folder_type}} et mise \xE0 jour des liens",
+          step_moving_title: "D\xE9placement des fichiers...",
+          step_moving_detail: "D\xE9placement de {{old_path}} vers {{new_path}}",
+          step_moving_count: "{{current}} / {{total}} fichiers trait\xE9s",
+          step_moved_title: "Fichiers d\xE9plac\xE9s",
+          step_moved_detail: "{{moved}} fichiers d\xE9plac\xE9s, {{skipped}} ignor\xE9s. Pr\xE9paration de la mise \xE0 jour des liens...",
+          step_updating_attachment_links: "Mise \xE0 jour des liens des pi\xE8ces jointes...",
+          step_updating_conversation_links: "Mise \xE0 jour des liens des conversations...",
+          step_updating_report_links: "Mise \xE0 jour des liens dans les rapports...",
+          step_updating_artifact_links: "Mise \xE0 jour des liens dans les artefacts...",
+          complete_message: "{{moved}} fichiers d\xE9plac\xE9s. {{links}} liens mis \xE0 jour avec succ\xE8s"
+        },
+        result_dialog: {
+          title: "R\xE9sultat de la migration des dossiers",
+          summary_title: "R\xE9sum\xE9 de la migration",
+          moved: "\u2705 D\xE9plac\xE9s avec succ\xE8s : {{count}} fichier(s)",
+          skipped: "\u26A0\uFE0F Ignor\xE9s (existaient d\xE9j\xE0) : {{count}} fichier(s)",
+          errors: "\u274C Erreurs : {{count}} fichier(s)",
+          explanation: "Les fichiers qui existaient d\xE9j\xE0 dans la destination n'ont pas \xE9t\xE9 \xE9cras\xE9s afin de pr\xE9server vos donn\xE9es.",
+          error_details_title: "D\xE9tails des erreurs :"
+        },
+        error_target_not_empty: {
+          title: "Le dossier cible n'est pas vide",
+          message: "Le dossier \xAB {{path}} \xBB contient d\xE9j\xE0 des fichiers.\n\nPour changer l'emplacement du dossier :\n\u2022 D\xE9placez les fichiers existants manuellement dans Obsidian, OU\n\u2022 Choisissez un dossier vide ou cr\xE9ez-en un nouveau"
+        },
+        error_migration_failed: {
+          title: "\xC9chec de la migration",
+          message_move: "\xC9chec du d\xE9placement des fichiers : {{error}}",
+          message_links: "\xC9chec du d\xE9placement des fichiers ou de la mise \xE0 jour des liens : {{error}}"
+        }
+      },
+      folder_browser: {
+        title: "S\xE9lectionner un dossier",
+        vault_root: "Racine du Vault (/)",
+        buttons: {
+          create_new_folder: "Cr\xE9er un nouveau dossier",
+          cancel: "Annuler",
+          select: "S\xE9lectionner"
+        },
+        create_folder_dialog: {
+          title: "Cr\xE9er un nouveau dossier",
+          folder_name_label: "Nom du dossier :",
+          buttons: {
+            cancel: "Annuler",
+            create: "Cr\xE9er"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F Veuillez d'abord s\xE9lectionner un dossier parent",
+          invalid_name: "\u274C Nom de dossier invalide : contient des caract\xE8res ill\xE9gaux",
+          already_exists: "\u274C Le dossier existe d\xE9j\xE0",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 Dossier cr\xE9\xE9 : {{name}}",
+          create_failed: "\u274C \xC9chec de la cr\xE9ation du dossier : {{error}}",
+          select_first: "\u26A0\uFE0F Veuillez d'abord s\xE9lectionner un dossier"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "Dans la version 1.3.0, vous pouvez sp\xE9cifier un dossier pour les rapports. Nous d\xE9placerons les rapports existants vers {{folder}}, ou vous pouvez s\xE9lectionner votre dossier pr\xE9f\xE9r\xE9 ci-dessous.",
+        note: "Remarque : Le dossier ne peut pas se trouver dans Conversations ou Attachments.",
+        report_folder_label: "\u{1F4CA} Dossier des rapports",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "Parcourir",
+          proceed: "Proc\xE9der"
+        },
+        error_invalid_folder: {
+          title: "Emplacement de dossier invalide",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "Merci d'avoir install\xE9 Nexus AI Chat Importer !",
+        description: "Importez et g\xE9rez vos conversations ChatGPT, Claude et Le Chat directement dans votre Vault Obsidian.",
+        resources_title: "Ressources",
+        resources: {
+          documentation: {
+            title: "Documentation",
+            description: "Apprenez \xE0 utiliser le plugin"
+          },
+          release_notes: {
+            title: "Notes de version",
+            description: "Les nouveaut\xE9s de cette version"
+          },
+          report_issues: {
+            title: "Signaler un probl\xE8me",
+            description: "Vous avez trouv\xE9 un bug ? Faites-le nous savoir"
+          },
+          community_forum: {
+            title: "Forum communautaire",
+            description: "Rejoignez la discussion"
+          }
+        },
+        buttons: {
+          get_started: "Commencer"
+        }
+      },
+      notices: {
+        import_analyzing: "Analyse des conversations \xE0 partir de {{count}} fichier(s)...",
+        import_no_new: "Aucune conversation nouvelle ou mise \xE0 jour. Toutes les conversations sont d\xE9j\xE0 \xE0 jour.",
+        import_starting: "Importation de {{count}} conversations ({{new}} nouvelles, {{updated}} mises \xE0 jour)...",
+        import_starting_selected: "Importation de {{count}} conversations s\xE9lectionn\xE9es \xE0 partir de {{files}} fichier(s)...",
+        import_completed_fallback: "Importation termin\xE9e. {{created}} cr\xE9\xE9es, {{updated}} mises \xE0 jour.",
+        import_error: "Erreur lors de l'importation : {{error}}",
+        import_error_analyzing: "Erreur lors de l'analyse des conversations : {{error}}",
+        import_error_file: "Erreur lors du traitement de {{filename}}. Consultez la console pour plus de d\xE9tails.",
+        import_no_selected: "Aucune conversation s\xE9lectionn\xE9e pour l'importation.",
+        import_no_zip_gemini: "Veuillez s\xE9lectionner au moins un fichier ZIP Gemini Takeout (plus un JSON optionnel depuis l'extension).",
+        import_no_zip: "Veuillez s\xE9lectionner au moins un fichier ZIP d'export.",
+        import_gemini_json_failed: "\xC9chec de la lecture du JSON d'index Gemini. Continuation sans index.",
+        report_failed: "\xC9chec de la cr\xE9ation du fichier journal. Consultez la console pour plus de d\xE9tails.",
+        attachment_map_failed: "\xC9chec de la construction de la carte des pi\xE8ces jointes. Consultez la console pour plus de d\xE9tails.",
+        ribbon_tooltip: "Nexus AI Chat Importer - Importer un nouveau fichier"
+      },
+      commands: {
+        import_conversations: {
+          name: "Importer des conversations IA"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 Soutenir ce plugin",
+        header_highlight: "Soutenir ce plugin",
+        default_message_emphasis: "Je travaille \xE0 temps plein sur les projets Nexus tout en \xE9tant sans emploi et en faisant face \xE0 des probl\xE8mes de sant\xE9.",
+        default_message: "Si ce plugin vous facilite la vie, un don repr\xE9senterait \xE9norm\xE9ment pour moi et m'aiderait \xE0 les maintenir en vie.",
+        reality_check: "Merci ! Des milliers d'heures de travail ont \xE9t\xE9 investies dans ces plugins, et chaque caf\xE9 m'aide \xE0 continuer \xE0 les am\xE9liorer tout en g\xE9rant des probl\xE8mes de sant\xE9 persistants. Si ce plugin vous facilite la vie, pensez \xE0 me soutenir.",
+        button_alt: "Soutenir mon travail"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/de.json
+var de_default;
+var init_de = __esm({
+  "src/i18n/locales/de.json"() {
+    de_default = {
+      common: {
+        buttons: {
+          cancel: "Abbrechen",
+          ok: "OK",
+          select: "Ausw\xE4hlen",
+          browse: "Durchsuchen",
+          continue: "Weiter",
+          proceed: "Fortfahren",
+          close: "Verstanden!",
+          create: "Erstellen",
+          remove: "Entfernen",
+          run: "Ausf\xFChren",
+          complete: "Abschlie\xDFen",
+          view_report: "Bericht anzeigen",
+          get_started: "Loslegen",
+          create_new_folder: "Neuen Ordner erstellen"
+        },
+        status: {
+          new: "Neu",
+          updated: "Aktualisiert",
+          unchanged: "Unver\xE4ndert",
+          unknown: "Unbekannt"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} Validierung",
+          phase_scanning: "\u{1F4CB} Scannen",
+          phase_processing: "\u2699\uFE0F Verarbeitung",
+          phase_writing: "\u{1F4BE} Schreiben",
+          phase_complete: "\u2705 Abgeschlossen",
+          phase_error: "\u274C Fehler"
+        }
+      },
+      provider_selection: {
+        title: "Archiv-Anbieter ausw\xE4hlen",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "OpenAI ChatGPT Gespr\xE4chsexporte"
+          },
+          claude: {
+            name: "Claude",
+            description: "Anthropic Claude Gespr\xE4chsexporte"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Mistral AI Le Chat Gespr\xE4chsexporte"
+          }
+        },
+        buttons: {
+          select: "Ausw\xE4hlen",
+          cancel: "Abbrechen"
+        }
+      },
+      file_selection: {
+        title: "{{provider}}-Gespr\xE4che importieren",
+        import_mode: {
+          section_title: "Importmodus",
+          all_label: "Alle importieren",
+          all_description: "Alle Gespr\xE4che importieren (schneller)",
+          selective_label: "Gezielt ausw\xE4hlen",
+          selective_description: "Gespr\xE4che in der Vorschau anzeigen und ausw\xE4hlen"
+        },
+        file_area: {
+          section_title: "Dateien ausw\xE4hlen",
+          drop_text_default: "ZIP-Dateien hier ablegen oder zum Durchsuchen klicken",
+          drop_text_gemini: "ZIP- und JSON-Dateien hier ablegen oder zum Durchsuchen klicken",
+          drop_subtext_default: "Unterst\xFCtzt Mehrfachauswahl von Dateien",
+          drop_subtext_gemini: "ZIP (Takeout) + optionales JSON (Index aus der Erweiterung)"
+        },
+        selected_files: {
+          section_title: "Ausgew\xE4hlte Dateien",
+          remove_button: "Entfernen"
+        },
+        buttons: {
+          cancel: "Abbrechen",
+          continue: "Weiter"
+        }
+      },
+      conversation_selection: {
+        title: "Zu importierende Gespr\xE4che ausw\xE4hlen",
+        controls: {
+          select_all: "Alle ausw\xE4hlen",
+          select_none: "Keine ausw\xE4hlen",
+          search_placeholder: "Gespr\xE4che suchen...",
+          status_label: "Status:",
+          show_label: "Anzeigen:"
+        },
+        status_filter_options: {
+          all: "Alle",
+          new: "Neu",
+          updated: "Aktualisiert",
+          unchanged: "Unver\xE4ndert"
+        },
+        table_headers: {
+          title: "Titel",
+          created: "Erstellt",
+          updated: "Aktualisiert",
+          messages: "Nachrichten",
+          status: "Status"
+        },
+        status_badges: {
+          new: "Neu",
+          updated: "Aktualisiert",
+          unchanged: "Unver\xE4ndert",
+          unknown: "Unbekannt",
+          tooltip_new: "Dieses Gespr\xE4ch ist nicht in Ihrem Vault",
+          tooltip_updated: "Dieses Gespr\xE4ch hat neuere Inhalte als Ihr Vault ({{existing_date}} \u2192 {{new_date}})",
+          tooltip_unchanged: "Dieses Gespr\xE4ch ist identisch mit dem in Ihrem Vault"
+        },
+        pagination: {
+          showing: "{{start}}\u2013{{end}} von {{total}} Gespr\xE4chen werden angezeigt",
+          page_of: "Seite {{current}} von {{total}}",
+          previous: "Zur\xFCck",
+          next: "Weiter"
+        },
+        summary: {
+          unique_conversations: "Eindeutige Gespr\xE4che",
+          new: "Neu",
+          updated: "Aktualisiert",
+          unchanged: "Unver\xE4ndert",
+          selected_of: "{{selected}} von {{total}} ausgew\xE4hlt"
+        },
+        buttons: {
+          cancel: "Abbrechen",
+          import_selected: "Auswahl importieren",
+          import_selected_count: "{{count}} Ausgew\xE4hlte importieren"
+        },
+        date_unknown: "Unbekannt"
+      },
+      import_progress: {
+        title: "{{filename}} wird importiert",
+        initial: {
+          title: "Import wird vorbereitet...",
+          detail: "ZIP-Dateistruktur wird validiert"
+        },
+        conversation_counter: "{{current}}/{{total}} Gespr\xE4che",
+        conversation_counter_selective: "{{current}}/{{total}} ausgew\xE4hlte Gespr\xE4che",
+        selective_mode_indicator: "\u{1F4CB} Selektiver Import: {{selected}} von {{total}} Gespr\xE4chen",
+        complete: {
+          message: "Import erfolgreich abgeschlossen",
+          detail: "Sie k\xF6nnen dieses Fenster schlie\xDFen"
+        },
+        error: {
+          message: "Beim Import ist ein Fehler aufgetreten",
+          detail: "Weitere Details finden Sie in der Konsole"
+        }
+      },
+      import_completion: {
+        title: "Import abgeschlossen",
+        success_message: "\u2705 Gespr\xE4che erfolgreich importiert",
+        stats: {
+          zip_files_processed: "Verarbeitete ZIP-Dateien",
+          unique_conversations: "Eindeutige Gespr\xE4che",
+          duplicates: "Duplikate",
+          new: "Neu",
+          updated: "Aktualisiert",
+          skipped: "\xDCbersprungen",
+          failed: "Fehlgeschlagen"
+        },
+        attachments: {
+          label: "Anh\xE4nge:",
+          summary: "{{found}}/{{total}} extrahiert ({{percentage}}%)",
+          missing_failed: "{{missing}} fehlend, {{failed}} fehlgeschlagen"
+        },
+        report: {
+          label: "\u{1F4C4} Detaillierter Bericht:"
+        },
+        buttons: {
+          view_report: "Bericht anzeigen",
+          ok: "OK"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} Ordnerstruktur",
+          conversation_folder: {
+            name: "Gespr\xE4chsordner",
+            desc: "Speicherort f\xFCr importierte Gespr\xE4che",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "Ordner durchsuchen oder neuen erstellen"
+          },
+          reports_folder: {
+            name: "Berichtsordner",
+            desc: "Speicherort f\xFCr Importberichte",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "Ordner durchsuchen oder neuen erstellen"
+          },
+          attachment_folder: {
+            name: "Anhangsordner",
+            desc: "Speicherort f\xFCr Anh\xE4nge (\u26A0\uFE0F Von der Synchronisierung ausschlie\xDFen, um Speicherplatz zu sparen)",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "Ordner durchsuchen oder neuen erstellen"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} Datumspr\xE4fix",
+          add_date_prefix: {
+            name: "Datumspr\xE4fix zu Dateinamen hinzuf\xFCgen",
+            desc: "Das Erstellungsdatum als Pr\xE4fix zu Gespr\xE4chsdateinamen hinzuf\xFCgen",
+            format_label: "Datumsformat ausw\xE4hlen: "
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} Nachrichtendatumsformat",
+          custom_format: {
+            name: "Benutzerdefiniertes Zeitstempelformat f\xFCr Nachrichten",
+            desc: "Das standardm\xE4\xDFige gebietsschemabasierte Zeitstempelformat in Nachrichtenkopfzeilen \xFCberschreiben. Wenn deaktiviert, folgen Zeitstempel der Spracheinstellung von Obsidian. Wenn Obsidian auf Englisch eingestellt ist, wird das US-Format (YYYY/DD/MM) erzwungen."
+          },
+          timestamp_format: {
+            name: "Zeitstempelformat",
+            desc: "Das Format f\xFCr Nachrichtenzeitstempel in Gespr\xE4chsnotizen w\xE4hlen"
+          },
+          preview_label: "Vorschau: "
+        },
+        attachments: {
+          section_title: "Anhangseinstellungen",
+          import_attachments: {
+            name: "Anh\xE4nge importieren",
+            desc: 'Anhangsdateien auf dem Datentr\xE4ger speichern und in Gespr\xE4chen verlinken (verwendet eine "Best-Effort"-Strategie)'
+          },
+          handle_missing: {
+            name: "Fehlende Anh\xE4nge behandeln",
+            desc: "Wenn Anh\xE4nge in Exporten fehlen, informative Notizen erstellen statt sie zu \xFCberspringen"
+          },
+          show_details: {
+            name: "Anhangsdetails in Berichten anzeigen",
+            desc: "Detaillierte Statistiken zur Anhangsverarbeitung in Importberichte aufnehmen"
+          },
+          info_box: {
+            title: "\u{1F4CE} \xDCber die Anhangsverarbeitung",
+            best_effort: "Best-Effort-Strategie: In Exporten gefundene Dateien werden extrahiert und verlinkt; fehlende Dateien erhalten informative Notizen.",
+            platform_diff: "Plattformunterschiede: ChatGPT-Exporte enthalten m\xF6glicherweise nicht alle Anh\xE4nge, insbesondere aus \xE4lteren Gespr\xE4chen.",
+            organization: "Einfache Organisation: Dateien werden unter attachments/Anbieter/Kategorie/ organisiert (z. B. attachments/chatgpt/images/).",
+            sync_tip: "Synchronisierungshinweis: Erw\xE4gen Sie, den Anhangsordner von der Synchronisierung auszuschlie\xDFen, um das Hochladen gro\xDFer Dateien zu vermeiden.",
+            tip: "\u{1F4A1} Tipp: Aktivieren Sie \u201EAnhangsdetails anzeigen\u201C, um genau zu sehen, welche Dateien beim Import gefunden, fehlend oder fehlgeschlagen waren."
+          }
+        },
+        migrations: {
+          section_title: "Migrationen",
+          description_manual: "Manuelle Vorg\xE4nge: Optionale Upgrade-Vorg\xE4nge, die bei Bedarf ausgef\xFChrt werden k\xF6nnen.",
+          description_automatic: "Automatische Vorg\xE4nge (wie das Entfernen alter Daten) werden beim Upgrade automatisch ausgef\xFChrt und sind hier nicht aufgef\xFChrt.",
+          version_header: "Version {{version}}",
+          no_migrations: {
+            title: "Keine manuellen Vorg\xE4nge verf\xFCgbar",
+            desc: "Alle Upgrade-Vorg\xE4nge wurden automatisch abgeschlossen."
+          },
+          operation_completed_suffix: " \u2705 Abgeschlossen",
+          buttons: {
+            completed: "\u2705 Abgeschlossen",
+            cannot_run: "Kann nicht ausgef\xFChrt werden",
+            run: "Ausf\xFChren",
+            running: "Wird ausgef\xFChrt..."
+          },
+          tooltips: {
+            completed: "Dieser Vorgang wurde abgeschlossen",
+            cannot_run: "Voraussetzungen f\xFCr diesen Vorgang nicht erf\xFCllt",
+            run: "{{operation_name}} ausf\xFChren"
+          },
+          error_loading: "Fehler beim Laden der Migrationen:"
+        },
+        support: {
+          section_title: "\u{1F49D} Support & Hilfe",
+          resources: {
+            name: "\u{1F4DA} Ressourcen",
+            desc: "Dokumentation, Versionshinweise und Community-Links",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} Changelog",
+            issues: "\u{1F41B} Fehler melden",
+            forum: "\u{1F4AC} Forum"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "Wird gestartet...",
+          progress_label: "Fortschritt: {{percentage}}%",
+          step_label: "Schritt {{current}}/{{total}}",
+          complete_label: "Abgeschlossen",
+          complete_message: "Erfolgreich abgeschlossen",
+          error_message: "Ein Fehler ist aufgetreten"
+        },
+        multi_operation_modal: {
+          progress_label: "Fortschritt: {{completed}}/{{total}} Vorg\xE4nge",
+          progress_with_failures: "Fortschritt: {{completed}}/{{total}} Vorg\xE4nge ({{failed}} fehlgeschlagen)",
+          all_completed: "Alle {{total}} Vorg\xE4nge erfolgreich abgeschlossen",
+          mark_complete_default: "Alle Vorg\xE4nge erfolgreich abgeschlossen",
+          buttons: {
+            complete: "Abschlie\xDFen",
+            close: "Schlie\xDFen"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} Migration erforderlich",
+            message: "Die folgenden Aufgaben werden automatisch ausgef\xFChrt, um Ihre Daten auf v1.3.0 zu aktualisieren:",
+            tasks: {
+              folder_settings: "\u2713 Ordnereinstellungen zur neuen Struktur migrieren",
+              timestamps: "\u2713 Zeitstempel auf ISO 8601-Format aktualisieren",
+              aliases: "\u2713 Frontmatter-Aliase korrigieren",
+              reports: "\u2713 Berichtsordner an den richtigen Speicherort verschieben",
+              artifacts: "\u2713 Artefakt-Metadaten aktualisieren"
+            },
+            estimate: "Dies dauert einige Sekunden."
+          },
+          buttons: {
+            run_migration: "\u{1F680} Migrationsaufgaben starten"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 Upgrade abgeschlossen \u2013 v{{version}}",
+          buttons: {
+            got_it: "Verstanden!"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "Verstanden!"
+          }
+        }
+      },
+      folder_migration: {
+        title: "Vorhandene Dateien verschieben?",
+        message_intro: "Sie \xE4ndern den Speicherort des Ordners {{folder_type}}:",
+        path_from: "Von: {{path}}",
+        path_to: "Nach: {{path}}",
+        question: "M\xF6chten Sie vorhandene Dateien an den neuen Speicherort verschieben?",
+        link_updates: {
+          title: "\u{1F517} Link-Aktualisierungen:",
+          attachments_text: "Das Verschieben von Anh\xE4ngen aktualisiert auch alle Gespr\xE4chsnotizen, die auf sie verweisen.",
+          conversations_text: "Das Verschieben von Gespr\xE4chen aktualisiert auch alle Berichte und Anh\xE4nge, die auf sie verweisen.",
+          estimated_time_seconds: "Gesch\xE4tzte Zeit: ~{{seconds}} Sekunden",
+          estimated_time_minutes: "Gesch\xE4tzte Zeit: ~{{minutes}} Minute(n)"
+        },
+        warning: {
+          title: "\u26A0\uFE0F Wichtig:",
+          text: "Wenn Sie \u201ENein\u201C w\xE4hlen, verbleiben vorhandene Dateien am alten Speicherort und werden von zuk\xFCnftigen Updates nicht beeinflusst."
+        },
+        buttons: {
+          cancel: "Abbrechen",
+          keep: "Nein, Dateien am alten Speicherort behalten",
+          move: "Ja, Dateien verschieben",
+          move_with_links: "Ja, Dateien verschieben und Links aktualisieren"
+        },
+        progress: {
+          title_moving: "{{folder_type}} wird verschoben und Links werden aktualisiert",
+          step_moving_title: "Dateien werden verschoben...",
+          step_moving_detail: "Verschieben von {{old_path}} nach {{new_path}}",
+          step_moving_count: "{{current}} / {{total}} Dateien verarbeitet",
+          step_moved_title: "Dateien verschoben",
+          step_moved_detail: "{{moved}} Dateien verschoben, {{skipped}} \xFCbersprungen. Links werden vorbereitet...",
+          step_updating_attachment_links: "Anhangs-Links werden aktualisiert...",
+          step_updating_conversation_links: "Gespr\xE4chs-Links werden aktualisiert...",
+          step_updating_report_links: "Links in Berichten werden aktualisiert...",
+          step_updating_artifact_links: "Links in Artefakten werden aktualisiert...",
+          complete_message: "{{moved}} Dateien verschoben. {{links}} Links erfolgreich aktualisiert"
+        },
+        result_dialog: {
+          title: "Ergebnis der Ordnermigration",
+          summary_title: "Migrationszusammenfassung",
+          moved: "\u2705 Erfolgreich verschoben: {{count}} Datei(en)",
+          skipped: "\u26A0\uFE0F \xDCbersprungen (bereits vorhanden): {{count}} Datei(en)",
+          errors: "\u274C Fehler: {{count}} Datei(en)",
+          explanation: "Dateien, die am Zielort bereits vorhanden waren, wurden zum Schutz Ihrer Daten nicht \xFCberschrieben.",
+          error_details_title: "Fehlerdetails:"
+        },
+        error_target_not_empty: {
+          title: "Zielordner ist nicht leer",
+          message: "Der Ordner \u201E{{path}}\u201C enth\xE4lt bereits Dateien.\n\nUm den Ordnerspeicherort zu \xE4ndern:\n\u2022 Vorhandene Dateien manuell in Obsidian verschieben, ODER\n\u2022 Einen leeren Ordner w\xE4hlen oder einen neuen erstellen"
+        },
+        error_migration_failed: {
+          title: "Migration fehlgeschlagen",
+          message_move: "Dateien konnten nicht verschoben werden: {{error}}",
+          message_links: "Dateien konnten nicht verschoben oder Links nicht aktualisiert werden: {{error}}"
+        }
+      },
+      folder_browser: {
+        title: "Ordner ausw\xE4hlen",
+        vault_root: "Vault-Wurzel (/)",
+        buttons: {
+          create_new_folder: "Neuen Ordner erstellen",
+          cancel: "Abbrechen",
+          select: "Ausw\xE4hlen"
+        },
+        create_folder_dialog: {
+          title: "Neuen Ordner erstellen",
+          folder_name_label: "Ordnername:",
+          buttons: {
+            cancel: "Abbrechen",
+            create: "Erstellen"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F Bitte zuerst einen \xFCbergeordneten Ordner ausw\xE4hlen",
+          invalid_name: "\u274C Ung\xFCltiger Ordnername: enth\xE4lt unerlaubte Zeichen",
+          already_exists: "\u274C Ordner existiert bereits",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 Ordner erstellt: {{name}}",
+          create_failed: "\u274C Ordner konnte nicht erstellt werden: {{error}}",
+          select_first: "\u26A0\uFE0F Bitte zuerst einen Ordner ausw\xE4hlen"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "In Version 1.3.0 k\xF6nnen Sie einen Ordner f\xFCr Berichte angeben. Vorhandene Berichte werden nach {{folder}} verschoben, oder Sie k\xF6nnen unten Ihren bevorzugten Ordner ausw\xE4hlen.",
+        note: "Hinweis: Der Ordner darf sich nicht innerhalb von Conversations oder Attachments befinden.",
+        report_folder_label: "\u{1F4CA} Berichtsordner",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "Durchsuchen",
+          proceed: "Fortfahren"
+        },
+        error_invalid_folder: {
+          title: "Ung\xFCltiger Ordnerspeicherort",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "Danke, dass Sie Nexus AI Chat Importer installiert haben!",
+        description: "Importieren und verwalten Sie Ihre ChatGPT-, Claude- und Le Chat-Gespr\xE4che direkt in Ihrem Obsidian-Vault.",
+        resources_title: "Ressourcen",
+        resources: {
+          documentation: {
+            title: "Dokumentation",
+            description: "Erfahren Sie, wie Sie das Plugin verwenden"
+          },
+          release_notes: {
+            title: "Versionshinweise",
+            description: "Neuigkeiten in dieser Version"
+          },
+          report_issues: {
+            title: "Fehler melden",
+            description: "Einen Fehler gefunden? Teilen Sie es uns mit"
+          },
+          community_forum: {
+            title: "Community-Forum",
+            description: "An der Diskussion teilnehmen"
+          }
+        },
+        buttons: {
+          get_started: "Loslegen"
+        }
+      },
+      notices: {
+        import_analyzing: "Gespr\xE4che aus {{count}} Datei(en) werden analysiert...",
+        import_no_new: "Keine neuen oder aktualisierten Gespr\xE4che gefunden. Alle Gespr\xE4che sind bereits aktuell.",
+        import_starting: "{{count}} Gespr\xE4che werden importiert ({{new}} neu, {{updated}} aktualisiert)...",
+        import_starting_selected: "{{count}} ausgew\xE4hlte Gespr\xE4che aus {{files}} Datei(en) werden importiert...",
+        import_completed_fallback: "Import abgeschlossen. {{created}} erstellt, {{updated}} aktualisiert.",
+        import_error: "Fehler beim Import: {{error}}",
+        import_error_analyzing: "Fehler beim Analysieren der Gespr\xE4che: {{error}}",
+        import_error_file: "Fehler beim Verarbeiten von {{filename}}. Weitere Details in der Konsole.",
+        import_no_selected: "Keine Gespr\xE4che f\xFCr den Import ausgew\xE4hlt.",
+        import_no_zip_gemini: "Bitte w\xE4hlen Sie mindestens eine Gemini Takeout ZIP-Datei (plus optionalem JSON-Index aus der Erweiterung).",
+        import_no_zip: "Bitte w\xE4hlen Sie mindestens eine ZIP-Exportdatei.",
+        import_gemini_json_failed: "Gemini-Index JSON konnte nicht gelesen werden. Fortfahren ohne Index.",
+        report_failed: "Protokolldatei konnte nicht erstellt werden. Weitere Details in der Konsole.",
+        attachment_map_failed: "Anhangskarte konnte nicht erstellt werden. Weitere Details in der Konsole.",
+        ribbon_tooltip: "Nexus AI Chat Importer - Neue Datei importieren"
+      },
+      commands: {
+        import_conversations: {
+          name: "KI-Gespr\xE4che importieren"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 Dieses Plugin unterst\xFCtzen",
+        header_highlight: "Dieses Plugin unterst\xFCtzen",
+        default_message_emphasis: "Ich arbeite Vollzeit an Nexus-Projekten, bin arbeitslos und k\xE4mpfe mit gesundheitlichen Problemen.",
+        default_message: "Wenn dieses Plugin Ihr Leben leichter macht, w\xFCrde mir eine Spende sehr viel bedeuten und dazu beitragen, die Projekte am Leben zu erhalten.",
+        reality_check: "Danke! Tausende Stunden Arbeit stecken in diesen Plugins, und jeder Kaffee hilft mir, sie weiterzuentwickeln, w\xE4hrend ich mit anhaltenden gesundheitlichen Problemen umgehe. Wenn dieses Plugin Ihr Leben leichter macht, erw\xE4gen Sie bitte, mich zu unterst\xFCtzen.",
+        button_alt: "Meine Arbeit unterst\xFCtzen"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/es.json
+var es_default;
+var init_es = __esm({
+  "src/i18n/locales/es.json"() {
+    es_default = {
+      common: {
+        buttons: {
+          cancel: "Cancelar",
+          ok: "OK",
+          select: "Seleccionar",
+          browse: "Explorar",
+          continue: "Continuar",
+          proceed: "Proceder",
+          close: "\xA1Entendido!",
+          create: "Crear",
+          remove: "Eliminar",
+          run: "Ejecutar",
+          complete: "Finalizar",
+          view_report: "Ver informe",
+          get_started: "Comenzar",
+          create_new_folder: "Crear nueva carpeta"
+        },
+        status: {
+          new: "Nuevo",
+          updated: "Actualizado",
+          unchanged: "Sin cambios",
+          unknown: "Desconocido"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} Validaci\xF3n",
+          phase_scanning: "\u{1F4CB} Escaneo",
+          phase_processing: "\u2699\uFE0F Procesando",
+          phase_writing: "\u{1F4BE} Escribiendo",
+          phase_complete: "\u2705 Completado",
+          phase_error: "\u274C Error"
+        }
+      },
+      provider_selection: {
+        title: "Seleccionar proveedor de archivo",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "Exportaciones de conversaciones OpenAI ChatGPT"
+          },
+          claude: {
+            name: "Claude",
+            description: "Exportaciones de conversaciones Anthropic Claude"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Exportaciones de conversaciones Mistral AI Le Chat"
+          }
+        },
+        buttons: {
+          select: "Seleccionar",
+          cancel: "Cancelar"
+        }
+      },
+      file_selection: {
+        title: "Importar conversaciones de {{provider}}",
+        import_mode: {
+          section_title: "Modo de importaci\xF3n",
+          all_label: "Importar todo",
+          all_description: "Importar todas las conversaciones (m\xE1s r\xE1pido)",
+          selective_label: "Selecci\xF3n espec\xEDfica",
+          selective_description: "Vista previa y selecci\xF3n de conversaciones"
+        },
+        file_area: {
+          section_title: "Seleccionar archivos",
+          drop_text_default: "Suelte archivos ZIP aqu\xED o haga clic para explorar",
+          drop_text_gemini: "Suelte archivos ZIP y JSON aqu\xED o haga clic para explorar",
+          drop_subtext_default: "Admite selecci\xF3n m\xFAltiple de archivos",
+          drop_subtext_gemini: "ZIP (Takeout) + JSON opcional (\xEDndice desde la extensi\xF3n)"
+        },
+        selected_files: {
+          section_title: "Archivos seleccionados",
+          remove_button: "Eliminar"
+        },
+        buttons: {
+          cancel: "Cancelar",
+          continue: "Continuar"
+        }
+      },
+      conversation_selection: {
+        title: "Seleccionar conversaciones para importar",
+        controls: {
+          select_all: "Seleccionar todo",
+          select_none: "Deseleccionar todo",
+          search_placeholder: "Buscar conversaciones...",
+          status_label: "Estado:",
+          show_label: "Mostrar:"
+        },
+        status_filter_options: {
+          all: "Todos",
+          new: "Nuevo",
+          updated: "Actualizado",
+          unchanged: "Sin cambios"
+        },
+        table_headers: {
+          title: "T\xEDtulo",
+          created: "Creado",
+          updated: "Actualizado",
+          messages: "Mensajes",
+          status: "Estado"
+        },
+        status_badges: {
+          new: "Nuevo",
+          updated: "Actualizado",
+          unchanged: "Sin cambios",
+          unknown: "Desconocido",
+          tooltip_new: "Esta conversaci\xF3n no est\xE1 en su Vault",
+          tooltip_updated: "Esta conversaci\xF3n tiene contenido m\xE1s reciente que su Vault ({{existing_date}} \u2192 {{new_date}})",
+          tooltip_unchanged: "Esta conversaci\xF3n es igual a la de su Vault"
+        },
+        pagination: {
+          showing: "Mostrando {{start}}-{{end}} de {{total}} conversaciones",
+          page_of: "P\xE1gina {{current}} de {{total}}",
+          previous: "Anterior",
+          next: "Siguiente"
+        },
+        summary: {
+          unique_conversations: "Conversaciones \xFAnicas",
+          new: "Nuevo",
+          updated: "Actualizado",
+          unchanged: "Sin cambios",
+          selected_of: "{{selected}} de {{total}} seleccionadas"
+        },
+        buttons: {
+          cancel: "Cancelar",
+          import_selected: "Importar selecci\xF3n",
+          import_selected_count: "Importar {{count}} seleccionadas"
+        },
+        date_unknown: "Desconocido"
+      },
+      import_progress: {
+        title: "Importando {{filename}}",
+        initial: {
+          title: "Preparando la importaci\xF3n...",
+          detail: "Validando la estructura del archivo ZIP"
+        },
+        conversation_counter: "{{current}}/{{total}} conversaciones",
+        conversation_counter_selective: "{{current}}/{{total}} conversaciones seleccionadas",
+        selective_mode_indicator: "\u{1F4CB} Importaci\xF3n selectiva: {{selected}} de {{total}} conversaciones",
+        complete: {
+          message: "Importaci\xF3n completada con \xE9xito",
+          detail: "Puede cerrar este cuadro de di\xE1logo"
+        },
+        error: {
+          message: "Se produjo un error durante la importaci\xF3n",
+          detail: "Consulte la consola para m\xE1s detalles"
+        }
+      },
+      import_completion: {
+        title: "Importaci\xF3n completada",
+        success_message: "\u2705 Conversaciones importadas con \xE9xito",
+        stats: {
+          zip_files_processed: "Archivos ZIP procesados",
+          unique_conversations: "Conversaciones \xFAnicas",
+          duplicates: "Duplicados",
+          new: "Nuevo",
+          updated: "Actualizado",
+          skipped: "Omitidos",
+          failed: "Fallidos"
+        },
+        attachments: {
+          label: "Adjuntos:",
+          summary: "{{found}}/{{total}} extra\xEDdos ({{percentage}}%)",
+          missing_failed: "{{missing}} faltantes, {{failed}} fallidos"
+        },
+        report: {
+          label: "\u{1F4C4} Informe detallado:"
+        },
+        buttons: {
+          view_report: "Ver informe",
+          ok: "OK"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} Estructura de carpetas",
+          conversation_folder: {
+            name: "Carpeta de conversaciones",
+            desc: "D\xF3nde se almacenan las conversaciones importadas",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "Explorar carpetas o crear una nueva"
+          },
+          reports_folder: {
+            name: "Carpeta de informes",
+            desc: "D\xF3nde se almacenan los informes de importaci\xF3n",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "Explorar carpetas o crear una nueva"
+          },
+          attachment_folder: {
+            name: "Carpeta de adjuntos",
+            desc: "D\xF3nde se almacenan los adjuntos (\u26A0\uFE0F Excluir de la sincronizaci\xF3n para ahorrar espacio)",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "Explorar carpetas o crear una nueva"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} Prefijo de fecha",
+          add_date_prefix: {
+            name: "A\xF1adir prefijo de fecha a los nombres de archivo",
+            desc: "A\xF1adir la fecha de creaci\xF3n como prefijo a los nombres de archivo de conversaci\xF3n",
+            format_label: "Seleccionar formato de fecha: "
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} Formato de fecha de mensajes",
+          custom_format: {
+            name: "Formato de marca de tiempo personalizado para mensajes",
+            desc: "Reemplazar el formato de marca de tiempo predeterminado basado en la configuraci\xF3n regional en los encabezados de mensajes. Cuando est\xE1 desactivado, las marcas de tiempo siguen la configuraci\xF3n de idioma de Obsidian. Si Obsidian est\xE1 en ingl\xE9s, se aplica el formato estadounidense (YYYY/DD/MM)."
+          },
+          timestamp_format: {
+            name: "Formato de marca de tiempo",
+            desc: "Elegir el formato para las marcas de tiempo de mensajes en las notas de conversaci\xF3n"
+          },
+          preview_label: "Vista previa: "
+        },
+        attachments: {
+          section_title: "Configuraci\xF3n de adjuntos",
+          import_attachments: {
+            name: "Importar adjuntos",
+            desc: "Guardar archivos adjuntos en disco y vincularlos en las conversaciones (utiliza una estrategia de \xABmejor esfuerzo\xBB)"
+          },
+          handle_missing: {
+            name: "Gestionar adjuntos faltantes",
+            desc: "Cuando faltan adjuntos en las exportaciones, crear notas informativas en lugar de omitirlos"
+          },
+          show_details: {
+            name: "Mostrar detalles de adjuntos en informes",
+            desc: "Incluir estad\xEDsticas detalladas del procesamiento de adjuntos en los informes de importaci\xF3n"
+          },
+          info_box: {
+            title: "\u{1F4CE} Acerca del manejo de adjuntos",
+            best_effort: "Estrategia de mejor esfuerzo: Los archivos encontrados en las exportaciones se extraen y vinculan; los archivos faltantes reciben notas informativas.",
+            platform_diff: "Diferencias entre plataformas: Las exportaciones de ChatGPT pueden no incluir todos los adjuntos, especialmente de conversaciones m\xE1s antiguas.",
+            organization: "Organizaci\xF3n sencilla: Los archivos se organizan en attachments/proveedor/categor\xEDa/ (p. ej., attachments/chatgpt/images/).",
+            sync_tip: "Consejo de sincronizaci\xF3n: Considere excluir la carpeta de adjuntos de la sincronizaci\xF3n para evitar subir archivos grandes.",
+            tip: "\u{1F4A1} Consejo: Active \xABMostrar detalles de adjuntos\xBB para ver exactamente qu\xE9 archivos se encontraron, faltaron o fallaron durante la importaci\xF3n."
+          }
+        },
+        migrations: {
+          section_title: "Migraciones",
+          description_manual: "Operaciones manuales: Operaciones de actualizaci\xF3n opcionales que se pueden ejecutar cuando sea conveniente.",
+          description_automatic: "Las operaciones autom\xE1ticas (como eliminar datos antiguos) se ejecutan autom\xE1ticamente durante la actualizaci\xF3n y no se muestran aqu\xED.",
+          version_header: "Versi\xF3n {{version}}",
+          no_migrations: {
+            title: "No hay operaciones manuales disponibles",
+            desc: "Todas las operaciones de actualizaci\xF3n se han completado autom\xE1ticamente."
+          },
+          operation_completed_suffix: " \u2705 Completado",
+          buttons: {
+            completed: "\u2705 Completado",
+            cannot_run: "No se puede ejecutar",
+            run: "Ejecutar",
+            running: "Ejecutando..."
+          },
+          tooltips: {
+            completed: "Esta operaci\xF3n ha sido completada",
+            cannot_run: "Los requisitos previos no se cumplen para esta operaci\xF3n",
+            run: "Ejecutar {{operation_name}}"
+          },
+          error_loading: "Error al cargar las migraciones:"
+        },
+        support: {
+          section_title: "\u{1F49D} Soporte y ayuda",
+          resources: {
+            name: "\u{1F4DA} Recursos",
+            desc: "Documentaci\xF3n, notas de versi\xF3n y enlaces de la comunidad",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} Changelog",
+            issues: "\u{1F41B} Problemas",
+            forum: "\u{1F4AC} Foro"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "Iniciando...",
+          progress_label: "Progreso: {{percentage}}%",
+          step_label: "Paso {{current}}/{{total}}",
+          complete_label: "Completado",
+          complete_message: "Completado con \xE9xito",
+          error_message: "Se produjo un error"
+        },
+        multi_operation_modal: {
+          progress_label: "Progreso: {{completed}}/{{total}} operaciones",
+          progress_with_failures: "Progreso: {{completed}}/{{total}} operaciones ({{failed}} fallidas)",
+          all_completed: "Las {{total}} operaciones se completaron con \xE9xito",
+          mark_complete_default: "Todas las operaciones se completaron con \xE9xito",
+          buttons: {
+            complete: "Finalizar",
+            close: "Cerrar"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} Migraci\xF3n requerida",
+            message: "Las siguientes tareas se ejecutar\xE1n autom\xE1ticamente para actualizar sus datos a v1.3.0:",
+            tasks: {
+              folder_settings: "\u2713 Migrar la configuraci\xF3n de carpetas a la nueva estructura",
+              timestamps: "\u2713 Actualizar marcas de tiempo al formato ISO 8601",
+              aliases: "\u2713 Corregir alias del frontmatter",
+              reports: "\u2713 Mover la carpeta de informes a la ubicaci\xF3n correcta",
+              artifacts: "\u2713 Actualizar metadatos de artefactos"
+            },
+            estimate: "Esto tomar\xE1 unos segundos."
+          },
+          buttons: {
+            run_migration: "\u{1F680} Ejecutar tareas de migraci\xF3n"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 Actualizaci\xF3n completada - v{{version}}",
+          buttons: {
+            got_it: "\xA1Entendido!"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "\xA1Entendido!"
+          }
+        }
+      },
+      folder_migration: {
+        title: "\xBFMover archivos existentes?",
+        message_intro: "Est\xE1 cambiando la ubicaci\xF3n de la carpeta {{folder_type}}:",
+        path_from: "Desde: {{path}}",
+        path_to: "Hacia: {{path}}",
+        question: "\xBFDesea mover los archivos existentes a la nueva ubicaci\xF3n?",
+        link_updates: {
+          title: "\u{1F517} Actualizaciones de enlaces:",
+          attachments_text: "Mover los adjuntos tambi\xE9n actualizar\xE1 todas las notas de conversaci\xF3n que hagan referencia a ellos.",
+          conversations_text: "Mover las conversaciones tambi\xE9n actualizar\xE1 todos los informes y adjuntos que hagan referencia a ellas.",
+          estimated_time_seconds: "Tiempo estimado: ~{{seconds}} segundos",
+          estimated_time_minutes: "Tiempo estimado: ~{{minutes}} minuto(s)"
+        },
+        warning: {
+          title: "\u26A0\uFE0F Importante:",
+          text: "Si elige \xABNo\xBB, los archivos existentes permanecer\xE1n en la ubicaci\xF3n anterior y no ser\xE1n afectados por futuras actualizaciones."
+        },
+        buttons: {
+          cancel: "Cancelar",
+          keep: "No, conservar los archivos en la ubicaci\xF3n anterior",
+          move: "S\xED, mover los archivos",
+          move_with_links: "S\xED, mover los archivos y actualizar enlaces"
+        },
+        progress: {
+          title_moving: "Moviendo {{folder_type}} y actualizando enlaces",
+          step_moving_title: "Moviendo archivos...",
+          step_moving_detail: "Moviendo de {{old_path}} a {{new_path}}",
+          step_moving_count: "{{current}} / {{total}} archivos procesados",
+          step_moved_title: "Archivos movidos",
+          step_moved_detail: "{{moved}} archivos movidos, {{skipped}} omitidos. Preparando actualizaci\xF3n de enlaces...",
+          step_updating_attachment_links: "Actualizando enlaces de adjuntos...",
+          step_updating_conversation_links: "Actualizando enlaces de conversaciones...",
+          step_updating_report_links: "Actualizando enlaces en informes...",
+          step_updating_artifact_links: "Actualizando enlaces en artefactos...",
+          complete_message: "{{moved}} archivos movidos. {{links}} enlaces actualizados con \xE9xito"
+        },
+        result_dialog: {
+          title: "Resultado de la migraci\xF3n de carpetas",
+          summary_title: "Resumen de la migraci\xF3n",
+          moved: "\u2705 Movidos con \xE9xito: {{count}} archivo(s)",
+          skipped: "\u26A0\uFE0F Omitidos (ya exist\xEDan): {{count}} archivo(s)",
+          errors: "\u274C Errores: {{count}} archivo(s)",
+          explanation: "Los archivos que ya exist\xEDan en el destino no fueron sobrescritos para preservar sus datos.",
+          error_details_title: "Detalles del error:"
+        },
+        error_target_not_empty: {
+          title: "La carpeta de destino no est\xE1 vac\xEDa",
+          message: "La carpeta \xAB{{path}}\xBB ya contiene archivos.\n\nPara cambiar la ubicaci\xF3n de la carpeta:\n\u2022 Mueva los archivos existentes manualmente en Obsidian, O\n\u2022 Elija una carpeta vac\xEDa o cree una nueva"
+        },
+        error_migration_failed: {
+          title: "La migraci\xF3n ha fallado",
+          message_move: "Error al mover archivos: {{error}}",
+          message_links: "Error al mover archivos o actualizar enlaces: {{error}}"
+        }
+      },
+      folder_browser: {
+        title: "Seleccionar carpeta",
+        vault_root: "Ra\xEDz del Vault (/)",
+        buttons: {
+          create_new_folder: "Crear nueva carpeta",
+          cancel: "Cancelar",
+          select: "Seleccionar"
+        },
+        create_folder_dialog: {
+          title: "Crear nueva carpeta",
+          folder_name_label: "Nombre de la carpeta:",
+          buttons: {
+            cancel: "Cancelar",
+            create: "Crear"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F Por favor, seleccione primero una carpeta principal",
+          invalid_name: "\u274C Nombre de carpeta no v\xE1lido: contiene caracteres no permitidos",
+          already_exists: "\u274C La carpeta ya existe",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 Carpeta creada: {{name}}",
+          create_failed: "\u274C Error al crear la carpeta: {{error}}",
+          select_first: "\u26A0\uFE0F Por favor, seleccione primero una carpeta"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "En la versi\xF3n 1.3.0, puede especificar una carpeta para los informes. Moveremos los informes existentes a {{folder}}, o puede seleccionar su carpeta preferida a continuaci\xF3n.",
+        note: "Nota: La carpeta no puede estar dentro de Conversations o Attachments.",
+        report_folder_label: "\u{1F4CA} Carpeta de informes",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "Explorar",
+          proceed: "Proceder"
+        },
+        error_invalid_folder: {
+          title: "Ubicaci\xF3n de carpeta no v\xE1lida",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "\xA1Gracias por instalar Nexus AI Chat Importer!",
+        description: "Importe y gestione sus conversaciones de ChatGPT, Claude y Le Chat directamente en su Vault de Obsidian.",
+        resources_title: "Recursos",
+        resources: {
+          documentation: {
+            title: "Documentaci\xF3n",
+            description: "Aprenda a usar el plugin"
+          },
+          release_notes: {
+            title: "Notas de versi\xF3n",
+            description: "Novedades en esta versi\xF3n"
+          },
+          report_issues: {
+            title: "Reportar problemas",
+            description: "\xBFEncontr\xF3 un error? H\xE1ganoslo saber"
+          },
+          community_forum: {
+            title: "Foro de la comunidad",
+            description: "\xDAnase a la discusi\xF3n"
+          }
+        },
+        buttons: {
+          get_started: "Comenzar"
+        }
+      },
+      notices: {
+        import_analyzing: "Analizando conversaciones de {{count}} archivo(s)...",
+        import_no_new: "No se encontraron conversaciones nuevas o actualizadas. Todas las conversaciones ya est\xE1n al d\xEDa.",
+        import_starting: "Importando {{count}} conversaciones ({{new}} nuevas, {{updated}} actualizadas)...",
+        import_starting_selected: "Importando {{count}} conversaciones seleccionadas de {{files}} archivo(s)...",
+        import_completed_fallback: "Importaci\xF3n completada. {{created}} creadas, {{updated}} actualizadas.",
+        import_error: "Error durante la importaci\xF3n: {{error}}",
+        import_error_analyzing: "Error al analizar las conversaciones: {{error}}",
+        import_error_file: "Error al procesar {{filename}}. Consulte la consola para m\xE1s detalles.",
+        import_no_selected: "No se han seleccionado conversaciones para importar.",
+        import_no_zip_gemini: "Por favor, seleccione al menos un archivo ZIP de Gemini Takeout (m\xE1s un JSON opcional desde la extensi\xF3n).",
+        import_no_zip: "Por favor, seleccione al menos un archivo ZIP de exportaci\xF3n.",
+        import_gemini_json_failed: "No se pudo leer el JSON de \xEDndice de Gemini. Continuando sin \xEDndice.",
+        report_failed: "No se pudo crear el archivo de registro. Consulte la consola para m\xE1s detalles.",
+        attachment_map_failed: "No se pudo construir el mapa de adjuntos. Consulte la consola para m\xE1s detalles.",
+        ribbon_tooltip: "Nexus AI Chat Importer - Importar nuevo archivo"
+      },
+      commands: {
+        import_conversations: {
+          name: "Importar conversaciones de IA"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 Apoyar este plugin",
+        header_highlight: "Apoyar este plugin",
+        default_message_emphasis: "Trabajo a tiempo completo en los proyectos Nexus estando desempleado y enfrentando problemas de salud.",
+        default_message: "Si este plugin te facilita la vida, una donaci\xF3n significar\xEDa much\xEDsimo para m\xED y ayudar\xEDa a mantenerlos activos.",
+        reality_check: "\xA1Gracias! Miles de horas de trabajo han ido a estos plugins, y cada caf\xE9 me ayuda a seguir mejor\xE1ndolos mientras gestiono problemas de salud continuos. Si este plugin te facilita la vida, por favor considera apoyarme.",
+        button_alt: "Apoyar mi trabajo"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/it.json
+var it_default;
+var init_it = __esm({
+  "src/i18n/locales/it.json"() {
+    it_default = {
+      common: {
+        buttons: {
+          cancel: "Annulla",
+          ok: "OK",
+          select: "Seleziona",
+          browse: "Sfoglia",
+          continue: "Continua",
+          proceed: "Procedi",
+          close: "Capito!",
+          create: "Crea",
+          remove: "Rimuovi",
+          run: "Esegui",
+          complete: "Completa",
+          view_report: "Visualizza report",
+          get_started: "Inizia",
+          create_new_folder: "Crea nuova cartella"
+        },
+        status: {
+          new: "Nuovo",
+          updated: "Aggiornato",
+          unchanged: "Invariato",
+          unknown: "Sconosciuto"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} Validazione",
+          phase_scanning: "\u{1F4CB} Scansione",
+          phase_processing: "\u2699\uFE0F Elaborazione",
+          phase_writing: "\u{1F4BE} Scrittura",
+          phase_complete: "\u2705 Completato",
+          phase_error: "\u274C Errore"
+        }
+      },
+      provider_selection: {
+        title: "Seleziona il provider dell'archivio",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "Esportazioni di conversazioni OpenAI ChatGPT"
+          },
+          claude: {
+            name: "Claude",
+            description: "Esportazioni di conversazioni Anthropic Claude"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Esportazioni di conversazioni Mistral AI Le Chat"
+          }
+        },
+        buttons: {
+          select: "Seleziona",
+          cancel: "Annulla"
+        }
+      },
+      file_selection: {
+        title: "Importa conversazioni {{provider}}",
+        import_mode: {
+          section_title: "Modalit\xE0 di importazione",
+          all_label: "Importa tutto",
+          all_description: "Importa tutte le conversazioni (pi\xF9 veloce)",
+          selective_label: "Selezione specifica",
+          selective_description: "Anteprima e scelta delle conversazioni"
+        },
+        file_area: {
+          section_title: "Seleziona file",
+          drop_text_default: "Trascina qui i file ZIP o clicca per sfogliare",
+          drop_text_gemini: "Trascina qui i file ZIP e JSON o clicca per sfogliare",
+          drop_subtext_default: "Supporta la selezione multipla di file",
+          drop_subtext_gemini: "ZIP (Takeout) + JSON opzionale (indice dall'estensione)"
+        },
+        selected_files: {
+          section_title: "File selezionati",
+          remove_button: "Rimuovi"
+        },
+        buttons: {
+          cancel: "Annulla",
+          continue: "Continua"
+        }
+      },
+      conversation_selection: {
+        title: "Seleziona le conversazioni da importare",
+        controls: {
+          select_all: "Seleziona tutto",
+          select_none: "Deseleziona tutto",
+          search_placeholder: "Cerca conversazioni...",
+          status_label: "Stato:",
+          show_label: "Mostra:"
+        },
+        status_filter_options: {
+          all: "Tutti",
+          new: "Nuovo",
+          updated: "Aggiornato",
+          unchanged: "Invariato"
+        },
+        table_headers: {
+          title: "Titolo",
+          created: "Creato",
+          updated: "Aggiornato",
+          messages: "Messaggi",
+          status: "Stato"
+        },
+        status_badges: {
+          new: "Nuovo",
+          updated: "Aggiornato",
+          unchanged: "Invariato",
+          unknown: "Sconosciuto",
+          tooltip_new: "Questa conversazione non \xE8 nel tuo Vault",
+          tooltip_updated: "Questa conversazione ha contenuto pi\xF9 recente rispetto al tuo Vault ({{existing_date}} \u2192 {{new_date}})",
+          tooltip_unchanged: "Questa conversazione \xE8 uguale a quella nel tuo Vault"
+        },
+        pagination: {
+          showing: "Visualizzazione di {{start}}-{{end}} su {{total}} conversazioni",
+          page_of: "Pagina {{current}} di {{total}}",
+          previous: "Precedente",
+          next: "Successivo"
+        },
+        summary: {
+          unique_conversations: "Conversazioni uniche",
+          new: "Nuovo",
+          updated: "Aggiornato",
+          unchanged: "Invariato",
+          selected_of: "{{selected}} di {{total}} selezionate"
+        },
+        buttons: {
+          cancel: "Annulla",
+          import_selected: "Importa selezione",
+          import_selected_count: "Importa {{count}} selezionate"
+        },
+        date_unknown: "Sconosciuto"
+      },
+      import_progress: {
+        title: "Importazione di {{filename}}",
+        initial: {
+          title: "Preparazione dell'importazione...",
+          detail: "Validazione della struttura del file ZIP"
+        },
+        conversation_counter: "{{current}}/{{total}} conversazioni",
+        conversation_counter_selective: "{{current}}/{{total}} conversazioni selezionate",
+        selective_mode_indicator: "\u{1F4CB} Importazione selettiva: {{selected}} di {{total}} conversazioni",
+        complete: {
+          message: "Importazione completata con successo",
+          detail: "Puoi chiudere questa finestra"
+        },
+        error: {
+          message: "Si \xE8 verificato un errore durante l'importazione",
+          detail: "Consulta la console per maggiori dettagli"
+        }
+      },
+      import_completion: {
+        title: "Importazione completata",
+        success_message: "\u2705 Conversazioni importate con successo",
+        stats: {
+          zip_files_processed: "File ZIP elaborati",
+          unique_conversations: "Conversazioni uniche",
+          duplicates: "Duplicati",
+          new: "Nuovo",
+          updated: "Aggiornato",
+          skipped: "Saltati",
+          failed: "Falliti"
+        },
+        attachments: {
+          label: "Allegati:",
+          summary: "{{found}}/{{total}} estratti ({{percentage}}%)",
+          missing_failed: "{{missing}} mancanti, {{failed}} falliti"
+        },
+        report: {
+          label: "\u{1F4C4} Report dettagliato:"
+        },
+        buttons: {
+          view_report: "Visualizza report",
+          ok: "OK"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} Struttura delle cartelle",
+          conversation_folder: {
+            name: "Cartella delle conversazioni",
+            desc: "Dove vengono archiviate le conversazioni importate",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "Sfoglia le cartelle o creane una nuova"
+          },
+          reports_folder: {
+            name: "Cartella dei report",
+            desc: "Dove vengono archiviati i report di importazione",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "Sfoglia le cartelle o creane una nuova"
+          },
+          attachment_folder: {
+            name: "Cartella degli allegati",
+            desc: "Dove vengono archiviati gli allegati (\u26A0\uFE0F Escludere dalla sincronizzazione per risparmiare spazio)",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "Sfoglia le cartelle o creane una nuova"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} Prefisso data",
+          add_date_prefix: {
+            name: "Aggiungi prefisso data ai nomi dei file",
+            desc: "Aggiunge la data di creazione come prefisso ai nomi dei file delle conversazioni",
+            format_label: "Seleziona formato data: "
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} Formato data messaggi",
+          custom_format: {
+            name: "Formato timestamp personalizzato per i messaggi",
+            desc: "Sostituisce il formato timestamp predefinito basato sulla lingua nelle intestazioni dei messaggi. Quando disabilitato, i timestamp seguono l'impostazione della lingua di Obsidian. Se Obsidian \xE8 impostato in inglese, viene applicato il formato americano (YYYY/DD/MM)."
+          },
+          timestamp_format: {
+            name: "Formato timestamp",
+            desc: "Scegli il formato per i timestamp dei messaggi nelle note delle conversazioni"
+          },
+          preview_label: "Anteprima: "
+        },
+        attachments: {
+          section_title: "Impostazioni allegati",
+          import_attachments: {
+            name: "Importa allegati",
+            desc: "Salva i file allegati su disco e collegali nelle conversazioni (utilizza una strategia \xABbest effort\xBB)"
+          },
+          handle_missing: {
+            name: "Gestisci allegati mancanti",
+            desc: "Quando gli allegati mancano dalle esportazioni, crea note informative invece di saltarli"
+          },
+          show_details: {
+            name: "Mostra dettagli allegati nei report",
+            desc: "Includi statistiche dettagliate sull'elaborazione degli allegati nei report di importazione"
+          },
+          info_box: {
+            title: "\u{1F4CE} Informazioni sulla gestione degli allegati",
+            best_effort: "Strategia best effort: I file trovati nelle esportazioni vengono estratti e collegati; i file mancanti ricevono note informative.",
+            platform_diff: "Differenze tra piattaforme: Le esportazioni di ChatGPT potrebbero non includere tutti gli allegati, specialmente dalle conversazioni pi\xF9 vecchie.",
+            organization: "Organizzazione semplice: I file sono organizzati in attachments/provider/categoria/ (es. attachments/chatgpt/images/).",
+            sync_tip: "Consiglio sulla sincronizzazione: Valuta di escludere la cartella degli allegati dalla sincronizzazione per evitare di caricare file di grandi dimensioni.",
+            tip: "\u{1F4A1} Consiglio: Abilita \xABMostra dettagli allegati\xBB per vedere esattamente quali file sono stati trovati, mancanti o falliti durante l'importazione."
+          }
+        },
+        migrations: {
+          section_title: "Migrazioni",
+          description_manual: "Operazioni manuali: Operazioni di aggiornamento opzionali che possono essere eseguite quando conveniente.",
+          description_automatic: "Le operazioni automatiche (come la rimozione dei dati vecchi) vengono eseguite automaticamente durante l'aggiornamento e non sono mostrate qui.",
+          version_header: "Versione {{version}}",
+          no_migrations: {
+            title: "Nessuna operazione manuale disponibile",
+            desc: "Tutte le operazioni di aggiornamento sono state completate automaticamente."
+          },
+          operation_completed_suffix: " \u2705 Completato",
+          buttons: {
+            completed: "\u2705 Completato",
+            cannot_run: "Impossibile eseguire",
+            run: "Esegui",
+            running: "In esecuzione..."
+          },
+          tooltips: {
+            completed: "Questa operazione \xE8 stata completata",
+            cannot_run: "I prerequisiti non sono soddisfatti per questa operazione",
+            run: "Esegui {{operation_name}}"
+          },
+          error_loading: "Errore nel caricamento delle migrazioni:"
+        },
+        support: {
+          section_title: "\u{1F49D} Supporto e aiuto",
+          resources: {
+            name: "\u{1F4DA} Risorse",
+            desc: "Documentazione, note di rilascio e link alla community",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} Changelog",
+            issues: "\u{1F41B} Segnalazioni",
+            forum: "\u{1F4AC} Forum"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "Avvio in corso...",
+          progress_label: "Progresso: {{percentage}}%",
+          step_label: "Passaggio {{current}}/{{total}}",
+          complete_label: "Completato",
+          complete_message: "Completato con successo",
+          error_message: "Si \xE8 verificato un errore"
+        },
+        multi_operation_modal: {
+          progress_label: "Progresso: {{completed}}/{{total}} operazioni",
+          progress_with_failures: "Progresso: {{completed}}/{{total}} operazioni ({{failed}} fallite)",
+          all_completed: "Tutte le {{total}} operazioni completate con successo",
+          mark_complete_default: "Tutte le operazioni completate con successo",
+          buttons: {
+            complete: "Completa",
+            close: "Chiudi"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} Migrazione richiesta",
+            message: "Le seguenti attivit\xE0 verranno eseguite automaticamente per aggiornare i dati alla v1.3.0:",
+            tasks: {
+              folder_settings: "\u2713 Migra le impostazioni delle cartelle alla nuova struttura",
+              timestamps: "\u2713 Aggiorna i timestamp al formato ISO 8601",
+              aliases: "\u2713 Correggi gli alias del frontmatter",
+              reports: "\u2713 Sposta la cartella dei report nella posizione corretta",
+              artifacts: "\u2713 Aggiorna i metadati degli artefatti"
+            },
+            estimate: "Ci vorranno pochi secondi."
+          },
+          buttons: {
+            run_migration: "\u{1F680} Avvia le attivit\xE0 di migrazione"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 Aggiornamento completato - v{{version}}",
+          buttons: {
+            got_it: "Capito!"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "Capito!"
+          }
+        }
+      },
+      folder_migration: {
+        title: "Spostare i file esistenti?",
+        message_intro: "Stai modificando la posizione della cartella {{folder_type}}:",
+        path_from: "Da: {{path}}",
+        path_to: "A: {{path}}",
+        question: "Vuoi spostare i file esistenti nella nuova posizione?",
+        link_updates: {
+          title: "\u{1F517} Aggiornamenti dei collegamenti:",
+          attachments_text: "Lo spostamento degli allegati aggiorner\xE0 anche tutte le note delle conversazioni che li referenziano.",
+          conversations_text: "Lo spostamento delle conversazioni aggiorner\xE0 anche tutti i report e gli allegati che le referenziano.",
+          estimated_time_seconds: "Tempo stimato: ~{{seconds}} secondi",
+          estimated_time_minutes: "Tempo stimato: ~{{minutes}} minuto/i"
+        },
+        warning: {
+          title: "\u26A0\uFE0F Importante:",
+          text: "Se scegli \xABNo\xBB, i file esistenti rimarranno nella posizione precedente e non saranno interessati da futuri aggiornamenti."
+        },
+        buttons: {
+          cancel: "Annulla",
+          keep: "No, mantieni i file nella posizione precedente",
+          move: "S\xEC, sposta i file",
+          move_with_links: "S\xEC, sposta i file e aggiorna i collegamenti"
+        },
+        progress: {
+          title_moving: "Spostamento di {{folder_type}} e aggiornamento dei collegamenti",
+          step_moving_title: "Spostamento dei file...",
+          step_moving_detail: "Spostamento da {{old_path}} a {{new_path}}",
+          step_moving_count: "{{current}} / {{total}} file elaborati",
+          step_moved_title: "File spostati",
+          step_moved_detail: "{{moved}} file spostati, {{skipped}} saltati. Preparazione all'aggiornamento dei collegamenti...",
+          step_updating_attachment_links: "Aggiornamento dei collegamenti degli allegati...",
+          step_updating_conversation_links: "Aggiornamento dei collegamenti delle conversazioni...",
+          step_updating_report_links: "Aggiornamento dei collegamenti nei report...",
+          step_updating_artifact_links: "Aggiornamento dei collegamenti negli artefatti...",
+          complete_message: "{{moved}} file spostati. {{links}} collegamenti aggiornati con successo"
+        },
+        result_dialog: {
+          title: "Risultato della migrazione delle cartelle",
+          summary_title: "Riepilogo della migrazione",
+          moved: "\u2705 Spostati con successo: {{count}} file",
+          skipped: "\u26A0\uFE0F Saltati (gi\xE0 esistenti): {{count}} file",
+          errors: "\u274C Errori: {{count}} file",
+          explanation: "I file gi\xE0 presenti nella destinazione non sono stati sovrascritti per preservare i tuoi dati.",
+          error_details_title: "Dettagli degli errori:"
+        },
+        error_target_not_empty: {
+          title: "La cartella di destinazione non \xE8 vuota",
+          message: "La cartella \xAB{{path}}\xBB contiene gi\xE0 dei file.\n\nPer cambiare la posizione della cartella:\n\u2022 Sposta manualmente i file esistenti in Obsidian, OPPURE\n\u2022 Scegli una cartella vuota o creane una nuova"
+        },
+        error_migration_failed: {
+          title: "Migrazione non riuscita",
+          message_move: "Impossibile spostare i file: {{error}}",
+          message_links: "Impossibile spostare i file o aggiornare i collegamenti: {{error}}"
+        }
+      },
+      folder_browser: {
+        title: "Seleziona cartella",
+        vault_root: "Radice del Vault (/)",
+        buttons: {
+          create_new_folder: "Crea nuova cartella",
+          cancel: "Annulla",
+          select: "Seleziona"
+        },
+        create_folder_dialog: {
+          title: "Crea nuova cartella",
+          folder_name_label: "Nome cartella:",
+          buttons: {
+            cancel: "Annulla",
+            create: "Crea"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F Seleziona prima una cartella principale",
+          invalid_name: "\u274C Nome cartella non valido: contiene caratteri non consentiti",
+          already_exists: "\u274C La cartella esiste gi\xE0",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 Cartella creata: {{name}}",
+          create_failed: "\u274C Impossibile creare la cartella: {{error}}",
+          select_first: "\u26A0\uFE0F Seleziona prima una cartella"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "Nella versione 1.3.0, puoi specificare una cartella per i report. I report esistenti verranno spostati in {{folder}}, oppure puoi selezionare la cartella preferita qui sotto.",
+        note: "Nota: La cartella non pu\xF2 trovarsi all'interno di Conversations o Attachments.",
+        report_folder_label: "\u{1F4CA} Cartella dei report",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "Sfoglia",
+          proceed: "Procedi"
+        },
+        error_invalid_folder: {
+          title: "Posizione cartella non valida",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "Grazie per aver installato Nexus AI Chat Importer!",
+        description: "Importa e gestisci le tue conversazioni ChatGPT, Claude e Le Chat direttamente nel tuo Vault Obsidian.",
+        resources_title: "Risorse",
+        resources: {
+          documentation: {
+            title: "Documentazione",
+            description: "Scopri come usare il plugin"
+          },
+          release_notes: {
+            title: "Note di rilascio",
+            description: "Novit\xE0 in questa versione"
+          },
+          report_issues: {
+            title: "Segnala problemi",
+            description: "Hai trovato un bug? Faccelo sapere"
+          },
+          community_forum: {
+            title: "Forum della community",
+            description: "Partecipa alla discussione"
+          }
+        },
+        buttons: {
+          get_started: "Inizia"
+        }
+      },
+      notices: {
+        import_analyzing: "Analisi delle conversazioni da {{count}} file...",
+        import_no_new: "Nessuna conversazione nuova o aggiornata trovata. Tutte le conversazioni sono gi\xE0 aggiornate.",
+        import_starting: "Importazione di {{count}} conversazioni ({{new}} nuove, {{updated}} aggiornate)...",
+        import_starting_selected: "Importazione di {{count}} conversazioni selezionate da {{files}} file...",
+        import_completed_fallback: "Importazione completata. {{created}} create, {{updated}} aggiornate.",
+        import_error: "Errore durante l'importazione: {{error}}",
+        import_error_analyzing: "Errore durante l'analisi delle conversazioni: {{error}}",
+        import_error_file: "Errore durante l'elaborazione di {{filename}}. Consulta la console per maggiori dettagli.",
+        import_no_selected: "Nessuna conversazione selezionata per l'importazione.",
+        import_no_zip_gemini: "Seleziona almeno un file ZIP di Gemini Takeout (pi\xF9 un JSON opzionale dall'estensione).",
+        import_no_zip: "Seleziona almeno un file ZIP di esportazione.",
+        import_gemini_json_failed: "Impossibile leggere il JSON dell'indice Gemini. Continuo senza indice.",
+        report_failed: "Impossibile creare il file di log. Consulta la console per maggiori dettagli.",
+        attachment_map_failed: "Impossibile costruire la mappa degli allegati. Consulta la console per maggiori dettagli.",
+        ribbon_tooltip: "Nexus AI Chat Importer - Importa nuovo file"
+      },
+      commands: {
+        import_conversations: {
+          name: "Importa conversazioni IA"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 Supporta questo plugin",
+        header_highlight: "Supporta questo plugin",
+        default_message_emphasis: "Lavoro a tempo pieno sui progetti Nexus mentre sono disoccupato e affronto problemi di salute.",
+        default_message: "Se questo plugin ti semplifica la vita, una donazione significherebbe moltissimo per me e aiuterebbe a tenerli in vita.",
+        reality_check: "Grazie! Migliaia di ore di lavoro sono state dedicate a questi plugin, e ogni caff\xE8 mi aiuta a continuare a migliorarli mentre gestisco problemi di salute continuativi. Se questo plugin ti semplifica la vita, considera di supportarmi.",
+        button_alt: "Supportare il mio lavoro"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/ru.json
+var ru_default;
+var init_ru = __esm({
+  "src/i18n/locales/ru.json"() {
+    ru_default = {
+      common: {
+        buttons: {
+          cancel: "\u041E\u0442\u043C\u0435\u043D\u0430",
+          ok: "\u041E\u041A",
+          select: "\u0412\u044B\u0431\u0440\u0430\u0442\u044C",
+          browse: "\u041E\u0431\u0437\u043E\u0440",
+          continue: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C",
+          proceed: "\u0412\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C",
+          close: "\u041F\u043E\u043D\u044F\u0442\u043D\u043E!",
+          create: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C",
+          remove: "\u0423\u0434\u0430\u043B\u0438\u0442\u044C",
+          run: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C",
+          complete: "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C",
+          view_report: "\u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u043E\u0442\u0447\u0451\u0442",
+          get_started: "\u041D\u0430\u0447\u0430\u0442\u044C",
+          create_new_folder: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u043F\u0430\u043F\u043A\u0443"
+        },
+        status: {
+          new: "\u041D\u043E\u0432\u044B\u0439",
+          updated: "\u041E\u0431\u043D\u043E\u0432\u043B\u0451\u043D",
+          unchanged: "\u0411\u0435\u0437 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439",
+          unknown: "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} \u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430",
+          phase_scanning: "\u{1F4CB} \u0421\u043A\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435",
+          phase_processing: "\u2699\uFE0F \u041E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0430",
+          phase_writing: "\u{1F4BE} \u0417\u0430\u043F\u0438\u0441\u044C",
+          phase_complete: "\u2705 \u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E",
+          phase_error: "\u274C \u041E\u0448\u0438\u0431\u043A\u0430"
+        }
+      },
+      provider_selection: {
+        title: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u043E\u0441\u0442\u0430\u0432\u0449\u0438\u043A\u0430 \u0430\u0440\u0445\u0438\u0432\u0430",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 OpenAI ChatGPT"
+          },
+          claude: {
+            name: "Claude",
+            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 Anthropic Claude"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 Mistral AI Le Chat"
+          }
+        },
+        buttons: {
+          select: "\u0412\u044B\u0431\u0440\u0430\u0442\u044C",
+          cancel: "\u041E\u0442\u043C\u0435\u043D\u0430"
+        }
+      },
+      file_selection: {
+        title: "\u0418\u043C\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 {{provider}}",
+        import_mode: {
+          section_title: "\u0420\u0435\u0436\u0438\u043C \u0438\u043C\u043F\u043E\u0440\u0442\u0430",
+          all_label: "\u0418\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0432\u0441\u0451",
+          all_description: "\u0418\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0432\u0441\u0435 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B (\u0431\u044B\u0441\u0442\u0440\u0435\u0435)",
+          selective_label: "\u0412\u044B\u0431\u043E\u0440\u043E\u0447\u043D\u044B\u0439 \u0432\u044B\u0431\u043E\u0440",
+          selective_description: "\u041F\u0440\u0435\u0434\u0432\u0430\u0440\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u0438 \u0432\u044B\u0431\u043E\u0440 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432"
+        },
+        file_area: {
+          section_title: "\u0412\u044B\u0431\u043E\u0440 \u0444\u0430\u0439\u043B\u043E\u0432",
+          drop_text_default: "\u041F\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u0435 ZIP-\u0444\u0430\u0439\u043B\u044B \u0441\u044E\u0434\u0430 \u0438\u043B\u0438 \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \u0434\u043B\u044F \u0432\u044B\u0431\u043E\u0440\u0430",
+          drop_text_gemini: "\u041F\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u0435 ZIP- \u0438 JSON-\u0444\u0430\u0439\u043B\u044B \u0441\u044E\u0434\u0430 \u0438\u043B\u0438 \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \u0434\u043B\u044F \u0432\u044B\u0431\u043E\u0440\u0430",
+          drop_subtext_default: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0432\u044B\u0431\u043E\u0440 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u0438\u0445 \u0444\u0430\u0439\u043B\u043E\u0432",
+          drop_subtext_gemini: "ZIP (Takeout) + \u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 JSON (\u0438\u043D\u0434\u0435\u043A\u0441 \u0438\u0437 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u0438\u044F)"
+        },
+        selected_files: {
+          section_title: "\u0412\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0435 \u0444\u0430\u0439\u043B\u044B",
+          remove_button: "\u0423\u0434\u0430\u043B\u0438\u0442\u044C"
+        },
+        buttons: {
+          cancel: "\u041E\u0442\u043C\u0435\u043D\u0430",
+          continue: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C"
+        }
+      },
+      conversation_selection: {
+        title: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u0434\u043B\u044F \u0438\u043C\u043F\u043E\u0440\u0442\u0430",
+        controls: {
+          select_all: "\u0412\u044B\u0431\u0440\u0430\u0442\u044C \u0432\u0441\u0451",
+          select_none: "\u0421\u043D\u044F\u0442\u044C \u0432\u044B\u0431\u043E\u0440",
+          search_placeholder: "\u041F\u043E\u0438\u0441\u043A \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432...",
+          status_label: "\u0421\u0442\u0430\u0442\u0443\u0441:",
+          show_label: "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C:"
+        },
+        status_filter_options: {
+          all: "\u0412\u0441\u0435",
+          new: "\u041D\u043E\u0432\u044B\u0435",
+          updated: "\u041E\u0431\u043D\u043E\u0432\u043B\u0451\u043D\u043D\u044B\u0435",
+          unchanged: "\u0411\u0435\u0437 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439"
+        },
+        table_headers: {
+          title: "\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A",
+          created: "\u0421\u043E\u0437\u0434\u0430\u043D",
+          updated: "\u041E\u0431\u043D\u043E\u0432\u043B\u0451\u043D",
+          messages: "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F",
+          status: "\u0421\u0442\u0430\u0442\u0443\u0441"
+        },
+        status_badges: {
+          new: "\u041D\u043E\u0432\u044B\u0439",
+          updated: "\u041E\u0431\u043D\u043E\u0432\u043B\u0451\u043D",
+          unchanged: "\u0411\u0435\u0437 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439",
+          unknown: "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E",
+          tooltip_new: "\u042D\u0442\u043E\u0433\u043E \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u0430 \u043D\u0435\u0442 \u0432 \u0432\u0430\u0448\u0435\u043C \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0435",
+          tooltip_updated: "\u042D\u0442\u043E\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440 \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u0431\u043E\u043B\u0435\u0435 \u043D\u043E\u0432\u044B\u0435 \u0434\u0430\u043D\u043D\u044B\u0435, \u0447\u0435\u043C \u0432 \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0435 ({{existing_date}} \u2192 {{new_date}})",
+          tooltip_unchanged: "\u042D\u0442\u043E\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440 \u0441\u043E\u0432\u043F\u0430\u0434\u0430\u0435\u0442 \u0441 \u0432\u0435\u0440\u0441\u0438\u0435\u0439 \u0432 \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0435"
+        },
+        pagination: {
+          showing: "\u041F\u043E\u043A\u0430\u0437\u0430\u043D\u044B {{start}}\u2013{{end}} \u0438\u0437 {{total}} \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
+          page_of: "\u0421\u0442\u0440\u0430\u043D\u0438\u0446\u0430 {{current}} \u0438\u0437 {{total}}",
+          previous: "\u041D\u0430\u0437\u0430\u0434",
+          next: "\u0414\u0430\u043B\u0435\u0435"
+        },
+        summary: {
+          unique_conversations: "\u0423\u043D\u0438\u043A\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B",
+          new: "\u041D\u043E\u0432\u044B\u0435",
+          updated: "\u041E\u0431\u043D\u043E\u0432\u043B\u0451\u043D\u043D\u044B\u0435",
+          unchanged: "\u0411\u0435\u0437 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439",
+          selected_of: "{{selected}} \u0438\u0437 {{total}} \u0432\u044B\u0431\u0440\u0430\u043D\u043E"
+        },
+        buttons: {
+          cancel: "\u041E\u0442\u043C\u0435\u043D\u0430",
+          import_selected: "\u0418\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0435",
+          import_selected_count: "\u0418\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C {{count}} \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0445"
+        },
+        date_unknown: "\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E"
+      },
+      import_progress: {
+        title: "\u0418\u043C\u043F\u043E\u0440\u0442 {{filename}}",
+        initial: {
+          title: "\u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430 \u0438\u043C\u043F\u043E\u0440\u0442\u0430...",
+          detail: "\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u044B ZIP-\u0444\u0430\u0439\u043B\u0430"
+        },
+        conversation_counter: "{{current}}/{{total}} \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
+        conversation_counter_selective: "{{current}}/{{total}} \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0445 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
+        selective_mode_indicator: "\u{1F4CB} \u0412\u044B\u0431\u043E\u0440\u043E\u0447\u043D\u044B\u0439 \u0438\u043C\u043F\u043E\u0440\u0442: {{selected}} \u0438\u0437 {{total}} \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
+        complete: {
+          message: "\u0418\u043C\u043F\u043E\u0440\u0442 \u0443\u0441\u043F\u0435\u0448\u043D\u043E \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D",
+          detail: "\u0412\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u044C \u044D\u0442\u043E \u043E\u043A\u043D\u043E"
+        },
+        error: {
+          message: "\u0412 \u043F\u0440\u043E\u0446\u0435\u0441\u0441\u0435 \u0438\u043C\u043F\u043E\u0440\u0442\u0430 \u043F\u0440\u043E\u0438\u0437\u043E\u0448\u043B\u0430 \u043E\u0448\u0438\u0431\u043A\u0430",
+          detail: "\u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043A\u043E\u043D\u0441\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u044F \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0439 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438"
+        }
+      },
+      import_completion: {
+        title: "\u0418\u043C\u043F\u043E\u0440\u0442 \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D",
+        success_message: "\u2705 \u0420\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u0443\u0441\u043F\u0435\u0448\u043D\u043E \u0438\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u044B",
+        stats: {
+          zip_files_processed: "\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043E ZIP-\u0444\u0430\u0439\u043B\u043E\u0432",
+          unique_conversations: "\u0423\u043D\u0438\u043A\u0430\u043B\u044C\u043D\u044B\u0445 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
+          duplicates: "\u0414\u0443\u0431\u043B\u0438\u043A\u0430\u0442\u044B",
+          new: "\u041D\u043E\u0432\u044B\u0435",
+          updated: "\u041E\u0431\u043D\u043E\u0432\u043B\u0451\u043D\u043D\u044B\u0435",
+          skipped: "\u041F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043E",
+          failed: "\u041E\u0448\u0438\u0431\u043A\u0430"
+        },
+        attachments: {
+          label: "\u0412\u043B\u043E\u0436\u0435\u043D\u0438\u044F:",
+          summary: "{{found}}/{{total}} \u0438\u0437\u0432\u043B\u0435\u0447\u0435\u043D\u043E ({{percentage}}%)",
+          missing_failed: "{{missing}} \u043E\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442, {{failed}} \u0441 \u043E\u0448\u0438\u0431\u043A\u0430\u043C\u0438"
+        },
+        report: {
+          label: "\u{1F4C4} \u041F\u043E\u0434\u0440\u043E\u0431\u043D\u044B\u0439 \u043E\u0442\u0447\u0451\u0442:"
+        },
+        buttons: {
+          view_report: "\u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u043E\u0442\u0447\u0451\u0442",
+          ok: "\u041E\u041A"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} \u0421\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u0430 \u043F\u0430\u043F\u043E\u043A",
+          conversation_folder: {
+            name: "\u041F\u0430\u043F\u043A\u0430 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
+            desc: "\u041C\u0435\u0441\u0442\u043E \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u0438\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0445 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "\u041E\u0431\u0437\u043E\u0440 \u043F\u0430\u043F\u043E\u043A \u0438\u043B\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0435 \u043D\u043E\u0432\u043E\u0439"
+          },
+          reports_folder: {
+            name: "\u041F\u0430\u043F\u043A\u0430 \u043E\u0442\u0447\u0451\u0442\u043E\u0432",
+            desc: "\u041C\u0435\u0441\u0442\u043E \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u043E\u0442\u0447\u0451\u0442\u043E\u0432 \u043E\u0431 \u0438\u043C\u043F\u043E\u0440\u0442\u0435",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "\u041E\u0431\u0437\u043E\u0440 \u043F\u0430\u043F\u043E\u043A \u0438\u043B\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0435 \u043D\u043E\u0432\u043E\u0439"
+          },
+          attachment_folder: {
+            name: "\u041F\u0430\u043F\u043A\u0430 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439",
+            desc: "\u041C\u0435\u0441\u0442\u043E \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 (\u26A0\uFE0F \u0418\u0441\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u0438\u0437 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0430\u0446\u0438\u0438 \u0434\u043B\u044F \u044D\u043A\u043E\u043D\u043E\u043C\u0438\u0438 \u043C\u0435\u0441\u0442\u0430)",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "\u041E\u0431\u0437\u043E\u0440 \u043F\u0430\u043F\u043E\u043A \u0438\u043B\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0435 \u043D\u043E\u0432\u043E\u0439"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} \u041F\u0440\u0435\u0444\u0438\u043A\u0441 \u0434\u0430\u0442\u044B",
+          add_date_prefix: {
+            name: "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0442\u044C \u043F\u0440\u0435\u0444\u0438\u043A\u0441 \u0434\u0430\u0442\u044B \u043A \u0438\u043C\u0435\u043D\u0430\u043C \u0444\u0430\u0439\u043B\u043E\u0432",
+            desc: "\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0442\u044C \u0434\u0430\u0442\u0443 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0432 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435 \u043F\u0440\u0435\u0444\u0438\u043A\u0441\u0430 \u043A \u0438\u043C\u0435\u043D\u0430\u043C \u0444\u0430\u0439\u043B\u043E\u0432 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
+            format_label: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0444\u043E\u0440\u043C\u0430\u0442 \u0434\u0430\u0442\u044B: "
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} \u0424\u043E\u0440\u043C\u0430\u0442 \u0434\u0430\u0442\u044B \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439",
+          custom_format: {
+            name: "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439 \u0444\u043E\u0440\u043C\u0430\u0442 \u0432\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0445 \u043C\u0435\u0442\u043E\u043A \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439",
+            desc: "\u041F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0439 \u0444\u043E\u0440\u043C\u0430\u0442 \u0432\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0445 \u043C\u0435\u0442\u043E\u043A \u0432 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u0430\u0445 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439. \u041F\u0440\u0438 \u043E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0438 \u0432\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0435 \u043C\u0435\u0442\u043A\u0438 \u0441\u043B\u0435\u0434\u0443\u044E\u0442 \u044F\u0437\u044B\u043A\u043E\u0432\u044B\u043C \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u043C Obsidian. \u0415\u0441\u043B\u0438 Obsidian \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D \u043D\u0430 \u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u0438\u0439 \u044F\u0437\u044B\u043A, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F \u0444\u043E\u0440\u043C\u0430\u0442 \u0421\u0428\u0410 (YYYY/DD/MM)."
+          },
+          timestamp_format: {
+            name: "\u0424\u043E\u0440\u043C\u0430\u0442 \u0432\u0440\u0435\u043C\u0435\u043D\u043D\u043E\u0439 \u043C\u0435\u0442\u043A\u0438",
+            desc: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0444\u043E\u0440\u043C\u0430\u0442 \u0432\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0445 \u043C\u0435\u0442\u043E\u043A \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439 \u0432 \u0437\u0430\u043C\u0435\u0442\u043A\u0430\u0445 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432"
+          },
+          preview_label: "\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440: "
+        },
+        attachments: {
+          section_title: "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439",
+          import_attachments: {
+            name: "\u0418\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u044F",
+            desc: "\u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0442\u044C \u0444\u0430\u0439\u043B\u044B \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 \u043D\u0430 \u0434\u0438\u0441\u043A \u0438 \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0442\u044C \u0441\u0441\u044B\u043B\u043A\u0438 \u043D\u0430 \u043D\u0438\u0445 \u0432 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u0430\u0445 (\u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442 \u0441\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044E \xAB\u043C\u0430\u043A\u0441\u0438\u043C\u0443\u043C \u0443\u0441\u0438\u043B\u0438\u0439\xBB)"
+          },
+          handle_missing: {
+            name: "\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0430 \u043E\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0445 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439",
+            desc: "\u0415\u0441\u043B\u0438 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u044F \u043E\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044E\u0442 \u0432 \u044D\u043A\u0441\u043F\u043E\u0440\u0442\u0435, \u0441\u043E\u0437\u0434\u0430\u0432\u0430\u0442\u044C \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u0437\u0430\u043C\u0435\u0442\u043A\u0438 \u0432\u043C\u0435\u0441\u0442\u043E \u0438\u0445 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0430"
+          },
+          show_details: {
+            name: "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0434\u0435\u0442\u0430\u043B\u0438 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 \u0432 \u043E\u0442\u0447\u0451\u0442\u0430\u0445",
+            desc: "\u0412\u043A\u043B\u044E\u0447\u0430\u0442\u044C \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u0443\u044E \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0443 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 \u0432 \u043E\u0442\u0447\u0451\u0442\u044B \u043E\u0431 \u0438\u043C\u043F\u043E\u0440\u0442\u0435"
+          },
+          info_box: {
+            title: "\u{1F4CE} \u041E\u0431 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0435 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439",
+            best_effort: "\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044F \xAB\u043C\u0430\u043A\u0441\u0438\u043C\u0443\u043C \u0443\u0441\u0438\u043B\u0438\u0439\xBB: \u0444\u0430\u0439\u043B\u044B, \u043D\u0430\u0439\u0434\u0435\u043D\u043D\u044B\u0435 \u0432 \u044D\u043A\u0441\u043F\u043E\u0440\u0442\u0435, \u0438\u0437\u0432\u043B\u0435\u043A\u0430\u044E\u0442\u0441\u044F \u0438 \u0441\u0432\u044F\u0437\u044B\u0432\u0430\u044E\u0442\u0441\u044F; \u0434\u043B\u044F \u043E\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0445 \u0444\u0430\u0439\u043B\u043E\u0432 \u0441\u043E\u0437\u0434\u0430\u044E\u0442\u0441\u044F \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u0437\u0430\u043C\u0435\u0442\u043A\u0438.",
+            platform_diff: "\u0420\u0430\u0437\u043B\u0438\u0447\u0438\u044F \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C: \u044D\u043A\u0441\u043F\u043E\u0440\u0442\u044B ChatGPT \u043C\u043E\u0433\u0443\u0442 \u043D\u0435 \u0432\u043A\u043B\u044E\u0447\u0430\u0442\u044C \u0432\u0441\u0435 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u044F, \u043E\u0441\u043E\u0431\u0435\u043D\u043D\u043E \u0438\u0437 \u0441\u0442\u0430\u0440\u044B\u0445 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432.",
+            organization: "\u041F\u0440\u043E\u0441\u0442\u0430\u044F \u043E\u0440\u0433\u0430\u043D\u0438\u0437\u0430\u0446\u0438\u044F: \u0444\u0430\u0439\u043B\u044B \u043E\u0440\u0433\u0430\u043D\u0438\u0437\u043E\u0432\u0430\u043D\u044B \u043F\u043E \u0441\u0445\u0435\u043C\u0435 attachments/provider/category/ (\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, attachments/chatgpt/images/).",
+            sync_tip: "\u0421\u043E\u0432\u0435\u0442 \u043F\u043E \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0430\u0446\u0438\u0438: \u0440\u0430\u0441\u0441\u043C\u043E\u0442\u0440\u0438\u0442\u0435 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u043F\u0430\u043F\u043A\u0438 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 \u0438\u0437 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0430\u0446\u0438\u0438, \u0447\u0442\u043E\u0431\u044B \u0438\u0437\u0431\u0435\u0436\u0430\u0442\u044C \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0444\u0430\u0439\u043B\u043E\u0432.",
+            tip: "\u{1F4A1} \u0421\u043E\u0432\u0435\u0442: \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \xAB\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0434\u0435\u0442\u0430\u043B\u0438 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439\xBB, \u0447\u0442\u043E\u0431\u044B \u0442\u043E\u0447\u043D\u043E \u0432\u0438\u0434\u0435\u0442\u044C, \u043A\u0430\u043A\u0438\u0435 \u0444\u0430\u0439\u043B\u044B \u0431\u044B\u043B\u0438 \u043D\u0430\u0439\u0434\u0435\u043D\u044B, \u043E\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u043E\u0432\u0430\u043B\u0438 \u0438\u043B\u0438 \u043D\u0435 \u0431\u044B\u043B\u0438 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u044B \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u0438\u043C\u043F\u043E\u0440\u0442\u0430."
+          }
+        },
+        migrations: {
+          section_title: "\u041C\u0438\u0433\u0440\u0430\u0446\u0438\u0438",
+          description_manual: "\u0420\u0443\u0447\u043D\u044B\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438: \u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043C\u043E\u0436\u043D\u043E \u0432\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u0432 \u0443\u0434\u043E\u0431\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F.",
+          description_automatic: "\u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 (\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u0435 \u0443\u0441\u0442\u0430\u0440\u0435\u0432\u0448\u0438\u0445 \u0434\u0430\u043D\u043D\u044B\u0445) \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u044E\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u0438 \u0437\u0434\u0435\u0441\u044C \u043D\u0435 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u044E\u0442\u0441\u044F.",
+          version_header: "\u0412\u0435\u0440\u0441\u0438\u044F {{version}}",
+          no_migrations: {
+            title: "\u041D\u0435\u0442 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0445 \u0440\u0443\u0447\u043D\u044B\u0445 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439",
+            desc: "\u0412\u0441\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u0431\u044B\u043B\u0438 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u044B \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438."
+          },
+          operation_completed_suffix: " \u2705 \u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E",
+          buttons: {
+            completed: "\u2705 \u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E",
+            cannot_run: "\u041D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E \u0432\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C",
+            run: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C",
+            running: "\u0412\u044B\u043F\u043E\u043B\u043D\u044F\u0435\u0442\u0441\u044F..."
+          },
+          tooltips: {
+            completed: "\u042D\u0442\u0430 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F \u0443\u0436\u0435 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430",
+            cannot_run: "\u041F\u0440\u0435\u0434\u0432\u0430\u0440\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0435 \u0443\u0441\u043B\u043E\u0432\u0438\u044F \u0434\u043B\u044F \u044D\u0442\u043E\u0439 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 \u043D\u0435 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u044B",
+            run: "\u0412\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C {{operation_name}}"
+          },
+          error_loading: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u043C\u0438\u0433\u0440\u0430\u0446\u0438\u0439:"
+        },
+        support: {
+          section_title: "\u{1F49D} \u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u0438 \u043F\u043E\u043C\u043E\u0449\u044C",
+          resources: {
+            name: "\u{1F4DA} \u0420\u0435\u0441\u0443\u0440\u0441\u044B",
+            desc: "\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F, \u043F\u0440\u0438\u043C\u0435\u0447\u0430\u043D\u0438\u044F \u043A \u0432\u044B\u043F\u0443\u0441\u043A\u0443 \u0438 \u0441\u0441\u044B\u043B\u043A\u0438 \u043D\u0430 \u0441\u043E\u043E\u0431\u0449\u0435\u0441\u0442\u0432\u043E",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} \u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439",
+            issues: "\u{1F41B} \u041F\u0440\u043E\u0431\u043B\u0435\u043C\u044B",
+            forum: "\u{1F4AC} \u0424\u043E\u0440\u0443\u043C"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "\u0417\u0430\u043F\u0443\u0441\u043A...",
+          progress_label: "\u041F\u0440\u043E\u0433\u0440\u0435\u0441\u0441: {{percentage}}%",
+          step_label: "\u0428\u0430\u0433 {{current}}/{{total}}",
+          complete_label: "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E",
+          complete_message: "\u0423\u0441\u043F\u0435\u0448\u043D\u043E \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E",
+          error_message: "\u041F\u0440\u043E\u0438\u0437\u043E\u0448\u043B\u0430 \u043E\u0448\u0438\u0431\u043A\u0430"
+        },
+        multi_operation_modal: {
+          progress_label: "\u041F\u0440\u043E\u0433\u0440\u0435\u0441\u0441: {{completed}}/{{total}} \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439",
+          progress_with_failures: "\u041F\u0440\u043E\u0433\u0440\u0435\u0441\u0441: {{completed}}/{{total}} \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 ({{failed}} \u0441 \u043E\u0448\u0438\u0431\u043A\u0430\u043C\u0438)",
+          all_completed: "\u0412\u0441\u0435 {{total}} \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u0443\u0441\u043F\u0435\u0448\u043D\u043E \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u044B",
+          mark_complete_default: "\u0412\u0441\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 \u0443\u0441\u043F\u0435\u0448\u043D\u043E \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u044B",
+          buttons: {
+            complete: "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C",
+            close: "\u0417\u0430\u043A\u0440\u044B\u0442\u044C"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} \u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043C\u0438\u0433\u0440\u0430\u0446\u0438\u044F",
+            message: "\u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0435 \u0437\u0430\u0434\u0430\u0447\u0438 \u0431\u0443\u0434\u0443\u0442 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u044B \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u0434\u043B\u044F \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u0432\u0430\u0448\u0438\u0445 \u0434\u0430\u043D\u043D\u044B\u0445 \u0434\u043E v1.3.0:",
+            tasks: {
+              folder_settings: "\u2713 \u041F\u0435\u0440\u0435\u043D\u043E\u0441 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043A \u043F\u0430\u043F\u043E\u043A \u0432 \u043D\u043E\u0432\u0443\u044E \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u0443",
+              timestamps: "\u2713 \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0432\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0445 \u043C\u0435\u0442\u043E\u043A \u0434\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0430 ISO 8601",
+              aliases: "\u2713 \u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043F\u0441\u0435\u0432\u0434\u043E\u043D\u0438\u043C\u043E\u0432 frontmatter",
+              reports: "\u2713 \u041F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u0438\u0435 \u043F\u0430\u043F\u043A\u0438 \u043E\u0442\u0447\u0451\u0442\u043E\u0432 \u0432 \u043F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u043E\u0435 \u0440\u0430\u0441\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0435",
+              artifacts: "\u2713 \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u043C\u0435\u0442\u0430\u0434\u0430\u043D\u043D\u044B\u0445 \u0430\u0440\u0442\u0435\u0444\u0430\u043A\u0442\u043E\u0432"
+            },
+            estimate: "\u042D\u0442\u043E \u0437\u0430\u0439\u043C\u0451\u0442 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u0435\u043A\u0443\u043D\u0434."
+          },
+          buttons: {
+            run_migration: "\u{1F680} \u0412\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u0437\u0430\u0434\u0430\u0447\u0438 \u043C\u0438\u0433\u0440\u0430\u0446\u0438\u0438"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E \u2014 v{{version}}",
+          buttons: {
+            got_it: "\u041F\u043E\u043D\u044F\u0442\u043D\u043E!"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "\u041F\u043E\u043D\u044F\u0442\u043D\u043E!"
+          }
+        }
+      },
+      folder_migration: {
+        title: "\u041F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0435 \u0444\u0430\u0439\u043B\u044B?",
+        message_intro: "\u0412\u044B \u0438\u0437\u043C\u0435\u043D\u044F\u0435\u0442\u0435 \u0440\u0430\u0441\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u043F\u0430\u043F\u043A\u0438 {{folder_type}}:",
+        path_from: "\u041E\u0442\u043A\u0443\u0434\u0430: {{path}}",
+        path_to: "\u041A\u0443\u0434\u0430: {{path}}",
+        question: "\u0425\u043E\u0442\u0438\u0442\u0435 \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0435 \u0444\u0430\u0439\u043B\u044B \u0432 \u043D\u043E\u0432\u043E\u0435 \u0440\u0430\u0441\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0435?",
+        link_updates: {
+          title: "\u{1F517} \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u0441\u044B\u043B\u043E\u043A:",
+          attachments_text: "\u041F\u0440\u0438 \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u0438\u0438 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 \u0442\u0430\u043A\u0436\u0435 \u0431\u0443\u0434\u0443\u0442 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u044B \u0432\u0441\u0435 \u0437\u0430\u043C\u0435\u0442\u043A\u0438 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043D\u0430 \u043D\u0438\u0445 \u0441\u0441\u044B\u043B\u0430\u044E\u0442\u0441\u044F.",
+          conversations_text: "\u041F\u0440\u0438 \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u0438\u0438 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u0442\u0430\u043A\u0436\u0435 \u0431\u0443\u0434\u0443\u0442 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u044B \u0432\u0441\u0435 \u043E\u0442\u0447\u0451\u0442\u044B \u0438 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u044F, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043D\u0430 \u043D\u0438\u0445 \u0441\u0441\u044B\u043B\u0430\u044E\u0442\u0441\u044F.",
+          estimated_time_seconds: "\u041E\u0436\u0438\u0434\u0430\u0435\u043C\u043E\u0435 \u0432\u0440\u0435\u043C\u044F: ~{{seconds}} \u0441\u0435\u043A\u0443\u043D\u0434",
+          estimated_time_minutes: "\u041E\u0436\u0438\u0434\u0430\u0435\u043C\u043E\u0435 \u0432\u0440\u0435\u043C\u044F: ~{{minutes}} \u043C\u0438\u043D\u0443\u0442(\u044B)"
+        },
+        warning: {
+          title: "\u26A0\uFE0F \u0412\u0430\u0436\u043D\u043E:",
+          text: "\u0415\u0441\u043B\u0438 \u0432\u044B \u0432\u044B\u0431\u0435\u0440\u0435\u0442\u0435 \xAB\u041D\u0435\u0442\xBB, \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0435 \u0444\u0430\u0439\u043B\u044B \u043E\u0441\u0442\u0430\u043D\u0443\u0442\u0441\u044F \u0432 \u043F\u0440\u0435\u0436\u043D\u0435\u043C \u0440\u0430\u0441\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0438 \u0438 \u043D\u0435 \u0431\u0443\u0434\u0443\u0442 \u0437\u0430\u0442\u0440\u043E\u043D\u0443\u0442\u044B \u0431\u0443\u0434\u0443\u0449\u0438\u043C\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F\u043C\u0438."
+        },
+        buttons: {
+          cancel: "\u041E\u0442\u043C\u0435\u043D\u0430",
+          keep: "\u041D\u0435\u0442, \u043E\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B \u043D\u0430 \u043F\u0440\u0435\u0436\u043D\u0435\u043C \u043C\u0435\u0441\u0442\u0435",
+          move: "\u0414\u0430, \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B",
+          move_with_links: "\u0414\u0430, \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B \u0438 \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u0441\u044B\u043B\u043A\u0438"
+        },
+        progress: {
+          title_moving: "\u041F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u0438\u0435 {{folder_type}} \u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u0441\u044B\u043B\u043E\u043A",
+          step_moving_title: "\u041F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u0438\u0435 \u0444\u0430\u0439\u043B\u043E\u0432...",
+          step_moving_detail: "\u041F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u0438\u0435 \u0438\u0437 {{old_path}} \u0432 {{new_path}}",
+          step_moving_count: "{{current}} / {{total}} \u0444\u0430\u0439\u043B\u043E\u0432 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043E",
+          step_moved_title: "\u0424\u0430\u0439\u043B\u044B \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u044B",
+          step_moved_detail: "{{moved}} \u0444\u0430\u0439\u043B\u043E\u0432 \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u043E, {{skipped}} \u043F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043E. \u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430 \u043A \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044E \u0441\u0441\u044B\u043B\u043E\u043A...",
+          step_updating_attachment_links: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u0441\u044B\u043B\u043E\u043A \u043D\u0430 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u044F...",
+          step_updating_conversation_links: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u0441\u044B\u043B\u043E\u043A \u043D\u0430 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B...",
+          step_updating_report_links: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u0441\u044B\u043B\u043E\u043A \u0432 \u043E\u0442\u0447\u0451\u0442\u0430\u0445...",
+          step_updating_artifact_links: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0441\u0441\u044B\u043B\u043E\u043A \u0432 \u0430\u0440\u0442\u0435\u0444\u0430\u043A\u0442\u0430\u0445...",
+          complete_message: "{{moved}} \u0444\u0430\u0439\u043B\u043E\u0432 \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u043E. {{links}} \u0441\u0441\u044B\u043B\u043E\u043A \u0443\u0441\u043F\u0435\u0448\u043D\u043E \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u043E"
+        },
+        result_dialog: {
+          title: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043C\u0438\u0433\u0440\u0430\u0446\u0438\u0438 \u043F\u0430\u043F\u043A\u0438",
+          summary_title: "\u0421\u0432\u043E\u0434\u043A\u0430 \u043C\u0438\u0433\u0440\u0430\u0446\u0438\u0438",
+          moved: "\u2705 \u0423\u0441\u043F\u0435\u0448\u043D\u043E \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u043E: {{count}} \u0444\u0430\u0439\u043B(\u043E\u0432)",
+          skipped: "\u26A0\uFE0F \u041F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043E (\u0443\u0436\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0442): {{count}} \u0444\u0430\u0439\u043B(\u043E\u0432)",
+          errors: "\u274C \u041E\u0448\u0438\u0431\u043A\u0438: {{count}} \u0444\u0430\u0439\u043B(\u043E\u0432)",
+          explanation: "\u0424\u0430\u0439\u043B\u044B, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0443\u0436\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u043E\u0432\u0430\u043B\u0438 \u0432 \u0446\u0435\u043B\u0435\u0432\u043E\u0439 \u043F\u0430\u043F\u043A\u0435, \u043D\u0435 \u0431\u044B\u043B\u0438 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0438\u0441\u0430\u043D\u044B \u0434\u043B\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u0432\u0430\u0448\u0438\u0445 \u0434\u0430\u043D\u043D\u044B\u0445.",
+          error_details_title: "\u0414\u0435\u0442\u0430\u043B\u0438 \u043E\u0448\u0438\u0431\u043E\u043A:"
+        },
+        error_target_not_empty: {
+          title: "\u0426\u0435\u043B\u0435\u0432\u0430\u044F \u043F\u0430\u043F\u043A\u0430 \u043D\u0435 \u043F\u0443\u0441\u0442\u0430",
+          message: '\u041F\u0430\u043F\u043A\u0430 "{{path}}" \u0443\u0436\u0435 \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u0444\u0430\u0439\u043B\u044B.\n\n\u0414\u043B\u044F \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0440\u0430\u0441\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u044F \u043F\u0430\u043F\u043A\u0438:\n\u2022 \u041F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0435 \u0444\u0430\u0439\u043B\u044B \u0432\u0440\u0443\u0447\u043D\u0443\u044E \u0432 Obsidian, \u0418\u041B\u0418\n\u2022 \u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0443\u0441\u0442\u0443\u044E \u043F\u0430\u043F\u043A\u0443 \u0438\u043B\u0438 \u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043D\u043E\u0432\u0443\u044E'
+        },
+        error_migration_failed: {
+          title: "\u041C\u0438\u0433\u0440\u0430\u0446\u0438\u044F \u043D\u0435 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430",
+          message_move: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B: {{error}}",
+          message_links: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B \u0438\u043B\u0438 \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u0441\u044B\u043B\u043A\u0438: {{error}}"
+        }
+      },
+      folder_browser: {
+        title: "\u0412\u044B\u0431\u043E\u0440 \u043F\u0430\u043F\u043A\u0438",
+        vault_root: "\u041A\u043E\u0440\u0435\u043D\u044C \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0430 (/)",
+        buttons: {
+          create_new_folder: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u043F\u0430\u043F\u043A\u0443",
+          cancel: "\u041E\u0442\u043C\u0435\u043D\u0430",
+          select: "\u0412\u044B\u0431\u0440\u0430\u0442\u044C"
+        },
+        create_folder_dialog: {
+          title: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u043F\u0430\u043F\u043A\u0443",
+          folder_name_label: "\u0418\u043C\u044F \u043F\u0430\u043F\u043A\u0438:",
+          buttons: {
+            cancel: "\u041E\u0442\u043C\u0435\u043D\u0430",
+            create: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u043E\u0434\u0438\u0442\u0435\u043B\u044C\u0441\u043A\u0443\u044E \u043F\u0430\u043F\u043A\u0443",
+          invalid_name: "\u274C \u041D\u0435\u0434\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u043E\u0435 \u0438\u043C\u044F \u043F\u0430\u043F\u043A\u0438: \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u043D\u0435\u0434\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u044B\u0435 \u0441\u0438\u043C\u0432\u043E\u043B\u044B",
+          already_exists: "\u274C \u041F\u0430\u043F\u043A\u0430 \u0443\u0436\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u0435\u0442",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 \u041F\u0430\u043F\u043A\u0430 \u0441\u043E\u0437\u0434\u0430\u043D\u0430: {{name}}",
+          create_failed: "\u274C \u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u043F\u0430\u043F\u043A\u0443: {{error}}",
+          select_first: "\u26A0\uFE0F \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0430\u043F\u043A\u0443"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "\u0412 \u0432\u0435\u0440\u0441\u0438\u0438 1.3.0 \u0432\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0443\u043A\u0430\u0437\u0430\u0442\u044C \u043F\u0430\u043F\u043A\u0443 \u0434\u043B\u044F \u043E\u0442\u0447\u0451\u0442\u043E\u0432. \u041C\u044B \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u043C \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0435 \u043E\u0442\u0447\u0451\u0442\u044B \u0432 {{folder}}, \u0438\u043B\u0438 \u0432\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0432\u044B\u0431\u0440\u0430\u0442\u044C \u043F\u0440\u0435\u0434\u043F\u043E\u0447\u0442\u0438\u0442\u0435\u043B\u044C\u043D\u0443\u044E \u043F\u0430\u043F\u043A\u0443 \u043D\u0438\u0436\u0435.",
+        note: "\u041F\u0440\u0438\u043C\u0435\u0447\u0430\u043D\u0438\u0435: \u043F\u0430\u043F\u043A\u0430 \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u043D\u0430\u0445\u043E\u0434\u0438\u0442\u044C\u0441\u044F \u0432\u043D\u0443\u0442\u0440\u0438 \u043F\u0430\u043F\u043E\u043A \xAB\u0420\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B\xBB \u0438\u043B\u0438 \xAB\u0412\u043B\u043E\u0436\u0435\u043D\u0438\u044F\xBB.",
+        report_folder_label: "\u{1F4CA} \u041F\u0430\u043F\u043A\u0430 \u043E\u0442\u0447\u0451\u0442\u043E\u0432",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "\u041E\u0431\u0437\u043E\u0440",
+          proceed: "\u0412\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C"
+        },
+        error_invalid_folder: {
+          title: "\u041D\u0435\u0434\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u043E\u0435 \u0440\u0430\u0441\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u043F\u0430\u043F\u043A\u0438",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E \u0437\u0430 \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0443 Nexus AI Chat Importer!",
+        description: "\u0418\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u0443\u0439\u0442\u0435 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B ChatGPT, Claude \u0438 Le Chat \u0438 \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0439\u0442\u0435 \u0438\u043C\u0438 \u043F\u0440\u044F\u043C\u043E \u0432 \u0432\u0430\u0448\u0435\u043C \u0445\u0440\u0430\u043D\u0438\u043B\u0438\u0449\u0435 Obsidian.",
+        resources_title: "\u0420\u0435\u0441\u0443\u0440\u0441\u044B",
+        resources: {
+          documentation: {
+            title: "\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F",
+            description: "\u0423\u0437\u043D\u0430\u0439\u0442\u0435, \u043A\u0430\u043A \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D"
+          },
+          release_notes: {
+            title: "\u041F\u0440\u0438\u043C\u0435\u0447\u0430\u043D\u0438\u044F \u043A \u0432\u044B\u043F\u0443\u0441\u043A\u0443",
+            description: "\u0427\u0442\u043E \u043D\u043E\u0432\u043E\u0433\u043E \u0432 \u044D\u0442\u043E\u0439 \u0432\u0435\u0440\u0441\u0438\u0438"
+          },
+          report_issues: {
+            title: "\u0421\u043E\u043E\u0431\u0449\u0438\u0442\u044C \u043E \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0435",
+            description: "\u041D\u0430\u0448\u043B\u0438 \u043E\u0448\u0438\u0431\u043A\u0443? \u0414\u0430\u0439\u0442\u0435 \u043D\u0430\u043C \u0437\u043D\u0430\u0442\u044C"
+          },
+          community_forum: {
+            title: "\u0424\u043E\u0440\u0443\u043C \u0441\u043E\u043E\u0431\u0449\u0435\u0441\u0442\u0432\u0430",
+            description: "\u041F\u0440\u0438\u0441\u043E\u0435\u0434\u0438\u043D\u044F\u0439\u0442\u0435\u0441\u044C \u043A \u043E\u0431\u0441\u0443\u0436\u0434\u0435\u043D\u0438\u044E"
+          }
+        },
+        buttons: {
+          get_started: "\u041D\u0430\u0447\u0430\u0442\u044C"
+        }
+      },
+      notices: {
+        import_analyzing: "\u0410\u043D\u0430\u043B\u0438\u0437 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u0438\u0437 {{count}} \u0444\u0430\u0439\u043B(\u043E\u0432)...",
+        import_no_new: "\u041D\u043E\u0432\u044B\u0445 \u0438\u043B\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0451\u043D\u043D\u044B\u0445 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E. \u0412\u0441\u0435 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u0443\u0436\u0435 \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u044B.",
+        import_starting: "\u0418\u043C\u043F\u043E\u0440\u0442 {{count}} \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 ({{new}} \u043D\u043E\u0432\u044B\u0445, {{updated}} \u043E\u0431\u043D\u043E\u0432\u043B\u0451\u043D\u043D\u044B\u0445)...",
+        import_starting_selected: "\u0418\u043C\u043F\u043E\u0440\u0442 {{count}} \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0445 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u0438\u0437 {{files}} \u0444\u0430\u0439\u043B(\u043E\u0432)...",
+        import_completed_fallback: "\u0418\u043C\u043F\u043E\u0440\u0442 \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D. {{created}} \u0441\u043E\u0437\u0434\u0430\u043D\u043E, {{updated}} \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u043E.",
+        import_error: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u0438\u043C\u043F\u043E\u0440\u0442\u0430: {{error}}",
+        import_error_analyzing: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0430\u043D\u0430\u043B\u0438\u0437\u0430 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432: {{error}}",
+        import_error_file: "\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 {{filename}}. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043A\u043E\u043D\u0441\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u044F \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0439 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438.",
+        import_no_selected: "\u041D\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u044B \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u0434\u043B\u044F \u0438\u043C\u043F\u043E\u0440\u0442\u0430.",
+        import_no_zip_gemini: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u0438\u043D ZIP-\u0444\u0430\u0439\u043B Gemini Takeout (\u043F\u043B\u044E\u0441 \u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 JSON-\u0438\u043D\u0434\u0435\u043A\u0441 \u0438\u0437 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u0438\u044F).",
+        import_no_zip: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u0438\u043D ZIP-\u0444\u0430\u0439\u043B \u044D\u043A\u0441\u043F\u043E\u0440\u0442\u0430.",
+        import_gemini_json_failed: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0440\u043E\u0447\u0438\u0442\u0430\u0442\u044C JSON-\u0438\u043D\u0434\u0435\u043A\u0441 Gemini. \u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435 \u0431\u0435\u0437 \u0438\u043D\u0434\u0435\u043A\u0441\u0430.",
+        report_failed: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u0444\u0430\u0439\u043B \u0436\u0443\u0440\u043D\u0430\u043B\u0430. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043A\u043E\u043D\u0441\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u044F \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0439 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438.",
+        attachment_map_failed: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u043A\u0430\u0440\u0442\u0443 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043A\u043E\u043D\u0441\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u044F \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0439 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438.",
+        ribbon_tooltip: "Nexus AI Chat Importer \u2014 \u0438\u043C\u043F\u043E\u0440\u0442 \u043D\u043E\u0432\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430"
+      },
+      commands: {
+        import_conversations: {
+          name: "\u0418\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u0418\u0418"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 \u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
+        header_highlight: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
+        default_message_emphasis: "\u042F \u0440\u0430\u0431\u043E\u0442\u0430\u044E \u043D\u0430\u0434 \u043F\u0440\u043E\u0435\u043A\u0442\u0430\u043C\u0438 Nexus \u043D\u0430 \u043F\u043E\u043B\u043D\u0443\u044E \u0441\u0442\u0430\u0432\u043A\u0443, \u0431\u0443\u0434\u0443\u0447\u0438 \u0431\u0435\u0437\u0440\u0430\u0431\u043E\u0442\u043D\u044B\u043C \u0438 \u0431\u043E\u0440\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C.",
+        default_message: "\u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u0431\u0443\u0434\u0435\u0442 \u0434\u043B\u044F \u043C\u0435\u043D\u044F \u043E\u0447\u0435\u043D\u044C \u0437\u043D\u0430\u0447\u0438\u043C\u044B\u043C \u0438 \u043F\u043E\u043C\u043E\u0436\u0435\u0442 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0442\u044C \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0432 \u0440\u0430\u0431\u043E\u0447\u0435\u043C \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0438.",
+        reality_check: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E! \u041D\u0430 \u044D\u0442\u0438 \u043F\u043B\u0430\u0433\u0438\u043D\u044B \u0443\u0448\u043B\u0438 \u0442\u044B\u0441\u044F\u0447\u0438 \u0447\u0430\u0441\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B, \u0438 \u043A\u0430\u0436\u0434\u0430\u044F \u0447\u0430\u0448\u043A\u0430 \u043A\u043E\u0444\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u043C\u043D\u0435 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0442\u044C \u0438\u0445 \u0443\u043B\u0443\u0447\u0448\u0430\u0442\u044C, \u0441\u043F\u0440\u0430\u0432\u043B\u044F\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C. \u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0440\u0430\u0441\u0441\u043C\u043E\u0442\u0440\u0438\u0442\u0435 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438.",
+        button_alt: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043C\u043E\u044E \u0440\u0430\u0431\u043E\u0442\u0443"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/zh.json
+var zh_default;
+var init_zh = __esm({
+  "src/i18n/locales/zh.json"() {
+    zh_default = {
+      common: {
+        buttons: {
+          cancel: "\u53D6\u6D88",
+          ok: "\u786E\u5B9A",
+          select: "\u9009\u62E9",
+          browse: "\u6D4F\u89C8",
+          continue: "\u7EE7\u7EED",
+          proceed: "\u6267\u884C",
+          close: "\u77E5\u9053\u4E86\uFF01",
+          create: "\u521B\u5EFA",
+          remove: "\u79FB\u9664",
+          run: "\u8FD0\u884C",
+          complete: "\u5B8C\u6210",
+          view_report: "\u67E5\u770B\u62A5\u544A",
+          get_started: "\u5F00\u59CB\u4F7F\u7528",
+          create_new_folder: "\u65B0\u5EFA\u6587\u4EF6\u5939"
+        },
+        status: {
+          new: "\u65B0\u5EFA",
+          updated: "\u5DF2\u66F4\u65B0",
+          unchanged: "\u672A\u53D8\u66F4",
+          unknown: "\u672A\u77E5"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} \u9A8C\u8BC1",
+          phase_scanning: "\u{1F4CB} \u626B\u63CF",
+          phase_processing: "\u2699\uFE0F \u5904\u7406",
+          phase_writing: "\u{1F4BE} \u5199\u5165",
+          phase_complete: "\u2705 \u5B8C\u6210",
+          phase_error: "\u274C \u9519\u8BEF"
+        }
+      },
+      provider_selection: {
+        title: "\u9009\u62E9\u5B58\u6863\u6765\u6E90",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "OpenAI ChatGPT \u5BF9\u8BDD\u5BFC\u51FA"
+          },
+          claude: {
+            name: "Claude",
+            description: "Anthropic Claude \u5BF9\u8BDD\u5BFC\u51FA"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Mistral AI Le Chat \u5BF9\u8BDD\u5BFC\u51FA"
+          }
+        },
+        buttons: {
+          select: "\u9009\u62E9",
+          cancel: "\u53D6\u6D88"
+        }
+      },
+      file_selection: {
+        title: "\u5BFC\u5165 {{provider}} \u5BF9\u8BDD",
+        import_mode: {
+          section_title: "\u5BFC\u5165\u6A21\u5F0F",
+          all_label: "\u5168\u90E8\u5BFC\u5165",
+          all_description: "\u5BFC\u5165\u6240\u6709\u5BF9\u8BDD\uFF08\u901F\u5EA6\u66F4\u5FEB\uFF09",
+          selective_label: "\u9009\u62E9\u6027\u5BFC\u5165",
+          selective_description: "\u9884\u89C8\u5E76\u9009\u62E9\u8981\u5BFC\u5165\u7684\u5BF9\u8BDD"
+        },
+        file_area: {
+          section_title: "\u9009\u62E9\u6587\u4EF6",
+          drop_text_default: "\u5C06 ZIP \u6587\u4EF6\u62D6\u653E\u81F3\u6B64\u5904\uFF0C\u6216\u70B9\u51FB\u6D4F\u89C8",
+          drop_text_gemini: "\u5C06 ZIP \u548C JSON \u6587\u4EF6\u62D6\u653E\u81F3\u6B64\u5904\uFF0C\u6216\u70B9\u51FB\u6D4F\u89C8",
+          drop_subtext_default: "\u652F\u6301\u591A\u6587\u4EF6\u9009\u62E9",
+          drop_subtext_gemini: "ZIP\uFF08Takeout\uFF09+ \u53EF\u9009 JSON\uFF08\u6765\u81EA\u6269\u5C55\u7684\u7D22\u5F15\uFF09"
+        },
+        selected_files: {
+          section_title: "\u5DF2\u9009\u6587\u4EF6",
+          remove_button: "\u79FB\u9664"
+        },
+        buttons: {
+          cancel: "\u53D6\u6D88",
+          continue: "\u7EE7\u7EED"
+        }
+      },
+      conversation_selection: {
+        title: "\u9009\u62E9\u8981\u5BFC\u5165\u7684\u5BF9\u8BDD",
+        controls: {
+          select_all: "\u5168\u9009",
+          select_none: "\u53D6\u6D88\u5168\u9009",
+          search_placeholder: "\u641C\u7D22\u5BF9\u8BDD...",
+          status_label: "\u72B6\u6001\uFF1A",
+          show_label: "\u663E\u793A\uFF1A"
+        },
+        status_filter_options: {
+          all: "\u5168\u90E8",
+          new: "\u65B0\u5EFA",
+          updated: "\u5DF2\u66F4\u65B0",
+          unchanged: "\u672A\u53D8\u66F4"
+        },
+        table_headers: {
+          title: "\u6807\u9898",
+          created: "\u521B\u5EFA\u65F6\u95F4",
+          updated: "\u66F4\u65B0\u65F6\u95F4",
+          messages: "\u6D88\u606F\u6570",
+          status: "\u72B6\u6001"
+        },
+        status_badges: {
+          new: "\u65B0\u5EFA",
+          updated: "\u5DF2\u66F4\u65B0",
+          unchanged: "\u672A\u53D8\u66F4",
+          unknown: "\u672A\u77E5",
+          tooltip_new: "\u6B64\u5BF9\u8BDD\u4E0D\u5728\u60A8\u7684 Vault \u4E2D",
+          tooltip_updated: "\u6B64\u5BF9\u8BDD\u7684\u5185\u5BB9\u6BD4\u60A8 Vault \u4E2D\u7684\u7248\u672C\u66F4\u65B0\uFF08{{existing_date}} \u2192 {{new_date}}\uFF09",
+          tooltip_unchanged: "\u6B64\u5BF9\u8BDD\u4E0E\u60A8 Vault \u4E2D\u7684\u7248\u672C\u76F8\u540C"
+        },
+        pagination: {
+          showing: "\u663E\u793A\u7B2C {{start}}\u2013{{end}} \u6761\uFF0C\u5171 {{total}} \u6761\u5BF9\u8BDD",
+          page_of: "\u7B2C {{current}} \u9875\uFF0C\u5171 {{total}} \u9875",
+          previous: "\u4E0A\u4E00\u9875",
+          next: "\u4E0B\u4E00\u9875"
+        },
+        summary: {
+          unique_conversations: "\u552F\u4E00\u5BF9\u8BDD",
+          new: "\u65B0\u5EFA",
+          updated: "\u5DF2\u66F4\u65B0",
+          unchanged: "\u672A\u53D8\u66F4",
+          selected_of: "\u5DF2\u9009 {{selected}} / {{total}}"
+        },
+        buttons: {
+          cancel: "\u53D6\u6D88",
+          import_selected: "\u5BFC\u5165\u5DF2\u9009",
+          import_selected_count: "\u5BFC\u5165\u5DF2\u9009 {{count}} \u6761"
+        },
+        date_unknown: "\u672A\u77E5"
+      },
+      import_progress: {
+        title: "\u6B63\u5728\u5BFC\u5165 {{filename}}",
+        initial: {
+          title: "\u6B63\u5728\u51C6\u5907\u5BFC\u5165...",
+          detail: "\u6B63\u5728\u9A8C\u8BC1 ZIP \u6587\u4EF6\u7ED3\u6784"
+        },
+        conversation_counter: "{{current}}/{{total}} \u6761\u5BF9\u8BDD",
+        conversation_counter_selective: "{{current}}/{{total}} \u6761\u5DF2\u9009\u5BF9\u8BDD",
+        selective_mode_indicator: "\u{1F4CB} \u9009\u62E9\u6027\u5BFC\u5165\uFF1A{{total}} \u6761\u4E2D\u5DF2\u9009 {{selected}} \u6761",
+        complete: {
+          message: "\u5BFC\u5165\u5DF2\u6210\u529F\u5B8C\u6210",
+          detail: "\u60A8\u53EF\u4EE5\u5173\u95ED\u6B64\u5BF9\u8BDD\u6846"
+        },
+        error: {
+          message: "\u5BFC\u5165\u8FC7\u7A0B\u4E2D\u53D1\u751F\u9519\u8BEF",
+          detail: "\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u83B7\u53D6\u8BE6\u7EC6\u4FE1\u606F"
+        }
+      },
+      import_completion: {
+        title: "\u5BFC\u5165\u5B8C\u6210",
+        success_message: "\u2705 \u5BF9\u8BDD\u5DF2\u6210\u529F\u5BFC\u5165",
+        stats: {
+          zip_files_processed: "\u5DF2\u5904\u7406 ZIP \u6587\u4EF6",
+          unique_conversations: "\u552F\u4E00\u5BF9\u8BDD",
+          duplicates: "\u91CD\u590D",
+          new: "\u65B0\u5EFA",
+          updated: "\u5DF2\u66F4\u65B0",
+          skipped: "\u5DF2\u8DF3\u8FC7",
+          failed: "\u5931\u8D25"
+        },
+        attachments: {
+          label: "\u9644\u4EF6\uFF1A",
+          summary: "{{found}}/{{total}} \u5DF2\u63D0\u53D6\uFF08{{percentage}}%\uFF09",
+          missing_failed: "{{missing}} \u7F3A\u5931\uFF0C{{failed}} \u5931\u8D25"
+        },
+        report: {
+          label: "\u{1F4C4} \u8BE6\u7EC6\u62A5\u544A\uFF1A"
+        },
+        buttons: {
+          view_report: "\u67E5\u770B\u62A5\u544A",
+          ok: "\u786E\u5B9A"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} \u6587\u4EF6\u5939\u7ED3\u6784",
+          conversation_folder: {
+            name: "\u5BF9\u8BDD\u6587\u4EF6\u5939",
+            desc: "\u5BFC\u5165\u7684\u5BF9\u8BDD\u5B58\u653E\u4F4D\u7F6E",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "\u6D4F\u89C8\u6587\u4EF6\u5939\u6216\u65B0\u5EFA\u6587\u4EF6\u5939"
+          },
+          reports_folder: {
+            name: "\u62A5\u544A\u6587\u4EF6\u5939",
+            desc: "\u5BFC\u5165\u62A5\u544A\u5B58\u653E\u4F4D\u7F6E",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "\u6D4F\u89C8\u6587\u4EF6\u5939\u6216\u65B0\u5EFA\u6587\u4EF6\u5939"
+          },
+          attachment_folder: {
+            name: "\u9644\u4EF6\u6587\u4EF6\u5939",
+            desc: "\u9644\u4EF6\u5B58\u653E\u4F4D\u7F6E\uFF08\u26A0\uFE0F \u8BF7\u5C06\u5176\u6392\u9664\u5728\u540C\u6B65\u8303\u56F4\u4E4B\u5916\u4EE5\u8282\u7701\u7A7A\u95F4\uFF09",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "\u6D4F\u89C8\u6587\u4EF6\u5939\u6216\u65B0\u5EFA\u6587\u4EF6\u5939"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} \u65E5\u671F\u524D\u7F00",
+          add_date_prefix: {
+            name: "\u4E3A\u6587\u4EF6\u540D\u6DFB\u52A0\u65E5\u671F\u524D\u7F00",
+            desc: "\u5C06\u521B\u5EFA\u65E5\u671F\u4F5C\u4E3A\u524D\u7F00\u6DFB\u52A0\u5230\u5BF9\u8BDD\u6587\u4EF6\u540D",
+            format_label: "\u9009\u62E9\u65E5\u671F\u683C\u5F0F\uFF1A"
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} \u6D88\u606F\u65E5\u671F\u683C\u5F0F",
+          custom_format: {
+            name: "\u81EA\u5B9A\u4E49\u6D88\u606F\u65F6\u95F4\u6233\u683C\u5F0F",
+            desc: "\u8986\u76D6\u6D88\u606F\u6807\u9898\u4E2D\u9ED8\u8BA4\u7684\u57FA\u4E8E\u533A\u57DF\u8BBE\u7F6E\u7684\u65F6\u95F4\u6233\u683C\u5F0F\u3002\u7981\u7528\u65F6\uFF0C\u65F6\u95F4\u6233\u9075\u5FAA Obsidian \u7684\u8BED\u8A00\u8BBE\u7F6E\u3002\u82E5 Obsidian \u8BBE\u7F6E\u4E3A\u82F1\u8BED\uFF0C\u5219\u5F3A\u5236\u4F7F\u7528\u7F8E\u56FD\u683C\u5F0F\uFF08YYYY/DD/MM\uFF09\u3002"
+          },
+          timestamp_format: {
+            name: "\u65F6\u95F4\u6233\u683C\u5F0F",
+            desc: "\u9009\u62E9\u5BF9\u8BDD\u7B14\u8BB0\u4E2D\u6D88\u606F\u65F6\u95F4\u6233\u7684\u683C\u5F0F"
+          },
+          preview_label: "\u9884\u89C8\uFF1A"
+        },
+        attachments: {
+          section_title: "\u9644\u4EF6\u8BBE\u7F6E",
+          import_attachments: {
+            name: "\u5BFC\u5165\u9644\u4EF6",
+            desc: "\u5C06\u9644\u4EF6\u6587\u4EF6\u4FDD\u5B58\u5230\u78C1\u76D8\u5E76\u5728\u5BF9\u8BDD\u4E2D\u94FE\u63A5\uFF08\u91C7\u7528\u201C\u5C3D\u529B\u800C\u4E3A\u201D\u7B56\u7565\uFF09"
+          },
+          handle_missing: {
+            name: "\u5904\u7406\u7F3A\u5931\u9644\u4EF6",
+            desc: "\u5F53\u5BFC\u51FA\u4E2D\u7F3A\u5C11\u9644\u4EF6\u65F6\uFF0C\u521B\u5EFA\u63D0\u793A\u6027\u7B14\u8BB0\u800C\u975E\u76F4\u63A5\u8DF3\u8FC7"
+          },
+          show_details: {
+            name: "\u5728\u62A5\u544A\u4E2D\u663E\u793A\u9644\u4EF6\u8BE6\u60C5",
+            desc: "\u5728\u5BFC\u5165\u62A5\u544A\u4E2D\u5305\u542B\u8BE6\u7EC6\u7684\u9644\u4EF6\u5904\u7406\u7EDF\u8BA1\u4FE1\u606F"
+          },
+          info_box: {
+            title: "\u{1F4CE} \u5173\u4E8E\u9644\u4EF6\u5904\u7406",
+            best_effort: "\u5C3D\u529B\u800C\u4E3A\u7B56\u7565\uFF1A\u5BFC\u51FA\u4E2D\u627E\u5230\u7684\u6587\u4EF6\u5C06\u88AB\u63D0\u53D6\u5E76\u94FE\u63A5\uFF1B\u7F3A\u5931\u7684\u6587\u4EF6\u5C06\u751F\u6210\u63D0\u793A\u6027\u7B14\u8BB0\u3002",
+            platform_diff: "\u5E73\u53F0\u5DEE\u5F02\uFF1AChatGPT \u5BFC\u51FA\u53EF\u80FD\u4E0D\u5305\u542B\u6240\u6709\u9644\u4EF6\uFF0C\u5C24\u5176\u662F\u6765\u81EA\u8F83\u65E9\u5BF9\u8BDD\u7684\u9644\u4EF6\u3002",
+            organization: "\u7B80\u5355\u6574\u7406\uFF1A\u6587\u4EF6\u6309 attachments/provider/category/ \u7ED3\u6784\u7EC4\u7EC7\uFF08\u5982 attachments/chatgpt/images/\uFF09\u3002",
+            sync_tip: "\u540C\u6B65\u63D0\u793A\uFF1A\u5EFA\u8BAE\u5C06\u9644\u4EF6\u6587\u4EF6\u5939\u6392\u9664\u5728\u540C\u6B65\u8303\u56F4\u4E4B\u5916\uFF0C\u4EE5\u907F\u514D\u4E0A\u4F20\u5927\u6587\u4EF6\u3002",
+            tip: '\u{1F4A1} \u63D0\u793A\uFF1A\u542F\u7528"\u663E\u793A\u9644\u4EF6\u8BE6\u60C5"\u53EF\u7CBE\u786E\u67E5\u770B\u5BFC\u5165\u65F6\u54EA\u4E9B\u6587\u4EF6\u88AB\u627E\u5230\u3001\u7F3A\u5931\u6216\u5931\u8D25\u3002'
+          }
+        },
+        migrations: {
+          section_title: "\u6570\u636E\u8FC1\u79FB",
+          description_manual: "\u624B\u52A8\u64CD\u4F5C\uFF1A\u53EF\u5728\u65B9\u4FBF\u65F6\u8FD0\u884C\u7684\u53EF\u9009\u5347\u7EA7\u64CD\u4F5C\u3002",
+          description_automatic: "\u81EA\u52A8\u64CD\u4F5C\uFF08\u5982\u5220\u9664\u65E7\u6570\u636E\uFF09\u5728\u5347\u7EA7\u671F\u95F4\u81EA\u52A8\u8FD0\u884C\uFF0C\u6B64\u5904\u4E0D\u663E\u793A\u3002",
+          version_header: "\u7248\u672C {{version}}",
+          no_migrations: {
+            title: "\u6CA1\u6709\u53EF\u7528\u7684\u624B\u52A8\u64CD\u4F5C",
+            desc: "\u6240\u6709\u5347\u7EA7\u64CD\u4F5C\u5747\u5DF2\u81EA\u52A8\u5B8C\u6210\u3002"
+          },
+          operation_completed_suffix: " \u2705 \u5DF2\u5B8C\u6210",
+          buttons: {
+            completed: "\u2705 \u5DF2\u5B8C\u6210",
+            cannot_run: "\u65E0\u6CD5\u8FD0\u884C",
+            run: "\u8FD0\u884C",
+            running: "\u8FD0\u884C\u4E2D..."
+          },
+          tooltips: {
+            completed: "\u6B64\u64CD\u4F5C\u5DF2\u5B8C\u6210",
+            cannot_run: "\u6B64\u64CD\u4F5C\u7684\u524D\u63D0\u6761\u4EF6\u672A\u6EE1\u8DB3",
+            run: "\u6267\u884C {{operation_name}}"
+          },
+          error_loading: "\u52A0\u8F7D\u8FC1\u79FB\u65F6\u51FA\u9519\uFF1A"
+        },
+        support: {
+          section_title: "\u{1F49D} \u652F\u6301\u4E0E\u5E2E\u52A9",
+          resources: {
+            name: "\u{1F4DA} \u8D44\u6E90",
+            desc: "\u6587\u6863\u3001\u53D1\u5E03\u8BF4\u660E\u53CA\u793E\u533A\u94FE\u63A5",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} \u66F4\u65B0\u65E5\u5FD7",
+            issues: "\u{1F41B} \u95EE\u9898\u53CD\u9988",
+            forum: "\u{1F4AC} \u8BBA\u575B"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "\u6B63\u5728\u542F\u52A8...",
+          progress_label: "\u8FDB\u5EA6\uFF1A{{percentage}}%",
+          step_label: "\u6B65\u9AA4 {{current}}/{{total}}",
+          complete_label: "\u5DF2\u5B8C\u6210",
+          complete_message: "\u5DF2\u6210\u529F\u5B8C\u6210",
+          error_message: "\u53D1\u751F\u9519\u8BEF"
+        },
+        multi_operation_modal: {
+          progress_label: "\u8FDB\u5EA6\uFF1A{{completed}}/{{total}} \u4E2A\u64CD\u4F5C",
+          progress_with_failures: "\u8FDB\u5EA6\uFF1A{{completed}}/{{total}} \u4E2A\u64CD\u4F5C\uFF08{{failed}} \u4E2A\u5931\u8D25\uFF09",
+          all_completed: "\u5168\u90E8 {{total}} \u4E2A\u64CD\u4F5C\u5DF2\u6210\u529F\u5B8C\u6210",
+          mark_complete_default: "\u6240\u6709\u64CD\u4F5C\u5747\u5DF2\u6210\u529F\u5B8C\u6210",
+          buttons: {
+            complete: "\u5B8C\u6210",
+            close: "\u5173\u95ED"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} \u9700\u8981\u8FC1\u79FB",
+            message: "\u4EE5\u4E0B\u4EFB\u52A1\u5C06\u81EA\u52A8\u8FD0\u884C\uFF0C\u4EE5\u5C06\u60A8\u7684\u6570\u636E\u5347\u7EA7\u5230 v1.3.0\uFF1A",
+            tasks: {
+              folder_settings: "\u2713 \u5C06\u6587\u4EF6\u5939\u8BBE\u7F6E\u8FC1\u79FB\u5230\u65B0\u7ED3\u6784",
+              timestamps: "\u2713 \u5C06\u65F6\u95F4\u6233\u66F4\u65B0\u4E3A ISO 8601 \u683C\u5F0F",
+              aliases: "\u2713 \u4FEE\u590D frontmatter \u522B\u540D",
+              reports: "\u2713 \u5C06\u62A5\u544A\u6587\u4EF6\u5939\u79FB\u81F3\u6B63\u786E\u4F4D\u7F6E",
+              artifacts: "\u2713 \u66F4\u65B0 artifact \u5143\u6570\u636E"
+            },
+            estimate: "\u8FD9\u5C06\u9700\u8981\u51E0\u79D2\u949F\u3002"
+          },
+          buttons: {
+            run_migration: "\u{1F680} \u8FD0\u884C\u8FC1\u79FB\u4EFB\u52A1"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 \u5347\u7EA7\u5B8C\u6210 - v{{version}}",
+          buttons: {
+            got_it: "\u77E5\u9053\u4E86\uFF01"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "\u77E5\u9053\u4E86\uFF01"
+          }
+        }
+      },
+      folder_migration: {
+        title: "\u79FB\u52A8\u73B0\u6709\u6587\u4EF6\uFF1F",
+        message_intro: "\u60A8\u6B63\u5728\u66F4\u6539 {{folder_type}} \u6587\u4EF6\u5939\u7684\u4F4D\u7F6E\uFF1A",
+        path_from: "\u4ECE\uFF1A{{path}}",
+        path_to: "\u5230\uFF1A{{path}}",
+        question: "\u662F\u5426\u5C06\u73B0\u6709\u6587\u4EF6\u79FB\u52A8\u5230\u65B0\u4F4D\u7F6E\uFF1F",
+        link_updates: {
+          title: "\u{1F517} \u94FE\u63A5\u66F4\u65B0\uFF1A",
+          attachments_text: "\u79FB\u52A8\u9644\u4EF6\u65F6\uFF0C\u6240\u6709\u5F15\u7528\u8FD9\u4E9B\u9644\u4EF6\u7684\u5BF9\u8BDD\u7B14\u8BB0\u4E5F\u5C06\u540C\u6B65\u66F4\u65B0\u3002",
+          conversations_text: "\u79FB\u52A8\u5BF9\u8BDD\u65F6\uFF0C\u6240\u6709\u5F15\u7528\u8FD9\u4E9B\u5BF9\u8BDD\u7684\u62A5\u544A\u548C\u9644\u4EF6\u4E5F\u5C06\u540C\u6B65\u66F4\u65B0\u3002",
+          estimated_time_seconds: "\u9884\u8BA1\u65F6\u95F4\uFF1A\u7EA6 {{seconds}} \u79D2",
+          estimated_time_minutes: "\u9884\u8BA1\u65F6\u95F4\uFF1A\u7EA6 {{minutes}} \u5206\u949F"
+        },
+        warning: {
+          title: "\u26A0\uFE0F \u91CD\u8981\u63D0\u793A\uFF1A",
+          text: "\u82E5\u9009\u62E9\u201C\u5426\u201D\uFF0C\u73B0\u6709\u6587\u4EF6\u5C06\u4FDD\u7559\u5728\u539F\u4F4D\u7F6E\uFF0C\u4E0D\u53D7\u672A\u6765\u66F4\u65B0\u7684\u5F71\u54CD\u3002"
+        },
+        buttons: {
+          cancel: "\u53D6\u6D88",
+          keep: "\u5426\uFF0C\u4FDD\u7559\u6587\u4EF6\u5728\u539F\u4F4D\u7F6E",
+          move: "\u662F\uFF0C\u79FB\u52A8\u6587\u4EF6",
+          move_with_links: "\u662F\uFF0C\u79FB\u52A8\u6587\u4EF6\u5E76\u66F4\u65B0\u94FE\u63A5"
+        },
+        progress: {
+          title_moving: "\u6B63\u5728\u79FB\u52A8 {{folder_type}} \u5E76\u66F4\u65B0\u94FE\u63A5",
+          step_moving_title: "\u6B63\u5728\u79FB\u52A8\u6587\u4EF6...",
+          step_moving_detail: "\u4ECE {{old_path}} \u79FB\u52A8\u5230 {{new_path}}",
+          step_moving_count: "\u5DF2\u5904\u7406 {{current}} / {{total}} \u4E2A\u6587\u4EF6",
+          step_moved_title: "\u6587\u4EF6\u5DF2\u79FB\u52A8",
+          step_moved_detail: "{{moved}} \u4E2A\u6587\u4EF6\u5DF2\u79FB\u52A8\uFF0C{{skipped}} \u4E2A\u5DF2\u8DF3\u8FC7\u3002\u6B63\u5728\u51C6\u5907\u66F4\u65B0\u94FE\u63A5...",
+          step_updating_attachment_links: "\u6B63\u5728\u66F4\u65B0\u9644\u4EF6\u94FE\u63A5...",
+          step_updating_conversation_links: "\u6B63\u5728\u66F4\u65B0\u5BF9\u8BDD\u94FE\u63A5...",
+          step_updating_report_links: "\u6B63\u5728\u66F4\u65B0\u62A5\u544A\u4E2D\u7684\u94FE\u63A5...",
+          step_updating_artifact_links: "\u6B63\u5728\u66F4\u65B0 artifact \u4E2D\u7684\u94FE\u63A5...",
+          complete_message: "{{moved}} \u4E2A\u6587\u4EF6\u5DF2\u79FB\u52A8\u3002{{links}} \u4E2A\u94FE\u63A5\u5DF2\u6210\u529F\u66F4\u65B0"
+        },
+        result_dialog: {
+          title: "\u6587\u4EF6\u5939\u8FC1\u79FB\u7ED3\u679C",
+          summary_title: "\u8FC1\u79FB\u6458\u8981",
+          moved: "\u2705 \u6210\u529F\u79FB\u52A8\uFF1A{{count}} \u4E2A\u6587\u4EF6",
+          skipped: "\u26A0\uFE0F \u5DF2\u8DF3\u8FC7\uFF08\u5DF2\u5B58\u5728\uFF09\uFF1A{{count}} \u4E2A\u6587\u4EF6",
+          errors: "\u274C \u9519\u8BEF\uFF1A{{count}} \u4E2A\u6587\u4EF6",
+          explanation: "\u76EE\u6807\u4F4D\u7F6E\u5DF2\u5B58\u5728\u7684\u6587\u4EF6\u672A\u88AB\u8986\u76D6\uFF0C\u4EE5\u4FDD\u62A4\u60A8\u7684\u6570\u636E\u3002",
+          error_details_title: "\u9519\u8BEF\u8BE6\u60C5\uFF1A"
+        },
+        error_target_not_empty: {
+          title: "\u76EE\u6807\u6587\u4EF6\u5939\u975E\u7A7A",
+          message: '\u6587\u4EF6\u5939"{{path}}"\u4E2D\u5DF2\u5305\u542B\u6587\u4EF6\u3002\n\n\u8981\u66F4\u6539\u6587\u4EF6\u5939\u4F4D\u7F6E\uFF0C\u8BF7\uFF1A\n\u2022 \u5728 Obsidian \u4E2D\u624B\u52A8\u79FB\u52A8\u73B0\u6709\u6587\u4EF6\uFF0C\u6216\n\u2022 \u9009\u62E9\u4E00\u4E2A\u7A7A\u6587\u4EF6\u5939\u6216\u65B0\u5EFA\u6587\u4EF6\u5939'
+        },
+        error_migration_failed: {
+          title: "\u8FC1\u79FB\u5931\u8D25",
+          message_move: "\u79FB\u52A8\u6587\u4EF6\u5931\u8D25\uFF1A{{error}}",
+          message_links: "\u79FB\u52A8\u6587\u4EF6\u6216\u66F4\u65B0\u94FE\u63A5\u5931\u8D25\uFF1A{{error}}"
+        }
+      },
+      folder_browser: {
+        title: "\u9009\u62E9\u6587\u4EF6\u5939",
+        vault_root: "Vault \u6839\u76EE\u5F55\uFF08/\uFF09",
+        buttons: {
+          create_new_folder: "\u65B0\u5EFA\u6587\u4EF6\u5939",
+          cancel: "\u53D6\u6D88",
+          select: "\u9009\u62E9"
+        },
+        create_folder_dialog: {
+          title: "\u65B0\u5EFA\u6587\u4EF6\u5939",
+          folder_name_label: "\u6587\u4EF6\u5939\u540D\u79F0\uFF1A",
+          buttons: {
+            cancel: "\u53D6\u6D88",
+            create: "\u521B\u5EFA"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F \u8BF7\u5148\u9009\u62E9\u7236\u6587\u4EF6\u5939",
+          invalid_name: "\u274C \u65E0\u6548\u7684\u6587\u4EF6\u5939\u540D\u79F0\uFF1A\u5305\u542B\u975E\u6CD5\u5B57\u7B26",
+          already_exists: "\u274C \u6587\u4EF6\u5939\u5DF2\u5B58\u5728",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 \u5DF2\u521B\u5EFA\u6587\u4EF6\u5939\uFF1A{{name}}",
+          create_failed: "\u274C \u521B\u5EFA\u6587\u4EF6\u5939\u5931\u8D25\uFF1A{{error}}",
+          select_first: "\u26A0\uFE0F \u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u6587\u4EF6\u5939"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "\u5728 1.3.0 \u7248\u672C\u4E2D\uFF0C\u60A8\u53EF\u4EE5\u4E3A\u62A5\u544A\u6307\u5B9A\u4E13\u7528\u6587\u4EF6\u5939\u3002\u6211\u4EEC\u5C06\u628A\u73B0\u6709\u62A5\u544A\u79FB\u81F3 {{folder}}\uFF0C\u60A8\u4E5F\u53EF\u4EE5\u5728\u4E0B\u65B9\u9009\u62E9\u60A8\u504F\u597D\u7684\u6587\u4EF6\u5939\u3002",
+        note: "\u6CE8\u610F\uFF1A\u8BE5\u6587\u4EF6\u5939\u4E0D\u80FD\u4F4D\u4E8E\u5BF9\u8BDD\u6216\u9644\u4EF6\u6587\u4EF6\u5939\u5185\u90E8\u3002",
+        report_folder_label: "\u{1F4CA} \u62A5\u544A\u6587\u4EF6\u5939",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "\u6D4F\u89C8",
+          proceed: "\u6267\u884C"
+        },
+        error_invalid_folder: {
+          title: "\u65E0\u6548\u7684\u6587\u4EF6\u5939\u4F4D\u7F6E",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "\u611F\u8C22\u5B89\u88C5 Nexus AI Chat Importer\uFF01",
+        description: "\u76F4\u63A5\u5728\u60A8\u7684 Obsidian Vault \u4E2D\u5BFC\u5165\u548C\u7BA1\u7406 ChatGPT\u3001Claude \u53CA Le Chat \u5BF9\u8BDD\u3002",
+        resources_title: "\u8D44\u6E90",
+        resources: {
+          documentation: {
+            title: "\u6587\u6863",
+            description: "\u4E86\u89E3\u5982\u4F55\u4F7F\u7528\u6B64\u63D2\u4EF6"
+          },
+          release_notes: {
+            title: "\u53D1\u5E03\u8BF4\u660E",
+            description: "\u672C\u7248\u672C\u65B0\u589E\u5185\u5BB9"
+          },
+          report_issues: {
+            title: "\u53CD\u9988\u95EE\u9898",
+            description: "\u53D1\u73B0 bug\uFF1F\u8BF7\u544A\u77E5\u6211\u4EEC"
+          },
+          community_forum: {
+            title: "\u793E\u533A\u8BBA\u575B",
+            description: "\u52A0\u5165\u8BA8\u8BBA"
+          }
+        },
+        buttons: {
+          get_started: "\u5F00\u59CB\u4F7F\u7528"
+        }
+      },
+      notices: {
+        import_analyzing: "\u6B63\u5728\u5206\u6790\u6765\u81EA {{count}} \u4E2A\u6587\u4EF6\u7684\u5BF9\u8BDD...",
+        import_no_new: "\u672A\u53D1\u73B0\u65B0\u7684\u6216\u5DF2\u66F4\u65B0\u7684\u5BF9\u8BDD\uFF0C\u6240\u6709\u5BF9\u8BDD\u5747\u5DF2\u662F\u6700\u65B0\u72B6\u6001\u3002",
+        import_starting: "\u6B63\u5728\u5BFC\u5165 {{count}} \u6761\u5BF9\u8BDD\uFF08{{new}} \u6761\u65B0\u5EFA\uFF0C{{updated}} \u6761\u5DF2\u66F4\u65B0\uFF09...",
+        import_starting_selected: "\u6B63\u5728\u4ECE {{files}} \u4E2A\u6587\u4EF6\u4E2D\u5BFC\u5165 {{count}} \u6761\u5DF2\u9009\u5BF9\u8BDD...",
+        import_completed_fallback: "\u5BFC\u5165\u5B8C\u6210\u3002\u5DF2\u521B\u5EFA {{created}} \u6761\uFF0C\u5DF2\u66F4\u65B0 {{updated}} \u6761\u3002",
+        import_error: "\u5BFC\u5165\u65F6\u53D1\u751F\u9519\u8BEF\uFF1A{{error}}",
+        import_error_analyzing: "\u5206\u6790\u5BF9\u8BDD\u65F6\u53D1\u751F\u9519\u8BEF\uFF1A{{error}}",
+        import_error_file: "\u5904\u7406 {{filename}} \u65F6\u53D1\u751F\u9519\u8BEF\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u83B7\u53D6\u8BE6\u7EC6\u4FE1\u606F\u3002",
+        import_no_selected: "\u672A\u9009\u62E9\u8981\u5BFC\u5165\u7684\u5BF9\u8BDD\u3002",
+        import_no_zip_gemini: "\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A Gemini Takeout ZIP \u6587\u4EF6\uFF08\u4EE5\u53CA\u53EF\u9009\u7684\u6765\u81EA\u6269\u5C55\u7684 JSON \u7D22\u5F15\uFF09\u3002",
+        import_no_zip: "\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A ZIP \u5BFC\u51FA\u6587\u4EF6\u3002",
+        import_gemini_json_failed: "\u8BFB\u53D6 Gemini \u7D22\u5F15 JSON \u5931\u8D25\uFF0C\u5C06\u5728\u4E0D\u4F7F\u7528\u7D22\u5F15\u7684\u60C5\u51B5\u4E0B\u7EE7\u7EED\u3002",
+        report_failed: "\u521B\u5EFA\u65E5\u5FD7\u6587\u4EF6\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u83B7\u53D6\u8BE6\u7EC6\u4FE1\u606F\u3002",
+        attachment_map_failed: "\u6784\u5EFA\u9644\u4EF6\u6620\u5C04\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u83B7\u53D6\u8BE6\u7EC6\u4FE1\u606F\u3002",
+        ribbon_tooltip: "Nexus AI Chat Importer - \u5BFC\u5165\u65B0\u6587\u4EF6"
+      },
+      commands: {
+        import_conversations: {
+          name: "\u5BFC\u5165 AI \u5BF9\u8BDD"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 \u652F\u6301\u6B64\u63D2\u4EF6",
+        header_highlight: "\u652F\u6301\u6B64\u63D2\u4EF6",
+        default_message_emphasis: "\u6211\u5728\u5931\u4E1A\u5E76\u4E0E\u5065\u5EB7\u95EE\u9898\u6297\u4E89\u7684\u540C\u65F6\uFF0C\u5168\u804C\u6295\u5165\u4E8E Nexus \u9879\u76EE\u7684\u5F00\u53D1\u3002",
+        default_message: "\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u4E00\u7B14\u6350\u6B3E\u5BF9\u6211\u610F\u4E49\u91CD\u5927\uFF0C\u4E5F\u5C06\u5E2E\u52A9\u8FD9\u4E9B\u9879\u76EE\u6301\u7EED\u8FD0\u8F6C\u3002",
+        reality_check: "\u611F\u8C22\u60A8\uFF01\u8FD9\u4E9B\u63D2\u4EF6\u51DD\u805A\u4E86\u6570\u5343\u5C0F\u65F6\u7684\u5FC3\u8840\uFF0C\u6BCF\u4E00\u676F\u5496\u5561\u90FD\u5E2E\u52A9\u6211\u5728\u5E94\u5BF9\u6301\u7EED\u5065\u5EB7\u95EE\u9898\u7684\u540C\u65F6\u4E0D\u65AD\u6539\u8FDB\u5B83\u4EEC\u3002\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u8BF7\u8003\u8651\u652F\u6301\u6211\u3002",
+        button_alt: "\u652F\u6301\u6211\u7684\u5DE5\u4F5C"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/ja.json
+var ja_default;
+var init_ja = __esm({
+  "src/i18n/locales/ja.json"() {
+    ja_default = {
+      common: {
+        buttons: {
+          cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB",
+          ok: "OK",
+          select: "\u9078\u629E",
+          browse: "\u53C2\u7167",
+          continue: "\u7D9A\u884C",
+          proceed: "\u5B9F\u884C",
+          close: "\u4E86\u89E3\uFF01",
+          create: "\u4F5C\u6210",
+          remove: "\u524A\u9664",
+          run: "\u5B9F\u884C",
+          complete: "\u5B8C\u4E86",
+          view_report: "\u30EC\u30DD\u30FC\u30C8\u3092\u898B\u308B",
+          get_started: "\u59CB\u3081\u308B",
+          create_new_folder: "\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210"
+        },
+        status: {
+          new: "\u65B0\u898F",
+          updated: "\u66F4\u65B0\u6E08\u307F",
+          unchanged: "\u5909\u66F4\u306A\u3057",
+          unknown: "\u4E0D\u660E"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} \u691C\u8A3C",
+          phase_scanning: "\u{1F4CB} \u30B9\u30AD\u30E3\u30F3",
+          phase_processing: "\u2699\uFE0F \u51E6\u7406\u4E2D",
+          phase_writing: "\u{1F4BE} \u66F8\u304D\u8FBC\u307F",
+          phase_complete: "\u2705 \u5B8C\u4E86",
+          phase_error: "\u274C \u30A8\u30E9\u30FC"
+        }
+      },
+      provider_selection: {
+        title: "\u30A2\u30FC\u30AB\u30A4\u30D6\u306E\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3092\u9078\u629E",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "OpenAI ChatGPT \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8"
+          },
+          claude: {
+            name: "Claude",
+            description: "Anthropic Claude \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Mistral AI Le Chat \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8"
+          }
+        },
+        buttons: {
+          select: "\u9078\u629E",
+          cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB"
+        }
+      },
+      file_selection: {
+        title: "{{provider}} \u306E\u4F1A\u8A71\u3092\u30A4\u30F3\u30DD\u30FC\u30C8",
+        import_mode: {
+          section_title: "\u30A4\u30F3\u30DD\u30FC\u30C8\u30E2\u30FC\u30C9",
+          all_label: "\u3059\u3079\u3066\u30A4\u30F3\u30DD\u30FC\u30C8",
+          all_description: "\u3059\u3079\u3066\u306E\u4F1A\u8A71\u3092\u30A4\u30F3\u30DD\u30FC\u30C8\u3059\u308B\uFF08\u9AD8\u901F\uFF09",
+          selective_label: "\u500B\u5225\u306B\u9078\u629E",
+          selective_description: "\u4F1A\u8A71\u3092\u30D7\u30EC\u30D3\u30E5\u30FC\u3057\u3066\u9078\u629E\u3059\u308B"
+        },
+        file_area: {
+          section_title: "\u30D5\u30A1\u30A4\u30EB\u3092\u9078\u629E",
+          drop_text_default: "ZIP\u30D5\u30A1\u30A4\u30EB\u3092\u3053\u3053\u306B\u30C9\u30ED\u30C3\u30D7\u3059\u308B\u304B\u3001\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u53C2\u7167",
+          drop_text_gemini: "ZIP\u30D5\u30A1\u30A4\u30EB\u307E\u305F\u306FJSON\u30D5\u30A1\u30A4\u30EB\u3092\u3053\u3053\u306B\u30C9\u30ED\u30C3\u30D7\u3059\u308B\u304B\u3001\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u53C2\u7167",
+          drop_subtext_default: "\u8907\u6570\u30D5\u30A1\u30A4\u30EB\u306E\u9078\u629E\u306B\u5BFE\u5FDC",
+          drop_subtext_gemini: "ZIP\uFF08Takeout\uFF09\uFF0B \u30AA\u30D7\u30B7\u30E7\u30F3\u306EJSON\uFF08\u62E1\u5F35\u6A5F\u80FD\u304B\u3089\u306E\u30A4\u30F3\u30C7\u30C3\u30AF\u30B9\uFF09"
+        },
+        selected_files: {
+          section_title: "\u9078\u629E\u6E08\u307F\u30D5\u30A1\u30A4\u30EB",
+          remove_button: "\u524A\u9664"
+        },
+        buttons: {
+          cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB",
+          continue: "\u7D9A\u884C"
+        }
+      },
+      conversation_selection: {
+        title: "\u30A4\u30F3\u30DD\u30FC\u30C8\u3059\u308B\u4F1A\u8A71\u3092\u9078\u629E",
+        controls: {
+          select_all: "\u3059\u3079\u3066\u9078\u629E",
+          select_none: "\u9078\u629E\u89E3\u9664",
+          search_placeholder: "\u4F1A\u8A71\u3092\u691C\u7D22...",
+          status_label: "\u30B9\u30C6\u30FC\u30BF\u30B9\uFF1A",
+          show_label: "\u8868\u793A\uFF1A"
+        },
+        status_filter_options: {
+          all: "\u3059\u3079\u3066",
+          new: "\u65B0\u898F",
+          updated: "\u66F4\u65B0\u6E08\u307F",
+          unchanged: "\u5909\u66F4\u306A\u3057"
+        },
+        table_headers: {
+          title: "\u30BF\u30A4\u30C8\u30EB",
+          created: "\u4F5C\u6210\u65E5",
+          updated: "\u66F4\u65B0\u65E5",
+          messages: "\u30E1\u30C3\u30BB\u30FC\u30B8\u6570",
+          status: "\u30B9\u30C6\u30FC\u30BF\u30B9"
+        },
+        status_badges: {
+          new: "\u65B0\u898F",
+          updated: "\u66F4\u65B0\u6E08\u307F",
+          unchanged: "\u5909\u66F4\u306A\u3057",
+          unknown: "\u4E0D\u660E",
+          tooltip_new: "\u3053\u306E\u4F1A\u8A71\u306FVault\u306B\u5B58\u5728\u3057\u307E\u305B\u3093",
+          tooltip_updated: "\u3053\u306E\u4F1A\u8A71\u306FVault\u5185\u306E\u30D0\u30FC\u30B8\u30E7\u30F3\u3088\u308A\u65B0\u3057\u3044\u5185\u5BB9\u3092\u542B\u3093\u3067\u3044\u307E\u3059\uFF08{{existing_date}} \u2192 {{new_date}}\uFF09",
+          tooltip_unchanged: "\u3053\u306E\u4F1A\u8A71\u306FVault\u5185\u306E\u30D0\u30FC\u30B8\u30E7\u30F3\u3068\u540C\u3058\u3067\u3059"
+        },
+        pagination: {
+          showing: "{{total}} \u4EF6\u4E2D {{start}}\u2013{{end}} \u4EF6\u3092\u8868\u793A",
+          page_of: "{{total}} \u30DA\u30FC\u30B8\u4E2D {{current}} \u30DA\u30FC\u30B8",
+          previous: "\u524D\u3078",
+          next: "\u6B21\u3078"
+        },
+        summary: {
+          unique_conversations: "\u56FA\u6709\u306E\u4F1A\u8A71",
+          new: "\u65B0\u898F",
+          updated: "\u66F4\u65B0\u6E08\u307F",
+          unchanged: "\u5909\u66F4\u306A\u3057",
+          selected_of: "{{total}} \u4EF6\u4E2D {{selected}} \u4EF6\u3092\u9078\u629E"
+        },
+        buttons: {
+          cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB",
+          import_selected: "\u9078\u629E\u6E08\u307F\u3092\u30A4\u30F3\u30DD\u30FC\u30C8",
+          import_selected_count: "\u9078\u629E\u3057\u305F {{count}} \u4EF6\u3092\u30A4\u30F3\u30DD\u30FC\u30C8"
+        },
+        date_unknown: "\u4E0D\u660E"
+      },
+      import_progress: {
+        title: "{{filename}} \u3092\u30A4\u30F3\u30DD\u30FC\u30C8\u4E2D",
+        initial: {
+          title: "\u30A4\u30F3\u30DD\u30FC\u30C8\u3092\u6E96\u5099\u4E2D...",
+          detail: "ZIP\u30D5\u30A1\u30A4\u30EB\u306E\u69CB\u9020\u3092\u691C\u8A3C\u3057\u3066\u3044\u307E\u3059"
+        },
+        conversation_counter: "{{current}}/{{total}} \u4EF6\u306E\u4F1A\u8A71",
+        conversation_counter_selective: "{{current}}/{{total}} \u4EF6\u306E\u9078\u629E\u6E08\u307F\u4F1A\u8A71",
+        selective_mode_indicator: "\u{1F4CB} \u9078\u629E\u30A4\u30F3\u30DD\u30FC\u30C8\uFF1A{{total}} \u4EF6\u4E2D {{selected}} \u4EF6",
+        complete: {
+          message: "\u30A4\u30F3\u30DD\u30FC\u30C8\u304C\u6B63\u5E38\u306B\u5B8C\u4E86\u3057\u307E\u3057\u305F",
+          detail: "\u3053\u306E\u30C0\u30A4\u30A2\u30ED\u30B0\u3092\u9589\u3058\u308B\u3053\u3068\u304C\u3067\u304D\u307E\u3059"
+        },
+        error: {
+          message: "\u30A4\u30F3\u30DD\u30FC\u30C8\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F",
+          detail: "\u8A73\u7D30\u306F\u30B3\u30F3\u30BD\u30FC\u30EB\u3092\u3054\u78BA\u8A8D\u304F\u3060\u3055\u3044"
+        }
+      },
+      import_completion: {
+        title: "\u30A4\u30F3\u30DD\u30FC\u30C8\u5B8C\u4E86",
+        success_message: "\u2705 \u4F1A\u8A71\u304C\u6B63\u5E38\u306B\u30A4\u30F3\u30DD\u30FC\u30C8\u3055\u308C\u307E\u3057\u305F",
+        stats: {
+          zip_files_processed: "\u51E6\u7406\u6E08\u307FZIP\u30D5\u30A1\u30A4\u30EB",
+          unique_conversations: "\u56FA\u6709\u306E\u4F1A\u8A71",
+          duplicates: "\u91CD\u8907",
+          new: "\u65B0\u898F",
+          updated: "\u66F4\u65B0\u6E08\u307F",
+          skipped: "\u30B9\u30AD\u30C3\u30D7\u6E08\u307F",
+          failed: "\u5931\u6557"
+        },
+        attachments: {
+          label: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\uFF1A",
+          summary: "{{found}}/{{total}} \u4EF6\u3092\u62BD\u51FA\uFF08{{percentage}}%\uFF09",
+          missing_failed: "{{missing}} \u4EF6\u6B20\u843D\u3001{{failed}} \u4EF6\u5931\u6557"
+        },
+        report: {
+          label: "\u{1F4C4} \u8A73\u7D30\u30EC\u30DD\u30FC\u30C8\uFF1A"
+        },
+        buttons: {
+          view_report: "\u30EC\u30DD\u30FC\u30C8\u3092\u898B\u308B",
+          ok: "OK"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} \u30D5\u30A9\u30EB\u30C0\u30FC\u69CB\u9020",
+          conversation_folder: {
+            name: "\u4F1A\u8A71\u30D5\u30A9\u30EB\u30C0\u30FC",
+            desc: "\u30A4\u30F3\u30DD\u30FC\u30C8\u3057\u305F\u4F1A\u8A71\u306E\u4FDD\u5B58\u5148",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u53C2\u7167\u3059\u308B\u304B\u3001\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210"
+          },
+          reports_folder: {
+            name: "\u30EC\u30DD\u30FC\u30C8\u30D5\u30A9\u30EB\u30C0\u30FC",
+            desc: "\u30A4\u30F3\u30DD\u30FC\u30C8\u30EC\u30DD\u30FC\u30C8\u306E\u4FDD\u5B58\u5148",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u53C2\u7167\u3059\u308B\u304B\u3001\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210"
+          },
+          attachment_folder: {
+            name: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u30D5\u30A9\u30EB\u30C0\u30FC",
+            desc: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u4FDD\u5B58\u5148\uFF08\u26A0\uFE0F \u5BB9\u91CF\u7BC0\u7D04\u306E\u305F\u3081\u540C\u671F\u304B\u3089\u9664\u5916\u3059\u308B\u3053\u3068\u3092\u63A8\u5968\uFF09",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u53C2\u7167\u3059\u308B\u304B\u3001\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} \u65E5\u4ED8\u30D7\u30EC\u30D5\u30A3\u30C3\u30AF\u30B9",
+          add_date_prefix: {
+            name: "\u30D5\u30A1\u30A4\u30EB\u540D\u306B\u65E5\u4ED8\u30D7\u30EC\u30D5\u30A3\u30C3\u30AF\u30B9\u3092\u8FFD\u52A0",
+            desc: "\u4F1A\u8A71\u30D5\u30A1\u30A4\u30EB\u540D\u306E\u5148\u982D\u306B\u4F5C\u6210\u65E5\u3092\u4ED8\u52A0\u3059\u308B",
+            format_label: "\u65E5\u4ED8\u5F62\u5F0F\u3092\u9078\u629E\uFF1A"
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} \u30E1\u30C3\u30BB\u30FC\u30B8\u306E\u65E5\u4ED8\u5F62\u5F0F",
+          custom_format: {
+            name: "\u30E1\u30C3\u30BB\u30FC\u30B8\u306E\u30BF\u30A4\u30E0\u30B9\u30BF\u30F3\u30D7\u5F62\u5F0F\u3092\u30AB\u30B9\u30BF\u30DE\u30A4\u30BA",
+            desc: "\u30E1\u30C3\u30BB\u30FC\u30B8\u30D8\u30C3\u30C0\u30FC\u306E\u30C7\u30D5\u30A9\u30EB\u30C8\u306E\u30ED\u30B1\u30FC\u30EB\u30D9\u30FC\u30B9\u306E\u30BF\u30A4\u30E0\u30B9\u30BF\u30F3\u30D7\u5F62\u5F0F\u3092\u4E0A\u66F8\u304D\u3057\u307E\u3059\u3002\u7121\u52B9\u306E\u5834\u5408\u3001\u30BF\u30A4\u30E0\u30B9\u30BF\u30F3\u30D7\u306F Obsidian \u306E\u8A00\u8A9E\u8A2D\u5B9A\u306B\u5F93\u3044\u307E\u3059\u3002Obsidian \u304C\u82F1\u8A9E\u306B\u8A2D\u5B9A\u3055\u308C\u3066\u3044\u308B\u5834\u5408\u3001US\u5F62\u5F0F\uFF08YYYY/DD/MM\uFF09\u304C\u9069\u7528\u3055\u308C\u307E\u3059\u3002"
+          },
+          timestamp_format: {
+            name: "\u30BF\u30A4\u30E0\u30B9\u30BF\u30F3\u30D7\u5F62\u5F0F",
+            desc: "\u4F1A\u8A71\u30CE\u30FC\u30C8\u306E\u30E1\u30C3\u30BB\u30FC\u30B8\u30BF\u30A4\u30E0\u30B9\u30BF\u30F3\u30D7\u306E\u5F62\u5F0F\u3092\u9078\u629E"
+          },
+          preview_label: "\u30D7\u30EC\u30D3\u30E5\u30FC\uFF1A"
+        },
+        attachments: {
+          section_title: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u8A2D\u5B9A",
+          import_attachments: {
+            name: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u3092\u30A4\u30F3\u30DD\u30FC\u30C8",
+            desc: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u3092\u30C7\u30A3\u30B9\u30AF\u306B\u4FDD\u5B58\u3057\u3001\u4F1A\u8A71\u5185\u3067\u30EA\u30F3\u30AF\u3057\u307E\u3059\uFF08\u300C\u30D9\u30B9\u30C8\u30A8\u30D5\u30A9\u30FC\u30C8\u300D\u65B9\u5F0F\uFF09"
+          },
+          handle_missing: {
+            name: "\u6B20\u843D\u3057\u305F\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u3092\u51E6\u7406",
+            desc: "\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8\u306B\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u304C\u542B\u307E\u308C\u3066\u3044\u306A\u3044\u5834\u5408\u3001\u30B9\u30AD\u30C3\u30D7\u305B\u305A\u306B\u60C5\u5831\u30CE\u30FC\u30C8\u3092\u4F5C\u6210\u3059\u308B"
+          },
+          show_details: {
+            name: "\u30EC\u30DD\u30FC\u30C8\u306B\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u8A73\u7D30\u3092\u8868\u793A",
+            desc: "\u30A4\u30F3\u30DD\u30FC\u30C8\u30EC\u30DD\u30FC\u30C8\u306B\u8A73\u7D30\u306A\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u51E6\u7406\u306E\u7D71\u8A08\u3092\u542B\u3081\u308B"
+          },
+          info_box: {
+            title: "\u{1F4CE} \u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u51E6\u7406\u306B\u3064\u3044\u3066",
+            best_effort: "\u30D9\u30B9\u30C8\u30A8\u30D5\u30A9\u30FC\u30C8\u65B9\u5F0F\uFF1A\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8\u3067\u898B\u3064\u304B\u3063\u305F\u30D5\u30A1\u30A4\u30EB\u306F\u62BD\u51FA\u3057\u3066\u30EA\u30F3\u30AF\u3057\u307E\u3059\u3002\u6B20\u843D\u3057\u3066\u3044\u308B\u30D5\u30A1\u30A4\u30EB\u306B\u306F\u60C5\u5831\u30CE\u30FC\u30C8\u3092\u4F5C\u6210\u3057\u307E\u3059\u3002",
+            platform_diff: "\u30D7\u30E9\u30C3\u30C8\u30D5\u30A9\u30FC\u30E0\u306E\u9055\u3044\uFF1AChatGPT\u306E\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8\u306B\u306F\u3001\u7279\u306B\u53E4\u3044\u4F1A\u8A71\u306E\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u304C\u3059\u3079\u3066\u542B\u307E\u308C\u306A\u3044\u5834\u5408\u304C\u3042\u308A\u307E\u3059\u3002",
+            organization: "\u30B7\u30F3\u30D7\u30EB\u306A\u6574\u7406\uFF1A\u30D5\u30A1\u30A4\u30EB\u306F attachments/provider/category/ \u306E\u5F62\u5F0F\u3067\u6574\u7406\u3055\u308C\u307E\u3059\uFF08\u4F8B\uFF1Aattachments/chatgpt/images/\uFF09\u3002",
+            sync_tip: "\u540C\u671F\u306E\u30D2\u30F3\u30C8\uFF1A\u5927\u5BB9\u91CF\u30D5\u30A1\u30A4\u30EB\u306E\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u3092\u907F\u3051\u308B\u305F\u3081\u3001\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u540C\u671F\u304B\u3089\u9664\u5916\u3059\u308B\u3053\u3068\u3092\u691C\u8A0E\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+            tip: "\u{1F4A1} \u30D2\u30F3\u30C8\uFF1A\u300C\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u8A73\u7D30\u3092\u8868\u793A\u300D\u3092\u6709\u52B9\u306B\u3059\u308B\u3068\u3001\u30A4\u30F3\u30DD\u30FC\u30C8\u6642\u306B\u898B\u3064\u304B\u3063\u305F\u30D5\u30A1\u30A4\u30EB\u30FB\u6B20\u843D\u3057\u305F\u30D5\u30A1\u30A4\u30EB\u30FB\u5931\u6557\u3057\u305F\u30D5\u30A1\u30A4\u30EB\u3092\u6B63\u78BA\u306B\u78BA\u8A8D\u3067\u304D\u307E\u3059\u3002"
+          }
+        },
+        migrations: {
+          section_title: "\u30DE\u30A4\u30B0\u30EC\u30FC\u30B7\u30E7\u30F3",
+          description_manual: "\u624B\u52D5\u64CD\u4F5C\uFF1A\u90FD\u5408\u306E\u3088\u3044\u3068\u304D\u306B\u5B9F\u884C\u3067\u304D\u308B\u30AA\u30D7\u30B7\u30E7\u30F3\u306E\u30A2\u30C3\u30D7\u30B0\u30EC\u30FC\u30C9\u64CD\u4F5C\u3067\u3059\u3002",
+          description_automatic: "\u81EA\u52D5\u64CD\u4F5C\uFF08\u53E4\u3044\u30C7\u30FC\u30BF\u306E\u524A\u9664\u306A\u3069\uFF09\u306F\u30A2\u30C3\u30D7\u30B0\u30EC\u30FC\u30C9\u6642\u306B\u81EA\u52D5\u7684\u306B\u5B9F\u884C\u3055\u308C\u3001\u3053\u3053\u306B\u306F\u8868\u793A\u3055\u308C\u307E\u305B\u3093\u3002",
+          version_header: "\u30D0\u30FC\u30B8\u30E7\u30F3 {{version}}",
+          no_migrations: {
+            title: "\u5229\u7528\u53EF\u80FD\u306A\u624B\u52D5\u64CD\u4F5C\u306F\u3042\u308A\u307E\u305B\u3093",
+            desc: "\u3059\u3079\u3066\u306E\u30A2\u30C3\u30D7\u30B0\u30EC\u30FC\u30C9\u64CD\u4F5C\u306F\u81EA\u52D5\u7684\u306B\u5B8C\u4E86\u3057\u307E\u3057\u305F\u3002"
+          },
+          operation_completed_suffix: " \u2705 \u5B8C\u4E86",
+          buttons: {
+            completed: "\u2705 \u5B8C\u4E86",
+            cannot_run: "\u5B9F\u884C\u4E0D\u53EF",
+            run: "\u5B9F\u884C",
+            running: "\u5B9F\u884C\u4E2D..."
+          },
+          tooltips: {
+            completed: "\u3053\u306E\u64CD\u4F5C\u306F\u3059\u3067\u306B\u5B8C\u4E86\u3057\u3066\u3044\u307E\u3059",
+            cannot_run: "\u3053\u306E\u64CD\u4F5C\u306E\u524D\u63D0\u6761\u4EF6\u304C\u6E80\u305F\u3055\u308C\u3066\u3044\u307E\u305B\u3093",
+            run: "{{operation_name}} \u3092\u5B9F\u884C"
+          },
+          error_loading: "\u30DE\u30A4\u30B0\u30EC\u30FC\u30B7\u30E7\u30F3\u306E\u8AAD\u307F\u8FBC\u307F\u30A8\u30E9\u30FC\uFF1A"
+        },
+        support: {
+          section_title: "\u{1F49D} \u30B5\u30DD\u30FC\u30C8\u3068\u30D8\u30EB\u30D7",
+          resources: {
+            name: "\u{1F4DA} \u30EA\u30BD\u30FC\u30B9",
+            desc: "\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u3001\u30EA\u30EA\u30FC\u30B9\u30CE\u30FC\u30C8\u3001\u30B3\u30DF\u30E5\u30CB\u30C6\u30A3\u30EA\u30F3\u30AF",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} \u5909\u66F4\u5C65\u6B74",
+            issues: "\u{1F41B} \u554F\u984C\u5831\u544A",
+            forum: "\u{1F4AC} \u30D5\u30A9\u30FC\u30E9\u30E0"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "\u958B\u59CB\u4E2D...",
+          progress_label: "\u9032\u6357\uFF1A{{percentage}}%",
+          step_label: "\u30B9\u30C6\u30C3\u30D7 {{current}}/{{total}}",
+          complete_label: "\u5B8C\u4E86",
+          complete_message: "\u6B63\u5E38\u306B\u5B8C\u4E86\u3057\u307E\u3057\u305F",
+          error_message: "\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F"
+        },
+        multi_operation_modal: {
+          progress_label: "\u9032\u6357\uFF1A{{completed}}/{{total}} \u64CD\u4F5C",
+          progress_with_failures: "\u9032\u6357\uFF1A{{completed}}/{{total}} \u64CD\u4F5C\uFF08{{failed}} \u4EF6\u5931\u6557\uFF09",
+          all_completed: "{{total}} \u4EF6\u306E\u64CD\u4F5C\u304C\u3059\u3079\u3066\u6B63\u5E38\u306B\u5B8C\u4E86\u3057\u307E\u3057\u305F",
+          mark_complete_default: "\u3059\u3079\u3066\u306E\u64CD\u4F5C\u304C\u6B63\u5E38\u306B\u5B8C\u4E86\u3057\u307E\u3057\u305F",
+          buttons: {
+            complete: "\u5B8C\u4E86",
+            close: "\u9589\u3058\u308B"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} \u30DE\u30A4\u30B0\u30EC\u30FC\u30B7\u30E7\u30F3\u304C\u5FC5\u8981\u3067\u3059",
+            message: "\u4EE5\u4E0B\u306E\u30BF\u30B9\u30AF\u304C\u81EA\u52D5\u7684\u306B\u5B9F\u884C\u3055\u308C\u3001\u30C7\u30FC\u30BF\u304C v1.3.0 \u306B\u30A2\u30C3\u30D7\u30B0\u30EC\u30FC\u30C9\u3055\u308C\u307E\u3059\uFF1A",
+            tasks: {
+              folder_settings: "\u2713 \u30D5\u30A9\u30EB\u30C0\u30FC\u8A2D\u5B9A\u3092\u65B0\u3057\u3044\u69CB\u9020\u306B\u79FB\u884C",
+              timestamps: "\u2713 \u30BF\u30A4\u30E0\u30B9\u30BF\u30F3\u30D7\u3092 ISO 8601 \u5F62\u5F0F\u306B\u66F4\u65B0",
+              aliases: "\u2713 frontmatter \u306E\u30A8\u30A4\u30EA\u30A2\u30B9\u3092\u4FEE\u6B63",
+              reports: "\u2713 \u30EC\u30DD\u30FC\u30C8\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u9069\u5207\u306A\u5834\u6240\u306B\u79FB\u52D5",
+              artifacts: "\u2713 \u30A2\u30FC\u30C6\u30A3\u30D5\u30A1\u30AF\u30C8\u306E\u30E1\u30BF\u30C7\u30FC\u30BF\u3092\u66F4\u65B0"
+            },
+            estimate: "\u6570\u79D2\u304B\u304B\u308A\u307E\u3059\u3002"
+          },
+          buttons: {
+            run_migration: "\u{1F680} \u30DE\u30A4\u30B0\u30EC\u30FC\u30B7\u30E7\u30F3\u3092\u5B9F\u884C"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 \u30A2\u30C3\u30D7\u30B0\u30EC\u30FC\u30C9\u5B8C\u4E86 - v{{version}}",
+          buttons: {
+            got_it: "\u4E86\u89E3\uFF01"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "\u4E86\u89E3\uFF01"
+          }
+        }
+      },
+      folder_migration: {
+        title: "\u65E2\u5B58\u306E\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3057\u307E\u3059\u304B\uFF1F",
+        message_intro: "{{folder_type}} \u30D5\u30A9\u30EB\u30C0\u30FC\u306E\u5834\u6240\u3092\u5909\u66F4\u3057\u3066\u3044\u307E\u3059\uFF1A",
+        path_from: "\u79FB\u52D5\u5143\uFF1A{{path}}",
+        path_to: "\u79FB\u52D5\u5148\uFF1A{{path}}",
+        question: "\u65E2\u5B58\u306E\u30D5\u30A1\u30A4\u30EB\u3092\u65B0\u3057\u3044\u5834\u6240\u306B\u79FB\u52D5\u3057\u307E\u3059\u304B\uFF1F",
+        link_updates: {
+          title: "\u{1F517} \u30EA\u30F3\u30AF\u306E\u66F4\u65B0\uFF1A",
+          attachments_text: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3059\u308B\u3068\u3001\u305D\u308C\u3089\u3092\u53C2\u7167\u3057\u3066\u3044\u308B\u3059\u3079\u3066\u306E\u4F1A\u8A71\u30CE\u30FC\u30C8\u3082\u66F4\u65B0\u3055\u308C\u307E\u3059\u3002",
+          conversations_text: "\u4F1A\u8A71\u3092\u79FB\u52D5\u3059\u308B\u3068\u3001\u305D\u308C\u3089\u3092\u53C2\u7167\u3057\u3066\u3044\u308B\u3059\u3079\u3066\u306E\u30EC\u30DD\u30FC\u30C8\u3068\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u3082\u66F4\u65B0\u3055\u308C\u307E\u3059\u3002",
+          estimated_time_seconds: "\u63A8\u5B9A\u6642\u9593\uFF1A\u7D04 {{seconds}} \u79D2",
+          estimated_time_minutes: "\u63A8\u5B9A\u6642\u9593\uFF1A\u7D04 {{minutes}} \u5206"
+        },
+        warning: {
+          title: "\u26A0\uFE0F \u91CD\u8981\uFF1A",
+          text: "\u300C\u3044\u3044\u3048\u300D\u3092\u9078\u629E\u3057\u305F\u5834\u5408\u3001\u65E2\u5B58\u306E\u30D5\u30A1\u30A4\u30EB\u306F\u5143\u306E\u5834\u6240\u306B\u6B8B\u308A\u3001\u4ECA\u5F8C\u306E\u66F4\u65B0\u306E\u5F71\u97FF\u3092\u53D7\u3051\u307E\u305B\u3093\u3002"
+        },
+        buttons: {
+          cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB",
+          keep: "\u3044\u3044\u3048\u3001\u5143\u306E\u5834\u6240\u306B\u4FDD\u6301\u3059\u308B",
+          move: "\u306F\u3044\u3001\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3059\u308B",
+          move_with_links: "\u306F\u3044\u3001\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3057\u3066\u30EA\u30F3\u30AF\u3082\u66F4\u65B0\u3059\u308B"
+        },
+        progress: {
+          title_moving: "{{folder_type}} \u3092\u79FB\u52D5\u3057\u3066\u30EA\u30F3\u30AF\u3092\u66F4\u65B0\u4E2D",
+          step_moving_title: "\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u4E2D...",
+          step_moving_detail: "{{old_path}} \u304B\u3089 {{new_path}} \u3078\u79FB\u52D5\u4E2D",
+          step_moving_count: "{{current}} / {{total}} \u30D5\u30A1\u30A4\u30EB\u3092\u51E6\u7406\u6E08\u307F",
+          step_moved_title: "\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3057\u307E\u3057\u305F",
+          step_moved_detail: "{{moved}} \u4EF6\u306E\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3001{{skipped}} \u4EF6\u3092\u30B9\u30AD\u30C3\u30D7\u3002\u30EA\u30F3\u30AF\u306E\u66F4\u65B0\u3092\u6E96\u5099\u4E2D...",
+          step_updating_attachment_links: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u30EA\u30F3\u30AF\u3092\u66F4\u65B0\u4E2D...",
+          step_updating_conversation_links: "\u4F1A\u8A71\u306E\u30EA\u30F3\u30AF\u3092\u66F4\u65B0\u4E2D...",
+          step_updating_report_links: "\u30EC\u30DD\u30FC\u30C8\u5185\u306E\u30EA\u30F3\u30AF\u3092\u66F4\u65B0\u4E2D...",
+          step_updating_artifact_links: "\u30A2\u30FC\u30C6\u30A3\u30D5\u30A1\u30AF\u30C8\u5185\u306E\u30EA\u30F3\u30AF\u3092\u66F4\u65B0\u4E2D...",
+          complete_message: "{{moved}} \u4EF6\u306E\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3057\u307E\u3057\u305F\u3002{{links}} \u4EF6\u306E\u30EA\u30F3\u30AF\u3092\u6B63\u5E38\u306B\u66F4\u65B0\u3057\u307E\u3057\u305F"
+        },
+        result_dialog: {
+          title: "\u30D5\u30A9\u30EB\u30C0\u30FC\u79FB\u884C\u306E\u7D50\u679C",
+          summary_title: "\u79FB\u884C\u306E\u6982\u8981",
+          moved: "\u2705 \u6B63\u5E38\u306B\u79FB\u52D5\uFF1A{{count}} \u30D5\u30A1\u30A4\u30EB",
+          skipped: "\u26A0\uFE0F \u30B9\u30AD\u30C3\u30D7\u6E08\u307F\uFF08\u3059\u3067\u306B\u5B58\u5728\uFF09\uFF1A{{count}} \u30D5\u30A1\u30A4\u30EB",
+          errors: "\u274C \u30A8\u30E9\u30FC\uFF1A{{count}} \u30D5\u30A1\u30A4\u30EB",
+          explanation: "\u79FB\u52D5\u5148\u306B\u3059\u3067\u306B\u5B58\u5728\u3059\u308B\u30D5\u30A1\u30A4\u30EB\u306F\u30C7\u30FC\u30BF\u4FDD\u8B77\u306E\u305F\u3081\u4E0A\u66F8\u304D\u3055\u308C\u307E\u305B\u3093\u3067\u3057\u305F\u3002",
+          error_details_title: "\u30A8\u30E9\u30FC\u306E\u8A73\u7D30\uFF1A"
+        },
+        error_target_not_empty: {
+          title: "\u79FB\u52D5\u5148\u30D5\u30A9\u30EB\u30C0\u30FC\u304C\u7A7A\u3067\u306F\u3042\u308A\u307E\u305B\u3093",
+          message: "\u30D5\u30A9\u30EB\u30C0\u30FC\u300C{{path}}\u300D\u306B\u306F\u3059\u3067\u306B\u30D5\u30A1\u30A4\u30EB\u304C\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002\n\n\u30D5\u30A9\u30EB\u30C0\u30FC\u306E\u5834\u6240\u3092\u5909\u66F4\u3059\u308B\u306B\u306F\uFF1A\n\u2022 Obsidian \u3067\u65E2\u5B58\u306E\u30D5\u30A1\u30A4\u30EB\u3092\u624B\u52D5\u3067\u79FB\u52D5\u3059\u308B\u3001\u307E\u305F\u306F\n\u2022 \u7A7A\u306E\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u9078\u629E\u3059\u308B\u304B\u3001\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210\u3059\u308B"
+        },
+        error_migration_failed: {
+          title: "\u79FB\u884C\u306B\u5931\u6557\u3057\u307E\u3057\u305F",
+          message_move: "\u30D5\u30A1\u30A4\u30EB\u306E\u79FB\u52D5\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{{error}}",
+          message_links: "\u30D5\u30A1\u30A4\u30EB\u306E\u79FB\u52D5\u307E\u305F\u306F\u30EA\u30F3\u30AF\u306E\u66F4\u65B0\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{{error}}"
+        }
+      },
+      folder_browser: {
+        title: "\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u9078\u629E",
+        vault_root: "Vault \u306E\u30EB\u30FC\u30C8\uFF08/\uFF09",
+        buttons: {
+          create_new_folder: "\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210",
+          cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB",
+          select: "\u9078\u629E"
+        },
+        create_folder_dialog: {
+          title: "\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210",
+          folder_name_label: "\u30D5\u30A9\u30EB\u30C0\u30FC\u540D\uFF1A",
+          buttons: {
+            cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB",
+            create: "\u4F5C\u6210"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F \u6700\u521D\u306B\u89AA\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044",
+          invalid_name: "\u274C \u7121\u52B9\u306A\u30D5\u30A9\u30EB\u30C0\u30FC\u540D\uFF1A\u4F7F\u7528\u3067\u304D\u306A\u3044\u6587\u5B57\u304C\u542B\u307E\u308C\u3066\u3044\u307E\u3059",
+          already_exists: "\u274C \u30D5\u30A9\u30EB\u30C0\u30FC\u306F\u3059\u3067\u306B\u5B58\u5728\u3057\u307E\u3059",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 \u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210\u3057\u307E\u3057\u305F\uFF1A{{name}}",
+          create_failed: "\u274C \u30D5\u30A9\u30EB\u30C0\u30FC\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{{error}}",
+          select_first: "\u26A0\uFE0F \u6700\u521D\u306B\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "\u30D0\u30FC\u30B8\u30E7\u30F3 1.3.0 \u3067\u306F\u3001\u30EC\u30DD\u30FC\u30C8\u7528\u306E\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u6307\u5B9A\u3067\u304D\u308B\u3088\u3046\u306B\u306A\u308A\u307E\u3057\u305F\u3002\u65E2\u5B58\u306E\u30EC\u30DD\u30FC\u30C8\u306F {{folder}} \u306B\u79FB\u52D5\u3055\u308C\u307E\u3059\u3002\u307E\u305F\u306F\u3001\u4EE5\u4E0B\u304B\u3089\u5E0C\u671B\u306E\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+        note: "\u6CE8\u610F\uFF1A\u3053\u306E\u30D5\u30A9\u30EB\u30C0\u30FC\u306F\u300C\u4F1A\u8A71\u300D\u307E\u305F\u306F\u300C\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u300D\u30D5\u30A9\u30EB\u30C0\u30FC\u306E\u5185\u90E8\u306B\u8A2D\u5B9A\u3067\u304D\u307E\u305B\u3093\u3002",
+        report_folder_label: "\u{1F4CA} \u30EC\u30DD\u30FC\u30C8\u30D5\u30A9\u30EB\u30C0\u30FC",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "\u53C2\u7167",
+          proceed: "\u5B9F\u884C"
+        },
+        error_invalid_folder: {
+          title: "\u7121\u52B9\u306A\u30D5\u30A9\u30EB\u30C0\u30FC\u306E\u5834\u6240",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "Nexus AI Chat Importer \u3092\u30A4\u30F3\u30B9\u30C8\u30FC\u30EB\u3044\u305F\u3060\u304D\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\uFF01",
+        description: "ChatGPT\u3001Claude\u3001Le Chat \u306E\u4F1A\u8A71\u3092 Obsidian Vault \u306B\u76F4\u63A5\u30A4\u30F3\u30DD\u30FC\u30C8\u3057\u3066\u7BA1\u7406\u3067\u304D\u307E\u3059\u3002",
+        resources_title: "\u30EA\u30BD\u30FC\u30B9",
+        resources: {
+          documentation: {
+            title: "\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8",
+            description: "\u30D7\u30E9\u30B0\u30A4\u30F3\u306E\u4F7F\u3044\u65B9\u3092\u5B66\u3076"
+          },
+          release_notes: {
+            title: "\u30EA\u30EA\u30FC\u30B9\u30CE\u30FC\u30C8",
+            description: "\u3053\u306E\u30D0\u30FC\u30B8\u30E7\u30F3\u306E\u65B0\u6A5F\u80FD"
+          },
+          report_issues: {
+            title: "\u554F\u984C\u3092\u5831\u544A",
+            description: "\u30D0\u30B0\u3092\u898B\u3064\u3051\u307E\u3057\u305F\u304B\uFF1F\u304A\u77E5\u3089\u305B\u304F\u3060\u3055\u3044"
+          },
+          community_forum: {
+            title: "\u30B3\u30DF\u30E5\u30CB\u30C6\u30A3\u30D5\u30A9\u30FC\u30E9\u30E0",
+            description: "\u30C7\u30A3\u30B9\u30AB\u30C3\u30B7\u30E7\u30F3\u306B\u53C2\u52A0\u3059\u308B"
+          }
+        },
+        buttons: {
+          get_started: "\u59CB\u3081\u308B"
+        }
+      },
+      notices: {
+        import_analyzing: "{{count}} \u4EF6\u306E\u30D5\u30A1\u30A4\u30EB\u304B\u3089\u4F1A\u8A71\u3092\u5206\u6790\u4E2D...",
+        import_no_new: "\u65B0\u898F\u307E\u305F\u306F\u66F4\u65B0\u3055\u308C\u305F\u4F1A\u8A71\u306F\u898B\u3064\u304B\u308A\u307E\u305B\u3093\u3067\u3057\u305F\u3002\u3059\u3079\u3066\u306E\u4F1A\u8A71\u306F\u6700\u65B0\u306E\u72B6\u614B\u3067\u3059\u3002",
+        import_starting: "{{count}} \u4EF6\u306E\u4F1A\u8A71\u3092\u30A4\u30F3\u30DD\u30FC\u30C8\u4E2D\uFF08\u65B0\u898F {{new}} \u4EF6\u3001\u66F4\u65B0\u6E08\u307F {{updated}} \u4EF6\uFF09...",
+        import_starting_selected: "{{files}} \u4EF6\u306E\u30D5\u30A1\u30A4\u30EB\u304B\u3089\u9078\u629E\u3057\u305F {{count}} \u4EF6\u306E\u4F1A\u8A71\u3092\u30A4\u30F3\u30DD\u30FC\u30C8\u4E2D...",
+        import_completed_fallback: "\u30A4\u30F3\u30DD\u30FC\u30C8\u304C\u5B8C\u4E86\u3057\u307E\u3057\u305F\u3002{{created}} \u4EF6\u3092\u4F5C\u6210\u3001{{updated}} \u4EF6\u3092\u66F4\u65B0\u3002",
+        import_error: "\u30A4\u30F3\u30DD\u30FC\u30C8\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F\uFF1A{{error}}",
+        import_error_analyzing: "\u4F1A\u8A71\u306E\u5206\u6790\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F\uFF1A{{error}}",
+        import_error_file: "{{filename}} \u306E\u51E6\u7406\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F\u3002\u8A73\u7D30\u306F\u30B3\u30F3\u30BD\u30FC\u30EB\u3092\u3054\u78BA\u8A8D\u304F\u3060\u3055\u3044\u3002",
+        import_no_selected: "\u30A4\u30F3\u30DD\u30FC\u30C8\u3059\u308B\u4F1A\u8A71\u304C\u9078\u629E\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
+        import_no_zip_gemini: "Gemini Takeout \u306E ZIP \u30D5\u30A1\u30A4\u30EB\u3092\u5C11\u306A\u304F\u3068\u3082 1 \u3064\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\uFF08\u30AA\u30D7\u30B7\u30E7\u30F3\u3068\u3057\u3066\u62E1\u5F35\u6A5F\u80FD\u304B\u3089\u306E JSON \u30A4\u30F3\u30C7\u30C3\u30AF\u30B9\u3082\u6307\u5B9A\u3067\u304D\u307E\u3059\uFF09\u3002",
+        import_no_zip: "ZIP \u30A8\u30AF\u30B9\u30DD\u30FC\u30C8\u30D5\u30A1\u30A4\u30EB\u3092\u5C11\u306A\u304F\u3068\u3082 1 \u3064\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+        import_gemini_json_failed: "Gemini \u30A4\u30F3\u30C7\u30C3\u30AF\u30B9 JSON \u306E\u8AAD\u307F\u8FBC\u307F\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u30A4\u30F3\u30C7\u30C3\u30AF\u30B9\u306A\u3057\u3067\u7D9A\u884C\u3057\u307E\u3059\u3002",
+        report_failed: "\u30ED\u30B0\u30D5\u30A1\u30A4\u30EB\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u8A73\u7D30\u306F\u30B3\u30F3\u30BD\u30FC\u30EB\u3092\u3054\u78BA\u8A8D\u304F\u3060\u3055\u3044\u3002",
+        attachment_map_failed: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u30DE\u30C3\u30D7\u306E\u69CB\u7BC9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u8A73\u7D30\u306F\u30B3\u30F3\u30BD\u30FC\u30EB\u3092\u3054\u78BA\u8A8D\u304F\u3060\u3055\u3044\u3002",
+        ribbon_tooltip: "Nexus AI Chat Importer - \u65B0\u3057\u3044\u30D5\u30A1\u30A4\u30EB\u3092\u30A4\u30F3\u30DD\u30FC\u30C8"
+      },
+      commands: {
+        import_conversations: {
+          name: "AI \u4F1A\u8A71\u3092\u30A4\u30F3\u30DD\u30FC\u30C8"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 \u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
+        header_highlight: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
+        default_message_emphasis: "\u79C1\u306F\u5931\u696D\u4E2D\u3067\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3092\u62B1\u3048\u306A\u304C\u3089\u3001Nexus \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306B\u30D5\u30EB\u30BF\u30A4\u30E0\u3067\u53D6\u308A\u7D44\u3093\u3067\u3044\u307E\u3059\u3002",
+        default_message: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u5BC4\u4ED8\u306F\u3068\u3066\u3082\u5927\u304D\u306A\u52B1\u307F\u306B\u306A\u308A\u3001\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u7D99\u7D9A\u3092\u652F\u3048\u3066\u304F\u308C\u307E\u3059\u3002",
+        reality_check: "\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\uFF01\u3053\u308C\u3089\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u306F\u6570\u5343\u6642\u9593\u306E\u4F5C\u696D\u304C\u6CE8\u304E\u8FBC\u307E\u308C\u3066\u304A\u308A\u3001\u4E00\u676F\u306E\u30B3\u30FC\u30D2\u30FC\u304C\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3068\u5411\u304D\u5408\u3044\u306A\u304C\u3089\u6539\u5584\u3092\u7D9A\u3051\u308B\u79C1\u306E\u529B\u306B\u306A\u308A\u307E\u3059\u3002\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u304A\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u305C\u3072\u30B5\u30DD\u30FC\u30C8\u3092\u3054\u691C\u8A0E\u304F\u3060\u3055\u3044\u3002",
+        button_alt: "\u79C1\u306E\u6D3B\u52D5\u3092\u652F\u63F4\u3059\u308B"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/pt.json
+var pt_default;
+var init_pt = __esm({
+  "src/i18n/locales/pt.json"() {
+    pt_default = {
+      common: {
+        buttons: {
+          cancel: "Cancelar",
+          ok: "OK",
+          select: "Selecionar",
+          browse: "Procurar",
+          continue: "Continuar",
+          proceed: "Prosseguir",
+          close: "Entendido!",
+          create: "Criar",
+          remove: "Remover",
+          run: "Executar",
+          complete: "Concluir",
+          view_report: "Ver relat\xF3rio",
+          get_started: "Come\xE7ar",
+          create_new_folder: "Criar nova pasta"
+        },
+        status: {
+          new: "Novo",
+          updated: "Atualizado",
+          unchanged: "Sem altera\xE7\xF5es",
+          unknown: "Desconhecido"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} Valida\xE7\xE3o",
+          phase_scanning: "\u{1F4CB} An\xE1lise",
+          phase_processing: "\u2699\uFE0F Processamento",
+          phase_writing: "\u{1F4BE} Escrita",
+          phase_complete: "\u2705 Conclu\xEDdo",
+          phase_error: "\u274C Erro"
+        }
+      },
+      provider_selection: {
+        title: "Selecionar fornecedor de arquivo",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "Exporta\xE7\xF5es de conversas do OpenAI ChatGPT"
+          },
+          claude: {
+            name: "Claude",
+            description: "Exporta\xE7\xF5es de conversas do Anthropic Claude"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Exporta\xE7\xF5es de conversas do Mistral AI Le Chat"
+          }
+        },
+        buttons: {
+          select: "Selecionar",
+          cancel: "Cancelar"
+        }
+      },
+      file_selection: {
+        title: "Importar conversas do {{provider}}",
+        import_mode: {
+          section_title: "Modo de importa\xE7\xE3o",
+          all_label: "Importar tudo",
+          all_description: "Importar todas as conversas (mais r\xE1pido)",
+          selective_label: "Selecionar individualmente",
+          selective_description: "Pr\xE9-visualizar e escolher conversas"
+        },
+        file_area: {
+          section_title: "Selecionar ficheiros",
+          drop_text_default: "Arraste ficheiros ZIP para aqui ou clique para procurar",
+          drop_text_gemini: "Arraste ficheiros ZIP e JSON para aqui ou clique para procurar",
+          drop_subtext_default: "Suporta sele\xE7\xE3o de m\xFAltiplos ficheiros",
+          drop_subtext_gemini: "ZIP (Takeout) + JSON opcional (\xEDndice da extens\xE3o)"
+        },
+        selected_files: {
+          section_title: "Ficheiros selecionados",
+          remove_button: "Remover"
+        },
+        buttons: {
+          cancel: "Cancelar",
+          continue: "Continuar"
+        }
+      },
+      conversation_selection: {
+        title: "Selecionar conversas para importar",
+        controls: {
+          select_all: "Selecionar tudo",
+          select_none: "Desselecionar tudo",
+          search_placeholder: "Pesquisar conversas...",
+          status_label: "Estado:",
+          show_label: "Mostrar:"
+        },
+        status_filter_options: {
+          all: "Todas",
+          new: "Novas",
+          updated: "Atualizadas",
+          unchanged: "Sem altera\xE7\xF5es"
+        },
+        table_headers: {
+          title: "T\xEDtulo",
+          created: "Criado em",
+          updated: "Atualizado em",
+          messages: "Mensagens",
+          status: "Estado"
+        },
+        status_badges: {
+          new: "Novo",
+          updated: "Atualizado",
+          unchanged: "Sem altera\xE7\xF5es",
+          unknown: "Desconhecido",
+          tooltip_new: "Esta conversa n\xE3o existe no seu cofre",
+          tooltip_updated: "Esta conversa tem conte\xFAdo mais recente do que o seu cofre ({{existing_date}} \u2192 {{new_date}})",
+          tooltip_unchanged: "Esta conversa \xE9 id\xEAntica \xE0 vers\xE3o no seu cofre"
+        },
+        pagination: {
+          showing: "A mostrar {{start}}\u2013{{end}} de {{total}} conversas",
+          page_of: "P\xE1gina {{current}} de {{total}}",
+          previous: "Anterior",
+          next: "Seguinte"
+        },
+        summary: {
+          unique_conversations: "Conversas \xFAnicas",
+          new: "Novas",
+          updated: "Atualizadas",
+          unchanged: "Sem altera\xE7\xF5es",
+          selected_of: "{{selected}} de {{total}} selecionadas"
+        },
+        buttons: {
+          cancel: "Cancelar",
+          import_selected: "Importar selecionadas",
+          import_selected_count: "Importar {{count}} selecionadas"
+        },
+        date_unknown: "Desconhecido"
+      },
+      import_progress: {
+        title: "A importar {{filename}}",
+        initial: {
+          title: "A preparar importa\xE7\xE3o...",
+          detail: "A validar a estrutura do ficheiro ZIP"
+        },
+        conversation_counter: "{{current}}/{{total}} conversas",
+        conversation_counter_selective: "{{current}}/{{total}} conversas selecionadas",
+        selective_mode_indicator: "\u{1F4CB} Importa\xE7\xE3o seletiva: {{selected}} de {{total}} conversas",
+        complete: {
+          message: "Importa\xE7\xE3o conclu\xEDda com sucesso",
+          detail: "Pode fechar esta janela"
+        },
+        error: {
+          message: "Ocorreu um erro durante a importa\xE7\xE3o",
+          detail: "Consulte a consola para mais detalhes"
+        }
+      },
+      import_completion: {
+        title: "Importa\xE7\xE3o conclu\xEDda",
+        success_message: "\u2705 Conversas importadas com sucesso",
+        stats: {
+          zip_files_processed: "Ficheiros ZIP processados",
+          unique_conversations: "Conversas \xFAnicas",
+          duplicates: "Duplicados",
+          new: "Novas",
+          updated: "Atualizadas",
+          skipped: "Ignoradas",
+          failed: "Falhadas"
+        },
+        attachments: {
+          label: "Anexos:",
+          summary: "{{found}}/{{total}} extra\xEDdos ({{percentage}}%)",
+          missing_failed: "{{missing}} em falta, {{failed}} falhados"
+        },
+        report: {
+          label: "\u{1F4C4} Relat\xF3rio detalhado:"
+        },
+        buttons: {
+          view_report: "Ver relat\xF3rio",
+          ok: "OK"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} Estrutura de pastas",
+          conversation_folder: {
+            name: "Pasta de conversas",
+            desc: "Local onde as conversas importadas s\xE3o guardadas",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "Procurar pastas ou criar uma nova"
+          },
+          reports_folder: {
+            name: "Pasta de relat\xF3rios",
+            desc: "Local onde os relat\xF3rios de importa\xE7\xE3o s\xE3o guardados",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "Procurar pastas ou criar uma nova"
+          },
+          attachment_folder: {
+            name: "Pasta de anexos",
+            desc: "Local onde os anexos s\xE3o guardados (\u26A0\uFE0F Excluir da sincroniza\xE7\xE3o para poupar espa\xE7o)",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "Procurar pastas ou criar uma nova"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} Prefixo de data",
+          add_date_prefix: {
+            name: "Adicionar prefixo de data aos nomes de ficheiro",
+            desc: "Adicionar a data de cria\xE7\xE3o como prefixo aos nomes dos ficheiros de conversa",
+            format_label: "Selecionar formato de data: "
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} Formato de data das mensagens",
+          custom_format: {
+            name: "Formato de data e hora personalizado nas mensagens",
+            desc: "Substituir o formato de data e hora predefinido baseado nas defini\xE7\xF5es de idioma nos cabe\xE7alhos das mensagens. Quando desativado, os carimbos de data e hora seguem as defini\xE7\xF5es de idioma do Obsidian. Se o Obsidian estiver em ingl\xEAs, o formato norte-americano (YYYY/DD/MM) \xE9 aplicado."
+          },
+          timestamp_format: {
+            name: "Formato de data e hora",
+            desc: "Escolher o formato dos carimbos de data e hora nas notas de conversa"
+          },
+          preview_label: "Pr\xE9-visualiza\xE7\xE3o: "
+        },
+        attachments: {
+          section_title: "Defini\xE7\xF5es de anexos",
+          import_attachments: {
+            name: "Importar anexos",
+            desc: "Guardar ficheiros de anexo no disco e associ\xE1-los nas conversas (utiliza estrat\xE9gia de 'melhor esfor\xE7o')"
+          },
+          handle_missing: {
+            name: "Lidar com anexos em falta",
+            desc: "Quando os anexos est\xE3o ausentes das exporta\xE7\xF5es, criar notas informativas em vez de os ignorar"
+          },
+          show_details: {
+            name: "Mostrar detalhes de anexos nos relat\xF3rios",
+            desc: "Incluir estat\xEDsticas detalhadas do processamento de anexos nos relat\xF3rios de importa\xE7\xE3o"
+          },
+          info_box: {
+            title: "\u{1F4CE} Sobre o tratamento de anexos",
+            best_effort: "Estrat\xE9gia de melhor esfor\xE7o: os ficheiros encontrados nas exporta\xE7\xF5es s\xE3o extra\xEDdos e associados; os ficheiros em falta recebem notas informativas.",
+            platform_diff: "Diferen\xE7as entre plataformas: as exporta\xE7\xF5es do ChatGPT podem n\xE3o incluir todos os anexos, especialmente de conversas mais antigas.",
+            organization: "Organiza\xE7\xE3o simples: ficheiros organizados como attachments/provider/category/ (por exemplo, attachments/chatgpt/images/).",
+            sync_tip: "Dica de sincroniza\xE7\xE3o: considere excluir a pasta de anexos da sincroniza\xE7\xE3o para evitar o envio de ficheiros grandes.",
+            tip: "\u{1F4A1} Dica: ative 'Mostrar detalhes de anexos' para ver exatamente quais ficheiros foram encontrados, est\xE3o em falta ou falharam durante a importa\xE7\xE3o."
+          }
+        },
+        migrations: {
+          section_title: "Migra\xE7\xF5es",
+          description_manual: "Opera\xE7\xF5es manuais: opera\xE7\xF5es de atualiza\xE7\xE3o opcionais que podem ser executadas quando for conveniente.",
+          description_automatic: "As opera\xE7\xF5es autom\xE1ticas (como a remo\xE7\xE3o de dados antigos) s\xE3o executadas automaticamente durante a atualiza\xE7\xE3o e n\xE3o s\xE3o apresentadas aqui.",
+          version_header: "Vers\xE3o {{version}}",
+          no_migrations: {
+            title: "N\xE3o h\xE1 opera\xE7\xF5es manuais dispon\xEDveis",
+            desc: "Todas as opera\xE7\xF5es de atualiza\xE7\xE3o foram conclu\xEDdas automaticamente."
+          },
+          operation_completed_suffix: " \u2705 Conclu\xEDdo",
+          buttons: {
+            completed: "\u2705 Conclu\xEDdo",
+            cannot_run: "N\xE3o \xE9 poss\xEDvel executar",
+            run: "Executar",
+            running: "A executar..."
+          },
+          tooltips: {
+            completed: "Esta opera\xE7\xE3o foi conclu\xEDda",
+            cannot_run: "Os pr\xE9-requisitos desta opera\xE7\xE3o n\xE3o foram cumpridos",
+            run: "Executar {{operation_name}}"
+          },
+          error_loading: "Erro ao carregar migra\xE7\xF5es:"
+        },
+        support: {
+          section_title: "\u{1F49D} Suporte e ajuda",
+          resources: {
+            name: "\u{1F4DA} Recursos",
+            desc: "Documenta\xE7\xE3o, notas de vers\xE3o e liga\xE7\xF5es para a comunidade",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} Registo de altera\xE7\xF5es",
+            issues: "\u{1F41B} Problemas",
+            forum: "\u{1F4AC} F\xF3rum"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "A iniciar...",
+          progress_label: "Progresso: {{percentage}}%",
+          step_label: "Passo {{current}}/{{total}}",
+          complete_label: "Conclu\xEDdo",
+          complete_message: "Conclu\xEDdo com sucesso",
+          error_message: "Ocorreu um erro"
+        },
+        multi_operation_modal: {
+          progress_label: "Progresso: {{completed}}/{{total}} opera\xE7\xF5es",
+          progress_with_failures: "Progresso: {{completed}}/{{total}} opera\xE7\xF5es ({{failed}} falhadas)",
+          all_completed: "Todas as {{total}} opera\xE7\xF5es conclu\xEDdas com sucesso",
+          mark_complete_default: "Todas as opera\xE7\xF5es conclu\xEDdas com sucesso",
+          buttons: {
+            complete: "Concluir",
+            close: "Fechar"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} Migra\xE7\xE3o necess\xE1ria",
+            message: "As seguintes tarefas ser\xE3o executadas automaticamente para atualizar os seus dados para v1.3.0:",
+            tasks: {
+              folder_settings: "\u2713 Migrar defini\xE7\xF5es de pastas para a nova estrutura",
+              timestamps: "\u2713 Atualizar carimbos de data e hora para o formato ISO 8601",
+              aliases: "\u2713 Corrigir aliases do frontmatter",
+              reports: "\u2713 Mover a pasta de relat\xF3rios para o local correto",
+              artifacts: "\u2713 Atualizar metadados de artefactos"
+            },
+            estimate: "Isto demorar\xE1 alguns segundos."
+          },
+          buttons: {
+            run_migration: "\u{1F680} Executar tarefas de migra\xE7\xE3o"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 Atualiza\xE7\xE3o conclu\xEDda - v{{version}}",
+          buttons: {
+            got_it: "Entendido!"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "Entendido!"
+          }
+        }
+      },
+      folder_migration: {
+        title: "Mover ficheiros existentes?",
+        message_intro: "Est\xE1 a alterar a localiza\xE7\xE3o da pasta {{folder_type}}:",
+        path_from: "De: {{path}}",
+        path_to: "Para: {{path}}",
+        question: "Deseja mover os ficheiros existentes para a nova localiza\xE7\xE3o?",
+        link_updates: {
+          title: "\u{1F517} Atualiza\xE7\xE3o de liga\xE7\xF5es:",
+          attachments_text: "Mover os anexos ir\xE1 tamb\xE9m atualizar todas as notas de conversa que os referenciam.",
+          conversations_text: "Mover as conversas ir\xE1 tamb\xE9m atualizar todos os relat\xF3rios e anexos que as referenciam.",
+          estimated_time_seconds: "Tempo estimado: ~{{seconds}} segundos",
+          estimated_time_minutes: "Tempo estimado: ~{{minutes}} minuto(s)"
+        },
+        warning: {
+          title: "\u26A0\uFE0F Importante:",
+          text: "Se escolher 'N\xE3o', os ficheiros existentes permanecer\xE3o na localiza\xE7\xE3o antiga e n\xE3o ser\xE3o afetados por atualiza\xE7\xF5es futuras."
+        },
+        buttons: {
+          cancel: "Cancelar",
+          keep: "N\xE3o, manter os ficheiros na localiza\xE7\xE3o antiga",
+          move: "Sim, mover os ficheiros",
+          move_with_links: "Sim, mover os ficheiros e atualizar as liga\xE7\xF5es"
+        },
+        progress: {
+          title_moving: "A mover {{folder_type}} e a atualizar liga\xE7\xF5es",
+          step_moving_title: "A mover ficheiros...",
+          step_moving_detail: "A mover de {{old_path}} para {{new_path}}",
+          step_moving_count: "{{current}} / {{total}} ficheiros processados",
+          step_moved_title: "Ficheiros movidos",
+          step_moved_detail: "{{moved}} ficheiros movidos, {{skipped}} ignorados. A preparar a atualiza\xE7\xE3o de liga\xE7\xF5es...",
+          step_updating_attachment_links: "A atualizar liga\xE7\xF5es de anexos...",
+          step_updating_conversation_links: "A atualizar liga\xE7\xF5es de conversas...",
+          step_updating_report_links: "A atualizar liga\xE7\xF5es nos relat\xF3rios...",
+          step_updating_artifact_links: "A atualizar liga\xE7\xF5es nos artefactos...",
+          complete_message: "{{moved}} ficheiros movidos. {{links}} liga\xE7\xF5es atualizadas com sucesso"
+        },
+        result_dialog: {
+          title: "Resultado da migra\xE7\xE3o de pasta",
+          summary_title: "Resumo da migra\xE7\xE3o",
+          moved: "\u2705 Movidos com sucesso: {{count}} ficheiro(s)",
+          skipped: "\u26A0\uFE0F Ignorados (j\xE1 existem): {{count}} ficheiro(s)",
+          errors: "\u274C Erros: {{count}} ficheiro(s)",
+          explanation: "Os ficheiros que j\xE1 existiam no destino n\xE3o foram substitu\xEDdos para preservar os seus dados.",
+          error_details_title: "Detalhes dos erros:"
+        },
+        error_target_not_empty: {
+          title: "A pasta de destino n\xE3o est\xE1 vazia",
+          message: 'A pasta "{{path}}" j\xE1 cont\xE9m ficheiros.\n\nPara alterar a localiza\xE7\xE3o da pasta:\n\u2022 Mova os ficheiros existentes manualmente no Obsidian, OU\n\u2022 Escolha uma pasta vazia ou crie uma nova'
+        },
+        error_migration_failed: {
+          title: "Migra\xE7\xE3o falhou",
+          message_move: "Falha ao mover ficheiros: {{error}}",
+          message_links: "Falha ao mover ficheiros ou atualizar liga\xE7\xF5es: {{error}}"
+        }
+      },
+      folder_browser: {
+        title: "Selecionar pasta",
+        vault_root: "Raiz do cofre (/)",
+        buttons: {
+          create_new_folder: "Criar nova pasta",
+          cancel: "Cancelar",
+          select: "Selecionar"
+        },
+        create_folder_dialog: {
+          title: "Criar nova pasta",
+          folder_name_label: "Nome da pasta:",
+          buttons: {
+            cancel: "Cancelar",
+            create: "Criar"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F Por favor, selecione primeiro uma pasta pai",
+          invalid_name: "\u274C Nome de pasta inv\xE1lido: cont\xE9m caracteres ilegais",
+          already_exists: "\u274C A pasta j\xE1 existe",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 Pasta criada: {{name}}",
+          create_failed: "\u274C Falha ao criar pasta: {{error}}",
+          select_first: "\u26A0\uFE0F Por favor, selecione primeiro uma pasta"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "Na vers\xE3o 1.3.0, pode especificar uma pasta para os relat\xF3rios. Os relat\xF3rios existentes ser\xE3o movidos para {{folder}}, ou pode selecionar a sua pasta preferida abaixo.",
+        note: "Nota: A pasta n\xE3o pode estar dentro de Conversas ou Anexos.",
+        report_folder_label: "\u{1F4CA} Pasta de relat\xF3rios",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "Procurar",
+          proceed: "Prosseguir"
+        },
+        error_invalid_folder: {
+          title: "Localiza\xE7\xE3o de pasta inv\xE1lida",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "Obrigado por instalar o Nexus AI Chat Importer!",
+        description: "Importe e fa\xE7a a gest\xE3o das suas conversas do ChatGPT, Claude e Le Chat diretamente no seu cofre do Obsidian.",
+        resources_title: "Recursos",
+        resources: {
+          documentation: {
+            title: "Documenta\xE7\xE3o",
+            description: "Saiba como utilizar o plugin"
+          },
+          release_notes: {
+            title: "Notas de vers\xE3o",
+            description: "O que h\xE1 de novo nesta vers\xE3o"
+          },
+          report_issues: {
+            title: "Reportar problemas",
+            description: "Encontrou um erro? Diga-nos"
+          },
+          community_forum: {
+            title: "F\xF3rum da comunidade",
+            description: "Junte-se \xE0 discuss\xE3o"
+          }
+        },
+        buttons: {
+          get_started: "Come\xE7ar"
+        }
+      },
+      notices: {
+        import_analyzing: "A analisar conversas de {{count}} ficheiro(s)...",
+        import_no_new: "N\xE3o foram encontradas conversas novas ou atualizadas. Todas as conversas j\xE1 est\xE3o atualizadas.",
+        import_starting: "A importar {{count}} conversas ({{new}} novas, {{updated}} atualizadas)...",
+        import_starting_selected: "A importar {{count}} conversas selecionadas de {{files}} ficheiro(s)...",
+        import_completed_fallback: "Importa\xE7\xE3o conclu\xEDda. {{created}} criadas, {{updated}} atualizadas.",
+        import_error: "Erro durante a importa\xE7\xE3o: {{error}}",
+        import_error_analyzing: "Erro ao analisar conversas: {{error}}",
+        import_error_file: "Erro ao processar {{filename}}. Consulte a consola para mais detalhes.",
+        import_no_selected: "Nenhuma conversa selecionada para importar.",
+        import_no_zip_gemini: "Por favor, selecione pelo menos um ficheiro ZIP do Gemini Takeout (mais o \xEDndice JSON opcional da extens\xE3o).",
+        import_no_zip: "Por favor, selecione pelo menos um ficheiro ZIP de exporta\xE7\xE3o.",
+        import_gemini_json_failed: "Falha ao ler o \xEDndice JSON do Gemini. A continuar sem \xEDndice.",
+        report_failed: "Falha ao criar o ficheiro de registo. Consulte a consola para mais detalhes.",
+        attachment_map_failed: "Falha ao construir o mapa de anexos. Consulte a consola para mais detalhes.",
+        ribbon_tooltip: "Nexus AI Chat Importer - Importar novo ficheiro"
+      },
+      commands: {
+        import_conversations: {
+          name: "Importar conversas de IA"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 Apoiar este plugin",
+        header_highlight: "Apoiar este plugin",
+        default_message_emphasis: "Estou a trabalhar nos projetos Nexus a tempo inteiro enquanto estou desempregado e a lidar com problemas de sa\xFAde.",
+        default_message: "Se este plugin facilita a sua vida, uma doa\xE7\xE3o significaria muito para mim e ajudaria a mant\xEA-los vivos.",
+        reality_check: "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada caf\xE9 ajuda-me a continuar a melhor\xE1-los enquanto lido com problemas de sa\xFAde cont\xEDnuos. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
+        button_alt: "Apoiar o meu trabalho"
+      }
+    };
+  }
+});
+
+// src/i18n/locales/ko.json
+var ko_default;
+var init_ko = __esm({
+  "src/i18n/locales/ko.json"() {
+    ko_default = {
+      common: {
+        buttons: {
+          cancel: "\uCDE8\uC18C",
+          ok: "\uD655\uC778",
+          select: "\uC120\uD0DD",
+          browse: "\uCC3E\uC544\uBCF4\uAE30",
+          continue: "\uACC4\uC18D",
+          proceed: "\uC9C4\uD589",
+          close: "\uC54C\uACA0\uC5B4\uC694!",
+          create: "\uB9CC\uB4E4\uAE30",
+          remove: "\uC81C\uAC70",
+          run: "\uC2E4\uD589",
+          complete: "\uC644\uB8CC",
+          view_report: "\uBCF4\uACE0\uC11C \uBCF4\uAE30",
+          get_started: "\uC2DC\uC791\uD558\uAE30",
+          create_new_folder: "\uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30"
+        },
+        status: {
+          new: "\uC2E0\uADDC",
+          updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
+          unchanged: "\uBCC0\uACBD \uC5C6\uC74C",
+          unknown: "\uC54C \uC218 \uC5C6\uC74C"
+        },
+        progress: {
+          phase_validation: "\u{1F50D} \uC720\uD6A8\uC131 \uAC80\uC0AC",
+          phase_scanning: "\u{1F4CB} \uC2A4\uCE94 \uC911",
+          phase_processing: "\u2699\uFE0F \uCC98\uB9AC \uC911",
+          phase_writing: "\u{1F4BE} \uC4F0\uB294 \uC911",
+          phase_complete: "\u2705 \uC644\uB8CC",
+          phase_error: "\u274C \uC624\uB958"
+        }
+      },
+      provider_selection: {
+        title: "\uC544\uCE74\uC774\uBE0C \uC81C\uACF5\uC790 \uC120\uD0DD",
+        providers: {
+          chatgpt: {
+            name: "ChatGPT",
+            description: "OpenAI ChatGPT \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30"
+          },
+          claude: {
+            name: "Claude",
+            description: "Anthropic Claude \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30"
+          },
+          lechat: {
+            name: "Le Chat",
+            description: "Mistral AI Le Chat \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30"
+          }
+        },
+        buttons: {
+          select: "\uC120\uD0DD",
+          cancel: "\uCDE8\uC18C"
+        }
+      },
+      file_selection: {
+        title: "{{provider}} \uB300\uD654 \uAC00\uC838\uC624\uAE30",
+        import_mode: {
+          section_title: "\uAC00\uC838\uC624\uAE30 \uBC29\uC2DD",
+          all_label: "\uC804\uCCB4 \uAC00\uC838\uC624\uAE30",
+          all_description: "\uBAA8\uB4E0 \uB300\uD654\uB97C \uAC00\uC838\uC635\uB2C8\uB2E4 (\uB354 \uBE60\uB984)",
+          selective_label: "\uAC1C\uBCC4 \uC120\uD0DD",
+          selective_description: "\uB300\uD654\uB97C \uBBF8\uB9AC \uBCF4\uACE0 \uC120\uD0DD\uD569\uB2C8\uB2E4"
+        },
+        file_area: {
+          section_title: "\uD30C\uC77C \uC120\uD0DD",
+          drop_text_default: "ZIP \uD30C\uC77C\uC744 \uC5EC\uAE30\uC5D0 \uB04C\uC5B4\uB2E4 \uB193\uAC70\uB098 \uD074\uB9AD\uD558\uC5EC \uCC3E\uC544\uBCF4\uAE30",
+          drop_text_gemini: "ZIP \uBC0F JSON \uD30C\uC77C\uC744 \uC5EC\uAE30\uC5D0 \uB04C\uC5B4\uB2E4 \uB193\uAC70\uB098 \uD074\uB9AD\uD558\uC5EC \uCC3E\uC544\uBCF4\uAE30",
+          drop_subtext_default: "\uC5EC\uB7EC \uD30C\uC77C \uC120\uD0DD \uC9C0\uC6D0",
+          drop_subtext_gemini: "ZIP (Takeout) + \uC120\uD0DD\uC801 JSON (\uD655\uC7A5 \uD504\uB85C\uADF8\uB7A8\uC758 \uC778\uB371\uC2A4)"
+        },
+        selected_files: {
+          section_title: "\uC120\uD0DD\uB41C \uD30C\uC77C",
+          remove_button: "\uC81C\uAC70"
+        },
+        buttons: {
+          cancel: "\uCDE8\uC18C",
+          continue: "\uACC4\uC18D"
+        }
+      },
+      conversation_selection: {
+        title: "\uAC00\uC838\uC62C \uB300\uD654 \uC120\uD0DD",
+        controls: {
+          select_all: "\uC804\uCCB4 \uC120\uD0DD",
+          select_none: "\uC120\uD0DD \uD574\uC81C",
+          search_placeholder: "\uB300\uD654 \uAC80\uC0C9...",
+          status_label: "\uC0C1\uD0DC:",
+          show_label: "\uD45C\uC2DC:"
+        },
+        status_filter_options: {
+          all: "\uC804\uCCB4",
+          new: "\uC2E0\uADDC",
+          updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
+          unchanged: "\uBCC0\uACBD \uC5C6\uC74C"
+        },
+        table_headers: {
+          title: "\uC81C\uBAA9",
+          created: "\uC0DD\uC131\uC77C",
+          updated: "\uC5C5\uB370\uC774\uD2B8\uC77C",
+          messages: "\uBA54\uC2DC\uC9C0",
+          status: "\uC0C1\uD0DC"
+        },
+        status_badges: {
+          new: "\uC2E0\uADDC",
+          updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
+          unchanged: "\uBCC0\uACBD \uC5C6\uC74C",
+          unknown: "\uC54C \uC218 \uC5C6\uC74C",
+          tooltip_new: "\uC774 \uB300\uD654\uB294 \uBCF4\uAD00\uD568\uC5D0 \uC5C6\uC2B5\uB2C8\uB2E4",
+          tooltip_updated: "\uC774 \uB300\uD654\uB294 \uBCF4\uAD00\uD568\uC758 \uBC84\uC804\uBCF4\uB2E4 \uCD5C\uC2E0 \uB0B4\uC6A9\uC744 \uD3EC\uD568\uD569\uB2C8\uB2E4 ({{existing_date}} \u2192 {{new_date}})",
+          tooltip_unchanged: "\uC774 \uB300\uD654\uB294 \uBCF4\uAD00\uD568\uC758 \uBC84\uC804\uACFC \uB3D9\uC77C\uD569\uB2C8\uB2E4"
+        },
+        pagination: {
+          showing: "\uC804\uCCB4 {{total}}\uAC1C \uC911 {{start}}\u2013{{end}}\uAC1C \uD45C\uC2DC",
+          page_of: "{{total}}\uD398\uC774\uC9C0 \uC911 {{current}}\uD398\uC774\uC9C0",
+          previous: "\uC774\uC804",
+          next: "\uB2E4\uC74C"
+        },
+        summary: {
+          unique_conversations: "\uACE0\uC720 \uB300\uD654",
+          new: "\uC2E0\uADDC",
+          updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
+          unchanged: "\uBCC0\uACBD \uC5C6\uC74C",
+          selected_of: "{{total}}\uAC1C \uC911 {{selected}}\uAC1C \uC120\uD0DD\uB428"
+        },
+        buttons: {
+          cancel: "\uCDE8\uC18C",
+          import_selected: "\uC120\uD0DD \uD56D\uBAA9 \uAC00\uC838\uC624\uAE30",
+          import_selected_count: "\uC120\uD0DD\uD55C {{count}}\uAC1C \uAC00\uC838\uC624\uAE30"
+        },
+        date_unknown: "\uC54C \uC218 \uC5C6\uC74C"
+      },
+      import_progress: {
+        title: "{{filename}} \uAC00\uC838\uC624\uB294 \uC911",
+        initial: {
+          title: "\uAC00\uC838\uC624\uAE30 \uC900\uBE44 \uC911...",
+          detail: "ZIP \uD30C\uC77C \uAD6C\uC870\uB97C \uD655\uC778\uD558\uB294 \uC911"
+        },
+        conversation_counter: "{{current}}/{{total}}\uAC1C \uB300\uD654",
+        conversation_counter_selective: "{{current}}/{{total}}\uAC1C \uC120\uD0DD\uB41C \uB300\uD654",
+        selective_mode_indicator: "\u{1F4CB} \uC120\uD0DD \uAC00\uC838\uC624\uAE30: {{total}}\uAC1C \uC911 {{selected}}\uAC1C",
+        complete: {
+          message: "\uAC00\uC838\uC624\uAE30\uAC00 \uC131\uACF5\uC801\uC73C\uB85C \uC644\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4",
+          detail: "\uC774 \uCC3D\uC744 \uB2EB\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4"
+        },
+        error: {
+          message: "\uAC00\uC838\uC624\uB294 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4",
+          detail: "\uC790\uC138\uD55C \uB0B4\uC6A9\uC740 \uCF58\uC194\uC744 \uD655\uC778\uD558\uC138\uC694"
+        }
+      },
+      import_completion: {
+        title: "\uAC00\uC838\uC624\uAE30 \uC644\uB8CC",
+        success_message: "\u2705 \uB300\uD654\uB97C \uC131\uACF5\uC801\uC73C\uB85C \uAC00\uC838\uC654\uC2B5\uB2C8\uB2E4",
+        stats: {
+          zip_files_processed: "\uCC98\uB9AC\uB41C ZIP \uD30C\uC77C",
+          unique_conversations: "\uACE0\uC720 \uB300\uD654",
+          duplicates: "\uC911\uBCF5",
+          new: "\uC2E0\uADDC",
+          updated: "\uC5C5\uB370\uC774\uD2B8\uB428",
+          skipped: "\uAC74\uB108\uB700",
+          failed: "\uC2E4\uD328"
+        },
+        attachments: {
+          label: "\uCCA8\uBD80 \uD30C\uC77C:",
+          summary: "{{found}}/{{total}}\uAC1C \uCD94\uCD9C\uB428 ({{percentage}}%)",
+          missing_failed: "{{missing}}\uAC1C \uC5C6\uC74C, {{failed}}\uAC1C \uC2E4\uD328"
+        },
+        report: {
+          label: "\u{1F4C4} \uC0C1\uC138 \uBCF4\uACE0\uC11C:"
+        },
+        buttons: {
+          view_report: "\uBCF4\uACE0\uC11C \uBCF4\uAE30",
+          ok: "\uD655\uC778"
+        }
+      },
+      settings: {
+        tab_title: "Nexus AI Chat Importer",
+        folders: {
+          section_title: "\u{1F4C1} \uD3F4\uB354 \uAD6C\uC870",
+          conversation_folder: {
+            name: "\uB300\uD654 \uD3F4\uB354",
+            desc: "\uAC00\uC838\uC628 \uB300\uD654\uAC00 \uC800\uC7A5\uB418\uB294 \uC704\uCE58",
+            placeholder: "Nexus/Conversations",
+            browse_tooltip: "\uD3F4\uB354 \uCC3E\uC544\uBCF4\uAE30 \uB610\uB294 \uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30"
+          },
+          reports_folder: {
+            name: "\uBCF4\uACE0\uC11C \uD3F4\uB354",
+            desc: "\uAC00\uC838\uC624\uAE30 \uBCF4\uACE0\uC11C\uAC00 \uC800\uC7A5\uB418\uB294 \uC704\uCE58",
+            placeholder: "Nexus Reports",
+            browse_tooltip: "\uD3F4\uB354 \uCC3E\uC544\uBCF4\uAE30 \uB610\uB294 \uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30"
+          },
+          attachment_folder: {
+            name: "\uCCA8\uBD80 \uD30C\uC77C \uD3F4\uB354",
+            desc: "\uCCA8\uBD80 \uD30C\uC77C\uC774 \uC800\uC7A5\uB418\uB294 \uC704\uCE58 (\u26A0\uFE0F \uC6A9\uB7C9 \uC808\uC57D\uC744 \uC704\uD574 \uB3D9\uAE30\uD654\uC5D0\uC11C \uC81C\uC678\uD558\uC138\uC694)",
+            placeholder: "Nexus/Attachments",
+            browse_tooltip: "\uD3F4\uB354 \uCC3E\uC544\uBCF4\uAE30 \uB610\uB294 \uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30"
+          }
+        },
+        display: {
+          section_title: "\u{1F4C5} \uB0A0\uC9DC \uC811\uB450\uC0AC",
+          add_date_prefix: {
+            name: "\uD30C\uC77C \uC774\uB984\uC5D0 \uB0A0\uC9DC \uC811\uB450\uC0AC \uCD94\uAC00",
+            desc: "\uB300\uD654 \uD30C\uC77C \uC774\uB984 \uC55E\uC5D0 \uC0DD\uC131 \uB0A0\uC9DC\uB97C \uC811\uB450\uC0AC\uB85C \uCD94\uAC00\uD569\uB2C8\uB2E4",
+            format_label: "\uB0A0\uC9DC \uD615\uC2DD \uC120\uD0DD: "
+          }
+        },
+        timestamps: {
+          section_title: "\u{1F4C5} \uBA54\uC2DC\uC9C0 \uB0A0\uC9DC \uD615\uC2DD",
+          custom_format: {
+            name: "\uBA54\uC2DC\uC9C0 \uD0C0\uC784\uC2A4\uD0EC\uD504 \uD615\uC2DD \uC0AC\uC6A9\uC790 \uC9C0\uC815",
+            desc: "\uBA54\uC2DC\uC9C0 \uD5E4\uB354\uC758 \uAE30\uBCF8 \uB85C\uCF00\uC77C \uAE30\uBC18 \uD0C0\uC784\uC2A4\uD0EC\uD504 \uD615\uC2DD\uC744 \uC7AC\uC815\uC758\uD569\uB2C8\uB2E4. \uBE44\uD65C\uC131\uD654\uB418\uBA74 \uD0C0\uC784\uC2A4\uD0EC\uD504\uB294 Obsidian\uC758 \uC5B8\uC5B4 \uC124\uC815\uC744 \uB530\uB985\uB2C8\uB2E4. Obsidian\uC774 \uC601\uC5B4\uB85C \uC124\uC815\uB41C \uACBD\uC6B0 \uBBF8\uAD6D \uD615\uC2DD(YYYY/DD/MM)\uC774 \uC801\uC6A9\uB429\uB2C8\uB2E4."
+          },
+          timestamp_format: {
+            name: "\uD0C0\uC784\uC2A4\uD0EC\uD504 \uD615\uC2DD",
+            desc: "\uB300\uD654 \uB178\uD2B8\uC758 \uBA54\uC2DC\uC9C0 \uD0C0\uC784\uC2A4\uD0EC\uD504 \uD615\uC2DD\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4"
+          },
+          preview_label: "\uBBF8\uB9AC \uBCF4\uAE30: "
+        },
+        attachments: {
+          section_title: "\uCCA8\uBD80 \uD30C\uC77C \uC124\uC815",
+          import_attachments: {
+            name: "\uCCA8\uBD80 \uD30C\uC77C \uAC00\uC838\uC624\uAE30",
+            desc: "\uCCA8\uBD80 \uD30C\uC77C\uC744 \uB514\uC2A4\uD06C\uC5D0 \uC800\uC7A5\uD558\uACE0 \uB300\uD654\uC5D0 \uC5F0\uACB0\uD569\uB2C8\uB2E4 ('\uCD5C\uC120 \uB178\uB825' \uC804\uB7B5 \uC0AC\uC6A9)"
+          },
+          handle_missing: {
+            name: "\uB204\uB77D\uB41C \uCCA8\uBD80 \uD30C\uC77C \uCC98\uB9AC",
+            desc: "\uB0B4\uBCF4\uB0B4\uAE30\uC5D0 \uCCA8\uBD80 \uD30C\uC77C\uC774 \uC5C6\uC744 \uB54C \uAC74\uB108\uB6F0\uB294 \uB300\uC2E0 \uC548\uB0B4 \uB178\uD2B8\uB97C \uB9CC\uB4ED\uB2C8\uB2E4"
+          },
+          show_details: {
+            name: "\uBCF4\uACE0\uC11C\uC5D0 \uCCA8\uBD80 \uD30C\uC77C \uC138\uBD80 \uC815\uBCF4 \uD45C\uC2DC",
+            desc: "\uAC00\uC838\uC624\uAE30 \uBCF4\uACE0\uC11C\uC5D0 \uC0C1\uC138\uD55C \uCCA8\uBD80 \uD30C\uC77C \uCC98\uB9AC \uD1B5\uACC4\uB97C \uD3EC\uD568\uD569\uB2C8\uB2E4"
+          },
+          info_box: {
+            title: "\u{1F4CE} \uCCA8\uBD80 \uD30C\uC77C \uCC98\uB9AC \uBC29\uC2DD",
+            best_effort: "\uCD5C\uC120 \uB178\uB825 \uC804\uB7B5: \uB0B4\uBCF4\uB0B4\uAE30\uC5D0\uC11C \uCC3E\uC740 \uD30C\uC77C\uC740 \uCD94\uCD9C\uD558\uC5EC \uC5F0\uACB0\uD558\uACE0, \uC5C6\uB294 \uD30C\uC77C\uC740 \uC548\uB0B4 \uB178\uD2B8\uB97C \uB9CC\uB4ED\uB2C8\uB2E4.",
+            platform_diff: "\uD50C\uB7AB\uD3FC \uCC28\uC774: ChatGPT \uB0B4\uBCF4\uB0B4\uAE30\uC5D0\uB294 \uD2B9\uD788 \uC624\uB798\uB41C \uB300\uD654\uC758 \uCCA8\uBD80 \uD30C\uC77C\uC774 \uBAA8\uB450 \uD3EC\uD568\uB418\uC9C0 \uC54A\uC744 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
+            organization: "\uAC04\uB2E8\uD55C \uAD6C\uC131: \uD30C\uC77C\uC740 attachments/provider/category/ \uD615\uC2DD\uC73C\uB85C \uAD6C\uC131\uB429\uB2C8\uB2E4 (\uC608: attachments/chatgpt/images/).",
+            sync_tip: "\uB3D9\uAE30\uD654 \uD301: \uB300\uC6A9\uB7C9 \uD30C\uC77C \uC5C5\uB85C\uB4DC\uB97C \uBC29\uC9C0\uD558\uB824\uBA74 \uCCA8\uBD80 \uD30C\uC77C \uD3F4\uB354\uB97C \uB3D9\uAE30\uD654\uC5D0\uC11C \uC81C\uC678\uD558\uB294 \uAC83\uC744 \uAD8C\uC7A5\uD569\uB2C8\uB2E4.",
+            tip: "\u{1F4A1} \uD301: '\uCCA8\uBD80 \uD30C\uC77C \uC138\uBD80 \uC815\uBCF4 \uD45C\uC2DC'\uB97C \uD65C\uC131\uD654\uD558\uBA74 \uAC00\uC838\uC624\uAE30 \uC911 \uCC3E\uC740 \uD30C\uC77C, \uC5C6\uB294 \uD30C\uC77C, \uC2E4\uD328\uD55C \uD30C\uC77C\uC744 \uC815\uD655\uD558\uAC8C \uD655\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+          }
+        },
+        migrations: {
+          section_title: "\uB9C8\uC774\uADF8\uB808\uC774\uC158",
+          description_manual: "\uC218\uB3D9 \uC791\uC5C5: \uD3B8\uB9AC\uD55C \uC2DC\uAC04\uC5D0 \uC2E4\uD589\uD560 \uC218 \uC788\uB294 \uC120\uD0DD\uC801 \uC5C5\uADF8\uB808\uC774\uB4DC \uC791\uC5C5\uC785\uB2C8\uB2E4.",
+          description_automatic: "\uC790\uB3D9 \uC791\uC5C5(\uC608: \uC774\uC804 \uB370\uC774\uD130 \uC81C\uAC70)\uC740 \uC5C5\uADF8\uB808\uC774\uB4DC \uC911 \uC790\uB3D9\uC73C\uB85C \uC2E4\uD589\uB418\uBA70 \uC5EC\uAE30\uC5D0 \uD45C\uC2DC\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
+          version_header: "\uBC84\uC804 {{version}}",
+          no_migrations: {
+            title: "\uC218\uB3D9 \uC791\uC5C5\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",
+            desc: "\uBAA8\uB4E0 \uC5C5\uADF8\uB808\uC774\uB4DC \uC791\uC5C5\uC774 \uC790\uB3D9\uC73C\uB85C \uC644\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4."
+          },
+          operation_completed_suffix: " \u2705 \uC644\uB8CC\uB428",
+          buttons: {
+            completed: "\u2705 \uC644\uB8CC\uB428",
+            cannot_run: "\uC2E4\uD589 \uBD88\uAC00",
+            run: "\uC2E4\uD589",
+            running: "\uC2E4\uD589 \uC911..."
+          },
+          tooltips: {
+            completed: "\uC774 \uC791\uC5C5\uC740 \uC774\uBBF8 \uC644\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4",
+            cannot_run: "\uC774 \uC791\uC5C5\uC758 \uC804\uC81C \uC870\uAC74\uC774 \uCDA9\uC871\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4",
+            run: "{{operation_name}} \uC2E4\uD589"
+          },
+          error_loading: "\uB9C8\uC774\uADF8\uB808\uC774\uC158 \uB85C\uB4DC \uC624\uB958:"
+        },
+        support: {
+          section_title: "\u{1F49D} \uC9C0\uC6D0 \uBC0F \uB3C4\uC6C0\uB9D0",
+          resources: {
+            name: "\u{1F4DA} \uB9AC\uC18C\uC2A4",
+            desc: "\uBB38\uC11C, \uB9B4\uB9AC\uC2A4 \uB178\uD2B8, \uCEE4\uBBA4\uB2C8\uD2F0 \uB9C1\uD06C",
+            readme: "\u{1F4D6} README",
+            changelog: "\u{1F4DD} \uBCC0\uACBD \uC774\uB825",
+            issues: "\u{1F41B} \uBB38\uC81C \uBCF4\uACE0",
+            forum: "\u{1F4AC} \uD3EC\uB7FC"
+          }
+        }
+      },
+      upgrade: {
+        progress_modal: {
+          starting: "\uC2DC\uC791 \uC911...",
+          progress_label: "\uC9C4\uD589\uB960: {{percentage}}%",
+          step_label: "\uB2E8\uACC4 {{current}}/{{total}}",
+          complete_label: "\uC644\uB8CC",
+          complete_message: "\uC131\uACF5\uC801\uC73C\uB85C \uC644\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4",
+          error_message: "\uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4"
+        },
+        multi_operation_modal: {
+          progress_label: "\uC9C4\uD589\uB960: {{completed}}/{{total}}\uAC1C \uC791\uC5C5",
+          progress_with_failures: "\uC9C4\uD589\uB960: {{completed}}/{{total}}\uAC1C \uC791\uC5C5 ({{failed}}\uAC1C \uC2E4\uD328)",
+          all_completed: "\uCD1D {{total}}\uAC1C \uC791\uC5C5\uC774 \uBAA8\uB450 \uC131\uACF5\uC801\uC73C\uB85C \uC644\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4",
+          mark_complete_default: "\uBAA8\uB4E0 \uC791\uC5C5\uC774 \uC131\uACF5\uC801\uC73C\uB85C \uC644\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4",
+          buttons: {
+            complete: "\uC644\uB8CC",
+            close: "\uB2EB\uAE30"
+          }
+        },
+        modal_130: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          migration_section: {
+            title: "\u{1F504} \uB9C8\uC774\uADF8\uB808\uC774\uC158 \uD544\uC694",
+            message: "\uB370\uC774\uD130\uB97C v1.3.0\uC73C\uB85C \uC5C5\uADF8\uB808\uC774\uB4DC\uD558\uAE30 \uC704\uD574 \uB2E4\uC74C \uC791\uC5C5\uC774 \uC790\uB3D9\uC73C\uB85C \uC2E4\uD589\uB429\uB2C8\uB2E4:",
+            tasks: {
+              folder_settings: "\u2713 \uD3F4\uB354 \uC124\uC815\uC744 \uC0C8 \uAD6C\uC870\uB85C \uB9C8\uC774\uADF8\uB808\uC774\uC158",
+              timestamps: "\u2713 \uD0C0\uC784\uC2A4\uD0EC\uD504\uB97C ISO 8601 \uD615\uC2DD\uC73C\uB85C \uC5C5\uB370\uC774\uD2B8",
+              aliases: "\u2713 frontmatter \uBCC4\uCE6D \uC218\uC815",
+              reports: "\u2713 \uBCF4\uACE0\uC11C \uD3F4\uB354\uB97C \uC62C\uBC14\uB978 \uC704\uCE58\uB85C \uC774\uB3D9",
+              artifacts: "\u2713 \uC544\uD2F0\uD329\uD2B8 \uBA54\uD0C0\uB370\uC774\uD130 \uC5C5\uB370\uC774\uD2B8"
+            },
+            estimate: "\uBA87 \uCD08\uAC00 \uC18C\uC694\uB429\uB2C8\uB2E4."
+          },
+          buttons: {
+            run_migration: "\u{1F680} \uB9C8\uC774\uADF8\uB808\uC774\uC158 \uC791\uC5C5 \uC2E4\uD589"
+          }
+        },
+        complete_modal: {
+          title: "\u2705 \uC5C5\uADF8\uB808\uC774\uB4DC \uC644\uB8CC - v{{version}}",
+          buttons: {
+            got_it: "\uC54C\uACA0\uC5B4\uC694!"
+          }
+        },
+        new_version_modal: {
+          title: "\u{1F389} Nexus AI Chat Importer {{version}}",
+          buttons: {
+            got_it: "\uC54C\uACA0\uC5B4\uC694!"
+          }
+        }
+      },
+      folder_migration: {
+        title: "\uAE30\uC874 \uD30C\uC77C\uC744 \uC774\uB3D9\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?",
+        message_intro: "{{folder_type}} \uD3F4\uB354 \uC704\uCE58\uB97C \uBCC0\uACBD\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4:",
+        path_from: "\uC774\uC804 \uC704\uCE58: {{path}}",
+        path_to: "\uC0C8 \uC704\uCE58: {{path}}",
+        question: "\uAE30\uC874 \uD30C\uC77C\uC744 \uC0C8 \uC704\uCE58\uB85C \uC774\uB3D9\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?",
+        link_updates: {
+          title: "\u{1F517} \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8:",
+          attachments_text: "\uCCA8\uBD80 \uD30C\uC77C\uC744 \uC774\uB3D9\uD558\uBA74 \uD574\uB2F9 \uD30C\uC77C\uC744 \uCC38\uC870\uD558\uB294 \uBAA8\uB4E0 \uB300\uD654 \uB178\uD2B8\uB3C4 \uC5C5\uB370\uC774\uD2B8\uB429\uB2C8\uB2E4.",
+          conversations_text: "\uB300\uD654\uB97C \uC774\uB3D9\uD558\uBA74 \uD574\uB2F9 \uB300\uD654\uB97C \uCC38\uC870\uD558\uB294 \uBAA8\uB4E0 \uBCF4\uACE0\uC11C\uC640 \uCCA8\uBD80 \uD30C\uC77C\uB3C4 \uC5C5\uB370\uC774\uD2B8\uB429\uB2C8\uB2E4.",
+          estimated_time_seconds: "\uC608\uC0C1 \uC2DC\uAC04: \uC57D {{seconds}}\uCD08",
+          estimated_time_minutes: "\uC608\uC0C1 \uC2DC\uAC04: \uC57D {{minutes}}\uBD84"
+        },
+        warning: {
+          title: "\u26A0\uFE0F \uC911\uC694:",
+          text: "'\uC544\uB2C8\uC694'\uB97C \uC120\uD0DD\uD558\uBA74 \uAE30\uC874 \uD30C\uC77C\uC774 \uC774\uC804 \uC704\uCE58\uC5D0 \uADF8\uB300\uB85C \uB0A8\uC544 \uD5A5\uD6C4 \uC5C5\uB370\uC774\uD2B8\uC5D0 \uC601\uD5A5\uC744 \uBC1B\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
+        },
+        buttons: {
+          cancel: "\uCDE8\uC18C",
+          keep: "\uC544\uB2C8\uC694, \uC774\uC804 \uC704\uCE58\uC5D0 \uD30C\uC77C \uC720\uC9C0",
+          move: "\uC608, \uD30C\uC77C \uC774\uB3D9",
+          move_with_links: "\uC608, \uD30C\uC77C \uC774\uB3D9 \uBC0F \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8"
+        },
+        progress: {
+          title_moving: "{{folder_type}} \uC774\uB3D9 \uBC0F \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8 \uC911",
+          step_moving_title: "\uD30C\uC77C \uC774\uB3D9 \uC911...",
+          step_moving_detail: "{{old_path}}\uC5D0\uC11C {{new_path}}\uB85C \uC774\uB3D9 \uC911",
+          step_moving_count: "{{current}} / {{total}}\uAC1C \uD30C\uC77C \uCC98\uB9AC\uB428",
+          step_moved_title: "\uD30C\uC77C \uC774\uB3D9 \uC644\uB8CC",
+          step_moved_detail: "{{moved}}\uAC1C \uD30C\uC77C \uC774\uB3D9\uB428, {{skipped}}\uAC1C \uAC74\uB108\uB700. \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8 \uC900\uBE44 \uC911...",
+          step_updating_attachment_links: "\uCCA8\uBD80 \uD30C\uC77C \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8 \uC911...",
+          step_updating_conversation_links: "\uB300\uD654 \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8 \uC911...",
+          step_updating_report_links: "\uBCF4\uACE0\uC11C\uC758 \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8 \uC911...",
+          step_updating_artifact_links: "\uC544\uD2F0\uD329\uD2B8\uC758 \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8 \uC911...",
+          complete_message: "{{moved}}\uAC1C \uD30C\uC77C \uC774\uB3D9\uB428. {{links}}\uAC1C \uB9C1\uD06C\uAC00 \uC131\uACF5\uC801\uC73C\uB85C \uC5C5\uB370\uC774\uD2B8\uB418\uC5C8\uC2B5\uB2C8\uB2E4"
+        },
+        result_dialog: {
+          title: "\uD3F4\uB354 \uB9C8\uC774\uADF8\uB808\uC774\uC158 \uACB0\uACFC",
+          summary_title: "\uB9C8\uC774\uADF8\uB808\uC774\uC158 \uC694\uC57D",
+          moved: "\u2705 \uC131\uACF5\uC801\uC73C\uB85C \uC774\uB3D9\uB428: {{count}}\uAC1C \uD30C\uC77C",
+          skipped: "\u26A0\uFE0F \uAC74\uB108\uB700 (\uC774\uBBF8 \uC874\uC7AC): {{count}}\uAC1C \uD30C\uC77C",
+          errors: "\u274C \uC624\uB958: {{count}}\uAC1C \uD30C\uC77C",
+          explanation: "\uB300\uC0C1 \uC704\uCE58\uC5D0 \uC774\uBBF8 \uC874\uC7AC\uD558\uB294 \uD30C\uC77C\uC740 \uB370\uC774\uD130\uB97C \uBCF4\uD638\uD558\uAE30 \uC704\uD574 \uB36E\uC5B4\uC4F0\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4.",
+          error_details_title: "\uC624\uB958 \uC138\uBD80 \uC815\uBCF4:"
+        },
+        error_target_not_empty: {
+          title: "\uB300\uC0C1 \uD3F4\uB354\uAC00 \uBE44\uC5B4 \uC788\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4",
+          message: '\uD3F4\uB354 "{{path}}"\uC5D0 \uC774\uBBF8 \uD30C\uC77C\uC774 \uC788\uC2B5\uB2C8\uB2E4.\n\n\uD3F4\uB354 \uC704\uCE58\uB97C \uBCC0\uACBD\uD558\uB824\uBA74:\n\u2022 Obsidian\uC5D0\uC11C \uAE30\uC874 \uD30C\uC77C\uC744 \uC218\uB3D9\uC73C\uB85C \uC774\uB3D9\uD558\uAC70\uB098\n\u2022 \uBE44\uC5B4 \uC788\uB294 \uD3F4\uB354\uB97C \uC120\uD0DD\uD558\uAC70\uB098 \uC0C8 \uD3F4\uB354\uB97C \uB9CC\uB4DC\uC138\uC694'
+        },
+        error_migration_failed: {
+          title: "\uB9C8\uC774\uADF8\uB808\uC774\uC158 \uC2E4\uD328",
+          message_move: "\uD30C\uC77C \uC774\uB3D9 \uC2E4\uD328: {{error}}",
+          message_links: "\uD30C\uC77C \uC774\uB3D9 \uB610\uB294 \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8 \uC2E4\uD328: {{error}}"
+        }
+      },
+      folder_browser: {
+        title: "\uD3F4\uB354 \uC120\uD0DD",
+        vault_root: "\uBCF4\uAD00\uD568 \uB8E8\uD2B8 (/)",
+        buttons: {
+          create_new_folder: "\uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30",
+          cancel: "\uCDE8\uC18C",
+          select: "\uC120\uD0DD"
+        },
+        create_folder_dialog: {
+          title: "\uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30",
+          folder_name_label: "\uD3F4\uB354 \uC774\uB984:",
+          buttons: {
+            cancel: "\uCDE8\uC18C",
+            create: "\uB9CC\uB4E4\uAE30"
+          }
+        },
+        notices: {
+          select_parent_first: "\u26A0\uFE0F \uBA3C\uC800 \uC0C1\uC704 \uD3F4\uB354\uB97C \uC120\uD0DD\uD558\uC138\uC694",
+          invalid_name: "\u274C \uC798\uBABB\uB41C \uD3F4\uB354 \uC774\uB984: \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uB294 \uBB38\uC790\uAC00 \uD3EC\uD568\uB418\uC5B4 \uC788\uC2B5\uB2C8\uB2E4",
+          already_exists: "\u274C \uD3F4\uB354\uAC00 \uC774\uBBF8 \uC874\uC7AC\uD569\uB2C8\uB2E4",
+          invalid_location: "\u274C {{error}}",
+          created_success: "\u2705 \uD3F4\uB354\uB97C \uB9CC\uB4E4\uC5C8\uC2B5\uB2C8\uB2E4: {{name}}",
+          create_failed: "\u274C \uD3F4\uB354 \uB9CC\uB4E4\uAE30 \uC2E4\uD328: {{error}}",
+          select_first: "\u26A0\uFE0F \uBA3C\uC800 \uD3F4\uB354\uB97C \uC120\uD0DD\uD558\uC138\uC694"
+        }
+      },
+      configure_folder_dialog: {
+        title: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+        description: "\uBC84\uC804 1.3.0\uC5D0\uC11C\uB294 \uBCF4\uACE0\uC11C \uD3F4\uB354\uB97C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uAE30\uC874 \uBCF4\uACE0\uC11C\uB294 {{folder}}\uB85C \uC774\uB3D9\uB418\uBA70, \uC544\uB798\uC5D0\uC11C \uC6D0\uD558\uB294 \uD3F4\uB354\uB97C \uC120\uD0DD\uD560 \uC218\uB3C4 \uC788\uC2B5\uB2C8\uB2E4.",
+        note: "\uCC38\uACE0: \uC774 \uD3F4\uB354\uB294 \uB300\uD654 \uB610\uB294 \uCCA8\uBD80 \uD30C\uC77C \uD3F4\uB354 \uC548\uC5D0 \uC788\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.",
+        report_folder_label: "\u{1F4CA} \uBCF4\uACE0\uC11C \uD3F4\uB354",
+        report_folder_placeholder: "Nexus Reports",
+        buttons: {
+          browse: "\uCC3E\uC544\uBCF4\uAE30",
+          proceed: "\uC9C4\uD589"
+        },
+        error_invalid_folder: {
+          title: "\uC798\uBABB\uB41C \uD3F4\uB354 \uC704\uCE58",
+          message: "{{error}}"
+        }
+      },
+      welcome: {
+        title: "Nexus AI Chat Importer {{version}}",
+        icon: "\u{1F389}",
+        heading: "Nexus AI Chat Importer\uB97C \uC124\uCE58\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4!",
+        description: "ChatGPT, Claude, Le Chat\uC758 \uB300\uD654\uB97C Obsidian \uBCF4\uAD00\uD568\uC5D0\uC11C \uBC14\uB85C \uAC00\uC838\uC624\uACE0 \uAD00\uB9AC\uD558\uC138\uC694.",
+        resources_title: "\uB9AC\uC18C\uC2A4",
+        resources: {
+          documentation: {
+            title: "\uBB38\uC11C",
+            description: "\uD50C\uB7EC\uADF8\uC778 \uC0AC\uC6A9\uBC95 \uC54C\uC544\uBCF4\uAE30"
+          },
+          release_notes: {
+            title: "\uB9B4\uB9AC\uC2A4 \uB178\uD2B8",
+            description: "\uC774\uBC88 \uBC84\uC804\uC758 \uC0C8\uB85C\uC6B4 \uAE30\uB2A5"
+          },
+          report_issues: {
+            title: "\uBB38\uC81C \uBCF4\uACE0",
+            description: "\uBC84\uADF8\uB97C \uBC1C\uACAC\uD558\uC168\uB098\uC694? \uC54C\uB824\uC8FC\uC138\uC694"
+          },
+          community_forum: {
+            title: "\uCEE4\uBBA4\uB2C8\uD2F0 \uD3EC\uB7FC",
+            description: "\uD1A0\uB860\uC5D0 \uCC38\uC5EC\uD558\uAE30"
+          }
+        },
+        buttons: {
+          get_started: "\uC2DC\uC791\uD558\uAE30"
+        }
+      },
+      notices: {
+        import_analyzing: "{{count}}\uAC1C \uD30C\uC77C\uC5D0\uC11C \uB300\uD654\uB97C \uBD84\uC11D\uD558\uB294 \uC911...",
+        import_no_new: "\uC0C8\uB85C\uC6B4 \uB300\uD654\uB098 \uC5C5\uB370\uC774\uD2B8\uB41C \uB300\uD654\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uBAA8\uB4E0 \uB300\uD654\uAC00 \uC774\uBBF8 \uCD5C\uC2E0 \uC0C1\uD0DC\uC785\uB2C8\uB2E4.",
+        import_starting: "{{count}}\uAC1C \uB300\uD654\uB97C \uAC00\uC838\uC624\uB294 \uC911 (\uC2E0\uADDC {{new}}\uAC1C, \uC5C5\uB370\uC774\uD2B8\uB428 {{updated}}\uAC1C)...",
+        import_starting_selected: "{{files}}\uAC1C \uD30C\uC77C\uC5D0\uC11C \uC120\uD0DD\uD55C {{count}}\uAC1C \uB300\uD654\uB97C \uAC00\uC838\uC624\uB294 \uC911...",
+        import_completed_fallback: "\uAC00\uC838\uC624\uAE30 \uC644\uB8CC. {{created}}\uAC1C \uC0DD\uC131\uB428, {{updated}}\uAC1C \uC5C5\uB370\uC774\uD2B8\uB428.",
+        import_error: "\uAC00\uC838\uC624\uB294 \uC911 \uC624\uB958 \uBC1C\uC0DD: {{error}}",
+        import_error_analyzing: "\uB300\uD654 \uBD84\uC11D \uC911 \uC624\uB958 \uBC1C\uC0DD: {{error}}",
+        import_error_file: "{{filename}} \uCC98\uB9AC \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4. \uC790\uC138\uD55C \uB0B4\uC6A9\uC740 \uCF58\uC194\uC744 \uD655\uC778\uD558\uC138\uC694.",
+        import_no_selected: "\uAC00\uC838\uC62C \uB300\uD654\uAC00 \uC120\uD0DD\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4.",
+        import_no_zip_gemini: "Gemini Takeout ZIP \uD30C\uC77C\uC744 \uD558\uB098 \uC774\uC0C1 \uC120\uD0DD\uD558\uC138\uC694 (\uD655\uC7A5 \uD504\uB85C\uADF8\uB7A8\uC758 JSON \uC778\uB371\uC2A4\uB294 \uC120\uD0DD \uC0AC\uD56D).",
+        import_no_zip: "ZIP \uB0B4\uBCF4\uB0B4\uAE30 \uD30C\uC77C\uC744 \uD558\uB098 \uC774\uC0C1 \uC120\uD0DD\uD558\uC138\uC694.",
+        import_gemini_json_failed: "Gemini \uC778\uB371\uC2A4 JSON\uC744 \uC77D\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC778\uB371\uC2A4 \uC5C6\uC774 \uACC4\uC18D \uC9C4\uD589\uD569\uB2C8\uB2E4.",
+        report_failed: "\uB85C\uADF8 \uD30C\uC77C\uC744 \uB9CC\uB4E4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC790\uC138\uD55C \uB0B4\uC6A9\uC740 \uCF58\uC194\uC744 \uD655\uC778\uD558\uC138\uC694.",
+        attachment_map_failed: "\uCCA8\uBD80 \uD30C\uC77C \uB9F5\uC744 \uB9CC\uB4E4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC790\uC138\uD55C \uB0B4\uC6A9\uC740 \uCF58\uC194\uC744 \uD655\uC778\uD558\uC138\uC694.",
+        ribbon_tooltip: "Nexus AI Chat Importer - \uC0C8 \uD30C\uC77C \uAC00\uC838\uC624\uAE30"
+      },
+      commands: {
+        import_conversations: {
+          name: "AI \uB300\uD654 \uAC00\uC838\uC624\uAE30"
+        }
+      },
+      kofi_support: {
+        header: "\u2615 \uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
+        header_highlight: "\uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
+        default_message_emphasis: "\uC800\uB294 \uC2E4\uC9C1 \uC0C1\uD0DC\uC5D0\uC11C \uAC74\uAC15 \uBB38\uC81C\uB97C \uACAA\uC73C\uBA74\uC11C\uB3C4 Nexus \uD504\uB85C\uC81D\uD2B8\uC5D0 \uD480\uD0C0\uC784\uC73C\uB85C \uC784\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
+        default_message: "\uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uB3C4\uC6C0\uC774 \uB41C\uB2E4\uBA74, \uD6C4\uC6D0\uC740 \uC800\uC5D0\uAC8C \uD070 \uD798\uC774 \uB418\uACE0 \uD504\uB85C\uC81D\uD2B8\uB97C \uC9C0\uC18D\uD558\uB294 \uB370 \uD070 \uB3C4\uC6C0\uC774 \uB429\uB2C8\uB2E4.",
+        reality_check: "\uAC10\uC0AC\uD569\uB2C8\uB2E4! \uC774 \uD50C\uB7EC\uADF8\uC778\uB4E4\uC5D0\uB294 \uC218\uCC9C \uC2DC\uAC04\uC758 \uC791\uC5C5\uC774 \uB2F4\uACA8 \uC788\uC73C\uBA70, \uCEE4\uD53C \uD55C \uC794 \uD55C \uC794\uC774 \uC9C0\uC18D\uC801\uC778 \uAC74\uAC15 \uBB38\uC81C\uB97C \uC548\uACE0\uB3C4 \uAC1C\uC120\uC744 \uC774\uC5B4\uB098\uAC00\uB294 \uC800\uC5D0\uAC8C \uD798\uC774 \uB429\uB2C8\uB2E4. \uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uC0B6\uC744 \uD3B8\uB9AC\uD558\uAC8C \uD574\uC900\uB2E4\uBA74 \uD6C4\uC6D0\uC744 \uACE0\uB824\uD574 \uC8FC\uC138\uC694.",
+        button_alt: "\uB0B4 \uC791\uC5C5 \uD6C4\uC6D0\uD558\uAE30"
+      }
+    };
+  }
+});
+
+// src/i18n/index.ts
+function initLocale() {
+  const lang = window.moment.locale();
+  _locale = locales[lang] ? lang : "en";
+}
+function t(key, vars) {
+  var _a, _b;
+  const keys = key.split(".");
+  const resolve = /* @__PURE__ */ __name((obj) => keys.reduce((o, k) => o && typeof o === "object" ? o[k] : void 0, obj), "resolve");
+  let str = (_b = (_a = resolve(locales[_locale])) != null ? _a : resolve(locales["en"])) != null ? _b : key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      str = str.split(`{{${k}}}`).join(v);
+    }
+  }
+  return str;
+}
+var locales, _locale;
+var init_i18n = __esm({
+  "src/i18n/index.ts"() {
+    "use strict";
+    init_en();
+    init_fr();
+    init_de();
+    init_es();
+    init_it();
+    init_ru();
+    init_zh();
+    init_ja();
+    init_pt();
+    init_ko();
+    locales = {
+      en: en_default,
+      fr: fr_default,
+      de: de_default,
+      es: es_default,
+      it: it_default,
+      ru: ru_default,
+      zh: zh_default,
+      ja: ja_default,
+      pt: pt_default,
+      ko: ko_default
+    };
+    _locale = "en";
+    __name(initLocale, "initLocale");
+    __name(t, "t");
+  }
+});
+
 // src/config/constants.ts
 var DEFAULT_SETTINGS, GITHUB, PROVIDER_URLS, MESSAGE_TIMESTAMP_FORMATS;
 var init_constants = __esm({
@@ -167,8 +5076,8 @@ function createKofiSupportBox(container, message) {
   const buttonContainer = supportBox.createDiv("kofi-button-container");
   const buttonImagePath = "https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/1.3.0/assets/support_me_on_kofi_red.png";
   buttonContainer.innerHTML = `
-        <a href="https://ko-fi.com/nexusplugins" target="_blank">
-            <img src="${buttonImagePath}" alt="Support me on Ko-fi" height="50">
+        <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank">
+            <img src="${buttonImagePath}" alt="Support my work" height="50">
         </a>
     `;
 }
@@ -185,6 +5094,7 @@ var init_folder_tree_browser_modal = __esm({
   "src/dialogs/folder-tree-browser-modal.ts"() {
     "use strict";
     import_obsidian3 = require("obsidian");
+    init_i18n();
     FolderTreeBrowserModal = class extends import_obsidian3.Modal {
       // Track folders created during this session
       constructor(app, onSubmit, initialPath, validatePath) {
@@ -209,7 +5119,7 @@ var init_folder_tree_browser_modal = __esm({
       }
       onOpen() {
         const { contentEl } = this;
-        contentEl.createEl("h3", { text: "Select Folder" });
+        contentEl.createEl("h3", { text: t("folder_browser.title") });
         this.treeContainer = contentEl.createDiv({ cls: "nexus-folder-tree-container" });
         this.treeContainer.style.maxHeight = "400px";
         this.treeContainer.style.overflowY = "auto";
@@ -222,12 +5132,12 @@ var init_folder_tree_browser_modal = __esm({
         buttonContainer.style.display = "flex";
         buttonContainer.style.gap = "8px";
         buttonContainer.style.justifyContent = "flex-end";
-        const createButton = buttonContainer.createEl("button", { text: "Create New Folder" });
+        const createButton = buttonContainer.createEl("button", { text: t("folder_browser.buttons.create_new_folder") });
         createButton.addEventListener("click", () => this.handleCreateFolder());
-        const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+        const cancelButton = buttonContainer.createEl("button", { text: t("folder_browser.buttons.cancel") });
         cancelButton.addEventListener("click", () => this.handleCancel());
         const selectButton = buttonContainer.createEl("button", {
-          text: "Select",
+          text: t("folder_browser.buttons.select"),
           cls: "mod-cta"
         });
         selectButton.addEventListener("click", () => this.handleSelect());
@@ -245,7 +5155,7 @@ var init_folder_tree_browser_modal = __esm({
           rootItem.style.backgroundColor = "var(--background-modifier-hover)";
         }
         const rootIcon = rootItem.createSpan({ text: "\u{1F4C1} " });
-        const rootLabel = rootItem.createSpan({ text: "Vault Root (/)" });
+        const rootLabel = rootItem.createSpan({ text: t("folder_browser.vault_root") });
         rootLabel.style.fontWeight = "bold";
         rootItem.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -339,7 +5249,7 @@ var init_folder_tree_browser_modal = __esm({
       async handleCreateFolder() {
         var _a;
         if (!this.selectedFolder) {
-          new import_obsidian3.Notice("\u26A0\uFE0F Please select a parent folder first");
+          new import_obsidian3.Notice(t("folder_browser.notices.select_parent_first"));
           return;
         }
         const folderName = await this.promptForFolderName();
@@ -347,27 +5257,27 @@ var init_folder_tree_browser_modal = __esm({
           return;
         }
         if (folderName.includes("/") || folderName.includes("\\") || folderName.includes(":") || folderName.includes("*") || folderName.includes("?") || folderName.includes('"') || folderName.includes("<") || folderName.includes(">") || folderName.includes("|")) {
-          new import_obsidian3.Notice("\u274C Invalid folder name: contains illegal characters");
+          new import_obsidian3.Notice(t("folder_browser.notices.invalid_name"));
           return;
         }
         const parentPath = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
         const newFolderPath = parentPath ? `${parentPath}/${folderName}` : folderName;
         const exists = this.app.vault.getAbstractFileByPath(newFolderPath);
         if (exists) {
-          new import_obsidian3.Notice("\u274C Folder already exists");
+          new import_obsidian3.Notice(t("folder_browser.notices.already_exists"));
           return;
         }
         if (this.validatePath) {
           const validation = this.validatePath(newFolderPath);
           if (!validation.valid) {
-            new import_obsidian3.Notice(`\u274C ${(_a = validation.error) != null ? _a : "Invalid folder location"}`);
+            new import_obsidian3.Notice(t("folder_browser.notices.invalid_location", { error: (_a = validation.error) != null ? _a : "Invalid folder location" }));
             return;
           }
         }
         try {
           await this.app.vault.createFolder(newFolderPath);
           this.createdFolders.add(newFolderPath);
-          new import_obsidian3.Notice(`\u2705 Created folder: ${folderName}`);
+          new import_obsidian3.Notice(t("folder_browser.notices.created_success", { name: folderName }));
           this.expandedFolders.add(this.selectedFolder.path);
           const newFolder = this.app.vault.getAbstractFileByPath(newFolderPath);
           if (newFolder instanceof import_obsidian3.TFolder) {
@@ -376,27 +5286,27 @@ var init_folder_tree_browser_modal = __esm({
           }
           this.renderTree();
         } catch (error) {
-          new import_obsidian3.Notice(`\u274C Failed to create folder: ${error.message}`);
+          new import_obsidian3.Notice(t("folder_browser.notices.create_failed", { error: error.message }));
         }
       }
       promptForFolderName() {
         return new Promise((resolve) => {
           const modal = new import_obsidian3.Modal(this.app);
-          modal.titleEl.setText("Create New Folder");
+          modal.titleEl.setText(t("folder_browser.create_folder_dialog.title"));
           const inputContainer = modal.contentEl.createDiv();
           inputContainer.style.marginBottom = "20px";
-          inputContainer.createEl("label", { text: "Folder name:" });
+          inputContainer.createEl("label", { text: t("folder_browser.create_folder_dialog.folder_name_label") });
           const input = inputContainer.createEl("input", { type: "text" });
           input.style.width = "100%";
           input.style.marginTop = "8px";
           const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-          const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+          const cancelButton = buttonContainer.createEl("button", { text: t("folder_browser.create_folder_dialog.buttons.cancel") });
           cancelButton.addEventListener("click", () => {
             modal.close();
             resolve(null);
           });
           const createButton = buttonContainer.createEl("button", {
-            text: "Create",
+            text: t("folder_browser.create_folder_dialog.buttons.create"),
             cls: "mod-cta"
           });
           createButton.addEventListener("click", () => {
@@ -422,14 +5332,14 @@ var init_folder_tree_browser_modal = __esm({
       handleSelect() {
         var _a;
         if (!this.selectedFolder) {
-          new import_obsidian3.Notice("\u26A0\uFE0F Please select a folder first");
+          new import_obsidian3.Notice(t("folder_browser.notices.select_first"));
           return;
         }
         const path = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
         if (this.validatePath) {
           const validation = this.validatePath(path);
           if (!validation.valid) {
-            new import_obsidian3.Notice(`\u274C ${(_a = validation.error) != null ? _a : "Invalid folder location"}`);
+            new import_obsidian3.Notice(t("folder_browser.notices.invalid_location", { error: (_a = validation.error) != null ? _a : "Invalid folder location" }));
             return;
           }
         }
@@ -1427,6 +6337,7 @@ var init_progress_modal = __esm({
   "src/upgrade/utils/progress-modal.ts"() {
     "use strict";
     import_obsidian6 = require("obsidian");
+    init_i18n();
     UpgradeProgressModal = class extends import_obsidian6.Modal {
       constructor(app, title, totalSteps = 100) {
         super(app);
@@ -1479,7 +6390,7 @@ var init_progress_modal = __esm({
             font-size: 0.9em;
             min-height: 1.2em;
         `;
-        this.updateProgress({ title: "Starting...", progress: 0 });
+        this.updateProgress({ title: t("upgrade.progress_modal.starting"), progress: 0 });
       }
       /**
        * Update progress with step information
@@ -1488,12 +6399,12 @@ var init_progress_modal = __esm({
         if (step.progress !== void 0) {
           const percentage = Math.min(100, Math.max(0, step.progress));
           this.progressBarEl.style.width = `${percentage}%`;
-          this.stepEl.textContent = `Progress: ${Math.round(percentage)}%`;
+          this.stepEl.textContent = t("upgrade.progress_modal.progress_label", { percentage: String(Math.round(percentage)) });
         } else {
           this.currentStep++;
           const percentage = Math.round(this.currentStep / this.totalSteps * 100);
           this.progressBarEl.style.width = `${percentage}%`;
-          this.stepEl.textContent = `Step ${this.currentStep}/${this.totalSteps}`;
+          this.stepEl.textContent = t("upgrade.progress_modal.step_label", { current: String(this.currentStep), total: String(this.totalSteps) });
         }
         this.statusEl.textContent = step.title;
         this.detailEl.textContent = step.detail || "";
@@ -1505,16 +6416,16 @@ var init_progress_modal = __esm({
         this.currentStep = stepNumber;
         const percentage = Math.round(stepNumber / this.totalSteps * 100);
         this.progressBarEl.style.width = `${percentage}%`;
-        this.stepEl.textContent = `Step ${stepNumber}/${this.totalSteps}`;
+        this.stepEl.textContent = t("upgrade.progress_modal.step_label", { current: String(stepNumber), total: String(this.totalSteps) });
         this.statusEl.textContent = step.title;
         this.detailEl.textContent = step.detail || "";
       }
       /**
        * Show completion state
        */
-      showComplete(message = "Completed successfully") {
+      showComplete(message = t("upgrade.progress_modal.complete_message")) {
         this.progressBarEl.style.width = "100%";
-        this.stepEl.textContent = "Complete";
+        this.stepEl.textContent = t("upgrade.progress_modal.complete_label");
         this.statusEl.textContent = message;
         this.detailEl.textContent = "";
         this.progressBarEl.style.background = "var(--text-success)";
@@ -1522,7 +6433,7 @@ var init_progress_modal = __esm({
       /**
        * Show error state
        */
-      showError(message = "An error occurred") {
+      showError(message = t("upgrade.progress_modal.error_message")) {
         this.statusEl.textContent = message;
         this.detailEl.textContent = "";
         this.progressBarEl.style.background = "var(--text-error)";
@@ -1552,6 +6463,7 @@ var init_enhanced_folder_migration_dialog = __esm({
   "src/dialogs/enhanced-folder-migration-dialog.ts"() {
     "use strict";
     import_obsidian7 = require("obsidian");
+    init_i18n();
     EnhancedFolderMigrationDialog = class extends import_obsidian7.Modal {
       constructor(plugin, oldPath, newPath, folderType, onComplete) {
         super(plugin.app);
@@ -1567,32 +6479,32 @@ var init_enhanced_folder_migration_dialog = __esm({
         contentEl.empty();
         await this.loadEstimates();
         contentEl.createEl("h2", {
-          text: "Move Existing Files?",
+          text: t("folder_migration.title"),
           cls: "nexus-migration-title"
         });
         const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
         messageContainer.createEl("p", {
-          text: `You are changing the ${this.folderType} folder location:`
+          text: t("folder_migration.message_intro", { folder_type: this.folderType })
         });
         const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
         pathContainer.createEl("div", {
-          text: `From: ${this.oldPath}`,
+          text: t("folder_migration.path_from", { path: this.oldPath }),
           cls: "nexus-migration-path-old"
         });
         pathContainer.createEl("div", {
-          text: `To: ${this.newPath}`,
+          text: t("folder_migration.path_to", { path: this.newPath }),
           cls: "nexus-migration-path-new"
         });
         messageContainer.createEl("p", {
-          text: "Do you want to move existing files to the new location?"
+          text: t("folder_migration.question")
         });
         if (this.shouldShowLinkUpdateInfo()) {
           this.createLinkUpdateInfo(contentEl);
         }
         const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
-        warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
+        warningBox.createEl("strong", { text: t("folder_migration.warning.title") });
         warningBox.createEl("p", {
-          text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
+          text: t("folder_migration.warning.text")
         });
         this.createButtons(contentEl);
         this.addStyles();
@@ -1617,21 +6529,21 @@ var init_enhanced_folder_migration_dialog = __esm({
       }
       createLinkUpdateInfo(contentEl) {
         const linkUpdateBox = contentEl.createDiv({ cls: "nexus-link-update-info" });
-        linkUpdateBox.createEl("strong", { text: "\u{1F517} Link Updates:" });
+        linkUpdateBox.createEl("strong", { text: t("folder_migration.link_updates.title") });
         const infoText = linkUpdateBox.createDiv();
         if (this.folderType === "attachments") {
           infoText.createEl("p", {
-            text: "Moving attachments will also update all conversation notes that reference them."
+            text: t("folder_migration.link_updates.attachments_text")
           });
         } else if (this.folderType === "conversations") {
           infoText.createEl("p", {
-            text: "Moving conversations will also update all reports and attachments that reference them."
+            text: t("folder_migration.link_updates.conversations_text")
           });
         }
         if (this.estimatedTime > 0) {
-          const timeText = this.estimatedTime < 60 ? `~${this.estimatedTime} seconds` : `~${Math.ceil(this.estimatedTime / 60)} minute(s)`;
+          const timeText = this.estimatedTime < 60 ? t("folder_migration.link_updates.estimated_time_seconds", { seconds: String(this.estimatedTime) }) : t("folder_migration.link_updates.estimated_time_minutes", { minutes: String(Math.ceil(this.estimatedTime / 60)) });
           infoText.createEl("p", {
-            text: `Estimated time: ${timeText}`,
+            text: timeText,
             cls: "nexus-time-estimate"
           });
         }
@@ -1639,7 +6551,7 @@ var init_enhanced_folder_migration_dialog = __esm({
       createButtons(contentEl) {
         const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
         const cancelButton = buttonContainer.createEl("button", {
-          text: "Cancel",
+          text: t("folder_migration.buttons.cancel"),
           cls: "nexus-migration-button-cancel"
         });
         cancelButton.addEventListener("click", async () => {
@@ -1653,7 +6565,7 @@ var init_enhanced_folder_migration_dialog = __esm({
           }
         });
         const keepButton = buttonContainer.createEl("button", {
-          text: "No, keep files in old location",
+          text: t("folder_migration.buttons.keep"),
           cls: "nexus-migration-button-keep"
         });
         keepButton.addEventListener("click", async () => {
@@ -1667,7 +6579,7 @@ var init_enhanced_folder_migration_dialog = __esm({
           }
         });
         const moveButton = buttonContainer.createEl("button", {
-          text: this.shouldShowLinkUpdateInfo() ? "Yes, move files and update links" : "Yes, move files",
+          text: this.shouldShowLinkUpdateInfo() ? t("folder_migration.buttons.move_with_links") : t("folder_migration.buttons.move"),
           cls: "mod-cta nexus-migration-button-move"
         });
         moveButton.addEventListener("click", async () => {
@@ -1695,13 +6607,13 @@ var init_enhanced_folder_migration_dialog = __esm({
           ]);
           progressModal = new UpgradeProgressModal2(
             this.app,
-            `Moving ${this.folderType} and updating links`,
+            t("folder_migration.progress.title_moving", { folder_type: this.folderType }),
             100
           );
           progressModal.open();
           progressModal.updateProgress({
-            title: "Moving files...",
-            detail: `Moving from ${this.oldPath} to ${this.newPath}`,
+            title: t("folder_migration.progress.step_moving_title"),
+            detail: t("folder_migration.progress.step_moving_detail", { old_path: this.oldPath, new_path: this.newPath }),
             progress: 5
           });
           const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
@@ -1715,15 +6627,15 @@ var init_enhanced_folder_migration_dialog = __esm({
             (current, total) => {
               const percentage = 5 + Math.round(current / total * 25);
               progressModal.updateProgress({
-                title: "Moving files...",
-                detail: `${current} / ${total} files processed`,
+                title: t("folder_migration.progress.step_moving_title"),
+                detail: t("folder_migration.progress.step_moving_count", { current: String(current), total: String(total) }),
                 progress: percentage
               });
             }
           );
           progressModal.updateProgress({
-            title: "Files moved",
-            detail: `${moveResult.moved} files moved, ${moveResult.skipped} skipped. Preparing to update links...`,
+            title: t("folder_migration.progress.step_moved_title"),
+            detail: t("folder_migration.progress.step_moved_detail", { moved: String(moveResult.moved), skipped: String(moveResult.skipped) }),
             progress: 30
           });
           const linkUpdateService = new LinkUpdateService2(this.plugin);
@@ -1735,7 +6647,7 @@ var init_enhanced_folder_migration_dialog = __esm({
               (progress) => {
                 const percentage = 30 + Math.round(progress.current / progress.total * 70);
                 progressModal.updateProgress({
-                  title: "Updating attachment links...",
+                  title: t("folder_migration.progress.step_updating_attachment_links"),
                   detail: progress.detail,
                   progress: percentage
                 });
@@ -1747,11 +6659,11 @@ var init_enhanced_folder_migration_dialog = __esm({
               this.newPath,
               (progress) => {
                 const percentage = 30 + Math.round(progress.current / progress.total * 70);
-                let title = "Updating conversation links...";
+                let title = t("folder_migration.progress.step_updating_conversation_links");
                 if (progress.phase === "updating-conversations") {
-                  title = "Updating links in reports...";
+                  title = t("folder_migration.progress.step_updating_report_links");
                 } else if (progress.phase === "updating-artifacts") {
-                  title = "Updating links in artifacts...";
+                  title = t("folder_migration.progress.step_updating_artifact_links");
                 }
                 progressModal.updateProgress({
                   title,
@@ -1763,7 +6675,7 @@ var init_enhanced_folder_migration_dialog = __esm({
           }
           const linksUpdated = this.folderType === "attachments" ? (stats == null ? void 0 : stats.attachmentLinksUpdated) || 0 : (stats == null ? void 0 : stats.conversationLinksUpdated) || 0;
           progressModal.showComplete(
-            `${moveResult.moved} files moved. ${linksUpdated} links updated successfully`
+            t("folder_migration.progress.complete_message", { moved: String(moveResult.moved), links: String(linksUpdated) })
           );
           progressModal.closeAfterDelay(3e3);
           new import_obsidian7.Notice(`\u2705 ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
@@ -1773,7 +6685,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             progressModal.close();
           }
           const errorMessage = error instanceof Error ? error.message : String(error);
-          this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${errorMessage}`);
+          this.showErrorDialog(t("folder_migration.error_migration_failed.title"), t("folder_migration.error_migration_failed.message_links", { error: errorMessage }));
         }
       }
       addStyles() {
@@ -1890,7 +6802,7 @@ var init_enhanced_folder_migration_dialog = __esm({
         buttonContainer.style.justifyContent = "flex-end";
         buttonContainer.style.marginTop = "1em";
         const okButton = buttonContainer.createEl("button", {
-          text: "OK",
+          text: t("common.buttons.ok"),
           cls: "mod-cta"
         });
         okButton.addEventListener("click", () => modal.close());
@@ -1921,9 +6833,9 @@ var require_jszip_min = __commonJS({
         function u(r, e2) {
           if (!o[r]) {
             if (!a[r]) {
-              var t = "function" == typeof require && require;
-              if (!e2 && t)
-                return t(r, true);
+              var t2 = "function" == typeof require && require;
+              if (!e2 && t2)
+                return t2(r, true);
               if (l)
                 return l(r, true);
               var n = new Error("Cannot find module '" + r + "'");
@@ -1931,8 +6843,8 @@ var require_jszip_min = __commonJS({
             }
             var i = o[r] = { exports: {} };
             a[r][0].call(i.exports, function(e3) {
-              var t2 = a[r][1][e3];
-              return u(t2 || e3);
+              var t3 = a[r][1][e3];
+              return u(t3 || e3);
             }, i, i.exports, s, a, o, h);
           }
           return o[r].exports;
@@ -1941,43 +6853,43 @@ var require_jszip_min = __commonJS({
         for (var l = "function" == typeof require && require, e = 0; e < h.length; e++)
           u(h[e]);
         return u;
-      }, "s"))({ 1: [function(e, t, r) {
+      }, "s"))({ 1: [function(e, t2, r) {
         "use strict";
         var d = e("./utils"), c = e("./support"), p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
         r.encode = function(e2) {
-          for (var t2, r2, n, i, s, a, o, h = [], u = 0, l = e2.length, f = l, c2 = "string" !== d.getTypeOf(e2); u < e2.length; )
-            f = l - u, n = c2 ? (t2 = e2[u++], r2 = u < l ? e2[u++] : 0, u < l ? e2[u++] : 0) : (t2 = e2.charCodeAt(u++), r2 = u < l ? e2.charCodeAt(u++) : 0, u < l ? e2.charCodeAt(u++) : 0), i = t2 >> 2, s = (3 & t2) << 4 | r2 >> 4, a = 1 < f ? (15 & r2) << 2 | n >> 6 : 64, o = 2 < f ? 63 & n : 64, h.push(p.charAt(i) + p.charAt(s) + p.charAt(a) + p.charAt(o));
+          for (var t3, r2, n, i, s, a, o, h = [], u = 0, l = e2.length, f = l, c2 = "string" !== d.getTypeOf(e2); u < e2.length; )
+            f = l - u, n = c2 ? (t3 = e2[u++], r2 = u < l ? e2[u++] : 0, u < l ? e2[u++] : 0) : (t3 = e2.charCodeAt(u++), r2 = u < l ? e2.charCodeAt(u++) : 0, u < l ? e2.charCodeAt(u++) : 0), i = t3 >> 2, s = (3 & t3) << 4 | r2 >> 4, a = 1 < f ? (15 & r2) << 2 | n >> 6 : 64, o = 2 < f ? 63 & n : 64, h.push(p.charAt(i) + p.charAt(s) + p.charAt(a) + p.charAt(o));
           return h.join("");
         }, r.decode = function(e2) {
-          var t2, r2, n, i, s, a, o = 0, h = 0, u = "data:";
+          var t3, r2, n, i, s, a, o = 0, h = 0, u = "data:";
           if (e2.substr(0, u.length) === u)
             throw new Error("Invalid base64 input, it looks like a data url.");
           var l, f = 3 * (e2 = e2.replace(/[^A-Za-z0-9+/=]/g, "")).length / 4;
           if (e2.charAt(e2.length - 1) === p.charAt(64) && f--, e2.charAt(e2.length - 2) === p.charAt(64) && f--, f % 1 != 0)
             throw new Error("Invalid base64 input, bad content length.");
           for (l = c.uint8array ? new Uint8Array(0 | f) : new Array(0 | f); o < e2.length; )
-            t2 = p.indexOf(e2.charAt(o++)) << 2 | (i = p.indexOf(e2.charAt(o++))) >> 4, r2 = (15 & i) << 4 | (s = p.indexOf(e2.charAt(o++))) >> 2, n = (3 & s) << 6 | (a = p.indexOf(e2.charAt(o++))), l[h++] = t2, 64 !== s && (l[h++] = r2), 64 !== a && (l[h++] = n);
+            t3 = p.indexOf(e2.charAt(o++)) << 2 | (i = p.indexOf(e2.charAt(o++))) >> 4, r2 = (15 & i) << 4 | (s = p.indexOf(e2.charAt(o++))) >> 2, n = (3 & s) << 6 | (a = p.indexOf(e2.charAt(o++))), l[h++] = t3, 64 !== s && (l[h++] = r2), 64 !== a && (l[h++] = n);
           return l;
         };
-      }, { "./support": 30, "./utils": 32 }], 2: [function(e, t, r) {
+      }, { "./support": 30, "./utils": 32 }], 2: [function(e, t2, r) {
         "use strict";
         var n = e("./external"), i = e("./stream/DataWorker"), s = e("./stream/Crc32Probe"), a = e("./stream/DataLengthProbe");
-        function o(e2, t2, r2, n2, i2) {
-          this.compressedSize = e2, this.uncompressedSize = t2, this.crc32 = r2, this.compression = n2, this.compressedContent = i2;
+        function o(e2, t3, r2, n2, i2) {
+          this.compressedSize = e2, this.uncompressedSize = t3, this.crc32 = r2, this.compression = n2, this.compressedContent = i2;
         }
         __name(o, "o");
         o.prototype = { getContentWorker: function() {
-          var e2 = new i(n.Promise.resolve(this.compressedContent)).pipe(this.compression.uncompressWorker()).pipe(new a("data_length")), t2 = this;
+          var e2 = new i(n.Promise.resolve(this.compressedContent)).pipe(this.compression.uncompressWorker()).pipe(new a("data_length")), t3 = this;
           return e2.on("end", function() {
-            if (this.streamInfo.data_length !== t2.uncompressedSize)
+            if (this.streamInfo.data_length !== t3.uncompressedSize)
               throw new Error("Bug : uncompressed data size mismatch");
           }), e2;
         }, getCompressedWorker: function() {
           return new i(n.Promise.resolve(this.compressedContent)).withStreamInfo("compressedSize", this.compressedSize).withStreamInfo("uncompressedSize", this.uncompressedSize).withStreamInfo("crc32", this.crc32).withStreamInfo("compression", this.compression);
-        } }, o.createWorkerFrom = function(e2, t2, r2) {
-          return e2.pipe(new s()).pipe(new a("uncompressedSize")).pipe(t2.compressWorker(r2)).pipe(new a("compressedSize")).withStreamInfo("compression", t2);
-        }, t.exports = o;
-      }, { "./external": 6, "./stream/Crc32Probe": 25, "./stream/DataLengthProbe": 26, "./stream/DataWorker": 27 }], 3: [function(e, t, r) {
+        } }, o.createWorkerFrom = function(e2, t3, r2) {
+          return e2.pipe(new s()).pipe(new a("uncompressedSize")).pipe(t3.compressWorker(r2)).pipe(new a("compressedSize")).withStreamInfo("compression", t3);
+        }, t2.exports = o;
+      }, { "./external": 6, "./stream/Crc32Probe": 25, "./stream/DataLengthProbe": 26, "./stream/DataWorker": 27 }], 3: [function(e, t2, r) {
         "use strict";
         var n = e("./stream/GenericWorker");
         r.STORE = { magic: "\0\0", compressWorker: function() {
@@ -1985,45 +6897,45 @@ var require_jszip_min = __commonJS({
         }, uncompressWorker: function() {
           return new n("STORE decompression");
         } }, r.DEFLATE = e("./flate");
-      }, { "./flate": 7, "./stream/GenericWorker": 28 }], 4: [function(e, t, r) {
+      }, { "./flate": 7, "./stream/GenericWorker": 28 }], 4: [function(e, t2, r) {
         "use strict";
         var n = e("./utils");
         var o = function() {
-          for (var e2, t2 = [], r2 = 0; r2 < 256; r2++) {
+          for (var e2, t3 = [], r2 = 0; r2 < 256; r2++) {
             e2 = r2;
             for (var n2 = 0; n2 < 8; n2++)
               e2 = 1 & e2 ? 3988292384 ^ e2 >>> 1 : e2 >>> 1;
-            t2[r2] = e2;
+            t3[r2] = e2;
           }
-          return t2;
+          return t3;
         }();
-        t.exports = function(e2, t2) {
-          return void 0 !== e2 && e2.length ? "string" !== n.getTypeOf(e2) ? function(e3, t3, r2, n2) {
+        t2.exports = function(e2, t3) {
+          return void 0 !== e2 && e2.length ? "string" !== n.getTypeOf(e2) ? function(e3, t4, r2, n2) {
             var i = o, s = n2 + r2;
             e3 ^= -1;
             for (var a = n2; a < s; a++)
-              e3 = e3 >>> 8 ^ i[255 & (e3 ^ t3[a])];
+              e3 = e3 >>> 8 ^ i[255 & (e3 ^ t4[a])];
             return -1 ^ e3;
-          }(0 | t2, e2, e2.length, 0) : function(e3, t3, r2, n2) {
+          }(0 | t3, e2, e2.length, 0) : function(e3, t4, r2, n2) {
             var i = o, s = n2 + r2;
             e3 ^= -1;
             for (var a = n2; a < s; a++)
-              e3 = e3 >>> 8 ^ i[255 & (e3 ^ t3.charCodeAt(a))];
+              e3 = e3 >>> 8 ^ i[255 & (e3 ^ t4.charCodeAt(a))];
             return -1 ^ e3;
-          }(0 | t2, e2, e2.length, 0) : 0;
+          }(0 | t3, e2, e2.length, 0) : 0;
         };
-      }, { "./utils": 32 }], 5: [function(e, t, r) {
+      }, { "./utils": 32 }], 5: [function(e, t2, r) {
         "use strict";
         r.base64 = false, r.binary = false, r.dir = false, r.createFolders = true, r.date = null, r.compression = null, r.compressionOptions = null, r.comment = null, r.unixPermissions = null, r.dosPermissions = null;
-      }, {}], 6: [function(e, t, r) {
+      }, {}], 6: [function(e, t2, r) {
         "use strict";
         var n = null;
-        n = "undefined" != typeof Promise ? Promise : e("lie"), t.exports = { Promise: n };
-      }, { lie: 37 }], 7: [function(e, t, r) {
+        n = "undefined" != typeof Promise ? Promise : e("lie"), t2.exports = { Promise: n };
+      }, { lie: 37 }], 7: [function(e, t2, r) {
         "use strict";
         var n = "undefined" != typeof Uint8Array && "undefined" != typeof Uint16Array && "undefined" != typeof Uint32Array, i = e("pako"), s = e("./utils"), a = e("./stream/GenericWorker"), o = n ? "uint8array" : "array";
-        function h(e2, t2) {
-          a.call(this, "FlateWorker/" + e2), this._pako = null, this._pakoAction = e2, this._pakoOptions = t2, this.meta = {};
+        function h(e2, t3) {
+          a.call(this, "FlateWorker/" + e2), this._pako = null, this._pakoAction = e2, this._pakoOptions = t3, this.meta = {};
         }
         __name(h, "h");
         r.magic = "\b\0", s.inherits(h, a), h.prototype.processChunk = function(e2) {
@@ -2034,33 +6946,33 @@ var require_jszip_min = __commonJS({
           a.prototype.cleanUp.call(this), this._pako = null;
         }, h.prototype._createPako = function() {
           this._pako = new i[this._pakoAction]({ raw: true, level: this._pakoOptions.level || -1 });
-          var t2 = this;
+          var t3 = this;
           this._pako.onData = function(e2) {
-            t2.push({ data: e2, meta: t2.meta });
+            t3.push({ data: e2, meta: t3.meta });
           };
         }, r.compressWorker = function(e2) {
           return new h("Deflate", e2);
         }, r.uncompressWorker = function() {
           return new h("Inflate", {});
         };
-      }, { "./stream/GenericWorker": 28, "./utils": 32, pako: 38 }], 8: [function(e, t, r) {
+      }, { "./stream/GenericWorker": 28, "./utils": 32, pako: 38 }], 8: [function(e, t2, r) {
         "use strict";
-        function A(e2, t2) {
+        function A(e2, t3) {
           var r2, n2 = "";
-          for (r2 = 0; r2 < t2; r2++)
+          for (r2 = 0; r2 < t3; r2++)
             n2 += String.fromCharCode(255 & e2), e2 >>>= 8;
           return n2;
         }
         __name(A, "A");
-        function n(e2, t2, r2, n2, i2, s2) {
+        function n(e2, t3, r2, n2, i2, s2) {
           var a, o, h = e2.file, u = e2.compression, l = s2 !== O.utf8encode, f = I.transformTo("string", s2(h.name)), c = I.transformTo("string", O.utf8encode(h.name)), d = h.comment, p = I.transformTo("string", s2(d)), m = I.transformTo("string", O.utf8encode(d)), _ = c.length !== h.name.length, g = m.length !== d.length, b = "", v = "", y = "", w = h.dir, k = h.date, x = { crc32: 0, compressedSize: 0, uncompressedSize: 0 };
-          t2 && !r2 || (x.crc32 = e2.crc32, x.compressedSize = e2.compressedSize, x.uncompressedSize = e2.uncompressedSize);
+          t3 && !r2 || (x.crc32 = e2.crc32, x.compressedSize = e2.compressedSize, x.uncompressedSize = e2.uncompressedSize);
           var S = 0;
-          t2 && (S |= 8), l || !_ && !g || (S |= 2048);
+          t3 && (S |= 8), l || !_ && !g || (S |= 2048);
           var z = 0, C = 0;
-          w && (z |= 16), "UNIX" === i2 ? (C = 798, z |= function(e3, t3) {
+          w && (z |= 16), "UNIX" === i2 ? (C = 798, z |= function(e3, t4) {
             var r3 = e3;
-            return e3 || (r3 = t3 ? 16893 : 33204), (65535 & r3) << 16;
+            return e3 || (r3 = t4 ? 16893 : 33204), (65535 & r3) << 16;
           }(h.unixPermissions, w)) : (C = 20, z |= function(e3) {
             return 63 & (e3 || 0);
           }(h.dosPermissions)), a = k.getUTCHours(), a <<= 6, a |= k.getUTCMinutes(), a <<= 5, a |= k.getUTCSeconds() / 2, o = k.getUTCFullYear() - 1980, o <<= 4, o |= k.getUTCMonth() + 1, o <<= 5, o |= k.getUTCDate(), _ && (v = A(1, 1) + A(B(f), 4) + c, b += "up" + A(v.length, 2) + v), g && (y = A(1, 1) + A(B(p), 4) + m, b += "uc" + A(y.length, 2) + y);
@@ -2069,25 +6981,25 @@ var require_jszip_min = __commonJS({
         }
         __name(n, "n");
         var I = e("../utils"), i = e("../stream/GenericWorker"), O = e("../utf8"), B = e("../crc32"), R = e("../signature");
-        function s(e2, t2, r2, n2) {
-          i.call(this, "ZipFileWorker"), this.bytesWritten = 0, this.zipComment = t2, this.zipPlatform = r2, this.encodeFileName = n2, this.streamFiles = e2, this.accumulate = false, this.contentBuffer = [], this.dirRecords = [], this.currentSourceOffset = 0, this.entriesCount = 0, this.currentFile = null, this._sources = [];
+        function s(e2, t3, r2, n2) {
+          i.call(this, "ZipFileWorker"), this.bytesWritten = 0, this.zipComment = t3, this.zipPlatform = r2, this.encodeFileName = n2, this.streamFiles = e2, this.accumulate = false, this.contentBuffer = [], this.dirRecords = [], this.currentSourceOffset = 0, this.entriesCount = 0, this.currentFile = null, this._sources = [];
         }
         __name(s, "s");
         I.inherits(s, i), s.prototype.push = function(e2) {
-          var t2 = e2.meta.percent || 0, r2 = this.entriesCount, n2 = this._sources.length;
-          this.accumulate ? this.contentBuffer.push(e2) : (this.bytesWritten += e2.data.length, i.prototype.push.call(this, { data: e2.data, meta: { currentFile: this.currentFile, percent: r2 ? (t2 + 100 * (r2 - n2 - 1)) / r2 : 100 } }));
+          var t3 = e2.meta.percent || 0, r2 = this.entriesCount, n2 = this._sources.length;
+          this.accumulate ? this.contentBuffer.push(e2) : (this.bytesWritten += e2.data.length, i.prototype.push.call(this, { data: e2.data, meta: { currentFile: this.currentFile, percent: r2 ? (t3 + 100 * (r2 - n2 - 1)) / r2 : 100 } }));
         }, s.prototype.openedSource = function(e2) {
           this.currentSourceOffset = this.bytesWritten, this.currentFile = e2.file.name;
-          var t2 = this.streamFiles && !e2.file.dir;
-          if (t2) {
-            var r2 = n(e2, t2, false, this.currentSourceOffset, this.zipPlatform, this.encodeFileName);
+          var t3 = this.streamFiles && !e2.file.dir;
+          if (t3) {
+            var r2 = n(e2, t3, false, this.currentSourceOffset, this.zipPlatform, this.encodeFileName);
             this.push({ data: r2.fileRecord, meta: { percent: 0 } });
           } else
             this.accumulate = true;
         }, s.prototype.closedSource = function(e2) {
           this.accumulate = false;
-          var t2 = this.streamFiles && !e2.file.dir, r2 = n(e2, t2, true, this.currentSourceOffset, this.zipPlatform, this.encodeFileName);
-          if (this.dirRecords.push(r2.dirRecord), t2)
+          var t3 = this.streamFiles && !e2.file.dir, r2 = n(e2, t3, true, this.currentSourceOffset, this.zipPlatform, this.encodeFileName);
+          if (this.dirRecords.push(r2.dirRecord), t3)
             this.push({ data: function(e3) {
               return R.DATA_DESCRIPTOR + A(e3.crc32, 4) + A(e3.compressedSize, 4) + A(e3.uncompressedSize, 4);
             }(e2), meta: { percent: 100 } });
@@ -2096,64 +7008,64 @@ var require_jszip_min = __commonJS({
               this.push(this.contentBuffer.shift());
           this.currentFile = null;
         }, s.prototype.flush = function() {
-          for (var e2 = this.bytesWritten, t2 = 0; t2 < this.dirRecords.length; t2++)
-            this.push({ data: this.dirRecords[t2], meta: { percent: 100 } });
-          var r2 = this.bytesWritten - e2, n2 = function(e3, t3, r3, n3, i2) {
+          for (var e2 = this.bytesWritten, t3 = 0; t3 < this.dirRecords.length; t3++)
+            this.push({ data: this.dirRecords[t3], meta: { percent: 100 } });
+          var r2 = this.bytesWritten - e2, n2 = function(e3, t4, r3, n3, i2) {
             var s2 = I.transformTo("string", i2(n3));
-            return R.CENTRAL_DIRECTORY_END + "\0\0\0\0" + A(e3, 2) + A(e3, 2) + A(t3, 4) + A(r3, 4) + A(s2.length, 2) + s2;
+            return R.CENTRAL_DIRECTORY_END + "\0\0\0\0" + A(e3, 2) + A(e3, 2) + A(t4, 4) + A(r3, 4) + A(s2.length, 2) + s2;
           }(this.dirRecords.length, r2, e2, this.zipComment, this.encodeFileName);
           this.push({ data: n2, meta: { percent: 100 } });
         }, s.prototype.prepareNextSource = function() {
           this.previous = this._sources.shift(), this.openedSource(this.previous.streamInfo), this.isPaused ? this.previous.pause() : this.previous.resume();
         }, s.prototype.registerPrevious = function(e2) {
           this._sources.push(e2);
-          var t2 = this;
+          var t3 = this;
           return e2.on("data", function(e3) {
-            t2.processChunk(e3);
+            t3.processChunk(e3);
           }), e2.on("end", function() {
-            t2.closedSource(t2.previous.streamInfo), t2._sources.length ? t2.prepareNextSource() : t2.end();
+            t3.closedSource(t3.previous.streamInfo), t3._sources.length ? t3.prepareNextSource() : t3.end();
           }), e2.on("error", function(e3) {
-            t2.error(e3);
+            t3.error(e3);
           }), this;
         }, s.prototype.resume = function() {
           return !!i.prototype.resume.call(this) && (!this.previous && this._sources.length ? (this.prepareNextSource(), true) : this.previous || this._sources.length || this.generatedError ? void 0 : (this.end(), true));
         }, s.prototype.error = function(e2) {
-          var t2 = this._sources;
+          var t3 = this._sources;
           if (!i.prototype.error.call(this, e2))
             return false;
-          for (var r2 = 0; r2 < t2.length; r2++)
+          for (var r2 = 0; r2 < t3.length; r2++)
             try {
-              t2[r2].error(e2);
+              t3[r2].error(e2);
             } catch (e3) {
             }
           return true;
         }, s.prototype.lock = function() {
           i.prototype.lock.call(this);
-          for (var e2 = this._sources, t2 = 0; t2 < e2.length; t2++)
-            e2[t2].lock();
-        }, t.exports = s;
-      }, { "../crc32": 4, "../signature": 23, "../stream/GenericWorker": 28, "../utf8": 31, "../utils": 32 }], 9: [function(e, t, r) {
+          for (var e2 = this._sources, t3 = 0; t3 < e2.length; t3++)
+            e2[t3].lock();
+        }, t2.exports = s;
+      }, { "../crc32": 4, "../signature": 23, "../stream/GenericWorker": 28, "../utf8": 31, "../utils": 32 }], 9: [function(e, t2, r) {
         "use strict";
         var u = e("../compressions"), n = e("./ZipFileWorker");
-        r.generateWorker = function(e2, a, t2) {
-          var o = new n(a.streamFiles, t2, a.platform, a.encodeFileName), h = 0;
+        r.generateWorker = function(e2, a, t3) {
+          var o = new n(a.streamFiles, t3, a.platform, a.encodeFileName), h = 0;
           try {
-            e2.forEach(function(e3, t3) {
+            e2.forEach(function(e3, t4) {
               h++;
-              var r2 = function(e4, t4) {
-                var r3 = e4 || t4, n3 = u[r3];
+              var r2 = function(e4, t5) {
+                var r3 = e4 || t5, n3 = u[r3];
                 if (!n3)
                   throw new Error(r3 + " is not a valid compression method !");
                 return n3;
-              }(t3.options.compression, a.compression), n2 = t3.options.compressionOptions || a.compressionOptions || {}, i = t3.dir, s = t3.date;
-              t3._compressWorker(r2, n2).withStreamInfo("file", { name: e3, dir: i, date: s, comment: t3.comment || "", unixPermissions: t3.unixPermissions, dosPermissions: t3.dosPermissions }).pipe(o);
+              }(t4.options.compression, a.compression), n2 = t4.options.compressionOptions || a.compressionOptions || {}, i = t4.dir, s = t4.date;
+              t4._compressWorker(r2, n2).withStreamInfo("file", { name: e3, dir: i, date: s, comment: t4.comment || "", unixPermissions: t4.unixPermissions, dosPermissions: t4.dosPermissions }).pipe(o);
             }), o.entriesCount = h;
           } catch (e3) {
             o.error(e3);
           }
           return o;
         };
-      }, { "../compressions": 3, "./ZipFileWorker": 8 }], 10: [function(e, t, r) {
+      }, { "../compressions": 3, "./ZipFileWorker": 8 }], 10: [function(e, t2, r) {
         "use strict";
         function n() {
           if (!(this instanceof n))
@@ -2162,77 +7074,77 @@ var require_jszip_min = __commonJS({
             throw new Error("The constructor with parameters has been removed in JSZip 3.0, please check the upgrade guide.");
           this.files = /* @__PURE__ */ Object.create(null), this.comment = null, this.root = "", this.clone = function() {
             var e2 = new n();
-            for (var t2 in this)
-              "function" != typeof this[t2] && (e2[t2] = this[t2]);
+            for (var t3 in this)
+              "function" != typeof this[t3] && (e2[t3] = this[t3]);
             return e2;
           };
         }
         __name(n, "n");
-        (n.prototype = e("./object")).loadAsync = e("./load"), n.support = e("./support"), n.defaults = e("./defaults"), n.version = "3.10.1", n.loadAsync = function(e2, t2) {
-          return new n().loadAsync(e2, t2);
-        }, n.external = e("./external"), t.exports = n;
-      }, { "./defaults": 5, "./external": 6, "./load": 11, "./object": 15, "./support": 30 }], 11: [function(e, t, r) {
+        (n.prototype = e("./object")).loadAsync = e("./load"), n.support = e("./support"), n.defaults = e("./defaults"), n.version = "3.10.1", n.loadAsync = function(e2, t3) {
+          return new n().loadAsync(e2, t3);
+        }, n.external = e("./external"), t2.exports = n;
+      }, { "./defaults": 5, "./external": 6, "./load": 11, "./object": 15, "./support": 30 }], 11: [function(e, t2, r) {
         "use strict";
         var u = e("./utils"), i = e("./external"), n = e("./utf8"), s = e("./zipEntries"), a = e("./stream/Crc32Probe"), l = e("./nodejsUtils");
         function f(n2) {
-          return new i.Promise(function(e2, t2) {
+          return new i.Promise(function(e2, t3) {
             var r2 = n2.decompressed.getContentWorker().pipe(new a());
             r2.on("error", function(e3) {
-              t2(e3);
+              t3(e3);
             }).on("end", function() {
-              r2.streamInfo.crc32 !== n2.decompressed.crc32 ? t2(new Error("Corrupted zip : CRC32 mismatch")) : e2();
+              r2.streamInfo.crc32 !== n2.decompressed.crc32 ? t3(new Error("Corrupted zip : CRC32 mismatch")) : e2();
             }).resume();
           });
         }
         __name(f, "f");
-        t.exports = function(e2, o) {
+        t2.exports = function(e2, o) {
           var h = this;
           return o = u.extend(o || {}, { base64: false, checkCRC32: false, optimizedBinaryString: false, createFolders: false, decodeFileName: n.utf8decode }), l.isNode && l.isStream(e2) ? i.Promise.reject(new Error("JSZip can't accept a stream when loading a zip file.")) : u.prepareContent("the loaded zip file", e2, true, o.optimizedBinaryString, o.base64).then(function(e3) {
-            var t2 = new s(o);
-            return t2.load(e3), t2;
+            var t3 = new s(o);
+            return t3.load(e3), t3;
           }).then(function(e3) {
-            var t2 = [i.Promise.resolve(e3)], r2 = e3.files;
+            var t3 = [i.Promise.resolve(e3)], r2 = e3.files;
             if (o.checkCRC32)
               for (var n2 = 0; n2 < r2.length; n2++)
-                t2.push(f(r2[n2]));
-            return i.Promise.all(t2);
+                t3.push(f(r2[n2]));
+            return i.Promise.all(t3);
           }).then(function(e3) {
-            for (var t2 = e3.shift(), r2 = t2.files, n2 = 0; n2 < r2.length; n2++) {
+            for (var t3 = e3.shift(), r2 = t3.files, n2 = 0; n2 < r2.length; n2++) {
               var i2 = r2[n2], s2 = i2.fileNameStr, a2 = u.resolve(i2.fileNameStr);
               h.file(a2, i2.decompressed, { binary: true, optimizedBinaryString: true, date: i2.date, dir: i2.dir, comment: i2.fileCommentStr.length ? i2.fileCommentStr : null, unixPermissions: i2.unixPermissions, dosPermissions: i2.dosPermissions, createFolders: o.createFolders }), i2.dir || (h.file(a2).unsafeOriginalName = s2);
             }
-            return t2.zipComment.length && (h.comment = t2.zipComment), h;
+            return t3.zipComment.length && (h.comment = t3.zipComment), h;
           });
         };
-      }, { "./external": 6, "./nodejsUtils": 14, "./stream/Crc32Probe": 25, "./utf8": 31, "./utils": 32, "./zipEntries": 33 }], 12: [function(e, t, r) {
+      }, { "./external": 6, "./nodejsUtils": 14, "./stream/Crc32Probe": 25, "./utf8": 31, "./utils": 32, "./zipEntries": 33 }], 12: [function(e, t2, r) {
         "use strict";
         var n = e("../utils"), i = e("../stream/GenericWorker");
-        function s(e2, t2) {
-          i.call(this, "Nodejs stream input adapter for " + e2), this._upstreamEnded = false, this._bindStream(t2);
+        function s(e2, t3) {
+          i.call(this, "Nodejs stream input adapter for " + e2), this._upstreamEnded = false, this._bindStream(t3);
         }
         __name(s, "s");
         n.inherits(s, i), s.prototype._bindStream = function(e2) {
-          var t2 = this;
+          var t3 = this;
           (this._stream = e2).pause(), e2.on("data", function(e3) {
-            t2.push({ data: e3, meta: { percent: 0 } });
+            t3.push({ data: e3, meta: { percent: 0 } });
           }).on("error", function(e3) {
-            t2.isPaused ? this.generatedError = e3 : t2.error(e3);
+            t3.isPaused ? this.generatedError = e3 : t3.error(e3);
           }).on("end", function() {
-            t2.isPaused ? t2._upstreamEnded = true : t2.end();
+            t3.isPaused ? t3._upstreamEnded = true : t3.end();
           });
         }, s.prototype.pause = function() {
           return !!i.prototype.pause.call(this) && (this._stream.pause(), true);
         }, s.prototype.resume = function() {
           return !!i.prototype.resume.call(this) && (this._upstreamEnded ? this.end() : this._stream.resume(), true);
-        }, t.exports = s;
-      }, { "../stream/GenericWorker": 28, "../utils": 32 }], 13: [function(e, t, r) {
+        }, t2.exports = s;
+      }, { "../stream/GenericWorker": 28, "../utils": 32 }], 13: [function(e, t2, r) {
         "use strict";
         var i = e("readable-stream").Readable;
-        function n(e2, t2, r2) {
-          i.call(this, t2), this._helper = e2;
+        function n(e2, t3, r2) {
+          i.call(this, t3), this._helper = e2;
           var n2 = this;
-          e2.on("data", function(e3, t3) {
-            n2.push(e3) || n2._helper.pause(), r2 && r2(t3);
+          e2.on("data", function(e3, t4) {
+            n2.push(e3) || n2._helper.pause(), r2 && r2(t4);
           }).on("error", function(e3) {
             n2.emit("error", e3);
           }).on("end", function() {
@@ -2242,46 +7154,46 @@ var require_jszip_min = __commonJS({
         __name(n, "n");
         e("../utils").inherits(n, i), n.prototype._read = function() {
           this._helper.resume();
-        }, t.exports = n;
-      }, { "../utils": 32, "readable-stream": 16 }], 14: [function(e, t, r) {
+        }, t2.exports = n;
+      }, { "../utils": 32, "readable-stream": 16 }], 14: [function(e, t2, r) {
         "use strict";
-        t.exports = { isNode: "undefined" != typeof Buffer, newBufferFrom: function(e2, t2) {
+        t2.exports = { isNode: "undefined" != typeof Buffer, newBufferFrom: function(e2, t3) {
           if (Buffer.from && Buffer.from !== Uint8Array.from)
-            return Buffer.from(e2, t2);
+            return Buffer.from(e2, t3);
           if ("number" == typeof e2)
             throw new Error('The "data" argument must not be a number');
-          return new Buffer(e2, t2);
+          return new Buffer(e2, t3);
         }, allocBuffer: function(e2) {
           if (Buffer.alloc)
             return Buffer.alloc(e2);
-          var t2 = new Buffer(e2);
-          return t2.fill(0), t2;
+          var t3 = new Buffer(e2);
+          return t3.fill(0), t3;
         }, isBuffer: function(e2) {
           return Buffer.isBuffer(e2);
         }, isStream: function(e2) {
           return e2 && "function" == typeof e2.on && "function" == typeof e2.pause && "function" == typeof e2.resume;
         } };
-      }, {}], 15: [function(e, t, r) {
+      }, {}], 15: [function(e, t2, r) {
         "use strict";
-        function s(e2, t2, r2) {
-          var n2, i2 = u.getTypeOf(t2), s2 = u.extend(r2 || {}, f);
+        function s(e2, t3, r2) {
+          var n2, i2 = u.getTypeOf(t3), s2 = u.extend(r2 || {}, f);
           s2.date = s2.date || new Date(), null !== s2.compression && (s2.compression = s2.compression.toUpperCase()), "string" == typeof s2.unixPermissions && (s2.unixPermissions = parseInt(s2.unixPermissions, 8)), s2.unixPermissions && 16384 & s2.unixPermissions && (s2.dir = true), s2.dosPermissions && 16 & s2.dosPermissions && (s2.dir = true), s2.dir && (e2 = g(e2)), s2.createFolders && (n2 = _(e2)) && b.call(this, n2, true);
           var a2 = "string" === i2 && false === s2.binary && false === s2.base64;
-          r2 && void 0 !== r2.binary || (s2.binary = !a2), (t2 instanceof c && 0 === t2.uncompressedSize || s2.dir || !t2 || 0 === t2.length) && (s2.base64 = false, s2.binary = true, t2 = "", s2.compression = "STORE", i2 = "string");
+          r2 && void 0 !== r2.binary || (s2.binary = !a2), (t3 instanceof c && 0 === t3.uncompressedSize || s2.dir || !t3 || 0 === t3.length) && (s2.base64 = false, s2.binary = true, t3 = "", s2.compression = "STORE", i2 = "string");
           var o2 = null;
-          o2 = t2 instanceof c || t2 instanceof l ? t2 : p.isNode && p.isStream(t2) ? new m(e2, t2) : u.prepareContent(e2, t2, s2.binary, s2.optimizedBinaryString, s2.base64);
+          o2 = t3 instanceof c || t3 instanceof l ? t3 : p.isNode && p.isStream(t3) ? new m(e2, t3) : u.prepareContent(e2, t3, s2.binary, s2.optimizedBinaryString, s2.base64);
           var h2 = new d(e2, o2, s2);
           this.files[e2] = h2;
         }
         __name(s, "s");
         var i = e("./utf8"), u = e("./utils"), l = e("./stream/GenericWorker"), a = e("./stream/StreamHelper"), f = e("./defaults"), c = e("./compressedObject"), d = e("./zipObject"), o = e("./generate"), p = e("./nodejsUtils"), m = e("./nodejs/NodejsStreamInputAdapter"), _ = /* @__PURE__ */ __name(function(e2) {
           "/" === e2.slice(-1) && (e2 = e2.substring(0, e2.length - 1));
-          var t2 = e2.lastIndexOf("/");
-          return 0 < t2 ? e2.substring(0, t2) : "";
+          var t3 = e2.lastIndexOf("/");
+          return 0 < t3 ? e2.substring(0, t3) : "";
         }, "_"), g = /* @__PURE__ */ __name(function(e2) {
           return "/" !== e2.slice(-1) && (e2 += "/"), e2;
-        }, "g"), b = /* @__PURE__ */ __name(function(e2, t2) {
-          return t2 = void 0 !== t2 ? t2 : f.createFolders, e2 = g(e2), this.files[e2] || s.call(this, e2, null, { dir: true, createFolders: t2 }), this.files[e2];
+        }, "g"), b = /* @__PURE__ */ __name(function(e2, t3) {
+          return t3 = void 0 !== t3 ? t3 : f.createFolders, e2 = g(e2), this.files[e2] || s.call(this, e2, null, { dir: true, createFolders: t3 }), this.files[e2];
         }, "b");
         function h(e2) {
           return "[object RegExp]" === Object.prototype.toString.call(e2);
@@ -2290,21 +7202,21 @@ var require_jszip_min = __commonJS({
         var n = { load: function() {
           throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
         }, forEach: function(e2) {
-          var t2, r2, n2;
-          for (t2 in this.files)
-            n2 = this.files[t2], (r2 = t2.slice(this.root.length, t2.length)) && t2.slice(0, this.root.length) === this.root && e2(r2, n2);
+          var t3, r2, n2;
+          for (t3 in this.files)
+            n2 = this.files[t3], (r2 = t3.slice(this.root.length, t3.length)) && t3.slice(0, this.root.length) === this.root && e2(r2, n2);
         }, filter: function(r2) {
           var n2 = [];
-          return this.forEach(function(e2, t2) {
-            r2(e2, t2) && n2.push(t2);
+          return this.forEach(function(e2, t3) {
+            r2(e2, t3) && n2.push(t3);
           }), n2;
-        }, file: function(e2, t2, r2) {
+        }, file: function(e2, t3, r2) {
           if (1 !== arguments.length)
-            return e2 = this.root + e2, s.call(this, e2, t2, r2), this;
+            return e2 = this.root + e2, s.call(this, e2, t3, r2), this;
           if (h(e2)) {
             var n2 = e2;
-            return this.filter(function(e3, t3) {
-              return !t3.dir && n2.test(e3);
+            return this.filter(function(e3, t4) {
+              return !t4.dir && n2.test(e3);
             });
           }
           var i2 = this.files[this.root + e2];
@@ -2313,71 +7225,71 @@ var require_jszip_min = __commonJS({
           if (!r2)
             return this;
           if (h(r2))
-            return this.filter(function(e3, t3) {
-              return t3.dir && r2.test(e3);
+            return this.filter(function(e3, t4) {
+              return t4.dir && r2.test(e3);
             });
-          var e2 = this.root + r2, t2 = b.call(this, e2), n2 = this.clone();
-          return n2.root = t2.name, n2;
+          var e2 = this.root + r2, t3 = b.call(this, e2), n2 = this.clone();
+          return n2.root = t3.name, n2;
         }, remove: function(r2) {
           r2 = this.root + r2;
           var e2 = this.files[r2];
           if (e2 || ("/" !== r2.slice(-1) && (r2 += "/"), e2 = this.files[r2]), e2 && !e2.dir)
             delete this.files[r2];
           else
-            for (var t2 = this.filter(function(e3, t3) {
-              return t3.name.slice(0, r2.length) === r2;
-            }), n2 = 0; n2 < t2.length; n2++)
-              delete this.files[t2[n2].name];
+            for (var t3 = this.filter(function(e3, t4) {
+              return t4.name.slice(0, r2.length) === r2;
+            }), n2 = 0; n2 < t3.length; n2++)
+              delete this.files[t3[n2].name];
           return this;
         }, generate: function() {
           throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
         }, generateInternalStream: function(e2) {
-          var t2, r2 = {};
+          var t3, r2 = {};
           try {
             if ((r2 = u.extend(e2 || {}, { streamFiles: false, compression: "STORE", compressionOptions: null, type: "", platform: "DOS", comment: null, mimeType: "application/zip", encodeFileName: i.utf8encode })).type = r2.type.toLowerCase(), r2.compression = r2.compression.toUpperCase(), "binarystring" === r2.type && (r2.type = "string"), !r2.type)
               throw new Error("No output type specified.");
             u.checkSupport(r2.type), "darwin" !== r2.platform && "freebsd" !== r2.platform && "linux" !== r2.platform && "sunos" !== r2.platform || (r2.platform = "UNIX"), "win32" === r2.platform && (r2.platform = "DOS");
             var n2 = r2.comment || this.comment || "";
-            t2 = o.generateWorker(this, r2, n2);
+            t3 = o.generateWorker(this, r2, n2);
           } catch (e3) {
-            (t2 = new l("error")).error(e3);
+            (t3 = new l("error")).error(e3);
           }
-          return new a(t2, r2.type || "string", r2.mimeType);
-        }, generateAsync: function(e2, t2) {
-          return this.generateInternalStream(e2).accumulate(t2);
-        }, generateNodeStream: function(e2, t2) {
-          return (e2 = e2 || {}).type || (e2.type = "nodebuffer"), this.generateInternalStream(e2).toNodejsStream(t2);
+          return new a(t3, r2.type || "string", r2.mimeType);
+        }, generateAsync: function(e2, t3) {
+          return this.generateInternalStream(e2).accumulate(t3);
+        }, generateNodeStream: function(e2, t3) {
+          return (e2 = e2 || {}).type || (e2.type = "nodebuffer"), this.generateInternalStream(e2).toNodejsStream(t3);
         } };
-        t.exports = n;
-      }, { "./compressedObject": 2, "./defaults": 5, "./generate": 9, "./nodejs/NodejsStreamInputAdapter": 12, "./nodejsUtils": 14, "./stream/GenericWorker": 28, "./stream/StreamHelper": 29, "./utf8": 31, "./utils": 32, "./zipObject": 35 }], 16: [function(e, t, r) {
+        t2.exports = n;
+      }, { "./compressedObject": 2, "./defaults": 5, "./generate": 9, "./nodejs/NodejsStreamInputAdapter": 12, "./nodejsUtils": 14, "./stream/GenericWorker": 28, "./stream/StreamHelper": 29, "./utf8": 31, "./utils": 32, "./zipObject": 35 }], 16: [function(e, t2, r) {
         "use strict";
-        t.exports = e("stream");
-      }, { stream: void 0 }], 17: [function(e, t, r) {
+        t2.exports = e("stream");
+      }, { stream: void 0 }], 17: [function(e, t2, r) {
         "use strict";
         var n = e("./DataReader");
         function i(e2) {
           n.call(this, e2);
-          for (var t2 = 0; t2 < this.data.length; t2++)
-            e2[t2] = 255 & e2[t2];
+          for (var t3 = 0; t3 < this.data.length; t3++)
+            e2[t3] = 255 & e2[t3];
         }
         __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.byteAt = function(e2) {
           return this.data[this.zero + e2];
         }, i.prototype.lastIndexOfSignature = function(e2) {
-          for (var t2 = e2.charCodeAt(0), r2 = e2.charCodeAt(1), n2 = e2.charCodeAt(2), i2 = e2.charCodeAt(3), s = this.length - 4; 0 <= s; --s)
-            if (this.data[s] === t2 && this.data[s + 1] === r2 && this.data[s + 2] === n2 && this.data[s + 3] === i2)
+          for (var t3 = e2.charCodeAt(0), r2 = e2.charCodeAt(1), n2 = e2.charCodeAt(2), i2 = e2.charCodeAt(3), s = this.length - 4; 0 <= s; --s)
+            if (this.data[s] === t3 && this.data[s + 1] === r2 && this.data[s + 2] === n2 && this.data[s + 3] === i2)
               return s - this.zero;
           return -1;
         }, i.prototype.readAndCheckSignature = function(e2) {
-          var t2 = e2.charCodeAt(0), r2 = e2.charCodeAt(1), n2 = e2.charCodeAt(2), i2 = e2.charCodeAt(3), s = this.readData(4);
-          return t2 === s[0] && r2 === s[1] && n2 === s[2] && i2 === s[3];
+          var t3 = e2.charCodeAt(0), r2 = e2.charCodeAt(1), n2 = e2.charCodeAt(2), i2 = e2.charCodeAt(3), s = this.readData(4);
+          return t3 === s[0] && r2 === s[1] && n2 === s[2] && i2 === s[3];
         }, i.prototype.readData = function(e2) {
           if (this.checkOffset(e2), 0 === e2)
             return [];
-          var t2 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
-          return this.index += e2, t2;
-        }, t.exports = i;
-      }, { "../utils": 32, "./DataReader": 18 }], 18: [function(e, t, r) {
+          var t3 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
+          return this.index += e2, t3;
+        }, t2.exports = i;
+      }, { "../utils": 32, "./DataReader": 18 }], 18: [function(e, t2, r) {
         "use strict";
         var n = e("../utils");
         function i(e2) {
@@ -2395,9 +7307,9 @@ var require_jszip_min = __commonJS({
           this.setIndex(this.index + e2);
         }, byteAt: function() {
         }, readInt: function(e2) {
-          var t2, r2 = 0;
-          for (this.checkOffset(e2), t2 = this.index + e2 - 1; t2 >= this.index; t2--)
-            r2 = (r2 << 8) + this.byteAt(t2);
+          var t3, r2 = 0;
+          for (this.checkOffset(e2), t3 = this.index + e2 - 1; t3 >= this.index; t3--)
+            r2 = (r2 << 8) + this.byteAt(t3);
           return this.index += e2, r2;
         }, readString: function(e2) {
           return n.transformTo("string", this.readData(e2));
@@ -2407,8 +7319,8 @@ var require_jszip_min = __commonJS({
         }, readDate: function() {
           var e2 = this.readInt(4);
           return new Date(Date.UTC(1980 + (e2 >> 25 & 127), (e2 >> 21 & 15) - 1, e2 >> 16 & 31, e2 >> 11 & 31, e2 >> 5 & 63, (31 & e2) << 1));
-        } }, t.exports = i;
-      }, { "../utils": 32 }], 19: [function(e, t, r) {
+        } }, t2.exports = i;
+      }, { "../utils": 32 }], 19: [function(e, t2, r) {
         "use strict";
         var n = e("./Uint8ArrayReader");
         function i(e2) {
@@ -2417,10 +7329,10 @@ var require_jszip_min = __commonJS({
         __name(i, "i");
         e("../utils").inherits(i, n), i.prototype.readData = function(e2) {
           this.checkOffset(e2);
-          var t2 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
-          return this.index += e2, t2;
-        }, t.exports = i;
-      }, { "../utils": 32, "./Uint8ArrayReader": 21 }], 20: [function(e, t, r) {
+          var t3 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
+          return this.index += e2, t3;
+        }, t2.exports = i;
+      }, { "../utils": 32, "./Uint8ArrayReader": 21 }], 20: [function(e, t2, r) {
         "use strict";
         var n = e("./DataReader");
         function i(e2) {
@@ -2435,10 +7347,10 @@ var require_jszip_min = __commonJS({
           return e2 === this.readData(4);
         }, i.prototype.readData = function(e2) {
           this.checkOffset(e2);
-          var t2 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
-          return this.index += e2, t2;
-        }, t.exports = i;
-      }, { "../utils": 32, "./DataReader": 18 }], 21: [function(e, t, r) {
+          var t3 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
+          return this.index += e2, t3;
+        }, t2.exports = i;
+      }, { "../utils": 32, "./DataReader": 18 }], 21: [function(e, t2, r) {
         "use strict";
         var n = e("./ArrayReader");
         function i(e2) {
@@ -2448,20 +7360,20 @@ var require_jszip_min = __commonJS({
         e("../utils").inherits(i, n), i.prototype.readData = function(e2) {
           if (this.checkOffset(e2), 0 === e2)
             return new Uint8Array(0);
-          var t2 = this.data.subarray(this.zero + this.index, this.zero + this.index + e2);
-          return this.index += e2, t2;
-        }, t.exports = i;
-      }, { "../utils": 32, "./ArrayReader": 17 }], 22: [function(e, t, r) {
+          var t3 = this.data.subarray(this.zero + this.index, this.zero + this.index + e2);
+          return this.index += e2, t3;
+        }, t2.exports = i;
+      }, { "../utils": 32, "./ArrayReader": 17 }], 22: [function(e, t2, r) {
         "use strict";
         var n = e("../utils"), i = e("../support"), s = e("./ArrayReader"), a = e("./StringReader"), o = e("./NodeBufferReader"), h = e("./Uint8ArrayReader");
-        t.exports = function(e2) {
-          var t2 = n.getTypeOf(e2);
-          return n.checkSupport(t2), "string" !== t2 || i.uint8array ? "nodebuffer" === t2 ? new o(e2) : i.uint8array ? new h(n.transformTo("uint8array", e2)) : new s(n.transformTo("array", e2)) : new a(e2);
+        t2.exports = function(e2) {
+          var t3 = n.getTypeOf(e2);
+          return n.checkSupport(t3), "string" !== t3 || i.uint8array ? "nodebuffer" === t3 ? new o(e2) : i.uint8array ? new h(n.transformTo("uint8array", e2)) : new s(n.transformTo("array", e2)) : new a(e2);
         };
-      }, { "../support": 30, "../utils": 32, "./ArrayReader": 17, "./NodeBufferReader": 19, "./StringReader": 20, "./Uint8ArrayReader": 21 }], 23: [function(e, t, r) {
+      }, { "../support": 30, "../utils": 32, "./ArrayReader": 17, "./NodeBufferReader": 19, "./StringReader": 20, "./Uint8ArrayReader": 21 }], 23: [function(e, t2, r) {
         "use strict";
         r.LOCAL_FILE_HEADER = "PK", r.CENTRAL_FILE_HEADER = "PK", r.CENTRAL_DIRECTORY_END = "PK", r.ZIP64_CENTRAL_DIRECTORY_LOCATOR = "PK\x07", r.ZIP64_CENTRAL_DIRECTORY_END = "PK", r.DATA_DESCRIPTOR = "PK\x07\b";
-      }, {}], 24: [function(e, t, r) {
+      }, {}], 24: [function(e, t2, r) {
         "use strict";
         var n = e("./GenericWorker"), i = e("../utils");
         function s(e2) {
@@ -2470,8 +7382,8 @@ var require_jszip_min = __commonJS({
         __name(s, "s");
         i.inherits(s, n), s.prototype.processChunk = function(e2) {
           this.push({ data: i.transformTo(this.destType, e2.data), meta: e2.meta });
-        }, t.exports = s;
-      }, { "../utils": 32, "./GenericWorker": 28 }], 25: [function(e, t, r) {
+        }, t2.exports = s;
+      }, { "../utils": 32, "./GenericWorker": 28 }], 25: [function(e, t2, r) {
         "use strict";
         var n = e("./GenericWorker"), i = e("../crc32");
         function s() {
@@ -2480,8 +7392,8 @@ var require_jszip_min = __commonJS({
         __name(s, "s");
         e("../utils").inherits(s, n), s.prototype.processChunk = function(e2) {
           this.streamInfo.crc32 = i(e2.data, this.streamInfo.crc32 || 0), this.push(e2);
-        }, t.exports = s;
-      }, { "../crc32": 4, "../utils": 32, "./GenericWorker": 28 }], 26: [function(e, t, r) {
+        }, t2.exports = s;
+      }, { "../crc32": 4, "../utils": 32, "./GenericWorker": 28 }], 26: [function(e, t2, r) {
         "use strict";
         var n = e("../utils"), i = e("./GenericWorker");
         function s(e2) {
@@ -2490,21 +7402,21 @@ var require_jszip_min = __commonJS({
         __name(s, "s");
         n.inherits(s, i), s.prototype.processChunk = function(e2) {
           if (e2) {
-            var t2 = this.streamInfo[this.propName] || 0;
-            this.streamInfo[this.propName] = t2 + e2.data.length;
+            var t3 = this.streamInfo[this.propName] || 0;
+            this.streamInfo[this.propName] = t3 + e2.data.length;
           }
           i.prototype.processChunk.call(this, e2);
-        }, t.exports = s;
-      }, { "../utils": 32, "./GenericWorker": 28 }], 27: [function(e, t, r) {
+        }, t2.exports = s;
+      }, { "../utils": 32, "./GenericWorker": 28 }], 27: [function(e, t2, r) {
         "use strict";
         var n = e("../utils"), i = e("./GenericWorker");
         function s(e2) {
           i.call(this, "DataWorker");
-          var t2 = this;
+          var t3 = this;
           this.dataIsReady = false, this.index = 0, this.max = 0, this.data = null, this.type = "", this._tickScheduled = false, e2.then(function(e3) {
-            t2.dataIsReady = true, t2.data = e3, t2.max = e3 && e3.length || 0, t2.type = n.getTypeOf(e3), t2.isPaused || t2._tickAndRepeat();
+            t3.dataIsReady = true, t3.data = e3, t3.max = e3 && e3.length || 0, t3.type = n.getTypeOf(e3), t3.isPaused || t3._tickAndRepeat();
           }, function(e3) {
-            t2.error(e3);
+            t3.error(e3);
           });
         }
         __name(s, "s");
@@ -2517,23 +7429,23 @@ var require_jszip_min = __commonJS({
         }, s.prototype._tick = function() {
           if (this.isPaused || this.isFinished)
             return false;
-          var e2 = null, t2 = Math.min(this.max, this.index + 16384);
+          var e2 = null, t3 = Math.min(this.max, this.index + 16384);
           if (this.index >= this.max)
             return this.end();
           switch (this.type) {
             case "string":
-              e2 = this.data.substring(this.index, t2);
+              e2 = this.data.substring(this.index, t3);
               break;
             case "uint8array":
-              e2 = this.data.subarray(this.index, t2);
+              e2 = this.data.subarray(this.index, t3);
               break;
             case "array":
             case "nodebuffer":
-              e2 = this.data.slice(this.index, t2);
+              e2 = this.data.slice(this.index, t3);
           }
-          return this.index = t2, this.push({ data: e2, meta: { percent: this.max ? this.index / this.max * 100 : 0 } });
-        }, t.exports = s;
-      }, { "../utils": 32, "./GenericWorker": 28 }], 28: [function(e, t, r) {
+          return this.index = t3, this.push({ data: e2, meta: { percent: this.max ? this.index / this.max * 100 : 0 } });
+        }, t2.exports = s;
+      }, { "../utils": 32, "./GenericWorker": 28 }], 28: [function(e, t2, r) {
         "use strict";
         function n(e2) {
           this.name = e2 || "default", this.streamInfo = {}, this.generatedError = null, this.extraStreamInfo = {}, this.isPaused = true, this.isFinished = false, this.isLocked = false, this._listeners = { data: [], end: [], error: [] }, this.previous = null;
@@ -2553,27 +7465,27 @@ var require_jszip_min = __commonJS({
           return true;
         }, error: function(e2) {
           return !this.isFinished && (this.isPaused ? this.generatedError = e2 : (this.isFinished = true, this.emit("error", e2), this.previous && this.previous.error(e2), this.cleanUp()), true);
-        }, on: function(e2, t2) {
-          return this._listeners[e2].push(t2), this;
+        }, on: function(e2, t3) {
+          return this._listeners[e2].push(t3), this;
         }, cleanUp: function() {
           this.streamInfo = this.generatedError = this.extraStreamInfo = null, this._listeners = [];
-        }, emit: function(e2, t2) {
+        }, emit: function(e2, t3) {
           if (this._listeners[e2])
             for (var r2 = 0; r2 < this._listeners[e2].length; r2++)
-              this._listeners[e2][r2].call(this, t2);
+              this._listeners[e2][r2].call(this, t3);
         }, pipe: function(e2) {
           return e2.registerPrevious(this);
         }, registerPrevious: function(e2) {
           if (this.isLocked)
             throw new Error("The stream '" + this + "' has already been used.");
           this.streamInfo = e2.streamInfo, this.mergeStreamInfo(), this.previous = e2;
-          var t2 = this;
+          var t3 = this;
           return e2.on("data", function(e3) {
-            t2.processChunk(e3);
+            t3.processChunk(e3);
           }), e2.on("end", function() {
-            t2.end();
+            t3.end();
           }), e2.on("error", function(e3) {
-            t2.error(e3);
+            t3.error(e3);
           }), this;
         }, pause: function() {
           return !this.isPaused && !this.isFinished && (this.isPaused = true, this.previous && this.previous.pause(), true);
@@ -2585,8 +7497,8 @@ var require_jszip_min = __commonJS({
         }, flush: function() {
         }, processChunk: function(e2) {
           this.push(e2);
-        }, withStreamInfo: function(e2, t2) {
-          return this.extraStreamInfo[e2] = t2, this.mergeStreamInfo(), this;
+        }, withStreamInfo: function(e2, t3) {
+          return this.extraStreamInfo[e2] = t3, this.mergeStreamInfo(), this;
         }, mergeStreamInfo: function() {
           for (var e2 in this.extraStreamInfo)
             Object.prototype.hasOwnProperty.call(this.extraStreamInfo, e2) && (this.streamInfo[e2] = this.extraStreamInfo[e2]);
@@ -2597,8 +7509,8 @@ var require_jszip_min = __commonJS({
         }, toString: function() {
           var e2 = "Worker " + this.name;
           return this.previous ? this.previous + " -> " + e2 : e2;
-        } }, t.exports = n;
-      }, {}], 29: [function(e, t, r) {
+        } }, t2.exports = n;
+      }, {}], 29: [function(e, t2, r) {
         "use strict";
         var h = e("../utils"), i = e("./ConvertWorker"), s = e("./GenericWorker"), u = e("../base64"), n = e("../support"), a = e("../external"), o = null;
         if (n.nodestream)
@@ -2607,43 +7519,43 @@ var require_jszip_min = __commonJS({
           } catch (e2) {
           }
         function l(e2, o2) {
-          return new a.Promise(function(t2, r2) {
+          return new a.Promise(function(t3, r2) {
             var n2 = [], i2 = e2._internalType, s2 = e2._outputType, a2 = e2._mimeType;
-            e2.on("data", function(e3, t3) {
-              n2.push(e3), o2 && o2(t3);
+            e2.on("data", function(e3, t4) {
+              n2.push(e3), o2 && o2(t4);
             }).on("error", function(e3) {
               n2 = [], r2(e3);
             }).on("end", function() {
               try {
-                var e3 = function(e4, t3, r3) {
+                var e3 = function(e4, t4, r3) {
                   switch (e4) {
                     case "blob":
-                      return h.newBlob(h.transformTo("arraybuffer", t3), r3);
+                      return h.newBlob(h.transformTo("arraybuffer", t4), r3);
                     case "base64":
-                      return u.encode(t3);
+                      return u.encode(t4);
                     default:
-                      return h.transformTo(e4, t3);
+                      return h.transformTo(e4, t4);
                   }
-                }(s2, function(e4, t3) {
+                }(s2, function(e4, t4) {
                   var r3, n3 = 0, i3 = null, s3 = 0;
-                  for (r3 = 0; r3 < t3.length; r3++)
-                    s3 += t3[r3].length;
+                  for (r3 = 0; r3 < t4.length; r3++)
+                    s3 += t4[r3].length;
                   switch (e4) {
                     case "string":
-                      return t3.join("");
+                      return t4.join("");
                     case "array":
-                      return Array.prototype.concat.apply([], t3);
+                      return Array.prototype.concat.apply([], t4);
                     case "uint8array":
-                      for (i3 = new Uint8Array(s3), r3 = 0; r3 < t3.length; r3++)
-                        i3.set(t3[r3], n3), n3 += t3[r3].length;
+                      for (i3 = new Uint8Array(s3), r3 = 0; r3 < t4.length; r3++)
+                        i3.set(t4[r3], n3), n3 += t4[r3].length;
                       return i3;
                     case "nodebuffer":
-                      return Buffer.concat(t3);
+                      return Buffer.concat(t4);
                     default:
                       throw new Error("concat : unsupported type '" + e4 + "'");
                   }
                 }(i2, n2), a2);
-                t2(e3);
+                t3(e3);
               } catch (e4) {
                 r2(e4);
               }
@@ -2652,9 +7564,9 @@ var require_jszip_min = __commonJS({
           });
         }
         __name(l, "l");
-        function f(e2, t2, r2) {
-          var n2 = t2;
-          switch (t2) {
+        function f(e2, t3, r2) {
+          var n2 = t3;
+          switch (t3) {
             case "blob":
             case "arraybuffer":
               n2 = "uint8array";
@@ -2663,7 +7575,7 @@ var require_jszip_min = __commonJS({
               n2 = "string";
           }
           try {
-            this._internalType = n2, this._outputType = t2, this._mimeType = r2, h.checkSupport(n2), this._worker = e2.pipe(new i(n2)), e2.lock();
+            this._internalType = n2, this._outputType = t3, this._mimeType = r2, h.checkSupport(n2), this._worker = e2.pipe(new i(n2)), e2.lock();
           } catch (e3) {
             this._worker = new s("error"), this._worker.error(e3);
           }
@@ -2671,12 +7583,12 @@ var require_jszip_min = __commonJS({
         __name(f, "f");
         f.prototype = { accumulate: function(e2) {
           return l(this, e2);
-        }, on: function(e2, t2) {
+        }, on: function(e2, t3) {
           var r2 = this;
           return "data" === e2 ? this._worker.on(e2, function(e3) {
-            t2.call(r2, e3.data, e3.meta);
+            t3.call(r2, e3.data, e3.meta);
           }) : this._worker.on(e2, function() {
-            h.delay(t2, arguments, r2);
+            h.delay(t3, arguments, r2);
           }), this;
         }, resume: function() {
           return h.delay(this._worker.resume, [], this._worker), this;
@@ -2686,8 +7598,8 @@ var require_jszip_min = __commonJS({
           if (h.checkSupport("nodestream"), "nodebuffer" !== this._outputType)
             throw new Error(this._outputType + " is not supported by this method");
           return new o(this, { objectMode: "nodebuffer" !== this._outputType }, e2);
-        } }, t.exports = f;
-      }, { "../base64": 1, "../external": 6, "../nodejs/NodejsStreamOutputAdapter": 13, "../support": 30, "../utils": 32, "./ConvertWorker": 24, "./GenericWorker": 28 }], 30: [function(e, t, r) {
+        } }, t2.exports = f;
+      }, { "../base64": 1, "../external": 6, "../nodejs/NodejsStreamOutputAdapter": 13, "../support": 30, "../utils": 32, "./ConvertWorker": 24, "./GenericWorker": 28 }], 30: [function(e, t2, r) {
         "use strict";
         if (r.base64 = true, r.array = true, r.string = true, r.arraybuffer = "undefined" != typeof ArrayBuffer && "undefined" != typeof Uint8Array, r.nodebuffer = "undefined" != typeof Buffer, r.uint8array = "undefined" != typeof Uint8Array, "undefined" == typeof ArrayBuffer)
           r.blob = false;
@@ -2709,7 +7621,7 @@ var require_jszip_min = __commonJS({
         } catch (e2) {
           r.nodestream = false;
         }
-      }, { "readable-stream": 16 }], 31: [function(e, t, s) {
+      }, { "readable-stream": 16 }], 31: [function(e, t2, s) {
         "use strict";
         for (var o = e("./utils"), h = e("./support"), r = e("./nodejsUtils"), n = e("./stream/GenericWorker"), u = new Array(256), i = 0; i < 256; i++)
           u[i] = 252 <= i ? 6 : 248 <= i ? 5 : 240 <= i ? 4 : 224 <= i ? 3 : 192 <= i ? 2 : 1;
@@ -2724,87 +7636,87 @@ var require_jszip_min = __commonJS({
         __name(l, "l");
         s.utf8encode = function(e2) {
           return h.nodebuffer ? r.newBufferFrom(e2, "utf-8") : function(e3) {
-            var t2, r2, n2, i2, s2, a2 = e3.length, o2 = 0;
+            var t3, r2, n2, i2, s2, a2 = e3.length, o2 = 0;
             for (i2 = 0; i2 < a2; i2++)
               55296 == (64512 & (r2 = e3.charCodeAt(i2))) && i2 + 1 < a2 && 56320 == (64512 & (n2 = e3.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), o2 += r2 < 128 ? 1 : r2 < 2048 ? 2 : r2 < 65536 ? 3 : 4;
-            for (t2 = h.uint8array ? new Uint8Array(o2) : new Array(o2), i2 = s2 = 0; s2 < o2; i2++)
-              55296 == (64512 & (r2 = e3.charCodeAt(i2))) && i2 + 1 < a2 && 56320 == (64512 & (n2 = e3.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), r2 < 128 ? t2[s2++] = r2 : (r2 < 2048 ? t2[s2++] = 192 | r2 >>> 6 : (r2 < 65536 ? t2[s2++] = 224 | r2 >>> 12 : (t2[s2++] = 240 | r2 >>> 18, t2[s2++] = 128 | r2 >>> 12 & 63), t2[s2++] = 128 | r2 >>> 6 & 63), t2[s2++] = 128 | 63 & r2);
-            return t2;
+            for (t3 = h.uint8array ? new Uint8Array(o2) : new Array(o2), i2 = s2 = 0; s2 < o2; i2++)
+              55296 == (64512 & (r2 = e3.charCodeAt(i2))) && i2 + 1 < a2 && 56320 == (64512 & (n2 = e3.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), r2 < 128 ? t3[s2++] = r2 : (r2 < 2048 ? t3[s2++] = 192 | r2 >>> 6 : (r2 < 65536 ? t3[s2++] = 224 | r2 >>> 12 : (t3[s2++] = 240 | r2 >>> 18, t3[s2++] = 128 | r2 >>> 12 & 63), t3[s2++] = 128 | r2 >>> 6 & 63), t3[s2++] = 128 | 63 & r2);
+            return t3;
           }(e2);
         }, s.utf8decode = function(e2) {
           return h.nodebuffer ? o.transformTo("nodebuffer", e2).toString("utf-8") : function(e3) {
-            var t2, r2, n2, i2, s2 = e3.length, a2 = new Array(2 * s2);
-            for (t2 = r2 = 0; t2 < s2; )
-              if ((n2 = e3[t2++]) < 128)
+            var t3, r2, n2, i2, s2 = e3.length, a2 = new Array(2 * s2);
+            for (t3 = r2 = 0; t3 < s2; )
+              if ((n2 = e3[t3++]) < 128)
                 a2[r2++] = n2;
               else if (4 < (i2 = u[n2]))
-                a2[r2++] = 65533, t2 += i2 - 1;
+                a2[r2++] = 65533, t3 += i2 - 1;
               else {
-                for (n2 &= 2 === i2 ? 31 : 3 === i2 ? 15 : 7; 1 < i2 && t2 < s2; )
-                  n2 = n2 << 6 | 63 & e3[t2++], i2--;
+                for (n2 &= 2 === i2 ? 31 : 3 === i2 ? 15 : 7; 1 < i2 && t3 < s2; )
+                  n2 = n2 << 6 | 63 & e3[t3++], i2--;
                 1 < i2 ? a2[r2++] = 65533 : n2 < 65536 ? a2[r2++] = n2 : (n2 -= 65536, a2[r2++] = 55296 | n2 >> 10 & 1023, a2[r2++] = 56320 | 1023 & n2);
               }
             return a2.length !== r2 && (a2.subarray ? a2 = a2.subarray(0, r2) : a2.length = r2), o.applyFromCharCode(a2);
           }(e2 = o.transformTo(h.uint8array ? "uint8array" : "array", e2));
         }, o.inherits(a, n), a.prototype.processChunk = function(e2) {
-          var t2 = o.transformTo(h.uint8array ? "uint8array" : "array", e2.data);
+          var t3 = o.transformTo(h.uint8array ? "uint8array" : "array", e2.data);
           if (this.leftOver && this.leftOver.length) {
             if (h.uint8array) {
-              var r2 = t2;
-              (t2 = new Uint8Array(r2.length + this.leftOver.length)).set(this.leftOver, 0), t2.set(r2, this.leftOver.length);
+              var r2 = t3;
+              (t3 = new Uint8Array(r2.length + this.leftOver.length)).set(this.leftOver, 0), t3.set(r2, this.leftOver.length);
             } else
-              t2 = this.leftOver.concat(t2);
+              t3 = this.leftOver.concat(t3);
             this.leftOver = null;
           }
-          var n2 = function(e3, t3) {
+          var n2 = function(e3, t4) {
             var r3;
-            for ((t3 = t3 || e3.length) > e3.length && (t3 = e3.length), r3 = t3 - 1; 0 <= r3 && 128 == (192 & e3[r3]); )
+            for ((t4 = t4 || e3.length) > e3.length && (t4 = e3.length), r3 = t4 - 1; 0 <= r3 && 128 == (192 & e3[r3]); )
               r3--;
-            return r3 < 0 ? t3 : 0 === r3 ? t3 : r3 + u[e3[r3]] > t3 ? r3 : t3;
-          }(t2), i2 = t2;
-          n2 !== t2.length && (h.uint8array ? (i2 = t2.subarray(0, n2), this.leftOver = t2.subarray(n2, t2.length)) : (i2 = t2.slice(0, n2), this.leftOver = t2.slice(n2, t2.length))), this.push({ data: s.utf8decode(i2), meta: e2.meta });
+            return r3 < 0 ? t4 : 0 === r3 ? t4 : r3 + u[e3[r3]] > t4 ? r3 : t4;
+          }(t3), i2 = t3;
+          n2 !== t3.length && (h.uint8array ? (i2 = t3.subarray(0, n2), this.leftOver = t3.subarray(n2, t3.length)) : (i2 = t3.slice(0, n2), this.leftOver = t3.slice(n2, t3.length))), this.push({ data: s.utf8decode(i2), meta: e2.meta });
         }, a.prototype.flush = function() {
           this.leftOver && this.leftOver.length && (this.push({ data: s.utf8decode(this.leftOver), meta: {} }), this.leftOver = null);
         }, s.Utf8DecodeWorker = a, o.inherits(l, n), l.prototype.processChunk = function(e2) {
           this.push({ data: s.utf8encode(e2.data), meta: e2.meta });
         }, s.Utf8EncodeWorker = l;
-      }, { "./nodejsUtils": 14, "./stream/GenericWorker": 28, "./support": 30, "./utils": 32 }], 32: [function(e, t, a) {
+      }, { "./nodejsUtils": 14, "./stream/GenericWorker": 28, "./support": 30, "./utils": 32 }], 32: [function(e, t2, a) {
         "use strict";
         var o = e("./support"), h = e("./base64"), r = e("./nodejsUtils"), u = e("./external");
         function n(e2) {
           return e2;
         }
         __name(n, "n");
-        function l(e2, t2) {
+        function l(e2, t3) {
           for (var r2 = 0; r2 < e2.length; ++r2)
-            t2[r2] = 255 & e2.charCodeAt(r2);
-          return t2;
+            t3[r2] = 255 & e2.charCodeAt(r2);
+          return t3;
         }
         __name(l, "l");
-        e("setimmediate"), a.newBlob = function(t2, r2) {
+        e("setimmediate"), a.newBlob = function(t3, r2) {
           a.checkSupport("blob");
           try {
-            return new Blob([t2], { type: r2 });
+            return new Blob([t3], { type: r2 });
           } catch (e2) {
             try {
               var n2 = new (self.BlobBuilder || self.WebKitBlobBuilder || self.MozBlobBuilder || self.MSBlobBuilder)();
-              return n2.append(t2), n2.getBlob(r2);
+              return n2.append(t3), n2.getBlob(r2);
             } catch (e3) {
               throw new Error("Bug : can't construct the Blob.");
             }
           }
         };
-        var i = { stringifyByChunk: function(e2, t2, r2) {
+        var i = { stringifyByChunk: function(e2, t3, r2) {
           var n2 = [], i2 = 0, s2 = e2.length;
           if (s2 <= r2)
             return String.fromCharCode.apply(null, e2);
           for (; i2 < s2; )
-            "array" === t2 || "nodebuffer" === t2 ? n2.push(String.fromCharCode.apply(null, e2.slice(i2, Math.min(i2 + r2, s2)))) : n2.push(String.fromCharCode.apply(null, e2.subarray(i2, Math.min(i2 + r2, s2)))), i2 += r2;
+            "array" === t3 || "nodebuffer" === t3 ? n2.push(String.fromCharCode.apply(null, e2.slice(i2, Math.min(i2 + r2, s2)))) : n2.push(String.fromCharCode.apply(null, e2.subarray(i2, Math.min(i2 + r2, s2)))), i2 += r2;
           return n2.join("");
         }, stringifyByChar: function(e2) {
-          for (var t2 = "", r2 = 0; r2 < e2.length; r2++)
-            t2 += String.fromCharCode(e2[r2]);
-          return t2;
+          for (var t3 = "", r2 = 0; r2 < e2.length; r2++)
+            t3 += String.fromCharCode(e2[r2]);
+          return t3;
         }, applyCanBeUsed: { uint8array: function() {
           try {
             return o.uint8array && 1 === String.fromCharCode.apply(null, new Uint8Array(1)).length;
@@ -2819,21 +7731,21 @@ var require_jszip_min = __commonJS({
           }
         }() } };
         function s(e2) {
-          var t2 = 65536, r2 = a.getTypeOf(e2), n2 = true;
+          var t3 = 65536, r2 = a.getTypeOf(e2), n2 = true;
           if ("uint8array" === r2 ? n2 = i.applyCanBeUsed.uint8array : "nodebuffer" === r2 && (n2 = i.applyCanBeUsed.nodebuffer), n2)
-            for (; 1 < t2; )
+            for (; 1 < t3; )
               try {
-                return i.stringifyByChunk(e2, r2, t2);
+                return i.stringifyByChunk(e2, r2, t3);
               } catch (e3) {
-                t2 = Math.floor(t2 / 2);
+                t3 = Math.floor(t3 / 2);
               }
           return i.stringifyByChar(e2);
         }
         __name(s, "s");
-        function f(e2, t2) {
+        function f(e2, t3) {
           for (var r2 = 0; r2 < e2.length; r2++)
-            t2[r2] = e2[r2];
-          return t2;
+            t3[r2] = e2[r2];
+          return t3;
         }
         __name(f, "f");
         a.applyFromCharCode = s;
@@ -2872,16 +7784,16 @@ var require_jszip_min = __commonJS({
           return c.nodebuffer.uint8array(e2).buffer;
         }, uint8array: function(e2) {
           return f(e2, new Uint8Array(e2.length));
-        }, nodebuffer: n }, a.transformTo = function(e2, t2) {
-          if (t2 = t2 || "", !e2)
-            return t2;
+        }, nodebuffer: n }, a.transformTo = function(e2, t3) {
+          if (t3 = t3 || "", !e2)
+            return t3;
           a.checkSupport(e2);
-          var r2 = a.getTypeOf(t2);
-          return c[r2][e2](t2);
+          var r2 = a.getTypeOf(t3);
+          return c[r2][e2](t3);
         }, a.resolve = function(e2) {
-          for (var t2 = e2.split("/"), r2 = [], n2 = 0; n2 < t2.length; n2++) {
-            var i2 = t2[n2];
-            "." === i2 || "" === i2 && 0 !== n2 && n2 !== t2.length - 1 || (".." === i2 ? r2.pop() : r2.push(i2));
+          for (var t3 = e2.split("/"), r2 = [], n2 = 0; n2 < t3.length; n2++) {
+            var i2 = t3[n2];
+            "." === i2 || "" === i2 && 0 !== n2 && n2 !== t3.length - 1 || (".." === i2 ? r2.pop() : r2.push(i2));
           }
           return r2.join("/");
         }, a.getTypeOf = function(e2) {
@@ -2890,43 +7802,43 @@ var require_jszip_min = __commonJS({
           if (!o[e2.toLowerCase()])
             throw new Error(e2 + " is not supported by this platform");
         }, a.MAX_VALUE_16BITS = 65535, a.MAX_VALUE_32BITS = -1, a.pretty = function(e2) {
-          var t2, r2, n2 = "";
+          var t3, r2, n2 = "";
           for (r2 = 0; r2 < (e2 || "").length; r2++)
-            n2 += "\\x" + ((t2 = e2.charCodeAt(r2)) < 16 ? "0" : "") + t2.toString(16).toUpperCase();
+            n2 += "\\x" + ((t3 = e2.charCodeAt(r2)) < 16 ? "0" : "") + t3.toString(16).toUpperCase();
           return n2;
-        }, a.delay = function(e2, t2, r2) {
+        }, a.delay = function(e2, t3, r2) {
           setImmediate(function() {
-            e2.apply(r2 || null, t2 || []);
+            e2.apply(r2 || null, t3 || []);
           });
-        }, a.inherits = function(e2, t2) {
+        }, a.inherits = function(e2, t3) {
           function r2() {
           }
           __name(r2, "r");
-          r2.prototype = t2.prototype, e2.prototype = new r2();
+          r2.prototype = t3.prototype, e2.prototype = new r2();
         }, a.extend = function() {
-          var e2, t2, r2 = {};
+          var e2, t3, r2 = {};
           for (e2 = 0; e2 < arguments.length; e2++)
-            for (t2 in arguments[e2])
-              Object.prototype.hasOwnProperty.call(arguments[e2], t2) && void 0 === r2[t2] && (r2[t2] = arguments[e2][t2]);
+            for (t3 in arguments[e2])
+              Object.prototype.hasOwnProperty.call(arguments[e2], t3) && void 0 === r2[t3] && (r2[t3] = arguments[e2][t3]);
           return r2;
         }, a.prepareContent = function(r2, e2, n2, i2, s2) {
           return u.Promise.resolve(e2).then(function(n3) {
-            return o.blob && (n3 instanceof Blob || -1 !== ["[object File]", "[object Blob]"].indexOf(Object.prototype.toString.call(n3))) && "undefined" != typeof FileReader ? new u.Promise(function(t2, r3) {
+            return o.blob && (n3 instanceof Blob || -1 !== ["[object File]", "[object Blob]"].indexOf(Object.prototype.toString.call(n3))) && "undefined" != typeof FileReader ? new u.Promise(function(t3, r3) {
               var e3 = new FileReader();
               e3.onload = function(e4) {
-                t2(e4.target.result);
+                t3(e4.target.result);
               }, e3.onerror = function(e4) {
                 r3(e4.target.error);
               }, e3.readAsArrayBuffer(n3);
             }) : n3;
           }).then(function(e3) {
-            var t2 = a.getTypeOf(e3);
-            return t2 ? ("arraybuffer" === t2 ? e3 = a.transformTo("uint8array", e3) : "string" === t2 && (s2 ? e3 = h.decode(e3) : n2 && true !== i2 && (e3 = function(e4) {
+            var t3 = a.getTypeOf(e3);
+            return t3 ? ("arraybuffer" === t3 ? e3 = a.transformTo("uint8array", e3) : "string" === t3 && (s2 ? e3 = h.decode(e3) : n2 && true !== i2 && (e3 = function(e4) {
               return l(e4, o.uint8array ? new Uint8Array(e4.length) : new Array(e4.length));
             }(e3))), e3) : u.Promise.reject(new Error("Can't read the data of '" + r2 + "'. Is it in a supported JavaScript type (String, Blob, ArrayBuffer, etc) ?"));
           });
         };
-      }, { "./base64": 1, "./external": 6, "./nodejsUtils": 14, "./support": 30, setimmediate: 54 }], 33: [function(e, t, r) {
+      }, { "./base64": 1, "./external": 6, "./nodejsUtils": 14, "./support": 30, setimmediate: 54 }], 33: [function(e, t2, r) {
         "use strict";
         var n = e("./reader/readerFor"), i = e("./utils"), s = e("./signature"), a = e("./zipEntry"), o = e("./support");
         function h(e2) {
@@ -2936,29 +7848,29 @@ var require_jszip_min = __commonJS({
         h.prototype = { checkSignature: function(e2) {
           if (!this.reader.readAndCheckSignature(e2)) {
             this.reader.index -= 4;
-            var t2 = this.reader.readString(4);
-            throw new Error("Corrupted zip or bug: unexpected signature (" + i.pretty(t2) + ", expected " + i.pretty(e2) + ")");
+            var t3 = this.reader.readString(4);
+            throw new Error("Corrupted zip or bug: unexpected signature (" + i.pretty(t3) + ", expected " + i.pretty(e2) + ")");
           }
-        }, isSignature: function(e2, t2) {
+        }, isSignature: function(e2, t3) {
           var r2 = this.reader.index;
           this.reader.setIndex(e2);
-          var n2 = this.reader.readString(4) === t2;
+          var n2 = this.reader.readString(4) === t3;
           return this.reader.setIndex(r2), n2;
         }, readBlockEndOfCentral: function() {
           this.diskNumber = this.reader.readInt(2), this.diskWithCentralDirStart = this.reader.readInt(2), this.centralDirRecordsOnThisDisk = this.reader.readInt(2), this.centralDirRecords = this.reader.readInt(2), this.centralDirSize = this.reader.readInt(4), this.centralDirOffset = this.reader.readInt(4), this.zipCommentLength = this.reader.readInt(2);
-          var e2 = this.reader.readData(this.zipCommentLength), t2 = o.uint8array ? "uint8array" : "array", r2 = i.transformTo(t2, e2);
+          var e2 = this.reader.readData(this.zipCommentLength), t3 = o.uint8array ? "uint8array" : "array", r2 = i.transformTo(t3, e2);
           this.zipComment = this.loadOptions.decodeFileName(r2);
         }, readBlockZip64EndOfCentral: function() {
           this.zip64EndOfCentralSize = this.reader.readInt(8), this.reader.skip(4), this.diskNumber = this.reader.readInt(4), this.diskWithCentralDirStart = this.reader.readInt(4), this.centralDirRecordsOnThisDisk = this.reader.readInt(8), this.centralDirRecords = this.reader.readInt(8), this.centralDirSize = this.reader.readInt(8), this.centralDirOffset = this.reader.readInt(8), this.zip64ExtensibleData = {};
-          for (var e2, t2, r2, n2 = this.zip64EndOfCentralSize - 44; 0 < n2; )
-            e2 = this.reader.readInt(2), t2 = this.reader.readInt(4), r2 = this.reader.readData(t2), this.zip64ExtensibleData[e2] = { id: e2, length: t2, value: r2 };
+          for (var e2, t3, r2, n2 = this.zip64EndOfCentralSize - 44; 0 < n2; )
+            e2 = this.reader.readInt(2), t3 = this.reader.readInt(4), r2 = this.reader.readData(t3), this.zip64ExtensibleData[e2] = { id: e2, length: t3, value: r2 };
         }, readBlockZip64EndOfCentralLocator: function() {
           if (this.diskWithZip64CentralDirStart = this.reader.readInt(4), this.relativeOffsetEndOfZip64CentralDir = this.reader.readInt(8), this.disksCount = this.reader.readInt(4), 1 < this.disksCount)
             throw new Error("Multi-volumes zip are not supported");
         }, readLocalFiles: function() {
-          var e2, t2;
+          var e2, t3;
           for (e2 = 0; e2 < this.files.length; e2++)
-            t2 = this.files[e2], this.reader.setIndex(t2.localHeaderOffset), this.checkSignature(s.LOCAL_FILE_HEADER), t2.readLocalPart(this.reader), t2.handleUTF8(), t2.processAttributes();
+            t3 = this.files[e2], this.reader.setIndex(t3.localHeaderOffset), this.checkSignature(s.LOCAL_FILE_HEADER), t3.readLocalPart(this.reader), t3.handleUTF8(), t3.processAttributes();
         }, readCentralDir: function() {
           var e2;
           for (this.reader.setIndex(this.centralDirOffset); this.reader.readAndCheckSignature(s.CENTRAL_FILE_HEADER); )
@@ -2970,7 +7882,7 @@ var require_jszip_min = __commonJS({
           if (e2 < 0)
             throw !this.isSignature(0, s.LOCAL_FILE_HEADER) ? new Error("Can't find end of central directory : is this a zip file ? If it is, see https://stuk.github.io/jszip/documentation/howto/read_zip.html") : new Error("Corrupted zip: can't find end of central directory");
           this.reader.setIndex(e2);
-          var t2 = e2;
+          var t3 = e2;
           if (this.checkSignature(s.CENTRAL_DIRECTORY_END), this.readBlockEndOfCentral(), this.diskNumber === i.MAX_VALUE_16BITS || this.diskWithCentralDirStart === i.MAX_VALUE_16BITS || this.centralDirRecordsOnThisDisk === i.MAX_VALUE_16BITS || this.centralDirRecords === i.MAX_VALUE_16BITS || this.centralDirSize === i.MAX_VALUE_32BITS || this.centralDirOffset === i.MAX_VALUE_32BITS) {
             if (this.zip64 = true, (e2 = this.reader.lastIndexOfSignature(s.ZIP64_CENTRAL_DIRECTORY_LOCATOR)) < 0)
               throw new Error("Corrupted zip: can't find the ZIP64 end of central directory locator");
@@ -2980,21 +7892,21 @@ var require_jszip_min = __commonJS({
           }
           var r2 = this.centralDirOffset + this.centralDirSize;
           this.zip64 && (r2 += 20, r2 += 12 + this.zip64EndOfCentralSize);
-          var n2 = t2 - r2;
+          var n2 = t3 - r2;
           if (0 < n2)
-            this.isSignature(t2, s.CENTRAL_FILE_HEADER) || (this.reader.zero = n2);
+            this.isSignature(t3, s.CENTRAL_FILE_HEADER) || (this.reader.zero = n2);
           else if (n2 < 0)
             throw new Error("Corrupted zip: missing " + Math.abs(n2) + " bytes.");
         }, prepareReader: function(e2) {
           this.reader = n(e2);
         }, load: function(e2) {
           this.prepareReader(e2), this.readEndOfCentral(), this.readCentralDir(), this.readLocalFiles();
-        } }, t.exports = h;
-      }, { "./reader/readerFor": 22, "./signature": 23, "./support": 30, "./utils": 32, "./zipEntry": 34 }], 34: [function(e, t, r) {
+        } }, t2.exports = h;
+      }, { "./reader/readerFor": 22, "./signature": 23, "./support": 30, "./utils": 32, "./zipEntry": 34 }], 34: [function(e, t2, r) {
         "use strict";
         var n = e("./reader/readerFor"), s = e("./utils"), i = e("./compressedObject"), a = e("./crc32"), o = e("./utf8"), h = e("./compressions"), u = e("./support");
-        function l(e2, t2) {
-          this.options = e2, this.loadOptions = t2;
+        function l(e2, t3) {
+          this.options = e2, this.loadOptions = t3;
         }
         __name(l, "l");
         l.prototype = { isEncrypted: function() {
@@ -3002,23 +7914,23 @@ var require_jszip_min = __commonJS({
         }, useUTF8: function() {
           return 2048 == (2048 & this.bitFlag);
         }, readLocalPart: function(e2) {
-          var t2, r2;
+          var t3, r2;
           if (e2.skip(22), this.fileNameLength = e2.readInt(2), r2 = e2.readInt(2), this.fileName = e2.readData(this.fileNameLength), e2.skip(r2), -1 === this.compressedSize || -1 === this.uncompressedSize)
             throw new Error("Bug or corrupted zip : didn't get enough information from the central directory (compressedSize === -1 || uncompressedSize === -1)");
-          if (null === (t2 = function(e3) {
-            for (var t3 in h)
-              if (Object.prototype.hasOwnProperty.call(h, t3) && h[t3].magic === e3)
-                return h[t3];
+          if (null === (t3 = function(e3) {
+            for (var t4 in h)
+              if (Object.prototype.hasOwnProperty.call(h, t4) && h[t4].magic === e3)
+                return h[t4];
             return null;
           }(this.compressionMethod)))
             throw new Error("Corrupted zip : compression " + s.pretty(this.compressionMethod) + " unknown (inner file : " + s.transformTo("string", this.fileName) + ")");
-          this.decompressed = new i(this.compressedSize, this.uncompressedSize, this.crc32, t2, e2.readData(this.compressedSize));
+          this.decompressed = new i(this.compressedSize, this.uncompressedSize, this.crc32, t3, e2.readData(this.compressedSize));
         }, readCentralPart: function(e2) {
           this.versionMadeBy = e2.readInt(2), e2.skip(2), this.bitFlag = e2.readInt(2), this.compressionMethod = e2.readString(2), this.date = e2.readDate(), this.crc32 = e2.readInt(4), this.compressedSize = e2.readInt(4), this.uncompressedSize = e2.readInt(4);
-          var t2 = e2.readInt(2);
+          var t3 = e2.readInt(2);
           if (this.extraFieldsLength = e2.readInt(2), this.fileCommentLength = e2.readInt(2), this.diskNumberStart = e2.readInt(2), this.internalFileAttributes = e2.readInt(2), this.externalFileAttributes = e2.readInt(4), this.localHeaderOffset = e2.readInt(4), this.isEncrypted())
             throw new Error("Encrypted zip are not supported");
-          e2.skip(t2), this.readExtraFields(e2), this.parseZIP64ExtraField(e2), this.fileComment = e2.readData(this.fileCommentLength);
+          e2.skip(t3), this.readExtraFields(e2), this.parseZIP64ExtraField(e2), this.fileComment = e2.readData(this.fileCommentLength);
         }, processAttributes: function() {
           this.unixPermissions = null, this.dosPermissions = null;
           var e2 = this.versionMadeBy >> 8;
@@ -3029,18 +7941,18 @@ var require_jszip_min = __commonJS({
             this.uncompressedSize === s.MAX_VALUE_32BITS && (this.uncompressedSize = e2.readInt(8)), this.compressedSize === s.MAX_VALUE_32BITS && (this.compressedSize = e2.readInt(8)), this.localHeaderOffset === s.MAX_VALUE_32BITS && (this.localHeaderOffset = e2.readInt(8)), this.diskNumberStart === s.MAX_VALUE_32BITS && (this.diskNumberStart = e2.readInt(4));
           }
         }, readExtraFields: function(e2) {
-          var t2, r2, n2, i2 = e2.index + this.extraFieldsLength;
+          var t3, r2, n2, i2 = e2.index + this.extraFieldsLength;
           for (this.extraFields || (this.extraFields = {}); e2.index + 4 < i2; )
-            t2 = e2.readInt(2), r2 = e2.readInt(2), n2 = e2.readData(r2), this.extraFields[t2] = { id: t2, length: r2, value: n2 };
+            t3 = e2.readInt(2), r2 = e2.readInt(2), n2 = e2.readData(r2), this.extraFields[t3] = { id: t3, length: r2, value: n2 };
           e2.setIndex(i2);
         }, handleUTF8: function() {
           var e2 = u.uint8array ? "uint8array" : "array";
           if (this.useUTF8())
             this.fileNameStr = o.utf8decode(this.fileName), this.fileCommentStr = o.utf8decode(this.fileComment);
           else {
-            var t2 = this.findExtraFieldUnicodePath();
-            if (null !== t2)
-              this.fileNameStr = t2;
+            var t3 = this.findExtraFieldUnicodePath();
+            if (null !== t3)
+              this.fileNameStr = t3;
             else {
               var r2 = s.transformTo(e2, this.fileName);
               this.fileNameStr = this.loadOptions.decodeFileName(r2);
@@ -3056,47 +7968,47 @@ var require_jszip_min = __commonJS({
         }, findExtraFieldUnicodePath: function() {
           var e2 = this.extraFields[28789];
           if (e2) {
-            var t2 = n(e2.value);
-            return 1 !== t2.readInt(1) ? null : a(this.fileName) !== t2.readInt(4) ? null : o.utf8decode(t2.readData(e2.length - 5));
+            var t3 = n(e2.value);
+            return 1 !== t3.readInt(1) ? null : a(this.fileName) !== t3.readInt(4) ? null : o.utf8decode(t3.readData(e2.length - 5));
           }
           return null;
         }, findExtraFieldUnicodeComment: function() {
           var e2 = this.extraFields[25461];
           if (e2) {
-            var t2 = n(e2.value);
-            return 1 !== t2.readInt(1) ? null : a(this.fileComment) !== t2.readInt(4) ? null : o.utf8decode(t2.readData(e2.length - 5));
+            var t3 = n(e2.value);
+            return 1 !== t3.readInt(1) ? null : a(this.fileComment) !== t3.readInt(4) ? null : o.utf8decode(t3.readData(e2.length - 5));
           }
           return null;
-        } }, t.exports = l;
-      }, { "./compressedObject": 2, "./compressions": 3, "./crc32": 4, "./reader/readerFor": 22, "./support": 30, "./utf8": 31, "./utils": 32 }], 35: [function(e, t, r) {
+        } }, t2.exports = l;
+      }, { "./compressedObject": 2, "./compressions": 3, "./crc32": 4, "./reader/readerFor": 22, "./support": 30, "./utf8": 31, "./utils": 32 }], 35: [function(e, t2, r) {
         "use strict";
-        function n(e2, t2, r2) {
-          this.name = e2, this.dir = r2.dir, this.date = r2.date, this.comment = r2.comment, this.unixPermissions = r2.unixPermissions, this.dosPermissions = r2.dosPermissions, this._data = t2, this._dataBinary = r2.binary, this.options = { compression: r2.compression, compressionOptions: r2.compressionOptions };
+        function n(e2, t3, r2) {
+          this.name = e2, this.dir = r2.dir, this.date = r2.date, this.comment = r2.comment, this.unixPermissions = r2.unixPermissions, this.dosPermissions = r2.dosPermissions, this._data = t3, this._dataBinary = r2.binary, this.options = { compression: r2.compression, compressionOptions: r2.compressionOptions };
         }
         __name(n, "n");
         var s = e("./stream/StreamHelper"), i = e("./stream/DataWorker"), a = e("./utf8"), o = e("./compressedObject"), h = e("./stream/GenericWorker");
         n.prototype = { internalStream: function(e2) {
-          var t2 = null, r2 = "string";
+          var t3 = null, r2 = "string";
           try {
             if (!e2)
               throw new Error("No output type specified.");
             var n2 = "string" === (r2 = e2.toLowerCase()) || "text" === r2;
-            "binarystring" !== r2 && "text" !== r2 || (r2 = "string"), t2 = this._decompressWorker();
+            "binarystring" !== r2 && "text" !== r2 || (r2 = "string"), t3 = this._decompressWorker();
             var i2 = !this._dataBinary;
-            i2 && !n2 && (t2 = t2.pipe(new a.Utf8EncodeWorker())), !i2 && n2 && (t2 = t2.pipe(new a.Utf8DecodeWorker()));
+            i2 && !n2 && (t3 = t3.pipe(new a.Utf8EncodeWorker())), !i2 && n2 && (t3 = t3.pipe(new a.Utf8DecodeWorker()));
           } catch (e3) {
-            (t2 = new h("error")).error(e3);
+            (t3 = new h("error")).error(e3);
           }
-          return new s(t2, r2, "");
-        }, async: function(e2, t2) {
-          return this.internalStream(e2).accumulate(t2);
-        }, nodeStream: function(e2, t2) {
-          return this.internalStream(e2 || "nodebuffer").toNodejsStream(t2);
-        }, _compressWorker: function(e2, t2) {
+          return new s(t3, r2, "");
+        }, async: function(e2, t3) {
+          return this.internalStream(e2).accumulate(t3);
+        }, nodeStream: function(e2, t3) {
+          return this.internalStream(e2 || "nodebuffer").toNodejsStream(t3);
+        }, _compressWorker: function(e2, t3) {
           if (this._data instanceof o && this._data.compression.magic === e2.magic)
             return this._data.getCompressedWorker();
           var r2 = this._decompressWorker();
-          return this._dataBinary || (r2 = r2.pipe(new a.Utf8EncodeWorker())), o.createWorkerFrom(r2, e2, t2);
+          return this._dataBinary || (r2 = r2.pipe(new a.Utf8EncodeWorker())), o.createWorkerFrom(r2, e2, t3);
         }, _decompressWorker: function() {
           return this._data instanceof o ? this._data.getContentWorker() : this._data instanceof h ? this._data : new i(this._data);
         } };
@@ -3104,38 +8016,38 @@ var require_jszip_min = __commonJS({
           throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
         }, f = 0; f < u.length; f++)
           n.prototype[u[f]] = l;
-        t.exports = n;
-      }, { "./compressedObject": 2, "./stream/DataWorker": 27, "./stream/GenericWorker": 28, "./stream/StreamHelper": 29, "./utf8": 31 }], 36: [function(e, l, t) {
-        (function(t2) {
+        t2.exports = n;
+      }, { "./compressedObject": 2, "./stream/DataWorker": 27, "./stream/GenericWorker": 28, "./stream/StreamHelper": 29, "./utf8": 31 }], 36: [function(e, l, t2) {
+        (function(t3) {
           "use strict";
-          var r, n, e2 = t2.MutationObserver || t2.WebKitMutationObserver;
+          var r, n, e2 = t3.MutationObserver || t3.WebKitMutationObserver;
           if (e2) {
-            var i = 0, s = new e2(u), a = t2.document.createTextNode("");
+            var i = 0, s = new e2(u), a = t3.document.createTextNode("");
             s.observe(a, { characterData: true }), r = /* @__PURE__ */ __name(function() {
               a.data = i = ++i % 2;
             }, "r");
-          } else if (t2.setImmediate || void 0 === t2.MessageChannel)
-            r = "document" in t2 && "onreadystatechange" in t2.document.createElement("script") ? function() {
-              var e3 = t2.document.createElement("script");
+          } else if (t3.setImmediate || void 0 === t3.MessageChannel)
+            r = "document" in t3 && "onreadystatechange" in t3.document.createElement("script") ? function() {
+              var e3 = t3.document.createElement("script");
               e3.onreadystatechange = function() {
                 u(), e3.onreadystatechange = null, e3.parentNode.removeChild(e3), e3 = null;
-              }, t2.document.documentElement.appendChild(e3);
+              }, t3.document.documentElement.appendChild(e3);
             } : function() {
               setTimeout(u, 0);
             };
           else {
-            var o = new t2.MessageChannel();
+            var o = new t3.MessageChannel();
             o.port1.onmessage = u, r = /* @__PURE__ */ __name(function() {
               o.port2.postMessage(0);
             }, "r");
           }
           var h = [];
           function u() {
-            var e3, t3;
+            var e3, t4;
             n = true;
             for (var r2 = h.length; r2; ) {
-              for (t3 = h, h = [], e3 = -1; ++e3 < r2; )
-                t3[e3]();
+              for (t4 = h, h = [], e3 = -1; ++e3 < r2; )
+                t4[e3]();
               r2 = h.length;
             }
             n = false;
@@ -3145,7 +8057,7 @@ var require_jszip_min = __commonJS({
             1 !== h.push(e3) || n || r();
           };
         }).call(this, "undefined" != typeof global ? global : "undefined" != typeof self ? self : "undefined" != typeof window ? window : {});
-      }, {}], 37: [function(e, t, r) {
+      }, {}], 37: [function(e, t2, r) {
         "use strict";
         var i = e("immediate");
         function u() {
@@ -3158,38 +8070,38 @@ var require_jszip_min = __commonJS({
           this.state = n, this.queue = [], this.outcome = void 0, e2 !== u && d(this, e2);
         }
         __name(o, "o");
-        function h(e2, t2, r2) {
-          this.promise = e2, "function" == typeof t2 && (this.onFulfilled = t2, this.callFulfilled = this.otherCallFulfilled), "function" == typeof r2 && (this.onRejected = r2, this.callRejected = this.otherCallRejected);
+        function h(e2, t3, r2) {
+          this.promise = e2, "function" == typeof t3 && (this.onFulfilled = t3, this.callFulfilled = this.otherCallFulfilled), "function" == typeof r2 && (this.onRejected = r2, this.callRejected = this.otherCallRejected);
         }
         __name(h, "h");
-        function f(t2, r2, n2) {
+        function f(t3, r2, n2) {
           i(function() {
             var e2;
             try {
               e2 = r2(n2);
             } catch (e3) {
-              return l.reject(t2, e3);
+              return l.reject(t3, e3);
             }
-            e2 === t2 ? l.reject(t2, new TypeError("Cannot resolve promise with itself")) : l.resolve(t2, e2);
+            e2 === t3 ? l.reject(t3, new TypeError("Cannot resolve promise with itself")) : l.resolve(t3, e2);
           });
         }
         __name(f, "f");
         function c(e2) {
-          var t2 = e2 && e2.then;
-          if (e2 && ("object" == typeof e2 || "function" == typeof e2) && "function" == typeof t2)
+          var t3 = e2 && e2.then;
+          if (e2 && ("object" == typeof e2 || "function" == typeof e2) && "function" == typeof t3)
             return function() {
-              t2.apply(e2, arguments);
+              t3.apply(e2, arguments);
             };
         }
         __name(c, "c");
-        function d(t2, e2) {
+        function d(t3, e2) {
           var r2 = false;
           function n2(e3) {
-            r2 || (r2 = true, l.reject(t2, e3));
+            r2 || (r2 = true, l.reject(t3, e3));
           }
           __name(n2, "n");
           function i2(e3) {
-            r2 || (r2 = true, l.resolve(t2, e3));
+            r2 || (r2 = true, l.resolve(t3, e3));
           }
           __name(i2, "i");
           var s2 = p(function() {
@@ -3198,36 +8110,36 @@ var require_jszip_min = __commonJS({
           "error" === s2.status && n2(s2.value);
         }
         __name(d, "d");
-        function p(e2, t2) {
+        function p(e2, t3) {
           var r2 = {};
           try {
-            r2.value = e2(t2), r2.status = "success";
+            r2.value = e2(t3), r2.status = "success";
           } catch (e3) {
             r2.status = "error", r2.value = e3;
           }
           return r2;
         }
         __name(p, "p");
-        (t.exports = o).prototype.finally = function(t2) {
-          if ("function" != typeof t2)
+        (t2.exports = o).prototype.finally = function(t3) {
+          if ("function" != typeof t3)
             return this;
           var r2 = this.constructor;
           return this.then(function(e2) {
-            return r2.resolve(t2()).then(function() {
+            return r2.resolve(t3()).then(function() {
               return e2;
             });
           }, function(e2) {
-            return r2.resolve(t2()).then(function() {
+            return r2.resolve(t3()).then(function() {
               throw e2;
             });
           });
         }, o.prototype.catch = function(e2) {
           return this.then(null, e2);
-        }, o.prototype.then = function(e2, t2) {
-          if ("function" != typeof e2 && this.state === a || "function" != typeof t2 && this.state === s)
+        }, o.prototype.then = function(e2, t3) {
+          if ("function" != typeof e2 && this.state === a || "function" != typeof t3 && this.state === s)
             return this;
           var r2 = new this.constructor(u);
-          this.state !== n ? f(r2, this.state === a ? e2 : t2, this.outcome) : this.queue.push(new h(r2, e2, t2));
+          this.state !== n ? f(r2, this.state === a ? e2 : t3, this.outcome) : this.queue.push(new h(r2, e2, t3));
           return r2;
         }, h.prototype.callFulfilled = function(e2) {
           l.resolve(this.promise, e2);
@@ -3237,31 +8149,31 @@ var require_jszip_min = __commonJS({
           l.reject(this.promise, e2);
         }, h.prototype.otherCallRejected = function(e2) {
           f(this.promise, this.onRejected, e2);
-        }, l.resolve = function(e2, t2) {
-          var r2 = p(c, t2);
+        }, l.resolve = function(e2, t3) {
+          var r2 = p(c, t3);
           if ("error" === r2.status)
             return l.reject(e2, r2.value);
           var n2 = r2.value;
           if (n2)
             d(e2, n2);
           else {
-            e2.state = a, e2.outcome = t2;
+            e2.state = a, e2.outcome = t3;
             for (var i2 = -1, s2 = e2.queue.length; ++i2 < s2; )
-              e2.queue[i2].callFulfilled(t2);
+              e2.queue[i2].callFulfilled(t3);
           }
           return e2;
-        }, l.reject = function(e2, t2) {
-          e2.state = s, e2.outcome = t2;
+        }, l.reject = function(e2, t3) {
+          e2.state = s, e2.outcome = t3;
           for (var r2 = -1, n2 = e2.queue.length; ++r2 < n2; )
-            e2.queue[r2].callRejected(t2);
+            e2.queue[r2].callRejected(t3);
           return e2;
         }, o.resolve = function(e2) {
           if (e2 instanceof this)
             return e2;
           return l.resolve(new this(u), e2);
         }, o.reject = function(e2) {
-          var t2 = new this(u);
-          return l.reject(t2, e2);
+          var t3 = new this(u);
+          return l.reject(t3, e2);
         }, o.all = function(e2) {
           var r2 = this;
           if ("[object Array]" !== Object.prototype.toString.call(e2))
@@ -3269,20 +8181,20 @@ var require_jszip_min = __commonJS({
           var n2 = e2.length, i2 = false;
           if (!n2)
             return this.resolve([]);
-          var s2 = new Array(n2), a2 = 0, t2 = -1, o2 = new this(u);
-          for (; ++t2 < n2; )
-            h2(e2[t2], t2);
+          var s2 = new Array(n2), a2 = 0, t3 = -1, o2 = new this(u);
+          for (; ++t3 < n2; )
+            h2(e2[t3], t3);
           return o2;
-          function h2(e3, t3) {
+          function h2(e3, t4) {
             r2.resolve(e3).then(function(e4) {
-              s2[t3] = e4, ++a2 !== n2 || i2 || (i2 = true, l.resolve(o2, s2));
+              s2[t4] = e4, ++a2 !== n2 || i2 || (i2 = true, l.resolve(o2, s2));
             }, function(e4) {
               i2 || (i2 = true, l.reject(o2, e4));
             });
           }
           __name(h2, "h");
         }, o.race = function(e2) {
-          var t2 = this;
+          var t3 = this;
           if ("[object Array]" !== Object.prototype.toString.call(e2))
             return this.reject(new TypeError("must be an array"));
           var r2 = e2.length, n2 = false;
@@ -3290,7 +8202,7 @@ var require_jszip_min = __commonJS({
             return this.resolve([]);
           var i2 = -1, s2 = new this(u);
           for (; ++i2 < r2; )
-            a2 = e2[i2], t2.resolve(a2).then(function(e3) {
+            a2 = e2[i2], t3.resolve(a2).then(function(e3) {
               n2 || (n2 = true, l.resolve(s2, e3));
             }, function(e3) {
               n2 || (n2 = true, l.reject(s2, e3));
@@ -3298,42 +8210,42 @@ var require_jszip_min = __commonJS({
           var a2;
           return s2;
         };
-      }, { immediate: 36 }], 38: [function(e, t, r) {
+      }, { immediate: 36 }], 38: [function(e, t2, r) {
         "use strict";
         var n = {};
-        (0, e("./lib/utils/common").assign)(n, e("./lib/deflate"), e("./lib/inflate"), e("./lib/zlib/constants")), t.exports = n;
-      }, { "./lib/deflate": 39, "./lib/inflate": 40, "./lib/utils/common": 41, "./lib/zlib/constants": 44 }], 39: [function(e, t, r) {
+        (0, e("./lib/utils/common").assign)(n, e("./lib/deflate"), e("./lib/inflate"), e("./lib/zlib/constants")), t2.exports = n;
+      }, { "./lib/deflate": 39, "./lib/inflate": 40, "./lib/utils/common": 41, "./lib/zlib/constants": 44 }], 39: [function(e, t2, r) {
         "use strict";
         var a = e("./zlib/deflate"), o = e("./utils/common"), h = e("./utils/strings"), i = e("./zlib/messages"), s = e("./zlib/zstream"), u = Object.prototype.toString, l = 0, f = -1, c = 0, d = 8;
         function p(e2) {
           if (!(this instanceof p))
             return new p(e2);
           this.options = o.assign({ level: f, method: d, chunkSize: 16384, windowBits: 15, memLevel: 8, strategy: c, to: "" }, e2 || {});
-          var t2 = this.options;
-          t2.raw && 0 < t2.windowBits ? t2.windowBits = -t2.windowBits : t2.gzip && 0 < t2.windowBits && t2.windowBits < 16 && (t2.windowBits += 16), this.err = 0, this.msg = "", this.ended = false, this.chunks = [], this.strm = new s(), this.strm.avail_out = 0;
-          var r2 = a.deflateInit2(this.strm, t2.level, t2.method, t2.windowBits, t2.memLevel, t2.strategy);
+          var t3 = this.options;
+          t3.raw && 0 < t3.windowBits ? t3.windowBits = -t3.windowBits : t3.gzip && 0 < t3.windowBits && t3.windowBits < 16 && (t3.windowBits += 16), this.err = 0, this.msg = "", this.ended = false, this.chunks = [], this.strm = new s(), this.strm.avail_out = 0;
+          var r2 = a.deflateInit2(this.strm, t3.level, t3.method, t3.windowBits, t3.memLevel, t3.strategy);
           if (r2 !== l)
             throw new Error(i[r2]);
-          if (t2.header && a.deflateSetHeader(this.strm, t2.header), t2.dictionary) {
+          if (t3.header && a.deflateSetHeader(this.strm, t3.header), t3.dictionary) {
             var n2;
-            if (n2 = "string" == typeof t2.dictionary ? h.string2buf(t2.dictionary) : "[object ArrayBuffer]" === u.call(t2.dictionary) ? new Uint8Array(t2.dictionary) : t2.dictionary, (r2 = a.deflateSetDictionary(this.strm, n2)) !== l)
+            if (n2 = "string" == typeof t3.dictionary ? h.string2buf(t3.dictionary) : "[object ArrayBuffer]" === u.call(t3.dictionary) ? new Uint8Array(t3.dictionary) : t3.dictionary, (r2 = a.deflateSetDictionary(this.strm, n2)) !== l)
               throw new Error(i[r2]);
             this._dict_set = true;
           }
         }
         __name(p, "p");
-        function n(e2, t2) {
-          var r2 = new p(t2);
+        function n(e2, t3) {
+          var r2 = new p(t3);
           if (r2.push(e2, true), r2.err)
             throw r2.msg || i[r2.err];
           return r2.result;
         }
         __name(n, "n");
-        p.prototype.push = function(e2, t2) {
+        p.prototype.push = function(e2, t3) {
           var r2, n2, i2 = this.strm, s2 = this.options.chunkSize;
           if (this.ended)
             return false;
-          n2 = t2 === ~~t2 ? t2 : true === t2 ? 4 : 0, "string" == typeof e2 ? i2.input = h.string2buf(e2) : "[object ArrayBuffer]" === u.call(e2) ? i2.input = new Uint8Array(e2) : i2.input = e2, i2.next_in = 0, i2.avail_in = i2.input.length;
+          n2 = t3 === ~~t3 ? t3 : true === t3 ? 4 : 0, "string" == typeof e2 ? i2.input = h.string2buf(e2) : "[object ArrayBuffer]" === u.call(e2) ? i2.input = new Uint8Array(e2) : i2.input = e2, i2.next_in = 0, i2.avail_in = i2.input.length;
           do {
             if (0 === i2.avail_out && (i2.output = new o.Buf8(s2), i2.next_out = 0, i2.avail_out = s2), 1 !== (r2 = a.deflate(i2, n2)) && r2 !== l)
               return this.onEnd(r2), !(this.ended = true);
@@ -3344,38 +8256,38 @@ var require_jszip_min = __commonJS({
           this.chunks.push(e2);
         }, p.prototype.onEnd = function(e2) {
           e2 === l && ("string" === this.options.to ? this.result = this.chunks.join("") : this.result = o.flattenChunks(this.chunks)), this.chunks = [], this.err = e2, this.msg = this.strm.msg;
-        }, r.Deflate = p, r.deflate = n, r.deflateRaw = function(e2, t2) {
-          return (t2 = t2 || {}).raw = true, n(e2, t2);
-        }, r.gzip = function(e2, t2) {
-          return (t2 = t2 || {}).gzip = true, n(e2, t2);
+        }, r.Deflate = p, r.deflate = n, r.deflateRaw = function(e2, t3) {
+          return (t3 = t3 || {}).raw = true, n(e2, t3);
+        }, r.gzip = function(e2, t3) {
+          return (t3 = t3 || {}).gzip = true, n(e2, t3);
         };
-      }, { "./utils/common": 41, "./utils/strings": 42, "./zlib/deflate": 46, "./zlib/messages": 51, "./zlib/zstream": 53 }], 40: [function(e, t, r) {
+      }, { "./utils/common": 41, "./utils/strings": 42, "./zlib/deflate": 46, "./zlib/messages": 51, "./zlib/zstream": 53 }], 40: [function(e, t2, r) {
         "use strict";
         var c = e("./zlib/inflate"), d = e("./utils/common"), p = e("./utils/strings"), m = e("./zlib/constants"), n = e("./zlib/messages"), i = e("./zlib/zstream"), s = e("./zlib/gzheader"), _ = Object.prototype.toString;
         function a(e2) {
           if (!(this instanceof a))
             return new a(e2);
           this.options = d.assign({ chunkSize: 16384, windowBits: 0, to: "" }, e2 || {});
-          var t2 = this.options;
-          t2.raw && 0 <= t2.windowBits && t2.windowBits < 16 && (t2.windowBits = -t2.windowBits, 0 === t2.windowBits && (t2.windowBits = -15)), !(0 <= t2.windowBits && t2.windowBits < 16) || e2 && e2.windowBits || (t2.windowBits += 32), 15 < t2.windowBits && t2.windowBits < 48 && 0 == (15 & t2.windowBits) && (t2.windowBits |= 15), this.err = 0, this.msg = "", this.ended = false, this.chunks = [], this.strm = new i(), this.strm.avail_out = 0;
-          var r2 = c.inflateInit2(this.strm, t2.windowBits);
+          var t3 = this.options;
+          t3.raw && 0 <= t3.windowBits && t3.windowBits < 16 && (t3.windowBits = -t3.windowBits, 0 === t3.windowBits && (t3.windowBits = -15)), !(0 <= t3.windowBits && t3.windowBits < 16) || e2 && e2.windowBits || (t3.windowBits += 32), 15 < t3.windowBits && t3.windowBits < 48 && 0 == (15 & t3.windowBits) && (t3.windowBits |= 15), this.err = 0, this.msg = "", this.ended = false, this.chunks = [], this.strm = new i(), this.strm.avail_out = 0;
+          var r2 = c.inflateInit2(this.strm, t3.windowBits);
           if (r2 !== m.Z_OK)
             throw new Error(n[r2]);
           this.header = new s(), c.inflateGetHeader(this.strm, this.header);
         }
         __name(a, "a");
-        function o(e2, t2) {
-          var r2 = new a(t2);
+        function o(e2, t3) {
+          var r2 = new a(t3);
           if (r2.push(e2, true), r2.err)
             throw r2.msg || n[r2.err];
           return r2.result;
         }
         __name(o, "o");
-        a.prototype.push = function(e2, t2) {
+        a.prototype.push = function(e2, t3) {
           var r2, n2, i2, s2, a2, o2, h = this.strm, u = this.options.chunkSize, l = this.options.dictionary, f = false;
           if (this.ended)
             return false;
-          n2 = t2 === ~~t2 ? t2 : true === t2 ? m.Z_FINISH : m.Z_NO_FLUSH, "string" == typeof e2 ? h.input = p.binstring2buf(e2) : "[object ArrayBuffer]" === _.call(e2) ? h.input = new Uint8Array(e2) : h.input = e2, h.next_in = 0, h.avail_in = h.input.length;
+          n2 = t3 === ~~t3 ? t3 : true === t3 ? m.Z_FINISH : m.Z_NO_FLUSH, "string" == typeof e2 ? h.input = p.binstring2buf(e2) : "[object ArrayBuffer]" === _.call(e2) ? h.input = new Uint8Array(e2) : h.input = e2, h.next_in = 0, h.avail_in = h.input.length;
           do {
             if (0 === h.avail_out && (h.output = new d.Buf8(u), h.next_out = 0, h.avail_out = u), (r2 = c.inflate(h, m.Z_NO_FLUSH)) === m.Z_NEED_DICT && l && (o2 = "string" == typeof l ? p.string2buf(l) : "[object ArrayBuffer]" === _.call(l) ? new Uint8Array(l) : l, r2 = c.inflateSetDictionary(this.strm, o2)), r2 === m.Z_BUF_ERROR && true === f && (r2 = m.Z_OK, f = false), r2 !== m.Z_STREAM_END && r2 !== m.Z_OK)
               return this.onEnd(r2), !(this.ended = true);
@@ -3386,15 +8298,15 @@ var require_jszip_min = __commonJS({
           this.chunks.push(e2);
         }, a.prototype.onEnd = function(e2) {
           e2 === m.Z_OK && ("string" === this.options.to ? this.result = this.chunks.join("") : this.result = d.flattenChunks(this.chunks)), this.chunks = [], this.err = e2, this.msg = this.strm.msg;
-        }, r.Inflate = a, r.inflate = o, r.inflateRaw = function(e2, t2) {
-          return (t2 = t2 || {}).raw = true, o(e2, t2);
+        }, r.Inflate = a, r.inflate = o, r.inflateRaw = function(e2, t3) {
+          return (t3 = t3 || {}).raw = true, o(e2, t3);
         }, r.ungzip = o;
-      }, { "./utils/common": 41, "./utils/strings": 42, "./zlib/constants": 44, "./zlib/gzheader": 47, "./zlib/inflate": 49, "./zlib/messages": 51, "./zlib/zstream": 53 }], 41: [function(e, t, r) {
+      }, { "./utils/common": 41, "./utils/strings": 42, "./zlib/constants": 44, "./zlib/gzheader": 47, "./zlib/inflate": 49, "./zlib/messages": 51, "./zlib/zstream": 53 }], 41: [function(e, t2, r) {
         "use strict";
         var n = "undefined" != typeof Uint8Array && "undefined" != typeof Uint16Array && "undefined" != typeof Int32Array;
         r.assign = function(e2) {
-          for (var t2 = Array.prototype.slice.call(arguments, 1); t2.length; ) {
-            var r2 = t2.shift();
+          for (var t3 = Array.prototype.slice.call(arguments, 1); t3.length; ) {
+            var r2 = t3.shift();
             if (r2) {
               if ("object" != typeof r2)
                 throw new TypeError(r2 + "must be non-object");
@@ -3403,32 +8315,32 @@ var require_jszip_min = __commonJS({
             }
           }
           return e2;
-        }, r.shrinkBuf = function(e2, t2) {
-          return e2.length === t2 ? e2 : e2.subarray ? e2.subarray(0, t2) : (e2.length = t2, e2);
+        }, r.shrinkBuf = function(e2, t3) {
+          return e2.length === t3 ? e2 : e2.subarray ? e2.subarray(0, t3) : (e2.length = t3, e2);
         };
-        var i = { arraySet: function(e2, t2, r2, n2, i2) {
-          if (t2.subarray && e2.subarray)
-            e2.set(t2.subarray(r2, r2 + n2), i2);
+        var i = { arraySet: function(e2, t3, r2, n2, i2) {
+          if (t3.subarray && e2.subarray)
+            e2.set(t3.subarray(r2, r2 + n2), i2);
           else
             for (var s2 = 0; s2 < n2; s2++)
-              e2[i2 + s2] = t2[r2 + s2];
+              e2[i2 + s2] = t3[r2 + s2];
         }, flattenChunks: function(e2) {
-          var t2, r2, n2, i2, s2, a;
-          for (t2 = n2 = 0, r2 = e2.length; t2 < r2; t2++)
-            n2 += e2[t2].length;
-          for (a = new Uint8Array(n2), t2 = i2 = 0, r2 = e2.length; t2 < r2; t2++)
-            s2 = e2[t2], a.set(s2, i2), i2 += s2.length;
+          var t3, r2, n2, i2, s2, a;
+          for (t3 = n2 = 0, r2 = e2.length; t3 < r2; t3++)
+            n2 += e2[t3].length;
+          for (a = new Uint8Array(n2), t3 = i2 = 0, r2 = e2.length; t3 < r2; t3++)
+            s2 = e2[t3], a.set(s2, i2), i2 += s2.length;
           return a;
-        } }, s = { arraySet: function(e2, t2, r2, n2, i2) {
+        } }, s = { arraySet: function(e2, t3, r2, n2, i2) {
           for (var s2 = 0; s2 < n2; s2++)
-            e2[i2 + s2] = t2[r2 + s2];
+            e2[i2 + s2] = t3[r2 + s2];
         }, flattenChunks: function(e2) {
           return [].concat.apply([], e2);
         } };
         r.setTyped = function(e2) {
           e2 ? (r.Buf8 = Uint8Array, r.Buf16 = Uint16Array, r.Buf32 = Int32Array, r.assign(r, i)) : (r.Buf8 = Array, r.Buf16 = Array, r.Buf32 = Array, r.assign(r, s));
         }, r.setTyped(n);
-      }, {}], 42: [function(e, t, r) {
+      }, {}], 42: [function(e, t2, r) {
         "use strict";
         var h = e("./common"), i = true, s = true;
         try {
@@ -3443,29 +8355,29 @@ var require_jszip_min = __commonJS({
         }
         for (var u = new h.Buf8(256), n = 0; n < 256; n++)
           u[n] = 252 <= n ? 6 : 248 <= n ? 5 : 240 <= n ? 4 : 224 <= n ? 3 : 192 <= n ? 2 : 1;
-        function l(e2, t2) {
-          if (t2 < 65537 && (e2.subarray && s || !e2.subarray && i))
-            return String.fromCharCode.apply(null, h.shrinkBuf(e2, t2));
-          for (var r2 = "", n2 = 0; n2 < t2; n2++)
+        function l(e2, t3) {
+          if (t3 < 65537 && (e2.subarray && s || !e2.subarray && i))
+            return String.fromCharCode.apply(null, h.shrinkBuf(e2, t3));
+          for (var r2 = "", n2 = 0; n2 < t3; n2++)
             r2 += String.fromCharCode(e2[n2]);
           return r2;
         }
         __name(l, "l");
         u[254] = u[254] = 1, r.string2buf = function(e2) {
-          var t2, r2, n2, i2, s2, a = e2.length, o = 0;
+          var t3, r2, n2, i2, s2, a = e2.length, o = 0;
           for (i2 = 0; i2 < a; i2++)
             55296 == (64512 & (r2 = e2.charCodeAt(i2))) && i2 + 1 < a && 56320 == (64512 & (n2 = e2.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), o += r2 < 128 ? 1 : r2 < 2048 ? 2 : r2 < 65536 ? 3 : 4;
-          for (t2 = new h.Buf8(o), i2 = s2 = 0; s2 < o; i2++)
-            55296 == (64512 & (r2 = e2.charCodeAt(i2))) && i2 + 1 < a && 56320 == (64512 & (n2 = e2.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), r2 < 128 ? t2[s2++] = r2 : (r2 < 2048 ? t2[s2++] = 192 | r2 >>> 6 : (r2 < 65536 ? t2[s2++] = 224 | r2 >>> 12 : (t2[s2++] = 240 | r2 >>> 18, t2[s2++] = 128 | r2 >>> 12 & 63), t2[s2++] = 128 | r2 >>> 6 & 63), t2[s2++] = 128 | 63 & r2);
-          return t2;
+          for (t3 = new h.Buf8(o), i2 = s2 = 0; s2 < o; i2++)
+            55296 == (64512 & (r2 = e2.charCodeAt(i2))) && i2 + 1 < a && 56320 == (64512 & (n2 = e2.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), r2 < 128 ? t3[s2++] = r2 : (r2 < 2048 ? t3[s2++] = 192 | r2 >>> 6 : (r2 < 65536 ? t3[s2++] = 224 | r2 >>> 12 : (t3[s2++] = 240 | r2 >>> 18, t3[s2++] = 128 | r2 >>> 12 & 63), t3[s2++] = 128 | r2 >>> 6 & 63), t3[s2++] = 128 | 63 & r2);
+          return t3;
         }, r.buf2binstring = function(e2) {
           return l(e2, e2.length);
         }, r.binstring2buf = function(e2) {
-          for (var t2 = new h.Buf8(e2.length), r2 = 0, n2 = t2.length; r2 < n2; r2++)
-            t2[r2] = e2.charCodeAt(r2);
-          return t2;
-        }, r.buf2string = function(e2, t2) {
-          var r2, n2, i2, s2, a = t2 || e2.length, o = new Array(2 * a);
+          for (var t3 = new h.Buf8(e2.length), r2 = 0, n2 = t3.length; r2 < n2; r2++)
+            t3[r2] = e2.charCodeAt(r2);
+          return t3;
+        }, r.buf2string = function(e2, t3) {
+          var r2, n2, i2, s2, a = t3 || e2.length, o = new Array(2 * a);
           for (r2 = n2 = 0; r2 < a; )
             if ((i2 = e2[r2++]) < 128)
               o[n2++] = i2;
@@ -3477,48 +8389,48 @@ var require_jszip_min = __commonJS({
               1 < s2 ? o[n2++] = 65533 : i2 < 65536 ? o[n2++] = i2 : (i2 -= 65536, o[n2++] = 55296 | i2 >> 10 & 1023, o[n2++] = 56320 | 1023 & i2);
             }
           return l(o, n2);
-        }, r.utf8border = function(e2, t2) {
+        }, r.utf8border = function(e2, t3) {
           var r2;
-          for ((t2 = t2 || e2.length) > e2.length && (t2 = e2.length), r2 = t2 - 1; 0 <= r2 && 128 == (192 & e2[r2]); )
+          for ((t3 = t3 || e2.length) > e2.length && (t3 = e2.length), r2 = t3 - 1; 0 <= r2 && 128 == (192 & e2[r2]); )
             r2--;
-          return r2 < 0 ? t2 : 0 === r2 ? t2 : r2 + u[e2[r2]] > t2 ? r2 : t2;
+          return r2 < 0 ? t3 : 0 === r2 ? t3 : r2 + u[e2[r2]] > t3 ? r2 : t3;
         };
-      }, { "./common": 41 }], 43: [function(e, t, r) {
+      }, { "./common": 41 }], 43: [function(e, t2, r) {
         "use strict";
-        t.exports = function(e2, t2, r2, n) {
+        t2.exports = function(e2, t3, r2, n) {
           for (var i = 65535 & e2 | 0, s = e2 >>> 16 & 65535 | 0, a = 0; 0 !== r2; ) {
-            for (r2 -= a = 2e3 < r2 ? 2e3 : r2; s = s + (i = i + t2[n++] | 0) | 0, --a; )
+            for (r2 -= a = 2e3 < r2 ? 2e3 : r2; s = s + (i = i + t3[n++] | 0) | 0, --a; )
               ;
             i %= 65521, s %= 65521;
           }
           return i | s << 16 | 0;
         };
-      }, {}], 44: [function(e, t, r) {
+      }, {}], 44: [function(e, t2, r) {
         "use strict";
-        t.exports = { Z_NO_FLUSH: 0, Z_PARTIAL_FLUSH: 1, Z_SYNC_FLUSH: 2, Z_FULL_FLUSH: 3, Z_FINISH: 4, Z_BLOCK: 5, Z_TREES: 6, Z_OK: 0, Z_STREAM_END: 1, Z_NEED_DICT: 2, Z_ERRNO: -1, Z_STREAM_ERROR: -2, Z_DATA_ERROR: -3, Z_BUF_ERROR: -5, Z_NO_COMPRESSION: 0, Z_BEST_SPEED: 1, Z_BEST_COMPRESSION: 9, Z_DEFAULT_COMPRESSION: -1, Z_FILTERED: 1, Z_HUFFMAN_ONLY: 2, Z_RLE: 3, Z_FIXED: 4, Z_DEFAULT_STRATEGY: 0, Z_BINARY: 0, Z_TEXT: 1, Z_UNKNOWN: 2, Z_DEFLATED: 8 };
-      }, {}], 45: [function(e, t, r) {
+        t2.exports = { Z_NO_FLUSH: 0, Z_PARTIAL_FLUSH: 1, Z_SYNC_FLUSH: 2, Z_FULL_FLUSH: 3, Z_FINISH: 4, Z_BLOCK: 5, Z_TREES: 6, Z_OK: 0, Z_STREAM_END: 1, Z_NEED_DICT: 2, Z_ERRNO: -1, Z_STREAM_ERROR: -2, Z_DATA_ERROR: -3, Z_BUF_ERROR: -5, Z_NO_COMPRESSION: 0, Z_BEST_SPEED: 1, Z_BEST_COMPRESSION: 9, Z_DEFAULT_COMPRESSION: -1, Z_FILTERED: 1, Z_HUFFMAN_ONLY: 2, Z_RLE: 3, Z_FIXED: 4, Z_DEFAULT_STRATEGY: 0, Z_BINARY: 0, Z_TEXT: 1, Z_UNKNOWN: 2, Z_DEFLATED: 8 };
+      }, {}], 45: [function(e, t2, r) {
         "use strict";
         var o = function() {
-          for (var e2, t2 = [], r2 = 0; r2 < 256; r2++) {
+          for (var e2, t3 = [], r2 = 0; r2 < 256; r2++) {
             e2 = r2;
             for (var n = 0; n < 8; n++)
               e2 = 1 & e2 ? 3988292384 ^ e2 >>> 1 : e2 >>> 1;
-            t2[r2] = e2;
+            t3[r2] = e2;
           }
-          return t2;
+          return t3;
         }();
-        t.exports = function(e2, t2, r2, n) {
+        t2.exports = function(e2, t3, r2, n) {
           var i = o, s = n + r2;
           e2 ^= -1;
           for (var a = n; a < s; a++)
-            e2 = e2 >>> 8 ^ i[255 & (e2 ^ t2[a])];
+            e2 = e2 >>> 8 ^ i[255 & (e2 ^ t3[a])];
           return -1 ^ e2;
         };
-      }, {}], 46: [function(e, t, r) {
+      }, {}], 46: [function(e, t2, r) {
         "use strict";
         var h, c = e("../utils/common"), u = e("./trees"), d = e("./adler32"), p = e("./crc32"), n = e("./messages"), l = 0, f = 4, m = 0, _ = -2, g = -1, b = 4, i = 2, v = 8, y = 9, s = 286, a = 30, o = 19, w = 2 * s + 1, k = 15, x = 3, S = 258, z = S + x + 1, C = 42, E = 113, A = 1, I = 2, O = 3, B = 4;
-        function R(e2, t2) {
-          return e2.msg = n[t2], t2;
+        function R(e2, t3) {
+          return e2.msg = n[t3], t3;
         }
         __name(R, "R");
         function T(e2) {
@@ -3526,52 +8438,52 @@ var require_jszip_min = __commonJS({
         }
         __name(T, "T");
         function D(e2) {
-          for (var t2 = e2.length; 0 <= --t2; )
-            e2[t2] = 0;
+          for (var t3 = e2.length; 0 <= --t3; )
+            e2[t3] = 0;
         }
         __name(D, "D");
         function F(e2) {
-          var t2 = e2.state, r2 = t2.pending;
-          r2 > e2.avail_out && (r2 = e2.avail_out), 0 !== r2 && (c.arraySet(e2.output, t2.pending_buf, t2.pending_out, r2, e2.next_out), e2.next_out += r2, t2.pending_out += r2, e2.total_out += r2, e2.avail_out -= r2, t2.pending -= r2, 0 === t2.pending && (t2.pending_out = 0));
+          var t3 = e2.state, r2 = t3.pending;
+          r2 > e2.avail_out && (r2 = e2.avail_out), 0 !== r2 && (c.arraySet(e2.output, t3.pending_buf, t3.pending_out, r2, e2.next_out), e2.next_out += r2, t3.pending_out += r2, e2.total_out += r2, e2.avail_out -= r2, t3.pending -= r2, 0 === t3.pending && (t3.pending_out = 0));
         }
         __name(F, "F");
-        function N(e2, t2) {
-          u._tr_flush_block(e2, 0 <= e2.block_start ? e2.block_start : -1, e2.strstart - e2.block_start, t2), e2.block_start = e2.strstart, F(e2.strm);
+        function N(e2, t3) {
+          u._tr_flush_block(e2, 0 <= e2.block_start ? e2.block_start : -1, e2.strstart - e2.block_start, t3), e2.block_start = e2.strstart, F(e2.strm);
         }
         __name(N, "N");
-        function U(e2, t2) {
-          e2.pending_buf[e2.pending++] = t2;
+        function U(e2, t3) {
+          e2.pending_buf[e2.pending++] = t3;
         }
         __name(U, "U");
-        function P(e2, t2) {
-          e2.pending_buf[e2.pending++] = t2 >>> 8 & 255, e2.pending_buf[e2.pending++] = 255 & t2;
+        function P(e2, t3) {
+          e2.pending_buf[e2.pending++] = t3 >>> 8 & 255, e2.pending_buf[e2.pending++] = 255 & t3;
         }
         __name(P, "P");
-        function L(e2, t2) {
+        function L(e2, t3) {
           var r2, n2, i2 = e2.max_chain_length, s2 = e2.strstart, a2 = e2.prev_length, o2 = e2.nice_match, h2 = e2.strstart > e2.w_size - z ? e2.strstart - (e2.w_size - z) : 0, u2 = e2.window, l2 = e2.w_mask, f2 = e2.prev, c2 = e2.strstart + S, d2 = u2[s2 + a2 - 1], p2 = u2[s2 + a2];
           e2.prev_length >= e2.good_match && (i2 >>= 2), o2 > e2.lookahead && (o2 = e2.lookahead);
           do {
-            if (u2[(r2 = t2) + a2] === p2 && u2[r2 + a2 - 1] === d2 && u2[r2] === u2[s2] && u2[++r2] === u2[s2 + 1]) {
+            if (u2[(r2 = t3) + a2] === p2 && u2[r2 + a2 - 1] === d2 && u2[r2] === u2[s2] && u2[++r2] === u2[s2 + 1]) {
               s2 += 2, r2++;
               do {
               } while (u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && s2 < c2);
               if (n2 = S - (c2 - s2), s2 = c2 - S, a2 < n2) {
-                if (e2.match_start = t2, o2 <= (a2 = n2))
+                if (e2.match_start = t3, o2 <= (a2 = n2))
                   break;
                 d2 = u2[s2 + a2 - 1], p2 = u2[s2 + a2];
               }
             }
-          } while ((t2 = f2[t2 & l2]) > h2 && 0 != --i2);
+          } while ((t3 = f2[t3 & l2]) > h2 && 0 != --i2);
           return a2 <= e2.lookahead ? a2 : e2.lookahead;
         }
         __name(L, "L");
         function j(e2) {
-          var t2, r2, n2, i2, s2, a2, o2, h2, u2, l2, f2 = e2.w_size;
+          var t3, r2, n2, i2, s2, a2, o2, h2, u2, l2, f2 = e2.w_size;
           do {
             if (i2 = e2.window_size - e2.lookahead - e2.strstart, e2.strstart >= f2 + (f2 - z)) {
-              for (c.arraySet(e2.window, e2.window, f2, f2, 0), e2.match_start -= f2, e2.strstart -= f2, e2.block_start -= f2, t2 = r2 = e2.hash_size; n2 = e2.head[--t2], e2.head[t2] = f2 <= n2 ? n2 - f2 : 0, --r2; )
+              for (c.arraySet(e2.window, e2.window, f2, f2, 0), e2.match_start -= f2, e2.strstart -= f2, e2.block_start -= f2, t3 = r2 = e2.hash_size; n2 = e2.head[--t3], e2.head[t3] = f2 <= n2 ? n2 - f2 : 0, --r2; )
                 ;
-              for (t2 = r2 = f2; n2 = e2.prev[--t2], e2.prev[t2] = f2 <= n2 ? n2 - f2 : 0, --r2; )
+              for (t3 = r2 = f2; n2 = e2.prev[--t3], e2.prev[t3] = f2 <= n2 ? n2 - f2 : 0, --r2; )
                 ;
               i2 += f2;
             }
@@ -3583,10 +8495,10 @@ var require_jszip_min = __commonJS({
           } while (e2.lookahead < z && 0 !== e2.strm.avail_in);
         }
         __name(j, "j");
-        function Z(e2, t2) {
+        function Z(e2, t3) {
           for (var r2, n2; ; ) {
             if (e2.lookahead < z) {
-              if (j(e2), e2.lookahead < z && t2 === l)
+              if (j(e2), e2.lookahead < z && t3 === l)
                 return A;
               if (0 === e2.lookahead)
                 break;
@@ -3603,13 +8515,13 @@ var require_jszip_min = __commonJS({
             if (n2 && (N(e2, false), 0 === e2.strm.avail_out))
               return A;
           }
-          return e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
+          return e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t3 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
         }
         __name(Z, "Z");
-        function W(e2, t2) {
+        function W(e2, t3) {
           for (var r2, n2, i2; ; ) {
             if (e2.lookahead < z) {
-              if (j(e2), e2.lookahead < z && t2 === l)
+              if (j(e2), e2.lookahead < z && t3 === l)
                 return A;
               if (0 === e2.lookahead)
                 break;
@@ -3625,11 +8537,11 @@ var require_jszip_min = __commonJS({
             } else
               e2.match_available = 1, e2.strstart++, e2.lookahead--;
           }
-          return e2.match_available && (n2 = u._tr_tally(e2, 0, e2.window[e2.strstart - 1]), e2.match_available = 0), e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
+          return e2.match_available && (n2 = u._tr_tally(e2, 0, e2.window[e2.strstart - 1]), e2.match_available = 0), e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t3 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
         }
         __name(W, "W");
-        function M(e2, t2, r2, n2, i2) {
-          this.good_length = e2, this.max_lazy = t2, this.nice_length = r2, this.max_chain = n2, this.func = i2;
+        function M(e2, t3, r2, n2, i2) {
+          this.good_length = e2, this.max_lazy = t3, this.nice_length = r2, this.max_chain = n2, this.func = i2;
         }
         __name(M, "M");
         function H() {
@@ -3637,33 +8549,33 @@ var require_jszip_min = __commonJS({
         }
         __name(H, "H");
         function G(e2) {
-          var t2;
-          return e2 && e2.state ? (e2.total_in = e2.total_out = 0, e2.data_type = i, (t2 = e2.state).pending = 0, t2.pending_out = 0, t2.wrap < 0 && (t2.wrap = -t2.wrap), t2.status = t2.wrap ? C : E, e2.adler = 2 === t2.wrap ? 0 : 1, t2.last_flush = l, u._tr_init(t2), m) : R(e2, _);
+          var t3;
+          return e2 && e2.state ? (e2.total_in = e2.total_out = 0, e2.data_type = i, (t3 = e2.state).pending = 0, t3.pending_out = 0, t3.wrap < 0 && (t3.wrap = -t3.wrap), t3.status = t3.wrap ? C : E, e2.adler = 2 === t3.wrap ? 0 : 1, t3.last_flush = l, u._tr_init(t3), m) : R(e2, _);
         }
         __name(G, "G");
         function K(e2) {
-          var t2 = G(e2);
-          return t2 === m && function(e3) {
+          var t3 = G(e2);
+          return t3 === m && function(e3) {
             e3.window_size = 2 * e3.w_size, D(e3.head), e3.max_lazy_match = h[e3.level].max_lazy, e3.good_match = h[e3.level].good_length, e3.nice_match = h[e3.level].nice_length, e3.max_chain_length = h[e3.level].max_chain, e3.strstart = 0, e3.block_start = 0, e3.lookahead = 0, e3.insert = 0, e3.match_length = e3.prev_length = x - 1, e3.match_available = 0, e3.ins_h = 0;
-          }(e2.state), t2;
+          }(e2.state), t3;
         }
         __name(K, "K");
-        function Y(e2, t2, r2, n2, i2, s2) {
+        function Y(e2, t3, r2, n2, i2, s2) {
           if (!e2)
             return _;
           var a2 = 1;
-          if (t2 === g && (t2 = 6), n2 < 0 ? (a2 = 0, n2 = -n2) : 15 < n2 && (a2 = 2, n2 -= 16), i2 < 1 || y < i2 || r2 !== v || n2 < 8 || 15 < n2 || t2 < 0 || 9 < t2 || s2 < 0 || b < s2)
+          if (t3 === g && (t3 = 6), n2 < 0 ? (a2 = 0, n2 = -n2) : 15 < n2 && (a2 = 2, n2 -= 16), i2 < 1 || y < i2 || r2 !== v || n2 < 8 || 15 < n2 || t3 < 0 || 9 < t3 || s2 < 0 || b < s2)
             return R(e2, _);
           8 === n2 && (n2 = 9);
           var o2 = new H();
-          return (e2.state = o2).strm = e2, o2.wrap = a2, o2.gzhead = null, o2.w_bits = n2, o2.w_size = 1 << o2.w_bits, o2.w_mask = o2.w_size - 1, o2.hash_bits = i2 + 7, o2.hash_size = 1 << o2.hash_bits, o2.hash_mask = o2.hash_size - 1, o2.hash_shift = ~~((o2.hash_bits + x - 1) / x), o2.window = new c.Buf8(2 * o2.w_size), o2.head = new c.Buf16(o2.hash_size), o2.prev = new c.Buf16(o2.w_size), o2.lit_bufsize = 1 << i2 + 6, o2.pending_buf_size = 4 * o2.lit_bufsize, o2.pending_buf = new c.Buf8(o2.pending_buf_size), o2.d_buf = 1 * o2.lit_bufsize, o2.l_buf = 3 * o2.lit_bufsize, o2.level = t2, o2.strategy = s2, o2.method = r2, K(e2);
+          return (e2.state = o2).strm = e2, o2.wrap = a2, o2.gzhead = null, o2.w_bits = n2, o2.w_size = 1 << o2.w_bits, o2.w_mask = o2.w_size - 1, o2.hash_bits = i2 + 7, o2.hash_size = 1 << o2.hash_bits, o2.hash_mask = o2.hash_size - 1, o2.hash_shift = ~~((o2.hash_bits + x - 1) / x), o2.window = new c.Buf8(2 * o2.w_size), o2.head = new c.Buf16(o2.hash_size), o2.prev = new c.Buf16(o2.w_size), o2.lit_bufsize = 1 << i2 + 6, o2.pending_buf_size = 4 * o2.lit_bufsize, o2.pending_buf = new c.Buf8(o2.pending_buf_size), o2.d_buf = 1 * o2.lit_bufsize, o2.l_buf = 3 * o2.lit_bufsize, o2.level = t3, o2.strategy = s2, o2.method = r2, K(e2);
         }
         __name(Y, "Y");
-        h = [new M(0, 0, 0, 0, function(e2, t2) {
+        h = [new M(0, 0, 0, 0, function(e2, t3) {
           var r2 = 65535;
           for (r2 > e2.pending_buf_size - 5 && (r2 = e2.pending_buf_size - 5); ; ) {
             if (e2.lookahead <= 1) {
-              if (j(e2), 0 === e2.lookahead && t2 === l)
+              if (j(e2), 0 === e2.lookahead && t3 === l)
                 return A;
               if (0 === e2.lookahead)
                 break;
@@ -3675,18 +8587,18 @@ var require_jszip_min = __commonJS({
             if (e2.strstart - e2.block_start >= e2.w_size - z && (N(e2, false), 0 === e2.strm.avail_out))
               return A;
           }
-          return e2.insert = 0, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : (e2.strstart > e2.block_start && (N(e2, false), e2.strm.avail_out), A);
-        }), new M(4, 4, 8, 4, Z), new M(4, 5, 16, 8, Z), new M(4, 6, 32, 32, Z), new M(4, 4, 16, 16, W), new M(8, 16, 32, 32, W), new M(8, 16, 128, 128, W), new M(8, 32, 128, 256, W), new M(32, 128, 258, 1024, W), new M(32, 258, 258, 4096, W)], r.deflateInit = function(e2, t2) {
-          return Y(e2, t2, v, 15, 8, 0);
-        }, r.deflateInit2 = Y, r.deflateReset = K, r.deflateResetKeep = G, r.deflateSetHeader = function(e2, t2) {
-          return e2 && e2.state ? 2 !== e2.state.wrap ? _ : (e2.state.gzhead = t2, m) : _;
-        }, r.deflate = function(e2, t2) {
+          return e2.insert = 0, t3 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : (e2.strstart > e2.block_start && (N(e2, false), e2.strm.avail_out), A);
+        }), new M(4, 4, 8, 4, Z), new M(4, 5, 16, 8, Z), new M(4, 6, 32, 32, Z), new M(4, 4, 16, 16, W), new M(8, 16, 32, 32, W), new M(8, 16, 128, 128, W), new M(8, 32, 128, 256, W), new M(32, 128, 258, 1024, W), new M(32, 258, 258, 4096, W)], r.deflateInit = function(e2, t3) {
+          return Y(e2, t3, v, 15, 8, 0);
+        }, r.deflateInit2 = Y, r.deflateReset = K, r.deflateResetKeep = G, r.deflateSetHeader = function(e2, t3) {
+          return e2 && e2.state ? 2 !== e2.state.wrap ? _ : (e2.state.gzhead = t3, m) : _;
+        }, r.deflate = function(e2, t3) {
           var r2, n2, i2, s2;
-          if (!e2 || !e2.state || 5 < t2 || t2 < 0)
+          if (!e2 || !e2.state || 5 < t3 || t3 < 0)
             return e2 ? R(e2, _) : _;
-          if (n2 = e2.state, !e2.output || !e2.input && 0 !== e2.avail_in || 666 === n2.status && t2 !== f)
+          if (n2 = e2.state, !e2.output || !e2.input && 0 !== e2.avail_in || 666 === n2.status && t3 !== f)
             return R(e2, 0 === e2.avail_out ? -5 : _);
-          if (n2.strm = e2, r2 = n2.last_flush, n2.last_flush = t2, n2.status === C)
+          if (n2.strm = e2, r2 = n2.last_flush, n2.last_flush = t3, n2.status === C)
             if (2 === n2.wrap)
               e2.adler = 0, U(n2, 31), U(n2, 139), U(n2, 8), n2.gzhead ? (U(n2, (n2.gzhead.text ? 1 : 0) + (n2.gzhead.hcrc ? 2 : 0) + (n2.gzhead.extra ? 4 : 0) + (n2.gzhead.name ? 8 : 0) + (n2.gzhead.comment ? 16 : 0)), U(n2, 255 & n2.gzhead.time), U(n2, n2.gzhead.time >> 8 & 255), U(n2, n2.gzhead.time >> 16 & 255), U(n2, n2.gzhead.time >> 24 & 255), U(n2, 9 === n2.level ? 2 : 2 <= n2.strategy || n2.level < 2 ? 4 : 0), U(n2, 255 & n2.gzhead.os), n2.gzhead.extra && n2.gzhead.extra.length && (U(n2, 255 & n2.gzhead.extra.length), U(n2, n2.gzhead.extra.length >> 8 & 255)), n2.gzhead.hcrc && (e2.adler = p(e2.adler, n2.pending_buf, n2.pending, 0)), n2.gzindex = 0, n2.status = 69) : (U(n2, 0), U(n2, 0), U(n2, 0), U(n2, 0), U(n2, 0), U(n2, 9 === n2.level ? 2 : 2 <= n2.strategy || n2.level < 2 ? 4 : 0), U(n2, 3), n2.status = E);
             else {
@@ -3729,26 +8641,26 @@ var require_jszip_min = __commonJS({
           if (103 === n2.status && (n2.gzhead.hcrc ? (n2.pending + 2 > n2.pending_buf_size && F(e2), n2.pending + 2 <= n2.pending_buf_size && (U(n2, 255 & e2.adler), U(n2, e2.adler >> 8 & 255), e2.adler = 0, n2.status = E)) : n2.status = E), 0 !== n2.pending) {
             if (F(e2), 0 === e2.avail_out)
               return n2.last_flush = -1, m;
-          } else if (0 === e2.avail_in && T(t2) <= T(r2) && t2 !== f)
+          } else if (0 === e2.avail_in && T(t3) <= T(r2) && t3 !== f)
             return R(e2, -5);
           if (666 === n2.status && 0 !== e2.avail_in)
             return R(e2, -5);
-          if (0 !== e2.avail_in || 0 !== n2.lookahead || t2 !== l && 666 !== n2.status) {
-            var o2 = 2 === n2.strategy ? function(e3, t3) {
+          if (0 !== e2.avail_in || 0 !== n2.lookahead || t3 !== l && 666 !== n2.status) {
+            var o2 = 2 === n2.strategy ? function(e3, t4) {
               for (var r3; ; ) {
                 if (0 === e3.lookahead && (j(e3), 0 === e3.lookahead)) {
-                  if (t3 === l)
+                  if (t4 === l)
                     return A;
                   break;
                 }
                 if (e3.match_length = 0, r3 = u._tr_tally(e3, 0, e3.window[e3.strstart]), e3.lookahead--, e3.strstart++, r3 && (N(e3, false), 0 === e3.strm.avail_out))
                   return A;
               }
-              return e3.insert = 0, t3 === f ? (N(e3, true), 0 === e3.strm.avail_out ? O : B) : e3.last_lit && (N(e3, false), 0 === e3.strm.avail_out) ? A : I;
-            }(n2, t2) : 3 === n2.strategy ? function(e3, t3) {
+              return e3.insert = 0, t4 === f ? (N(e3, true), 0 === e3.strm.avail_out ? O : B) : e3.last_lit && (N(e3, false), 0 === e3.strm.avail_out) ? A : I;
+            }(n2, t3) : 3 === n2.strategy ? function(e3, t4) {
               for (var r3, n3, i3, s3, a3 = e3.window; ; ) {
                 if (e3.lookahead <= S) {
-                  if (j(e3), e3.lookahead <= S && t3 === l)
+                  if (j(e3), e3.lookahead <= S && t4 === l)
                     return A;
                   if (0 === e3.lookahead)
                     break;
@@ -3762,40 +8674,40 @@ var require_jszip_min = __commonJS({
                 if (e3.match_length >= x ? (r3 = u._tr_tally(e3, 1, e3.match_length - x), e3.lookahead -= e3.match_length, e3.strstart += e3.match_length, e3.match_length = 0) : (r3 = u._tr_tally(e3, 0, e3.window[e3.strstart]), e3.lookahead--, e3.strstart++), r3 && (N(e3, false), 0 === e3.strm.avail_out))
                   return A;
               }
-              return e3.insert = 0, t3 === f ? (N(e3, true), 0 === e3.strm.avail_out ? O : B) : e3.last_lit && (N(e3, false), 0 === e3.strm.avail_out) ? A : I;
-            }(n2, t2) : h[n2.level].func(n2, t2);
+              return e3.insert = 0, t4 === f ? (N(e3, true), 0 === e3.strm.avail_out ? O : B) : e3.last_lit && (N(e3, false), 0 === e3.strm.avail_out) ? A : I;
+            }(n2, t3) : h[n2.level].func(n2, t3);
             if (o2 !== O && o2 !== B || (n2.status = 666), o2 === A || o2 === O)
               return 0 === e2.avail_out && (n2.last_flush = -1), m;
-            if (o2 === I && (1 === t2 ? u._tr_align(n2) : 5 !== t2 && (u._tr_stored_block(n2, 0, 0, false), 3 === t2 && (D(n2.head), 0 === n2.lookahead && (n2.strstart = 0, n2.block_start = 0, n2.insert = 0))), F(e2), 0 === e2.avail_out))
+            if (o2 === I && (1 === t3 ? u._tr_align(n2) : 5 !== t3 && (u._tr_stored_block(n2, 0, 0, false), 3 === t3 && (D(n2.head), 0 === n2.lookahead && (n2.strstart = 0, n2.block_start = 0, n2.insert = 0))), F(e2), 0 === e2.avail_out))
               return n2.last_flush = -1, m;
           }
-          return t2 !== f ? m : n2.wrap <= 0 ? 1 : (2 === n2.wrap ? (U(n2, 255 & e2.adler), U(n2, e2.adler >> 8 & 255), U(n2, e2.adler >> 16 & 255), U(n2, e2.adler >> 24 & 255), U(n2, 255 & e2.total_in), U(n2, e2.total_in >> 8 & 255), U(n2, e2.total_in >> 16 & 255), U(n2, e2.total_in >> 24 & 255)) : (P(n2, e2.adler >>> 16), P(n2, 65535 & e2.adler)), F(e2), 0 < n2.wrap && (n2.wrap = -n2.wrap), 0 !== n2.pending ? m : 1);
+          return t3 !== f ? m : n2.wrap <= 0 ? 1 : (2 === n2.wrap ? (U(n2, 255 & e2.adler), U(n2, e2.adler >> 8 & 255), U(n2, e2.adler >> 16 & 255), U(n2, e2.adler >> 24 & 255), U(n2, 255 & e2.total_in), U(n2, e2.total_in >> 8 & 255), U(n2, e2.total_in >> 16 & 255), U(n2, e2.total_in >> 24 & 255)) : (P(n2, e2.adler >>> 16), P(n2, 65535 & e2.adler)), F(e2), 0 < n2.wrap && (n2.wrap = -n2.wrap), 0 !== n2.pending ? m : 1);
         }, r.deflateEnd = function(e2) {
-          var t2;
-          return e2 && e2.state ? (t2 = e2.state.status) !== C && 69 !== t2 && 73 !== t2 && 91 !== t2 && 103 !== t2 && t2 !== E && 666 !== t2 ? R(e2, _) : (e2.state = null, t2 === E ? R(e2, -3) : m) : _;
-        }, r.deflateSetDictionary = function(e2, t2) {
-          var r2, n2, i2, s2, a2, o2, h2, u2, l2 = t2.length;
+          var t3;
+          return e2 && e2.state ? (t3 = e2.state.status) !== C && 69 !== t3 && 73 !== t3 && 91 !== t3 && 103 !== t3 && t3 !== E && 666 !== t3 ? R(e2, _) : (e2.state = null, t3 === E ? R(e2, -3) : m) : _;
+        }, r.deflateSetDictionary = function(e2, t3) {
+          var r2, n2, i2, s2, a2, o2, h2, u2, l2 = t3.length;
           if (!e2 || !e2.state)
             return _;
           if (2 === (s2 = (r2 = e2.state).wrap) || 1 === s2 && r2.status !== C || r2.lookahead)
             return _;
-          for (1 === s2 && (e2.adler = d(e2.adler, t2, l2, 0)), r2.wrap = 0, l2 >= r2.w_size && (0 === s2 && (D(r2.head), r2.strstart = 0, r2.block_start = 0, r2.insert = 0), u2 = new c.Buf8(r2.w_size), c.arraySet(u2, t2, l2 - r2.w_size, r2.w_size, 0), t2 = u2, l2 = r2.w_size), a2 = e2.avail_in, o2 = e2.next_in, h2 = e2.input, e2.avail_in = l2, e2.next_in = 0, e2.input = t2, j(r2); r2.lookahead >= x; ) {
+          for (1 === s2 && (e2.adler = d(e2.adler, t3, l2, 0)), r2.wrap = 0, l2 >= r2.w_size && (0 === s2 && (D(r2.head), r2.strstart = 0, r2.block_start = 0, r2.insert = 0), u2 = new c.Buf8(r2.w_size), c.arraySet(u2, t3, l2 - r2.w_size, r2.w_size, 0), t3 = u2, l2 = r2.w_size), a2 = e2.avail_in, o2 = e2.next_in, h2 = e2.input, e2.avail_in = l2, e2.next_in = 0, e2.input = t3, j(r2); r2.lookahead >= x; ) {
             for (n2 = r2.strstart, i2 = r2.lookahead - (x - 1); r2.ins_h = (r2.ins_h << r2.hash_shift ^ r2.window[n2 + x - 1]) & r2.hash_mask, r2.prev[n2 & r2.w_mask] = r2.head[r2.ins_h], r2.head[r2.ins_h] = n2, n2++, --i2; )
               ;
             r2.strstart = n2, r2.lookahead = x - 1, j(r2);
           }
           return r2.strstart += r2.lookahead, r2.block_start = r2.strstart, r2.insert = r2.lookahead, r2.lookahead = 0, r2.match_length = r2.prev_length = x - 1, r2.match_available = 0, e2.next_in = o2, e2.input = h2, e2.avail_in = a2, r2.wrap = s2, m;
         }, r.deflateInfo = "pako deflate (from Nodeca project)";
-      }, { "../utils/common": 41, "./adler32": 43, "./crc32": 45, "./messages": 51, "./trees": 52 }], 47: [function(e, t, r) {
+      }, { "../utils/common": 41, "./adler32": 43, "./crc32": 45, "./messages": 51, "./trees": 52 }], 47: [function(e, t2, r) {
         "use strict";
-        t.exports = function() {
+        t2.exports = function() {
           this.text = 0, this.time = 0, this.xflags = 0, this.os = 0, this.extra = null, this.extra_len = 0, this.name = "", this.comment = "", this.hcrc = 0, this.done = false;
         };
-      }, {}], 48: [function(e, t, r) {
+      }, {}], 48: [function(e, t2, r) {
         "use strict";
-        t.exports = function(e2, t2) {
+        t2.exports = function(e2, t3) {
           var r2, n, i, s, a, o, h, u, l, f, c, d, p, m, _, g, b, v, y, w, k, x, S, z, C;
-          r2 = e2.state, n = e2.next_in, z = e2.input, i = n + (e2.avail_in - 5), s = e2.next_out, C = e2.output, a = s - (t2 - e2.avail_out), o = s + (e2.avail_out - 257), h = r2.dmax, u = r2.wsize, l = r2.whave, f = r2.wnext, c = r2.window, d = r2.hold, p = r2.bits, m = r2.lencode, _ = r2.distcode, g = (1 << r2.lenbits) - 1, b = (1 << r2.distbits) - 1;
+          r2 = e2.state, n = e2.next_in, z = e2.input, i = n + (e2.avail_in - 5), s = e2.next_out, C = e2.output, a = s - (t3 - e2.avail_out), o = s + (e2.avail_out - 257), h = r2.dmax, u = r2.wsize, l = r2.whave, f = r2.wnext, c = r2.window, d = r2.hold, p = r2.bits, m = r2.lencode, _ = r2.distcode, g = (1 << r2.lenbits) - 1, b = (1 << r2.distbits) - 1;
           e:
             do {
               p < 15 && (d += z[n++] << p, p += 8, d += z[n++] << p, p += 8), v = m[d & g];
@@ -3873,7 +8785,7 @@ var require_jszip_min = __commonJS({
             } while (n < i && s < o);
           n -= w = p >> 3, d &= (1 << (p -= w << 3)) - 1, e2.next_in = n, e2.next_out = s, e2.avail_in = n < i ? i - n + 5 : 5 - (n - i), e2.avail_out = s < o ? o - s + 257 : 257 - (s - o), r2.hold = d, r2.bits = p;
         };
-      }, {}], 49: [function(e, t, r) {
+      }, {}], 49: [function(e, t2, r) {
         "use strict";
         var I = e("../utils/common"), O = e("./adler32"), B = e("./crc32"), R = e("./inffast"), T = e("./inftrees"), D = 1, F = 2, N = 0, U = -2, P = 1, n = 852, i = 592;
         function L(e2) {
@@ -3885,52 +8797,52 @@ var require_jszip_min = __commonJS({
         }
         __name(s, "s");
         function a(e2) {
-          var t2;
-          return e2 && e2.state ? (t2 = e2.state, e2.total_in = e2.total_out = t2.total = 0, e2.msg = "", t2.wrap && (e2.adler = 1 & t2.wrap), t2.mode = P, t2.last = 0, t2.havedict = 0, t2.dmax = 32768, t2.head = null, t2.hold = 0, t2.bits = 0, t2.lencode = t2.lendyn = new I.Buf32(n), t2.distcode = t2.distdyn = new I.Buf32(i), t2.sane = 1, t2.back = -1, N) : U;
+          var t3;
+          return e2 && e2.state ? (t3 = e2.state, e2.total_in = e2.total_out = t3.total = 0, e2.msg = "", t3.wrap && (e2.adler = 1 & t3.wrap), t3.mode = P, t3.last = 0, t3.havedict = 0, t3.dmax = 32768, t3.head = null, t3.hold = 0, t3.bits = 0, t3.lencode = t3.lendyn = new I.Buf32(n), t3.distcode = t3.distdyn = new I.Buf32(i), t3.sane = 1, t3.back = -1, N) : U;
         }
         __name(a, "a");
         function o(e2) {
-          var t2;
-          return e2 && e2.state ? ((t2 = e2.state).wsize = 0, t2.whave = 0, t2.wnext = 0, a(e2)) : U;
+          var t3;
+          return e2 && e2.state ? ((t3 = e2.state).wsize = 0, t3.whave = 0, t3.wnext = 0, a(e2)) : U;
         }
         __name(o, "o");
-        function h(e2, t2) {
+        function h(e2, t3) {
           var r2, n2;
-          return e2 && e2.state ? (n2 = e2.state, t2 < 0 ? (r2 = 0, t2 = -t2) : (r2 = 1 + (t2 >> 4), t2 < 48 && (t2 &= 15)), t2 && (t2 < 8 || 15 < t2) ? U : (null !== n2.window && n2.wbits !== t2 && (n2.window = null), n2.wrap = r2, n2.wbits = t2, o(e2))) : U;
+          return e2 && e2.state ? (n2 = e2.state, t3 < 0 ? (r2 = 0, t3 = -t3) : (r2 = 1 + (t3 >> 4), t3 < 48 && (t3 &= 15)), t3 && (t3 < 8 || 15 < t3) ? U : (null !== n2.window && n2.wbits !== t3 && (n2.window = null), n2.wrap = r2, n2.wbits = t3, o(e2))) : U;
         }
         __name(h, "h");
-        function u(e2, t2) {
+        function u(e2, t3) {
           var r2, n2;
-          return e2 ? (n2 = new s(), (e2.state = n2).window = null, (r2 = h(e2, t2)) !== N && (e2.state = null), r2) : U;
+          return e2 ? (n2 = new s(), (e2.state = n2).window = null, (r2 = h(e2, t3)) !== N && (e2.state = null), r2) : U;
         }
         __name(u, "u");
         var l, f, c = true;
         function j(e2) {
           if (c) {
-            var t2;
-            for (l = new I.Buf32(512), f = new I.Buf32(32), t2 = 0; t2 < 144; )
-              e2.lens[t2++] = 8;
-            for (; t2 < 256; )
-              e2.lens[t2++] = 9;
-            for (; t2 < 280; )
-              e2.lens[t2++] = 7;
-            for (; t2 < 288; )
-              e2.lens[t2++] = 8;
-            for (T(D, e2.lens, 0, 288, l, 0, e2.work, { bits: 9 }), t2 = 0; t2 < 32; )
-              e2.lens[t2++] = 5;
+            var t3;
+            for (l = new I.Buf32(512), f = new I.Buf32(32), t3 = 0; t3 < 144; )
+              e2.lens[t3++] = 8;
+            for (; t3 < 256; )
+              e2.lens[t3++] = 9;
+            for (; t3 < 280; )
+              e2.lens[t3++] = 7;
+            for (; t3 < 288; )
+              e2.lens[t3++] = 8;
+            for (T(D, e2.lens, 0, 288, l, 0, e2.work, { bits: 9 }), t3 = 0; t3 < 32; )
+              e2.lens[t3++] = 5;
             T(F, e2.lens, 0, 32, f, 0, e2.work, { bits: 5 }), c = false;
           }
           e2.lencode = l, e2.lenbits = 9, e2.distcode = f, e2.distbits = 5;
         }
         __name(j, "j");
-        function Z(e2, t2, r2, n2) {
+        function Z(e2, t3, r2, n2) {
           var i2, s2 = e2.state;
-          return null === s2.window && (s2.wsize = 1 << s2.wbits, s2.wnext = 0, s2.whave = 0, s2.window = new I.Buf8(s2.wsize)), n2 >= s2.wsize ? (I.arraySet(s2.window, t2, r2 - s2.wsize, s2.wsize, 0), s2.wnext = 0, s2.whave = s2.wsize) : (n2 < (i2 = s2.wsize - s2.wnext) && (i2 = n2), I.arraySet(s2.window, t2, r2 - n2, i2, s2.wnext), (n2 -= i2) ? (I.arraySet(s2.window, t2, r2 - n2, n2, 0), s2.wnext = n2, s2.whave = s2.wsize) : (s2.wnext += i2, s2.wnext === s2.wsize && (s2.wnext = 0), s2.whave < s2.wsize && (s2.whave += i2))), 0;
+          return null === s2.window && (s2.wsize = 1 << s2.wbits, s2.wnext = 0, s2.whave = 0, s2.window = new I.Buf8(s2.wsize)), n2 >= s2.wsize ? (I.arraySet(s2.window, t3, r2 - s2.wsize, s2.wsize, 0), s2.wnext = 0, s2.whave = s2.wsize) : (n2 < (i2 = s2.wsize - s2.wnext) && (i2 = n2), I.arraySet(s2.window, t3, r2 - n2, i2, s2.wnext), (n2 -= i2) ? (I.arraySet(s2.window, t3, r2 - n2, n2, 0), s2.wnext = n2, s2.whave = s2.wsize) : (s2.wnext += i2, s2.wnext === s2.wsize && (s2.wnext = 0), s2.whave < s2.wsize && (s2.whave += i2))), 0;
         }
         __name(Z, "Z");
         r.inflateReset = o, r.inflateReset2 = h, r.inflateResetKeep = a, r.inflateInit = function(e2) {
           return u(e2, 15);
-        }, r.inflateInit2 = u, r.inflate = function(e2, t2) {
+        }, r.inflateInit2 = u, r.inflate = function(e2, t3) {
           var r2, n2, i2, s2, a2, o2, h2, u2, l2, f2, c2, d, p, m, _, g, b, v, y, w, k, x, S, z, C = 0, E = new I.Buf8(4), A = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
           if (!e2 || !e2.state || !e2.output || !e2.input && 0 !== e2.avail_in)
             return U;
@@ -4061,7 +8973,7 @@ var require_jszip_min = __commonJS({
                     return e2.next_out = a2, e2.avail_out = h2, e2.next_in = s2, e2.avail_in = o2, r2.hold = u2, r2.bits = l2, 2;
                   e2.adler = r2.check = 1, r2.mode = 12;
                 case 12:
-                  if (5 === t2 || 6 === t2)
+                  if (5 === t3 || 6 === t3)
                     break e;
                 case 13:
                   if (r2.last) {
@@ -4078,7 +8990,7 @@ var require_jszip_min = __commonJS({
                       r2.mode = 14;
                       break;
                     case 1:
-                      if (j(r2), r2.mode = 20, 6 !== t2)
+                      if (j(r2), r2.mode = 20, 6 !== t3)
                         break;
                       u2 >>>= 2, l2 -= 2;
                       break e;
@@ -4100,7 +9012,7 @@ var require_jszip_min = __commonJS({
                     e2.msg = "invalid stored block lengths", r2.mode = 30;
                     break;
                   }
-                  if (r2.length = 65535 & u2, l2 = u2 = 0, r2.mode = 15, 6 === t2)
+                  if (r2.length = 65535 & u2, l2 = u2 = 0, r2.mode = 15, 6 === t3)
                     break e;
                 case 15:
                   r2.mode = 16;
@@ -4198,7 +9110,7 @@ var require_jszip_min = __commonJS({
                     e2.msg = "invalid distances set", r2.mode = 30;
                     break;
                   }
-                  if (r2.mode = 20, 6 === t2)
+                  if (r2.mode = 20, 6 === t3)
                     break e;
                 case 20:
                   r2.mode = 21;
@@ -4336,28 +9248,28 @@ var require_jszip_min = __commonJS({
                 default:
                   return U;
               }
-          return e2.next_out = a2, e2.avail_out = h2, e2.next_in = s2, e2.avail_in = o2, r2.hold = u2, r2.bits = l2, (r2.wsize || c2 !== e2.avail_out && r2.mode < 30 && (r2.mode < 27 || 4 !== t2)) && Z(e2, e2.output, e2.next_out, c2 - e2.avail_out) ? (r2.mode = 31, -4) : (f2 -= e2.avail_in, c2 -= e2.avail_out, e2.total_in += f2, e2.total_out += c2, r2.total += c2, r2.wrap && c2 && (e2.adler = r2.check = r2.flags ? B(r2.check, i2, c2, e2.next_out - c2) : O(r2.check, i2, c2, e2.next_out - c2)), e2.data_type = r2.bits + (r2.last ? 64 : 0) + (12 === r2.mode ? 128 : 0) + (20 === r2.mode || 15 === r2.mode ? 256 : 0), (0 == f2 && 0 === c2 || 4 === t2) && x === N && (x = -5), x);
+          return e2.next_out = a2, e2.avail_out = h2, e2.next_in = s2, e2.avail_in = o2, r2.hold = u2, r2.bits = l2, (r2.wsize || c2 !== e2.avail_out && r2.mode < 30 && (r2.mode < 27 || 4 !== t3)) && Z(e2, e2.output, e2.next_out, c2 - e2.avail_out) ? (r2.mode = 31, -4) : (f2 -= e2.avail_in, c2 -= e2.avail_out, e2.total_in += f2, e2.total_out += c2, r2.total += c2, r2.wrap && c2 && (e2.adler = r2.check = r2.flags ? B(r2.check, i2, c2, e2.next_out - c2) : O(r2.check, i2, c2, e2.next_out - c2)), e2.data_type = r2.bits + (r2.last ? 64 : 0) + (12 === r2.mode ? 128 : 0) + (20 === r2.mode || 15 === r2.mode ? 256 : 0), (0 == f2 && 0 === c2 || 4 === t3) && x === N && (x = -5), x);
         }, r.inflateEnd = function(e2) {
           if (!e2 || !e2.state)
             return U;
-          var t2 = e2.state;
-          return t2.window && (t2.window = null), e2.state = null, N;
-        }, r.inflateGetHeader = function(e2, t2) {
+          var t3 = e2.state;
+          return t3.window && (t3.window = null), e2.state = null, N;
+        }, r.inflateGetHeader = function(e2, t3) {
           var r2;
-          return e2 && e2.state ? 0 == (2 & (r2 = e2.state).wrap) ? U : ((r2.head = t2).done = false, N) : U;
-        }, r.inflateSetDictionary = function(e2, t2) {
-          var r2, n2 = t2.length;
-          return e2 && e2.state ? 0 !== (r2 = e2.state).wrap && 11 !== r2.mode ? U : 11 === r2.mode && O(1, t2, n2, 0) !== r2.check ? -3 : Z(e2, t2, n2, n2) ? (r2.mode = 31, -4) : (r2.havedict = 1, N) : U;
+          return e2 && e2.state ? 0 == (2 & (r2 = e2.state).wrap) ? U : ((r2.head = t3).done = false, N) : U;
+        }, r.inflateSetDictionary = function(e2, t3) {
+          var r2, n2 = t3.length;
+          return e2 && e2.state ? 0 !== (r2 = e2.state).wrap && 11 !== r2.mode ? U : 11 === r2.mode && O(1, t3, n2, 0) !== r2.check ? -3 : Z(e2, t3, n2, n2) ? (r2.mode = 31, -4) : (r2.havedict = 1, N) : U;
         }, r.inflateInfo = "pako inflate (from Nodeca project)";
-      }, { "../utils/common": 41, "./adler32": 43, "./crc32": 45, "./inffast": 48, "./inftrees": 50 }], 50: [function(e, t, r) {
+      }, { "../utils/common": 41, "./adler32": 43, "./crc32": 45, "./inffast": 48, "./inftrees": 50 }], 50: [function(e, t2, r) {
         "use strict";
         var D = e("../utils/common"), F = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0], N = [16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 72, 78], U = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577, 0, 0], P = [16, 16, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 64, 64];
-        t.exports = function(e2, t2, r2, n, i, s, a, o) {
+        t2.exports = function(e2, t3, r2, n, i, s, a, o) {
           var h, u, l, f, c, d, p, m, _, g = o.bits, b = 0, v = 0, y = 0, w = 0, k = 0, x = 0, S = 0, z = 0, C = 0, E = 0, A = null, I = 0, O = new D.Buf16(16), B = new D.Buf16(16), R = null, T = 0;
           for (b = 0; b <= 15; b++)
             O[b] = 0;
           for (v = 0; v < n; v++)
-            O[t2[r2 + v]]++;
+            O[t3[r2 + v]]++;
           for (k = g, w = 15; 1 <= w && 0 === O[w]; w--)
             ;
           if (w < k && (k = w), 0 === w)
@@ -4372,7 +9284,7 @@ var require_jszip_min = __commonJS({
           for (B[1] = 0, b = 1; b < 15; b++)
             B[b + 1] = B[b] + O[b];
           for (v = 0; v < n; v++)
-            0 !== t2[r2 + v] && (a[B[t2[r2 + v]]++] = v);
+            0 !== t3[r2 + v] && (a[B[t3[r2 + v]]++] = v);
           if (d = 0 === e2 ? (A = R = a, 19) : 1 === e2 ? (A = F, I -= 257, R = N, T -= 257, 256) : (A = U, R = P, -1), b = y, c = s, S = v = E = 0, l = -1, f = (C = 1 << (x = k)) - 1, 1 === e2 && 852 < C || 2 === e2 && 592 < C)
             return 1;
           for (; ; ) {
@@ -4383,7 +9295,7 @@ var require_jszip_min = __commonJS({
             if (0 !== h ? (E &= h - 1, E += h) : E = 0, v++, 0 == --O[b]) {
               if (b === w)
                 break;
-              b = t2[r2 + a[v]];
+              b = t3[r2 + a[v]];
             }
             if (k < b && (E & f) !== l) {
               for (0 === S && (S = k), c += y, z = 1 << (x = b - S); x + S < w && !((z -= O[x + S]) <= 0); )
@@ -4395,15 +9307,15 @@ var require_jszip_min = __commonJS({
           }
           return 0 !== E && (i[c + E] = b - S << 24 | 64 << 16 | 0), o.bits = k, 0;
         };
-      }, { "../utils/common": 41 }], 51: [function(e, t, r) {
+      }, { "../utils/common": 41 }], 51: [function(e, t2, r) {
         "use strict";
-        t.exports = { 2: "need dictionary", 1: "stream end", 0: "", "-1": "file error", "-2": "stream error", "-3": "data error", "-4": "insufficient memory", "-5": "buffer error", "-6": "incompatible version" };
-      }, {}], 52: [function(e, t, r) {
+        t2.exports = { 2: "need dictionary", 1: "stream end", 0: "", "-1": "file error", "-2": "stream error", "-3": "data error", "-4": "insufficient memory", "-5": "buffer error", "-6": "incompatible version" };
+      }, {}], 52: [function(e, t2, r) {
         "use strict";
         var i = e("../utils/common"), o = 0, h = 1;
         function n(e2) {
-          for (var t2 = e2.length; 0 <= --t2; )
-            e2[t2] = 0;
+          for (var t3 = e2.length; 0 <= --t3; )
+            e2[t3] = 0;
         }
         __name(n, "n");
         var s = 0, a = 29, u = 256, l = u + 1 + a, f = 30, c = 19, _ = 2 * l + 1, g = 15, d = 16, p = 7, m = 256, b = 16, v = 17, y = 18, w = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0], k = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13], x = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7], S = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15], z = new Array(2 * (l + 2));
@@ -4417,54 +9329,54 @@ var require_jszip_min = __commonJS({
         var I = new Array(a);
         n(I);
         var O, B, R, T = new Array(f);
-        function D(e2, t2, r2, n2, i2) {
-          this.static_tree = e2, this.extra_bits = t2, this.extra_base = r2, this.elems = n2, this.max_length = i2, this.has_stree = e2 && e2.length;
+        function D(e2, t3, r2, n2, i2) {
+          this.static_tree = e2, this.extra_bits = t3, this.extra_base = r2, this.elems = n2, this.max_length = i2, this.has_stree = e2 && e2.length;
         }
         __name(D, "D");
-        function F(e2, t2) {
-          this.dyn_tree = e2, this.max_code = 0, this.stat_desc = t2;
+        function F(e2, t3) {
+          this.dyn_tree = e2, this.max_code = 0, this.stat_desc = t3;
         }
         __name(F, "F");
         function N(e2) {
           return e2 < 256 ? E[e2] : E[256 + (e2 >>> 7)];
         }
         __name(N, "N");
-        function U(e2, t2) {
-          e2.pending_buf[e2.pending++] = 255 & t2, e2.pending_buf[e2.pending++] = t2 >>> 8 & 255;
+        function U(e2, t3) {
+          e2.pending_buf[e2.pending++] = 255 & t3, e2.pending_buf[e2.pending++] = t3 >>> 8 & 255;
         }
         __name(U, "U");
-        function P(e2, t2, r2) {
-          e2.bi_valid > d - r2 ? (e2.bi_buf |= t2 << e2.bi_valid & 65535, U(e2, e2.bi_buf), e2.bi_buf = t2 >> d - e2.bi_valid, e2.bi_valid += r2 - d) : (e2.bi_buf |= t2 << e2.bi_valid & 65535, e2.bi_valid += r2);
+        function P(e2, t3, r2) {
+          e2.bi_valid > d - r2 ? (e2.bi_buf |= t3 << e2.bi_valid & 65535, U(e2, e2.bi_buf), e2.bi_buf = t3 >> d - e2.bi_valid, e2.bi_valid += r2 - d) : (e2.bi_buf |= t3 << e2.bi_valid & 65535, e2.bi_valid += r2);
         }
         __name(P, "P");
-        function L(e2, t2, r2) {
-          P(e2, r2[2 * t2], r2[2 * t2 + 1]);
+        function L(e2, t3, r2) {
+          P(e2, r2[2 * t3], r2[2 * t3 + 1]);
         }
         __name(L, "L");
-        function j(e2, t2) {
-          for (var r2 = 0; r2 |= 1 & e2, e2 >>>= 1, r2 <<= 1, 0 < --t2; )
+        function j(e2, t3) {
+          for (var r2 = 0; r2 |= 1 & e2, e2 >>>= 1, r2 <<= 1, 0 < --t3; )
             ;
           return r2 >>> 1;
         }
         __name(j, "j");
-        function Z(e2, t2, r2) {
+        function Z(e2, t3, r2) {
           var n2, i2, s2 = new Array(g + 1), a2 = 0;
           for (n2 = 1; n2 <= g; n2++)
             s2[n2] = a2 = a2 + r2[n2 - 1] << 1;
-          for (i2 = 0; i2 <= t2; i2++) {
+          for (i2 = 0; i2 <= t3; i2++) {
             var o2 = e2[2 * i2 + 1];
             0 !== o2 && (e2[2 * i2] = j(s2[o2]++, o2));
           }
         }
         __name(Z, "Z");
         function W(e2) {
-          var t2;
-          for (t2 = 0; t2 < l; t2++)
-            e2.dyn_ltree[2 * t2] = 0;
-          for (t2 = 0; t2 < f; t2++)
-            e2.dyn_dtree[2 * t2] = 0;
-          for (t2 = 0; t2 < c; t2++)
-            e2.bl_tree[2 * t2] = 0;
+          var t3;
+          for (t3 = 0; t3 < l; t3++)
+            e2.dyn_ltree[2 * t3] = 0;
+          for (t3 = 0; t3 < f; t3++)
+            e2.dyn_dtree[2 * t3] = 0;
+          for (t3 = 0; t3 < c; t3++)
+            e2.bl_tree[2 * t3] = 0;
           e2.dyn_ltree[2 * m] = 1, e2.opt_len = e2.static_len = 0, e2.last_lit = e2.matches = 0;
         }
         __name(W, "W");
@@ -4472,37 +9384,37 @@ var require_jszip_min = __commonJS({
           8 < e2.bi_valid ? U(e2, e2.bi_buf) : 0 < e2.bi_valid && (e2.pending_buf[e2.pending++] = e2.bi_buf), e2.bi_buf = 0, e2.bi_valid = 0;
         }
         __name(M, "M");
-        function H(e2, t2, r2, n2) {
-          var i2 = 2 * t2, s2 = 2 * r2;
-          return e2[i2] < e2[s2] || e2[i2] === e2[s2] && n2[t2] <= n2[r2];
+        function H(e2, t3, r2, n2) {
+          var i2 = 2 * t3, s2 = 2 * r2;
+          return e2[i2] < e2[s2] || e2[i2] === e2[s2] && n2[t3] <= n2[r2];
         }
         __name(H, "H");
-        function G(e2, t2, r2) {
-          for (var n2 = e2.heap[r2], i2 = r2 << 1; i2 <= e2.heap_len && (i2 < e2.heap_len && H(t2, e2.heap[i2 + 1], e2.heap[i2], e2.depth) && i2++, !H(t2, n2, e2.heap[i2], e2.depth)); )
+        function G(e2, t3, r2) {
+          for (var n2 = e2.heap[r2], i2 = r2 << 1; i2 <= e2.heap_len && (i2 < e2.heap_len && H(t3, e2.heap[i2 + 1], e2.heap[i2], e2.depth) && i2++, !H(t3, n2, e2.heap[i2], e2.depth)); )
             e2.heap[r2] = e2.heap[i2], r2 = i2, i2 <<= 1;
           e2.heap[r2] = n2;
         }
         __name(G, "G");
-        function K(e2, t2, r2) {
+        function K(e2, t3, r2) {
           var n2, i2, s2, a2, o2 = 0;
           if (0 !== e2.last_lit)
-            for (; n2 = e2.pending_buf[e2.d_buf + 2 * o2] << 8 | e2.pending_buf[e2.d_buf + 2 * o2 + 1], i2 = e2.pending_buf[e2.l_buf + o2], o2++, 0 === n2 ? L(e2, i2, t2) : (L(e2, (s2 = A[i2]) + u + 1, t2), 0 !== (a2 = w[s2]) && P(e2, i2 -= I[s2], a2), L(e2, s2 = N(--n2), r2), 0 !== (a2 = k[s2]) && P(e2, n2 -= T[s2], a2)), o2 < e2.last_lit; )
+            for (; n2 = e2.pending_buf[e2.d_buf + 2 * o2] << 8 | e2.pending_buf[e2.d_buf + 2 * o2 + 1], i2 = e2.pending_buf[e2.l_buf + o2], o2++, 0 === n2 ? L(e2, i2, t3) : (L(e2, (s2 = A[i2]) + u + 1, t3), 0 !== (a2 = w[s2]) && P(e2, i2 -= I[s2], a2), L(e2, s2 = N(--n2), r2), 0 !== (a2 = k[s2]) && P(e2, n2 -= T[s2], a2)), o2 < e2.last_lit; )
               ;
-          L(e2, m, t2);
+          L(e2, m, t3);
         }
         __name(K, "K");
-        function Y(e2, t2) {
-          var r2, n2, i2, s2 = t2.dyn_tree, a2 = t2.stat_desc.static_tree, o2 = t2.stat_desc.has_stree, h2 = t2.stat_desc.elems, u2 = -1;
+        function Y(e2, t3) {
+          var r2, n2, i2, s2 = t3.dyn_tree, a2 = t3.stat_desc.static_tree, o2 = t3.stat_desc.has_stree, h2 = t3.stat_desc.elems, u2 = -1;
           for (e2.heap_len = 0, e2.heap_max = _, r2 = 0; r2 < h2; r2++)
             0 !== s2[2 * r2] ? (e2.heap[++e2.heap_len] = u2 = r2, e2.depth[r2] = 0) : s2[2 * r2 + 1] = 0;
           for (; e2.heap_len < 2; )
             s2[2 * (i2 = e2.heap[++e2.heap_len] = u2 < 2 ? ++u2 : 0)] = 1, e2.depth[i2] = 0, e2.opt_len--, o2 && (e2.static_len -= a2[2 * i2 + 1]);
-          for (t2.max_code = u2, r2 = e2.heap_len >> 1; 1 <= r2; r2--)
+          for (t3.max_code = u2, r2 = e2.heap_len >> 1; 1 <= r2; r2--)
             G(e2, s2, r2);
           for (i2 = h2; r2 = e2.heap[1], e2.heap[1] = e2.heap[e2.heap_len--], G(e2, s2, 1), n2 = e2.heap[1], e2.heap[--e2.heap_max] = r2, e2.heap[--e2.heap_max] = n2, s2[2 * i2] = s2[2 * r2] + s2[2 * n2], e2.depth[i2] = (e2.depth[r2] >= e2.depth[n2] ? e2.depth[r2] : e2.depth[n2]) + 1, s2[2 * r2 + 1] = s2[2 * n2 + 1] = i2, e2.heap[1] = i2++, G(e2, s2, 1), 2 <= e2.heap_len; )
             ;
-          e2.heap[--e2.heap_max] = e2.heap[1], function(e3, t3) {
-            var r3, n3, i3, s3, a3, o3, h3 = t3.dyn_tree, u3 = t3.max_code, l2 = t3.stat_desc.static_tree, f2 = t3.stat_desc.has_stree, c2 = t3.stat_desc.extra_bits, d2 = t3.stat_desc.extra_base, p2 = t3.stat_desc.max_length, m2 = 0;
+          e2.heap[--e2.heap_max] = e2.heap[1], function(e3, t4) {
+            var r3, n3, i3, s3, a3, o3, h3 = t4.dyn_tree, u3 = t4.max_code, l2 = t4.stat_desc.static_tree, f2 = t4.stat_desc.has_stree, c2 = t4.stat_desc.extra_bits, d2 = t4.stat_desc.extra_base, p2 = t4.stat_desc.max_length, m2 = 0;
             for (s3 = 0; s3 <= g; s3++)
               e3.bl_count[s3] = 0;
             for (h3[2 * e3.heap[e3.heap_max] + 1] = 0, r3 = e3.heap_max + 1; r3 < _; r3++)
@@ -4517,19 +9429,19 @@ var require_jszip_min = __commonJS({
                 for (n3 = e3.bl_count[s3]; 0 !== n3; )
                   u3 < (i3 = e3.heap[--r3]) || (h3[2 * i3 + 1] !== s3 && (e3.opt_len += (s3 - h3[2 * i3 + 1]) * h3[2 * i3], h3[2 * i3 + 1] = s3), n3--);
             }
-          }(e2, t2), Z(s2, u2, e2.bl_count);
+          }(e2, t3), Z(s2, u2, e2.bl_count);
         }
         __name(Y, "Y");
-        function X(e2, t2, r2) {
-          var n2, i2, s2 = -1, a2 = t2[1], o2 = 0, h2 = 7, u2 = 4;
-          for (0 === a2 && (h2 = 138, u2 = 3), t2[2 * (r2 + 1) + 1] = 65535, n2 = 0; n2 <= r2; n2++)
-            i2 = a2, a2 = t2[2 * (n2 + 1) + 1], ++o2 < h2 && i2 === a2 || (o2 < u2 ? e2.bl_tree[2 * i2] += o2 : 0 !== i2 ? (i2 !== s2 && e2.bl_tree[2 * i2]++, e2.bl_tree[2 * b]++) : o2 <= 10 ? e2.bl_tree[2 * v]++ : e2.bl_tree[2 * y]++, s2 = i2, u2 = (o2 = 0) === a2 ? (h2 = 138, 3) : i2 === a2 ? (h2 = 6, 3) : (h2 = 7, 4));
+        function X(e2, t3, r2) {
+          var n2, i2, s2 = -1, a2 = t3[1], o2 = 0, h2 = 7, u2 = 4;
+          for (0 === a2 && (h2 = 138, u2 = 3), t3[2 * (r2 + 1) + 1] = 65535, n2 = 0; n2 <= r2; n2++)
+            i2 = a2, a2 = t3[2 * (n2 + 1) + 1], ++o2 < h2 && i2 === a2 || (o2 < u2 ? e2.bl_tree[2 * i2] += o2 : 0 !== i2 ? (i2 !== s2 && e2.bl_tree[2 * i2]++, e2.bl_tree[2 * b]++) : o2 <= 10 ? e2.bl_tree[2 * v]++ : e2.bl_tree[2 * y]++, s2 = i2, u2 = (o2 = 0) === a2 ? (h2 = 138, 3) : i2 === a2 ? (h2 = 6, 3) : (h2 = 7, 4));
         }
         __name(X, "X");
-        function V(e2, t2, r2) {
-          var n2, i2, s2 = -1, a2 = t2[1], o2 = 0, h2 = 7, u2 = 4;
+        function V(e2, t3, r2) {
+          var n2, i2, s2 = -1, a2 = t3[1], o2 = 0, h2 = 7, u2 = 4;
           for (0 === a2 && (h2 = 138, u2 = 3), n2 = 0; n2 <= r2; n2++)
-            if (i2 = a2, a2 = t2[2 * (n2 + 1) + 1], !(++o2 < h2 && i2 === a2)) {
+            if (i2 = a2, a2 = t3[2 * (n2 + 1) + 1], !(++o2 < h2 && i2 === a2)) {
               if (o2 < u2)
                 for (; L(e2, i2, e2.bl_tree), 0 != --o2; )
                   ;
@@ -4541,15 +9453,15 @@ var require_jszip_min = __commonJS({
         __name(V, "V");
         n(T);
         var q = false;
-        function J(e2, t2, r2, n2) {
-          P(e2, (s << 1) + (n2 ? 1 : 0), 3), function(e3, t3, r3, n3) {
-            M(e3), n3 && (U(e3, r3), U(e3, ~r3)), i.arraySet(e3.pending_buf, e3.window, t3, r3, e3.pending), e3.pending += r3;
-          }(e2, t2, r2, true);
+        function J(e2, t3, r2, n2) {
+          P(e2, (s << 1) + (n2 ? 1 : 0), 3), function(e3, t4, r3, n3) {
+            M(e3), n3 && (U(e3, r3), U(e3, ~r3)), i.arraySet(e3.pending_buf, e3.window, t4, r3, e3.pending), e3.pending += r3;
+          }(e2, t3, r2, true);
         }
         __name(J, "J");
         r._tr_init = function(e2) {
           q || (function() {
-            var e3, t2, r2, n2, i2, s2 = new Array(g + 1);
+            var e3, t3, r2, n2, i2, s2 = new Array(g + 1);
             for (n2 = r2 = 0; n2 < a - 1; n2++)
               for (I[n2] = r2, e3 = 0; e3 < 1 << w[n2]; e3++)
                 A[r2++] = n2;
@@ -4559,8 +9471,8 @@ var require_jszip_min = __commonJS({
             for (i2 >>= 7; n2 < f; n2++)
               for (T[n2] = i2 << 7, e3 = 0; e3 < 1 << k[n2] - 7; e3++)
                 E[256 + i2++] = n2;
-            for (t2 = 0; t2 <= g; t2++)
-              s2[t2] = 0;
+            for (t3 = 0; t3 <= g; t3++)
+              s2[t3] = 0;
             for (e3 = 0; e3 <= 143; )
               z[2 * e3 + 1] = 8, e3++, s2[8]++;
             for (; e3 <= 255; )
@@ -4573,77 +9485,77 @@ var require_jszip_min = __commonJS({
               C[2 * e3 + 1] = 5, C[2 * e3] = j(e3, 5);
             O = new D(z, w, u + 1, l, g), B = new D(C, k, 0, f, g), R = new D(new Array(0), x, 0, c, p);
           }(), q = true), e2.l_desc = new F(e2.dyn_ltree, O), e2.d_desc = new F(e2.dyn_dtree, B), e2.bl_desc = new F(e2.bl_tree, R), e2.bi_buf = 0, e2.bi_valid = 0, W(e2);
-        }, r._tr_stored_block = J, r._tr_flush_block = function(e2, t2, r2, n2) {
+        }, r._tr_stored_block = J, r._tr_flush_block = function(e2, t3, r2, n2) {
           var i2, s2, a2 = 0;
           0 < e2.level ? (2 === e2.strm.data_type && (e2.strm.data_type = function(e3) {
-            var t3, r3 = 4093624447;
-            for (t3 = 0; t3 <= 31; t3++, r3 >>>= 1)
-              if (1 & r3 && 0 !== e3.dyn_ltree[2 * t3])
+            var t4, r3 = 4093624447;
+            for (t4 = 0; t4 <= 31; t4++, r3 >>>= 1)
+              if (1 & r3 && 0 !== e3.dyn_ltree[2 * t4])
                 return o;
             if (0 !== e3.dyn_ltree[18] || 0 !== e3.dyn_ltree[20] || 0 !== e3.dyn_ltree[26])
               return h;
-            for (t3 = 32; t3 < u; t3++)
-              if (0 !== e3.dyn_ltree[2 * t3])
+            for (t4 = 32; t4 < u; t4++)
+              if (0 !== e3.dyn_ltree[2 * t4])
                 return h;
             return o;
           }(e2)), Y(e2, e2.l_desc), Y(e2, e2.d_desc), a2 = function(e3) {
-            var t3;
-            for (X(e3, e3.dyn_ltree, e3.l_desc.max_code), X(e3, e3.dyn_dtree, e3.d_desc.max_code), Y(e3, e3.bl_desc), t3 = c - 1; 3 <= t3 && 0 === e3.bl_tree[2 * S[t3] + 1]; t3--)
+            var t4;
+            for (X(e3, e3.dyn_ltree, e3.l_desc.max_code), X(e3, e3.dyn_dtree, e3.d_desc.max_code), Y(e3, e3.bl_desc), t4 = c - 1; 3 <= t4 && 0 === e3.bl_tree[2 * S[t4] + 1]; t4--)
               ;
-            return e3.opt_len += 3 * (t3 + 1) + 5 + 5 + 4, t3;
-          }(e2), i2 = e2.opt_len + 3 + 7 >>> 3, (s2 = e2.static_len + 3 + 7 >>> 3) <= i2 && (i2 = s2)) : i2 = s2 = r2 + 5, r2 + 4 <= i2 && -1 !== t2 ? J(e2, t2, r2, n2) : 4 === e2.strategy || s2 === i2 ? (P(e2, 2 + (n2 ? 1 : 0), 3), K(e2, z, C)) : (P(e2, 4 + (n2 ? 1 : 0), 3), function(e3, t3, r3, n3) {
+            return e3.opt_len += 3 * (t4 + 1) + 5 + 5 + 4, t4;
+          }(e2), i2 = e2.opt_len + 3 + 7 >>> 3, (s2 = e2.static_len + 3 + 7 >>> 3) <= i2 && (i2 = s2)) : i2 = s2 = r2 + 5, r2 + 4 <= i2 && -1 !== t3 ? J(e2, t3, r2, n2) : 4 === e2.strategy || s2 === i2 ? (P(e2, 2 + (n2 ? 1 : 0), 3), K(e2, z, C)) : (P(e2, 4 + (n2 ? 1 : 0), 3), function(e3, t4, r3, n3) {
             var i3;
-            for (P(e3, t3 - 257, 5), P(e3, r3 - 1, 5), P(e3, n3 - 4, 4), i3 = 0; i3 < n3; i3++)
+            for (P(e3, t4 - 257, 5), P(e3, r3 - 1, 5), P(e3, n3 - 4, 4), i3 = 0; i3 < n3; i3++)
               P(e3, e3.bl_tree[2 * S[i3] + 1], 3);
-            V(e3, e3.dyn_ltree, t3 - 1), V(e3, e3.dyn_dtree, r3 - 1);
+            V(e3, e3.dyn_ltree, t4 - 1), V(e3, e3.dyn_dtree, r3 - 1);
           }(e2, e2.l_desc.max_code + 1, e2.d_desc.max_code + 1, a2 + 1), K(e2, e2.dyn_ltree, e2.dyn_dtree)), W(e2), n2 && M(e2);
-        }, r._tr_tally = function(e2, t2, r2) {
-          return e2.pending_buf[e2.d_buf + 2 * e2.last_lit] = t2 >>> 8 & 255, e2.pending_buf[e2.d_buf + 2 * e2.last_lit + 1] = 255 & t2, e2.pending_buf[e2.l_buf + e2.last_lit] = 255 & r2, e2.last_lit++, 0 === t2 ? e2.dyn_ltree[2 * r2]++ : (e2.matches++, t2--, e2.dyn_ltree[2 * (A[r2] + u + 1)]++, e2.dyn_dtree[2 * N(t2)]++), e2.last_lit === e2.lit_bufsize - 1;
+        }, r._tr_tally = function(e2, t3, r2) {
+          return e2.pending_buf[e2.d_buf + 2 * e2.last_lit] = t3 >>> 8 & 255, e2.pending_buf[e2.d_buf + 2 * e2.last_lit + 1] = 255 & t3, e2.pending_buf[e2.l_buf + e2.last_lit] = 255 & r2, e2.last_lit++, 0 === t3 ? e2.dyn_ltree[2 * r2]++ : (e2.matches++, t3--, e2.dyn_ltree[2 * (A[r2] + u + 1)]++, e2.dyn_dtree[2 * N(t3)]++), e2.last_lit === e2.lit_bufsize - 1;
         }, r._tr_align = function(e2) {
           P(e2, 2, 3), L(e2, m, z), function(e3) {
             16 === e3.bi_valid ? (U(e3, e3.bi_buf), e3.bi_buf = 0, e3.bi_valid = 0) : 8 <= e3.bi_valid && (e3.pending_buf[e3.pending++] = 255 & e3.bi_buf, e3.bi_buf >>= 8, e3.bi_valid -= 8);
           }(e2);
         };
-      }, { "../utils/common": 41 }], 53: [function(e, t, r) {
+      }, { "../utils/common": 41 }], 53: [function(e, t2, r) {
         "use strict";
-        t.exports = function() {
+        t2.exports = function() {
           this.input = null, this.next_in = 0, this.avail_in = 0, this.total_in = 0, this.output = null, this.next_out = 0, this.avail_out = 0, this.total_out = 0, this.msg = "", this.state = null, this.data_type = 2, this.adler = 0;
         };
-      }, {}], 54: [function(e, t, r) {
+      }, {}], 54: [function(e, t2, r) {
         (function(e2) {
           !function(r2, n) {
             "use strict";
             if (!r2.setImmediate) {
-              var i, s, t2, a, o = 1, h = {}, u = false, l = r2.document, e3 = Object.getPrototypeOf && Object.getPrototypeOf(r2);
+              var i, s, t3, a, o = 1, h = {}, u = false, l = r2.document, e3 = Object.getPrototypeOf && Object.getPrototypeOf(r2);
               e3 = e3 && e3.setTimeout ? e3 : r2, i = "[object process]" === {}.toString.call(r2.process) ? function(e4) {
                 process.nextTick(function() {
                   c(e4);
                 });
               } : function() {
                 if (r2.postMessage && !r2.importScripts) {
-                  var e4 = true, t3 = r2.onmessage;
+                  var e4 = true, t4 = r2.onmessage;
                   return r2.onmessage = function() {
                     e4 = false;
-                  }, r2.postMessage("", "*"), r2.onmessage = t3, e4;
+                  }, r2.postMessage("", "*"), r2.onmessage = t4, e4;
                 }
               }() ? (a = "setImmediate$" + Math.random() + "$", r2.addEventListener ? r2.addEventListener("message", d, false) : r2.attachEvent("onmessage", d), function(e4) {
                 r2.postMessage(a + e4, "*");
-              }) : r2.MessageChannel ? ((t2 = new MessageChannel()).port1.onmessage = function(e4) {
+              }) : r2.MessageChannel ? ((t3 = new MessageChannel()).port1.onmessage = function(e4) {
                 c(e4.data);
               }, function(e4) {
-                t2.port2.postMessage(e4);
+                t3.port2.postMessage(e4);
               }) : l && "onreadystatechange" in l.createElement("script") ? (s = l.documentElement, function(e4) {
-                var t3 = l.createElement("script");
-                t3.onreadystatechange = function() {
-                  c(e4), t3.onreadystatechange = null, s.removeChild(t3), t3 = null;
-                }, s.appendChild(t3);
+                var t4 = l.createElement("script");
+                t4.onreadystatechange = function() {
+                  c(e4), t4.onreadystatechange = null, s.removeChild(t4), t4 = null;
+                }, s.appendChild(t4);
               }) : function(e4) {
                 setTimeout(c, 0, e4);
               }, e3.setImmediate = function(e4) {
                 "function" != typeof e4 && (e4 = new Function("" + e4));
-                for (var t3 = new Array(arguments.length - 1), r3 = 0; r3 < t3.length; r3++)
-                  t3[r3] = arguments[r3 + 1];
-                var n2 = { callback: e4, args: t3 };
+                for (var t4 = new Array(arguments.length - 1), r3 = 0; r3 < t4.length; r3++)
+                  t4[r3] = arguments[r3 + 1];
+                var n2 = { callback: e4, args: t4 };
                 return h[o] = n2, i(o), o++;
               }, e3.clearImmediate = f;
             }
@@ -4655,29 +9567,29 @@ var require_jszip_min = __commonJS({
               if (u)
                 setTimeout(c, 0, e4);
               else {
-                var t3 = h[e4];
-                if (t3) {
+                var t4 = h[e4];
+                if (t4) {
                   u = true;
                   try {
                     !function(e5) {
-                      var t4 = e5.callback, r3 = e5.args;
+                      var t5 = e5.callback, r3 = e5.args;
                       switch (r3.length) {
                         case 0:
-                          t4();
+                          t5();
                           break;
                         case 1:
-                          t4(r3[0]);
+                          t5(r3[0]);
                           break;
                         case 2:
-                          t4(r3[0], r3[1]);
+                          t5(r3[0], r3[1]);
                           break;
                         case 3:
-                          t4(r3[0], r3[1], r3[2]);
+                          t5(r3[0], r3[1], r3[2]);
                           break;
                         default:
-                          t4.apply(n, r3);
+                          t5.apply(n, r3);
                       }
-                    }(t3);
+                    }(t4);
                   } finally {
                     f(e4), u = false;
                   }
@@ -6410,7 +11322,7 @@ Your conversations will be reorganized with provider structure and modern callou
 
 ## \u2615 Support My Work
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)`;
+[![Support my work](https://img.shields.io/badge/\u2615_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)`;
         try {
           const response = await fetch("https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.2.0");
           if (response.ok) {
@@ -6506,6 +11418,7 @@ var init_configure_folder_locations_dialog = __esm({
     init_folder_tree_browser_modal();
     init_folder_validation();
     init_utils();
+    init_i18n();
     ConfigureFolderLocationsDialog = class extends import_obsidian20.Modal {
       // Track if onComplete was already called
       constructor(plugin, onComplete) {
@@ -6520,34 +11433,34 @@ var init_configure_folder_locations_dialog = __esm({
         const { contentEl } = this;
         contentEl.empty();
         contentEl.createEl("h2", {
-          text: "\u{1F389} Nexus AI Chat Importer v1.3.0",
+          text: t("configure_folder_dialog.title"),
           cls: "nexus-upgrade-title"
         });
         const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
         const descriptionEl = messageContainer.createDiv({ cls: "nexus-upgrade-description" });
         descriptionEl.createEl("p", {
-          text: `In version 1.3.0, you can specify a folder for Reports. We will move existing reports to ${this.originalReportFolder}, or you can select your preferred folder below.`
+          text: t("configure_folder_dialog.description", { folder: this.originalReportFolder })
         });
         descriptionEl.createEl("p", {
-          text: "Note: The folder cannot be inside Conversations or Attachments.",
+          text: t("configure_folder_dialog.note"),
           cls: "nexus-upgrade-note"
         });
         const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
         folderSection.createEl("div", {
-          text: "\u{1F4CA} Report Folder",
+          text: t("configure_folder_dialog.report_folder_label"),
           cls: "nexus-upgrade-folder-label"
         });
         const inputContainer = folderSection.createDiv({ cls: "nexus-upgrade-input-container" });
         this.reportFolderInput = inputContainer.createEl("input", {
           type: "text",
-          placeholder: "Nexus Reports",
+          placeholder: t("configure_folder_dialog.report_folder_placeholder"),
           value: this.originalReportFolder,
           cls: "nexus-upgrade-folder-input"
         });
         this.reportFolderInput.readOnly = true;
         this.reportFolderInput.style.cursor = "default";
         const browseButton = inputContainer.createEl("button", {
-          text: "Browse",
+          text: t("configure_folder_dialog.buttons.browse"),
           cls: "mod-cta nexus-upgrade-browse-button"
         });
         browseButton.addEventListener("click", () => {
@@ -6564,7 +11477,7 @@ var init_configure_folder_locations_dialog = __esm({
         });
         const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container-centered" });
         const proceedButton = buttonContainer.createEl("button", {
-          text: "Proceed",
+          text: t("configure_folder_dialog.buttons.proceed"),
           cls: "mod-cta nexus-upgrade-proceed-button"
         });
         proceedButton.addEventListener("click", async () => {
@@ -6608,7 +11521,7 @@ var init_configure_folder_locations_dialog = __esm({
           this.plugin.settings.attachmentFolder
         );
         if (!validation.valid) {
-          this.showErrorDialog("Invalid Folder Location", (_a = validation.error) != null ? _a : "Invalid folder configuration");
+          this.showErrorDialog(t("configure_folder_dialog.error_invalid_folder.title"), t("configure_folder_dialog.error_invalid_folder.message", { error: (_a = validation.error) != null ? _a : "Invalid folder configuration" }));
           return;
         }
         const result = {
@@ -6695,38 +11608,38 @@ To change the folder location:
        */
       showMergeResultDialog(result, oldPath, newPath) {
         const modal = new import_obsidian20.Modal(this.plugin.app);
-        modal.titleEl.setText("Folder Migration Result");
+        modal.titleEl.setText(t("folder_migration.result_dialog.title"));
         const { contentEl } = modal;
         const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
-        summary.createEl("h3", { text: "Migration Summary" });
+        summary.createEl("h3", { text: t("folder_migration.result_dialog.summary_title") });
         const stats = summary.createDiv({ cls: "nexus-merge-stats" });
-        stats.createEl("p", { text: `\u2705 Successfully moved: ${result.moved} file(s)` });
+        stats.createEl("p", { text: t("folder_migration.result_dialog.moved", { count: String(result.moved) }) });
         if (result.skipped > 0) {
           stats.createEl("p", {
-            text: `\u26A0\uFE0F Skipped (already exist): ${result.skipped} file(s)`,
+            text: t("folder_migration.result_dialog.skipped", { count: String(result.skipped) }),
             cls: "nexus-merge-warning"
           });
         }
         if (result.errors > 0) {
           stats.createEl("p", {
-            text: `\u274C Errors: ${result.errors} file(s)`,
+            text: t("folder_migration.result_dialog.errors", { count: String(result.errors) }),
             cls: "nexus-merge-error"
           });
         }
         const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
         explanation.createEl("p", {
-          text: "Files that already existed in the destination were not overwritten to preserve your data."
+          text: t("folder_migration.result_dialog.explanation")
         });
         if (result.errorDetails && result.errorDetails.length > 0) {
           const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
-          errorSection.createEl("h4", { text: "Error Details:" });
+          errorSection.createEl("h4", { text: t("folder_migration.result_dialog.error_details_title") });
           const errorList = errorSection.createEl("ul");
           for (const error of result.errorDetails) {
             errorList.createEl("li", { text: error });
           }
         }
         const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-        const closeButton = buttonContainer.createEl("button", { text: "OK", cls: "mod-cta" });
+        const closeButton = buttonContainer.createEl("button", { text: t("common.buttons.ok"), cls: "mod-cta" });
         closeButton.addEventListener("click", () => modal.close());
         const styleEl = document.createElement("style");
         styleEl.textContent = `
@@ -6888,7 +11801,7 @@ To change the folder location:
         buttonContainer.style.justifyContent = "flex-end";
         buttonContainer.style.marginTop = "1em";
         const okButton = buttonContainer.createEl("button", {
-          text: "OK",
+          text: t("common.buttons.ok"),
           cls: "mod-cta"
         });
         okButton.addEventListener("click", () => modal.close());
@@ -8257,6 +13170,7 @@ var init_upgrade_complete_modal = __esm({
     "use strict";
     import_obsidian23 = require("obsidian");
     init_kofi_support_box();
+    init_i18n();
     UpgradeCompleteModal = class extends import_obsidian23.Modal {
       constructor(app, plugin, version) {
         super(app);
@@ -8267,7 +13181,7 @@ var init_upgrade_complete_modal = __esm({
         const { contentEl, titleEl, modalEl } = this;
         modalEl.classList.add("nexus-upgrade-complete-modal");
         contentEl.classList.add("nexus-ai-chat-importer-modal");
-        titleEl.setText(`\u2705 Upgrade Complete - v${this.version}`);
+        titleEl.setText(t("upgrade.complete_modal.title", { version: this.version }));
         this.createContent();
       }
       onClose() {
@@ -8281,23 +13195,24 @@ var init_upgrade_complete_modal = __esm({
         this.addStyles();
       }
       async addReleaseNotes() {
-        let content = `## \u2728 What's New
+        let content = `## \u2728 What's New in v1.5.0
 
-- **\u{1F916} Le Chat Support** - Import your Mistral AI Le Chat conversations with attachments and references
-- **\u{1F4BB} CLI for Bulk Import** - Import conversations from the command line without opening Obsidian
-- **\u{1F4C1} Human-Readable Artifact Folders** - Claude artifacts now stored in folders named after the conversation, not UUIDs
-- **\u{1F4D0} LaTeX Math Conversion** - Math equations automatically converted to Obsidian's math syntax
+### \u{1F30D} Full UI Localization \u2014 10 Languages
 
-## \u{1F504} Migration: Artifact Callout Restoration
+- **Automatic language detection** \u2014 the plugin UI matches your Obsidian interface language, no configuration needed
+- **10 supported languages**: English, French, German, Spanish, Italian, Russian, Chinese (Simplified), Japanese, Portuguese, Korean
+- **Complete coverage** \u2014 all dialogs, settings panels, progress modals, notices, and status labels are translated
+- **English fallback** \u2014 any missing key falls back to English automatically
 
-Anthropic changed the structure of their Claude export format. Conversations imported with v1.3.x may be missing inline artifact callouts. The migration has restored artifact links at the end of affected notes. To get artifacts inline within messages, delete the note and re-import from your Claude export ZIP.
+> Import reports and conversation notes remain in English \u2014 only the plugin UI is localized.
 
-## \u{1F41B} Bug Fixes
+## v1.4.0 in brief
 
-- Multiple attachments in a single message no longer break out of the parent callout
-- Claude artifacts now render correctly for both old and new export formats
-- Conversations on mobile no longer show raw placeholder text instead of artifact links
-- Binary files referenced by Claude scripts are no longer saved as empty artifacts`;
+- **\u{1F916} Le Chat (Mistral AI)** \u2014 Full support with attachments, references, and citations
+- **\u{1F4BB} CLI for Bulk Import** \u2014 Import from the terminal without opening Obsidian
+- **\u{1F4C1} Human-readable artifact folders** \u2014 Claude artifacts stored in folders named after the conversation, not UUIDs
+- **\u{1F4D0} LaTeX math** \u2014 Math equations converted to Obsidian \`$$...$$\` / \`$...$\` syntax
+- **\u{1F41B} Bug fixes** \u2014 Multi-attachment callouts, Claude format changes, mobile placeholders, binary artifacts`;
         try {
           const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
           if (response.ok) {
@@ -8321,7 +13236,7 @@ Anthropic changed the structure of their Claude export format. Conversations imp
       addCloseButton() {
         const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
         const button = buttonContainer.createEl("button", {
-          text: "Got it!",
+          text: t("upgrade.complete_modal.buttons.got_it"),
           cls: "mod-cta nexus-upgrade-button"
         });
         button.addEventListener("click", () => {
@@ -8402,6 +13317,7 @@ var init_upgrade_modal_1_3_0 = __esm({
     "use strict";
     import_obsidian24 = require("obsidian");
     init_kofi_support_box();
+    init_i18n();
     NexusUpgradeModal130 = class extends import_obsidian24.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
@@ -8414,7 +13330,7 @@ var init_upgrade_modal_1_3_0 = __esm({
         var _a;
         const { containerEl, titleEl, modalEl } = this;
         modalEl.classList.add("nexus-upgrade-modal-130");
-        titleEl.setText(`\u{1F389} Nexus AI Chat Importer ${this.version}`);
+        titleEl.setText(t("upgrade.modal_130.title", { version: this.version }));
         (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
         this.createForm();
       }
@@ -8466,32 +13382,32 @@ Try the new **selective import** feature on your next import - you'll love the c
         const header = migrationSection.createDiv({ cls: "nexus-migration-header" });
         header.innerHTML = `
             <div class="nexus-migration-title">
-                \u{1F504} <strong>Migration Required</strong>
+                ${t("upgrade.modal_130.migration_section.title")}
             </div>
         `;
         const message = migrationSection.createDiv({ cls: "nexus-migration-message" });
         message.innerHTML = `
-            <p>The following tasks will run automatically to upgrade your data to v1.3.0:</p>
+            <p>${t("upgrade.modal_130.migration_section.message")}</p>
         `;
         const taskList = migrationSection.createDiv({ cls: "nexus-migration-tasks" });
         taskList.innerHTML = `
             <ul>
-                <li>\u2713 Migrate folder settings to new structure</li>
-                <li>\u2713 Update timestamps to ISO 8601 format</li>
-                <li>\u2713 Fix frontmatter aliases</li>
-                <li>\u2713 Move Reports folder to proper location</li>
-                <li>\u2713 Update artifact metadata</li>
+                <li>${t("upgrade.modal_130.migration_section.tasks.folder_settings")}</li>
+                <li>${t("upgrade.modal_130.migration_section.tasks.timestamps")}</li>
+                <li>${t("upgrade.modal_130.migration_section.tasks.aliases")}</li>
+                <li>${t("upgrade.modal_130.migration_section.tasks.reports")}</li>
+                <li>${t("upgrade.modal_130.migration_section.tasks.artifacts")}</li>
             </ul>
         `;
         const estimate = migrationSection.createDiv({ cls: "nexus-migration-estimate" });
         estimate.innerHTML = `
-            <p><em>This will take a few seconds.</em></p>
+            <p><em>${t("upgrade.modal_130.migration_section.estimate")}</em></p>
         `;
       }
       addMigrationButton() {
         const buttonContainer = this.contentEl.createDiv({ cls: "nexus-migration-button-container" });
         const migrationButton = buttonContainer.createEl("button", {
-          text: "\u{1F680} Run Migration Tasks",
+          text: t("upgrade.modal_130.buttons.run_migration"),
           cls: "mod-cta nexus-migration-button"
         });
         migrationButton.onclick = () => {
@@ -8599,6 +13515,7 @@ __export(main_exports, {
 });
 module.exports = __toCommonJS(main_exports);
 var import_obsidian32 = require("obsidian");
+init_i18n();
 init_constants();
 
 // src/ui/settings-tab.ts
@@ -8635,29 +13552,32 @@ __name(BaseSettingsSection, "BaseSettingsSection");
 
 // src/ui/settings/support-section.ts
 init_kofi_support_box();
+init_i18n();
 var SupportSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
-    this.title = "\u{1F49D} Support & Help";
     this.order = 5;
+  }
+  get title() {
+    return t("settings.support.section_title");
   }
   render(containerEl) {
     const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
     createKofiSupportBox(supportContainer);
-    new import_obsidian.Setting(supportContainer).setName("\u{1F4DA} Resources").setDesc("Documentation, release notes, and community links").addButton(
-      (button) => button.setButtonText("\u{1F4D6} README").onClick(() => {
+    new import_obsidian.Setting(supportContainer).setName(t("settings.support.resources.name")).setDesc(t("settings.support.resources.desc")).addButton(
+      (button) => button.setButtonText(t("settings.support.resources.readme")).onClick(() => {
         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
       })
     ).addButton(
-      (button) => button.setButtonText("\u{1F4DD} Changelog").onClick(() => {
+      (button) => button.setButtonText(t("settings.support.resources.changelog")).onClick(() => {
         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
       })
     ).addButton(
-      (button) => button.setButtonText("\u{1F41B} Issues").onClick(() => {
+      (button) => button.setButtonText(t("settings.support.resources.issues")).onClick(() => {
         window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
       })
     ).addButton(
-      (button) => button.setButtonText("\u{1F4AC} Forum").onClick(() => {
+      (button) => button.setButtonText(t("settings.support.resources.forum")).onClick(() => {
         window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
       })
     );
@@ -8670,6 +13590,7 @@ var import_obsidian8 = require("obsidian");
 
 // src/dialogs/folder-migration-dialog.ts
 var import_obsidian2 = require("obsidian");
+init_i18n();
 var FolderMigrationDialog = class extends import_obsidian2.Modal {
   constructor(plugin, oldPath, newPath, folderType, onComplete) {
     super(plugin.app);
@@ -8682,33 +13603,33 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl("h2", {
-      text: "Move Existing Files?",
+      text: t("folder_migration.title"),
       cls: "nexus-migration-title"
     });
     const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
     messageContainer.createEl("p", {
-      text: `You are changing the ${this.folderType} folder location:`
+      text: t("folder_migration.message_intro", { folder_type: this.folderType })
     });
     const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
     pathContainer.createEl("div", {
-      text: `From: ${this.oldPath}`,
+      text: t("folder_migration.path_from", { path: this.oldPath }),
       cls: "nexus-migration-path-old"
     });
     pathContainer.createEl("div", {
-      text: `To: ${this.newPath}`,
+      text: t("folder_migration.path_to", { path: this.newPath }),
       cls: "nexus-migration-path-new"
     });
     messageContainer.createEl("p", {
-      text: "Do you want to move existing files to the new location?"
+      text: t("folder_migration.question")
     });
     const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
-    warningBox.createEl("strong", { text: "\u26A0\uFE0F Important:" });
+    warningBox.createEl("strong", { text: t("folder_migration.warning.title") });
     warningBox.createEl("p", {
-      text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates."
+      text: t("folder_migration.warning.text")
     });
     const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
     const cancelButton = buttonContainer.createEl("button", {
-      text: "Cancel",
+      text: t("folder_migration.buttons.cancel"),
       cls: "nexus-migration-button-cancel"
     });
     cancelButton.addEventListener("click", async () => {
@@ -8721,7 +13642,7 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
       }
     });
     const keepButton = buttonContainer.createEl("button", {
-      text: "No, keep files in old location",
+      text: t("folder_migration.buttons.keep"),
       cls: "nexus-migration-button-keep"
     });
     keepButton.addEventListener("click", async () => {
@@ -8734,7 +13655,7 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
       }
     });
     const moveButton = buttonContainer.createEl("button", {
-      text: "Yes, move files",
+      text: t("folder_migration.buttons.move"),
       cls: "mod-cta nexus-migration-button-move"
     });
     moveButton.addEventListener("click", async () => {
@@ -8836,23 +13757,26 @@ __name(FolderMigrationDialog, "FolderMigrationDialog");
 init_folder_tree_browser_modal();
 init_folder_validation();
 init_utils();
+init_i18n();
 var FolderSettingsSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
-    this.title = "\u{1F4C1} Folder Structure";
     this.order = 10;
+  }
+  get title() {
+    return t("settings.folders.section_title");
   }
   render(containerEl) {
     let conversationFolderTextComponent;
-    new import_obsidian8.Setting(containerEl).setName("Conversation folder").setDesc("Where imported conversations are stored").addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.conversation_folder.name")).setDesc(t("settings.folders.conversation_folder.desc")).addText((text) => {
       conversationFolderTextComponent = text;
-      text.setPlaceholder("Nexus/Conversations").setValue(this.plugin.settings.conversationFolder);
+      text.setPlaceholder(t("settings.folders.conversation_folder.placeholder")).setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-conversation-folder-input");
       text.inputEl.readOnly = true;
       text.inputEl.style.cursor = "default";
     }).addButton((button) => {
-      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
+      button.setButtonText(t("common.buttons.browse")).setTooltip(t("settings.folders.conversation_folder.browse_tooltip")).onClick(async () => {
         const modal = new FolderTreeBrowserModal(
           this.plugin.app,
           async (path) => {
@@ -8874,15 +13798,15 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       });
     });
     let reportFolderTextComponent;
-    new import_obsidian8.Setting(containerEl).setName("Reports folder").setDesc("Where import reports are stored").addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.reports_folder.name")).setDesc(t("settings.folders.reports_folder.desc")).addText((text) => {
       reportFolderTextComponent = text;
-      text.setPlaceholder("Nexus Reports").setValue(this.plugin.settings.reportFolder);
+      text.setPlaceholder(t("settings.folders.reports_folder.placeholder")).setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-report-folder-input");
       text.inputEl.readOnly = true;
       text.inputEl.style.cursor = "default";
     }).addButton((button) => {
-      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
+      button.setButtonText(t("common.buttons.browse")).setTooltip(t("settings.folders.reports_folder.browse_tooltip")).onClick(async () => {
         const modal = new FolderTreeBrowserModal(
           this.plugin.app,
           async (path) => {
@@ -8904,15 +13828,15 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       });
     });
     let attachmentFolderTextComponent;
-    new import_obsidian8.Setting(containerEl).setName("Attachment folder").setDesc("Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)").addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.attachment_folder.name")).setDesc(t("settings.folders.attachment_folder.desc")).addText((text) => {
       attachmentFolderTextComponent = text;
-      text.setPlaceholder("Nexus/Attachments").setValue(this.plugin.settings.attachmentFolder);
+      text.setPlaceholder(t("settings.folders.attachment_folder.placeholder")).setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-attachment-folder-input");
       text.inputEl.readOnly = true;
       text.inputEl.style.cursor = "default";
     }).addButton((button) => {
-      button.setButtonText("Browse").setTooltip("Browse folders or create a new one").onClick(async () => {
+      button.setButtonText(t("common.buttons.browse")).setTooltip(t("settings.folders.attachment_folder.browse_tooltip")).onClick(async () => {
         const modal = new FolderTreeBrowserModal(
           this.plugin.app,
           async (path) => {
@@ -8948,7 +13872,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       this.plugin.settings.attachmentFolder
     );
     if (!validation.valid) {
-      this.showErrorDialog("Invalid Folder Location", (_a = validation.error) != null ? _a : "Invalid folder configuration");
+      this.showErrorDialog(t("configure_folder_dialog.error_invalid_folder.title"), t("configure_folder_dialog.error_invalid_folder.message", { error: (_a = validation.error) != null ? _a : "Invalid folder configuration" }));
       textComponent.setValue(oldPath);
       return;
     }
@@ -8967,12 +13891,8 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
     if (newFolder && newFolder instanceof import_obsidian8.TFolder && newFolder.children.length > 0) {
       this.showErrorDialog(
-        "Target Folder Not Empty",
-        `The folder "${newPath}" already contains files.
-
-To change the folder location:
-\u2022 Move existing files manually in Obsidian, OR
-\u2022 Choose an empty folder or create a new one`
+        t("folder_migration.error_target_not_empty.title"),
+        t("folder_migration.error_target_not_empty.message", { path: newPath })
       );
       textComponent.setValue(oldPath);
       return;
@@ -9037,7 +13957,7 @@ To change the folder location:
         }
       } catch (error) {
         this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
-        this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
+        this.showErrorDialog(t("folder_migration.error_migration_failed.title"), t("folder_migration.error_migration_failed.message_move", { error: error.message }));
         throw error;
       }
     }
@@ -9066,38 +13986,38 @@ To change the folder location:
    */
   showMergeResultDialog(result, _oldPath, _newPath) {
     const modal = new import_obsidian8.Modal(this.plugin.app);
-    modal.titleEl.setText("Folder Migration Result");
+    modal.titleEl.setText(t("folder_migration.result_dialog.title"));
     const { contentEl } = modal;
     const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
-    summary.createEl("h3", { text: "Migration Summary" });
+    summary.createEl("h3", { text: t("folder_migration.result_dialog.summary_title") });
     const stats = summary.createDiv({ cls: "nexus-merge-stats" });
-    stats.createEl("p", { text: `\u2705 Successfully moved: ${result.moved} file(s)` });
+    stats.createEl("p", { text: t("folder_migration.result_dialog.moved", { count: String(result.moved) }) });
     if (result.skipped > 0) {
       stats.createEl("p", {
-        text: `\u26A0\uFE0F Skipped (already exist): ${result.skipped} file(s)`,
+        text: t("folder_migration.result_dialog.skipped", { count: String(result.skipped) }),
         cls: "nexus-merge-warning"
       });
     }
     if (result.errors > 0) {
       stats.createEl("p", {
-        text: `\u274C Errors: ${result.errors} file(s)`,
+        text: t("folder_migration.result_dialog.errors", { count: String(result.errors) }),
         cls: "nexus-merge-error"
       });
     }
     const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
     explanation.createEl("p", {
-      text: "Files that already existed in the destination were not overwritten to preserve your data."
+      text: t("folder_migration.result_dialog.explanation")
     });
     if (result.errorDetails && result.errorDetails.length > 0) {
       const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
-      errorSection.createEl("h4", { text: "Error Details:" });
+      errorSection.createEl("h4", { text: t("folder_migration.result_dialog.error_details_title") });
       const errorList = errorSection.createEl("ul");
       for (const error of result.errorDetails) {
         errorList.createEl("li", { text: error });
       }
     }
     const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-    const closeButton = buttonContainer.createEl("button", { text: "OK", cls: "mod-cta" });
+    const closeButton = buttonContainer.createEl("button", { text: t("common.buttons.ok"), cls: "mod-cta" });
     closeButton.addEventListener("click", () => modal.close());
     const styleEl = document.createElement("style");
     styleEl.textContent = `
@@ -9151,7 +14071,7 @@ To change the folder location:
     buttonContainer.style.justifyContent = "flex-end";
     buttonContainer.style.marginTop = "1em";
     const okButton = buttonContainer.createEl("button", {
-      text: "OK",
+      text: t("common.buttons.ok"),
       cls: "mod-cta"
     });
     okButton.addEventListener("click", () => modal.close());
@@ -9162,18 +14082,21 @@ __name(FolderSettingsSection, "FolderSettingsSection");
 
 // src/ui/settings/display-settings-section.ts
 var import_obsidian9 = require("obsidian");
+init_i18n();
 var DisplaySettingsSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
-    this.title = "\u{1F4C5} Date Prefix";
     this.order = 20;
+  }
+  get title() {
+    return t("settings.display.section_title");
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-date-prefix-section" });
-    const setting = new import_obsidian9.Setting(sectionContainer).setName("Add date prefix to filenames").setDesc("Add creation date as a prefix to conversation filenames");
+    const setting = new import_obsidian9.Setting(sectionContainer).setName(t("settings.display.add_date_prefix.name")).setDesc(t("settings.display.add_date_prefix.desc"));
     if (this.plugin.settings.addDatePrefix) {
       setting.controlEl.createSpan({
-        text: "Select date format: ",
+        text: t("settings.display.add_date_prefix.format_label"),
         cls: "date-format-label"
       });
       setting.addDropdown(
@@ -9200,15 +14123,18 @@ __name(DisplaySettingsSection, "DisplaySettingsSection");
 var import_obsidian10 = require("obsidian");
 init_constants();
 init_utils();
+init_i18n();
 var MessageDateFormatSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
-    this.title = "\u{1F4C5} Message Date Format";
     this.order = 21;
+  }
+  get title() {
+    return t("settings.timestamps.section_title");
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-message-date-section" });
-    new import_obsidian10.Setting(sectionContainer).setName("Custom message timestamp format").setDesc("Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced.").addToggle(
+    new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.custom_format.name")).setDesc(t("settings.timestamps.custom_format.desc")).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.useCustomMessageTimestampFormat).onChange(async (value) => {
         this.plugin.settings.useCustomMessageTimestampFormat = value;
         await this.plugin.saveSettings();
@@ -9216,7 +14142,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
       })
     );
     if (this.plugin.settings.useCustomMessageTimestampFormat) {
-      new import_obsidian10.Setting(sectionContainer).setName("Timestamp format").setDesc("Choose the format for message timestamps in conversation notes").addDropdown((dropdown) => {
+      new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.timestamp_format.name")).setDesc(t("settings.timestamps.timestamp_format.desc")).addDropdown((dropdown) => {
         Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
           dropdown.addOption(key, config.label);
         });
@@ -9238,7 +14164,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
     const preview = formatMessageTimestamp(now, format);
     container.empty();
     const previewLine = container.createDiv({ cls: "nexus-preview-line" });
-    previewLine.createEl("strong", { text: "Preview: " });
+    previewLine.createEl("strong", { text: t("settings.timestamps.preview_label") });
     previewLine.createEl("code", { text: preview, cls: "nexus-preview-code" });
     const config = MESSAGE_TIMESTAMP_FORMATS[format];
     if (config) {
@@ -9287,6 +14213,7 @@ var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.Plugin
 __name(NexusAiChatImporterPluginSettingTab, "NexusAiChatImporterPluginSettingTab");
 
 // src/commands/command-registry.ts
+init_i18n();
 var CommandRegistry = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -9294,7 +14221,7 @@ var CommandRegistry = class {
   registerCommands() {
     this.plugin.addCommand({
       id: "nexus-ai-chat-importer-select-zip",
-      name: "Import AI conversations",
+      name: t("commands.import_conversations.name"),
       callback: () => {
         this.plugin.showProviderSelectionDialog();
       }
@@ -13843,6 +18770,7 @@ __name(createProviderRegistry, "createProviderRegistry");
 
 // src/ui/import-progress-modal.ts
 var import_obsidian16 = require("obsidian");
+init_i18n();
 var ImportProgressModal = class extends import_obsidian16.Modal {
   constructor(app, fileName) {
     super(app);
@@ -13858,7 +18786,7 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
     const { contentEl } = this;
     contentEl.addClass("nexus-import-progress-modal");
     this.modalTitleEl = contentEl.createEl("h2", {
-      text: `Importing ${this.fileName}`,
+      text: t("import_progress.title", { filename: this.fileName }),
       cls: "modal-title"
     });
     const contentContainer = contentEl.createDiv({ cls: "modal-content" });
@@ -13924,8 +18852,8 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
         `;
     this.updateProgress({
       phase: "validation",
-      title: "Preparing import...",
-      detail: "Validating ZIP file structure"
+      title: t("import_progress.initial.title"),
+      detail: t("import_progress.initial.detail")
     });
   }
   /**
@@ -13933,12 +18861,12 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
    */
   updateProgress(step) {
     const phaseLabels = {
-      "validation": "\u{1F50D} Validation",
-      "scanning": "\u{1F4CB} Scanning",
-      "processing": "\u2699\uFE0F Processing",
-      "writing": "\u{1F4BE} Writing",
-      "complete": "\u2705 Complete",
-      "error": "\u274C Error"
+      "validation": t("common.progress.phase_validation"),
+      "scanning": t("common.progress.phase_scanning"),
+      "processing": t("common.progress.phase_processing"),
+      "writing": t("common.progress.phase_writing"),
+      "complete": t("common.progress.phase_complete"),
+      "error": t("common.progress.phase_error")
     };
     this.phaseEl.textContent = phaseLabels[step.phase] || step.phase;
     if (step.total !== void 0) {
@@ -13949,9 +18877,9 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
     }
     if (this.totalConversations > 0) {
       if (this.isSelectiveImport) {
-        this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} selected conversations`;
+        this.conversationCountEl.textContent = t("import_progress.conversation_counter_selective", { current: String(this.currentConversation), total: String(this.totalConversations) });
       } else {
-        this.conversationCountEl.textContent = `${this.currentConversation}/${this.totalConversations} conversations`;
+        this.conversationCountEl.textContent = t("import_progress.conversation_counter", { current: String(this.currentConversation), total: String(this.totalConversations) });
       }
     } else {
       this.conversationCountEl.textContent = "";
@@ -13985,21 +18913,21 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
   /**
    * Show completion state
    */
-  showComplete(message = "Import completed successfully") {
+  showComplete(message = t("import_progress.complete.message")) {
     this.isComplete = true;
     this.progressBarEl.style.width = "100%";
     this.progressBarEl.style.background = "var(--text-success)";
     this.statusEl.textContent = message;
-    this.detailEl.textContent = "You can close this dialog";
+    this.detailEl.textContent = t("import_progress.complete.detail");
     this.closeAfterDelay(3e3);
   }
   /**
    * Show error state
    */
-  showError(message = "An error occurred during import") {
+  showError(message = t("import_progress.error.message")) {
     this.progressBarEl.style.background = "var(--text-error)";
     this.statusEl.textContent = message;
-    this.detailEl.textContent = "Check the console for more details";
+    this.detailEl.textContent = t("import_progress.error.detail");
   }
   /**
    * Close after delay
@@ -14019,7 +18947,7 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
     this.selectedCount = selectedCount;
     this.totalAvailable = totalAvailable;
     this.importModeEl.style.display = "block";
-    this.importModeEl.textContent = `\u{1F4CB} Selective Import: ${selectedCount} of ${totalAvailable} conversations`;
+    this.importModeEl.textContent = t("import_progress.selective_mode_indicator", { selected: String(selectedCount), total: String(totalAvailable) });
   }
   /**
    * Get progress callback function
@@ -14977,6 +19905,7 @@ init_constants();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
 var import_obsidian18 = require("obsidian");
+init_i18n();
 var MultiOperationProgressModal = class extends import_obsidian18.Modal {
   constructor(app, title, operations) {
     super(app);
@@ -15032,14 +19961,14 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
   /**
    * Mark all operations as complete and allow closing
    */
-  markComplete(message = "All operations completed successfully") {
+  markComplete(message = t("upgrade.multi_operation_modal.mark_complete_default")) {
     this.canClose = true;
     this.overallProgressEl.textContent = message;
     this.overallProgressEl.style.color = "var(--text-success)";
     if (!this.closeButtonEl) {
       const buttonContainer = this.contentEl.createDiv({ cls: "modal-button-container" });
       this.closeButtonEl = buttonContainer.createEl("button", {
-        text: "Complete",
+        text: t("upgrade.multi_operation_modal.buttons.complete"),
         cls: "mod-cta"
       });
       this.closeButtonEl.addEventListener("click", () => this.close());
@@ -15055,7 +19984,7 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
     if (!this.closeButtonEl) {
       const buttonContainer = this.contentEl.createDiv({ cls: "modal-button-container" });
       this.closeButtonEl = buttonContainer.createEl("button", {
-        text: "Close",
+        text: t("upgrade.multi_operation_modal.buttons.close"),
         cls: "mod-warning"
       });
       this.closeButtonEl.addEventListener("click", () => this.close());
@@ -15161,13 +20090,13 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
     const failed = this.operations.filter((op) => op.status === "failed").length;
     const total = this.operations.length;
     if (failed > 0) {
-      this.overallProgressEl.textContent = `Progress: ${completed}/${total} operations (${failed} failed)`;
+      this.overallProgressEl.textContent = t("upgrade.multi_operation_modal.progress_with_failures", { completed: String(completed), total: String(total), failed: String(failed) });
       this.overallProgressEl.style.color = "var(--text-error)";
     } else if (completed === total) {
-      this.overallProgressEl.textContent = `All ${total} operations completed successfully`;
+      this.overallProgressEl.textContent = t("upgrade.multi_operation_modal.all_completed", { total: String(total) });
       this.overallProgressEl.style.color = "var(--text-success)";
     } else {
-      this.overallProgressEl.textContent = `Progress: ${completed}/${total} operations`;
+      this.overallProgressEl.textContent = t("upgrade.multi_operation_modal.progress_label", { completed: String(completed), total: String(total) });
       this.overallProgressEl.style.color = "var(--text-normal)";
     }
   }
@@ -15918,6 +20847,7 @@ init_logger();
 
 // src/dialogs/provider-selection-dialog.ts
 var import_obsidian26 = require("obsidian");
+init_i18n();
 var ProviderSelectionDialog = class extends import_obsidian26.Modal {
   constructor(app, providerRegistry, onProviderSelected) {
     super(app);
@@ -15930,24 +20860,24 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
     if (registry.getAdapter("chatgpt")) {
       providers.push({
         id: "chatgpt",
-        name: "ChatGPT",
-        description: "OpenAI ChatGPT conversation exports",
+        name: t("provider_selection.providers.chatgpt.name"),
+        description: t("provider_selection.providers.chatgpt.description"),
         fileFormats: ["conversations.json only"]
       });
     }
     if (registry.getAdapter("claude")) {
       providers.push({
         id: "claude",
-        name: "Claude",
-        description: "Anthropic Claude conversation exports",
+        name: t("provider_selection.providers.claude.name"),
+        description: t("provider_selection.providers.claude.description"),
         fileFormats: ["conversations.json + users.json", "projects.json (optional)"]
       });
     }
     if (registry.getAdapter("lechat")) {
       providers.push({
         id: "lechat",
-        name: "Le Chat",
-        description: "Mistral AI Le Chat conversation exports",
+        name: t("provider_selection.providers.lechat.name"),
+        description: t("provider_selection.providers.lechat.description"),
         fileFormats: ["chat-<uuid>.json files"]
       });
     }
@@ -15956,10 +20886,10 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: "Select Archive Provider" });
+    contentEl.createEl("h2", { text: t("provider_selection.title") });
     this.providers.forEach((provider) => {
       new import_obsidian26.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
-        button.setButtonText("Select").setCta().onClick(() => {
+        button.setButtonText(t("provider_selection.buttons.select")).setCta().onClick(() => {
           this.selectedProvider = provider.id;
           this.close();
           this.onProviderSelected(provider.id);
@@ -15969,7 +20899,7 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
     const buttonContainer = contentEl.createDiv();
     buttonContainer.style.textAlign = "center";
     buttonContainer.style.marginTop = "20px";
-    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    const cancelButton = buttonContainer.createEl("button", { text: t("provider_selection.buttons.cancel") });
     cancelButton.style.marginRight = "10px";
     cancelButton.onclick = () => this.close();
   }
@@ -15985,6 +20915,7 @@ __name(ProviderSelectionDialog, "ProviderSelectionDialog");
 
 // src/dialogs/enhanced-file-selection-dialog.ts
 var import_obsidian27 = require("obsidian");
+init_i18n();
 var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
@@ -16002,7 +20933,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     contentEl.empty();
     modalEl.addClass("nexus-file-selection-dialog");
     contentEl.addClass("nexus-file-selection-dialog");
-    titleEl.setText(`Import ${this.provider.charAt(0).toUpperCase() + this.provider.slice(1)} Conversations`);
+    titleEl.setText(t("file_selection.title", { provider: this.provider.charAt(0).toUpperCase() + this.provider.slice(1) }));
     this.createImportModeSection(contentEl);
     this.createFileSelectionArea(contentEl);
     this.createFilePreviewArea(contentEl);
@@ -16012,7 +20943,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
   createImportModeSection(container) {
     const section = container.createDiv("import-mode-section");
     section.style.marginBottom = "20px";
-    const sectionTitle = section.createEl("h3", { text: "Import Mode" });
+    const sectionTitle = section.createEl("h3", { text: t("file_selection.import_mode.section_title") });
     sectionTitle.style.marginTop = "0";
     sectionTitle.style.marginBottom = "12px";
     sectionTitle.style.fontSize = "1em";
@@ -16053,11 +20984,11 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     allLabel.style.marginBottom = "4px";
     allLabel.style.cursor = "pointer";
     allLabel.style.color = "var(--text-normal)";
-    allLabel.textContent = "Import All";
+    allLabel.textContent = t("file_selection.import_mode.all_label");
     const allDesc = allContent.createDiv();
     allDesc.style.fontSize = "0.85em";
     allDesc.style.color = "var(--text-muted)";
-    allDesc.textContent = "Import all conversations (faster)";
+    allDesc.textContent = t("file_selection.import_mode.all_description");
     allOption.addEventListener("click", () => {
       allRadio.checked = true;
       this.importMode = "all";
@@ -16097,11 +21028,11 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     selectLabel.style.marginBottom = "4px";
     selectLabel.style.cursor = "pointer";
     selectLabel.style.color = "var(--text-normal)";
-    selectLabel.textContent = "Select Specific";
+    selectLabel.textContent = t("file_selection.import_mode.selective_label");
     const selectDesc = selectContent.createDiv();
     selectDesc.style.fontSize = "0.85em";
     selectDesc.style.color = "var(--text-muted)";
-    selectDesc.textContent = "Preview and choose conversations";
+    selectDesc.textContent = t("file_selection.import_mode.selective_description");
     selectOption.addEventListener("click", () => {
       selectRadio.checked = true;
       this.importMode = "selective";
@@ -16125,7 +21056,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
   createFileSelectionArea(container) {
     const section = container.createDiv("file-selection-section");
     section.style.marginBottom = "20px";
-    const sectionTitle = section.createEl("h3", { text: "Select Files" });
+    const sectionTitle = section.createEl("h3", { text: t("file_selection.file_area.section_title") });
     sectionTitle.style.marginBottom = "10px";
     sectionTitle.style.fontSize = "1em";
     const dropZone = section.createDiv("drop-zone");
@@ -16143,17 +21074,17 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     dropText.style.fontSize = "16px";
     dropText.style.marginBottom = "10px";
     if (this.provider === "gemini") {
-      dropText.textContent = "Drop ZIP and JSON files here or click to browse";
+      dropText.textContent = t("file_selection.file_area.drop_text_gemini");
     } else {
-      dropText.textContent = "Drop ZIP files here or click to browse";
+      dropText.textContent = t("file_selection.file_area.drop_text_default");
     }
     const dropSubtext = dropZone.createEl("div");
     dropSubtext.style.fontSize = "14px";
     dropSubtext.style.color = "var(--text-muted)";
     if (this.provider === "gemini") {
-      dropSubtext.textContent = "ZIP (Takeout) + optional JSON (index from extension)";
+      dropSubtext.textContent = t("file_selection.file_area.drop_subtext_gemini");
     } else {
-      dropSubtext.textContent = "Supports multiple file selection";
+      dropSubtext.textContent = t("file_selection.file_area.drop_subtext_default");
     }
     const fileInput = section.createEl("input", { type: "file" });
     if (this.provider === "gemini") {
@@ -16175,7 +21106,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     section.id = "file-preview-section";
     section.style.marginBottom = "20px";
     section.style.display = "none";
-    const sectionTitle = section.createEl("h3", { text: "Selected Files" });
+    const sectionTitle = section.createEl("h3", { text: t("file_selection.selected_files.section_title") });
     sectionTitle.style.marginBottom = "15px";
     const fileListContainer = section.createDiv("file-list-container");
     fileListContainer.style.maxHeight = "300px";
@@ -16192,10 +21123,10 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     buttonContainer.style.justifyContent = "flex-end";
     buttonContainer.style.gap = "10px";
     buttonContainer.style.marginTop = "20px";
-    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    const cancelButton = buttonContainer.createEl("button", { text: t("file_selection.buttons.cancel") });
     cancelButton.style.padding = "8px 16px";
     cancelButton.addEventListener("click", () => this.close());
-    const importButton = buttonContainer.createEl("button", { text: "Continue" });
+    const importButton = buttonContainer.createEl("button", { text: t("file_selection.buttons.continue") });
     importButton.id = "import-button";
     importButton.style.padding = "8px 16px";
     importButton.classList.add("mod-cta");
@@ -16273,7 +21204,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
         fileSize.textContent = formatFileSize(file.size);
         fileSize.style.fontSize = "0.9em";
         fileSize.style.color = "var(--text-muted)";
-        const removeButton = fileItem.createEl("button", { text: "Remove" });
+        const removeButton = fileItem.createEl("button", { text: t("file_selection.selected_files.remove_button") });
         removeButton.style.padding = "4px 8px";
         removeButton.style.fontSize = "0.9em";
         removeButton.addEventListener("click", () => this.removeFile(index));
@@ -16393,6 +21324,7 @@ __name(EnhancedFileSelectionDialog, "EnhancedFileSelectionDialog");
 
 // src/dialogs/conversation-selection-dialog.ts
 var import_obsidian28 = require("obsidian");
+init_i18n();
 var ConversationSelectionDialog = class extends import_obsidian28.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
@@ -16434,7 +21366,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     contentEl.empty();
     modalEl.addClass("nexus-conversation-selection-dialog");
     contentEl.addClass("nexus-conversation-selection-dialog");
-    titleEl.setText("Select Conversations to Import");
+    titleEl.setText(t("conversation_selection.title"));
     this.createSummarySection(contentEl);
     this.createControlsSection(contentEl);
     this.createConversationListSection(contentEl);
@@ -16459,7 +21391,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     section.style.display = "flex";
     section.style.gap = "12px";
     section.style.alignItems = "center";
-    const selectAllBtn = section.createEl("button", { text: "Select All" });
+    const selectAllBtn = section.createEl("button", { text: t("conversation_selection.controls.select_all") });
     selectAllBtn.style.padding = "8px 16px";
     selectAllBtn.style.whiteSpace = "nowrap";
     selectAllBtn.addEventListener("click", () => {
@@ -16469,7 +21401,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       this.renderConversationList();
       this.updateSummary();
     });
-    const selectNoneBtn = section.createEl("button", { text: "Select None" });
+    const selectNoneBtn = section.createEl("button", { text: t("conversation_selection.controls.select_none") });
     selectNoneBtn.style.padding = "8px 16px";
     selectNoneBtn.style.whiteSpace = "nowrap";
     selectNoneBtn.addEventListener("click", () => {
@@ -16478,7 +21410,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       this.updateSummary();
     });
     const searchInput = section.createEl("input", { type: "text" });
-    searchInput.placeholder = "Search conversations...";
+    searchInput.placeholder = t("conversation_selection.controls.search_placeholder");
     searchInput.style.flex = "1";
     searchInput.style.minWidth = "200px";
     searchInput.style.padding = "8px 12px";
@@ -16493,7 +21425,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       this.updatePagination();
     });
     const statusLabel = section.createEl("label");
-    statusLabel.textContent = "Status:";
+    statusLabel.textContent = t("conversation_selection.controls.status_label");
     statusLabel.style.marginRight = "4px";
     statusLabel.style.fontSize = "14px";
     statusLabel.style.whiteSpace = "nowrap";
@@ -16507,10 +21439,10 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     statusSelect.style.color = "var(--text-normal)";
     statusSelect.classList.add("nexus-custom-select");
     const statusOptions = [
-      { value: "all", text: "All" },
-      { value: "new", text: "New" },
-      { value: "updated", text: "Updated" },
-      { value: "unchanged", text: "Unchanged" }
+      { value: "all", text: t("conversation_selection.status_filter_options.all") },
+      { value: "new", text: t("conversation_selection.status_filter_options.new") },
+      { value: "updated", text: t("conversation_selection.status_filter_options.updated") },
+      { value: "unchanged", text: t("conversation_selection.status_filter_options.unchanged") }
     ];
     statusOptions.forEach((option) => {
       const optionEl = statusSelect.createEl("option");
@@ -16527,7 +21459,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       this.updatePagination();
     });
     const pageSizeLabel = section.createEl("label");
-    pageSizeLabel.textContent = "Show:";
+    pageSizeLabel.textContent = t("conversation_selection.controls.show_label");
     pageSizeLabel.style.marginRight = "4px";
     pageSizeLabel.style.fontSize = "14px";
     pageSizeLabel.style.whiteSpace = "nowrap";
@@ -16578,15 +21510,15 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     const headers = [
       { text: "", width: "40px", sortField: null },
       // Checkbox - plus compact
-      { text: "Title", width: "45%", sortField: "title" },
+      { text: t("conversation_selection.table_headers.title"), width: "45%", sortField: "title" },
       // Plus d'espace
-      { text: "Created", width: "110px", sortField: "createTime" },
+      { text: t("conversation_selection.table_headers.created"), width: "110px", sortField: "createTime" },
       // Réduit
-      { text: "Updated", width: "110px", sortField: "updateTime" },
+      { text: t("conversation_selection.table_headers.updated"), width: "110px", sortField: "updateTime" },
       // Réduit
-      { text: "Messages", width: "80px", sortField: "messageCount" },
+      { text: t("conversation_selection.table_headers.messages"), width: "80px", sortField: "messageCount" },
       // Réduit
-      { text: "Status", width: "100px", sortField: null }
+      { text: t("conversation_selection.table_headers.status"), width: "100px", sortField: null }
       // Réduit
     ];
     headers.forEach((header) => {
@@ -16655,10 +21587,10 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     buttonContainer.style.justifyContent = "flex-end";
     buttonContainer.style.gap = "10px";
     buttonContainer.style.marginTop = "20px";
-    const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+    const cancelButton = buttonContainer.createEl("button", { text: t("conversation_selection.buttons.cancel") });
     cancelButton.style.padding = "8px 16px";
     cancelButton.addEventListener("click", () => this.close());
-    const importButton = buttonContainer.createEl("button", { text: "Import Selected" });
+    const importButton = buttonContainer.createEl("button", { text: t("conversation_selection.buttons.import_selected") });
     importButton.id = "import-selected-button";
     importButton.style.padding = "8px 16px";
     importButton.classList.add("mod-cta");
@@ -16757,22 +21689,22 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     badge.classList.add("status-badge");
     switch (conversation.existenceStatus) {
       case "new":
-        badge.textContent = "New";
+        badge.textContent = t("conversation_selection.status_badges.new");
         badge.classList.add("status-new");
-        badge.title = "This conversation is not in your vault";
+        badge.title = t("conversation_selection.status_badges.tooltip_new");
         break;
       case "updated":
-        badge.textContent = "Updated";
+        badge.textContent = t("conversation_selection.status_badges.updated");
         badge.classList.add("status-updated");
-        badge.title = `This conversation has newer content than your vault (${this.formatDate(conversation.existingUpdateTime || 0)} \u2192 ${this.formatDate(conversation.updateTime)})`;
+        badge.title = t("conversation_selection.status_badges.tooltip_updated", { existing_date: this.formatDate(conversation.existingUpdateTime || 0), new_date: this.formatDate(conversation.updateTime) });
         break;
       case "unchanged":
-        badge.textContent = "Unchanged";
+        badge.textContent = t("conversation_selection.status_badges.unchanged");
         badge.classList.add("status-unchanged");
-        badge.title = "This conversation is the same as in your vault";
+        badge.title = t("conversation_selection.status_badges.tooltip_unchanged");
         break;
       default:
-        badge.textContent = "Unknown";
+        badge.textContent = t("conversation_selection.status_badges.unknown");
         badge.classList.add("status-unchanged");
         break;
     }
@@ -16786,9 +21718,9 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     const { currentPage, totalPages, totalItems, pageSize } = this.state.pagination;
     const startItem = (currentPage - 1) * pageSize + 1;
     const endItem = Math.min(currentPage * pageSize, totalItems);
-    pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} conversations`;
+    pageInfo.textContent = t("conversation_selection.pagination.showing", { start: String(startItem), end: String(endItem), total: String(totalItems) });
     pageControls.empty();
-    const prevBtn = pageControls.createEl("button", { text: "Previous" });
+    const prevBtn = pageControls.createEl("button", { text: t("conversation_selection.pagination.previous") });
     prevBtn.disabled = currentPage <= 1;
     prevBtn.style.padding = "6px 12px";
     prevBtn.addEventListener("click", () => {
@@ -16798,9 +21730,9 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       }
     });
     const pageSpan = pageControls.createEl("span");
-    pageSpan.textContent = `Page ${currentPage} of ${totalPages}`;
+    pageSpan.textContent = t("conversation_selection.pagination.page_of", { current: String(currentPage), total: String(totalPages) });
     pageSpan.style.padding = "6px 12px";
-    const nextBtn = pageControls.createEl("button", { text: "Next" });
+    const nextBtn = pageControls.createEl("button", { text: t("conversation_selection.pagination.next") });
     nextBtn.disabled = currentPage >= totalPages;
     nextBtn.style.padding = "6px 12px";
     nextBtn.addEventListener("click", () => {
@@ -16830,7 +21762,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     const importButton = this.contentEl.querySelector("#import-selected-button");
     if (importButton) {
       importButton.disabled = selectedCount === 0;
-      importButton.textContent = selectedCount > 0 ? `Import ${selectedCount} Selected` : "Import Selected";
+      importButton.textContent = selectedCount > 0 ? t("conversation_selection.buttons.import_selected_count", { count: String(selectedCount) }) : t("conversation_selection.buttons.import_selected");
     }
   }
   buildComprehensiveSummary(selectedCount, totalCount, statusCounts) {
@@ -16840,25 +21772,25 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       return `
                 <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="font-weight: 600; font-size: 1.4em; color: var(--text-accent);">${uniqueCount}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Unique Conversations</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t("conversation_selection.summary.unique_conversations")}</div>
                 </div>
                 <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="font-weight: 600; font-size: 1.4em; color: var(--color-green);">${info.conversationsNew}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">New</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t("conversation_selection.summary.new")}</div>
                 </div>
                 <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="font-weight: 600; font-size: 1.4em; color: var(--color-orange);">${info.conversationsUpdated}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Updated</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t("conversation_selection.summary.updated")}</div>
                 </div>
                 <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="font-weight: 600; font-size: 1.4em; color: var(--text-muted);">${info.conversationsIgnored}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Unchanged</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t("conversation_selection.summary.unchanged")}</div>
                 </div>
             `;
     }
     return `
             <div style="text-align: center; padding: 12px;">
-                <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> selected
+                ${t("conversation_selection.summary.selected_of", { selected: String(selectedCount), total: String(totalCount) })}
             </div>
         `;
   }
@@ -16877,7 +21809,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
   }
   formatDate(timestamp) {
     if (!timestamp)
-      return "Unknown";
+      return t("conversation_selection.date_unknown");
     const date = new Date(timestamp * 1e3);
     return date.toLocaleDateString();
   }
@@ -17115,6 +22047,7 @@ __name(ConversationSelectionDialog, "ConversationSelectionDialog");
 // src/dialogs/installation-welcome-dialog.ts
 var import_obsidian29 = require("obsidian");
 init_kofi_support_box();
+init_i18n();
 var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
   constructor(app, version) {
     super(app);
@@ -17125,26 +22058,26 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
     contentEl.empty();
     modalEl.addClass("nexus-installation-welcome-dialog");
     contentEl.addClass("nexus-installation-welcome-dialog");
-    titleEl.setText(`Nexus AI Chat Importer ${this.version}`);
+    titleEl.setText(t("welcome.title", { version: this.version }));
     const welcomeSection = contentEl.createDiv("welcome-section");
     welcomeSection.style.cssText = `
             text-align: center;
             margin-bottom: 24px;
         `;
     const welcomeIcon = welcomeSection.createDiv();
-    welcomeIcon.innerHTML = "\u{1F389}";
+    welcomeIcon.innerHTML = t("welcome.icon");
     welcomeIcon.style.cssText = `
             font-size: 48px;
             margin-bottom: 12px;
         `;
     const welcomeTitle = welcomeSection.createEl("h2");
-    welcomeTitle.textContent = "Thank you for installing Nexus AI Chat Importer!";
+    welcomeTitle.textContent = t("welcome.heading");
     welcomeTitle.style.cssText = `
             margin: 0 0 12px 0;
             color: var(--text-normal);
         `;
     const welcomeText = welcomeSection.createDiv();
-    welcomeText.textContent = "Import and manage your ChatGPT and Claude conversations directly in your Obsidian vault.";
+    welcomeText.textContent = t("welcome.description");
     welcomeText.style.cssText = `
             color: var(--text-muted);
             line-height: 1.6;
@@ -17156,7 +22089,7 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
             margin-top: 24px;
         `;
     const resourcesTitle = resourcesSection.createEl("h3");
-    resourcesTitle.textContent = "Resources";
+    resourcesTitle.textContent = t("welcome.resources_title");
     resourcesTitle.style.cssText = `
             margin: 0 0 16px 0;
             color: var(--text-normal);
@@ -17172,26 +22105,26 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
     const resources = [
       {
         icon: "\u{1F4D6}",
-        title: "Documentation",
-        description: "Learn how to use the plugin",
+        title: t("welcome.resources.documentation.title"),
+        description: t("welcome.resources.documentation.description"),
         url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md"
       },
       {
         icon: "\u{1F4DD}",
-        title: "Release Notes",
-        description: "What's new in this version",
+        title: t("welcome.resources.release_notes.title"),
+        description: t("welcome.resources.release_notes.description"),
         url: "https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md"
       },
       {
         icon: "\u{1F41B}",
-        title: "Report Issues",
-        description: "Found a bug? Let us know",
+        title: t("welcome.resources.report_issues.title"),
+        description: t("welcome.resources.report_issues.description"),
         url: "https://github.com/superkikim/nexus-ai-chat-importer/issues"
       },
       {
         icon: "\u{1F4AC}",
-        title: "Community Forum",
-        description: "Join the discussion",
+        title: t("welcome.resources.community_forum.title"),
+        description: t("welcome.resources.community_forum.description"),
         url: "https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664"
       }
     ];
@@ -17206,7 +22139,7 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
             margin-top: 24px;
         `;
     const closeButton = buttonContainer.createEl("button", {
-      text: "Get Started"
+      text: t("welcome.buttons.get_started")
     });
     closeButton.addClass("mod-cta");
     closeButton.style.cssText = `
@@ -17281,6 +22214,7 @@ __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 var import_obsidian30 = require("obsidian");
 init_kofi_support_box();
 init_constants();
+init_i18n();
 var NewVersionModal = class extends import_obsidian30.Modal {
   constructor(app, plugin, version, fallbackMessage) {
     super(app);
@@ -17291,7 +22225,7 @@ var NewVersionModal = class extends import_obsidian30.Modal {
   onOpen() {
     const { titleEl, modalEl } = this;
     modalEl.classList.add("nexus-new-version-modal");
-    titleEl.setText(`\u{1F389} Nexus AI Chat Importer ${this.version}`);
+    titleEl.setText(t("upgrade.new_version_modal.title", { version: this.version }));
     this.createForm();
   }
   onClose() {
@@ -17334,7 +22268,7 @@ var NewVersionModal = class extends import_obsidian30.Modal {
   addCloseButton() {
     const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container" });
     const closeButton = buttonContainer.createEl("button", {
-      text: "Got it!",
+      text: t("upgrade.new_version_modal.buttons.got_it"),
       cls: "mod-cta nexus-close-button"
     });
     closeButton.onclick = () => {
@@ -17969,6 +22903,7 @@ __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 var import_obsidian31 = require("obsidian");
 init_kofi_support_box();
 init_logger();
+init_i18n();
 var logger5 = new Logger();
 var ImportCompletionDialog = class extends import_obsidian31.Modal {
   constructor(app, stats, reportFilePath) {
@@ -17981,13 +22916,13 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     contentEl.empty();
     modalEl.addClass("nexus-import-completion-dialog");
     contentEl.addClass("nexus-import-completion-dialog");
-    titleEl.setText("Import Completed");
+    titleEl.setText(t("import_completion.title"));
     const successMsg = contentEl.createDiv("success-message");
     successMsg.style.textAlign = "center";
     successMsg.style.marginBottom = "20px";
     successMsg.style.fontSize = "1.1em";
     successMsg.style.color = "var(--color-green)";
-    successMsg.innerHTML = "\u2705 Successfully imported conversations";
+    successMsg.innerHTML = t("import_completion.success_message");
     this.createStatsSection(contentEl);
     if (this.stats.attachmentsTotal > 0) {
       this.createAttachmentsSection(contentEl);
@@ -18003,14 +22938,14 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     section.style.display = "grid";
     section.style.gridTemplateColumns = "repeat(3, 1fr)";
     section.style.gap = "12px";
-    this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), "ZIP Files Processed");
-    this.createStatCartouche(section, "\u{1F4AC}", this.stats.totalConversations.toString(), "Unique Conversations");
-    this.createStatCartouche(section, "\u{1F501}", this.stats.duplicates.toString(), "Duplicates", "var(--text-muted)");
-    this.createStatCartouche(section, "\u2728", this.stats.created.toString(), "New", "var(--color-green)");
-    this.createStatCartouche(section, "\u{1F504}", this.stats.updated.toString(), "Updated", "var(--color-orange)");
-    this.createStatCartouche(section, "\u23ED\uFE0F", this.stats.skipped.toString(), "Skipped", "var(--text-muted)");
+    this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), t("import_completion.stats.zip_files_processed"));
+    this.createStatCartouche(section, "\u{1F4AC}", this.stats.totalConversations.toString(), t("import_completion.stats.unique_conversations"));
+    this.createStatCartouche(section, "\u{1F501}", this.stats.duplicates.toString(), t("import_completion.stats.duplicates"), "var(--text-muted)");
+    this.createStatCartouche(section, "\u2728", this.stats.created.toString(), t("import_completion.stats.new"), "var(--color-green)");
+    this.createStatCartouche(section, "\u{1F504}", this.stats.updated.toString(), t("import_completion.stats.updated"), "var(--color-orange)");
+    this.createStatCartouche(section, "\u23ED\uFE0F", this.stats.skipped.toString(), t("import_completion.stats.skipped"), "var(--text-muted)");
     if (this.stats.failed > 0) {
-      this.createStatCartouche(section, "\u274C", this.stats.failed.toString(), "Failed", "var(--color-red)");
+      this.createStatCartouche(section, "\u274C", this.stats.failed.toString(), t("import_completion.stats.failed"), "var(--color-red)");
     }
   }
   createStatCartouche(container, icon, value, label, color) {
@@ -18046,14 +22981,14 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     const icon = percentage === 100 ? "\u2705" : percentage > 50 ? "\u26A0\uFE0F" : "\u274C";
     const color = percentage === 100 ? "var(--color-green)" : percentage > 50 ? "var(--color-orange)" : "var(--color-red)";
     const attachmentText = section.createDiv();
-    attachmentText.innerHTML = `${icon} <strong>Attachments:</strong> ${this.stats.attachmentsFound}/${this.stats.attachmentsTotal} extracted (${percentage}%)`;
+    attachmentText.innerHTML = `${icon} <strong>${t("import_completion.attachments.label")}</strong> ${t("import_completion.attachments.summary", { found: String(this.stats.attachmentsFound), total: String(this.stats.attachmentsTotal), percentage: String(percentage) })}`;
     attachmentText.style.color = color;
     if (this.stats.attachmentsMissing > 0 || this.stats.attachmentsFailed > 0) {
       const details = section.createDiv();
       details.style.fontSize = "0.85em";
       details.style.color = "var(--text-muted)";
       details.style.marginTop = "4px";
-      details.textContent = `${this.stats.attachmentsMissing} missing, ${this.stats.attachmentsFailed} failed`;
+      details.textContent = t("import_completion.attachments.missing_failed", { missing: String(this.stats.attachmentsMissing), failed: String(this.stats.attachmentsFailed) });
     }
   }
   createReportSection(container) {
@@ -18063,7 +22998,7 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     section.style.backgroundColor = "var(--background-secondary)";
     section.style.borderRadius = "6px";
     const label = section.createDiv();
-    label.textContent = "\u{1F4C4} Detailed report:";
+    label.textContent = t("import_completion.report.label");
     label.style.fontSize = "0.9em";
     label.style.color = "var(--text-muted)";
     label.style.marginBottom = "6px";
@@ -18089,13 +23024,13 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     buttonContainer.style.justifyContent = "flex-end";
     buttonContainer.style.gap = "10px";
     buttonContainer.style.marginTop = "20px";
-    const viewReportBtn = buttonContainer.createEl("button", { text: "View Report" });
+    const viewReportBtn = buttonContainer.createEl("button", { text: t("import_completion.buttons.view_report") });
     viewReportBtn.style.padding = "8px 16px";
     viewReportBtn.addEventListener("click", () => {
       this.openReport();
       this.close();
     });
-    const okBtn = buttonContainer.createEl("button", { text: "OK" });
+    const okBtn = buttonContainer.createEl("button", { text: t("import_completion.buttons.ok") });
     okBtn.classList.add("mod-cta");
     okBtn.style.padding = "8px 16px";
     okBtn.addEventListener("click", () => this.close());
@@ -18175,13 +23110,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   }
   async onload() {
     try {
+      initLocale();
       await this.loadSettings();
       this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
       this.commandRegistry.registerCommands();
       this.eventHandlers.registerEvents();
       const ribbonIconEl = this.addRibbonIcon(
         "message-square-plus",
-        "Nexus AI Chat Importer - Import new file",
+        t("notices.ribbon_tooltip"),
         () => this.showProviderSelectionDialog()
       );
       ribbonIconEl.addClass("nexus-ai-chat-ribbon");
@@ -18342,7 +23278,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
     if (provider === "gemini") {
       if (zipFiles.length === 0) {
-        new import_obsidian32.Notice("Please select at least one Gemini Takeout ZIP file (plus optional JSON index from the extension).");
+        new import_obsidian32.Notice(t("notices.import_no_zip_gemini"));
         this.logger.warn("[Gemini] No ZIP files selected for import");
         return;
       }
@@ -18366,7 +23302,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           }
         } catch (error) {
           this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
-          new import_obsidian32.Notice("Failed to read Gemini index JSON. Continuing without index.");
+          new import_obsidian32.Notice(t("notices.import_gemini_json_failed"));
         }
       }
       this.currentGeminiIndex = index;
@@ -18383,7 +23319,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         this.importService.setGeminiIndex(null);
       }
       if (zipFiles.length === 0) {
-        new import_obsidian32.Notice("Please select at least one ZIP export file.");
+        new import_obsidian32.Notice(t("notices.import_no_zip"));
         this.logger.warn(`[${provider}] No ZIP files selected for import`);
         return;
       }
@@ -18401,7 +23337,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   async handleImportAll(files, provider) {
     var _a, _b, _c, _d;
     try {
-      new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -18416,7 +23352,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian32.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian32.Notice(t("notices.import_no_new"));
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -18426,7 +23362,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const allIds = extractionResult.conversations.map((c) => c.id);
       const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
       const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
-      new import_obsidian32.Notice(`Importing ${allIds.length} conversations (${newCount} new, ${updatedCount} updated)...`);
+      new import_obsidian32.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -18456,7 +23392,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian32.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logger.error("[IMPORT-ALL] Error in import all:", error);
@@ -18467,7 +23403,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       } else {
         this.logger.error("[IMPORT-ALL] Error (not Error instance):", String(error));
       }
-      new import_obsidian32.Notice(`Error during import: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     }
   }
   /**
@@ -18475,7 +23411,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
-      new import_obsidian32.Notice(`Analyzing conversations from ${files.length} file(s)...`);
+      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -18486,7 +23422,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         existingConversations
       );
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian32.Notice("No new or updated conversations found. All conversations are already up to date.");
+        new import_obsidian32.Notice(t("notices.import_no_new"));
         const operationReport = new ImportReport();
         const reportPath = await this.writeConsolidatedReport(
           operationReport,
@@ -18517,7 +23453,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (error instanceof Error) {
         this.logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
       }
-      new import_obsidian32.Notice(`Error analyzing conversations: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian32.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
     }
   }
   /**
@@ -18529,21 +23465,21 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
     }
     if (result.selectedIds.length === 0) {
-      new import_obsidian32.Notice("No conversations selected for import.");
+      new import_obsidian32.Notice(t("notices.import_no_selected"));
       const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
       if (reportPath2) {
         this.showImportCompletionDialog(operationReport, reportPath2);
       }
       return;
     }
-    new import_obsidian32.Notice(`Importing ${result.selectedIds.length} selected conversations from ${files.length} file(s)...`);
+    new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     if (provider === "chatgpt" && files.length > 1) {
       try {
         await this.importService.buildAttachmentMapForMultiZip(files);
       } catch (error) {
         this.logger.error("Failed to build attachment map:", error);
-        new import_obsidian32.Notice("Failed to build attachment map. Check console for details.");
+        new import_obsidian32.Notice(t("notices.attachment_map_failed"));
       }
     }
     for (const file of files) {
@@ -18553,7 +23489,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
         } catch (error) {
           this.logger.error(`Error processing file ${file.name}:`, error);
-          new import_obsidian32.Notice(`Error processing ${file.name}. Check console for details.`);
+          new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
         }
       }
     }
@@ -18564,7 +23500,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian32.Notice(`Import completed. ${operationReport.getCreatedCount()} created, ${operationReport.getUpdatedCount()} updated.`);
+      new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
     }
   }
   /**
@@ -18585,7 +23521,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian32.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian32.Notice(t("notices.report_failed"));
       return "";
     }
     const now = Date.now() / 1e3;
@@ -18637,7 +23573,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       this.logger.error("Full error:", error);
       this.logger.error("Log content length:", logContent.length);
-      new import_obsidian32.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian32.Notice(t("notices.report_failed"));
       return "";
     }
   }

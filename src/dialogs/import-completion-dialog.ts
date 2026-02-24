@@ -21,6 +21,7 @@
 import { App, Modal } from "obsidian";
 import { createKofiSupportBox } from "../ui/components/kofi-support-box";
 import { Logger } from "../logger";
+import { t } from '../i18n';
 
 const logger = new Logger();
 
@@ -61,7 +62,7 @@ export class ImportCompletionDialog extends Modal {
         contentEl.addClass('nexus-import-completion-dialog');
 
         // Set title
-        titleEl.setText("Import Completed");
+        titleEl.setText(t('import_completion.title'));
 
         // Success message
         const successMsg = contentEl.createDiv('success-message');
@@ -69,7 +70,7 @@ export class ImportCompletionDialog extends Modal {
         successMsg.style.marginBottom = "20px";
         successMsg.style.fontSize = "1.1em";
         successMsg.style.color = "var(--color-green)";
-        successMsg.innerHTML = "✅ Successfully imported conversations";
+        successMsg.innerHTML = t('import_completion.success_message');
 
         // Statistics section with cartouches
         this.createStatsSection(contentEl);
@@ -100,26 +101,26 @@ export class ImportCompletionDialog extends Modal {
         section.style.gap = "12px";
 
         // Files cartouche
-        this.createStatCartouche(section, "📁", this.stats.totalFiles.toString(), "ZIP Files Processed");
+        this.createStatCartouche(section, "📁", this.stats.totalFiles.toString(), t('import_completion.stats.zip_files_processed'));
 
         // Total conversations cartouche (unique UUIDs in ZIPs)
-        this.createStatCartouche(section, "💬", this.stats.totalConversations.toString(), "Unique Conversations");
+        this.createStatCartouche(section, "💬", this.stats.totalConversations.toString(), t('import_completion.stats.unique_conversations'));
 
         // Duplicates cartouche (always shown to explain difference between total and created)
-        this.createStatCartouche(section, "🔁", this.stats.duplicates.toString(), "Duplicates", "var(--text-muted)");
+        this.createStatCartouche(section, "🔁", this.stats.duplicates.toString(), t('import_completion.stats.duplicates'), "var(--text-muted)");
 
         // Created cartouche
-        this.createStatCartouche(section, "✨", this.stats.created.toString(), "New", "var(--color-green)");
+        this.createStatCartouche(section, "✨", this.stats.created.toString(), t('import_completion.stats.new'), "var(--color-green)");
 
         // Updated cartouche
-        this.createStatCartouche(section, "🔄", this.stats.updated.toString(), "Updated", "var(--color-orange)");
+        this.createStatCartouche(section, "🔄", this.stats.updated.toString(), t('import_completion.stats.updated'), "var(--color-orange)");
 
         // Skipped cartouche
-        this.createStatCartouche(section, "⏭️", this.stats.skipped.toString(), "Skipped", "var(--text-muted)");
+        this.createStatCartouche(section, "⏭️", this.stats.skipped.toString(), t('import_completion.stats.skipped'), "var(--text-muted)");
 
         // Failed cartouche (only if > 0)
         if (this.stats.failed > 0) {
-            this.createStatCartouche(section, "❌", this.stats.failed.toString(), "Failed", "var(--color-red)");
+            this.createStatCartouche(section, "❌", this.stats.failed.toString(), t('import_completion.stats.failed'), "var(--color-red)");
         }
     }
 
@@ -169,7 +170,7 @@ export class ImportCompletionDialog extends Modal {
         const color = percentage === 100 ? "var(--color-green)" : percentage > 50 ? "var(--color-orange)" : "var(--color-red)";
 
         const attachmentText = section.createDiv();
-        attachmentText.innerHTML = `${icon} <strong>Attachments:</strong> ${this.stats.attachmentsFound}/${this.stats.attachmentsTotal} extracted (${percentage}%)`;
+        attachmentText.innerHTML = `${icon} <strong>${t('import_completion.attachments.label')}</strong> ${t('import_completion.attachments.summary', { found: String(this.stats.attachmentsFound), total: String(this.stats.attachmentsTotal), percentage: String(percentage) })}`;
         attachmentText.style.color = color;
 
         if (this.stats.attachmentsMissing > 0 || this.stats.attachmentsFailed > 0) {
@@ -177,7 +178,7 @@ export class ImportCompletionDialog extends Modal {
             details.style.fontSize = "0.85em";
             details.style.color = "var(--text-muted)";
             details.style.marginTop = "4px";
-            details.textContent = `${this.stats.attachmentsMissing} missing, ${this.stats.attachmentsFailed} failed`;
+            details.textContent = t('import_completion.attachments.missing_failed', { missing: String(this.stats.attachmentsMissing), failed: String(this.stats.attachmentsFailed) });
         }
     }
 
@@ -189,7 +190,7 @@ export class ImportCompletionDialog extends Modal {
         section.style.borderRadius = "6px";
 
         const label = section.createDiv();
-        label.textContent = "📄 Detailed report:";
+        label.textContent = t('import_completion.report.label');
         label.style.fontSize = "0.9em";
         label.style.color = "var(--text-muted)";
         label.style.marginBottom = "6px";
@@ -221,7 +222,7 @@ export class ImportCompletionDialog extends Modal {
         buttonContainer.style.marginTop = "20px";
 
         // View Report button
-        const viewReportBtn = buttonContainer.createEl("button", { text: "View Report" });
+        const viewReportBtn = buttonContainer.createEl("button", { text: t('import_completion.buttons.view_report') });
         viewReportBtn.style.padding = "8px 16px";
         viewReportBtn.addEventListener('click', () => {
             this.openReport();
@@ -229,7 +230,7 @@ export class ImportCompletionDialog extends Modal {
         });
 
         // OK button
-        const okBtn = buttonContainer.createEl("button", { text: "OK" });
+        const okBtn = buttonContainer.createEl("button", { text: t('import_completion.buttons.ok') });
         okBtn.classList.add('mod-cta');
         okBtn.style.padding = "8px 16px";
         okBtn.addEventListener('click', () => this.close());

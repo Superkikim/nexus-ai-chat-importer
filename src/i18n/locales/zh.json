@@ -1,0 +1,479 @@
+{
+  "common": {
+    "buttons": {
+      "cancel": "取消",
+      "ok": "确定",
+      "select": "选择",
+      "browse": "浏览",
+      "continue": "继续",
+      "proceed": "执行",
+      "close": "知道了！",
+      "create": "创建",
+      "remove": "移除",
+      "run": "运行",
+      "complete": "完成",
+      "view_report": "查看报告",
+      "get_started": "开始使用",
+      "create_new_folder": "新建文件夹"
+    },
+    "status": {
+      "new": "新建",
+      "updated": "已更新",
+      "unchanged": "未变更",
+      "unknown": "未知"
+    },
+    "progress": {
+      "phase_validation": "🔍 验证",
+      "phase_scanning": "📋 扫描",
+      "phase_processing": "⚙️ 处理",
+      "phase_writing": "💾 写入",
+      "phase_complete": "✅ 完成",
+      "phase_error": "❌ 错误"
+    }
+  },
+  "provider_selection": {
+    "title": "选择存档来源",
+    "providers": {
+      "chatgpt": {
+        "name": "ChatGPT",
+        "description": "OpenAI ChatGPT 对话导出"
+      },
+      "claude": {
+        "name": "Claude",
+        "description": "Anthropic Claude 对话导出"
+      },
+      "lechat": {
+        "name": "Le Chat",
+        "description": "Mistral AI Le Chat 对话导出"
+      }
+    },
+    "buttons": {
+      "select": "选择",
+      "cancel": "取消"
+    }
+  },
+  "file_selection": {
+    "title": "导入 {{provider}} 对话",
+    "import_mode": {
+      "section_title": "导入模式",
+      "all_label": "全部导入",
+      "all_description": "导入所有对话（速度更快）",
+      "selective_label": "选择性导入",
+      "selective_description": "预览并选择要导入的对话"
+    },
+    "file_area": {
+      "section_title": "选择文件",
+      "drop_text_default": "将 ZIP 文件拖放至此处，或点击浏览",
+      "drop_text_gemini": "将 ZIP 和 JSON 文件拖放至此处，或点击浏览",
+      "drop_subtext_default": "支持多文件选择",
+      "drop_subtext_gemini": "ZIP（Takeout）+ 可选 JSON（来自扩展的索引）"
+    },
+    "selected_files": {
+      "section_title": "已选文件",
+      "remove_button": "移除"
+    },
+    "buttons": {
+      "cancel": "取消",
+      "continue": "继续"
+    }
+  },
+  "conversation_selection": {
+    "title": "选择要导入的对话",
+    "controls": {
+      "select_all": "全选",
+      "select_none": "取消全选",
+      "search_placeholder": "搜索对话...",
+      "status_label": "状态：",
+      "show_label": "显示："
+    },
+    "status_filter_options": {
+      "all": "全部",
+      "new": "新建",
+      "updated": "已更新",
+      "unchanged": "未变更"
+    },
+    "table_headers": {
+      "title": "标题",
+      "created": "创建时间",
+      "updated": "更新时间",
+      "messages": "消息数",
+      "status": "状态"
+    },
+    "status_badges": {
+      "new": "新建",
+      "updated": "已更新",
+      "unchanged": "未变更",
+      "unknown": "未知",
+      "tooltip_new": "此对话不在您的 Vault 中",
+      "tooltip_updated": "此对话的内容比您 Vault 中的版本更新（{{existing_date}} → {{new_date}}）",
+      "tooltip_unchanged": "此对话与您 Vault 中的版本相同"
+    },
+    "pagination": {
+      "showing": "显示第 {{start}}–{{end}} 条，共 {{total}} 条对话",
+      "page_of": "第 {{current}} 页，共 {{total}} 页",
+      "previous": "上一页",
+      "next": "下一页"
+    },
+    "summary": {
+      "unique_conversations": "唯一对话",
+      "new": "新建",
+      "updated": "已更新",
+      "unchanged": "未变更",
+      "selected_of": "已选 {{selected}} / {{total}}"
+    },
+    "buttons": {
+      "cancel": "取消",
+      "import_selected": "导入已选",
+      "import_selected_count": "导入已选 {{count}} 条"
+    },
+    "date_unknown": "未知"
+  },
+  "import_progress": {
+    "title": "正在导入 {{filename}}",
+    "initial": {
+      "title": "正在准备导入...",
+      "detail": "正在验证 ZIP 文件结构"
+    },
+    "conversation_counter": "{{current}}/{{total}} 条对话",
+    "conversation_counter_selective": "{{current}}/{{total}} 条已选对话",
+    "selective_mode_indicator": "📋 选择性导入：{{total}} 条中已选 {{selected}} 条",
+    "complete": {
+      "message": "导入已成功完成",
+      "detail": "您可以关闭此对话框"
+    },
+    "error": {
+      "message": "导入过程中发生错误",
+      "detail": "请查看控制台获取详细信息"
+    }
+  },
+  "import_completion": {
+    "title": "导入完成",
+    "success_message": "✅ 对话已成功导入",
+    "stats": {
+      "zip_files_processed": "已处理 ZIP 文件",
+      "unique_conversations": "唯一对话",
+      "duplicates": "重复",
+      "new": "新建",
+      "updated": "已更新",
+      "skipped": "已跳过",
+      "failed": "失败"
+    },
+    "attachments": {
+      "label": "附件：",
+      "summary": "{{found}}/{{total}} 已提取（{{percentage}}%）",
+      "missing_failed": "{{missing}} 缺失，{{failed}} 失败"
+    },
+    "report": {
+      "label": "📄 详细报告："
+    },
+    "buttons": {
+      "view_report": "查看报告",
+      "ok": "确定"
+    }
+  },
+  "settings": {
+    "tab_title": "Nexus AI Chat Importer",
+    "folders": {
+      "section_title": "📁 文件夹结构",
+      "conversation_folder": {
+        "name": "对话文件夹",
+        "desc": "导入的对话存放位置",
+        "placeholder": "Nexus/Conversations",
+        "browse_tooltip": "浏览文件夹或新建文件夹"
+      },
+      "reports_folder": {
+        "name": "报告文件夹",
+        "desc": "导入报告存放位置",
+        "placeholder": "Nexus Reports",
+        "browse_tooltip": "浏览文件夹或新建文件夹"
+      },
+      "attachment_folder": {
+        "name": "附件文件夹",
+        "desc": "附件存放位置（⚠️ 请将其排除在同步范围之外以节省空间）",
+        "placeholder": "Nexus/Attachments",
+        "browse_tooltip": "浏览文件夹或新建文件夹"
+      }
+    },
+    "display": {
+      "section_title": "📅 日期前缀",
+      "add_date_prefix": {
+        "name": "为文件名添加日期前缀",
+        "desc": "将创建日期作为前缀添加到对话文件名",
+        "format_label": "选择日期格式："
+      }
+    },
+    "timestamps": {
+      "section_title": "📅 消息日期格式",
+      "custom_format": {
+        "name": "自定义消息时间戳格式",
+        "desc": "覆盖消息标题中默认的基于区域设置的时间戳格式。禁用时，时间戳遵循 Obsidian 的语言设置。若 Obsidian 设置为英语，则强制使用美国格式（YYYY/DD/MM）。"
+      },
+      "timestamp_format": {
+        "name": "时间戳格式",
+        "desc": "选择对话笔记中消息时间戳的格式"
+      },
+      "preview_label": "预览："
+    },
+    "attachments": {
+      "section_title": "附件设置",
+      "import_attachments": {
+        "name": "导入附件",
+        "desc": "将附件文件保存到磁盘并在对话中链接（采用“尽力而为”策略）"
+      },
+      "handle_missing": {
+        "name": "处理缺失附件",
+        "desc": "当导出中缺少附件时，创建提示性笔记而非直接跳过"
+      },
+      "show_details": {
+        "name": "在报告中显示附件详情",
+        "desc": "在导入报告中包含详细的附件处理统计信息"
+      },
+      "info_box": {
+        "title": "📎 关于附件处理",
+        "best_effort": "尽力而为策略：导出中找到的文件将被提取并链接；缺失的文件将生成提示性笔记。",
+        "platform_diff": "平台差异：ChatGPT 导出可能不包含所有附件，尤其是来自较早对话的附件。",
+        "organization": "简单整理：文件按 attachments/provider/category/ 结构组织（如 attachments/chatgpt/images/）。",
+        "sync_tip": "同步提示：建议将附件文件夹排除在同步范围之外，以避免上传大文件。",
+        "tip": "💡 提示：启用\"显示附件详情\"可精确查看导入时哪些文件被找到、缺失或失败。"
+      }
+    },
+    "migrations": {
+      "section_title": "数据迁移",
+      "description_manual": "手动操作：可在方便时运行的可选升级操作。",
+      "description_automatic": "自动操作（如删除旧数据）在升级期间自动运行，此处不显示。",
+      "version_header": "版本 {{version}}",
+      "no_migrations": {
+        "title": "没有可用的手动操作",
+        "desc": "所有升级操作均已自动完成。"
+      },
+      "operation_completed_suffix": " ✅ 已完成",
+      "buttons": {
+        "completed": "✅ 已完成",
+        "cannot_run": "无法运行",
+        "run": "运行",
+        "running": "运行中..."
+      },
+      "tooltips": {
+        "completed": "此操作已完成",
+        "cannot_run": "此操作的前提条件未满足",
+        "run": "执行 {{operation_name}}"
+      },
+      "error_loading": "加载迁移时出错："
+    },
+    "support": {
+      "section_title": "💝 支持与帮助",
+      "resources": {
+        "name": "📚 资源",
+        "desc": "文档、发布说明及社区链接",
+        "readme": "📖 README",
+        "changelog": "📝 更新日志",
+        "issues": "🐛 问题反馈",
+        "forum": "💬 论坛"
+      }
+    }
+  },
+  "upgrade": {
+    "progress_modal": {
+      "starting": "正在启动...",
+      "progress_label": "进度：{{percentage}}%",
+      "step_label": "步骤 {{current}}/{{total}}",
+      "complete_label": "已完成",
+      "complete_message": "已成功完成",
+      "error_message": "发生错误"
+    },
+    "multi_operation_modal": {
+      "progress_label": "进度：{{completed}}/{{total}} 个操作",
+      "progress_with_failures": "进度：{{completed}}/{{total}} 个操作（{{failed}} 个失败）",
+      "all_completed": "全部 {{total}} 个操作已成功完成",
+      "mark_complete_default": "所有操作均已成功完成",
+      "buttons": {
+        "complete": "完成",
+        "close": "关闭"
+      }
+    },
+    "modal_130": {
+      "title": "🎉 Nexus AI Chat Importer {{version}}",
+      "migration_section": {
+        "title": "🔄 需要迁移",
+        "message": "以下任务将自动运行，以将您的数据升级到 v1.3.0：",
+        "tasks": {
+          "folder_settings": "✓ 将文件夹设置迁移到新结构",
+          "timestamps": "✓ 将时间戳更新为 ISO 8601 格式",
+          "aliases": "✓ 修复 frontmatter 别名",
+          "reports": "✓ 将报告文件夹移至正确位置",
+          "artifacts": "✓ 更新 artifact 元数据"
+        },
+        "estimate": "这将需要几秒钟。"
+      },
+      "buttons": {
+        "run_migration": "🚀 运行迁移任务"
+      }
+    },
+    "complete_modal": {
+      "title": "✅ 升级完成 - v{{version}}",
+      "buttons": {
+        "got_it": "知道了！"
+      }
+    },
+    "new_version_modal": {
+      "title": "🎉 Nexus AI Chat Importer {{version}}",
+      "buttons": {
+        "got_it": "知道了！"
+      }
+    }
+  },
+  "folder_migration": {
+    "title": "移动现有文件？",
+    "message_intro": "您正在更改 {{folder_type}} 文件夹的位置：",
+    "path_from": "从：{{path}}",
+    "path_to": "到：{{path}}",
+    "question": "是否将现有文件移动到新位置？",
+    "link_updates": {
+      "title": "🔗 链接更新：",
+      "attachments_text": "移动附件时，所有引用这些附件的对话笔记也将同步更新。",
+      "conversations_text": "移动对话时，所有引用这些对话的报告和附件也将同步更新。",
+      "estimated_time_seconds": "预计时间：约 {{seconds}} 秒",
+      "estimated_time_minutes": "预计时间：约 {{minutes}} 分钟"
+    },
+    "warning": {
+      "title": "⚠️ 重要提示：",
+      "text": "若选择“否”，现有文件将保留在原位置，不受未来更新的影响。"
+    },
+    "buttons": {
+      "cancel": "取消",
+      "keep": "否，保留文件在原位置",
+      "move": "是，移动文件",
+      "move_with_links": "是，移动文件并更新链接"
+    },
+    "progress": {
+      "title_moving": "正在移动 {{folder_type}} 并更新链接",
+      "step_moving_title": "正在移动文件...",
+      "step_moving_detail": "从 {{old_path}} 移动到 {{new_path}}",
+      "step_moving_count": "已处理 {{current}} / {{total}} 个文件",
+      "step_moved_title": "文件已移动",
+      "step_moved_detail": "{{moved}} 个文件已移动，{{skipped}} 个已跳过。正在准备更新链接...",
+      "step_updating_attachment_links": "正在更新附件链接...",
+      "step_updating_conversation_links": "正在更新对话链接...",
+      "step_updating_report_links": "正在更新报告中的链接...",
+      "step_updating_artifact_links": "正在更新 artifact 中的链接...",
+      "complete_message": "{{moved}} 个文件已移动。{{links}} 个链接已成功更新"
+    },
+    "result_dialog": {
+      "title": "文件夹迁移结果",
+      "summary_title": "迁移摘要",
+      "moved": "✅ 成功移动：{{count}} 个文件",
+      "skipped": "⚠️ 已跳过（已存在）：{{count}} 个文件",
+      "errors": "❌ 错误：{{count}} 个文件",
+      "explanation": "目标位置已存在的文件未被覆盖，以保护您的数据。",
+      "error_details_title": "错误详情："
+    },
+    "error_target_not_empty": {
+      "title": "目标文件夹非空",
+      "message": "文件夹\"{{path}}\"中已包含文件。\n\n要更改文件夹位置，请：\n• 在 Obsidian 中手动移动现有文件，或\n• 选择一个空文件夹或新建文件夹"
+    },
+    "error_migration_failed": {
+      "title": "迁移失败",
+      "message_move": "移动文件失败：{{error}}",
+      "message_links": "移动文件或更新链接失败：{{error}}"
+    }
+  },
+  "folder_browser": {
+    "title": "选择文件夹",
+    "vault_root": "Vault 根目录（/）",
+    "buttons": {
+      "create_new_folder": "新建文件夹",
+      "cancel": "取消",
+      "select": "选择"
+    },
+    "create_folder_dialog": {
+      "title": "新建文件夹",
+      "folder_name_label": "文件夹名称：",
+      "buttons": {
+        "cancel": "取消",
+        "create": "创建"
+      }
+    },
+    "notices": {
+      "select_parent_first": "⚠️ 请先选择父文件夹",
+      "invalid_name": "❌ 无效的文件夹名称：包含非法字符",
+      "already_exists": "❌ 文件夹已存在",
+      "invalid_location": "❌ {{error}}",
+      "created_success": "✅ 已创建文件夹：{{name}}",
+      "create_failed": "❌ 创建文件夹失败：{{error}}",
+      "select_first": "⚠️ 请先选择一个文件夹"
+    }
+  },
+  "configure_folder_dialog": {
+    "title": "🎉 Nexus AI Chat Importer v1.3.0",
+    "description": "在 1.3.0 版本中，您可以为报告指定专用文件夹。我们将把现有报告移至 {{folder}}，您也可以在下方选择您偏好的文件夹。",
+    "note": "注意：该文件夹不能位于对话或附件文件夹内部。",
+    "report_folder_label": "📊 报告文件夹",
+    "report_folder_placeholder": "Nexus Reports",
+    "buttons": {
+      "browse": "浏览",
+      "proceed": "执行"
+    },
+    "error_invalid_folder": {
+      "title": "无效的文件夹位置",
+      "message": "{{error}}"
+    }
+  },
+  "welcome": {
+    "title": "Nexus AI Chat Importer {{version}}",
+    "icon": "🎉",
+    "heading": "感谢安装 Nexus AI Chat Importer！",
+    "description": "直接在您的 Obsidian Vault 中导入和管理 ChatGPT、Claude 及 Le Chat 对话。",
+    "resources_title": "资源",
+    "resources": {
+      "documentation": {
+        "title": "文档",
+        "description": "了解如何使用此插件"
+      },
+      "release_notes": {
+        "title": "发布说明",
+        "description": "本版本新增内容"
+      },
+      "report_issues": {
+        "title": "反馈问题",
+        "description": "发现 bug？请告知我们"
+      },
+      "community_forum": {
+        "title": "社区论坛",
+        "description": "加入讨论"
+      }
+    },
+    "buttons": {
+      "get_started": "开始使用"
+    }
+  },
+  "notices": {
+    "import_analyzing": "正在分析来自 {{count}} 个文件的对话...",
+    "import_no_new": "未发现新的或已更新的对话，所有对话均已是最新状态。",
+    "import_starting": "正在导入 {{count}} 条对话（{{new}} 条新建，{{updated}} 条已更新）...",
+    "import_starting_selected": "正在从 {{files}} 个文件中导入 {{count}} 条已选对话...",
+    "import_completed_fallback": "导入完成。已创建 {{created}} 条，已更新 {{updated}} 条。",
+    "import_error": "导入时发生错误：{{error}}",
+    "import_error_analyzing": "分析对话时发生错误：{{error}}",
+    "import_error_file": "处理 {{filename}} 时发生错误，请查看控制台获取详细信息。",
+    "import_no_selected": "未选择要导入的对话。",
+    "import_no_zip_gemini": "请至少选择一个 Gemini Takeout ZIP 文件（以及可选的来自扩展的 JSON 索引）。",
+    "import_no_zip": "请至少选择一个 ZIP 导出文件。",
+    "import_gemini_json_failed": "读取 Gemini 索引 JSON 失败，将在不使用索引的情况下继续。",
+    "report_failed": "创建日志文件失败，请查看控制台获取详细信息。",
+    "attachment_map_failed": "构建附件映射失败，请查看控制台获取详细信息。",
+    "ribbon_tooltip": "Nexus AI Chat Importer - 导入新文件"
+  },
+  "commands": {
+    "import_conversations": {
+      "name": "导入 AI 对话"
+    }
+  },
+  "kofi_support": {
+    "header": "☕ 支持此插件",
+    "header_highlight": "支持此插件",
+    "default_message_emphasis": "我在失业并与健康问题抗争的同时，全职投入于 Nexus 项目的开发。",
+    "default_message": "如果这个插件让您的生活更便捷，一笔捐款对我意义重大，也将帮助这些项目持续运转。",
+    "reality_check": "感谢您！这些插件凝聚了数千小时的心血，每一杯咖啡都帮助我在应对持续健康问题的同时不断改进它们。如果这个插件让您的生活更便捷，请考虑支持我。",
+    "button_alt": "支持我的工作"
+  }
+}

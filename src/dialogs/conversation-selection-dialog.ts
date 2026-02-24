@@ -27,6 +27,7 @@ import {
     SortOptions,
     FilterOptions
 } from "../types/conversation-selection";
+import { t } from '../i18n';
 
 export class ConversationSelectionDialog extends Modal {
     private state: ConversationSelectionState;
@@ -89,7 +90,7 @@ export class ConversationSelectionDialog extends Modal {
         contentEl.addClass('nexus-conversation-selection-dialog');
 
         // Set title in modal title bar (not in content)
-        titleEl.setText("Select Conversations to Import");
+        titleEl.setText(t('conversation_selection.title'));
 
         // Summary (4 cartouches)
         this.createSummarySection(contentEl);
@@ -133,7 +134,7 @@ export class ConversationSelectionDialog extends Modal {
         section.style.alignItems = "center";
 
         // Select All button
-        const selectAllBtn = section.createEl("button", { text: "Select All" });
+        const selectAllBtn = section.createEl("button", { text: t('conversation_selection.controls.select_all') });
         selectAllBtn.style.padding = "8px 16px";
         selectAllBtn.style.whiteSpace = "nowrap";
         selectAllBtn.addEventListener('click', () => {
@@ -145,7 +146,7 @@ export class ConversationSelectionDialog extends Modal {
         });
 
         // Select None button
-        const selectNoneBtn = section.createEl("button", { text: "Select None" });
+        const selectNoneBtn = section.createEl("button", { text: t('conversation_selection.controls.select_none') });
         selectNoneBtn.style.padding = "8px 16px";
         selectNoneBtn.style.whiteSpace = "nowrap";
         selectNoneBtn.addEventListener('click', () => {
@@ -156,7 +157,7 @@ export class ConversationSelectionDialog extends Modal {
 
         // Search input
         const searchInput = section.createEl("input", { type: "text" });
-        searchInput.placeholder = "Search conversations...";
+        searchInput.placeholder = t('conversation_selection.controls.search_placeholder');
         searchInput.style.flex = "1";
         searchInput.style.minWidth = "200px";
         searchInput.style.padding = "8px 12px";
@@ -173,7 +174,7 @@ export class ConversationSelectionDialog extends Modal {
 
         // Filter by status dropdown
         const statusLabel = section.createEl("label");
-        statusLabel.textContent = "Status:";
+        statusLabel.textContent = t('conversation_selection.controls.status_label');
         statusLabel.style.marginRight = "4px";
         statusLabel.style.fontSize = "14px";
         statusLabel.style.whiteSpace = "nowrap";
@@ -189,10 +190,10 @@ export class ConversationSelectionDialog extends Modal {
         statusSelect.classList.add('nexus-custom-select');
 
         const statusOptions = [
-            { value: 'all', text: 'All' },
-            { value: 'new', text: 'New' },
-            { value: 'updated', text: 'Updated' },
-            { value: 'unchanged', text: 'Unchanged' }
+            { value: 'all', text: t('conversation_selection.status_filter_options.all') },
+            { value: 'new', text: t('conversation_selection.status_filter_options.new') },
+            { value: 'updated', text: t('conversation_selection.status_filter_options.updated') },
+            { value: 'unchanged', text: t('conversation_selection.status_filter_options.unchanged') }
         ];
 
         statusOptions.forEach(option => {
@@ -213,7 +214,7 @@ export class ConversationSelectionDialog extends Modal {
 
         // Page size dropdown
         const pageSizeLabel = section.createEl("label");
-        pageSizeLabel.textContent = "Show:";
+        pageSizeLabel.textContent = t('conversation_selection.controls.show_label');
         pageSizeLabel.style.marginRight = "4px";
         pageSizeLabel.style.fontSize = "14px";
         pageSizeLabel.style.whiteSpace = "nowrap";
@@ -279,11 +280,11 @@ export class ConversationSelectionDialog extends Modal {
 
         const headers = [
             { text: "", width: "40px", sortField: null }, // Checkbox - plus compact
-            { text: "Title", width: "45%", sortField: 'title' as const }, // Plus d'espace
-            { text: "Created", width: "110px", sortField: 'createTime' as const }, // Réduit
-            { text: "Updated", width: "110px", sortField: 'updateTime' as const }, // Réduit
-            { text: "Messages", width: "80px", sortField: 'messageCount' as const }, // Réduit
-            { text: "Status", width: "100px", sortField: null } // Réduit
+            { text: t('conversation_selection.table_headers.title'), width: "45%", sortField: 'title' as const }, // Plus d'espace
+            { text: t('conversation_selection.table_headers.created'), width: "110px", sortField: 'createTime' as const }, // Réduit
+            { text: t('conversation_selection.table_headers.updated'), width: "110px", sortField: 'updateTime' as const }, // Réduit
+            { text: t('conversation_selection.table_headers.messages'), width: "80px", sortField: 'messageCount' as const }, // Réduit
+            { text: t('conversation_selection.table_headers.status'), width: "100px", sortField: null } // Réduit
         ];
 
         headers.forEach(header => {
@@ -373,12 +374,12 @@ export class ConversationSelectionDialog extends Modal {
         buttonContainer.style.marginTop = "20px";
 
         // Cancel button
-        const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+        const cancelButton = buttonContainer.createEl("button", { text: t('conversation_selection.buttons.cancel') });
         cancelButton.style.padding = "8px 16px";
         cancelButton.addEventListener('click', () => this.close());
 
         // Import button
-        const importButton = buttonContainer.createEl("button", { text: "Import Selected" });
+        const importButton = buttonContainer.createEl("button", { text: t('conversation_selection.buttons.import_selected') });
         importButton.id = 'import-selected-button';
         importButton.style.padding = "8px 16px";
         importButton.classList.add('mod-cta');
@@ -507,22 +508,22 @@ export class ConversationSelectionDialog extends Modal {
 
         switch (conversation.existenceStatus) {
             case 'new':
-                badge.textContent = "New";
+                badge.textContent = t('conversation_selection.status_badges.new');
                 badge.classList.add('status-new');
-                badge.title = "This conversation is not in your vault";
+                badge.title = t('conversation_selection.status_badges.tooltip_new');
                 break;
             case 'updated':
-                badge.textContent = "Updated";
+                badge.textContent = t('conversation_selection.status_badges.updated');
                 badge.classList.add('status-updated');
-                badge.title = `This conversation has newer content than your vault (${this.formatDate(conversation.existingUpdateTime || 0)} → ${this.formatDate(conversation.updateTime)})`;
+                badge.title = t('conversation_selection.status_badges.tooltip_updated', { existing_date: this.formatDate(conversation.existingUpdateTime || 0), new_date: this.formatDate(conversation.updateTime) });
                 break;
             case 'unchanged':
-                badge.textContent = "Unchanged";
+                badge.textContent = t('conversation_selection.status_badges.unchanged');
                 badge.classList.add('status-unchanged');
-                badge.title = "This conversation is the same as in your vault";
+                badge.title = t('conversation_selection.status_badges.tooltip_unchanged');
                 break;
             default:
-                badge.textContent = "Unknown";
+                badge.textContent = t('conversation_selection.status_badges.unknown');
                 badge.classList.add('status-unchanged');
                 break;
         }
@@ -541,13 +542,13 @@ export class ConversationSelectionDialog extends Modal {
         const endItem = Math.min(currentPage * pageSize, totalItems);
 
         // Update page info
-        pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} conversations`;
+        pageInfo.textContent = t('conversation_selection.pagination.showing', { start: String(startItem), end: String(endItem), total: String(totalItems) });
 
         // Update page controls
         pageControls.empty();
 
         // Previous button
-        const prevBtn = pageControls.createEl("button", { text: "Previous" });
+        const prevBtn = pageControls.createEl("button", { text: t('conversation_selection.pagination.previous') });
         prevBtn.disabled = currentPage <= 1;
         prevBtn.style.padding = "6px 12px";
         prevBtn.addEventListener('click', () => {
@@ -559,11 +560,11 @@ export class ConversationSelectionDialog extends Modal {
 
         // Page numbers (simplified - just show current page)
         const pageSpan = pageControls.createEl("span");
-        pageSpan.textContent = `Page ${currentPage} of ${totalPages}`;
+        pageSpan.textContent = t('conversation_selection.pagination.page_of', { current: String(currentPage), total: String(totalPages) });
         pageSpan.style.padding = "6px 12px";
 
         // Next button
-        const nextBtn = pageControls.createEl("button", { text: "Next" });
+        const nextBtn = pageControls.createEl("button", { text: t('conversation_selection.pagination.next') });
         nextBtn.disabled = currentPage >= totalPages;
         nextBtn.style.padding = "6px 12px";
         nextBtn.addEventListener('click', () => {
@@ -601,7 +602,7 @@ export class ConversationSelectionDialog extends Modal {
         const importButton = this.contentEl.querySelector('#import-selected-button') as HTMLButtonElement;
         if (importButton) {
             importButton.disabled = selectedCount === 0;
-            importButton.textContent = selectedCount > 0 ? `Import ${selectedCount} Selected` : 'Import Selected';
+            importButton.textContent = selectedCount > 0 ? t('conversation_selection.buttons.import_selected_count', { count: String(selectedCount) }) : t('conversation_selection.buttons.import_selected');
         }
     }
 
@@ -614,19 +615,19 @@ export class ConversationSelectionDialog extends Modal {
             return `
                 <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="font-weight: 600; font-size: 1.4em; color: var(--text-accent);">${uniqueCount}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Unique Conversations</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t('conversation_selection.summary.unique_conversations')}</div>
                 </div>
                 <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="font-weight: 600; font-size: 1.4em; color: var(--color-green);">${info.conversationsNew}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">New</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t('conversation_selection.summary.new')}</div>
                 </div>
                 <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="font-weight: 600; font-size: 1.4em; color: var(--color-orange);">${info.conversationsUpdated}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Updated</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t('conversation_selection.summary.updated')}</div>
                 </div>
                 <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div style="font-weight: 600; font-size: 1.4em; color: var(--text-muted);">${info.conversationsIgnored}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">Unchanged</div>
+                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t('conversation_selection.summary.unchanged')}</div>
                 </div>
             `;
         }
@@ -634,7 +635,7 @@ export class ConversationSelectionDialog extends Modal {
         // Fallback si pas d'analysisInfo
         return `
             <div style="text-align: center; padding: 12px;">
-                <strong>${selectedCount}</strong> of <strong>${totalCount}</strong> selected
+                ${t('conversation_selection.summary.selected_of', { selected: String(selectedCount), total: String(totalCount) })}
             </div>
         `;
     }
@@ -656,7 +657,7 @@ export class ConversationSelectionDialog extends Modal {
     }
 
     private formatDate(timestamp: number): string {
-        if (!timestamp) return 'Unknown';
+        if (!timestamp) return t('conversation_selection.date_unknown');
         const date = new Date(timestamp * 1000);
         return date.toLocaleDateString();
     }

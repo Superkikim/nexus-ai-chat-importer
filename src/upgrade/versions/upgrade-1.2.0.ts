@@ -652,7 +652,7 @@ Your conversations will be reorganized with provider structure and modern callou
 
 ## ☕ Support My Work
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)`;
+[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)`;
 
         try {
             // Try to fetch release notes from GitHub

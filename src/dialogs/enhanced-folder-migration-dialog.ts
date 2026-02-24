@@ -21,6 +21,7 @@
 import { Modal, Notice, TFolder } from "obsidian";
 import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
+import { t } from '../i18n';
 
 /**
  * Enhanced dialog for folder migration with link update capabilities
@@ -56,30 +57,30 @@ export class EnhancedFolderMigrationDialog extends Modal {
         await this.loadEstimates();
 
         // Title
-        contentEl.createEl("h2", { 
-            text: "Move Existing Files?",
+        contentEl.createEl("h2", {
+            text: t('folder_migration.title'),
             cls: "nexus-migration-title"
         });
 
         // Message
         const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
         
-        messageContainer.createEl("p", { 
-            text: `You are changing the ${this.folderType} folder location:` 
+        messageContainer.createEl("p", {
+            text: t('folder_migration.message_intro', { folder_type: this.folderType })
         });
 
         const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
-        pathContainer.createEl("div", { 
-            text: `From: ${this.oldPath}`,
+        pathContainer.createEl("div", {
+            text: t('folder_migration.path_from', { path: this.oldPath }),
             cls: "nexus-migration-path-old"
         });
-        pathContainer.createEl("div", { 
-            text: `To: ${this.newPath}`,
+        pathContainer.createEl("div", {
+            text: t('folder_migration.path_to', { path: this.newPath }),
             cls: "nexus-migration-path-new"
         });
 
-        messageContainer.createEl("p", { 
-            text: "Do you want to move existing files to the new location?" 
+        messageContainer.createEl("p", {
+            text: t('folder_migration.question')
         });
 
         // Link update information (only for attachment and conversation folders)
@@ -89,9 +90,9 @@ export class EnhancedFolderMigrationDialog extends Modal {
 
         // Warning box
         const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
-        warningBox.createEl("strong", { text: "⚠️ Important:" });
-        warningBox.createEl("p", { 
-            text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates." 
+        warningBox.createEl("strong", { text: t('folder_migration.warning.title') });
+        warningBox.createEl("p", {
+            text: t('folder_migration.warning.text')
         });
 
         // Buttons (3 options: Cancel, Keep, Move)
@@ -125,27 +126,27 @@ export class EnhancedFolderMigrationDialog extends Modal {
 
     private createLinkUpdateInfo(contentEl: HTMLElement): void {
         const linkUpdateBox = contentEl.createDiv({ cls: "nexus-link-update-info" });
-        linkUpdateBox.createEl("strong", { text: "🔗 Link Updates:" });
+        linkUpdateBox.createEl("strong", { text: t('folder_migration.link_updates.title') });
 
         const infoText = linkUpdateBox.createDiv();
 
         if (this.folderType === 'attachments') {
             infoText.createEl("p", {
-                text: "Moving attachments will also update all conversation notes that reference them."
+                text: t('folder_migration.link_updates.attachments_text')
             });
         } else if (this.folderType === 'conversations') {
             infoText.createEl("p", {
-                text: "Moving conversations will also update all reports and attachments that reference them."
+                text: t('folder_migration.link_updates.conversations_text')
             });
         }
 
         if (this.estimatedTime > 0) {
             const timeText = this.estimatedTime < 60
-                ? `~${this.estimatedTime} seconds`
-                : `~${Math.ceil(this.estimatedTime / 60)} minute(s)`;
+                ? t('folder_migration.link_updates.estimated_time_seconds', { seconds: String(this.estimatedTime) })
+                : t('folder_migration.link_updates.estimated_time_minutes', { minutes: String(Math.ceil(this.estimatedTime / 60)) });
 
             infoText.createEl("p", {
-                text: `Estimated time: ${timeText}`,
+                text: timeText,
                 cls: "nexus-time-estimate"
             });
         }
@@ -156,7 +157,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
 
         // Cancel button (left)
         const cancelButton = buttonContainer.createEl("button", {
-            text: "Cancel",
+            text: t('folder_migration.buttons.cancel'),
             cls: "nexus-migration-button-cancel"
         });
         cancelButton.addEventListener("click", async () => {
@@ -172,7 +173,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
 
         // Keep button (middle)
         const keepButton = buttonContainer.createEl("button", {
-            text: "No, keep files in old location",
+            text: t('folder_migration.buttons.keep'),
             cls: "nexus-migration-button-keep"
         });
         keepButton.addEventListener("click", async () => {
@@ -188,7 +189,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
 
         // Move button (right, primary action)
         const moveButton = buttonContainer.createEl("button", {
-            text: this.shouldShowLinkUpdateInfo() ? "Yes, move files and update links" : "Yes, move files",
+            text: this.shouldShowLinkUpdateInfo() ? t('folder_migration.buttons.move_with_links') : t('folder_migration.buttons.move'),
             cls: "mod-cta nexus-migration-button-move"
         });
         moveButton.addEventListener("click", async () => {
@@ -221,15 +222,15 @@ export class EnhancedFolderMigrationDialog extends Modal {
             // Show progress modal for the operation
             progressModal = new UpgradeProgressModal(
                 this.app,
-                `Moving ${this.folderType} and updating links`,
+                t('folder_migration.progress.title_moving', { folder_type: this.folderType }),
                 100
             );
             progressModal.open();
 
             // Step 1: Move the files (0-30%)
             progressModal.updateProgress({
-                title: "Moving files...",
-                detail: `Moving from ${this.oldPath} to ${this.newPath}`,
+                title: t('folder_migration.progress.step_moving_title'),
+                detail: t('folder_migration.progress.step_moving_detail', { old_path: this.oldPath, new_path: this.newPath }),
                 progress: 5
             });
 
@@ -248,16 +249,16 @@ export class EnhancedFolderMigrationDialog extends Modal {
                     // Map file move progress from 5% to 30%
                     const percentage = 5 + Math.round((current / total) * 25);
                     progressModal.updateProgress({
-                        title: "Moving files...",
-                        detail: `${current} / ${total} files processed`,
+                        title: t('folder_migration.progress.step_moving_title'),
+                        detail: t('folder_migration.progress.step_moving_count', { current: String(current), total: String(total) }),
                         progress: percentage
                     });
                 }
             );
 
             progressModal.updateProgress({
-                title: "Files moved",
-                detail: `${moveResult.moved} files moved, ${moveResult.skipped} skipped. Preparing to update links...`,
+                title: t('folder_migration.progress.step_moved_title'),
+                detail: t('folder_migration.progress.step_moved_detail', { moved: String(moveResult.moved), skipped: String(moveResult.skipped) }),
                 progress: 30
             });
 
@@ -273,7 +274,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
                         // Map link update progress from 30% to 100%
                         const percentage = 30 + Math.round((progress.current / progress.total) * 70);
                         progressModal.updateProgress({
-                            title: "Updating attachment links...",
+                            title: t('folder_migration.progress.step_updating_attachment_links'),
                             detail: progress.detail,
                             progress: percentage
                         });
@@ -288,11 +289,11 @@ export class EnhancedFolderMigrationDialog extends Modal {
                         const percentage = 30 + Math.round((progress.current / progress.total) * 70);
 
                         // Provide more detailed progress messages
-                        let title = "Updating conversation links...";
+                        let title = t('folder_migration.progress.step_updating_conversation_links');
                         if (progress.phase === 'updating-conversations') {
-                            title = "Updating links in reports...";
+                            title = t('folder_migration.progress.step_updating_report_links');
                         } else if (progress.phase === 'updating-artifacts') {
-                            title = "Updating links in artifacts...";
+                            title = t('folder_migration.progress.step_updating_artifact_links');
                         }
 
                         progressModal.updateProgress({
@@ -310,7 +311,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 : stats?.conversationLinksUpdated || 0;
 
             progressModal.showComplete(
-                `${moveResult.moved} files moved. ${linksUpdated} links updated successfully`
+                t('folder_migration.progress.complete_message', { moved: String(moveResult.moved), links: String(linksUpdated) })
             );
             progressModal.closeAfterDelay(3000);
 
@@ -324,7 +325,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
                 progressModal.close();
             }
             const errorMessage = error instanceof Error ? error.message : String(error);
-            this.showErrorDialog("Migration Failed", `Failed to move files or update links: ${errorMessage}`);
+            this.showErrorDialog(t('folder_migration.error_migration_failed.title'), t('folder_migration.error_migration_failed.message_links', { error: errorMessage }));
         }
     }
 
@@ -446,7 +447,7 @@ export class EnhancedFolderMigrationDialog extends Modal {
         buttonContainer.style.marginTop = "1em";
 
         const okButton = buttonContainer.createEl("button", {
-            text: "OK",
+            text: t('common.buttons.ok'),
             cls: "mod-cta"
         });
         okButton.addEventListener("click", () => modal.close());

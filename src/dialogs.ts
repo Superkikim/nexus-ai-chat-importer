@@ -226,8 +226,8 @@ class BeautifulUpgradeDialog extends Modal {
                 If these plugins help you, even a small donation would mean the world and help keep them alive.
             </div>
             <div class="nexus-coffee-div">
-                <a href="https://ko-fi.com/nexusplugins" target="_blank">
-                    <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" height="45">
+                <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank">
+                    <img src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Support my work" height="45">
                 </a>
             </div>
         `;

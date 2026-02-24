@@ -19,6 +19,7 @@
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { t } from '../i18n';
 
 /**
  * Upgrade complete modal - shown AFTER migrations are done
@@ -42,7 +43,7 @@ export class UpgradeCompleteModal extends Modal {
         contentEl.classList.add('nexus-ai-chat-importer-modal');
 
         // Set title
-        titleEl.setText(`✅ Upgrade Complete - v${this.version}`);
+        titleEl.setText(t('upgrade.complete_modal.title', { version: this.version }));
 
         this.createContent();
     }
@@ -68,24 +69,25 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     private async addReleaseNotes() {
-        // Fallback content for v1.4.0
-        let content = `## ✨ What's New
+        // Fallback content for v1.5.0
+        let content = `## ✨ What's New in v1.5.0
 
-- **🤖 Le Chat Support** - Import your Mistral AI Le Chat conversations with attachments and references
-- **💻 CLI for Bulk Import** - Import conversations from the command line without opening Obsidian
-- **📁 Human-Readable Artifact Folders** - Claude artifacts now stored in folders named after the conversation, not UUIDs
-- **📐 LaTeX Math Conversion** - Math equations automatically converted to Obsidian's math syntax
+### 🌍 Full UI Localization — 10 Languages
 
-## 🔄 Migration: Artifact Callout Restoration
+- **Automatic language detection** — the plugin UI matches your Obsidian interface language, no configuration needed
+- **10 supported languages**: English, French, German, Spanish, Italian, Russian, Chinese (Simplified), Japanese, Portuguese, Korean
+- **Complete coverage** — all dialogs, settings panels, progress modals, notices, and status labels are translated
+- **English fallback** — any missing key falls back to English automatically
 
-Anthropic changed the structure of their Claude export format. Conversations imported with v1.3.x may be missing inline artifact callouts. The migration has restored artifact links at the end of affected notes. To get artifacts inline within messages, delete the note and re-import from your Claude export ZIP.
+> Import reports and conversation notes remain in English — only the plugin UI is localized.
 
-## 🐛 Bug Fixes
+## v1.4.0 in brief
 
-- Multiple attachments in a single message no longer break out of the parent callout
-- Claude artifacts now render correctly for both old and new export formats
-- Conversations on mobile no longer show raw placeholder text instead of artifact links
-- Binary files referenced by Claude scripts are no longer saved as empty artifacts`;
+- **🤖 Le Chat (Mistral AI)** — Full support with attachments, references, and citations
+- **💻 CLI for Bulk Import** — Import from the terminal without opening Obsidian
+- **📁 Human-readable artifact folders** — Claude artifacts stored in folders named after the conversation, not UUIDs
+- **📐 LaTeX math** — Math equations converted to Obsidian \`$$...$$\` / \`$...$\` syntax
+- **🐛 Bug fixes** — Multi-attachment callouts, Claude format changes, mobile placeholders, binary artifacts`;
 
         try {
             // Try to fetch Overview section from README
@@ -117,7 +119,7 @@ Anthropic changed the structure of their Claude export format. Conversations imp
     private addCloseButton() {
         const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
         const button = buttonContainer.createEl("button", {
-            text: "Got it!",
+            text: t('upgrade.complete_modal.buttons.got_it'),
             cls: "mod-cta nexus-upgrade-button"
         });
 

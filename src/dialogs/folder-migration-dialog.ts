@@ -20,6 +20,7 @@
 // src/dialogs/folder-migration-dialog.ts
 import { Modal, Notice } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
+import { t } from '../i18n';
 
 /**
  * Dialog to ask user if they want to migrate files when changing folder location
@@ -49,37 +50,37 @@ export class FolderMigrationDialog extends Modal {
         contentEl.empty();
 
         // Title
-        contentEl.createEl("h2", { 
-            text: "Move Existing Files?",
+        contentEl.createEl("h2", {
+            text: t('folder_migration.title'),
             cls: "nexus-migration-title"
         });
 
         // Message
         const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
-        
-        messageContainer.createEl("p", { 
-            text: `You are changing the ${this.folderType} folder location:` 
+
+        messageContainer.createEl("p", {
+            text: t('folder_migration.message_intro', { folder_type: this.folderType })
         });
 
         const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
-        pathContainer.createEl("div", { 
-            text: `From: ${this.oldPath}`,
+        pathContainer.createEl("div", {
+            text: t('folder_migration.path_from', { path: this.oldPath }),
             cls: "nexus-migration-path-old"
         });
-        pathContainer.createEl("div", { 
-            text: `To: ${this.newPath}`,
+        pathContainer.createEl("div", {
+            text: t('folder_migration.path_to', { path: this.newPath }),
             cls: "nexus-migration-path-new"
         });
 
-        messageContainer.createEl("p", { 
-            text: "Do you want to move existing files to the new location?" 
+        messageContainer.createEl("p", {
+            text: t('folder_migration.question')
         });
 
         // Warning box
         const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
-        warningBox.createEl("strong", { text: "⚠️ Important:" });
-        warningBox.createEl("p", { 
-            text: "If you choose 'No', existing files will remain in the old location and will not be impacted by future updates." 
+        warningBox.createEl("strong", { text: t('folder_migration.warning.title') });
+        warningBox.createEl("p", {
+            text: t('folder_migration.warning.text')
         });
 
         // Buttons (3 options: Cancel, Keep, Move)
@@ -87,7 +88,7 @@ export class FolderMigrationDialog extends Modal {
 
         // Cancel button (left)
         const cancelButton = buttonContainer.createEl("button", {
-            text: "Cancel",
+            text: t('folder_migration.buttons.cancel'),
             cls: "nexus-migration-button-cancel"
         });
         cancelButton.addEventListener("click", async () => {
@@ -102,7 +103,7 @@ export class FolderMigrationDialog extends Modal {
 
         // Keep button (middle)
         const keepButton = buttonContainer.createEl("button", {
-            text: "No, keep files in old location",
+            text: t('folder_migration.buttons.keep'),
             cls: "nexus-migration-button-keep"
         });
         keepButton.addEventListener("click", async () => {
@@ -117,7 +118,7 @@ export class FolderMigrationDialog extends Modal {
 
         // Move button (right, primary action)
         const moveButton = buttonContainer.createEl("button", {
-            text: "Yes, move files",
+            text: t('folder_migration.buttons.move'),
             cls: "mod-cta nexus-migration-button-move"
         });
         moveButton.addEventListener("click", async () => {

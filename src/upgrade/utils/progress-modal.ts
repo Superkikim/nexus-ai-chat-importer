@@ -19,6 +19,7 @@
 
 // src/upgrade/utils/progress-modal.ts
 import { Modal, App } from "obsidian";
+import { t } from '../../i18n';
 
 export interface ProgressStep {
     title: string;
@@ -101,7 +102,7 @@ export class UpgradeProgressModal extends Modal {
             min-height: 1.2em;
         `;
 
-        this.updateProgress({ title: "Starting...", progress: 0 });
+        this.updateProgress({ title: t('upgrade.progress_modal.starting'), progress: 0 });
     }
 
     /**
@@ -112,14 +113,14 @@ export class UpgradeProgressModal extends Modal {
             const percentage = Math.min(100, Math.max(0, step.progress));
             this.progressBarEl.style.width = `${percentage}%`;
             
-            this.stepEl.textContent = `Progress: ${Math.round(percentage)}%`;
+            this.stepEl.textContent = t('upgrade.progress_modal.progress_label', { percentage: String(Math.round(percentage)) });
         } else {
             // Use step-based progress
             this.currentStep++;
             const percentage = Math.round((this.currentStep / this.totalSteps) * 100);
             this.progressBarEl.style.width = `${percentage}%`;
             
-            this.stepEl.textContent = `Step ${this.currentStep}/${this.totalSteps}`;
+            this.stepEl.textContent = t('upgrade.progress_modal.step_label', { current: String(this.currentStep), total: String(this.totalSteps) });
         }
 
         this.statusEl.textContent = step.title;
@@ -134,7 +135,7 @@ export class UpgradeProgressModal extends Modal {
         const percentage = Math.round((stepNumber / this.totalSteps) * 100);
         
         this.progressBarEl.style.width = `${percentage}%`;
-        this.stepEl.textContent = `Step ${stepNumber}/${this.totalSteps}`;
+        this.stepEl.textContent = t('upgrade.progress_modal.step_label', { current: String(stepNumber), total: String(this.totalSteps) });
         this.statusEl.textContent = step.title;
         this.detailEl.textContent = step.detail || "";
     }
@@ -142,9 +143,9 @@ export class UpgradeProgressModal extends Modal {
     /**
      * Show completion state
      */
-    showComplete(message: string = "Completed successfully") {
+    showComplete(message: string = t('upgrade.progress_modal.complete_message')) {
         this.progressBarEl.style.width = "100%";
-        this.stepEl.textContent = "Complete";
+        this.stepEl.textContent = t('upgrade.progress_modal.complete_label');
         this.statusEl.textContent = message;
         this.detailEl.textContent = "";
         
@@ -155,7 +156,7 @@ export class UpgradeProgressModal extends Modal {
     /**
      * Show error state
      */
-    showError(message: string = "An error occurred") {
+    showError(message: string = t('upgrade.progress_modal.error_message')) {
         this.statusEl.textContent = message;
         this.detailEl.textContent = "";
         

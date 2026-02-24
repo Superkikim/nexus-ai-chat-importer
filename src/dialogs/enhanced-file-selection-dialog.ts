@@ -21,6 +21,7 @@
 import { App, Modal, Setting } from "obsidian";
 import { FileSelectionResult, ImportMode } from "../types/conversation-selection";
 import { formatFileSize } from "../utils/file-utils";
+import { t } from '../i18n';
 
 export class EnhancedFileSelectionDialog extends Modal {
     private selectedFiles: File[] = [];
@@ -53,7 +54,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         contentEl.addClass('nexus-file-selection-dialog');
 
         // Set title in modal title bar
-        titleEl.setText(`Import ${this.provider.charAt(0).toUpperCase() + this.provider.slice(1)} Conversations`);
+        titleEl.setText(t('file_selection.title', { provider: this.provider.charAt(0).toUpperCase() + this.provider.slice(1) }));
 
         // Import mode selection
         this.createImportModeSection(contentEl);
@@ -75,7 +76,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         const section = container.createDiv('import-mode-section');
         section.style.marginBottom = "20px";
 
-        const sectionTitle = section.createEl("h3", { text: "Import Mode" });
+        const sectionTitle = section.createEl("h3", { text: t('file_selection.import_mode.section_title') });
         sectionTitle.style.marginTop = "0";
         sectionTitle.style.marginBottom = "12px";
         sectionTitle.style.fontSize = "1em";
@@ -124,12 +125,12 @@ export class EnhancedFileSelectionDialog extends Modal {
         allLabel.style.marginBottom = "4px";
         allLabel.style.cursor = "pointer";
         allLabel.style.color = "var(--text-normal)";
-        allLabel.textContent = "Import All";
+        allLabel.textContent = t('file_selection.import_mode.all_label');
 
         const allDesc = allContent.createDiv();
         allDesc.style.fontSize = "0.85em";
         allDesc.style.color = "var(--text-muted)";
-        allDesc.textContent = "Import all conversations (faster)";
+        allDesc.textContent = t('file_selection.import_mode.all_description');
 
         allOption.addEventListener('click', () => {
             allRadio.checked = true;
@@ -176,12 +177,12 @@ export class EnhancedFileSelectionDialog extends Modal {
         selectLabel.style.marginBottom = "4px";
         selectLabel.style.cursor = "pointer";
         selectLabel.style.color = "var(--text-normal)";
-        selectLabel.textContent = "Select Specific";
+        selectLabel.textContent = t('file_selection.import_mode.selective_label');
 
         const selectDesc = selectContent.createDiv();
         selectDesc.style.fontSize = "0.85em";
         selectDesc.style.color = "var(--text-muted)";
-        selectDesc.textContent = "Preview and choose conversations";
+        selectDesc.textContent = t('file_selection.import_mode.selective_description');
 
         selectOption.addEventListener('click', () => {
             selectRadio.checked = true;
@@ -211,7 +212,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         const section = container.createDiv('file-selection-section');
         section.style.marginBottom = "20px";
 
-        const sectionTitle = section.createEl("h3", { text: "Select Files" });
+        const sectionTitle = section.createEl("h3", { text: t('file_selection.file_area.section_title') });
         sectionTitle.style.marginBottom = "10px";
         sectionTitle.style.fontSize = "1em";
 
@@ -235,9 +236,9 @@ export class EnhancedFileSelectionDialog extends Modal {
 
         // Different text for Gemini (supports JSON index)
         if (this.provider === 'gemini') {
-            dropText.textContent = "Drop ZIP and JSON files here or click to browse";
+            dropText.textContent = t('file_selection.file_area.drop_text_gemini');
         } else {
-            dropText.textContent = "Drop ZIP files here or click to browse";
+            dropText.textContent = t('file_selection.file_area.drop_text_default');
         }
 
         const dropSubtext = dropZone.createEl("div");
@@ -245,9 +246,9 @@ export class EnhancedFileSelectionDialog extends Modal {
         dropSubtext.style.color = "var(--text-muted)";
 
         if (this.provider === 'gemini') {
-            dropSubtext.textContent = "ZIP (Takeout) + optional JSON (index from extension)";
+            dropSubtext.textContent = t('file_selection.file_area.drop_subtext_gemini');
         } else {
-            dropSubtext.textContent = "Supports multiple file selection";
+            dropSubtext.textContent = t('file_selection.file_area.drop_subtext_default');
         }
 
         // File input (hidden)
@@ -280,7 +281,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         section.style.marginBottom = "20px";
         section.style.display = "none"; // Hidden initially
 
-        const sectionTitle = section.createEl("h3", { text: "Selected Files" });
+        const sectionTitle = section.createEl("h3", { text: t('file_selection.selected_files.section_title') });
         sectionTitle.style.marginBottom = "15px";
 
         // Scrollable container for file list
@@ -303,12 +304,12 @@ export class EnhancedFileSelectionDialog extends Modal {
         buttonContainer.style.marginTop = "20px";
 
         // Cancel button
-        const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+        const cancelButton = buttonContainer.createEl("button", { text: t('file_selection.buttons.cancel') });
         cancelButton.style.padding = "8px 16px";
         cancelButton.addEventListener('click', () => this.close());
 
         // Import button
-        const importButton = buttonContainer.createEl("button", { text: "Continue" });
+        const importButton = buttonContainer.createEl("button", { text: t('file_selection.buttons.continue') });
         importButton.id = 'import-button';
         importButton.style.padding = "8px 16px";
         importButton.classList.add('mod-cta');
@@ -400,7 +401,7 @@ export class EnhancedFileSelectionDialog extends Modal {
                 fileSize.style.fontSize = "0.9em";
                 fileSize.style.color = "var(--text-muted)";
 
-                const removeButton = fileItem.createEl("button", { text: "Remove" });
+                const removeButton = fileItem.createEl("button", { text: t('file_selection.selected_files.remove_button') });
                 removeButton.style.padding = "4px 8px";
                 removeButton.style.fontSize = "0.9em";
                 removeButton.addEventListener('click', () => this.removeFile(index));

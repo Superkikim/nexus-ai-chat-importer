@@ -1,9 +1,9 @@
 {
     "id": "nexus-ai-chat-importer",
     "name": "Nexus AI Chat Importer",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "author": "Superkikim",
     "authorUrl": "https://github.com/Superkikim",
     "minAppVersion": "0.15.0",
-    "description": "Import conversations from ChatGPT export files."
+    "description": "Import AI conversations from ChatGPT, Claude, and Le Chat exports into Obsidian."
 }

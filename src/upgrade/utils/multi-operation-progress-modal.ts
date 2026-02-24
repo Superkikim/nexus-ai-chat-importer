@@ -19,6 +19,7 @@
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
 import { Modal, App } from "obsidian";
+import { t } from '../../i18n';
 
 export interface OperationStatus {
     id: string;
@@ -106,16 +107,16 @@ export class MultiOperationProgressModal extends Modal {
     /**
      * Mark all operations as complete and allow closing
      */
-    markComplete(message: string = "All operations completed successfully") {
+    markComplete(message: string = t('upgrade.multi_operation_modal.mark_complete_default')) {
         this.canClose = true;
         this.overallProgressEl.textContent = message;
         this.overallProgressEl.style.color = "var(--text-success)";
-        
+
         // Add close button
         if (!this.closeButtonEl) {
             const buttonContainer = this.contentEl.createDiv({ cls: "modal-button-container" });
-            this.closeButtonEl = buttonContainer.createEl("button", { 
-                text: "Complete",
+            this.closeButtonEl = buttonContainer.createEl("button", {
+                text: t('upgrade.multi_operation_modal.buttons.complete'),
                 cls: "mod-cta"
             });
             this.closeButtonEl.addEventListener("click", () => this.close());
@@ -133,8 +134,8 @@ export class MultiOperationProgressModal extends Modal {
         // Add close button
         if (!this.closeButtonEl) {
             const buttonContainer = this.contentEl.createDiv({ cls: "modal-button-container" });
-            this.closeButtonEl = buttonContainer.createEl("button", { 
-                text: "Close",
+            this.closeButtonEl = buttonContainer.createEl("button", {
+                text: t('upgrade.multi_operation_modal.buttons.close'),
                 cls: "mod-warning"
             });
             this.closeButtonEl.addEventListener("click", () => this.close());
@@ -258,13 +259,13 @@ export class MultiOperationProgressModal extends Modal {
         const total = this.operations.length;
 
         if (failed > 0) {
-            this.overallProgressEl.textContent = `Progress: ${completed}/${total} operations (${failed} failed)`;
+            this.overallProgressEl.textContent = t('upgrade.multi_operation_modal.progress_with_failures', { completed: String(completed), total: String(total), failed: String(failed) });
             this.overallProgressEl.style.color = "var(--text-error)";
         } else if (completed === total) {
-            this.overallProgressEl.textContent = `All ${total} operations completed successfully`;
+            this.overallProgressEl.textContent = t('upgrade.multi_operation_modal.all_completed', { total: String(total) });
             this.overallProgressEl.style.color = "var(--text-success)";
         } else {
-            this.overallProgressEl.textContent = `Progress: ${completed}/${total} operations`;
+            this.overallProgressEl.textContent = t('upgrade.multi_operation_modal.progress_label', { completed: String(completed), total: String(total) });
             this.overallProgressEl.style.color = "var(--text-normal)";
         }
     }

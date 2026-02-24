@@ -21,9 +21,10 @@
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { createKofiSupportBox } from "../components/kofi-support-box";
+import { t } from '../../i18n';
 
 export class SupportSection extends BaseSettingsSection {
-    readonly title = "💝 Support & Help";
+    get title() { return t('settings.support.section_title'); }
     readonly order = 5;
 
     render(containerEl: HTMLElement): void {
@@ -34,32 +35,32 @@ export class SupportSection extends BaseSettingsSection {
 
         // Resources section - ONE Setting with multiple buttons
         new Setting(supportContainer)
-            .setName("📚 Resources")
-            .setDesc("Documentation, release notes, and community links")
+            .setName(t('settings.support.resources.name'))
+            .setDesc(t('settings.support.resources.desc'))
             .addButton((button) =>
                 button
-                    .setButtonText("📖 README")
+                    .setButtonText(t('settings.support.resources.readme'))
                     .onClick(() => {
                         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/README.md", "_blank");
                     })
             )
             .addButton((button) =>
                 button
-                    .setButtonText("📝 Changelog")
+                    .setButtonText(t('settings.support.resources.changelog'))
                     .onClick(() => {
                         window.open("https://github.com/superkikim/nexus-ai-chat-importer/blob/1.3.0/RELEASE_NOTES.md", "_blank");
                     })
             )
             .addButton((button) =>
                 button
-                    .setButtonText("🐛 Issues")
+                    .setButtonText(t('settings.support.resources.issues'))
                     .onClick(() => {
                         window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
                     })
             )
             .addButton((button) =>
                 button
-                    .setButtonText("💬 Forum")
+                    .setButtonText(t('settings.support.resources.forum'))
                     .onClick(() => {
                         window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
                     })

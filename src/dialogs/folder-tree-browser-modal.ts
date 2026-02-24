@@ -17,6 +17,7 @@
  */
 
 import { App, Modal, Notice, TFolder } from "obsidian";
+import { t } from '../i18n';
 
 /**
  * Tree-based folder browser with fold/unfold navigation
@@ -59,7 +60,7 @@ export class FolderTreeBrowserModal extends Modal {
     onOpen(): void {
         const { contentEl } = this;
         
-        contentEl.createEl("h3", { text: "Select Folder" });
+        contentEl.createEl("h3", { text: t('folder_browser.title') });
 
         // Tree container with scroll
         this.treeContainer = contentEl.createDiv({ cls: "nexus-folder-tree-container" });
@@ -79,14 +80,14 @@ export class FolderTreeBrowserModal extends Modal {
         buttonContainer.style.gap = "8px";
         buttonContainer.style.justifyContent = "flex-end";
 
-        const createButton = buttonContainer.createEl("button", { text: "Create New Folder" });
+        const createButton = buttonContainer.createEl("button", { text: t('folder_browser.buttons.create_new_folder') });
         createButton.addEventListener("click", () => this.handleCreateFolder());
 
-        const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+        const cancelButton = buttonContainer.createEl("button", { text: t('folder_browser.buttons.cancel') });
         cancelButton.addEventListener("click", () => this.handleCancel());
 
         const selectButton = buttonContainer.createEl("button", {
-            text: "Select",
+            text: t('folder_browser.buttons.select'),
             cls: "mod-cta"
         });
         selectButton.addEventListener("click", () => this.handleSelect());
@@ -111,7 +112,7 @@ export class FolderTreeBrowserModal extends Modal {
         }
 
         const rootIcon = rootItem.createSpan({ text: "📁 " });
-        const rootLabel = rootItem.createSpan({ text: "Vault Root (/)" });
+        const rootLabel = rootItem.createSpan({ text: t('folder_browser.vault_root') });
         rootLabel.style.fontWeight = "bold";
 
         rootItem.addEventListener("click", (e) => {
@@ -236,7 +237,7 @@ export class FolderTreeBrowserModal extends Modal {
 
     private async handleCreateFolder(): Promise<void> {
         if (!this.selectedFolder) {
-            new Notice("⚠️ Please select a parent folder first");
+            new Notice(t('folder_browser.notices.select_parent_first'));
             return;
         }
 
@@ -252,7 +253,7 @@ export class FolderTreeBrowserModal extends Modal {
             folderName.includes('?') || folderName.includes('"') || 
             folderName.includes('<') || folderName.includes('>') || 
             folderName.includes('|')) {
-            new Notice("❌ Invalid folder name: contains illegal characters");
+            new Notice(t('folder_browser.notices.invalid_name'));
             return;
         }
 
@@ -263,7 +264,7 @@ export class FolderTreeBrowserModal extends Modal {
         // Check if folder already exists
         const exists = this.app.vault.getAbstractFileByPath(newFolderPath);
         if (exists) {
-            new Notice("❌ Folder already exists");
+            new Notice(t('folder_browser.notices.already_exists'));
             return;
         }
 
@@ -271,7 +272,7 @@ export class FolderTreeBrowserModal extends Modal {
         if (this.validatePath) {
             const validation = this.validatePath(newFolderPath);
             if (!validation.valid) {
-                new Notice(`❌ ${validation.error ?? "Invalid folder location"}`);
+                new Notice(t('folder_browser.notices.invalid_location', { error: validation.error ?? "Invalid folder location" }));
                 return;
             }
         }
@@ -283,7 +284,7 @@ export class FolderTreeBrowserModal extends Modal {
             // Track this folder as created during this session
             this.createdFolders.add(newFolderPath);
 
-            new Notice(`✅ Created folder: ${folderName}`);
+            new Notice(t('folder_browser.notices.created_success', { name: folderName }));
 
             // Expand parent and select the new folder
             this.expandedFolders.add(this.selectedFolder.path);
@@ -296,33 +297,33 @@ export class FolderTreeBrowserModal extends Modal {
             // Re-render the tree
             this.renderTree();
         } catch (error: any) {
-            new Notice(`❌ Failed to create folder: ${error.message}`);
+            new Notice(t('folder_browser.notices.create_failed', { error: error.message }));
         }
     }
 
     private promptForFolderName(): Promise<string | null> {
         return new Promise((resolve) => {
             const modal = new Modal(this.app);
-            modal.titleEl.setText("Create New Folder");
+            modal.titleEl.setText(t('folder_browser.create_folder_dialog.title'));
 
             const inputContainer = modal.contentEl.createDiv();
             inputContainer.style.marginBottom = "20px";
 
-            inputContainer.createEl("label", { text: "Folder name:" });
+            inputContainer.createEl("label", { text: t('folder_browser.create_folder_dialog.folder_name_label') });
             const input = inputContainer.createEl("input", { type: "text" });
             input.style.width = "100%";
             input.style.marginTop = "8px";
 
             const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-            
-            const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+
+            const cancelButton = buttonContainer.createEl("button", { text: t('folder_browser.create_folder_dialog.buttons.cancel') });
             cancelButton.addEventListener("click", () => {
                 modal.close();
                 resolve(null);
             });
 
             const createButton = buttonContainer.createEl("button", {
-                text: "Create",
+                text: t('folder_browser.create_folder_dialog.buttons.create'),
                 cls: "mod-cta"
             });
             createButton.addEventListener("click", () => {
@@ -350,7 +351,7 @@ export class FolderTreeBrowserModal extends Modal {
 
     private handleSelect(): void {
         if (!this.selectedFolder) {
-            new Notice("⚠️ Please select a folder first");
+            new Notice(t('folder_browser.notices.select_first'));
             return;
         }
 
@@ -360,7 +361,7 @@ export class FolderTreeBrowserModal extends Modal {
         if (this.validatePath) {
             const validation = this.validatePath(path);
             if (!validation.valid) {
-                new Notice(`❌ ${validation.error ?? "Invalid folder location"}`);
+                new Notice(t('folder_browser.notices.invalid_location', { error: validation.error ?? "Invalid folder location" }));
                 return;
             }
         }

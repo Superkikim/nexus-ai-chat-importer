@@ -24,22 +24,23 @@ import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
 import { FolderTreeBrowserModal } from "../../dialogs/folder-tree-browser-modal";
 import { validateFolderNesting } from "../../utils/folder-validation";
 import { moveAndMergeFolders, type FolderMergeResult } from "../../utils";
+import { t } from '../../i18n';
 
 export class FolderSettingsSection extends BaseSettingsSection {
-    readonly title = "📁 Folder Structure";
+    get title() { return t('settings.folders.section_title'); }
     readonly order = 10;
 
     render(containerEl: HTMLElement): void {
         // Conversation Folder
         let conversationFolderTextComponent: any;
         new Setting(containerEl)
-            .setName("Conversation folder")
-            .setDesc("Where imported conversations are stored")
+            .setName(t('settings.folders.conversation_folder.name'))
+            .setDesc(t('settings.folders.conversation_folder.desc'))
             .addText((text) => {
                 conversationFolderTextComponent = text;
 
                 text
-                    .setPlaceholder("Nexus/Conversations")
+                    .setPlaceholder(t('settings.folders.conversation_folder.placeholder'))
                     .setValue(this.plugin.settings.conversationFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
@@ -51,8 +52,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
             })
             .addButton((button) => {
                 button
-                    .setButtonText("Browse")
-                    .setTooltip("Browse folders or create a new one")
+                    .setButtonText(t('common.buttons.browse'))
+                    .setTooltip(t('settings.folders.conversation_folder.browse_tooltip'))
                     .onClick(async () => {
                         const modal = new FolderTreeBrowserModal(
                             this.plugin.app,
@@ -79,13 +80,13 @@ export class FolderSettingsSection extends BaseSettingsSection {
         // Report Folder
         let reportFolderTextComponent: any;
         new Setting(containerEl)
-            .setName("Reports folder")
-            .setDesc("Where import reports are stored")
+            .setName(t('settings.folders.reports_folder.name'))
+            .setDesc(t('settings.folders.reports_folder.desc'))
             .addText((text) => {
                 reportFolderTextComponent = text;
 
                 text
-                    .setPlaceholder("Nexus Reports")
+                    .setPlaceholder(t('settings.folders.reports_folder.placeholder'))
                     .setValue(this.plugin.settings.reportFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
@@ -97,8 +98,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
             })
             .addButton((button) => {
                 button
-                    .setButtonText("Browse")
-                    .setTooltip("Browse folders or create a new one")
+                    .setButtonText(t('common.buttons.browse'))
+                    .setTooltip(t('settings.folders.reports_folder.browse_tooltip'))
                     .onClick(async () => {
                         const modal = new FolderTreeBrowserModal(
                             this.plugin.app,
@@ -125,13 +126,13 @@ export class FolderSettingsSection extends BaseSettingsSection {
         // Attachment Folder
         let attachmentFolderTextComponent: any;
         new Setting(containerEl)
-            .setName("Attachment folder")
-            .setDesc("Where attachments are stored (⚠️ Exclude from sync to save space)")
+            .setName(t('settings.folders.attachment_folder.name'))
+            .setDesc(t('settings.folders.attachment_folder.desc'))
             .addText((text) => {
                 attachmentFolderTextComponent = text;
 
                 text
-                    .setPlaceholder("Nexus/Attachments")
+                    .setPlaceholder(t('settings.folders.attachment_folder.placeholder'))
                     .setValue(this.plugin.settings.attachmentFolder);
 
                 text.inputEl.addClass("nexus-folder-path-input");
@@ -143,8 +144,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
             })
             .addButton((button) => {
                 button
-                    .setButtonText("Browse")
-                    .setTooltip("Browse folders or create a new one")
+                    .setButtonText(t('common.buttons.browse'))
+                    .setTooltip(t('settings.folders.attachment_folder.browse_tooltip'))
                     .onClick(async () => {
                         const modal = new FolderTreeBrowserModal(
                             this.plugin.app,
@@ -192,7 +193,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
         );
 
         if (!validation.valid) {
-            this.showErrorDialog("Invalid Folder Location", validation.error ?? "Invalid folder configuration");
+            this.showErrorDialog(t('configure_folder_dialog.error_invalid_folder.title'), t('configure_folder_dialog.error_invalid_folder.message', { error: validation.error ?? "Invalid folder configuration" }));
             // Restore old value in the text field
             textComponent.setValue(oldPath);
             return;
@@ -219,8 +220,8 @@ export class FolderSettingsSection extends BaseSettingsSection {
         const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
         if (newFolder && newFolder instanceof TFolder && newFolder.children.length > 0) {
             this.showErrorDialog(
-                "Target Folder Not Empty",
-                `The folder "${newPath}" already contains files.\n\nTo change the folder location:\n• Move existing files manually in Obsidian, OR\n• Choose an empty folder or create a new one`
+                t('folder_migration.error_target_not_empty.title'),
+                t('folder_migration.error_target_not_empty.message', { path: newPath })
             );
             // Restore old value in the text field
             textComponent.setValue(oldPath);
@@ -309,7 +310,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
                 }
             } catch (error: any) {
                 this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
-                this.showErrorDialog("Migration Failed", `Failed to move files: ${error.message}`);
+                this.showErrorDialog(t('folder_migration.error_migration_failed.title'), t('folder_migration.error_migration_failed.message_move', { error: error.message }));
                 throw error;
             }
         }
@@ -350,27 +351,27 @@ export class FolderSettingsSection extends BaseSettingsSection {
      */
     private showMergeResultDialog(result: FolderMergeResult, _oldPath: string, _newPath: string): void {
         const modal = new Modal(this.plugin.app);
-        modal.titleEl.setText("Folder Migration Result");
+        modal.titleEl.setText(t('folder_migration.result_dialog.title'));
 
         const { contentEl } = modal;
 
         // Summary
         const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
-        summary.createEl("h3", { text: "Migration Summary" });
+        summary.createEl("h3", { text: t('folder_migration.result_dialog.summary_title') });
 
         const stats = summary.createDiv({ cls: "nexus-merge-stats" });
-        stats.createEl("p", { text: `✅ Successfully moved: ${result.moved} file(s)` });
+        stats.createEl("p", { text: t('folder_migration.result_dialog.moved', { count: String(result.moved) }) });
 
         if (result.skipped > 0) {
             stats.createEl("p", {
-                text: `⚠️ Skipped (already exist): ${result.skipped} file(s)`,
+                text: t('folder_migration.result_dialog.skipped', { count: String(result.skipped) }),
                 cls: "nexus-merge-warning"
             });
         }
 
         if (result.errors > 0) {
             stats.createEl("p", {
-                text: `❌ Errors: ${result.errors} file(s)`,
+                text: t('folder_migration.result_dialog.errors', { count: String(result.errors) }),
                 cls: "nexus-merge-error"
             });
         }
@@ -378,13 +379,13 @@ export class FolderSettingsSection extends BaseSettingsSection {
         // Explanation
         const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
         explanation.createEl("p", {
-            text: "Files that already existed in the destination were not overwritten to preserve your data."
+            text: t('folder_migration.result_dialog.explanation')
         });
 
         // Error details if any
         if (result.errorDetails && result.errorDetails.length > 0) {
             const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
-            errorSection.createEl("h4", { text: "Error Details:" });
+            errorSection.createEl("h4", { text: t('folder_migration.result_dialog.error_details_title') });
             const errorList = errorSection.createEl("ul");
             for (const error of result.errorDetails) {
                 errorList.createEl("li", { text: error });
@@ -393,7 +394,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
 
         // Close button
         const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-        const closeButton = buttonContainer.createEl("button", { text: "OK", cls: "mod-cta" });
+        const closeButton = buttonContainer.createEl("button", { text: t('common.buttons.ok'), cls: "mod-cta" });
         closeButton.addEventListener("click", () => modal.close());
 
         // Add styles
@@ -454,7 +455,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
         buttonContainer.style.marginTop = "1em";
 
         const okButton = buttonContainer.createEl("button", {
-            text: "OK",
+            text: t('common.buttons.ok'),
             cls: "mod-cta"
         });
         okButton.addEventListener("click", () => modal.close());

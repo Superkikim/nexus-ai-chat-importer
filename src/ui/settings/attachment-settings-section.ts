@@ -1,15 +1,16 @@
 // src/ui/settings/attachment-settings-section.ts
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
+import { t } from '../../i18n';
 
 export class AttachmentSettingsSection extends BaseSettingsSection {
-    readonly title = "Attachment Settings";
+    get title() { return t('settings.attachments.section_title'); }
     readonly order = 20;
 
     render(containerEl: HTMLElement): void {
         new Setting(containerEl)
-            .setName("Import attachments")
-            .setDesc("Save attachment files to disk and link them in conversations (uses 'best effort' strategy)")
+            .setName(t('settings.attachments.import_attachments.name'))
+            .setDesc(t('settings.attachments.import_attachments.desc'))
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.importAttachments ?? true)
@@ -28,11 +29,11 @@ export class AttachmentSettingsSection extends BaseSettingsSection {
 
     private renderAttachmentOptions(containerEl: HTMLElement): void {
         new Setting(containerEl)
-            .setName("Attachment folder")
-            .setDesc("Choose a folder to store attachment files")
+            .setName(t('settings.folders.attachment_folder.name'))
+            .setDesc(t('settings.folders.attachment_folder.desc'))
             .addText((text) =>
                 text
-                    .setPlaceholder("Enter attachment folder path")
+                    .setPlaceholder(t('settings.folders.attachment_folder.placeholder'))
                     .setValue(this.plugin.settings.attachmentFolder)
                     .onChange(async (value) => {
                         this.plugin.settings.attachmentFolder = value;
@@ -41,8 +42,8 @@ export class AttachmentSettingsSection extends BaseSettingsSection {
             );
 
         new Setting(containerEl)
-            .setName("Handle missing attachments")
-            .setDesc("When attachments are missing from exports, create informative notes instead of skipping them")
+            .setName(t('settings.attachments.handle_missing.name'))
+            .setDesc(t('settings.attachments.handle_missing.desc'))
             .addToggle((toggle) =>
                 toggle
                     .setValue(!this.plugin.settings.skipMissingAttachments)
@@ -53,8 +54,8 @@ export class AttachmentSettingsSection extends BaseSettingsSection {
             );
 
         new Setting(containerEl)
-            .setName("Show attachment details in reports")
-            .setDesc("Include detailed attachment processing statistics in import reports")
+            .setName(t('settings.attachments.show_details.name'))
+            .setDesc(t('settings.attachments.show_details.desc'))
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.showAttachmentDetails ?? false)
@@ -73,20 +74,20 @@ export class AttachmentSettingsSection extends BaseSettingsSection {
         noteEl.style.borderRadius = "8px";
         noteEl.style.border = "1px solid var(--background-modifier-border)";
         
-        noteEl.createEl("h4", { text: "📎 About Attachment Handling", cls: "setting-item-name" });
+        noteEl.createEl("h4", { text: t('settings.attachments.info_box.title'), cls: "setting-item-name" });
         
         const infoList = noteEl.createEl("ul");
         infoList.style.marginTop = "10px";
         infoList.style.paddingLeft = "20px";
         
-        infoList.createEl("li").innerHTML = "<strong>Best Effort Strategy:</strong> Files found in exports are extracted and linked; missing files get informative notes.";
-        infoList.createEl("li").innerHTML = "<strong>Platform Differences:</strong> ChatGPT exports may not include all attachments, especially from older conversations.";
-        infoList.createEl("li").innerHTML = "<strong>Simple Organization:</strong> Files organized as <code>attachments/provider/category/</code> (e.g., <code>attachments/chatgpt/images/</code>).";
-        infoList.createEl("li").innerHTML = "<strong>Sync Tip:</strong> Consider excluding the attachment folder from sync to avoid uploading large files.";
+        infoList.createEl("li", { text: t('settings.attachments.info_box.best_effort') });
+        infoList.createEl("li", { text: t('settings.attachments.info_box.platform_diff') });
+        infoList.createEl("li", { text: t('settings.attachments.info_box.organization') });
+        infoList.createEl("li", { text: t('settings.attachments.info_box.sync_tip') });
         
         const tipEl = noteEl.createDiv();
         tipEl.style.marginTop = "10px";
         tipEl.style.fontStyle = "italic";
-        tipEl.innerHTML = "💡 <strong>Tip:</strong> Enable 'Show attachment details' to see exactly which files were found, missing, or failed during import.";
+        tipEl.textContent = t('settings.attachments.info_box.tip');
     }
 }

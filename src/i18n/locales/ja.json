@@ -1,0 +1,479 @@
+{
+  "common": {
+    "buttons": {
+      "cancel": "キャンセル",
+      "ok": "OK",
+      "select": "選択",
+      "browse": "参照",
+      "continue": "続行",
+      "proceed": "実行",
+      "close": "了解！",
+      "create": "作成",
+      "remove": "削除",
+      "run": "実行",
+      "complete": "完了",
+      "view_report": "レポートを見る",
+      "get_started": "始める",
+      "create_new_folder": "新しいフォルダーを作成"
+    },
+    "status": {
+      "new": "新規",
+      "updated": "更新済み",
+      "unchanged": "変更なし",
+      "unknown": "不明"
+    },
+    "progress": {
+      "phase_validation": "🔍 検証",
+      "phase_scanning": "📋 スキャン",
+      "phase_processing": "⚙️ 処理中",
+      "phase_writing": "💾 書き込み",
+      "phase_complete": "✅ 完了",
+      "phase_error": "❌ エラー"
+    }
+  },
+  "provider_selection": {
+    "title": "アーカイブのプロバイダーを選択",
+    "providers": {
+      "chatgpt": {
+        "name": "ChatGPT",
+        "description": "OpenAI ChatGPT の会話エクスポート"
+      },
+      "claude": {
+        "name": "Claude",
+        "description": "Anthropic Claude の会話エクスポート"
+      },
+      "lechat": {
+        "name": "Le Chat",
+        "description": "Mistral AI Le Chat の会話エクスポート"
+      }
+    },
+    "buttons": {
+      "select": "選択",
+      "cancel": "キャンセル"
+    }
+  },
+  "file_selection": {
+    "title": "{{provider}} の会話をインポート",
+    "import_mode": {
+      "section_title": "インポートモード",
+      "all_label": "すべてインポート",
+      "all_description": "すべての会話をインポートする（高速）",
+      "selective_label": "個別に選択",
+      "selective_description": "会話をプレビューして選択する"
+    },
+    "file_area": {
+      "section_title": "ファイルを選択",
+      "drop_text_default": "ZIPファイルをここにドロップするか、クリックして参照",
+      "drop_text_gemini": "ZIPファイルまたはJSONファイルをここにドロップするか、クリックして参照",
+      "drop_subtext_default": "複数ファイルの選択に対応",
+      "drop_subtext_gemini": "ZIP（Takeout）＋ オプションのJSON（拡張機能からのインデックス）"
+    },
+    "selected_files": {
+      "section_title": "選択済みファイル",
+      "remove_button": "削除"
+    },
+    "buttons": {
+      "cancel": "キャンセル",
+      "continue": "続行"
+    }
+  },
+  "conversation_selection": {
+    "title": "インポートする会話を選択",
+    "controls": {
+      "select_all": "すべて選択",
+      "select_none": "選択解除",
+      "search_placeholder": "会話を検索...",
+      "status_label": "ステータス：",
+      "show_label": "表示："
+    },
+    "status_filter_options": {
+      "all": "すべて",
+      "new": "新規",
+      "updated": "更新済み",
+      "unchanged": "変更なし"
+    },
+    "table_headers": {
+      "title": "タイトル",
+      "created": "作成日",
+      "updated": "更新日",
+      "messages": "メッセージ数",
+      "status": "ステータス"
+    },
+    "status_badges": {
+      "new": "新規",
+      "updated": "更新済み",
+      "unchanged": "変更なし",
+      "unknown": "不明",
+      "tooltip_new": "この会話はVaultに存在しません",
+      "tooltip_updated": "この会話はVault内のバージョンより新しい内容を含んでいます（{{existing_date}} → {{new_date}}）",
+      "tooltip_unchanged": "この会話はVault内のバージョンと同じです"
+    },
+    "pagination": {
+      "showing": "{{total}} 件中 {{start}}–{{end}} 件を表示",
+      "page_of": "{{total}} ページ中 {{current}} ページ",
+      "previous": "前へ",
+      "next": "次へ"
+    },
+    "summary": {
+      "unique_conversations": "固有の会話",
+      "new": "新規",
+      "updated": "更新済み",
+      "unchanged": "変更なし",
+      "selected_of": "{{total}} 件中 {{selected}} 件を選択"
+    },
+    "buttons": {
+      "cancel": "キャンセル",
+      "import_selected": "選択済みをインポート",
+      "import_selected_count": "選択した {{count}} 件をインポート"
+    },
+    "date_unknown": "不明"
+  },
+  "import_progress": {
+    "title": "{{filename}} をインポート中",
+    "initial": {
+      "title": "インポートを準備中...",
+      "detail": "ZIPファイルの構造を検証しています"
+    },
+    "conversation_counter": "{{current}}/{{total}} 件の会話",
+    "conversation_counter_selective": "{{current}}/{{total}} 件の選択済み会話",
+    "selective_mode_indicator": "📋 選択インポート：{{total}} 件中 {{selected}} 件",
+    "complete": {
+      "message": "インポートが正常に完了しました",
+      "detail": "このダイアログを閉じることができます"
+    },
+    "error": {
+      "message": "インポート中にエラーが発生しました",
+      "detail": "詳細はコンソールをご確認ください"
+    }
+  },
+  "import_completion": {
+    "title": "インポート完了",
+    "success_message": "✅ 会話が正常にインポートされました",
+    "stats": {
+      "zip_files_processed": "処理済みZIPファイル",
+      "unique_conversations": "固有の会話",
+      "duplicates": "重複",
+      "new": "新規",
+      "updated": "更新済み",
+      "skipped": "スキップ済み",
+      "failed": "失敗"
+    },
+    "attachments": {
+      "label": "添付ファイル：",
+      "summary": "{{found}}/{{total}} 件を抽出（{{percentage}}%）",
+      "missing_failed": "{{missing}} 件欠落、{{failed}} 件失敗"
+    },
+    "report": {
+      "label": "📄 詳細レポート："
+    },
+    "buttons": {
+      "view_report": "レポートを見る",
+      "ok": "OK"
+    }
+  },
+  "settings": {
+    "tab_title": "Nexus AI Chat Importer",
+    "folders": {
+      "section_title": "📁 フォルダー構造",
+      "conversation_folder": {
+        "name": "会話フォルダー",
+        "desc": "インポートした会話の保存先",
+        "placeholder": "Nexus/Conversations",
+        "browse_tooltip": "フォルダーを参照するか、新しいフォルダーを作成"
+      },
+      "reports_folder": {
+        "name": "レポートフォルダー",
+        "desc": "インポートレポートの保存先",
+        "placeholder": "Nexus Reports",
+        "browse_tooltip": "フォルダーを参照するか、新しいフォルダーを作成"
+      },
+      "attachment_folder": {
+        "name": "添付ファイルフォルダー",
+        "desc": "添付ファイルの保存先（⚠️ 容量節約のため同期から除外することを推奨）",
+        "placeholder": "Nexus/Attachments",
+        "browse_tooltip": "フォルダーを参照するか、新しいフォルダーを作成"
+      }
+    },
+    "display": {
+      "section_title": "📅 日付プレフィックス",
+      "add_date_prefix": {
+        "name": "ファイル名に日付プレフィックスを追加",
+        "desc": "会話ファイル名の先頭に作成日を付加する",
+        "format_label": "日付形式を選択："
+      }
+    },
+    "timestamps": {
+      "section_title": "📅 メッセージの日付形式",
+      "custom_format": {
+        "name": "メッセージのタイムスタンプ形式をカスタマイズ",
+        "desc": "メッセージヘッダーのデフォルトのロケールベースのタイムスタンプ形式を上書きします。無効の場合、タイムスタンプは Obsidian の言語設定に従います。Obsidian が英語に設定されている場合、US形式（YYYY/DD/MM）が適用されます。"
+      },
+      "timestamp_format": {
+        "name": "タイムスタンプ形式",
+        "desc": "会話ノートのメッセージタイムスタンプの形式を選択"
+      },
+      "preview_label": "プレビュー："
+    },
+    "attachments": {
+      "section_title": "添付ファイルの設定",
+      "import_attachments": {
+        "name": "添付ファイルをインポート",
+        "desc": "添付ファイルをディスクに保存し、会話内でリンクします（「ベストエフォート」方式）"
+      },
+      "handle_missing": {
+        "name": "欠落した添付ファイルを処理",
+        "desc": "エクスポートに添付ファイルが含まれていない場合、スキップせずに情報ノートを作成する"
+      },
+      "show_details": {
+        "name": "レポートに添付ファイルの詳細を表示",
+        "desc": "インポートレポートに詳細な添付ファイル処理の統計を含める"
+      },
+      "info_box": {
+        "title": "📎 添付ファイルの処理について",
+        "best_effort": "ベストエフォート方式：エクスポートで見つかったファイルは抽出してリンクします。欠落しているファイルには情報ノートを作成します。",
+        "platform_diff": "プラットフォームの違い：ChatGPTのエクスポートには、特に古い会話の添付ファイルがすべて含まれない場合があります。",
+        "organization": "シンプルな整理：ファイルは attachments/provider/category/ の形式で整理されます（例：attachments/chatgpt/images/）。",
+        "sync_tip": "同期のヒント：大容量ファイルのアップロードを避けるため、添付ファイルフォルダーを同期から除外することを検討してください。",
+        "tip": "💡 ヒント：「添付ファイルの詳細を表示」を有効にすると、インポート時に見つかったファイル・欠落したファイル・失敗したファイルを正確に確認できます。"
+      }
+    },
+    "migrations": {
+      "section_title": "マイグレーション",
+      "description_manual": "手動操作：都合のよいときに実行できるオプションのアップグレード操作です。",
+      "description_automatic": "自動操作（古いデータの削除など）はアップグレード時に自動的に実行され、ここには表示されません。",
+      "version_header": "バージョン {{version}}",
+      "no_migrations": {
+        "title": "利用可能な手動操作はありません",
+        "desc": "すべてのアップグレード操作は自動的に完了しました。"
+      },
+      "operation_completed_suffix": " ✅ 完了",
+      "buttons": {
+        "completed": "✅ 完了",
+        "cannot_run": "実行不可",
+        "run": "実行",
+        "running": "実行中..."
+      },
+      "tooltips": {
+        "completed": "この操作はすでに完了しています",
+        "cannot_run": "この操作の前提条件が満たされていません",
+        "run": "{{operation_name}} を実行"
+      },
+      "error_loading": "マイグレーションの読み込みエラー："
+    },
+    "support": {
+      "section_title": "💝 サポートとヘルプ",
+      "resources": {
+        "name": "📚 リソース",
+        "desc": "ドキュメント、リリースノート、コミュニティリンク",
+        "readme": "📖 README",
+        "changelog": "📝 変更履歴",
+        "issues": "🐛 問題報告",
+        "forum": "💬 フォーラム"
+      }
+    }
+  },
+  "upgrade": {
+    "progress_modal": {
+      "starting": "開始中...",
+      "progress_label": "進捗：{{percentage}}%",
+      "step_label": "ステップ {{current}}/{{total}}",
+      "complete_label": "完了",
+      "complete_message": "正常に完了しました",
+      "error_message": "エラーが発生しました"
+    },
+    "multi_operation_modal": {
+      "progress_label": "進捗：{{completed}}/{{total}} 操作",
+      "progress_with_failures": "進捗：{{completed}}/{{total}} 操作（{{failed}} 件失敗）",
+      "all_completed": "{{total}} 件の操作がすべて正常に完了しました",
+      "mark_complete_default": "すべての操作が正常に完了しました",
+      "buttons": {
+        "complete": "完了",
+        "close": "閉じる"
+      }
+    },
+    "modal_130": {
+      "title": "🎉 Nexus AI Chat Importer {{version}}",
+      "migration_section": {
+        "title": "🔄 マイグレーションが必要です",
+        "message": "以下のタスクが自動的に実行され、データが v1.3.0 にアップグレードされます：",
+        "tasks": {
+          "folder_settings": "✓ フォルダー設定を新しい構造に移行",
+          "timestamps": "✓ タイムスタンプを ISO 8601 形式に更新",
+          "aliases": "✓ frontmatter のエイリアスを修正",
+          "reports": "✓ レポートフォルダーを適切な場所に移動",
+          "artifacts": "✓ アーティファクトのメタデータを更新"
+        },
+        "estimate": "数秒かかります。"
+      },
+      "buttons": {
+        "run_migration": "🚀 マイグレーションを実行"
+      }
+    },
+    "complete_modal": {
+      "title": "✅ アップグレード完了 - v{{version}}",
+      "buttons": {
+        "got_it": "了解！"
+      }
+    },
+    "new_version_modal": {
+      "title": "🎉 Nexus AI Chat Importer {{version}}",
+      "buttons": {
+        "got_it": "了解！"
+      }
+    }
+  },
+  "folder_migration": {
+    "title": "既存のファイルを移動しますか？",
+    "message_intro": "{{folder_type}} フォルダーの場所を変更しています：",
+    "path_from": "移動元：{{path}}",
+    "path_to": "移動先：{{path}}",
+    "question": "既存のファイルを新しい場所に移動しますか？",
+    "link_updates": {
+      "title": "🔗 リンクの更新：",
+      "attachments_text": "添付ファイルを移動すると、それらを参照しているすべての会話ノートも更新されます。",
+      "conversations_text": "会話を移動すると、それらを参照しているすべてのレポートと添付ファイルも更新されます。",
+      "estimated_time_seconds": "推定時間：約 {{seconds}} 秒",
+      "estimated_time_minutes": "推定時間：約 {{minutes}} 分"
+    },
+    "warning": {
+      "title": "⚠️ 重要：",
+      "text": "「いいえ」を選択した場合、既存のファイルは元の場所に残り、今後の更新の影響を受けません。"
+    },
+    "buttons": {
+      "cancel": "キャンセル",
+      "keep": "いいえ、元の場所に保持する",
+      "move": "はい、ファイルを移動する",
+      "move_with_links": "はい、ファイルを移動してリンクも更新する"
+    },
+    "progress": {
+      "title_moving": "{{folder_type}} を移動してリンクを更新中",
+      "step_moving_title": "ファイルを移動中...",
+      "step_moving_detail": "{{old_path}} から {{new_path}} へ移動中",
+      "step_moving_count": "{{current}} / {{total}} ファイルを処理済み",
+      "step_moved_title": "ファイルを移動しました",
+      "step_moved_detail": "{{moved}} 件のファイルを移動、{{skipped}} 件をスキップ。リンクの更新を準備中...",
+      "step_updating_attachment_links": "添付ファイルのリンクを更新中...",
+      "step_updating_conversation_links": "会話のリンクを更新中...",
+      "step_updating_report_links": "レポート内のリンクを更新中...",
+      "step_updating_artifact_links": "アーティファクト内のリンクを更新中...",
+      "complete_message": "{{moved}} 件のファイルを移動しました。{{links}} 件のリンクを正常に更新しました"
+    },
+    "result_dialog": {
+      "title": "フォルダー移行の結果",
+      "summary_title": "移行の概要",
+      "moved": "✅ 正常に移動：{{count}} ファイル",
+      "skipped": "⚠️ スキップ済み（すでに存在）：{{count}} ファイル",
+      "errors": "❌ エラー：{{count}} ファイル",
+      "explanation": "移動先にすでに存在するファイルはデータ保護のため上書きされませんでした。",
+      "error_details_title": "エラーの詳細："
+    },
+    "error_target_not_empty": {
+      "title": "移動先フォルダーが空ではありません",
+      "message": "フォルダー「{{path}}」にはすでにファイルが含まれています。\n\nフォルダーの場所を変更するには：\n• Obsidian で既存のファイルを手動で移動する、または\n• 空のフォルダーを選択するか、新しいフォルダーを作成する"
+    },
+    "error_migration_failed": {
+      "title": "移行に失敗しました",
+      "message_move": "ファイルの移動に失敗しました：{{error}}",
+      "message_links": "ファイルの移動またはリンクの更新に失敗しました：{{error}}"
+    }
+  },
+  "folder_browser": {
+    "title": "フォルダーを選択",
+    "vault_root": "Vault のルート（/）",
+    "buttons": {
+      "create_new_folder": "新しいフォルダーを作成",
+      "cancel": "キャンセル",
+      "select": "選択"
+    },
+    "create_folder_dialog": {
+      "title": "新しいフォルダーを作成",
+      "folder_name_label": "フォルダー名：",
+      "buttons": {
+        "cancel": "キャンセル",
+        "create": "作成"
+      }
+    },
+    "notices": {
+      "select_parent_first": "⚠️ 最初に親フォルダーを選択してください",
+      "invalid_name": "❌ 無効なフォルダー名：使用できない文字が含まれています",
+      "already_exists": "❌ フォルダーはすでに存在します",
+      "invalid_location": "❌ {{error}}",
+      "created_success": "✅ フォルダーを作成しました：{{name}}",
+      "create_failed": "❌ フォルダーの作成に失敗しました：{{error}}",
+      "select_first": "⚠️ 最初にフォルダーを選択してください"
+    }
+  },
+  "configure_folder_dialog": {
+    "title": "🎉 Nexus AI Chat Importer v1.3.0",
+    "description": "バージョン 1.3.0 では、レポート用のフォルダーを指定できるようになりました。既存のレポートは {{folder}} に移動されます。または、以下から希望のフォルダーを選択してください。",
+    "note": "注意：このフォルダーは「会話」または「添付ファイル」フォルダーの内部に設定できません。",
+    "report_folder_label": "📊 レポートフォルダー",
+    "report_folder_placeholder": "Nexus Reports",
+    "buttons": {
+      "browse": "参照",
+      "proceed": "実行"
+    },
+    "error_invalid_folder": {
+      "title": "無効なフォルダーの場所",
+      "message": "{{error}}"
+    }
+  },
+  "welcome": {
+    "title": "Nexus AI Chat Importer {{version}}",
+    "icon": "🎉",
+    "heading": "Nexus AI Chat Importer をインストールいただきありがとうございます！",
+    "description": "ChatGPT、Claude、Le Chat の会話を Obsidian Vault に直接インポートして管理できます。",
+    "resources_title": "リソース",
+    "resources": {
+      "documentation": {
+        "title": "ドキュメント",
+        "description": "プラグインの使い方を学ぶ"
+      },
+      "release_notes": {
+        "title": "リリースノート",
+        "description": "このバージョンの新機能"
+      },
+      "report_issues": {
+        "title": "問題を報告",
+        "description": "バグを見つけましたか？お知らせください"
+      },
+      "community_forum": {
+        "title": "コミュニティフォーラム",
+        "description": "ディスカッションに参加する"
+      }
+    },
+    "buttons": {
+      "get_started": "始める"
+    }
+  },
+  "notices": {
+    "import_analyzing": "{{count}} 件のファイルから会話を分析中...",
+    "import_no_new": "新規または更新された会話は見つかりませんでした。すべての会話は最新の状態です。",
+    "import_starting": "{{count}} 件の会話をインポート中（新規 {{new}} 件、更新済み {{updated}} 件）...",
+    "import_starting_selected": "{{files}} 件のファイルから選択した {{count}} 件の会話をインポート中...",
+    "import_completed_fallback": "インポートが完了しました。{{created}} 件を作成、{{updated}} 件を更新。",
+    "import_error": "インポート中にエラーが発生しました：{{error}}",
+    "import_error_analyzing": "会話の分析中にエラーが発生しました：{{error}}",
+    "import_error_file": "{{filename}} の処理中にエラーが発生しました。詳細はコンソールをご確認ください。",
+    "import_no_selected": "インポートする会話が選択されていません。",
+    "import_no_zip_gemini": "Gemini Takeout の ZIP ファイルを少なくとも 1 つ選択してください（オプションとして拡張機能からの JSON インデックスも指定できます）。",
+    "import_no_zip": "ZIP エクスポートファイルを少なくとも 1 つ選択してください。",
+    "import_gemini_json_failed": "Gemini インデックス JSON の読み込みに失敗しました。インデックスなしで続行します。",
+    "report_failed": "ログファイルの作成に失敗しました。詳細はコンソールをご確認ください。",
+    "attachment_map_failed": "添付ファイルマップの構築に失敗しました。詳細はコンソールをご確認ください。",
+    "ribbon_tooltip": "Nexus AI Chat Importer - 新しいファイルをインポート"
+  },
+  "commands": {
+    "import_conversations": {
+      "name": "AI 会話をインポート"
+    }
+  },
+  "kofi_support": {
+    "header": "☕ このプラグインを支援する",
+    "header_highlight": "このプラグインを支援する",
+    "default_message_emphasis": "私は失業中で健康上の問題を抱えながら、Nexus プロジェクトにフルタイムで取り組んでいます。",
+    "default_message": "このプラグインが役に立っているなら、寄付はとても大きな励みになり、プロジェクトの継続を支えてくれます。",
+    "reality_check": "ありがとうございます！これらのプラグインには数千時間の作業が注ぎ込まれており、一杯のコーヒーが健康上の問題と向き合いながら改善を続ける私の力になります。このプラグインがお役に立っているなら、ぜひサポートをご検討ください。",
+    "button_alt": "私の活動を支援する"
+  }
+}

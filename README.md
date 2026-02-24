@@ -1,6 +1,11 @@
 # Nexus AI Chat Importer
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.4.0) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Superkikim/nexus_stats/main/summary.json&query=%24.total_downloads&label=downloads&color=blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/tag/1.5.0) [![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Superkikim/nexus_stats/main/summary.json&query=%24.total_downloads&label=downloads&color=blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
+
+> 🌍 **Plugin UI and documentation now available in 10 languages**
+>
+> [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
+
 
 ## 📑 Table of Contents
 
@@ -23,7 +28,7 @@
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
 ### 📚 More
-- [✨ What's New](#-new-in-v140) - v1.4.0 features
+- [✨ What's New](#-whats-new-in-v150) - v1.5.0 features
 - [☕ Support](#-support-my-work) - Help keep this plugin alive
 - [📜 License](#-license) - GPL-3.0
 
@@ -61,33 +66,32 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - CLI for automation and headless setups
 - Beautiful formatting with role-specific callouts
 - Detailed import reports
-- International date support
+- Full UI localization in 10 languages
 
-### ✨ What's New in v1.4.0
+### ✨ What's New in v1.5.0
 
-#### 🚀 Features
+#### 🌍 Full UI Localization — 10 Languages
+
+- **Automatic language detection** — the plugin UI matches your Obsidian interface language, no configuration needed
+- **10 supported languages**: English, French, German, Spanish, Italian, Russian, Chinese (Simplified), Japanese, Portuguese, Korean
+- **Complete coverage** — all dialogs, settings panels, progress modals, import notices, and status labels are translated
+- **English fallback** — any missing key gracefully falls back to English
+
+> Note: Import reports and conversation note content remain in English — only the plugin UI is localized.
+
+#### v1.4.0 in brief
 
 - **🤖 Le Chat (Mistral AI)** — Full support with attachments, references, and citations
-- **💻 CLI for Bulk Import** — Import from the terminal without opening Obsidian ([see docs](#-command-line-interface-cli))
-
-#### 🎨 Improvements
-
-- **Human-readable artifact folders** — Claude artifacts now stored in folders named after the conversation, not UUIDs
-- **LaTeX math** — Math equations are properly handled and converted to Obsidian syntax
-- **Large archive support** — All providers now handle very large exports reliably
-
-#### 🐛 Bug Fixes
-
-- Multiple attachments in a single message no longer break out of the parent callout
-- Claude artifacts render correctly for both old and new export formats
-- Mobile artifact placeholders no longer show raw text
-- Binary files referenced by Claude scripts no longer saved as empty artifacts
+- **💻 CLI for Bulk Import** — Import from the terminal without opening Obsidian
+- **📁 Human-readable artifact folders** — Claude artifacts stored in folders named after the conversation, not UUIDs
+- **📐 LaTeX math** — Math equations converted to Obsidian `$$...$$` / `$...$` syntax
+- **🐛 Bug fixes** — Multi-attachment callouts, Claude format changes, mobile placeholders, binary artifacts
 
 ---
 
 > Upgrading from a previous version triggers required migration tasks automatically.
 
-*For v1.3.x and earlier release notes, see [RELEASE_NOTES.md](RELEASE_NOTES.md)*
+*For full release history, see [RELEASE_NOTES.md](RELEASE_NOTES.md)*
 
 ## ☕ Support My Work
 
@@ -97,7 +101,7 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 
 **If this plugin makes your life easier, a donation would mean the world to me and help keep development going strong.**
 
-[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)
 
 **Why support?**
 - 🚀 **Faster development** - More time for features and improvements
@@ -545,7 +549,7 @@ I'm exploring a solution using a browser extension to capture conversation metad
 
 **Status:** Research only. No timeline, no guarantees, no promises - just experimentation.
 
-You may notice Gemini code in the repository - it's experimental and disabled in v1.4.0.
+You may notice Gemini code in the repository - it's experimental and disabled in v1.5.0.
 
 ---
 
@@ -704,7 +708,7 @@ I'm constantly working to improve the plugin. Here's what's planned for future r
 
 - 💡 **Suggest Features**: Open an issue on GitHub with your ideas
 - 🐛 **Report Bugs**: Help us improve by reporting issues
-- ☕ **Support Development**: [Buy me a coffee](https://ko-fi.com/nexusplugins) to speed up development
+- ☕ **Support Development**: [Support my work](https://nexus-prod.dev/nexus-ai-chat-importer/support) to speed up development
 - ⭐ **Star the Repo**: Show your support on GitHub
 
 Your feedback and support directly influence what features get prioritized!
@@ -754,7 +758,7 @@ See [LICENSE.md](LICENSE.md) for full details.
 
 [![Report Issues](https://img.shields.io/badge/🐛_Report_Issues-GitHub-red?style=for-the-badge)](https://github.com/Superkikim/nexus-ai-chat-importer/issues)
 [![Obsidian Forum](https://img.shields.io/badge/💬_Community-Obsidian_Forum-purple?style=for-the-badge)](https://forum.obsidian.md/)
-[![Ko-fi](https://img.shields.io/badge/☕_Support-Ko--fi-ff5e5b?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/nexusplugins)
+[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)
 
 ### 📦 Repository
 
