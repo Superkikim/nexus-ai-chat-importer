@@ -1,5 +1,11 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.0 — TBD
+
+![Version](https://img.shields.io/badge/version-1.6.0-blue)
+
+---
+
 ## Version 1.5.4 — UI & Branding Polish
 
 ![Version](https://img.shields.io/badge/version-1.5.4-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
