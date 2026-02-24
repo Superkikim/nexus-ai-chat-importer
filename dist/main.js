@@ -514,11 +514,11 @@ var init_en = __esm({
         }
       },
       support_box: {
-        header: "\u2615 Support This Plugin",
+        header: "Support This Plugin",
         header_highlight: "Support This Plugin",
         default_message_emphasis: "I'm working on Nexus projects full-time while unemployed and dealing with health issues.",
         default_message: "If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.",
-        reality_check: "Thank you! Thousands of hours of work have gone into these plugins, and every coffee helps me keep improving them while managing ongoing health issues. If this plugin makes your life easier, please consider supporting me.",
+        reality_check: "Thank you! Thousands of hours of work have gone into these plugins, and every donation helps me keep improving them while managing ongoing health issues. If this plugin makes your life easier, please consider supporting me.",
         button_alt: "Support my work"
       }
     };
@@ -1000,11 +1000,11 @@ var init_fr = __esm({
         }
       },
       support_box: {
-        header: "\u2615 Soutenir ce plugin",
+        header: "Soutenir ce plugin",
         header_highlight: "Soutenir ce plugin",
         default_message_emphasis: "Je travaille \xE0 temps plein sur les projets Nexus tout en \xE9tant sans emploi et en faisant face \xE0 des probl\xE8mes de sant\xE9.",
         default_message: "Si ce plugin vous facilite la vie, un don repr\xE9senterait \xE9norm\xE9ment pour moi et m'aiderait \xE0 les maintenir en vie.",
-        reality_check: "Merci ! Des milliers d'heures de travail ont \xE9t\xE9 investies dans ces plugins, et chaque caf\xE9 m'aide \xE0 continuer \xE0 les am\xE9liorer tout en g\xE9rant des probl\xE8mes de sant\xE9 persistants. Si ce plugin vous facilite la vie, pensez \xE0 me soutenir.",
+        reality_check: "Merci ! Des milliers d'heures de travail ont \xE9t\xE9 investies dans ces plugins, et chaque don m'aide \xE0 continuer \xE0 les am\xE9liorer tout en g\xE9rant des probl\xE8mes de sant\xE9 persistants. Si ce plugin vous facilite la vie, pensez \xE0 me soutenir.",
         button_alt: "Soutenir mon travail"
       }
     };
@@ -1486,11 +1486,11 @@ var init_de = __esm({
         }
       },
       support_box: {
-        header: "\u2615 Dieses Plugin unterst\xFCtzen",
+        header: "Dieses Plugin unterst\xFCtzen",
         header_highlight: "Dieses Plugin unterst\xFCtzen",
         default_message_emphasis: "Ich arbeite Vollzeit an Nexus-Projekten, bin arbeitslos und k\xE4mpfe mit gesundheitlichen Problemen.",
         default_message: "Wenn dieses Plugin Ihr Leben leichter macht, w\xFCrde mir eine Spende sehr viel bedeuten und dazu beitragen, die Projekte am Leben zu erhalten.",
-        reality_check: "Danke! Tausende Stunden Arbeit stecken in diesen Plugins, und jeder Kaffee hilft mir, sie weiterzuentwickeln, w\xE4hrend ich mit anhaltenden gesundheitlichen Problemen umgehe. Wenn dieses Plugin Ihr Leben leichter macht, erw\xE4gen Sie bitte, mich zu unterst\xFCtzen.",
+        reality_check: "Danke! Tausende Stunden Arbeit stecken in diesen Plugins, und jede Spende hilft mir, sie weiterzuentwickeln, w\xE4hrend ich mit anhaltenden gesundheitlichen Problemen umgehe. Wenn dieses Plugin Ihr Leben leichter macht, erw\xE4gen Sie bitte, mich zu unterst\xFCtzen.",
         button_alt: "Meine Arbeit unterst\xFCtzen"
       }
     };
@@ -1972,11 +1972,11 @@ var init_es = __esm({
         }
       },
       support_box: {
-        header: "\u2615 Apoyar este plugin",
+        header: "Apoyar este plugin",
         header_highlight: "Apoyar este plugin",
         default_message_emphasis: "Trabajo a tiempo completo en los proyectos Nexus estando desempleado y enfrentando problemas de salud.",
         default_message: "Si este plugin te facilita la vida, una donaci\xF3n significar\xEDa much\xEDsimo para m\xED y ayudar\xEDa a mantenerlos activos.",
-        reality_check: "\xA1Gracias! Miles de horas de trabajo han ido a estos plugins, y cada caf\xE9 me ayuda a seguir mejor\xE1ndolos mientras gestiono problemas de salud continuos. Si este plugin te facilita la vida, por favor considera apoyarme.",
+        reality_check: "\xA1Gracias! Miles de horas de trabajo han ido a estos plugins, y cada donaci\xF3n me ayuda a seguir mejor\xE1ndolos mientras gestiono problemas de salud continuos. Si este plugin te facilita la vida, por favor considera apoyarme.",
         button_alt: "Apoyar mi trabajo"
       }
     };
@@ -2458,11 +2458,11 @@ var init_it = __esm({
         }
       },
       support_box: {
-        header: "\u2615 Supporta questo plugin",
+        header: "Supporta questo plugin",
         header_highlight: "Supporta questo plugin",
         default_message_emphasis: "Lavoro a tempo pieno sui progetti Nexus mentre sono disoccupato e affronto problemi di salute.",
         default_message: "Se questo plugin ti semplifica la vita, una donazione significherebbe moltissimo per me e aiuterebbe a tenerli in vita.",
-        reality_check: "Grazie! Migliaia di ore di lavoro sono state dedicate a questi plugin, e ogni caff\xE8 mi aiuta a continuare a migliorarli mentre gestisco problemi di salute continuativi. Se questo plugin ti semplifica la vita, considera di supportarmi.",
+        reality_check: "Grazie! Migliaia di ore di lavoro sono state dedicate a questi plugin, e ogni donazione mi aiuta a continuare a migliorarli mentre gestisco problemi di salute continuativi. Se questo plugin ti semplifica la vita, considera di supportarmi.",
         button_alt: "Supportare il mio lavoro"
       }
     };
@@ -2944,11 +2944,11 @@ var init_ru = __esm({
         }
       },
       support_box: {
-        header: "\u2615 \u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
+        header: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
         header_highlight: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
         default_message_emphasis: "\u042F \u0440\u0430\u0431\u043E\u0442\u0430\u044E \u043D\u0430\u0434 \u043F\u0440\u043E\u0435\u043A\u0442\u0430\u043C\u0438 Nexus \u043D\u0430 \u043F\u043E\u043B\u043D\u0443\u044E \u0441\u0442\u0430\u0432\u043A\u0443, \u0431\u0443\u0434\u0443\u0447\u0438 \u0431\u0435\u0437\u0440\u0430\u0431\u043E\u0442\u043D\u044B\u043C \u0438 \u0431\u043E\u0440\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C.",
         default_message: "\u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u0431\u0443\u0434\u0435\u0442 \u0434\u043B\u044F \u043C\u0435\u043D\u044F \u043E\u0447\u0435\u043D\u044C \u0437\u043D\u0430\u0447\u0438\u043C\u044B\u043C \u0438 \u043F\u043E\u043C\u043E\u0436\u0435\u0442 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0442\u044C \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0432 \u0440\u0430\u0431\u043E\u0447\u0435\u043C \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0438.",
-        reality_check: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E! \u041D\u0430 \u044D\u0442\u0438 \u043F\u043B\u0430\u0433\u0438\u043D\u044B \u0443\u0448\u043B\u0438 \u0442\u044B\u0441\u044F\u0447\u0438 \u0447\u0430\u0441\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B, \u0438 \u043A\u0430\u0436\u0434\u0430\u044F \u0447\u0430\u0448\u043A\u0430 \u043A\u043E\u0444\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u043C\u043D\u0435 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0442\u044C \u0438\u0445 \u0443\u043B\u0443\u0447\u0448\u0430\u0442\u044C, \u0441\u043F\u0440\u0430\u0432\u043B\u044F\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C. \u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0440\u0430\u0441\u0441\u043C\u043E\u0442\u0440\u0438\u0442\u0435 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438.",
+        reality_check: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E! \u041D\u0430 \u044D\u0442\u0438 \u043F\u043B\u0430\u0433\u0438\u043D\u044B \u0443\u0448\u043B\u0438 \u0442\u044B\u0441\u044F\u0447\u0438 \u0447\u0430\u0441\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B, \u0438 \u043A\u0430\u0436\u0434\u043E\u0435 \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u043C\u043D\u0435 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0442\u044C \u0438\u0445 \u0443\u043B\u0443\u0447\u0448\u0430\u0442\u044C, \u0441\u043F\u0440\u0430\u0432\u043B\u044F\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C. \u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0440\u0430\u0441\u0441\u043C\u043E\u0442\u0440\u0438\u0442\u0435 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438.",
         button_alt: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043C\u043E\u044E \u0440\u0430\u0431\u043E\u0442\u0443"
       }
     };
@@ -3430,11 +3430,11 @@ var init_zh = __esm({
         }
       },
       support_box: {
-        header: "\u2615 \u652F\u6301\u6B64\u63D2\u4EF6",
+        header: "\u652F\u6301\u6B64\u63D2\u4EF6",
         header_highlight: "\u652F\u6301\u6B64\u63D2\u4EF6",
         default_message_emphasis: "\u6211\u5728\u5931\u4E1A\u5E76\u4E0E\u5065\u5EB7\u95EE\u9898\u6297\u4E89\u7684\u540C\u65F6\uFF0C\u5168\u804C\u6295\u5165\u4E8E Nexus \u9879\u76EE\u7684\u5F00\u53D1\u3002",
         default_message: "\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u4E00\u7B14\u6350\u6B3E\u5BF9\u6211\u610F\u4E49\u91CD\u5927\uFF0C\u4E5F\u5C06\u5E2E\u52A9\u8FD9\u4E9B\u9879\u76EE\u6301\u7EED\u8FD0\u8F6C\u3002",
-        reality_check: "\u611F\u8C22\u60A8\uFF01\u8FD9\u4E9B\u63D2\u4EF6\u51DD\u805A\u4E86\u6570\u5343\u5C0F\u65F6\u7684\u5FC3\u8840\uFF0C\u6BCF\u4E00\u676F\u5496\u5561\u90FD\u5E2E\u52A9\u6211\u5728\u5E94\u5BF9\u6301\u7EED\u5065\u5EB7\u95EE\u9898\u7684\u540C\u65F6\u4E0D\u65AD\u6539\u8FDB\u5B83\u4EEC\u3002\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u8BF7\u8003\u8651\u652F\u6301\u6211\u3002",
+        reality_check: "\u611F\u8C22\u60A8\uFF01\u8FD9\u4E9B\u63D2\u4EF6\u51DD\u805A\u4E86\u6570\u5343\u5C0F\u65F6\u7684\u5FC3\u8840\uFF0C\u6BCF\u4E00\u7B14\u6350\u6B3E\u90FD\u5E2E\u52A9\u6211\u5728\u5E94\u5BF9\u6301\u7EED\u5065\u5EB7\u95EE\u9898\u7684\u540C\u65F6\u4E0D\u65AD\u6539\u8FDB\u5B83\u4EEC\u3002\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u8BF7\u8003\u8651\u652F\u6301\u6211\u3002",
         button_alt: "\u652F\u6301\u6211\u7684\u5DE5\u4F5C"
       }
     };
@@ -3916,11 +3916,11 @@ var init_ja = __esm({
         }
       },
       support_box: {
-        header: "\u2615 \u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
+        header: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
         header_highlight: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
         default_message_emphasis: "\u79C1\u306F\u5931\u696D\u4E2D\u3067\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3092\u62B1\u3048\u306A\u304C\u3089\u3001Nexus \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306B\u30D5\u30EB\u30BF\u30A4\u30E0\u3067\u53D6\u308A\u7D44\u3093\u3067\u3044\u307E\u3059\u3002",
         default_message: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u5BC4\u4ED8\u306F\u3068\u3066\u3082\u5927\u304D\u306A\u52B1\u307F\u306B\u306A\u308A\u3001\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u7D99\u7D9A\u3092\u652F\u3048\u3066\u304F\u308C\u307E\u3059\u3002",
-        reality_check: "\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\uFF01\u3053\u308C\u3089\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u306F\u6570\u5343\u6642\u9593\u306E\u4F5C\u696D\u304C\u6CE8\u304E\u8FBC\u307E\u308C\u3066\u304A\u308A\u3001\u4E00\u676F\u306E\u30B3\u30FC\u30D2\u30FC\u304C\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3068\u5411\u304D\u5408\u3044\u306A\u304C\u3089\u6539\u5584\u3092\u7D9A\u3051\u308B\u79C1\u306E\u529B\u306B\u306A\u308A\u307E\u3059\u3002\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u304A\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u305C\u3072\u30B5\u30DD\u30FC\u30C8\u3092\u3054\u691C\u8A0E\u304F\u3060\u3055\u3044\u3002",
+        reality_check: "\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\uFF01\u3053\u308C\u3089\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u306F\u6570\u5343\u6642\u9593\u306E\u4F5C\u696D\u304C\u6CE8\u304E\u8FBC\u307E\u308C\u3066\u304A\u308A\u3001\u3054\u652F\u63F4\u304C\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3068\u5411\u304D\u5408\u3044\u306A\u304C\u3089\u6539\u5584\u3092\u7D9A\u3051\u308B\u79C1\u306E\u529B\u306B\u306A\u308A\u307E\u3059\u3002\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u304A\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u305C\u3072\u30B5\u30DD\u30FC\u30C8\u3092\u3054\u691C\u8A0E\u304F\u3060\u3055\u3044\u3002",
         button_alt: "\u79C1\u306E\u6D3B\u52D5\u3092\u652F\u63F4\u3059\u308B"
       }
     };
@@ -4402,11 +4402,11 @@ var init_pt = __esm({
         }
       },
       support_box: {
-        header: "\u2615 Apoiar este plugin",
+        header: "Apoiar este plugin",
         header_highlight: "Apoiar este plugin",
         default_message_emphasis: "Estou a trabalhar nos projetos Nexus a tempo inteiro enquanto estou desempregado e a lidar com problemas de sa\xFAde.",
         default_message: "Se este plugin facilita a sua vida, uma doa\xE7\xE3o significaria muito para mim e ajudaria a mant\xEA-los vivos.",
-        reality_check: "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada caf\xE9 ajuda-me a continuar a melhor\xE1-los enquanto lido com problemas de sa\xFAde cont\xEDnuos. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
+        reality_check: "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada doa\xE7\xE3o ajuda-me a continuar a melhor\xE1-los enquanto lido com problemas de sa\xFAde cont\xEDnuos. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
         button_alt: "Apoiar o meu trabalho"
       }
     };
@@ -4888,11 +4888,11 @@ var init_ko = __esm({
         }
       },
       support_box: {
-        header: "\u2615 \uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
+        header: "\uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
         header_highlight: "\uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
         default_message_emphasis: "\uC800\uB294 \uC2E4\uC9C1 \uC0C1\uD0DC\uC5D0\uC11C \uAC74\uAC15 \uBB38\uC81C\uB97C \uACAA\uC73C\uBA74\uC11C\uB3C4 Nexus \uD504\uB85C\uC81D\uD2B8\uC5D0 \uD480\uD0C0\uC784\uC73C\uB85C \uC784\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
         default_message: "\uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uB3C4\uC6C0\uC774 \uB41C\uB2E4\uBA74, \uD6C4\uC6D0\uC740 \uC800\uC5D0\uAC8C \uD070 \uD798\uC774 \uB418\uACE0 \uD504\uB85C\uC81D\uD2B8\uB97C \uC9C0\uC18D\uD558\uB294 \uB370 \uD070 \uB3C4\uC6C0\uC774 \uB429\uB2C8\uB2E4.",
-        reality_check: "\uAC10\uC0AC\uD569\uB2C8\uB2E4! \uC774 \uD50C\uB7EC\uADF8\uC778\uB4E4\uC5D0\uB294 \uC218\uCC9C \uC2DC\uAC04\uC758 \uC791\uC5C5\uC774 \uB2F4\uACA8 \uC788\uC73C\uBA70, \uCEE4\uD53C \uD55C \uC794 \uD55C \uC794\uC774 \uC9C0\uC18D\uC801\uC778 \uAC74\uAC15 \uBB38\uC81C\uB97C \uC548\uACE0\uB3C4 \uAC1C\uC120\uC744 \uC774\uC5B4\uB098\uAC00\uB294 \uC800\uC5D0\uAC8C \uD798\uC774 \uB429\uB2C8\uB2E4. \uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uC0B6\uC744 \uD3B8\uB9AC\uD558\uAC8C \uD574\uC900\uB2E4\uBA74 \uD6C4\uC6D0\uC744 \uACE0\uB824\uD574 \uC8FC\uC138\uC694.",
+        reality_check: "\uAC10\uC0AC\uD569\uB2C8\uB2E4! \uC774 \uD50C\uB7EC\uADF8\uC778\uB4E4\uC5D0\uB294 \uC218\uCC9C \uC2DC\uAC04\uC758 \uC791\uC5C5\uC774 \uB2F4\uACA8 \uC788\uC73C\uBA70, \uD6C4\uC6D0 \uD558\uB098\uD558\uB098\uAC00 \uC9C0\uC18D\uC801\uC778 \uAC74\uAC15 \uBB38\uC81C\uB97C \uC548\uACE0\uB3C4 \uAC1C\uC120\uC744 \uC774\uC5B4\uB098\uAC00\uB294 \uC800\uC5D0\uAC8C \uD798\uC774 \uB429\uB2C8\uB2E4. \uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uC0B6\uC744 \uD3B8\uB9AC\uD558\uAC8C \uD574\uC900\uB2E4\uBA74 \uD6C4\uC6D0\uC744 \uACE0\uB824\uD574 \uC8FC\uC138\uC694.",
         button_alt: "\uB0B4 \uC791\uC5C5 \uD6C4\uC6D0\uD558\uAE30"
       }
     };
@@ -5052,7 +5052,7 @@ var init_constants = __esm({
 function createSupportBox(container, message) {
   const supportBox = container.createDiv("nexus-support-box");
   const header = supportBox.createDiv("nexus-support-header");
-  header.innerHTML = `\u2615 <span class="nexus-support-header-highlight">${t("support_box.header_highlight")}</span>`;
+  header.innerHTML = `<span class="nexus-support-header-highlight">${t("support_box.header_highlight")}</span>`;
   const messageEl = supportBox.createDiv("nexus-support-message");
   if (message) {
     const paragraphs = message.split("\n\n");
@@ -5071,10 +5071,13 @@ function createSupportBox(container, message) {
   }
   const realityCheck = supportBox.createDiv("nexus-support-reality-check");
   realityCheck.innerHTML = t("support_box.reality_check");
+  const locale = window.moment.locale();
+  const supported = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
+  const supportUrl = supported.includes(locale) ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer/support` : "https://nexus-prod.dev/nexus-ai-chat-importer/support";
   const buttonContainer = supportBox.createDiv("nexus-support-button-container");
   buttonContainer.innerHTML = `
-        <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank" class="nexus-support-link">
-            \u2615 ${t("support_box.button_alt")}
+        <a href="${supportUrl}" target="_blank" class="nexus-support-link">
+            ${t("support_box.button_alt")}
         </a>
     `;
 }
@@ -11310,17 +11313,20 @@ ${cleanContent}`;
         this.contentEl.empty();
       }
       async createForm() {
+        const upgradeLocale = window.moment.locale();
+        const upgradeSupportedLocales = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
+        const upgradeSupportUrl = upgradeSupportedLocales.includes(upgradeLocale) ? `https://nexus-prod.dev/${upgradeLocale}/nexus-ai-chat-importer/support` : "https://nexus-prod.dev/nexus-ai-chat-importer/support";
         let message = `\u{1F389} **Upgrade to v1.2.0**
 
-Your conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated. 
+Your conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.
 
 **\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
 
 ---
 
-## \u2615 Support My Work
+## Support My Work
 
-[![Support my work](https://img.shields.io/badge/\u2615_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)`;
+[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](${upgradeSupportUrl})`;
         try {
           const response = await fetch("https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.2.0");
           if (response.ok) {

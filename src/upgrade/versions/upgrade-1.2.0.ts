@@ -642,17 +642,23 @@ export class NexusUpgradeModal extends Modal {
 
     async createForm() {
         // Fetch release notes from GitHub
+        const upgradeLocale = window.moment.locale();
+        const upgradeSupportedLocales = ['fr','de','es','it','ru','zh','ja','pt','ko'];
+        const upgradeSupportUrl = upgradeSupportedLocales.includes(upgradeLocale)
+            ? `https://nexus-prod.dev/${upgradeLocale}/nexus-ai-chat-importer/support`
+            : 'https://nexus-prod.dev/nexus-ai-chat-importer/support';
+
         let message = `🎉 **Upgrade to v1.2.0**
 
-Your conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated. 
+Your conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.
 
 **💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
 
 ---
 
-## ☕ Support My Work
+## Support My Work
 
-[![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)`;
+[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](${upgradeSupportUrl})`;
 
         try {
             // Try to fetch release notes from GitHub
