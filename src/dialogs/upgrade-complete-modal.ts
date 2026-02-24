@@ -18,12 +18,12 @@
 
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
-import { createKofiSupportBox } from "../ui/components/kofi-support-box";
+import { createSupportBox } from "../ui/components/support-box";
 import { t } from '../i18n';
 
 /**
  * Upgrade complete modal - shown AFTER migrations are done
- * Displays Ko-fi + What's New + Improvements + Bug Fixes
+ * Displays support section + What's New + Improvements + Bug Fixes
  */
 export class UpgradeCompleteModal extends Modal {
     private plugin: NexusAiChatImporterPlugin;
@@ -55,8 +55,8 @@ export class UpgradeCompleteModal extends Modal {
     async createContent() {
         const { contentEl } = this;
 
-        // Ko-fi support section (using reusable component)
-        createKofiSupportBox(contentEl);
+        // Support section (using reusable component)
+        createSupportBox(contentEl);
 
         // Release notes content
         await this.addReleaseNotes();

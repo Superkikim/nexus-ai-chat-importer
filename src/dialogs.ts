@@ -217,7 +217,7 @@ class BeautifulUpgradeDialog extends Modal {
         const content = container.createDiv('nexus-upgrade-content');
         content.innerHTML = this.options.message;
 
-        // Ko-fi support section (like Excalidraw)
+        // Support section
         const supportSection = container.createDiv('nexus-support-section');
         supportSection.innerHTML = `
             <div class="nexus-support-text">
@@ -226,7 +226,7 @@ class BeautifulUpgradeDialog extends Modal {
                 If these plugins help you, even a small donation would mean the world and help keep them alive.
             </div>
             <div class="nexus-coffee-div">
-                <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank" class="kofi-support-link">
+                <a href="https://nexus-prod.dev/nexus-ai-chat-importer/support" target="_blank" class="nexus-support-link">
                     ☕ Support my work
                 </a>
             </div>

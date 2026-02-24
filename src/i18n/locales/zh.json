@@ -468,7 +468,7 @@
       "name": "导入 AI 对话"
     }
   },
-  "kofi_support": {
+  "support_box": {
     "header": "☕ 支持此插件",
     "header_highlight": "支持此插件",
     "default_message_emphasis": "我在失业并与健康问题抗争的同时，全职投入于 Nexus 项目的开发。",

@@ -1,5 +1,26 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.5.1 — Support Link & Branding Cleanup
+
+![Version](https://img.shields.io/badge/version-1.5.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### Overview
+
+Version 1.5.1 is a maintenance release that replaces all Ko-fi references with the new [nexus-prod.dev](https://nexus-prod.dev/nexus-ai-chat-importer/support) support page and removes Ko-fi branding from the plugin internals.
+
+---
+
+### 🔧 Changes
+
+- **Support link updated**: All Ko-fi URLs replaced with `nexus-prod.dev/nexus-ai-chat-importer/support`
+- **Support button redesigned**: The Ko-fi image button is replaced by a clean, self-hosted styled button
+- **Internal branding removed**: All `kofi-*` CSS class names, the `kofi-support-box.ts` file, the `createKofiSupportBox` function, and the `kofi_support` i18n key have been renamed to neutral `nexus-support-*` / `support_box` equivalents
+- **Obsolete CSS removed**: Dead CSS selectors for the removed Ko-fi image are deleted
+
+No behavior change for end users — only the support destination and visual button style change.
+
+---
+
 ## Version 1.5.0 — Full UI Localization
 
 ![Version](https://img.shields.io/badge/version-1.5.0-blue) ![i18n](https://img.shields.io/badge/i18n-10_languages-green)
@@ -125,7 +146,7 @@ The v1.4.0 migration automatically detects affected conversation notes and resto
   - A new internal flag remembers that you’ve seen it.
 - **Upgrade experience is now consistent for all 1.3.x updates.**
   - The old short “upgrade” popup has been removed.
-  - You now always see the full **Upgrade Complete** dialog with Ko-fi and the **README → Overview** content, even when there are no migrations (for example 1.3.2 → 1.3.3).
+  - You now always see the full **Upgrade Complete** dialog with support section and the **README → Overview** content, even when there are no migrations (for example 1.3.2 → 1.3.3).
 - **Claude notice content is clearer and shorter.**
   - It reuses the same Overview content from README.
   - The text focuses on the Claude export change and what to do.

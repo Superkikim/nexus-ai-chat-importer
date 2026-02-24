@@ -468,7 +468,7 @@
       "name": "KI-Gespräche importieren"
     }
   },
-  "kofi_support": {
+  "support_box": {
     "header": "☕ Dieses Plugin unterstützen",
     "header_highlight": "Dieses Plugin unterstützen",
     "default_message_emphasis": "Ich arbeite Vollzeit an Nexus-Projekten, bin arbeitslos und kämpfe mit gesundheitlichen Problemen.",

@@ -116,18 +116,9 @@
     max-width: 42em;
 }
 
-/* Ko-fi support styling */
 .nexus-upgrade-modal h2 {
     margin-top: 2em;
     margin-bottom: 1em;
-}
-
-.nexus-upgrade-modal p img[alt*="Ko-fi"] {
-    transition: transform 0.2s ease;
-}
-
-.nexus-upgrade-modal p img[alt*="Ko-fi"]:hover {
-    transform: scale(1.05);
 }
 
 .nexus-upgrade-buttons {
@@ -520,14 +511,14 @@
     margin-top: 1.5em;
 }
 
-.nexus-kofi-button {
+.nexus-support-button {
     font-size: 1.1em;
     padding: 0.75em 2em;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.nexus-kofi-button:hover {
+.nexus-support-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -620,10 +611,10 @@
 }
 
 /* ========================================
-   KO-FI SUPPORT BOX
+   SUPPORT BOX
    ======================================== */
 
-.kofi-support-box {
+.nexus-support-box {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 12px;
     padding: 20px;
@@ -632,35 +623,35 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.kofi-header {
+.nexus-support-header {
     text-align: center;
     margin-bottom: 16px;
     font-size: 1.3em;
     font-weight: 600;
 }
 
-.kofi-header-highlight {
+.nexus-support-header-highlight {
     color: #FFD700;
 }
 
-.kofi-message {
+.nexus-support-message {
     text-align: center;
     margin-bottom: 8px;
     line-height: 1.6;
 }
 
-.kofi-message p {
+.nexus-support-message p {
     margin: 8px 0;
     color: rgba(255, 255, 255, 0.95);
 }
 
-.kofi-message-emphasis {
+.nexus-support-message-emphasis {
     color: #FFD700;
     font-weight: 600;
     font-size: 1.05em;
 }
 
-.kofi-reality-check {
+.nexus-support-reality-check {
     background: rgba(255, 215, 0, 0.15);
     border: 1px solid rgba(255, 215, 0, 0.3);
     border-radius: 8px;
@@ -672,17 +663,17 @@
     line-height: 1.5;
 }
 
-.kofi-reality-check strong {
+.nexus-support-reality-check strong {
     color: #FFD700;
     font-weight: 600;
 }
 
-.kofi-button-container {
+.nexus-support-button-container {
     text-align: center;
     margin: 0px 0;
 }
 
-.kofi-support-link {
+.nexus-support-link {
     display: inline-block;
     padding: 10px 28px;
     background-color: #FF5E5B;
@@ -695,7 +686,7 @@
     transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-.kofi-support-link:hover {
+.nexus-support-link:hover {
     background-color: #e04a47;
     transform: scale(1.05);
 }

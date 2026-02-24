@@ -20,7 +20,7 @@
 // src/ui/settings/support-section.ts
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
-import { createKofiSupportBox } from "../components/kofi-support-box";
+import { createSupportBox } from "../components/support-box";
 import { t } from '../../i18n';
 
 export class SupportSection extends BaseSettingsSection {
@@ -30,8 +30,8 @@ export class SupportSection extends BaseSettingsSection {
     render(containerEl: HTMLElement): void {
         const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
 
-        // Use reusable Ko-fi support box component
-        createKofiSupportBox(supportContainer);
+        // Use reusable support box component
+        createSupportBox(supportContainer);
 
         // Resources section - ONE Setting with multiple buttons
         new Setting(supportContainer)

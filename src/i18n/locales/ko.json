@@ -468,7 +468,7 @@
       "name": "AI 대화 가져오기"
     }
   },
-  "kofi_support": {
+  "support_box": {
     "header": "☕ 이 플러그인 후원하기",
     "header_highlight": "이 플러그인 후원하기",
     "default_message_emphasis": "저는 실직 상태에서 건강 문제를 겪으면서도 Nexus 프로젝트에 풀타임으로 임하고 있습니다.",

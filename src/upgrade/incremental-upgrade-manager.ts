@@ -121,7 +121,7 @@ export class IncrementalUpgradeManager {
 	            if (upgradeChain.length === 0) {
 	                await this.markUpgradeComplete(currentVersion);
 	                // No migrations needed for this upgrade path, but we still
-	                // want to show the "new version" dialog with Ko-fi and
+	                // want to show the "new version" dialog with support section and
 	                // README Overview (same UX as when migrations ran).
 	                return {
 	                    success: true,
@@ -639,7 +639,7 @@ export class IncrementalUpgradeManager {
 
     /**
      * Show upgrade complete dialog AFTER migrations
-     * Displays Ko-fi + What's New + Improvements + Bug Fixes
+     * Displays support section + What's New + Improvements + Bug Fixes
      */
     /**
      * Show upgrade completion dialog
