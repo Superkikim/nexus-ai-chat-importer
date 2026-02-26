@@ -433,7 +433,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Build attachment map for multi-ZIP fallback (ChatGPT only)
             if (provider === 'chatgpt' && files.length > 1) {
-                await this.importService.buildAttachmentMapForMultiZip(files);
+                await this.importService.buildAttachmentMapForMultiZip(files, provider);
             }
 
             // Process files sequentially with shared report
@@ -580,7 +580,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Build attachment map for multi-ZIP fallback (ChatGPT only)
         if (provider === 'chatgpt' && files.length > 1) {
             try {
-                await this.importService.buildAttachmentMapForMultiZip(files);
+                await this.importService.buildAttachmentMapForMultiZip(files, provider);
             } catch (error) {
                 this.logger.error('Failed to build attachment map:', error);
                 new Notice(t('notices.attachment_map_failed'));

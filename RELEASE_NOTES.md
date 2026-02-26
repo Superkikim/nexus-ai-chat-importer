@@ -1,5 +1,13 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.5.5 — Large ZIP Support
+
+![Version](https://img.shields.io/badge/version-1.5.5-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+Fixes silent import failures on large ChatGPT exports (500MB–6GB+). Modern ChatGPT archives include voice conversation recordings stored as binary `.dat` files, which caused the plugin to exhaust Electron's memory limit before any processing could begin. The ZIP loader now uses a streaming approach on desktop (Electron): only the ZIP index is read upfront, then entries are extracted one by one — audio and video files that are not user-uploaded attachments are skipped entirely. Peak memory usage is now proportional to the largest individual file being processed, not the total ZIP size. The fallback to standard loading remains in place for mobile and other non-Electron environments.
+
+---
+
 ## Version 1.5.4 — UI & Branding Polish
 
 ![Version](https://img.shields.io/badge/version-1.5.4-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)

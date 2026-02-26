@@ -151,5 +151,14 @@ export abstract class BaseProviderAdapter<TChat = any> implements ProviderAdapte
      * Get report naming strategy for this provider
      */
     abstract getReportNamingStrategy(): ReportNamingStrategy;
+
+    /**
+     * Default ZIP entry filter — include everything.
+     * Provider subclasses may override to skip large unwanted entries
+     * (e.g. ChatGPT voice-recording DAT files) before they are loaded into RAM.
+     */
+    shouldIncludeZipEntry(_entryName: string, _uncompressedSize: number): boolean {
+        return true;
+    }
 }
 

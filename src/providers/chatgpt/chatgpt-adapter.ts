@@ -135,6 +135,45 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
     }
 
     /**
+     * ChatGPT-specific ZIP entry filter.
+     *
+     * ChatGPT exports can contain gigabytes of voice-recording files (.dat)
+     * and audio/video files that are NOT user-uploaded attachments. Loading
+     * them into RAM via JSZip would cause Electron to OOM-crash on large exports.
+     *
+     * Rules (first match wins):
+     *  1. Small files (<1 MB) — always keep (JSON, metadata, tiny assets)
+     *  2. User-uploaded attachments (basename starts with file- or file_) — keep
+     *  3. Audio / video extensions — skip
+     *  4. .dat files not matching user-attachment pattern — skip (voice recordings)
+     *  5. Everything else — keep
+     */
+    shouldIncludeZipEntry(entryName: string, uncompressedSize: number): boolean {
+        // Rule 1: small files regardless of type
+        if (uncompressedSize < 1 * 1024 * 1024) return true;
+
+        const baseName = entryName.split("/").pop() ?? entryName;
+        const ext = baseName.includes(".") ? baseName.split(".").pop()!.toLowerCase() : "";
+
+        // Rule 2: user-uploaded attachments (IDs are case-sensitive — test original baseName)
+        const USER_ATTACHMENT = /^file[-_][A-Za-z0-9]/;
+        if (USER_ATTACHMENT.test(baseName)) return true;
+
+        // Rule 3: audio / video — skip
+        const AUDIO_VIDEO = new Set([
+            "mp3", "m4a", "mp4", "webm", "ogg", "aac", "wav", "flac",
+            "opus", "wma", "mov", "avi", "mkv",
+        ]);
+        if (AUDIO_VIDEO.has(ext)) return false;
+
+        // Rule 4: .dat not matching user-attachment pattern — skip (voice recordings)
+        if (ext === "dat") return false;
+
+        // Rule 5: default keep
+        return true;
+    }
+
+    /**
      * Provide ChatGPT-specific attachment extractor
      * The actual processMessageAttachments() logic is inherited from BaseProviderAdapter
      */

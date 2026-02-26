@@ -54,7 +54,7 @@ export class ProviderSelectionDialog extends Modal {
                 id: "chatgpt",
                 name: t('provider_selection.providers.chatgpt.name'),
                 description: t('provider_selection.providers.chatgpt.description'),
-                fileFormats: ["conversations.json only"]
+                fileFormats: ["conversations.json (legacy) or conversations-XX.json files"]
             });
         }
 
