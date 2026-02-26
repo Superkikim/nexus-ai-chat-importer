@@ -81,15 +81,19 @@ var init_en = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "OpenAI ChatGPT conversation exports"
+            description: "OpenAI ChatGPT conversation exports",
+            file_formats_0: "conversations.json (legacy) or conversations-XXX.json files"
           },
           claude: {
             name: "Claude",
-            description: "Anthropic Claude conversation exports"
+            description: "Anthropic Claude conversation exports",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json (optional)"
           },
           lechat: {
             name: "Le Chat",
-            description: "Mistral AI Le Chat conversation exports"
+            description: "Mistral AI Le Chat conversation exports",
+            file_formats_0: "chat-<uuid>.json files"
           }
         },
         buttons: {
@@ -14565,7 +14569,18 @@ var init_upgrade_complete_modal = __esm({
         this.addStyles();
       }
       async addReleaseNotes() {
-        let content = `## \u2728 What's New in v1.5.0
+        let content = `## \u2728 What's New in v1.5.5
+
+**New ChatGPT export format** \u2014 OpenAI split conversations across multiple numbered files
+(\`conversations-XXX.json\`). Imports were silently failing. This version adds full support
+for the new format. Older exports remain unaffected.
+
+**Memory-safe ZIP loading** \u2014 Export archives are no longer loaded entirely into memory,
+reducing the risk of RAM saturation on very large exports.
+
+---
+
+## v1.5.0 \u2014 UI Localization
 
 ### \u{1F30D} Full UI Localization \u2014 10 Languages
 
@@ -22117,7 +22132,7 @@ var IncrementalUpgradeManager = class {
    * Write a consolidated upgrade report per run
    */
   async writeUpgradeReport(fromVersion, toVersion, upgradeChain, result) {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d;
     const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
     const upgradesFolder = `${reportRoot}/Upgrades`;
     const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
@@ -22185,35 +22200,6 @@ var IncrementalUpgradeManager = class {
           md += `${msg}
 
 `;
-        const details = (_e = opRes.result) == null ? void 0 : _e.details;
-        if (details) {
-          if (Array.isArray(details)) {
-            if (details.length > 0) {
-              for (const item of details) {
-                if (typeof item === "string") {
-                  md += `${item}
-`;
-                }
-              }
-              md += `
-`;
-            }
-          } else if (typeof details === "object") {
-            const keys = Object.keys(details);
-            if (keys.length > 0 && !keys.every((k) => /^\d+$/.test(k))) {
-              md += `**Statistics:**
-
-`;
-              for (const key of keys) {
-                const value = details[key];
-                md += `- ${key}: ${String(value)}
-`;
-              }
-              md += `
-`;
-            }
-          }
-        }
       }
     }
     try {
@@ -22506,7 +22492,7 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
         id: "chatgpt",
         name: t("provider_selection.providers.chatgpt.name"),
         description: t("provider_selection.providers.chatgpt.description"),
-        fileFormats: ["conversations.json (legacy) or conversations-XX.json files"]
+        fileFormats: [t("provider_selection.providers.chatgpt.file_formats_0")]
       });
     }
     if (registry.getAdapter("claude")) {
@@ -22514,7 +22500,10 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
         id: "claude",
         name: t("provider_selection.providers.claude.name"),
         description: t("provider_selection.providers.claude.description"),
-        fileFormats: ["conversations.json + users.json", "projects.json (optional)"]
+        fileFormats: [
+          t("provider_selection.providers.claude.file_formats_0"),
+          t("provider_selection.providers.claude.file_formats_1")
+        ]
       });
     }
     if (registry.getAdapter("lechat")) {
@@ -22522,7 +22511,7 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
         id: "lechat",
         name: t("provider_selection.providers.lechat.name"),
         description: t("provider_selection.providers.lechat.description"),
-        fileFormats: ["chat-<uuid>.json files"]
+        fileFormats: [t("provider_selection.providers.lechat.file_formats_0")]
       });
     }
     return providers;

@@ -592,34 +592,6 @@ export class IncrementalUpgradeManager {
                 const msg = opRes.result?.message || '';
                 md += `### ${opName} ${status}\n\n`;
                 if (msg) md += `${msg}\n\n`;
-
-                const details = opRes.result?.details;
-                if (details) {
-                    // Format details based on type
-                    if (Array.isArray(details)) {
-                        // Array of strings (e.g., migration results)
-                        if (details.length > 0) {
-                            for (const item of details) {
-                                if (typeof item === 'string') {
-                                    md += `${item}\n`;
-                                }
-                            }
-                            md += `\n`;
-                        }
-                    } else if (typeof details === 'object') {
-                        // Object with key-value pairs (e.g., statistics)
-                        const keys = Object.keys(details);
-                        if (keys.length > 0 && !keys.every(k => /^\d+$/.test(k))) {
-                            // Only show if not array-like keys (0, 1, 2...)
-                            md += `**Statistics:**\n\n`;
-                            for (const key of keys) {
-                                const value = details[key as keyof typeof details];
-                                md += `- ${key}: ${String(value)}\n`;
-                            }
-                            md += `\n`;
-                        }
-                    }
-                }
             }
         }
 
