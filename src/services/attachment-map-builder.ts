@@ -1,5 +1,5 @@
-import JSZip from "jszip";
 import { Logger } from "../logger";
+import { enumerateZipEntries } from "../utils/zip-loader";
 
 /**
  * Information about where an attachment file is located across multiple ZIPs
@@ -35,21 +35,18 @@ export class AttachmentMapBuilder {
      */
     async buildAttachmentMap(files: File[]): Promise<AttachmentMap> {
         const attachmentMap: AttachmentMap = new Map();
-        const JSZipModule = (await import('jszip')).default;
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
 
             try {
-                const zip = new JSZipModule();
-                const zipContent = await zip.loadAsync(file);
+                // enumerateZipEntries reads only the ZIP central directory on Electron
+                // (zero extraction cost), or falls back to JSZip.loadAsync on mobile.
+                const entries = await enumerateZipEntries(file);
 
-                // Scan all files in the ZIP
-                for (const [path, zipFile] of Object.entries(zipContent.files)) {
-                    if (zipFile.dir) continue;
-
+                for (const entry of entries) {
                     // Extract potential file IDs from the path
-                    const fileIds = this.extractFileIds(path);
+                    const fileIds = this.extractFileIds(entry.path);
 
                     for (const fileId of fileIds) {
                         if (!attachmentMap.has(fileId)) {
@@ -57,12 +54,12 @@ export class AttachmentMapBuilder {
                         }
 
                         const locations = attachmentMap.get(fileId)!;
-                        
+
                         // Add this location (will be in chronological order)
                         locations.push({
                             zipIndex: i,
-                            path: path,
-                            size: (zipFile as any)._data?.uncompressedSize || 0,
+                            path: entry.path,
+                            size: entry.size,
                             zipFileName: file.name
                         });
                     }

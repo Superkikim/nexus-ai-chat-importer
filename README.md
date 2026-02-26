@@ -28,7 +28,7 @@
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
 ### 📚 More
-- [✨ What's New](#-whats-new-in-v150) - v1.5.0 features
+- [✨ What's New](#-whats-new) - Latest changes
 - [☕ Support](#-support-my-work) - Help keep this plugin alive
 - [📜 License](#-license) - GPL-3.0
 
@@ -68,24 +68,34 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - Detailed import reports
 - Full UI localization in 10 languages
 
-### ✨ What's New in v1.5.0
+### ✨ What's New
 
-#### 🌍 Full UI Localization — 10 Languages
+#### v1.5.5 — Bug Fixes
 
-- **Automatic language detection** — the plugin UI matches your Obsidian interface language, no configuration needed
-- **10 supported languages**: English, French, German, Spanish, Italian, Russian, Chinese (Simplified), Japanese, Portuguese, Korean
-- **Complete coverage** — all dialogs, settings panels, progress modals, import notices, and status labels are translated
-- **English fallback** — any missing key gracefully falls back to English
+🐛 **Bug Fixes**
+- **ChatGPT new export format** — OpenAI split conversations across multiple numbered files
+  (`conversations-XXX.json`). Imports were silently failing. Fixed.
+- **Memory safety for large archives** — Export archives are no longer loaded entirely into
+  memory, reducing the risk of RAM saturation on very large exports.
 
-> Note: Import reports and conversation note content remain in English — only the plugin UI is localized.
+> ⚠️ The new format fix is based on community reports — not yet personally tested. Feedback
+> welcome in [issue #45](https://github.com/Superkikim/nexus-ai-chat-importer/issues/45).
 
-#### v1.4.0 in brief
+---
 
-- **🤖 Le Chat (Mistral AI)** — Full support with attachments, references, and citations
-- **💻 CLI for Bulk Import** — Import from the terminal without opening Obsidian
-- **📁 Human-readable artifact folders** — Claude artifacts stored in folders named after the conversation, not UUIDs
-- **📐 LaTeX math** — Math equations converted to Obsidian `$$...$$` / `$...$` syntax
-- **🐛 Bug fixes** — Multi-attachment callouts, Claude format changes, mobile placeholders, binary artifacts
+#### v1.5.x — Highlights
+
+✨ **New**
+- Full UI localization in 10 languages — automatic, matches your Obsidian language setting
+
+🔧 **Improved**
+- Le Chat generated images now show a proper "not included in export" callout
+- Missing attachment callouts simplified to a single clean line
+- Support links and branding updated throughout
+
+🐛 **Bug Fixes**
+- ChatGPT user-uploaded image extraction restored for multi-ZIP imports
+- Claude export format changes handled correctly
 
 ---
 

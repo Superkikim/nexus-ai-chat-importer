@@ -1,5 +1,25 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.5.5 — Bug Fixes for ChatGPT Users
+
+![Version](https://img.shields.io/badge/version-1.5.5-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+**New ChatGPT export format not recognised**
+OpenAI recently changed their export structure — conversations are now split across multiple
+numbered files (`conversations-XXX.json`) instead of a single file. The plugin didn't recognise
+this new format and failed silently, with nothing imported and no error shown. This patch adds
+support for the new format. Older exports are unaffected.
+
+**Memory safety for large archives**
+In previous versions, export archives are loaded entirely in memory. This could potentially lead
+to RAM saturation and a crash in case of an archive bigger than available RAM. This patch
+addresses this risk.
+
+> ⚠️ The new format fix is based on community reports — not yet personally tested. Feedback
+> welcome in [issue #45](https://github.com/Superkikim/nexus-ai-chat-importer/issues/45).
+
+---
+
 ## Version 1.5.4 — UI & Branding Polish
 
 ![Version](https://img.shields.io/badge/version-1.5.4-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)

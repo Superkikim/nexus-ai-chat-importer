@@ -50,6 +50,10 @@ export interface ProviderAdapter<TChat = any> {
 
   // Report naming strategy for this provider
   getReportNamingStrategy(): ReportNamingStrategy;
+
+  // Optional ZIP entry filter — return false to skip an entry during loading.
+  // If absent, all entries are included (default behaviour).
+  shouldIncludeZipEntry?(entryName: string, uncompressedSize: number): boolean;
 }
 
 export interface ProviderRegistry {

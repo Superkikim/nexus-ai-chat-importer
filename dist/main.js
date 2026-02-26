@@ -81,15 +81,19 @@ var init_en = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "OpenAI ChatGPT conversation exports"
+            description: "OpenAI ChatGPT conversation exports",
+            file_formats_0: "conversations.json (legacy) or conversations-XXX.json files"
           },
           claude: {
             name: "Claude",
-            description: "Anthropic Claude conversation exports"
+            description: "Anthropic Claude conversation exports",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json (optional)"
           },
           lechat: {
             name: "Le Chat",
-            description: "Mistral AI Le Chat conversation exports"
+            description: "Mistral AI Le Chat conversation exports",
+            file_formats_0: "chat-<uuid>.json files"
           }
         },
         buttons: {
@@ -6818,6 +6822,101 @@ var init_enhanced_folder_migration_dialog = __esm({
   }
 });
 
+// src/dialogs.ts
+function displayModal(app, title, paragraphs, note) {
+  const modal = new import_obsidian13.Modal(app);
+  modal.contentEl.addClass("nexus-ai-chat-importer-modal");
+  const titleEl = modal.contentEl.createEl("h2", {
+    text: title,
+    cls: "modal-title"
+  });
+  const contentContainer = modal.contentEl.createDiv({ cls: "modal-content" });
+  paragraphs.forEach((paragraph, paragraphIndex) => {
+    const paragraphWithSpacing = paragraph + "\n\n";
+    const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
+    const sections = paragraphWithSpacing.split("\n\n").filter((section) => section.trim() !== "");
+    sections.forEach((section, sectionIndex) => {
+      const sectionDiv = paragraphDiv.createDiv({ cls: "modal-section" });
+      const lines = section.split("\n").filter((line) => line.trim() !== "");
+      lines.forEach((line) => {
+        const lineDiv = sectionDiv.createDiv({ cls: "modal-line" });
+        let htmlContent = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        if (line.trim().endsWith(":") && line.trim().length < 30) {
+          lineDiv.innerHTML = `<strong class="section-header">${htmlContent}</strong>`;
+        } else if (line.trim().startsWith("\u2022") || line.trim().startsWith("-")) {
+          lineDiv.innerHTML = htmlContent;
+          lineDiv.addClass("modal-list-item");
+        } else {
+          lineDiv.innerHTML = htmlContent;
+        }
+      });
+      if (sectionIndex < sections.length - 1) {
+        paragraphDiv.createDiv({ cls: "modal-section-break" });
+      }
+    });
+  });
+  if (note) {
+    contentContainer.createDiv({ cls: "modal-major-break" });
+    const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
+    let noteContent = note.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    noteDiv.innerHTML = noteContent;
+  }
+  return modal;
+}
+function addButtons(modal, type, resolve, customLabels) {
+  const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+  if (type === "information") {
+    const buttonLabel = (customLabels == null ? void 0 : customLabels.button1) || "Understood";
+    const button = buttonContainer.createEl("button", {
+      text: buttonLabel,
+      cls: "mod-cta"
+      // Obsidian's primary button class
+    });
+    button.addEventListener("click", () => {
+      modal.close();
+      resolve(true);
+    });
+  } else {
+    const noLabel = (customLabels == null ? void 0 : customLabels.button2) || "No";
+    const yesLabel = (customLabels == null ? void 0 : customLabels.button1) || "Yes";
+    const noButton = buttonContainer.createEl("button", {
+      text: noLabel,
+      cls: "mod-muted"
+      // Obsidian's secondary button class
+    });
+    noButton.addEventListener("click", () => {
+      modal.close();
+      resolve(false);
+    });
+    const yesButton = buttonContainer.createEl("button", {
+      text: yesLabel,
+      cls: "mod-cta"
+      // Obsidian's primary button class
+    });
+    yesButton.addEventListener("click", () => {
+      modal.close();
+      resolve(true);
+    });
+  }
+}
+async function showDialog(app, type, title, paragraphs, note, customLabels) {
+  return new Promise((resolve) => {
+    const modal = displayModal(app, title, paragraphs, note);
+    addButtons(modal, type, resolve, customLabels);
+    modal.open();
+  });
+}
+var import_obsidian13;
+var init_dialogs = __esm({
+  "src/dialogs.ts"() {
+    "use strict";
+    import_obsidian13 = require("obsidian");
+    __name(displayModal, "displayModal");
+    __name(addButtons, "addButtons");
+    __name(showDialog, "showDialog");
+  }
+});
+
 // node_modules/jszip/dist/jszip.min.js
 var require_jszip_min = __commonJS({
   "node_modules/jszip/dist/jszip.min.js"(exports, module2) {
@@ -9609,98 +9708,1369 @@ var require_jszip_min = __commonJS({
   }
 });
 
-// src/dialogs.ts
-function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian13.Modal(app);
-  modal.contentEl.addClass("nexus-ai-chat-importer-modal");
-  const titleEl = modal.contentEl.createEl("h2", {
-    text: title,
-    cls: "modal-title"
-  });
-  const contentContainer = modal.contentEl.createDiv({ cls: "modal-content" });
-  paragraphs.forEach((paragraph, paragraphIndex) => {
-    const paragraphWithSpacing = paragraph + "\n\n";
-    const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
-    const sections = paragraphWithSpacing.split("\n\n").filter((section) => section.trim() !== "");
-    sections.forEach((section, sectionIndex) => {
-      const sectionDiv = paragraphDiv.createDiv({ cls: "modal-section" });
-      const lines = section.split("\n").filter((line) => line.trim() !== "");
-      lines.forEach((line) => {
-        const lineDiv = sectionDiv.createDiv({ cls: "modal-line" });
-        let htmlContent = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
-        if (line.trim().endsWith(":") && line.trim().length < 30) {
-          lineDiv.innerHTML = `<strong class="section-header">${htmlContent}</strong>`;
-        } else if (line.trim().startsWith("\u2022") || line.trim().startsWith("-")) {
-          lineDiv.innerHTML = htmlContent;
-          lineDiv.addClass("modal-list-item");
+// node_modules/pend/index.js
+var require_pend = __commonJS({
+  "node_modules/pend/index.js"(exports, module2) {
+    module2.exports = Pend;
+    function Pend() {
+      this.pending = 0;
+      this.max = Infinity;
+      this.listeners = [];
+      this.waiting = [];
+      this.error = null;
+    }
+    __name(Pend, "Pend");
+    Pend.prototype.go = function(fn) {
+      if (this.pending < this.max) {
+        pendGo(this, fn);
+      } else {
+        this.waiting.push(fn);
+      }
+    };
+    Pend.prototype.wait = function(cb) {
+      if (this.pending === 0) {
+        cb(this.error);
+      } else {
+        this.listeners.push(cb);
+      }
+    };
+    Pend.prototype.hold = function() {
+      return pendHold(this);
+    };
+    function pendHold(self2) {
+      self2.pending += 1;
+      var called = false;
+      return onCb;
+      function onCb(err) {
+        if (called)
+          throw new Error("callback called twice");
+        called = true;
+        self2.error = self2.error || err;
+        self2.pending -= 1;
+        if (self2.waiting.length > 0 && self2.pending < self2.max) {
+          pendGo(self2, self2.waiting.shift());
+        } else if (self2.pending === 0) {
+          var listeners = self2.listeners;
+          self2.listeners = [];
+          listeners.forEach(cbListener);
+        }
+      }
+      __name(onCb, "onCb");
+      function cbListener(listener) {
+        listener(self2.error);
+      }
+      __name(cbListener, "cbListener");
+    }
+    __name(pendHold, "pendHold");
+    function pendGo(self2, fn) {
+      fn(pendHold(self2));
+    }
+    __name(pendGo, "pendGo");
+  }
+});
+
+// node_modules/fd-slicer/index.js
+var require_fd_slicer = __commonJS({
+  "node_modules/fd-slicer/index.js"(exports) {
+    var fs = require("fs");
+    var util = require("util");
+    var stream = require("stream");
+    var Readable = stream.Readable;
+    var Writable = stream.Writable;
+    var PassThrough = stream.PassThrough;
+    var Pend = require_pend();
+    var EventEmitter = require("events").EventEmitter;
+    exports.createFromBuffer = createFromBuffer;
+    exports.createFromFd = createFromFd;
+    exports.BufferSlicer = BufferSlicer;
+    exports.FdSlicer = FdSlicer;
+    util.inherits(FdSlicer, EventEmitter);
+    function FdSlicer(fd, options) {
+      options = options || {};
+      EventEmitter.call(this);
+      this.fd = fd;
+      this.pend = new Pend();
+      this.pend.max = 1;
+      this.refCount = 0;
+      this.autoClose = !!options.autoClose;
+    }
+    __name(FdSlicer, "FdSlicer");
+    FdSlicer.prototype.read = function(buffer, offset, length, position, callback) {
+      var self2 = this;
+      self2.pend.go(function(cb) {
+        fs.read(self2.fd, buffer, offset, length, position, function(err, bytesRead, buffer2) {
+          cb();
+          callback(err, bytesRead, buffer2);
+        });
+      });
+    };
+    FdSlicer.prototype.write = function(buffer, offset, length, position, callback) {
+      var self2 = this;
+      self2.pend.go(function(cb) {
+        fs.write(self2.fd, buffer, offset, length, position, function(err, written, buffer2) {
+          cb();
+          callback(err, written, buffer2);
+        });
+      });
+    };
+    FdSlicer.prototype.createReadStream = function(options) {
+      return new ReadStream(this, options);
+    };
+    FdSlicer.prototype.createWriteStream = function(options) {
+      return new WriteStream(this, options);
+    };
+    FdSlicer.prototype.ref = function() {
+      this.refCount += 1;
+    };
+    FdSlicer.prototype.unref = function() {
+      var self2 = this;
+      self2.refCount -= 1;
+      if (self2.refCount > 0)
+        return;
+      if (self2.refCount < 0)
+        throw new Error("invalid unref");
+      if (self2.autoClose) {
+        fs.close(self2.fd, onCloseDone);
+      }
+      function onCloseDone(err) {
+        if (err) {
+          self2.emit("error", err);
         } else {
-          lineDiv.innerHTML = htmlContent;
+          self2.emit("close");
+        }
+      }
+      __name(onCloseDone, "onCloseDone");
+    };
+    util.inherits(ReadStream, Readable);
+    function ReadStream(context, options) {
+      options = options || {};
+      Readable.call(this, options);
+      this.context = context;
+      this.context.ref();
+      this.start = options.start || 0;
+      this.endOffset = options.end;
+      this.pos = this.start;
+      this.destroyed = false;
+    }
+    __name(ReadStream, "ReadStream");
+    ReadStream.prototype._read = function(n) {
+      var self2 = this;
+      if (self2.destroyed)
+        return;
+      var toRead = Math.min(self2._readableState.highWaterMark, n);
+      if (self2.endOffset != null) {
+        toRead = Math.min(toRead, self2.endOffset - self2.pos);
+      }
+      if (toRead <= 0) {
+        self2.destroyed = true;
+        self2.push(null);
+        self2.context.unref();
+        return;
+      }
+      self2.context.pend.go(function(cb) {
+        if (self2.destroyed)
+          return cb();
+        var buffer = new Buffer(toRead);
+        fs.read(self2.context.fd, buffer, 0, toRead, self2.pos, function(err, bytesRead) {
+          if (err) {
+            self2.destroy(err);
+          } else if (bytesRead === 0) {
+            self2.destroyed = true;
+            self2.push(null);
+            self2.context.unref();
+          } else {
+            self2.pos += bytesRead;
+            self2.push(buffer.slice(0, bytesRead));
+          }
+          cb();
+        });
+      });
+    };
+    ReadStream.prototype.destroy = function(err) {
+      if (this.destroyed)
+        return;
+      err = err || new Error("stream destroyed");
+      this.destroyed = true;
+      this.emit("error", err);
+      this.context.unref();
+    };
+    util.inherits(WriteStream, Writable);
+    function WriteStream(context, options) {
+      options = options || {};
+      Writable.call(this, options);
+      this.context = context;
+      this.context.ref();
+      this.start = options.start || 0;
+      this.endOffset = options.end == null ? Infinity : +options.end;
+      this.bytesWritten = 0;
+      this.pos = this.start;
+      this.destroyed = false;
+      this.on("finish", this.destroy.bind(this));
+    }
+    __name(WriteStream, "WriteStream");
+    WriteStream.prototype._write = function(buffer, encoding, callback) {
+      var self2 = this;
+      if (self2.destroyed)
+        return;
+      if (self2.pos + buffer.length > self2.endOffset) {
+        var err = new Error("maximum file length exceeded");
+        err.code = "ETOOBIG";
+        self2.destroy();
+        callback(err);
+        return;
+      }
+      self2.context.pend.go(function(cb) {
+        if (self2.destroyed)
+          return cb();
+        fs.write(self2.context.fd, buffer, 0, buffer.length, self2.pos, function(err2, bytes) {
+          if (err2) {
+            self2.destroy();
+            cb();
+            callback(err2);
+          } else {
+            self2.bytesWritten += bytes;
+            self2.pos += bytes;
+            self2.emit("progress");
+            cb();
+            callback();
+          }
+        });
+      });
+    };
+    WriteStream.prototype.destroy = function() {
+      if (this.destroyed)
+        return;
+      this.destroyed = true;
+      this.context.unref();
+    };
+    util.inherits(BufferSlicer, EventEmitter);
+    function BufferSlicer(buffer, options) {
+      EventEmitter.call(this);
+      options = options || {};
+      this.refCount = 0;
+      this.buffer = buffer;
+      this.maxChunkSize = options.maxChunkSize || Number.MAX_SAFE_INTEGER;
+    }
+    __name(BufferSlicer, "BufferSlicer");
+    BufferSlicer.prototype.read = function(buffer, offset, length, position, callback) {
+      var end = position + length;
+      var delta = end - this.buffer.length;
+      var written = delta > 0 ? delta : length;
+      this.buffer.copy(buffer, offset, position, end);
+      setImmediate(function() {
+        callback(null, written);
+      });
+    };
+    BufferSlicer.prototype.write = function(buffer, offset, length, position, callback) {
+      buffer.copy(this.buffer, position, offset, offset + length);
+      setImmediate(function() {
+        callback(null, length, buffer);
+      });
+    };
+    BufferSlicer.prototype.createReadStream = function(options) {
+      options = options || {};
+      var readStream = new PassThrough(options);
+      readStream.destroyed = false;
+      readStream.start = options.start || 0;
+      readStream.endOffset = options.end;
+      readStream.pos = readStream.endOffset || this.buffer.length;
+      var entireSlice = this.buffer.slice(readStream.start, readStream.pos);
+      var offset = 0;
+      while (true) {
+        var nextOffset = offset + this.maxChunkSize;
+        if (nextOffset >= entireSlice.length) {
+          if (offset < entireSlice.length) {
+            readStream.write(entireSlice.slice(offset, entireSlice.length));
+          }
+          break;
+        }
+        readStream.write(entireSlice.slice(offset, nextOffset));
+        offset = nextOffset;
+      }
+      readStream.end();
+      readStream.destroy = function() {
+        readStream.destroyed = true;
+      };
+      return readStream;
+    };
+    BufferSlicer.prototype.createWriteStream = function(options) {
+      var bufferSlicer = this;
+      options = options || {};
+      var writeStream = new Writable(options);
+      writeStream.start = options.start || 0;
+      writeStream.endOffset = options.end == null ? this.buffer.length : +options.end;
+      writeStream.bytesWritten = 0;
+      writeStream.pos = writeStream.start;
+      writeStream.destroyed = false;
+      writeStream._write = function(buffer, encoding, callback) {
+        if (writeStream.destroyed)
+          return;
+        var end = writeStream.pos + buffer.length;
+        if (end > writeStream.endOffset) {
+          var err = new Error("maximum file length exceeded");
+          err.code = "ETOOBIG";
+          writeStream.destroyed = true;
+          callback(err);
+          return;
+        }
+        buffer.copy(bufferSlicer.buffer, writeStream.pos, 0, buffer.length);
+        writeStream.bytesWritten += buffer.length;
+        writeStream.pos = end;
+        writeStream.emit("progress");
+        callback();
+      };
+      writeStream.destroy = function() {
+        writeStream.destroyed = true;
+      };
+      return writeStream;
+    };
+    BufferSlicer.prototype.ref = function() {
+      this.refCount += 1;
+    };
+    BufferSlicer.prototype.unref = function() {
+      this.refCount -= 1;
+      if (this.refCount < 0) {
+        throw new Error("invalid unref");
+      }
+    };
+    function createFromBuffer(buffer, options) {
+      return new BufferSlicer(buffer, options);
+    }
+    __name(createFromBuffer, "createFromBuffer");
+    function createFromFd(fd, options) {
+      return new FdSlicer(fd, options);
+    }
+    __name(createFromFd, "createFromFd");
+  }
+});
+
+// node_modules/buffer-crc32/index.js
+var require_buffer_crc32 = __commonJS({
+  "node_modules/buffer-crc32/index.js"(exports, module2) {
+    var Buffer2 = require("buffer").Buffer;
+    var CRC_TABLE = [
+      0,
+      1996959894,
+      3993919788,
+      2567524794,
+      124634137,
+      1886057615,
+      3915621685,
+      2657392035,
+      249268274,
+      2044508324,
+      3772115230,
+      2547177864,
+      162941995,
+      2125561021,
+      3887607047,
+      2428444049,
+      498536548,
+      1789927666,
+      4089016648,
+      2227061214,
+      450548861,
+      1843258603,
+      4107580753,
+      2211677639,
+      325883990,
+      1684777152,
+      4251122042,
+      2321926636,
+      335633487,
+      1661365465,
+      4195302755,
+      2366115317,
+      997073096,
+      1281953886,
+      3579855332,
+      2724688242,
+      1006888145,
+      1258607687,
+      3524101629,
+      2768942443,
+      901097722,
+      1119000684,
+      3686517206,
+      2898065728,
+      853044451,
+      1172266101,
+      3705015759,
+      2882616665,
+      651767980,
+      1373503546,
+      3369554304,
+      3218104598,
+      565507253,
+      1454621731,
+      3485111705,
+      3099436303,
+      671266974,
+      1594198024,
+      3322730930,
+      2970347812,
+      795835527,
+      1483230225,
+      3244367275,
+      3060149565,
+      1994146192,
+      31158534,
+      2563907772,
+      4023717930,
+      1907459465,
+      112637215,
+      2680153253,
+      3904427059,
+      2013776290,
+      251722036,
+      2517215374,
+      3775830040,
+      2137656763,
+      141376813,
+      2439277719,
+      3865271297,
+      1802195444,
+      476864866,
+      2238001368,
+      4066508878,
+      1812370925,
+      453092731,
+      2181625025,
+      4111451223,
+      1706088902,
+      314042704,
+      2344532202,
+      4240017532,
+      1658658271,
+      366619977,
+      2362670323,
+      4224994405,
+      1303535960,
+      984961486,
+      2747007092,
+      3569037538,
+      1256170817,
+      1037604311,
+      2765210733,
+      3554079995,
+      1131014506,
+      879679996,
+      2909243462,
+      3663771856,
+      1141124467,
+      855842277,
+      2852801631,
+      3708648649,
+      1342533948,
+      654459306,
+      3188396048,
+      3373015174,
+      1466479909,
+      544179635,
+      3110523913,
+      3462522015,
+      1591671054,
+      702138776,
+      2966460450,
+      3352799412,
+      1504918807,
+      783551873,
+      3082640443,
+      3233442989,
+      3988292384,
+      2596254646,
+      62317068,
+      1957810842,
+      3939845945,
+      2647816111,
+      81470997,
+      1943803523,
+      3814918930,
+      2489596804,
+      225274430,
+      2053790376,
+      3826175755,
+      2466906013,
+      167816743,
+      2097651377,
+      4027552580,
+      2265490386,
+      503444072,
+      1762050814,
+      4150417245,
+      2154129355,
+      426522225,
+      1852507879,
+      4275313526,
+      2312317920,
+      282753626,
+      1742555852,
+      4189708143,
+      2394877945,
+      397917763,
+      1622183637,
+      3604390888,
+      2714866558,
+      953729732,
+      1340076626,
+      3518719985,
+      2797360999,
+      1068828381,
+      1219638859,
+      3624741850,
+      2936675148,
+      906185462,
+      1090812512,
+      3747672003,
+      2825379669,
+      829329135,
+      1181335161,
+      3412177804,
+      3160834842,
+      628085408,
+      1382605366,
+      3423369109,
+      3138078467,
+      570562233,
+      1426400815,
+      3317316542,
+      2998733608,
+      733239954,
+      1555261956,
+      3268935591,
+      3050360625,
+      752459403,
+      1541320221,
+      2607071920,
+      3965973030,
+      1969922972,
+      40735498,
+      2617837225,
+      3943577151,
+      1913087877,
+      83908371,
+      2512341634,
+      3803740692,
+      2075208622,
+      213261112,
+      2463272603,
+      3855990285,
+      2094854071,
+      198958881,
+      2262029012,
+      4057260610,
+      1759359992,
+      534414190,
+      2176718541,
+      4139329115,
+      1873836001,
+      414664567,
+      2282248934,
+      4279200368,
+      1711684554,
+      285281116,
+      2405801727,
+      4167216745,
+      1634467795,
+      376229701,
+      2685067896,
+      3608007406,
+      1308918612,
+      956543938,
+      2808555105,
+      3495958263,
+      1231636301,
+      1047427035,
+      2932959818,
+      3654703836,
+      1088359270,
+      936918e3,
+      2847714899,
+      3736837829,
+      1202900863,
+      817233897,
+      3183342108,
+      3401237130,
+      1404277552,
+      615818150,
+      3134207493,
+      3453421203,
+      1423857449,
+      601450431,
+      3009837614,
+      3294710456,
+      1567103746,
+      711928724,
+      3020668471,
+      3272380065,
+      1510334235,
+      755167117
+    ];
+    if (typeof Int32Array !== "undefined") {
+      CRC_TABLE = new Int32Array(CRC_TABLE);
+    }
+    function ensureBuffer(input) {
+      if (Buffer2.isBuffer(input)) {
+        return input;
+      }
+      var hasNewBufferAPI = typeof Buffer2.alloc === "function" && typeof Buffer2.from === "function";
+      if (typeof input === "number") {
+        return hasNewBufferAPI ? Buffer2.alloc(input) : new Buffer2(input);
+      } else if (typeof input === "string") {
+        return hasNewBufferAPI ? Buffer2.from(input) : new Buffer2(input);
+      } else {
+        throw new Error("input must be buffer, number, or string, received " + typeof input);
+      }
+    }
+    __name(ensureBuffer, "ensureBuffer");
+    function bufferizeInt(num) {
+      var tmp = ensureBuffer(4);
+      tmp.writeInt32BE(num, 0);
+      return tmp;
+    }
+    __name(bufferizeInt, "bufferizeInt");
+    function _crc32(buf, previous) {
+      buf = ensureBuffer(buf);
+      if (Buffer2.isBuffer(previous)) {
+        previous = previous.readUInt32BE(0);
+      }
+      var crc = ~~previous ^ -1;
+      for (var n = 0; n < buf.length; n++) {
+        crc = CRC_TABLE[(crc ^ buf[n]) & 255] ^ crc >>> 8;
+      }
+      return crc ^ -1;
+    }
+    __name(_crc32, "_crc32");
+    function crc32() {
+      return bufferizeInt(_crc32.apply(null, arguments));
+    }
+    __name(crc32, "crc32");
+    crc32.signed = function() {
+      return _crc32.apply(null, arguments);
+    };
+    crc32.unsigned = function() {
+      return _crc32.apply(null, arguments) >>> 0;
+    };
+    module2.exports = crc32;
+  }
+});
+
+// node_modules/yauzl/index.js
+var require_yauzl = __commonJS({
+  "node_modules/yauzl/index.js"(exports) {
+    var fs = require("fs");
+    var zlib = require("zlib");
+    var fd_slicer = require_fd_slicer();
+    var crc32 = require_buffer_crc32();
+    var util = require("util");
+    var EventEmitter = require("events").EventEmitter;
+    var Transform = require("stream").Transform;
+    var PassThrough = require("stream").PassThrough;
+    var Writable = require("stream").Writable;
+    exports.open = open;
+    exports.fromFd = fromFd;
+    exports.fromBuffer = fromBuffer;
+    exports.fromRandomAccessReader = fromRandomAccessReader;
+    exports.dosDateTimeToDate = dosDateTimeToDate;
+    exports.validateFileName = validateFileName;
+    exports.ZipFile = ZipFile;
+    exports.Entry = Entry;
+    exports.RandomAccessReader = RandomAccessReader;
+    function open(path, options, callback) {
+      if (typeof options === "function") {
+        callback = options;
+        options = null;
+      }
+      if (options == null)
+        options = {};
+      if (options.autoClose == null)
+        options.autoClose = true;
+      if (options.lazyEntries == null)
+        options.lazyEntries = false;
+      if (options.decodeStrings == null)
+        options.decodeStrings = true;
+      if (options.validateEntrySizes == null)
+        options.validateEntrySizes = true;
+      if (options.strictFileNames == null)
+        options.strictFileNames = false;
+      if (callback == null)
+        callback = defaultCallback;
+      fs.open(path, "r", function(err, fd) {
+        if (err)
+          return callback(err);
+        fromFd(fd, options, function(err2, zipfile) {
+          if (err2)
+            fs.close(fd, defaultCallback);
+          callback(err2, zipfile);
+        });
+      });
+    }
+    __name(open, "open");
+    function fromFd(fd, options, callback) {
+      if (typeof options === "function") {
+        callback = options;
+        options = null;
+      }
+      if (options == null)
+        options = {};
+      if (options.autoClose == null)
+        options.autoClose = false;
+      if (options.lazyEntries == null)
+        options.lazyEntries = false;
+      if (options.decodeStrings == null)
+        options.decodeStrings = true;
+      if (options.validateEntrySizes == null)
+        options.validateEntrySizes = true;
+      if (options.strictFileNames == null)
+        options.strictFileNames = false;
+      if (callback == null)
+        callback = defaultCallback;
+      fs.fstat(fd, function(err, stats) {
+        if (err)
+          return callback(err);
+        var reader = fd_slicer.createFromFd(fd, { autoClose: true });
+        fromRandomAccessReader(reader, stats.size, options, callback);
+      });
+    }
+    __name(fromFd, "fromFd");
+    function fromBuffer(buffer, options, callback) {
+      if (typeof options === "function") {
+        callback = options;
+        options = null;
+      }
+      if (options == null)
+        options = {};
+      options.autoClose = false;
+      if (options.lazyEntries == null)
+        options.lazyEntries = false;
+      if (options.decodeStrings == null)
+        options.decodeStrings = true;
+      if (options.validateEntrySizes == null)
+        options.validateEntrySizes = true;
+      if (options.strictFileNames == null)
+        options.strictFileNames = false;
+      var reader = fd_slicer.createFromBuffer(buffer, { maxChunkSize: 65536 });
+      fromRandomAccessReader(reader, buffer.length, options, callback);
+    }
+    __name(fromBuffer, "fromBuffer");
+    function fromRandomAccessReader(reader, totalSize, options, callback) {
+      if (typeof options === "function") {
+        callback = options;
+        options = null;
+      }
+      if (options == null)
+        options = {};
+      if (options.autoClose == null)
+        options.autoClose = true;
+      if (options.lazyEntries == null)
+        options.lazyEntries = false;
+      if (options.decodeStrings == null)
+        options.decodeStrings = true;
+      var decodeStrings = !!options.decodeStrings;
+      if (options.validateEntrySizes == null)
+        options.validateEntrySizes = true;
+      if (options.strictFileNames == null)
+        options.strictFileNames = false;
+      if (callback == null)
+        callback = defaultCallback;
+      if (typeof totalSize !== "number")
+        throw new Error("expected totalSize parameter to be a number");
+      if (totalSize > Number.MAX_SAFE_INTEGER) {
+        throw new Error("zip file too large. only file sizes up to 2^52 are supported due to JavaScript's Number type being an IEEE 754 double.");
+      }
+      reader.ref();
+      var eocdrWithoutCommentSize = 22;
+      var maxCommentSize = 65535;
+      var bufferSize = Math.min(eocdrWithoutCommentSize + maxCommentSize, totalSize);
+      var buffer = newBuffer(bufferSize);
+      var bufferReadStart = totalSize - buffer.length;
+      readAndAssertNoEof(reader, buffer, 0, bufferSize, bufferReadStart, function(err) {
+        if (err)
+          return callback(err);
+        for (var i = bufferSize - eocdrWithoutCommentSize; i >= 0; i -= 1) {
+          if (buffer.readUInt32LE(i) !== 101010256)
+            continue;
+          var eocdrBuffer = buffer.slice(i);
+          var diskNumber = eocdrBuffer.readUInt16LE(4);
+          if (diskNumber !== 0) {
+            return callback(new Error("multi-disk zip files are not supported: found disk number: " + diskNumber));
+          }
+          var entryCount = eocdrBuffer.readUInt16LE(10);
+          var centralDirectoryOffset = eocdrBuffer.readUInt32LE(16);
+          var commentLength = eocdrBuffer.readUInt16LE(20);
+          var expectedCommentLength = eocdrBuffer.length - eocdrWithoutCommentSize;
+          if (commentLength !== expectedCommentLength) {
+            return callback(new Error("invalid comment length. expected: " + expectedCommentLength + ". found: " + commentLength));
+          }
+          var comment = decodeStrings ? decodeBuffer(eocdrBuffer, 22, eocdrBuffer.length, false) : eocdrBuffer.slice(22);
+          if (!(entryCount === 65535 || centralDirectoryOffset === 4294967295)) {
+            return callback(null, new ZipFile(reader, centralDirectoryOffset, totalSize, entryCount, comment, options.autoClose, options.lazyEntries, decodeStrings, options.validateEntrySizes, options.strictFileNames));
+          }
+          var zip64EocdlBuffer = newBuffer(20);
+          var zip64EocdlOffset = bufferReadStart + i - zip64EocdlBuffer.length;
+          readAndAssertNoEof(reader, zip64EocdlBuffer, 0, zip64EocdlBuffer.length, zip64EocdlOffset, function(err2) {
+            if (err2)
+              return callback(err2);
+            if (zip64EocdlBuffer.readUInt32LE(0) !== 117853008) {
+              return callback(new Error("invalid zip64 end of central directory locator signature"));
+            }
+            var zip64EocdrOffset = readUInt64LE(zip64EocdlBuffer, 8);
+            var zip64EocdrBuffer = newBuffer(56);
+            readAndAssertNoEof(reader, zip64EocdrBuffer, 0, zip64EocdrBuffer.length, zip64EocdrOffset, function(err3) {
+              if (err3)
+                return callback(err3);
+              if (zip64EocdrBuffer.readUInt32LE(0) !== 101075792) {
+                return callback(new Error("invalid zip64 end of central directory record signature"));
+              }
+              entryCount = readUInt64LE(zip64EocdrBuffer, 32);
+              centralDirectoryOffset = readUInt64LE(zip64EocdrBuffer, 48);
+              return callback(null, new ZipFile(reader, centralDirectoryOffset, totalSize, entryCount, comment, options.autoClose, options.lazyEntries, decodeStrings, options.validateEntrySizes, options.strictFileNames));
+            });
+          });
+          return;
+        }
+        callback(new Error("end of central directory record signature not found"));
+      });
+    }
+    __name(fromRandomAccessReader, "fromRandomAccessReader");
+    util.inherits(ZipFile, EventEmitter);
+    function ZipFile(reader, centralDirectoryOffset, fileSize, entryCount, comment, autoClose, lazyEntries, decodeStrings, validateEntrySizes, strictFileNames) {
+      var self2 = this;
+      EventEmitter.call(self2);
+      self2.reader = reader;
+      self2.reader.on("error", function(err) {
+        emitError(self2, err);
+      });
+      self2.reader.once("close", function() {
+        self2.emit("close");
+      });
+      self2.readEntryCursor = centralDirectoryOffset;
+      self2.fileSize = fileSize;
+      self2.entryCount = entryCount;
+      self2.comment = comment;
+      self2.entriesRead = 0;
+      self2.autoClose = !!autoClose;
+      self2.lazyEntries = !!lazyEntries;
+      self2.decodeStrings = !!decodeStrings;
+      self2.validateEntrySizes = !!validateEntrySizes;
+      self2.strictFileNames = !!strictFileNames;
+      self2.isOpen = true;
+      self2.emittedError = false;
+      if (!self2.lazyEntries)
+        self2._readEntry();
+    }
+    __name(ZipFile, "ZipFile");
+    ZipFile.prototype.close = function() {
+      if (!this.isOpen)
+        return;
+      this.isOpen = false;
+      this.reader.unref();
+    };
+    function emitErrorAndAutoClose(self2, err) {
+      if (self2.autoClose)
+        self2.close();
+      emitError(self2, err);
+    }
+    __name(emitErrorAndAutoClose, "emitErrorAndAutoClose");
+    function emitError(self2, err) {
+      if (self2.emittedError)
+        return;
+      self2.emittedError = true;
+      self2.emit("error", err);
+    }
+    __name(emitError, "emitError");
+    ZipFile.prototype.readEntry = function() {
+      if (!this.lazyEntries)
+        throw new Error("readEntry() called without lazyEntries:true");
+      this._readEntry();
+    };
+    ZipFile.prototype._readEntry = function() {
+      var self2 = this;
+      if (self2.entryCount === self2.entriesRead) {
+        setImmediate(function() {
+          if (self2.autoClose)
+            self2.close();
+          if (self2.emittedError)
+            return;
+          self2.emit("end");
+        });
+        return;
+      }
+      if (self2.emittedError)
+        return;
+      var buffer = newBuffer(46);
+      readAndAssertNoEof(self2.reader, buffer, 0, buffer.length, self2.readEntryCursor, function(err) {
+        if (err)
+          return emitErrorAndAutoClose(self2, err);
+        if (self2.emittedError)
+          return;
+        var entry = new Entry();
+        var signature = buffer.readUInt32LE(0);
+        if (signature !== 33639248)
+          return emitErrorAndAutoClose(self2, new Error("invalid central directory file header signature: 0x" + signature.toString(16)));
+        entry.versionMadeBy = buffer.readUInt16LE(4);
+        entry.versionNeededToExtract = buffer.readUInt16LE(6);
+        entry.generalPurposeBitFlag = buffer.readUInt16LE(8);
+        entry.compressionMethod = buffer.readUInt16LE(10);
+        entry.lastModFileTime = buffer.readUInt16LE(12);
+        entry.lastModFileDate = buffer.readUInt16LE(14);
+        entry.crc32 = buffer.readUInt32LE(16);
+        entry.compressedSize = buffer.readUInt32LE(20);
+        entry.uncompressedSize = buffer.readUInt32LE(24);
+        entry.fileNameLength = buffer.readUInt16LE(28);
+        entry.extraFieldLength = buffer.readUInt16LE(30);
+        entry.fileCommentLength = buffer.readUInt16LE(32);
+        entry.internalFileAttributes = buffer.readUInt16LE(36);
+        entry.externalFileAttributes = buffer.readUInt32LE(38);
+        entry.relativeOffsetOfLocalHeader = buffer.readUInt32LE(42);
+        if (entry.generalPurposeBitFlag & 64)
+          return emitErrorAndAutoClose(self2, new Error("strong encryption is not supported"));
+        self2.readEntryCursor += 46;
+        buffer = newBuffer(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
+        readAndAssertNoEof(self2.reader, buffer, 0, buffer.length, self2.readEntryCursor, function(err2) {
+          if (err2)
+            return emitErrorAndAutoClose(self2, err2);
+          if (self2.emittedError)
+            return;
+          var isUtf8 = (entry.generalPurposeBitFlag & 2048) !== 0;
+          entry.fileName = self2.decodeStrings ? decodeBuffer(buffer, 0, entry.fileNameLength, isUtf8) : buffer.slice(0, entry.fileNameLength);
+          var fileCommentStart = entry.fileNameLength + entry.extraFieldLength;
+          var extraFieldBuffer = buffer.slice(entry.fileNameLength, fileCommentStart);
+          entry.extraFields = [];
+          var i = 0;
+          while (i < extraFieldBuffer.length - 3) {
+            var headerId = extraFieldBuffer.readUInt16LE(i + 0);
+            var dataSize = extraFieldBuffer.readUInt16LE(i + 2);
+            var dataStart = i + 4;
+            var dataEnd = dataStart + dataSize;
+            if (dataEnd > extraFieldBuffer.length)
+              return emitErrorAndAutoClose(self2, new Error("extra field length exceeds extra field buffer size"));
+            var dataBuffer = newBuffer(dataSize);
+            extraFieldBuffer.copy(dataBuffer, 0, dataStart, dataEnd);
+            entry.extraFields.push({
+              id: headerId,
+              data: dataBuffer
+            });
+            i = dataEnd;
+          }
+          entry.fileComment = self2.decodeStrings ? decodeBuffer(buffer, fileCommentStart, fileCommentStart + entry.fileCommentLength, isUtf8) : buffer.slice(fileCommentStart, fileCommentStart + entry.fileCommentLength);
+          entry.comment = entry.fileComment;
+          self2.readEntryCursor += buffer.length;
+          self2.entriesRead += 1;
+          if (entry.uncompressedSize === 4294967295 || entry.compressedSize === 4294967295 || entry.relativeOffsetOfLocalHeader === 4294967295) {
+            var zip64EiefBuffer = null;
+            for (var i = 0; i < entry.extraFields.length; i++) {
+              var extraField = entry.extraFields[i];
+              if (extraField.id === 1) {
+                zip64EiefBuffer = extraField.data;
+                break;
+              }
+            }
+            if (zip64EiefBuffer == null) {
+              return emitErrorAndAutoClose(self2, new Error("expected zip64 extended information extra field"));
+            }
+            var index = 0;
+            if (entry.uncompressedSize === 4294967295) {
+              if (index + 8 > zip64EiefBuffer.length) {
+                return emitErrorAndAutoClose(self2, new Error("zip64 extended information extra field does not include uncompressed size"));
+              }
+              entry.uncompressedSize = readUInt64LE(zip64EiefBuffer, index);
+              index += 8;
+            }
+            if (entry.compressedSize === 4294967295) {
+              if (index + 8 > zip64EiefBuffer.length) {
+                return emitErrorAndAutoClose(self2, new Error("zip64 extended information extra field does not include compressed size"));
+              }
+              entry.compressedSize = readUInt64LE(zip64EiefBuffer, index);
+              index += 8;
+            }
+            if (entry.relativeOffsetOfLocalHeader === 4294967295) {
+              if (index + 8 > zip64EiefBuffer.length) {
+                return emitErrorAndAutoClose(self2, new Error("zip64 extended information extra field does not include relative header offset"));
+              }
+              entry.relativeOffsetOfLocalHeader = readUInt64LE(zip64EiefBuffer, index);
+              index += 8;
+            }
+          }
+          if (self2.decodeStrings) {
+            for (var i = 0; i < entry.extraFields.length; i++) {
+              var extraField = entry.extraFields[i];
+              if (extraField.id === 28789) {
+                if (extraField.data.length < 6) {
+                  continue;
+                }
+                if (extraField.data.readUInt8(0) !== 1) {
+                  continue;
+                }
+                var oldNameCrc32 = extraField.data.readUInt32LE(1);
+                if (crc32.unsigned(buffer.slice(0, entry.fileNameLength)) !== oldNameCrc32) {
+                  continue;
+                }
+                entry.fileName = decodeBuffer(extraField.data, 5, extraField.data.length, true);
+                break;
+              }
+            }
+          }
+          if (self2.validateEntrySizes && entry.compressionMethod === 0) {
+            var expectedCompressedSize = entry.uncompressedSize;
+            if (entry.isEncrypted()) {
+              expectedCompressedSize += 12;
+            }
+            if (entry.compressedSize !== expectedCompressedSize) {
+              var msg = "compressed/uncompressed size mismatch for stored file: " + entry.compressedSize + " != " + entry.uncompressedSize;
+              return emitErrorAndAutoClose(self2, new Error(msg));
+            }
+          }
+          if (self2.decodeStrings) {
+            if (!self2.strictFileNames) {
+              entry.fileName = entry.fileName.replace(/\\/g, "/");
+            }
+            var errorMessage = validateFileName(entry.fileName, self2.validateFileNameOptions);
+            if (errorMessage != null)
+              return emitErrorAndAutoClose(self2, new Error(errorMessage));
+          }
+          self2.emit("entry", entry);
+          if (!self2.lazyEntries)
+            self2._readEntry();
+        });
+      });
+    };
+    ZipFile.prototype.openReadStream = function(entry, options, callback) {
+      var self2 = this;
+      var relativeStart = 0;
+      var relativeEnd = entry.compressedSize;
+      if (callback == null) {
+        callback = options;
+        options = {};
+      } else {
+        if (options.decrypt != null) {
+          if (!entry.isEncrypted()) {
+            throw new Error("options.decrypt can only be specified for encrypted entries");
+          }
+          if (options.decrypt !== false)
+            throw new Error("invalid options.decrypt value: " + options.decrypt);
+          if (entry.isCompressed()) {
+            if (options.decompress !== false)
+              throw new Error("entry is encrypted and compressed, and options.decompress !== false");
+          }
+        }
+        if (options.decompress != null) {
+          if (!entry.isCompressed()) {
+            throw new Error("options.decompress can only be specified for compressed entries");
+          }
+          if (!(options.decompress === false || options.decompress === true)) {
+            throw new Error("invalid options.decompress value: " + options.decompress);
+          }
+        }
+        if (options.start != null || options.end != null) {
+          if (entry.isCompressed() && options.decompress !== false) {
+            throw new Error("start/end range not allowed for compressed entry without options.decompress === false");
+          }
+          if (entry.isEncrypted() && options.decrypt !== false) {
+            throw new Error("start/end range not allowed for encrypted entry without options.decrypt === false");
+          }
+        }
+        if (options.start != null) {
+          relativeStart = options.start;
+          if (relativeStart < 0)
+            throw new Error("options.start < 0");
+          if (relativeStart > entry.compressedSize)
+            throw new Error("options.start > entry.compressedSize");
+        }
+        if (options.end != null) {
+          relativeEnd = options.end;
+          if (relativeEnd < 0)
+            throw new Error("options.end < 0");
+          if (relativeEnd > entry.compressedSize)
+            throw new Error("options.end > entry.compressedSize");
+          if (relativeEnd < relativeStart)
+            throw new Error("options.end < options.start");
+        }
+      }
+      if (!self2.isOpen)
+        return callback(new Error("closed"));
+      if (entry.isEncrypted()) {
+        if (options.decrypt !== false)
+          return callback(new Error("entry is encrypted, and options.decrypt !== false"));
+      }
+      self2.reader.ref();
+      var buffer = newBuffer(30);
+      readAndAssertNoEof(self2.reader, buffer, 0, buffer.length, entry.relativeOffsetOfLocalHeader, function(err) {
+        try {
+          if (err)
+            return callback(err);
+          var signature = buffer.readUInt32LE(0);
+          if (signature !== 67324752) {
+            return callback(new Error("invalid local file header signature: 0x" + signature.toString(16)));
+          }
+          var fileNameLength = buffer.readUInt16LE(26);
+          var extraFieldLength = buffer.readUInt16LE(28);
+          var localFileHeaderEnd = entry.relativeOffsetOfLocalHeader + buffer.length + fileNameLength + extraFieldLength;
+          var decompress;
+          if (entry.compressionMethod === 0) {
+            decompress = false;
+          } else if (entry.compressionMethod === 8) {
+            decompress = options.decompress != null ? options.decompress : true;
+          } else {
+            return callback(new Error("unsupported compression method: " + entry.compressionMethod));
+          }
+          var fileDataStart = localFileHeaderEnd;
+          var fileDataEnd = fileDataStart + entry.compressedSize;
+          if (entry.compressedSize !== 0) {
+            if (fileDataEnd > self2.fileSize) {
+              return callback(new Error("file data overflows file bounds: " + fileDataStart + " + " + entry.compressedSize + " > " + self2.fileSize));
+            }
+          }
+          var readStream = self2.reader.createReadStream({
+            start: fileDataStart + relativeStart,
+            end: fileDataStart + relativeEnd
+          });
+          var endpointStream = readStream;
+          if (decompress) {
+            var destroyed = false;
+            var inflateFilter = zlib.createInflateRaw();
+            readStream.on("error", function(err2) {
+              setImmediate(function() {
+                if (!destroyed)
+                  inflateFilter.emit("error", err2);
+              });
+            });
+            readStream.pipe(inflateFilter);
+            if (self2.validateEntrySizes) {
+              endpointStream = new AssertByteCountStream(entry.uncompressedSize);
+              inflateFilter.on("error", function(err2) {
+                setImmediate(function() {
+                  if (!destroyed)
+                    endpointStream.emit("error", err2);
+                });
+              });
+              inflateFilter.pipe(endpointStream);
+            } else {
+              endpointStream = inflateFilter;
+            }
+            endpointStream.destroy = function() {
+              destroyed = true;
+              if (inflateFilter !== endpointStream)
+                inflateFilter.unpipe(endpointStream);
+              readStream.unpipe(inflateFilter);
+              readStream.destroy();
+            };
+          }
+          callback(null, endpointStream);
+        } finally {
+          self2.reader.unref();
         }
       });
-      if (sectionIndex < sections.length - 1) {
-        paragraphDiv.createDiv({ cls: "modal-section-break" });
+    };
+    function Entry() {
+    }
+    __name(Entry, "Entry");
+    Entry.prototype.getLastModDate = function() {
+      return dosDateTimeToDate(this.lastModFileDate, this.lastModFileTime);
+    };
+    Entry.prototype.isEncrypted = function() {
+      return (this.generalPurposeBitFlag & 1) !== 0;
+    };
+    Entry.prototype.isCompressed = function() {
+      return this.compressionMethod === 8;
+    };
+    function dosDateTimeToDate(date, time) {
+      var day = date & 31;
+      var month = (date >> 5 & 15) - 1;
+      var year = (date >> 9 & 127) + 1980;
+      var millisecond = 0;
+      var second = (time & 31) * 2;
+      var minute = time >> 5 & 63;
+      var hour = time >> 11 & 31;
+      return new Date(year, month, day, hour, minute, second, millisecond);
+    }
+    __name(dosDateTimeToDate, "dosDateTimeToDate");
+    function validateFileName(fileName) {
+      if (fileName.indexOf("\\") !== -1) {
+        return "invalid characters in fileName: " + fileName;
       }
-    });
-  });
-  if (note) {
-    contentContainer.createDiv({ cls: "modal-major-break" });
-    const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
-    let noteContent = note.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
-    noteDiv.innerHTML = noteContent;
-  }
-  return modal;
-}
-function addButtons(modal, type, resolve, customLabels) {
-  const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-  if (type === "information") {
-    const buttonLabel = (customLabels == null ? void 0 : customLabels.button1) || "Understood";
-    const button = buttonContainer.createEl("button", {
-      text: buttonLabel,
-      cls: "mod-cta"
-      // Obsidian's primary button class
-    });
-    button.addEventListener("click", () => {
-      modal.close();
-      resolve(true);
-    });
-  } else {
-    const noLabel = (customLabels == null ? void 0 : customLabels.button2) || "No";
-    const yesLabel = (customLabels == null ? void 0 : customLabels.button1) || "Yes";
-    const noButton = buttonContainer.createEl("button", {
-      text: noLabel,
-      cls: "mod-muted"
-      // Obsidian's secondary button class
-    });
-    noButton.addEventListener("click", () => {
-      modal.close();
-      resolve(false);
-    });
-    const yesButton = buttonContainer.createEl("button", {
-      text: yesLabel,
-      cls: "mod-cta"
-      // Obsidian's primary button class
-    });
-    yesButton.addEventListener("click", () => {
-      modal.close();
-      resolve(true);
-    });
-  }
-}
-async function showDialog(app, type, title, paragraphs, note, customLabels) {
-  return new Promise((resolve) => {
-    const modal = displayModal(app, title, paragraphs, note);
-    addButtons(modal, type, resolve, customLabels);
-    modal.open();
-  });
-}
-var import_obsidian13;
-var init_dialogs = __esm({
-  "src/dialogs.ts"() {
-    "use strict";
-    import_obsidian13 = require("obsidian");
-    __name(displayModal, "displayModal");
-    __name(addButtons, "addButtons");
-    __name(showDialog, "showDialog");
+      if (/^[a-zA-Z]:/.test(fileName) || /^\//.test(fileName)) {
+        return "absolute path: " + fileName;
+      }
+      if (fileName.split("/").indexOf("..") !== -1) {
+        return "invalid relative path: " + fileName;
+      }
+      return null;
+    }
+    __name(validateFileName, "validateFileName");
+    function readAndAssertNoEof(reader, buffer, offset, length, position, callback) {
+      if (length === 0) {
+        return setImmediate(function() {
+          callback(null, newBuffer(0));
+        });
+      }
+      reader.read(buffer, offset, length, position, function(err, bytesRead) {
+        if (err)
+          return callback(err);
+        if (bytesRead < length) {
+          return callback(new Error("unexpected EOF"));
+        }
+        callback();
+      });
+    }
+    __name(readAndAssertNoEof, "readAndAssertNoEof");
+    util.inherits(AssertByteCountStream, Transform);
+    function AssertByteCountStream(byteCount) {
+      Transform.call(this);
+      this.actualByteCount = 0;
+      this.expectedByteCount = byteCount;
+    }
+    __name(AssertByteCountStream, "AssertByteCountStream");
+    AssertByteCountStream.prototype._transform = function(chunk, encoding, cb) {
+      this.actualByteCount += chunk.length;
+      if (this.actualByteCount > this.expectedByteCount) {
+        var msg = "too many bytes in the stream. expected " + this.expectedByteCount + ". got at least " + this.actualByteCount;
+        return cb(new Error(msg));
+      }
+      cb(null, chunk);
+    };
+    AssertByteCountStream.prototype._flush = function(cb) {
+      if (this.actualByteCount < this.expectedByteCount) {
+        var msg = "not enough bytes in the stream. expected " + this.expectedByteCount + ". got only " + this.actualByteCount;
+        return cb(new Error(msg));
+      }
+      cb();
+    };
+    util.inherits(RandomAccessReader, EventEmitter);
+    function RandomAccessReader() {
+      EventEmitter.call(this);
+      this.refCount = 0;
+    }
+    __name(RandomAccessReader, "RandomAccessReader");
+    RandomAccessReader.prototype.ref = function() {
+      this.refCount += 1;
+    };
+    RandomAccessReader.prototype.unref = function() {
+      var self2 = this;
+      self2.refCount -= 1;
+      if (self2.refCount > 0)
+        return;
+      if (self2.refCount < 0)
+        throw new Error("invalid unref");
+      self2.close(onCloseDone);
+      function onCloseDone(err) {
+        if (err)
+          return self2.emit("error", err);
+        self2.emit("close");
+      }
+      __name(onCloseDone, "onCloseDone");
+    };
+    RandomAccessReader.prototype.createReadStream = function(options) {
+      var start = options.start;
+      var end = options.end;
+      if (start === end) {
+        var emptyStream = new PassThrough();
+        setImmediate(function() {
+          emptyStream.end();
+        });
+        return emptyStream;
+      }
+      var stream = this._readStreamForRange(start, end);
+      var destroyed = false;
+      var refUnrefFilter = new RefUnrefFilter(this);
+      stream.on("error", function(err) {
+        setImmediate(function() {
+          if (!destroyed)
+            refUnrefFilter.emit("error", err);
+        });
+      });
+      refUnrefFilter.destroy = function() {
+        stream.unpipe(refUnrefFilter);
+        refUnrefFilter.unref();
+        stream.destroy();
+      };
+      var byteCounter = new AssertByteCountStream(end - start);
+      refUnrefFilter.on("error", function(err) {
+        setImmediate(function() {
+          if (!destroyed)
+            byteCounter.emit("error", err);
+        });
+      });
+      byteCounter.destroy = function() {
+        destroyed = true;
+        refUnrefFilter.unpipe(byteCounter);
+        refUnrefFilter.destroy();
+      };
+      return stream.pipe(refUnrefFilter).pipe(byteCounter);
+    };
+    RandomAccessReader.prototype._readStreamForRange = function(start, end) {
+      throw new Error("not implemented");
+    };
+    RandomAccessReader.prototype.read = function(buffer, offset, length, position, callback) {
+      var readStream = this.createReadStream({ start: position, end: position + length });
+      var writeStream = new Writable();
+      var written = 0;
+      writeStream._write = function(chunk, encoding, cb) {
+        chunk.copy(buffer, offset + written, 0, chunk.length);
+        written += chunk.length;
+        cb();
+      };
+      writeStream.on("finish", callback);
+      readStream.on("error", function(error) {
+        callback(error);
+      });
+      readStream.pipe(writeStream);
+    };
+    RandomAccessReader.prototype.close = function(callback) {
+      setImmediate(callback);
+    };
+    util.inherits(RefUnrefFilter, PassThrough);
+    function RefUnrefFilter(context) {
+      PassThrough.call(this);
+      this.context = context;
+      this.context.ref();
+      this.unreffedYet = false;
+    }
+    __name(RefUnrefFilter, "RefUnrefFilter");
+    RefUnrefFilter.prototype._flush = function(cb) {
+      this.unref();
+      cb();
+    };
+    RefUnrefFilter.prototype.unref = function(cb) {
+      if (this.unreffedYet)
+        return;
+      this.unreffedYet = true;
+      this.context.unref();
+    };
+    var cp437 = "\0\u263A\u263B\u2665\u2666\u2663\u2660\u2022\u25D8\u25CB\u25D9\u2642\u2640\u266A\u266B\u263C\u25BA\u25C4\u2195\u203C\xB6\xA7\u25AC\u21A8\u2191\u2193\u2192\u2190\u221F\u2194\u25B2\u25BC !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u2302\xC7\xFC\xE9\xE2\xE4\xE0\xE5\xE7\xEA\xEB\xE8\xEF\xEE\xEC\xC4\xC5\xC9\xE6\xC6\xF4\xF6\xF2\xFB\xF9\xFF\xD6\xDC\xA2\xA3\xA5\u20A7\u0192\xE1\xED\xF3\xFA\xF1\xD1\xAA\xBA\xBF\u2310\xAC\xBD\xBC\xA1\xAB\xBB\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255D\u255C\u255B\u2510\u2514\u2534\u252C\u251C\u2500\u253C\u255E\u255F\u255A\u2554\u2569\u2566\u2560\u2550\u256C\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256B\u256A\u2518\u250C\u2588\u2584\u258C\u2590\u2580\u03B1\xDF\u0393\u03C0\u03A3\u03C3\xB5\u03C4\u03A6\u0398\u03A9\u03B4\u221E\u03C6\u03B5\u2229\u2261\xB1\u2265\u2264\u2320\u2321\xF7\u2248\xB0\u2219\xB7\u221A\u207F\xB2\u25A0\xA0";
+    function decodeBuffer(buffer, start, end, isUtf8) {
+      if (isUtf8) {
+        return buffer.toString("utf8", start, end);
+      } else {
+        var result = "";
+        for (var i = start; i < end; i++) {
+          result += cp437[buffer[i]];
+        }
+        return result;
+      }
+    }
+    __name(decodeBuffer, "decodeBuffer");
+    function readUInt64LE(buffer, offset) {
+      var lower32 = buffer.readUInt32LE(offset);
+      var upper32 = buffer.readUInt32LE(offset + 4);
+      return upper32 * 4294967296 + lower32;
+    }
+    __name(readUInt64LE, "readUInt64LE");
+    var newBuffer;
+    if (typeof Buffer.allocUnsafe === "function") {
+      newBuffer = /* @__PURE__ */ __name(function(len) {
+        return Buffer.allocUnsafe(len);
+      }, "newBuffer");
+    } else {
+      newBuffer = /* @__PURE__ */ __name(function(len) {
+        return new Buffer(len);
+      }, "newBuffer");
+    }
+    function defaultCallback(err) {
+      if (err)
+        throw err;
+    }
+    __name(defaultCallback, "defaultCallback");
   }
 });
 
@@ -13199,7 +14569,18 @@ var init_upgrade_complete_modal = __esm({
         this.addStyles();
       }
       async addReleaseNotes() {
-        let content = `## \u2728 What's New in v1.5.0
+        let content = `## \u2728 What's New in v1.5.5
+
+**New ChatGPT export format** \u2014 OpenAI split conversations across multiple numbered files
+(\`conversations-XXX.json\`). Imports were silently failing. This version adds full support
+for the new format. Older exports remain unaffected.
+
+**Memory-safe ZIP loading** \u2014 Export archives are no longer loaded entirely into memory,
+reducing the risk of RAM saturation on very large exports.
+
+---
+
+## v1.5.0 \u2014 UI Localization
 
 ### \u{1F30D} Full UI Localization \u2014 10 Languages
 
@@ -14259,7 +15640,6 @@ __name(EventHandlers, "EventHandlers");
 
 // src/services/import-service.ts
 var import_obsidian17 = require("obsidian");
-var import_jszip = __toESM(require_jszip_min());
 init_utils();
 init_dialogs();
 
@@ -16710,6 +18090,14 @@ var BaseProviderAdapter = class {
     }
     return processedMessages;
   }
+  /**
+   * Default ZIP entry filter — include everything.
+   * Provider subclasses may override to skip large unwanted entries
+   * (e.g. ChatGPT voice-recording DAT files) before they are loaded into RAM.
+   */
+  shouldIncludeZipEntry(_entryName, _uncompressedSize) {
+    return true;
+  }
 };
 __name(BaseProviderAdapter, "BaseProviderAdapter");
 
@@ -16794,6 +18182,50 @@ var ChatGPTAdapter = class extends BaseProviderAdapter {
       }
     }
     return newMessages;
+  }
+  /**
+   * ChatGPT-specific ZIP entry filter.
+   *
+   * ChatGPT exports can contain gigabytes of voice-recording files (.dat)
+   * and audio/video files that are NOT user-uploaded attachments. Loading
+   * them into RAM via JSZip would cause Electron to OOM-crash on large exports.
+   *
+   * Rules (first match wins):
+   *  1. Small files (<1 MB) — always keep (JSON, metadata, tiny assets)
+   *  2. User-uploaded attachments (basename starts with file- or file_) — keep
+   *  3. Audio / video extensions — skip
+   *  4. .dat files not matching user-attachment pattern — skip (voice recordings)
+   *  5. Everything else — keep
+   */
+  shouldIncludeZipEntry(entryName, uncompressedSize) {
+    var _a;
+    if (uncompressedSize < 1 * 1024 * 1024)
+      return true;
+    const baseName = (_a = entryName.split("/").pop()) != null ? _a : entryName;
+    const ext = baseName.includes(".") ? baseName.split(".").pop().toLowerCase() : "";
+    const USER_ATTACHMENT = /^file[-_][A-Za-z0-9]/;
+    if (USER_ATTACHMENT.test(baseName))
+      return true;
+    const AUDIO_VIDEO = /* @__PURE__ */ new Set([
+      "mp3",
+      "m4a",
+      "mp4",
+      "webm",
+      "ogg",
+      "aac",
+      "wav",
+      "flac",
+      "opus",
+      "wma",
+      "mov",
+      "avi",
+      "mkv"
+    ]);
+    if (AUDIO_VIDEO.has(ext))
+      return false;
+    if (ext === "dat")
+      return false;
+    return true;
   }
   /**
    * Provide ChatGPT-specific attachment extractor
@@ -19006,6 +20438,146 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
 };
 __name(ImportProgressModal, "ImportProgressModal");
 
+// src/utils/zip-loader.ts
+var import_jszip = __toESM(require_jszip_min());
+function streamToBuffer(stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on("data", (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
+  });
+}
+__name(streamToBuffer, "streamToBuffer");
+function openYauzl(filePath) {
+  return new Promise((resolve, reject) => {
+    const yauzl = require_yauzl();
+    yauzl.open(filePath, { lazyEntries: true, autoClose: false }, (err, zipfile) => {
+      if (err)
+        reject(err);
+      else
+        resolve(zipfile);
+    });
+  });
+}
+__name(openYauzl, "openYauzl");
+function openEntryStream(zipfile, entry) {
+  return new Promise((resolve, reject) => {
+    zipfile.openReadStream(entry, (err, stream) => {
+      if (err)
+        reject(err);
+      else
+        resolve(stream);
+    });
+  });
+}
+__name(openEntryStream, "openEntryStream");
+async function loadZipSelective(file, shouldInclude) {
+  const filePath = file.path;
+  if (!filePath) {
+    const zip = new import_jszip.default();
+    return zip.loadAsync(file);
+  }
+  const resultZip = new import_jszip.default();
+  let zipfile;
+  try {
+    zipfile = await openYauzl(filePath);
+  } catch (e) {
+    const zip = new import_jszip.default();
+    return zip.loadAsync(file);
+  }
+  await new Promise((resolve, reject) => {
+    zipfile.on("error", (err) => {
+      zipfile.close();
+      reject(err);
+    });
+    zipfile.on("end", () => {
+      zipfile.close();
+      resolve();
+    });
+    zipfile.on("entry", async (entry) => {
+      try {
+        if (shouldInclude && !shouldInclude(entry.fileName, entry.uncompressedSize)) {
+          zipfile.readEntry();
+          return;
+        }
+        if (entry.fileName.endsWith("/")) {
+          resultZip.folder(entry.fileName.slice(0, -1));
+          zipfile.readEntry();
+          return;
+        }
+        const stream = await openEntryStream(zipfile, entry);
+        const buffer = await streamToBuffer(stream);
+        resultZip.file(entry.fileName, buffer, {
+          date: entry.getLastModDate ? entry.getLastModDate() : new Date()
+        });
+        zipfile.readEntry();
+      } catch (entryErr) {
+        console.warn(
+          `[zip-loader] Skipping entry "${entry.fileName}": ${entryErr}`
+        );
+        zipfile.readEntry();
+      }
+    });
+    zipfile.readEntry();
+  });
+  return resultZip;
+}
+__name(loadZipSelective, "loadZipSelective");
+async function enumerateZipEntries(file) {
+  const filePath = file.path;
+  if (!filePath) {
+    const zip = new import_jszip.default();
+    const content = await zip.loadAsync(file);
+    return Object.entries(content.files).filter(([, f]) => !f.dir).map(([path, f]) => {
+      var _a, _b;
+      return {
+        path,
+        size: (_b = (_a = f._data) == null ? void 0 : _a.uncompressedSize) != null ? _b : 0
+      };
+    });
+  }
+  const entries = [];
+  let zipfile;
+  try {
+    zipfile = await openYauzl(filePath);
+  } catch (e) {
+    const zip = new import_jszip.default();
+    const content = await zip.loadAsync(file);
+    return Object.entries(content.files).filter(([, f]) => !f.dir).map(([path, f]) => {
+      var _a, _b;
+      return {
+        path,
+        size: (_b = (_a = f._data) == null ? void 0 : _a.uncompressedSize) != null ? _b : 0
+      };
+    });
+  }
+  await new Promise((resolve, reject) => {
+    zipfile.on("error", (err) => {
+      zipfile.close();
+      reject(err);
+    });
+    zipfile.on("end", () => {
+      zipfile.close();
+      resolve();
+    });
+    zipfile.on("entry", (entry) => {
+      if (!entry.fileName.endsWith("/")) {
+        entries.push({
+          path: entry.fileName,
+          size: entry.uncompressedSize
+        });
+      }
+      zipfile.readEntry();
+    });
+    zipfile.readEntry();
+  });
+  return entries;
+}
+__name(enumerateZipEntries, "enumerateZipEntries");
+
 // src/services/attachment-map-builder.ts
 var AttachmentMapBuilder = class {
   constructor(logger6) {
@@ -19016,18 +20588,13 @@ var AttachmentMapBuilder = class {
    * Processes ZIPs in order (oldest to newest) so newer versions are at the end
    */
   async buildAttachmentMap(files) {
-    var _a;
     const attachmentMap = /* @__PURE__ */ new Map();
-    const JSZipModule = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
-        const zip = new JSZipModule();
-        const zipContent = await zip.loadAsync(file);
-        for (const [path, zipFile] of Object.entries(zipContent.files)) {
-          if (zipFile.dir)
-            continue;
-          const fileIds = this.extractFileIds(path);
+        const entries = await enumerateZipEntries(file);
+        for (const entry of entries) {
+          const fileIds = this.extractFileIds(entry.path);
           for (const fileId of fileIds) {
             if (!attachmentMap.has(fileId)) {
               attachmentMap.set(fileId, []);
@@ -19035,8 +20602,8 @@ var AttachmentMapBuilder = class {
             const locations = attachmentMap.get(fileId);
             locations.push({
               zipIndex: i,
-              path,
-              size: ((_a = zipFile._data) == null ? void 0 : _a.uncompressedSize) || 0,
+              path: entry.path,
+              size: entry.size,
               zipFileName: file.name
             });
           }
@@ -19519,9 +21086,11 @@ Do NOT extract and re-compress the file - just rename it!`;
     }
   }
   async validateZipFile(file, forcedProvider) {
+    var _a;
     try {
-      const zip = new import_jszip.default();
-      const content = await zip.loadAsync(file);
+      const adapter = forcedProvider ? this.providerRegistry.getAdapter(forcedProvider) : void 0;
+      const entryFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
+      const content = await loadZipSelective(file, entryFilter);
       const fileNames = Object.keys(content.files);
       const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
       const hasGeminiActivityJson = geminiJsonFiles.length > 0;
@@ -19548,15 +21117,16 @@ Do NOT extract and re-compress the file - just rename it!`;
             );
           }
         } else {
-          if (!fileNames.includes("conversations.json")) {
+          const hasConversations = fileNames.includes("conversations.json") || fileNames.some((n) => /^conversations-\d+\.json$/.test(n));
+          if (!hasConversations) {
             throw new NexusAiChatImporterError(
               "Invalid ZIP structure",
-              `Missing required file: conversations.json for ${forcedProvider} provider.`
+              `Missing required file: conversations.json (or conversations-XX.json files) for ${forcedProvider} provider.`
             );
           }
         }
       } else {
-        const hasConversationsJson = fileNames.includes("conversations.json");
+        const hasConversationsJson = fileNames.includes("conversations.json") || fileNames.some((n) => /^conversations-\d+\.json$/.test(n));
         const hasUsersJson = fileNames.includes("users.json");
         const hasProjectsJson = fileNames.includes("projects.json");
         const hasLeChatFiles = fileNames.some((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
@@ -19572,7 +21142,7 @@ Do NOT extract and re-compress the file - just rename it!`;
           );
         }
       }
-      return zip;
+      return content;
     } catch (error) {
       if (error instanceof NexusAiChatImporterError) {
         throw error;
@@ -19733,6 +21303,40 @@ Do NOT extract and re-compress the file - just rename it!`;
         );
       }
     }
+    const numberedConvFiles = fileNames.filter((n) => /^conversations-\d+\.json$/.test(n)).sort();
+    if (numberedConvFiles.length > 0) {
+      const conversations = [];
+      let totalUncompressedBytes = 0;
+      for (const fileName of numberedConvFiles) {
+        const f = zip.file(fileName);
+        if (!f)
+          continue;
+        const json = await f.async("string");
+        totalUncompressedBytes += json.length;
+        for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
+          conversations.push(conv);
+        }
+      }
+      if (conversations.length === 0) {
+        throw new NexusAiChatImporterError(
+          "No conversations found",
+          "The numbered conversations files (conversations-XX.json) are all empty."
+        );
+      }
+      let archiveModeDecision;
+      if (typeof zipSizeBytes === "number") {
+        archiveModeDecision = decideArchiveMode({
+          zipSizeBytes,
+          conversationsUncompressedBytes: totalUncompressedBytes
+        });
+        if (archiveModeDecision.mode === "large-archive") {
+          this.plugin.logger.info(
+            `Large archive detected for numbered conversations (reason: ${archiveModeDecision.reason}, files=${numberedConvFiles.length}, uncompressedBytesTotal=${totalUncompressedBytes})`
+          );
+        }
+      }
+      return { conversations, archiveModeDecision };
+    }
     const conversationsFile = zip.file("conversations.json");
     if (!conversationsFile) {
       throw new NexusAiChatImporterError(
@@ -19830,16 +21434,17 @@ Do NOT extract and re-compress the file - just rename it!`;
    * Build attachment map for multi-ZIP import
    * Opens all ZIPs and scans for available attachments
    */
-  async buildAttachmentMapForMultiZip(files) {
+  async buildAttachmentMapForMultiZip(files, provider) {
+    var _a;
     try {
+      const adapter = provider ? this.providerRegistry.getAdapter(provider) : void 0;
+      const entryFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
       this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMap(files);
-      const JSZipModule = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
       this.currentZips = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         try {
-          const zip = new JSZipModule();
-          const zipContent = await zip.loadAsync(file);
+          const zipContent = await loadZipSelective(file, entryFilter);
           this.currentZips.push(zipContent);
         } catch (error) {
           this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
@@ -20527,7 +22132,7 @@ var IncrementalUpgradeManager = class {
    * Write a consolidated upgrade report per run
    */
   async writeUpgradeReport(fromVersion, toVersion, upgradeChain, result) {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d;
     const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
     const upgradesFolder = `${reportRoot}/Upgrades`;
     const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
@@ -20595,35 +22200,6 @@ var IncrementalUpgradeManager = class {
           md += `${msg}
 
 `;
-        const details = (_e = opRes.result) == null ? void 0 : _e.details;
-        if (details) {
-          if (Array.isArray(details)) {
-            if (details.length > 0) {
-              for (const item of details) {
-                if (typeof item === "string") {
-                  md += `${item}
-`;
-                }
-              }
-              md += `
-`;
-            }
-          } else if (typeof details === "object") {
-            const keys = Object.keys(details);
-            if (keys.length > 0 && !keys.every((k) => /^\d+$/.test(k))) {
-              md += `**Statistics:**
-
-`;
-              for (const key of keys) {
-                const value = details[key];
-                md += `- ${key}: ${String(value)}
-`;
-              }
-              md += `
-`;
-            }
-          }
-        }
       }
     }
     try {
@@ -20916,7 +22492,7 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
         id: "chatgpt",
         name: t("provider_selection.providers.chatgpt.name"),
         description: t("provider_selection.providers.chatgpt.description"),
-        fileFormats: ["conversations.json only"]
+        fileFormats: [t("provider_selection.providers.chatgpt.file_formats_0")]
       });
     }
     if (registry.getAdapter("claude")) {
@@ -20924,7 +22500,10 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
         id: "claude",
         name: t("provider_selection.providers.claude.name"),
         description: t("provider_selection.providers.claude.description"),
-        fileFormats: ["conversations.json + users.json", "projects.json (optional)"]
+        fileFormats: [
+          t("provider_selection.providers.claude.file_formats_0"),
+          t("provider_selection.providers.claude.file_formats_1")
+        ]
       });
     }
     if (registry.getAdapter("lechat")) {
@@ -20932,7 +22511,7 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
         id: "lechat",
         name: t("provider_selection.providers.lechat.name"),
         description: t("provider_selection.providers.lechat.description"),
-        fileFormats: ["chat-<uuid>.json files"]
+        fileFormats: [t("provider_selection.providers.lechat.file_formats_0")]
       });
     }
     return providers;
@@ -22516,6 +24095,23 @@ var ConversationMetadataExtractor = class {
         throw new Error("Invalid Gemini My Activity JSON structure in ZIP archive");
       }
     }
+    const numberedConvFiles = Object.keys(zip.files).filter((n) => /^conversations-\d+\.json$/.test(n)).sort();
+    if (numberedConvFiles.length > 0) {
+      const conversations = [];
+      for (const fileName of numberedConvFiles) {
+        const f = zip.file(fileName);
+        if (!f)
+          continue;
+        const json = await f.async("string");
+        for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
+          conversations.push(conv);
+        }
+      }
+      if (conversations.length === 0) {
+        throw new Error("No conversations found in numbered conversations files (conversations-XX.json)");
+      }
+      return conversations;
+    }
     const conversationsFile = zip.file("conversations.json");
     if (!conversationsFile) {
       throw new Error("Missing conversations.json file, chat-{uuid}.json files, or Gemini My Activity JSON in ZIP archive");
@@ -23430,7 +25026,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         }
       });
       if (provider === "chatgpt" && files.length > 1) {
-        await this.importService.buildAttachmentMapForMultiZip(files);
+        await this.importService.buildAttachmentMapForMultiZip(files, provider);
       }
       for (const file of files) {
         const conversationsForFile = conversationsByFile.get(file.name);
@@ -23533,7 +25129,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     if (provider === "chatgpt" && files.length > 1) {
       try {
-        await this.importService.buildAttachmentMapForMultiZip(files);
+        await this.importService.buildAttachmentMapForMultiZip(files, provider);
       } catch (error) {
         this.logger.error("Failed to build attachment map:", error);
         new import_obsidian32.Notice(t("notices.attachment_map_failed"));

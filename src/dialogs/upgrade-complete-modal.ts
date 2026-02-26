@@ -69,8 +69,19 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     private async addReleaseNotes() {
-        // Fallback content for v1.5.0
-        let content = `## ✨ What's New in v1.5.0
+        // Fallback content (updated for v1.5.5)
+        let content = `## ✨ What's New in v1.5.5
+
+**New ChatGPT export format** — OpenAI split conversations across multiple numbered files
+(\`conversations-XXX.json\`). Imports were silently failing. This version adds full support
+for the new format. Older exports remain unaffected.
+
+**Memory-safe ZIP loading** — Export archives are no longer loaded entirely into memory,
+reducing the risk of RAM saturation on very large exports.
+
+---
+
+## v1.5.0 — UI Localization
 
 ### 🌍 Full UI Localization — 10 Languages
 

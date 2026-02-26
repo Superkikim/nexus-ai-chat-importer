@@ -54,7 +54,7 @@ export class ProviderSelectionDialog extends Modal {
                 id: "chatgpt",
                 name: t('provider_selection.providers.chatgpt.name'),
                 description: t('provider_selection.providers.chatgpt.description'),
-                fileFormats: ["conversations.json only"]
+                fileFormats: [t('provider_selection.providers.chatgpt.file_formats_0')]
             });
         }
 
@@ -64,7 +64,10 @@ export class ProviderSelectionDialog extends Modal {
                 id: "claude",
                 name: t('provider_selection.providers.claude.name'),
                 description: t('provider_selection.providers.claude.description'),
-                fileFormats: ["conversations.json + users.json", "projects.json (optional)"]
+                fileFormats: [
+                    t('provider_selection.providers.claude.file_formats_0'),
+                    t('provider_selection.providers.claude.file_formats_1')
+                ]
             });
         }
 
@@ -74,7 +77,7 @@ export class ProviderSelectionDialog extends Modal {
                 id: "lechat",
                 name: t('provider_selection.providers.lechat.name'),
                 description: t('provider_selection.providers.lechat.description'),
-                fileFormats: ["chat-<uuid>.json files"]
+                fileFormats: [t('provider_selection.providers.lechat.file_formats_0')]
             });
         }
 
