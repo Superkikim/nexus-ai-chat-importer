@@ -1,6 +1,6 @@
 {
     "name": "nexus-ai-chat-importer",
-    "version": "1.5.5",
+    "version": "1.5.6",
     "description": "Import AI conversations from ChatGPT, Claude, and Le Chat exports into your Obsidian vault.",
     "main": "main.js",
     "scripts": {
