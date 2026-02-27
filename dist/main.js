@@ -5587,6 +5587,9 @@ async function doesFilePathExist(filePath, vault) {
   return file !== null;
 }
 async function getFileHash(file) {
+  if (!file.path) {
+    return `mobile:${file.name}:${file.size}:${file.lastModified}`;
+  }
   const buffer = await file.arrayBuffer();
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -20672,11 +20675,6 @@ __name(enumerateZipEntriesMobile, "enumerateZipEntriesMobile");
 async function loadZipSelective(file, shouldInclude) {
   const filePath = file.path;
   if (!filePath) {
-    const MOBILE_JSZIP_THRESHOLD = 500 * 1024 * 1024;
-    if (file.size < MOBILE_JSZIP_THRESHOLD) {
-      const zip = new import_jszip.default();
-      return zip.loadAsync(file);
-    }
     try {
       return await loadZipSelectiveMobile(file, shouldInclude);
     } catch (e) {
@@ -21218,7 +21216,9 @@ Do NOT extract and re-compress the file - just rename it!`;
         title: "Validating ZIP structure...",
         detail: "Checking file format and contents"
       });
+      console.log(`[NexusAI] validateZipFile start: ${file.name} (${file.size} bytes, mobile=${!file.path})`);
       const zip = await this.validateZipFile(file, forcedProvider);
+      console.log(`[NexusAI] validateZipFile done: ${Object.keys(zip.files).length} entries`);
       let isReprocess = false;
       let fileHash = "";
       if (!isSharedReport) {
@@ -21227,7 +21227,9 @@ Do NOT extract and re-compress the file - just rename it!`;
           title: "Validating file...",
           detail: "Checking file hash and import history"
         });
+        console.log(`[NexusAI] getFileHash start (legacy, mobile=${!file.path})`);
         fileHash = await getFileHash(file);
+        console.log(`[NexusAI] getFileHash done: ${fileHash.substring(0, 16)}...`);
         const foundByHash = storage.isArchiveImported(fileHash);
         const foundByName = storage.isArchiveImported(file.name);
         isReprocess = foundByHash || foundByName;
@@ -21253,9 +21255,12 @@ Do NOT extract and re-compress the file - just rename it!`;
           progressModal.open();
         }
       } else {
+        console.log(`[NexusAI] getFileHash start (shared, mobile=${!file.path})`);
         fileHash = await getFileHash(file);
+        console.log(`[NexusAI] getFileHash done`);
       }
       processingStarted = true;
+      console.log(`[NexusAI] processConversations start`);
       await this.processConversations(
         zip,
         file,
@@ -24583,10 +24588,12 @@ var ConversationMetadataExtractor = class {
             `Metadata extraction: large archive detected for ${file.name} (reason: ${archiveModeDecision.reason}, size=${file.size})`
           );
         }
+        console.log(`[NexusAI] metadata-extractor: loading ${file.name} (${file.size} bytes, mobile=${!file.path})`);
         const zipContent = await loadZipSelective(
           file,
           (entryName) => entryName.endsWith(".json")
         );
+        console.log(`[NexusAI] metadata-extractor: ZIP loaded \u2014 ${Object.keys(zipContent.files).length} JSON entries`);
         const metadata = await this.extractMetadataFromZip(
           zipContent,
           forcedProvider,

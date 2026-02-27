@@ -427,12 +427,11 @@ async function enumerateZipEntriesMobile(
  * On Electron desktop (File.path available): uses yauzl streaming — only the
  * central directory and selected entries are read from disk.
  *
- * On mobile/browser (no File.path):
- *   • Files < 500 MB  → JSZip.loadAsync (one contiguous read, lower overhead).
- *   • Files ≥ 500 MB  → File.slice random access — only the central directory
- *     and kept entries are read from disk (avoids OOM on 2 GB+ archives).
- *   Falls back to JSZip.loadAsync when ZIP64 format is detected or
- *   DecompressionStream is unavailable (legacy WebView).
+ * On mobile/browser (no File.path): uses File.slice random access — only the
+ * central directory and kept entries are read from disk. The shouldInclude
+ * filter is always respected, keeping peak RAM proportional to kept content.
+ * Falls back to JSZip.loadAsync when ZIP64 format is detected or
+ * DecompressionStream is unavailable (legacy WebView).
  *
  * The returned JSZip instance is API-compatible with what JSZip.loadAsync
  * would have returned. Callers using zip.files, zip.file(name), and
@@ -450,17 +449,11 @@ export async function loadZipSelective(
 ): Promise<JSZip> {
     const filePath: string | undefined = (file as any).path;
 
-    // Mobile / browser path
+    // Mobile / browser path — always use File.slice selective loader.
+    // JSZip.loadAsync(file) ignores the shouldInclude filter and loads all
+    // entries into memory, defeating memory-safety regardless of archive size.
+    // File.slice respects the filter so peak RAM is proportional to kept content.
     if (!filePath) {
-        // Below the threshold, JSZip.loadAsync is faster: a single contiguous read
-        // avoids the per-entry WKWebView IPC overhead of File.slice (~5-10 ms each).
-        // 500 MB keeps peak RAM well below the iOS/Android WebView process limit (~1.5 GB).
-        const MOBILE_JSZIP_THRESHOLD = 500 * 1024 * 1024; // 500 MB
-        if (file.size < MOBILE_JSZIP_THRESHOLD) {
-            const zip = new JSZip();
-            return zip.loadAsync(file);
-        }
-        // Large archive (≥ 500 MB): use File.slice selective loader to avoid OOM.
         try {
             return await loadZipSelectiveMobile(file, shouldInclude);
         } catch {

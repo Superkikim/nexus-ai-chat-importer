@@ -207,6 +207,14 @@ export async function doesFilePathExist(
 }
 
 export async function getFileHash(file: File): Promise<string> {
+    // On mobile (no file.path), loading the entire raw ZIP via file.arrayBuffer()
+    // for SHA-256 computation causes an OOM kill on large archives.
+    // A composite key of name + size + lastModified is sufficiently unique
+    // for archive-level dedup. The "mobile:" prefix ensures no collision
+    // with existing SHA-256 hex strings stored from desktop imports.
+    if (!(file as any).path) {
+        return `mobile:${file.name}:${file.size}:${file.lastModified}`;
+    }
     const buffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
