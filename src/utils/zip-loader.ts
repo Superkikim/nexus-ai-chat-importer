@@ -364,30 +364,47 @@ async function loadZipSelectiveMobile(
     file: File,
     shouldInclude?: (entryName: string, uncompressedSize: number) => boolean
 ): Promise<JSZip> {
+    // eslint-disable-next-line no-console
+    console.log(`[NexusAI] loadZipSelectiveMobile: findEOCD start (${file.size} bytes)`);
     const eocd = await findEOCD(file);
     if (!eocd)
         throw new Error(
             "[zip-loader] ZIP64 or invalid ZIP — using JSZip fallback"
         );
+    // eslint-disable-next-line no-console
+    console.log(`[NexusAI] loadZipSelectiveMobile: EOCD found — cdOffset=${eocd.cdOffset} cdSize=${eocd.cdSize} entries=${eocd.entryCount}`);
 
     const entries = await parseCentralDirectory(
         file,
         eocd.cdOffset,
         eocd.cdSize
     );
+    // eslint-disable-next-line no-console
+    console.log(`[NexusAI] loadZipSelectiveMobile: CD parsed — ${entries.length} non-dir entries`);
+
     const resultZip = new JSZip();
+    let included = 0;
+    let skipped = 0;
 
     for (const entry of entries) {
         if (
             shouldInclude &&
             !shouldInclude(entry.name, entry.uncompressedSize)
         ) {
+            skipped++;
             continue; // Skip — zero bytes read from disk for this entry
         }
+        included++;
+        // eslint-disable-next-line no-console
+        console.log(`[NexusAI] decompressEntry: "${entry.name}" compressed=${entry.compressedSize} uncompressed=${entry.uncompressedSize}`);
         const data = await decompressEntry(file, entry);
+        // eslint-disable-next-line no-console
+        console.log(`[NexusAI] decompressEntry: "${entry.name}" done — ${data.byteLength} bytes`);
         resultZip.file(entry.name, data);
     }
 
+    // eslint-disable-next-line no-console
+    console.log(`[NexusAI] loadZipSelectiveMobile: done — included=${included} skipped=${skipped}`);
     return resultZip;
 }
 
@@ -456,8 +473,10 @@ export async function loadZipSelective(
     if (!filePath) {
         try {
             return await loadZipSelectiveMobile(file, shouldInclude);
-        } catch {
+        } catch (mobileErr) {
             // ZIP64 or DecompressionStream unavailable — fall back to JSZip (pre-1.5.6 behaviour)
+            // eslint-disable-next-line no-console
+            console.error(`[NexusAI] loadZipSelectiveMobile failed, falling back to JSZip:`, mobileErr);
             const zip = new JSZip();
             return zip.loadAsync(file);
         }

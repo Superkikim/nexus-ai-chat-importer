@@ -20637,24 +20637,34 @@ async function decompressEntry(file, entry) {
 }
 __name(decompressEntry, "decompressEntry");
 async function loadZipSelectiveMobile(file, shouldInclude) {
+  console.log(`[NexusAI] loadZipSelectiveMobile: findEOCD start (${file.size} bytes)`);
   const eocd = await findEOCD(file);
   if (!eocd)
     throw new Error(
       "[zip-loader] ZIP64 or invalid ZIP \u2014 using JSZip fallback"
     );
+  console.log(`[NexusAI] loadZipSelectiveMobile: EOCD found \u2014 cdOffset=${eocd.cdOffset} cdSize=${eocd.cdSize} entries=${eocd.entryCount}`);
   const entries = await parseCentralDirectory(
     file,
     eocd.cdOffset,
     eocd.cdSize
   );
+  console.log(`[NexusAI] loadZipSelectiveMobile: CD parsed \u2014 ${entries.length} non-dir entries`);
   const resultZip = new import_jszip.default();
+  let included = 0;
+  let skipped = 0;
   for (const entry of entries) {
     if (shouldInclude && !shouldInclude(entry.name, entry.uncompressedSize)) {
+      skipped++;
       continue;
     }
+    included++;
+    console.log(`[NexusAI] decompressEntry: "${entry.name}" compressed=${entry.compressedSize} uncompressed=${entry.uncompressedSize}`);
     const data = await decompressEntry(file, entry);
+    console.log(`[NexusAI] decompressEntry: "${entry.name}" done \u2014 ${data.byteLength} bytes`);
     resultZip.file(entry.name, data);
   }
+  console.log(`[NexusAI] loadZipSelectiveMobile: done \u2014 included=${included} skipped=${skipped}`);
   return resultZip;
 }
 __name(loadZipSelectiveMobile, "loadZipSelectiveMobile");
@@ -20677,7 +20687,8 @@ async function loadZipSelective(file, shouldInclude) {
   if (!filePath) {
     try {
       return await loadZipSelectiveMobile(file, shouldInclude);
-    } catch (e) {
+    } catch (mobileErr) {
+      console.error(`[NexusAI] loadZipSelectiveMobile failed, falling back to JSZip:`, mobileErr);
       const zip = new import_jszip.default();
       return zip.loadAsync(file);
     }
@@ -24651,6 +24662,7 @@ var ConversationMetadataExtractor = class {
         });
       } catch (error) {
         logger.error(`Error extracting metadata from ${file.name}:`, error);
+        console.error(`[NexusAI] metadata-extractor FAILED for ${file.name}:`, error instanceof Error ? error.message : error);
       }
     }
     const filterResult = this.filterConversationsForSelection(
