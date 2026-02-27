@@ -78,7 +78,9 @@ function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
                 Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as string)
             );
         });
-        stream.on("end", () => resolve(Buffer.concat(chunks)));
+        stream.on("end", () =>
+            resolve(Buffer.concat(chunks as unknown as Uint8Array[]))
+        );
         stream.on("error", reject);
     });
 }
@@ -119,14 +121,26 @@ function openEntryStream(
 // Mobile helpers (File.slice / Web API)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Read a byte range from a File without loading the whole file. */
-async function readSlice(
+/**
+ * Read a byte range from a File without loading the whole file.
+ *
+ * Uses FileReader instead of Blob.arrayBuffer() because FileReader is the
+ * older, more widely supported API — Blob.arrayBuffer() can silently stall
+ * in Obsidian's WKWebView (iOS) context and never resolve its Promise.
+ */
+function readSlice(
     file: File,
     start: number,
     length: number
 ): Promise<ArrayBuffer> {
-    if (length <= 0) return new ArrayBuffer(0);
-    return file.slice(start, start + length).arrayBuffer();
+    if (length <= 0) return Promise.resolve(new ArrayBuffer(0));
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as ArrayBuffer);
+        reader.onerror = () =>
+            reject(reader.error ?? new Error("[zip-loader] FileReader error"));
+        reader.readAsArrayBuffer(file.slice(start, start + length));
+    });
 }
 
 /**
@@ -413,10 +427,12 @@ async function enumerateZipEntriesMobile(
  * On Electron desktop (File.path available): uses yauzl streaming — only the
  * central directory and selected entries are read from disk.
  *
- * On mobile/browser (no File.path): uses File.slice random access — only the
- * central directory and kept entries are read from disk. Falls back to
- * JSZip.loadAsync when ZIP64 format is detected or DecompressionStream is
- * unavailable (legacy WebView).
+ * On mobile/browser (no File.path):
+ *   • Files < 500 MB  → JSZip.loadAsync (one contiguous read, lower overhead).
+ *   • Files ≥ 500 MB  → File.slice random access — only the central directory
+ *     and kept entries are read from disk (avoids OOM on 2 GB+ archives).
+ *   Falls back to JSZip.loadAsync when ZIP64 format is detected or
+ *   DecompressionStream is unavailable (legacy WebView).
  *
  * The returned JSZip instance is API-compatible with what JSZip.loadAsync
  * would have returned. Callers using zip.files, zip.file(name), and
@@ -434,8 +450,17 @@ export async function loadZipSelective(
 ): Promise<JSZip> {
     const filePath: string | undefined = (file as any).path;
 
-    // Mobile / browser path — use File.slice selective loader
+    // Mobile / browser path
     if (!filePath) {
+        // Below the threshold, JSZip.loadAsync is faster: a single contiguous read
+        // avoids the per-entry WKWebView IPC overhead of File.slice (~5-10 ms each).
+        // 500 MB keeps peak RAM well below the iOS/Android WebView process limit (~1.5 GB).
+        const MOBILE_JSZIP_THRESHOLD = 500 * 1024 * 1024; // 500 MB
+        if (file.size < MOBILE_JSZIP_THRESHOLD) {
+            const zip = new JSZip();
+            return zip.loadAsync(file);
+        }
+        // Large archive (≥ 500 MB): use File.slice selective loader to avoid OOM.
         try {
             return await loadZipSelectiveMobile(file, shouldInclude);
         } catch {
@@ -489,7 +514,7 @@ export async function loadZipSelective(
                 const stream = await openEntryStream(zipfile, entry);
                 const buffer = await streamToBuffer(stream);
 
-                resultZip.file(entry.fileName, buffer, {
+                resultZip.file(entry.fileName, new Uint8Array(buffer), {
                     date: entry.getLastModDate
                         ? entry.getLastModDate()
                         : new Date(),

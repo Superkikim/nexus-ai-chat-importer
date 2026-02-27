@@ -20448,7 +20448,10 @@ function streamToBuffer(stream) {
         Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
       );
     });
-    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on(
+      "end",
+      () => resolve(Buffer.concat(chunks))
+    );
     stream.on("error", reject);
   });
 }
@@ -20483,10 +20486,18 @@ function openEntryStream(zipfile, entry) {
   });
 }
 __name(openEntryStream, "openEntryStream");
-async function readSlice(file, start, length) {
+function readSlice(file, start, length) {
   if (length <= 0)
-    return new ArrayBuffer(0);
-  return file.slice(start, start + length).arrayBuffer();
+    return Promise.resolve(new ArrayBuffer(0));
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => {
+      var _a;
+      return reject((_a = reader.error) != null ? _a : new Error("[zip-loader] FileReader error"));
+    };
+    reader.readAsArrayBuffer(file.slice(start, start + length));
+  });
 }
 __name(readSlice, "readSlice");
 async function findEOCD(file) {
@@ -20661,6 +20672,11 @@ __name(enumerateZipEntriesMobile, "enumerateZipEntriesMobile");
 async function loadZipSelective(file, shouldInclude) {
   const filePath = file.path;
   if (!filePath) {
+    const MOBILE_JSZIP_THRESHOLD = 500 * 1024 * 1024;
+    if (file.size < MOBILE_JSZIP_THRESHOLD) {
+      const zip = new import_jszip.default();
+      return zip.loadAsync(file);
+    }
     try {
       return await loadZipSelectiveMobile(file, shouldInclude);
     } catch (e) {
@@ -20698,7 +20714,7 @@ async function loadZipSelective(file, shouldInclude) {
         }
         const stream = await openEntryStream(zipfile, entry);
         const buffer = await streamToBuffer(stream);
-        resultZip.file(entry.fileName, buffer, {
+        resultZip.file(entry.fileName, new Uint8Array(buffer), {
           date: entry.getLastModDate ? entry.getLastModDate() : new Date()
         });
         zipfile.readEntry();
