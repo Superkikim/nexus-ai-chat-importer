@@ -24583,9 +24583,10 @@ var ConversationMetadataExtractor = class {
             `Metadata extraction: large archive detected for ${file.name} (reason: ${archiveModeDecision.reason}, size=${file.size})`
           );
         }
-        const JSZip2 = (await Promise.resolve().then(() => __toESM(require_jszip_min()))).default;
-        const zip = new JSZip2();
-        const zipContent = await zip.loadAsync(file);
+        const zipContent = await loadZipSelective(
+          file,
+          (entryName) => entryName.endsWith(".json")
+        );
         const metadata = await this.extractMetadataFromZip(
           zipContent,
           forcedProvider,
