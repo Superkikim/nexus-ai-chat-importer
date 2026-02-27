@@ -20444,7 +20444,9 @@ function streamToBuffer(stream) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     stream.on("data", (chunk) => {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      chunks.push(
+        Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+      );
     });
     stream.on("end", () => resolve(Buffer.concat(chunks)));
     stream.on("error", reject);
@@ -20454,31 +20456,217 @@ __name(streamToBuffer, "streamToBuffer");
 function openYauzl(filePath) {
   return new Promise((resolve, reject) => {
     const yauzl = require_yauzl();
-    yauzl.open(filePath, { lazyEntries: true, autoClose: false }, (err, zipfile) => {
-      if (err)
-        reject(err);
-      else
-        resolve(zipfile);
-    });
+    yauzl.open(
+      filePath,
+      { lazyEntries: true, autoClose: false },
+      (err, zipfile) => {
+        if (err)
+          reject(err);
+        else
+          resolve(zipfile);
+      }
+    );
   });
 }
 __name(openYauzl, "openYauzl");
 function openEntryStream(zipfile, entry) {
   return new Promise((resolve, reject) => {
-    zipfile.openReadStream(entry, (err, stream) => {
-      if (err)
-        reject(err);
-      else
-        resolve(stream);
-    });
+    zipfile.openReadStream(
+      entry,
+      (err, stream) => {
+        if (err)
+          reject(err);
+        else
+          resolve(stream);
+      }
+    );
   });
 }
 __name(openEntryStream, "openEntryStream");
+async function readSlice(file, start, length) {
+  if (length <= 0)
+    return new ArrayBuffer(0);
+  return file.slice(start, start + length).arrayBuffer();
+}
+__name(readSlice, "readSlice");
+async function findEOCD(file) {
+  const searchSize = Math.min(65557, file.size);
+  const buffer = await readSlice(file, file.size - searchSize, searchSize);
+  const view = new DataView(buffer);
+  for (let i = buffer.byteLength - 22; i >= 0; i--) {
+    if (view.getUint32(i, true) !== 101010256)
+      continue;
+    const entryCount = view.getUint16(i + 10, true);
+    const cdSize = view.getUint32(i + 12, true);
+    const cdOffset = view.getUint32(i + 16, true);
+    if (cdOffset === 4294967295 || entryCount === 65535 || cdSize === 4294967295) {
+      return null;
+    }
+    return { cdOffset, cdSize, entryCount };
+  }
+  return null;
+}
+__name(findEOCD, "findEOCD");
+async function parseCentralDirectory(file, cdOffset, cdSize) {
+  const buffer = await readSlice(file, cdOffset, cdSize);
+  const view = new DataView(buffer);
+  const decoder = new TextDecoder("utf-8");
+  const entries = [];
+  let pos = 0;
+  while (pos + 46 <= buffer.byteLength) {
+    if (view.getUint32(pos, true) !== 33639248)
+      break;
+    const compressionMethod = view.getUint16(pos + 10, true);
+    const compressedSize32 = view.getUint32(pos + 20, true);
+    const uncompressedSize32 = view.getUint32(pos + 24, true);
+    const nameLength = view.getUint16(pos + 28, true);
+    const extraLength = view.getUint16(pos + 30, true);
+    const commentLength = view.getUint16(pos + 32, true);
+    const localHeaderOffset32 = view.getUint32(pos + 42, true);
+    const nameBytes = new Uint8Array(buffer, pos + 46, nameLength);
+    const name = decoder.decode(nameBytes);
+    let compressedSize = compressedSize32;
+    let uncompressedSize = uncompressedSize32;
+    let localHeaderOffset = localHeaderOffset32;
+    if (extraLength > 0) {
+      const extraStart = pos + 46 + nameLength;
+      let extraPos = 0;
+      while (extraPos + 4 <= extraLength) {
+        const headerId = view.getUint16(extraStart + extraPos, true);
+        const dataSize = view.getUint16(
+          extraStart + extraPos + 2,
+          true
+        );
+        if (headerId === 1 && dataSize >= 8) {
+          let z64Pos = extraStart + extraPos + 4;
+          if (uncompressedSize32 === 4294967295 && z64Pos + 8 <= extraStart + extraPos + 4 + dataSize) {
+            uncompressedSize = Number(
+              view.getBigUint64(z64Pos, true)
+            );
+            z64Pos += 8;
+          }
+          if (compressedSize32 === 4294967295 && z64Pos + 8 <= extraStart + extraPos + 4 + dataSize) {
+            compressedSize = Number(
+              view.getBigUint64(z64Pos, true)
+            );
+            z64Pos += 8;
+          }
+          if (localHeaderOffset32 === 4294967295 && z64Pos + 8 <= extraStart + extraPos + 4 + dataSize) {
+            localHeaderOffset = Number(
+              view.getBigUint64(z64Pos, true)
+            );
+          }
+        }
+        extraPos += 4 + dataSize;
+      }
+    }
+    if (!name.endsWith("/")) {
+      entries.push({
+        name,
+        compressionMethod,
+        compressedSize,
+        uncompressedSize,
+        localHeaderOffset
+      });
+    }
+    pos += 46 + nameLength + extraLength + commentLength;
+  }
+  return entries;
+}
+__name(parseCentralDirectory, "parseCentralDirectory");
+async function decompressEntry(file, entry) {
+  if (entry.compressedSize === 0)
+    return new Uint8Array(0);
+  const localHeader = await readSlice(file, entry.localHeaderOffset, 30);
+  const localView = new DataView(localHeader);
+  if (localView.getUint32(0, true) !== 67324752) {
+    throw new Error(
+      `[zip-loader] Invalid local file header for "${entry.name}"`
+    );
+  }
+  const localNameLen = localView.getUint16(26, true);
+  const localExtraLen = localView.getUint16(28, true);
+  const dataOffset = entry.localHeaderOffset + 30 + localNameLen + localExtraLen;
+  const compressedData = await readSlice(
+    file,
+    dataOffset,
+    entry.compressedSize
+  );
+  if (entry.compressionMethod === 0) {
+    return new Uint8Array(compressedData);
+  }
+  if (entry.compressionMethod === 8) {
+    if (typeof DecompressionStream === "undefined") {
+      throw new Error("[zip-loader] DecompressionStream unavailable");
+    }
+    const ds = new DecompressionStream("deflate-raw");
+    const writer = ds.writable.getWriter();
+    const reader = ds.readable.getReader();
+    await writer.write(new Uint8Array(compressedData));
+    await writer.close();
+    const chunks = [];
+    for (let result2 = await reader.read(); !result2.done; result2 = await reader.read()) {
+      chunks.push(result2.value);
+    }
+    const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
+  }
+  throw new Error(
+    `[zip-loader] Unsupported compression method ${entry.compressionMethod} for "${entry.name}"`
+  );
+}
+__name(decompressEntry, "decompressEntry");
+async function loadZipSelectiveMobile(file, shouldInclude) {
+  const eocd = await findEOCD(file);
+  if (!eocd)
+    throw new Error(
+      "[zip-loader] ZIP64 or invalid ZIP \u2014 using JSZip fallback"
+    );
+  const entries = await parseCentralDirectory(
+    file,
+    eocd.cdOffset,
+    eocd.cdSize
+  );
+  const resultZip = new import_jszip.default();
+  for (const entry of entries) {
+    if (shouldInclude && !shouldInclude(entry.name, entry.uncompressedSize)) {
+      continue;
+    }
+    const data = await decompressEntry(file, entry);
+    resultZip.file(entry.name, data);
+  }
+  return resultZip;
+}
+__name(loadZipSelectiveMobile, "loadZipSelectiveMobile");
+async function enumerateZipEntriesMobile(file) {
+  const eocd = await findEOCD(file);
+  if (!eocd)
+    throw new Error(
+      "[zip-loader] ZIP64 or invalid ZIP \u2014 using JSZip fallback"
+    );
+  const entries = await parseCentralDirectory(
+    file,
+    eocd.cdOffset,
+    eocd.cdSize
+  );
+  return entries.map((e) => ({ path: e.name, size: e.uncompressedSize }));
+}
+__name(enumerateZipEntriesMobile, "enumerateZipEntriesMobile");
 async function loadZipSelective(file, shouldInclude) {
   const filePath = file.path;
   if (!filePath) {
-    const zip = new import_jszip.default();
-    return zip.loadAsync(file);
+    try {
+      return await loadZipSelectiveMobile(file, shouldInclude);
+    } catch (e) {
+      const zip = new import_jszip.default();
+      return zip.loadAsync(file);
+    }
   }
   const resultZip = new import_jszip.default();
   let zipfile;
@@ -20529,15 +20717,19 @@ __name(loadZipSelective, "loadZipSelective");
 async function enumerateZipEntries(file) {
   const filePath = file.path;
   if (!filePath) {
-    const zip = new import_jszip.default();
-    const content = await zip.loadAsync(file);
-    return Object.entries(content.files).filter(([, f]) => !f.dir).map(([path, f]) => {
-      var _a, _b;
-      return {
-        path,
-        size: (_b = (_a = f._data) == null ? void 0 : _a.uncompressedSize) != null ? _b : 0
-      };
-    });
+    try {
+      return await enumerateZipEntriesMobile(file);
+    } catch (e) {
+      const zip = new import_jszip.default();
+      const content = await zip.loadAsync(file);
+      return Object.entries(content.files).filter(([, f]) => !f.dir).map(([path, f]) => {
+        var _a, _b;
+        return {
+          path,
+          size: (_b = (_a = f._data) == null ? void 0 : _a.uncompressedSize) != null ? _b : 0
+        };
+      });
+    }
   }
   const entries = [];
   let zipfile;
