@@ -468,6 +468,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                         console.error(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
                         // Continue with other files even if one fails
                     }
+                    // Yield to GC before processing the next file.
+                    // On mobile (WKWebView/JavaScriptCore), the decompressed JSON string
+                    // and parsed conversation objects from this file are still in the heap
+                    // immediately after handleZipFile returns. Without a yield, the next
+                    // file's validateZipFile can trigger OOM before the GC has a chance
+                    // to free that memory. 50ms is enough for one GC cycle on iOS.
+                    // eslint-disable-next-line no-console
+                    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] GC yield before next file`);
+                    await new Promise<void>(resolve => setTimeout(resolve, 50));
                 } else {
                     // eslint-disable-next-line no-console
                     console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] Skipping ${file.name} — no conversations to import`);
@@ -640,6 +649,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     console.error(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
                     new Notice(t('notices.import_error_file', { filename: file.name }));
                 }
+                // Yield to GC before next file (see handleImportAll for rationale)
+                // eslint-disable-next-line no-console
+                console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] GC yield before next file`);
+                await new Promise<void>(resolve => setTimeout(resolve, 50));
             } else {
                 // eslint-disable-next-line no-console
                 console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Skipping ${file.name} — no conversations to import`);

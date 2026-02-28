@@ -21691,6 +21691,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       this.importReport.setFileCounters(
         this.conversationProcessor.getCounters()
       );
+      rawConversations.length = 0;
       progressCallback == null ? void 0 : progressCallback({
         phase: "writing",
         title: "Finalizing import...",
@@ -25359,6 +25360,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
             this.logger.error(`Error processing file ${file.name}:`, error);
             console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
           }
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] GC yield before next file`);
+          await new Promise((resolve) => setTimeout(resolve, 50));
         } else {
           console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] Skipping ${file.name} \u2014 no conversations to import`);
         }
@@ -25478,6 +25481,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
           new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
         }
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] GC yield before next file`);
+        await new Promise((resolve) => setTimeout(resolve, 50));
       } else {
         console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Skipping ${file.name} \u2014 no conversations to import`);
       }

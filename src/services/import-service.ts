@@ -538,6 +538,11 @@ export class ImportService {
                 this.conversationProcessor.getCounters()
             );
 
+            // Release the large array immediately after processing — the GC can then
+            // collect the conversation objects (and any still-retained JSON strings)
+            // before the caller allocates memory for the next ZIP file.
+            rawConversations.length = 0;
+
             progressCallback?.({
                 phase: 'writing',
                 title: 'Finalizing import...',
