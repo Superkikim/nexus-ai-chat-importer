@@ -306,14 +306,23 @@ export class ImportService {
                 : "An unknown error occurred";
 
             this.plugin.logger.error("Error handling zip file", { message });
+            // eslint-disable-next-line no-console
+            console.error(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleZipFile] FAILED ${file.name}: ${message}`);
 
             progressModal.close();
-            await showDialog(
-                this.plugin.app,
-                "information",
-                "Import failed",
-                [message, "Please check the import report for more details."]
-            );
+            if (isSharedReport) {
+                // Multi-file mode: don't block with a dialog — record error and continue
+                sharedReport!.addError(`Skipped: ${file.name}`, message);
+                new Notice(`Skipped ${file.name}: ${message}`, 6000);
+            } else {
+                // Single-file mode: show blocking dialog as before
+                await showDialog(
+                    this.plugin.app,
+                    "information",
+                    "Import failed",
+                    [message, "Please check the import report for more details."]
+                );
+            }
         } finally {
             // Only write report if processing actually started AND this is NOT a shared report
             // (shared reports are written by the caller after all files are processed)
@@ -669,20 +678,46 @@ export class ImportService {
             const entryFilter = adapter?.shouldIncludeZipEntry?.bind(adapter);
 
             // Build the attachment map
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [attachmap] Building attachment map: ${files.length} files, provider=${provider ?? 'auto'}`);
             this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMap(files);
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [attachmap] Attachment map built: ${this.currentAttachmentMap?.size ?? 0} entries`);
 
-            // Open all ZIPs for later access
+            // Open all ZIPs for later access (mobile: use LazyZip to avoid OOM)
             this.currentZips = [];
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
+                const isMobile = !(file as any).path;
                 try {
-                    const zipContent = await loadZipSelective(file, entryFilter);
+                    // eslint-disable-next-line no-console
+                    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [attachmap] [${i + 1}/${files.length}] Opening ${file.name} (${(file.size / 1024 / 1024).toFixed(0)} MB, mobile=${isMobile})`);
+                    let zipContent: JSZip;
+                    if (isMobile) {
+                        // On mobile: use LazyZip so all ZIPs can be open simultaneously
+                        // without decompressing any content (only Central Directory metadata).
+                        const mobileFilter = entryFilter
+                            ? (name: string, size: number) => DEFAULT_MOBILE_FILTER(name, 0) && entryFilter(name, size)
+                            : DEFAULT_MOBILE_FILTER;
+                        const lazyEntries = await enumerateZipEntriesRaw(file, mobileFilter);
+                        zipContent = lazyEntries.length > 0
+                            ? new LazyZip(file, lazyEntries) as unknown as JSZip
+                            : await loadZipSelective(file, mobileFilter); // ZIP64 fallback
+                    } else {
+                        zipContent = await loadZipSelective(file, entryFilter);
+                    }
                     this.currentZips.push(zipContent);
+                    // eslint-disable-next-line no-console
+                    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [attachmap] [${i + 1}/${files.length}] ${file.name}: ${Object.keys(zipContent.files).length} entries indexed`);
                 } catch (error) {
                     this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
+                    // eslint-disable-next-line no-console
+                    console.error(`[NexusAI][${new Date().toISOString().slice(11,23)}] [attachmap] [${i + 1}/${files.length}] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
                 }
             }
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [attachmap] Done — ${this.currentZips.length}/${files.length} ZIPs indexed`);
 
             // Pass the attachment map to the ChatGPT adapter
             const chatgptAdapter = this.providerRegistry.getAdapter('chatgpt') as any;

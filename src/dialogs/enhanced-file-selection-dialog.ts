@@ -18,7 +18,7 @@
 
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-import { App, Modal, Setting } from "obsidian";
+import { App, Modal, Notice, Setting } from "obsidian";
 import { FileSelectionResult, ImportMode } from "../types/conversation-selection";
 import { formatFileSize } from "../utils/file-utils";
 import { t } from '../i18n';
@@ -320,7 +320,14 @@ export class EnhancedFileSelectionDialog extends Modal {
     private handleFileSelection(event: Event) {
         const input = event.target as HTMLInputElement;
         if (input.files) {
-            this.selectedFiles = Array.from(input.files);
+            const incoming = Array.from(input.files);
+            const existingNames = new Set(this.selectedFiles.map(f => f.name));
+            const duplicates = incoming.filter(f => existingNames.has(f.name));
+            const unique = incoming.filter(f => !existingNames.has(f.name));
+            this.selectedFiles = [...this.selectedFiles, ...unique];
+            if (duplicates.length > 0) {
+                new Notice(`${duplicates.length} duplicate file(s) ignored: ${duplicates.map(f => f.name).join(', ')}`);
+            }
             this.updateFilePreview();
             this.updateImportButton();
         }
@@ -363,7 +370,13 @@ export class EnhancedFileSelectionDialog extends Modal {
                 return fileName.endsWith('.zip');
             });
             if (files.length > 0) {
-                this.selectedFiles = files;
+                const existingNames = new Set(this.selectedFiles.map(f => f.name));
+                const duplicates = files.filter(f => existingNames.has(f.name));
+                const unique = files.filter(f => !existingNames.has(f.name));
+                this.selectedFiles = [...this.selectedFiles, ...unique];
+                if (duplicates.length > 0) {
+                    new Notice(`${duplicates.length} duplicate file(s) ignored: ${duplicates.map(f => f.name).join(', ')}`);
+                }
                 this.updateFilePreview();
                 this.updateImportButton();
             }

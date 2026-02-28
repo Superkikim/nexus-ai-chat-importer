@@ -287,10 +287,18 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      * Handle the result from enhanced file selection dialog
      */
 	    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
-	        const { files, mode, provider } = result;
+	        const { files: rawFiles, mode, provider } = result;
 
-	        if (files.length === 0) {
+	        if (rawFiles.length === 0) {
 	            return;
+	        }
+
+	        // Safety-net deduplication by filename (dialog already deduplicates, but defensive)
+	        const seenNames = new Set<string>();
+	        const files = rawFiles.filter(f => seenNames.has(f.name) ? false : (seenNames.add(f.name), true));
+	        if (files.length < rawFiles.length) {
+	            // eslint-disable-next-line no-console
+	            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleFileSelectionResult] Deduplicated: ${rawFiles.length} → ${files.length} files`);
 	        }
 
 	        // Separate ZIP exports from optional JSON files
@@ -374,6 +382,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(files: File[], provider: string): Promise<void> {
         try {
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] START — ${files.length} ZIPs, provider=${provider}, mobile=${!(files[0] as any)?.path}`);
             new Notice(t('notices.import_analyzing', { count: String(files.length) }));
 
             // Create metadata extractor
@@ -433,19 +443,34 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Build attachment map for multi-ZIP fallback (ChatGPT only)
             if (provider === 'chatgpt' && files.length > 1) {
+                // eslint-disable-next-line no-console
+                console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] Building attachment map for ${files.length} ChatGPT ZIPs...`);
                 await this.importService.buildAttachmentMapForMultiZip(files, provider);
+                // eslint-disable-next-line no-console
+                console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] Attachment map done`);
             }
 
             // Process files sequentially with shared report
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] Starting import loop: ${files.length} files`);
             for (const file of files) {
                 const conversationsForFile = conversationsByFile.get(file.name);
                 if (conversationsForFile && conversationsForFile.length > 0) {
+                    // eslint-disable-next-line no-console
+                    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] Processing ${file.name} — ${conversationsForFile.length} conversations`);
                     try {
                         await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                        // eslint-disable-next-line no-console
+                        console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] Done: ${file.name}`);
                     } catch (error) {
                         this.logger.error(`Error processing file ${file.name}:`, error);
+                        // eslint-disable-next-line no-console
+                        console.error(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
                         // Continue with other files even if one fails
                     }
+                } else {
+                    // eslint-disable-next-line no-console
+                    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] Skipping ${file.name} — no conversations to import`);
                 }
             }
 
@@ -483,6 +508,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleSelectiveImport] START — ${files.length} ZIPs, provider=${provider}`);
             new Notice(t('notices.import_analyzing', { count: String(files.length) }));
 
             // Create metadata extractor
@@ -572,6 +599,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             return;
         }
 
+        // eslint-disable-next-line no-console
+        console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] START — ${result.selectedIds.length} conversations selected across ${files.length} files`);
         new Notice(t('notices.import_starting_selected', { count: String(result.selectedIds.length), files: String(files.length) }));
 
         // Group selected conversations by source file for efficient processing
@@ -579,24 +608,41 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         // Build attachment map for multi-ZIP fallback (ChatGPT only)
         if (provider === 'chatgpt' && files.length > 1) {
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Building attachment map for ${files.length} ChatGPT ZIPs...`);
             try {
                 await this.importService.buildAttachmentMapForMultiZip(files, provider);
+                // eslint-disable-next-line no-console
+                console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Attachment map done`);
             } catch (error) {
                 this.logger.error('Failed to build attachment map:', error);
+                // eslint-disable-next-line no-console
+                console.error(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Attachment map FAILED:`, error instanceof Error ? error.message : error);
                 new Notice(t('notices.attachment_map_failed'));
             }
         }
 
         // Process files sequentially in original order with shared report
+        // eslint-disable-next-line no-console
+        console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Starting import loop: ${files.length} files`);
         for (const file of files) {
             const conversationsForFile = conversationsByFile.get(file.name);
             if (conversationsForFile && conversationsForFile.length > 0) {
+                // eslint-disable-next-line no-console
+                console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Processing ${file.name} — ${conversationsForFile.length} conversations`);
                 try {
                     await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                    // eslint-disable-next-line no-console
+                    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Done: ${file.name}`);
                 } catch (error) {
                     this.logger.error(`Error processing file ${file.name}:`, error);
+                    // eslint-disable-next-line no-console
+                    console.error(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
                     new Notice(t('notices.import_error_file', { filename: file.name }));
                 }
+            } else {
+                // eslint-disable-next-line no-console
+                console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Skipping ${file.name} — no conversations to import`);
             }
         }
 
@@ -676,6 +722,14 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Store analysis info for completion stats
         if (analysisInfo) {
             report.setAnalysisInfo(analysisInfo);
+
+            // Surface files that failed Phase 0 (format not recognized / parse error)
+            // as Global Errors so they appear prominently in the report
+            if (analysisInfo.unrecognizedFiles?.length > 0) {
+                for (const uf of analysisInfo.unrecognizedFiles) {
+                    report.addError(`Skipped (unrecognized): ${uf.name}`, uf.reason);
+                }
+            }
         }
 
         const stats = report.getCompletionStats();

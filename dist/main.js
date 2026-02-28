@@ -21519,13 +21519,19 @@ Do NOT extract and re-compress the file - just rename it!`;
     } catch (error) {
       const message = error instanceof NexusAiChatImporterError ? error.message : error instanceof Error ? error.message : "An unknown error occurred";
       this.plugin.logger.error("Error handling zip file", { message });
+      console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleZipFile] FAILED ${file.name}: ${message}`);
       progressModal.close();
-      await showDialog(
-        this.plugin.app,
-        "information",
-        "Import failed",
-        [message, "Please check the import report for more details."]
-      );
+      if (isSharedReport) {
+        sharedReport.addError(`Skipped: ${file.name}`, message);
+        new import_obsidian17.Notice(`Skipped ${file.name}: ${message}`, 6e3);
+      } else {
+        await showDialog(
+          this.plugin.app,
+          "information",
+          "Import failed",
+          [message, "Please check the import report for more details."]
+        );
+      }
     } finally {
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
@@ -21786,21 +21792,35 @@ Do NOT extract and re-compress the file - just rename it!`;
    * Opens all ZIPs and scans for available attachments
    */
   async buildAttachmentMapForMultiZip(files, provider) {
-    var _a;
+    var _a, _b, _c;
     try {
       const adapter = provider ? this.providerRegistry.getAdapter(provider) : void 0;
       const entryFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [attachmap] Building attachment map: ${files.length} files, provider=${provider != null ? provider : "auto"}`);
       this.currentAttachmentMap = await this.attachmentMapBuilder.buildAttachmentMap(files);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [attachmap] Attachment map built: ${(_c = (_b = this.currentAttachmentMap) == null ? void 0 : _b.size) != null ? _c : 0} entries`);
       this.currentZips = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const isMobile = !file.path;
         try {
-          const zipContent = await loadZipSelective(file, entryFilter);
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [attachmap] [${i + 1}/${files.length}] Opening ${file.name} (${(file.size / 1024 / 1024).toFixed(0)} MB, mobile=${isMobile})`);
+          let zipContent;
+          if (isMobile) {
+            const mobileFilter = entryFilter ? (name, size) => DEFAULT_MOBILE_FILTER(name, 0) && entryFilter(name, size) : DEFAULT_MOBILE_FILTER;
+            const lazyEntries = await enumerateZipEntriesRaw(file, mobileFilter);
+            zipContent = lazyEntries.length > 0 ? new LazyZip(file, lazyEntries) : await loadZipSelective(file, mobileFilter);
+          } else {
+            zipContent = await loadZipSelective(file, entryFilter);
+          }
           this.currentZips.push(zipContent);
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [attachmap] [${i + 1}/${files.length}] ${file.name}: ${Object.keys(zipContent.files).length} entries indexed`);
         } catch (error) {
           this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
+          console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [attachmap] [${i + 1}/${files.length}] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
         }
       }
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [attachmap] Done \u2014 ${this.currentZips.length}/${files.length} ZIPs indexed`);
       const chatgptAdapter = this.providerRegistry.getAdapter("chatgpt");
       if (chatgptAdapter && this.currentAttachmentMap) {
         chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, this.currentZips);
@@ -23120,7 +23140,14 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
   handleFileSelection(event) {
     const input = event.target;
     if (input.files) {
-      this.selectedFiles = Array.from(input.files);
+      const incoming = Array.from(input.files);
+      const existingNames = new Set(this.selectedFiles.map((f) => f.name));
+      const duplicates = incoming.filter((f) => existingNames.has(f.name));
+      const unique = incoming.filter((f) => !existingNames.has(f.name));
+      this.selectedFiles = [...this.selectedFiles, ...unique];
+      if (duplicates.length > 0) {
+        new import_obsidian27.Notice(`${duplicates.length} duplicate file(s) ignored: ${duplicates.map((f) => f.name).join(", ")}`);
+      }
       this.updateFilePreview();
       this.updateImportButton();
     }
@@ -23157,7 +23184,13 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
         return fileName.endsWith(".zip");
       });
       if (files.length > 0) {
-        this.selectedFiles = files;
+        const existingNames = new Set(this.selectedFiles.map((f) => f.name));
+        const duplicates = files.filter((f) => existingNames.has(f.name));
+        const unique = files.filter((f) => !existingNames.has(f.name));
+        this.selectedFiles = [...this.selectedFiles, ...unique];
+        if (duplicates.length > 0) {
+          new import_obsidian27.Notice(`${duplicates.length} duplicate file(s) ignored: ${duplicates.map((f) => f.name).join(", ")}`);
+        }
         this.updateFilePreview();
         this.updateImportButton();
       }
@@ -24636,8 +24669,11 @@ var ConversationMetadataExtractor = class {
     const allConversationsFound = [];
     const fileStatsMap = /* @__PURE__ */ new Map();
     const conversationToFileMap = /* @__PURE__ */ new Map();
+    const unrecognizedFiles = [];
+    console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [meta/start] Processing ${files.length} ZIPs for metadata extraction`);
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [meta/${i + 1}/${files.length}] Starting ${file.name} (${(file.size / 1024 / 1024).toFixed(0)} MB, mobile=${!file.path})`);
       try {
         const archiveModeDecision = decideArchiveMode({ zipSizeBytes: file.size });
         if (archiveModeDecision.mode === "large-archive") {
@@ -24654,6 +24690,7 @@ var ConversationMetadataExtractor = class {
           console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [meta/decompress] ZIP loaded \u2014 ${Object.keys(zc.files).length} JSON entries`);
           return this.extractMetadataFromZip(zc, forcedProvider, file.name, i, void 0);
         })();
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [meta/${i + 1}/${files.length}] Metadata extracted: ${metadata.length} conversations in ${file.name}`);
         await new Promise((resolve) => setTimeout(resolve, 0));
         allConversationsFound.push(...metadata);
         const totalInFile = metadata.length;
@@ -24703,8 +24740,10 @@ var ConversationMetadataExtractor = class {
           skippedConversations: 0
         });
       } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
         logger.error(`Error extracting metadata from ${file.name}:`, error);
-        console.error(`[NexusAI] metadata-extractor FAILED for ${file.name}:`, error instanceof Error ? error.message : error);
+        console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [meta/${i + 1}/${files.length}] FAILED ${file.name}: ${reason}`);
+        unrecognizedFiles.push({ name: file.name, reason });
       }
     }
     const filterResult = this.filterConversationsForSelection(
@@ -24737,7 +24776,8 @@ var ConversationMetadataExtractor = class {
       hasMultipleFiles: files.length > 1,
       conversationsNew: filterResult.newCount,
       conversationsUpdated: filterResult.updatedCount,
-      conversationsIgnored: filterResult.ignoredCount
+      conversationsIgnored: filterResult.ignoredCount,
+      unrecognizedFiles
     };
     console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [P0/compare] total=${allConversationsFound.length} unique=${conversationMap.size} duplicates=${analysisInfo.duplicatesRemoved} new=${filterResult.newCount} updated=${filterResult.updatedCount} unchanged=${filterResult.ignoredCount}`);
     return {
@@ -25194,9 +25234,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
    * Handle the result from enhanced file selection dialog
    */
   async handleFileSelectionResult(result) {
-    const { files, mode, provider } = result;
-    if (files.length === 0) {
+    const { files: rawFiles, mode, provider } = result;
+    if (rawFiles.length === 0) {
       return;
+    }
+    const seenNames = /* @__PURE__ */ new Set();
+    const files = rawFiles.filter((f) => seenNames.has(f.name) ? false : (seenNames.add(f.name), true));
+    if (files.length < rawFiles.length) {
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleFileSelectionResult] Deduplicated: ${rawFiles.length} \u2192 ${files.length} files`);
     }
     const zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
     const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
@@ -25259,8 +25304,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
    * Handle "Import All" mode with analysis and auto-selection
    */
   async handleImportAll(files, provider) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     try {
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] START \u2014 ${files.length} ZIPs, provider=${provider}, mobile=${!((_a = files[0]) == null ? void 0 : _a.path)}`);
       new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
@@ -25284,8 +25330,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
-      const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
-      const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
+      const newCount = (_c = (_b = extractionResult.analysisInfo) == null ? void 0 : _b.conversationsNew) != null ? _c : 0;
+      const updatedCount = (_e = (_d = extractionResult.analysisInfo) == null ? void 0 : _d.conversationsUpdated) != null ? _e : 0;
       new import_obsidian32.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
@@ -25297,16 +25343,24 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         }
       });
       if (provider === "chatgpt" && files.length > 1) {
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] Building attachment map for ${files.length} ChatGPT ZIPs...`);
         await this.importService.buildAttachmentMapForMultiZip(files, provider);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] Attachment map done`);
       }
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] Starting import loop: ${files.length} files`);
       for (const file of files) {
         const conversationsForFile = conversationsByFile.get(file.name);
         if (conversationsForFile && conversationsForFile.length > 0) {
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] Processing ${file.name} \u2014 ${conversationsForFile.length} conversations`);
           try {
             await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+            console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] Done: ${file.name}`);
           } catch (error) {
             this.logger.error(`Error processing file ${file.name}:`, error);
+            console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
           }
+        } else {
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] Skipping ${file.name} \u2014 no conversations to import`);
         }
       }
       if (provider === "chatgpt" && files.length > 1) {
@@ -25335,6 +25389,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleSelectiveImport] START \u2014 ${files.length} ZIPs, provider=${provider}`);
       new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
@@ -25396,25 +25451,35 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       }
       return;
     }
+    console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] START \u2014 ${result.selectedIds.length} conversations selected across ${files.length} files`);
     new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
     const conversationsByFile = await this.groupConversationsByFile(result, files);
     if (provider === "chatgpt" && files.length > 1) {
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Building attachment map for ${files.length} ChatGPT ZIPs...`);
       try {
         await this.importService.buildAttachmentMapForMultiZip(files, provider);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Attachment map done`);
       } catch (error) {
         this.logger.error("Failed to build attachment map:", error);
+        console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Attachment map FAILED:`, error instanceof Error ? error.message : error);
         new import_obsidian32.Notice(t("notices.attachment_map_failed"));
       }
     }
+    console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Starting import loop: ${files.length} files`);
     for (const file of files) {
       const conversationsForFile = conversationsByFile.get(file.name);
       if (conversationsForFile && conversationsForFile.length > 0) {
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Processing ${file.name} \u2014 ${conversationsForFile.length} conversations`);
         try {
           await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Done: ${file.name}`);
         } catch (error) {
           this.logger.error(`Error processing file ${file.name}:`, error);
+          console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
           new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
         }
+      } else {
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Skipping ${file.name} \u2014 no conversations to import`);
       }
     }
     if (provider === "chatgpt" && files.length > 1) {
@@ -25431,6 +25496,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
    * Write consolidated report for multi-file import
    */
   async writeConsolidatedReport(report, provider, files, analysisInfo, fileStats, isSelectiveImport) {
+    var _a;
     const reportFolder = this.settings.reportFolder;
     const providerRegistry = createProviderRegistry(this);
     const adapter = providerRegistry.getAdapter(provider);
@@ -25463,6 +25529,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     }
     if (analysisInfo) {
       report.setAnalysisInfo(analysisInfo);
+      if (((_a = analysisInfo.unrecognizedFiles) == null ? void 0 : _a.length) > 0) {
+        for (const uf of analysisInfo.unrecognizedFiles) {
+          report.addError(`Skipped (unrecognized): ${uf.name}`, uf.reason);
+        }
+      }
     }
     const stats = report.getCompletionStats();
     const processedFiles = [];
