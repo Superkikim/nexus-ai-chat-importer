@@ -65,6 +65,12 @@ interface CentralDirEntry {
     localHeaderOffset: number;
 }
 
+/**
+ * Public alias for CentralDirEntry.
+ * Used by LazyZip to hold entry metadata without decompressing content.
+ */
+export type ZipEntry = CentralDirEntry;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Desktop helpers (yauzl)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -320,22 +326,24 @@ async function decompressEntry(
         }
 
         const ds = new DecompressionStream("deflate-raw");
-        const writer = ds.writable.getWriter();
-        const reader = ds.readable.getReader();
-
-        // Write compressed data and close the writable end
-        await writer.write(new Uint8Array(compressedData));
-        await writer.close();
-
-        // Collect all decompressed chunks
         const chunks: Uint8Array[] = [];
-        for (
-            let result = await reader.read();
-            !result.done;
-            result = await reader.read()
-        ) {
-            chunks.push(result.value);
-        }
+
+        // Use pipeTo so write and read happen concurrently.
+        // Awaiting writer.write() before reader.read() causes a permanent
+        // deadlock on iOS: the stream stalls when its output buffer fills up
+        // and the writer never resolves because no one is draining the reader.
+        await new ReadableStream<Uint8Array>({
+            start(controller) {
+                controller.enqueue(new Uint8Array(compressedData));
+                controller.close();
+            }
+        }).pipeThrough(ds as unknown as TransformStream<Uint8Array, Uint8Array>).pipeTo(
+            new WritableStream<Uint8Array>({
+                write(chunk) {
+                    chunks.push(chunk);
+                }
+            })
+        );
 
         // Assemble into a single Uint8Array
         const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
@@ -365,14 +373,14 @@ async function loadZipSelectiveMobile(
     shouldInclude?: (entryName: string, uncompressedSize: number) => boolean
 ): Promise<JSZip> {
     // eslint-disable-next-line no-console
-    console.log(`[NexusAI] loadZipSelectiveMobile: findEOCD start (${file.size} bytes)`);
+    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] loadZipSelectiveMobile: findEOCD start (${file.size} bytes)`);
     const eocd = await findEOCD(file);
     if (!eocd)
         throw new Error(
             "[zip-loader] ZIP64 or invalid ZIP — using JSZip fallback"
         );
     // eslint-disable-next-line no-console
-    console.log(`[NexusAI] loadZipSelectiveMobile: EOCD found — cdOffset=${eocd.cdOffset} cdSize=${eocd.cdSize} entries=${eocd.entryCount}`);
+    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] loadZipSelectiveMobile: EOCD found — cdOffset=${eocd.cdOffset} cdSize=${eocd.cdSize} entries=${eocd.entryCount}`);
 
     const entries = await parseCentralDirectory(
         file,
@@ -380,7 +388,7 @@ async function loadZipSelectiveMobile(
         eocd.cdSize
     );
     // eslint-disable-next-line no-console
-    console.log(`[NexusAI] loadZipSelectiveMobile: CD parsed — ${entries.length} non-dir entries`);
+    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] loadZipSelectiveMobile: CD parsed — ${entries.length} non-dir entries`);
 
     const resultZip = new JSZip();
     let included = 0;
@@ -396,15 +404,15 @@ async function loadZipSelectiveMobile(
         }
         included++;
         // eslint-disable-next-line no-console
-        console.log(`[NexusAI] decompressEntry: "${entry.name}" compressed=${entry.compressedSize} uncompressed=${entry.uncompressedSize}`);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] decompressEntry: "${entry.name}" compressed=${entry.compressedSize} uncompressed=${entry.uncompressedSize}`);
         const data = await decompressEntry(file, entry);
         // eslint-disable-next-line no-console
-        console.log(`[NexusAI] decompressEntry: "${entry.name}" done — ${data.byteLength} bytes`);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] decompressEntry: "${entry.name}" done — ${data.byteLength} bytes`);
         resultZip.file(entry.name, data);
     }
 
     // eslint-disable-next-line no-console
-    console.log(`[NexusAI] loadZipSelectiveMobile: done — included=${included} skipped=${skipped}`);
+    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] loadZipSelectiveMobile: done — included=${included} skipped=${skipped}`);
     return resultZip;
 }
 
@@ -631,4 +639,62 @@ export async function enumerateZipEntries(
     });
 
     return entries;
+}
+
+/**
+ * Enumerate ZIP entries with full Central Directory metadata (including offsets).
+ *
+ * Unlike `enumerateZipEntries` which returns only {path, size}, this function
+ * returns the complete ZipEntry records needed by LazyZip to decompress entries
+ * on demand via File.slice — without loading any content into memory upfront.
+ *
+ * Uses the File.slice path (mobile-compatible) regardless of platform.
+ * Returns an empty array when ZIP64 format is detected (caller should fall back
+ * to `loadZipSelective`).
+ *
+ * @param file    The File object selected by the user.
+ * @param filter  Optional predicate — return false to exclude an entry from the result.
+ *                Receives (entryName, uncompressedSizeBytes).
+ * @returns       Array of ZipEntry (with localHeaderOffset) for non-directory entries
+ *                matching the filter, or [] on ZIP64/parse failure.
+ */
+export async function enumerateZipEntriesRaw(
+    file: File,
+    filter?: (name: string, size: number) => boolean
+): Promise<ZipEntry[]> {
+    let eocd: { cdOffset: number; cdSize: number; entryCount: number } | null;
+    try {
+        eocd = await findEOCD(file);
+    } catch {
+        return [];
+    }
+    if (!eocd) return []; // ZIP64 sentinel or not a ZIP
+
+    let all: CentralDirEntry[];
+    try {
+        all = await parseCentralDirectory(file, eocd.cdOffset, eocd.cdSize);
+    } catch {
+        return [];
+    }
+
+    const files = all.filter(e => !e.name.endsWith("/"));
+    return filter ? files.filter(e => filter(e.name, e.uncompressedSize)) : files;
+}
+
+/**
+ * Decompress a single ZIP entry from a File using File.slice random-access reads.
+ *
+ * This is the public counterpart of the private `decompressEntry` function.
+ * Called by LazyZip when an entry's content is needed for the first time,
+ * enabling on-demand decompression instead of loading all entries upfront.
+ *
+ * @param file   The original ZIP File object.
+ * @param entry  The ZipEntry metadata (from enumerateZipEntriesRaw).
+ * @returns      The decompressed entry content as a Uint8Array.
+ */
+export async function decompressZipEntry(
+    file: File,
+    entry: ZipEntry
+): Promise<Uint8Array> {
+    return decompressEntry(file, entry);
 }

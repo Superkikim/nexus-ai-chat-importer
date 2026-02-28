@@ -11335,6 +11335,7 @@ var init_storage_service = __esm({
           this.isDirty = false;
         } catch (error) {
           this.plugin.logger.error("saveData failed:", error);
+          throw error;
         }
       }
       debouncedSave() {
@@ -20614,14 +20615,19 @@ async function decompressEntry(file, entry) {
       throw new Error("[zip-loader] DecompressionStream unavailable");
     }
     const ds = new DecompressionStream("deflate-raw");
-    const writer = ds.writable.getWriter();
-    const reader = ds.readable.getReader();
-    await writer.write(new Uint8Array(compressedData));
-    await writer.close();
     const chunks = [];
-    for (let result2 = await reader.read(); !result2.done; result2 = await reader.read()) {
-      chunks.push(result2.value);
-    }
+    await new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(compressedData));
+        controller.close();
+      }
+    }).pipeThrough(ds).pipeTo(
+      new WritableStream({
+        write(chunk) {
+          chunks.push(chunk);
+        }
+      })
+    );
     const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
     const result = new Uint8Array(totalLength);
     let offset = 0;
@@ -20637,19 +20643,19 @@ async function decompressEntry(file, entry) {
 }
 __name(decompressEntry, "decompressEntry");
 async function loadZipSelectiveMobile(file, shouldInclude) {
-  console.log(`[NexusAI] loadZipSelectiveMobile: findEOCD start (${file.size} bytes)`);
+  console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] loadZipSelectiveMobile: findEOCD start (${file.size} bytes)`);
   const eocd = await findEOCD(file);
   if (!eocd)
     throw new Error(
       "[zip-loader] ZIP64 or invalid ZIP \u2014 using JSZip fallback"
     );
-  console.log(`[NexusAI] loadZipSelectiveMobile: EOCD found \u2014 cdOffset=${eocd.cdOffset} cdSize=${eocd.cdSize} entries=${eocd.entryCount}`);
+  console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] loadZipSelectiveMobile: EOCD found \u2014 cdOffset=${eocd.cdOffset} cdSize=${eocd.cdSize} entries=${eocd.entryCount}`);
   const entries = await parseCentralDirectory(
     file,
     eocd.cdOffset,
     eocd.cdSize
   );
-  console.log(`[NexusAI] loadZipSelectiveMobile: CD parsed \u2014 ${entries.length} non-dir entries`);
+  console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] loadZipSelectiveMobile: CD parsed \u2014 ${entries.length} non-dir entries`);
   const resultZip = new import_jszip.default();
   let included = 0;
   let skipped = 0;
@@ -20659,12 +20665,12 @@ async function loadZipSelectiveMobile(file, shouldInclude) {
       continue;
     }
     included++;
-    console.log(`[NexusAI] decompressEntry: "${entry.name}" compressed=${entry.compressedSize} uncompressed=${entry.uncompressedSize}`);
+    console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] decompressEntry: "${entry.name}" compressed=${entry.compressedSize} uncompressed=${entry.uncompressedSize}`);
     const data = await decompressEntry(file, entry);
-    console.log(`[NexusAI] decompressEntry: "${entry.name}" done \u2014 ${data.byteLength} bytes`);
+    console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] decompressEntry: "${entry.name}" done \u2014 ${data.byteLength} bytes`);
     resultZip.file(entry.name, data);
   }
-  console.log(`[NexusAI] loadZipSelectiveMobile: done \u2014 included=${included} skipped=${skipped}`);
+  console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] loadZipSelectiveMobile: done \u2014 included=${included} skipped=${skipped}`);
   return resultZip;
 }
 __name(loadZipSelectiveMobile, "loadZipSelectiveMobile");
@@ -20794,6 +20800,29 @@ async function enumerateZipEntries(file) {
   return entries;
 }
 __name(enumerateZipEntries, "enumerateZipEntries");
+async function enumerateZipEntriesRaw(file, filter) {
+  let eocd;
+  try {
+    eocd = await findEOCD(file);
+  } catch (e) {
+    return [];
+  }
+  if (!eocd)
+    return [];
+  let all;
+  try {
+    all = await parseCentralDirectory(file, eocd.cdOffset, eocd.cdSize);
+  } catch (e) {
+    return [];
+  }
+  const files = all.filter((e) => !e.name.endsWith("/"));
+  return filter ? files.filter((e) => filter(e.name, e.uncompressedSize)) : files;
+}
+__name(enumerateZipEntriesRaw, "enumerateZipEntriesRaw");
+async function decompressZipEntry(file, entry) {
+  return decompressEntry(file, entry);
+}
+__name(decompressZipEntry, "decompressZipEntry");
 
 // src/services/attachment-map-builder.ts
 var AttachmentMapBuilder = class {
@@ -20914,6 +20943,54 @@ function decideArchiveMode(context) {
   };
 }
 __name(decideArchiveMode, "decideArchiveMode");
+
+// src/utils/lazy-zip.ts
+var LazyZipObject = class {
+  constructor(file, entry) {
+    this._file = file;
+    this._entry = entry;
+    this.name = entry.name;
+    this.dir = entry.name.endsWith("/");
+  }
+  async async(type) {
+    const data = await decompressZipEntry(this._file, this._entry);
+    if (type === "uint8array")
+      return data;
+    if (type === "string") {
+      return new TextDecoder("utf-8").decode(data);
+    }
+    if (type === "base64") {
+      const CHUNK = 8192;
+      let binary = "";
+      for (let i = 0; i < data.byteLength; i += CHUNK) {
+        binary += String.fromCharCode(
+          ...data.subarray(i, Math.min(i + CHUNK, data.byteLength))
+        );
+      }
+      return btoa(binary);
+    }
+    throw new Error(`[LazyZip] Unsupported output type: "${type}"`);
+  }
+};
+__name(LazyZipObject, "LazyZipObject");
+var LazyZip = class {
+  constructor(sourceFile, entries) {
+    this.files = {};
+    for (const entry of entries) {
+      this.files[entry.name] = new LazyZipObject(sourceFile, entry);
+    }
+  }
+  /**
+   * Look up an entry by name, matching JSZip's `zip.file(name)` API.
+   * Returns null (not undefined) when not found, so callers using
+   * `if (!zip.file(name))` continue to work correctly.
+   */
+  file(name) {
+    var _a;
+    return (_a = this.files[name]) != null ? _a : null;
+  }
+};
+__name(LazyZip, "LazyZip");
 
 // src/utils/streaming-json-array-parser.ts
 var StreamingJsonArrayParser = class {
@@ -21067,6 +21144,124 @@ var StreamingJsonArrayParser = class {
 };
 __name(StreamingJsonArrayParser, "StreamingJsonArrayParser");
 
+// src/utils/zip-content-reader.ts
+function findGeminiActivityJsonFiles(fileNames) {
+  const geminiJsonFiles = [];
+  for (const name of fileNames) {
+    if (!name.toLowerCase().endsWith(".json"))
+      continue;
+    const segments = name.split("/");
+    if (segments.length >= 3 && segments[0] === "Takeout") {
+      const thirdLevel = segments[2];
+      if (thirdLevel.toLowerCase().includes("gemini")) {
+        geminiJsonFiles.push(name);
+      }
+    }
+  }
+  return geminiJsonFiles;
+}
+__name(findGeminiActivityJsonFiles, "findGeminiActivityJsonFiles");
+async function extractRawConversations(zip) {
+  const fileNames = Object.keys(zip.files);
+  const leChatFiles = fileNames.filter((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
+  if (leChatFiles.length > 0) {
+    const conversations = [];
+    let uncompressedBytes = 0;
+    for (const fileName of leChatFiles) {
+      const f = zip.file(fileName);
+      if (!f)
+        continue;
+      const content = await f.async("string");
+      uncompressedBytes += content.length;
+      conversations.push(JSON.parse(content));
+    }
+    return { conversations, uncompressedBytes };
+  }
+  const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
+  if (geminiJsonFiles.length > 0) {
+    const activityFilePath = geminiJsonFiles[0];
+    const activityFile = zip.file(activityFilePath);
+    if (!activityFile) {
+      throw new NexusAiChatImporterError(
+        "Missing Gemini activity JSON",
+        "The ZIP file appears to contain a Gemini folder but the My Activity JSON file is missing."
+      );
+    }
+    const activityJson = await activityFile.async("string");
+    try {
+      const conversations = [];
+      for (const entry of StreamingJsonArrayParser.streamConversations(activityJson)) {
+        conversations.push(entry);
+      }
+      if (conversations.length === 0) {
+        throw new NexusAiChatImporterError(
+          "Empty Gemini export",
+          "No entries found in the Gemini My Activity JSON file."
+        );
+      }
+      return { conversations, uncompressedBytes: activityJson.length };
+    } catch (error) {
+      if (error instanceof NexusAiChatImporterError)
+        throw error;
+      throw new NexusAiChatImporterError(
+        "Invalid Gemini My Activity JSON structure",
+        "The Gemini My Activity JSON file does not contain a valid array of activity entries."
+      );
+    }
+  }
+  const numberedConvFiles = fileNames.filter((n) => /^conversations-\d+\.json$/.test(n)).sort();
+  if (numberedConvFiles.length > 0) {
+    const conversations = [];
+    let uncompressedBytes = 0;
+    for (const fileName of numberedConvFiles) {
+      const f = zip.file(fileName);
+      if (!f)
+        continue;
+      const json = await f.async("string");
+      uncompressedBytes += json.length;
+      for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
+        conversations.push(conv);
+      }
+    }
+    if (conversations.length === 0) {
+      throw new NexusAiChatImporterError(
+        "No conversations found",
+        "The numbered conversation files (conversations-NNN.json) are all empty."
+      );
+    }
+    return { conversations, uncompressedBytes };
+  }
+  const conversationsFile = zip.file("conversations.json");
+  if (!conversationsFile) {
+    throw new NexusAiChatImporterError(
+      "Missing conversations.json",
+      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or a Gemini My Activity JSON file."
+    );
+  }
+  const conversationsJson = await conversationsFile.async("string");
+  try {
+    const conversations = [];
+    for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
+      conversations.push(conv);
+    }
+    if (conversations.length === 0) {
+      throw new NexusAiChatImporterError(
+        "No conversations found",
+        "The conversations.json file exists but contains no conversations."
+      );
+    }
+    return { conversations, uncompressedBytes: conversationsJson.length };
+  } catch (error) {
+    if (error instanceof NexusAiChatImporterError)
+      throw error;
+    throw new NexusAiChatImporterError(
+      "Invalid conversations.json structure",
+      "The conversations.json file does not contain a valid conversation array."
+    );
+  }
+}
+__name(extractRawConversations, "extractRawConversations");
+
 // src/utils/conversation-filter.ts
 init_logger();
 function filterConversationsByIds(rawConversations, selectedIds, providerRegistry, forcedProvider) {
@@ -21114,22 +21309,29 @@ function filterConversationsByIds(rawConversations, selectedIds, providerRegistr
 __name(filterConversationsByIds, "filterConversationsByIds");
 
 // src/services/import-service.ts
-function findGeminiActivityJsonFiles(fileNames) {
-  const geminiJsonFiles = [];
-  for (const name of fileNames) {
-    if (!name.toLowerCase().endsWith(".json"))
-      continue;
-    const segments = name.split("/");
-    if (segments.length >= 3 && segments[0] === "Takeout") {
-      const thirdLevel = segments[2];
-      if (thirdLevel.toLowerCase().includes("gemini")) {
-        geminiJsonFiles.push(name);
-      }
-    }
-  }
-  return geminiJsonFiles;
-}
-__name(findGeminiActivityJsonFiles, "findGeminiActivityJsonFiles");
+var MOBILE_SKIP_EXTS = /* @__PURE__ */ new Set([
+  "mp3",
+  "m4a",
+  "mp4",
+  "webm",
+  "ogg",
+  "aac",
+  "wav",
+  "flac",
+  "opus",
+  "wma",
+  "mov",
+  "avi",
+  "mkv",
+  "dat"
+]);
+var DEFAULT_MOBILE_FILTER = /* @__PURE__ */ __name((name, _size) => {
+  var _a, _b;
+  if (name.endsWith(".json"))
+    return true;
+  const ext = (_b = (_a = name.split(".").pop()) == null ? void 0 : _a.toLowerCase()) != null ? _b : "";
+  return !MOBILE_SKIP_EXTS.has(ext);
+}, "DEFAULT_MOBILE_FILTER");
 var ImportService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -21188,6 +21390,7 @@ var ImportService = class {
     });
   }
   async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport) {
+    var _a;
     const fileName = file.name.toLowerCase();
     if (!fileName.endsWith(".zip")) {
       const errorMessage = `Invalid file format: "${file.name}"
@@ -21227,9 +21430,32 @@ Do NOT extract and re-compress the file - just rename it!`;
         title: "Validating ZIP structure...",
         detail: "Checking file format and contents"
       });
-      console.log(`[NexusAI] validateZipFile start: ${file.name} (${file.size} bytes, mobile=${!file.path})`);
-      const zip = await this.validateZipFile(file, forcedProvider);
-      console.log(`[NexusAI] validateZipFile done: ${Object.keys(zip.files).length} entries`);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [1/4 catalog] Reading ZIP Central Directory: ${file.name} (${file.size} bytes, mobile=${!file.path})`);
+      const fileNames = await this.validateZipFile(file, forcedProvider);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [1/4 catalog] Done \u2014 ${fileNames.length} entries listed, 0 bytes decompressed, provider=${forcedProvider != null ? forcedProvider : "auto-detect"}`);
+      const adapter = forcedProvider ? this.providerRegistry.getAdapter(forcedProvider) : void 0;
+      const adapterFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
+      const isMobile = !file.path;
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [2/4 decompress] Loading ZIP entries (mobile=${isMobile}, filter=${adapterFilter ? "custom" : isMobile ? "default-mobile" : "all"})`);
+      let zip;
+      if (isMobile) {
+        const mobileFilter = /* @__PURE__ */ __name((name, size) => {
+          if (!DEFAULT_MOBILE_FILTER(name, size))
+            return false;
+          return adapterFilter ? adapterFilter(name, size) : true;
+        }, "mobileFilter");
+        const lazyEntries = await enumerateZipEntriesRaw(file, mobileFilter);
+        if (lazyEntries.length === 0) {
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [2/4 decompress] ZIP64/fallback \u2014 using loadZipSelective`);
+          zip = await loadZipSelective(file, mobileFilter);
+        } else {
+          zip = new LazyZip(file, lazyEntries);
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [2/4 decompress] LazyZip ready \u2014 ${lazyEntries.length} entries indexed, 0 bytes decompressed`);
+        }
+      } else {
+        zip = await loadZipSelective(file, adapterFilter);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [2/4 decompress] Done \u2014 ${Object.keys(zip.files).length} entries in memory`);
+      }
       let isReprocess = false;
       let fileHash = "";
       if (!isSharedReport) {
@@ -21238,9 +21464,9 @@ Do NOT extract and re-compress the file - just rename it!`;
           title: "Validating file...",
           detail: "Checking file hash and import history"
         });
-        console.log(`[NexusAI] getFileHash start (legacy, mobile=${!file.path})`);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [3/4 hash] Computing file hash (legacy mode, mobile=${!file.path})`);
         fileHash = await getFileHash(file);
-        console.log(`[NexusAI] getFileHash done: ${fileHash.substring(0, 16)}...`);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [3/4 hash] Done: ${fileHash.substring(0, 16)}...`);
         const foundByHash = storage.isArchiveImported(fileHash);
         const foundByName = storage.isArchiveImported(file.name);
         isReprocess = foundByHash || foundByName;
@@ -21266,12 +21492,12 @@ Do NOT extract and re-compress the file - just rename it!`;
           progressModal.open();
         }
       } else {
-        console.log(`[NexusAI] getFileHash start (shared, mobile=${!file.path})`);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [3/4 hash] Computing file hash (shared mode, mobile=${!file.path})`);
         fileHash = await getFileHash(file);
-        console.log(`[NexusAI] getFileHash done`);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [3/4 hash] Done`);
       }
       processingStarted = true;
-      console.log(`[NexusAI] processConversations start`);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [4/4 import] processConversations start`);
       await this.processConversations(
         zip,
         file,
@@ -21282,6 +21508,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         progressModal,
         file.size
       );
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [4/4 import] processConversations done`);
       storage.addImportedArchive(fileHash, file.name);
       await this.plugin.saveSettings();
       progressCallback({
@@ -21292,12 +21519,13 @@ Do NOT extract and re-compress the file - just rename it!`;
     } catch (error) {
       const message = error instanceof NexusAiChatImporterError ? error.message : error instanceof Error ? error.message : "An unknown error occurred";
       this.plugin.logger.error("Error handling zip file", { message });
-      progressCallback({
-        phase: "error",
-        title: "Import failed",
-        detail: message
-      });
-      setTimeout(() => progressModal.close(), 5e3);
+      progressModal.close();
+      await showDialog(
+        this.plugin.app,
+        "information",
+        "Import failed",
+        [message, "Please check the import report for more details."]
+      );
     } finally {
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
@@ -21309,35 +21537,43 @@ Do NOT extract and re-compress the file - just rename it!`;
       }
     }
   }
+  /**
+   * Validate ZIP structure using enumerateZipEntries (zero decompression).
+   * Returns file names on success; throws NexusAiChatImporterError on failure.
+   *
+   * Fix 1: Uses enumerateZipEntries instead of loadZipSelective so we never
+   * decompress any entry just to check file names — critical for mobile OOM.
+   * Fix 3: Structural provider validation from file names (ChatGPT vs Claude).
+   */
   async validateZipFile(file, forcedProvider) {
-    var _a;
     try {
-      const adapter = forcedProvider ? this.providerRegistry.getAdapter(forcedProvider) : void 0;
-      const entryFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
-      const content = await loadZipSelective(file, entryFilter);
-      const fileNames = Object.keys(content.files);
-      const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
-      const hasGeminiActivityJson = geminiJsonFiles.length > 0;
+      const entries = await enumerateZipEntries(file);
+      const fileNames = entries.map((e) => e.path);
       if (fileNames.length === 0) {
         throw new NexusAiChatImporterError(
           "Empty ZIP file",
           "The ZIP file contains no files. Please check that you selected the correct export file."
         );
       }
+      const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
+      const hasGeminiActivityJson = geminiJsonFiles.length > 0;
+      const hasUsersJson = fileNames.includes("users.json");
+      const hasUserJson = fileNames.includes("user.json");
+      const hasMsgFeedback = fileNames.includes("message_feedback.json");
       if (forcedProvider) {
         if (forcedProvider === "lechat") {
-          const hasLeChatFiles = fileNames.some((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
+          const hasLeChatFiles = fileNames.some((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
           if (!hasLeChatFiles) {
             throw new NexusAiChatImporterError(
-              "Invalid ZIP structure",
-              `Missing required files: chat-<uuid>.json files for Le Chat provider.`
+              "Wrong Provider Selected",
+              "No Le Chat conversation files (chat-<uuid>.json) found in this ZIP. Please select the correct provider for this export."
             );
           }
         } else if (forcedProvider === "gemini") {
           if (!hasGeminiActivityJson) {
             throw new NexusAiChatImporterError(
-              "Invalid ZIP structure",
-              "Missing required Gemini activity JSON file for Gemini provider. Expected a Google Takeout My Activity export containing a folder such as:\nTakeout/<My Activity>/<*Gemini*>/My Activity.json"
+              "Wrong Provider Selected",
+              "No Gemini activity JSON found in this ZIP. Expected a Google Takeout export with a folder like:\nTakeout/<My Activity>/<*Gemini*>/My Activity.json"
             );
           }
         } else {
@@ -21345,28 +21581,38 @@ Do NOT extract and re-compress the file - just rename it!`;
           if (!hasConversations) {
             throw new NexusAiChatImporterError(
               "Invalid ZIP structure",
-              `Missing required file: conversations.json (or conversations-XX.json files) for ${forcedProvider} provider.`
+              `Missing required file: conversations.json (or conversations-NNN.json) for ${forcedProvider} provider.`
+            );
+          }
+          if (forcedProvider === "chatgpt" && hasUsersJson && !hasUserJson) {
+            throw new NexusAiChatImporterError(
+              "Wrong Provider Selected",
+              "This ZIP appears to be a Claude export (contains users.json), not ChatGPT. Please select Claude as the provider and try again."
+            );
+          }
+          if (forcedProvider === "claude" && hasUserJson && hasMsgFeedback && !hasUsersJson) {
+            throw new NexusAiChatImporterError(
+              "Wrong Provider Selected",
+              "This ZIP appears to be a ChatGPT export (contains user.json + message_feedback.json), not Claude. Please select ChatGPT as the provider and try again."
             );
           }
         }
       } else {
         const hasConversationsJson = fileNames.includes("conversations.json") || fileNames.some((n) => /^conversations-\d+\.json$/.test(n));
-        const hasUsersJson = fileNames.includes("users.json");
         const hasProjectsJson = fileNames.includes("projects.json");
-        const hasLeChatFiles = fileNames.some((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
-        const hasGeminiFormat = hasGeminiActivityJson;
+        const hasLeChatFiles = fileNames.some((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
         const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
         const isClaudeFormat = hasConversationsJson && hasUsersJson;
         const isLeChatFormat = hasLeChatFiles && !hasConversationsJson;
-        const isGeminiFormat = hasGeminiFormat && !hasConversationsJson && !hasLeChatFiles;
+        const isGeminiFormat = hasGeminiActivityJson && !hasConversationsJson && !hasLeChatFiles;
         if (!isChatGPTFormat && !isClaudeFormat && !isLeChatFormat && !isGeminiFormat) {
           throw new NexusAiChatImporterError(
-            "Invalid ZIP structure",
-            "This ZIP file doesn't match any supported chat export format. Expected either ChatGPT format (conversations.json), Claude format (conversations.json + users.json), Le Chat format (chat-<uuid>.json files), or Gemini format (Google Takeout My Activity export with a folder like Takeout/<My Activity>/<*Gemini*>/My Activity.json)."
+            "Unrecognized Export Format",
+            "This ZIP file doesn't match any supported chat export format.\n\nSupported formats:\n\u2022 ChatGPT \u2014 contains conversations.json (without users.json)\n\u2022 Claude \u2014 contains conversations.json + users.json\n\u2022 Le Chat \u2014 contains chat-<uuid>.json files\n\u2022 Gemini \u2014 Google Takeout with Takeout/<Activity>/<*Gemini*>/My Activity.json"
           );
         }
       }
-      return content;
+      return fileNames;
     } catch (error) {
       if (error instanceof NexusAiChatImporterError) {
         throw error;
@@ -21393,9 +21639,11 @@ Do NOT extract and re-compress the file - just rename it!`;
       const extractionResult = await this.extractRawConversationsFromZip(zip, zipSizeBytes);
       let rawConversations = extractionResult.conversations;
       const archiveModeDecision = extractionResult.archiveModeDecision;
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [4/4 extract] ${rawConversations.length} conversations found in ZIP`);
       if (selectedConversationIds && selectedConversationIds.length > 0) {
         const originalCount = rawConversations.length;
         rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [4/4 filter] ${rawConversations.length}/${originalCount} conversations selected for import`);
         if (progressModal) {
           progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
         }
@@ -21412,6 +21660,8 @@ Do NOT extract and re-compress the file - just rename it!`;
         detail: "Checking vault for existing conversations",
         total: rawConversations.length
       });
+      const detectedProvider = forcedProvider != null ? forcedProvider : this.providerRegistry.detectProvider(rawConversations);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [4/4 detect] provider=${detectedProvider}${forcedProvider ? " (forced)" : " (auto-detected)"}`);
       if (forcedProvider) {
         this.validateProviderMatch(rawConversations, forcedProvider);
       }
@@ -21458,149 +21708,26 @@ Do NOT extract and re-compress the file - just rename it!`;
   /**
    * Extract raw conversation data without knowing provider specifics
    * and decide archive mode based on ZIP and uncompressed sizes.
+   *
+   * Fix 2 (DRY): delegates format detection to the shared extractRawConversations()
+   * in zip-content-reader.ts. Archive-mode decision remains here since it is
+   * specific to the import pipeline (metadata extractor does not need it).
    */
   async extractRawConversationsFromZip(zip, zipSizeBytes) {
-    const fileNames = Object.keys(zip.files);
-    const leChatFiles = fileNames.filter((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
-    if (leChatFiles.length > 0) {
-      const conversations = [];
-      for (const fileName of leChatFiles) {
-        const file = zip.file(fileName);
-        if (file) {
-          const content = await file.async("string");
-          const parsedConversation = JSON.parse(content);
-          conversations.push(parsedConversation);
-        }
-      }
-      let archiveModeDecision;
-      if (typeof zipSizeBytes === "number") {
-        archiveModeDecision = decideArchiveMode({ zipSizeBytes });
-        if (archiveModeDecision.mode === "large-archive") {
-          this.plugin.logger.info(
-            `Large archive detected for Le Chat ZIP (reason: ${archiveModeDecision.reason}, zipSizeBytes=${zipSizeBytes})`
-          );
-        }
-      }
-      return { conversations, archiveModeDecision };
-    }
-    const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
-    if (geminiJsonFiles.length > 0) {
-      const activityFilePath = geminiJsonFiles[0];
-      const activityFile = zip.file(activityFilePath);
-      if (!activityFile) {
-        throw new NexusAiChatImporterError(
-          "Missing Gemini activity JSON",
-          "The ZIP file appears to contain a Gemini folder but the My Activity JSON file is missing."
-        );
-      }
-      const activityJson = await activityFile.async("string");
-      try {
-        const conversations = [];
-        for (const entry of StreamingJsonArrayParser.streamConversations(activityJson)) {
-          conversations.push(entry);
-        }
-        if (conversations.length === 0) {
-          throw new Error("No entries found in Gemini My Activity JSON");
-        }
-        let archiveModeDecision;
-        if (typeof zipSizeBytes === "number") {
-          const uncompressedBytesApprox = activityJson.length;
-          archiveModeDecision = decideArchiveMode({
-            zipSizeBytes,
-            conversationsUncompressedBytes: uncompressedBytesApprox
-          });
-          if (archiveModeDecision.mode === "large-archive") {
-            this.plugin.logger.info(
-              `Large archive detected for Gemini My Activity JSON (reason: ${archiveModeDecision.reason}, zipSizeBytes=${zipSizeBytes}, uncompressedBytesApprox=${uncompressedBytesApprox})`
-            );
-          }
-        }
-        return { conversations, archiveModeDecision };
-      } catch (error) {
-        this.plugin.logger.error(
-          "Failed to parse Gemini My Activity JSON using streaming parser",
-          error
-        );
-        throw new NexusAiChatImporterError(
-          "Invalid Gemini My Activity JSON structure",
-          "The Gemini My Activity JSON file does not contain a valid array of activity entries"
+    const { conversations, uncompressedBytes } = await extractRawConversations(zip);
+    let archiveModeDecision;
+    if (typeof zipSizeBytes === "number") {
+      archiveModeDecision = decideArchiveMode({
+        zipSizeBytes,
+        conversationsUncompressedBytes: uncompressedBytes
+      });
+      if (archiveModeDecision.mode === "large-archive") {
+        this.plugin.logger.info(
+          `Large archive detected (reason: ${archiveModeDecision.reason}, zipSizeBytes=${zipSizeBytes}, uncompressedBytes=${uncompressedBytes})`
         );
       }
     }
-    const numberedConvFiles = fileNames.filter((n) => /^conversations-\d+\.json$/.test(n)).sort();
-    if (numberedConvFiles.length > 0) {
-      const conversations = [];
-      let totalUncompressedBytes = 0;
-      for (const fileName of numberedConvFiles) {
-        const f = zip.file(fileName);
-        if (!f)
-          continue;
-        const json = await f.async("string");
-        totalUncompressedBytes += json.length;
-        for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
-          conversations.push(conv);
-        }
-      }
-      if (conversations.length === 0) {
-        throw new NexusAiChatImporterError(
-          "No conversations found",
-          "The numbered conversations files (conversations-XX.json) are all empty."
-        );
-      }
-      let archiveModeDecision;
-      if (typeof zipSizeBytes === "number") {
-        archiveModeDecision = decideArchiveMode({
-          zipSizeBytes,
-          conversationsUncompressedBytes: totalUncompressedBytes
-        });
-        if (archiveModeDecision.mode === "large-archive") {
-          this.plugin.logger.info(
-            `Large archive detected for numbered conversations (reason: ${archiveModeDecision.reason}, files=${numberedConvFiles.length}, uncompressedBytesTotal=${totalUncompressedBytes})`
-          );
-        }
-      }
-      return { conversations, archiveModeDecision };
-    }
-    const conversationsFile = zip.file("conversations.json");
-    if (!conversationsFile) {
-      throw new NexusAiChatImporterError(
-        "Missing conversations.json",
-        "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or a Gemini My Activity JSON file"
-      );
-    }
-    const conversationsJson = await conversationsFile.async("string");
-    try {
-      const conversations = [];
-      for (const conversation of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
-        conversations.push(conversation);
-      }
-      if (conversations.length === 0) {
-        throw new Error("No conversations found in conversations.json");
-      }
-      let archiveModeDecision;
-      if (typeof zipSizeBytes === "number") {
-        const uncompressedBytesApprox = conversationsJson.length;
-        archiveModeDecision = decideArchiveMode({
-          zipSizeBytes,
-          conversationsUncompressedBytes: uncompressedBytesApprox
-        });
-        if (archiveModeDecision.mode === "large-archive") {
-          this.plugin.logger.info(
-            `Large archive detected for conversations.json (reason: ${archiveModeDecision.reason}, zipSizeBytes=${zipSizeBytes}, uncompressedBytesApprox=${uncompressedBytesApprox})`
-          );
-        }
-      }
-      return { conversations, archiveModeDecision };
-    } catch (error) {
-      this.plugin.logger.error(
-        "Failed to parse conversations.json using streaming parser",
-        error
-      );
-      throw new NexusAiChatImporterError(
-        "Invalid conversations.json structure",
-        "The conversations.json file does not contain a valid conversation array"
-      );
-    }
+    return { conversations, archiveModeDecision };
   }
   /**
    * Filter conversations by selected IDs
@@ -24213,22 +24340,6 @@ __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
 // src/services/conversation-metadata-extractor.ts
 init_utils();
 init_logger();
-function findGeminiActivityJsonFiles2(fileNames) {
-  const geminiJsonFiles = [];
-  for (const name of fileNames) {
-    if (!name.toLowerCase().endsWith(".json"))
-      continue;
-    const segments = name.split("/");
-    if (segments.length >= 3 && segments[0] === "Takeout") {
-      const thirdLevel = segments[2];
-      if (thirdLevel.toLowerCase().includes("gemini")) {
-        geminiJsonFiles.push(name);
-      }
-    }
-  }
-  return geminiJsonFiles;
-}
-__name(findGeminiActivityJsonFiles2, "findGeminiActivityJsonFiles");
 var ConversationMetadataExtractor = class {
   constructor(providerRegistry, plugin) {
     this.providerRegistry = providerRegistry;
@@ -24240,14 +24351,17 @@ var ConversationMetadataExtractor = class {
   async extractMetadataFromZip(zip, forcedProvider, sourceFileName, sourceFileIndex, existingConversations) {
     try {
       const rawConversations = await this.extractRawConversationsFromZip(zip);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [P0/extract] ${rawConversations.length} raw conversations found`);
       if (rawConversations.length === 0) {
         return [];
       }
       const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [P0/detect] provider=${provider}`);
       if (provider === "unknown") {
         throw new Error("Could not detect conversation provider from data structure");
       }
       const metadata = this.extractMetadataByProvider(rawConversations, provider);
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [P0/metadata] ${metadata.length} metadata items extracted`);
       return metadata.map((conv) => {
         const enhanced = {
           ...conv,
@@ -24280,80 +24394,12 @@ var ConversationMetadataExtractor = class {
     }
   }
   /**
-   * Extract raw conversation data from ZIP (provider-agnostic)
+   * Extract raw conversation data from ZIP (provider-agnostic).
+   * Fix 2 (DRY): delegates to extractRawConversations() from zip-content-reader.ts.
    */
   async extractRawConversationsFromZip(zip) {
-    const fileNames = Object.keys(zip.files);
-    const leChatFiles = fileNames.filter((name) => name.match(/^chat-[a-f0-9-]+\.json$/));
-    if (leChatFiles.length > 0) {
-      const conversations = [];
-      for (const fileName of leChatFiles) {
-        const file = zip.file(fileName);
-        if (file) {
-          const content = await file.async("string");
-          const parsedConversation = JSON.parse(content);
-          conversations.push(parsedConversation);
-        }
-      }
-      return conversations;
-    }
-    const geminiJsonFiles = findGeminiActivityJsonFiles2(fileNames);
-    if (geminiJsonFiles.length > 0) {
-      const activityFilePath = geminiJsonFiles[0];
-      const activityFile = zip.file(activityFilePath);
-      if (!activityFile) {
-        throw new Error("Gemini folder detected but My Activity JSON file is missing in ZIP archive");
-      }
-      const activityJson = await activityFile.async("string");
-      try {
-        const conversations = [];
-        for (const entry of StreamingJsonArrayParser.streamConversations(activityJson)) {
-          conversations.push(entry);
-        }
-        if (conversations.length === 0) {
-          throw new Error("No entries found in Gemini My Activity JSON");
-        }
-        return conversations;
-      } catch (error) {
-        logger.error("Failed to parse Gemini My Activity JSON in metadata extractor", error);
-        throw new Error("Invalid Gemini My Activity JSON structure in ZIP archive");
-      }
-    }
-    const numberedConvFiles = Object.keys(zip.files).filter((n) => /^conversations-\d+\.json$/.test(n)).sort();
-    if (numberedConvFiles.length > 0) {
-      const conversations = [];
-      for (const fileName of numberedConvFiles) {
-        const f = zip.file(fileName);
-        if (!f)
-          continue;
-        const json = await f.async("string");
-        for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
-          conversations.push(conv);
-        }
-      }
-      if (conversations.length === 0) {
-        throw new Error("No conversations found in numbered conversations files (conversations-XX.json)");
-      }
-      return conversations;
-    }
-    const conversationsFile = zip.file("conversations.json");
-    if (!conversationsFile) {
-      throw new Error("Missing conversations.json file, chat-{uuid}.json files, or Gemini My Activity JSON in ZIP archive");
-    }
-    const conversationsJson = await conversationsFile.async("string");
-    try {
-      const conversations = [];
-      for (const conversation of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
-        conversations.push(conversation);
-      }
-      if (conversations.length === 0) {
-        throw new Error("No conversations found in conversations.json");
-      }
-      return conversations;
-    } catch (error) {
-      logger.error("Failed to parse conversations.json in metadata extractor", error);
-      throw new Error("Invalid conversations.json structure");
-    }
+    const { conversations } = await extractRawConversations(zip);
+    return conversations;
   }
   /**
    * Extract metadata based on detected provider
@@ -24599,20 +24645,16 @@ var ConversationMetadataExtractor = class {
             `Metadata extraction: large archive detected for ${file.name} (reason: ${archiveModeDecision.reason}, size=${file.size})`
           );
         }
-        console.log(`[NexusAI] metadata-extractor: loading ${file.name} (${file.size} bytes, mobile=${!file.path})`);
-        const zipContent = await loadZipSelective(
-          file,
-          (entryName) => entryName.endsWith(".json")
-        );
-        console.log(`[NexusAI] metadata-extractor: ZIP loaded \u2014 ${Object.keys(zipContent.files).length} JSON entries`);
-        const metadata = await this.extractMetadataFromZip(
-          zipContent,
-          forcedProvider,
-          file.name,
-          i,
-          void 0
-          // Don't compare with vault yet
-        );
+        console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [meta/decompress] Loading ${file.name} (${file.size} bytes, mobile=${!file.path})`);
+        const metadata = await (async () => {
+          const zc = await loadZipSelective(
+            file,
+            (entryName) => entryName.endsWith(".json")
+          );
+          console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [meta/decompress] ZIP loaded \u2014 ${Object.keys(zc.files).length} JSON entries`);
+          return this.extractMetadataFromZip(zc, forcedProvider, file.name, i, void 0);
+        })();
+        await new Promise((resolve) => setTimeout(resolve, 0));
         allConversationsFound.push(...metadata);
         const totalInFile = metadata.length;
         let duplicatesInFile = 0;
@@ -24697,6 +24739,7 @@ var ConversationMetadataExtractor = class {
       conversationsUpdated: filterResult.updatedCount,
       conversationsIgnored: filterResult.ignoredCount
     };
+    console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [P0/compare] total=${allConversationsFound.length} unique=${conversationMap.size} duplicates=${analysisInfo.duplicatesRemoved} new=${filterResult.newCount} updated=${filterResult.updatedCount} unchanged=${filterResult.ignoredCount}`);
     return {
       conversations: filterResult.conversations,
       analysisInfo,
