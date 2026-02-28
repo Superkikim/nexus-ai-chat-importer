@@ -292,6 +292,9 @@ async function decompressEntry(
 ): Promise<Uint8Array> {
     if (entry.compressedSize === 0) return new Uint8Array(0);
 
+    // eslint-disable-next-line no-console
+    console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [decompressEntry] "${entry.name}" compressed=${entry.compressedSize} uncompressed=${entry.uncompressedSize}`);
+
     // Read local file header to find the exact data start offset.
     // Local header: 30 bytes fixed + nameLen + extraLen (may differ from CD extra).
     const localHeader = await readSlice(file, entry.localHeaderOffset, 30);
@@ -353,6 +356,8 @@ async function decompressEntry(
             result.set(chunk, offset);
             offset += chunk.length;
         }
+        // eslint-disable-next-line no-console
+        console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [decompressEntry] done "${entry.name}" → ${result.byteLength} bytes`);
         return result;
     }
 

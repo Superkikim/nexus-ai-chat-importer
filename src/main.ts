@@ -473,10 +473,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     // and parsed conversation objects from this file are still in the heap
                     // immediately after handleZipFile returns. Without a yield, the next
                     // file's validateZipFile can trigger OOM before the GC has a chance
-                    // to free that memory. 50ms is enough for one GC cycle on iOS.
+                    // to free that memory. 200ms allows a full major GC cycle on iOS.
                     // eslint-disable-next-line no-console
                     console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] GC yield before next file`);
-                    await new Promise<void>(resolve => setTimeout(resolve, 50));
+                    await new Promise<void>(resolve => setTimeout(resolve, 200));
                 } else {
                     // eslint-disable-next-line no-console
                     console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleImportAll] Skipping ${file.name} — no conversations to import`);
@@ -652,7 +652,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 // Yield to GC before next file (see handleImportAll for rationale)
                 // eslint-disable-next-line no-console
                 console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] GC yield before next file`);
-                await new Promise<void>(resolve => setTimeout(resolve, 50));
+                await new Promise<void>(resolve => setTimeout(resolve, 200));
             } else {
                 // eslint-disable-next-line no-console
                 console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [handleConvSelection] Skipping ${file.name} — no conversations to import`);

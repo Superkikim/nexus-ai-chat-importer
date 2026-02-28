@@ -20592,6 +20592,7 @@ __name(parseCentralDirectory, "parseCentralDirectory");
 async function decompressEntry(file, entry) {
   if (entry.compressedSize === 0)
     return new Uint8Array(0);
+  console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [decompressEntry] "${entry.name}" compressed=${entry.compressedSize} uncompressed=${entry.uncompressedSize}`);
   const localHeader = await readSlice(file, entry.localHeaderOffset, 30);
   const localView = new DataView(localHeader);
   if (localView.getUint32(0, true) !== 67324752) {
@@ -20635,6 +20636,7 @@ async function decompressEntry(file, entry) {
       result.set(chunk, offset);
       offset += chunk.length;
     }
+    console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [decompressEntry] done "${entry.name}" \u2192 ${result.byteLength} bytes`);
     return result;
   }
   throw new Error(
@@ -21213,15 +21215,20 @@ async function extractRawConversations(zip) {
   if (numberedConvFiles.length > 0) {
     const conversations = [];
     let uncompressedBytes = 0;
-    for (const fileName of numberedConvFiles) {
+    for (let i = 0; i < numberedConvFiles.length; i++) {
+      const fileName = numberedConvFiles[i];
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [extract] [${i + 1}/${numberedConvFiles.length}] Loading "${fileName}"`);
       const f = zip.file(fileName);
       if (!f)
         continue;
       const json = await f.async("string");
       uncompressedBytes += json.length;
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [extract] [${i + 1}/${numberedConvFiles.length}] Parsed "${fileName}" \u2014 ${json.length} chars \u2192 streaming`);
       for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
         conversations.push(conv);
       }
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [extract] [${i + 1}/${numberedConvFiles.length}] Done \u2014 ${conversations.length} conversations total \u2014 GC yield`);
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
     if (conversations.length === 0) {
       throw new NexusAiChatImporterError(
@@ -21642,6 +21649,8 @@ Do NOT extract and re-compress the file - just rename it!`;
         title: "Extracting conversations...",
         detail: "Reading conversation data from ZIP file"
       });
+      console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [4/4 import] GC yield before JSON extraction`);
+      await new Promise((resolve) => setTimeout(resolve, 50));
       const extractionResult = await this.extractRawConversationsFromZip(zip, zipSizeBytes);
       let rawConversations = extractionResult.conversations;
       const archiveModeDecision = extractionResult.archiveModeDecision;
@@ -25361,7 +25370,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
             console.error(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] FAILED: ${file.name}:`, error instanceof Error ? error.message : error);
           }
           console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] GC yield before next file`);
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         } else {
           console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleImportAll] Skipping ${file.name} \u2014 no conversations to import`);
         }
@@ -25482,7 +25491,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
         }
         console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] GC yield before next file`);
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       } else {
         console.log(`[NexusAI][${new Date().toISOString().slice(11, 23)}] [handleConvSelection] Skipping ${file.name} \u2014 no conversations to import`);
       }

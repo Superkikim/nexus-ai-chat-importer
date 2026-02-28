@@ -469,6 +469,12 @@ export class ImportService {
                 detail: 'Reading conversation data from ZIP file'
             });
 
+            // GC yield: give JavaScriptCore time to free memory from any previous
+            // ZIP's conversation objects before this file's decompression begins.
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [4/4 import] GC yield before JSON extraction`);
+            await new Promise<void>(resolve => setTimeout(resolve, 50));
+
             // Extract raw conversation data (provider agnostic)
 	            const extractionResult = await this.extractRawConversationsFromZip(zip, zipSizeBytes);
 	            let rawConversations = extractionResult.conversations;

@@ -146,14 +146,24 @@ export async function extractRawConversations(
         const conversations: any[] = [];
         let uncompressedBytes = 0;
 
-        for (const fileName of numberedConvFiles) {
+        for (let i = 0; i < numberedConvFiles.length; i++) {
+            const fileName = numberedConvFiles[i];
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [extract] [${i + 1}/${numberedConvFiles.length}] Loading "${fileName}"`);
             const f = zip.file(fileName);
             if (!f) continue;
             const json = await f.async("string");
             uncompressedBytes += json.length;
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [extract] [${i + 1}/${numberedConvFiles.length}] Parsed "${fileName}" — ${json.length} chars → streaming`);
             for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
                 conversations.push(conv);
             }
+            // eslint-disable-next-line no-console
+            console.log(`[NexusAI][${new Date().toISOString().slice(11,23)}] [extract] [${i + 1}/${numberedConvFiles.length}] Done — ${conversations.length} conversations total — GC yield`);
+            // Yield to GC: allows the JS engine to collect the previous iteration's
+            // decompressed JSON string before allocating memory for the next file.
+            await new Promise<void>(resolve => setTimeout(resolve, 0));
         }
 
         if (conversations.length === 0) {
