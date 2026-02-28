@@ -52,6 +52,7 @@ export class StorageService {
             this.isDirty = false;
         } catch (error) {
             this.plugin.logger.error("saveData failed:", error);
+            throw error;
         }
     }
 
