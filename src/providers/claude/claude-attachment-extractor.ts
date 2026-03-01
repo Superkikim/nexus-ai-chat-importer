@@ -18,11 +18,11 @@
 
 
 // src/providers/claude/claude-attachment-extractor.ts
-import JSZip from "jszip";
 import { StandardAttachment } from "../../types/standard";
 import { Logger } from "../../logger";
 import { isImageFile, isTextFile } from "../../utils/file-utils";
 import type NexusAiChatImporterPlugin from "../../main";
+import { ZipArchiveReader, ZipEntryHandle, writeZipEntryToVault } from "../../utils/zip-loader";
 
 export class ClaudeAttachmentExtractor {
     constructor(
@@ -36,7 +36,7 @@ export class ClaudeAttachmentExtractor {
      * This method handles the "files not found" case gracefully
      */
     async extractAttachments(
-        zip: JSZip,
+        zip: ZipArchiveReader,
         conversationId: string,
         attachments: StandardAttachment[]
     ): Promise<StandardAttachment[]> {
@@ -71,17 +71,22 @@ export class ClaudeAttachmentExtractor {
      * Claude exports typically don't include files, so we create informative placeholders
      */
     private async processAttachment(
-        zip: JSZip,
+        zip: ZipArchiveReader,
         conversationId: string,
         attachment: StandardAttachment
     ): Promise<StandardAttachment> {
         const fileName = attachment.fileName;
 
         // Try to find the file in the ZIP (unlikely for Claude exports)
-        const zipFile = this.findFileInZip(zip, fileName);
+        const zipPath = await this.findFileInZip(zip, fileName);
 
-        if (!zipFile) {
+        if (!zipPath) {
             // This is the normal case for Claude - files are not included in export
+            return this.createFileNotFoundPlaceholder(attachment, conversationId);
+        }
+
+        const zipFile = zip.get(zipPath);
+        if (!zipFile) {
             return this.createFileNotFoundPlaceholder(attachment, conversationId);
         }
 
@@ -141,23 +146,21 @@ export class ClaudeAttachmentExtractor {
      * Find a file in the ZIP archive
      * Claude files might be in root or in subdirectories
      */
-    private findFileInZip(zip: JSZip, fileName: string): JSZip.JSZipObject | null {
+    private async findFileInZip(zip: ZipArchiveReader, fileName: string): Promise<string | null> {
         // Try exact match first
-        let file = zip.file(fileName);
-        if (file) return file;
+        if (zip.has(fileName)) return fileName;
 
         // Try in common subdirectories
         const commonPaths = ['attachments/', 'files/', 'uploads/'];
         for (const path of commonPaths) {
-            file = zip.file(path + fileName);
-            if (file) return file;
+            if (zip.has(path + fileName)) return path + fileName;
         }
 
         // Search through all files for a match
-        const allFiles = Object.keys(zip.files);
-        for (const filePath of allFiles) {
-            if (filePath.endsWith(fileName) || filePath.includes(fileName)) {
-                return zip.file(filePath);
+        const allFiles = await zip.listEntries();
+        for (const entry of allFiles) {
+            if (entry.path.endsWith(fileName) || entry.path.includes(fileName)) {
+                return entry.path;
             }
         }
 
@@ -168,16 +171,13 @@ export class ClaudeAttachmentExtractor {
      * Process image attachment
      */
     private async processImageAttachment(
-        zipFile: JSZip.JSZipObject,
+        zipFile: ZipEntryHandle,
         attachment: StandardAttachment,
         conversationId: string
     ): Promise<StandardAttachment> {
         try {
-            const imageData = await zipFile.async("base64");
             const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-            
-            // Save to vault (always enabled)
-            const filePath = await this.saveAttachmentToVault(fileName, imageData, true, "images");
+            const filePath = await this.saveAttachmentToVault(fileName, zipFile, "images");
 
             return {
                 ...attachment,
@@ -197,11 +197,11 @@ export class ClaudeAttachmentExtractor {
      * Process text attachment
      */
     private async processTextAttachment(
-        zipFile: JSZip.JSZipObject,
+        zipFile: ZipEntryHandle,
         attachment: StandardAttachment
     ): Promise<StandardAttachment> {
         try {
-            const textContent = await zipFile.async("string");
+            const textContent = await zipFile.readText();
             
             return {
                 ...attachment,
@@ -220,14 +220,13 @@ export class ClaudeAttachmentExtractor {
      * Process binary attachment
      */
     private async processBinaryAttachment(
-        zipFile: JSZip.JSZipObject,
+        zipFile: ZipEntryHandle,
         attachment: StandardAttachment,
         conversationId: string
     ): Promise<StandardAttachment> {
         try {
-            const binaryData = await zipFile.async("base64");
             const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-            const filePath = await this.saveAttachmentToVault(fileName, binaryData, true, "documents");
+            const filePath = await this.saveAttachmentToVault(fileName, zipFile, "documents");
 
             return {
                 ...attachment,
@@ -262,7 +261,7 @@ export class ClaudeAttachmentExtractor {
     /**
      * Save attachment to vault using attachmentFolder setting
      */
-    private async saveAttachmentToVault(fileName: string, data: string, isBase64: boolean, category: string = "files"): Promise<string> {
+    private async saveAttachmentToVault(fileName: string, zipFile: { readBytes(): Promise<Uint8Array> }, category: string = "files"): Promise<string> {
         const attachmentFolder = `${this.plugin.settings.attachmentFolder}/claude/${category}`;
 
         // Ensure folder exists
@@ -273,19 +272,7 @@ export class ClaudeAttachmentExtractor {
         }
 
         const filePath = `${attachmentFolder}/${fileName}`;
-
-        if (isBase64) {
-            // Convert base64 to array buffer for binary files
-            const binaryString = atob(data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            await this.plugin.app.vault.createBinary(filePath, bytes.buffer);
-        } else {
-            await this.plugin.app.vault.create(filePath, data);
-        }
-
-        return filePath;
+        const writeResult = await writeZipEntryToVault(zipFile as any, filePath, this.plugin.app.vault);
+        return writeResult.targetPath;
     }
 }

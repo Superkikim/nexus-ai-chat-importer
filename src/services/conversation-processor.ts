@@ -28,7 +28,6 @@ import { FileService } from "./file-service";
 import { ProviderRegistry } from "../providers/provider-adapter";
 import { ImportProgressCallback } from "../ui/import-progress-modal";
 import { logger } from "../logger";
-import JSZip from "jszip";
 import {
     isValidMessage,
     ensureFolderExists,
@@ -38,6 +37,7 @@ import {
     compareTimestampsIgnoringSeconds
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
+import { ZipArchiveReader } from "../utils/zip-loader";
 
 export class ConversationProcessor {
     private messageFormatter: MessageFormatter;
@@ -66,7 +66,7 @@ export class ConversationProcessor {
     /**
      * Process raw conversations (provider agnostic entry point)
      */
-    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: JSZip, isReprocess: boolean = false, forcedProvider?: string, progressCallback?: ImportProgressCallback): Promise<ImportReport> {
+    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: ZipArchiveReader, isReprocess: boolean = false, forcedProvider?: string, progressCallback?: ImportProgressCallback): Promise<ImportReport> {
         // Use forced provider or detect from raw data structure
         const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
 
@@ -79,6 +79,54 @@ export class ConversationProcessor {
         }
 
         return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess, progressCallback);
+    }
+
+    async processConversationStream(
+        provider: string,
+        generator: AsyncGenerator<any>,
+        importReport: ImportReport,
+        zip?: ZipArchiveReader,
+        isReprocess: boolean = false,
+        selectedIds?: Set<string>,
+        progressCallback?: ImportProgressCallback,
+        approxTotal?: number
+    ): Promise<ImportReport> {
+        this.currentProvider = provider;
+        const adapter = this.providerRegistry.getAdapter(provider);
+
+        if (!adapter) {
+            importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
+            return importReport;
+        }
+
+        const storage = this.plugin.getStorageService();
+        const existingConversationsMap = await storage.scanExistingConversations();
+        this.counters.totalExistingConversations = existingConversationsMap.size;
+
+        let processedCount = 0;
+
+        for await (const chat of generator) {
+            if (selectedIds && selectedIds.size > 0) {
+                let chatId: string | undefined;
+                try { chatId = adapter.getId(chat); } catch { chatId = undefined; }
+                if (!chatId || !selectedIds.has(chatId)) continue;
+            }
+
+            await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
+
+            processedCount++;
+            progressCallback?.({
+                phase: 'processing',
+                title: 'Processing conversations...',
+                detail: approxTotal
+                    ? `Processing conversation ${processedCount} of ${approxTotal}`
+                    : `Processing conversation ${processedCount}`,
+                current: processedCount,
+                total: approxTotal
+            });
+        }
+
+        return importReport;
     }
 
     /**
@@ -97,7 +145,7 @@ export class ConversationProcessor {
         provider: string,
         rawConversations: any[],
         importReport: ImportReport,
-        zip?: JSZip,
+        zip?: ZipArchiveReader,
         isReprocess: boolean = false,
         progressCallback?: ImportProgressCallback
     ): Promise<ImportReport> {
@@ -153,7 +201,7 @@ export class ConversationProcessor {
         chat: any,
         existingConversations: Map<string, ConversationCatalogEntry>,
         importReport: ImportReport,
-        zip?: JSZip,
+        zip?: ZipArchiveReader,
         isReprocess: boolean = false
     ): Promise<void> {
         try {
@@ -205,7 +253,7 @@ export class ConversationProcessor {
         chat: any,
         existingRecord: ConversationCatalogEntry,
         importReport: ImportReport,
-        zip?: JSZip,
+        zip?: ZipArchiveReader,
         isReprocess: boolean = false,
         isStandardConversation: boolean = false
     ): Promise<void> {
@@ -256,7 +304,7 @@ export class ConversationProcessor {
         chat: any,
         filePath: string,
         importReport: ImportReport,
-        zip?: JSZip,
+        zip?: ZipArchiveReader,
         isStandardConversation: boolean = false
     ): Promise<void> {
         this.counters.totalNewConversationsToImport++;
@@ -312,7 +360,7 @@ export class ConversationProcessor {
         filePath: string,
         totalMessageCount: number,
         importReport: ImportReport,
-        zip?: JSZip,
+        zip?: ZipArchiveReader,
         forceUpdate: boolean = false,
         isStandardConversation: boolean = false
     ): Promise<void> {
@@ -448,7 +496,7 @@ export class ConversationProcessor {
         chat: any,
         filePath: string,
         importReport: ImportReport,
-        zip?: JSZip,
+        zip?: ZipArchiveReader,
         isStandardConversation: boolean = false
     ): Promise<void> {
         try {

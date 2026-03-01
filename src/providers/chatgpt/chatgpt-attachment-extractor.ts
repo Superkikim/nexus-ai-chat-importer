@@ -18,19 +18,26 @@
 
 
 // src/providers/chatgpt/chatgpt-attachment-extractor.ts
-import JSZip from "jszip";
 import { StandardAttachment } from "../../types/standard";
 import { ensureFolderExists } from "../../utils";
-import { formatFileSize, detectFileFormat, getFileCategory, sanitizeFileName } from "../../utils/file-utils";
+import { formatFileSize, getFileCategory, sanitizeFileName } from "../../utils/file-utils";
 import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
 import { AttachmentMap, AttachmentLocation } from "../../services/attachment-map-builder";
+import {
+    AttachmentLookupIndex,
+    buildAttachmentLookupIndex,
+    writeZipEntryToVault,
+    ZipArchiveReader,
+    ZipEntryHandle,
+} from "../../utils/zip-loader";
 
 
 export class ChatGPTAttachmentExtractor {
-    private zipFileCache = new Map<string, JSZip.JSZipObject | null>(); // Cache for ZIP file lookups
+    private zipFileCache = new Map<string, { reader: ZipArchiveReader; path: string } | null>();
     private attachmentMap: AttachmentMap | null = null; // Multi-ZIP attachment map
-    private allZips: JSZip[] = []; // All opened ZIPs for multi-ZIP fallback
+    private allZips: ZipArchiveReader[] = [];
+    private lookupIndexCache = new WeakMap<object, AttachmentLookupIndex>();
 
     constructor(private plugin: NexusAiChatImporterPlugin, private logger: Logger) {}
 
@@ -38,7 +45,7 @@ export class ChatGPTAttachmentExtractor {
      * Set attachment map for multi-ZIP support
      * This enables fallback to older ZIPs when files are missing in recent exports
      */
-    setAttachmentMap(attachmentMap: AttachmentMap, allZips: JSZip[]): void {
+    setAttachmentMap(attachmentMap: AttachmentMap, allZips: ZipArchiveReader[]): void {
         this.attachmentMap = attachmentMap;
         this.allZips = allZips;
     }
@@ -58,7 +65,7 @@ export class ChatGPTAttachmentExtractor {
      * - If file missing: create informative note
      */
     async extractAttachments(
-        zip: JSZip,
+        zip: ZipArchiveReader,
         conversationId: string,
         attachments: StandardAttachment[],
         messageId?: string
@@ -99,15 +106,15 @@ export class ChatGPTAttachmentExtractor {
      * Process single attachment with best effort strategy
      */
     private async processAttachmentBestEffort(
-        zip: JSZip,
+        zip: ZipArchiveReader,
         conversationId: string,
         attachment: StandardAttachment,
         messageId?: string
     ): Promise<StandardAttachment> {
         // Try to find file in ZIP
-        const zipFile = await this.findChatGPTFileById(zip, attachment, conversationId, messageId);
+        const locatedFile = await this.findChatGPTFileById(zip, attachment, conversationId, messageId);
 
-        if (!zipFile) {
+        if (!locatedFile) {
             // File not found - handle DALL-E images specially
             let finalExtractedContent = attachment.extractedContent;
 
@@ -134,7 +141,7 @@ export class ChatGPTAttachmentExtractor {
 
         // File found - try to extract it
         try {
-            const extractResult = await this.extractSingleAttachment(zip, conversationId, attachment, zipFile);
+            const extractResult = await this.extractSingleAttachment(conversationId, attachment, locatedFile);
 
             if (extractResult) {
                 // For generated images with extractedContent, replace placeholders
@@ -217,50 +224,45 @@ export class ChatGPTAttachmentExtractor {
      * Extract single attachment to disk with conflict resolution and format detection
      */
     private async extractSingleAttachment(
-        zip: JSZip,
         conversationId: string,
         attachment: StandardAttachment,
-        zipFile: JSZip.JSZipObject
+        locatedFile: { reader: ZipArchiveReader; path: string }
     ): Promise<{localPath: string, finalFileName: string, actualFileType: string} | null> {
-        // Get file content for format detection
-        const fileContent = await zipFile.async("uint8array");
-
-        // Detect actual file format (especially for .dat files)
-        const formatInfo = detectFileFormat(fileContent);
-        
-        // Update filename with correct extension if needed (for all generated images)
         let finalFileName = attachment.fileName;
         let finalFileType = attachment.fileType;
-
-        if (attachment.attachmentType === 'generated_image' && formatInfo.extension) {
-            // Correct extension for generated images (handles .dat, .webp, .jpg, .png)
-            const baseName = attachment.fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, '');
-            finalFileName = `${baseName}.${formatInfo.extension}`;
-            finalFileType = formatInfo.mimeType || attachment.fileType;
-        }
-        
-        // Generate target path for saving
-        let targetPath = this.generateLocalPath(conversationId, {
-            ...attachment,
-            fileName: finalFileName,
-            fileType: finalFileType
-        });
-
-        // Ensure folder exists
-        const folderPath = targetPath.substring(0, targetPath.lastIndexOf('/'));
-        const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
-        if (!folderResult.success) {
-            throw new Error(`Failed to create ChatGPT attachment folder: ${folderResult.error}`);
+        const entry = locatedFile.reader.get(locatedFile.path);
+        if (!entry) {
+            throw new Error(`Attachment entry disappeared from ZIP reader: ${locatedFile.path}`);
         }
 
-        // Handle file conflicts by adding suffix if needed
-        targetPath = await this.resolveFileConflict(targetPath);
+        const writeResult = await writeZipEntryToVault(
+            entry,
+            async (detection) => {
+                if (attachment.attachmentType === 'generated_image' && detection.detectedExtension) {
+                    const baseName = attachment.fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, '');
+                    finalFileName = `${baseName}.${detection.detectedExtension}`;
+                    finalFileType = detection.detectedMimeType || attachment.fileType;
+                }
 
-        // Save file
-        await this.plugin.app.vault.adapter.writeBinary(targetPath, fileContent.buffer as ArrayBuffer);
+                let targetPath = this.generateLocalPath(conversationId, {
+                    ...attachment,
+                    fileName: finalFileName,
+                    fileType: finalFileType
+                });
+
+                const folderPath = targetPath.substring(0, targetPath.lastIndexOf('/'));
+                const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
+                if (!folderResult.success) {
+                    throw new Error(`Failed to create attachment folder: ${folderResult.error}`);
+                }
+
+                return this.resolveFileConflict(targetPath);
+            },
+            this.plugin.app.vault
+        );
 
         return {
-            localPath: targetPath,
+            localPath: writeResult.targetPath,
             finalFileName: finalFileName,
             actualFileType: finalFileType || 'application/octet-stream'
         };
@@ -295,11 +297,11 @@ export class ChatGPTAttachmentExtractor {
      * Find file in ZIP - ENHANCED WITH MULTI-ZIP FALLBACK + COMPREHENSIVE SEARCH + CACHING
      */
     private async findChatGPTFileById(
-        zip: JSZip,
+        zip: ZipArchiveReader,
         attachment: StandardAttachment,
         conversationId?: string,
         messageId?: string
-    ): Promise<JSZip.JSZipObject | null> {
+    ): Promise<{ reader: ZipArchiveReader; path: string } | null> {
         if (!attachment.fileId) {
             const context = conversationId && messageId
                 ? `conversation: ${conversationId}, message: ${messageId}`
@@ -309,9 +311,8 @@ export class ChatGPTAttachmentExtractor {
             this.logger.warn(`No fileId provided for attachment: ${attachment.fileName} (${context})`);
 
             // Fallback: try to find by filename only
-            const zipFile = zip.file(attachment.fileName);
-            if (zipFile) {
-                return zipFile;
+            if (zip.has(attachment.fileName)) {
+                return { reader: zip, path: attachment.fileName };
             }
 
             return null;
@@ -332,77 +333,51 @@ export class ChatGPTAttachmentExtractor {
             }
         }
 
+        const index = await this.getLookupIndex(zip);
+
         // Strategy 1: Try exact filename match first
-        let zipFile = zip.file(attachment.fileName);
-        if (zipFile) {
-            this.zipFileCache.set(cacheKey, zipFile);
-            return zipFile;
+        if (zip.has(attachment.fileName)) {
+            const located = { reader: zip, path: attachment.fileName };
+            this.zipFileCache.set(cacheKey, located);
+            return located;
         }
 
         // Strategy 2: DALL-E Strategy - Check dalle-generations/ folder first (restored from v1.2.0)
         if (attachment.fileName.startsWith('dalle_')) {
-            const dalleFiles = await this.searchDalleGenerations(zip, attachment.fileId);
+            const dalleFiles = this.findCandidatePaths(index.byDalleId, attachment.fileId);
             if (dalleFiles.length > 0) {
-                this.zipFileCache.set(cacheKey, dalleFiles[0]);
-                return dalleFiles[0]; // Return first match
+                const located = { reader: zip, path: dalleFiles[0] };
+                this.zipFileCache.set(cacheKey, located);
+                return located;
             }
         }
 
         // Strategy 3: Regular file ID patterns (restored from v1.2.0)
         const fileIdPattern = `${attachment.fileId}-${attachment.fileName}`;
-        zipFile = zip.file(fileIdPattern);
-        if (zipFile) {
-            this.zipFileCache.set(cacheKey, zipFile);
-            return zipFile;
+        if (zip.has(fileIdPattern)) {
+            const located = { reader: zip, path: fileIdPattern };
+            this.zipFileCache.set(cacheKey, located);
+            return located;
         }
 
         // Strategy 4: Pattern file-{ID}.{ext} (restored from v1.2.0)
         const extension = this.getFileExtension(attachment.fileName);
         if (extension) {
             const fileIdExtPattern = `${attachment.fileId}.${extension}`;
-            zipFile = zip.file(fileIdExtPattern);
-            if (zipFile) {
-                this.zipFileCache.set(cacheKey, zipFile);
-                return zipFile;
+            if (zip.has(fileIdExtPattern)) {
+                const located = { reader: zip, path: fileIdExtPattern };
+                this.zipFileCache.set(cacheKey, located);
+                return located;
             }
         }
 
-        // Strategy 5: Comprehensive search by file ID in entire ZIP
-        const foundFile = await this.searchZipByFileId(zip, attachment.fileId);
+        const candidates = this.findCandidatePaths(index.byFileId, attachment.fileId);
+        const foundFile = candidates.length > 0 ? { reader: zip, path: candidates[0] } : null;
 
         // Cache result (even if null)
         this.zipFileCache.set(cacheKey, foundFile);
 
         return foundFile;
-    }
-
-    /**
-     * Search entire ZIP for file by exact ID with enhanced DALL-E support
-     */
-    private async searchZipByFileId(zip: JSZip, fileId: string): Promise<JSZip.JSZipObject | null> {
-        // Search through all files in ZIP for exact match
-        for (const [path, file] of Object.entries(zip.files)) {
-            if (file.dir) continue;
-
-            // Strategy 1: Check if path contains the exact file ID
-            if (path.includes(fileId)) {
-                return file;
-            }
-
-            // Strategy 2: For DALL-E files, also check common patterns
-            // DALL-E files might be stored as:
-            // - dalle/file-{fileId}.png
-            // - images/{fileId}.dat
-            // - attachments/{fileId}
-            const fileName = path.split('/').pop() || '';
-            if (fileName.includes(fileId) ||
-                fileName.startsWith(`file-${fileId}`) ||
-                fileName.startsWith(fileId)) {
-                return file;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -413,7 +388,7 @@ export class ChatGPTAttachmentExtractor {
         attachment: StandardAttachment,
         conversationId?: string,
         messageId?: string
-    ): Promise<JSZip.JSZipObject | null> {
+    ): Promise<{ reader: ZipArchiveReader; path: string } | null> {
         if (!this.attachmentMap || this.allZips.length === 0) {
             return null;
         }
@@ -480,41 +455,20 @@ export class ChatGPTAttachmentExtractor {
     /**
      * Get JSZip file object from attachment location
      */
-    private getFileFromLocation(location: AttachmentLocation): JSZip.JSZipObject | null {
+    private getFileFromLocation(location: AttachmentLocation): { reader: ZipArchiveReader; path: string } | null {
         if (location.zipIndex >= this.allZips.length) {
             this.logger.error(`Invalid ZIP index ${location.zipIndex} (only ${this.allZips.length} ZIPs available)`);
             return null;
         }
 
         const zip = this.allZips[location.zipIndex];
-        const zipFile = zip.file(location.path);
 
-        if (!zipFile) {
+        if (!zip.has(location.path)) {
             this.logger.error(`File not found in ZIP ${location.zipIndex}: ${location.path}`);
             return null;
         }
 
-        return zipFile;
-    }
-
-    /**
-     * Search specifically in dalle-generations/ folder (restored from v1.2.0)
-     */
-    private async searchDalleGenerations(zip: JSZip, fileId: string): Promise<JSZip.JSZipObject[]> {
-        const matches: JSZip.JSZipObject[] = [];
-
-        for (const [path, file] of Object.entries(zip.files)) {
-            if (!file.dir && path.toLowerCase().includes('dalle')) {
-                // Check various patterns for DALL-E files
-                if (path.includes(fileId) ||
-                    path.includes(fileId.replace('file_', '')) ||
-                    path.includes(fileId.replace('file-', ''))) {
-                    matches.push(file);
-                }
-            }
-        }
-
-        return matches;
+        return { reader: zip, path: location.path };
     }
 
     /**
@@ -574,6 +528,30 @@ export class ChatGPTAttachmentExtractor {
      */
     clearCache(): void {
         this.zipFileCache.clear();
+    }
+
+    private async getLookupIndex(zip: ZipArchiveReader): Promise<AttachmentLookupIndex> {
+        const cached = this.lookupIndexCache.get(zip as object);
+        if (cached) {
+            return cached;
+        }
+
+        const entries = await zip.listEntries();
+        const index = buildAttachmentLookupIndex(entries);
+        this.lookupIndexCache.set(zip as object, index);
+        return index;
+    }
+
+    private findCandidatePaths(index: Map<string, string[]>, fileId: string): string[] {
+        const exact = index.get(fileId);
+        if (exact && exact.length > 0) return exact;
+
+        for (const alternative of this.getAlternativeFileIds(fileId)) {
+            const matches = index.get(alternative);
+            if (matches && matches.length > 0) return matches;
+        }
+
+        return [];
     }
 
     /**

@@ -18,9 +18,9 @@
 
 
 // src/providers/base/base-provider-adapter.ts
-import JSZip from "jszip";
 import { ProviderAdapter } from "../provider-adapter";
 import { StandardConversation, StandardMessage, StandardAttachment, ReportNamingStrategy } from "../../types/standard";
+import { ZipArchiveReader } from "../../utils/zip-loader";
 
 /**
  * Interface for attachment extractors
@@ -30,14 +30,14 @@ export interface AttachmentExtractor {
     /**
      * Extract attachments from ZIP file
      * 
-     * @param zip - JSZip instance containing the archive
+     * @param zip - ZIP reader instance containing the archive
      * @param conversationId - ID of the conversation
      * @param attachments - Array of attachments to extract
      * @param messageId - Optional message ID for better logging
      * @returns Array of processed attachments with local paths
      */
     extractAttachments(
-        zip: JSZip,
+        zip: ZipArchiveReader,
         conversationId: string,
         attachments: any[],
         messageId?: string
@@ -65,13 +65,13 @@ export abstract class BaseProviderAdapter<TChat = any> implements ProviderAdapte
      * 
      * @param messages - Array of messages to process
      * @param conversationId - ID of the conversation
-     * @param zip - JSZip instance containing attachments
+     * @param zip - ZIP reader instance containing attachments
      * @returns Array of messages with processed attachments
      */
     async processMessageAttachments(
         messages: StandardMessage[],
         conversationId: string,
-        zip: JSZip
+        zip: ZipArchiveReader
     ): Promise<StandardMessage[]> {
         const processedMessages: StandardMessage[] = [];
 
@@ -161,4 +161,3 @@ export abstract class BaseProviderAdapter<TChat = any> implements ProviderAdapte
         return true;
     }
 }
-

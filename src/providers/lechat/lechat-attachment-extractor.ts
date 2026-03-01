@@ -16,13 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import JSZip from "jszip";
 import { StandardAttachment } from "../../types/standard";
 import { ensureFolderExists } from "../../utils";
-import { formatFileSize, detectFileFormat, getFileCategory, sanitizeFileName } from "../../utils/file-utils";
+import { getFileCategory, sanitizeFileName } from "../../utils/file-utils";
 import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
 import { AttachmentMap } from "../../services/attachment-map-builder";
+import { ZipArchiveReader, writeZipEntryToVault } from "../../utils/zip-loader";
 
 /**
  * Attachment extractor for Le Chat (Mistral AI)
@@ -31,16 +31,16 @@ import { AttachmentMap } from "../../services/attachment-map-builder";
  * Each file is stored with its original name.
  */
 export class LeChatAttachmentExtractor {
-    private zipFileCache = new Map<string, JSZip.JSZipObject | null>();
+    private zipFileCache = new Map<string, string | null>();
     private attachmentMap: AttachmentMap | null = null;
-    private allZips: JSZip[] = [];
+    private allZips: ZipArchiveReader[] = [];
 
     constructor(private plugin: NexusAiChatImporterPlugin, private logger: Logger) {}
 
     /**
      * Set attachment map for multi-ZIP support
      */
-    setAttachmentMap(attachmentMap: AttachmentMap, allZips: JSZip[]): void {
+    setAttachmentMap(attachmentMap: AttachmentMap, allZips: ZipArchiveReader[]): void {
         this.attachmentMap = attachmentMap;
         this.allZips = allZips;
     }
@@ -58,7 +58,7 @@ export class LeChatAttachmentExtractor {
      * Extract and save Le Chat attachments
      */
     async extractAttachments(
-        zip: JSZip,
+        zip: ZipArchiveReader,
         conversationId: string,
         attachments: StandardAttachment[],
         messageId?: string
@@ -99,7 +99,7 @@ export class LeChatAttachmentExtractor {
      * Process single attachment
      */
     private async processAttachment(
-        zip: JSZip,
+        zip: ZipArchiveReader,
         conversationId: string,
         attachment: StandardAttachment,
         messageId?: string
@@ -108,10 +108,10 @@ export class LeChatAttachmentExtractor {
         const zipPath = `chat-${conversationId}-files/${attachment.fileName}`;
         
         // Try to find file in ZIP
-        let zipFile = this.findFileInZip(zip, zipPath);
+        let zipPathMatch = await this.findFileInZip(zip, zipPath);
         
         // If not found, try attachment map (multi-ZIP support)
-        if (!zipFile && this.attachmentMap) {
+        if (!zipPathMatch && this.attachmentMap) {
             const locations = this.attachmentMap.get(attachment.fileName);
             if (locations && locations.length > 0) {
                 // Try each location
@@ -119,15 +119,15 @@ export class LeChatAttachmentExtractor {
                     const zipIndex = this.allZips.indexOf(zip);
                     if (zipIndex !== -1 && location.zipIndex < this.allZips.length) {
                         const targetZip = this.allZips[location.zipIndex];
-                        zipFile = this.findFileInZip(targetZip, location.path);
-                        if (zipFile) break;
+                        zipPathMatch = await this.findFileInZip(targetZip, location.path);
+                        if (zipPathMatch) break;
                     }
                 }
             }
         }
 
         // If file not found, return attachment with not found status
-        if (!zipFile) {
+        if (!zipPathMatch) {
             return {
                 ...attachment,
                 status: {
@@ -140,22 +140,8 @@ export class LeChatAttachmentExtractor {
         }
 
         // Extract file content
-        const fileContent = await zipFile.async("uint8array");
-
-        // Detect file format if needed
         let finalFileName = attachment.fileName;
         let finalFileType = attachment.fileType;
-
-        if (!finalFileType || finalFileType === 'application/octet-stream') {
-            const detected = detectFileFormat(fileContent);
-            if (detected.extension && detected.mimeType) {
-                finalFileType = detected.mimeType;
-                // Update extension if detected
-                if (!finalFileName.includes('.')) {
-                    finalFileName = `${finalFileName}.${detected.extension}`;
-                }
-            }
-        }
 
         // Generate unique filename to avoid collisions (like Claude does)
         const uniqueFileName = this.generateUniqueFileName(finalFileName, conversationId, messageId);
@@ -174,19 +160,31 @@ export class LeChatAttachmentExtractor {
         // Resolve file conflicts by adding numeric suffix if needed
         vaultPath = await this.resolveFileConflict(vaultPath);
 
-        // Save file to vault
-        await this.plugin.app.vault.adapter.writeBinary(vaultPath, fileContent.buffer as ArrayBuffer);
+        const entry = zip.get(zipPathMatch);
+        if (!entry) {
+            throw new Error(`Attachment entry disappeared from ZIP reader: ${zipPathMatch}`);
+        }
+
+        const writeResult = await writeZipEntryToVault(
+            entry,
+            vaultPath,
+            this.plugin.app.vault
+        );
+
+        if ((!finalFileType || finalFileType === 'application/octet-stream') && writeResult.detectedMimeType) {
+            finalFileType = writeResult.detectedMimeType;
+        }
 
         return {
             ...attachment,
             fileName: finalFileName,
             fileType: finalFileType,
-            fileSize: fileContent.length,
-            url: vaultPath,
+            fileSize: writeResult.byteLength,
+            url: writeResult.targetPath,
             status: {
                 processed: true,
                 found: true,
-                localPath: vaultPath
+                localPath: writeResult.targetPath
             }
         };
     }
@@ -194,7 +192,7 @@ export class LeChatAttachmentExtractor {
     /**
      * Find file in ZIP with caching
      */
-    private findFileInZip(zip: JSZip, path: string): JSZip.JSZipObject | null {
+    private async findFileInZip(zip: ZipArchiveReader, path: string): Promise<string | null> {
         // Check cache first
         const cacheKey = `${zip}:${path}`;
         if (this.zipFileCache.has(cacheKey)) {
@@ -202,22 +200,22 @@ export class LeChatAttachmentExtractor {
         }
 
         // Try exact match
-        let file = zip.file(path);
+        let filePath = zip.has(path) ? path : null;
         
         // Try case-insensitive match
-        if (!file) {
+        if (!filePath) {
             const lowerPath = path.toLowerCase();
-            const allFiles = Object.keys(zip.files);
-            const matchingPath = allFiles.find(p => p.toLowerCase() === lowerPath);
+            const entries = await zip.listEntries();
+            const matchingPath = entries.map(entry => entry.path).find(p => p.toLowerCase() === lowerPath);
             if (matchingPath) {
-                file = zip.file(matchingPath);
+                filePath = matchingPath;
             }
         }
 
         // Cache result
-        this.zipFileCache.set(cacheKey, file);
+        this.zipFileCache.set(cacheKey, filePath);
 
-        return file;
+        return filePath;
     }
 
     /**
@@ -266,4 +264,3 @@ export class LeChatAttachmentExtractor {
         return finalPath;
     }
 }
-

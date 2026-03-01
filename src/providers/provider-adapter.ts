@@ -18,8 +18,8 @@
 
 
 // src/providers/provider-adapter.ts
-import JSZip from "jszip";
 import { ReportNamingStrategy, StandardConversation, StandardMessage, StandardAttachment } from "../types/standard";
+import { ZipArchiveReader } from "../utils/zip-loader";
 
 // Minimal provider-agnostic adapter contract
 export interface ProviderAdapter<TChat = any> {
@@ -45,7 +45,7 @@ export interface ProviderAdapter<TChat = any> {
   processMessageAttachments?(
     messages: StandardMessage[],
     conversationId: string,
-    zip: JSZip
+    zip: ZipArchiveReader
   ): Promise<StandardMessage[]>;
 
   // Report naming strategy for this provider
@@ -86,4 +86,3 @@ export class DefaultProviderRegistry implements ProviderRegistry {
     return 'unknown';
   }
 }
-
