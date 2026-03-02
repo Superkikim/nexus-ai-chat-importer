@@ -20,7 +20,6 @@
 // src/services/storage-service.ts
 import { ConversationCatalogEntry } from "../types/plugin";
 import { TFile } from "obsidian";
-import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
 import { DateParser } from "../utils/date-parser";
 
@@ -120,6 +119,10 @@ export class StorageService {
      * 3. Fallback to manual parsing for problematic files
      */
     async scanExistingConversations(): Promise<Map<string, ConversationCatalogEntry>> {
+        const storageLogger = this.plugin.logger.child("Storage");
+        const startedAt = Date.now();
+        storageLogger.info("Begin scanExistingConversations");
+
         // Step 1: Wait for cache to be clean (with timeout)
         await this.waitForCacheClean(1000); // Max 1 second wait
 
@@ -151,6 +154,12 @@ export class StorageService {
         let foundViaCache = 0;
         let foundViaManual = 0;
         let errors = 0;
+
+        storageLogger.info("Conversation files discovered for scan", {
+            conversationFolder,
+            markdownFileCount: allFiles.length,
+            conversationFileCount: conversationFiles.length,
+        });
 
         // Process files in batches
         const batchSize = 100;
@@ -187,6 +196,15 @@ export class StorageService {
                 await new Promise(resolve => setTimeout(resolve, 1));
             }
         }
+
+        storageLogger.info("scanExistingConversations complete", {
+            conversationCount: conversations.size,
+            processed,
+            foundViaCache,
+            foundViaManual,
+            errors,
+            durationMs: Date.now() - startedAt,
+        });
 
         return conversations;
     }

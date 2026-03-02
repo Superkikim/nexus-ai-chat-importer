@@ -32,9 +32,14 @@ import { ImportProgressModal, ImportProgressCallback } from "../ui/import-progre
 import { AttachmentMapBuilder, AttachmentMap } from "./attachment-map-builder";
 import { decideArchiveMode, ArchiveModeDecision } from "./archive-mode-decider";
 import type NexusAiChatImporterPlugin from "../main";
-import { createZipArchiveReader, enumerateZipEntries, ZipArchiveReader } from "../utils/zip-loader";
-import { extractConversationsStream, extractRawConversations, findGeminiActivityJsonFiles } from "../utils/zip-content-reader";
+import { createZipArchiveReader, ZipArchiveReader } from "../utils/zip-loader";
+import {
+    classifyArchiveEntries,
+    extractConversationsStream,
+    extractRawConversations,
+} from "../utils/zip-content-reader";
 import { filterConversationsByIds as filterConversationsByIdsUsingAdapters } from "../utils/conversation-filter";
+import { sortFilesForImport } from "../utils/file-sort";
 import type { GeminiIndex } from "../providers/gemini/gemini-types";
 
 export class ImportService {
@@ -86,21 +91,11 @@ export class ImportService {
     }
 
     private sortFilesByTimestamp(files: File[]): File[] {
-        return files.sort((a, b) => {
-            const timestampRegex = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
-            const getTimestamp = (filename: string) => {
-                const match = filename.match(timestampRegex);
-                if (!match) {
-                    this.plugin.logger.warn(`No timestamp found in filename: ${filename}`);
-                    return "0";
-                }
-                return match[1];
-            };
-            return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
-        });
+        return sortFilesForImport(files);
     }
 
     async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[], sharedReport?: ImportReport) {
+        const importLogger = this.plugin.logger.child("Import");
         // Validate file extension before processing
         const fileName = file.name.toLowerCase();
         if (!fileName.endsWith('.zip')) {
@@ -153,6 +148,14 @@ export class ImportService {
         }
 
         try {
+            importLogger.info(`Begin file import`, {
+                fileName: file.name,
+                forcedProvider: forcedProvider || "auto",
+                selectedConversationCount: selectedConversationIds?.length ?? null,
+                sharedReport: !!sharedReport,
+                fileSize: file.size,
+            });
+
             progressCallback({
                 phase: 'validation',
                 title: 'Validating ZIP structure...',
@@ -160,6 +163,10 @@ export class ImportService {
             });
 
             const zip = await this.validateZipFile(file, forcedProvider);
+            importLogger.info(`ZIP validated`, {
+                fileName: file.name,
+                forcedProvider: forcedProvider || "auto",
+            });
 
             // When using shared report (new workflow), skip the "already imported" check
             // because the analysis already determined what needs to be imported
@@ -210,6 +217,10 @@ export class ImportService {
             }
 
 	            processingStarted = true;
+	            importLogger.info(`Begin conversation processing`, {
+	                fileName: file.name,
+	                forcedProvider: forcedProvider || "auto",
+	            });
 	            await this.processConversations(
 	                zip,
 	                file,
@@ -231,6 +242,12 @@ export class ImportService {
                 detail: `Processed ${this.conversationProcessor.getCounters().totalNewConversationsToImport + this.conversationProcessor.getCounters().totalExistingConversationsToUpdate} conversations`
             });
 
+            importLogger.info(`File import completed`, {
+                fileName: file.name,
+                created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
+                updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
+            });
+
         } catch (error: unknown) {
             const message = error instanceof NexusAiChatImporterError
                 ? error.message
@@ -239,6 +256,11 @@ export class ImportService {
                 : "An unknown error occurred";
 
             this.plugin.logger.error("Error handling zip file", { message });
+            importLogger.error(`File import failed`, {
+                fileName: file.name,
+                forcedProvider: forcedProvider || "auto",
+                message,
+            });
 
             progressCallback({
                 phase: 'error',
@@ -267,98 +289,57 @@ export class ImportService {
     }
 
     private async validateZipFile(file: File, forcedProvider?: string): Promise<ZipArchiveReader> {
+        const importLogger = this.plugin.logger.child("Import");
         try {
             const adapter = forcedProvider ? this.providerRegistry.getAdapter(forcedProvider) : undefined;
             const entryFilter = adapter?.shouldIncludeZipEntry?.bind(adapter);
-            const entries = await enumerateZipEntries(file, entryFilter);
+            importLogger.info(`Validate ZIP`, {
+                fileName: file.name,
+                forcedProvider: forcedProvider || "auto",
+                hasEntryFilter: !!entryFilter,
+            });
+            const zip = await createZipArchiveReader(file, entryFilter);
+            const entries = await zip.listEntries();
             const fileNames = entries.map(entry => entry.path);
-            const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
-            const hasGeminiActivityJson = geminiJsonFiles.length > 0;
+            const classification = classifyArchiveEntries(fileNames, forcedProvider);
 
-            // Check if ZIP is empty
-            if (fileNames.length === 0) {
+            importLogger.info(`ZIP classification complete`, {
+                fileName: file.name,
+                entryCount: entries.length,
+                supported: classification.supported,
+                reason: classification.reason,
+                provider: classification.supported ? classification.provider : undefined,
+            });
+
+            if (classification.reason === "empty") {
                 throw new NexusAiChatImporterError(
                     "Empty ZIP file",
                     "The ZIP file contains no files. Please check that you selected the correct export file."
                 );
             }
 
-            // If provider is forced, validate provider-specific format
-            if (forcedProvider) {
-                if (forcedProvider === 'lechat') {
-                    // Le Chat format: individual chat-{uuid}.json files
-                    const hasLeChatFiles = fileNames.some(name => name.match(/^chat-[a-f0-9-]+\.json$/));
-                    if (!hasLeChatFiles) {
-                        throw new NexusAiChatImporterError(
-                            "Invalid ZIP structure",
-                            `Missing required files: chat-<uuid>.json files for Le Chat provider.`
-                        );
-                    }
-                } else if (forcedProvider === 'gemini') {
-                    // Gemini format: Google Takeout My Activity export with a Gemini folder
-                    if (!hasGeminiActivityJson) {
-                        throw new NexusAiChatImporterError(
-                            "Invalid ZIP structure",
-                            "Missing required Gemini activity JSON file for Gemini provider. " +
-                            "Expected a Google Takeout My Activity export containing a folder such as:\n" +
-                            "Takeout/<My Activity>/<*Gemini*>/My Activity.json"
-                        );
-                    }
-                } else {
-                    // ChatGPT/Claude: must have conversations.json (legacy) or numbered files (new format)
-                    const hasConversations = fileNames.includes("conversations.json")
-                        || fileNames.some(n => /^conversations-\d+\.json$/.test(n));
-                    if (!hasConversations) {
-                        throw new NexusAiChatImporterError(
-                            "Invalid ZIP structure",
-                            `Missing required file: conversations.json (or conversations-XX.json files) for ${forcedProvider} provider.`
-                        );
-                    }
-                }
-            } else {
-                // Auto-detection mode (legacy behavior)
-                const hasConversationsJson = fileNames.includes("conversations.json")
-                    || fileNames.some(n => /^conversations-\d+\.json$/.test(n));
-                const hasUsersJson = fileNames.includes("users.json");
-                const hasProjectsJson = fileNames.includes("projects.json");
-                const hasLeChatFiles = fileNames.some(name => name.match(/^chat-[a-f0-9-]+\.json$/));
-                const hasGeminiFormat = hasGeminiActivityJson;
-
-                // ChatGPT format: conversations.json only
-                const isChatGPTFormat = hasConversationsJson && !hasUsersJson && !hasProjectsJson;
-
-                // Claude format: conversations.json + users.json (projects.json optional for legacy)
-                const isClaudeFormat = hasConversationsJson && hasUsersJson;
-
-                // Le Chat format: individual chat-{uuid}.json files
-                const isLeChatFormat = hasLeChatFiles && !hasConversationsJson;
-
-                // Gemini format: Google Takeout My Activity export with Gemini folder
-                const isGeminiFormat = hasGeminiFormat && !hasConversationsJson && !hasLeChatFiles;
-
-	                if (!isChatGPTFormat && !isClaudeFormat && !isLeChatFormat && !isGeminiFormat) {
-                    throw new NexusAiChatImporterError(
-                        "Invalid ZIP structure",
-                        "This ZIP file doesn't match any supported chat export format. " +
-                        "Expected either ChatGPT format (conversations.json), " +
-                        "Claude format (conversations.json + users.json), " +
-                        "Le Chat format (chat-<uuid>.json files), or " +
-                        "Gemini format (Google Takeout My Activity export with a folder like " +
-                        "Takeout/<My Activity>/<*Gemini*>/My Activity.json)."
-                    );
-                }
+            if (!classification.supported) {
+                throw new NexusAiChatImporterError(
+                    classification.reason === "provider-mismatch" ? "Provider mismatch" : "Unsupported ZIP structure",
+                    classification.message || "This ZIP file does not match a supported export format."
+                );
             }
 
-            return createZipArchiveReader(file, entryFilter);
+            return zip;
         } catch (error: any) {
+            importLogger.error(`ZIP validation failed`, {
+                fileName: file.name,
+                forcedProvider: forcedProvider || "auto",
+                message: error?.message || String(error),
+            });
             if (error instanceof NexusAiChatImporterError) {
                 throw error;
             }
 
-            if (error.message && error.message.includes('safely on mobile')) {
+            if (error.message && error.message.includes('central directory')) {
                 throw new NexusAiChatImporterError(
-                    "Mobile import not supported for this archive",
-                    `${error.message}`
+                    "Corrupted ZIP file",
+                    "The ZIP central directory could not be read. Please try downloading the archive again."
                 );
             }
 
@@ -380,6 +361,7 @@ export class ImportService {
     }
 
     private async processConversations(zip: ZipArchiveReader, file: File, isReprocess: boolean, forcedProvider?: string, progressCallback?: ImportProgressCallback, selectedConversationIds?: string[], progressModal?: ImportProgressModal, zipSizeBytes?: number): Promise<void> {
+        const importLogger = this.plugin.logger.child("Import");
         try {
             progressCallback?.({
                 phase: 'scanning',
@@ -388,6 +370,13 @@ export class ImportService {
             });
 
             const useStreaming = !!forcedProvider && forcedProvider !== 'gemini';
+            importLogger.info(`Conversation processing strategy selected`, {
+                fileName: file.name,
+                forcedProvider: forcedProvider || "auto",
+                useStreaming,
+                selectedConversationCount: selectedConversationIds?.length ?? null,
+                zipSizeBytes: zipSizeBytes ?? null,
+            });
 
             if (useStreaming) {
                 const selectedIds = selectedConversationIds ? new Set(selectedConversationIds) : undefined;
@@ -413,10 +402,21 @@ export class ImportService {
 
                 this.importReport = report;
                 this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+                importLogger.info(`Streaming conversation processing complete`, {
+                    fileName: file.name,
+                    created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
+                    updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
+                });
             } else {
                 const extractionResult = await this.extractRawConversationsFromZip(zip, zipSizeBytes);
                 let rawConversations = extractionResult.conversations;
                 const archiveModeDecision = extractionResult.archiveModeDecision;
+                importLogger.info(`Raw conversations extracted`, {
+                    fileName: file.name,
+                    conversationCount: rawConversations.length,
+                    archiveMode: archiveModeDecision?.mode ?? "default",
+                    archiveReason: archiveModeDecision?.reason ?? null,
+                });
 
                 if (selectedConversationIds && selectedConversationIds.length > 0) {
                     const originalCount = rawConversations.length;
@@ -466,6 +466,11 @@ export class ImportService {
 
                 this.importReport = report;
                 this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+                importLogger.info(`Raw conversation processing complete`, {
+                    fileName: file.name,
+                    created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
+                    updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
+                });
             }
 
             progressCallback?.({
@@ -611,7 +616,7 @@ export class ImportService {
                     const zipContent = await createZipArchiveReader(file, entryFilter);
                     this.currentZips.push(zipContent);
                 } catch (error) {
-                    this.plugin.logger.error(`Failed to open ZIP for attachment map: ${file.name}`, error);
+                    this.plugin.logger.warn(`Skipping ZIP for attachment map: ${file.name}`, error);
                 }
             }
 

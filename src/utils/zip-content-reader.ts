@@ -1,6 +1,23 @@
 import { NexusAiChatImporterError } from "../models/errors";
+import { logger } from "../logger";
 import { StreamingJsonArrayParser } from "./streaming-json-array-parser";
 import { ZipArchiveReader } from "./zip-loader";
+
+export type SupportedArchiveProvider = "chatgpt" | "claude" | "lechat" | "gemini";
+
+export type ArchiveClassification =
+    | {
+        supported: true;
+        provider: SupportedArchiveProvider;
+        reason: "supported";
+        message?: string;
+    }
+    | {
+        supported: false;
+        provider?: undefined;
+        reason: "empty" | "unsupported-format" | "provider-mismatch";
+        message?: string;
+    };
 
 export function findGeminiActivityJsonFiles(fileNames: string[]): string[] {
     const geminiJsonFiles: string[] = [];
@@ -18,6 +35,102 @@ export function findGeminiActivityJsonFiles(fileNames: string[]): string[] {
     }
 
     return geminiJsonFiles;
+}
+
+export function classifyArchiveEntries(
+    fileNames: string[],
+    forcedProvider?: string
+): ArchiveClassification {
+    if (fileNames.length === 0) {
+        return {
+            supported: false,
+            reason: "empty",
+            message: "The ZIP file contains no files.",
+        };
+    }
+
+    const hasConversationsJson = fileNames.includes("conversations.json")
+        || fileNames.some(name => /^conversations-\d+\.json$/.test(name));
+    const hasUsersJson = fileNames.includes("users.json");
+    const hasLeChatFiles = fileNames.some(name => /^chat-[a-f0-9-]+\.json$/.test(name));
+    const hasGeminiActivityJson = findGeminiActivityJsonFiles(fileNames).length > 0;
+
+    const detectedProvider: SupportedArchiveProvider | undefined =
+        hasLeChatFiles && !hasConversationsJson
+            ? "lechat"
+            : hasGeminiActivityJson && !hasConversationsJson && !hasLeChatFiles
+            ? "gemini"
+            : hasConversationsJson && hasUsersJson
+            ? "claude"
+            : hasConversationsJson
+            ? "chatgpt"
+            : undefined;
+
+    if (forcedProvider) {
+        const expectedProvider = forcedProvider as SupportedArchiveProvider;
+
+        if (expectedProvider === "chatgpt") {
+            if (detectedProvider === "chatgpt") {
+                return { supported: true, provider: "chatgpt", reason: "supported" };
+            }
+
+            return {
+                supported: false,
+                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
+                message: "This ZIP file does not look like a ChatGPT export.",
+            };
+        }
+
+        if (expectedProvider === "claude") {
+            if (detectedProvider === "claude") {
+                return { supported: true, provider: "claude", reason: "supported" };
+            }
+
+            return {
+                supported: false,
+                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
+                message: "This ZIP file does not look like a Claude export.",
+            };
+        }
+
+        if (expectedProvider === "lechat") {
+            if (detectedProvider === "lechat") {
+                return { supported: true, provider: "lechat", reason: "supported" };
+            }
+
+            return {
+                supported: false,
+                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
+                message: "This ZIP file does not look like a Le Chat export.",
+            };
+        }
+
+        if (expectedProvider === "gemini") {
+            if (detectedProvider === "gemini") {
+                return { supported: true, provider: "gemini", reason: "supported" };
+            }
+
+            return {
+                supported: false,
+                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
+                message: "This ZIP file does not look like a Gemini Takeout export.",
+            };
+        }
+    }
+
+    if (!detectedProvider) {
+        return {
+            supported: false,
+            reason: "unsupported-format",
+            message: "This ZIP file does not match any supported export format.",
+        };
+    }
+
+    return {
+        supported: true,
+        provider: detectedProvider,
+        reason: "supported",
+    };
 }
 
 export interface RawConversationExtractionResult {
@@ -130,15 +243,37 @@ export async function extractRawConversations(
 export async function* extractConversationsStream(
     zip: ZipArchiveReader
 ): AsyncGenerator<any> {
+    const streamLogger = logger.child("Stream");
+    const startedAt = Date.now();
+    streamLogger.info("Begin conversation stream extraction");
     const fileNames = await listFileNames(zip);
+    streamLogger.info("ZIP entry listing complete for stream extraction", {
+        entryCount: fileNames.length,
+        durationMs: Date.now() - startedAt,
+    });
 
     const leChatFiles = fileNames.filter(name => /^chat-[a-f0-9-]+\.json$/.test(name));
     if (leChatFiles.length > 0) {
+        streamLogger.info("Using Le Chat conversation stream", {
+            fileCount: leChatFiles.length,
+        });
+        let yieldedCount = 0;
         for (const fileName of leChatFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            yield JSON.parse(await entry.readText());
+            streamLogger.info("Reading Le Chat conversation file", { fileName });
+            const text = await entry.readText();
+            streamLogger.info("Le Chat conversation file read complete", {
+                fileName,
+                textLength: text.length,
+            });
+            yieldedCount++;
+            yield JSON.parse(text);
         }
+        streamLogger.info("Le Chat conversation stream complete", {
+            yieldedCount,
+            durationMs: Date.now() - startedAt,
+        });
         return;
     }
 
@@ -152,14 +287,34 @@ export async function* extractConversationsStream(
 
     const numberedConvFiles = fileNames.filter(name => /^conversations-\d+\.json$/.test(name)).sort();
     if (numberedConvFiles.length > 0) {
+        streamLogger.info("Using numbered conversation stream", {
+            fileCount: numberedConvFiles.length,
+        });
+        let yieldedCount = 0;
         for (const fileName of numberedConvFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
+            streamLogger.info("Reading numbered conversation file", { fileName });
             const json = await entry.readText();
+            streamLogger.info("Numbered conversation file read complete", {
+                fileName,
+                textLength: json.length,
+            });
             for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
+                yieldedCount++;
+                if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+                    streamLogger.info("Yielding streamed conversation", {
+                        source: fileName,
+                        yieldedCount,
+                    });
+                }
                 yield conv;
             }
         }
+        streamLogger.info("Numbered conversation stream complete", {
+            yieldedCount,
+            durationMs: Date.now() - startedAt,
+        });
         return;
     }
 
@@ -171,8 +326,25 @@ export async function* extractConversationsStream(
         );
     }
 
+    streamLogger.info("Reading conversations.json for stream extraction");
     const conversationsJson = await conversationsFile.readText();
+    streamLogger.info("conversations.json read complete", {
+        textLength: conversationsJson.length,
+        durationMs: Date.now() - startedAt,
+    });
+    let yieldedCount = 0;
     for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
+        yieldedCount++;
+        if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+            streamLogger.info("Yielding streamed conversation", {
+                source: "conversations.json",
+                yieldedCount,
+            });
+        }
         yield conv;
     }
+    streamLogger.info("Conversation stream extraction complete", {
+        yieldedCount,
+        durationMs: Date.now() - startedAt,
+    });
 }

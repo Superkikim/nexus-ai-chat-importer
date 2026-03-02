@@ -27,7 +27,6 @@ import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
 import { ProviderRegistry } from "../providers/provider-adapter";
 import { ImportProgressCallback } from "../ui/import-progress-modal";
-import { logger } from "../logger";
 import {
     isValidMessage,
     ensureFolderExists,
@@ -93,6 +92,7 @@ export class ConversationProcessor {
     ): Promise<ImportReport> {
         this.currentProvider = provider;
         const adapter = this.providerRegistry.getAdapter(provider);
+        const processLogger = this.plugin.logger.child("Process");
 
         if (!adapter) {
             importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
@@ -100,21 +100,65 @@ export class ConversationProcessor {
         }
 
         const storage = this.plugin.getStorageService();
+        const scanStartedAt = Date.now();
+        processLogger.info("Scan existing conversations started", {
+            provider,
+            selectedConversationCount: selectedIds?.size ?? null,
+            approxTotal: approxTotal ?? null,
+        });
         const existingConversationsMap = await storage.scanExistingConversations();
+        processLogger.info("Scan existing conversations complete", {
+            provider,
+            existingConversationCount: existingConversationsMap.size,
+            durationMs: Date.now() - scanStartedAt,
+        });
         this.counters.totalExistingConversations = existingConversationsMap.size;
 
         let processedCount = 0;
+        let seenCount = 0;
+        let yieldedCount = 0;
 
         for await (const chat of generator) {
+            seenCount++;
+            if (seenCount === 1) {
+                processLogger.info("First streamed conversation received", { provider });
+            }
+
             if (selectedIds && selectedIds.size > 0) {
                 let chatId: string | undefined;
                 try { chatId = adapter.getId(chat); } catch { chatId = undefined; }
-                if (!chatId || !selectedIds.has(chatId)) continue;
+                if (!chatId || !selectedIds.has(chatId)) {
+                    if (seenCount <= 3) {
+                        processLogger.info("Skipping streamed conversation not in selection", {
+                            provider,
+                            seenCount,
+                            hasChatId: !!chatId,
+                        });
+                    }
+                    continue;
+                }
             }
 
+            yieldedCount++;
+            if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+                processLogger.info("Processing streamed conversation", {
+                    provider,
+                    seenCount,
+                    yieldedCount,
+                    processedCount,
+                    approxTotal: approxTotal ?? null,
+                });
+            }
             await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
 
             processedCount++;
+            if (processedCount <= 3 || processedCount % 100 === 0) {
+                processLogger.info("Processed streamed conversation", {
+                    provider,
+                    processedCount,
+                    approxTotal: approxTotal ?? null,
+                });
+            }
             progressCallback?.({
                 phase: 'processing',
                 title: 'Processing conversations...',
@@ -125,6 +169,14 @@ export class ConversationProcessor {
                 total: approxTotal
             });
         }
+
+        processLogger.info("Streaming conversation processing loop complete", {
+            provider,
+            seenCount,
+            yieldedCount,
+            processedCount,
+            approxTotal: approxTotal ?? null,
+        });
 
         return importReport;
     }
@@ -204,12 +256,22 @@ export class ConversationProcessor {
         zip?: ZipArchiveReader,
         isReprocess: boolean = false
     ): Promise<void> {
+        const processLogger = this.plugin.logger.child("Process");
         try {
             // Check if chat is already a StandardConversation (from Gemini index preprocessing)
             const isStandardConversation = this.isStandardConversation(chat);
 
             const chatId = isStandardConversation ? chat.id : adapter.getId(chat);
             const chatTitle = isStandardConversation ? chat.title : (adapter.getTitle(chat) || 'Untitled');
+
+            if (this.counters.totalConversationsProcessed < 3) {
+                processLogger.info("Begin single chat processing", {
+                    provider: this.currentProvider,
+                    chatId: chatId || null,
+                    chatTitle,
+                    hasExistingEntry: !!existingConversations.get(chatId),
+                });
+            }
 
             // Validate conversation has required fields
             if (!chatId || chatId.trim() === '') {
@@ -227,10 +289,22 @@ export class ConversationProcessor {
                 await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
             }
             this.counters.totalConversationsProcessed++;
+            if (this.counters.totalConversationsProcessed <= 3) {
+                processLogger.info("Single chat processing complete", {
+                    provider: this.currentProvider,
+                    chatId,
+                    processedCount: this.counters.totalConversationsProcessed,
+                });
+            }
         } catch (error: any) {
             const errorMessage = error.message || "Unknown error occurred";
             const isStandardConversation = this.isStandardConversation(chat);
             const chatTitle = isStandardConversation ? chat.title : (adapter.getTitle(chat) || "Untitled");
+            processLogger.error("Single chat processing failed", {
+                provider: this.currentProvider,
+                chatTitle,
+                message: errorMessage,
+            });
             importReport.addError(`Error processing chat: ${chatTitle}`, errorMessage);
         }
     }
@@ -499,6 +573,7 @@ export class ConversationProcessor {
         zip?: ZipArchiveReader,
         isStandardConversation: boolean = false
     ): Promise<void> {
+        const processLogger = this.plugin.logger.child("Process");
         try {
             // Ensure the folder exists (in case it was deleted)
             const folderPath = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -512,6 +587,10 @@ export class ConversationProcessor {
             if (isStandardConversation) {
                 standardConversation = chat;
             } else {
+                processLogger.info("Converting new chat to standard conversation", {
+                    provider: this.currentProvider,
+                    filePath,
+                });
                 standardConversation = await adapter.convertChat(chat);
             }
 
@@ -520,6 +599,11 @@ export class ConversationProcessor {
             // Process attachments if ZIP provided
             let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
             if (zip && adapter.processMessageAttachments) {
+                processLogger.info("Processing attachments for new chat", {
+                    provider: this.currentProvider,
+                    chatId,
+                    messageCount: standardConversation.messages.length,
+                });
                 standardConversation.messages = await adapter.processMessageAttachments(
                     standardConversation.messages,
                     chatId,
@@ -532,6 +616,12 @@ export class ConversationProcessor {
 
             const content = this.noteFormatter.generateMarkdownContent(standardConversation);
 
+            processLogger.info("Writing new note", {
+                provider: this.currentProvider,
+                chatId,
+                filePath,
+                messageCount: standardConversation.messages.length,
+            });
             await this.fileService.writeToFile(filePath, content);
 
             const messageCount = standardConversation.messages.length;

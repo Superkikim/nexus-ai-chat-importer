@@ -40,6 +40,7 @@ import { ConversationMetadataExtractor } from "./services/conversation-metadata-
 import { ImportReport } from "./models/import-report";
 import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
 import { ensureFolderExists, formatTimestamp } from "./utils";
+import { sortFilesForImport } from "./utils/file-sort";
 import type { GeminiIndex } from "./providers/gemini/gemini-types";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
@@ -337,7 +338,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 	            this.importService.setGeminiIndex(index);
 
 	            // Sort only the ZIP exports by timestamp
-	            const sortedZipFiles = this.sortFilesByTimestamp(zipFiles);
+	            const sortedZipFiles = sortFilesForImport(zipFiles);
 
 	            if (mode === "all") {
 	                // Import all conversations with analysis (new optimized workflow)
@@ -359,7 +360,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 	                return;
 	            }
 
-	            const sortedZipFiles = this.sortFilesByTimestamp(zipFiles);
+	            const sortedZipFiles = sortFilesForImport(zipFiles);
 
 	            if (mode === "all") {
 	                await this.handleImportAll(sortedZipFiles, provider);
@@ -374,6 +375,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(files: File[], provider: string): Promise<void> {
         try {
+            this.logger.child("ImportFlow").info(`Import-all analysis started`, {
+                provider,
+                fileCount: files.length,
+            });
             new Notice(t('notices.import_analyzing', { count: String(files.length) }));
 
             // Create metadata extractor
@@ -390,6 +395,19 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 existingConversations
             );
+
+            this.logger.child("ImportFlow").info(`Import-all analysis finished`, {
+                provider,
+                fileCount: files.length,
+                supportedFileCount: extractionResult.supportedFiles.length,
+                ignoredArchiveCount: extractionResult.ignoredArchives.length,
+                conversationCount: extractionResult.conversations.length,
+            });
+
+            if (extractionResult.supportedFiles.length === 0) {
+                new Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
+                return;
+            }
 
             // Create shared report for the entire operation
             const operationReport = new ImportReport();
@@ -432,15 +450,26 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             });
 
             // Build attachment map for multi-ZIP fallback (ChatGPT only)
-            if (provider === 'chatgpt' && files.length > 1) {
-                await this.importService.buildAttachmentMapForMultiZip(files, provider);
+            const filesToImport = files.filter(file => conversationsByFile.has(file.name));
+
+            if (provider === 'chatgpt' && filesToImport.length > 1) {
+                this.logger.child("ImportFlow").info(`Building multi-ZIP attachment map`, {
+                    provider,
+                    fileCount: filesToImport.length,
+                });
+                await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
             }
 
             // Process files sequentially with shared report
-            for (const file of files) {
+            for (const file of filesToImport) {
                 const conversationsForFile = conversationsByFile.get(file.name);
                 if (conversationsForFile && conversationsForFile.length > 0) {
                     try {
+                        this.logger.child("ImportFlow").info(`Importing file`, {
+                            provider,
+                            fileName: file.name,
+                            conversationCount: conversationsForFile.length,
+                        });
                         await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
                     } catch (error) {
                         this.logger.error(`Error processing file ${file.name}:`, error);
@@ -450,7 +479,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             }
 
             // Clear attachment map after import completes
-            if (provider === 'chatgpt' && files.length > 1) {
+            if (provider === 'chatgpt' && filesToImport.length > 1) {
                 this.importService.clearAttachmentMap();
             }
 
@@ -483,6 +512,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
+            this.logger.child("ImportFlow").info(`Selective analysis started`, {
+                provider,
+                fileCount: files.length,
+            });
             new Notice(t('notices.import_analyzing', { count: String(files.length) }));
 
             // Create metadata extractor
@@ -499,6 +532,19 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 existingConversations
             );
+
+            this.logger.child("ImportFlow").info(`Selective analysis finished`, {
+                provider,
+                fileCount: files.length,
+                supportedFileCount: extractionResult.supportedFiles.length,
+                ignoredArchiveCount: extractionResult.ignoredArchives.length,
+                conversationCount: extractionResult.conversations.length,
+            });
+
+            if (extractionResult.supportedFiles.length === 0) {
+                new Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
+                return;
+            }
 
             if (extractionResult.conversations.length === 0) {
                 // No conversations to import - same logic as full import
@@ -527,7 +573,14 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this.app,
                 extractionResult.conversations,
                 (result: ConversationSelectionResult) => {
-                    this.handleConversationSelectionResult(result, files, provider, extractionResult.analysisInfo, extractionResult.fileStats);
+                    this.handleConversationSelectionResult(
+                        result,
+                        extractionResult.conversations,
+                        files,
+                        provider,
+                        extractionResult.analysisInfo,
+                        extractionResult.fileStats
+                    );
                 },
                 this,
                 extractionResult.analysisInfo
@@ -548,6 +601,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleConversationSelectionResult(
         result: ConversationSelectionResult,
+        availableConversations: any[],
         files: File[],
         provider: string,
         analysisInfo?: any,
@@ -575,12 +629,17 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         new Notice(t('notices.import_starting_selected', { count: String(result.selectedIds.length), files: String(files.length) }));
 
         // Group selected conversations by source file for efficient processing
-        const conversationsByFile = await this.groupConversationsByFile(result, files);
+        const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
+        const filesToImport = files.filter(file => conversationsByFile.has(file.name));
 
         // Build attachment map for multi-ZIP fallback (ChatGPT only)
-        if (provider === 'chatgpt' && files.length > 1) {
+        if (provider === 'chatgpt' && filesToImport.length > 1) {
             try {
-                await this.importService.buildAttachmentMapForMultiZip(files, provider);
+                this.logger.child("ImportFlow").info(`Building multi-ZIP attachment map`, {
+                    provider,
+                    fileCount: filesToImport.length,
+                });
+                await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
             } catch (error) {
                 this.logger.error('Failed to build attachment map:', error);
                 new Notice(t('notices.attachment_map_failed'));
@@ -588,10 +647,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         // Process files sequentially in original order with shared report
-        for (const file of files) {
+        for (const file of filesToImport) {
             const conversationsForFile = conversationsByFile.get(file.name);
             if (conversationsForFile && conversationsForFile.length > 0) {
                 try {
+                    this.logger.child("ImportFlow").info(`Importing file`, {
+                        provider,
+                        fileName: file.name,
+                        conversationCount: conversationsForFile.length,
+                    });
                     await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
                 } catch (error) {
                     this.logger.error(`Error processing file ${file.name}:`, error);
@@ -601,7 +665,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         // Clear attachment map after import completes
-        if (provider === 'chatgpt' && files.length > 1) {
+        if (provider === 'chatgpt' && filesToImport.length > 1) {
             this.importService.clearAttachmentMap();
         }
 
@@ -740,61 +804,23 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
     /**
      * Group selected conversations by their source file for multi-file import
      */
-    private async groupConversationsByFile(
-        result: ConversationSelectionResult,
-        files: File[]
-    ): Promise<Map<string, string[]>> {
+    private groupConversationsByFile(
+        selectedIds: string[],
+        conversations: Array<{ id: string; sourceFile?: string }>
+    ): Map<string, string[]> {
         const conversationsByFile = new Map<string, string[]>();
 
-        // We need to re-extract metadata to get source file information
-        // This is necessary because the selection result only contains IDs
-        try {
-            const providerRegistry = createProviderRegistry(this);
-            // Fixed: Pass plugin instance to constructor
-            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
-            const storage = this.getStorageService();
-            const existingConversations = await storage.scanExistingConversations();
-
-            // Re-extract metadata with source file tracking
-            const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
-                files,
-                undefined, // Let it auto-detect provider
-                existingConversations
-            );
-
-            // Group selected conversations by source file
-            const selectedIdsSet = new Set(result.selectedIds);
-            for (const conversation of extractionResult.conversations) {
-                if (selectedIdsSet.has(conversation.id) && conversation.sourceFile) {
-                    const fileConversations = conversationsByFile.get(conversation.sourceFile) || [];
-                    fileConversations.push(conversation.id);
-                    conversationsByFile.set(conversation.sourceFile, fileConversations);
-                }
+        const selectedIdsSet = new Set(selectedIds);
+        for (const conversation of conversations) {
+            if (!selectedIdsSet.has(conversation.id) || !conversation.sourceFile) {
+                continue;
             }
-        } catch (error) {
-            this.logger.error("Error grouping conversations by file:", error);
-            // Fallback: assign all conversations to first file
-            conversationsByFile.set(files[0].name, result.selectedIds);
+
+            const fileConversations = conversationsByFile.get(conversation.sourceFile) || [];
+            fileConversations.push(conversation.id);
+            conversationsByFile.set(conversation.sourceFile, fileConversations);
         }
 
         return conversationsByFile;
-    }
-
-    /**
-     * Sort files by timestamp (same logic as ImportService)
-     */
-    private sortFilesByTimestamp(files: File[]): File[] {
-        return files.sort((a, b) => {
-            const timestampRegex = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/;
-            const getTimestamp = (filename: string) => {
-                const match = filename.match(timestampRegex);
-                if (!match) {
-                    this.logger.warn(`No timestamp found in filename: ${filename}`);
-                    return "0";
-                }
-                return match[1];
-            };
-            return getTimestamp(a.name).localeCompare(getTimestamp(b.name));
-        });
     }
 }

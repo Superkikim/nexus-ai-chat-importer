@@ -18,12 +18,6 @@ export async function createZipArchiveReader(
     }
 
     const mobileEntries = await readMobileZipEntries(file, shouldInclude);
-    if (mobileEntries.length === 0) {
-        throw new Error(
-            "This archive cannot be processed safely on mobile. Please import it on desktop."
-        );
-    }
-
     return new MobileZipArchiveReader(file, mobileEntries);
 }
 

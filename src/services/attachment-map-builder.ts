@@ -1,4 +1,4 @@
-import { Logger } from "../logger";
+import { Logger, ScopedLogger } from "../logger";
 import { enumerateZipEntries } from "../utils/zip-loader";
 
 /**
@@ -27,7 +27,14 @@ export type AttachmentMap = Map<string, AttachmentLocation[]>;
  * This enables fallback to older ZIPs when recent exports are missing files
  */
 export class AttachmentMapBuilder {
-    constructor(private logger: Logger) {}
+    private attachmentLogger: ScopedLogger;
+
+    constructor(private logger: Logger) {
+        this.attachmentLogger =
+            typeof logger.child === "function"
+                ? logger.child("AttachMap")
+                : new Logger().child("AttachMap");
+    }
 
     /**
      * Scan all ZIP files and build a map of available attachments
@@ -35,20 +42,33 @@ export class AttachmentMapBuilder {
      */
     async buildAttachmentMap(files: File[]): Promise<AttachmentMap> {
         const attachmentMap: AttachmentMap = new Map();
+        const startedAt = Date.now();
+
+        this.attachmentLogger.info(`Begin attachment map build`, {
+            fileCount: files.length,
+        });
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            const fileStartedAt = Date.now();
 
             try {
+                this.attachmentLogger.info(`Scan attachments [${i + 1}/${files.length}]`, {
+                    fileName: file.name,
+                    fileSize: file.size,
+                });
+
                 // enumerateZipEntries reads only the ZIP central directory on Electron
                 // (zero extraction cost), or falls back to JSZip.loadAsync on mobile.
                 const entries = await enumerateZipEntries(file);
+                let mappedIdsForFile = 0;
 
                 for (const entry of entries) {
                     // Extract potential file IDs from the path
                     const fileIds = this.extractFileIds(entry.path);
 
                     for (const fileId of fileIds) {
+                        mappedIdsForFile++;
                         if (!attachmentMap.has(fileId)) {
                             attachmentMap.set(fileId, []);
                         }
@@ -64,10 +84,28 @@ export class AttachmentMapBuilder {
                         });
                     }
                 }
+
+                this.attachmentLogger.info(`Attachment scan complete`, {
+                    fileName: file.name,
+                    entryCount: entries.length,
+                    mappedIdsForFile,
+                    durationMs: Date.now() - fileStartedAt,
+                });
             } catch (error) {
-                this.logger.error(`Failed to scan attachments in ${file.name}:`, error);
+                this.attachmentLogger.error(`Attachment scan failed`, {
+                    fileName: file.name,
+                    fileSize: file.size,
+                    durationMs: Date.now() - fileStartedAt,
+                    message: error instanceof Error ? error.message : String(error),
+                });
             }
         }
+
+        this.attachmentLogger.info(`Attachment map build complete`, {
+            fileCount: files.length,
+            uniqueFileIds: attachmentMap.size,
+            durationMs: Date.now() - startedAt,
+        });
 
         return attachmentMap;
     }
@@ -144,4 +182,3 @@ export class AttachmentMapBuilder {
         return attachmentMap.get(fileId) || [];
     }
 }
-

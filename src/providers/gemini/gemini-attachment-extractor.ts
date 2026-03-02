@@ -1,10 +1,10 @@
 import type { AttachmentExtractor } from "../base/base-provider-adapter";
 import type { StandardAttachment } from "../../types/standard";
-import type JSZip from "jszip";
 import type NexusAiChatImporterPlugin from "../../main";
 import { detectFileFormat, getFileCategory, sanitizeFileName } from "../../utils/file-utils";
 import { normalizePath } from "obsidian";
 import { ensureFolderExists } from "../../utils";
+import type { ZipArchiveReader, ZipEntryHandle } from "../../utils/zip-loader";
 
 /**
  * Extracts attachments from Gemini Takeout exports
@@ -13,7 +13,7 @@ export class GeminiAttachmentExtractor implements AttachmentExtractor {
 	constructor(private plugin: NexusAiChatImporterPlugin) {}
 
 	async extractAttachments(
-		zip: JSZip,
+		zip: ZipArchiveReader,
 		conversationId: string,
 		attachments: StandardAttachment[],
 		messageId?: string
@@ -44,12 +44,12 @@ export class GeminiAttachmentExtractor implements AttachmentExtractor {
 	 * Process a single attachment
 	 */
 	private async processAttachment(
-		zip: JSZip,
+		zip: ZipArchiveReader,
 		conversationId: string,
 		attachment: StandardAttachment
 	): Promise<StandardAttachment> {
 		// Find the attachment file in the ZIP
-		const zipFile = this.findAttachmentInZip(zip, attachment.fileName);
+		const zipFile = await this.findAttachmentInZip(zip, attachment.fileName);
 
 		if (!zipFile) {
 			return {
@@ -64,7 +64,7 @@ export class GeminiAttachmentExtractor implements AttachmentExtractor {
 		}
 
 		// Read file content
-		const fileContent = await zipFile.async("uint8array");
+		const fileContent = await zipFile.readBytes();
 
 		// Detect file format
 		let finalFileName = attachment.fileName;
@@ -115,11 +115,12 @@ export class GeminiAttachmentExtractor implements AttachmentExtractor {
 	/**
 	 * Find attachment file in ZIP (search in Gemini folder)
 	 */
-	private findAttachmentInZip(zip: JSZip, fileName: string): JSZip.JSZipObject | null {
+	private async findAttachmentInZip(zip: ZipArchiveReader, fileName: string): Promise<ZipEntryHandle | null> {
 		// Search for files matching the pattern: Takeout/.../<*Gemini*>/<fileName>
-		const allFiles = Object.keys(zip.files);
+		const allFiles = await zip.listEntries();
 
-		for (const path of allFiles) {
+		for (const entry of allFiles) {
+			const path = entry.path;
 			const segments = path.split("/");
 
 			// Must be in Takeout structure
@@ -135,7 +136,7 @@ export class GeminiAttachmentExtractor implements AttachmentExtractor {
 			// Check if filename matches
 			const pathFileName = segments[segments.length - 1];
 			if (pathFileName === fileName) {
-				return zip.files[path];
+				return zip.get(path);
 			}
 		}
 
@@ -173,4 +174,3 @@ export class GeminiAttachmentExtractor implements AttachmentExtractor {
 		return uniqueName;
 	}
 }
-

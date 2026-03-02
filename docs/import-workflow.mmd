@@ -1,0 +1,46 @@
+flowchart TD
+    classDef meta fill:#dbeafe,stroke:#3b82f6,color:#1e40af
+    classDef imp  fill:#dcfce7,stroke:#22c55e,color:#166534
+    classDef conv fill:#fef9c3,stroke:#ca8a04,color:#78350f
+    classDef term fill:#f3e8ff,stroke:#a855f7,color:#581c87
+
+    START(["ZIP selected"]):::term
+
+    subgraph P0 ["Phase 0 - Metadata extraction"]
+        direction TB
+        B["loadZipSelective\nJSON-only filter\nreads EOCD + CD, decompresses *.json"]:::meta
+        C["extractRawConversations\nparses conversations JSON"]:::meta
+        D["detect provider\nChatGPT / Claude / LeChat / Gemini"]:::meta
+        E["extractMetadata\nid, title, timestamps, messageCount"]:::meta
+        F["compare with vault\nnew / updated / unchanged"]:::meta
+        B --> C --> D --> E --> F
+    end
+
+    DIALOG(["ConversationSelectionDialog\nuser picks conversations to import"]):::term
+
+    subgraph P1 ["Phase 1 - Import"]
+        direction TB
+        H["1/4 validateZipFile\nenumerateZipEntries\nreads EOCD + CD only - 0 bytes decompressed\nvalidates provider from file names"]:::imp
+        I["2/4 loadZipSelective\nmobile: DEFAULT_MOBILE_FILTER hard gate\nskips wav, mp3, mp4...\nthen adapter filter\ndecompresses JSON + images"]:::imp
+        J["3/4 getFileHash\nfor deduplication tracking"]:::imp
+        K["4/4 processConversations\nextract, detect provider, filter selected IDs"]:::imp
+        H --> I --> J --> K
+    end
+
+    DEC{"existing in vault?"}:::conv
+    P["create note"]:::conv
+    Q["update note"]:::conv
+    R["skip"]:::conv
+    S["copy attachments\nfrom JSZip in memory"]:::conv
+
+    DONE(["Import complete\nwrite report"]):::term
+
+    START --> B
+    F --> DIALOG
+    DIALOG -->|"user selects"| H
+    K --> DEC
+    DEC -->|new| P --> S
+    DEC -->|updated| Q --> S
+    DEC -->|unchanged| R
+    S --> DONE
+    R --> DONE
