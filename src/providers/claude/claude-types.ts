@@ -53,7 +53,15 @@ export interface ClaudeFile {
     file_name: string;
 }
 
+export interface ClaudeToolResultContentItem {
+    type: string;
+    text: string;
+    uuid: string;
+    file_path?: string;
+}
+
 export interface ClaudeContentBlock {
+    id?: string;
     start_timestamp: string;
     stop_timestamp: string;
     type: 'text' | 'thinking' | 'tool_use' | 'tool_result';
@@ -70,11 +78,7 @@ export interface ClaudeContentBlock {
         [key: string]: any;
     };
     // Tool result specific fields
-    content?: Array<{
-        type: string;
-        text: string;
-        uuid: string;
-    }>;
+    content?: ClaudeToolResultContentItem[];
 }
 
 export interface ClaudeMessage {
