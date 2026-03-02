@@ -70,32 +70,25 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 
 ### ✨ What's New
 
-#### v1.5.5 — Bug Fixes
-
-🐛 **Bug Fixes**
-- **ChatGPT new export format** — OpenAI split conversations across multiple numbered files
-  (`conversations-XXX.json`). Imports were silently failing. Fixed.
-- **Memory safety for large archives** — Export archives are no longer loaded entirely into
-  memory, reducing the risk of RAM saturation on very large exports.
-
-> ⚠️ The new format fix is based on community reports — not yet personally tested. Feedback
-> welcome in [issue #45](https://github.com/Superkikim/nexus-ai-chat-importer/issues/45).
-
----
-
 #### v1.5.x — Highlights
 
 ✨ **New**
 - Full UI localization in 10 languages — automatic, matches your Obsidian language setting
+- Upgrade flow now surfaces current release notes directly inside the plugin
 
 🔧 **Improved**
 - Le Chat generated images now show a proper "not included in export" callout
 - Missing attachment callouts simplified to a single clean line
 - Support links and branding updated throughout
+- Desktop and mobile now follow the same ZIP-reading model: scan first, then read only what is needed
+- Import logs now identify the exact phase reached during ZIP scan, metadata extraction, attachment indexing, and streaming import
 
 🐛 **Bug Fixes**
+- ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly
 - ChatGPT user-uploaded image extraction restored for multi-ZIP imports
 - Claude export format changes handled correctly
+- Unsupported ZIP files are classified earlier and skipped more cleanly
+- Large archive handling no longer relies on loading the whole ZIP into memory
 
 ---
 

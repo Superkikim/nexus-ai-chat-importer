@@ -69,15 +69,17 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     private async addReleaseNotes() {
-        // Fallback content (updated for v1.5.5)
-        let content = `## ✨ What's New in v1.5.5
+        // Fallback content (updated for v1.5.7)
+        let content = `## ✨ What's New in v1.5.7
 
-**New ChatGPT export format** — OpenAI split conversations across multiple numbered files
-(\`conversations-XXX.json\`). Imports were silently failing. This version adds full support
-for the new format. Older exports remain unaffected.
+**ZIP pipeline refactor** — Desktop and mobile now use the same archive-reading model:
+central directory scan first, then targeted reads only when needed.
 
-**Memory-safe ZIP loading** — Export archives are no longer loaded entirely into memory,
-reducing the risk of RAM saturation on very large exports.
+**Improved mobile diagnostics** — Import logs now expose the exact phase reached during
+metadata extraction, attachment indexing, ZIP scanning, and conversation streaming.
+
+**Safer archive detection** — Unsupported ZIP files are classified earlier and skipped more
+cleanly instead of falling into generic extraction errors.
 
 ---
 
@@ -198,4 +200,3 @@ reducing the risk of RAM saturation on very large exports.
         document.head.appendChild(style);
     }
 }
-

@@ -1,5 +1,29 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.5.7 — ZIP Pipeline Refactor & Mobile Import Hardening
+
+![Version](https://img.shields.io/badge/version-1.5.7-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+**Unified ZIP pipeline**
+Desktop and mobile now follow the same archive-reading model: inspect the central directory first,
+then read only the entries that are actually needed for preview, selection, and import.
+
+**Improved mobile diagnostics**
+The import logger now exposes the exact phase reached during ZIP scan, metadata extraction,
+attachment map building, and conversation streaming so silent crashes can be isolated precisely.
+
+**Cleaner archive classification**
+Unsupported ZIP files are classified earlier and skipped more cleanly instead of surfacing as
+generic extraction failures.
+
+**Additional bug fixes included in this release**
+- ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly
+- large archive handling no longer relies on full in-memory ZIP loading
+- multi-ZIP import analysis and attachment indexing follow the same ZIP reader model
+- mobile import logging now shows the exact phase reached before a crash or failure
+
+---
+
 ## Version 1.5.5 — Bug Fixes for ChatGPT Users
 
 ![Version](https://img.shields.io/badge/version-1.5.5-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
