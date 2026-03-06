@@ -18919,6 +18919,8 @@ var StreamingJsonArrayParser = class {
 __name(StreamingJsonArrayParser, "StreamingJsonArrayParser");
 
 // src/utils/zip-content-reader.ts
+var DEFAULT_LARGE_JSON_THRESHOLD_BYTES = 32 * 1024 * 1024;
+var DEFAULT_STREAM_YIELD_EVERY = 25;
 function findGeminiActivityJsonFiles(fileNames) {
   const geminiJsonFiles = [];
   for (const name of fileNames) {
@@ -19103,9 +19105,23 @@ async function extractRawConversations(zip) {
   return { conversations, uncompressedBytes: conversationsJson.length };
 }
 __name(extractRawConversations, "extractRawConversations");
-async function* extractConversationsStream(zip) {
+async function* extractConversationsStream(zip, options = {}) {
+  var _a, _b, _c;
   const streamLogger = logger.child("Stream");
   const startedAt = Date.now();
+  const largeJsonThresholdBytes = (_a = options.largeJsonThresholdBytes) != null ? _a : DEFAULT_LARGE_JSON_THRESHOLD_BYTES;
+  const streamYieldEvery = Math.max(1, (_b = options.streamYieldEvery) != null ? _b : DEFAULT_STREAM_YIELD_EVERY);
+  const isMobileRuntime = !!options.mobileRuntime;
+  const enforceChunkedForLargeJsonOnMobile = (_c = options.enforceChunkedForLargeJsonOnMobile) != null ? _c : isMobileRuntime;
+  const yieldToEventLoopIfNeeded = /* @__PURE__ */ __name(async (count) => {
+    if (!isMobileRuntime) {
+      return;
+    }
+    if (count % streamYieldEvery !== 0) {
+      return;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+  }, "yieldToEventLoopIfNeeded");
   streamLogger.info("Begin conversation stream extraction");
   const entries = await zip.listEntries();
   const fileNames = entries.map((entry) => entry.path);
@@ -19158,15 +19174,27 @@ async function* extractConversationsStream(zip) {
         continue;
       const entrySize = entrySizeMap.get(fileName);
       const fileReadStartedAt = Date.now();
+      const isLargeJsonFile = typeof entrySize === "number" && entrySize >= largeJsonThresholdBytes;
+      const chunkReader2 = entry.readTextChunks;
+      const canUseChunkedReader2 = !!chunkReader2;
       streamLogger.info(
         `Reading numbered conversation file (${fileName}) [entrySize=${entrySize != null ? entrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
       );
-      if (entry.readTextChunks) {
+      if (isLargeJsonFile) {
+        streamLogger.info("Large JSON mode activated for numbered conversation file", {
+          fileName,
+          entrySize,
+          thresholdBytes: largeJsonThresholdBytes,
+          mobileRuntime: isMobileRuntime,
+          chunkedAvailable: canUseChunkedReader2
+        });
+      }
+      if (chunkReader2) {
         streamLogger.info("Using chunked numbered conversation reader", {
           fileName,
           entrySize: entrySize != null ? entrySize : null
         });
-        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(entry.readTextChunks())) {
+        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader2())) {
           yieldedCount2++;
           if (yieldedCount2 <= 3 || yieldedCount2 % 100 === 0) {
             streamLogger.info("Yielding streamed conversation", {
@@ -19175,12 +19203,18 @@ async function* extractConversationsStream(zip) {
             });
           }
           yield conv;
+          await yieldToEventLoopIfNeeded(yieldedCount2);
         }
         streamLogger.info("Chunked numbered conversation file parse complete", {
           fileName,
           readDurationMs: Date.now() - fileReadStartedAt,
           memorySnapshot: formatRuntimeMemorySnapshot()
         });
+      } else if (isMobileRuntime && isLargeJsonFile && enforceChunkedForLargeJsonOnMobile) {
+        throw new NexusAiChatImporterError(
+          "Large JSON mobile fail-safe triggered",
+          `This archive contains a large conversation JSON (${entrySize} bytes) and cannot be safely processed on mobile without chunked reading support.`
+        );
       } else {
         const json = await entry.readText();
         streamLogger.info("Numbered conversation file read complete", {
@@ -19199,6 +19233,7 @@ async function* extractConversationsStream(zip) {
             });
           }
           yield conv;
+          await yieldToEventLoopIfNeeded(yieldedCount2);
         }
       }
     }
@@ -19217,16 +19252,27 @@ async function* extractConversationsStream(zip) {
   }
   const conversationEntrySize = entrySizeMap.get("conversations.json");
   const readStartedAt = Date.now();
+  const isLargeConversationsJson = typeof conversationEntrySize === "number" && conversationEntrySize >= largeJsonThresholdBytes;
+  const chunkReader = conversationsFile.readTextChunks;
+  const canUseChunkedReader = !!chunkReader;
   streamLogger.info(
     `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize != null ? conversationEntrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
   );
+  if (isLargeConversationsJson) {
+    streamLogger.info("Large JSON mode activated for conversations.json", {
+      entrySize: conversationEntrySize != null ? conversationEntrySize : null,
+      thresholdBytes: largeJsonThresholdBytes,
+      mobileRuntime: isMobileRuntime,
+      chunkedAvailable: canUseChunkedReader
+    });
+  }
   let yieldedCount = 0;
-  if (conversationsFile.readTextChunks) {
+  if (chunkReader) {
     streamLogger.info("Using chunked conversations.json reader", {
       entrySize: conversationEntrySize != null ? conversationEntrySize : null
     });
     try {
-      for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(conversationsFile.readTextChunks())) {
+      for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader())) {
         yieldedCount++;
         if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
           streamLogger.info("Yielding streamed conversation", {
@@ -19235,6 +19281,7 @@ async function* extractConversationsStream(zip) {
           });
         }
         yield conv;
+        await yieldToEventLoopIfNeeded(yieldedCount);
       }
     } catch (error) {
       streamLogger.error("Failed while chunk-reading conversations.json for stream extraction", {
@@ -19252,6 +19299,11 @@ async function* extractConversationsStream(zip) {
       memorySnapshot: formatRuntimeMemorySnapshot(),
       mode: "chunked"
     });
+  } else if (isMobileRuntime && isLargeConversationsJson && enforceChunkedForLargeJsonOnMobile) {
+    throw new NexusAiChatImporterError(
+      "Large JSON mobile fail-safe triggered",
+      `This archive contains a large conversations.json (${conversationEntrySize} bytes) and cannot be safely processed on mobile without chunked reading support.`
+    );
   } else {
     let conversationsJson;
     try {
@@ -19281,6 +19333,7 @@ async function* extractConversationsStream(zip) {
         });
       }
       yield conv;
+      await yieldToEventLoopIfNeeded(yieldedCount);
     }
     conversationsJson = "";
     streamLogger.info("Conversation stream extraction complete", {
@@ -19683,7 +19736,12 @@ Do NOT extract and re-compress the file - just rename it!`;
         });
         const report = await this.conversationProcessor.processConversationStream(
           forcedProvider,
-          extractConversationsStream(zip),
+          extractConversationsStream(zip, {
+            mobileRuntime: this.isMobileRuntime(),
+            enforceChunkedForLargeJsonOnMobile: this.isMobileRuntime(),
+            largeJsonThresholdBytes: 32 * 1024 * 1024,
+            streamYieldEvery: 25
+          }),
           this.importReport,
           zip,
           isReprocess,

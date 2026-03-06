@@ -461,7 +461,12 @@ export class ImportService {
 
                 const report = await this.conversationProcessor.processConversationStream(
                     forcedProvider,
-                    extractConversationsStream(zip),
+                    extractConversationsStream(zip, {
+                        mobileRuntime: this.isMobileRuntime(),
+                        enforceChunkedForLargeJsonOnMobile: this.isMobileRuntime(),
+                        largeJsonThresholdBytes: 32 * 1024 * 1024,
+                        streamYieldEvery: 25,
+                    }),
                     this.importReport,
                     zip,
                     isReprocess,
