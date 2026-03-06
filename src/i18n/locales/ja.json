@@ -455,6 +455,8 @@
     "import_error": "インポート中にエラーが発生しました：{{error}}",
     "import_error_analyzing": "会話の分析中にエラーが発生しました：{{error}}",
     "import_error_file": "{{filename}} の処理中にエラーが発生しました。詳細はコンソールをご確認ください。",
+    "import_error_file_report": "ファイルのインポートに失敗しました: {{filename}}",
+    "import_error_mobile_large_json": "この ZIP には非常に大きな会話ファイル ({{size_mb}} MB) が含まれています。今回の実行ではモバイル端末で安全に処理できませんでした。選択する ZIP ファイル数を減らして再試行してください。",
     "import_no_selected": "インポートする会話が選択されていません。",
     "import_no_zip_gemini": "Gemini Takeout の ZIP ファイルを少なくとも 1 つ選択してください（オプションとして拡張機能からの JSON インデックスも指定できます）。",
     "import_no_zip": "ZIP エクスポートファイルを少なくとも 1 つ選択してください。",

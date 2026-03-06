@@ -455,6 +455,8 @@
     "import_error": "Fehler beim Import: {{error}}",
     "import_error_analyzing": "Fehler beim Analysieren der Gespräche: {{error}}",
     "import_error_file": "Fehler beim Verarbeiten von {{filename}}. Weitere Details in der Konsole.",
+    "import_error_file_report": "Dateiimport fehlgeschlagen: {{filename}}",
+    "import_error_mobile_large_json": "Diese ZIP-Datei enthält eine sehr große Konversationsdatei ({{size_mb}} MB). Ihr Mobilgerät konnte sie in diesem Durchlauf nicht zuverlässig verarbeiten. Versuchen Sie es erneut und wählen Sie weniger ZIP-Dateien gleichzeitig aus.",
     "import_no_selected": "Keine Gespräche für den Import ausgewählt.",
     "import_no_zip_gemini": "Bitte wählen Sie mindestens eine Gemini Takeout ZIP-Datei (plus optionalem JSON-Index aus der Erweiterung).",
     "import_no_zip": "Bitte wählen Sie mindestens eine ZIP-Exportdatei.",

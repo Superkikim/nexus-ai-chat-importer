@@ -455,6 +455,8 @@
     "import_error": "Errore durante l'importazione: {{error}}",
     "import_error_analyzing": "Errore durante l'analisi delle conversazioni: {{error}}",
     "import_error_file": "Errore durante l'elaborazione di {{filename}}. Consulta la console per maggiori dettagli.",
+    "import_error_file_report": "Importazione del file non riuscita: {{filename}}",
+    "import_error_mobile_large_json": "Questo ZIP contiene un file di conversazioni molto grande ({{size_mb}} MB). Il tuo dispositivo mobile non è riuscito a elaborarlo in modo affidabile in questa esecuzione. Riprova selezionando meno file ZIP alla volta.",
     "import_no_selected": "Nessuna conversazione selezionata per l'importazione.",
     "import_no_zip_gemini": "Seleziona almeno un file ZIP di Gemini Takeout (più un JSON opzionale dall'estensione).",
     "import_no_zip": "Seleziona almeno un file ZIP di esportazione.",

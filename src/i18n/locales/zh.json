@@ -455,6 +455,8 @@
     "import_error": "导入时发生错误：{{error}}",
     "import_error_analyzing": "分析对话时发生错误：{{error}}",
     "import_error_file": "处理 {{filename}} 时发生错误，请查看控制台获取详细信息。",
+    "import_error_file_report": "文件导入失败：{{filename}}",
+    "import_error_mobile_large_json": "该 ZIP 包含非常大的会话文件（{{size_mb}} MB）。本次运行中你的移动设备无法可靠处理它。请减少一次选择的 ZIP 文件数量后重试。",
     "import_no_selected": "未选择要导入的对话。",
     "import_no_zip_gemini": "请至少选择一个 Gemini Takeout ZIP 文件（以及可选的来自扩展的 JSON 索引）。",
     "import_no_zip": "请至少选择一个 ZIP 导出文件。",
