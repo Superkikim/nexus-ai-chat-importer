@@ -691,3 +691,344 @@
     transform: scale(1.05);
 }
 
+/* ========================================
+   RESPONSIVE DIALOG FOUNDATION
+   ======================================== */
+
+.modal.nexus-installation-welcome-dialog,
+.modal.nexus-upgrade-complete-modal,
+.modal.nexus-provider-selection-dialog,
+.modal.nexus-file-selection-dialog,
+.modal.nexus-conversation-selection-dialog,
+.modal.nexus-import-completion-dialog {
+    width: min(800px, 90vw) !important;
+    max-width: 90vw !important;
+}
+
+.nexus-ai-chat-importer-modal,
+.nexus-file-selection-dialog,
+.nexus-conversation-selection-dialog,
+.nexus-import-completion-dialog,
+.nexus-import-progress-modal {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.nexus-dialog-section {
+    margin-bottom: 20px;
+}
+
+.nexus-dialog-title {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1em;
+}
+
+.nexus-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.nexus-dialog-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.nexus-import-options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.nexus-option-box {
+    padding: 14px 16px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background-color: var(--background-primary);
+    min-width: 0;
+}
+
+.nexus-option-box.is-selected {
+    border-color: var(--interactive-accent);
+    border-width: 2px;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+}
+
+.nexus-option-box-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.nexus-option-box-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 4px;
+    cursor: pointer;
+    color: var(--text-normal);
+}
+
+.nexus-option-box-description {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.nexus-drop-zone {
+    border: 2px dashed var(--background-modifier-border);
+    border-radius: 10px;
+    padding: 24px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nexus-drop-zone.is-dragover,
+.nexus-drop-zone:hover {
+    border-color: var(--interactive-accent);
+    background-color: var(--background-modifier-hover);
+}
+
+.nexus-drop-zone-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.nexus-drop-zone-text {
+    font-size: 16px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.nexus-drop-zone-subtext {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.nexus-file-preview-section {
+    display: none;
+}
+
+.nexus-file-preview-section.is-visible {
+    display: block;
+}
+
+.nexus-file-list-container {
+    max-height: 300px;
+    overflow: auto;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.nexus-file-list-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.nexus-file-list-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nexus-file-list-container::-webkit-scrollbar-thumb {
+    background-color: var(--background-modifier-border);
+    border-radius: 5px;
+}
+
+.nexus-file-list-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted);
+}
+
+.nexus-file-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.nexus-file-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.nexus-file-list-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.nexus-file-list-item-name {
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.nexus-file-list-item-size {
+    font-size: 0.9em;
+    color: var(--text-muted);
+}
+
+.nexus-file-list-remove {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    font-size: 0.9em;
+}
+
+.nexus-folder-tree-container {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.nexus-tree-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.nexus-tree-item.is-selected {
+    background-color: var(--background-modifier-hover);
+    font-weight: 700;
+}
+
+.nexus-tree-item.is-hovered {
+    background-color: var(--background-modifier-hover-light);
+}
+
+@media (max-width: 700px) {
+    .nexus-ai-chat-importer-modal {
+        min-width: 0;
+    }
+
+    .nexus-ai-chat-importer-modal .modal-button-container,
+    .nexus-ai-chat-importer-modal .button-container,
+    .nexus-dialog-actions {
+        flex-wrap: wrap;
+        justify-content: stretch;
+    }
+
+    .nexus-ai-chat-importer-modal .modal-button-container > button,
+    .nexus-ai-chat-importer-modal .button-container > button,
+    .nexus-dialog-actions > button {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .nexus-import-progress-modal .modal-content {
+        min-width: 0 !important;
+        width: min(92vw, 520px) !important;
+        max-width: 92vw !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal.nexus-installation-welcome-dialog,
+    .modal.nexus-upgrade-complete-modal,
+    .modal.nexus-provider-selection-dialog,
+    .modal.nexus-file-selection-dialog,
+    .modal.nexus-conversation-selection-dialog,
+    .modal.nexus-import-completion-dialog {
+        width: 96vw !important;
+        max-width: 96vw !important;
+    }
+
+    .nexus-ai-chat-importer-modal,
+    .nexus-file-selection-dialog,
+    .nexus-conversation-selection-dialog,
+    .nexus-import-completion-dialog {
+        min-width: 0 !important;
+        max-width: 100%;
+    }
+
+    .nexus-dialog-toolbar {
+        flex-wrap: wrap;
+        align-items: stretch;
+    }
+
+    .nexus-dialog-toolbar > input,
+    .nexus-dialog-toolbar > select,
+    .nexus-dialog-toolbar > label,
+    .nexus-dialog-toolbar > button {
+        min-width: 0;
+    }
+
+    .nexus-import-options-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nexus-file-list-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .nexus-file-list-remove {
+        width: 100%;
+    }
+
+    .nexus-folder-tree-container {
+        max-height: 50vh;
+    }
+
+    .setting-item:has(.nexus-folder-path-input) {
+        grid-template-columns: 1fr !important;
+    }
+
+    .setting-item:has(.nexus-folder-path-input) .setting-item-control {
+        grid-column: 1 !important;
+        flex-wrap: wrap !important;
+    }
+
+    .nexus-folder-path-input {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+body.is-mobile .modal.nexus-installation-welcome-dialog,
+body.is-mobile .modal.nexus-upgrade-complete-modal,
+body.is-mobile .modal.nexus-provider-selection-dialog,
+body.is-mobile .modal.nexus-file-selection-dialog,
+body.is-mobile .modal.nexus-conversation-selection-dialog,
+body.is-mobile .modal.nexus-import-completion-dialog {
+    width: 96vw !important;
+    max-width: 96vw !important;
+}
+
+body.is-mobile .nexus-import-options-grid {
+    grid-template-columns: 1fr;
+}
+
+body.is-mobile .nexus-dialog-actions {
+    flex-wrap: wrap;
+}
+
+body.is-mobile .nexus-dialog-actions > button {
+    flex: 1 1 100%;
+    min-width: 0;
+}
+
+body.is-mobile .nexus-dialog-toolbar {
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+body.is-mobile .nexus-file-list-item {
+    flex-direction: column;
+    align-items: stretch;
+}

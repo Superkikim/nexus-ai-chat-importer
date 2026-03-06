@@ -70,77 +70,24 @@ export class ImportProgressModal extends Modal {
         
         // Phase indicator
         this.phaseEl = contentContainer.createEl("div", { cls: "import-phase" });
-        this.phaseEl.style.cssText = `
-            text-align: center;
-            margin: 10px 0;
-            font-weight: 600;
-            color: var(--text-accent);
-            font-size: 1.1em;
-        `;
 
         // Import mode indicator
         this.importModeEl = contentContainer.createEl("div", { cls: "import-mode" });
-        this.importModeEl.style.cssText = `
-            text-align: center;
-            margin: 5px 0 10px 0;
-            font-weight: 500;
-            color: var(--text-accent);
-            font-size: 0.85em;
-            padding: 4px 8px;
-            background: var(--background-secondary);
-            border-radius: 4px;
-            display: none;
-        `;
 
         // Conversation counter
         this.conversationCountEl = contentContainer.createEl("div", { cls: "conversation-counter" });
-        this.conversationCountEl.style.cssText = `
-            text-align: center;
-            margin: 5px 0 15px 0;
-            font-weight: 500;
-            color: var(--text-normal);
-            font-size: 0.9em;
-        `;
 
         // Progress bar container
         const progressContainer = contentContainer.createDiv({ cls: "progress-container" });
-        progressContainer.style.cssText = `
-            background: var(--background-secondary);
-            border-radius: 8px;
-            padding: 4px;
-            margin: 20px 0;
-            border: 1px solid var(--background-modifier-border);
-        `;
 
         // Progress bar
         this.progressBarEl = progressContainer.createDiv({ cls: "progress-bar" });
-        this.progressBarEl.style.cssText = `
-            height: 20px;
-            background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.3s ease;
-            position: relative;
-        `;
 
         // Status text
         this.statusEl = contentContainer.createEl("div", { cls: "status-text" });
-        this.statusEl.style.cssText = `
-            text-align: center;
-            margin: 10px 0;
-            font-weight: 500;
-            color: var(--text-normal);
-        `;
 
         // Detail text
         this.detailEl = contentContainer.createEl("div", { cls: "detail-text" });
-        this.detailEl.style.cssText = `
-            text-align: center;
-            margin: 5px 0;
-            font-size: 0.85em;
-            color: var(--text-muted);
-            min-height: 1.2em;
-        `;
 
         // Initial state
         this.updateProgress({

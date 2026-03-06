@@ -321,17 +321,22 @@ export class ConversationMetadataExtractor {
                 });
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
-                ignoredArchives.push({
-                    fileName: file.name,
-                    reason: "read-error",
-                    message,
-                });
-                this.metadataLogger.error(`Failed to analyze archive`, {
+                const ignoredArchive = this.classifyReadFailure(file.name, message, forcedProvider);
+                ignoredArchives.push(ignoredArchive);
+
+                const logDetails = {
                     fileName: file.name,
                     fileSize: file.size,
                     durationMs: Date.now() - fileStartedAt,
+                    reason: ignoredArchive.reason,
                     message,
-                });
+                    userMessage: ignoredArchive.message,
+                };
+                if (ignoredArchive.reason === "read-error") {
+                    this.metadataLogger.error(`Archive analysis failed and was ignored`, logDetails);
+                } else {
+                    this.metadataLogger.warn(`Archive analysis failed and was ignored`, logDetails);
+                }
             }
         }
 
@@ -391,6 +396,51 @@ export class ConversationMetadataExtractor {
         });
 
         return result;
+    }
+
+    private classifyReadFailure(
+        fileName: string,
+        message: string,
+        forcedProvider?: string
+    ): IgnoredArchiveInfo {
+        const normalized = message.toLowerCase();
+        const looksUnsupportedArchive =
+            normalized.includes("central directory not found") ||
+            normalized.includes("not a valid zip") ||
+            normalized.includes("zip64") ||
+            normalized.includes("object can not be found here") ||
+            normalized.includes("notfounderror");
+
+        if (looksUnsupportedArchive) {
+            return {
+                fileName,
+                reason: "unsupported-format",
+                message: this.getUnsupportedArchiveMessage(forcedProvider),
+            };
+        }
+
+        return {
+            fileName,
+            reason: "read-error",
+            message,
+        };
+    }
+
+    private getUnsupportedArchiveMessage(forcedProvider?: string): string {
+        if (forcedProvider === "chatgpt") {
+            return "This ZIP file does not look like a ChatGPT export.";
+        }
+        if (forcedProvider === "claude") {
+            return "This ZIP file does not look like a Claude export.";
+        }
+        if (forcedProvider === "lechat") {
+            return "This ZIP file does not look like a Le Chat export.";
+        }
+        if (forcedProvider === "gemini") {
+            return "This ZIP file does not look like a Gemini Takeout export.";
+        }
+
+        return "This ZIP file does not match any supported export format.";
     }
 
     private resolveProvider(

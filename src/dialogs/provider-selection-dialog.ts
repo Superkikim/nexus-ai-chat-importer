@@ -96,8 +96,10 @@ export class ProviderSelectionDialog extends Modal {
     }
 
     onOpen() {
-        const { contentEl } = this;
+        const { contentEl, modalEl } = this;
         contentEl.empty();
+        modalEl.addClass("nexus-provider-selection-dialog");
+        contentEl.addClass("nexus-ai-chat-importer-modal");
 
         // Title
         contentEl.createEl("h2", { text: t('provider_selection.title') });
@@ -120,12 +122,9 @@ export class ProviderSelectionDialog extends Modal {
         });
 
         // Cancel button
-        const buttonContainer = contentEl.createDiv();
-        buttonContainer.style.textAlign = "center";
-        buttonContainer.style.marginTop = "20px";
+        const buttonContainer = contentEl.createDiv({ cls: "nexus-dialog-actions" });
 
         const cancelButton = buttonContainer.createEl("button", { text: t('provider_selection.buttons.cancel') });
-        cancelButton.style.marginRight = "10px";
         cancelButton.onclick = () => this.close();
     }
 

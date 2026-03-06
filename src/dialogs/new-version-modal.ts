@@ -107,7 +107,7 @@ export class NewVersionModal extends Modal {
 	    }
 
     private addCloseButton() {
-        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container" });
+        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container nexus-dialog-actions" });
 
         const closeButton = buttonContainer.createEl("button", {
             text: t('upgrade.new_version_modal.buttons.got_it'),
@@ -123,18 +123,18 @@ export class NewVersionModal extends Modal {
         const styleEl = document.createElement("style");
         styleEl.textContent = `
             .modal.nexus-new-version-modal {
-                max-width: 1050px !important;
-                width: 1050px !important;
+                max-width: min(1050px, 92vw) !important;
+                width: min(1050px, 92vw) !important;
             }
 
             .nexus-upgrade-content {
                 margin-bottom: 20px;
                 line-height: 1.6;
+                overflow-wrap: anywhere;
             }
 
             /* Close Button Styles */
             .nexus-close-button-container {
-                text-align: center;
                 margin: 32px 0;
             }
 
@@ -151,8 +151,18 @@ export class NewVersionModal extends Modal {
                 transform: translateY(-2px);
                 box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
             }
+
+            @media (max-width: 700px) {
+                .modal.nexus-new-version-modal .modal-content {
+                    padding: 16px !important;
+                }
+
+                .nexus-close-button {
+                    width: 100%;
+                    padding: 14px 20px !important;
+                }
+            }
         `;
         document.head.appendChild(styleEl);
     }
 }
-

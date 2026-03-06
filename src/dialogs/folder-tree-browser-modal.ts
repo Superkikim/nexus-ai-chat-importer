@@ -58,27 +58,20 @@ export class FolderTreeBrowserModal extends Modal {
     }
 
     onOpen(): void {
-        const { contentEl } = this;
+        const { contentEl, modalEl } = this;
+        modalEl.addClass("nexus-folder-browser-modal");
+        contentEl.addClass("nexus-ai-chat-importer-modal");
         
         contentEl.createEl("h3", { text: t('folder_browser.title') });
 
         // Tree container with scroll
         this.treeContainer = contentEl.createDiv({ cls: "nexus-folder-tree-container" });
-        this.treeContainer.style.maxHeight = "400px";
-        this.treeContainer.style.overflowY = "auto";
-        this.treeContainer.style.marginBottom = "20px";
-        this.treeContainer.style.border = "1px solid var(--background-modifier-border)";
-        this.treeContainer.style.borderRadius = "4px";
-        this.treeContainer.style.padding = "8px";
 
         // Render the tree
         this.renderTree();
 
         // Buttons
-        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.gap = "8px";
-        buttonContainer.style.justifyContent = "flex-end";
+        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container nexus-dialog-actions" });
 
         const createButton = buttonContainer.createEl("button", { text: t('folder_browser.buttons.create_new_folder') });
         createButton.addEventListener("click", () => this.handleCreateFolder());
@@ -101,14 +94,9 @@ export class FolderTreeBrowserModal extends Modal {
         
         // Render vault root as special case
         const rootItem = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
-        rootItem.style.display = "flex";
-        rootItem.style.alignItems = "center";
-        rootItem.style.padding = "4px 8px";
-        rootItem.style.cursor = "pointer";
-        rootItem.style.borderRadius = "4px";
 
         if (this.selectedFolder === root) {
-            rootItem.style.backgroundColor = "var(--background-modifier-hover)";
+            rootItem.addClass("is-selected");
         }
 
         const rootIcon = rootItem.createSpan({ text: "📁 " });
@@ -141,16 +129,10 @@ export class FolderTreeBrowserModal extends Modal {
 
         // Folder item
         const item = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
-        item.style.display = "flex";
-        item.style.alignItems = "center";
-        item.style.padding = "4px 8px";
         item.style.paddingLeft = `${depth * 20 + 8}px`;
-        item.style.cursor = "pointer";
-        item.style.borderRadius = "4px";
 
         if (isSelected) {
-            item.style.backgroundColor = "var(--background-modifier-hover)";
-            item.style.fontWeight = "bold";
+            item.addClass("is-selected");
         }
 
         // Expand/collapse icon
@@ -177,12 +159,12 @@ export class FolderTreeBrowserModal extends Modal {
         // Hover effect
         item.addEventListener("mouseenter", () => {
             if (!isSelected) {
-                item.style.backgroundColor = "var(--background-modifier-hover-light)";
+                item.addClass("is-hovered");
             }
         });
         item.addEventListener("mouseleave", () => {
             if (!isSelected) {
-                item.style.backgroundColor = "";
+                item.removeClass("is-hovered");
             }
         });
 
@@ -404,4 +386,3 @@ export class FolderTreeBrowserModal extends Modal {
         contentEl.empty();
     }
 }
-

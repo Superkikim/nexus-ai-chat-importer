@@ -117,26 +117,17 @@ export class ConversationSelectionDialog extends Modal {
     }
 
     private createSummarySection(container: HTMLElement) {
-        const section = container.createDiv('summary-section');
+        const section = container.createDiv('summary-section nexus-summary-grid nexus-dialog-section');
         section.id = 'conversation-summary';
-        section.style.marginBottom = "20px";
-        section.style.display = "grid";
-        section.style.gridTemplateColumns = "repeat(4, 1fr)";
-        section.style.gap = "12px";
         // Content will be updated by updateSummary()
     }
 
     private createControlsSection(container: HTMLElement) {
-        const section = container.createDiv('controls-section');
-        section.style.marginBottom = "20px";
-        section.style.display = "flex";
-        section.style.gap = "12px";
-        section.style.alignItems = "center";
+        const section = container.createDiv('controls-section nexus-dialog-toolbar nexus-controls-row nexus-dialog-section');
 
         // Select All button
         const selectAllBtn = section.createEl("button", { text: t('conversation_selection.controls.select_all') });
-        selectAllBtn.style.padding = "8px 16px";
-        selectAllBtn.style.whiteSpace = "nowrap";
+        selectAllBtn.addClass('nexus-control-button');
         selectAllBtn.addEventListener('click', () => {
             this.state.filteredConversations.forEach(conv => {
                 this.state.selectedIds.add(conv.id);
@@ -147,8 +138,7 @@ export class ConversationSelectionDialog extends Modal {
 
         // Select None button
         const selectNoneBtn = section.createEl("button", { text: t('conversation_selection.controls.select_none') });
-        selectNoneBtn.style.padding = "8px 16px";
-        selectNoneBtn.style.whiteSpace = "nowrap";
+        selectNoneBtn.addClass('nexus-control-button');
         selectNoneBtn.addEventListener('click', () => {
             this.state.selectedIds.clear();
             this.renderConversationList();
@@ -156,13 +146,11 @@ export class ConversationSelectionDialog extends Modal {
         });
 
         // Search input
-        const searchInput = section.createEl("input", { type: "text" });
+        const searchInput = section.createEl("input", {
+            type: "text",
+            cls: "nexus-conversation-search",
+        });
         searchInput.placeholder = t('conversation_selection.controls.search_placeholder');
-        searchInput.style.flex = "1";
-        searchInput.style.minWidth = "200px";
-        searchInput.style.padding = "8px 12px";
-        searchInput.style.border = "1px solid var(--background-modifier-border)";
-        searchInput.style.borderRadius = "4px";
         searchInput.addEventListener('input', (e) => {
             const target = e.target as HTMLInputElement;
             this.state.filter.searchTerm = target.value;
@@ -173,21 +161,10 @@ export class ConversationSelectionDialog extends Modal {
         });
 
         // Filter by status dropdown
-        const statusLabel = section.createEl("label");
+        const statusLabel = section.createEl("label", { cls: "nexus-filter-label" });
         statusLabel.textContent = t('conversation_selection.controls.status_label');
-        statusLabel.style.marginRight = "4px";
-        statusLabel.style.fontSize = "14px";
-        statusLabel.style.whiteSpace = "nowrap";
 
-        const statusSelect = section.createEl("select");
-        statusSelect.style.padding = "8px 12px";
-        statusSelect.style.paddingRight = "28px";
-        statusSelect.style.border = "1px solid var(--background-modifier-border)";
-        statusSelect.style.borderRadius = "4px";
-        statusSelect.style.fontSize = "14px";
-        statusSelect.style.backgroundColor = "var(--background-primary)";
-        statusSelect.style.color = "var(--text-normal)";
-        statusSelect.classList.add('nexus-custom-select');
+        const statusSelect = section.createEl("select", { cls: "nexus-custom-select nexus-filter-select" });
 
         const statusOptions = [
             { value: 'all', text: t('conversation_selection.status_filter_options.all') },
@@ -213,21 +190,10 @@ export class ConversationSelectionDialog extends Modal {
         });
 
         // Page size dropdown
-        const pageSizeLabel = section.createEl("label");
+        const pageSizeLabel = section.createEl("label", { cls: "nexus-filter-label" });
         pageSizeLabel.textContent = t('conversation_selection.controls.show_label');
-        pageSizeLabel.style.marginRight = "4px";
-        pageSizeLabel.style.fontSize = "14px";
-        pageSizeLabel.style.whiteSpace = "nowrap";
 
-        const pageSizeSelect = section.createEl("select");
-        pageSizeSelect.style.padding = "8px 12px";
-        pageSizeSelect.style.paddingRight = "28px";
-        pageSizeSelect.style.border = "1px solid var(--background-modifier-border)";
-        pageSizeSelect.style.borderRadius = "4px";
-        pageSizeSelect.style.fontSize = "14px";
-        pageSizeSelect.style.backgroundColor = "var(--background-primary)";
-        pageSizeSelect.style.color = "var(--text-normal)";
-        pageSizeSelect.classList.add('nexus-custom-select');
+        const pageSizeSelect = section.createEl("select", { cls: "nexus-custom-select nexus-filter-select" });
 
         const pageSizeOptions = [10, 20, 50, 100];
         pageSizeOptions.forEach(size => {
@@ -257,8 +223,7 @@ export class ConversationSelectionDialog extends Modal {
 
 
     private createConversationListSection(container: HTMLElement) {
-        const section = container.createDiv('conversation-list-section');
-        section.style.marginBottom = "20px";
+        const section = container.createDiv('conversation-list-section nexus-dialog-section');
 
         // Table container with scroll
         const tableContainer = section.createDiv('table-container');
@@ -343,45 +308,35 @@ export class ConversationSelectionDialog extends Modal {
         // Table body
         const tbody = table.createEl("tbody");
         tbody.id = 'conversation-table-body';
+
+        const mobileList = section.createDiv('nexus-mobile-conversation-list');
+        mobileList.id = 'conversation-mobile-list';
     }
 
     private createPaginationSection(container: HTMLElement) {
         const section = container.createDiv('pagination-section');
+        section.addClass('nexus-pagination-section');
         section.id = 'pagination-section';
-        section.style.marginBottom = "20px";
-        section.style.display = "flex";
-        section.style.justifyContent = "space-between";
-        section.style.alignItems = "center";
 
         // Page info
-        const pageInfo = section.createDiv();
+        const pageInfo = section.createDiv({ cls: 'nexus-page-info' });
         pageInfo.id = 'page-info';
-        pageInfo.style.fontSize = "0.9em";
-        pageInfo.style.color = "var(--text-muted)";
 
         // Page controls
-        const pageControls = section.createDiv();
+        const pageControls = section.createDiv({ cls: 'nexus-page-controls' });
         pageControls.id = 'page-controls';
-        pageControls.style.display = "flex";
-        pageControls.style.gap = "8px";
     }
 
     private createActionButtons(container: HTMLElement) {
-        const buttonContainer = container.createDiv('action-buttons');
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.justifyContent = "flex-end";
-        buttonContainer.style.gap = "10px";
-        buttonContainer.style.marginTop = "20px";
+        const buttonContainer = container.createDiv('action-buttons nexus-dialog-actions');
 
         // Cancel button
         const cancelButton = buttonContainer.createEl("button", { text: t('conversation_selection.buttons.cancel') });
-        cancelButton.style.padding = "8px 16px";
         cancelButton.addEventListener('click', () => this.close());
 
         // Import button
         const importButton = buttonContainer.createEl("button", { text: t('conversation_selection.buttons.import_selected') });
         importButton.id = 'import-selected-button';
-        importButton.style.padding = "8px 16px";
         importButton.classList.add('mod-cta');
         importButton.addEventListener('click', () => this.handleImportSelected());
     }
@@ -438,9 +393,11 @@ export class ConversationSelectionDialog extends Modal {
 
     private renderConversationList() {
         const tbody = this.contentEl.querySelector('#conversation-table-body') as HTMLElement;
+        const mobileList = this.contentEl.querySelector('#conversation-mobile-list') as HTMLElement;
         if (!tbody) return;
 
         tbody.empty();
+        mobileList?.empty();
 
         const { currentPage, pageSize } = this.state.pagination;
         const startIndex = (currentPage - 1) * pageSize;
@@ -497,9 +454,51 @@ export class ConversationSelectionDialog extends Modal {
             statusCell.style.textAlign = "center";
             const statusBadge = this.createStatusBadge(conversation);
             statusCell.appendChild(statusBadge);
+
+            if (mobileList) {
+                this.renderMobileConversationCard(mobileList, conversation);
+            }
         });
 
         this.renderPaginationControls();
+    }
+
+    private renderMobileConversationCard(container: HTMLElement, conversation: ConversationMetadata) {
+        const card = container.createDiv('nexus-conversation-card');
+
+        const header = card.createDiv('nexus-conversation-card-header');
+
+        const checkbox = header.createEl("input", {
+            type: "checkbox",
+            cls: 'nexus-conversation-card-checkbox',
+        });
+        checkbox.checked = this.state.selectedIds.has(conversation.id);
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                this.state.selectedIds.add(conversation.id);
+            } else {
+                this.state.selectedIds.delete(conversation.id);
+            }
+            this.updateSummary();
+        });
+
+        const titleWrap = header.createDiv('nexus-conversation-card-title-wrap');
+        const title = titleWrap.createDiv('nexus-conversation-card-title');
+        title.textContent = conversation.title;
+
+        if (conversation.sourceFile) {
+            const sourceInfo = titleWrap.createDiv('nexus-conversation-card-source');
+            sourceInfo.textContent = `📁 ${conversation.sourceFile}`;
+        }
+
+        const badge = this.createStatusBadge(conversation);
+        badge.addClass('nexus-conversation-card-badge');
+        header.appendChild(badge);
+
+        const meta = card.createDiv('nexus-conversation-card-meta');
+        meta.createDiv({ text: `${t('conversation_selection.table_headers.created')}: ${this.formatDate(conversation.createTime)}` });
+        meta.createDiv({ text: `${t('conversation_selection.table_headers.updated')}: ${this.formatDate(conversation.updateTime)}` });
+        meta.createDiv({ text: `${t('conversation_selection.table_headers.messages')}: ${conversation.messageCount}` });
     }
 
     private createStatusBadge(conversation: ConversationMetadata): HTMLElement {
@@ -613,21 +612,21 @@ export class ConversationSelectionDialog extends Modal {
             const uniqueCount = info.uniqueConversationsKept;
 
             return `
-                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                    <div style="font-weight: 600; font-size: 1.4em; color: var(--text-accent);">${uniqueCount}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t('conversation_selection.summary.unique_conversations')}</div>
+                <div class="nexus-summary-card">
+                    <div class="nexus-summary-value nexus-summary-value-primary">${uniqueCount}</div>
+                    <div class="nexus-summary-label">${t('conversation_selection.summary.unique_conversations')}</div>
                 </div>
-                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                    <div style="font-weight: 600; font-size: 1.4em; color: var(--color-green);">${info.conversationsNew}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t('conversation_selection.summary.new')}</div>
+                <div class="nexus-summary-card">
+                    <div class="nexus-summary-value nexus-summary-value-success">${info.conversationsNew}</div>
+                    <div class="nexus-summary-label">${t('conversation_selection.summary.new')}</div>
                 </div>
-                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                    <div style="font-weight: 600; font-size: 1.4em; color: var(--color-orange);">${info.conversationsUpdated}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t('conversation_selection.summary.updated')}</div>
+                <div class="nexus-summary-card">
+                    <div class="nexus-summary-value nexus-summary-value-warning">${info.conversationsUpdated}</div>
+                    <div class="nexus-summary-label">${t('conversation_selection.summary.updated')}</div>
                 </div>
-                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                    <div style="font-weight: 600; font-size: 1.4em; color: var(--text-muted);">${info.conversationsIgnored}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t('conversation_selection.summary.unchanged')}</div>
+                <div class="nexus-summary-card">
+                    <div class="nexus-summary-value nexus-summary-value-muted">${info.conversationsIgnored}</div>
+                    <div class="nexus-summary-label">${t('conversation_selection.summary.unchanged')}</div>
                 </div>
             `;
         }
@@ -690,6 +689,75 @@ export class ConversationSelectionDialog extends Modal {
                 padding: 20px 24px 24px 24px;
             }
 
+            .nexus-conversation-selection-dialog .nexus-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-card {
+                text-align: center;
+                padding: 12px;
+                background-color: var(--background-primary);
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value {
+                font-weight: 600;
+                font-size: 1.4em;
+                margin-bottom: 4px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value-primary {
+                color: var(--text-accent);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value-success {
+                color: var(--color-green);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value-warning {
+                color: var(--color-orange);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value-muted {
+                color: var(--text-muted);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-label {
+                color: var(--text-muted);
+                font-size: 0.85em;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-controls-row {
+                background-color: var(--background-primary);
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid var(--background-modifier-border);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-control-button {
+                white-space: nowrap;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-search {
+                flex: 1 1 220px;
+                min-width: 0;
+                padding: 8px 12px;
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-filter-label {
+                font-size: 14px;
+                white-space: nowrap;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-filter-select {
+                min-width: 0;
+            }
+
             /* Table container with independent scroll */
             .nexus-conversation-selection-dialog .nexus-table-container {
                 max-height: 450px;
@@ -699,6 +767,11 @@ export class ConversationSelectionDialog extends Modal {
                 border-radius: 8px;
                 margin-bottom: 20px;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-mobile-conversation-list {
+                display: none;
+                gap: 10px;
             }
 
             /* Table styling */
@@ -856,14 +929,6 @@ export class ConversationSelectionDialog extends Modal {
                 margin-bottom: 20px;
             }
 
-            /* Controls section */
-            .nexus-conversation-selection-dialog .controls-section {
-                background-color: var(--background-primary);
-                padding: 12px;
-                border-radius: 8px;
-                border: 1px solid var(--background-modifier-border);
-            }
-
             /* Scrollbar styling for table container */
             .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar {
                 width: 10px;
@@ -882,6 +947,107 @@ export class ConversationSelectionDialog extends Modal {
 
             .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-thumb:hover {
                 background: var(--text-muted);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-pagination-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-page-info {
+                font-size: 0.9em;
+                color: var(--text-muted);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-page-controls {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card {
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 10px;
+                padding: 12px;
+                background: var(--background-primary);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-header {
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                gap: 10px;
+                align-items: start;
+                margin-bottom: 10px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-title-wrap {
+                min-width: 0;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-title {
+                font-weight: 600;
+                word-break: break-word;
+                line-height: 1.4;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-source {
+                font-size: 0.82em;
+                color: var(--text-muted);
+                margin-top: 4px;
+                word-break: break-word;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-meta {
+                display: grid;
+                gap: 4px;
+                font-size: 0.9em;
+                color: var(--text-muted);
+            }
+
+            @media (max-width: 700px) {
+                .modal.nexus-conversation-selection-dialog .modal-content {
+                    padding: 14px 14px 18px 14px;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-summary-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .nexus-conversation-selection-dialog .nexus-controls-row {
+                    flex-wrap: wrap;
+                    align-items: stretch;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-conversation-search {
+                    flex: 1 1 100%;
+                    order: -1;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-pagination-section {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-page-controls {
+                    justify-content: space-between;
+                }
+            }
+
+            @media (max-width: 600px) {
+                .nexus-conversation-selection-dialog .nexus-table-container {
+                    display: none;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-mobile-conversation-list {
+                    display: grid;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-summary-grid {
+                    grid-template-columns: 1fr 1fr;
+                }
             }
         `;
         document.head.appendChild(style);

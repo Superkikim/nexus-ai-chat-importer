@@ -130,7 +130,7 @@ cleanly instead of falling into generic extraction errors.
     }
 
     private addCloseButton() {
-        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
+        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container nexus-dialog-actions" });
         const button = buttonContainer.createEl("button", {
             text: t('upgrade.complete_modal.buttons.got_it'),
             cls: "mod-cta nexus-upgrade-button"
@@ -159,6 +159,7 @@ cleanly instead of falling into generic extraction errors.
             .nexus-upgrade-notes {
                 padding: 0 1em;
                 margin-bottom: 2em;
+                overflow-wrap: anywhere;
             }
 
             .nexus-upgrade-notes h2 {
@@ -184,7 +185,6 @@ cleanly instead of falling into generic extraction errors.
 
             /* Close button */
             .nexus-upgrade-button-container {
-                text-align: center;
                 padding: 1.5em 0;
                 border-top: 1px solid var(--background-modifier-border);
                 margin-top: 1em;
@@ -195,6 +195,20 @@ cleanly instead of falling into generic extraction errors.
                 font-size: 1.1em;
                 font-weight: 600;
                 border-radius: 8px;
+            }
+
+            @media (max-width: 700px) {
+                .nexus-upgrade-complete-modal .modal-content {
+                    padding: 16px !important;
+                }
+
+                .nexus-upgrade-notes {
+                    padding: 0;
+                }
+
+                .nexus-upgrade-button {
+                    width: 100%;
+                }
             }
         `;
         document.head.appendChild(style);

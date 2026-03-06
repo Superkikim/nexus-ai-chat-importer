@@ -73,36 +73,19 @@ export class EnhancedFileSelectionDialog extends Modal {
     }
 
     private createImportModeSection(container: HTMLElement) {
-        const section = container.createDiv('import-mode-section');
-        section.style.marginBottom = "20px";
+        const section = container.createDiv('import-mode-section nexus-dialog-section');
 
-        const sectionTitle = section.createEl("h3", { text: t('file_selection.import_mode.section_title') });
-        sectionTitle.style.marginTop = "0";
-        sectionTitle.style.marginBottom = "12px";
-        sectionTitle.style.fontSize = "1em";
+        section.createEl("h3", {
+            text: t('file_selection.import_mode.section_title'),
+            cls: 'nexus-dialog-title',
+        });
 
         // Two options side by side - clean and readable
-        const optionsContainer = section.createDiv('import-options-container');
-        optionsContainer.style.display = "grid";
-        optionsContainer.style.gridTemplateColumns = "1fr 1fr";
-        optionsContainer.style.gap = "12px";
+        const optionsContainer = section.createDiv('import-options-container nexus-import-options-grid');
 
         // Import All option
-        const allOption = optionsContainer.createDiv('import-option-box');
-        allOption.style.padding = "14px 16px";
-        allOption.style.border = "1px solid var(--background-modifier-border)";
-        allOption.style.borderRadius = "6px";
-        allOption.style.cursor = "pointer";
-        allOption.style.transition = "all 0.2s";
-        allOption.style.display = "flex";
-        allOption.style.alignItems = "center";
-        allOption.style.gap = "10px";
-        allOption.style.backgroundColor = "var(--background-primary)";
-
-        if (this.importMode === 'all') {
-            allOption.style.borderColor = "var(--interactive-accent)";
-            allOption.style.borderWidth = "2px";
-        }
+        const allOption = optionsContainer.createDiv('import-option-box nexus-option-box');
+        allOption.toggleClass('is-selected', this.importMode === 'all');
 
         const allRadio = allOption.createEl("input", { type: "radio" });
         allRadio.name = "importMode";
@@ -115,21 +98,13 @@ export class EnhancedFileSelectionDialog extends Modal {
             this.updateImportModeBoxes();
         });
 
-        const allContent = allOption.createDiv();
-        allContent.style.flex = "1";
+        const allContent = allOption.createDiv({ cls: 'nexus-option-box-content' });
 
-        const allLabel = allContent.createEl("label");
+        const allLabel = allContent.createEl("label", { cls: 'nexus-option-box-label' });
         allLabel.htmlFor = "import-all";
-        allLabel.style.display = "block";
-        allLabel.style.fontWeight = "500";
-        allLabel.style.marginBottom = "4px";
-        allLabel.style.cursor = "pointer";
-        allLabel.style.color = "var(--text-normal)";
         allLabel.textContent = t('file_selection.import_mode.all_label');
 
-        const allDesc = allContent.createDiv();
-        allDesc.style.fontSize = "0.85em";
-        allDesc.style.color = "var(--text-muted)";
+        const allDesc = allContent.createDiv({ cls: 'nexus-option-box-description' });
         allDesc.textContent = t('file_selection.import_mode.all_description');
 
         allOption.addEventListener('click', () => {
@@ -140,21 +115,8 @@ export class EnhancedFileSelectionDialog extends Modal {
         });
 
         // Select Specific option
-        const selectOption = optionsContainer.createDiv('import-option-box');
-        selectOption.style.padding = "14px 16px";
-        selectOption.style.border = "1px solid var(--background-modifier-border)";
-        selectOption.style.borderRadius = "6px";
-        selectOption.style.cursor = "pointer";
-        selectOption.style.transition = "all 0.2s";
-        selectOption.style.display = "flex";
-        selectOption.style.alignItems = "center";
-        selectOption.style.gap = "10px";
-        selectOption.style.backgroundColor = "var(--background-primary)";
-
-        if (this.importMode === 'selective') {
-            selectOption.style.borderColor = "var(--interactive-accent)";
-            selectOption.style.borderWidth = "2px";
-        }
+        const selectOption = optionsContainer.createDiv('import-option-box nexus-option-box');
+        selectOption.toggleClass('is-selected', this.importMode === 'selective');
 
         const selectRadio = selectOption.createEl("input", { type: "radio" });
         selectRadio.name = "importMode";
@@ -167,21 +129,13 @@ export class EnhancedFileSelectionDialog extends Modal {
             this.updateImportModeBoxes();
         });
 
-        const selectContent = selectOption.createDiv();
-        selectContent.style.flex = "1";
+        const selectContent = selectOption.createDiv({ cls: 'nexus-option-box-content' });
 
-        const selectLabel = selectContent.createEl("label");
+        const selectLabel = selectContent.createEl("label", { cls: 'nexus-option-box-label' });
         selectLabel.htmlFor = "import-selective";
-        selectLabel.style.display = "block";
-        selectLabel.style.fontWeight = "500";
-        selectLabel.style.marginBottom = "4px";
-        selectLabel.style.cursor = "pointer";
-        selectLabel.style.color = "var(--text-normal)";
         selectLabel.textContent = t('file_selection.import_mode.selective_label');
 
-        const selectDesc = selectContent.createDiv();
-        selectDesc.style.fontSize = "0.85em";
-        selectDesc.style.color = "var(--text-muted)";
+        const selectDesc = selectContent.createDiv({ cls: 'nexus-option-box-description' });
         selectDesc.textContent = t('file_selection.import_mode.selective_description');
 
         selectOption.addEventListener('click', () => {
@@ -197,42 +151,25 @@ export class EnhancedFileSelectionDialog extends Modal {
         boxes.forEach((box, index) => {
             const isSelected = (index === 0 && this.importMode === 'all') ||
                              (index === 1 && this.importMode === 'selective');
-
-            if (isSelected) {
-                box.style.borderColor = "var(--interactive-accent)";
-                box.style.borderWidth = "2px";
-            } else {
-                box.style.borderColor = "var(--background-modifier-border)";
-                box.style.borderWidth = "1px";
-            }
+            box.toggleClass('is-selected', isSelected);
         });
     }
 
     private createFileSelectionArea(container: HTMLElement) {
-        const section = container.createDiv('file-selection-section');
-        section.style.marginBottom = "20px";
+        const section = container.createDiv('file-selection-section nexus-dialog-section');
 
-        const sectionTitle = section.createEl("h3", { text: t('file_selection.file_area.section_title') });
-        sectionTitle.style.marginBottom = "10px";
-        sectionTitle.style.fontSize = "1em";
+        section.createEl("h3", {
+            text: t('file_selection.file_area.section_title'),
+            cls: 'nexus-dialog-title',
+        });
 
         // Drop zone - more compact
-        const dropZone = section.createDiv('drop-zone');
-        dropZone.style.border = "2px dashed var(--background-modifier-border)";
-        dropZone.style.borderRadius = "8px";
-        dropZone.style.padding = "24px 20px";
-        dropZone.style.textAlign = "center";
-        dropZone.style.cursor = "pointer";
-        dropZone.style.transition = "all 0.2s ease";
+        const dropZone = section.createDiv('drop-zone nexus-drop-zone');
 
-        const dropIcon = dropZone.createEl("div");
-        dropIcon.style.fontSize = "48px";
-        dropIcon.style.marginBottom = "15px";
+        const dropIcon = dropZone.createEl("div", { cls: 'nexus-drop-zone-icon' });
         dropIcon.textContent = "📁";
 
-        const dropText = dropZone.createEl("div");
-        dropText.style.fontSize = "16px";
-        dropText.style.marginBottom = "10px";
+        const dropText = dropZone.createEl("div", { cls: 'nexus-drop-zone-text' });
 
         // Different text for Gemini (supports JSON index)
         if (this.provider === 'gemini') {
@@ -241,9 +178,7 @@ export class EnhancedFileSelectionDialog extends Modal {
             dropText.textContent = t('file_selection.file_area.drop_text_default');
         }
 
-        const dropSubtext = dropZone.createEl("div");
-        dropSubtext.style.fontSize = "14px";
-        dropSubtext.style.color = "var(--text-muted)";
+        const dropSubtext = dropZone.createEl("div", { cls: 'nexus-drop-zone-subtext' });
 
         if (this.provider === 'gemini') {
             dropSubtext.textContent = t('file_selection.file_area.drop_subtext_gemini');
@@ -276,42 +211,31 @@ export class EnhancedFileSelectionDialog extends Modal {
     }
 
     private createFilePreviewArea(container: HTMLElement) {
-        const section = container.createDiv('file-preview-section');
+        const section = container.createDiv('file-preview-section nexus-file-preview-section nexus-dialog-section');
         section.id = 'file-preview-section';
-        section.style.marginBottom = "20px";
-        section.style.display = "none"; // Hidden initially
 
-        const sectionTitle = section.createEl("h3", { text: t('file_selection.selected_files.section_title') });
-        sectionTitle.style.marginBottom = "15px";
+        section.createEl("h3", {
+            text: t('file_selection.selected_files.section_title'),
+            cls: 'nexus-dialog-title',
+        });
 
         // Scrollable container for file list
-        const fileListContainer = section.createDiv('file-list-container');
-        fileListContainer.style.maxHeight = "300px";
-        fileListContainer.style.overflowY = "auto";
-        fileListContainer.style.border = "1px solid var(--background-modifier-border)";
-        fileListContainer.style.borderRadius = "6px";
-        fileListContainer.style.padding = "8px";
+        const fileListContainer = section.createDiv('file-list-container nexus-file-list-container');
 
         const fileList = fileListContainer.createDiv('file-list');
         fileList.id = 'file-list';
     }
 
     private createActionButtons(container: HTMLElement) {
-        const buttonContainer = container.createDiv('action-buttons');
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.justifyContent = "flex-end";
-        buttonContainer.style.gap = "10px";
-        buttonContainer.style.marginTop = "20px";
+        const buttonContainer = container.createDiv('action-buttons nexus-dialog-actions');
 
         // Cancel button
         const cancelButton = buttonContainer.createEl("button", { text: t('file_selection.buttons.cancel') });
-        cancelButton.style.padding = "8px 16px";
         cancelButton.addEventListener('click', () => this.close());
 
         // Import button
         const importButton = buttonContainer.createEl("button", { text: t('file_selection.buttons.continue') });
         importButton.id = 'import-button';
-        importButton.style.padding = "8px 16px";
         importButton.classList.add('mod-cta');
         importButton.disabled = true;
         importButton.addEventListener('click', () => this.handleImport());
@@ -328,8 +252,7 @@ export class EnhancedFileSelectionDialog extends Modal {
 
     private handleDragOver(event: DragEvent, dropZone: HTMLElement) {
         event.preventDefault();
-        dropZone.style.borderColor = "var(--interactive-accent)";
-        dropZone.style.backgroundColor = "var(--background-modifier-hover)";
+        dropZone.addClass('is-dragover');
     }
 
     private handleDragEnter(event: DragEvent, dropZone: HTMLElement) {
@@ -341,16 +264,14 @@ export class EnhancedFileSelectionDialog extends Modal {
         event.preventDefault();
         this.dragCounter--;
         if (this.dragCounter === 0) {
-            dropZone.style.borderColor = "var(--background-modifier-border)";
-            dropZone.style.backgroundColor = "transparent";
+            dropZone.removeClass('is-dragover');
         }
     }
 
     private handleDrop(event: DragEvent, dropZone: HTMLElement) {
         event.preventDefault();
         this.dragCounter = 0;
-        dropZone.style.borderColor = "var(--background-modifier-border)";
-        dropZone.style.backgroundColor = "transparent";
+        dropZone.removeClass('is-dragover');
 
         if (event.dataTransfer?.files) {
             const files = Array.from(event.dataTransfer.files).filter(file => {
@@ -375,39 +296,28 @@ export class EnhancedFileSelectionDialog extends Modal {
         const fileList = this.contentEl.querySelector('#file-list') as HTMLElement;
 
         if (this.selectedFiles.length > 0) {
-            previewSection.style.display = "block";
+            previewSection.addClass('is-visible');
             fileList.empty();
 
             this.selectedFiles.forEach((file, index) => {
-                const fileItem = fileList.createDiv('file-item');
-                fileItem.style.display = "flex";
-                fileItem.style.justifyContent = "space-between";
-                fileItem.style.alignItems = "center";
-                fileItem.style.padding = "8px 12px";
-                fileItem.style.border = "1px solid var(--background-modifier-border)";
-                fileItem.style.borderRadius = "4px";
-                fileItem.style.marginBottom = "8px";
+                const fileItem = fileList.createDiv('file-item nexus-file-list-item');
 
-                const fileInfo = fileItem.createDiv();
-                fileInfo.style.display = "flex";
-                fileInfo.style.flexDirection = "column";
+                const fileInfo = fileItem.createDiv({ cls: 'nexus-file-list-item-info' });
 
-                const fileName = fileInfo.createEl("span");
+                const fileName = fileInfo.createEl("span", { cls: 'nexus-file-list-item-name' });
                 fileName.textContent = file.name;
-                fileName.style.fontWeight = "500";
 
-                const fileSize = fileInfo.createEl("span");
+                const fileSize = fileInfo.createEl("span", { cls: 'nexus-file-list-item-size' });
                 fileSize.textContent = formatFileSize(file.size);
-                fileSize.style.fontSize = "0.9em";
-                fileSize.style.color = "var(--text-muted)";
 
-                const removeButton = fileItem.createEl("button", { text: t('file_selection.selected_files.remove_button') });
-                removeButton.style.padding = "4px 8px";
-                removeButton.style.fontSize = "0.9em";
+                const removeButton = fileItem.createEl("button", {
+                    text: t('file_selection.selected_files.remove_button'),
+                    cls: 'nexus-file-list-remove',
+                });
                 removeButton.addEventListener('click', () => this.removeFile(index));
             });
         } else {
-            previewSection.style.display = "none";
+            previewSection.removeClass('is-visible');
         }
     }
 
@@ -463,15 +373,12 @@ export class EnhancedFileSelectionDialog extends Modal {
     private addCustomStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            /* Modal sizing - wider and responsive */
             .modal.nexus-file-selection-dialog {
                 max-width: min(800px, 90vw) !important;
                 width: min(800px, 90vw) !important;
                 height: auto !important;
                 padding: 0 !important;
             }
-
-            /* Modal title spacing */
             .modal.nexus-file-selection-dialog .modal-title {
                 padding: 16px 24px !important;
                 margin: 0 !important;
@@ -486,39 +393,10 @@ export class EnhancedFileSelectionDialog extends Modal {
                 flex-direction: column;
                 padding: 20px 24px 24px 24px;
             }
-
-            /* Import mode boxes hover effect */
-            .nexus-file-selection-dialog .import-option-box:hover {
-                background-color: var(--background-modifier-hover);
-            }
-
-            /* Drop zone hover effect */
-            .nexus-file-selection-dialog .drop-zone:hover {
-                border-color: var(--interactive-accent);
-                background-color: var(--background-modifier-hover);
-            }
-
-            /* File list container with custom scrollbar */
-            .nexus-file-selection-dialog .file-list-container {
-                scrollbar-width: thin;
-                scrollbar-color: var(--background-modifier-border) transparent;
-            }
-
-            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar {
-                width: 10px;
-            }
-
-            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-track {
-                background: transparent;
-            }
-
-            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-thumb {
-                background-color: var(--background-modifier-border);
-                border-radius: 5px;
-            }
-
-            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-thumb:hover {
-                background-color: var(--text-muted);
+            @media (max-width: 600px) {
+                .modal.nexus-file-selection-dialog .modal-content {
+                    padding: 14px 14px 18px 14px;
+                }
             }
         `;
         document.head.appendChild(style);

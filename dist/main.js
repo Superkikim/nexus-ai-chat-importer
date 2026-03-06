@@ -5113,20 +5113,13 @@ var init_folder_tree_browser_modal = __esm({
         }
       }
       onOpen() {
-        const { contentEl } = this;
+        const { contentEl, modalEl } = this;
+        modalEl.addClass("nexus-folder-browser-modal");
+        contentEl.addClass("nexus-ai-chat-importer-modal");
         contentEl.createEl("h3", { text: t("folder_browser.title") });
         this.treeContainer = contentEl.createDiv({ cls: "nexus-folder-tree-container" });
-        this.treeContainer.style.maxHeight = "400px";
-        this.treeContainer.style.overflowY = "auto";
-        this.treeContainer.style.marginBottom = "20px";
-        this.treeContainer.style.border = "1px solid var(--background-modifier-border)";
-        this.treeContainer.style.borderRadius = "4px";
-        this.treeContainer.style.padding = "8px";
         this.renderTree();
-        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.gap = "8px";
-        buttonContainer.style.justifyContent = "flex-end";
+        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container nexus-dialog-actions" });
         const createButton = buttonContainer.createEl("button", { text: t("folder_browser.buttons.create_new_folder") });
         createButton.addEventListener("click", () => this.handleCreateFolder());
         const cancelButton = buttonContainer.createEl("button", { text: t("folder_browser.buttons.cancel") });
@@ -5141,13 +5134,8 @@ var init_folder_tree_browser_modal = __esm({
         this.treeContainer.empty();
         const root = this.app.vault.getRoot();
         const rootItem = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
-        rootItem.style.display = "flex";
-        rootItem.style.alignItems = "center";
-        rootItem.style.padding = "4px 8px";
-        rootItem.style.cursor = "pointer";
-        rootItem.style.borderRadius = "4px";
         if (this.selectedFolder === root) {
-          rootItem.style.backgroundColor = "var(--background-modifier-hover)";
+          rootItem.addClass("is-selected");
         }
         const rootIcon = rootItem.createSpan({ text: "\u{1F4C1} " });
         const rootLabel = rootItem.createSpan({ text: t("folder_browser.vault_root") });
@@ -5170,15 +5158,9 @@ var init_folder_tree_browser_modal = __esm({
         const isSelected = ((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path;
         const hasChildren = folder.children.some((c) => c instanceof import_obsidian3.TFolder);
         const item = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
-        item.style.display = "flex";
-        item.style.alignItems = "center";
-        item.style.padding = "4px 8px";
         item.style.paddingLeft = `${depth * 20 + 8}px`;
-        item.style.cursor = "pointer";
-        item.style.borderRadius = "4px";
         if (isSelected) {
-          item.style.backgroundColor = "var(--background-modifier-hover)";
-          item.style.fontWeight = "bold";
+          item.addClass("is-selected");
         }
         const expandIcon = item.createSpan();
         expandIcon.style.width = "16px";
@@ -5196,12 +5178,12 @@ var init_folder_tree_browser_modal = __esm({
         });
         item.addEventListener("mouseenter", () => {
           if (!isSelected) {
-            item.style.backgroundColor = "var(--background-modifier-hover-light)";
+            item.addClass("is-hovered");
           }
         });
         item.addEventListener("mouseleave", () => {
           if (!isSelected) {
-            item.style.backgroundColor = "";
+            item.removeClass("is-hovered");
           }
         });
         if (isExpanded && hasChildren) {
@@ -11894,7 +11876,7 @@ cleanly instead of falling into generic extraction errors.
         );
       }
       addCloseButton() {
-        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container" });
+        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container nexus-dialog-actions" });
         const button = buttonContainer.createEl("button", {
           text: t("upgrade.complete_modal.buttons.got_it"),
           cls: "mod-cta nexus-upgrade-button"
@@ -11921,6 +11903,7 @@ cleanly instead of falling into generic extraction errors.
             .nexus-upgrade-notes {
                 padding: 0 1em;
                 margin-bottom: 2em;
+                overflow-wrap: anywhere;
             }
 
             .nexus-upgrade-notes h2 {
@@ -11946,7 +11929,6 @@ cleanly instead of falling into generic extraction errors.
 
             /* Close button */
             .nexus-upgrade-button-container {
-                text-align: center;
                 padding: 1.5em 0;
                 border-top: 1px solid var(--background-modifier-border);
                 margin-top: 1em;
@@ -11957,6 +11939,20 @@ cleanly instead of falling into generic extraction errors.
                 font-size: 1.1em;
                 font-weight: 600;
                 border-radius: 8px;
+            }
+
+            @media (max-width: 700px) {
+                .nexus-upgrade-complete-modal .modal-content {
+                    padding: 16px !important;
+                }
+
+                .nexus-upgrade-notes {
+                    padding: 0;
+                }
+
+                .nexus-upgrade-button {
+                    width: 100%;
+                }
             }
         `;
         document.head.appendChild(style);
@@ -15100,19 +15096,55 @@ var CENTRAL_DIRECTORY_SIGNATURE = 33639248;
 var LOCAL_FILE_HEADER_SIGNATURE = 67324752;
 var ZIP64_EXTRA_FIELD_ID = 1;
 var mobileZipLogger = logger.child("MobileZip");
-function readSlice(file, start, length) {
+function shouldRetryReadError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  const name = error instanceof Error ? error.name : "";
+  const normalized = `${name} ${message}`.toLowerCase();
+  return normalized.includes("notfounderror") || normalized.includes("object can not be found here");
+}
+__name(shouldRetryReadError, "shouldRetryReadError");
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+__name(wait, "wait");
+async function readSlice(file, start, length) {
   if (length <= 0) {
     return Promise.resolve(new ArrayBuffer(0));
   }
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => {
-      var _a;
-      return reject((_a = reader.error) != null ? _a : new Error("ZIP read failed"));
-    };
-    reader.readAsArrayBuffer(file.slice(start, start + length));
-  });
+  const safeStart = Math.max(0, start);
+  const safeEnd = Math.min(file.size, safeStart + length);
+  const safeLength = Math.max(0, safeEnd - safeStart);
+  const maxAttempts = 3;
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => {
+          var _a;
+          return reject((_a = reader.error) != null ? _a : new Error("ZIP read failed"));
+        };
+        reader.readAsArrayBuffer(file.slice(safeStart, safeStart + safeLength));
+      });
+    } catch (error) {
+      lastError = error;
+      const retryable = shouldRetryReadError(error);
+      if (!retryable || attempt === maxAttempts) {
+        break;
+      }
+      mobileZipLogger.warn(`Retrying failed ZIP slice read`, {
+        fileName: file.name,
+        attempt,
+        maxAttempts,
+        start: safeStart,
+        length: safeLength,
+        message: error instanceof Error ? error.message : String(error)
+      });
+      await wait(30 * attempt);
+    }
+  }
+  throw lastError != null ? lastError : new Error("ZIP read failed");
 }
 __name(readSlice, "readSlice");
 function getUint64(view, offset) {
@@ -15131,7 +15163,7 @@ async function findEndOfCentralDirectory(file) {
       return { offset: sliceStart + pos, view: new DataView(buffer, pos) };
     }
   }
-  throw new Error("ZIP central directory not found");
+  throw new Error("ZIP central directory not found (archive is invalid or unsupported)");
 }
 __name(findEndOfCentralDirectory, "findEndOfCentralDirectory");
 async function readZip64CentralDirectoryInfo(file, eocdOffset) {
@@ -18197,65 +18229,12 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
     });
     const contentContainer = contentEl.createDiv({ cls: "modal-content" });
     this.phaseEl = contentContainer.createEl("div", { cls: "import-phase" });
-    this.phaseEl.style.cssText = `
-            text-align: center;
-            margin: 10px 0;
-            font-weight: 600;
-            color: var(--text-accent);
-            font-size: 1.1em;
-        `;
     this.importModeEl = contentContainer.createEl("div", { cls: "import-mode" });
-    this.importModeEl.style.cssText = `
-            text-align: center;
-            margin: 5px 0 10px 0;
-            font-weight: 500;
-            color: var(--text-accent);
-            font-size: 0.85em;
-            padding: 4px 8px;
-            background: var(--background-secondary);
-            border-radius: 4px;
-            display: none;
-        `;
     this.conversationCountEl = contentContainer.createEl("div", { cls: "conversation-counter" });
-    this.conversationCountEl.style.cssText = `
-            text-align: center;
-            margin: 5px 0 15px 0;
-            font-weight: 500;
-            color: var(--text-normal);
-            font-size: 0.9em;
-        `;
     const progressContainer = contentContainer.createDiv({ cls: "progress-container" });
-    progressContainer.style.cssText = `
-            background: var(--background-secondary);
-            border-radius: 8px;
-            padding: 4px;
-            margin: 20px 0;
-            border: 1px solid var(--background-modifier-border);
-        `;
     this.progressBarEl = progressContainer.createDiv({ cls: "progress-bar" });
-    this.progressBarEl.style.cssText = `
-            height: 20px;
-            background: linear-gradient(90deg, var(--interactive-accent), var(--interactive-accent-hover));
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.3s ease;
-            position: relative;
-        `;
     this.statusEl = contentContainer.createEl("div", { cls: "status-text" });
-    this.statusEl.style.cssText = `
-            text-align: center;
-            margin: 10px 0;
-            font-weight: 500;
-            color: var(--text-normal);
-        `;
     this.detailEl = contentContainer.createEl("div", { cls: "detail-text" });
-    this.detailEl.style.cssText = `
-            text-align: center;
-            margin: 5px 0;
-            font-size: 0.85em;
-            color: var(--text-muted);
-            min-height: 1.2em;
-        `;
     this.updateProgress({
       phase: "validation",
       title: t("import_progress.initial.title"),
@@ -19031,6 +19010,7 @@ var ImportService = class {
     this.importReport = new ImportReport();
     this.currentAttachmentMap = null;
     this.currentZips = [];
+    this.runtimeContext = null;
     this.providerRegistry = createProviderRegistry(plugin);
     this.attachmentMapBuilder = new AttachmentMapBuilder(plugin.logger);
     this.conversationProcessor = new ConversationProcessor(plugin, this.providerRegistry);
@@ -19074,6 +19054,7 @@ var ImportService = class {
   async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport) {
     var _a;
     const importLogger = this.plugin.logger.child("Import");
+    this.beginRuntimeContext(file.name, forcedProvider || "auto");
     const fileName = file.name.toLowerCase();
     if (!fileName.endsWith(".zip")) {
       const errorMessage = `Invalid file format: "${file.name}"
@@ -19102,6 +19083,7 @@ Do NOT extract and re-compress the file - just rename it!`;
     this.conversationProcessor.resetCounters();
     const storage = this.plugin.getStorageService();
     let processingStarted = false;
+    let zip = null;
     const progressModal = new ImportProgressModal(this.plugin.app, file.name);
     const progressCallback = progressModal.getProgressCallback();
     progressModal.open();
@@ -19120,11 +19102,13 @@ Do NOT extract and re-compress the file - just rename it!`;
         title: "Validating ZIP structure...",
         detail: "Checking file format and contents"
       });
-      const zip = await this.validateZipFile(file, forcedProvider);
+      this.updateRuntimePhase("zip-validation");
+      zip = await this.validateZipFile(file, forcedProvider);
       importLogger.info(`ZIP validated`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto"
       });
+      await this.yieldToEventLoopIfMobile();
       let isReprocess = false;
       let fileHash = "";
       if (!isSharedReport) {
@@ -19133,6 +19117,7 @@ Do NOT extract and re-compress the file - just rename it!`;
           title: "Validating file...",
           detail: "Checking file hash and import history"
         });
+        this.updateRuntimePhase("hash-validation");
         fileHash = await getFileHash(file);
         const foundByHash = storage.isArchiveImported(fileHash);
         const foundByName = storage.isArchiveImported(file.name);
@@ -19162,6 +19147,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         fileHash = await getFileHash(file);
       }
       processingStarted = true;
+      this.updateRuntimePhase("conversation-processing");
       importLogger.info(`Begin conversation processing`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto"
@@ -19176,6 +19162,8 @@ Do NOT extract and re-compress the file - just rename it!`;
         progressModal,
         file.size
       );
+      await this.yieldToEventLoopIfMobile();
+      this.updateRuntimePhase("persist-settings");
       storage.addImportedArchive(fileHash, file.name);
       await this.plugin.saveSettings();
       progressCallback({
@@ -19188,13 +19176,15 @@ Do NOT extract and re-compress the file - just rename it!`;
         created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
         updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate
       });
+      this.updateRuntimePhase("completed");
     } catch (error) {
       const message = error instanceof NexusAiChatImporterError ? error.message : error instanceof Error ? error.message : "An unknown error occurred";
       this.plugin.logger.error("Error handling zip file", { message });
       importLogger.error(`File import failed`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
-        message
+        message,
+        runtimeContext: this.runtimeContext
       });
       progressCallback({
         phase: "error",
@@ -19203,6 +19193,9 @@ Do NOT extract and re-compress the file - just rename it!`;
       });
       setTimeout(() => progressModal.close(), 5e3);
     } finally {
+      zip = null;
+      await this.yieldToEventLoopIfMobile();
+      this.endRuntimeContext();
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
         if (!progressModal.isComplete) {
@@ -19257,13 +19250,20 @@ Do NOT extract and re-compress the file - just rename it!`;
       if (error instanceof NexusAiChatImporterError) {
         throw error;
       }
-      if (error.message && error.message.includes("central directory")) {
+      const message = typeof (error == null ? void 0 : error.message) === "string" ? error.message : String(error);
+      if (message.includes("central directory not found")) {
         throw new NexusAiChatImporterError(
-          "Corrupted ZIP file",
-          "The ZIP central directory could not be read. Please try downloading the archive again."
+          "Unsupported ZIP file",
+          "This ZIP file does not look like a supported export or is not a valid ZIP archive."
         );
       }
-      if (error.message && error.message.includes("corrupted")) {
+      if ((error == null ? void 0 : error.name) === "NotFoundError" || message.includes("object can not be found here")) {
+        throw new NexusAiChatImporterError(
+          "Mobile file handle unavailable",
+          "The mobile webview could no longer access this file. Please reselect this ZIP and retry."
+        );
+      }
+      if (message.includes("corrupted")) {
         throw new NexusAiChatImporterError(
           "Corrupted ZIP file",
           "The file appears to be corrupted or is not a valid ZIP file. Please try downloading the export again from your AI provider."
@@ -19271,7 +19271,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       }
       throw new NexusAiChatImporterError(
         "Error reading ZIP file",
-        `Failed to read the ZIP file: ${error.message || "Unknown error"}. Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, or Gemini.`
+        `Failed to read the ZIP file: ${message || "Unknown error"}. Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, or Gemini.`
       );
     }
   }
@@ -19313,6 +19313,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         );
         this.importReport = report;
         this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+        await this.yieldToEventLoopIfMobile();
         importLogger.info(`Streaming conversation processing complete`, {
           fileName: file.name,
           created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
@@ -19322,6 +19323,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         const extractionResult = await this.extractRawConversationsFromZip(zip, zipSizeBytes);
         let rawConversations = extractionResult.conversations;
         const archiveModeDecision = extractionResult.archiveModeDecision;
+        await this.yieldToEventLoopIfMobile();
         importLogger.info(`Raw conversations extracted`, {
           fileName: file.name,
           conversationCount: rawConversations.length,
@@ -19367,6 +19369,8 @@ Do NOT extract and re-compress the file - just rename it!`;
         );
         this.importReport = report;
         this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+        rawConversations = [];
+        await this.yieldToEventLoopIfMobile();
         importLogger.info(`Raw conversation processing complete`, {
           fileName: file.name,
           created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
@@ -19499,6 +19503,51 @@ Do NOT extract and re-compress the file - just rename it!`;
     if (chatgptAdapter) {
       chatgptAdapter.clearAttachmentMap();
     }
+  }
+  /**
+   * Reset transient runtime state between two import operations.
+   * This does not touch persisted settings/catalog data.
+   */
+  resetRuntimeState() {
+    this.clearAttachmentMap();
+    this.importReport = new ImportReport();
+    this.conversationProcessor.resetCounters();
+    this.runtimeContext = null;
+  }
+  isMobileRuntime() {
+    return import_obsidian17.Platform.isMobileApp || import_obsidian17.Platform.isMobile;
+  }
+  async yieldToEventLoopIfMobile() {
+    if (!this.isMobileRuntime()) {
+      return;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+  }
+  beginRuntimeContext(fileName, provider) {
+    this.runtimeContext = {
+      fileName,
+      provider,
+      startedAtMs: Date.now(),
+      currentPhase: "start"
+    };
+  }
+  updateRuntimePhase(phase) {
+    if (!this.runtimeContext) {
+      return;
+    }
+    this.runtimeContext.currentPhase = phase;
+  }
+  endRuntimeContext() {
+    if (!this.runtimeContext) {
+      return;
+    }
+    this.plugin.logger.child("Import").info("Runtime context released", {
+      fileName: this.runtimeContext.fileName,
+      provider: this.runtimeContext.provider,
+      phase: this.runtimeContext.currentPhase,
+      durationMs: Date.now() - this.runtimeContext.startedAtMs
+    });
+    this.runtimeContext = null;
   }
 };
 __name(ImportService, "ImportService");
@@ -20547,8 +20596,10 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
     return providers;
   }
   onOpen() {
-    const { contentEl } = this;
+    const { contentEl, modalEl } = this;
     contentEl.empty();
+    modalEl.addClass("nexus-provider-selection-dialog");
+    contentEl.addClass("nexus-ai-chat-importer-modal");
     contentEl.createEl("h2", { text: t("provider_selection.title") });
     this.providers.forEach((provider) => {
       new import_obsidian26.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
@@ -20559,11 +20610,8 @@ var ProviderSelectionDialog = class extends import_obsidian26.Modal {
         });
       });
     });
-    const buttonContainer = contentEl.createDiv();
-    buttonContainer.style.textAlign = "center";
-    buttonContainer.style.marginTop = "20px";
+    const buttonContainer = contentEl.createDiv({ cls: "nexus-dialog-actions" });
     const cancelButton = buttonContainer.createEl("button", { text: t("provider_selection.buttons.cancel") });
-    cancelButton.style.marginRight = "10px";
     cancelButton.onclick = () => this.close();
   }
   createProviderDescription(provider) {
@@ -20604,30 +20652,14 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     this.addCustomStyles();
   }
   createImportModeSection(container) {
-    const section = container.createDiv("import-mode-section");
-    section.style.marginBottom = "20px";
-    const sectionTitle = section.createEl("h3", { text: t("file_selection.import_mode.section_title") });
-    sectionTitle.style.marginTop = "0";
-    sectionTitle.style.marginBottom = "12px";
-    sectionTitle.style.fontSize = "1em";
-    const optionsContainer = section.createDiv("import-options-container");
-    optionsContainer.style.display = "grid";
-    optionsContainer.style.gridTemplateColumns = "1fr 1fr";
-    optionsContainer.style.gap = "12px";
-    const allOption = optionsContainer.createDiv("import-option-box");
-    allOption.style.padding = "14px 16px";
-    allOption.style.border = "1px solid var(--background-modifier-border)";
-    allOption.style.borderRadius = "6px";
-    allOption.style.cursor = "pointer";
-    allOption.style.transition = "all 0.2s";
-    allOption.style.display = "flex";
-    allOption.style.alignItems = "center";
-    allOption.style.gap = "10px";
-    allOption.style.backgroundColor = "var(--background-primary)";
-    if (this.importMode === "all") {
-      allOption.style.borderColor = "var(--interactive-accent)";
-      allOption.style.borderWidth = "2px";
-    }
+    const section = container.createDiv("import-mode-section nexus-dialog-section");
+    section.createEl("h3", {
+      text: t("file_selection.import_mode.section_title"),
+      cls: "nexus-dialog-title"
+    });
+    const optionsContainer = section.createDiv("import-options-container nexus-import-options-grid");
+    const allOption = optionsContainer.createDiv("import-option-box nexus-option-box");
+    allOption.toggleClass("is-selected", this.importMode === "all");
     const allRadio = allOption.createEl("input", { type: "radio" });
     allRadio.name = "importMode";
     allRadio.value = "all";
@@ -20638,19 +20670,11 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
       this.updateImportModeDescription();
       this.updateImportModeBoxes();
     });
-    const allContent = allOption.createDiv();
-    allContent.style.flex = "1";
-    const allLabel = allContent.createEl("label");
+    const allContent = allOption.createDiv({ cls: "nexus-option-box-content" });
+    const allLabel = allContent.createEl("label", { cls: "nexus-option-box-label" });
     allLabel.htmlFor = "import-all";
-    allLabel.style.display = "block";
-    allLabel.style.fontWeight = "500";
-    allLabel.style.marginBottom = "4px";
-    allLabel.style.cursor = "pointer";
-    allLabel.style.color = "var(--text-normal)";
     allLabel.textContent = t("file_selection.import_mode.all_label");
-    const allDesc = allContent.createDiv();
-    allDesc.style.fontSize = "0.85em";
-    allDesc.style.color = "var(--text-muted)";
+    const allDesc = allContent.createDiv({ cls: "nexus-option-box-description" });
     allDesc.textContent = t("file_selection.import_mode.all_description");
     allOption.addEventListener("click", () => {
       allRadio.checked = true;
@@ -20658,20 +20682,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
       this.updateImportModeDescription();
       this.updateImportModeBoxes();
     });
-    const selectOption = optionsContainer.createDiv("import-option-box");
-    selectOption.style.padding = "14px 16px";
-    selectOption.style.border = "1px solid var(--background-modifier-border)";
-    selectOption.style.borderRadius = "6px";
-    selectOption.style.cursor = "pointer";
-    selectOption.style.transition = "all 0.2s";
-    selectOption.style.display = "flex";
-    selectOption.style.alignItems = "center";
-    selectOption.style.gap = "10px";
-    selectOption.style.backgroundColor = "var(--background-primary)";
-    if (this.importMode === "selective") {
-      selectOption.style.borderColor = "var(--interactive-accent)";
-      selectOption.style.borderWidth = "2px";
-    }
+    const selectOption = optionsContainer.createDiv("import-option-box nexus-option-box");
+    selectOption.toggleClass("is-selected", this.importMode === "selective");
     const selectRadio = selectOption.createEl("input", { type: "radio" });
     selectRadio.name = "importMode";
     selectRadio.value = "selective";
@@ -20682,19 +20694,11 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
       this.updateImportModeDescription();
       this.updateImportModeBoxes();
     });
-    const selectContent = selectOption.createDiv();
-    selectContent.style.flex = "1";
-    const selectLabel = selectContent.createEl("label");
+    const selectContent = selectOption.createDiv({ cls: "nexus-option-box-content" });
+    const selectLabel = selectContent.createEl("label", { cls: "nexus-option-box-label" });
     selectLabel.htmlFor = "import-selective";
-    selectLabel.style.display = "block";
-    selectLabel.style.fontWeight = "500";
-    selectLabel.style.marginBottom = "4px";
-    selectLabel.style.cursor = "pointer";
-    selectLabel.style.color = "var(--text-normal)";
     selectLabel.textContent = t("file_selection.import_mode.selective_label");
-    const selectDesc = selectContent.createDiv();
-    selectDesc.style.fontSize = "0.85em";
-    selectDesc.style.color = "var(--text-muted)";
+    const selectDesc = selectContent.createDiv({ cls: "nexus-option-box-description" });
     selectDesc.textContent = t("file_selection.import_mode.selective_description");
     selectOption.addEventListener("click", () => {
       selectRadio.checked = true;
@@ -20707,43 +20711,25 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     const boxes = this.contentEl.querySelectorAll(".import-option-box");
     boxes.forEach((box, index) => {
       const isSelected = index === 0 && this.importMode === "all" || index === 1 && this.importMode === "selective";
-      if (isSelected) {
-        box.style.borderColor = "var(--interactive-accent)";
-        box.style.borderWidth = "2px";
-      } else {
-        box.style.borderColor = "var(--background-modifier-border)";
-        box.style.borderWidth = "1px";
-      }
+      box.toggleClass("is-selected", isSelected);
     });
   }
   createFileSelectionArea(container) {
-    const section = container.createDiv("file-selection-section");
-    section.style.marginBottom = "20px";
-    const sectionTitle = section.createEl("h3", { text: t("file_selection.file_area.section_title") });
-    sectionTitle.style.marginBottom = "10px";
-    sectionTitle.style.fontSize = "1em";
-    const dropZone = section.createDiv("drop-zone");
-    dropZone.style.border = "2px dashed var(--background-modifier-border)";
-    dropZone.style.borderRadius = "8px";
-    dropZone.style.padding = "24px 20px";
-    dropZone.style.textAlign = "center";
-    dropZone.style.cursor = "pointer";
-    dropZone.style.transition = "all 0.2s ease";
-    const dropIcon = dropZone.createEl("div");
-    dropIcon.style.fontSize = "48px";
-    dropIcon.style.marginBottom = "15px";
+    const section = container.createDiv("file-selection-section nexus-dialog-section");
+    section.createEl("h3", {
+      text: t("file_selection.file_area.section_title"),
+      cls: "nexus-dialog-title"
+    });
+    const dropZone = section.createDiv("drop-zone nexus-drop-zone");
+    const dropIcon = dropZone.createEl("div", { cls: "nexus-drop-zone-icon" });
     dropIcon.textContent = "\u{1F4C1}";
-    const dropText = dropZone.createEl("div");
-    dropText.style.fontSize = "16px";
-    dropText.style.marginBottom = "10px";
+    const dropText = dropZone.createEl("div", { cls: "nexus-drop-zone-text" });
     if (this.provider === "gemini") {
       dropText.textContent = t("file_selection.file_area.drop_text_gemini");
     } else {
       dropText.textContent = t("file_selection.file_area.drop_text_default");
     }
-    const dropSubtext = dropZone.createEl("div");
-    dropSubtext.style.fontSize = "14px";
-    dropSubtext.style.color = "var(--text-muted)";
+    const dropSubtext = dropZone.createEl("div", { cls: "nexus-drop-zone-subtext" });
     if (this.provider === "gemini") {
       dropSubtext.textContent = t("file_selection.file_area.drop_subtext_gemini");
     } else {
@@ -20765,33 +20751,22 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     dropZone.addEventListener("drop", (e) => this.handleDrop(e, dropZone));
   }
   createFilePreviewArea(container) {
-    const section = container.createDiv("file-preview-section");
+    const section = container.createDiv("file-preview-section nexus-file-preview-section nexus-dialog-section");
     section.id = "file-preview-section";
-    section.style.marginBottom = "20px";
-    section.style.display = "none";
-    const sectionTitle = section.createEl("h3", { text: t("file_selection.selected_files.section_title") });
-    sectionTitle.style.marginBottom = "15px";
-    const fileListContainer = section.createDiv("file-list-container");
-    fileListContainer.style.maxHeight = "300px";
-    fileListContainer.style.overflowY = "auto";
-    fileListContainer.style.border = "1px solid var(--background-modifier-border)";
-    fileListContainer.style.borderRadius = "6px";
-    fileListContainer.style.padding = "8px";
+    section.createEl("h3", {
+      text: t("file_selection.selected_files.section_title"),
+      cls: "nexus-dialog-title"
+    });
+    const fileListContainer = section.createDiv("file-list-container nexus-file-list-container");
     const fileList = fileListContainer.createDiv("file-list");
     fileList.id = "file-list";
   }
   createActionButtons(container) {
-    const buttonContainer = container.createDiv("action-buttons");
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.justifyContent = "flex-end";
-    buttonContainer.style.gap = "10px";
-    buttonContainer.style.marginTop = "20px";
+    const buttonContainer = container.createDiv("action-buttons nexus-dialog-actions");
     const cancelButton = buttonContainer.createEl("button", { text: t("file_selection.buttons.cancel") });
-    cancelButton.style.padding = "8px 16px";
     cancelButton.addEventListener("click", () => this.close());
     const importButton = buttonContainer.createEl("button", { text: t("file_selection.buttons.continue") });
     importButton.id = "import-button";
-    importButton.style.padding = "8px 16px";
     importButton.classList.add("mod-cta");
     importButton.disabled = true;
     importButton.addEventListener("click", () => this.handleImport());
@@ -20806,8 +20781,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
   }
   handleDragOver(event, dropZone) {
     event.preventDefault();
-    dropZone.style.borderColor = "var(--interactive-accent)";
-    dropZone.style.backgroundColor = "var(--background-modifier-hover)";
+    dropZone.addClass("is-dragover");
   }
   handleDragEnter(event, dropZone) {
     event.preventDefault();
@@ -20817,16 +20791,14 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     event.preventDefault();
     this.dragCounter--;
     if (this.dragCounter === 0) {
-      dropZone.style.borderColor = "var(--background-modifier-border)";
-      dropZone.style.backgroundColor = "transparent";
+      dropZone.removeClass("is-dragover");
     }
   }
   handleDrop(event, dropZone) {
     var _a;
     event.preventDefault();
     this.dragCounter = 0;
-    dropZone.style.borderColor = "var(--background-modifier-border)";
-    dropZone.style.backgroundColor = "transparent";
+    dropZone.removeClass("is-dragover");
     if ((_a = event.dataTransfer) == null ? void 0 : _a.files) {
       const files = Array.from(event.dataTransfer.files).filter((file) => {
         const fileName = file.name.toLowerCase();
@@ -20846,34 +20818,23 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     const previewSection = this.contentEl.querySelector("#file-preview-section");
     const fileList = this.contentEl.querySelector("#file-list");
     if (this.selectedFiles.length > 0) {
-      previewSection.style.display = "block";
+      previewSection.addClass("is-visible");
       fileList.empty();
       this.selectedFiles.forEach((file, index) => {
-        const fileItem = fileList.createDiv("file-item");
-        fileItem.style.display = "flex";
-        fileItem.style.justifyContent = "space-between";
-        fileItem.style.alignItems = "center";
-        fileItem.style.padding = "8px 12px";
-        fileItem.style.border = "1px solid var(--background-modifier-border)";
-        fileItem.style.borderRadius = "4px";
-        fileItem.style.marginBottom = "8px";
-        const fileInfo = fileItem.createDiv();
-        fileInfo.style.display = "flex";
-        fileInfo.style.flexDirection = "column";
-        const fileName = fileInfo.createEl("span");
+        const fileItem = fileList.createDiv("file-item nexus-file-list-item");
+        const fileInfo = fileItem.createDiv({ cls: "nexus-file-list-item-info" });
+        const fileName = fileInfo.createEl("span", { cls: "nexus-file-list-item-name" });
         fileName.textContent = file.name;
-        fileName.style.fontWeight = "500";
-        const fileSize = fileInfo.createEl("span");
+        const fileSize = fileInfo.createEl("span", { cls: "nexus-file-list-item-size" });
         fileSize.textContent = formatFileSize(file.size);
-        fileSize.style.fontSize = "0.9em";
-        fileSize.style.color = "var(--text-muted)";
-        const removeButton = fileItem.createEl("button", { text: t("file_selection.selected_files.remove_button") });
-        removeButton.style.padding = "4px 8px";
-        removeButton.style.fontSize = "0.9em";
+        const removeButton = fileItem.createEl("button", {
+          text: t("file_selection.selected_files.remove_button"),
+          cls: "nexus-file-list-remove"
+        });
         removeButton.addEventListener("click", () => this.removeFile(index));
       });
     } else {
-      previewSection.style.display = "none";
+      previewSection.removeClass("is-visible");
     }
   }
   removeFile(index) {
@@ -20918,15 +20879,12 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
   addCustomStyles() {
     const style = document.createElement("style");
     style.textContent = `
-            /* Modal sizing - wider and responsive */
             .modal.nexus-file-selection-dialog {
                 max-width: min(800px, 90vw) !important;
                 width: min(800px, 90vw) !important;
                 height: auto !important;
                 padding: 0 !important;
             }
-
-            /* Modal title spacing */
             .modal.nexus-file-selection-dialog .modal-title {
                 padding: 16px 24px !important;
                 margin: 0 !important;
@@ -20941,39 +20899,10 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
                 flex-direction: column;
                 padding: 20px 24px 24px 24px;
             }
-
-            /* Import mode boxes hover effect */
-            .nexus-file-selection-dialog .import-option-box:hover {
-                background-color: var(--background-modifier-hover);
-            }
-
-            /* Drop zone hover effect */
-            .nexus-file-selection-dialog .drop-zone:hover {
-                border-color: var(--interactive-accent);
-                background-color: var(--background-modifier-hover);
-            }
-
-            /* File list container with custom scrollbar */
-            .nexus-file-selection-dialog .file-list-container {
-                scrollbar-width: thin;
-                scrollbar-color: var(--background-modifier-border) transparent;
-            }
-
-            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar {
-                width: 10px;
-            }
-
-            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-track {
-                background: transparent;
-            }
-
-            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-thumb {
-                background-color: var(--background-modifier-border);
-                border-radius: 5px;
-            }
-
-            .nexus-file-selection-dialog .file-list-container::-webkit-scrollbar-thumb:hover {
-                background-color: var(--text-muted);
+            @media (max-width: 600px) {
+                .modal.nexus-file-selection-dialog .modal-content {
+                    padding: 14px 14px 18px 14px;
+                }
             }
         `;
     document.head.appendChild(style);
@@ -21041,22 +20970,13 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     this.updatePagination();
   }
   createSummarySection(container) {
-    const section = container.createDiv("summary-section");
+    const section = container.createDiv("summary-section nexus-summary-grid nexus-dialog-section");
     section.id = "conversation-summary";
-    section.style.marginBottom = "20px";
-    section.style.display = "grid";
-    section.style.gridTemplateColumns = "repeat(4, 1fr)";
-    section.style.gap = "12px";
   }
   createControlsSection(container) {
-    const section = container.createDiv("controls-section");
-    section.style.marginBottom = "20px";
-    section.style.display = "flex";
-    section.style.gap = "12px";
-    section.style.alignItems = "center";
+    const section = container.createDiv("controls-section nexus-dialog-toolbar nexus-controls-row nexus-dialog-section");
     const selectAllBtn = section.createEl("button", { text: t("conversation_selection.controls.select_all") });
-    selectAllBtn.style.padding = "8px 16px";
-    selectAllBtn.style.whiteSpace = "nowrap";
+    selectAllBtn.addClass("nexus-control-button");
     selectAllBtn.addEventListener("click", () => {
       this.state.filteredConversations.forEach((conv) => {
         this.state.selectedIds.add(conv.id);
@@ -21065,20 +20985,17 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       this.updateSummary();
     });
     const selectNoneBtn = section.createEl("button", { text: t("conversation_selection.controls.select_none") });
-    selectNoneBtn.style.padding = "8px 16px";
-    selectNoneBtn.style.whiteSpace = "nowrap";
+    selectNoneBtn.addClass("nexus-control-button");
     selectNoneBtn.addEventListener("click", () => {
       this.state.selectedIds.clear();
       this.renderConversationList();
       this.updateSummary();
     });
-    const searchInput = section.createEl("input", { type: "text" });
+    const searchInput = section.createEl("input", {
+      type: "text",
+      cls: "nexus-conversation-search"
+    });
     searchInput.placeholder = t("conversation_selection.controls.search_placeholder");
-    searchInput.style.flex = "1";
-    searchInput.style.minWidth = "200px";
-    searchInput.style.padding = "8px 12px";
-    searchInput.style.border = "1px solid var(--background-modifier-border)";
-    searchInput.style.borderRadius = "4px";
     searchInput.addEventListener("input", (e) => {
       const target = e.target;
       this.state.filter.searchTerm = target.value;
@@ -21087,20 +21004,9 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       this.updateSummary();
       this.updatePagination();
     });
-    const statusLabel = section.createEl("label");
+    const statusLabel = section.createEl("label", { cls: "nexus-filter-label" });
     statusLabel.textContent = t("conversation_selection.controls.status_label");
-    statusLabel.style.marginRight = "4px";
-    statusLabel.style.fontSize = "14px";
-    statusLabel.style.whiteSpace = "nowrap";
-    const statusSelect = section.createEl("select");
-    statusSelect.style.padding = "8px 12px";
-    statusSelect.style.paddingRight = "28px";
-    statusSelect.style.border = "1px solid var(--background-modifier-border)";
-    statusSelect.style.borderRadius = "4px";
-    statusSelect.style.fontSize = "14px";
-    statusSelect.style.backgroundColor = "var(--background-primary)";
-    statusSelect.style.color = "var(--text-normal)";
-    statusSelect.classList.add("nexus-custom-select");
+    const statusSelect = section.createEl("select", { cls: "nexus-custom-select nexus-filter-select" });
     const statusOptions = [
       { value: "all", text: t("conversation_selection.status_filter_options.all") },
       { value: "new", text: t("conversation_selection.status_filter_options.new") },
@@ -21121,20 +21027,9 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       this.updateSummary();
       this.updatePagination();
     });
-    const pageSizeLabel = section.createEl("label");
+    const pageSizeLabel = section.createEl("label", { cls: "nexus-filter-label" });
     pageSizeLabel.textContent = t("conversation_selection.controls.show_label");
-    pageSizeLabel.style.marginRight = "4px";
-    pageSizeLabel.style.fontSize = "14px";
-    pageSizeLabel.style.whiteSpace = "nowrap";
-    const pageSizeSelect = section.createEl("select");
-    pageSizeSelect.style.padding = "8px 12px";
-    pageSizeSelect.style.paddingRight = "28px";
-    pageSizeSelect.style.border = "1px solid var(--background-modifier-border)";
-    pageSizeSelect.style.borderRadius = "4px";
-    pageSizeSelect.style.fontSize = "14px";
-    pageSizeSelect.style.backgroundColor = "var(--background-primary)";
-    pageSizeSelect.style.color = "var(--text-normal)";
-    pageSizeSelect.classList.add("nexus-custom-select");
+    const pageSizeSelect = section.createEl("select", { cls: "nexus-custom-select nexus-filter-select" });
     const pageSizeOptions = [10, 20, 50, 100];
     pageSizeOptions.forEach((size) => {
       const optionEl = pageSizeSelect.createEl("option");
@@ -21156,8 +21051,7 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     });
   }
   createConversationListSection(container) {
-    const section = container.createDiv("conversation-list-section");
-    section.style.marginBottom = "20px";
+    const section = container.createDiv("conversation-list-section nexus-dialog-section");
     const tableContainer = section.createDiv("table-container");
     tableContainer.classList.add("nexus-table-container");
     const table = tableContainer.createEl("table");
@@ -21227,35 +21121,24 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
     });
     const tbody = table.createEl("tbody");
     tbody.id = "conversation-table-body";
+    const mobileList = section.createDiv("nexus-mobile-conversation-list");
+    mobileList.id = "conversation-mobile-list";
   }
   createPaginationSection(container) {
     const section = container.createDiv("pagination-section");
+    section.addClass("nexus-pagination-section");
     section.id = "pagination-section";
-    section.style.marginBottom = "20px";
-    section.style.display = "flex";
-    section.style.justifyContent = "space-between";
-    section.style.alignItems = "center";
-    const pageInfo = section.createDiv();
+    const pageInfo = section.createDiv({ cls: "nexus-page-info" });
     pageInfo.id = "page-info";
-    pageInfo.style.fontSize = "0.9em";
-    pageInfo.style.color = "var(--text-muted)";
-    const pageControls = section.createDiv();
+    const pageControls = section.createDiv({ cls: "nexus-page-controls" });
     pageControls.id = "page-controls";
-    pageControls.style.display = "flex";
-    pageControls.style.gap = "8px";
   }
   createActionButtons(container) {
-    const buttonContainer = container.createDiv("action-buttons");
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.justifyContent = "flex-end";
-    buttonContainer.style.gap = "10px";
-    buttonContainer.style.marginTop = "20px";
+    const buttonContainer = container.createDiv("action-buttons nexus-dialog-actions");
     const cancelButton = buttonContainer.createEl("button", { text: t("conversation_selection.buttons.cancel") });
-    cancelButton.style.padding = "8px 16px";
     cancelButton.addEventListener("click", () => this.close());
     const importButton = buttonContainer.createEl("button", { text: t("conversation_selection.buttons.import_selected") });
     importButton.id = "import-selected-button";
-    importButton.style.padding = "8px 16px";
     importButton.classList.add("mod-cta");
     importButton.addEventListener("click", () => this.handleImportSelected());
   }
@@ -21301,9 +21184,11 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
   }
   renderConversationList() {
     const tbody = this.contentEl.querySelector("#conversation-table-body");
+    const mobileList = this.contentEl.querySelector("#conversation-mobile-list");
     if (!tbody)
       return;
     tbody.empty();
+    mobileList == null ? void 0 : mobileList.empty();
     const { currentPage, pageSize } = this.state.pagination;
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -21344,8 +21229,42 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       statusCell.style.textAlign = "center";
       const statusBadge = this.createStatusBadge(conversation);
       statusCell.appendChild(statusBadge);
+      if (mobileList) {
+        this.renderMobileConversationCard(mobileList, conversation);
+      }
     });
     this.renderPaginationControls();
+  }
+  renderMobileConversationCard(container, conversation) {
+    const card = container.createDiv("nexus-conversation-card");
+    const header = card.createDiv("nexus-conversation-card-header");
+    const checkbox = header.createEl("input", {
+      type: "checkbox",
+      cls: "nexus-conversation-card-checkbox"
+    });
+    checkbox.checked = this.state.selectedIds.has(conversation.id);
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        this.state.selectedIds.add(conversation.id);
+      } else {
+        this.state.selectedIds.delete(conversation.id);
+      }
+      this.updateSummary();
+    });
+    const titleWrap = header.createDiv("nexus-conversation-card-title-wrap");
+    const title = titleWrap.createDiv("nexus-conversation-card-title");
+    title.textContent = conversation.title;
+    if (conversation.sourceFile) {
+      const sourceInfo = titleWrap.createDiv("nexus-conversation-card-source");
+      sourceInfo.textContent = `\u{1F4C1} ${conversation.sourceFile}`;
+    }
+    const badge = this.createStatusBadge(conversation);
+    badge.addClass("nexus-conversation-card-badge");
+    header.appendChild(badge);
+    const meta = card.createDiv("nexus-conversation-card-meta");
+    meta.createDiv({ text: `${t("conversation_selection.table_headers.created")}: ${this.formatDate(conversation.createTime)}` });
+    meta.createDiv({ text: `${t("conversation_selection.table_headers.updated")}: ${this.formatDate(conversation.updateTime)}` });
+    meta.createDiv({ text: `${t("conversation_selection.table_headers.messages")}: ${conversation.messageCount}` });
   }
   createStatusBadge(conversation) {
     const badge = document.createElement("span");
@@ -21433,21 +21352,21 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
       const info = this.analysisInfo;
       const uniqueCount = info.uniqueConversationsKept;
       return `
-                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                    <div style="font-weight: 600; font-size: 1.4em; color: var(--text-accent);">${uniqueCount}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t("conversation_selection.summary.unique_conversations")}</div>
+                <div class="nexus-summary-card">
+                    <div class="nexus-summary-value nexus-summary-value-primary">${uniqueCount}</div>
+                    <div class="nexus-summary-label">${t("conversation_selection.summary.unique_conversations")}</div>
                 </div>
-                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                    <div style="font-weight: 600; font-size: 1.4em; color: var(--color-green);">${info.conversationsNew}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t("conversation_selection.summary.new")}</div>
+                <div class="nexus-summary-card">
+                    <div class="nexus-summary-value nexus-summary-value-success">${info.conversationsNew}</div>
+                    <div class="nexus-summary-label">${t("conversation_selection.summary.new")}</div>
                 </div>
-                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                    <div style="font-weight: 600; font-size: 1.4em; color: var(--color-orange);">${info.conversationsUpdated}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t("conversation_selection.summary.updated")}</div>
+                <div class="nexus-summary-card">
+                    <div class="nexus-summary-value nexus-summary-value-warning">${info.conversationsUpdated}</div>
+                    <div class="nexus-summary-label">${t("conversation_selection.summary.updated")}</div>
                 </div>
-                <div style="text-align: center; padding: 12px; background-color: var(--background-primary); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                    <div style="font-weight: 600; font-size: 1.4em; color: var(--text-muted);">${info.conversationsIgnored}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85em; margin-top: 4px;">${t("conversation_selection.summary.unchanged")}</div>
+                <div class="nexus-summary-card">
+                    <div class="nexus-summary-value nexus-summary-value-muted">${info.conversationsIgnored}</div>
+                    <div class="nexus-summary-label">${t("conversation_selection.summary.unchanged")}</div>
                 </div>
             `;
     }
@@ -21504,6 +21423,75 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
                 padding: 20px 24px 24px 24px;
             }
 
+            .nexus-conversation-selection-dialog .nexus-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-card {
+                text-align: center;
+                padding: 12px;
+                background-color: var(--background-primary);
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value {
+                font-weight: 600;
+                font-size: 1.4em;
+                margin-bottom: 4px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value-primary {
+                color: var(--text-accent);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value-success {
+                color: var(--color-green);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value-warning {
+                color: var(--color-orange);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-value-muted {
+                color: var(--text-muted);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-summary-label {
+                color: var(--text-muted);
+                font-size: 0.85em;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-controls-row {
+                background-color: var(--background-primary);
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid var(--background-modifier-border);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-control-button {
+                white-space: nowrap;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-search {
+                flex: 1 1 220px;
+                min-width: 0;
+                padding: 8px 12px;
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 4px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-filter-label {
+                font-size: 14px;
+                white-space: nowrap;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-filter-select {
+                min-width: 0;
+            }
+
             /* Table container with independent scroll */
             .nexus-conversation-selection-dialog .nexus-table-container {
                 max-height: 450px;
@@ -21513,6 +21501,11 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
                 border-radius: 8px;
                 margin-bottom: 20px;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-mobile-conversation-list {
+                display: none;
+                gap: 10px;
             }
 
             /* Table styling */
@@ -21670,14 +21663,6 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
                 margin-bottom: 20px;
             }
 
-            /* Controls section */
-            .nexus-conversation-selection-dialog .controls-section {
-                background-color: var(--background-primary);
-                padding: 12px;
-                border-radius: 8px;
-                border: 1px solid var(--background-modifier-border);
-            }
-
             /* Scrollbar styling for table container */
             .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar {
                 width: 10px;
@@ -21696,6 +21681,107 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
 
             .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-thumb:hover {
                 background: var(--text-muted);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-pagination-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-page-info {
+                font-size: 0.9em;
+                color: var(--text-muted);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-page-controls {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card {
+                border: 1px solid var(--background-modifier-border);
+                border-radius: 10px;
+                padding: 12px;
+                background: var(--background-primary);
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-header {
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                gap: 10px;
+                align-items: start;
+                margin-bottom: 10px;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-title-wrap {
+                min-width: 0;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-title {
+                font-weight: 600;
+                word-break: break-word;
+                line-height: 1.4;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-source {
+                font-size: 0.82em;
+                color: var(--text-muted);
+                margin-top: 4px;
+                word-break: break-word;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-conversation-card-meta {
+                display: grid;
+                gap: 4px;
+                font-size: 0.9em;
+                color: var(--text-muted);
+            }
+
+            @media (max-width: 700px) {
+                .modal.nexus-conversation-selection-dialog .modal-content {
+                    padding: 14px 14px 18px 14px;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-summary-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .nexus-conversation-selection-dialog .nexus-controls-row {
+                    flex-wrap: wrap;
+                    align-items: stretch;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-conversation-search {
+                    flex: 1 1 100%;
+                    order: -1;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-pagination-section {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-page-controls {
+                    justify-content: space-between;
+                }
+            }
+
+            @media (max-width: 600px) {
+                .nexus-conversation-selection-dialog .nexus-table-container {
+                    display: none;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-mobile-conversation-list {
+                    display: grid;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-summary-grid {
+                    grid-template-columns: 1fr 1fr;
+                }
             }
         `;
     document.head.appendChild(style);
@@ -21932,7 +22018,7 @@ var NewVersionModal = class extends import_obsidian30.Modal {
     return match ? match[1].trim() : null;
   }
   addCloseButton() {
-    const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container" });
+    const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container nexus-dialog-actions" });
     const closeButton = buttonContainer.createEl("button", {
       text: t("upgrade.new_version_modal.buttons.got_it"),
       cls: "mod-cta nexus-close-button"
@@ -21945,18 +22031,18 @@ var NewVersionModal = class extends import_obsidian30.Modal {
     const styleEl = document.createElement("style");
     styleEl.textContent = `
             .modal.nexus-new-version-modal {
-                max-width: 1050px !important;
-                width: 1050px !important;
+                max-width: min(1050px, 92vw) !important;
+                width: min(1050px, 92vw) !important;
             }
 
             .nexus-upgrade-content {
                 margin-bottom: 20px;
                 line-height: 1.6;
+                overflow-wrap: anywhere;
             }
 
             /* Close Button Styles */
             .nexus-close-button-container {
-                text-align: center;
                 margin: 32px 0;
             }
 
@@ -21972,6 +22058,17 @@ var NewVersionModal = class extends import_obsidian30.Modal {
             .nexus-close-button:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+            }
+
+            @media (max-width: 700px) {
+                .modal.nexus-new-version-modal .modal-content {
+                    padding: 16px !important;
+                }
+
+                .nexus-close-button {
+                    width: 100%;
+                    padding: 14px 20px !important;
+                }
             }
         `;
     document.head.appendChild(styleEl);
@@ -22211,17 +22308,21 @@ var ConversationMetadataExtractor = class {
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        ignoredArchives.push({
-          fileName: file.name,
-          reason: "read-error",
-          message
-        });
-        this.metadataLogger.error(`Failed to analyze archive`, {
+        const ignoredArchive = this.classifyReadFailure(file.name, message, forcedProvider);
+        ignoredArchives.push(ignoredArchive);
+        const logDetails = {
           fileName: file.name,
           fileSize: file.size,
           durationMs: Date.now() - fileStartedAt,
-          message
-        });
+          reason: ignoredArchive.reason,
+          message,
+          userMessage: ignoredArchive.message
+        };
+        if (ignoredArchive.reason === "read-error") {
+          this.metadataLogger.error(`Archive analysis failed and was ignored`, logDetails);
+        } else {
+          this.metadataLogger.warn(`Archive analysis failed and was ignored`, logDetails);
+        }
       }
     }
     const filterResult = this.filterConversationsForSelection(
@@ -22275,6 +22376,37 @@ var ConversationMetadataExtractor = class {
       durationMs: Date.now() - batchStartedAt
     });
     return result;
+  }
+  classifyReadFailure(fileName, message, forcedProvider) {
+    const normalized = message.toLowerCase();
+    const looksUnsupportedArchive = normalized.includes("central directory not found") || normalized.includes("not a valid zip") || normalized.includes("zip64") || normalized.includes("object can not be found here") || normalized.includes("notfounderror");
+    if (looksUnsupportedArchive) {
+      return {
+        fileName,
+        reason: "unsupported-format",
+        message: this.getUnsupportedArchiveMessage(forcedProvider)
+      };
+    }
+    return {
+      fileName,
+      reason: "read-error",
+      message
+    };
+  }
+  getUnsupportedArchiveMessage(forcedProvider) {
+    if (forcedProvider === "chatgpt") {
+      return "This ZIP file does not look like a ChatGPT export.";
+    }
+    if (forcedProvider === "claude") {
+      return "This ZIP file does not look like a Claude export.";
+    }
+    if (forcedProvider === "lechat") {
+      return "This ZIP file does not look like a Le Chat export.";
+    }
+    if (forcedProvider === "gemini") {
+      return "This ZIP file does not look like a Gemini Takeout export.";
+    }
+    return "This ZIP file does not match any supported export format.";
   }
   resolveProvider(rawConversations, forcedProvider, detectedProvider) {
     if (forcedProvider) {
@@ -22541,11 +22673,7 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     this.addCustomStyles();
   }
   createStatsSection(container) {
-    const section = container.createDiv("stats-section");
-    section.style.marginBottom = "20px";
-    section.style.display = "grid";
-    section.style.gridTemplateColumns = "repeat(3, 1fr)";
-    section.style.gap = "12px";
+    const section = container.createDiv("stats-section nexus-stats-grid nexus-dialog-section");
     this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), t("import_completion.stats.zip_files_processed"));
     this.createStatCartouche(section, "\u{1F4AC}", this.stats.totalConversations.toString(), t("import_completion.stats.unique_conversations"));
     this.createStatCartouche(section, "\u{1F501}", this.stats.duplicates.toString(), t("import_completion.stats.duplicates"), "var(--text-muted)");
@@ -22558,33 +22686,17 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
   }
   createStatCartouche(container, icon, value, label, color) {
     const cartouche = container.createDiv("stat-cartouche");
-    cartouche.style.textAlign = "center";
-    cartouche.style.padding = "12px";
-    cartouche.style.backgroundColor = "var(--background-primary)";
-    cartouche.style.borderRadius = "8px";
-    cartouche.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
-    const iconEl = cartouche.createDiv();
+    cartouche.addClass("nexus-stat-card");
+    const iconEl = cartouche.createDiv({ cls: "nexus-stat-card-icon" });
     iconEl.textContent = icon;
-    iconEl.style.fontSize = "1.5em";
-    iconEl.style.marginBottom = "4px";
-    const valueEl = cartouche.createDiv();
+    const valueEl = cartouche.createDiv({ cls: "nexus-stat-card-value" });
     valueEl.textContent = value;
-    valueEl.style.fontWeight = "600";
-    valueEl.style.fontSize = "1.4em";
     valueEl.style.color = color || "var(--text-accent)";
-    valueEl.style.marginBottom = "4px";
-    const labelEl = cartouche.createDiv();
+    const labelEl = cartouche.createDiv({ cls: "nexus-stat-card-label" });
     labelEl.textContent = label;
-    labelEl.style.fontSize = "0.85em";
-    labelEl.style.color = "var(--text-muted)";
   }
   createAttachmentsSection(container) {
-    const section = container.createDiv("attachments-section");
-    section.style.marginBottom = "20px";
-    section.style.padding = "12px";
-    section.style.backgroundColor = "var(--background-secondary)";
-    section.style.borderRadius = "6px";
-    section.style.textAlign = "center";
+    const section = container.createDiv("attachments-section nexus-dialog-section nexus-completion-panel nexus-completion-panel-center");
     const percentage = Math.round(this.stats.attachmentsFound / this.stats.attachmentsTotal * 100);
     const icon = percentage === 100 ? "\u2705" : percentage > 50 ? "\u26A0\uFE0F" : "\u274C";
     const color = percentage === 100 ? "var(--color-green)" : percentage > 50 ? "var(--color-orange)" : "var(--color-red)";
@@ -22593,28 +22705,16 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     attachmentText.style.color = color;
     if (this.stats.attachmentsMissing > 0 || this.stats.attachmentsFailed > 0) {
       const details = section.createDiv();
-      details.style.fontSize = "0.85em";
-      details.style.color = "var(--text-muted)";
-      details.style.marginTop = "4px";
+      details.addClass("nexus-completion-panel-detail");
       details.textContent = t("import_completion.attachments.missing_failed", { missing: String(this.stats.attachmentsMissing), failed: String(this.stats.attachmentsFailed) });
     }
   }
   createReportSection(container) {
-    const section = container.createDiv("report-section");
-    section.style.marginBottom = "20px";
-    section.style.padding = "12px";
-    section.style.backgroundColor = "var(--background-secondary)";
-    section.style.borderRadius = "6px";
-    const label = section.createDiv();
+    const section = container.createDiv("report-section nexus-dialog-section nexus-completion-panel");
+    const label = section.createDiv({ cls: "nexus-completion-panel-label" });
     label.textContent = t("import_completion.report.label");
-    label.style.fontSize = "0.9em";
-    label.style.color = "var(--text-muted)";
-    label.style.marginBottom = "6px";
-    const link = section.createEl("a");
+    const link = section.createEl("a", { cls: "nexus-completion-link" });
     link.textContent = this.reportFilePath;
-    link.style.color = "var(--text-accent)";
-    link.style.textDecoration = "none";
-    link.style.cursor = "pointer";
     link.addEventListener("click", (e) => {
       e.preventDefault();
       this.openReport();
@@ -22627,20 +22727,14 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     });
   }
   createActionButtons(container) {
-    const buttonContainer = container.createDiv("action-buttons");
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.justifyContent = "flex-end";
-    buttonContainer.style.gap = "10px";
-    buttonContainer.style.marginTop = "20px";
+    const buttonContainer = container.createDiv("action-buttons nexus-dialog-actions");
     const viewReportBtn = buttonContainer.createEl("button", { text: t("import_completion.buttons.view_report") });
-    viewReportBtn.style.padding = "8px 16px";
     viewReportBtn.addEventListener("click", () => {
       this.openReport();
       this.close();
     });
     const okBtn = buttonContainer.createEl("button", { text: t("import_completion.buttons.ok") });
     okBtn.classList.add("mod-cta");
-    okBtn.style.padding = "8px 16px";
     okBtn.addEventListener("click", () => this.close());
   }
   async openReport() {
@@ -22672,6 +22766,65 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
                 padding: 20px 24px 24px 24px;
             }
 
+            .nexus-import-completion-dialog .nexus-stats-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .nexus-import-completion-dialog .nexus-stat-card {
+                text-align: center;
+                padding: 12px;
+                background-color: var(--background-primary);
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .nexus-import-completion-dialog .nexus-stat-card-icon {
+                font-size: 1.5em;
+                margin-bottom: 4px;
+            }
+
+            .nexus-import-completion-dialog .nexus-stat-card-value {
+                font-weight: 600;
+                font-size: 1.4em;
+                margin-bottom: 4px;
+            }
+
+            .nexus-import-completion-dialog .nexus-stat-card-label {
+                font-size: 0.85em;
+                color: var(--text-muted);
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-panel {
+                padding: 12px;
+                background-color: var(--background-secondary);
+                border-radius: 6px;
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-panel-center {
+                text-align: center;
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-panel-label {
+                font-size: 0.9em;
+                color: var(--text-muted);
+                margin-bottom: 6px;
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-panel-detail {
+                font-size: 0.85em;
+                color: var(--text-muted);
+                margin-top: 4px;
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-link {
+                color: var(--text-accent);
+                text-decoration: none;
+                cursor: pointer;
+                word-break: break-word;
+            }
+
             /* Stat cartouches hover effect */
             .nexus-import-completion-dialog .stat-cartouche {
                 transition: transform 0.2s, box-shadow 0.2s;
@@ -22692,6 +22845,22 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
                 transform: translateY(-1px);
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
+
+            @media (max-width: 700px) {
+                .modal.nexus-import-completion-dialog .modal-content {
+                    padding: 14px 14px 18px 14px;
+                }
+
+                .nexus-import-completion-dialog .nexus-stats-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 480px) {
+                .nexus-import-completion-dialog .nexus-stats-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
         `;
     document.head.appendChild(style);
   }
@@ -22709,6 +22878,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     super(app, manifest);
     this.logger = new Logger();
     this.currentGeminiIndex = null;
+    this.lastImportCheckpoint = null;
     this.storageService = new StorageService(this);
     this.importService = new ImportService(this);
     this.fileService = new FileService(this);
@@ -22748,6 +22918,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   }
   async onunload() {
     try {
+      this.importService.resetRuntimeState();
+      if (this.currentGeminiIndex) {
+        this.currentGeminiIndex = null;
+        this.importService.setGeminiIndex(null);
+      }
       this.eventHandlers.cleanup();
       await this.saveSettings();
     } catch (error) {
@@ -22945,6 +23120,12 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   async handleImportAll(files, provider) {
     var _a, _b, _c, _d;
     try {
+      this.setImportCheckpoint({
+        operation: "import-all",
+        phase: "analysis-start",
+        provider,
+        task: `0/${files.length}`
+      });
       this.logger.child("ImportFlow").info(`Import-all analysis started`, {
         provider,
         fileCount: files.length
@@ -22954,11 +23135,18 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
+      this.setImportCheckpoint({
+        operation: "import-all",
+        phase: "metadata-extraction",
+        provider,
+        task: `0/${files.length}`
+      });
       const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
         files,
         provider,
         existingConversations
       );
+      this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "import-all");
       this.logger.child("ImportFlow").info(`Import-all analysis finished`, {
         provider,
         fileCount: files.length,
@@ -22996,31 +23184,20 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         }
       });
       const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
-      if (provider === "chatgpt" && filesToImport.length > 1) {
-        this.logger.child("ImportFlow").info(`Building multi-ZIP attachment map`, {
-          provider,
-          fileCount: filesToImport.length
-        });
-        await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
-      }
-      for (const file of filesToImport) {
-        const conversationsForFile = conversationsByFile.get(file.name);
-        if (conversationsForFile && conversationsForFile.length > 0) {
-          try {
-            this.logger.child("ImportFlow").info(`Importing file`, {
-              provider,
-              fileName: file.name,
-              conversationCount: conversationsForFile.length
-            });
-            await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
-          } catch (error) {
-            this.logger.error(`Error processing file ${file.name}:`, error);
-          }
-        }
-      }
-      if (provider === "chatgpt" && filesToImport.length > 1) {
-        this.importService.clearAttachmentMap();
-      }
+      this.setImportCheckpoint({
+        operation: "import-all",
+        phase: "file-processing-start",
+        provider,
+        task: `0/${filesToImport.length}`,
+        conversationCount: allIds.length
+      });
+      await this.processFilesWithStrategy(
+        "import-all",
+        provider,
+        filesToImport,
+        conversationsByFile,
+        operationReport
+      );
       const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
@@ -23028,15 +23205,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
-      this.logger.error("[IMPORT-ALL] Error in import all:", error);
-      if (error instanceof Error) {
-        this.logger.error("[IMPORT-ALL] Error message:", error.message);
-        this.logger.error("[IMPORT-ALL] Error name:", error.name);
-        this.logger.error("[IMPORT-ALL] Error stack:", error.stack);
-      } else {
-        this.logger.error("[IMPORT-ALL] Error (not Error instance):", String(error));
-      }
+      this.logImportFailureWithCheckpoint(error, "import-all");
       new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+    } finally {
+      await this.runPostImportCleanup("import-all");
     }
   }
   /**
@@ -23044,6 +23216,12 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
    */
   async handleSelectiveImport(files, provider) {
     try {
+      this.setImportCheckpoint({
+        operation: "selective-analysis",
+        phase: "analysis-start",
+        provider,
+        task: `0/${files.length}`
+      });
       this.logger.child("ImportFlow").info(`Selective analysis started`, {
         provider,
         fileCount: files.length
@@ -23053,11 +23231,18 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
+      this.setImportCheckpoint({
+        operation: "selective-analysis",
+        phase: "metadata-extraction",
+        provider,
+        task: `0/${files.length}`
+      });
       const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
         files,
         provider,
         existingConversations
       );
+      this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "selective-analysis");
       this.logger.child("ImportFlow").info(`Selective analysis finished`, {
         provider,
         fileCount: files.length,
@@ -23103,11 +23288,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         extractionResult.analysisInfo
       ).open();
     } catch (error) {
-      this.logger.error("[SELECTIVE-IMPORT] Error in selective import:", error);
-      this.logger.error("[SELECTIVE-IMPORT] Full error details:", error);
-      if (error instanceof Error) {
-        this.logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
-      }
+      this.logImportFailureWithCheckpoint(error, "selective-analysis");
       new import_obsidian32.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
     }
   }
@@ -23115,57 +23296,53 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
    * Handle the result from conversation selection dialog
    */
   async handleConversationSelectionResult(result, availableConversations, files, provider, analysisInfo, fileStats) {
-    const operationReport = new ImportReport();
-    if (this.settings.useCustomMessageTimestampFormat) {
-      operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
-    }
-    if (result.selectedIds.length === 0) {
-      new import_obsidian32.Notice(t("notices.import_no_selected"));
-      const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
-      if (reportPath2) {
-        this.showImportCompletionDialog(operationReport, reportPath2);
+    try {
+      this.setImportCheckpoint({
+        operation: "selective-import",
+        phase: "selection-accepted",
+        provider,
+        conversationCount: result.selectedIds.length
+      });
+      const operationReport = new ImportReport();
+      if (this.settings.useCustomMessageTimestampFormat) {
+        operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
-      return;
-    }
-    new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
-    const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
-    const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
-    if (provider === "chatgpt" && filesToImport.length > 1) {
-      try {
-        this.logger.child("ImportFlow").info(`Building multi-ZIP attachment map`, {
-          provider,
-          fileCount: filesToImport.length
-        });
-        await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
-      } catch (error) {
-        this.logger.error("Failed to build attachment map:", error);
-        new import_obsidian32.Notice(t("notices.attachment_map_failed"));
-      }
-    }
-    for (const file of filesToImport) {
-      const conversationsForFile = conversationsByFile.get(file.name);
-      if (conversationsForFile && conversationsForFile.length > 0) {
-        try {
-          this.logger.child("ImportFlow").info(`Importing file`, {
-            provider,
-            fileName: file.name,
-            conversationCount: conversationsForFile.length
-          });
-          await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
-        } catch (error) {
-          this.logger.error(`Error processing file ${file.name}:`, error);
-          new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
+      if (result.selectedIds.length === 0) {
+        new import_obsidian32.Notice(t("notices.import_no_selected"));
+        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+        if (reportPath2) {
+          this.showImportCompletionDialog(operationReport, reportPath2);
         }
+        return;
       }
-    }
-    if (provider === "chatgpt" && filesToImport.length > 1) {
-      this.importService.clearAttachmentMap();
-    }
-    const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
-    if (reportPath) {
-      this.showImportCompletionDialog(operationReport, reportPath);
-    } else {
-      new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+      new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
+      const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
+      const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
+      this.setImportCheckpoint({
+        operation: "selective-import",
+        phase: "file-processing-start",
+        provider,
+        task: `0/${filesToImport.length}`,
+        conversationCount: result.selectedIds.length
+      });
+      await this.processFilesWithStrategy(
+        "selective-import",
+        provider,
+        filesToImport,
+        conversationsByFile,
+        operationReport
+      );
+      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+      if (reportPath) {
+        this.showImportCompletionDialog(operationReport, reportPath);
+      } else {
+        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+      }
+    } catch (error) {
+      this.logImportFailureWithCheckpoint(error, "selective-import");
+      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+    } finally {
+      await this.runPostImportCleanup("selective-import");
     }
   }
   /**
@@ -23268,6 +23445,166 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       conversationsByFile.set(conversation.sourceFile, fileConversations);
     }
     return conversationsByFile;
+  }
+  isMobileTaskQueueMode() {
+    return import_obsidian32.Platform.isMobileApp || import_obsidian32.Platform.isMobile;
+  }
+  async yieldToEventLoop() {
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+  }
+  async runPostImportCleanup(operation) {
+    const importFlowLogger = this.logger.child("ImportFlow");
+    const isMobile = this.isMobileTaskQueueMode();
+    this.setImportCheckpoint({
+      operation,
+      phase: "cleanup-start",
+      provider: "n/a"
+    });
+    importFlowLogger.info(`Post-import cleanup started`, {
+      operation,
+      isMobile
+    });
+    this.importService.resetRuntimeState();
+    await this.yieldToEventLoop();
+    if (isMobile) {
+      await this.yieldToEventLoop();
+    }
+    this.setImportCheckpoint({
+      operation,
+      phase: "cleanup-complete",
+      provider: "n/a"
+    });
+    importFlowLogger.info(`Post-import cleanup complete`, {
+      operation,
+      isMobile
+    });
+  }
+  async processFilesWithStrategy(operation, provider, filesToImport, conversationsByFile, operationReport) {
+    const importFlowLogger = this.logger.child("ImportFlow");
+    const mobileTaskQueueMode = this.isMobileTaskQueueMode();
+    if (!mobileTaskQueueMode && provider === "chatgpt" && filesToImport.length > 1) {
+      this.setImportCheckpoint({
+        operation,
+        phase: "attachment-map-build",
+        provider,
+        task: `0/${filesToImport.length}`
+      });
+      importFlowLogger.info(`Building multi-ZIP attachment map`, {
+        provider,
+        fileCount: filesToImport.length,
+        mode: "desktop-multi-zip"
+      });
+      await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
+    }
+    for (let i = 0; i < filesToImport.length; i++) {
+      const file = filesToImport[i];
+      const conversationsForFile = conversationsByFile.get(file.name);
+      if (!conversationsForFile || conversationsForFile.length === 0) {
+        continue;
+      }
+      try {
+        if (mobileTaskQueueMode && provider === "chatgpt") {
+          this.setImportCheckpoint({
+            operation,
+            phase: "attachment-map-build",
+            provider,
+            fileName: file.name,
+            task: `${i + 1}/${filesToImport.length}`,
+            conversationCount: conversationsForFile.length
+          });
+          importFlowLogger.info(`Building single-ZIP attachment map for mobile task`, {
+            provider,
+            fileName: file.name,
+            task: `${i + 1}/${filesToImport.length}`
+          });
+          await this.importService.buildAttachmentMapForMultiZip([file], provider);
+        }
+        this.setImportCheckpoint({
+          operation,
+          phase: "file-import",
+          provider,
+          fileName: file.name,
+          task: `${i + 1}/${filesToImport.length}`,
+          conversationCount: conversationsForFile.length
+        });
+        importFlowLogger.info(`Importing file`, {
+          provider,
+          fileName: file.name,
+          conversationCount: conversationsForFile.length,
+          task: `${i + 1}/${filesToImport.length}`,
+          mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard"
+        });
+        await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+      } catch (error) {
+        this.logger.error(`Error processing file ${file.name}:`, error);
+        new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
+      } finally {
+        if (mobileTaskQueueMode) {
+          this.importService.clearAttachmentMap();
+          this.setImportCheckpoint({
+            operation,
+            phase: "mobile-file-cleanup",
+            provider,
+            fileName: file.name,
+            task: `${i + 1}/${filesToImport.length}`
+          });
+          await this.yieldToEventLoop();
+        }
+      }
+    }
+    if (!mobileTaskQueueMode && provider === "chatgpt" && filesToImport.length > 1) {
+      this.importService.clearAttachmentMap();
+    }
+  }
+  setImportCheckpoint(checkpoint) {
+    var _a, _b, _c;
+    const nextCheckpoint = {
+      ...checkpoint,
+      timestampMs: Date.now()
+    };
+    this.lastImportCheckpoint = nextCheckpoint;
+    this.logger.child("ImportCheckpoint").info("Checkpoint reached", {
+      operation: nextCheckpoint.operation,
+      phase: nextCheckpoint.phase,
+      provider: nextCheckpoint.provider,
+      fileName: (_a = nextCheckpoint.fileName) != null ? _a : null,
+      task: (_b = nextCheckpoint.task) != null ? _b : null,
+      conversationCount: (_c = nextCheckpoint.conversationCount) != null ? _c : null
+    });
+  }
+  logImportFailureWithCheckpoint(error, operation) {
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : void 0;
+    this.logger.child("ImportFlow").error("Import operation failed", {
+      operation,
+      message,
+      lastCheckpoint: this.lastImportCheckpoint,
+      stack
+    });
+  }
+  logIgnoredArchives(ignoredArchives, provider, operation) {
+    if (ignoredArchives.length === 0) {
+      return;
+    }
+    const groupedCounts = ignoredArchives.reduce((acc, archive) => {
+      acc[archive.reason] = (acc[archive.reason] || 0) + 1;
+      return acc;
+    }, {});
+    this.logger.child("ImportFlow").warn("Archives ignored during metadata extraction", {
+      operation,
+      provider,
+      ignoredCount: ignoredArchives.length,
+      groupedCounts,
+      archives: ignoredArchives.map((archive) => ({
+        fileName: archive.fileName,
+        reason: archive.reason,
+        message: archive.message
+      }))
+    });
+    new import_obsidian32.Notice(
+      `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,
+      5e3
+    );
   }
 };
 __name(NexusAiChatImporterPlugin, "NexusAiChatImporterPlugin");

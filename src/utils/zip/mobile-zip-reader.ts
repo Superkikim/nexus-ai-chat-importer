@@ -28,17 +28,56 @@ const LOCAL_FILE_HEADER_SIGNATURE = 0x04034b50;
 const ZIP64_EXTRA_FIELD_ID = 0x0001;
 const mobileZipLogger = logger.child("MobileZip");
 
-function readSlice(file: File, start: number, length: number): Promise<ArrayBuffer> {
+function shouldRetryReadError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    const name = error instanceof Error ? error.name : "";
+    const normalized = `${name} ${message}`.toLowerCase();
+    return normalized.includes("notfounderror") || normalized.includes("object can not be found here");
+}
+
+function wait(ms: number): Promise<void> {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function readSlice(file: File, start: number, length: number): Promise<ArrayBuffer> {
     if (length <= 0) {
         return Promise.resolve(new ArrayBuffer(0));
     }
 
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as ArrayBuffer);
-        reader.onerror = () => reject(reader.error ?? new Error("ZIP read failed"));
-        reader.readAsArrayBuffer(file.slice(start, start + length));
-    });
+    const safeStart = Math.max(0, start);
+    const safeEnd = Math.min(file.size, safeStart + length);
+    const safeLength = Math.max(0, safeEnd - safeStart);
+    const maxAttempts = 3;
+    let lastError: unknown = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await new Promise<ArrayBuffer>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as ArrayBuffer);
+                reader.onerror = () => reject(reader.error ?? new Error("ZIP read failed"));
+                reader.readAsArrayBuffer(file.slice(safeStart, safeStart + safeLength));
+            });
+        } catch (error) {
+            lastError = error;
+            const retryable = shouldRetryReadError(error);
+            if (!retryable || attempt === maxAttempts) {
+                break;
+            }
+
+            mobileZipLogger.warn(`Retrying failed ZIP slice read`, {
+                fileName: file.name,
+                attempt,
+                maxAttempts,
+                start: safeStart,
+                length: safeLength,
+                message: error instanceof Error ? error.message : String(error),
+            });
+            await wait(30 * attempt);
+        }
+    }
+
+    throw lastError ?? new Error("ZIP read failed");
 }
 
 function getUint64(view: DataView, offset: number): number {
@@ -59,7 +98,7 @@ async function findEndOfCentralDirectory(file: File): Promise<{ offset: number; 
         }
     }
 
-    throw new Error("ZIP central directory not found");
+    throw new Error("ZIP central directory not found (archive is invalid or unsupported)");
 }
 
 async function readZip64CentralDirectoryInfo(file: File, eocdOffset: number): Promise<CentralDirectoryInfo> {

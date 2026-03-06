@@ -18,7 +18,7 @@
 
 
 // src/services/import-service.ts
-import { Notice } from "obsidian";
+import { Notice, Platform } from "obsidian";
 import { CustomError } from "../types/plugin";
 import { getFileHash, ensureFolderExists, formatTimestamp } from "../utils";
 import { showDialog } from "../dialogs";
@@ -42,6 +42,13 @@ import { filterConversationsByIds as filterConversationsByIdsUsingAdapters } fro
 import { sortFilesForImport } from "../utils/file-sort";
 import type { GeminiIndex } from "../providers/gemini/gemini-types";
 
+interface ImportRuntimeContext {
+    fileName: string;
+    provider: string;
+    startedAtMs: number;
+    currentPhase: string;
+}
+
 export class ImportService {
     private importReport: ImportReport = new ImportReport();
     private conversationProcessor: ConversationProcessor;
@@ -49,6 +56,7 @@ export class ImportService {
     private attachmentMapBuilder: AttachmentMapBuilder;
     private currentAttachmentMap: AttachmentMap | null = null;
     private currentZips: ZipArchiveReader[] = [];
+    private runtimeContext: ImportRuntimeContext | null = null;
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
         this.providerRegistry = createProviderRegistry(plugin);
@@ -96,6 +104,7 @@ export class ImportService {
 
     async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[], sharedReport?: ImportReport) {
         const importLogger = this.plugin.logger.child("Import");
+        this.beginRuntimeContext(file.name, forcedProvider || "auto");
         // Validate file extension before processing
         const fileName = file.name.toLowerCase();
         if (!fileName.endsWith('.zip')) {
@@ -135,6 +144,7 @@ export class ImportService {
 
         const storage = this.plugin.getStorageService();
         let processingStarted = false;
+        let zip: ZipArchiveReader | null = null;
 
         // Create and show progress modal
         const progressModal = new ImportProgressModal(this.plugin.app, file.name);
@@ -161,12 +171,14 @@ export class ImportService {
                 title: 'Validating ZIP structure...',
                 detail: 'Checking file format and contents'
             });
+            this.updateRuntimePhase("zip-validation");
 
-            const zip = await this.validateZipFile(file, forcedProvider);
+            zip = await this.validateZipFile(file, forcedProvider);
             importLogger.info(`ZIP validated`, {
                 fileName: file.name,
                 forcedProvider: forcedProvider || "auto",
             });
+            await this.yieldToEventLoopIfMobile();
 
             // When using shared report (new workflow), skip the "already imported" check
             // because the analysis already determined what needs to be imported
@@ -180,6 +192,7 @@ export class ImportService {
                     title: 'Validating file...',
                     detail: 'Checking file hash and import history'
                 });
+                this.updateRuntimePhase("hash-validation");
 
                 fileHash = await getFileHash(file);
                 const foundByHash = storage.isArchiveImported(fileHash);
@@ -216,23 +229,26 @@ export class ImportService {
                 fileHash = await getFileHash(file);
             }
 
-	            processingStarted = true;
-	            importLogger.info(`Begin conversation processing`, {
+		            processingStarted = true;
+                    this.updateRuntimePhase("conversation-processing");
+		            importLogger.info(`Begin conversation processing`, {
 	                fileName: file.name,
 	                forcedProvider: forcedProvider || "auto",
 	            });
-	            await this.processConversations(
-	                zip,
+		            await this.processConversations(
+		                zip,
 	                file,
 	                isReprocess,
 	                forcedProvider,
 	                progressCallback,
 	                selectedConversationIds,
 	                progressModal,
-	                file.size
-	            );
+		                file.size
+		            );
+                    await this.yieldToEventLoopIfMobile();
 
             // Track imported archive
+            this.updateRuntimePhase("persist-settings");
             storage.addImportedArchive(fileHash, file.name);
             await this.plugin.saveSettings();
 
@@ -247,6 +263,7 @@ export class ImportService {
                 created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
                 updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
             });
+            this.updateRuntimePhase("completed");
 
         } catch (error: unknown) {
             const message = error instanceof NexusAiChatImporterError
@@ -260,6 +277,7 @@ export class ImportService {
                 fileName: file.name,
                 forcedProvider: forcedProvider || "auto",
                 message,
+                runtimeContext: this.runtimeContext,
             });
 
             progressCallback({
@@ -271,6 +289,9 @@ export class ImportService {
             // Keep modal open for error state
             setTimeout(() => progressModal.close(), 5000);
         } finally {
+            zip = null;
+            await this.yieldToEventLoopIfMobile();
+            this.endRuntimeContext();
             // Only write report if processing actually started AND this is NOT a shared report
             // (shared reports are written by the caller after all files are processed)
             if (processingStarted && !isSharedReport) {
@@ -336,14 +357,23 @@ export class ImportService {
                 throw error;
             }
 
-            if (error.message && error.message.includes('central directory')) {
+            const message = typeof error?.message === "string" ? error.message : String(error);
+
+            if (message.includes("central directory not found")) {
                 throw new NexusAiChatImporterError(
-                    "Corrupted ZIP file",
-                    "The ZIP central directory could not be read. Please try downloading the archive again."
+                    "Unsupported ZIP file",
+                    "This ZIP file does not look like a supported export or is not a valid ZIP archive."
                 );
             }
 
-            if (error.message && error.message.includes('corrupted')) {
+            if (error?.name === "NotFoundError" || message.includes("object can not be found here")) {
+                throw new NexusAiChatImporterError(
+                    "Mobile file handle unavailable",
+                    "The mobile webview could no longer access this file. Please reselect this ZIP and retry."
+                );
+            }
+
+            if (message.includes('corrupted')) {
                 throw new NexusAiChatImporterError(
                     "Corrupted ZIP file",
                     "The file appears to be corrupted or is not a valid ZIP file. " +
@@ -354,8 +384,8 @@ export class ImportService {
             // Generic ZIP loading error
             throw new NexusAiChatImporterError(
                 "Error reading ZIP file",
-                `Failed to read the ZIP file: ${error.message || 'Unknown error'}. ` +
-	                "Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, or Gemini."
+                `Failed to read the ZIP file: ${message || 'Unknown error'}. ` +
+		                "Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, or Gemini."
             );
         }
     }
@@ -402,6 +432,7 @@ export class ImportService {
 
                 this.importReport = report;
                 this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+                await this.yieldToEventLoopIfMobile();
                 importLogger.info(`Streaming conversation processing complete`, {
                     fileName: file.name,
                     created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
@@ -411,6 +442,7 @@ export class ImportService {
                 const extractionResult = await this.extractRawConversationsFromZip(zip, zipSizeBytes);
                 let rawConversations = extractionResult.conversations;
                 const archiveModeDecision = extractionResult.archiveModeDecision;
+                await this.yieldToEventLoopIfMobile();
                 importLogger.info(`Raw conversations extracted`, {
                     fileName: file.name,
                     conversationCount: rawConversations.length,
@@ -466,6 +498,8 @@ export class ImportService {
 
                 this.importReport = report;
                 this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+                rawConversations = [];
+                await this.yieldToEventLoopIfMobile();
                 importLogger.info(`Raw conversation processing complete`, {
                     fileName: file.name,
                     created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
@@ -642,6 +676,59 @@ export class ImportService {
         if (chatgptAdapter) {
             chatgptAdapter.clearAttachmentMap();
         }
+    }
+
+    /**
+     * Reset transient runtime state between two import operations.
+     * This does not touch persisted settings/catalog data.
+     */
+    resetRuntimeState(): void {
+        this.clearAttachmentMap();
+        this.importReport = new ImportReport();
+        this.conversationProcessor.resetCounters();
+        this.runtimeContext = null;
+    }
+
+    private isMobileRuntime(): boolean {
+        return Platform.isMobileApp || Platform.isMobile;
+    }
+
+    private async yieldToEventLoopIfMobile(): Promise<void> {
+        if (!this.isMobileRuntime()) {
+            return;
+        }
+
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+    }
+
+    private beginRuntimeContext(fileName: string, provider: string): void {
+        this.runtimeContext = {
+            fileName,
+            provider,
+            startedAtMs: Date.now(),
+            currentPhase: "start",
+        };
+    }
+
+    private updateRuntimePhase(phase: string): void {
+        if (!this.runtimeContext) {
+            return;
+        }
+        this.runtimeContext.currentPhase = phase;
+    }
+
+    private endRuntimeContext(): void {
+        if (!this.runtimeContext) {
+            return;
+        }
+
+        this.plugin.logger.child("Import").info("Runtime context released", {
+            fileName: this.runtimeContext.fileName,
+            provider: this.runtimeContext.provider,
+            phase: this.runtimeContext.currentPhase,
+            durationMs: Date.now() - this.runtimeContext.startedAtMs,
+        });
+        this.runtimeContext = null;
     }
 }
 

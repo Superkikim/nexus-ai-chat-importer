@@ -17,7 +17,7 @@
  */
 
 // src/main.ts
-import { Plugin, App, PluginManifest, Notice } from "obsidian";
+import { Plugin, App, PluginManifest, Notice, Platform } from "obsidian";
 import { initLocale, t } from "./i18n";
 import { DEFAULT_SETTINGS } from "./config/constants";
 import { PluginSettings } from "./types/plugin";
@@ -36,12 +36,22 @@ import { InstallationWelcomeDialog } from "./dialogs/installation-welcome-dialog
 import { UpgradeNotice132Dialog } from "./dialogs/upgrade-notice-1.3.2-dialog";
 import { createProviderRegistry } from "./providers/provider-registry";
 import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
-import { ConversationMetadataExtractor } from "./services/conversation-metadata-extractor";
+import { ConversationMetadataExtractor, IgnoredArchiveInfo } from "./services/conversation-metadata-extractor";
 import { ImportReport } from "./models/import-report";
 import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
 import { ensureFolderExists, formatTimestamp } from "./utils";
 import { sortFilesForImport } from "./utils/file-sort";
 import type { GeminiIndex } from "./providers/gemini/gemini-types";
+
+interface ImportCheckpoint {
+    operation: "import-all" | "selective-analysis" | "selective-import";
+    phase: string;
+    provider: string;
+    fileName?: string;
+    task?: string;
+    conversationCount?: number;
+    timestampMs: number;
+}
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
@@ -54,6 +64,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 	    private eventHandlers: EventHandlers;
 	    private upgradeManager: IncrementalUpgradeManager;
 	    private currentGeminiIndex: GeminiIndex | null = null;
+        private lastImportCheckpoint: ImportCheckpoint | null = null;
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
@@ -113,6 +124,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     async onunload() {
         try {
+            this.importService.resetRuntimeState();
+            if (this.currentGeminiIndex) {
+                this.currentGeminiIndex = null;
+                this.importService.setGeminiIndex(null);
+            }
             this.eventHandlers.cleanup();
             await this.saveSettings();
         } catch (error) {
@@ -375,6 +391,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(files: File[], provider: string): Promise<void> {
         try {
+            this.setImportCheckpoint({
+                operation: "import-all",
+                phase: "analysis-start",
+                provider,
+                task: `0/${files.length}`,
+            });
             this.logger.child("ImportFlow").info(`Import-all analysis started`, {
                 provider,
                 fileCount: files.length,
@@ -390,11 +412,18 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const existingConversations = await storage.scanExistingConversations();
 
             // Extract metadata from all ZIP files (same as selective mode)
+            this.setImportCheckpoint({
+                operation: "import-all",
+                phase: "metadata-extraction",
+                provider,
+                task: `0/${files.length}`,
+            });
             const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
                 files,
                 provider,
                 existingConversations
             );
+            this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "import-all");
 
             this.logger.child("ImportFlow").info(`Import-all analysis finished`, {
                 provider,
@@ -449,39 +478,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 }
             });
 
-            // Build attachment map for multi-ZIP fallback (ChatGPT only)
             const filesToImport = files.filter(file => conversationsByFile.has(file.name));
-
-            if (provider === 'chatgpt' && filesToImport.length > 1) {
-                this.logger.child("ImportFlow").info(`Building multi-ZIP attachment map`, {
-                    provider,
-                    fileCount: filesToImport.length,
-                });
-                await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
-            }
-
-            // Process files sequentially with shared report
-            for (const file of filesToImport) {
-                const conversationsForFile = conversationsByFile.get(file.name);
-                if (conversationsForFile && conversationsForFile.length > 0) {
-                    try {
-                        this.logger.child("ImportFlow").info(`Importing file`, {
-                            provider,
-                            fileName: file.name,
-                            conversationCount: conversationsForFile.length,
-                        });
-                        await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
-                    } catch (error) {
-                        this.logger.error(`Error processing file ${file.name}:`, error);
-                        // Continue with other files even if one fails
-                    }
-                }
-            }
-
-            // Clear attachment map after import completes
-            if (provider === 'chatgpt' && filesToImport.length > 1) {
-                this.importService.clearAttachmentMap();
-            }
+            this.setImportCheckpoint({
+                operation: "import-all",
+                phase: "file-processing-start",
+                provider,
+                task: `0/${filesToImport.length}`,
+                conversationCount: allIds.length,
+            });
+            await this.processFilesWithStrategy(
+                "import-all",
+                provider,
+                filesToImport,
+                conversationsByFile,
+                operationReport
+            );
 
             // Write the consolidated report (always, even if some files failed)
             const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
@@ -495,15 +506,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             }
 
         } catch (error) {
-            this.logger.error("[IMPORT-ALL] Error in import all:", error);
-            if (error instanceof Error) {
-                this.logger.error("[IMPORT-ALL] Error message:", error.message);
-                this.logger.error("[IMPORT-ALL] Error name:", error.name);
-                this.logger.error("[IMPORT-ALL] Error stack:", error.stack);
-            } else {
-                this.logger.error("[IMPORT-ALL] Error (not Error instance):", String(error));
-            }
+            this.logImportFailureWithCheckpoint(error, "import-all");
             new Notice(t('notices.import_error', { error: error instanceof Error ? error.message : String(error) }));
+        } finally {
+            await this.runPostImportCleanup("import-all");
         }
     }
 
@@ -512,6 +518,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
+            this.setImportCheckpoint({
+                operation: "selective-analysis",
+                phase: "analysis-start",
+                provider,
+                task: `0/${files.length}`,
+            });
             this.logger.child("ImportFlow").info(`Selective analysis started`, {
                 provider,
                 fileCount: files.length,
@@ -527,11 +539,18 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const existingConversations = await storage.scanExistingConversations();
 
             // Extract metadata from all ZIP files
+            this.setImportCheckpoint({
+                operation: "selective-analysis",
+                phase: "metadata-extraction",
+                provider,
+                task: `0/${files.length}`,
+            });
             const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
                 files,
                 provider,
                 existingConversations
             );
+            this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "selective-analysis");
 
             this.logger.child("ImportFlow").info(`Selective analysis finished`, {
                 provider,
@@ -586,14 +605,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 extractionResult.analysisInfo
             ).open();
 
-        } catch (error) {
-            this.logger.error("[SELECTIVE-IMPORT] Error in selective import:", error);
-            this.logger.error("[SELECTIVE-IMPORT] Full error details:", error);
-            if (error instanceof Error) {
-                this.logger.error("[SELECTIVE-IMPORT] Error stack:", error.stack);
-            }
-            new Notice(t('notices.import_error_analyzing', { error: error instanceof Error ? error.message : String(error) }));
-        }
+	        } catch (error) {
+                this.logImportFailureWithCheckpoint(error, "selective-analysis");
+	            new Notice(t('notices.import_error_analyzing', { error: error instanceof Error ? error.message : String(error) }));
+	        }
     }
 
     /**
@@ -607,77 +622,68 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         analysisInfo?: any,
         fileStats?: Map<string, any>
     ): Promise<void> {
-        // Create shared report for the entire operation
-        const operationReport = new ImportReport();
+        try {
+            this.setImportCheckpoint({
+                operation: "selective-import",
+                phase: "selection-accepted",
+                provider,
+                conversationCount: result.selectedIds.length,
+            });
+            // Create shared report for the entire operation
+            const operationReport = new ImportReport();
 
-        // Set custom timestamp format if enabled
-        if (this.settings.useCustomMessageTimestampFormat) {
-            operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
-        }
+            // Set custom timestamp format if enabled
+            if (this.settings.useCustomMessageTimestampFormat) {
+                operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+            }
 
-        if (result.selectedIds.length === 0) {
-            new Notice(t('notices.import_no_selected'));
+            if (result.selectedIds.length === 0) {
+                new Notice(t('notices.import_no_selected'));
 
-            // Still write report and show dialog
+                // Still write report and show dialog
+                const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+                if (reportPath) {
+                    this.showImportCompletionDialog(operationReport, reportPath);
+                }
+                return;
+            }
+
+            new Notice(t('notices.import_starting_selected', { count: String(result.selectedIds.length), files: String(files.length) }));
+
+            // Group selected conversations by source file for efficient processing
+            const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
+            const filesToImport = files.filter(file => conversationsByFile.has(file.name));
+
+            this.setImportCheckpoint({
+                operation: "selective-import",
+                phase: "file-processing-start",
+                provider,
+                task: `0/${filesToImport.length}`,
+                conversationCount: result.selectedIds.length,
+            });
+            await this.processFilesWithStrategy(
+                "selective-import",
+                provider,
+                filesToImport,
+                conversationsByFile,
+                operationReport
+            );
+
+            // Write the consolidated report (always, even if some files failed)
             const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+
+            // Show completion dialog
             if (reportPath) {
                 this.showImportCompletionDialog(operationReport, reportPath);
+            } else {
+                // Fallback if report writing failed
+                new Notice(t('notices.import_completed_fallback', { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
             }
-            return;
-        }
-
-        new Notice(t('notices.import_starting_selected', { count: String(result.selectedIds.length), files: String(files.length) }));
-
-        // Group selected conversations by source file for efficient processing
-        const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
-        const filesToImport = files.filter(file => conversationsByFile.has(file.name));
-
-        // Build attachment map for multi-ZIP fallback (ChatGPT only)
-        if (provider === 'chatgpt' && filesToImport.length > 1) {
-            try {
-                this.logger.child("ImportFlow").info(`Building multi-ZIP attachment map`, {
-                    provider,
-                    fileCount: filesToImport.length,
-                });
-                await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
-            } catch (error) {
-                this.logger.error('Failed to build attachment map:', error);
-                new Notice(t('notices.attachment_map_failed'));
-            }
-        }
-
-        // Process files sequentially in original order with shared report
-        for (const file of filesToImport) {
-            const conversationsForFile = conversationsByFile.get(file.name);
-            if (conversationsForFile && conversationsForFile.length > 0) {
-                try {
-                    this.logger.child("ImportFlow").info(`Importing file`, {
-                        provider,
-                        fileName: file.name,
-                        conversationCount: conversationsForFile.length,
-                    });
-                    await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
-                } catch (error) {
-                    this.logger.error(`Error processing file ${file.name}:`, error);
-                    new Notice(t('notices.import_error_file', { filename: file.name }));
-                }
-            }
-        }
-
-        // Clear attachment map after import completes
-        if (provider === 'chatgpt' && filesToImport.length > 1) {
-            this.importService.clearAttachmentMap();
-        }
-
-        // Write the consolidated report (always, even if some files failed)
-        const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
-
-        // Show completion dialog
-        if (reportPath) {
-            this.showImportCompletionDialog(operationReport, reportPath);
-        } else {
-            // Fallback if report writing failed
-            new Notice(t('notices.import_completed_fallback', { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        } catch (error) {
+            this.logImportFailureWithCheckpoint(error, "selective-import");
+            new Notice(t('notices.import_error', { error: error instanceof Error ? error.message : String(error) }));
+        } finally {
+            await this.runPostImportCleanup("selective-import");
         }
     }
 
@@ -822,5 +828,198 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
         }
 
         return conversationsByFile;
+    }
+
+    private isMobileTaskQueueMode(): boolean {
+        return Platform.isMobileApp || Platform.isMobile;
+    }
+
+    private async yieldToEventLoop(): Promise<void> {
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+    }
+
+    private async runPostImportCleanup(operation: "import-all" | "selective-import"): Promise<void> {
+        const importFlowLogger = this.logger.child("ImportFlow");
+        const isMobile = this.isMobileTaskQueueMode();
+
+        this.setImportCheckpoint({
+            operation,
+            phase: "cleanup-start",
+            provider: "n/a",
+        });
+        importFlowLogger.info(`Post-import cleanup started`, {
+            operation,
+            isMobile,
+        });
+
+        this.importService.resetRuntimeState();
+        await this.yieldToEventLoop();
+        if (isMobile) {
+            await this.yieldToEventLoop();
+        }
+
+        this.setImportCheckpoint({
+            operation,
+            phase: "cleanup-complete",
+            provider: "n/a",
+        });
+        importFlowLogger.info(`Post-import cleanup complete`, {
+            operation,
+            isMobile,
+        });
+    }
+
+    private async processFilesWithStrategy(
+        operation: "import-all" | "selective-import",
+        provider: string,
+        filesToImport: File[],
+        conversationsByFile: Map<string, string[]>,
+        operationReport: ImportReport
+    ): Promise<void> {
+        const importFlowLogger = this.logger.child("ImportFlow");
+        const mobileTaskQueueMode = this.isMobileTaskQueueMode();
+
+        if (!mobileTaskQueueMode && provider === "chatgpt" && filesToImport.length > 1) {
+            this.setImportCheckpoint({
+                operation,
+                phase: "attachment-map-build",
+                provider,
+                task: `0/${filesToImport.length}`,
+            });
+            importFlowLogger.info(`Building multi-ZIP attachment map`, {
+                provider,
+                fileCount: filesToImport.length,
+                mode: "desktop-multi-zip",
+            });
+            await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
+        }
+
+        for (let i = 0; i < filesToImport.length; i++) {
+            const file = filesToImport[i];
+            const conversationsForFile = conversationsByFile.get(file.name);
+
+            if (!conversationsForFile || conversationsForFile.length === 0) {
+                continue;
+            }
+
+            try {
+                if (mobileTaskQueueMode && provider === "chatgpt") {
+                    this.setImportCheckpoint({
+                        operation,
+                        phase: "attachment-map-build",
+                        provider,
+                        fileName: file.name,
+                        task: `${i + 1}/${filesToImport.length}`,
+                        conversationCount: conversationsForFile.length,
+                    });
+                    importFlowLogger.info(`Building single-ZIP attachment map for mobile task`, {
+                        provider,
+                        fileName: file.name,
+                        task: `${i + 1}/${filesToImport.length}`,
+                    });
+                    await this.importService.buildAttachmentMapForMultiZip([file], provider);
+                }
+
+                this.setImportCheckpoint({
+                    operation,
+                    phase: "file-import",
+                    provider,
+                    fileName: file.name,
+                    task: `${i + 1}/${filesToImport.length}`,
+                    conversationCount: conversationsForFile.length,
+                });
+                importFlowLogger.info(`Importing file`, {
+                    provider,
+                    fileName: file.name,
+                    conversationCount: conversationsForFile.length,
+                    task: `${i + 1}/${filesToImport.length}`,
+                    mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard",
+                });
+
+                await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+            } catch (error) {
+                this.logger.error(`Error processing file ${file.name}:`, error);
+                new Notice(t('notices.import_error_file', { filename: file.name }));
+            } finally {
+                if (mobileTaskQueueMode) {
+                    this.importService.clearAttachmentMap();
+                    this.setImportCheckpoint({
+                        operation,
+                        phase: "mobile-file-cleanup",
+                        provider,
+                        fileName: file.name,
+                        task: `${i + 1}/${filesToImport.length}`,
+                    });
+                    await this.yieldToEventLoop();
+                }
+            }
+        }
+
+        if (!mobileTaskQueueMode && provider === "chatgpt" && filesToImport.length > 1) {
+            this.importService.clearAttachmentMap();
+        }
+    }
+
+    private setImportCheckpoint(checkpoint: Omit<ImportCheckpoint, "timestampMs">): void {
+        const nextCheckpoint: ImportCheckpoint = {
+            ...checkpoint,
+            timestampMs: Date.now(),
+        };
+        this.lastImportCheckpoint = nextCheckpoint;
+
+        this.logger.child("ImportCheckpoint").info("Checkpoint reached", {
+            operation: nextCheckpoint.operation,
+            phase: nextCheckpoint.phase,
+            provider: nextCheckpoint.provider,
+            fileName: nextCheckpoint.fileName ?? null,
+            task: nextCheckpoint.task ?? null,
+            conversationCount: nextCheckpoint.conversationCount ?? null,
+        });
+    }
+
+    private logImportFailureWithCheckpoint(
+        error: unknown,
+        operation: "import-all" | "selective-analysis" | "selective-import"
+    ): void {
+        const message = error instanceof Error ? error.message : String(error);
+        const stack = error instanceof Error ? error.stack : undefined;
+        this.logger.child("ImportFlow").error("Import operation failed", {
+            operation,
+            message,
+            lastCheckpoint: this.lastImportCheckpoint,
+            stack,
+        });
+    }
+
+    private logIgnoredArchives(
+        ignoredArchives: IgnoredArchiveInfo[],
+        provider: string,
+        operation: "import-all" | "selective-analysis"
+    ): void {
+        if (ignoredArchives.length === 0) {
+            return;
+        }
+
+        const groupedCounts = ignoredArchives.reduce<Record<string, number>>((acc, archive) => {
+            acc[archive.reason] = (acc[archive.reason] || 0) + 1;
+            return acc;
+        }, {});
+
+        this.logger.child("ImportFlow").warn("Archives ignored during metadata extraction", {
+            operation,
+            provider,
+            ignoredCount: ignoredArchives.length,
+            groupedCounts,
+            archives: ignoredArchives.map(archive => ({
+                fileName: archive.fileName,
+                reason: archive.reason,
+                message: archive.message,
+            })),
+        });
+
+        new Notice(
+            `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,
+            5000
+        );
     }
 }

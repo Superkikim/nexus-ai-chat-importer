@@ -58,8 +58,8 @@ export class AttachmentMapBuilder {
                     fileSize: file.size,
                 });
 
-                // enumerateZipEntries reads only the ZIP central directory on Electron
-                // (zero extraction cost), or falls back to JSZip.loadAsync on mobile.
+                // enumerateZipEntries reads ZIP metadata only (central directory parsing)
+                // on both desktop and mobile, without extracting attachment payloads.
                 const entries = await enumerateZipEntries(file);
                 let mappedIdsForFile = 0;
 

@@ -94,11 +94,7 @@ export class ImportCompletionDialog extends Modal {
     }
 
     private createStatsSection(container: HTMLElement) {
-        const section = container.createDiv('stats-section');
-        section.style.marginBottom = "20px";
-        section.style.display = "grid";
-        section.style.gridTemplateColumns = "repeat(3, 1fr)";
-        section.style.gap = "12px";
+        const section = container.createDiv('stats-section nexus-stats-grid nexus-dialog-section');
 
         // Files cartouche
         this.createStatCartouche(section, "📁", this.stats.totalFiles.toString(), t('import_completion.stats.zip_files_processed'));
@@ -132,37 +128,21 @@ export class ImportCompletionDialog extends Modal {
         color?: string
     ) {
         const cartouche = container.createDiv('stat-cartouche');
-        cartouche.style.textAlign = "center";
-        cartouche.style.padding = "12px";
-        cartouche.style.backgroundColor = "var(--background-primary)";
-        cartouche.style.borderRadius = "8px";
-        cartouche.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+        cartouche.addClass('nexus-stat-card');
 
-        const iconEl = cartouche.createDiv();
+        const iconEl = cartouche.createDiv({ cls: 'nexus-stat-card-icon' });
         iconEl.textContent = icon;
-        iconEl.style.fontSize = "1.5em";
-        iconEl.style.marginBottom = "4px";
 
-        const valueEl = cartouche.createDiv();
+        const valueEl = cartouche.createDiv({ cls: 'nexus-stat-card-value' });
         valueEl.textContent = value;
-        valueEl.style.fontWeight = "600";
-        valueEl.style.fontSize = "1.4em";
         valueEl.style.color = color || "var(--text-accent)";
-        valueEl.style.marginBottom = "4px";
 
-        const labelEl = cartouche.createDiv();
+        const labelEl = cartouche.createDiv({ cls: 'nexus-stat-card-label' });
         labelEl.textContent = label;
-        labelEl.style.fontSize = "0.85em";
-        labelEl.style.color = "var(--text-muted)";
     }
 
     private createAttachmentsSection(container: HTMLElement) {
-        const section = container.createDiv('attachments-section');
-        section.style.marginBottom = "20px";
-        section.style.padding = "12px";
-        section.style.backgroundColor = "var(--background-secondary)";
-        section.style.borderRadius = "6px";
-        section.style.textAlign = "center";
+        const section = container.createDiv('attachments-section nexus-dialog-section nexus-completion-panel nexus-completion-panel-center');
 
         const percentage = Math.round((this.stats.attachmentsFound / this.stats.attachmentsTotal) * 100);
         
@@ -175,31 +155,19 @@ export class ImportCompletionDialog extends Modal {
 
         if (this.stats.attachmentsMissing > 0 || this.stats.attachmentsFailed > 0) {
             const details = section.createDiv();
-            details.style.fontSize = "0.85em";
-            details.style.color = "var(--text-muted)";
-            details.style.marginTop = "4px";
+            details.addClass('nexus-completion-panel-detail');
             details.textContent = t('import_completion.attachments.missing_failed', { missing: String(this.stats.attachmentsMissing), failed: String(this.stats.attachmentsFailed) });
         }
     }
 
     private createReportSection(container: HTMLElement) {
-        const section = container.createDiv('report-section');
-        section.style.marginBottom = "20px";
-        section.style.padding = "12px";
-        section.style.backgroundColor = "var(--background-secondary)";
-        section.style.borderRadius = "6px";
+        const section = container.createDiv('report-section nexus-dialog-section nexus-completion-panel');
 
-        const label = section.createDiv();
+        const label = section.createDiv({ cls: 'nexus-completion-panel-label' });
         label.textContent = t('import_completion.report.label');
-        label.style.fontSize = "0.9em";
-        label.style.color = "var(--text-muted)";
-        label.style.marginBottom = "6px";
 
-        const link = section.createEl("a");
+        const link = section.createEl("a", { cls: 'nexus-completion-link' });
         link.textContent = this.reportFilePath;
-        link.style.color = "var(--text-accent)";
-        link.style.textDecoration = "none";
-        link.style.cursor = "pointer";
         link.addEventListener('click', (e) => {
             e.preventDefault();
             this.openReport();
@@ -215,15 +183,10 @@ export class ImportCompletionDialog extends Modal {
 
 
     private createActionButtons(container: HTMLElement) {
-        const buttonContainer = container.createDiv('action-buttons');
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.justifyContent = "flex-end";
-        buttonContainer.style.gap = "10px";
-        buttonContainer.style.marginTop = "20px";
+        const buttonContainer = container.createDiv('action-buttons nexus-dialog-actions');
 
         // View Report button
         const viewReportBtn = buttonContainer.createEl("button", { text: t('import_completion.buttons.view_report') });
-        viewReportBtn.style.padding = "8px 16px";
         viewReportBtn.addEventListener('click', () => {
             this.openReport();
             this.close();
@@ -232,7 +195,6 @@ export class ImportCompletionDialog extends Modal {
         // OK button
         const okBtn = buttonContainer.createEl("button", { text: t('import_completion.buttons.ok') });
         okBtn.classList.add('mod-cta');
-        okBtn.style.padding = "8px 16px";
         okBtn.addEventListener('click', () => this.close());
     }
 
@@ -266,6 +228,65 @@ export class ImportCompletionDialog extends Modal {
                 padding: 20px 24px 24px 24px;
             }
 
+            .nexus-import-completion-dialog .nexus-stats-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .nexus-import-completion-dialog .nexus-stat-card {
+                text-align: center;
+                padding: 12px;
+                background-color: var(--background-primary);
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .nexus-import-completion-dialog .nexus-stat-card-icon {
+                font-size: 1.5em;
+                margin-bottom: 4px;
+            }
+
+            .nexus-import-completion-dialog .nexus-stat-card-value {
+                font-weight: 600;
+                font-size: 1.4em;
+                margin-bottom: 4px;
+            }
+
+            .nexus-import-completion-dialog .nexus-stat-card-label {
+                font-size: 0.85em;
+                color: var(--text-muted);
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-panel {
+                padding: 12px;
+                background-color: var(--background-secondary);
+                border-radius: 6px;
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-panel-center {
+                text-align: center;
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-panel-label {
+                font-size: 0.9em;
+                color: var(--text-muted);
+                margin-bottom: 6px;
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-panel-detail {
+                font-size: 0.85em;
+                color: var(--text-muted);
+                margin-top: 4px;
+            }
+
+            .nexus-import-completion-dialog .nexus-completion-link {
+                color: var(--text-accent);
+                text-decoration: none;
+                cursor: pointer;
+                word-break: break-word;
+            }
+
             /* Stat cartouches hover effect */
             .nexus-import-completion-dialog .stat-cartouche {
                 transition: transform 0.2s, box-shadow 0.2s;
@@ -286,6 +307,22 @@ export class ImportCompletionDialog extends Modal {
                 transform: translateY(-1px);
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
+
+            @media (max-width: 700px) {
+                .modal.nexus-import-completion-dialog .modal-content {
+                    padding: 14px 14px 18px 14px;
+                }
+
+                .nexus-import-completion-dialog .nexus-stats-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 480px) {
+                .nexus-import-completion-dialog .nexus-stats-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
@@ -295,4 +332,3 @@ export class ImportCompletionDialog extends Modal {
         contentEl.empty();
     }
 }
-
