@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Platform } from "obsidian";
 import { ProviderRegistry } from "../providers/provider-adapter";
 import { Chat } from "../providers/chatgpt/chatgpt-types";
 import { ClaudeConversation } from "../providers/claude/claude-types";
@@ -24,6 +25,7 @@ import type NexusAiChatImporterPlugin from "../main";
 import { createZipArchiveReader, ZipArchiveReader } from "../utils/zip-loader";
 import {
     classifyArchiveEntries,
+    extractConversationsStream,
     extractRawConversations,
     SupportedArchiveProvider,
 } from "../utils/zip-content-reader";
@@ -118,22 +120,36 @@ export class ConversationMetadataExtractor {
             return [];
         }
 
-        const rawConversations = await extractRawConversations(zip);
-        if (rawConversations.conversations.length === 0) {
+        const provider = (forcedProvider || classification.provider) as SupportedArchiveProvider;
+        let metadata: ConversationMetadata[] = [];
+
+        if (provider === "gemini") {
+            const rawConversations = await extractRawConversations(zip);
+            if (rawConversations.conversations.length > 0) {
+                metadata = this.extractMetadataByProvider(rawConversations.conversations, provider);
+            }
+        } else {
+            for await (const rawConversation of extractConversationsStream(zip, {
+                mobileRuntime: Platform.isMobile,
+                enforceChunkedForLargeJsonOnMobile: Platform.isMobile,
+                largeJsonThresholdBytes: 32 * 1024 * 1024,
+                streamYieldEvery: 25,
+            })) {
+                const singleConversationMetadata = this.extractSingleMetadataByProvider(rawConversation, provider);
+                if (singleConversationMetadata) {
+                    metadata.push(singleConversationMetadata);
+                }
+            }
+        }
+
+        if (metadata.length === 0) {
             this.metadataLogger.warn(`Archive produced no conversations during metadata extraction`, {
                 sourceFileName,
-                provider: classification.provider,
+                provider,
                 durationMs: Date.now() - startedAt,
             });
             return [];
         }
-
-        const provider = this.resolveProvider(
-            rawConversations.conversations,
-            forcedProvider,
-            classification.provider
-        );
-        const metadata = this.extractMetadataByProvider(rawConversations.conversations, provider);
 
         const enhancedMetadata = metadata.map(conv => {
             const enhanced: ConversationMetadata = {
@@ -443,25 +459,9 @@ export class ConversationMetadataExtractor {
         return "This ZIP file does not match any supported export format.";
     }
 
-    private resolveProvider(
-        rawConversations: any[],
-        forcedProvider?: string,
-        detectedProvider?: SupportedArchiveProvider
-    ): SupportedArchiveProvider {
-        if (forcedProvider) {
-            return forcedProvider as SupportedArchiveProvider;
-        }
-
-        if (detectedProvider) {
-            return detectedProvider;
-        }
-
-        const provider = this.providerRegistry.detectProvider(rawConversations);
-        if (provider === "unknown") {
-            throw new Error("Could not detect conversation provider from data structure");
-        }
-
-        return provider as SupportedArchiveProvider;
+    private extractSingleMetadataByProvider(rawConversation: any, provider: string): ConversationMetadata | null {
+        const metadata = this.extractMetadataByProvider([rawConversation], provider);
+        return metadata.length > 0 ? metadata[0] : null;
     }
 
     private extractMetadataByProvider(rawConversations: any[], provider: string): ConversationMetadata[] {

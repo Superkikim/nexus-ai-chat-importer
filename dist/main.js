@@ -5551,7 +5551,6 @@ __export(utils_exports, {
   generateUniqueFileName: () => generateUniqueFileName,
   generateYearMonthFolder: () => generateYearMonthFolder,
   getFileFingerprint: () => getFileFingerprint,
-  getFileHash: () => getFileHash,
   isCustomError: () => isCustomError,
   isNexusRelated: () => isNexusRelated,
   isValidMessage: () => isValidMessage,
@@ -5636,12 +5635,6 @@ async function generateUniqueFileName(filePath, vaultAdapter) {
 async function doesFilePathExist(filePath, vault) {
   const file = vault.getAbstractFileByPath(filePath);
   return file !== null;
-}
-async function getFileHash(file) {
-  const buffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 function getFileFingerprint(file) {
   const safeName = encodeURIComponent(file.name);
@@ -5927,7 +5920,6 @@ var init_utils = __esm({
     __name(createDatePrefix, "createDatePrefix");
     __name(generateUniqueFileName, "generateUniqueFileName");
     __name(doesFilePathExist, "doesFilePathExist");
-    __name(getFileHash, "getFileHash");
     __name(getFileFingerprint, "getFileFingerprint");
     __name(generateConversationFileName, "generateConversationFileName");
     __name(generateSafeAlias, "generateSafeAlias");
@@ -12196,7 +12188,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian32 = require("obsidian");
+var import_obsidian33 = require("obsidian");
 init_i18n();
 init_constants();
 
@@ -14975,31 +14967,84 @@ function openYauzl(filePath) {
   });
 }
 __name(openYauzl, "openYauzl");
-function streamToBuffer(stream) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    stream.on("data", (chunk) => {
-      if (typeof chunk === "string") {
-        chunks.push(new TextEncoder().encode(chunk));
-      } else {
-        chunks.push(chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk));
+function normalizeChunk(chunk) {
+  if (typeof chunk === "string") {
+    return new TextEncoder().encode(chunk);
+  }
+  return chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk);
+}
+__name(normalizeChunk, "normalizeChunk");
+async function* streamToByteChunks(stream) {
+  const queue = [];
+  let done = false;
+  let failure = null;
+  let resume = null;
+  const wake = /* @__PURE__ */ __name(() => {
+    if (resume) {
+      const resolver = resume;
+      resume = null;
+      resolver();
+    }
+  }, "wake");
+  const onData = /* @__PURE__ */ __name((chunk) => {
+    queue.push(normalizeChunk(chunk));
+    wake();
+  }, "onData");
+  const onEnd = /* @__PURE__ */ __name(() => {
+    done = true;
+    wake();
+  }, "onEnd");
+  const onError = /* @__PURE__ */ __name((error) => {
+    failure = error;
+    done = true;
+    wake();
+  }, "onError");
+  stream.on("data", onData);
+  stream.on("end", onEnd);
+  stream.on("error", onError);
+  try {
+    while (!done || queue.length > 0) {
+      if (queue.length === 0) {
+        await new Promise((resolve) => {
+          resume = resolve;
+        });
+        continue;
       }
-    });
-    stream.on("end", () => {
-      const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-      const buffer = new Uint8Array(totalLength);
-      let offset = 0;
-      for (const chunk of chunks) {
-        buffer.set(chunk, offset);
-        offset += chunk.byteLength;
-      }
-      resolve(buffer);
-    });
-    stream.on("error", reject);
-  });
+      yield queue.shift();
+    }
+  } finally {
+    if (typeof stream.off === "function") {
+      stream.off("data", onData);
+      stream.off("end", onEnd);
+      stream.off("error", onError);
+    } else if (typeof stream.removeListener === "function") {
+      stream.removeListener("data", onData);
+      stream.removeListener("end", onEnd);
+      stream.removeListener("error", onError);
+    }
+  }
+  if (failure) {
+    throw failure;
+  }
+}
+__name(streamToByteChunks, "streamToByteChunks");
+async function streamToBuffer(stream) {
+  const chunks = [];
+  let totalLength = 0;
+  for await (const chunk of streamToByteChunks(stream)) {
+    chunks.push(chunk);
+    totalLength += chunk.byteLength;
+  }
+  const buffer = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    buffer.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return buffer;
 }
 __name(streamToBuffer, "streamToBuffer");
-async function readDesktopEntry(filePath, entryName) {
+async function openDesktopEntryReadStream(filePath, entryName) {
   const zipfile = await openYauzl(filePath);
   return await new Promise((resolve, reject) => {
     let settled = false;
@@ -15025,20 +15070,23 @@ async function readDesktopEntry(filePath, entryName) {
           fail(err);
           return;
         }
-        try {
-          const buffer = await streamToBuffer(stream);
-          if (!settled) {
-            settled = true;
-            zipfile.close();
-            resolve(buffer);
-          }
-        } catch (error) {
-          fail(error);
+        if (!settled) {
+          settled = true;
+          resolve({ zipfile, stream });
         }
       });
     });
     zipfile.readEntry();
   });
+}
+__name(openDesktopEntryReadStream, "openDesktopEntryReadStream");
+async function readDesktopEntry(filePath, entryName) {
+  const { zipfile, stream } = await openDesktopEntryReadStream(filePath, entryName);
+  try {
+    return await streamToBuffer(stream);
+  } finally {
+    zipfile.close();
+  }
 }
 __name(readDesktopEntry, "readDesktopEntry");
 var DesktopZipEntryHandle = class {
@@ -15052,6 +15100,24 @@ var DesktopZipEntryHandle = class {
   async readText() {
     const bytes = await this.readBytes();
     return new TextDecoder("utf-8").decode(bytes);
+  }
+  async *readTextChunks() {
+    const { zipfile, stream } = await openDesktopEntryReadStream(this.filePath, this.name);
+    const decoder = new TextDecoder("utf-8");
+    try {
+      for await (const chunk of streamToByteChunks(stream)) {
+        const textChunk = decoder.decode(chunk, { stream: true });
+        if (textChunk.length > 0) {
+          yield textChunk;
+        }
+      }
+      const finalChunk = decoder.decode();
+      if (finalChunk.length > 0) {
+        yield finalChunk;
+      }
+    } finally {
+      zipfile.close();
+    }
   }
 };
 __name(DesktopZipEntryHandle, "DesktopZipEntryHandle");
@@ -19153,6 +19219,56 @@ async function listFileNames(zip) {
   return entries.map((entry) => entry.path);
 }
 __name(listFileNames, "listFileNames");
+async function collectJsonArrayFromEntry(entry) {
+  var _a;
+  const items = [];
+  let uncompressedBytes = 0;
+  const chunkReader = (_a = entry.readTextChunks) == null ? void 0 : _a.bind(entry);
+  if (chunkReader) {
+    const reader = chunkReader;
+    async function* countingChunks() {
+      for await (const chunk of reader()) {
+        uncompressedBytes += chunk.length;
+        yield chunk;
+      }
+    }
+    __name(countingChunks, "countingChunks");
+    for await (const value of StreamingJsonArrayParser.streamConversationsFromChunks(countingChunks())) {
+      items.push(value);
+    }
+    return { items, uncompressedBytes };
+  }
+  throw new NexusAiChatImporterError(
+    "ZIP_TEXT_STREAM_REQUIRED",
+    "ZIP entry text streaming is unavailable for this archive reader."
+  );
+}
+__name(collectJsonArrayFromEntry, "collectJsonArrayFromEntry");
+async function collectLeChatConversationFromEntry(entry) {
+  var _a;
+  const messages = [];
+  let uncompressedBytes = 0;
+  const chunkReader = (_a = entry.readTextChunks) == null ? void 0 : _a.bind(entry);
+  if (chunkReader) {
+    const reader = chunkReader;
+    async function* countingChunks() {
+      for await (const chunk of reader()) {
+        uncompressedBytes += chunk.length;
+        yield chunk;
+      }
+    }
+    __name(countingChunks, "countingChunks");
+    for await (const message of StreamingJsonArrayParser.streamConversationsFromChunks(countingChunks())) {
+      messages.push(message);
+    }
+    return { messages, uncompressedBytes };
+  }
+  throw new NexusAiChatImporterError(
+    "ZIP_TEXT_STREAM_REQUIRED",
+    "ZIP entry text streaming is unavailable for this archive reader."
+  );
+}
+__name(collectLeChatConversationFromEntry, "collectLeChatConversationFromEntry");
 function formatRuntimeMemorySnapshot() {
   const perf = globalThis.performance;
   const memory = perf == null ? void 0 : perf.memory;
@@ -19170,16 +19286,16 @@ async function extractRawConversations(zip) {
   const leChatFiles = fileNames.filter((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
   if (leChatFiles.length > 0) {
     const conversations2 = [];
-    let uncompressedBytes = 0;
+    let uncompressedBytes2 = 0;
     for (const fileName of leChatFiles) {
       const entry = zip.get(fileName);
       if (!entry)
         continue;
-      const content = await entry.readText();
-      uncompressedBytes += content.length;
-      conversations2.push(JSON.parse(content));
+      const { messages, uncompressedBytes: fileBytes } = await collectLeChatConversationFromEntry(entry);
+      uncompressedBytes2 += fileBytes;
+      conversations2.push(messages);
     }
-    return { conversations: conversations2, uncompressedBytes };
+    return { conversations: conversations2, uncompressedBytes: uncompressedBytes2 };
   }
   const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
   if (geminiJsonFiles.length > 0) {
@@ -19190,30 +19306,26 @@ async function extractRawConversations(zip) {
         "The ZIP file appears to contain a Gemini folder but the activity JSON file is missing."
       );
     }
-    const activityJson = await activityFile.readText();
-    const conversations2 = [];
-    for (const entry of StreamingJsonArrayParser.streamConversations(activityJson)) {
-      conversations2.push(entry);
-    }
+    const { items: conversations2, uncompressedBytes: uncompressedBytes2 } = await collectJsonArrayFromEntry(activityFile);
     if (conversations2.length === 0) {
       throw new NexusAiChatImporterError(
         "Empty Gemini export",
         "No entries found in the Gemini activity JSON file."
       );
     }
-    return { conversations: conversations2, uncompressedBytes: activityJson.length };
+    return { conversations: conversations2, uncompressedBytes: uncompressedBytes2 };
   }
   const numberedConvFiles = fileNames.filter((name) => /^conversations-\d+\.json$/.test(name)).sort();
   if (numberedConvFiles.length > 0) {
     const conversations2 = [];
-    let uncompressedBytes = 0;
+    let uncompressedBytes2 = 0;
     for (const fileName of numberedConvFiles) {
       const entry = zip.get(fileName);
       if (!entry)
         continue;
-      const json = await entry.readText();
-      uncompressedBytes += json.length;
-      for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
+      const parsed = await collectJsonArrayFromEntry(entry);
+      uncompressedBytes2 += parsed.uncompressedBytes;
+      for (const conv of parsed.items) {
         conversations2.push(conv);
       }
     }
@@ -19223,7 +19335,7 @@ async function extractRawConversations(zip) {
         "The numbered conversation files are all empty."
       );
     }
-    return { conversations: conversations2, uncompressedBytes };
+    return { conversations: conversations2, uncompressedBytes: uncompressedBytes2 };
   }
   const conversationsFile = zip.get("conversations.json");
   if (!conversationsFile) {
@@ -19232,18 +19344,14 @@ async function extractRawConversations(zip) {
       "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or a Gemini activity JSON file."
     );
   }
-  const conversationsJson = await conversationsFile.readText();
-  const conversations = [];
-  for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
-    conversations.push(conv);
-  }
+  const { items: conversations, uncompressedBytes } = await collectJsonArrayFromEntry(conversationsFile);
   if (conversations.length === 0) {
     throw new NexusAiChatImporterError(
       "No conversations found",
       "The conversations.json file exists but contains no conversations."
     );
   }
-  return { conversations, uncompressedBytes: conversationsJson.length };
+  return { conversations, uncompressedBytes };
 }
 __name(extractRawConversations, "extractRawConversations");
 async function* extractConversationsStream(zip, options = {}) {
@@ -19282,13 +19390,13 @@ async function* extractConversationsStream(zip, options = {}) {
       if (!entry)
         continue;
       streamLogger.info("Reading Le Chat conversation file", { fileName });
-      const text = await entry.readText();
+      const { messages, uncompressedBytes } = await collectLeChatConversationFromEntry(entry);
       streamLogger.info("Le Chat conversation file read complete", {
         fileName,
-        textLength: text.length
+        textLength: uncompressedBytes
       });
       yieldedCount2++;
-      yield JSON.parse(text);
+      yield messages;
     }
     streamLogger.info("Le Chat conversation stream complete", {
       yieldedCount: yieldedCount2,
@@ -19361,25 +19469,13 @@ async function* extractConversationsStream(zip, options = {}) {
           }
         );
       } else {
-        const json = await entry.readText();
-        streamLogger.info("Numbered conversation file read complete", {
-          fileName,
-          textLength: json.length,
-          approxStringBytes: json.length * 2,
-          readDurationMs: Date.now() - fileReadStartedAt,
-          memorySnapshot: formatRuntimeMemorySnapshot()
-        });
-        for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
-          yieldedCount2++;
-          if (yieldedCount2 <= 3 || yieldedCount2 % 100 === 0) {
-            streamLogger.info("Yielding streamed conversation", {
-              source: fileName,
-              yieldedCount: yieldedCount2
-            });
+        throw new NexusAiChatImporterError(
+          "ZIP_TEXT_STREAM_REQUIRED",
+          {
+            fileName,
+            entrySizeBytes: entrySize != null ? entrySize : null
           }
-          yield conv;
-          await yieldToEventLoopIfNeeded(yieldedCount2);
-        }
+        );
       }
     }
     streamLogger.info("Numbered conversation stream complete", {
@@ -19454,44 +19550,13 @@ async function* extractConversationsStream(zip, options = {}) {
       }
     );
   } else {
-    let conversationsJson;
-    try {
-      conversationsJson = await conversationsFile.readText();
-    } catch (error) {
-      streamLogger.error("Failed while reading conversations.json for stream extraction", {
-        durationMs: Date.now() - readStartedAt,
-        memorySnapshot: formatRuntimeMemorySnapshot(),
-        message: error instanceof Error ? error.message : String(error)
-      });
-      throw error;
-    }
-    streamLogger.info("conversations.json read complete", {
-      textLength: conversationsJson.length,
-      approxStringBytes: conversationsJson.length * 2,
-      readDurationMs: Date.now() - readStartedAt,
-      totalDurationMs: Date.now() - startedAt,
-      memorySnapshot: formatRuntimeMemorySnapshot()
-    });
-    const parseStartedAt = Date.now();
-    for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
-      yieldedCount++;
-      if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-        streamLogger.info("Yielding streamed conversation", {
-          source: "conversations.json",
-          yieldedCount
-        });
+    throw new NexusAiChatImporterError(
+      "ZIP_TEXT_STREAM_REQUIRED",
+      {
+        fileName: "conversations.json",
+        entrySizeBytes: conversationEntrySize != null ? conversationEntrySize : null
       }
-      yield conv;
-      await yieldToEventLoopIfNeeded(yieldedCount);
-    }
-    conversationsJson = "";
-    streamLogger.info("Conversation stream extraction complete", {
-      yieldedCount,
-      parseDurationMs: Date.now() - parseStartedAt,
-      durationMs: Date.now() - startedAt,
-      memorySnapshot: formatRuntimeMemorySnapshot(),
-      mode: "full-text"
-    });
+    );
   }
 }
 __name(extractConversationsStream, "extractConversationsStream");
@@ -19697,17 +19762,15 @@ Do NOT extract and re-compress the file - just rename it!`;
           detail: "Checking file hash and import history"
         });
         this.updateRuntimePhase("hash-validation");
-        importLogger.info("Archive tracking hash start", {
+        importLogger.info("Archive tracking fingerprint start", {
           fileName: file.name,
-          strategy: "sha256",
+          strategy: "metadata-fingerprint",
           fileSize: file.size
         });
-        const hashStartedAt = Date.now();
-        fileHash = await getFileHash(file);
-        importLogger.info("Archive tracking hash complete", {
+        fileHash = getFileFingerprint(file);
+        importLogger.info("Archive tracking fingerprint complete", {
           fileName: file.name,
-          strategy: "sha256",
-          durationMs: Date.now() - hashStartedAt
+          strategy: "metadata-fingerprint"
         });
         const foundByHash = storage.isArchiveImported(fileHash);
         const foundByName = storage.isArchiveImported(file.name);
@@ -22749,6 +22812,7 @@ If something doesn't work as expected, please report it on the [forum thread](ht
 __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
 
 // src/services/conversation-metadata-extractor.ts
+var import_obsidian31 = require("obsidian");
 init_utils();
 init_logger();
 var ConversationMetadataExtractor = class {
@@ -22771,21 +22835,34 @@ var ConversationMetadataExtractor = class {
       });
       return [];
     }
-    const rawConversations = await extractRawConversations(zip);
-    if (rawConversations.conversations.length === 0) {
+    const provider = forcedProvider || classification.provider;
+    let metadata = [];
+    if (provider === "gemini") {
+      const rawConversations = await extractRawConversations(zip);
+      if (rawConversations.conversations.length > 0) {
+        metadata = this.extractMetadataByProvider(rawConversations.conversations, provider);
+      }
+    } else {
+      for await (const rawConversation of extractConversationsStream(zip, {
+        mobileRuntime: import_obsidian31.Platform.isMobile,
+        enforceChunkedForLargeJsonOnMobile: import_obsidian31.Platform.isMobile,
+        largeJsonThresholdBytes: 32 * 1024 * 1024,
+        streamYieldEvery: 25
+      })) {
+        const singleConversationMetadata = this.extractSingleMetadataByProvider(rawConversation, provider);
+        if (singleConversationMetadata) {
+          metadata.push(singleConversationMetadata);
+        }
+      }
+    }
+    if (metadata.length === 0) {
       this.metadataLogger.warn(`Archive produced no conversations during metadata extraction`, {
         sourceFileName,
-        provider: classification.provider,
+        provider,
         durationMs: Date.now() - startedAt
       });
       return [];
     }
-    const provider = this.resolveProvider(
-      rawConversations.conversations,
-      forcedProvider,
-      classification.provider
-    );
-    const metadata = this.extractMetadataByProvider(rawConversations.conversations, provider);
     const enhancedMetadata = metadata.map((conv) => {
       const enhanced = {
         ...conv,
@@ -23043,18 +23120,9 @@ var ConversationMetadataExtractor = class {
     }
     return "This ZIP file does not match any supported export format.";
   }
-  resolveProvider(rawConversations, forcedProvider, detectedProvider) {
-    if (forcedProvider) {
-      return forcedProvider;
-    }
-    if (detectedProvider) {
-      return detectedProvider;
-    }
-    const provider = this.providerRegistry.detectProvider(rawConversations);
-    if (provider === "unknown") {
-      throw new Error("Could not detect conversation provider from data structure");
-    }
-    return provider;
+  extractSingleMetadataByProvider(rawConversation, provider) {
+    const metadata = this.extractMetadataByProvider([rawConversation], provider);
+    return metadata.length > 0 ? metadata[0] : null;
   }
   extractMetadataByProvider(rawConversations, provider) {
     switch (provider) {
@@ -23275,12 +23343,12 @@ var ConversationMetadataExtractor = class {
 __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian31 = require("obsidian");
+var import_obsidian32 = require("obsidian");
 init_support_box();
 init_logger();
 init_i18n();
 var logger5 = new Logger();
-var ImportCompletionDialog = class extends import_obsidian31.Modal {
+var ImportCompletionDialog = class extends import_obsidian32.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -23508,7 +23576,7 @@ __name(ImportCompletionDialog, "ImportCompletionDialog");
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -23684,7 +23752,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
             message,
             stack: error instanceof Error ? error.stack : void 0
           });
-          new import_obsidian32.Notice(t("notices.import_error", { error: message }));
+          new import_obsidian33.Notice(t("notices.import_error", { error: message }));
         }
       }
     ).open();
@@ -23714,7 +23782,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
     if (provider === "gemini") {
       if (zipFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_zip_gemini"));
+        new import_obsidian33.Notice(t("notices.import_no_zip_gemini"));
         this.logger.warn("[Gemini] No ZIP files selected for import");
         return;
       }
@@ -23738,7 +23806,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           }
         } catch (error) {
           this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
-          new import_obsidian32.Notice(t("notices.import_gemini_json_failed"));
+          new import_obsidian33.Notice(t("notices.import_gemini_json_failed"));
         }
       }
       this.currentGeminiIndex = index;
@@ -23755,7 +23823,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         this.importService.setGeminiIndex(null);
       }
       if (zipFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_zip"));
+        new import_obsidian33.Notice(t("notices.import_no_zip"));
         this.logger.warn(`[${provider}] No ZIP files selected for import`);
         return;
       }
@@ -23788,7 +23856,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         fileCount: files.length
       });
-      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
+      new import_obsidian33.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -23813,7 +23881,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian32.Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
+        new import_obsidian33.Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
         return;
       }
       const operationReport = new ImportReport();
@@ -23821,7 +23889,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_new"));
+        new import_obsidian33.Notice(t("notices.import_no_new"));
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -23831,7 +23899,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const allIds = extractionResult.conversations.map((c) => c.id);
       const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
       const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
-      new import_obsidian32.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
+      new import_obsidian33.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -23860,11 +23928,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian33.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "import-all");
-      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian33.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       await this.runPostImportCleanup("import-all");
     }
@@ -23980,7 +24048,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian32.Notice(
+      new import_obsidian33.Notice(
         t("notices.import_completed_fallback", {
           created: String(operationReport.getCreatedCount()),
           updated: String(operationReport.getUpdatedCount())
@@ -23988,7 +24056,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       );
     }
     if (skippedUnsupported > 0) {
-      new import_obsidian32.Notice(
+      new import_obsidian33.Notice(
         `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
         5e3
       );
@@ -24009,7 +24077,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         fileCount: files.length
       });
-      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
+      new import_obsidian33.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -24034,11 +24102,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian32.Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
+        new import_obsidian33.Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
         return;
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_new"));
+        new import_obsidian33.Notice(t("notices.import_no_new"));
         const operationReport = new ImportReport();
         const reportPath = await this.writeConsolidatedReport(
           operationReport,
@@ -24072,7 +24140,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       ).open();
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-analysis");
-      new import_obsidian32.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian33.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
     }
   }
   /**
@@ -24091,14 +24159,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (result.selectedIds.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_selected"));
+        new import_obsidian33.Notice(t("notices.import_no_selected"));
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
         }
         return;
       }
-      new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
+      new import_obsidian33.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
       const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
       const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
       this.setImportCheckpoint({
@@ -24119,11 +24187,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian33.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-import");
-      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian33.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       await this.runPostImportCleanup("selective-import");
     }
@@ -24146,7 +24214,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian32.Notice(t("notices.report_failed"));
+      new import_obsidian33.Notice(t("notices.report_failed"));
       return "";
     }
     const now = Date.now() / 1e3;
@@ -24198,7 +24266,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
       this.logger.error("Full error:", error);
       this.logger.error("Log content length:", logContent.length);
-      new import_obsidian32.Notice(t("notices.report_failed"));
+      new import_obsidian33.Notice(t("notices.report_failed"));
       return "";
     }
   }
@@ -24230,7 +24298,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
     return conversationsByFile;
   }
   isMobileTaskQueueMode() {
-    return import_obsidian32.Platform.isMobileApp || import_obsidian32.Platform.isMobile;
+    return import_obsidian33.Platform.isMobileApp || import_obsidian33.Platform.isMobile;
   }
   async yieldToEventLoop() {
     await new Promise((resolve) => window.setTimeout(resolve, 0));
@@ -24320,7 +24388,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
         await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
       } catch (error) {
         this.logger.error(`Error processing file ${file.name}:`, error);
-        new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
+        new import_obsidian33.Notice(t("notices.import_error_file", { filename: file.name }));
       } finally {
         if (mobileTaskQueueMode) {
           this.importService.clearAttachmentMap();
@@ -24384,7 +24452,7 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
         message: archive.message
       }))
     });
-    new import_obsidian32.Notice(
+    new import_obsidian33.Notice(
       `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,
       5e3
     );

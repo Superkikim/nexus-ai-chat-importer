@@ -17,34 +17,99 @@ function openYauzl(filePath: string): Promise<any> {
     });
 }
 
-function streamToBuffer(stream: any): Promise<Uint8Array> {
-    return new Promise((resolve, reject) => {
-        const chunks: Uint8Array[] = [];
-        stream.on("data", (chunk: Uint8Array | string) => {
-            if (typeof chunk === "string") {
-                chunks.push(new TextEncoder().encode(chunk));
-            } else {
-                chunks.push(chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk));
-            }
-        });
-        stream.on("end", () => {
-            const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-            const buffer = new Uint8Array(totalLength);
-            let offset = 0;
-            for (const chunk of chunks) {
-                buffer.set(chunk, offset);
-                offset += chunk.byteLength;
-            }
-            resolve(buffer);
-        });
-        stream.on("error", reject);
-    });
+function normalizeChunk(chunk: Uint8Array | Buffer | string): Uint8Array {
+    if (typeof chunk === "string") {
+        return new TextEncoder().encode(chunk);
+    }
+    return chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk);
 }
 
-async function readDesktopEntry(filePath: string, entryName: string): Promise<Uint8Array> {
+async function* streamToByteChunks(stream: any): AsyncGenerator<Uint8Array> {
+    const queue: Uint8Array[] = [];
+    let done = false;
+    let failure: Error | null = null;
+    let resume: (() => void) | null = null;
+
+    const wake = () => {
+        if (resume) {
+            const resolver = resume;
+            resume = null;
+            resolver();
+        }
+    };
+
+    const onData = (chunk: Uint8Array | Buffer | string) => {
+        queue.push(normalizeChunk(chunk));
+        wake();
+    };
+    const onEnd = () => {
+        done = true;
+        wake();
+    };
+    const onError = (error: Error) => {
+        failure = error;
+        done = true;
+        wake();
+    };
+
+    stream.on("data", onData);
+    stream.on("end", onEnd);
+    stream.on("error", onError);
+
+    try {
+        while (!done || queue.length > 0) {
+            if (queue.length === 0) {
+                await new Promise<void>((resolve) => {
+                    resume = resolve;
+                });
+                continue;
+            }
+
+            yield queue.shift()!;
+        }
+    } finally {
+        if (typeof stream.off === "function") {
+            stream.off("data", onData);
+            stream.off("end", onEnd);
+            stream.off("error", onError);
+        } else if (typeof stream.removeListener === "function") {
+            stream.removeListener("data", onData);
+            stream.removeListener("end", onEnd);
+            stream.removeListener("error", onError);
+        }
+    }
+
+    if (failure) {
+        throw failure;
+    }
+}
+
+async function streamToBuffer(stream: any): Promise<Uint8Array> {
+    const chunks: Uint8Array[] = [];
+    let totalLength = 0;
+
+    for await (const chunk of streamToByteChunks(stream)) {
+        chunks.push(chunk);
+        totalLength += chunk.byteLength;
+    }
+
+    const buffer = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+        buffer.set(chunk, offset);
+        offset += chunk.byteLength;
+    }
+
+    return buffer;
+}
+
+async function openDesktopEntryReadStream(
+    filePath: string,
+    entryName: string
+): Promise<{ zipfile: any; stream: any }> {
     const zipfile = await openYauzl(filePath);
 
-    return await new Promise<Uint8Array>((resolve, reject) => {
+    return await new Promise<{ zipfile: any; stream: any }>((resolve, reject) => {
         let settled = false;
 
         const fail = (error: Error) => {
@@ -71,21 +136,24 @@ async function readDesktopEntry(filePath: string, entryName: string): Promise<Ui
                     return;
                 }
 
-                try {
-                    const buffer = await streamToBuffer(stream);
-                    if (!settled) {
-                        settled = true;
-                        zipfile.close();
-                        resolve(buffer);
-                    }
-                } catch (error) {
-                    fail(error as Error);
+                if (!settled) {
+                    settled = true;
+                    resolve({ zipfile, stream });
                 }
             });
         });
 
         zipfile.readEntry();
     });
+}
+
+async function readDesktopEntry(filePath: string, entryName: string): Promise<Uint8Array> {
+    const { zipfile, stream } = await openDesktopEntryReadStream(filePath, entryName);
+    try {
+        return await streamToBuffer(stream);
+    } finally {
+        zipfile.close();
+    }
 }
 
 class DesktopZipEntryHandle implements ZipEntryHandle {
@@ -102,6 +170,27 @@ class DesktopZipEntryHandle implements ZipEntryHandle {
     async readText(): Promise<string> {
         const bytes = await this.readBytes();
         return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    async *readTextChunks(): AsyncGenerator<string> {
+        const { zipfile, stream } = await openDesktopEntryReadStream(this.filePath, this.name);
+        const decoder = new TextDecoder("utf-8");
+
+        try {
+            for await (const chunk of streamToByteChunks(stream)) {
+                const textChunk = decoder.decode(chunk, { stream: true });
+                if (textChunk.length > 0) {
+                    yield textChunk;
+                }
+            }
+
+            const finalChunk = decoder.decode();
+            if (finalChunk.length > 0) {
+                yield finalChunk;
+            }
+        } finally {
+            zipfile.close();
+        }
     }
 }
 

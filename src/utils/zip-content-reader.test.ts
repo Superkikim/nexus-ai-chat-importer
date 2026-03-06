@@ -16,6 +16,10 @@ class MemoryZipEntry implements ZipEntryHandle {
     async readBytes(): Promise<Uint8Array> {
         return new TextEncoder().encode(this.text);
     }
+
+    async *readTextChunks(): AsyncGenerator<string> {
+        yield this.text;
+    }
 }
 
 class MemoryZipReader implements ZipArchiveReader {

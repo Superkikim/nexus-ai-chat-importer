@@ -20,7 +20,7 @@
 // src/services/import-service.ts
 import { Notice, Platform } from "obsidian";
 import { ConversationCatalogEntry, CustomError } from "../types/plugin";
-import { getFileHash, getFileFingerprint, ensureFolderExists, formatTimestamp } from "../utils";
+import { getFileFingerprint, ensureFolderExists, formatTimestamp } from "../utils";
 import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
 import { ConversationProcessor } from "./conversation-processor";
@@ -228,17 +228,15 @@ export class ImportService {
                 });
                 this.updateRuntimePhase("hash-validation");
 
-                importLogger.info("Archive tracking hash start", {
+                importLogger.info("Archive tracking fingerprint start", {
                     fileName: file.name,
-                    strategy: "sha256",
+                    strategy: "metadata-fingerprint",
                     fileSize: file.size,
                 });
-                const hashStartedAt = Date.now();
-                fileHash = await getFileHash(file);
-                importLogger.info("Archive tracking hash complete", {
+                fileHash = getFileFingerprint(file);
+                importLogger.info("Archive tracking fingerprint complete", {
                     fileName: file.name,
-                    strategy: "sha256",
-                    durationMs: Date.now() - hashStartedAt,
+                    strategy: "metadata-fingerprint",
                 });
                 const foundByHash = storage.isArchiveImported(fileHash);
                 const foundByName = storage.isArchiveImported(file.name);

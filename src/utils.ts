@@ -206,13 +206,6 @@ export async function doesFilePathExist(
     return file !== null; // Return true if the file exists, false otherwise
 }
 
-export async function getFileHash(file: File): Promise<string> {
-    const buffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 /**
  * Build a lightweight archive fingerprint without reading the full file into memory.
  * Used in multi-file shared-report flows where full SHA-256 can trigger mobile OOM.

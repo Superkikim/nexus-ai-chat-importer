@@ -153,6 +153,65 @@ async function listFileNames(zip: ZipArchiveReader): Promise<string[]> {
     return entries.map(entry => entry.path);
 }
 
+async function collectJsonArrayFromEntry(entry: {
+    readText(): Promise<string>;
+    readTextChunks?: () => AsyncGenerator<string>;
+}): Promise<{ items: any[]; uncompressedBytes: number }> {
+    const items: any[] = [];
+    let uncompressedBytes = 0;
+    const chunkReader = entry.readTextChunks?.bind(entry);
+
+    if (chunkReader) {
+        const reader = chunkReader;
+        async function* countingChunks(): AsyncGenerator<string> {
+            for await (const chunk of reader()) {
+                uncompressedBytes += chunk.length;
+                yield chunk;
+            }
+        }
+
+        for await (const value of StreamingJsonArrayParser.streamConversationsFromChunks(countingChunks())) {
+            items.push(value);
+        }
+
+        return { items, uncompressedBytes };
+    }
+
+    throw new NexusAiChatImporterError(
+        "ZIP_TEXT_STREAM_REQUIRED",
+        "ZIP entry text streaming is unavailable for this archive reader."
+    );
+}
+
+async function collectLeChatConversationFromEntry(entry: {
+    readText(): Promise<string>;
+    readTextChunks?: () => AsyncGenerator<string>;
+}): Promise<{ messages: any[]; uncompressedBytes: number }> {
+    const messages: any[] = [];
+    let uncompressedBytes = 0;
+    const chunkReader = entry.readTextChunks?.bind(entry);
+
+    if (chunkReader) {
+        const reader = chunkReader;
+        async function* countingChunks(): AsyncGenerator<string> {
+            for await (const chunk of reader()) {
+                uncompressedBytes += chunk.length;
+                yield chunk;
+            }
+        }
+
+        for await (const message of StreamingJsonArrayParser.streamConversationsFromChunks(countingChunks())) {
+            messages.push(message);
+        }
+        return { messages, uncompressedBytes };
+    }
+
+    throw new NexusAiChatImporterError(
+        "ZIP_TEXT_STREAM_REQUIRED",
+        "ZIP entry text streaming is unavailable for this archive reader."
+    );
+}
+
 function formatRuntimeMemorySnapshot(): string {
     const perf = globalThis.performance as Performance & {
         memory?: {
@@ -186,9 +245,9 @@ export async function extractRawConversations(
         for (const fileName of leChatFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            const content = await entry.readText();
-            uncompressedBytes += content.length;
-            conversations.push(JSON.parse(content));
+            const { messages, uncompressedBytes: fileBytes } = await collectLeChatConversationFromEntry(entry);
+            uncompressedBytes += fileBytes;
+            conversations.push(messages);
         }
 
         return { conversations, uncompressedBytes };
@@ -204,11 +263,7 @@ export async function extractRawConversations(
             );
         }
 
-        const activityJson = await activityFile.readText();
-        const conversations: any[] = [];
-        for (const entry of StreamingJsonArrayParser.streamConversations(activityJson)) {
-            conversations.push(entry);
-        }
+        const { items: conversations, uncompressedBytes } = await collectJsonArrayFromEntry(activityFile);
 
         if (conversations.length === 0) {
             throw new NexusAiChatImporterError(
@@ -217,7 +272,7 @@ export async function extractRawConversations(
             );
         }
 
-        return { conversations, uncompressedBytes: activityJson.length };
+        return { conversations, uncompressedBytes };
     }
 
     const numberedConvFiles = fileNames.filter(name => /^conversations-\d+\.json$/.test(name)).sort();
@@ -228,10 +283,10 @@ export async function extractRawConversations(
         for (const fileName of numberedConvFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            const json = await entry.readText();
-            uncompressedBytes += json.length;
+            const parsed = await collectJsonArrayFromEntry(entry);
+            uncompressedBytes += parsed.uncompressedBytes;
 
-            for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
+            for (const conv of parsed.items) {
                 conversations.push(conv);
             }
         }
@@ -254,11 +309,7 @@ export async function extractRawConversations(
         );
     }
 
-    const conversationsJson = await conversationsFile.readText();
-    const conversations: any[] = [];
-    for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
-        conversations.push(conv);
-    }
+    const { items: conversations, uncompressedBytes } = await collectJsonArrayFromEntry(conversationsFile);
 
     if (conversations.length === 0) {
         throw new NexusAiChatImporterError(
@@ -267,7 +318,7 @@ export async function extractRawConversations(
         );
     }
 
-    return { conversations, uncompressedBytes: conversationsJson.length };
+    return { conversations, uncompressedBytes };
 }
 
 export async function* extractConversationsStream(
@@ -309,13 +360,13 @@ export async function* extractConversationsStream(
             const entry = zip.get(fileName);
             if (!entry) continue;
             streamLogger.info("Reading Le Chat conversation file", { fileName });
-            const text = await entry.readText();
+            const { messages, uncompressedBytes } = await collectLeChatConversationFromEntry(entry);
             streamLogger.info("Le Chat conversation file read complete", {
                 fileName,
-                textLength: text.length,
+                textLength: uncompressedBytes,
             });
             yieldedCount++;
-            yield JSON.parse(text);
+            yield messages;
         }
         streamLogger.info("Le Chat conversation stream complete", {
             yieldedCount,
@@ -389,25 +440,13 @@ export async function* extractConversationsStream(
                     }
                 );
             } else {
-                const json = await entry.readText();
-                streamLogger.info("Numbered conversation file read complete", {
-                    fileName,
-                    textLength: json.length,
-                    approxStringBytes: json.length * 2,
-                    readDurationMs: Date.now() - fileReadStartedAt,
-                    memorySnapshot: formatRuntimeMemorySnapshot(),
-                });
-                for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
-                    yieldedCount++;
-                    if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-                        streamLogger.info("Yielding streamed conversation", {
-                            source: fileName,
-                            yieldedCount,
-                        });
+                throw new NexusAiChatImporterError(
+                    "ZIP_TEXT_STREAM_REQUIRED",
+                    {
+                        fileName,
+                        entrySizeBytes: entrySize ?? null,
                     }
-                    yield conv;
-                    await yieldToEventLoopIfNeeded(yieldedCount);
-                }
+                );
             }
         }
         streamLogger.info("Numbered conversation stream complete", {
@@ -484,43 +523,12 @@ export async function* extractConversationsStream(
             }
         );
     } else {
-        let conversationsJson: string;
-        try {
-            conversationsJson = await conversationsFile.readText();
-        } catch (error) {
-            streamLogger.error("Failed while reading conversations.json for stream extraction", {
-                durationMs: Date.now() - readStartedAt,
-                memorySnapshot: formatRuntimeMemorySnapshot(),
-                message: error instanceof Error ? error.message : String(error),
-            });
-            throw error;
-        }
-        streamLogger.info("conversations.json read complete", {
-            textLength: conversationsJson.length,
-            approxStringBytes: conversationsJson.length * 2,
-            readDurationMs: Date.now() - readStartedAt,
-            totalDurationMs: Date.now() - startedAt,
-            memorySnapshot: formatRuntimeMemorySnapshot(),
-        });
-        const parseStartedAt = Date.now();
-        for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
-            yieldedCount++;
-            if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-                streamLogger.info("Yielding streamed conversation", {
-                    source: "conversations.json",
-                    yieldedCount,
-                });
+        throw new NexusAiChatImporterError(
+            "ZIP_TEXT_STREAM_REQUIRED",
+            {
+                fileName: "conversations.json",
+                entrySizeBytes: conversationEntrySize ?? null,
             }
-            yield conv;
-            await yieldToEventLoopIfNeeded(yieldedCount);
-        }
-        conversationsJson = "";
-        streamLogger.info("Conversation stream extraction complete", {
-            yieldedCount,
-            parseDurationMs: Date.now() - parseStartedAt,
-            durationMs: Date.now() - startedAt,
-            memorySnapshot: formatRuntimeMemorySnapshot(),
-            mode: "full-text",
-        });
+        );
     }
 }
