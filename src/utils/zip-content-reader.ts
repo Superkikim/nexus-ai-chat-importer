@@ -143,6 +143,26 @@ async function listFileNames(zip: ZipArchiveReader): Promise<string[]> {
     return entries.map(entry => entry.path);
 }
 
+function formatRuntimeMemorySnapshot(): string {
+    const perf = globalThis.performance as Performance & {
+        memory?: {
+            usedJSHeapSize: number;
+            totalJSHeapSize: number;
+            jsHeapSizeLimit: number;
+        };
+    };
+
+    const memory = perf?.memory;
+    if (!memory || typeof memory.usedJSHeapSize !== "number") {
+        return "heap=n/a";
+    }
+
+    const usedMb = Math.round((memory.usedJSHeapSize / (1024 * 1024)) * 10) / 10;
+    const totalMb = Math.round((memory.totalJSHeapSize / (1024 * 1024)) * 10) / 10;
+    const limitMb = Math.round((memory.jsHeapSizeLimit / (1024 * 1024)) * 10) / 10;
+    return `heapUsedMB=${usedMb},heapTotalMB=${totalMb},heapLimitMB=${limitMb}`;
+}
+
 export async function extractRawConversations(
     zip: ZipArchiveReader
 ): Promise<RawConversationExtractionResult> {
@@ -246,7 +266,9 @@ export async function* extractConversationsStream(
     const streamLogger = logger.child("Stream");
     const startedAt = Date.now();
     streamLogger.info("Begin conversation stream extraction");
-    const fileNames = await listFileNames(zip);
+    const entries = await zip.listEntries();
+    const fileNames = entries.map((entry) => entry.path);
+    const entrySizeMap = new Map(entries.map((entry) => [entry.path, entry.size]));
     streamLogger.info("ZIP entry listing complete for stream extraction", {
         entryCount: fileNames.length,
         durationMs: Date.now() - startedAt,
@@ -294,11 +316,18 @@ export async function* extractConversationsStream(
         for (const fileName of numberedConvFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            streamLogger.info("Reading numbered conversation file", { fileName });
+            const entrySize = entrySizeMap.get(fileName);
+            const fileReadStartedAt = Date.now();
+            streamLogger.info(
+                `Reading numbered conversation file (${fileName}) [entrySize=${entrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
+            );
             const json = await entry.readText();
             streamLogger.info("Numbered conversation file read complete", {
                 fileName,
                 textLength: json.length,
+                approxStringBytes: json.length * 2,
+                readDurationMs: Date.now() - fileReadStartedAt,
+                memorySnapshot: formatRuntimeMemorySnapshot(),
             });
             for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
                 yieldedCount++;
@@ -326,12 +355,30 @@ export async function* extractConversationsStream(
         );
     }
 
-    streamLogger.info("Reading conversations.json for stream extraction");
-    const conversationsJson = await conversationsFile.readText();
+    const conversationEntrySize = entrySizeMap.get("conversations.json");
+    const readStartedAt = Date.now();
+    streamLogger.info(
+        `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
+    );
+    let conversationsJson: string;
+    try {
+        conversationsJson = await conversationsFile.readText();
+    } catch (error) {
+        streamLogger.error("Failed while reading conversations.json for stream extraction", {
+            durationMs: Date.now() - readStartedAt,
+            memorySnapshot: formatRuntimeMemorySnapshot(),
+            message: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+    }
     streamLogger.info("conversations.json read complete", {
         textLength: conversationsJson.length,
-        durationMs: Date.now() - startedAt,
+        approxStringBytes: conversationsJson.length * 2,
+        readDurationMs: Date.now() - readStartedAt,
+        totalDurationMs: Date.now() - startedAt,
+        memorySnapshot: formatRuntimeMemorySnapshot(),
     });
+    const parseStartedAt = Date.now();
     let yieldedCount = 0;
     for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
         yieldedCount++;
@@ -343,8 +390,11 @@ export async function* extractConversationsStream(
         }
         yield conv;
     }
+    conversationsJson = "";
     streamLogger.info("Conversation stream extraction complete", {
         yieldedCount,
+        parseDurationMs: Date.now() - parseStartedAt,
         durationMs: Date.now() - startedAt,
+        memorySnapshot: formatRuntimeMemorySnapshot(),
     });
 }

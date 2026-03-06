@@ -19,7 +19,7 @@
 
 // src/services/import-service.ts
 import { Notice, Platform } from "obsidian";
-import { CustomError } from "../types/plugin";
+import { ConversationCatalogEntry, CustomError } from "../types/plugin";
 import { getFileHash, ensureFolderExists, formatTimestamp } from "../utils";
 import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
@@ -47,6 +47,25 @@ interface ImportRuntimeContext {
     provider: string;
     startedAtMs: number;
     currentPhase: string;
+}
+
+function getRuntimeMemorySnapshot(): string {
+    const perf = globalThis.performance as Performance & {
+        memory?: {
+            usedJSHeapSize: number;
+            totalJSHeapSize: number;
+            jsHeapSizeLimit: number;
+        };
+    };
+    const memory = perf?.memory;
+    if (!memory || typeof memory.usedJSHeapSize !== "number") {
+        return "heap=n/a";
+    }
+
+    const usedMb = Math.round((memory.usedJSHeapSize / (1024 * 1024)) * 10) / 10;
+    const totalMb = Math.round((memory.totalJSHeapSize / (1024 * 1024)) * 10) / 10;
+    const limitMb = Math.round((memory.jsHeapSizeLimit / (1024 * 1024)) * 10) / 10;
+    return `heapUsedMB=${usedMb},heapTotalMB=${totalMb},heapLimitMB=${limitMb}`;
 }
 
 export class ImportService {
@@ -102,7 +121,13 @@ export class ImportService {
         return sortFilesForImport(files);
     }
 
-    async handleZipFile(file: File, forcedProvider?: string, selectedConversationIds?: string[], sharedReport?: ImportReport) {
+    async handleZipFile(
+        file: File,
+        forcedProvider?: string,
+        selectedConversationIds?: string[],
+        sharedReport?: ImportReport,
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>
+    ) {
         const importLogger = this.plugin.logger.child("Import");
         this.beginRuntimeContext(file.name, forcedProvider || "auto");
         // Validate file extension before processing
@@ -164,6 +189,7 @@ export class ImportService {
                 selectedConversationCount: selectedConversationIds?.length ?? null,
                 sharedReport: !!sharedReport,
                 fileSize: file.size,
+                memorySnapshot: getRuntimeMemorySnapshot(),
             });
 
             progressCallback({
@@ -234,6 +260,7 @@ export class ImportService {
 		            importLogger.info(`Begin conversation processing`, {
 	                fileName: file.name,
 	                forcedProvider: forcedProvider || "auto",
+                    memorySnapshot: getRuntimeMemorySnapshot(),
 	            });
 		            await this.processConversations(
 		                zip,
@@ -243,7 +270,8 @@ export class ImportService {
 	                progressCallback,
 	                selectedConversationIds,
 	                progressModal,
-		                file.size
+		                file.size,
+                        existingConversationsMap
 		            );
                     await this.yieldToEventLoopIfMobile();
 
@@ -262,6 +290,7 @@ export class ImportService {
                 fileName: file.name,
                 created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
                 updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
+                memorySnapshot: getRuntimeMemorySnapshot(),
             });
             this.updateRuntimePhase("completed");
 
@@ -278,6 +307,7 @@ export class ImportService {
                 forcedProvider: forcedProvider || "auto",
                 message,
                 runtimeContext: this.runtimeContext,
+                memorySnapshot: getRuntimeMemorySnapshot(),
             });
 
             progressCallback({
@@ -390,7 +420,17 @@ export class ImportService {
         }
     }
 
-    private async processConversations(zip: ZipArchiveReader, file: File, isReprocess: boolean, forcedProvider?: string, progressCallback?: ImportProgressCallback, selectedConversationIds?: string[], progressModal?: ImportProgressModal, zipSizeBytes?: number): Promise<void> {
+    private async processConversations(
+        zip: ZipArchiveReader,
+        file: File,
+        isReprocess: boolean,
+        forcedProvider?: string,
+        progressCallback?: ImportProgressCallback,
+        selectedConversationIds?: string[],
+        progressModal?: ImportProgressModal,
+        zipSizeBytes?: number,
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>
+    ): Promise<void> {
         const importLogger = this.plugin.logger.child("Import");
         try {
             progressCallback?.({
@@ -427,7 +467,8 @@ export class ImportService {
                     isReprocess,
                     selectedIds,
                     progressCallback,
-                    selectedConversationIds?.length
+                    selectedConversationIds?.length,
+                    existingConversationsMap
                 );
 
                 this.importReport = report;
@@ -493,7 +534,8 @@ export class ImportService {
                     zip,
                     isReprocess,
                     forcedProvider,
-                    progressCallback
+                    progressCallback,
+                    existingConversationsMap
                 );
 
                 this.importReport = report;
@@ -727,6 +769,7 @@ export class ImportService {
             provider: this.runtimeContext.provider,
             phase: this.runtimeContext.currentPhase,
             durationMs: Date.now() - this.runtimeContext.startedAtMs,
+            memorySnapshot: getRuntimeMemorySnapshot(),
         });
         this.runtimeContext = null;
     }

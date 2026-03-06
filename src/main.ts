@@ -20,7 +20,7 @@
 import { Plugin, App, PluginManifest, Notice, Platform } from "obsidian";
 import { initLocale, t } from "./i18n";
 import { DEFAULT_SETTINGS } from "./config/constants";
-import { PluginSettings } from "./types/plugin";
+import { ConversationCatalogEntry, PluginSettings } from "./types/plugin";
 import { NexusAiChatImporterPluginSettingTab } from "./ui/settings-tab";
 import { CommandRegistry } from "./commands/command-registry";
 import { EventHandlers } from "./events/event-handlers";
@@ -541,6 +541,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         const providerRegistry = createProviderRegistry(this);
         const adapter = providerRegistry.getAdapter(provider);
         const entryFilter = adapter?.shouldIncludeZipEntry?.bind(adapter);
+        const storage = this.getStorageService();
+
+        this.setImportCheckpoint({
+            operation: "import-all",
+            phase: "mobile-direct-existing-scan-start",
+            provider,
+        });
+        const existingScanStartedAt = Date.now();
+        let existingConversationsMap: Map<string, ConversationCatalogEntry> = await storage.scanExistingConversations();
+        this.logger.child("ImportFlow").info("Mobile direct import existing conversation scan complete", {
+            provider,
+            conversationCount: existingConversationsMap.size,
+            durationMs: Date.now() - existingScanStartedAt,
+        });
+        this.setImportCheckpoint({
+            operation: "import-all",
+            phase: "mobile-direct-existing-scan-complete",
+            provider,
+            conversationCount: existingConversationsMap.size,
+        });
+        await this.yieldToEventLoop();
 
         let skippedUnsupported = 0;
         for (let i = 0; i < files.length; i++) {
@@ -592,11 +613,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 fileName: file.name,
                 task: `${i + 1}/${files.length}`,
             });
-            await this.importService.handleZipFile(file, provider, undefined, operationReport);
+            await this.importService.handleZipFile(
+                file,
+                provider,
+                undefined,
+                operationReport,
+                existingConversationsMap
+            );
             this.importService.clearAttachmentMap();
             await this.yieldToEventLoop();
             await this.yieldToEventLoop();
         }
+
+        existingConversationsMap.clear();
+        existingConversationsMap = new Map<string, ConversationCatalogEntry>();
+        await this.yieldToEventLoop();
 
         const reportPath = await this.writeConsolidatedReport(
             operationReport,

@@ -1013,6 +1013,15 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
         try {
             await this.plugin.app.vault.create(filePath, markdownContent);
         } catch (error) {
+            if (this.isFileAlreadyExistsError(error)) {
+                this.plugin.logger.child("ClaudeArtifacts").info("Artifact file already exists, skipping write", {
+                    filePath,
+                    artifactId,
+                    versionNumber,
+                    conversationId: conversationId || null,
+                });
+                return;
+            }
             this.plugin.logger.error(`Failed to create artifact file ${filePath}:`, error);
             throw error;
         }
@@ -1039,13 +1048,25 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
                 return true; // Same version, skip
             }
 
-            // Different version_uuid but same file path - this shouldn't happen in normal cases
-            // but could happen if there are conflicts. Let's update the file.
-            return false;
+            // Different version_uuid but same path: keep existing file to avoid noisy create conflicts.
+            this.plugin.logger.child("ClaudeArtifacts").warn("Artifact version path already exists with different version UUID, skipping", {
+                filePath,
+                versionUuid,
+            });
+            return true;
         } catch (error) {
             // If we can't read the file, don't skip (try to create/update)
             return false;
         }
+    }
+
+    private static isFileAlreadyExistsError(error: unknown): boolean {
+        if (!error) {
+            return false;
+        }
+
+        const message = error instanceof Error ? error.message : String(error);
+        return message.toLowerCase().includes("file already exists");
     }
 
     /**

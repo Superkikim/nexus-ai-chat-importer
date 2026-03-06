@@ -13838,16 +13838,24 @@ var ConversationProcessor = class {
   /**
    * Process raw conversations (provider agnostic entry point)
    */
-  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider, progressCallback) {
+  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider, progressCallback, existingConversationsMap) {
     const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
     if (provider === "unknown") {
       const errorMsg = forcedProvider ? `Forced provider '${forcedProvider}' is not available or registered` : `Could not detect conversation provider from data structure`;
       importReport.addError("Unknown provider", errorMsg);
       return importReport;
     }
-    return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess, progressCallback);
+    return this.processConversationsWithProvider(
+      provider,
+      rawConversations,
+      importReport,
+      zip,
+      isReprocess,
+      progressCallback,
+      existingConversationsMap
+    );
   }
-  async processConversationStream(provider, generator, importReport, zip, isReprocess = false, selectedIds, progressCallback, approxTotal) {
+  async processConversationStream(provider, generator, importReport, zip, isReprocess = false, selectedIds, progressCallback, approxTotal, existingConversationsMap) {
     var _a;
     this.currentProvider = provider;
     const adapter = this.providerRegistry.getAdapter(provider);
@@ -13856,20 +13864,29 @@ var ConversationProcessor = class {
       importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
       return importReport;
     }
-    const storage = this.plugin.getStorageService();
-    const scanStartedAt = Date.now();
-    processLogger.info("Scan existing conversations started", {
-      provider,
-      selectedConversationCount: (_a = selectedIds == null ? void 0 : selectedIds.size) != null ? _a : null,
-      approxTotal: approxTotal != null ? approxTotal : null
-    });
-    const existingConversationsMap = await storage.scanExistingConversations();
-    processLogger.info("Scan existing conversations complete", {
-      provider,
-      existingConversationCount: existingConversationsMap.size,
-      durationMs: Date.now() - scanStartedAt
-    });
-    this.counters.totalExistingConversations = existingConversationsMap.size;
+    let conversationsMap;
+    if (existingConversationsMap) {
+      conversationsMap = existingConversationsMap;
+      processLogger.info("Using preloaded existing conversations map", {
+        provider,
+        existingConversationCount: conversationsMap.size
+      });
+    } else {
+      const storage = this.plugin.getStorageService();
+      const scanStartedAt = Date.now();
+      processLogger.info("Scan existing conversations started", {
+        provider,
+        selectedConversationCount: (_a = selectedIds == null ? void 0 : selectedIds.size) != null ? _a : null,
+        approxTotal: approxTotal != null ? approxTotal : null
+      });
+      conversationsMap = await storage.scanExistingConversations();
+      processLogger.info("Scan existing conversations complete", {
+        provider,
+        existingConversationCount: conversationsMap.size,
+        durationMs: Date.now() - scanStartedAt
+      });
+    }
+    this.counters.totalExistingConversations = conversationsMap.size;
     let processedCount = 0;
     let seenCount = 0;
     let yieldedCount = 0;
@@ -13906,7 +13923,7 @@ var ConversationProcessor = class {
           approxTotal: approxTotal != null ? approxTotal : null
         });
       }
-      await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
+      await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
       processedCount++;
       if (processedCount <= 3 || processedCount % 100 === 0) {
         processLogger.info("Processed streamed conversation", {
@@ -13941,10 +13958,11 @@ var ConversationProcessor = class {
   /**
    * Process conversations using the detected provider
    */
-  async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false, progressCallback) {
+  async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false, progressCallback, existingConversationsMap) {
     var _a;
     this.currentProvider = provider;
     const adapter = this.providerRegistry.getAdapter(provider);
+    const processLogger = this.plugin.logger.child("Process");
     if (!adapter) {
       importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
       return importReport;
@@ -13960,12 +13978,21 @@ var ConversationProcessor = class {
       conversationsToProcess = groupedConversations;
       this.plugin.logger.info(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
     }
-    const storage = this.plugin.getStorageService();
-    const existingConversationsMap = await storage.scanExistingConversations();
-    this.counters.totalExistingConversations = existingConversationsMap.size;
+    let conversationsMap;
+    if (existingConversationsMap) {
+      conversationsMap = existingConversationsMap;
+      processLogger.info("Using preloaded existing conversations map", {
+        provider,
+        existingConversationCount: conversationsMap.size
+      });
+    } else {
+      const storage = this.plugin.getStorageService();
+      conversationsMap = await storage.scanExistingConversations();
+    }
+    this.counters.totalExistingConversations = conversationsMap.size;
     let processedCount = 0;
     for (const chat of conversationsToProcess) {
-      await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
+      await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
       processedCount++;
       progressCallback == null ? void 0 : progressCallback({
         phase: "processing",
@@ -13978,11 +14005,14 @@ var ConversationProcessor = class {
     return importReport;
   }
   async processSingleChat(adapter, chat, existingConversations, importReport, zip, isReprocess = false) {
+    var _a, _b, _c;
     const processLogger = this.plugin.logger.child("Process");
     try {
       const isStandardConversation = this.isStandardConversation(chat);
       const chatId = isStandardConversation ? chat.id : adapter.getId(chat);
       const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat) || "Untitled";
+      const chatCreateTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+      const chatUpdateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
       if (this.counters.totalConversationsProcessed < 3) {
         processLogger.info("Begin single chat processing", {
           provider: this.currentProvider,
@@ -13997,12 +14027,28 @@ var ConversationProcessor = class {
         return;
       }
       const existingEntry = existingConversations.get(chatId);
+      let resolvedPath;
       if (existingEntry) {
+        resolvedPath = existingEntry.path;
         await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess, isStandardConversation);
       } else {
         const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
+        resolvedPath = filePath;
         await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
       }
+      const previousEntry = existingConversations.get(chatId);
+      const previousUpdateTime = (_b = (_a = previousEntry == null ? void 0 : previousEntry.update_time) != null ? _a : previousEntry == null ? void 0 : previousEntry.updateTime) != null ? _b : 0;
+      const nextUpdateTime = Math.max(previousUpdateTime, Number(chatUpdateTime) || 0);
+      const nextCreateTime = (_c = previousEntry == null ? void 0 : previousEntry.create_time) != null ? _c : Number(chatCreateTime) || 0;
+      const nextPath = (previousEntry == null ? void 0 : previousEntry.path) || resolvedPath;
+      existingConversations.set(chatId, {
+        conversationId: chatId,
+        provider: this.currentProvider,
+        updateTime: nextUpdateTime,
+        path: nextPath,
+        create_time: nextCreateTime,
+        update_time: nextUpdateTime
+      });
       this.counters.totalConversationsProcessed++;
       if (this.counters.totalConversationsProcessed <= 3) {
         processLogger.info("Single chat processing complete", {
@@ -14195,7 +14241,6 @@ var ConversationProcessor = class {
     }
   }
   async createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation = false) {
-    const processLogger = this.plugin.logger.child("Process");
     try {
       const folderPath = filePath.substring(0, filePath.lastIndexOf("/"));
       const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
@@ -14206,20 +14251,11 @@ var ConversationProcessor = class {
       if (isStandardConversation) {
         standardConversation = chat;
       } else {
-        processLogger.info("Converting new chat to standard conversation", {
-          provider: this.currentProvider,
-          filePath
-        });
         standardConversation = await adapter.convertChat(chat);
       }
       const chatId = standardConversation.id;
       let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
       if (zip && adapter.processMessageAttachments) {
-        processLogger.info("Processing attachments for new chat", {
-          provider: this.currentProvider,
-          chatId,
-          messageCount: standardConversation.messages.length
-        });
         standardConversation.messages = await adapter.processMessageAttachments(
           standardConversation.messages,
           chatId,
@@ -14228,12 +14264,6 @@ var ConversationProcessor = class {
         attachmentStats = this.calculateAttachmentStats(standardConversation.messages);
       }
       const content = this.noteFormatter.generateMarkdownContent(standardConversation);
-      processLogger.info("Writing new note", {
-        provider: this.currentProvider,
-        chatId,
-        filePath,
-        messageCount: standardConversation.messages.length
-      });
       await this.fileService.writeToFile(filePath, content);
       const messageCount = standardConversation.messages.length;
       const createTime = standardConversation.createTime;
@@ -16912,6 +16942,15 @@ ${versionContent}
     try {
       await this.plugin.app.vault.create(filePath, markdownContent);
     } catch (error) {
+      if (this.isFileAlreadyExistsError(error)) {
+        this.plugin.logger.child("ClaudeArtifacts").info("Artifact file already exists, skipping write", {
+          filePath,
+          artifactId,
+          versionNumber,
+          conversationId: conversationId || null
+        });
+        return;
+      }
       this.plugin.logger.error(`Failed to create artifact file ${filePath}:`, error);
       throw error;
     }
@@ -16929,10 +16968,21 @@ ${versionContent}
       if (existingContent.includes(`version_uuid: ${versionUuid}`)) {
         return true;
       }
-      return false;
+      this.plugin.logger.child("ClaudeArtifacts").warn("Artifact version path already exists with different version UUID, skipping", {
+        filePath,
+        versionUuid
+      });
+      return true;
     } catch (error) {
       return false;
     }
+  }
+  static isFileAlreadyExistsError(error) {
+    if (!error) {
+      return false;
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    return message.toLowerCase().includes("file already exists");
   }
   /**
    * Determine if we should replace the current artifact with a new one
@@ -18745,6 +18795,18 @@ async function listFileNames(zip) {
   return entries.map((entry) => entry.path);
 }
 __name(listFileNames, "listFileNames");
+function formatRuntimeMemorySnapshot() {
+  const perf = globalThis.performance;
+  const memory = perf == null ? void 0 : perf.memory;
+  if (!memory || typeof memory.usedJSHeapSize !== "number") {
+    return "heap=n/a";
+  }
+  const usedMb = Math.round(memory.usedJSHeapSize / (1024 * 1024) * 10) / 10;
+  const totalMb = Math.round(memory.totalJSHeapSize / (1024 * 1024) * 10) / 10;
+  const limitMb = Math.round(memory.jsHeapSizeLimit / (1024 * 1024) * 10) / 10;
+  return `heapUsedMB=${usedMb},heapTotalMB=${totalMb},heapLimitMB=${limitMb}`;
+}
+__name(formatRuntimeMemorySnapshot, "formatRuntimeMemorySnapshot");
 async function extractRawConversations(zip) {
   const fileNames = await listFileNames(zip);
   const leChatFiles = fileNames.filter((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
@@ -18830,7 +18892,9 @@ async function* extractConversationsStream(zip) {
   const streamLogger = logger.child("Stream");
   const startedAt = Date.now();
   streamLogger.info("Begin conversation stream extraction");
-  const fileNames = await listFileNames(zip);
+  const entries = await zip.listEntries();
+  const fileNames = entries.map((entry) => entry.path);
+  const entrySizeMap = new Map(entries.map((entry) => [entry.path, entry.size]));
   streamLogger.info("ZIP entry listing complete for stream extraction", {
     entryCount: fileNames.length,
     durationMs: Date.now() - startedAt
@@ -18877,11 +18941,18 @@ async function* extractConversationsStream(zip) {
       const entry = zip.get(fileName);
       if (!entry)
         continue;
-      streamLogger.info("Reading numbered conversation file", { fileName });
+      const entrySize = entrySizeMap.get(fileName);
+      const fileReadStartedAt = Date.now();
+      streamLogger.info(
+        `Reading numbered conversation file (${fileName}) [entrySize=${entrySize != null ? entrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
+      );
       const json = await entry.readText();
       streamLogger.info("Numbered conversation file read complete", {
         fileName,
-        textLength: json.length
+        textLength: json.length,
+        approxStringBytes: json.length * 2,
+        readDurationMs: Date.now() - fileReadStartedAt,
+        memorySnapshot: formatRuntimeMemorySnapshot()
       });
       for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
         yieldedCount2++;
@@ -18907,12 +18978,30 @@ async function* extractConversationsStream(zip) {
       "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or a Gemini activity JSON file."
     );
   }
-  streamLogger.info("Reading conversations.json for stream extraction");
-  const conversationsJson = await conversationsFile.readText();
+  const conversationEntrySize = entrySizeMap.get("conversations.json");
+  const readStartedAt = Date.now();
+  streamLogger.info(
+    `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize != null ? conversationEntrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
+  );
+  let conversationsJson;
+  try {
+    conversationsJson = await conversationsFile.readText();
+  } catch (error) {
+    streamLogger.error("Failed while reading conversations.json for stream extraction", {
+      durationMs: Date.now() - readStartedAt,
+      memorySnapshot: formatRuntimeMemorySnapshot(),
+      message: error instanceof Error ? error.message : String(error)
+    });
+    throw error;
+  }
   streamLogger.info("conversations.json read complete", {
     textLength: conversationsJson.length,
-    durationMs: Date.now() - startedAt
+    approxStringBytes: conversationsJson.length * 2,
+    readDurationMs: Date.now() - readStartedAt,
+    totalDurationMs: Date.now() - startedAt,
+    memorySnapshot: formatRuntimeMemorySnapshot()
   });
+  const parseStartedAt = Date.now();
   let yieldedCount = 0;
   for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
     yieldedCount++;
@@ -18924,9 +19013,12 @@ async function* extractConversationsStream(zip) {
     }
     yield conv;
   }
+  conversationsJson = "";
   streamLogger.info("Conversation stream extraction complete", {
     yieldedCount,
-    durationMs: Date.now() - startedAt
+    parseDurationMs: Date.now() - parseStartedAt,
+    durationMs: Date.now() - startedAt,
+    memorySnapshot: formatRuntimeMemorySnapshot()
   });
 }
 __name(extractConversationsStream, "extractConversationsStream");
@@ -19004,6 +19096,18 @@ function extractEmbeddedTimestamp(fileName) {
 __name(extractEmbeddedTimestamp, "extractEmbeddedTimestamp");
 
 // src/services/import-service.ts
+function getRuntimeMemorySnapshot() {
+  const perf = globalThis.performance;
+  const memory = perf == null ? void 0 : perf.memory;
+  if (!memory || typeof memory.usedJSHeapSize !== "number") {
+    return "heap=n/a";
+  }
+  const usedMb = Math.round(memory.usedJSHeapSize / (1024 * 1024) * 10) / 10;
+  const totalMb = Math.round(memory.totalJSHeapSize / (1024 * 1024) * 10) / 10;
+  const limitMb = Math.round(memory.jsHeapSizeLimit / (1024 * 1024) * 10) / 10;
+  return `heapUsedMB=${usedMb},heapTotalMB=${totalMb},heapLimitMB=${limitMb}`;
+}
+__name(getRuntimeMemorySnapshot, "getRuntimeMemorySnapshot");
 var ImportService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -19051,7 +19155,7 @@ var ImportService = class {
   sortFilesByTimestamp(files) {
     return sortFilesForImport(files);
   }
-  async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport) {
+  async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport, existingConversationsMap) {
     var _a;
     const importLogger = this.plugin.logger.child("Import");
     this.beginRuntimeContext(file.name, forcedProvider || "auto");
@@ -19095,7 +19199,8 @@ Do NOT extract and re-compress the file - just rename it!`;
         forcedProvider: forcedProvider || "auto",
         selectedConversationCount: (_a = selectedConversationIds == null ? void 0 : selectedConversationIds.length) != null ? _a : null,
         sharedReport: !!sharedReport,
-        fileSize: file.size
+        fileSize: file.size,
+        memorySnapshot: getRuntimeMemorySnapshot()
       });
       progressCallback({
         phase: "validation",
@@ -19150,7 +19255,8 @@ Do NOT extract and re-compress the file - just rename it!`;
       this.updateRuntimePhase("conversation-processing");
       importLogger.info(`Begin conversation processing`, {
         fileName: file.name,
-        forcedProvider: forcedProvider || "auto"
+        forcedProvider: forcedProvider || "auto",
+        memorySnapshot: getRuntimeMemorySnapshot()
       });
       await this.processConversations(
         zip,
@@ -19160,7 +19266,8 @@ Do NOT extract and re-compress the file - just rename it!`;
         progressCallback,
         selectedConversationIds,
         progressModal,
-        file.size
+        file.size,
+        existingConversationsMap
       );
       await this.yieldToEventLoopIfMobile();
       this.updateRuntimePhase("persist-settings");
@@ -19174,7 +19281,8 @@ Do NOT extract and re-compress the file - just rename it!`;
       importLogger.info(`File import completed`, {
         fileName: file.name,
         created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
-        updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate
+        updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
+        memorySnapshot: getRuntimeMemorySnapshot()
       });
       this.updateRuntimePhase("completed");
     } catch (error) {
@@ -19184,7 +19292,8 @@ Do NOT extract and re-compress the file - just rename it!`;
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
         message,
-        runtimeContext: this.runtimeContext
+        runtimeContext: this.runtimeContext,
+        memorySnapshot: getRuntimeMemorySnapshot()
       });
       progressCallback({
         phase: "error",
@@ -19275,7 +19384,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       );
     }
   }
-  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal, zipSizeBytes) {
+  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal, zipSizeBytes, existingConversationsMap) {
     var _a, _b, _c;
     const importLogger = this.plugin.logger.child("Import");
     try {
@@ -19309,7 +19418,8 @@ Do NOT extract and re-compress the file - just rename it!`;
           isReprocess,
           selectedIds,
           progressCallback,
-          selectedConversationIds == null ? void 0 : selectedConversationIds.length
+          selectedConversationIds == null ? void 0 : selectedConversationIds.length,
+          existingConversationsMap
         );
         this.importReport = report;
         this.importReport.setFileCounters(this.conversationProcessor.getCounters());
@@ -19365,7 +19475,8 @@ Do NOT extract and re-compress the file - just rename it!`;
           zip,
           isReprocess,
           forcedProvider,
-          progressCallback
+          progressCallback,
+          existingConversationsMap
         );
         this.importReport = report;
         this.importReport.setFileCounters(this.conversationProcessor.getCounters());
@@ -19545,7 +19656,8 @@ Do NOT extract and re-compress the file - just rename it!`;
       fileName: this.runtimeContext.fileName,
       provider: this.runtimeContext.provider,
       phase: this.runtimeContext.currentPhase,
-      durationMs: Date.now() - this.runtimeContext.startedAtMs
+      durationMs: Date.now() - this.runtimeContext.startedAtMs,
+      memorySnapshot: getRuntimeMemorySnapshot()
     });
     this.runtimeContext = null;
   }
@@ -23235,6 +23347,26 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const providerRegistry = createProviderRegistry(this);
     const adapter = providerRegistry.getAdapter(provider);
     const entryFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
+    const storage = this.getStorageService();
+    this.setImportCheckpoint({
+      operation: "import-all",
+      phase: "mobile-direct-existing-scan-start",
+      provider
+    });
+    const existingScanStartedAt = Date.now();
+    let existingConversationsMap = await storage.scanExistingConversations();
+    this.logger.child("ImportFlow").info("Mobile direct import existing conversation scan complete", {
+      provider,
+      conversationCount: existingConversationsMap.size,
+      durationMs: Date.now() - existingScanStartedAt
+    });
+    this.setImportCheckpoint({
+      operation: "import-all",
+      phase: "mobile-direct-existing-scan-complete",
+      provider,
+      conversationCount: existingConversationsMap.size
+    });
+    await this.yieldToEventLoop();
     let skippedUnsupported = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -23282,11 +23414,20 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         fileName: file.name,
         task: `${i + 1}/${files.length}`
       });
-      await this.importService.handleZipFile(file, provider, void 0, operationReport);
+      await this.importService.handleZipFile(
+        file,
+        provider,
+        void 0,
+        operationReport,
+        existingConversationsMap
+      );
       this.importService.clearAttachmentMap();
       await this.yieldToEventLoop();
       await this.yieldToEventLoop();
     }
+    existingConversationsMap.clear();
+    existingConversationsMap = /* @__PURE__ */ new Map();
+    await this.yieldToEventLoop();
     const reportPath = await this.writeConsolidatedReport(
       operationReport,
       provider,

@@ -65,7 +65,15 @@ export class ConversationProcessor {
     /**
      * Process raw conversations (provider agnostic entry point)
      */
-    async processRawConversations(rawConversations: any[], importReport: ImportReport, zip?: ZipArchiveReader, isReprocess: boolean = false, forcedProvider?: string, progressCallback?: ImportProgressCallback): Promise<ImportReport> {
+    async processRawConversations(
+        rawConversations: any[],
+        importReport: ImportReport,
+        zip?: ZipArchiveReader,
+        isReprocess: boolean = false,
+        forcedProvider?: string,
+        progressCallback?: ImportProgressCallback,
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>
+    ): Promise<ImportReport> {
         // Use forced provider or detect from raw data structure
         const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
 
@@ -77,7 +85,15 @@ export class ConversationProcessor {
             return importReport;
         }
 
-        return this.processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess, progressCallback);
+        return this.processConversationsWithProvider(
+            provider,
+            rawConversations,
+            importReport,
+            zip,
+            isReprocess,
+            progressCallback,
+            existingConversationsMap
+        );
     }
 
     async processConversationStream(
@@ -88,7 +104,8 @@ export class ConversationProcessor {
         isReprocess: boolean = false,
         selectedIds?: Set<string>,
         progressCallback?: ImportProgressCallback,
-        approxTotal?: number
+        approxTotal?: number,
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>
     ): Promise<ImportReport> {
         this.currentProvider = provider;
         const adapter = this.providerRegistry.getAdapter(provider);
@@ -99,20 +116,29 @@ export class ConversationProcessor {
             return importReport;
         }
 
-        const storage = this.plugin.getStorageService();
-        const scanStartedAt = Date.now();
-        processLogger.info("Scan existing conversations started", {
-            provider,
-            selectedConversationCount: selectedIds?.size ?? null,
-            approxTotal: approxTotal ?? null,
-        });
-        const existingConversationsMap = await storage.scanExistingConversations();
-        processLogger.info("Scan existing conversations complete", {
-            provider,
-            existingConversationCount: existingConversationsMap.size,
-            durationMs: Date.now() - scanStartedAt,
-        });
-        this.counters.totalExistingConversations = existingConversationsMap.size;
+        let conversationsMap: Map<string, ConversationCatalogEntry>;
+        if (existingConversationsMap) {
+            conversationsMap = existingConversationsMap;
+            processLogger.info("Using preloaded existing conversations map", {
+                provider,
+                existingConversationCount: conversationsMap.size,
+            });
+        } else {
+            const storage = this.plugin.getStorageService();
+            const scanStartedAt = Date.now();
+            processLogger.info("Scan existing conversations started", {
+                provider,
+                selectedConversationCount: selectedIds?.size ?? null,
+                approxTotal: approxTotal ?? null,
+            });
+            conversationsMap = await storage.scanExistingConversations();
+            processLogger.info("Scan existing conversations complete", {
+                provider,
+                existingConversationCount: conversationsMap.size,
+                durationMs: Date.now() - scanStartedAt,
+            });
+        }
+        this.counters.totalExistingConversations = conversationsMap.size;
 
         let processedCount = 0;
         let seenCount = 0;
@@ -149,7 +175,7 @@ export class ConversationProcessor {
                     approxTotal: approxTotal ?? null,
                 });
             }
-            await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
+            await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
 
             processedCount++;
             if (processedCount <= 3 || processedCount % 100 === 0) {
@@ -199,10 +225,12 @@ export class ConversationProcessor {
         importReport: ImportReport,
         zip?: ZipArchiveReader,
         isReprocess: boolean = false,
-        progressCallback?: ImportProgressCallback
+        progressCallback?: ImportProgressCallback,
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>
     ): Promise<ImportReport> {
         this.currentProvider = provider;
         const adapter = this.providerRegistry.getAdapter(provider);
+        const processLogger = this.plugin.logger.child("Process");
 
         if (!adapter) {
             importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
@@ -225,15 +253,22 @@ export class ConversationProcessor {
             this.plugin.logger.info(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
         }
 
-        const storage = this.plugin.getStorageService();
-
-        // Scan existing conversations from vault instead of loading catalog
-        const existingConversationsMap = await storage.scanExistingConversations();
-        this.counters.totalExistingConversations = existingConversationsMap.size;
+        let conversationsMap: Map<string, ConversationCatalogEntry>;
+        if (existingConversationsMap) {
+            conversationsMap = existingConversationsMap;
+            processLogger.info("Using preloaded existing conversations map", {
+                provider,
+                existingConversationCount: conversationsMap.size,
+            });
+        } else {
+            const storage = this.plugin.getStorageService();
+            conversationsMap = await storage.scanExistingConversations();
+        }
+        this.counters.totalExistingConversations = conversationsMap.size;
 
         let processedCount = 0;
         for (const chat of conversationsToProcess) {
-            await this.processSingleChat(adapter, chat, existingConversationsMap, importReport, zip, isReprocess);
+            await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
 
             processedCount++;
             progressCallback?.({
@@ -263,6 +298,8 @@ export class ConversationProcessor {
 
             const chatId = isStandardConversation ? chat.id : adapter.getId(chat);
             const chatTitle = isStandardConversation ? chat.title : (adapter.getTitle(chat) || 'Untitled');
+            const chatCreateTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
+            const chatUpdateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
 
             if (this.counters.totalConversationsProcessed < 3) {
                 processLogger.info("Begin single chat processing", {
@@ -282,12 +319,30 @@ export class ConversationProcessor {
 
             const existingEntry = existingConversations.get(chatId);
 
+            let resolvedPath: string;
             if (existingEntry) {
+                resolvedPath = existingEntry.path;
                 await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess, isStandardConversation);
             } else {
                 const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
+                resolvedPath = filePath;
                 await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
             }
+
+            const previousEntry = existingConversations.get(chatId);
+            const previousUpdateTime = previousEntry?.update_time ?? previousEntry?.updateTime ?? 0;
+            const nextUpdateTime = Math.max(previousUpdateTime, Number(chatUpdateTime) || 0);
+            const nextCreateTime = previousEntry?.create_time ?? (Number(chatCreateTime) || 0);
+            const nextPath = previousEntry?.path || resolvedPath;
+            existingConversations.set(chatId, {
+                conversationId: chatId,
+                provider: this.currentProvider,
+                updateTime: nextUpdateTime,
+                path: nextPath,
+                create_time: nextCreateTime,
+                update_time: nextUpdateTime,
+            });
+
             this.counters.totalConversationsProcessed++;
             if (this.counters.totalConversationsProcessed <= 3) {
                 processLogger.info("Single chat processing complete", {
@@ -573,7 +628,6 @@ export class ConversationProcessor {
         zip?: ZipArchiveReader,
         isStandardConversation: boolean = false
     ): Promise<void> {
-        const processLogger = this.plugin.logger.child("Process");
         try {
             // Ensure the folder exists (in case it was deleted)
             const folderPath = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -587,10 +641,6 @@ export class ConversationProcessor {
             if (isStandardConversation) {
                 standardConversation = chat;
             } else {
-                processLogger.info("Converting new chat to standard conversation", {
-                    provider: this.currentProvider,
-                    filePath,
-                });
                 standardConversation = await adapter.convertChat(chat);
             }
 
@@ -599,11 +649,6 @@ export class ConversationProcessor {
             // Process attachments if ZIP provided
             let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
             if (zip && adapter.processMessageAttachments) {
-                processLogger.info("Processing attachments for new chat", {
-                    provider: this.currentProvider,
-                    chatId,
-                    messageCount: standardConversation.messages.length,
-                });
                 standardConversation.messages = await adapter.processMessageAttachments(
                     standardConversation.messages,
                     chatId,
@@ -616,12 +661,6 @@ export class ConversationProcessor {
 
             const content = this.noteFormatter.generateMarkdownContent(standardConversation);
 
-            processLogger.info("Writing new note", {
-                provider: this.currentProvider,
-                chatId,
-                filePath,
-                messageCount: standardConversation.messages.length,
-            });
             await this.fileService.writeToFile(filePath, content);
 
             const messageCount = standardConversation.messages.length;
