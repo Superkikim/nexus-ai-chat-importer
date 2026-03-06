@@ -13892,9 +13892,6 @@ var ConversationProcessor = class {
     let yieldedCount = 0;
     for await (const chat of generator) {
       seenCount++;
-      if (seenCount === 1) {
-        processLogger.info("First streamed conversation received", { provider });
-      }
       if (selectedIds && selectedIds.size > 0) {
         let chatId;
         try {
@@ -13903,35 +13900,12 @@ var ConversationProcessor = class {
           chatId = void 0;
         }
         if (!chatId || !selectedIds.has(chatId)) {
-          if (seenCount <= 3) {
-            processLogger.info("Skipping streamed conversation not in selection", {
-              provider,
-              seenCount,
-              hasChatId: !!chatId
-            });
-          }
           continue;
         }
       }
       yieldedCount++;
-      if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-        processLogger.info("Processing streamed conversation", {
-          provider,
-          seenCount,
-          yieldedCount,
-          processedCount,
-          approxTotal: approxTotal != null ? approxTotal : null
-        });
-      }
       await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
       processedCount++;
-      if (processedCount <= 3 || processedCount % 100 === 0) {
-        processLogger.info("Processed streamed conversation", {
-          provider,
-          processedCount,
-          approxTotal: approxTotal != null ? approxTotal : null
-        });
-      }
       progressCallback == null ? void 0 : progressCallback({
         phase: "processing",
         title: "Processing conversations...",
@@ -14013,14 +13987,6 @@ var ConversationProcessor = class {
       const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat) || "Untitled";
       const chatCreateTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
       const chatUpdateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
-      if (this.counters.totalConversationsProcessed < 3) {
-        processLogger.info("Begin single chat processing", {
-          provider: this.currentProvider,
-          chatId: chatId || null,
-          chatTitle,
-          hasExistingEntry: !!existingConversations.get(chatId)
-        });
-      }
       if (!chatId || chatId.trim() === "") {
         this.plugin.logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
         importReport.addFailed(chatTitle, "N/A", 0, 0, "Missing conversation ID");
@@ -14050,13 +14016,6 @@ var ConversationProcessor = class {
         update_time: nextUpdateTime
       });
       this.counters.totalConversationsProcessed++;
-      if (this.counters.totalConversationsProcessed <= 3) {
-        processLogger.info("Single chat processing complete", {
-          provider: this.currentProvider,
-          chatId,
-          processedCount: this.counters.totalConversationsProcessed
-        });
-      }
     } catch (error) {
       const errorMessage = error.message || "Unknown error occurred";
       const isStandardConversation = this.isStandardConversation(chat);
