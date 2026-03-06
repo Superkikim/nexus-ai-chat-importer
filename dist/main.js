@@ -496,6 +496,7 @@ var init_en = __esm({
         import_error_file: "Error processing {{filename}}. Check console for details.",
         import_error_file_report: "File import failed: {{filename}}",
         import_error_mobile_large_json: "This ZIP contains a very large conversation file ({{size_mb}} MB). Your mobile device could not process it safely in this run. Please retry with fewer ZIP files selected.",
+        import_mobile_single_zip_only: "On mobile, only one ZIP can be imported at a time. Please select a single ZIP file.",
         import_no_selected: "No conversations selected for import.",
         import_no_zip_gemini: "Please select at least one Gemini Takeout ZIP file (plus optional JSON index from the extension).",
         import_no_zip: "Please select at least one ZIP export file.",
@@ -984,6 +985,7 @@ var init_fr = __esm({
         import_error_file: "Erreur lors du traitement de {{filename}}. Consultez la console pour plus de d\xE9tails.",
         import_error_file_report: "\xC9chec de l'import du fichier : {{filename}}",
         import_error_mobile_large_json: "Ce ZIP contient un fichier de conversations tr\xE8s volumineux ({{size_mb}} MB). Votre appareil mobile n'a pas pu le traiter de fa\xE7on fiable sur cette tentative. R\xE9essayez en s\xE9lectionnant moins de ZIP \xE0 la fois.",
+        import_mobile_single_zip_only: "Sur mobile, un seul ZIP peut \xEAtre import\xE9 \xE0 la fois. Veuillez s\xE9lectionner un seul fichier ZIP.",
         import_no_selected: "Aucune conversation s\xE9lectionn\xE9e pour l'importation.",
         import_no_zip_gemini: "Veuillez s\xE9lectionner au moins un fichier ZIP Gemini Takeout (plus un JSON optionnel depuis l'extension).",
         import_no_zip: "Veuillez s\xE9lectionner au moins un fichier ZIP d'export.",
@@ -1472,6 +1474,7 @@ var init_de = __esm({
         import_error_file: "Fehler beim Verarbeiten von {{filename}}. Weitere Details in der Konsole.",
         import_error_file_report: "Dateiimport fehlgeschlagen: {{filename}}",
         import_error_mobile_large_json: "Diese ZIP-Datei enth\xE4lt eine sehr gro\xDFe Konversationsdatei ({{size_mb}} MB). Ihr Mobilger\xE4t konnte sie in diesem Durchlauf nicht zuverl\xE4ssig verarbeiten. Versuchen Sie es erneut und w\xE4hlen Sie weniger ZIP-Dateien gleichzeitig aus.",
+        import_mobile_single_zip_only: "Auf Mobilger\xE4ten kann nur eine ZIP-Datei gleichzeitig importiert werden. Bitte w\xE4hlen Sie nur eine ZIP-Datei aus.",
         import_no_selected: "Keine Gespr\xE4che f\xFCr den Import ausgew\xE4hlt.",
         import_no_zip_gemini: "Bitte w\xE4hlen Sie mindestens eine Gemini Takeout ZIP-Datei (plus optionalem JSON-Index aus der Erweiterung).",
         import_no_zip: "Bitte w\xE4hlen Sie mindestens eine ZIP-Exportdatei.",
@@ -1960,6 +1963,7 @@ var init_es = __esm({
         import_error_file: "Error al procesar {{filename}}. Consulte la consola para m\xE1s detalles.",
         import_error_file_report: "Error al importar el archivo: {{filename}}",
         import_error_mobile_large_json: "Este ZIP contiene un archivo de conversaciones muy grande ({{size_mb}} MB). Tu dispositivo m\xF3vil no pudo procesarlo de forma fiable en esta ejecuci\xF3n. Int\xE9ntalo de nuevo seleccionando menos archivos ZIP a la vez.",
+        import_mobile_single_zip_only: "En m\xF3vil, solo se puede importar un ZIP a la vez. Selecciona un \xFAnico archivo ZIP.",
         import_no_selected: "No se han seleccionado conversaciones para importar.",
         import_no_zip_gemini: "Por favor, seleccione al menos un archivo ZIP de Gemini Takeout (m\xE1s un JSON opcional desde la extensi\xF3n).",
         import_no_zip: "Por favor, seleccione al menos un archivo ZIP de exportaci\xF3n.",
@@ -2448,6 +2452,7 @@ var init_it = __esm({
         import_error_file: "Errore durante l'elaborazione di {{filename}}. Consulta la console per maggiori dettagli.",
         import_error_file_report: "Importazione del file non riuscita: {{filename}}",
         import_error_mobile_large_json: "Questo ZIP contiene un file di conversazioni molto grande ({{size_mb}} MB). Il tuo dispositivo mobile non \xE8 riuscito a elaborarlo in modo affidabile in questa esecuzione. Riprova selezionando meno file ZIP alla volta.",
+        import_mobile_single_zip_only: "Su mobile \xE8 possibile importare un solo ZIP alla volta. Seleziona un solo file ZIP.",
         import_no_selected: "Nessuna conversazione selezionata per l'importazione.",
         import_no_zip_gemini: "Seleziona almeno un file ZIP di Gemini Takeout (pi\xF9 un JSON opzionale dall'estensione).",
         import_no_zip: "Seleziona almeno un file ZIP di esportazione.",
@@ -2936,6 +2941,7 @@ var init_ru = __esm({
         import_error_file: "\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 {{filename}}. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043A\u043E\u043D\u0441\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u044F \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0439 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438.",
         import_error_file_report: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0438\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0444\u0430\u0439\u043B: {{filename}}",
         import_error_mobile_large_json: "\u042D\u0442\u043E\u0442 ZIP \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u043E\u0447\u0435\u043D\u044C \u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u0444\u0430\u0439\u043B \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 ({{size_mb}} MB). \u0412\u0430\u0448\u0435 \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u043E\u0435 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E \u043D\u0435 \u0441\u043C\u043E\u0433\u043B\u043E \u043D\u0430\u0434\u0451\u0436\u043D\u043E \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C \u0435\u0433\u043E \u0432 \u044D\u0442\u043E\u043C \u0437\u0430\u043F\u0443\u0441\u043A\u0435. \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u043F\u043E\u043F\u044B\u0442\u043A\u0443, \u0432\u044B\u0431\u0440\u0430\u0432 \u043C\u0435\u043D\u044C\u0448\u0435 ZIP-\u0444\u0430\u0439\u043B\u043E\u0432 \u0437\u0430 \u0440\u0430\u0437.",
+        import_mobile_single_zip_only: "\u041D\u0430 \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u043E\u043C \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0435 \u043C\u043E\u0436\u043D\u043E \u0438\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0442\u043E\u043B\u044C\u043A\u043E \u043E\u0434\u0438\u043D ZIP \u0437\u0430 \u0440\u0430\u0437. \u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043E\u0434\u0438\u043D ZIP-\u0444\u0430\u0439\u043B.",
         import_no_selected: "\u041D\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u044B \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u0434\u043B\u044F \u0438\u043C\u043F\u043E\u0440\u0442\u0430.",
         import_no_zip_gemini: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u0438\u043D ZIP-\u0444\u0430\u0439\u043B Gemini Takeout (\u043F\u043B\u044E\u0441 \u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 JSON-\u0438\u043D\u0434\u0435\u043A\u0441 \u0438\u0437 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043D\u0438\u044F).",
         import_no_zip: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u0438\u043D ZIP-\u0444\u0430\u0439\u043B \u044D\u043A\u0441\u043F\u043E\u0440\u0442\u0430.",
@@ -3424,6 +3430,7 @@ var init_zh = __esm({
         import_error_file: "\u5904\u7406 {{filename}} \u65F6\u53D1\u751F\u9519\u8BEF\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u83B7\u53D6\u8BE6\u7EC6\u4FE1\u606F\u3002",
         import_error_file_report: "\u6587\u4EF6\u5BFC\u5165\u5931\u8D25\uFF1A{{filename}}",
         import_error_mobile_large_json: "\u8BE5 ZIP \u5305\u542B\u975E\u5E38\u5927\u7684\u4F1A\u8BDD\u6587\u4EF6\uFF08{{size_mb}} MB\uFF09\u3002\u672C\u6B21\u8FD0\u884C\u4E2D\u4F60\u7684\u79FB\u52A8\u8BBE\u5907\u65E0\u6CD5\u53EF\u9760\u5904\u7406\u5B83\u3002\u8BF7\u51CF\u5C11\u4E00\u6B21\u9009\u62E9\u7684 ZIP \u6587\u4EF6\u6570\u91CF\u540E\u91CD\u8BD5\u3002",
+        import_mobile_single_zip_only: "\u5728\u79FB\u52A8\u7AEF\u4E00\u6B21\u53EA\u80FD\u5BFC\u5165\u4E00\u4E2A ZIP\u3002\u8BF7\u9009\u62E9\u5355\u4E2A ZIP \u6587\u4EF6\u3002",
         import_no_selected: "\u672A\u9009\u62E9\u8981\u5BFC\u5165\u7684\u5BF9\u8BDD\u3002",
         import_no_zip_gemini: "\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A Gemini Takeout ZIP \u6587\u4EF6\uFF08\u4EE5\u53CA\u53EF\u9009\u7684\u6765\u81EA\u6269\u5C55\u7684 JSON \u7D22\u5F15\uFF09\u3002",
         import_no_zip: "\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A ZIP \u5BFC\u51FA\u6587\u4EF6\u3002",
@@ -3912,6 +3919,7 @@ var init_ja = __esm({
         import_error_file: "{{filename}} \u306E\u51E6\u7406\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F\u3002\u8A73\u7D30\u306F\u30B3\u30F3\u30BD\u30FC\u30EB\u3092\u3054\u78BA\u8A8D\u304F\u3060\u3055\u3044\u3002",
         import_error_file_report: "\u30D5\u30A1\u30A4\u30EB\u306E\u30A4\u30F3\u30DD\u30FC\u30C8\u306B\u5931\u6557\u3057\u307E\u3057\u305F: {{filename}}",
         import_error_mobile_large_json: "\u3053\u306E ZIP \u306B\u306F\u975E\u5E38\u306B\u5927\u304D\u306A\u4F1A\u8A71\u30D5\u30A1\u30A4\u30EB ({{size_mb}} MB) \u304C\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002\u4ECA\u56DE\u306E\u5B9F\u884C\u3067\u306F\u30E2\u30D0\u30A4\u30EB\u7AEF\u672B\u3067\u5B89\u5168\u306B\u51E6\u7406\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F\u3002\u9078\u629E\u3059\u308B ZIP \u30D5\u30A1\u30A4\u30EB\u6570\u3092\u6E1B\u3089\u3057\u3066\u518D\u8A66\u884C\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+        import_mobile_single_zip_only: "\u30E2\u30D0\u30A4\u30EB\u3067\u306F\u4E00\u5EA6\u306B1\u3064\u306EZIP\u306E\u307F\u30A4\u30F3\u30DD\u30FC\u30C8\u3067\u304D\u307E\u3059\u3002ZIP\u30D5\u30A1\u30A4\u30EB\u30921\u3064\u3060\u3051\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
         import_no_selected: "\u30A4\u30F3\u30DD\u30FC\u30C8\u3059\u308B\u4F1A\u8A71\u304C\u9078\u629E\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
         import_no_zip_gemini: "Gemini Takeout \u306E ZIP \u30D5\u30A1\u30A4\u30EB\u3092\u5C11\u306A\u304F\u3068\u3082 1 \u3064\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\uFF08\u30AA\u30D7\u30B7\u30E7\u30F3\u3068\u3057\u3066\u62E1\u5F35\u6A5F\u80FD\u304B\u3089\u306E JSON \u30A4\u30F3\u30C7\u30C3\u30AF\u30B9\u3082\u6307\u5B9A\u3067\u304D\u307E\u3059\uFF09\u3002",
         import_no_zip: "ZIP \u30A8\u30AF\u30B9\u30DD\u30FC\u30C8\u30D5\u30A1\u30A4\u30EB\u3092\u5C11\u306A\u304F\u3068\u3082 1 \u3064\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
@@ -4400,6 +4408,7 @@ var init_pt = __esm({
         import_error_file: "Erro ao processar {{filename}}. Consulte a consola para mais detalhes.",
         import_error_file_report: "Falha ao importar o ficheiro: {{filename}}",
         import_error_mobile_large_json: "Este ZIP cont\xE9m um ficheiro de conversas muito grande ({{size_mb}} MB). O seu dispositivo m\xF3vel n\xE3o conseguiu process\xE1-lo de forma fi\xE1vel nesta execu\xE7\xE3o. Tente novamente selecionando menos ficheiros ZIP de cada vez.",
+        import_mobile_single_zip_only: "No mobile, s\xF3 \xE9 poss\xEDvel importar um ZIP de cada vez. Selecione apenas um ficheiro ZIP.",
         import_no_selected: "Nenhuma conversa selecionada para importar.",
         import_no_zip_gemini: "Por favor, selecione pelo menos um ficheiro ZIP do Gemini Takeout (mais o \xEDndice JSON opcional da extens\xE3o).",
         import_no_zip: "Por favor, selecione pelo menos um ficheiro ZIP de exporta\xE7\xE3o.",
@@ -4888,6 +4897,7 @@ var init_ko = __esm({
         import_error_file: "{{filename}} \uCC98\uB9AC \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4. \uC790\uC138\uD55C \uB0B4\uC6A9\uC740 \uCF58\uC194\uC744 \uD655\uC778\uD558\uC138\uC694.",
         import_error_file_report: "\uD30C\uC77C \uAC00\uC838\uC624\uAE30\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4: {{filename}}",
         import_error_mobile_large_json: "\uC774 ZIP\uC5D0\uB294 \uB9E4\uC6B0 \uD070 \uB300\uD654 \uD30C\uC77C({{size_mb}} MB)\uC774 \uD3EC\uD568\uB418\uC5B4 \uC788\uC2B5\uB2C8\uB2E4. \uC774\uBC88 \uC2E4\uD589\uC5D0\uC11C\uB294 \uBAA8\uBC14\uC77C \uAE30\uAE30\uC5D0\uC11C \uC548\uC815\uC801\uC73C\uB85C \uCC98\uB9AC\uD560 \uC218 \uC5C6\uC5C8\uC2B5\uB2C8\uB2E4. \uD55C \uBC88\uC5D0 \uC120\uD0DD\uD558\uB294 ZIP \uD30C\uC77C \uC218\uB97C \uC904\uC5EC \uB2E4\uC2DC \uC2DC\uB3C4\uD558\uC138\uC694.",
+        import_mobile_single_zip_only: "\uBAA8\uBC14\uC77C\uC5D0\uC11C\uB294 \uD55C \uBC88\uC5D0 ZIP \uD30C\uC77C 1\uAC1C\uB9CC \uAC00\uC838\uC62C \uC218 \uC788\uC2B5\uB2C8\uB2E4. ZIP \uD30C\uC77C \uD558\uB098\uB9CC \uC120\uD0DD\uD558\uC138\uC694.",
         import_no_selected: "\uAC00\uC838\uC62C \uB300\uD654\uAC00 \uC120\uD0DD\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4.",
         import_no_zip_gemini: "Gemini Takeout ZIP \uD30C\uC77C\uC744 \uD558\uB098 \uC774\uC0C1 \uC120\uD0DD\uD558\uC138\uC694 (\uD655\uC7A5 \uD504\uB85C\uADF8\uB7A8\uC758 JSON \uC778\uB371\uC2A4\uB294 \uC120\uD0DD \uC0AC\uD56D).",
         import_no_zip: "ZIP \uB0B4\uBCF4\uB0B4\uAE30 \uD30C\uC77C\uC744 \uD558\uB098 \uC774\uC0C1 \uC120\uD0DD\uD558\uC138\uC694.",
@@ -21439,7 +21449,8 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     } else {
       fileInput.accept = ".zip";
     }
-    fileInput.multiple = true;
+    const allowMultipleSelection = this.provider === "gemini" || !this.isMobileRuntime();
+    fileInput.multiple = allowMultipleSelection;
     fileInput.style.display = "none";
     dropZone.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", (e) => this.handleFileSelection(e));
@@ -21472,7 +21483,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
   handleFileSelection(event) {
     const input = event.target;
     if (input.files) {
-      this.selectedFiles = Array.from(input.files);
+      this.selectedFiles = this.enforceMobileSingleZipSelection(Array.from(input.files));
       this.updateFilePreview();
       this.updateImportButton();
     }
@@ -21506,11 +21517,27 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
         return fileName.endsWith(".zip");
       });
       if (files.length > 0) {
-        this.selectedFiles = files;
+        this.selectedFiles = this.enforceMobileSingleZipSelection(files);
         this.updateFilePreview();
         this.updateImportButton();
       }
     }
+  }
+  isMobileRuntime() {
+    return import_obsidian27.Platform.isMobileApp || import_obsidian27.Platform.isMobile;
+  }
+  enforceMobileSingleZipSelection(files) {
+    if (!this.isMobileRuntime()) {
+      return files;
+    }
+    const zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
+    if (zipFiles.length <= 1) {
+      return files;
+    }
+    const firstZip = zipFiles[0];
+    const nonZipFiles = files.filter((file) => !file.name.toLowerCase().endsWith(".zip"));
+    new import_obsidian27.Notice(t("notices.import_mobile_single_zip_only"));
+    return [firstZip, ...nonZipFiles];
   }
   updateFilePreview() {
     const previewSection = this.contentEl.querySelector("#file-preview-section");
@@ -23778,8 +23805,18 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     if (files.length === 0) {
       return;
     }
-    const zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
+    let zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
     const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
+    const isMobile = this.isMobileTaskQueueMode();
+    if (isMobile && zipFiles.length > 1) {
+      this.logger.child("ImportFlow").warn("Mobile ZIP selection limited to one archive", {
+        provider,
+        selectedZipCount: zipFiles.length,
+        keptFileName: zipFiles[0].name
+      });
+      new import_obsidian33.Notice(t("notices.import_mobile_single_zip_only"));
+      zipFiles = [zipFiles[0]];
+    }
     if (provider === "gemini") {
       if (zipFiles.length === 0) {
         new import_obsidian33.Notice(t("notices.import_no_zip_gemini"));
@@ -23938,23 +23975,33 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     }
   }
   async handleImportAllMobileSequential(files, provider) {
-    var _a;
+    var _a, _b, _c;
+    const mobileFiles = files.slice(0, 1);
+    if (files.length > 1) {
+      this.logger.child("ImportFlow").warn("Mobile import-all guard kept only one ZIP file", {
+        provider,
+        selectedFileCount: files.length,
+        keptFileName: (_b = (_a = mobileFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
+      });
+    }
     this.setImportCheckpoint({
       operation: "import-all",
       phase: "mobile-direct-import-start",
       provider,
-      task: `0/${files.length}`
+      task: `0/${mobileFiles.length}`
     });
     this.logger.child("ImportFlow").info("Mobile import-all running in direct sequential mode", {
       provider,
-      fileCount: files.length
+      fileCount: mobileFiles.length
     });
-    const mobileRun = await this.initOrResumeMobileImportRun(provider, files);
-    const runState = mobileRun.state;
     const providerRegistry = createProviderRegistry(this);
     const adapter = providerRegistry.getAdapter(provider);
-    const entryFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
+    const entryFilter = (_c = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _c.bind(adapter);
     const storage = this.getStorageService();
+    const operationReport = new ImportReport();
+    if (this.settings.useCustomMessageTimestampFormat) {
+      operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+    }
     this.setImportCheckpoint({
       operation: "import-all",
       phase: "mobile-direct-existing-scan-start",
@@ -23976,39 +24023,17 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     await this.yieldToEventLoop();
     let skippedUnsupported = 0;
     let skippedAlreadyImported = 0;
-    let skippedAlreadyRecorded = 0;
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (let i = 0; i < mobileFiles.length; i++) {
+      const file = mobileFiles[i];
       const archiveFingerprint = getFileFingerprint(file);
-      const previousRecord = runState.records[archiveFingerprint];
-      if (previousRecord && (previousRecord.status === "done" || previousRecord.status === "skipped-imported" || previousRecord.status === "skipped-unsupported")) {
-        skippedAlreadyRecorded++;
-        this.logger.child("ImportFlow").info("Skipping archive already recorded in resumable mobile run", {
-          provider,
-          fileName: file.name,
-          status: previousRecord.status,
-          task: `${i + 1}/${files.length}`,
-          runId: runState.runId
-        });
-        await this.yieldToEventLoop();
-        continue;
-      }
       if (storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name)) {
         skippedAlreadyImported++;
         this.logger.child("ImportFlow").info("Skipping already imported archive during mobile direct import", {
           provider,
           fileName: file.name,
           fingerprint: archiveFingerprint,
-          task: `${i + 1}/${files.length}`
+          task: `${i + 1}/${mobileFiles.length}`
         });
-        await this.recordMobileRunFileResult(
-          runState,
-          file,
-          archiveFingerprint,
-          "skipped-imported",
-          this.getEmptyCompletionStats(),
-          "Already imported in a previous run."
-        );
         await this.yieldToEventLoop();
         continue;
       }
@@ -24017,7 +24042,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         phase: "mobile-direct-file-precheck",
         provider,
         fileName: file.name,
-        task: `${i + 1}/${files.length}`
+        task: `${i + 1}/${mobileFiles.length}`
       });
       let isSupportedArchive = true;
       try {
@@ -24032,16 +24057,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
             fileName: file.name,
             reason: classification.reason,
             message: classification.message,
-            task: `${i + 1}/${files.length}`
+            task: `${i + 1}/${mobileFiles.length}`
           });
-          await this.recordMobileRunFileResult(
-            runState,
-            file,
-            archiveFingerprint,
-            "skipped-unsupported",
-            this.getEmptyCompletionStats(),
-            classification.message || "Unsupported archive format for selected provider."
-          );
         }
       } catch (error) {
         isSupportedArchive = false;
@@ -24051,16 +24068,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
           provider,
           fileName: file.name,
           message: errorMessage,
-          task: `${i + 1}/${files.length}`
+          task: `${i + 1}/${mobileFiles.length}`
         });
-        await this.recordMobileRunFileResult(
-          runState,
-          file,
-          archiveFingerprint,
-          "skipped-unsupported",
-          this.getEmptyCompletionStats(),
-          errorMessage
-        );
       }
       if (!isSupportedArchive) {
         await this.yieldToEventLoop();
@@ -24071,28 +24080,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         phase: "mobile-direct-file-import",
         provider,
         fileName: file.name,
-        task: `${i + 1}/${files.length}`
+        task: `${i + 1}/${mobileFiles.length}`
       });
-      const fileReport = new ImportReport();
-      if (this.settings.useCustomMessageTimestampFormat) {
-        fileReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
-      }
       await this.importService.handleZipFile(
         file,
         provider,
         void 0,
-        fileReport,
+        operationReport,
         existingConversationsMap
-      );
-      const fileStats = fileReport.getCompletionStats();
-      const fileStatus = fileStats.failed > 0 ? "failed" : "done";
-      await this.recordMobileRunFileResult(
-        runState,
-        file,
-        archiveFingerprint,
-        fileStatus,
-        fileStats,
-        fileStats.failed > 0 ? "Some conversations failed during processing." : void 0
       );
       this.importService.resetRuntimeState();
       await this.yieldToEventLoop();
@@ -24103,7 +24098,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         phase: "mobile-direct-existing-rescan",
         provider,
         fileName: file.name,
-        task: `${i + 1}/${files.length}`
+        task: `${i + 1}/${mobileFiles.length}`
       });
       const rescanStartedAt = Date.now();
       existingConversationsMap.clear();
@@ -24119,9 +24114,15 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     existingConversationsMap.clear();
     existingConversationsMap = /* @__PURE__ */ new Map();
     await this.yieldToEventLoop();
-    const completionStats = this.computeMobileRunCompletionStats(runState, files.length);
-    await this.finalizeMobileImportRun(runState, completionStats);
-    this.showImportCompletionDialogWithStats(completionStats, runState.reportPath);
+    const reportPath = await this.writeConsolidatedReport(operationReport, provider, mobileFiles);
+    if (reportPath) {
+      this.showImportCompletionDialog(operationReport, reportPath);
+    } else {
+      new import_obsidian33.Notice(t("notices.import_completed_fallback", {
+        created: String(operationReport.getCreatedCount()),
+        updated: String(operationReport.getUpdatedCount())
+      }));
+    }
     if (skippedUnsupported > 0) {
       new import_obsidian33.Notice(
         `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
@@ -24130,13 +24131,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     }
     if (skippedAlreadyImported > 0) {
       new import_obsidian33.Notice(
-        `${skippedAlreadyImported} archive(s) were already imported and were skipped for safe resume.`,
-        5e3
-      );
-    }
-    if (skippedAlreadyRecorded > 0) {
-      new import_obsidian33.Notice(
-        `${skippedAlreadyRecorded} archive(s) were already completed in this resumable run and were skipped.`,
+        `${skippedAlreadyImported} archive(s) were already imported and were skipped.`,
         5e3
       );
     }
@@ -24145,18 +24140,28 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
    * Handle selective import workflow
    */
   async handleSelectiveImport(files, provider) {
+    var _a, _b;
     try {
+      const mobileFiles = this.isMobileTaskQueueMode() ? files.slice(0, 1) : files;
+      if (this.isMobileTaskQueueMode() && files.length > 1) {
+        this.logger.child("ImportFlow").warn("Mobile selective import guard kept only one ZIP file", {
+          provider,
+          selectedFileCount: files.length,
+          keptFileName: (_b = (_a = mobileFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
+        });
+        new import_obsidian33.Notice(t("notices.import_mobile_single_zip_only"));
+      }
       this.setImportCheckpoint({
         operation: "selective-analysis",
         phase: "analysis-start",
         provider,
-        task: `0/${files.length}`
+        task: `0/${mobileFiles.length}`
       });
       this.logger.child("ImportFlow").info(`Selective analysis started`, {
         provider,
-        fileCount: files.length
+        fileCount: mobileFiles.length
       });
-      new import_obsidian33.Notice(t("notices.import_analyzing", { count: String(files.length) }));
+      new import_obsidian33.Notice(t("notices.import_analyzing", { count: String(mobileFiles.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -24165,17 +24170,17 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         operation: "selective-analysis",
         phase: "metadata-extraction",
         provider,
-        task: `0/${files.length}`
+        task: `0/${mobileFiles.length}`
       });
       const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
-        files,
+        mobileFiles,
         provider,
         existingConversations
       );
       this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "selective-analysis");
       this.logger.child("ImportFlow").info(`Selective analysis finished`, {
         provider,
-        fileCount: files.length,
+        fileCount: mobileFiles.length,
         supportedFileCount: extractionResult.supportedFiles.length,
         ignoredArchiveCount: extractionResult.ignoredArchives.length,
         conversationCount: extractionResult.conversations.length
@@ -24190,7 +24195,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         const reportPath = await this.writeConsolidatedReport(
           operationReport,
           provider,
-          files,
+          mobileFiles,
           extractionResult.analysisInfo,
           extractionResult.fileStats,
           true
@@ -24208,7 +24213,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
           this.handleConversationSelectionResult(
             result,
             extractionResult.conversations,
-            files,
+            mobileFiles,
             provider,
             extractionResult.analysisInfo,
             extractionResult.fileStats
@@ -24349,231 +24354,6 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       return "";
     }
   }
-  getEmptyCompletionStats() {
-    return {
-      totalFiles: 0,
-      totalConversations: 0,
-      duplicates: 0,
-      created: 0,
-      updated: 0,
-      skipped: 0,
-      failed: 0,
-      attachmentsFound: 0,
-      attachmentsTotal: 0,
-      attachmentsMissing: 0,
-      attachmentsFailed: 0
-    };
-  }
-  async resolveProviderReportFolder(provider) {
-    const providerRegistry = createProviderRegistry(this);
-    const adapter = providerRegistry.getAdapter(provider);
-    let providerName = provider;
-    if (adapter) {
-      providerName = adapter.getReportNamingStrategy().getProviderName();
-    }
-    const folderPath = `${this.settings.reportFolder}/${providerName}`;
-    const folderResult = await ensureFolderExists(folderPath, this.app.vault);
-    if (!folderResult.success) {
-      throw new Error(folderResult.error || `Failed to create provider report folder: ${folderPath}`);
-    }
-    return { providerName, folderPath };
-  }
-  buildMobileSelectionSignature(files) {
-    const fingerprints = files.map((file) => getFileFingerprint(file)).sort();
-    return `${files.length}:${fingerprints.join("|")}`;
-  }
-  async appendToVaultFile(filePath, content) {
-    const adapter = this.app.vault.adapter;
-    if (!await adapter.exists(filePath)) {
-      await adapter.write(filePath, content);
-      return;
-    }
-    if (typeof adapter.append === "function") {
-      await adapter.append(filePath, content);
-      return;
-    }
-    const existing = await adapter.read(filePath);
-    await adapter.write(filePath, `${existing}${content}`);
-  }
-  async writeMobileRunState(state) {
-    state.updatedAt = new Date().toISOString();
-    await this.app.vault.adapter.write(state.statePath, JSON.stringify(state, null, 2));
-  }
-  async initOrResumeMobileImportRun(provider, files) {
-    const { providerName, folderPath } = await this.resolveProviderReportFolder(provider);
-    const statePath = `${folderPath}/.mobile-import-${providerName}-state.json`;
-    const selectionSignature = this.buildMobileSelectionSignature(files);
-    if (await this.app.vault.adapter.exists(statePath)) {
-      try {
-        const raw = await this.app.vault.adapter.read(statePath);
-        const parsed = JSON.parse(raw);
-        if (parsed.schemaVersion === 1 && parsed.provider === provider && parsed.selectionSignature === selectionSignature && typeof parsed.reportPath === "string" && await this.app.vault.adapter.exists(parsed.reportPath)) {
-          parsed.statePath = statePath;
-          this.logger.child("ImportFlow").info("Resuming mobile import run", {
-            provider,
-            runId: parsed.runId,
-            completedFiles: Object.keys(parsed.records || {}).length
-          });
-          await this.appendToVaultFile(
-            parsed.reportPath,
-            `
----
-
-## Resume Session
-
-- Resumed at: ${new Date().toISOString()}
-- Provider: ${provider}
-`
-          );
-          return { state: parsed, resumed: true };
-        }
-      } catch (error) {
-        this.logger.child("ImportFlow").warn("Failed to parse existing mobile run state. Starting a new run.", {
-          provider,
-          statePath,
-          message: error instanceof Error ? error.message : String(error)
-        });
-      }
-    }
-    const now = Date.now() / 1e3;
-    const datePrefix = formatTimestamp(now, "prefix");
-    const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, "");
-    let reportPath = `${folderPath}/${datePrefix}-${timeStr} - mobile import report.md`;
-    let counter = 2;
-    while (await this.app.vault.adapter.exists(reportPath)) {
-      reportPath = `${folderPath}/${datePrefix}-${timeStr}-${counter} - mobile import report.md`;
-      counter++;
-    }
-    const runId = `${datePrefix}-${timeStr}-${Math.random().toString(16).slice(2, 8)}`;
-    const nowIso = new Date().toISOString();
-    const state = {
-      schemaVersion: 1,
-      runId,
-      provider,
-      providerFolderName: providerName,
-      selectionSignature,
-      startedAt: nowIso,
-      updatedAt: nowIso,
-      statePath,
-      reportPath,
-      records: {}
-    };
-    const reportHeader = `---
-importdate: ${nowIso}
-provider: ${provider}
-runMode: mobile-resumable
-runId: ${runId}
-totalFilesSelected: ${files.length}
----
-
-# Nexus AI Chat Importer Report (Mobile Resumable)
-
-- Started at: ${nowIso}
-- Provider: ${provider}
-- Selected files: ${files.length}
-
-## File Results
-`;
-    await this.app.vault.adapter.write(reportPath, reportHeader);
-    await this.writeMobileRunState(state);
-    this.logger.child("ImportFlow").info("Initialized new mobile import run", {
-      provider,
-      runId,
-      reportPath,
-      selectedFileCount: files.length
-    });
-    return { state, resumed: false };
-  }
-  async recordMobileRunFileResult(runState, file, fingerprint, status, stats, message) {
-    const record = {
-      fileName: file.name,
-      fingerprint,
-      status,
-      created: stats.created,
-      updated: stats.updated,
-      skipped: stats.skipped,
-      failed: stats.failed,
-      totalConversations: stats.totalConversations,
-      attachmentsFound: stats.attachmentsFound,
-      attachmentsTotal: stats.attachmentsTotal,
-      attachmentsMissing: stats.attachmentsMissing,
-      attachmentsFailed: stats.attachmentsFailed,
-      message,
-      finishedAt: new Date().toISOString()
-    };
-    runState.records[fingerprint] = record;
-    await this.writeMobileRunState(runState);
-    const iconByStatus = {
-      done: "\u2705",
-      failed: "\u274C",
-      "skipped-unsupported": "\u23ED\uFE0F",
-      "skipped-imported": "\u23ED\uFE0F"
-    };
-    const section = `
-### ${iconByStatus[status]} ${file.name}
-
-- Status: ${status}
-- Conversations: ${record.totalConversations}
-- Created: ${record.created}
-- Updated: ${record.updated}
-- Skipped: ${record.skipped}
-- Failed: ${record.failed}
-- Attachments: ${record.attachmentsFound}/${record.attachmentsTotal}
-${message ? `- Note: ${message}
-` : ""}- Finished at: ${record.finishedAt}
-`;
-    await this.appendToVaultFile(runState.reportPath, section);
-  }
-  computeMobileRunCompletionStats(runState, selectedFileCount) {
-    const stats = this.getEmptyCompletionStats();
-    stats.totalFiles = selectedFileCount;
-    for (const record of Object.values(runState.records)) {
-      stats.totalConversations += record.totalConversations;
-      stats.created += record.created;
-      stats.updated += record.updated;
-      stats.skipped += record.skipped;
-      stats.failed += record.failed;
-      stats.attachmentsFound += record.attachmentsFound;
-      stats.attachmentsTotal += record.attachmentsTotal;
-      stats.attachmentsMissing += record.attachmentsMissing;
-      stats.attachmentsFailed += record.attachmentsFailed;
-      if (record.status === "skipped-imported" || record.status === "skipped-unsupported") {
-        stats.skipped += 1;
-      }
-      if (record.status === "failed" && record.failed === 0) {
-        stats.failed += 1;
-      }
-    }
-    return stats;
-  }
-  async finalizeMobileImportRun(runState, completionStats) {
-    const summary = `
----
-
-## Final Summary
-
-- Run ID: ${runState.runId}
-- Completed at: ${new Date().toISOString()}
-- Files selected: ${completionStats.totalFiles}
-- Created: ${completionStats.created}
-- Updated: ${completionStats.updated}
-- Skipped: ${completionStats.skipped}
-- Failed: ${completionStats.failed}
-- Attachments: ${completionStats.attachmentsFound}/${completionStats.attachmentsTotal}
-`;
-    await this.appendToVaultFile(runState.reportPath, summary);
-    if (await this.app.vault.adapter.exists(runState.statePath)) {
-      await this.app.vault.adapter.remove(runState.statePath);
-    }
-    this.logger.child("ImportFlow").info("Mobile import run finalized", {
-      provider: runState.provider,
-      runId: runState.runId,
-      reportPath: runState.reportPath
-    });
-  }
-  showImportCompletionDialogWithStats(stats, reportPath) {
-    new ImportCompletionDialog(this.app, stats, reportPath).open();
-  }
   /**
    * Show import completion dialog
    */
@@ -24635,24 +24415,34 @@ ${message ? `- Note: ${message}
     });
   }
   async processFilesWithStrategy(operation, provider, filesToImport, conversationsByFile, operationReport) {
+    var _a, _b;
     const importFlowLogger = this.logger.child("ImportFlow");
     const mobileTaskQueueMode = this.isMobileTaskQueueMode();
-    if (!mobileTaskQueueMode && provider === "chatgpt" && filesToImport.length > 1) {
+    const executionFiles = mobileTaskQueueMode ? filesToImport.slice(0, 1) : filesToImport;
+    if (mobileTaskQueueMode && filesToImport.length > 1) {
+      importFlowLogger.warn("Mobile file strategy guard kept only one ZIP file", {
+        operation,
+        provider,
+        selectedFileCount: filesToImport.length,
+        keptFileName: (_b = (_a = executionFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
+      });
+    }
+    if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
       this.setImportCheckpoint({
         operation,
         phase: "attachment-map-build",
         provider,
-        task: `0/${filesToImport.length}`
+        task: `0/${executionFiles.length}`
       });
       importFlowLogger.info(`Building multi-ZIP attachment map`, {
         provider,
-        fileCount: filesToImport.length,
+        fileCount: executionFiles.length,
         mode: "desktop-multi-zip"
       });
-      await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
+      await this.importService.buildAttachmentMapForMultiZip(executionFiles, provider);
     }
-    for (let i = 0; i < filesToImport.length; i++) {
-      const file = filesToImport[i];
+    for (let i = 0; i < executionFiles.length; i++) {
+      const file = executionFiles[i];
       const conversationsForFile = conversationsByFile.get(file.name);
       if (!conversationsForFile || conversationsForFile.length === 0) {
         continue;
@@ -24664,13 +24454,13 @@ ${message ? `- Note: ${message}
             phase: "attachment-map-build",
             provider,
             fileName: file.name,
-            task: `${i + 1}/${filesToImport.length}`,
+            task: `${i + 1}/${executionFiles.length}`,
             conversationCount: conversationsForFile.length
           });
           importFlowLogger.info(`Building single-ZIP attachment map for mobile task`, {
             provider,
             fileName: file.name,
-            task: `${i + 1}/${filesToImport.length}`
+            task: `${i + 1}/${executionFiles.length}`
           });
           await this.importService.buildAttachmentMapForMultiZip([file], provider);
         }
@@ -24679,14 +24469,14 @@ ${message ? `- Note: ${message}
           phase: "file-import",
           provider,
           fileName: file.name,
-          task: `${i + 1}/${filesToImport.length}`,
+          task: `${i + 1}/${executionFiles.length}`,
           conversationCount: conversationsForFile.length
         });
         importFlowLogger.info(`Importing file`, {
           provider,
           fileName: file.name,
           conversationCount: conversationsForFile.length,
-          task: `${i + 1}/${filesToImport.length}`,
+          task: `${i + 1}/${executionFiles.length}`,
           mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard"
         });
         await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
@@ -24701,13 +24491,13 @@ ${message ? `- Note: ${message}
             phase: "mobile-file-cleanup",
             provider,
             fileName: file.name,
-            task: `${i + 1}/${filesToImport.length}`
+            task: `${i + 1}/${executionFiles.length}`
           });
           await this.yieldToEventLoop();
         }
       }
     }
-    if (!mobileTaskQueueMode && provider === "chatgpt" && filesToImport.length > 1) {
+    if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
       this.importService.clearAttachmentMap();
     }
   }

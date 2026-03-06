@@ -38,7 +38,7 @@ import { createProviderRegistry } from "./providers/provider-registry";
 import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
 import { ConversationMetadataExtractor, IgnoredArchiveInfo } from "./services/conversation-metadata-extractor";
 import { ImportReport } from "./models/import-report";
-import { ImportCompletionDialog, ImportCompletionStats } from "./dialogs/import-completion-dialog";
+import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
 import { ensureFolderExists, formatTimestamp, getFileFingerprint } from "./utils";
 import { sortFilesForImport } from "./utils/file-sort";
 import type { GeminiIndex } from "./providers/gemini/gemini-types";
@@ -53,38 +53,6 @@ interface ImportCheckpoint {
     task?: string;
     conversationCount?: number;
     timestampMs: number;
-}
-
-type MobileRunFileStatus = "done" | "failed" | "skipped-unsupported" | "skipped-imported";
-
-interface MobileImportRunFileRecord {
-    fileName: string;
-    fingerprint: string;
-    status: MobileRunFileStatus;
-    created: number;
-    updated: number;
-    skipped: number;
-    failed: number;
-    totalConversations: number;
-    attachmentsFound: number;
-    attachmentsTotal: number;
-    attachmentsMissing: number;
-    attachmentsFailed: number;
-    message?: string;
-    finishedAt: string;
-}
-
-interface MobileImportRunState {
-    schemaVersion: 1;
-    runId: string;
-    provider: string;
-    providerFolderName: string;
-    selectionSignature: string;
-    startedAt: string;
-    updatedAt: string;
-    statePath: string;
-    reportPath: string;
-    records: Record<string, MobileImportRunFileRecord>;
 }
 
 export default class NexusAiChatImporterPlugin extends Plugin {
@@ -356,16 +324,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     /**
      * Handle the result from enhanced file selection dialog
      */
-	    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
-	        const { files, mode, provider } = result;
+		    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
+		        const { files, mode, provider } = result;
 
-	        if (files.length === 0) {
-	            return;
-	        }
+		        if (files.length === 0) {
+		            return;
+		        }
 
-	        // Separate ZIP exports from optional JSON files
-	        const zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
-	        const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
+		        // Separate ZIP exports from optional JSON files
+		        let zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
+		        const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
+	            const isMobile = this.isMobileTaskQueueMode();
+
+	            if (isMobile && zipFiles.length > 1) {
+	                this.logger.child("ImportFlow").warn("Mobile ZIP selection limited to one archive", {
+	                    provider,
+	                    selectedZipCount: zipFiles.length,
+	                    keptFileName: zipFiles[0].name,
+	                });
+	                new Notice(t("notices.import_mobile_single_zip_only"));
+	                zipFiles = [zipFiles[0]];
+	            }
 
 	        if (provider === "gemini") {
 	            if (zipFiles.length === 0) {
@@ -573,24 +552,34 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     }
 
     private async handleImportAllMobileSequential(files: File[], provider: string): Promise<void> {
+        const mobileFiles = files.slice(0, 1);
+        if (files.length > 1) {
+            this.logger.child("ImportFlow").warn("Mobile import-all guard kept only one ZIP file", {
+                provider,
+                selectedFileCount: files.length,
+                keptFileName: mobileFiles[0]?.name ?? null,
+            });
+        }
+
         this.setImportCheckpoint({
             operation: "import-all",
             phase: "mobile-direct-import-start",
             provider,
-            task: `0/${files.length}`,
+            task: `0/${mobileFiles.length}`,
         });
         this.logger.child("ImportFlow").info("Mobile import-all running in direct sequential mode", {
             provider,
-            fileCount: files.length,
+            fileCount: mobileFiles.length,
         });
-
-        const mobileRun = await this.initOrResumeMobileImportRun(provider, files);
-        const runState = mobileRun.state;
 
         const providerRegistry = createProviderRegistry(this);
         const adapter = providerRegistry.getAdapter(provider);
         const entryFilter = adapter?.shouldIncludeZipEntry?.bind(adapter);
         const storage = this.getStorageService();
+        const operationReport = new ImportReport();
+        if (this.settings.useCustomMessageTimestampFormat) {
+            operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+        }
 
         this.setImportCheckpoint({
             operation: "import-all",
@@ -614,28 +603,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
         let skippedUnsupported = 0;
         let skippedAlreadyImported = 0;
-        let skippedAlreadyRecorded = 0;
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
+        for (let i = 0; i < mobileFiles.length; i++) {
+            const file = mobileFiles[i];
             const archiveFingerprint = getFileFingerprint(file);
-            const previousRecord = runState.records[archiveFingerprint];
-
-            if (previousRecord && (
-                previousRecord.status === "done" ||
-                previousRecord.status === "skipped-imported" ||
-                previousRecord.status === "skipped-unsupported"
-            )) {
-                skippedAlreadyRecorded++;
-                this.logger.child("ImportFlow").info("Skipping archive already recorded in resumable mobile run", {
-                    provider,
-                    fileName: file.name,
-                    status: previousRecord.status,
-                    task: `${i + 1}/${files.length}`,
-                    runId: runState.runId,
-                });
-                await this.yieldToEventLoop();
-                continue;
-            }
 
             if (storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name)) {
                 skippedAlreadyImported++;
@@ -643,16 +613,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     provider,
                     fileName: file.name,
                     fingerprint: archiveFingerprint,
-                    task: `${i + 1}/${files.length}`,
+                    task: `${i + 1}/${mobileFiles.length}`,
                 });
-                await this.recordMobileRunFileResult(
-                    runState,
-                    file,
-                    archiveFingerprint,
-                    "skipped-imported",
-                    this.getEmptyCompletionStats(),
-                    "Already imported in a previous run."
-                );
                 await this.yieldToEventLoop();
                 continue;
             }
@@ -662,7 +624,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 phase: "mobile-direct-file-precheck",
                 provider,
                 fileName: file.name,
-                task: `${i + 1}/${files.length}`,
+                task: `${i + 1}/${mobileFiles.length}`,
             });
 
             let isSupportedArchive = true;
@@ -678,16 +640,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                         fileName: file.name,
                         reason: classification.reason,
                         message: classification.message,
-                        task: `${i + 1}/${files.length}`,
+                        task: `${i + 1}/${mobileFiles.length}`,
                     });
-                    await this.recordMobileRunFileResult(
-                        runState,
-                        file,
-                        archiveFingerprint,
-                        "skipped-unsupported",
-                        this.getEmptyCompletionStats(),
-                        classification.message || "Unsupported archive format for selected provider."
-                    );
                 }
             } catch (error) {
                 isSupportedArchive = false;
@@ -697,16 +651,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     provider,
                     fileName: file.name,
                     message: errorMessage,
-                    task: `${i + 1}/${files.length}`,
+                    task: `${i + 1}/${mobileFiles.length}`,
                 });
-                await this.recordMobileRunFileResult(
-                    runState,
-                    file,
-                    archiveFingerprint,
-                    "skipped-unsupported",
-                    this.getEmptyCompletionStats(),
-                    errorMessage
-                );
             }
 
             if (!isSupportedArchive) {
@@ -719,31 +665,16 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 phase: "mobile-direct-file-import",
                 provider,
                 fileName: file.name,
-                task: `${i + 1}/${files.length}`,
+                task: `${i + 1}/${mobileFiles.length}`,
             });
-            const fileReport = new ImportReport();
-            if (this.settings.useCustomMessageTimestampFormat) {
-                fileReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
-            }
-
             await this.importService.handleZipFile(
                 file,
                 provider,
                 undefined,
-                fileReport,
+                operationReport,
                 existingConversationsMap
             );
 
-            const fileStats = fileReport.getCompletionStats();
-            const fileStatus: MobileRunFileStatus = fileStats.failed > 0 ? "failed" : "done";
-            await this.recordMobileRunFileResult(
-                runState,
-                file,
-                archiveFingerprint,
-                fileStatus,
-                fileStats,
-                fileStats.failed > 0 ? "Some conversations failed during processing." : undefined
-            );
             this.importService.resetRuntimeState();
             await this.yieldToEventLoop();
             await this.yieldToEventLoop();
@@ -754,7 +685,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 phase: "mobile-direct-existing-rescan",
                 provider,
                 fileName: file.name,
-                task: `${i + 1}/${files.length}`,
+                task: `${i + 1}/${mobileFiles.length}`,
             });
             const rescanStartedAt = Date.now();
             existingConversationsMap.clear();
@@ -772,9 +703,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         existingConversationsMap = new Map<string, ConversationCatalogEntry>();
         await this.yieldToEventLoop();
 
-        const completionStats = this.computeMobileRunCompletionStats(runState, files.length);
-        await this.finalizeMobileImportRun(runState, completionStats);
-        this.showImportCompletionDialogWithStats(completionStats, runState.reportPath);
+        const reportPath = await this.writeConsolidatedReport(operationReport, provider, mobileFiles);
+        if (reportPath) {
+            this.showImportCompletionDialog(operationReport, reportPath);
+        } else {
+            new Notice(t('notices.import_completed_fallback', {
+                created: String(operationReport.getCreatedCount()),
+                updated: String(operationReport.getUpdatedCount()),
+            }));
+        }
 
         if (skippedUnsupported > 0) {
             new Notice(
@@ -784,13 +721,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
         if (skippedAlreadyImported > 0) {
             new Notice(
-                `${skippedAlreadyImported} archive(s) were already imported and were skipped for safe resume.`,
-                5000
-            );
-        }
-        if (skippedAlreadyRecorded > 0) {
-            new Notice(
-                `${skippedAlreadyRecorded} archive(s) were already completed in this resumable run and were skipped.`,
+                `${skippedAlreadyImported} archive(s) were already imported and were skipped.`,
                 5000
             );
         }
@@ -801,17 +732,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
         try {
+            const mobileFiles = this.isMobileTaskQueueMode() ? files.slice(0, 1) : files;
+            if (this.isMobileTaskQueueMode() && files.length > 1) {
+                this.logger.child("ImportFlow").warn("Mobile selective import guard kept only one ZIP file", {
+                    provider,
+                    selectedFileCount: files.length,
+                    keptFileName: mobileFiles[0]?.name ?? null,
+                });
+                new Notice(t("notices.import_mobile_single_zip_only"));
+            }
+
             this.setImportCheckpoint({
                 operation: "selective-analysis",
                 phase: "analysis-start",
                 provider,
-                task: `0/${files.length}`,
+                task: `0/${mobileFiles.length}`,
             });
             this.logger.child("ImportFlow").info(`Selective analysis started`, {
                 provider,
-                fileCount: files.length,
+                fileCount: mobileFiles.length,
             });
-            new Notice(t('notices.import_analyzing', { count: String(files.length) }));
+            new Notice(t('notices.import_analyzing', { count: String(mobileFiles.length) }));
 
             // Create metadata extractor
             const providerRegistry = createProviderRegistry(this);
@@ -826,10 +767,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 operation: "selective-analysis",
                 phase: "metadata-extraction",
                 provider,
-                task: `0/${files.length}`,
+                task: `0/${mobileFiles.length}`,
             });
             const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
-                files,
+                mobileFiles,
                 provider,
                 existingConversations
             );
@@ -837,7 +778,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             this.logger.child("ImportFlow").info(`Selective analysis finished`, {
                 provider,
-                fileCount: files.length,
+                fileCount: mobileFiles.length,
                 supportedFileCount: extractionResult.supportedFiles.length,
                 ignoredArchiveCount: extractionResult.ignoredArchives.length,
                 conversationCount: extractionResult.conversations.length,
@@ -857,7 +798,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 const reportPath = await this.writeConsolidatedReport(
                     operationReport,
                     provider,
-                    files,
+                    mobileFiles,
                     extractionResult.analysisInfo,
                     extractionResult.fileStats,
                     true // isSelective
@@ -878,7 +819,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     this.handleConversationSelectionResult(
                         result,
                         extractionResult.conversations,
-                        files,
+                        mobileFiles,
                         provider,
                         extractionResult.analysisInfo,
                         extractionResult.fileStats
@@ -1077,275 +1018,6 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
         }
     }
 
-    private getEmptyCompletionStats(): ImportCompletionStats {
-        return {
-            totalFiles: 0,
-            totalConversations: 0,
-            duplicates: 0,
-            created: 0,
-            updated: 0,
-            skipped: 0,
-            failed: 0,
-            attachmentsFound: 0,
-            attachmentsTotal: 0,
-            attachmentsMissing: 0,
-            attachmentsFailed: 0,
-        };
-    }
-
-    private async resolveProviderReportFolder(provider: string): Promise<{ providerName: string; folderPath: string }> {
-        const providerRegistry = createProviderRegistry(this);
-        const adapter = providerRegistry.getAdapter(provider);
-        let providerName = provider;
-        if (adapter) {
-            providerName = adapter.getReportNamingStrategy().getProviderName();
-        }
-
-        const folderPath = `${this.settings.reportFolder}/${providerName}`;
-        const folderResult = await ensureFolderExists(folderPath, this.app.vault);
-        if (!folderResult.success) {
-            throw new Error(folderResult.error || `Failed to create provider report folder: ${folderPath}`);
-        }
-
-        return { providerName, folderPath };
-    }
-
-    private buildMobileSelectionSignature(files: File[]): string {
-        const fingerprints = files.map(file => getFileFingerprint(file)).sort();
-        return `${files.length}:${fingerprints.join("|")}`;
-    }
-
-    private async appendToVaultFile(filePath: string, content: string): Promise<void> {
-        const adapter = this.app.vault.adapter as any;
-
-        if (!(await adapter.exists(filePath))) {
-            await adapter.write(filePath, content);
-            return;
-        }
-
-        if (typeof adapter.append === "function") {
-            await adapter.append(filePath, content);
-            return;
-        }
-
-        const existing = await adapter.read(filePath);
-        await adapter.write(filePath, `${existing}${content}`);
-    }
-
-    private async writeMobileRunState(state: MobileImportRunState): Promise<void> {
-        state.updatedAt = new Date().toISOString();
-        await this.app.vault.adapter.write(state.statePath, JSON.stringify(state, null, 2));
-    }
-
-    private async initOrResumeMobileImportRun(
-        provider: string,
-        files: File[]
-    ): Promise<{ state: MobileImportRunState; resumed: boolean }> {
-        const { providerName, folderPath } = await this.resolveProviderReportFolder(provider);
-        const statePath = `${folderPath}/.mobile-import-${providerName}-state.json`;
-        const selectionSignature = this.buildMobileSelectionSignature(files);
-
-        if (await this.app.vault.adapter.exists(statePath)) {
-            try {
-                const raw = await this.app.vault.adapter.read(statePath);
-                const parsed = JSON.parse(raw) as MobileImportRunState;
-                if (
-                    parsed.schemaVersion === 1 &&
-                    parsed.provider === provider &&
-                    parsed.selectionSignature === selectionSignature &&
-                    typeof parsed.reportPath === "string" &&
-                    await this.app.vault.adapter.exists(parsed.reportPath)
-                ) {
-                    parsed.statePath = statePath;
-                    this.logger.child("ImportFlow").info("Resuming mobile import run", {
-                        provider,
-                        runId: parsed.runId,
-                        completedFiles: Object.keys(parsed.records || {}).length,
-                    });
-                    await this.appendToVaultFile(
-                        parsed.reportPath,
-                        `\n---\n\n## Resume Session\n\n- Resumed at: ${new Date().toISOString()}\n- Provider: ${provider}\n`
-                    );
-                    return { state: parsed, resumed: true };
-                }
-            } catch (error) {
-                this.logger.child("ImportFlow").warn("Failed to parse existing mobile run state. Starting a new run.", {
-                    provider,
-                    statePath,
-                    message: error instanceof Error ? error.message : String(error),
-                });
-            }
-        }
-
-        const now = Date.now() / 1000;
-        const datePrefix = formatTimestamp(now, "prefix");
-        const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, "");
-        let reportPath = `${folderPath}/${datePrefix}-${timeStr} - mobile import report.md`;
-        let counter = 2;
-        while (await this.app.vault.adapter.exists(reportPath)) {
-            reportPath = `${folderPath}/${datePrefix}-${timeStr}-${counter} - mobile import report.md`;
-            counter++;
-        }
-
-        const runId = `${datePrefix}-${timeStr}-${Math.random().toString(16).slice(2, 8)}`;
-        const nowIso = new Date().toISOString();
-        const state: MobileImportRunState = {
-            schemaVersion: 1,
-            runId,
-            provider,
-            providerFolderName: providerName,
-            selectionSignature,
-            startedAt: nowIso,
-            updatedAt: nowIso,
-            statePath,
-            reportPath,
-            records: {},
-        };
-
-        const reportHeader = `---
-importdate: ${nowIso}
-provider: ${provider}
-runMode: mobile-resumable
-runId: ${runId}
-totalFilesSelected: ${files.length}
----
-
-# Nexus AI Chat Importer Report (Mobile Resumable)
-
-- Started at: ${nowIso}
-- Provider: ${provider}
-- Selected files: ${files.length}
-
-## File Results
-`;
-
-        await this.app.vault.adapter.write(reportPath, reportHeader);
-        await this.writeMobileRunState(state);
-
-        this.logger.child("ImportFlow").info("Initialized new mobile import run", {
-            provider,
-            runId,
-            reportPath,
-            selectedFileCount: files.length,
-        });
-
-        return { state, resumed: false };
-    }
-
-    private async recordMobileRunFileResult(
-        runState: MobileImportRunState,
-        file: File,
-        fingerprint: string,
-        status: MobileRunFileStatus,
-        stats: ImportCompletionStats,
-        message?: string
-    ): Promise<void> {
-        const record: MobileImportRunFileRecord = {
-            fileName: file.name,
-            fingerprint,
-            status,
-            created: stats.created,
-            updated: stats.updated,
-            skipped: stats.skipped,
-            failed: stats.failed,
-            totalConversations: stats.totalConversations,
-            attachmentsFound: stats.attachmentsFound,
-            attachmentsTotal: stats.attachmentsTotal,
-            attachmentsMissing: stats.attachmentsMissing,
-            attachmentsFailed: stats.attachmentsFailed,
-            message,
-            finishedAt: new Date().toISOString(),
-        };
-
-        runState.records[fingerprint] = record;
-        await this.writeMobileRunState(runState);
-
-        const iconByStatus: Record<MobileRunFileStatus, string> = {
-            done: "✅",
-            failed: "❌",
-            "skipped-unsupported": "⏭️",
-            "skipped-imported": "⏭️",
-        };
-        const section = `
-### ${iconByStatus[status]} ${file.name}
-
-- Status: ${status}
-- Conversations: ${record.totalConversations}
-- Created: ${record.created}
-- Updated: ${record.updated}
-- Skipped: ${record.skipped}
-- Failed: ${record.failed}
-- Attachments: ${record.attachmentsFound}/${record.attachmentsTotal}
-${message ? `- Note: ${message}\n` : ""}- Finished at: ${record.finishedAt}
-`;
-
-        await this.appendToVaultFile(runState.reportPath, section);
-    }
-
-    private computeMobileRunCompletionStats(
-        runState: MobileImportRunState,
-        selectedFileCount: number
-    ): ImportCompletionStats {
-        const stats = this.getEmptyCompletionStats();
-        stats.totalFiles = selectedFileCount;
-
-        for (const record of Object.values(runState.records)) {
-            stats.totalConversations += record.totalConversations;
-            stats.created += record.created;
-            stats.updated += record.updated;
-            stats.skipped += record.skipped;
-            stats.failed += record.failed;
-            stats.attachmentsFound += record.attachmentsFound;
-            stats.attachmentsTotal += record.attachmentsTotal;
-            stats.attachmentsMissing += record.attachmentsMissing;
-            stats.attachmentsFailed += record.attachmentsFailed;
-
-            if (record.status === "skipped-imported" || record.status === "skipped-unsupported") {
-                stats.skipped += 1;
-            }
-            if (record.status === "failed" && record.failed === 0) {
-                stats.failed += 1;
-            }
-        }
-
-        return stats;
-    }
-
-    private async finalizeMobileImportRun(
-        runState: MobileImportRunState,
-        completionStats: ImportCompletionStats
-    ): Promise<void> {
-        const summary = `
----
-
-## Final Summary
-
-- Run ID: ${runState.runId}
-- Completed at: ${new Date().toISOString()}
-- Files selected: ${completionStats.totalFiles}
-- Created: ${completionStats.created}
-- Updated: ${completionStats.updated}
-- Skipped: ${completionStats.skipped}
-- Failed: ${completionStats.failed}
-- Attachments: ${completionStats.attachmentsFound}/${completionStats.attachmentsTotal}
-`;
-
-        await this.appendToVaultFile(runState.reportPath, summary);
-        if (await this.app.vault.adapter.exists(runState.statePath)) {
-            await this.app.vault.adapter.remove(runState.statePath);
-        }
-
-        this.logger.child("ImportFlow").info("Mobile import run finalized", {
-            provider: runState.provider,
-            runId: runState.runId,
-            reportPath: runState.reportPath,
-        });
-    }
-
-    private showImportCompletionDialogWithStats(stats: ImportCompletionStats, reportPath: string): void {
-        new ImportCompletionDialog(this.app, stats, reportPath).open();
-    }
-
     /**
      * Show import completion dialog
      */
@@ -1430,24 +1102,34 @@ ${message ? `- Note: ${message}\n` : ""}- Finished at: ${record.finishedAt}
     ): Promise<void> {
         const importFlowLogger = this.logger.child("ImportFlow");
         const mobileTaskQueueMode = this.isMobileTaskQueueMode();
+        const executionFiles = mobileTaskQueueMode ? filesToImport.slice(0, 1) : filesToImport;
 
-        if (!mobileTaskQueueMode && provider === "chatgpt" && filesToImport.length > 1) {
+        if (mobileTaskQueueMode && filesToImport.length > 1) {
+            importFlowLogger.warn("Mobile file strategy guard kept only one ZIP file", {
+                operation,
+                provider,
+                selectedFileCount: filesToImport.length,
+                keptFileName: executionFiles[0]?.name ?? null,
+            });
+        }
+
+        if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
             this.setImportCheckpoint({
                 operation,
                 phase: "attachment-map-build",
                 provider,
-                task: `0/${filesToImport.length}`,
+                task: `0/${executionFiles.length}`,
             });
             importFlowLogger.info(`Building multi-ZIP attachment map`, {
                 provider,
-                fileCount: filesToImport.length,
+                fileCount: executionFiles.length,
                 mode: "desktop-multi-zip",
             });
-            await this.importService.buildAttachmentMapForMultiZip(filesToImport, provider);
+            await this.importService.buildAttachmentMapForMultiZip(executionFiles, provider);
         }
 
-        for (let i = 0; i < filesToImport.length; i++) {
-            const file = filesToImport[i];
+        for (let i = 0; i < executionFiles.length; i++) {
+            const file = executionFiles[i];
             const conversationsForFile = conversationsByFile.get(file.name);
 
             if (!conversationsForFile || conversationsForFile.length === 0) {
@@ -1461,13 +1143,13 @@ ${message ? `- Note: ${message}\n` : ""}- Finished at: ${record.finishedAt}
                         phase: "attachment-map-build",
                         provider,
                         fileName: file.name,
-                        task: `${i + 1}/${filesToImport.length}`,
+                        task: `${i + 1}/${executionFiles.length}`,
                         conversationCount: conversationsForFile.length,
                     });
                     importFlowLogger.info(`Building single-ZIP attachment map for mobile task`, {
                         provider,
                         fileName: file.name,
-                        task: `${i + 1}/${filesToImport.length}`,
+                        task: `${i + 1}/${executionFiles.length}`,
                     });
                     await this.importService.buildAttachmentMapForMultiZip([file], provider);
                 }
@@ -1477,14 +1159,14 @@ ${message ? `- Note: ${message}\n` : ""}- Finished at: ${record.finishedAt}
                     phase: "file-import",
                     provider,
                     fileName: file.name,
-                    task: `${i + 1}/${filesToImport.length}`,
+                    task: `${i + 1}/${executionFiles.length}`,
                     conversationCount: conversationsForFile.length,
                 });
                 importFlowLogger.info(`Importing file`, {
                     provider,
                     fileName: file.name,
                     conversationCount: conversationsForFile.length,
-                    task: `${i + 1}/${filesToImport.length}`,
+                    task: `${i + 1}/${executionFiles.length}`,
                     mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard",
                 });
 
@@ -1500,14 +1182,14 @@ ${message ? `- Note: ${message}\n` : ""}- Finished at: ${record.finishedAt}
                         phase: "mobile-file-cleanup",
                         provider,
                         fileName: file.name,
-                        task: `${i + 1}/${filesToImport.length}`,
+                        task: `${i + 1}/${executionFiles.length}`,
                     });
                     await this.yieldToEventLoop();
                 }
             }
         }
 
-        if (!mobileTaskQueueMode && provider === "chatgpt" && filesToImport.length > 1) {
+        if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
             this.importService.clearAttachmentMap();
         }
     }

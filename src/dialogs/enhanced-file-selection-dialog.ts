@@ -18,7 +18,7 @@
 
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-import { App, Modal, Setting } from "obsidian";
+import { App, Modal, Notice, Platform, Setting } from "obsidian";
 import { FileSelectionResult, ImportMode } from "../types/conversation-selection";
 import { formatFileSize } from "../utils/file-utils";
 import { t } from '../i18n';
@@ -196,7 +196,8 @@ export class EnhancedFileSelectionDialog extends Modal {
             fileInput.accept = ".zip";
         }
 
-        fileInput.multiple = true;
+        const allowMultipleSelection = this.provider === 'gemini' || !this.isMobileRuntime();
+        fileInput.multiple = allowMultipleSelection;
         fileInput.style.display = "none";
 
         // Event handlers
@@ -244,7 +245,7 @@ export class EnhancedFileSelectionDialog extends Modal {
     private handleFileSelection(event: Event) {
         const input = event.target as HTMLInputElement;
         if (input.files) {
-            this.selectedFiles = Array.from(input.files);
+            this.selectedFiles = this.enforceMobileSingleZipSelection(Array.from(input.files));
             this.updateFilePreview();
             this.updateImportButton();
         }
@@ -284,11 +285,32 @@ export class EnhancedFileSelectionDialog extends Modal {
                 return fileName.endsWith('.zip');
             });
             if (files.length > 0) {
-                this.selectedFiles = files;
+                this.selectedFiles = this.enforceMobileSingleZipSelection(files);
                 this.updateFilePreview();
                 this.updateImportButton();
             }
         }
+    }
+
+    private isMobileRuntime(): boolean {
+        return Platform.isMobileApp || Platform.isMobile;
+    }
+
+    private enforceMobileSingleZipSelection(files: File[]): File[] {
+        if (!this.isMobileRuntime()) {
+            return files;
+        }
+
+        const zipFiles = files.filter(file => file.name.toLowerCase().endsWith('.zip'));
+        if (zipFiles.length <= 1) {
+            return files;
+        }
+
+        const firstZip = zipFiles[0];
+        const nonZipFiles = files.filter(file => !file.name.toLowerCase().endsWith('.zip'));
+
+        new Notice(t('notices.import_mobile_single_zip_only'));
+        return [firstZip, ...nonZipFiles];
     }
 
     private updateFilePreview() {
