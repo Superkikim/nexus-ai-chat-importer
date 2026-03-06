@@ -20,7 +20,7 @@
 // src/services/import-service.ts
 import { Notice, Platform } from "obsidian";
 import { ConversationCatalogEntry, CustomError } from "../types/plugin";
-import { getFileHash, ensureFolderExists, formatTimestamp } from "../utils";
+import { getFileHash, getFileFingerprint, ensureFolderExists, formatTimestamp } from "../utils";
 import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
 import { ConversationProcessor } from "./conversation-processor";
@@ -228,7 +228,18 @@ export class ImportService {
                 });
                 this.updateRuntimePhase("hash-validation");
 
+                importLogger.info("Archive tracking hash start", {
+                    fileName: file.name,
+                    strategy: "sha256",
+                    fileSize: file.size,
+                });
+                const hashStartedAt = Date.now();
                 fileHash = await getFileHash(file);
+                importLogger.info("Archive tracking hash complete", {
+                    fileName: file.name,
+                    strategy: "sha256",
+                    durationMs: Date.now() - hashStartedAt,
+                });
                 const foundByHash = storage.isArchiveImported(fileHash);
                 const foundByName = storage.isArchiveImported(file.name);
                 isReprocess = foundByHash || foundByName;
@@ -259,8 +270,13 @@ export class ImportService {
                     progressModal.open();
                 }
             } else {
-                // New workflow: always compute hash for tracking, but don't check/prompt
-                fileHash = await getFileHash(file);
+                // Shared-report workflow (multi-file): avoid loading full ZIP into memory on mobile.
+                fileHash = getFileFingerprint(file);
+                importLogger.info("Archive tracking fingerprint generated", {
+                    fileName: file.name,
+                    strategy: "metadata-fingerprint",
+                    fileSize: file.size,
+                });
             }
 
 		            processingStarted = true;

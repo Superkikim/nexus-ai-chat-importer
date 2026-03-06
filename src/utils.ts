@@ -214,6 +214,15 @@ export async function getFileHash(file: File): Promise<string> {
 }
 
 /**
+ * Build a lightweight archive fingerprint without reading the full file into memory.
+ * Used in multi-file shared-report flows where full SHA-256 can trigger mobile OOM.
+ */
+export function getFileFingerprint(file: File): string {
+    const safeName = encodeURIComponent(file.name);
+    return `meta:${safeName}:${file.size}:${file.lastModified}`;
+}
+
+/**
  * Generate the exact filename that would be used for a conversation
  * This matches the logic in ConversationProcessor.generateFilePathForChat
  */

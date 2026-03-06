@@ -5550,6 +5550,7 @@ __export(utils_exports, {
   generateSafeAlias: () => generateSafeAlias,
   generateUniqueFileName: () => generateUniqueFileName,
   generateYearMonthFolder: () => generateYearMonthFolder,
+  getFileFingerprint: () => getFileFingerprint,
   getFileHash: () => getFileHash,
   isCustomError: () => isCustomError,
   isNexusRelated: () => isNexusRelated,
@@ -5641,6 +5642,10 @@ async function getFileHash(file) {
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function getFileFingerprint(file) {
+  const safeName = encodeURIComponent(file.name);
+  return `meta:${safeName}:${file.size}:${file.lastModified}`;
 }
 function generateConversationFileName(chatTitle, createTime, addDatePrefix, dateFormat) {
   const date = new Date(createTime * 1e3);
@@ -5923,6 +5928,7 @@ var init_utils = __esm({
     __name(generateUniqueFileName, "generateUniqueFileName");
     __name(doesFilePathExist, "doesFilePathExist");
     __name(getFileHash, "getFileHash");
+    __name(getFileFingerprint, "getFileFingerprint");
     __name(generateConversationFileName, "generateConversationFileName");
     __name(generateSafeAlias, "generateSafeAlias");
     __name(isValidMessage, "isValidMessage");
@@ -19691,7 +19697,18 @@ Do NOT extract and re-compress the file - just rename it!`;
           detail: "Checking file hash and import history"
         });
         this.updateRuntimePhase("hash-validation");
+        importLogger.info("Archive tracking hash start", {
+          fileName: file.name,
+          strategy: "sha256",
+          fileSize: file.size
+        });
+        const hashStartedAt = Date.now();
         fileHash = await getFileHash(file);
+        importLogger.info("Archive tracking hash complete", {
+          fileName: file.name,
+          strategy: "sha256",
+          durationMs: Date.now() - hashStartedAt
+        });
         const foundByHash = storage.isArchiveImported(fileHash);
         const foundByName = storage.isArchiveImported(file.name);
         isReprocess = foundByHash || foundByName;
@@ -19717,7 +19734,12 @@ Do NOT extract and re-compress the file - just rename it!`;
           progressModal.open();
         }
       } else {
-        fileHash = await getFileHash(file);
+        fileHash = getFileFingerprint(file);
+        importLogger.info("Archive tracking fingerprint generated", {
+          fileName: file.name,
+          strategy: "metadata-fingerprint",
+          fileSize: file.size
+        });
       }
       processingStarted = true;
       this.updateRuntimePhase("conversation-processing");
