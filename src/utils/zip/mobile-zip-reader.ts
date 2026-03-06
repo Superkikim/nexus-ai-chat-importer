@@ -20,6 +20,11 @@ interface MobileZipEntryRecord extends ZipEntryMeta {
     generalPurposeBitFlag: number;
 }
 
+interface LocalFileDataRange {
+    dataStart: number;
+    compressedSize: number;
+}
+
 const EOCD_SIGNATURE = 0x06054b50;
 const ZIP64_EOCD_LOCATOR_SIGNATURE = 0x07064b50;
 const ZIP64_EOCD_SIGNATURE = 0x06064b50;
@@ -272,6 +277,11 @@ async function parseCentralDirectory(file: File, info: CentralDirectoryInfo): Pr
 }
 
 async function readCompressedFileData(file: File, entry: MobileZipEntryRecord): Promise<Uint8Array> {
+    const { dataStart, compressedSize } = await getLocalFileDataRange(file, entry);
+    return new Uint8Array(await readSlice(file, dataStart, compressedSize));
+}
+
+async function getLocalFileDataRange(file: File, entry: MobileZipEntryRecord): Promise<LocalFileDataRange> {
     const localHeader = await readSlice(file, entry.localHeaderOffset, 30);
     const headerView = new DataView(localHeader);
 
@@ -282,8 +292,10 @@ async function readCompressedFileData(file: File, entry: MobileZipEntryRecord): 
     const fileNameLength = headerView.getUint16(26, true);
     const extraFieldLength = headerView.getUint16(28, true);
     const dataStart = entry.localHeaderOffset + 30 + fileNameLength + extraFieldLength;
-
-    return new Uint8Array(await readSlice(file, dataStart, entry.compressedSize));
+    return {
+        dataStart,
+        compressedSize: entry.compressedSize,
+    };
 }
 
 async function inflateRawDeflate(data: Uint8Array, expectedLength: number): Promise<Uint8Array> {
@@ -346,6 +358,90 @@ async function readLocalFileData(file: File, entry: MobileZipEntryRecord): Promi
     throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`);
 }
 
+async function* readCompressedDataChunks(
+    file: File,
+    range: LocalFileDataRange,
+    chunkSize = 512 * 1024
+): AsyncGenerator<Uint8Array> {
+    let offset = 0;
+    while (offset < range.compressedSize) {
+        const length = Math.min(chunkSize, range.compressedSize - offset);
+        const chunk = new Uint8Array(await readSlice(file, range.dataStart + offset, length));
+        offset += chunk.byteLength;
+        if (chunk.byteLength > 0) {
+            yield chunk;
+        }
+    }
+}
+
+async function* readLocalFileTextChunks(file: File, entry: MobileZipEntryRecord): AsyncGenerator<string> {
+    const range = await getLocalFileDataRange(file, entry);
+    const decoder = new TextDecoder("utf-8");
+
+    if (entry.compressionMethod === 0) {
+        for await (const chunk of readCompressedDataChunks(file, range)) {
+            const textChunk = decoder.decode(chunk, { stream: true });
+            if (textChunk.length > 0) {
+                yield textChunk;
+            }
+        }
+        const finalChunk = decoder.decode();
+        if (finalChunk.length > 0) {
+            yield finalChunk;
+        }
+        return;
+    }
+
+    if (entry.compressionMethod !== 8) {
+        throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`);
+    }
+
+    if (typeof DecompressionStream === "undefined") {
+        throw new Error("DecompressionStream is unavailable on this device");
+    }
+
+    const decompressor = new DecompressionStream("deflate-raw") as unknown as TransformStream<Uint8Array, Uint8Array>;
+    const writer = decompressor.writable.getWriter();
+    const reader = decompressor.readable.getReader();
+
+    const pumpCompressed = (async () => {
+        try {
+            for await (const compressedChunk of readCompressedDataChunks(file, range)) {
+                await writer.write(compressedChunk);
+            }
+            await writer.close();
+        } catch (error) {
+            await writer.abort(error);
+            throw error;
+        }
+    })();
+
+    try {
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) {
+                break;
+            }
+            if (!value || value.byteLength === 0) {
+                continue;
+            }
+
+            const textChunk = decoder.decode(value, { stream: true });
+            if (textChunk.length > 0) {
+                yield textChunk;
+            }
+        }
+
+        const finalChunk = decoder.decode();
+        if (finalChunk.length > 0) {
+            yield finalChunk;
+        }
+        await pumpCompressed;
+    } finally {
+        reader.releaseLock();
+    }
+}
+
 class MobileZipEntryHandle implements ZipEntryHandle {
     readonly name: string;
 
@@ -360,6 +456,12 @@ class MobileZipEntryHandle implements ZipEntryHandle {
     async readText(): Promise<string> {
         const bytes = await this.readBytes();
         return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    async *readTextChunks(): AsyncGenerator<string> {
+        for await (const chunk of readLocalFileTextChunks(this.file, this.entry)) {
+            yield chunk;
+        }
     }
 }
 

@@ -7,6 +7,7 @@ export interface ZipEntryHandle {
     readonly name: string;
     readText(): Promise<string>;
     readBytes(): Promise<Uint8Array>;
+    readTextChunks?(): AsyncGenerator<string>;
 }
 
 export interface ZipArchiveReader {

@@ -321,23 +321,45 @@ export async function* extractConversationsStream(
             streamLogger.info(
                 `Reading numbered conversation file (${fileName}) [entrySize=${entrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
             );
-            const json = await entry.readText();
-            streamLogger.info("Numbered conversation file read complete", {
-                fileName,
-                textLength: json.length,
-                approxStringBytes: json.length * 2,
-                readDurationMs: Date.now() - fileReadStartedAt,
-                memorySnapshot: formatRuntimeMemorySnapshot(),
-            });
-            for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
-                yieldedCount++;
-                if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-                    streamLogger.info("Yielding streamed conversation", {
-                        source: fileName,
-                        yieldedCount,
-                    });
+            if (entry.readTextChunks) {
+                streamLogger.info("Using chunked numbered conversation reader", {
+                    fileName,
+                    entrySize: entrySize ?? null,
+                });
+                for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(entry.readTextChunks())) {
+                    yieldedCount++;
+                    if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+                        streamLogger.info("Yielding streamed conversation", {
+                            source: fileName,
+                            yieldedCount,
+                        });
+                    }
+                    yield conv;
                 }
-                yield conv;
+                streamLogger.info("Chunked numbered conversation file parse complete", {
+                    fileName,
+                    readDurationMs: Date.now() - fileReadStartedAt,
+                    memorySnapshot: formatRuntimeMemorySnapshot(),
+                });
+            } else {
+                const json = await entry.readText();
+                streamLogger.info("Numbered conversation file read complete", {
+                    fileName,
+                    textLength: json.length,
+                    approxStringBytes: json.length * 2,
+                    readDurationMs: Date.now() - fileReadStartedAt,
+                    memorySnapshot: formatRuntimeMemorySnapshot(),
+                });
+                for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
+                    yieldedCount++;
+                    if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+                        streamLogger.info("Yielding streamed conversation", {
+                            source: fileName,
+                            yieldedCount,
+                        });
+                    }
+                    yield conv;
+                }
             }
         }
         streamLogger.info("Numbered conversation stream complete", {
@@ -360,41 +382,75 @@ export async function* extractConversationsStream(
     streamLogger.info(
         `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
     );
-    let conversationsJson: string;
-    try {
-        conversationsJson = await conversationsFile.readText();
-    } catch (error) {
-        streamLogger.error("Failed while reading conversations.json for stream extraction", {
-            durationMs: Date.now() - readStartedAt,
-            memorySnapshot: formatRuntimeMemorySnapshot(),
-            message: error instanceof Error ? error.message : String(error),
-        });
-        throw error;
-    }
-    streamLogger.info("conversations.json read complete", {
-        textLength: conversationsJson.length,
-        approxStringBytes: conversationsJson.length * 2,
-        readDurationMs: Date.now() - readStartedAt,
-        totalDurationMs: Date.now() - startedAt,
-        memorySnapshot: formatRuntimeMemorySnapshot(),
-    });
-    const parseStartedAt = Date.now();
     let yieldedCount = 0;
-    for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
-        yieldedCount++;
-        if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-            streamLogger.info("Yielding streamed conversation", {
-                source: "conversations.json",
+    if (conversationsFile.readTextChunks) {
+        streamLogger.info("Using chunked conversations.json reader", {
+            entrySize: conversationEntrySize ?? null,
+        });
+        try {
+            for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(conversationsFile.readTextChunks())) {
+                yieldedCount++;
+                if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+                    streamLogger.info("Yielding streamed conversation", {
+                        source: "conversations.json",
+                        yieldedCount,
+                    });
+                }
+                yield conv;
+            }
+        } catch (error) {
+            streamLogger.error("Failed while chunk-reading conversations.json for stream extraction", {
+                durationMs: Date.now() - readStartedAt,
+                memorySnapshot: formatRuntimeMemorySnapshot(),
                 yieldedCount,
+                message: error instanceof Error ? error.message : String(error),
             });
+            throw error;
         }
-        yield conv;
+        streamLogger.info("Conversation stream extraction complete", {
+            yieldedCount,
+            parseDurationMs: Date.now() - readStartedAt,
+            durationMs: Date.now() - startedAt,
+            memorySnapshot: formatRuntimeMemorySnapshot(),
+            mode: "chunked",
+        });
+    } else {
+        let conversationsJson: string;
+        try {
+            conversationsJson = await conversationsFile.readText();
+        } catch (error) {
+            streamLogger.error("Failed while reading conversations.json for stream extraction", {
+                durationMs: Date.now() - readStartedAt,
+                memorySnapshot: formatRuntimeMemorySnapshot(),
+                message: error instanceof Error ? error.message : String(error),
+            });
+            throw error;
+        }
+        streamLogger.info("conversations.json read complete", {
+            textLength: conversationsJson.length,
+            approxStringBytes: conversationsJson.length * 2,
+            readDurationMs: Date.now() - readStartedAt,
+            totalDurationMs: Date.now() - startedAt,
+            memorySnapshot: formatRuntimeMemorySnapshot(),
+        });
+        const parseStartedAt = Date.now();
+        for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
+            yieldedCount++;
+            if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+                streamLogger.info("Yielding streamed conversation", {
+                    source: "conversations.json",
+                    yieldedCount,
+                });
+            }
+            yield conv;
+        }
+        conversationsJson = "";
+        streamLogger.info("Conversation stream extraction complete", {
+            yieldedCount,
+            parseDurationMs: Date.now() - parseStartedAt,
+            durationMs: Date.now() - startedAt,
+            memorySnapshot: formatRuntimeMemorySnapshot(),
+            mode: "full-text",
+        });
     }
-    conversationsJson = "";
-    streamLogger.info("Conversation stream extraction complete", {
-        yieldedCount,
-        parseDurationMs: Date.now() - parseStartedAt,
-        durationMs: Date.now() - startedAt,
-        memorySnapshot: formatRuntimeMemorySnapshot(),
-    });
 }

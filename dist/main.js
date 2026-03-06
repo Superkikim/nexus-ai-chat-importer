@@ -15288,6 +15288,11 @@ async function parseCentralDirectory(file, info) {
 }
 __name(parseCentralDirectory, "parseCentralDirectory");
 async function readCompressedFileData(file, entry) {
+  const { dataStart, compressedSize } = await getLocalFileDataRange(file, entry);
+  return new Uint8Array(await readSlice(file, dataStart, compressedSize));
+}
+__name(readCompressedFileData, "readCompressedFileData");
+async function getLocalFileDataRange(file, entry) {
   const localHeader = await readSlice(file, entry.localHeaderOffset, 30);
   const headerView = new DataView(localHeader);
   if (headerView.getUint32(0, true) !== LOCAL_FILE_HEADER_SIGNATURE) {
@@ -15296,9 +15301,12 @@ async function readCompressedFileData(file, entry) {
   const fileNameLength = headerView.getUint16(26, true);
   const extraFieldLength = headerView.getUint16(28, true);
   const dataStart = entry.localHeaderOffset + 30 + fileNameLength + extraFieldLength;
-  return new Uint8Array(await readSlice(file, dataStart, entry.compressedSize));
+  return {
+    dataStart,
+    compressedSize: entry.compressedSize
+  };
 }
-__name(readCompressedFileData, "readCompressedFileData");
+__name(getLocalFileDataRange, "getLocalFileDataRange");
 async function inflateRawDeflate(data, expectedLength) {
   var _a;
   if (typeof DecompressionStream === "undefined") {
@@ -15349,6 +15357,78 @@ async function readLocalFileData(file, entry) {
   throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`);
 }
 __name(readLocalFileData, "readLocalFileData");
+async function* readCompressedDataChunks(file, range, chunkSize = 512 * 1024) {
+  let offset = 0;
+  while (offset < range.compressedSize) {
+    const length = Math.min(chunkSize, range.compressedSize - offset);
+    const chunk = new Uint8Array(await readSlice(file, range.dataStart + offset, length));
+    offset += chunk.byteLength;
+    if (chunk.byteLength > 0) {
+      yield chunk;
+    }
+  }
+}
+__name(readCompressedDataChunks, "readCompressedDataChunks");
+async function* readLocalFileTextChunks(file, entry) {
+  const range = await getLocalFileDataRange(file, entry);
+  const decoder = new TextDecoder("utf-8");
+  if (entry.compressionMethod === 0) {
+    for await (const chunk of readCompressedDataChunks(file, range)) {
+      const textChunk = decoder.decode(chunk, { stream: true });
+      if (textChunk.length > 0) {
+        yield textChunk;
+      }
+    }
+    const finalChunk = decoder.decode();
+    if (finalChunk.length > 0) {
+      yield finalChunk;
+    }
+    return;
+  }
+  if (entry.compressionMethod !== 8) {
+    throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`);
+  }
+  if (typeof DecompressionStream === "undefined") {
+    throw new Error("DecompressionStream is unavailable on this device");
+  }
+  const decompressor = new DecompressionStream("deflate-raw");
+  const writer = decompressor.writable.getWriter();
+  const reader = decompressor.readable.getReader();
+  const pumpCompressed = (async () => {
+    try {
+      for await (const compressedChunk of readCompressedDataChunks(file, range)) {
+        await writer.write(compressedChunk);
+      }
+      await writer.close();
+    } catch (error) {
+      await writer.abort(error);
+      throw error;
+    }
+  })();
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        break;
+      }
+      if (!value || value.byteLength === 0) {
+        continue;
+      }
+      const textChunk = decoder.decode(value, { stream: true });
+      if (textChunk.length > 0) {
+        yield textChunk;
+      }
+    }
+    const finalChunk = decoder.decode();
+    if (finalChunk.length > 0) {
+      yield finalChunk;
+    }
+    await pumpCompressed;
+  } finally {
+    reader.releaseLock();
+  }
+}
+__name(readLocalFileTextChunks, "readLocalFileTextChunks");
 var MobileZipEntryHandle = class {
   constructor(file, entry) {
     this.file = file;
@@ -15361,6 +15441,11 @@ var MobileZipEntryHandle = class {
   async readText() {
     const bytes = await this.readBytes();
     return new TextDecoder("utf-8").decode(bytes);
+  }
+  async *readTextChunks() {
+    for await (const chunk of readLocalFileTextChunks(this.file, this.entry)) {
+      yield chunk;
+    }
   }
 };
 __name(MobileZipEntryHandle, "MobileZipEntryHandle");
@@ -18530,6 +18615,129 @@ var StreamingJsonArrayParser = class {
     }
   }
   /**
+   * Stream objects from chunked JSON text without building one giant string.
+   *
+   * This is primarily used on mobile when a large `conversations.json`
+   * could otherwise trigger memory pressure.
+   */
+  static async *streamConversationsFromChunks(chunks) {
+    const arrayState = await this.findConversationsArrayStart(chunks);
+    if (!arrayState) {
+      throw new Error("Could not find conversations array in chunked JSON payload");
+    }
+    let {
+      buffer,
+      done,
+      pullNextChunk,
+      scanIndex
+    } = arrayState;
+    let inString = false;
+    let escape = false;
+    let elementDepth = 0;
+    let elementStart = -1;
+    let elementEnd = -1;
+    while (true) {
+      while (scanIndex < buffer.length) {
+        const ch = buffer[scanIndex];
+        if (elementStart === -1) {
+          if (ch === "]") {
+            return;
+          }
+          if (ch === "," || /\s/.test(ch)) {
+            scanIndex++;
+            continue;
+          }
+          elementStart = scanIndex;
+          elementEnd = -1;
+          inString = false;
+          escape = false;
+          elementDepth = 0;
+        }
+        if (inString) {
+          if (escape) {
+            escape = false;
+          } else if (ch === "\\") {
+            escape = true;
+          } else if (ch === '"') {
+            inString = false;
+          }
+        } else {
+          if (ch === '"') {
+            inString = true;
+          } else if (ch === "{" || ch === "[") {
+            elementDepth++;
+          } else if (ch === "}" || ch === "]") {
+            elementDepth--;
+            if (elementDepth < 0) {
+              throw new Error("Invalid chunked JSON array: unbalanced brackets");
+            }
+            if (elementDepth === 0) {
+              elementEnd = scanIndex + 1;
+            }
+          }
+          if (elementEnd !== -1) {
+            if (ch === "," || ch === "]") {
+              const element = buffer.slice(elementStart, elementEnd).trim();
+              if (element.length > 0) {
+                try {
+                  yield JSON.parse(element);
+                } catch (e) {
+                }
+              }
+              buffer = buffer.slice(scanIndex + 1);
+              scanIndex = 0;
+              elementStart = -1;
+              elementEnd = -1;
+              elementDepth = 0;
+              inString = false;
+              escape = false;
+              if (ch === "]") {
+                return;
+              }
+              continue;
+            }
+            if (!/\s/.test(ch)) {
+              const element = buffer.slice(elementStart, elementEnd).trim();
+              if (element.length > 0) {
+                try {
+                  yield JSON.parse(element);
+                } catch (e) {
+                }
+              }
+              buffer = buffer.slice(elementEnd);
+              scanIndex = 0;
+              elementStart = -1;
+              elementEnd = -1;
+              elementDepth = 0;
+              inString = false;
+              escape = false;
+              continue;
+            }
+          }
+        }
+        scanIndex++;
+      }
+      if (done) {
+        if (elementStart !== -1 && elementEnd !== -1) {
+          const element = buffer.slice(elementStart, elementEnd).trim();
+          if (element.length > 0) {
+            try {
+              yield JSON.parse(element);
+            } catch (e) {
+            }
+          }
+        }
+        return;
+      }
+      const nextChunk = await pullNextChunk();
+      if (nextChunk === null) {
+        done = true;
+        continue;
+      }
+      buffer += nextChunk;
+    }
+  }
+  /**
    * Extract the raw JSON for the conversations array.
    * Returns a substring representing `[ {...}, {...}, ... ]`.
    */
@@ -18622,6 +18830,54 @@ var StreamingJsonArrayParser = class {
         i++;
       if (i < len && arrayJson[i] === ",") {
         i++;
+      }
+    }
+  }
+  static async findConversationsArrayStart(chunks) {
+    const iterator = chunks[Symbol.asyncIterator]();
+    let done = false;
+    let buffer = "";
+    const pullNextChunk = /* @__PURE__ */ __name(async () => {
+      const next = await iterator.next();
+      if (next.done) {
+        done = true;
+        return null;
+      }
+      return next.value || "";
+    }, "pullNextChunk");
+    while (true) {
+      let i = 0;
+      while (i < buffer.length && /\s/.test(buffer[i]))
+        i++;
+      if (i < buffer.length && buffer[i] === "[") {
+        return {
+          buffer: buffer.slice(i + 1),
+          scanIndex: 0,
+          done,
+          pullNextChunk
+        };
+      }
+      const convMatch = buffer.match(/"conversations"\s*:\s*\[/);
+      if (convMatch && convMatch.index !== void 0) {
+        const matchStart = convMatch.index;
+        const matchEnd = matchStart + convMatch[0].length;
+        return {
+          buffer: buffer.slice(matchEnd),
+          scanIndex: 0,
+          done,
+          pullNextChunk
+        };
+      }
+      if (done) {
+        return null;
+      }
+      const nextChunk = await pullNextChunk();
+      if (nextChunk === null) {
+        continue;
+      }
+      buffer += nextChunk;
+      if (buffer.length > 1024 * 1024) {
+        buffer = buffer.slice(-1024 * 1024);
       }
     }
   }
@@ -18905,23 +19161,45 @@ async function* extractConversationsStream(zip) {
       streamLogger.info(
         `Reading numbered conversation file (${fileName}) [entrySize=${entrySize != null ? entrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
       );
-      const json = await entry.readText();
-      streamLogger.info("Numbered conversation file read complete", {
-        fileName,
-        textLength: json.length,
-        approxStringBytes: json.length * 2,
-        readDurationMs: Date.now() - fileReadStartedAt,
-        memorySnapshot: formatRuntimeMemorySnapshot()
-      });
-      for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
-        yieldedCount2++;
-        if (yieldedCount2 <= 3 || yieldedCount2 % 100 === 0) {
-          streamLogger.info("Yielding streamed conversation", {
-            source: fileName,
-            yieldedCount: yieldedCount2
-          });
+      if (entry.readTextChunks) {
+        streamLogger.info("Using chunked numbered conversation reader", {
+          fileName,
+          entrySize: entrySize != null ? entrySize : null
+        });
+        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(entry.readTextChunks())) {
+          yieldedCount2++;
+          if (yieldedCount2 <= 3 || yieldedCount2 % 100 === 0) {
+            streamLogger.info("Yielding streamed conversation", {
+              source: fileName,
+              yieldedCount: yieldedCount2
+            });
+          }
+          yield conv;
         }
-        yield conv;
+        streamLogger.info("Chunked numbered conversation file parse complete", {
+          fileName,
+          readDurationMs: Date.now() - fileReadStartedAt,
+          memorySnapshot: formatRuntimeMemorySnapshot()
+        });
+      } else {
+        const json = await entry.readText();
+        streamLogger.info("Numbered conversation file read complete", {
+          fileName,
+          textLength: json.length,
+          approxStringBytes: json.length * 2,
+          readDurationMs: Date.now() - fileReadStartedAt,
+          memorySnapshot: formatRuntimeMemorySnapshot()
+        });
+        for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
+          yieldedCount2++;
+          if (yieldedCount2 <= 3 || yieldedCount2 % 100 === 0) {
+            streamLogger.info("Yielding streamed conversation", {
+              source: fileName,
+              yieldedCount: yieldedCount2
+            });
+          }
+          yield conv;
+        }
       }
     }
     streamLogger.info("Numbered conversation stream complete", {
@@ -18942,43 +19220,77 @@ async function* extractConversationsStream(zip) {
   streamLogger.info(
     `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize != null ? conversationEntrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
   );
-  let conversationsJson;
-  try {
-    conversationsJson = await conversationsFile.readText();
-  } catch (error) {
-    streamLogger.error("Failed while reading conversations.json for stream extraction", {
-      durationMs: Date.now() - readStartedAt,
-      memorySnapshot: formatRuntimeMemorySnapshot(),
-      message: error instanceof Error ? error.message : String(error)
-    });
-    throw error;
-  }
-  streamLogger.info("conversations.json read complete", {
-    textLength: conversationsJson.length,
-    approxStringBytes: conversationsJson.length * 2,
-    readDurationMs: Date.now() - readStartedAt,
-    totalDurationMs: Date.now() - startedAt,
-    memorySnapshot: formatRuntimeMemorySnapshot()
-  });
-  const parseStartedAt = Date.now();
   let yieldedCount = 0;
-  for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
-    yieldedCount++;
-    if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-      streamLogger.info("Yielding streamed conversation", {
-        source: "conversations.json",
-        yieldedCount
+  if (conversationsFile.readTextChunks) {
+    streamLogger.info("Using chunked conversations.json reader", {
+      entrySize: conversationEntrySize != null ? conversationEntrySize : null
+    });
+    try {
+      for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(conversationsFile.readTextChunks())) {
+        yieldedCount++;
+        if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+          streamLogger.info("Yielding streamed conversation", {
+            source: "conversations.json",
+            yieldedCount
+          });
+        }
+        yield conv;
+      }
+    } catch (error) {
+      streamLogger.error("Failed while chunk-reading conversations.json for stream extraction", {
+        durationMs: Date.now() - readStartedAt,
+        memorySnapshot: formatRuntimeMemorySnapshot(),
+        yieldedCount,
+        message: error instanceof Error ? error.message : String(error)
       });
+      throw error;
     }
-    yield conv;
+    streamLogger.info("Conversation stream extraction complete", {
+      yieldedCount,
+      parseDurationMs: Date.now() - readStartedAt,
+      durationMs: Date.now() - startedAt,
+      memorySnapshot: formatRuntimeMemorySnapshot(),
+      mode: "chunked"
+    });
+  } else {
+    let conversationsJson;
+    try {
+      conversationsJson = await conversationsFile.readText();
+    } catch (error) {
+      streamLogger.error("Failed while reading conversations.json for stream extraction", {
+        durationMs: Date.now() - readStartedAt,
+        memorySnapshot: formatRuntimeMemorySnapshot(),
+        message: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
+    streamLogger.info("conversations.json read complete", {
+      textLength: conversationsJson.length,
+      approxStringBytes: conversationsJson.length * 2,
+      readDurationMs: Date.now() - readStartedAt,
+      totalDurationMs: Date.now() - startedAt,
+      memorySnapshot: formatRuntimeMemorySnapshot()
+    });
+    const parseStartedAt = Date.now();
+    for (const conv of StreamingJsonArrayParser.streamConversations(conversationsJson)) {
+      yieldedCount++;
+      if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
+        streamLogger.info("Yielding streamed conversation", {
+          source: "conversations.json",
+          yieldedCount
+        });
+      }
+      yield conv;
+    }
+    conversationsJson = "";
+    streamLogger.info("Conversation stream extraction complete", {
+      yieldedCount,
+      parseDurationMs: Date.now() - parseStartedAt,
+      durationMs: Date.now() - startedAt,
+      memorySnapshot: formatRuntimeMemorySnapshot(),
+      mode: "full-text"
+    });
   }
-  conversationsJson = "";
-  streamLogger.info("Conversation stream extraction complete", {
-    yieldedCount,
-    parseDurationMs: Date.now() - parseStartedAt,
-    durationMs: Date.now() - startedAt,
-    memorySnapshot: formatRuntimeMemorySnapshot()
-  });
 }
 __name(extractConversationsStream, "extractConversationsStream");
 

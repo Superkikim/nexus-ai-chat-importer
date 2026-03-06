@@ -52,6 +52,147 @@ export class StreamingJsonArrayParser {
     }
 
     /**
+     * Stream objects from chunked JSON text without building one giant string.
+     *
+     * This is primarily used on mobile when a large `conversations.json`
+     * could otherwise trigger memory pressure.
+     */
+    static async *streamConversationsFromChunks(chunks: AsyncIterable<string>): AsyncGenerator<any> {
+        const arrayState = await this.findConversationsArrayStart(chunks);
+        if (!arrayState) {
+            throw new Error("Could not find conversations array in chunked JSON payload");
+        }
+
+        let {
+            buffer,
+            done,
+            pullNextChunk,
+            scanIndex,
+        } = arrayState;
+
+        let inString = false;
+        let escape = false;
+        let elementDepth = 0;
+        let elementStart = -1;
+        let elementEnd = -1;
+
+        while (true) {
+            while (scanIndex < buffer.length) {
+                const ch = buffer[scanIndex];
+
+                if (elementStart === -1) {
+                    if (ch === "]") {
+                        return;
+                    }
+                    if (ch === "," || /\s/.test(ch)) {
+                        scanIndex++;
+                        continue;
+                    }
+
+                    elementStart = scanIndex;
+                    elementEnd = -1;
+                    inString = false;
+                    escape = false;
+                    elementDepth = 0;
+                }
+
+                if (inString) {
+                    if (escape) {
+                        escape = false;
+                    } else if (ch === "\\") {
+                        escape = true;
+                    } else if (ch === "\"") {
+                        inString = false;
+                    }
+                } else {
+                    if (ch === "\"") {
+                        inString = true;
+                    } else if (ch === "{" || ch === "[") {
+                        elementDepth++;
+                    } else if (ch === "}" || ch === "]") {
+                        elementDepth--;
+                        if (elementDepth < 0) {
+                            throw new Error("Invalid chunked JSON array: unbalanced brackets");
+                        }
+                        if (elementDepth === 0) {
+                            elementEnd = scanIndex + 1;
+                        }
+                    }
+
+                    if (elementEnd !== -1) {
+                        if (ch === "," || ch === "]") {
+                            const element = buffer.slice(elementStart, elementEnd).trim();
+                            if (element.length > 0) {
+                                try {
+                                    yield JSON.parse(element);
+                                } catch {
+                                    // Keep parity with string parser: skip malformed elements.
+                                }
+                            }
+
+                            buffer = buffer.slice(scanIndex + 1);
+                            scanIndex = 0;
+                            elementStart = -1;
+                            elementEnd = -1;
+                            elementDepth = 0;
+                            inString = false;
+                            escape = false;
+
+                            if (ch === "]") {
+                                return;
+                            }
+                            continue;
+                        }
+
+                        if (!/\s/.test(ch)) {
+                            const element = buffer.slice(elementStart, elementEnd).trim();
+                            if (element.length > 0) {
+                                try {
+                                    yield JSON.parse(element);
+                                } catch {
+                                    // Keep parity with string parser: skip malformed elements.
+                                }
+                            }
+
+                            buffer = buffer.slice(elementEnd);
+                            scanIndex = 0;
+                            elementStart = -1;
+                            elementEnd = -1;
+                            elementDepth = 0;
+                            inString = false;
+                            escape = false;
+                            continue;
+                        }
+                    }
+                }
+
+                scanIndex++;
+            }
+
+            if (done) {
+                if (elementStart !== -1 && elementEnd !== -1) {
+                    const element = buffer.slice(elementStart, elementEnd).trim();
+                    if (element.length > 0) {
+                        try {
+                            yield JSON.parse(element);
+                        } catch {
+                            // Keep parity with string parser: skip malformed elements.
+                        }
+                    }
+                }
+                return;
+            }
+
+            const nextChunk = await pullNextChunk();
+            if (nextChunk === null) {
+                done = true;
+                continue;
+            }
+            buffer += nextChunk;
+        }
+    }
+
+    /**
      * Extract the raw JSON for the conversations array.
      * Returns a substring representing `[ {...}, {...}, ... ]`.
      */
@@ -160,6 +301,65 @@ export class StreamingJsonArrayParser {
         }
     }
 
+    private static async findConversationsArrayStart(chunks: AsyncIterable<string>): Promise<{
+        buffer: string;
+        scanIndex: number;
+        done: boolean;
+        pullNextChunk: () => Promise<string | null>;
+    } | null> {
+        const iterator = chunks[Symbol.asyncIterator]();
+        let done = false;
+        let buffer = "";
+
+        const pullNextChunk = async (): Promise<string | null> => {
+            const next = await iterator.next();
+            if (next.done) {
+                done = true;
+                return null;
+            }
+            return next.value || "";
+        };
+
+        while (true) {
+            let i = 0;
+            while (i < buffer.length && /\s/.test(buffer[i])) i++;
+            if (i < buffer.length && buffer[i] === "[") {
+                return {
+                    buffer: buffer.slice(i + 1),
+                    scanIndex: 0,
+                    done,
+                    pullNextChunk,
+                };
+            }
+
+            const convMatch = buffer.match(/"conversations"\s*:\s*\[/);
+            if (convMatch && convMatch.index !== undefined) {
+                const matchStart = convMatch.index;
+                const matchEnd = matchStart + convMatch[0].length;
+                return {
+                    buffer: buffer.slice(matchEnd),
+                    scanIndex: 0,
+                    done,
+                    pullNextChunk,
+                };
+            }
+
+            if (done) {
+                return null;
+            }
+
+            const nextChunk = await pullNextChunk();
+            if (nextChunk === null) {
+                continue;
+            }
+            buffer += nextChunk;
+
+            if (buffer.length > 1024 * 1024) {
+                buffer = buffer.slice(-1024 * 1024);
+            }
+        }
+    }
+
     /**
      * Find the matching closing bracket for `[` starting at startIndex.
      */
@@ -198,4 +398,3 @@ export class StreamingJsonArrayParser {
         throw new Error("No matching closing bracket found in JSON source");
     }
 }
-
