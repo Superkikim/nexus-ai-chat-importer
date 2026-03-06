@@ -42,6 +42,8 @@ import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
 import { ensureFolderExists, formatTimestamp } from "./utils";
 import { sortFilesForImport } from "./utils/file-sort";
 import type { GeminiIndex } from "./providers/gemini/gemini-types";
+import { createZipArchiveReader } from "./utils/zip-loader";
+import { classifyArchiveEntries } from "./utils/zip-content-reader";
 
 interface ImportCheckpoint {
     operation: "import-all" | "selective-analysis" | "selective-import";
@@ -391,6 +393,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(files: File[], provider: string): Promise<void> {
         try {
+            const isMobile = this.isMobileTaskQueueMode();
+            if (isMobile) {
+                await this.handleImportAllMobileSequential(files, provider);
+                return;
+            }
+
             this.setImportCheckpoint({
                 operation: "import-all",
                 phase: "analysis-start",
@@ -510,6 +518,111 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             new Notice(t('notices.import_error', { error: error instanceof Error ? error.message : String(error) }));
         } finally {
             await this.runPostImportCleanup("import-all");
+        }
+    }
+
+    private async handleImportAllMobileSequential(files: File[], provider: string): Promise<void> {
+        this.setImportCheckpoint({
+            operation: "import-all",
+            phase: "mobile-direct-import-start",
+            provider,
+            task: `0/${files.length}`,
+        });
+        this.logger.child("ImportFlow").info("Mobile import-all running in direct sequential mode", {
+            provider,
+            fileCount: files.length,
+        });
+
+        const operationReport = new ImportReport();
+        if (this.settings.useCustomMessageTimestampFormat) {
+            operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+        }
+
+        const providerRegistry = createProviderRegistry(this);
+        const adapter = providerRegistry.getAdapter(provider);
+        const entryFilter = adapter?.shouldIncludeZipEntry?.bind(adapter);
+
+        let skippedUnsupported = 0;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            this.setImportCheckpoint({
+                operation: "import-all",
+                phase: "mobile-direct-file-precheck",
+                provider,
+                fileName: file.name,
+                task: `${i + 1}/${files.length}`,
+            });
+
+            let isSupportedArchive = true;
+            try {
+                const zip = await createZipArchiveReader(file, entryFilter);
+                const entries = await zip.listEntries();
+                const classification = classifyArchiveEntries(entries.map((entry) => entry.path), provider);
+                if (!classification.supported) {
+                    isSupportedArchive = false;
+                    skippedUnsupported++;
+                    this.logger.child("ImportFlow").warn("Skipping unsupported archive during mobile direct import", {
+                        provider,
+                        fileName: file.name,
+                        reason: classification.reason,
+                        message: classification.message,
+                        task: `${i + 1}/${files.length}`,
+                    });
+                }
+            } catch (error) {
+                isSupportedArchive = false;
+                skippedUnsupported++;
+                this.logger.child("ImportFlow").warn("Skipping unreadable archive during mobile direct import", {
+                    provider,
+                    fileName: file.name,
+                    message: error instanceof Error ? error.message : String(error),
+                    task: `${i + 1}/${files.length}`,
+                });
+            }
+
+            if (!isSupportedArchive) {
+                await this.yieldToEventLoop();
+                continue;
+            }
+
+            this.setImportCheckpoint({
+                operation: "import-all",
+                phase: "mobile-direct-file-import",
+                provider,
+                fileName: file.name,
+                task: `${i + 1}/${files.length}`,
+            });
+            await this.importService.handleZipFile(file, provider, undefined, operationReport);
+            this.importService.clearAttachmentMap();
+            await this.yieldToEventLoop();
+            await this.yieldToEventLoop();
+        }
+
+        const reportPath = await this.writeConsolidatedReport(
+            operationReport,
+            provider,
+            files,
+            undefined,
+            undefined,
+            false
+        );
+
+        if (reportPath) {
+            this.showImportCompletionDialog(operationReport, reportPath);
+        } else {
+            new Notice(
+                t("notices.import_completed_fallback", {
+                    created: String(operationReport.getCreatedCount()),
+                    updated: String(operationReport.getUpdatedCount()),
+                })
+            );
+        }
+
+        if (skippedUnsupported > 0) {
+            new Notice(
+                `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
+                5000
+            );
         }
     }
 
