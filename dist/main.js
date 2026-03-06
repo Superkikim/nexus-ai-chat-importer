@@ -23977,8 +23977,21 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     });
     await this.yieldToEventLoop();
     let skippedUnsupported = 0;
+    let skippedAlreadyImported = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      const archiveFingerprint = getFileFingerprint(file);
+      if (storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name)) {
+        skippedAlreadyImported++;
+        this.logger.child("ImportFlow").info("Skipping already imported archive during mobile direct import", {
+          provider,
+          fileName: file.name,
+          fingerprint: archiveFingerprint,
+          task: `${i + 1}/${files.length}`
+        });
+        await this.yieldToEventLoop();
+        continue;
+      }
       this.setImportCheckpoint({
         operation: "import-all",
         phase: "mobile-direct-file-precheck",
@@ -24030,8 +24043,26 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         operationReport,
         existingConversationsMap
       );
-      this.importService.clearAttachmentMap();
+      this.importService.resetRuntimeState();
       await this.yieldToEventLoop();
+      await this.yieldToEventLoop();
+      await new Promise((resolve) => window.setTimeout(resolve, 500));
+      this.setImportCheckpoint({
+        operation: "import-all",
+        phase: "mobile-direct-existing-rescan",
+        provider,
+        fileName: file.name,
+        task: `${i + 1}/${files.length}`
+      });
+      const rescanStartedAt = Date.now();
+      existingConversationsMap.clear();
+      existingConversationsMap = await storage.scanExistingConversations();
+      this.logger.child("ImportFlow").info("Mobile direct import existing conversation map refreshed", {
+        provider,
+        fileName: file.name,
+        conversationCount: existingConversationsMap.size,
+        durationMs: Date.now() - rescanStartedAt
+      });
       await this.yieldToEventLoop();
     }
     existingConversationsMap.clear();
@@ -24058,6 +24089,12 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     if (skippedUnsupported > 0) {
       new import_obsidian33.Notice(
         `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
+        5e3
+      );
+    }
+    if (skippedAlreadyImported > 0) {
+      new import_obsidian33.Notice(
+        `${skippedAlreadyImported} archive(s) were already imported and were skipped for safe resume.`,
         5e3
       );
     }

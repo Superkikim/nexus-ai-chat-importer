@@ -39,7 +39,7 @@ import { FileSelectionResult, ConversationSelectionResult } from "./types/conver
 import { ConversationMetadataExtractor, IgnoredArchiveInfo } from "./services/conversation-metadata-extractor";
 import { ImportReport } from "./models/import-report";
 import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
-import { ensureFolderExists, formatTimestamp } from "./utils";
+import { ensureFolderExists, formatTimestamp, getFileFingerprint } from "./utils";
 import { sortFilesForImport } from "./utils/file-sort";
 import type { GeminiIndex } from "./providers/gemini/gemini-types";
 import { createZipArchiveReader } from "./utils/zip-loader";
@@ -583,8 +583,23 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         await this.yieldToEventLoop();
 
         let skippedUnsupported = 0;
+        let skippedAlreadyImported = 0;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            const archiveFingerprint = getFileFingerprint(file);
+
+            if (storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name)) {
+                skippedAlreadyImported++;
+                this.logger.child("ImportFlow").info("Skipping already imported archive during mobile direct import", {
+                    provider,
+                    fileName: file.name,
+                    fingerprint: archiveFingerprint,
+                    task: `${i + 1}/${files.length}`,
+                });
+                await this.yieldToEventLoop();
+                continue;
+            }
+
             this.setImportCheckpoint({
                 operation: "import-all",
                 phase: "mobile-direct-file-precheck",
@@ -639,8 +654,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 operationReport,
                 existingConversationsMap
             );
-            this.importService.clearAttachmentMap();
+            this.importService.resetRuntimeState();
             await this.yieldToEventLoop();
+            await this.yieldToEventLoop();
+            await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+
+            this.setImportCheckpoint({
+                operation: "import-all",
+                phase: "mobile-direct-existing-rescan",
+                provider,
+                fileName: file.name,
+                task: `${i + 1}/${files.length}`,
+            });
+            const rescanStartedAt = Date.now();
+            existingConversationsMap.clear();
+            existingConversationsMap = await storage.scanExistingConversations();
+            this.logger.child("ImportFlow").info("Mobile direct import existing conversation map refreshed", {
+                provider,
+                fileName: file.name,
+                conversationCount: existingConversationsMap.size,
+                durationMs: Date.now() - rescanStartedAt,
+            });
             await this.yieldToEventLoop();
         }
 
@@ -671,6 +705,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         if (skippedUnsupported > 0) {
             new Notice(
                 `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
+                5000
+            );
+        }
+        if (skippedAlreadyImported > 0) {
+            new Notice(
+                `${skippedAlreadyImported} archive(s) were already imported and were skipped for safe resume.`,
                 5000
             );
         }
