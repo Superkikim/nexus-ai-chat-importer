@@ -494,6 +494,8 @@ var init_en = __esm({
         import_error: "Error during import: {{error}}",
         import_error_analyzing: "Error analyzing conversations: {{error}}",
         import_error_file: "Error processing {{filename}}. Check console for details.",
+        import_error_file_report: "File import failed: {{filename}}",
+        import_error_mobile_large_json: "This ZIP contains a very large conversation file ({{size_mb}} MB). Your mobile device could not process it safely in this run. Please retry with fewer ZIP files selected.",
         import_no_selected: "No conversations selected for import.",
         import_no_zip_gemini: "Please select at least one Gemini Takeout ZIP file (plus optional JSON index from the extension).",
         import_no_zip: "Please select at least one ZIP export file.",
@@ -980,6 +982,8 @@ var init_fr = __esm({
         import_error: "Erreur lors de l'importation : {{error}}",
         import_error_analyzing: "Erreur lors de l'analyse des conversations : {{error}}",
         import_error_file: "Erreur lors du traitement de {{filename}}. Consultez la console pour plus de d\xE9tails.",
+        import_error_file_report: "\xC9chec de l'import du fichier : {{filename}}",
+        import_error_mobile_large_json: "Ce ZIP contient un fichier de conversations tr\xE8s volumineux ({{size_mb}} MB). Votre appareil mobile n'a pas pu le traiter de fa\xE7on fiable sur cette tentative. R\xE9essayez en s\xE9lectionnant moins de ZIP \xE0 la fois.",
         import_no_selected: "Aucune conversation s\xE9lectionn\xE9e pour l'importation.",
         import_no_zip_gemini: "Veuillez s\xE9lectionner au moins un fichier ZIP Gemini Takeout (plus un JSON optionnel depuis l'extension).",
         import_no_zip: "Veuillez s\xE9lectionner au moins un fichier ZIP d'export.",
@@ -19212,8 +19216,12 @@ async function* extractConversationsStream(zip, options = {}) {
         });
       } else if (isMobileRuntime && isLargeJsonFile && enforceChunkedForLargeJsonOnMobile) {
         throw new NexusAiChatImporterError(
-          "Large JSON mobile fail-safe triggered",
-          `This archive contains a large conversation JSON (${entrySize} bytes) and cannot be safely processed on mobile without chunked reading support.`
+          "MOBILE_LARGE_JSON_STREAM_REQUIRED",
+          {
+            fileName,
+            entrySizeBytes: entrySize != null ? entrySize : null,
+            thresholdBytes: largeJsonThresholdBytes
+          }
         );
       } else {
         const json = await entry.readText();
@@ -19301,8 +19309,12 @@ async function* extractConversationsStream(zip, options = {}) {
     });
   } else if (isMobileRuntime && isLargeConversationsJson && enforceChunkedForLargeJsonOnMobile) {
     throw new NexusAiChatImporterError(
-      "Large JSON mobile fail-safe triggered",
-      `This archive contains a large conversations.json (${conversationEntrySize} bytes) and cannot be safely processed on mobile without chunked reading support.`
+      "MOBILE_LARGE_JSON_STREAM_REQUIRED",
+      {
+        fileName: "conversations.json",
+        entrySizeBytes: conversationEntrySize != null ? conversationEntrySize : null,
+        thresholdBytes: largeJsonThresholdBytes
+      }
     );
   } else {
     let conversationsJson;
@@ -19420,6 +19432,7 @@ function extractEmbeddedTimestamp(fileName) {
 __name(extractEmbeddedTimestamp, "extractEmbeddedTimestamp");
 
 // src/services/import-service.ts
+init_i18n();
 function getRuntimeMemorySnapshot() {
   const perf = globalThis.performance;
   const memory = perf == null ? void 0 : perf.memory;
@@ -19610,19 +19623,20 @@ Do NOT extract and re-compress the file - just rename it!`;
       });
       this.updateRuntimePhase("completed");
     } catch (error) {
-      const message = error instanceof NexusAiChatImporterError ? error.message : error instanceof Error ? error.message : "An unknown error occurred";
-      this.plugin.logger.error("Error handling zip file", { message });
+      const resolvedError = this.resolveImportError(error, file.name);
+      this.plugin.logger.error("Error handling zip file", { message: resolvedError.rawMessage });
       importLogger.error(`File import failed`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
-        message,
+        message: resolvedError.rawMessage,
         runtimeContext: this.runtimeContext,
         memorySnapshot: getRuntimeMemorySnapshot()
       });
+      this.importReport.addError(resolvedError.reportMessage, resolvedError.reportDetails);
       progressCallback({
         phase: "error",
-        title: "Import failed",
-        detail: message
+        title: t("import_progress.error.message"),
+        detail: resolvedError.userMessage
       });
       setTimeout(() => progressModal.close(), 5e3);
     } finally {
@@ -19989,6 +20003,33 @@ Do NOT extract and re-compress the file - just rename it!`;
       memorySnapshot: getRuntimeMemorySnapshot()
     });
     this.runtimeContext = null;
+  }
+  resolveImportError(error, fileName) {
+    const rawMessage = error instanceof NexusAiChatImporterError ? error.message : error instanceof Error ? error.message : "An unknown error occurred";
+    if (error instanceof NexusAiChatImporterError && error.message === "MOBILE_LARGE_JSON_STREAM_REQUIRED") {
+      const details = typeof error.details === "object" && error.details !== null ? error.details : {};
+      const entrySizeBytes = typeof details.entrySizeBytes === "number" ? details.entrySizeBytes : null;
+      const thresholdBytes = typeof details.thresholdBytes === "number" ? details.thresholdBytes : null;
+      const entrySizeMb = entrySizeBytes !== null ? Math.round(entrySizeBytes / (1024 * 1024) * 10) / 10 : null;
+      const thresholdMb = thresholdBytes !== null ? Math.round(thresholdBytes / (1024 * 1024) * 10) / 10 : null;
+      const userMessage = t("notices.import_error_mobile_large_json", {
+        filename: fileName,
+        size_mb: entrySizeMb !== null ? String(entrySizeMb) : "n/a"
+      });
+      const reportDetails = `${userMessage} (entrySizeBytes=${entrySizeBytes != null ? entrySizeBytes : "n/a"}, thresholdBytes=${thresholdBytes != null ? thresholdBytes : "n/a"}, thresholdMb=${thresholdMb != null ? thresholdMb : "n/a"})`;
+      return {
+        rawMessage,
+        userMessage,
+        reportMessage: t("notices.import_error_file_report", { filename: fileName }),
+        reportDetails
+      };
+    }
+    return {
+      rawMessage,
+      userMessage: rawMessage,
+      reportMessage: t("notices.import_error_file_report", { filename: fileName }),
+      reportDetails: rawMessage
+    };
   }
 };
 __name(ImportService, "ImportService");

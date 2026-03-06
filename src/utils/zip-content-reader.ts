@@ -381,8 +381,12 @@ export async function* extractConversationsStream(
                 });
             } else if (isMobileRuntime && isLargeJsonFile && enforceChunkedForLargeJsonOnMobile) {
                 throw new NexusAiChatImporterError(
-                    "Large JSON mobile fail-safe triggered",
-                    `This archive contains a large conversation JSON (${entrySize} bytes) and cannot be safely processed on mobile without chunked reading support.`
+                    "MOBILE_LARGE_JSON_STREAM_REQUIRED",
+                    {
+                        fileName,
+                        entrySizeBytes: entrySize ?? null,
+                        thresholdBytes: largeJsonThresholdBytes,
+                    }
                 );
             } else {
                 const json = await entry.readText();
@@ -472,8 +476,12 @@ export async function* extractConversationsStream(
         });
     } else if (isMobileRuntime && isLargeConversationsJson && enforceChunkedForLargeJsonOnMobile) {
         throw new NexusAiChatImporterError(
-            "Large JSON mobile fail-safe triggered",
-            `This archive contains a large conversations.json (${conversationEntrySize} bytes) and cannot be safely processed on mobile without chunked reading support.`
+            "MOBILE_LARGE_JSON_STREAM_REQUIRED",
+            {
+                fileName: "conversations.json",
+                entrySizeBytes: conversationEntrySize ?? null,
+                thresholdBytes: largeJsonThresholdBytes,
+            }
         );
     } else {
         let conversationsJson: string;

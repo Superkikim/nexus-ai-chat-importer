@@ -41,12 +41,20 @@ import {
 import { filterConversationsByIds as filterConversationsByIdsUsingAdapters } from "../utils/conversation-filter";
 import { sortFilesForImport } from "../utils/file-sort";
 import type { GeminiIndex } from "../providers/gemini/gemini-types";
+import { t } from "../i18n";
 
 interface ImportRuntimeContext {
     fileName: string;
     provider: string;
     startedAtMs: number;
     currentPhase: string;
+}
+
+interface ResolvedImportError {
+    rawMessage: string;
+    userMessage: string;
+    reportMessage: string;
+    reportDetails: string;
 }
 
 function getRuntimeMemorySnapshot(): string {
@@ -295,25 +303,23 @@ export class ImportService {
             this.updateRuntimePhase("completed");
 
         } catch (error: unknown) {
-            const message = error instanceof NexusAiChatImporterError
-                ? error.message
-                : error instanceof Error
-                ? error.message
-                : "An unknown error occurred";
+            const resolvedError = this.resolveImportError(error, file.name);
 
-            this.plugin.logger.error("Error handling zip file", { message });
+            this.plugin.logger.error("Error handling zip file", { message: resolvedError.rawMessage });
             importLogger.error(`File import failed`, {
                 fileName: file.name,
                 forcedProvider: forcedProvider || "auto",
-                message,
+                message: resolvedError.rawMessage,
                 runtimeContext: this.runtimeContext,
                 memorySnapshot: getRuntimeMemorySnapshot(),
             });
 
+            this.importReport.addError(resolvedError.reportMessage, resolvedError.reportDetails);
+
             progressCallback({
                 phase: 'error',
-                title: 'Import failed',
-                detail: message
+                title: t('import_progress.error.message'),
+                detail: resolvedError.userMessage
             });
 
             // Keep modal open for error state
@@ -777,6 +783,46 @@ export class ImportService {
             memorySnapshot: getRuntimeMemorySnapshot(),
         });
         this.runtimeContext = null;
+    }
+
+    private resolveImportError(error: unknown, fileName: string): ResolvedImportError {
+        const rawMessage = error instanceof NexusAiChatImporterError
+            ? error.message
+            : error instanceof Error
+            ? error.message
+            : "An unknown error occurred";
+
+        if (error instanceof NexusAiChatImporterError && error.message === "MOBILE_LARGE_JSON_STREAM_REQUIRED") {
+            const details = typeof error.details === "object" && error.details !== null
+                ? error.details as { entrySizeBytes?: number; thresholdBytes?: number }
+                : {};
+
+            const entrySizeBytes = typeof details.entrySizeBytes === "number" ? details.entrySizeBytes : null;
+            const thresholdBytes = typeof details.thresholdBytes === "number" ? details.thresholdBytes : null;
+            const entrySizeMb = entrySizeBytes !== null ? Math.round((entrySizeBytes / (1024 * 1024)) * 10) / 10 : null;
+            const thresholdMb = thresholdBytes !== null ? Math.round((thresholdBytes / (1024 * 1024)) * 10) / 10 : null;
+
+            const userMessage = t("notices.import_error_mobile_large_json", {
+                filename: fileName,
+                size_mb: entrySizeMb !== null ? String(entrySizeMb) : "n/a",
+            });
+
+            const reportDetails = `${userMessage} (entrySizeBytes=${entrySizeBytes ?? "n/a"}, thresholdBytes=${thresholdBytes ?? "n/a"}, thresholdMb=${thresholdMb ?? "n/a"})`;
+
+            return {
+                rawMessage,
+                userMessage,
+                reportMessage: t("notices.import_error_file_report", { filename: fileName }),
+                reportDetails,
+            };
+        }
+
+        return {
+            rawMessage,
+            userMessage: rawMessage,
+            reportMessage: t("notices.import_error_file_report", { filename: fileName }),
+            reportDetails: rawMessage,
+        };
     }
 }
 
