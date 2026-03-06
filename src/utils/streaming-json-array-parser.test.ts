@@ -7,6 +7,12 @@ import { StreamingJsonArrayParser } from "./streaming-json-array-parser";
  */
 
 describe("StreamingJsonArrayParser", () => {
+    async function* chunksFrom(parts: string[]): AsyncGenerator<string> {
+        for (const part of parts) {
+            yield part;
+        }
+    }
+
     it("streams ChatGPT-style top-level arrays", () => {
         const conversations = [
             { id: "c1", title: "First", nested: { value: 1 } },
@@ -86,5 +92,45 @@ describe("StreamingJsonArrayParser", () => {
         // The invalid middle element should be ignored
         expect(ids).toEqual(["g1", "g2"]);
     });
-});
 
+    it("streams chunked ChatGPT arrays with BOM prefix", async () => {
+        const conversations = [
+            { id: "c1", title: "First" },
+            { id: "c2", title: "Second" },
+        ];
+        const json = `\uFEFF${JSON.stringify(conversations)}`;
+        const parts = [json.slice(0, 2), json.slice(2, 9), json.slice(9)];
+
+        const ids: string[] = [];
+        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunksFrom(parts))) {
+            ids.push(conv.id);
+        }
+
+        expect(ids).toEqual(["c1", "c2"]);
+    });
+
+    it("streams chunked Claude root object and ignores string false positives", async () => {
+        const payload = {
+            note: "example: \"conversations\":[not-real]",
+            conversations: [
+                { uuid: "ca", name: "Alpha" },
+                { uuid: "cb", name: "Beta", chat_messages: [{ text: "hi" }] },
+            ],
+            meta: { exported_at: "2024-01-01T00:00:00Z" },
+        };
+        const json = JSON.stringify(payload);
+        const keyStart = json.indexOf("\"conversations\"");
+        const parts = [
+            json.slice(0, keyStart + 5),
+            json.slice(keyStart + 5, keyStart + 17),
+            json.slice(keyStart + 17),
+        ];
+
+        const uuids: string[] = [];
+        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunksFrom(parts))) {
+            uuids.push(conv.uuid);
+        }
+
+        expect(uuids).toEqual(["ca", "cb"]);
+    });
+});
