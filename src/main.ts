@@ -283,7 +283,26 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.app,
             providerRegistry,
             (selectedProvider: string) => {
-                this.showEnhancedFileSelectionDialog(selectedProvider);
+                const importFlowLogger = this.logger.child("ImportFlow");
+                importFlowLogger.info("Provider selected from dialog", {
+                    selectedProvider,
+                    isMobile: this.isMobileTaskQueueMode(),
+                });
+
+                try {
+                    this.showEnhancedFileSelectionDialog(selectedProvider);
+                    importFlowLogger.info("Enhanced file selection dialog opened", {
+                        selectedProvider,
+                    });
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    importFlowLogger.error("Failed to open enhanced file selection dialog", {
+                        selectedProvider,
+                        message,
+                        stack: error instanceof Error ? error.stack : undefined,
+                    });
+                    new Notice(t("notices.import_error", { error: message }));
+                }
             }
         ).open();
     }
@@ -296,7 +315,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.app,
             provider,
             (result: FileSelectionResult) => {
-                this.handleFileSelectionResult(result);
+                void this.handleFileSelectionResult(result);
             },
             this
         ).open();

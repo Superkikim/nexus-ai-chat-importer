@@ -528,9 +528,11 @@ export class ConversationProcessor {
                         standardConversation = await adapter.convertChat(chat);
                     }
 
-                    // Filter only new messages for formatting
+                    // Filter only new messages for formatting.
+                    // Use note message IDs as source of truth because adapter.getNewMessages()
+                    // may return provider-native objects (e.g. Claude uses uuid, not id).
                     const newStandardMessages = standardConversation.messages.filter((msg: StandardMessage) =>
-                        newMessages.some((newMsg: StandardMessage) => newMsg.id === msg.id)
+                        !existingMessageIds.includes(msg.id)
                     );
 
                     // Process attachments on new messages only

@@ -816,7 +816,8 @@ export class ClaudeConverter {
         const filePath = `${conversationFolder}/${fileName}`;
 
         // Check if already exists
-        const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
+        const versionUuid = this.resolveArtifactVersionUuid(artifactData, versionNumber);
+        const shouldSkip = await this.shouldSkipArtifactVersion(filePath, versionUuid);
         if (shouldSkip) {
             return;
         }
@@ -927,9 +928,7 @@ export class ClaudeConverter {
         const artifactId = isNewFormat
             ? this.extractArtifactIdFromPath(artifactInput.path)
             : (artifactInput.id || 'unknown');
-        const versionUuid = isNewFormat
-            ? (artifactInput._blockId || `${artifactInput.path}::v${versionNumber}`)
-            : artifactInput.version_uuid;
+        const versionUuid = this.resolveArtifactVersionUuid(artifactInput, versionNumber);
 
         // Use forced language (from create/rewrite) or auto-detect
         if (forcedLanguage) {
@@ -1034,6 +1033,44 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
     /**
      * Check if we should skip saving this artifact version (already exists)
      */
+    private static resolveArtifactVersionUuid(artifactInput: any, versionNumber: number): string {
+        const explicitVersionUuid = typeof artifactInput?.version_uuid === "string"
+            ? artifactInput.version_uuid.trim()
+            : "";
+        if (explicitVersionUuid.length > 0) {
+            return explicitVersionUuid;
+        }
+
+        const blockVersionUuid = typeof artifactInput?._blockId === "string"
+            ? artifactInput._blockId.trim()
+            : "";
+        if (blockVersionUuid.length > 0) {
+            return blockVersionUuid;
+        }
+
+        const artifactPath = typeof artifactInput?.path === "string"
+            ? artifactInput.path.trim()
+            : "";
+        if (artifactPath.length > 0) {
+            return `${artifactPath}::v${versionNumber}`;
+        }
+
+        const artifactId = typeof artifactInput?.id === "string" && artifactInput.id.trim().length > 0
+            ? artifactInput.id.trim()
+            : "unknown";
+        return `${artifactId}::v${versionNumber}`;
+    }
+
+    private static extractVersionUuidFromArtifactContent(content: string): string | null {
+        const match = content.match(/^\s*version_uuid:\s*(.+)\s*$/m);
+        if (!match) {
+            return null;
+        }
+
+        const rawValue = match[1].trim().replace(/^['"]|['"]$/g, "");
+        return rawValue.length > 0 ? rawValue : null;
+    }
+
     private static async shouldSkipArtifactVersion(filePath: string, versionUuid: string): Promise<boolean> {
         try {
             const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
@@ -1042,16 +1079,27 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
             }
 
             const existingContent = await this.plugin.app.vault.read(existingFile as any);
+            const existingVersionUuid = this.extractVersionUuidFromArtifactContent(existingContent);
 
             // Check if the version_uuid matches (same version)
-            if (existingContent.includes(`version_uuid: ${versionUuid}`)) {
+            if (existingVersionUuid && existingVersionUuid === versionUuid) {
                 return true; // Same version, skip
             }
 
-            // Different version_uuid but same path: keep existing file to avoid noisy create conflicts.
-            this.plugin.logger.child("ClaudeArtifacts").warn("Artifact version path already exists with different version UUID, skipping", {
+            if (!existingVersionUuid) {
+                // Legacy/no-frontmatter file at the same path: preserve existing file.
+                this.plugin.logger.child("ClaudeArtifacts").info("Artifact version path already exists without version UUID metadata, skipping", {
+                    filePath,
+                    incomingVersionUuid: versionUuid,
+                });
+                return true;
+            }
+
+            // Different artifact version UUID but same path: preserve existing file.
+            this.plugin.logger.child("ClaudeArtifacts").warn("Artifact version path already exists with different artifact version UUID, skipping", {
                 filePath,
-                versionUuid,
+                incomingVersionUuid: versionUuid,
+                existingVersionUuid,
             });
             return true;
         } catch (error) {

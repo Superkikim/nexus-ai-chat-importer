@@ -14179,7 +14179,7 @@ var ConversationProcessor = class {
             standardConversation = await adapter.convertChat(chat);
           }
           const newStandardMessages = standardConversation.messages.filter(
-            (msg) => newMessages.some((newMsg) => newMsg.id === msg.id)
+            (msg) => !existingMessageIds.includes(msg.id)
           );
           let processedNewMessages = newStandardMessages;
           if (zip && adapter.processMessageAttachments) {
@@ -16872,7 +16872,8 @@ ${code}
     const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
     const fileName = `${safeArtifactId}_v${versionNumber}.md`;
     const filePath = `${conversationFolder}/${fileName}`;
-    const shouldSkip = await this.shouldSkipArtifactVersion(filePath, artifactData.version_uuid);
+    const versionUuid = this.resolveArtifactVersionUuid(artifactData, versionNumber);
+    const shouldSkip = await this.shouldSkipArtifactVersion(filePath, versionUuid);
     if (shouldSkip) {
       return;
     }
@@ -16943,7 +16944,7 @@ ${code}
     let language = isNewFormat ? "text" : artifactInput.language || "text";
     const command = artifactInput.command || "create";
     const artifactId = isNewFormat ? this.extractArtifactIdFromPath(artifactInput.path) : artifactInput.id || "unknown";
-    const versionUuid = isNewFormat ? artifactInput._blockId || `${artifactInput.path}::v${versionNumber}` : artifactInput.version_uuid;
+    const versionUuid = this.resolveArtifactVersionUuid(artifactInput, versionNumber);
     if (forcedLanguage) {
       language = forcedLanguage;
     } else if ((language.toLowerCase() === "text" || !language || language === "undefined") && versionContent) {
@@ -17022,6 +17023,30 @@ ${versionContent}
   /**
    * Check if we should skip saving this artifact version (already exists)
    */
+  static resolveArtifactVersionUuid(artifactInput, versionNumber) {
+    const explicitVersionUuid = typeof (artifactInput == null ? void 0 : artifactInput.version_uuid) === "string" ? artifactInput.version_uuid.trim() : "";
+    if (explicitVersionUuid.length > 0) {
+      return explicitVersionUuid;
+    }
+    const blockVersionUuid = typeof (artifactInput == null ? void 0 : artifactInput._blockId) === "string" ? artifactInput._blockId.trim() : "";
+    if (blockVersionUuid.length > 0) {
+      return blockVersionUuid;
+    }
+    const artifactPath = typeof (artifactInput == null ? void 0 : artifactInput.path) === "string" ? artifactInput.path.trim() : "";
+    if (artifactPath.length > 0) {
+      return `${artifactPath}::v${versionNumber}`;
+    }
+    const artifactId = typeof (artifactInput == null ? void 0 : artifactInput.id) === "string" && artifactInput.id.trim().length > 0 ? artifactInput.id.trim() : "unknown";
+    return `${artifactId}::v${versionNumber}`;
+  }
+  static extractVersionUuidFromArtifactContent(content) {
+    const match = content.match(/^\s*version_uuid:\s*(.+)\s*$/m);
+    if (!match) {
+      return null;
+    }
+    const rawValue = match[1].trim().replace(/^['"]|['"]$/g, "");
+    return rawValue.length > 0 ? rawValue : null;
+  }
   static async shouldSkipArtifactVersion(filePath, versionUuid) {
     try {
       const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
@@ -17029,12 +17054,21 @@ ${versionContent}
         return false;
       }
       const existingContent = await this.plugin.app.vault.read(existingFile);
-      if (existingContent.includes(`version_uuid: ${versionUuid}`)) {
+      const existingVersionUuid = this.extractVersionUuidFromArtifactContent(existingContent);
+      if (existingVersionUuid && existingVersionUuid === versionUuid) {
         return true;
       }
-      this.plugin.logger.child("ClaudeArtifacts").warn("Artifact version path already exists with different version UUID, skipping", {
+      if (!existingVersionUuid) {
+        this.plugin.logger.child("ClaudeArtifacts").info("Artifact version path already exists without version UUID metadata, skipping", {
+          filePath,
+          incomingVersionUuid: versionUuid
+        });
+        return true;
+      }
+      this.plugin.logger.child("ClaudeArtifacts").warn("Artifact version path already exists with different artifact version UUID, skipping", {
         filePath,
-        versionUuid
+        incomingVersionUuid: versionUuid,
+        existingVersionUuid
       });
       return true;
     } catch (error) {
@@ -23611,7 +23645,25 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       this.app,
       providerRegistry,
       (selectedProvider) => {
-        this.showEnhancedFileSelectionDialog(selectedProvider);
+        const importFlowLogger = this.logger.child("ImportFlow");
+        importFlowLogger.info("Provider selected from dialog", {
+          selectedProvider,
+          isMobile: this.isMobileTaskQueueMode()
+        });
+        try {
+          this.showEnhancedFileSelectionDialog(selectedProvider);
+          importFlowLogger.info("Enhanced file selection dialog opened", {
+            selectedProvider
+          });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          importFlowLogger.error("Failed to open enhanced file selection dialog", {
+            selectedProvider,
+            message,
+            stack: error instanceof Error ? error.stack : void 0
+          });
+          new import_obsidian32.Notice(t("notices.import_error", { error: message }));
+        }
       }
     ).open();
   }
@@ -23623,7 +23675,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       this.app,
       provider,
       (result) => {
-        this.handleFileSelectionResult(result);
+        void this.handleFileSelectionResult(result);
       },
       this
     ).open();
