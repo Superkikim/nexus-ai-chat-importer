@@ -23949,10 +23949,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       provider,
       fileCount: files.length
     });
-    const operationReport = new ImportReport();
-    if (this.settings.useCustomMessageTimestampFormat) {
-      operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
-    }
+    const mobileRun = await this.initOrResumeMobileImportRun(provider, files);
+    const runState = mobileRun.state;
     const providerRegistry = createProviderRegistry(this);
     const adapter = providerRegistry.getAdapter(provider);
     const entryFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
@@ -23978,9 +23976,23 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     await this.yieldToEventLoop();
     let skippedUnsupported = 0;
     let skippedAlreadyImported = 0;
+    let skippedAlreadyRecorded = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const archiveFingerprint = getFileFingerprint(file);
+      const previousRecord = runState.records[archiveFingerprint];
+      if (previousRecord && (previousRecord.status === "done" || previousRecord.status === "skipped-imported" || previousRecord.status === "skipped-unsupported")) {
+        skippedAlreadyRecorded++;
+        this.logger.child("ImportFlow").info("Skipping archive already recorded in resumable mobile run", {
+          provider,
+          fileName: file.name,
+          status: previousRecord.status,
+          task: `${i + 1}/${files.length}`,
+          runId: runState.runId
+        });
+        await this.yieldToEventLoop();
+        continue;
+      }
       if (storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name)) {
         skippedAlreadyImported++;
         this.logger.child("ImportFlow").info("Skipping already imported archive during mobile direct import", {
@@ -23989,6 +24001,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
           fingerprint: archiveFingerprint,
           task: `${i + 1}/${files.length}`
         });
+        await this.recordMobileRunFileResult(
+          runState,
+          file,
+          archiveFingerprint,
+          "skipped-imported",
+          this.getEmptyCompletionStats(),
+          "Already imported in a previous run."
+        );
         await this.yieldToEventLoop();
         continue;
       }
@@ -24014,16 +24034,33 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
             message: classification.message,
             task: `${i + 1}/${files.length}`
           });
+          await this.recordMobileRunFileResult(
+            runState,
+            file,
+            archiveFingerprint,
+            "skipped-unsupported",
+            this.getEmptyCompletionStats(),
+            classification.message || "Unsupported archive format for selected provider."
+          );
         }
       } catch (error) {
         isSupportedArchive = false;
         skippedUnsupported++;
+        const errorMessage = error instanceof Error ? error.message : String(error);
         this.logger.child("ImportFlow").warn("Skipping unreadable archive during mobile direct import", {
           provider,
           fileName: file.name,
-          message: error instanceof Error ? error.message : String(error),
+          message: errorMessage,
           task: `${i + 1}/${files.length}`
         });
+        await this.recordMobileRunFileResult(
+          runState,
+          file,
+          archiveFingerprint,
+          "skipped-unsupported",
+          this.getEmptyCompletionStats(),
+          errorMessage
+        );
       }
       if (!isSupportedArchive) {
         await this.yieldToEventLoop();
@@ -24036,12 +24073,26 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         fileName: file.name,
         task: `${i + 1}/${files.length}`
       });
+      const fileReport = new ImportReport();
+      if (this.settings.useCustomMessageTimestampFormat) {
+        fileReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+      }
       await this.importService.handleZipFile(
         file,
         provider,
         void 0,
-        operationReport,
+        fileReport,
         existingConversationsMap
+      );
+      const fileStats = fileReport.getCompletionStats();
+      const fileStatus = fileStats.failed > 0 ? "failed" : "done";
+      await this.recordMobileRunFileResult(
+        runState,
+        file,
+        archiveFingerprint,
+        fileStatus,
+        fileStats,
+        fileStats.failed > 0 ? "Some conversations failed during processing." : void 0
       );
       this.importService.resetRuntimeState();
       await this.yieldToEventLoop();
@@ -24068,24 +24119,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     existingConversationsMap.clear();
     existingConversationsMap = /* @__PURE__ */ new Map();
     await this.yieldToEventLoop();
-    const reportPath = await this.writeConsolidatedReport(
-      operationReport,
-      provider,
-      files,
-      void 0,
-      void 0,
-      false
-    );
-    if (reportPath) {
-      this.showImportCompletionDialog(operationReport, reportPath);
-    } else {
-      new import_obsidian33.Notice(
-        t("notices.import_completed_fallback", {
-          created: String(operationReport.getCreatedCount()),
-          updated: String(operationReport.getUpdatedCount())
-        })
-      );
-    }
+    const completionStats = this.computeMobileRunCompletionStats(runState, files.length);
+    await this.finalizeMobileImportRun(runState, completionStats);
+    this.showImportCompletionDialogWithStats(completionStats, runState.reportPath);
     if (skippedUnsupported > 0) {
       new import_obsidian33.Notice(
         `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
@@ -24095,6 +24131,12 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     if (skippedAlreadyImported > 0) {
       new import_obsidian33.Notice(
         `${skippedAlreadyImported} archive(s) were already imported and were skipped for safe resume.`,
+        5e3
+      );
+    }
+    if (skippedAlreadyRecorded > 0) {
+      new import_obsidian33.Notice(
+        `${skippedAlreadyRecorded} archive(s) were already completed in this resumable run and were skipped.`,
         5e3
       );
     }
@@ -24306,6 +24348,231 @@ ${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo
       new import_obsidian33.Notice(t("notices.report_failed"));
       return "";
     }
+  }
+  getEmptyCompletionStats() {
+    return {
+      totalFiles: 0,
+      totalConversations: 0,
+      duplicates: 0,
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      failed: 0,
+      attachmentsFound: 0,
+      attachmentsTotal: 0,
+      attachmentsMissing: 0,
+      attachmentsFailed: 0
+    };
+  }
+  async resolveProviderReportFolder(provider) {
+    const providerRegistry = createProviderRegistry(this);
+    const adapter = providerRegistry.getAdapter(provider);
+    let providerName = provider;
+    if (adapter) {
+      providerName = adapter.getReportNamingStrategy().getProviderName();
+    }
+    const folderPath = `${this.settings.reportFolder}/${providerName}`;
+    const folderResult = await ensureFolderExists(folderPath, this.app.vault);
+    if (!folderResult.success) {
+      throw new Error(folderResult.error || `Failed to create provider report folder: ${folderPath}`);
+    }
+    return { providerName, folderPath };
+  }
+  buildMobileSelectionSignature(files) {
+    const fingerprints = files.map((file) => getFileFingerprint(file)).sort();
+    return `${files.length}:${fingerprints.join("|")}`;
+  }
+  async appendToVaultFile(filePath, content) {
+    const adapter = this.app.vault.adapter;
+    if (!await adapter.exists(filePath)) {
+      await adapter.write(filePath, content);
+      return;
+    }
+    if (typeof adapter.append === "function") {
+      await adapter.append(filePath, content);
+      return;
+    }
+    const existing = await adapter.read(filePath);
+    await adapter.write(filePath, `${existing}${content}`);
+  }
+  async writeMobileRunState(state) {
+    state.updatedAt = new Date().toISOString();
+    await this.app.vault.adapter.write(state.statePath, JSON.stringify(state, null, 2));
+  }
+  async initOrResumeMobileImportRun(provider, files) {
+    const { providerName, folderPath } = await this.resolveProviderReportFolder(provider);
+    const statePath = `${folderPath}/.mobile-import-${providerName}-state.json`;
+    const selectionSignature = this.buildMobileSelectionSignature(files);
+    if (await this.app.vault.adapter.exists(statePath)) {
+      try {
+        const raw = await this.app.vault.adapter.read(statePath);
+        const parsed = JSON.parse(raw);
+        if (parsed.schemaVersion === 1 && parsed.provider === provider && parsed.selectionSignature === selectionSignature && typeof parsed.reportPath === "string" && await this.app.vault.adapter.exists(parsed.reportPath)) {
+          parsed.statePath = statePath;
+          this.logger.child("ImportFlow").info("Resuming mobile import run", {
+            provider,
+            runId: parsed.runId,
+            completedFiles: Object.keys(parsed.records || {}).length
+          });
+          await this.appendToVaultFile(
+            parsed.reportPath,
+            `
+---
+
+## Resume Session
+
+- Resumed at: ${new Date().toISOString()}
+- Provider: ${provider}
+`
+          );
+          return { state: parsed, resumed: true };
+        }
+      } catch (error) {
+        this.logger.child("ImportFlow").warn("Failed to parse existing mobile run state. Starting a new run.", {
+          provider,
+          statePath,
+          message: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+    const now = Date.now() / 1e3;
+    const datePrefix = formatTimestamp(now, "prefix");
+    const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, "");
+    let reportPath = `${folderPath}/${datePrefix}-${timeStr} - mobile import report.md`;
+    let counter = 2;
+    while (await this.app.vault.adapter.exists(reportPath)) {
+      reportPath = `${folderPath}/${datePrefix}-${timeStr}-${counter} - mobile import report.md`;
+      counter++;
+    }
+    const runId = `${datePrefix}-${timeStr}-${Math.random().toString(16).slice(2, 8)}`;
+    const nowIso = new Date().toISOString();
+    const state = {
+      schemaVersion: 1,
+      runId,
+      provider,
+      providerFolderName: providerName,
+      selectionSignature,
+      startedAt: nowIso,
+      updatedAt: nowIso,
+      statePath,
+      reportPath,
+      records: {}
+    };
+    const reportHeader = `---
+importdate: ${nowIso}
+provider: ${provider}
+runMode: mobile-resumable
+runId: ${runId}
+totalFilesSelected: ${files.length}
+---
+
+# Nexus AI Chat Importer Report (Mobile Resumable)
+
+- Started at: ${nowIso}
+- Provider: ${provider}
+- Selected files: ${files.length}
+
+## File Results
+`;
+    await this.app.vault.adapter.write(reportPath, reportHeader);
+    await this.writeMobileRunState(state);
+    this.logger.child("ImportFlow").info("Initialized new mobile import run", {
+      provider,
+      runId,
+      reportPath,
+      selectedFileCount: files.length
+    });
+    return { state, resumed: false };
+  }
+  async recordMobileRunFileResult(runState, file, fingerprint, status, stats, message) {
+    const record = {
+      fileName: file.name,
+      fingerprint,
+      status,
+      created: stats.created,
+      updated: stats.updated,
+      skipped: stats.skipped,
+      failed: stats.failed,
+      totalConversations: stats.totalConversations,
+      attachmentsFound: stats.attachmentsFound,
+      attachmentsTotal: stats.attachmentsTotal,
+      attachmentsMissing: stats.attachmentsMissing,
+      attachmentsFailed: stats.attachmentsFailed,
+      message,
+      finishedAt: new Date().toISOString()
+    };
+    runState.records[fingerprint] = record;
+    await this.writeMobileRunState(runState);
+    const iconByStatus = {
+      done: "\u2705",
+      failed: "\u274C",
+      "skipped-unsupported": "\u23ED\uFE0F",
+      "skipped-imported": "\u23ED\uFE0F"
+    };
+    const section = `
+### ${iconByStatus[status]} ${file.name}
+
+- Status: ${status}
+- Conversations: ${record.totalConversations}
+- Created: ${record.created}
+- Updated: ${record.updated}
+- Skipped: ${record.skipped}
+- Failed: ${record.failed}
+- Attachments: ${record.attachmentsFound}/${record.attachmentsTotal}
+${message ? `- Note: ${message}
+` : ""}- Finished at: ${record.finishedAt}
+`;
+    await this.appendToVaultFile(runState.reportPath, section);
+  }
+  computeMobileRunCompletionStats(runState, selectedFileCount) {
+    const stats = this.getEmptyCompletionStats();
+    stats.totalFiles = selectedFileCount;
+    for (const record of Object.values(runState.records)) {
+      stats.totalConversations += record.totalConversations;
+      stats.created += record.created;
+      stats.updated += record.updated;
+      stats.skipped += record.skipped;
+      stats.failed += record.failed;
+      stats.attachmentsFound += record.attachmentsFound;
+      stats.attachmentsTotal += record.attachmentsTotal;
+      stats.attachmentsMissing += record.attachmentsMissing;
+      stats.attachmentsFailed += record.attachmentsFailed;
+      if (record.status === "skipped-imported" || record.status === "skipped-unsupported") {
+        stats.skipped += 1;
+      }
+      if (record.status === "failed" && record.failed === 0) {
+        stats.failed += 1;
+      }
+    }
+    return stats;
+  }
+  async finalizeMobileImportRun(runState, completionStats) {
+    const summary = `
+---
+
+## Final Summary
+
+- Run ID: ${runState.runId}
+- Completed at: ${new Date().toISOString()}
+- Files selected: ${completionStats.totalFiles}
+- Created: ${completionStats.created}
+- Updated: ${completionStats.updated}
+- Skipped: ${completionStats.skipped}
+- Failed: ${completionStats.failed}
+- Attachments: ${completionStats.attachmentsFound}/${completionStats.attachmentsTotal}
+`;
+    await this.appendToVaultFile(runState.reportPath, summary);
+    if (await this.app.vault.adapter.exists(runState.statePath)) {
+      await this.app.vault.adapter.remove(runState.statePath);
+    }
+    this.logger.child("ImportFlow").info("Mobile import run finalized", {
+      provider: runState.provider,
+      runId: runState.runId,
+      reportPath: runState.reportPath
+    });
+  }
+  showImportCompletionDialogWithStats(stats, reportPath) {
+    new ImportCompletionDialog(this.app, stats, reportPath).open();
   }
   /**
    * Show import completion dialog
