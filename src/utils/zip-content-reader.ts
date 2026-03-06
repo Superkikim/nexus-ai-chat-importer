@@ -344,7 +344,7 @@ export async function* extractConversationsStream(
             const entrySize = entrySizeMap.get(fileName);
             const fileReadStartedAt = Date.now();
             const isLargeJsonFile = typeof entrySize === "number" && entrySize >= largeJsonThresholdBytes;
-            const chunkReader = entry.readTextChunks;
+            const chunkReader = entry.readTextChunks?.bind(entry);
             const canUseChunkedReader = !!chunkReader;
             streamLogger.info(
                 `Reading numbered conversation file (${fileName}) [entrySize=${entrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
@@ -428,7 +428,7 @@ export async function* extractConversationsStream(
     const conversationEntrySize = entrySizeMap.get("conversations.json");
     const readStartedAt = Date.now();
     const isLargeConversationsJson = typeof conversationEntrySize === "number" && conversationEntrySize >= largeJsonThresholdBytes;
-    const chunkReader = conversationsFile.readTextChunks;
+    const chunkReader = conversationsFile.readTextChunks?.bind(conversationsFile);
     const canUseChunkedReader = !!chunkReader;
     streamLogger.info(
         `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`

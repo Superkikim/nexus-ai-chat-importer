@@ -19126,7 +19126,7 @@ async function extractRawConversations(zip) {
 }
 __name(extractRawConversations, "extractRawConversations");
 async function* extractConversationsStream(zip, options = {}) {
-  var _a, _b, _c;
+  var _a, _b, _c, _d, _e;
   const streamLogger = logger.child("Stream");
   const startedAt = Date.now();
   const largeJsonThresholdBytes = (_a = options.largeJsonThresholdBytes) != null ? _a : DEFAULT_LARGE_JSON_THRESHOLD_BYTES;
@@ -19195,7 +19195,7 @@ async function* extractConversationsStream(zip, options = {}) {
       const entrySize = entrySizeMap.get(fileName);
       const fileReadStartedAt = Date.now();
       const isLargeJsonFile = typeof entrySize === "number" && entrySize >= largeJsonThresholdBytes;
-      const chunkReader2 = entry.readTextChunks;
+      const chunkReader2 = (_d = entry.readTextChunks) == null ? void 0 : _d.bind(entry);
       const canUseChunkedReader2 = !!chunkReader2;
       streamLogger.info(
         `Reading numbered conversation file (${fileName}) [entrySize=${entrySize != null ? entrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
@@ -19277,7 +19277,7 @@ async function* extractConversationsStream(zip, options = {}) {
   const conversationEntrySize = entrySizeMap.get("conversations.json");
   const readStartedAt = Date.now();
   const isLargeConversationsJson = typeof conversationEntrySize === "number" && conversationEntrySize >= largeJsonThresholdBytes;
-  const chunkReader = conversationsFile.readTextChunks;
+  const chunkReader = (_e = conversationsFile.readTextChunks) == null ? void 0 : _e.bind(conversationsFile);
   const canUseChunkedReader = !!chunkReader;
   streamLogger.info(
     `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize != null ? conversationEntrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
