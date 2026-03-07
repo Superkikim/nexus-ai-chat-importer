@@ -13077,6 +13077,190 @@ var ImportReport = class {
   addError(message, details) {
     this.globalErrors.push({ message, details });
   }
+  generateSummaryReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport, archiveDisplayNames, links) {
+    var _a, _b, _c, _d;
+    const stats = this.getGlobalStats();
+    const totalAttachments = this.getTotalAttachmentStats();
+    const totalFilesAnalyzed = allFiles ? allFiles.length : this.fileSections.size;
+    const processedSet = new Set(processedFiles || []);
+    const skippedSet = new Set(skippedFiles || []);
+    const lines = [];
+    lines.push("# Nexus AI Chat Importer Summary");
+    lines.push("");
+    if (links) {
+      lines.push(`- Heavy index: [[${links.heavyFileName}]]`);
+      lines.push(`- Mobile index: [[${links.mobileFileName}]]`);
+      lines.push("");
+    }
+    lines.push("## Overview");
+    lines.push("");
+    lines.push(`- Files analyzed: ${totalFilesAnalyzed}`);
+    lines.push(`- Files processed: ${processedSet.size}`);
+    lines.push(`- Files skipped: ${skippedSet.size}`);
+    lines.push(`- Conversations created: ${stats.created}`);
+    lines.push(`- Conversations updated: ${stats.updated}`);
+    lines.push(`- Conversations skipped: ${(_a = analysisInfo == null ? void 0 : analysisInfo.conversationsIgnored) != null ? _a : stats.skipped}`);
+    lines.push(`- Conversations failed: ${stats.failed}`);
+    if (analysisInfo) {
+      lines.push(`- Conversations found (raw): ${analysisInfo.totalConversationsFound || 0}`);
+      lines.push(`- Conversations kept (unique): ${analysisInfo.uniqueConversationsKept || 0}`);
+      lines.push(`- Duplicates removed: ${analysisInfo.duplicatesRemoved || 0}`);
+    }
+    lines.push(`- Attachments extracted: ${totalAttachments.found}/${totalAttachments.total}`);
+    lines.push(`- Attachments missing: ${totalAttachments.missing}`);
+    lines.push(`- Attachments failed: ${totalAttachments.failed}`);
+    lines.push("");
+    if (allFiles && allFiles.length > 0) {
+      const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
+      lines.push("## Archives");
+      lines.push("");
+      for (const file of sortedFiles) {
+        const section = this.fileSections.get(file.name);
+        const perFileStats = fileStats == null ? void 0 : fileStats.get(file.name);
+        const shortName = (archiveDisplayNames == null ? void 0 : archiveDisplayNames.get(file.name)) || file.name;
+        const selectedCount = (_b = perFileStats == null ? void 0 : perFileStats.selectedForImport) != null ? _b : ((section == null ? void 0 : section.created.length) || 0) + ((section == null ? void 0 : section.updated.length) || 0);
+        const createdCount = (section == null ? void 0 : section.created.length) || 0;
+        const updatedCount = (section == null ? void 0 : section.updated.length) || 0;
+        const failedCount = (section == null ? void 0 : section.failed.length) || 0;
+        const duplicateCount = (_c = perFileStats == null ? void 0 : perFileStats.duplicates) != null ? _c : 0;
+        const conversationCount = (_d = perFileStats == null ? void 0 : perFileStats.totalConversations) != null ? _d : selectedCount;
+        const status = processedSet.has(file.name) ? "processed" : "skipped";
+        lines.push(`- \`${shortName}\` \xB7 ${status} \xB7 conversations=${conversationCount} \xB7 selected=${selectedCount} \xB7 created=${createdCount} \xB7 updated=${updatedCount} \xB7 failed=${failedCount} \xB7 duplicates=${duplicateCount}`);
+      }
+      lines.push("");
+      if (archiveDisplayNames && archiveDisplayNames.size > 0) {
+        lines.push("## Archive Name Map");
+        lines.push("");
+        for (const file of sortedFiles) {
+          const shortName = archiveDisplayNames.get(file.name);
+          if (!shortName || shortName === file.name) {
+            continue;
+          }
+          lines.push(`- \`${shortName}\` -> \`${file.name}\``);
+        }
+        lines.push("");
+      }
+    }
+    if (this.globalErrors.length > 0) {
+      lines.push("## Global Errors");
+      lines.push("");
+      for (const entry of this.globalErrors) {
+        lines.push(`- **${entry.message}**: ${entry.details}`);
+      }
+      lines.push("");
+    } else if (isSelectiveImport) {
+      lines.push("## Global Errors");
+      lines.push("");
+      lines.push("- None");
+      lines.push("");
+    }
+    return lines.join("\n");
+  }
+  generateHeavyIndexContent(allFiles, links) {
+    const stats = this.getGlobalStats();
+    const fileNames = this.getOrderedFileNames(allFiles);
+    const lines = [];
+    lines.push("# Nexus AI Chat Importer Index (Heavy)");
+    lines.push("");
+    if (links) {
+      lines.push(`- Summary: [[${links.summaryFileName}]]`);
+      lines.push(`- Mobile index: [[${links.mobileFileName}]]`);
+      lines.push("");
+    }
+    lines.push("## Index Summary");
+    lines.push("");
+    lines.push(`- Created: ${stats.created}`);
+    lines.push(`- Updated: ${stats.updated}`);
+    lines.push(`- Failed: ${stats.failed}`);
+    lines.push(`- Files with entries: ${fileNames.length}`);
+    lines.push("");
+    if (fileNames.length === 0) {
+      lines.push("No indexed conversations.");
+      lines.push("");
+      return lines.join("\n");
+    }
+    const multipleFiles = fileNames.length > 1;
+    for (let index = 0; index < fileNames.length; index++) {
+      const fileName = fileNames[index];
+      const section = this.fileSections.get(fileName);
+      if (!section) {
+        continue;
+      }
+      if (multipleFiles) {
+        lines.push(`## ${fileName}`);
+        lines.push("");
+      }
+      const sectionContent = this.generateFileContent(section, multipleFiles).trim();
+      if (sectionContent.length > 0) {
+        lines.push(sectionContent);
+        lines.push("");
+      }
+    }
+    return lines.join("\n");
+  }
+  generateMobileIndexContent(allFiles, links) {
+    const fileNames = this.getOrderedFileNames(allFiles);
+    const createdOrUpdatedByPath = /* @__PURE__ */ new Map();
+    const failedEntries = [];
+    for (const fileName of fileNames) {
+      const section = this.fileSections.get(fileName);
+      if (!section) {
+        continue;
+      }
+      for (const entry of [...section.created, ...section.updated]) {
+        const current = createdOrUpdatedByPath.get(entry.filePath);
+        if (!current || entry.updateTime >= current.updateTime) {
+          createdOrUpdatedByPath.set(entry.filePath, {
+            title: entry.title,
+            filePath: entry.filePath,
+            updateTime: entry.updateTime,
+            sourceFile: entry.sourceFile
+          });
+        }
+      }
+      failedEntries.push(...section.failed);
+    }
+    const indexedEntries = Array.from(createdOrUpdatedByPath.values()).sort((a, b) => {
+      return a.title.localeCompare(b.title, void 0, { sensitivity: "base" });
+    });
+    const lines = [];
+    lines.push("# Nexus AI Chat Importer Index (Mobile)");
+    lines.push("");
+    if (links) {
+      lines.push(`- Summary: [[${links.summaryFileName}]]`);
+      lines.push(`- Heavy index: [[${links.heavyFileName}]]`);
+      lines.push("");
+    }
+    lines.push("## Index Summary");
+    lines.push("");
+    lines.push(`- Conversations listed: ${indexedEntries.length}`);
+    lines.push(`- Failed conversations: ${failedEntries.length}`);
+    lines.push("");
+    lines.push("## Conversations");
+    lines.push("");
+    if (indexedEntries.length === 0) {
+      lines.push("- None");
+      lines.push("");
+    } else {
+      for (const entry of indexedEntries) {
+        const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
+        const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
+        lines.push(`- ${titleLink}`);
+      }
+      lines.push("");
+    }
+    if (failedEntries.length > 0) {
+      const sortedFailures = [...failedEntries].sort((a, b) => a.title.localeCompare(b.title, void 0, { sensitivity: "base" }));
+      lines.push("## Failed");
+      lines.push("");
+      for (const entry of sortedFailures) {
+        const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
+        lines.push(`- ${sanitizedTitle} \u2014 ${entry.errorMessage || "Unknown error"}`);
+      }
+      lines.push("");
+    }
+    return lines.join("\n");
+  }
   generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) {
     let content = "# Nexus AI Chat Importer Report\n\n";
     content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) + "\n\n";
@@ -13112,6 +13296,19 @@ var ImportReport = class {
       content += this.generateErrorTable();
     }
     return content;
+  }
+  getOrderedFileNames(allFiles) {
+    if (!allFiles || allFiles.length === 0) {
+      return Array.from(this.fileSections.keys());
+    }
+    const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
+    const orderedNames = [];
+    for (const file of sortedFiles) {
+      if (this.fileSections.has(file.name)) {
+        orderedNames.push(file.name);
+      }
+    }
+    return orderedNames;
   }
   generateSkippedFilesSection(skippedFiles, isSelectiveImport) {
     const title = isSelectiveImport ? "\u23ED\uFE0F Skipped Files (No Selected Conversations)" : "\u23ED\uFE0F Skipped Files (Already Up to Date)";
@@ -24304,10 +24501,16 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     const now = Date.now() / 1e3;
     const datePrefix = formatTimestamp(now, "prefix");
     const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, "");
-    let logFilePath = `${folderPath}/${datePrefix}-${timeStr} - import report.md`;
+    let basePrefix = `${datePrefix}-${timeStr}`;
     let counter = 2;
-    while (await this.app.vault.adapter.exists(logFilePath)) {
-      logFilePath = `${folderPath}/${datePrefix}-${timeStr}-${counter} - import report.md`;
+    let summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
+    let heavyPath = `${folderPath}/${basePrefix} - index heavy.md`;
+    let mobilePath = `${folderPath}/${basePrefix} - index mobile.md`;
+    while (await this.app.vault.adapter.exists(summaryPath) || await this.app.vault.adapter.exists(heavyPath) || await this.app.vault.adapter.exists(mobilePath)) {
+      basePrefix = `${datePrefix}-${timeStr}-${counter}`;
+      summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
+      heavyPath = `${folderPath}/${basePrefix} - index heavy.md`;
+      mobilePath = `${folderPath}/${basePrefix} - index mobile.md`;
       counter++;
     }
     const currentDate = new Date().toISOString();
@@ -24320,7 +24523,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     const stats = report.getCompletionStats();
     const processedFiles = [];
     const skippedFiles = [];
-    if (stats.totalFiles > 0) {
+    if (stats.totalFiles > 0 || report.getProcessedFileNames().length > 0) {
       report.getProcessedFileNames().forEach((name) => processedFiles.push(name));
     }
     files.forEach((file) => {
@@ -24328,8 +24531,12 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         skippedFiles.push(file.name);
       }
     });
-    const logContent = `---
-importdate: ${currentDate}
+    const summaryFileName = summaryPath.split("/").pop() || `${basePrefix} - import summary.md`;
+    const heavyFileName = heavyPath.split("/").pop() || `${basePrefix} - index heavy.md`;
+    const mobileFileName = mobilePath.split("/").pop() || `${basePrefix} - index mobile.md`;
+    const links = { summaryFileName, heavyFileName, mobileFileName };
+    const archiveDisplayNames = this.buildArchiveDisplayNames(provider, files);
+    const commonFrontmatter = `importdate: ${currentDate}
 provider: ${provider}
 totalFilesAnalyzed: ${files.length}
 totalFilesProcessed: ${processedFiles.length}
@@ -24339,20 +24546,89 @@ totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
 totalSkipped: ${stats.skipped}
 totalFailed: ${stats.failed}
+`;
+    const summaryContent = `---
+${commonFrontmatter}reportType: summary
+linkedHeavy: ${heavyFileName}
+linkedMobile: ${mobileFileName}
 ---
 
-${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport)}
+${report.generateSummaryReportContent(
+      files,
+      processedFiles,
+      skippedFiles,
+      analysisInfo,
+      fileStats,
+      isSelectiveImport,
+      archiveDisplayNames,
+      links
+    )}
+`;
+    const heavyContent = `---
+${commonFrontmatter}reportType: index-heavy
+linkedSummary: ${summaryFileName}
+linkedMobile: ${mobileFileName}
+---
+
+${report.generateHeavyIndexContent(files, links)}
+`;
+    const mobileContent = `---
+${commonFrontmatter}reportType: index-mobile
+linkedSummary: ${summaryFileName}
+linkedHeavy: ${heavyFileName}
+---
+
+${report.generateMobileIndexContent(files, links)}
 `;
     try {
-      await this.app.vault.create(logFilePath, logContent);
-      return logFilePath;
+      await this.app.vault.create(summaryPath, summaryContent);
+      await this.app.vault.create(heavyPath, heavyContent);
+      await this.app.vault.create(mobilePath, mobileContent);
+      return summaryPath;
     } catch (error) {
-      this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
+      this.logger.error(`Failed to write consolidated reports`, error);
       this.logger.error("Full error:", error);
-      this.logger.error("Log content length:", logContent.length);
       new import_obsidian33.Notice(t("notices.report_failed"));
       return "";
     }
+  }
+  buildArchiveDisplayNames(provider, files) {
+    const map = /* @__PURE__ */ new Map();
+    for (const file of files) {
+      map.set(file.name, this.getArchiveDisplayName(provider, file.name));
+    }
+    return map;
+  }
+  getArchiveDisplayName(provider, fileName) {
+    const normalizedProvider = provider.toLowerCase();
+    const lowerName = fileName.toLowerCase();
+    if (!lowerName.endsWith(".zip")) {
+      return fileName;
+    }
+    const stem = fileName.slice(0, -4);
+    if (stem.length <= 12) {
+      return fileName;
+    }
+    const head = stem.slice(0, 3);
+    if (normalizedProvider === "claude") {
+      const timeMatches = Array.from(stem.matchAll(/-(\d{2})-(\d{2})-(\d{2})/g));
+      const lastTime = timeMatches.length > 0 ? timeMatches[timeMatches.length - 1] : null;
+      const lastCharMatch = stem.match(/([A-Za-z0-9])$/);
+      if (lastTime && lastCharMatch) {
+        const mm = lastTime[2];
+        const ss = lastTime[3];
+        return `${head}...${mm}-${ss}...${lastCharMatch[1]}.zip`;
+      }
+    }
+    if (normalizedProvider === "chatgpt") {
+      const chatGptTail = stem.match(/-(\d{2})-(\d{2})$/);
+      if (chatGptTail) {
+        return `${head}...${chatGptTail[1]}-${chatGptTail[2]}.zip`;
+      }
+    }
+    const tailMatch = stem.match(/([A-Za-z0-9]{4})$/);
+    const tail = tailMatch ? tailMatch[1] : stem.slice(-4);
+    return `${head}...${tail}.zip`;
   }
   /**
    * Show import completion dialog

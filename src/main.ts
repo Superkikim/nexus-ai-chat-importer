@@ -922,9 +922,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         fileStats?: Map<string, any>,
         isSelectiveImport?: boolean
     ): Promise<string> {
-        // Get provider-specific folder
         const reportFolder = this.settings.reportFolder;
-
         const providerRegistry = createProviderRegistry(this);
         const adapter = providerRegistry.getAdapter(provider);
 
@@ -937,8 +935,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         const folderPath = `${reportFolder}/${providerName}`;
-
-        // Ensure provider subfolder exists
         const folderResult = await ensureFolderExists(folderPath, this.app.vault);
         if (!folderResult.success) {
             this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
@@ -946,52 +942,55 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             return "";
         }
 
-        // Generate filename with timestamp (YYYYMMDD-HHMMSS format for chronological sorting)
         const now = Date.now() / 1000;
-        const datePrefix = formatTimestamp(now, "prefix"); // YYYYMMDD
-        const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, ""); // HHMMSS
-        let logFilePath = `${folderPath}/${datePrefix}-${timeStr} - import report.md`;
-
-        // Handle duplicates
+        const datePrefix = formatTimestamp(now, "prefix");
+        const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, "");
+        let basePrefix = `${datePrefix}-${timeStr}`;
         let counter = 2;
-        while (await this.app.vault.adapter.exists(logFilePath)) {
-            logFilePath = `${folderPath}/${datePrefix}-${timeStr}-${counter} - import report.md`;
+        let summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
+        let heavyPath = `${folderPath}/${basePrefix} - index heavy.md`;
+        let mobilePath = `${folderPath}/${basePrefix} - index mobile.md`;
+
+        while (
+            await this.app.vault.adapter.exists(summaryPath) ||
+            await this.app.vault.adapter.exists(heavyPath) ||
+            await this.app.vault.adapter.exists(mobilePath)
+        ) {
+            basePrefix = `${datePrefix}-${timeStr}-${counter}`;
+            summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
+            heavyPath = `${folderPath}/${basePrefix} - index heavy.md`;
+            mobilePath = `${folderPath}/${basePrefix} - index mobile.md`;
             counter++;
         }
 
-        // Generate frontmatter with ISO 8601 date format (consistent with conversation frontmatter)
         const currentDate = new Date().toISOString();
-
-        // Store file stats for duplicate counting
         if (fileStats) {
             report.setFileStats(fileStats);
         }
 
-        // Store analysis info for completion stats
         if (analysisInfo) {
             report.setAnalysisInfo(analysisInfo);
         }
 
         const stats = report.getCompletionStats();
-
-        // Determine which files were processed vs skipped
         const processedFiles: string[] = [];
         const skippedFiles: string[] = [];
-
-        if (stats.totalFiles > 0) {
-            // Files that were actually processed (have entries in report)
+        if (stats.totalFiles > 0 || report.getProcessedFileNames().length > 0) {
             report.getProcessedFileNames().forEach(name => processedFiles.push(name));
         }
 
-        // All files that weren't processed are considered skipped
         files.forEach(file => {
             if (!processedFiles.includes(file.name)) {
                 skippedFiles.push(file.name);
             }
         });
 
-        const logContent = `---
-importdate: ${currentDate}
+        const summaryFileName = summaryPath.split("/").pop() || `${basePrefix} - import summary.md`;
+        const heavyFileName = heavyPath.split("/").pop() || `${basePrefix} - index heavy.md`;
+        const mobileFileName = mobilePath.split("/").pop() || `${basePrefix} - index mobile.md`;
+        const links = { summaryFileName, heavyFileName, mobileFileName };
+        const archiveDisplayNames = this.buildArchiveDisplayNames(provider, files);
+        const commonFrontmatter = `importdate: ${currentDate}
 provider: ${provider}
 totalFilesAnalyzed: ${files.length}
 totalFilesProcessed: ${processedFiles.length}
@@ -1001,21 +1000,100 @@ totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
 totalSkipped: ${stats.skipped}
 totalFailed: ${stats.failed}
+`;
+
+        const summaryContent = `---
+${commonFrontmatter}reportType: summary
+linkedHeavy: ${heavyFileName}
+linkedMobile: ${mobileFileName}
 ---
 
-${report.generateReportContent(files, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport)}
+${report.generateSummaryReportContent(
+            files,
+            processedFiles,
+            skippedFiles,
+            analysisInfo,
+            fileStats,
+            isSelectiveImport,
+            archiveDisplayNames,
+            links
+        )}
+`;
+
+        const heavyContent = `---
+${commonFrontmatter}reportType: index-heavy
+linkedSummary: ${summaryFileName}
+linkedMobile: ${mobileFileName}
+---
+
+${report.generateHeavyIndexContent(files, links)}
+`;
+
+        const mobileContent = `---
+${commonFrontmatter}reportType: index-mobile
+linkedSummary: ${summaryFileName}
+linkedHeavy: ${heavyFileName}
+---
+
+${report.generateMobileIndexContent(files, links)}
 `;
 
         try {
-            await this.app.vault.create(logFilePath, logContent);
-            return logFilePath;
+            await this.app.vault.create(summaryPath, summaryContent);
+            await this.app.vault.create(heavyPath, heavyContent);
+            await this.app.vault.create(mobilePath, mobileContent);
+            return summaryPath;
         } catch (error: any) {
-            this.logger.error(`Failed to write import log to ${logFilePath}:`, error);
+            this.logger.error(`Failed to write consolidated reports`, error);
             this.logger.error("Full error:", error);
-            this.logger.error("Log content length:", logContent.length);
             new Notice(t('notices.report_failed'));
             return "";
         }
+    }
+
+    private buildArchiveDisplayNames(provider: string, files: File[]): Map<string, string> {
+        const map = new Map<string, string>();
+        for (const file of files) {
+            map.set(file.name, this.getArchiveDisplayName(provider, file.name));
+        }
+        return map;
+    }
+
+    private getArchiveDisplayName(provider: string, fileName: string): string {
+        const normalizedProvider = provider.toLowerCase();
+        const lowerName = fileName.toLowerCase();
+        if (!lowerName.endsWith(".zip")) {
+            return fileName;
+        }
+
+        const stem = fileName.slice(0, -4);
+        if (stem.length <= 12) {
+            return fileName;
+        }
+
+        const head = stem.slice(0, 3);
+
+        if (normalizedProvider === "claude") {
+            const timeMatches = Array.from(stem.matchAll(/-(\d{2})-(\d{2})-(\d{2})/g));
+            const lastTime = timeMatches.length > 0 ? timeMatches[timeMatches.length - 1] : null;
+            const lastCharMatch = stem.match(/([A-Za-z0-9])$/);
+            if (lastTime && lastCharMatch) {
+                const mm = lastTime[2];
+                const ss = lastTime[3];
+                return `${head}...${mm}-${ss}...${lastCharMatch[1]}.zip`;
+            }
+        }
+
+        if (normalizedProvider === "chatgpt") {
+            const chatGptTail = stem.match(/-(\d{2})-(\d{2})$/);
+            if (chatGptTail) {
+                return `${head}...${chatGptTail[1]}-${chatGptTail[2]}.zip`;
+            }
+        }
+
+        const tailMatch = stem.match(/([A-Za-z0-9]{4})$/);
+        const tail = tailMatch ? tailMatch[1] : stem.slice(-4);
+        return `${head}...${tail}.zip`;
     }
 
     /**
