@@ -446,6 +446,13 @@
       "get_started": "시작하기"
     }
   },
+  "mobile_archive_processed_dialog": {
+    "title": "이미 처리된 아카이브입니다",
+    "description": "파일 {{filename}} 는 이 기기에서 이미 가져왔습니다.",
+    "choice_help": "모바일에서 계속할 방식을 선택하세요:",
+    "button_reprocess": "다시 처리하고 모든 노트 재생성",
+    "button_incremental": "누락되었거나 업데이트된 노트만 추가/업데이트"
+  },
   "notices": {
     "import_analyzing": "{{count}}개 파일에서 대화를 분석하는 중...",
     "import_no_new": "새로운 대화나 업데이트된 대화가 없습니다. 모든 대화가 이미 최신 상태입니다.",

@@ -446,6 +446,13 @@
       "get_started": "开始使用"
     }
   },
+  "mobile_archive_processed_dialog": {
+    "title": "归档已处理",
+    "description": "文件 {{filename}} 已在此设备上导入过。",
+    "choice_help": "请选择在移动端继续的方式：",
+    "button_reprocess": "重新处理并重建所有笔记",
+    "button_incremental": "仅添加/更新缺失或已更新的笔记"
+  },
   "notices": {
     "import_analyzing": "正在分析来自 {{count}} 个文件的对话...",
     "import_no_new": "未发现新的或已更新的对话，所有对话均已是最新状态。",

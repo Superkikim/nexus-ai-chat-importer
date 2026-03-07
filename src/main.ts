@@ -34,6 +34,7 @@ import { EnhancedFileSelectionDialog } from "./dialogs/enhanced-file-selection-d
 import { ConversationSelectionDialog } from "./dialogs/conversation-selection-dialog";
 import { InstallationWelcomeDialog } from "./dialogs/installation-welcome-dialog";
 import { UpgradeNotice132Dialog } from "./dialogs/upgrade-notice-1.3.2-dialog";
+import { showDialog } from "./dialogs";
 import { createProviderRegistry } from "./providers/provider-registry";
 import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
 import { ConversationMetadataExtractor, IgnoredArchiveInfo } from "./services/conversation-metadata-extractor";
@@ -54,6 +55,8 @@ interface ImportCheckpoint {
     conversationCount?: number;
     timestampMs: number;
 }
+
+type MobileArchiveImportMode = "reprocess" | "incremental";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
@@ -602,22 +605,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         await this.yieldToEventLoop();
 
         let skippedUnsupported = 0;
-        let skippedAlreadyImported = 0;
         for (let i = 0; i < mobileFiles.length; i++) {
             const file = mobileFiles[i];
-            const archiveFingerprint = getFileFingerprint(file);
-
-            if (storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name)) {
-                skippedAlreadyImported++;
-                this.logger.child("ImportFlow").info("Skipping already imported archive during mobile direct import", {
-                    provider,
-                    fileName: file.name,
-                    fingerprint: archiveFingerprint,
-                    task: `${i + 1}/${mobileFiles.length}`,
-                });
-                await this.yieldToEventLoop();
-                continue;
-            }
 
             this.setImportCheckpoint({
                 operation: "import-all",
@@ -667,12 +656,14 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 fileName: file.name,
                 task: `${i + 1}/${mobileFiles.length}`,
             });
+            const archiveImportMode = await this.resolveMobileArchiveImportMode(file, provider);
             await this.importService.handleZipFile(
                 file,
                 provider,
                 undefined,
                 operationReport,
-                existingConversationsMap
+                existingConversationsMap,
+                { archiveImportMode }
             );
 
             this.importService.resetRuntimeState();
@@ -716,12 +707,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         if (skippedUnsupported > 0) {
             new Notice(
                 `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
-                5000
-            );
-        }
-        if (skippedAlreadyImported > 0) {
-            new Notice(
-                `${skippedAlreadyImported} archive(s) were already imported and were skipped.`,
                 5000
             );
         }
@@ -1136,6 +1121,49 @@ ${report.generateMobileIndexContent(files, links)}
         return Platform.isMobileApp || Platform.isMobile;
     }
 
+    private async resolveMobileArchiveImportMode(file: File, provider: string): Promise<MobileArchiveImportMode> {
+        if (!this.isMobileTaskQueueMode()) {
+            return "incremental";
+        }
+
+        const storage = this.getStorageService();
+        const archiveFingerprint = getFileFingerprint(file);
+        const alreadyImported = storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name);
+        if (!alreadyImported) {
+            return "incremental";
+        }
+
+        this.logger.child("ImportFlow").info("Mobile archive already processed, prompting for import mode", {
+            provider,
+            fileName: file.name,
+            fingerprint: archiveFingerprint,
+        });
+
+        const shouldReprocess = await showDialog(
+            this.app,
+            "confirmation",
+            t("mobile_archive_processed_dialog.title"),
+            [
+                t("mobile_archive_processed_dialog.description", { filename: file.name }),
+                t("mobile_archive_processed_dialog.choice_help"),
+            ],
+            undefined,
+            {
+                button1: t("mobile_archive_processed_dialog.button_reprocess"),
+                button2: t("mobile_archive_processed_dialog.button_incremental"),
+            }
+        );
+
+        const selectedMode: MobileArchiveImportMode = shouldReprocess ? "reprocess" : "incremental";
+        this.logger.child("ImportFlow").info("Mobile archive import mode selected", {
+            provider,
+            fileName: file.name,
+            selectedMode,
+        });
+
+        return selectedMode;
+    }
+
     private async yieldToEventLoop(): Promise<void> {
         await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
     }
@@ -1248,7 +1276,18 @@ ${report.generateMobileIndexContent(files, links)}
                     mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard",
                 });
 
-                await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+                const archiveImportMode = mobileTaskQueueMode
+                    ? await this.resolveMobileArchiveImportMode(file, provider)
+                    : undefined;
+
+                await this.importService.handleZipFile(
+                    file,
+                    provider,
+                    conversationsForFile,
+                    operationReport,
+                    undefined,
+                    archiveImportMode ? { archiveImportMode } : undefined
+                );
             } catch (error) {
                 this.logger.error(`Error processing file ${file.name}:`, error);
                 new Notice(t('notices.import_error_file', { filename: file.name }));

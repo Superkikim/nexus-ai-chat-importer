@@ -446,6 +446,13 @@
       "get_started": "Começar"
     }
   },
+  "mobile_archive_processed_dialog": {
+    "title": "Arquivo já processado",
+    "description": "O ficheiro {{filename}} já foi importado neste dispositivo.",
+    "choice_help": "Escolha como continuar no mobile:",
+    "button_reprocess": "Reprocessar e recriar todas as notas",
+    "button_incremental": "Adicionar/atualizar notas em falta ou atualizadas"
+  },
   "notices": {
     "import_analyzing": "A analisar conversas de {{count}} ficheiro(s)...",
     "import_no_new": "Não foram encontradas conversas novas ou atualizadas. Todas as conversas já estão atualizadas.",

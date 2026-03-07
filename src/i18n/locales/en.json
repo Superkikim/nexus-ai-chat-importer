@@ -450,6 +450,13 @@
       "get_started": "Get Started"
     }
   },
+  "mobile_archive_processed_dialog": {
+    "title": "Archive already processed",
+    "description": "The file {{filename}} was already imported on this device.",
+    "choice_help": "Choose how to continue on mobile:",
+    "button_reprocess": "Reprocess and recreate all notes",
+    "button_incremental": "Add/update missing or updated notes"
+  },
   "notices": {
     "import_analyzing": "Analyzing conversations from {{count}} file(s)...",
     "import_no_new": "No new or updated conversations found. All conversations are already up to date.",

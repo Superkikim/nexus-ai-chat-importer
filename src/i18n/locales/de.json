@@ -446,6 +446,13 @@
       "get_started": "Loslegen"
     }
   },
+  "mobile_archive_processed_dialog": {
+    "title": "Archiv bereits verarbeitet",
+    "description": "Die Datei {{filename}} wurde auf diesem Gerät bereits importiert.",
+    "choice_help": "Wähle, wie auf Mobilgeräten fortgefahren werden soll:",
+    "button_reprocess": "Erneut verarbeiten und alle Notizen neu erstellen",
+    "button_incremental": "Fehlende oder aktualisierte Notizen hinzufügen/aktualisieren"
+  },
   "notices": {
     "import_analyzing": "Gespräche aus {{count}} Datei(en) werden analysiert...",
     "import_no_new": "Keine neuen oder aktualisierten Gespräche gefunden. Alle Gespräche sind bereits aktuell.",

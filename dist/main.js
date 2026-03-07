@@ -485,6 +485,13 @@ var init_en = __esm({
           get_started: "Get Started"
         }
       },
+      mobile_archive_processed_dialog: {
+        title: "Archive already processed",
+        description: "The file {{filename}} was already imported on this device.",
+        choice_help: "Choose how to continue on mobile:",
+        button_reprocess: "Reprocess and recreate all notes",
+        button_incremental: "Add/update missing or updated notes"
+      },
       notices: {
         import_analyzing: "Analyzing conversations from {{count}} file(s)...",
         import_no_new: "No new or updated conversations found. All conversations are already up to date.",
@@ -973,6 +980,13 @@ var init_fr = __esm({
         buttons: {
           get_started: "Commencer"
         }
+      },
+      mobile_archive_processed_dialog: {
+        title: "Archive d\xE9j\xE0 trait\xE9e",
+        description: "Le fichier {{filename}} a d\xE9j\xE0 \xE9t\xE9 import\xE9 sur cet appareil.",
+        choice_help: "Choisissez le mode de traitement sur mobile :",
+        button_reprocess: "Retraiter et recr\xE9er toutes les notes",
+        button_incremental: "Ajouter/mettre \xE0 jour les notes manquantes ou modifi\xE9es"
       },
       notices: {
         import_analyzing: "Analyse des conversations \xE0 partir de {{count}} fichier(s)...",
@@ -1463,6 +1477,13 @@ var init_de = __esm({
           get_started: "Loslegen"
         }
       },
+      mobile_archive_processed_dialog: {
+        title: "Archiv bereits verarbeitet",
+        description: "Die Datei {{filename}} wurde auf diesem Ger\xE4t bereits importiert.",
+        choice_help: "W\xE4hle, wie auf Mobilger\xE4ten fortgefahren werden soll:",
+        button_reprocess: "Erneut verarbeiten und alle Notizen neu erstellen",
+        button_incremental: "Fehlende oder aktualisierte Notizen hinzuf\xFCgen/aktualisieren"
+      },
       notices: {
         import_analyzing: "Gespr\xE4che aus {{count}} Datei(en) werden analysiert...",
         import_no_new: "Keine neuen oder aktualisierten Gespr\xE4che gefunden. Alle Gespr\xE4che sind bereits aktuell.",
@@ -1951,6 +1972,13 @@ var init_es = __esm({
         buttons: {
           get_started: "Comenzar"
         }
+      },
+      mobile_archive_processed_dialog: {
+        title: "Archivo ya procesado",
+        description: "El archivo {{filename}} ya se import\xF3 en este dispositivo.",
+        choice_help: "Elige c\xF3mo continuar en m\xF3vil:",
+        button_reprocess: "Reprocesar y recrear todas las notas",
+        button_incremental: "A\xF1adir/actualizar notas faltantes o actualizadas"
       },
       notices: {
         import_analyzing: "Analizando conversaciones de {{count}} archivo(s)...",
@@ -2441,6 +2469,13 @@ var init_it = __esm({
           get_started: "Inizia"
         }
       },
+      mobile_archive_processed_dialog: {
+        title: "Archivio gi\xE0 elaborato",
+        description: "Il file {{filename}} \xE8 gi\xE0 stato importato su questo dispositivo.",
+        choice_help: "Scegli come continuare su mobile:",
+        button_reprocess: "Rielabora e ricrea tutte le note",
+        button_incremental: "Aggiungi/aggiorna note mancanti o aggiornate"
+      },
       notices: {
         import_analyzing: "Analisi delle conversazioni da {{count}} file...",
         import_no_new: "Nessuna conversazione nuova o aggiornata trovata. Tutte le conversazioni sono gi\xE0 aggiornate.",
@@ -2929,6 +2964,13 @@ var init_ru = __esm({
         buttons: {
           get_started: "\u041D\u0430\u0447\u0430\u0442\u044C"
         }
+      },
+      mobile_archive_processed_dialog: {
+        title: "\u0410\u0440\u0445\u0438\u0432 \u0443\u0436\u0435 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u043D",
+        description: "\u0424\u0430\u0439\u043B {{filename}} \u0443\u0436\u0435 \u0438\u043C\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u043D \u043D\u0430 \u044D\u0442\u043E\u043C \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0435.",
+        choice_help: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435, \u043A\u0430\u043A \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u043D\u0430 \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u043E\u043C \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0435:",
+        button_reprocess: "\u041F\u043E\u0432\u0442\u043E\u0440\u043D\u043E \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C \u0438 \u043F\u0435\u0440\u0435\u0441\u043E\u0437\u0434\u0430\u0442\u044C \u0432\u0441\u0435 \u0437\u0430\u043C\u0435\u0442\u043A\u0438",
+        button_incremental: "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C/\u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0442\u043E\u043B\u044C\u043A\u043E \u043E\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0435 \u0438\u043B\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0451\u043D\u043D\u044B\u0435 \u0437\u0430\u043C\u0435\u0442\u043A\u0438"
       },
       notices: {
         import_analyzing: "\u0410\u043D\u0430\u043B\u0438\u0437 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u0438\u0437 {{count}} \u0444\u0430\u0439\u043B(\u043E\u0432)...",
@@ -3419,6 +3461,13 @@ var init_zh = __esm({
           get_started: "\u5F00\u59CB\u4F7F\u7528"
         }
       },
+      mobile_archive_processed_dialog: {
+        title: "\u5F52\u6863\u5DF2\u5904\u7406",
+        description: "\u6587\u4EF6 {{filename}} \u5DF2\u5728\u6B64\u8BBE\u5907\u4E0A\u5BFC\u5165\u8FC7\u3002",
+        choice_help: "\u8BF7\u9009\u62E9\u5728\u79FB\u52A8\u7AEF\u7EE7\u7EED\u7684\u65B9\u5F0F\uFF1A",
+        button_reprocess: "\u91CD\u65B0\u5904\u7406\u5E76\u91CD\u5EFA\u6240\u6709\u7B14\u8BB0",
+        button_incremental: "\u4EC5\u6DFB\u52A0/\u66F4\u65B0\u7F3A\u5931\u6216\u5DF2\u66F4\u65B0\u7684\u7B14\u8BB0"
+      },
       notices: {
         import_analyzing: "\u6B63\u5728\u5206\u6790\u6765\u81EA {{count}} \u4E2A\u6587\u4EF6\u7684\u5BF9\u8BDD...",
         import_no_new: "\u672A\u53D1\u73B0\u65B0\u7684\u6216\u5DF2\u66F4\u65B0\u7684\u5BF9\u8BDD\uFF0C\u6240\u6709\u5BF9\u8BDD\u5747\u5DF2\u662F\u6700\u65B0\u72B6\u6001\u3002",
@@ -3907,6 +3956,13 @@ var init_ja = __esm({
         buttons: {
           get_started: "\u59CB\u3081\u308B"
         }
+      },
+      mobile_archive_processed_dialog: {
+        title: "\u30A2\u30FC\u30AB\u30A4\u30D6\u306F\u65E2\u306B\u51E6\u7406\u6E08\u307F\u3067\u3059",
+        description: "\u30D5\u30A1\u30A4\u30EB {{filename}} \u306F\u3053\u306E\u7AEF\u672B\u3067\u3059\u3067\u306B\u30A4\u30F3\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u3059\u3002",
+        choice_help: "\u30E2\u30D0\u30A4\u30EB\u3067\u306E\u7D9A\u884C\u65B9\u6CD5\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\uFF1A",
+        button_reprocess: "\u518D\u51E6\u7406\u3057\u3066\u3059\u3079\u3066\u306E\u30CE\u30FC\u30C8\u3092\u518D\u4F5C\u6210",
+        button_incremental: "\u4E0D\u8DB3\u30FB\u66F4\u65B0\u5206\u306E\u30CE\u30FC\u30C8\u306E\u307F\u8FFD\u52A0/\u66F4\u65B0"
       },
       notices: {
         import_analyzing: "{{count}} \u4EF6\u306E\u30D5\u30A1\u30A4\u30EB\u304B\u3089\u4F1A\u8A71\u3092\u5206\u6790\u4E2D...",
@@ -4397,6 +4453,13 @@ var init_pt = __esm({
           get_started: "Come\xE7ar"
         }
       },
+      mobile_archive_processed_dialog: {
+        title: "Arquivo j\xE1 processado",
+        description: "O ficheiro {{filename}} j\xE1 foi importado neste dispositivo.",
+        choice_help: "Escolha como continuar no mobile:",
+        button_reprocess: "Reprocessar e recriar todas as notas",
+        button_incremental: "Adicionar/atualizar notas em falta ou atualizadas"
+      },
       notices: {
         import_analyzing: "A analisar conversas de {{count}} ficheiro(s)...",
         import_no_new: "N\xE3o foram encontradas conversas novas ou atualizadas. Todas as conversas j\xE1 est\xE3o atualizadas.",
@@ -4885,6 +4948,13 @@ var init_ko = __esm({
         buttons: {
           get_started: "\uC2DC\uC791\uD558\uAE30"
         }
+      },
+      mobile_archive_processed_dialog: {
+        title: "\uC774\uBBF8 \uCC98\uB9AC\uB41C \uC544\uCE74\uC774\uBE0C\uC785\uB2C8\uB2E4",
+        description: "\uD30C\uC77C {{filename}} \uB294 \uC774 \uAE30\uAE30\uC5D0\uC11C \uC774\uBBF8 \uAC00\uC838\uC654\uC2B5\uB2C8\uB2E4.",
+        choice_help: "\uBAA8\uBC14\uC77C\uC5D0\uC11C \uACC4\uC18D\uD560 \uBC29\uC2DD\uC744 \uC120\uD0DD\uD558\uC138\uC694:",
+        button_reprocess: "\uB2E4\uC2DC \uCC98\uB9AC\uD558\uACE0 \uBAA8\uB4E0 \uB178\uD2B8 \uC7AC\uC0DD\uC131",
+        button_incremental: "\uB204\uB77D\uB418\uC5C8\uAC70\uB098 \uC5C5\uB370\uC774\uD2B8\uB41C \uB178\uD2B8\uB9CC \uCD94\uAC00/\uC5C5\uB370\uC774\uD2B8"
       },
       notices: {
         import_analyzing: "{{count}}\uAC1C \uD30C\uC77C\uC5D0\uC11C \uB300\uD654\uB97C \uBD84\uC11D\uD558\uB294 \uC911...",
@@ -19901,8 +19971,8 @@ var ImportService = class {
   sortFilesByTimestamp(files) {
     return sortFilesForImport(files);
   }
-  async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport, existingConversationsMap) {
-    var _a;
+  async handleZipFile(file, forcedProvider, selectedConversationIds, sharedReport, existingConversationsMap, options) {
+    var _a, _b;
     const importLogger = this.plugin.logger.child("Import");
     this.beginRuntimeContext(file.name, forcedProvider || "auto");
     const fileName = file.name.toLowerCase();
@@ -20009,6 +20079,20 @@ Do NOT extract and re-compress the file - just rename it!`;
           fileName: file.name,
           strategy: "metadata-fingerprint",
           fileSize: file.size
+        });
+      }
+      const archiveImportMode = (_b = options == null ? void 0 : options.archiveImportMode) != null ? _b : "auto";
+      if (archiveImportMode === "reprocess") {
+        isReprocess = true;
+        importLogger.info("Archive import mode override applied", {
+          fileName: file.name,
+          archiveImportMode
+        });
+      } else if (archiveImportMode === "incremental") {
+        isReprocess = false;
+        importLogger.info("Archive import mode override applied", {
+          fileName: file.name,
+          archiveImportMode
         });
       }
       processingStarted = true;
@@ -23035,6 +23119,9 @@ If something doesn't work as expected, please report it on the [forum thread](ht
 };
 __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
 
+// src/main.ts
+init_dialogs();
+
 // src/services/conversation-metadata-extractor.ts
 var import_obsidian31 = require("obsidian");
 init_utils();
@@ -24219,21 +24306,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     });
     await this.yieldToEventLoop();
     let skippedUnsupported = 0;
-    let skippedAlreadyImported = 0;
     for (let i = 0; i < mobileFiles.length; i++) {
       const file = mobileFiles[i];
-      const archiveFingerprint = getFileFingerprint(file);
-      if (storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name)) {
-        skippedAlreadyImported++;
-        this.logger.child("ImportFlow").info("Skipping already imported archive during mobile direct import", {
-          provider,
-          fileName: file.name,
-          fingerprint: archiveFingerprint,
-          task: `${i + 1}/${mobileFiles.length}`
-        });
-        await this.yieldToEventLoop();
-        continue;
-      }
       this.setImportCheckpoint({
         operation: "import-all",
         phase: "mobile-direct-file-precheck",
@@ -24279,12 +24353,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         fileName: file.name,
         task: `${i + 1}/${mobileFiles.length}`
       });
+      const archiveImportMode = await this.resolveMobileArchiveImportMode(file, provider);
       await this.importService.handleZipFile(
         file,
         provider,
         void 0,
         operationReport,
-        existingConversationsMap
+        existingConversationsMap,
+        { archiveImportMode }
       );
       this.importService.resetRuntimeState();
       await this.yieldToEventLoop();
@@ -24323,12 +24399,6 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     if (skippedUnsupported > 0) {
       new import_obsidian33.Notice(
         `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
-        5e3
-      );
-    }
-    if (skippedAlreadyImported > 0) {
-      new import_obsidian33.Notice(
-        `${skippedAlreadyImported} archive(s) were already imported and were skipped.`,
         5e3
       );
     }
@@ -24660,6 +24730,43 @@ ${report.generateMobileIndexContent(files, links)}
   isMobileTaskQueueMode() {
     return import_obsidian33.Platform.isMobileApp || import_obsidian33.Platform.isMobile;
   }
+  async resolveMobileArchiveImportMode(file, provider) {
+    if (!this.isMobileTaskQueueMode()) {
+      return "incremental";
+    }
+    const storage = this.getStorageService();
+    const archiveFingerprint = getFileFingerprint(file);
+    const alreadyImported = storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name);
+    if (!alreadyImported) {
+      return "incremental";
+    }
+    this.logger.child("ImportFlow").info("Mobile archive already processed, prompting for import mode", {
+      provider,
+      fileName: file.name,
+      fingerprint: archiveFingerprint
+    });
+    const shouldReprocess = await showDialog(
+      this.app,
+      "confirmation",
+      t("mobile_archive_processed_dialog.title"),
+      [
+        t("mobile_archive_processed_dialog.description", { filename: file.name }),
+        t("mobile_archive_processed_dialog.choice_help")
+      ],
+      void 0,
+      {
+        button1: t("mobile_archive_processed_dialog.button_reprocess"),
+        button2: t("mobile_archive_processed_dialog.button_incremental")
+      }
+    );
+    const selectedMode = shouldReprocess ? "reprocess" : "incremental";
+    this.logger.child("ImportFlow").info("Mobile archive import mode selected", {
+      provider,
+      fileName: file.name,
+      selectedMode
+    });
+    return selectedMode;
+  }
   async yieldToEventLoop() {
     await new Promise((resolve) => window.setTimeout(resolve, 0));
   }
@@ -24755,7 +24862,15 @@ ${report.generateMobileIndexContent(files, links)}
           task: `${i + 1}/${executionFiles.length}`,
           mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard"
         });
-        await this.importService.handleZipFile(file, provider, conversationsForFile, operationReport);
+        const archiveImportMode = mobileTaskQueueMode ? await this.resolveMobileArchiveImportMode(file, provider) : void 0;
+        await this.importService.handleZipFile(
+          file,
+          provider,
+          conversationsForFile,
+          operationReport,
+          void 0,
+          archiveImportMode ? { archiveImportMode } : void 0
+        );
       } catch (error) {
         this.logger.error(`Error processing file ${file.name}:`, error);
         new import_obsidian33.Notice(t("notices.import_error_file", { filename: file.name }));

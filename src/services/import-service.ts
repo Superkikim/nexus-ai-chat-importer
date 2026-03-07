@@ -57,6 +57,12 @@ interface ResolvedImportError {
     reportDetails: string;
 }
 
+export type ArchiveImportMode = "auto" | "reprocess" | "incremental";
+
+export interface HandleZipFileOptions {
+    archiveImportMode?: ArchiveImportMode;
+}
+
 function getRuntimeMemorySnapshot(): string {
     const perf = globalThis.performance as Performance & {
         memory?: {
@@ -134,7 +140,8 @@ export class ImportService {
         forcedProvider?: string,
         selectedConversationIds?: string[],
         sharedReport?: ImportReport,
-        existingConversationsMap?: Map<string, ConversationCatalogEntry>
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>,
+        options?: HandleZipFileOptions
     ) {
         const importLogger = this.plugin.logger.child("Import");
         this.beginRuntimeContext(file.name, forcedProvider || "auto");
@@ -274,6 +281,21 @@ export class ImportService {
                     fileName: file.name,
                     strategy: "metadata-fingerprint",
                     fileSize: file.size,
+                });
+            }
+
+            const archiveImportMode = options?.archiveImportMode ?? "auto";
+            if (archiveImportMode === "reprocess") {
+                isReprocess = true;
+                importLogger.info("Archive import mode override applied", {
+                    fileName: file.name,
+                    archiveImportMode,
+                });
+            } else if (archiveImportMode === "incremental") {
+                isReprocess = false;
+                importLogger.info("Archive import mode override applied", {
+                    fileName: file.name,
+                    archiveImportMode,
                 });
             }
 
