@@ -112,7 +112,7 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 
 I'm working on Nexus projects full-time while unemployed and dealing with health issues.
 
-**Over 6,500 downloads so far! Thank you to everyone who has supported this project.**
+**Over 7,000 downloads so far! Thank you to everyone who has supported this project.**
 
 **If this plugin makes your life easier, a donation would mean the world to me and help keep development going strong.**
 
@@ -174,7 +174,7 @@ After installing the plugin:
 3. **Configure filename options**:
    - **Add Date Prefix**: Enable to add dates to conversation filenames (e.g., `2024-01-15 - My Chat.md`)
    - **Date Format**: Choose between `YYYY-MM-DD` (2024-01-15) or `YYYYMMDD` (20240115)
-4. **Chose message date format**:
+4. **Choose message timestamp format**:
    - **Custom date format** If Obsidian Locale is not providing the format you want (i.e. english provides US format MM/DD/YYYY), select the format you prefer. The plugin will apply it to messages in conversations while importing
 
 ### Upgrading from Previous Versions
@@ -215,7 +215,7 @@ Customize how your conversations look:
 
 - **Message Timestamps**: Choose how dates appear in messages
   - **Auto** (default): Matches your Obsidian language
-  - **Custom**: Pick from ISO 8601, US, European, UK, German, or Japanese
+  - **Custom**: Pick from ISO 8601, US, European, German, or Japanese
 
 #### **🔄 Moving Your Files**
 
@@ -308,7 +308,7 @@ Perfect when you want control:
 
 ### Step 4: Check Your Report
 
-After every import, you get linked report files:
+After each import run with at least one supported archive, you get linked report files:
 
 **What's in it:**
 - ✅ **Import Summary** - stats, archive status, errors, attachments
@@ -320,7 +320,7 @@ After every import, you get linked report files:
 - `<reports>/<provider>/<timestamp> - index heavy.md`
 - `<reports>/<provider>/<timestamp> - index mobile.md`
 
-**💡 Tip:** The summary report opens automatically when import finishes.
+**💡 Tip:** The completion dialog includes a direct link to the summary report.
 
 ## 📊 Understanding Import Reports
 
@@ -394,8 +394,10 @@ This metadata enables powerful Obsidian features:
 
 **2. Header** - Title with link to original conversation:
 ```markdown
-# Conversation Title
-[View original conversation](https://chatgpt.com/c/abc123...)
+# Title: Conversation Title
+Created: 2024-01-15 at 14:30:22
+Last Updated: 2024-01-15 at 16:45:10
+Chat URL: https://chatgpt.com/c/abc123...
 ```
 
 > **Note**: If you deleted the conversation online, the link will be dead.
