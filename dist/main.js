@@ -350,6 +350,7 @@ var init_en = __esm({
         },
         complete_modal: {
           title: "\u2705 Upgrade Complete - v{{version}}",
+          fallback_content: "## \u2728 What's New in v{{version}}\n\n### New\n- Provider is auto-detected from the first supported selected ZIP archive\n- Import reports are split into three linked files:\n  - import summary\n  - index heavy\n  - index mobile\n\n### Improved\n- Desktop and mobile use a unified ZIP-reading model (scan first, targeted reads only)\n- Mobile imports run in single-archive mode for better reliability on constrained devices\n- Unsupported archives are identified earlier and skipped more cleanly\n\n### Bug Fixes\n- ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly\n- Multi-ZIP attachment handling for ChatGPT imports is more robust\n- Large archive handling avoids full ZIP in-memory loading by default",
           buttons: {
             got_it: "Got it!"
           }
@@ -850,6 +851,7 @@ var init_fr = __esm({
         },
         complete_modal: {
           title: "\u2705 Mise \xE0 niveau termin\xE9e - v{{version}}",
+          fallback_content: "## \u2728 Nouveaut\xE9s de la v{{version}}\n\n### Nouveau\n- Le fournisseur est d\xE9tect\xE9 automatiquement \xE0 partir de la premi\xE8re archive ZIP prise en charge s\xE9lectionn\xE9e\n- Les rapports d'import sont s\xE9par\xE9s en trois fichiers li\xE9s :\n  - import summary\n  - index heavy\n  - index mobile\n\n### Am\xE9liorations\n- Desktop et mobile utilisent un mod\xE8le unifi\xE9 de lecture ZIP (analyse d'abord, lecture cibl\xE9e ensuite)\n- Sur mobile, les imports s'ex\xE9cutent archive par archive pour une meilleure fiabilit\xE9 sur appareils contraints\n- Les archives non prises en charge sont d\xE9tect\xE9es plus t\xF4t et ignor\xE9es plus proprement\n\n### Correctifs\n- Les exports ChatGPT num\xE9rot\xE9s (`conversations-XXX.json`) sont correctement reconnus\n- La gestion des pi\xE8ces jointes ChatGPT en multi-ZIP est plus robuste\n- Le traitement des grandes archives \xE9vite le chargement complet du ZIP en m\xE9moire",
           buttons: {
             got_it: "Compris !"
           }
@@ -1350,6 +1352,7 @@ var init_de = __esm({
         },
         complete_modal: {
           title: "\u2705 Upgrade abgeschlossen \u2013 v{{version}}",
+          fallback_content: "## \u2728 Neu in v{{version}}\n\n### Neu\n- Der Anbieter wird automatisch aus der ersten unterst\xFCtzten ausgew\xE4hlten ZIP-Datei erkannt\n- Importberichte sind in drei verkn\xFCpfte Dateien aufgeteilt:\n  - import summary\n  - index heavy\n  - index mobile\n\n### Verbesserungen\n- Desktop und Mobile verwenden ein einheitliches ZIP-Lesemodell (zuerst scannen, dann gezielt lesen)\n- Mobile Importe laufen im Einzelarchiv-Modus f\xFCr bessere Zuverl\xE4ssigkeit auf Ger\xE4ten mit wenig Ressourcen\n- Nicht unterst\xFCtzte Archive werden fr\xFCher erkannt und sauberer \xFCbersprungen\n\n### Fehlerbehebungen\n- Nummerierte ChatGPT-Exporte (`conversations-XXX.json`) werden korrekt erkannt\n- Die Multi-ZIP-Anhangsverarbeitung f\xFCr ChatGPT ist robuster\n- Gro\xDFe Archive werden standardm\xE4\xDFig ohne vollst\xE4ndiges Laden der ZIP in den Speicher verarbeitet",
           buttons: {
             got_it: "Verstanden!"
           }
@@ -1850,6 +1853,7 @@ var init_es = __esm({
         },
         complete_modal: {
           title: "\u2705 Actualizaci\xF3n completada - v{{version}}",
+          fallback_content: "## \u2728 Novedades en v{{version}}\n\n### Nuevo\n- El proveedor se detecta autom\xE1ticamente a partir del primer archivo ZIP compatible seleccionado\n- Los informes de importaci\xF3n se dividen en tres archivos enlazados:\n  - import summary\n  - index heavy\n  - index mobile\n\n### Mejoras\n- Desktop y m\xF3vil usan un modelo unificado de lectura ZIP (primero escaneo, luego lectura selectiva)\n- En m\xF3vil, las importaciones se ejecutan en modo de archivo \xFAnico para mayor fiabilidad en dispositivos limitados\n- Los archivos no compatibles se identifican antes y se omiten de forma m\xE1s limpia\n\n### Correcciones\n- Las exportaciones numeradas de ChatGPT (`conversations-XXX.json`) se reconocen correctamente\n- La gesti\xF3n de adjuntos de ChatGPT en multi-ZIP es m\xE1s robusta\n- El manejo de archivos grandes evita cargar todo el ZIP en memoria por defecto",
           buttons: {
             got_it: "\xA1Entendido!"
           }
@@ -2350,6 +2354,7 @@ var init_it = __esm({
         },
         complete_modal: {
           title: "\u2705 Aggiornamento completato - v{{version}}",
+          fallback_content: "## \u2728 Novit\xE0 della v{{version}}\n\n### Novit\xE0\n- Il provider viene rilevato automaticamente dal primo archivio ZIP supportato selezionato\n- I report di importazione sono suddivisi in tre file collegati:\n  - import summary\n  - index heavy\n  - index mobile\n\n### Miglioramenti\n- Desktop e mobile usano un modello unificato di lettura ZIP (prima scansione, poi letture mirate)\n- Su mobile, le importazioni vengono eseguite in modalit\xE0 archivio singolo per maggiore affidabilit\xE0 su dispositivi limitati\n- Gli archivi non supportati vengono identificati prima e ignorati in modo pi\xF9 pulito\n\n### Correzioni\n- Le esportazioni numerate di ChatGPT (`conversations-XXX.json`) sono riconosciute correttamente\n- La gestione degli allegati ChatGPT in multi-ZIP \xE8 pi\xF9 robusta\n- La gestione degli archivi grandi evita il caricamento completo dello ZIP in memoria per impostazione predefinita",
           buttons: {
             got_it: "Capito!"
           }
@@ -2850,6 +2855,7 @@ var init_ru = __esm({
         },
         complete_modal: {
           title: "\u2705 \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E \u2014 v{{version}}",
+          fallback_content: "## \u2728 \u0427\u0442\u043E \u043D\u043E\u0432\u043E\u0433\u043E \u0432 v{{version}}\n\n### \u041D\u043E\u0432\u043E\u0435\n- \u041F\u043E\u0441\u0442\u0430\u0432\u0449\u0438\u043A \u043E\u043F\u0440\u0435\u0434\u0435\u043B\u044F\u0435\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u043F\u043E \u043F\u0435\u0440\u0432\u043E\u043C\u0443 \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u043E\u043C\u0443 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u043C\u043E\u043C\u0443 ZIP-\u0430\u0440\u0445\u0438\u0432\u0443\n- \u041E\u0442\u0447\u0451\u0442\u044B \u0438\u043C\u043F\u043E\u0440\u0442\u0430 \u0440\u0430\u0437\u0434\u0435\u043B\u0435\u043D\u044B \u043D\u0430 \u0442\u0440\u0438 \u0441\u0432\u044F\u0437\u0430\u043D\u043D\u044B\u0445 \u0444\u0430\u0439\u043B\u0430:\n  - import summary\n  - index heavy\n  - index mobile\n\n### \u0423\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F\n- \u041D\u0430 \u0434\u0435\u0441\u043A\u0442\u043E\u043F\u0435 \u0438 \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0445 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430\u0445 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F \u0435\u0434\u0438\u043D\u0430\u044F \u043C\u043E\u0434\u0435\u043B\u044C \u0447\u0442\u0435\u043D\u0438\u044F ZIP (\u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u0441\u043A\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435, \u0437\u0430\u0442\u0435\u043C \u0442\u043E\u0447\u0435\u0447\u043D\u043E\u0435 \u0447\u0442\u0435\u043D\u0438\u0435)\n- \u041D\u0430 \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0445 \u0438\u043C\u043F\u043E\u0440\u0442 \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u0435\u0442\u0441\u044F \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u043E\u0434\u043D\u043E\u0433\u043E \u0430\u0440\u0445\u0438\u0432\u0430 \u0434\u043B\u044F \u043B\u0443\u0447\u0448\u0435\u0439 \u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u043E\u0441\u0442\u0438 \u043D\u0430 \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u043D\u044B\u0445 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430\u0445\n- \u041D\u0435\u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u043C\u044B\u0435 \u0430\u0440\u0445\u0438\u0432\u044B \u043E\u043F\u0440\u0435\u0434\u0435\u043B\u044F\u044E\u0442\u0441\u044F \u0440\u0430\u043D\u044C\u0448\u0435 \u0438 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0430\u044E\u0442\u0441\u044F \u0430\u043A\u043A\u0443\u0440\u0430\u0442\u043D\u0435\u0435\n\n### \u0418\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u044F\n- \u041D\u0443\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u044D\u043A\u0441\u043F\u043E\u0440\u0442\u044B ChatGPT (`conversations-XXX.json`) \u0440\u0430\u0441\u043F\u043E\u0437\u043D\u0430\u044E\u0442\u0441\u044F \u043A\u043E\u0440\u0440\u0435\u043A\u0442\u043D\u043E\n- \u041E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0430 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 ChatGPT \u0432 multi-ZIP \u0441\u0442\u0430\u043B\u0430 \u0431\u043E\u043B\u0435\u0435 \u043D\u0430\u0434\u0451\u0436\u043D\u043E\u0439\n- \u0414\u043B\u044F \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0430\u0440\u0445\u0438\u0432\u043E\u0432 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043F\u043E\u043B\u043D\u0430\u044F \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 ZIP \u0432 \u043F\u0430\u043C\u044F\u0442\u044C \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E",
           buttons: {
             got_it: "\u041F\u043E\u043D\u044F\u0442\u043D\u043E!"
           }
@@ -3350,6 +3356,7 @@ var init_zh = __esm({
         },
         complete_modal: {
           title: "\u2705 \u5347\u7EA7\u5B8C\u6210 - v{{version}}",
+          fallback_content: "## \u2728 v{{version}} \u66F4\u65B0\u5185\u5BB9\n\n### \u65B0\u589E\n- \u73B0\u5728\u4F1A\u6839\u636E\u4F60\u9009\u62E9\u7684\u7B2C\u4E00\u4E2A\u53D7\u652F\u6301 ZIP \u81EA\u52A8\u8BC6\u522B\u63D0\u4F9B\u65B9\n- \u5BFC\u5165\u62A5\u544A\u5DF2\u62C6\u5206\u4E3A\u4E09\u4E2A\u4E92\u76F8\u94FE\u63A5\u7684\u6587\u4EF6\uFF1A\n  - import summary\n  - index heavy\n  - index mobile\n\n### \u6539\u8FDB\n- \u684C\u9762\u7AEF\u4E0E\u79FB\u52A8\u7AEF\u91C7\u7528\u7EDF\u4E00\u7684 ZIP \u8BFB\u53D6\u6A21\u578B\uFF08\u5148\u626B\u63CF\uFF0C\u518D\u6309\u9700\u8BFB\u53D6\uFF09\n- \u79FB\u52A8\u7AEF\u4F7F\u7528\u5355\u5F52\u6863\u6A21\u5F0F\u5BFC\u5165\uFF0C\u5728\u8D44\u6E90\u53D7\u9650\u8BBE\u5907\u4E0A\u66F4\u7A33\u5B9A\n- \u4E0D\u652F\u6301\u7684\u5F52\u6863\u4F1A\u66F4\u65E9\u88AB\u8BC6\u522B\uFF0C\u5E76\u4EE5\u66F4\u5E72\u51C0\u7684\u65B9\u5F0F\u8DF3\u8FC7\n\n### \u4FEE\u590D\n- \u73B0\u5728\u53EF\u6B63\u786E\u8BC6\u522B ChatGPT \u7F16\u53F7\u5BFC\u51FA\uFF08`conversations-XXX.json`\uFF09\n- ChatGPT \u591A ZIP \u573A\u666F\u4E0B\u7684\u9644\u4EF6\u5904\u7406\u66F4\u52A0\u7A33\u5B9A\n- \u5927\u578B\u5F52\u6863\u9ED8\u8BA4\u4E0D\u518D\u9700\u8981\u5C06\u6574\u4E2A ZIP \u4E00\u6B21\u6027\u52A0\u8F7D\u5230\u5185\u5B58",
           buttons: {
             got_it: "\u77E5\u9053\u4E86\uFF01"
           }
@@ -3850,6 +3857,7 @@ var init_ja = __esm({
         },
         complete_modal: {
           title: "\u2705 \u30A2\u30C3\u30D7\u30B0\u30EC\u30FC\u30C9\u5B8C\u4E86 - v{{version}}",
+          fallback_content: "## \u2728 v{{version}} \u306E\u65B0\u6A5F\u80FD\n\n### \u65B0\u6A5F\u80FD\n- \u6700\u521D\u306B\u9078\u629E\u3057\u305F\u5BFE\u5FDC ZIP \u30A2\u30FC\u30AB\u30A4\u30D6\u304B\u3089\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3092\u81EA\u52D5\u5224\u5B9A\u3057\u307E\u3059\n- \u30A4\u30F3\u30DD\u30FC\u30C8\u30EC\u30DD\u30FC\u30C8\u3092 3 \u3064\u306E\u76F8\u4E92\u30EA\u30F3\u30AF\u3055\u308C\u305F\u30D5\u30A1\u30A4\u30EB\u306B\u5206\u5272\u3057\u307E\u3057\u305F:\n  - import summary\n  - index heavy\n  - index mobile\n\n### \u6539\u5584\n- \u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\u3068\u30E2\u30D0\u30A4\u30EB\u3067 ZIP \u8AAD\u307F\u53D6\u308A\u65B9\u5F0F\u3092\u7D71\u4E00\uFF08\u5148\u306B\u30B9\u30AD\u30E3\u30F3\u3057\u3001\u5FC5\u8981\u306A\u9805\u76EE\u306E\u307F\u8AAD\u307F\u53D6\u308A\uFF09\n- \u30E2\u30D0\u30A4\u30EB\u3067\u306F\u5236\u7D04\u306E\u3042\u308B\u7AEF\u672B\u3067\u306E\u4FE1\u983C\u6027\u5411\u4E0A\u306E\u305F\u3081\u3001\u5358\u4E00\u30A2\u30FC\u30AB\u30A4\u30D6\u30E2\u30FC\u30C9\u3067\u5B9F\u884C\u3057\u307E\u3059\n- \u975E\u5BFE\u5FDC\u30A2\u30FC\u30AB\u30A4\u30D6\u3092\u3088\u308A\u65E9\u3044\u6BB5\u968E\u3067\u5224\u5B9A\u3057\u3001\u3088\u308A\u30AF\u30EA\u30FC\u30F3\u306B\u30B9\u30AD\u30C3\u30D7\u3057\u307E\u3059\n\n### \u30D0\u30B0\u4FEE\u6B63\n- ChatGPT \u306E\u9023\u756A\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8\uFF08`conversations-XXX.json`\uFF09\u3092\u6B63\u3057\u304F\u8A8D\u8B58\u3057\u307E\u3059\n- ChatGPT \u306E\u30DE\u30EB\u30C1 ZIP \u53D6\u308A\u8FBC\u307F\u6642\u306E\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u51E6\u7406\u3092\u5F37\u5316\u3057\u307E\u3057\u305F\n- \u5927\u5BB9\u91CF\u30A2\u30FC\u30AB\u30A4\u30D6\u3067\u3082\u3001ZIP \u5168\u4F53\u3092\u30E1\u30E2\u30EA\u306B\u8AAD\u307F\u8FBC\u307E\u306A\u3044\u3088\u3046\u306B\u6539\u5584\u3057\u307E\u3057\u305F",
           buttons: {
             got_it: "\u4E86\u89E3\uFF01"
           }
@@ -4350,6 +4358,7 @@ var init_pt = __esm({
         },
         complete_modal: {
           title: "\u2705 Atualiza\xE7\xE3o conclu\xEDda - v{{version}}",
+          fallback_content: "## \u2728 Novidades da v{{version}}\n\n### Novo\n- O fornecedor \xE9 detetado automaticamente a partir do primeiro arquivo ZIP suportado selecionado\n- Os relat\xF3rios de importa\xE7\xE3o foram divididos em tr\xEAs ficheiros ligados entre si:\n  - import summary\n  - index heavy\n  - index mobile\n\n### Melhorias\n- Desktop e mobile usam um modelo unificado de leitura de ZIP (primeiro analisa, depois l\xEA apenas o necess\xE1rio)\n- No mobile, as importa\xE7\xF5es correm em modo de arquivo \xFAnico para maior fiabilidade em dispositivos limitados\n- Arquivos n\xE3o suportados s\xE3o identificados mais cedo e ignorados de forma mais limpa\n\n### Corre\xE7\xF5es\n- As exporta\xE7\xF5es numeradas do ChatGPT (`conversations-XXX.json`) s\xE3o reconhecidas corretamente\n- O tratamento de anexos do ChatGPT em multi-ZIP est\xE1 mais robusto\n- O tratamento de arquivos grandes evita carregar o ZIP inteiro em mem\xF3ria por padr\xE3o",
           buttons: {
             got_it: "Entendido!"
           }
@@ -4850,6 +4859,7 @@ var init_ko = __esm({
         },
         complete_modal: {
           title: "\u2705 \uC5C5\uADF8\uB808\uC774\uB4DC \uC644\uB8CC - v{{version}}",
+          fallback_content: "## \u2728 v{{version}}\uC758 \uC0C8\uB85C\uC6B4 \uAE30\uB2A5\n\n### \uC2E0\uADDC\n- \uC120\uD0DD\uD55C \uCCAB \uBC88\uC9F8 \uC9C0\uC6D0 ZIP \uC544\uCE74\uC774\uBE0C\uC5D0\uC11C \uC81C\uACF5\uC790\uB97C \uC790\uB3D9\uC73C\uB85C \uAC10\uC9C0\uD569\uB2C8\uB2E4\n- \uAC00\uC838\uC624\uAE30 \uBCF4\uACE0\uC11C\uB97C \uC11C\uB85C \uC5F0\uACB0\uB41C 3\uAC1C \uD30C\uC77C\uB85C \uBD84\uB9AC\uD588\uC2B5\uB2C8\uB2E4:\n  - import summary\n  - index heavy\n  - index mobile\n\n### \uAC1C\uC120\n- \uB370\uC2A4\uD06C\uD1B1\uACFC \uBAA8\uBC14\uC77C\uC774 \uD1B5\uD569 ZIP \uC77D\uAE30 \uBAA8\uB378\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4(\uBA3C\uC800 \uC2A4\uCE94, \uD544\uC694\uD55C \uD56D\uBAA9\uB9CC \uC77D\uAE30)\n- \uBAA8\uBC14\uC77C\uC5D0\uC11C\uB294 \uB9AC\uC18C\uC2A4\uAC00 \uC81C\uD55C\uB41C \uAE30\uAE30\uC5D0\uC11C \uC548\uC815\uC131\uC744 \uB192\uC774\uAE30 \uC704\uD574 \uB2E8\uC77C \uC544\uCE74\uC774\uBE0C \uBAA8\uB4DC\uB85C \uAC00\uC838\uC635\uB2C8\uB2E4\n- \uC9C0\uC6D0\uB418\uC9C0 \uC54A\uB294 \uC544\uCE74\uC774\uBE0C\uB97C \uB354 \uC774\uB978 \uB2E8\uACC4\uC5D0\uC11C \uC2DD\uBCC4\uD558\uACE0 \uB354 \uAE54\uB054\uD558\uAC8C \uAC74\uB108\uB701\uB2C8\uB2E4\n\n### \uBC84\uADF8 \uC218\uC815\n- ChatGPT \uBC88\uD638\uD615 \uB0B4\uBCF4\uB0B4\uAE30(`conversations-XXX.json`)\uB97C \uC62C\uBC14\uB974\uAC8C \uC778\uC2DD\uD569\uB2C8\uB2E4\n- ChatGPT \uB2E4\uC911 ZIP \uCCA8\uBD80\uD30C\uC77C \uCC98\uB9AC \uC548\uC815\uC131\uC774 \uD5A5\uC0C1\uB418\uC5C8\uC2B5\uB2C8\uB2E4\n- \uB300\uC6A9\uB7C9 \uC544\uCE74\uC774\uBE0C \uCC98\uB9AC \uC2DC \uAE30\uBCF8\uC801\uC73C\uB85C ZIP \uC804\uCCB4\uB97C \uBA54\uBAA8\uB9AC\uC5D0 \uB85C\uB4DC\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4",
           buttons: {
             got_it: "\uC54C\uACA0\uC5B4\uC694!"
           }
@@ -11958,25 +11968,7 @@ var init_upgrade_complete_modal = __esm({
         this.addStyles();
       }
       async addReleaseNotes() {
-        let content = `## \u2728 What's New in v${this.version}
-
-### New
-- Provider is auto-detected from the first supported selected ZIP archive
-- Import reports are split into three linked files:
-  - import summary
-  - index heavy
-  - index mobile
-
-### Improved
-- Desktop and mobile use a unified ZIP-reading model (scan first, targeted reads only)
-- Mobile imports run in single-archive mode for better reliability on constrained devices
-- Unsupported archives are identified earlier and skipped more cleanly
-
-### Bug Fixes
-- ChatGPT numbered exports (\`conversations-XXX.json\`) are recognised correctly
-- Multi-ZIP attachment handling for ChatGPT imports is more robust
-- Large archive handling avoids full ZIP in-memory loading by default
-`;
+        let content = t("upgrade.complete_modal.fallback_content", { version: this.version });
         try {
           const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
           if (response.ok) {

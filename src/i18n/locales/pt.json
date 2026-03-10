@@ -315,6 +315,7 @@
     },
     "complete_modal": {
       "title": "✅ Atualização concluída - v{{version}}",
+      "fallback_content": "## ✨ Novidades da v{{version}}\n\n### Novo\n- O fornecedor é detetado automaticamente a partir do primeiro arquivo ZIP suportado selecionado\n- Os relatórios de importação foram divididos em três ficheiros ligados entre si:\n  - import summary\n  - index heavy\n  - index mobile\n\n### Melhorias\n- Desktop e mobile usam um modelo unificado de leitura de ZIP (primeiro analisa, depois lê apenas o necessário)\n- No mobile, as importações correm em modo de arquivo único para maior fiabilidade em dispositivos limitados\n- Arquivos não suportados são identificados mais cedo e ignorados de forma mais limpa\n\n### Correções\n- As exportações numeradas do ChatGPT (`conversations-XXX.json`) são reconhecidas corretamente\n- O tratamento de anexos do ChatGPT em multi-ZIP está mais robusto\n- O tratamento de arquivos grandes evita carregar o ZIP inteiro em memória por padrão",
       "buttons": {
         "got_it": "Entendido!"
       }

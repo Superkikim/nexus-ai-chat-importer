@@ -69,26 +69,8 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     private async addReleaseNotes() {
-        // Fallback content used when README fetch is unavailable
-        let content = `## ✨ What's New in v${this.version}
-
-### New
-- Provider is auto-detected from the first supported selected ZIP archive
-- Import reports are split into three linked files:
-  - import summary
-  - index heavy
-  - index mobile
-
-### Improved
-- Desktop and mobile use a unified ZIP-reading model (scan first, targeted reads only)
-- Mobile imports run in single-archive mode for better reliability on constrained devices
-- Unsupported archives are identified earlier and skipped more cleanly
-
-### Bug Fixes
-- ChatGPT numbered exports (\`conversations-XXX.json\`) are recognised correctly
-- Multi-ZIP attachment handling for ChatGPT imports is more robust
-- Large archive handling avoids full ZIP in-memory loading by default
-`;
+        // Localized fallback content used when README fetch is unavailable
+        let content = t('upgrade.complete_modal.fallback_content', { version: this.version });
 
         try {
             // Try to fetch Overview section from README
