@@ -26,7 +26,7 @@
 - [🎨 Conversation Format](#-conversation-format) - How conversations look
 
 ### 🔧 Advanced
-- [📎 Attachments](#-complete-attachment-handling) - Images, DALL-E, artifacts
+- [📎 Attachments](#attachments) - Images, DALL-E, artifacts
 - [🤖 Provider Differences](#-provider-specific-features--limitations) - ChatGPT, Claude, Le Chat specifics
 - [💻 CLI](#-command-line-interface-cli) - Import from command line
 - [⚙️ Settings](#plugin-settings) - Customize folders and formatting
@@ -307,6 +307,9 @@ Perfect when you want control:
 - ✅ **Duplicate detection** - Automatically finds duplicates across ZIPs
 - ✅ **Flexible sorting** - Organize by date, title, or status
 
+> **💾 Keep your export ZIPs**
+> The plugin imports from your ZIP files but does not store them. If something goes wrong or a future plugin version improves processing, you will need the original ZIP to reimport. Keep at least your most recent export from each provider.
+
 ### Step 4: Check Your Report
 
 After each import run with at least one supported archive, you get linked report files:
@@ -369,117 +372,6 @@ Conversations are organized by provider, year, and month:
 <conversations>/chatgpt/2024/01/my-conversation.md
 <conversations>/claude/2024/02/another-chat.md
 ```
-
-#### Structure
-
-Each conversation note contains:
-
-**1. Frontmatter** - Rich metadata for Obsidian features:
-```yaml
----
-nexus: nexus-ai-chat-importer
-plugin_version: "1.x.x"
-provider: chatgpt                     # chatgpt, claude, or lechat
-aliases: "Conversation Title"         # YAML-safe alias used for linking
-conversation_id: abc123...
-create_time: 2024-01-15T14:30:22.000Z # UTC ISO 8601
-update_time: 2024-01-15T16:45:10.000Z # UTC ISO 8601
----
-```
-
-This metadata enables powerful Obsidian features:
-- 🔍 **Search & filter** by any field
-- 📊 **Dataview queries** for custom dashboards
-- 📈 **Track statistics** across conversations
-- 🔗 **Link** using aliases
-
-**2. Header** - Title with link to original conversation:
-```markdown
-# Title: Conversation Title
-Created: 2024-01-15 at 14:30:22
-Last Updated: 2024-01-15 at 16:45:10
-Chat URL: https://chatgpt.com/c/abc123...
-```
-
-> **Note**: If you deleted the conversation online, the link will be dead.
-
-**3. Messages** - Formatted with custom callouts:
-
-```markdown
-> [!nexus_user]
-> **User** - 2024-01-15 14:30:22
->
-> Your message here...
-
-> [!nexus_agent]
-> **Assistant** - 2024-01-15 14:31:05
->
-> AI response here...
-```
-
-**Callout Types**:
-- 👤 **nexus_user**: Blue callouts for user messages
-- 🤖 **nexus_agent**: Green callouts for AI responses
-- 📎 **nexus_attachment**: Amber callouts for attachments
-- ✨ **nexus_artifact**: Purple callouts for Claude artifacts
-- 🪄 **nexus_prompt**: Red callouts for prompt blocks (including DALL-E prompts)
-
-**Viewing Modes**:
-- **Reading View**: Full visual experience with colored callouts
-- **Live Preview**: Rendered callouts while editing
-- **Source Mode**: Raw Markdown syntax
-
-#### Date & Time Formats
-
-The plugin uses **two different date formats** depending on where they appear:
-
-**1. Metadata (Top of File) - Universal Format**
-
-The dates at the top of each note use **ISO 8601** format (`2024-01-15T14:30:22.000Z`):
-
-✅ **Works everywhere** - No matter what language you use
-✅ **Sorts correctly** - Alphabetical order = chronological order
-✅ **No confusion** - Never mix up month and day
-✅ **Works with Dataview** - Perfect for queries and tables
-✅ **Same timezone** - Always UTC (no timezone confusion)
-
-**2. Message Timestamps (In Conversation) - Your Choice**
-
-The timestamps shown in each message can be customized:
-
-- **Auto (Default)**: Matches your Obsidian language
-  - English → `01/15/2024 2:30:22 PM`
-  - French → `15/01/2024 14:30:22`
-  - German → `15.01.2024 14:30:22`
-
-- **Custom**: Pick your favorite format in Settings
-  - **Universal**: `2024-01-15 14:30:22` (same everywhere, easy to sort)
-  - **US**: `01/15/2024 2:30:22 PM`
-  - **European**: `15/01/2024 14:30:22`
-  - **German**: `15.01.2024 14:30:22`
-  - **Japanese**: `2024/01/15 14:30:22`
-
-> **⚠️ Important**: Changing this setting only affects **new imports**. Your existing notes won't change (to protect your data).
-
-**Example of Universal Format**: `2024-01-15T14:30:22.000Z`
-- **Date**: January 15, 2024
-- **Time**: 2:30:22 PM (in UTC timezone)
-- **Why UTC?** So the same timestamp works everywhere in the world
-
-#### Recommendations
-
-**✅ DO**:
-- Add your own frontmatter fields and edit message content as needed
-- Manual edits are usually preserved during migrations and incremental updates
-- Keep backups if you plan to reprocess/recreate existing notes
-- Use Reading View for best experience
-
-**❌ DON'T**:
-- Modify plugin-generated frontmatter fields (`nexus`, `plugin_version`, `provider`, `aliases`, `conversation_id`, `create_time`, `update_time`)
-- Delete message IDs (hidden in Reading View)
-- Remove messages and expect skipped/incremental runs to always restore them automatically
-
-> **Why?** The plugin uses conversation_id and message IDs to detect updates and avoid duplicates. Modifying them breaks this functionality.
 
 ### Attachments
 
@@ -546,12 +438,140 @@ Some attachments may be missing from exports:
 
 The plugin continues importing even with missing attachments. Check import reports for details.
 
+---
+
+## 🎨 Conversation Format
+
+Each imported conversation is a Markdown note with three parts.
+
+### 1. Frontmatter
+
+Rich metadata written at the top of every note:
+
+```yaml
+---
+nexus: nexus-ai-chat-importer        # Plugin identifier (do not modify)
+plugin_version: "1.x.x"             # Plugin version at import time
+provider: chatgpt                    # chatgpt, claude, or lechat
+aliases: My Conversation Title       # YAML-safe alias for Obsidian linking
+conversation_id: abc123...
+create_time: 2024-01-15T14:30:22.000Z # UTC ISO 8601
+update_time: 2024-01-15T16:45:10.000Z # UTC ISO 8601
+---
+```
+
+> **Note on `aliases`**: Normal titles are written unquoted. Titles that contain YAML-special characters (`:`, `[`, `{`) are automatically wrapped in single quotes — e.g. `aliases: 'My Question: An Answer'`.
+
+This metadata enables powerful Obsidian features:
+- 🔍 **Search & filter** by any field
+- 📊 **Dataview queries** for custom dashboards
+- 📈 **Track statistics** across conversations
+- 🔗 **Link** using aliases
+
+### 2. Header
+
+Title and timestamps, with a link to the original conversation:
+
+```markdown
+# Title: Conversation Title
+Created: 2024-01-15 at 14:30:22
+Last Updated: 2024-01-15 at 16:45:10
+Chat URL: https://chatgpt.com/c/abc123...
+```
+
+> **Note**: If you deleted the conversation online, the link will be dead.
+
+### 3. Messages
+
+Formatted with custom Obsidian callouts:
+
+```markdown
+> [!nexus_user]
+> **User** - 2024-01-15 14:30:22
+>
+> Your message here...
+
+> [!nexus_agent]
+> **Assistant** - 2024-01-15 14:31:05
+>
+> AI response here...
+```
+
+**Callout Types**:
+- 👤 **nexus_user**: Blue callouts for user messages
+- 🤖 **nexus_agent**: Green callouts for AI responses
+- 📎 **nexus_attachment**: Amber callouts for attachments
+- ✨ **nexus_artifact**: Purple callouts for Claude artifacts
+- 🪄 **nexus_prompt**: Red callouts for prompt blocks (including DALL-E prompts)
+
+**Viewing Modes**:
+- **Reading View**: Full visual experience with colored callouts
+- **Live Preview**: Rendered callouts while editing
+- **Source Mode**: Raw Markdown syntax
+
+### Date & Time Formats
+
+The plugin uses **two different date formats** depending on where they appear:
+
+**1. Metadata (Top of File) - Universal Format**
+
+The dates at the top of each note use **ISO 8601** format (`2024-01-15T14:30:22.000Z`):
+
+✅ **Works everywhere** - No matter what language you use
+✅ **Sorts correctly** - Alphabetical order = chronological order
+✅ **No confusion** - Never mix up month and day
+✅ **Works with Dataview** - Perfect for queries and tables
+✅ **Same timezone** - Always UTC (no timezone confusion)
+
+**2. Message Timestamps (In Conversation) - Your Choice**
+
+The timestamps shown in each message can be customized:
+
+- **Auto (Default)**: Matches your Obsidian language
+  - English → `01/15/2024 2:30:22 PM`
+  - French → `15/01/2024 14:30:22`
+  - German → `15.01.2024 14:30:22`
+
+- **Custom**: Pick your favorite format in Settings
+  - **Universal**: `2024-01-15 14:30:22` (same everywhere, easy to sort)
+  - **US**: `01/15/2024 2:30:22 PM`
+  - **European**: `15/01/2024 14:30:22`
+  - **German**: `15.01.2024 14:30:22`
+  - **Japanese**: `2024/01/15 14:30:22`
+
+> **⚠️ Important**: Changing this setting only affects **new imports**. Your existing notes won't change (to protect your data).
+
+### Recommendations
+
+**✅ DO**:
+- Add your own frontmatter fields and edit message content as needed
+- Manual edits are usually preserved during migrations and incremental updates
+- Keep backups if you plan to reprocess/recreate existing notes
+- Use Reading View for best experience
+
+**❌ DON'T**:
+- Modify plugin-generated frontmatter fields (`nexus`, `plugin_version`, `provider`, `aliases`, `conversation_id`, `create_time`, `update_time`)
+- Delete message IDs (hidden in Reading View)
+- Remove messages and expect skipped/incremental runs to always restore them automatically
+
+> **Why?** The plugin uses `conversation_id` and message IDs to detect updates and avoid duplicates. Modifying them breaks this functionality.
+
+---
+
 ## 🤖 Provider-Specific Features & Limitations
 
 Each AI provider exports data differently.
 
-> **Important**: providers do not publish stable export specs. Export ZIP formats can change at any time.
-> If import behavior changes unexpectedly, please open an issue with clear details (provider, platform/device, plugin version, ZIP size, logs, screenshots).
+> **⚠️ Export Format Stability**
+>
+> AI providers make export ZIPs available to comply with data portability regulations (GDPR, CCPA, etc.).
+> These exports are **not officially documented** and providers make **no guarantees** about format stability — they can and do change without notice.
+>
+> If a provider changes their export format, the plugin may stop importing correctly through no fault of its own.
+> **The plugin author cannot be held responsible for breakage caused by provider-side format changes.**
+>
+> If import behavior changes unexpectedly, please open an issue with clear, precise details:
+> provider, platform/device, plugin version, ZIP size, problem description, and relevant logs or screenshots.
 
 ### ChatGPT (OpenAI)
 
@@ -598,7 +618,7 @@ Each AI provider exports data differently.
 - Custom elements
 
 **⚠️ Limitations**:
-- **No conversation titles**: Le Chat exports don't include conversation titles. The plugin automatically generates titles from the first user message (truncated to 50 characters)
+- **No conversation titles**: Le Chat exports don't include conversation titles. The plugin automatically generates titles from the first user message (first 50 characters, followed by '...')
 - **No generated images**: Images created by Le Chat's image generation tool are **not included in exports**. Only external URLs are provided, which may expire. The plugin will show the generation prompt but cannot download the images
 - **Tool calls filtered**: Internal tool calls (web_search, etc.) are filtered out as they're not useful for users
 
