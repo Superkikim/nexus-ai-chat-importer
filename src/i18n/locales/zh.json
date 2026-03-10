@@ -36,15 +36,19 @@
     "providers": {
       "chatgpt": {
         "name": "ChatGPT",
-        "description": "OpenAI ChatGPT 对话导出"
+        "description": "OpenAI ChatGPT 对话导出",
+        "file_formats_0": "conversations.json（旧格式）或 conversations-XXX.json 文件"
       },
       "claude": {
         "name": "Claude",
-        "description": "Anthropic Claude 对话导出"
+        "description": "Anthropic Claude 对话导出",
+        "file_formats_0": "conversations.json + users.json",
+        "file_formats_1": "projects.json（可选）"
       },
       "lechat": {
         "name": "Le Chat",
-        "description": "Mistral AI Le Chat 对话导出"
+        "description": "Mistral AI Le Chat 对话导出",
+        "file_formats_0": "chat-<uuid>.json 文件"
       }
     },
     "buttons": {

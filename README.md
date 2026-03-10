@@ -44,8 +44,9 @@
    - **Claude**: Settings → Privacy → Export data → Download ZIP
    - **Le Chat**: Click your name → Profile → Le Chat: Export → Download
 3. **Import**: Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar or use command palette → "Import AI conversations"
-4. **Select** your ZIP file(s) → Choose import mode (all or selective)
-5. **Done!** Your conversations are now in `Nexus/Conversations/`
+4. **Select** your ZIP file(s) and import mode (all or selective)
+5. **Provider is auto-detected** from the first supported archive in your selection
+6. **Done!** Your conversations are now in `Nexus/Conversations/`
 
 💡 **First time?** The plugin will show you a welcome dialog with helpful links!
 
@@ -80,14 +81,18 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - Le Chat generated images now show a proper "not included in export" callout
 - Missing attachment callouts simplified to a single clean line
 - Support links and branding updated throughout
+- Provider is auto-detected from the first supported selected archive
+- Mixed-provider selections are handled cleanly (unsupported provider files are ignored)
+- Mobile now runs imports in single-archive mode for better runtime stability
 - Desktop and mobile now follow the same ZIP-reading model: scan first, then read only what is needed
 - Import logs now identify the exact phase reached during ZIP scan, metadata extraction, attachment indexing, and streaming import
+- Reports are now split into summary + heavy index + mobile index for better readability
 
 🐛 **Bug Fixes**
 - ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly
 - ChatGPT user-uploaded image extraction restored for multi-ZIP imports
 - Claude export format changes handled correctly
-- Unsupported ZIP files are classified earlier and skipped more cleanly
+- Unsupported ZIP files are classified earlier and skipped with clearer messaging
 - Large archive handling no longer relies on loading the whole ZIP into memory
 
 ---
@@ -242,14 +247,22 @@ Want to reorganize? No problem!
 - Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar, OR
 - Press **Ctrl/Cmd+P** → type "**Import AI conversations**"
 
+### Provider Detection Rules (v1.5.7)
+
+- The plugin auto-detects the provider from the **first supported ZIP** in your selection
+- Files that don't match that provider are ignored and reported as skipped
+- Unsupported archives are ignored with a clear message instead of breaking the import flow
+- Desktop supports multiple ZIPs in one run (single provider per run)
+- Mobile runs one ZIP per import for reliability
+
 ### Step 3: Choose Your Import Style
 
 #### 🚀 **Quick Import** (Import Everything)
 
 Perfect when you want everything imported fast:
 
-1. Select **ChatGPT**, **Claude**, or **Le Chat**
-2. Choose your ZIP file(s)
+1. Choose your ZIP file(s)
+2. The provider is detected automatically from the first supported archive
 3. Click **Import All**
 4. Done! ✨
 
@@ -257,8 +270,8 @@ Perfect when you want everything imported fast:
 
 Perfect when you want control:
 
-1. Select **ChatGPT**, **Claude**, or **Le Chat**
-2. Choose your ZIP file(s)
+1. Choose your ZIP file(s)
+2. The provider is detected automatically from the first supported archive
 3. Click **Select Conversations**
 4. **Review the list** - you'll see:
    - 📝 Conversation title and date
@@ -278,24 +291,45 @@ Perfect when you want control:
 **Cool features:**
 - ✅ **Keyword search** - Find conversations by title instantly
 - ✅ **Smart filtering** - Show only what you need
-- ✅ **Multi-ZIP support** - Process multiple exports at once
+- ✅ **Multi-ZIP support (desktop)** - Process multiple exports at once
+- ✅ **Single-ZIP safety mode (mobile)** - One archive per run for stable imports
 - ✅ **Duplicate detection** - Automatically finds duplicates across ZIPs
 - ✅ **Flexible sorting** - Organize by date, title, or status
 
 ### Step 4: Check Your Report
 
-After every import, you get a beautiful summary report:
+After every import, you get linked report files:
 
 **What's in it:**
-- ✅ How many conversations were imported
-- ⏱️ How long it took
-- 📊 Success rate
-- 📎 Attachment statistics
-- 🔗 Clickable links to your new conversations
+- ✅ **Import Summary** - stats, archive status, errors, attachments
+- ✅ **Index Heavy** - full conversation index (new / updated / failed tables)
+- ✅ **Index Mobile** - compact list optimized for mobile browsing
 
-**Where to find it:** `<reports>/<provider>/import-YYYYMMDD-HHMMSS.md`
+**Where to find them:**
+- `<reports>/<provider>/<timestamp> - import summary.md`
+- `<reports>/<provider>/<timestamp> - index heavy.md`
+- `<reports>/<provider>/<timestamp> - index mobile.md`
 
-**💡 Tip:** The report opens automatically when import finishes!
+**💡 Tip:** The summary report opens automatically when import finishes.
+
+## 📊 Understanding Import Reports
+
+Each import now writes three cross-linked reports:
+
+1. **Import Summary**
+- Global counters (files, conversations, attachments)
+- Per-archive status table
+- Consolidated errors
+
+2. **Index Heavy**
+- Full per-conversation listing
+- Separate sections for created, updated, and failed items
+- Best suited for desktop review and audits
+
+3. **Index Mobile**
+- Lightweight conversation index
+- Split into `✨ New Notes` and `🔄 Updated Notes`
+- Faster to open on mobile and small screens
 
 ## 📁 Data Organization
 
@@ -583,6 +617,11 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 - Existing attachments
 - Folder structure
 
+**Mobile note**:
+- If an archive was already imported, mobile lets you choose between:
+  - **Reprocess and recreate all notes**
+  - **Add/update missing/updated notes**
+
 ## 💻 Command-Line Interface (CLI)
 
 Import conversations without opening Obsidian — useful for automation, large archives, or headless setups.
@@ -671,9 +710,15 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 - If frozen, restart Obsidian
 
 **No conversations appear**:
-- Verify correct provider selected
+- Verify selected ZIP files belong to the same provider
+- Check provider auto-detection in the import dialog
 - Check ZIP file is valid export
 - Review import report for errors
+
+**Archive is skipped as unsupported**:
+- This means the file does not match a supported export structure
+- The import continues for other valid archives
+- Use the summary report to see exactly which file was skipped and why
 
 **Safari users (Mac) - ZIP file issues**:
 - Safari automatically unzips downloaded files by default

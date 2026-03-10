@@ -36,15 +36,19 @@
     "providers": {
       "chatgpt": {
         "name": "ChatGPT",
-        "description": "OpenAI ChatGPT 대화 내보내기"
+        "description": "OpenAI ChatGPT 대화 내보내기",
+        "file_formats_0": "conversations.json(레거시) 또는 conversations-XXX.json 파일"
       },
       "claude": {
         "name": "Claude",
-        "description": "Anthropic Claude 대화 내보내기"
+        "description": "Anthropic Claude 대화 내보내기",
+        "file_formats_0": "conversations.json + users.json",
+        "file_formats_1": "projects.json(선택 사항)"
       },
       "lechat": {
         "name": "Le Chat",
-        "description": "Mistral AI Le Chat 대화 내보내기"
+        "description": "Mistral AI Le Chat 대화 내보내기",
+        "file_formats_0": "chat-<uuid>.json 파일"
       }
     },
     "buttons": {

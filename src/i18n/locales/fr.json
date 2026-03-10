@@ -36,15 +36,19 @@
     "providers": {
       "chatgpt": {
         "name": "ChatGPT",
-        "description": "Exports de conversations OpenAI ChatGPT"
+        "description": "Exports de conversations OpenAI ChatGPT",
+        "file_formats_0": "conversations.json (ancien format) ou fichiers conversations-XXX.json"
       },
       "claude": {
         "name": "Claude",
-        "description": "Exports de conversations Anthropic Claude"
+        "description": "Exports de conversations Anthropic Claude",
+        "file_formats_0": "conversations.json + users.json",
+        "file_formats_1": "projects.json (optionnel)"
       },
       "lechat": {
         "name": "Le Chat",
-        "description": "Exports de conversations Mistral AI Le Chat"
+        "description": "Exports de conversations Mistral AI Le Chat",
+        "file_formats_0": "fichiers chat-<uuid>.json"
       }
     },
     "buttons": {

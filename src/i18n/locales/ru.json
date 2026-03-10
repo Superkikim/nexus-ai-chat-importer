@@ -36,15 +36,19 @@
     "providers": {
       "chatgpt": {
         "name": "ChatGPT",
-        "description": "Экспорт разговоров OpenAI ChatGPT"
+        "description": "Экспорт разговоров OpenAI ChatGPT",
+        "file_formats_0": "conversations.json (старый формат) или файлы conversations-XXX.json"
       },
       "claude": {
         "name": "Claude",
-        "description": "Экспорт разговоров Anthropic Claude"
+        "description": "Экспорт разговоров Anthropic Claude",
+        "file_formats_0": "conversations.json + users.json",
+        "file_formats_1": "projects.json (необязательно)"
       },
       "lechat": {
         "name": "Le Chat",
-        "description": "Экспорт разговоров Mistral AI Le Chat"
+        "description": "Экспорт разговоров Mistral AI Le Chat",
+        "file_formats_0": "файлы chat-<uuid>.json"
       }
     },
     "buttons": {

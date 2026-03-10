@@ -36,15 +36,19 @@
     "providers": {
       "chatgpt": {
         "name": "ChatGPT",
-        "description": "OpenAI ChatGPT の会話エクスポート"
+        "description": "OpenAI ChatGPT の会話エクスポート",
+        "file_formats_0": "conversations.json（旧形式）または conversations-XXX.json ファイル"
       },
       "claude": {
         "name": "Claude",
-        "description": "Anthropic Claude の会話エクスポート"
+        "description": "Anthropic Claude の会話エクスポート",
+        "file_formats_0": "conversations.json + users.json",
+        "file_formats_1": "projects.json（任意）"
       },
       "lechat": {
         "name": "Le Chat",
-        "description": "Mistral AI Le Chat の会話エクスポート"
+        "description": "Mistral AI Le Chat の会話エクスポート",
+        "file_formats_0": "chat-<uuid>.json ファイル"
       }
     },
     "buttons": {
