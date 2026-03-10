@@ -57,6 +57,12 @@ interface ReportCrossLinks {
     mobileFileName: string;
 }
 
+interface IgnoredArchiveDetail {
+    fileName: string;
+    reason: string;
+    message: string;
+}
+
 export class ImportReport {
     private fileSections: Map<string, FileSection> = new Map();
     private currentFileName: string = "";
@@ -66,6 +72,7 @@ export class ImportReport {
     private fileStats?: Map<string, any>; // Store file analysis stats for duplicate counting
     private analysisInfo?: any; // Store analysis info for completion stats
     private customTimestampFormat?: MessageTimestampFormat; // Custom format for report dates
+    private ignoredArchiveDetails: Map<string, IgnoredArchiveDetail> = new Map();
 
     /**
      * Start a new file section for multi-file imports
@@ -283,8 +290,8 @@ export class ImportReport {
             const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
             lines.push("## Archives");
             lines.push("");
-            lines.push("| Archive | Status | Conversations | Selected | Created | Updated | Failed | Duplicates |");
-            lines.push("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |");
+            lines.push("| Archive | Status | Reason | Conversations | Selected | Created | Updated | Failed | Duplicates |");
+            lines.push("| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |");
 
             for (const file of sortedFiles) {
                 const section = this.fileSections.get(file.name);
@@ -297,8 +304,9 @@ export class ImportReport {
                 const duplicateCount = perFileStats?.duplicates ?? 0;
                 const conversationCount = perFileStats?.totalConversations ?? selectedCount;
                 const status = processedSet.has(file.name) ? "processed" : "skipped";
+                const reason = this.buildArchiveReason(file.name, status, isSelectiveImport);
 
-                lines.push(`| \`${shortName}\` | ${status} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`);
+                lines.push(`| \`${shortName}\` | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`);
             }
             lines.push("");
 
@@ -598,7 +606,8 @@ export class ImportReport {
         section += `> <summary>View file list</summary>\n`;
         section += `> \n`;
         skippedFiles.forEach(fileName => {
-            section += `> - \`${fileName}\`\n`;
+            const reason = this.buildArchiveReason(fileName, "skipped", isSelectiveImport);
+            section += `> - \`${fileName}\` — ${reason}\n`;
         });
         section += `> \n`;
         section += `> </details>\n`;
@@ -916,6 +925,13 @@ export class ImportReport {
         this.analysisInfo = analysisInfo;
     }
 
+    setIgnoredArchives(ignoredArchives: IgnoredArchiveDetail[]) {
+        this.ignoredArchiveDetails.clear();
+        ignoredArchives.forEach((archive) => {
+            this.ignoredArchiveDetails.set(archive.fileName, archive);
+        });
+    }
+
     /**
      * Calculate total duplicates from file stats
      */
@@ -961,5 +977,37 @@ export class ImportReport {
      */
     getProcessedFileNames(): string[] {
         return Array.from(this.fileSections.keys());
+    }
+
+    private buildArchiveReason(
+        fileName: string,
+        status: "processed" | "skipped",
+        isSelectiveImport?: boolean
+    ): string {
+        if (status === "processed") {
+            return "imported";
+        }
+
+        const ignored = this.ignoredArchiveDetails.get(fileName);
+        if (ignored) {
+            return `${this.formatIgnoredArchiveReason(ignored.reason)}: ${ignored.message}`;
+        }
+
+        return isSelectiveImport ? "no selected conversations" : "no importable conversations";
+    }
+
+    private formatIgnoredArchiveReason(reason: string): string {
+        switch (reason) {
+            case "provider-mismatch":
+                return "provider mismatch";
+            case "unsupported-format":
+                return "unsupported format";
+            case "empty":
+                return "empty archive";
+            case "read-error":
+                return "read error";
+            default:
+                return reason;
+        }
     }
 }

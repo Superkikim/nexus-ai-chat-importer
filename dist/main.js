@@ -13285,8 +13285,9 @@ var ImportReport = class {
     this.globalErrors = [];
     this.providerSpecificColumnHeader = "Attachments";
     this.operationStartTime = Date.now();
+    // Custom format for report dates
+    this.ignoredArchiveDetails = /* @__PURE__ */ new Map();
   }
-  // Custom format for report dates
   /**
    * Start a new file section for multi-file imports
    */
@@ -13462,8 +13463,8 @@ var ImportReport = class {
       const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
       lines.push("## Archives");
       lines.push("");
-      lines.push("| Archive | Status | Conversations | Selected | Created | Updated | Failed | Duplicates |");
-      lines.push("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |");
+      lines.push("| Archive | Status | Reason | Conversations | Selected | Created | Updated | Failed | Duplicates |");
+      lines.push("| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |");
       for (const file of sortedFiles) {
         const section = this.fileSections.get(file.name);
         const perFileStats = fileStats == null ? void 0 : fileStats.get(file.name);
@@ -13475,7 +13476,8 @@ var ImportReport = class {
         const duplicateCount = (_c = perFileStats == null ? void 0 : perFileStats.duplicates) != null ? _c : 0;
         const conversationCount = (_d = perFileStats == null ? void 0 : perFileStats.totalConversations) != null ? _d : selectedCount;
         const status = processedSet.has(file.name) ? "processed" : "skipped";
-        lines.push(`| \`${shortName}\` | ${status} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`);
+        const reason = this.buildArchiveReason(file.name, status, isSelectiveImport);
+        lines.push(`| \`${shortName}\` | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`);
       }
       lines.push("");
       if (archiveDisplayNames && archiveDisplayNames.size > 0) {
@@ -13716,7 +13718,8 @@ var ImportReport = class {
     section += `> 
 `;
     skippedFiles.forEach((fileName) => {
-      section += `> - \`${fileName}\`
+      const reason = this.buildArchiveReason(fileName, "skipped", isSelectiveImport);
+      section += `> - \`${fileName}\` \u2014 ${reason}
 `;
     });
     section += `> 
@@ -13999,6 +14002,12 @@ var ImportReport = class {
   setAnalysisInfo(analysisInfo) {
     this.analysisInfo = analysisInfo;
   }
+  setIgnoredArchives(ignoredArchives) {
+    this.ignoredArchiveDetails.clear();
+    ignoredArchives.forEach((archive) => {
+      this.ignoredArchiveDetails.set(archive.fileName, archive);
+    });
+  }
   /**
    * Calculate total duplicates from file stats
    */
@@ -14040,6 +14049,30 @@ var ImportReport = class {
    */
   getProcessedFileNames() {
     return Array.from(this.fileSections.keys());
+  }
+  buildArchiveReason(fileName, status, isSelectiveImport) {
+    if (status === "processed") {
+      return "imported";
+    }
+    const ignored = this.ignoredArchiveDetails.get(fileName);
+    if (ignored) {
+      return `${this.formatIgnoredArchiveReason(ignored.reason)}: ${ignored.message}`;
+    }
+    return isSelectiveImport ? "no selected conversations" : "no importable conversations";
+  }
+  formatIgnoredArchiveReason(reason) {
+    switch (reason) {
+      case "provider-mismatch":
+        return "provider mismatch";
+      case "unsupported-format":
+        return "unsupported format";
+      case "empty":
+        return "empty archive";
+      case "read-error":
+        return "read error";
+      default:
+        return reason;
+    }
   }
 };
 __name(ImportReport, "ImportReport");
@@ -24599,7 +24632,15 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       }
       if (extractionResult.conversations.length === 0) {
         new import_obsidian32.Notice(t("notices.import_no_new"));
-        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
+        const reportPath2 = await this.writeConsolidatedReport(
+          operationReport,
+          provider,
+          files,
+          extractionResult.analysisInfo,
+          extractionResult.fileStats,
+          false,
+          extractionResult.ignoredArchives
+        );
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
         }
@@ -24633,7 +24674,15 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         conversationsByFile,
         operationReport
       );
-      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
+      const reportPath = await this.writeConsolidatedReport(
+        operationReport,
+        provider,
+        files,
+        extractionResult.analysisInfo,
+        extractionResult.fileStats,
+        false,
+        extractionResult.ignoredArchives
+      );
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
@@ -24853,8 +24902,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           mobileFiles,
           extractionResult.analysisInfo,
           extractionResult.fileStats,
-          true
+          true,
           // isSelective
+          extractionResult.ignoredArchives
         );
         if (reportPath) {
           this.showImportCompletionDialog(operationReport, reportPath);
@@ -24871,7 +24921,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
             mobileFiles,
             provider,
             extractionResult.analysisInfo,
-            extractionResult.fileStats
+            extractionResult.fileStats,
+            extractionResult.ignoredArchives
           );
         },
         this,
@@ -24885,7 +24936,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   /**
    * Handle the result from conversation selection dialog
    */
-  async handleConversationSelectionResult(result, availableConversations, files, provider, analysisInfo, fileStats) {
+  async handleConversationSelectionResult(result, availableConversations, files, provider, analysisInfo, fileStats, ignoredArchives) {
     try {
       this.setImportCheckpoint({
         operation: "selective-import",
@@ -24899,7 +24950,15 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       }
       if (result.selectedIds.length === 0) {
         new import_obsidian32.Notice(t("notices.import_no_selected"));
-        const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+        const reportPath2 = await this.writeConsolidatedReport(
+          operationReport,
+          provider,
+          files,
+          analysisInfo,
+          fileStats,
+          true,
+          ignoredArchives
+        );
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
         }
@@ -24927,7 +24986,15 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         operationReport,
         selectedExistingConversationIds
       );
-      const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+      const reportPath = await this.writeConsolidatedReport(
+        operationReport,
+        provider,
+        files,
+        analysisInfo,
+        fileStats,
+        true,
+        ignoredArchives
+      );
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
@@ -24943,7 +25010,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   /**
    * Write consolidated report for multi-file import
    */
-  async writeConsolidatedReport(report, provider, files, analysisInfo, fileStats, isSelectiveImport) {
+  async writeConsolidatedReport(report, provider, files, analysisInfo, fileStats, isSelectiveImport, ignoredArchives) {
     const reportFolder = this.settings.reportFolder;
     const providerRegistry = createProviderRegistry(this);
     const adapter = providerRegistry.getAdapter(provider);
@@ -24983,6 +25050,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     if (analysisInfo) {
       report.setAnalysisInfo(analysisInfo);
     }
+    report.setIgnoredArchives(ignoredArchives != null ? ignoredArchives : []);
     const stats = report.getCompletionStats();
     const processedFiles = [];
     const skippedFiles = [];

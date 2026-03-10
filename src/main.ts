@@ -526,7 +526,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 new Notice(t('notices.import_no_new'));
 
                 // Write report showing what was analyzed
-                const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
+                const reportPath = await this.writeConsolidatedReport(
+                    operationReport,
+                    provider,
+                    files,
+                    extractionResult.analysisInfo,
+                    extractionResult.fileStats,
+                    false,
+                    extractionResult.ignoredArchives
+                );
 
                 // Show completion dialog with 0 imports
                 if (reportPath) {
@@ -570,7 +578,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
 
             // Write the consolidated report (always, even if some files failed)
-            const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
+            const reportPath = await this.writeConsolidatedReport(
+                operationReport,
+                provider,
+                files,
+                extractionResult.analysisInfo,
+                extractionResult.fileStats,
+                false,
+                extractionResult.ignoredArchives
+            );
 
             // Show completion dialog
             if (reportPath) {
@@ -820,7 +836,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     mobileFiles,
                     extractionResult.analysisInfo,
                     extractionResult.fileStats,
-                    true // isSelective
+                    true, // isSelective
+                    extractionResult.ignoredArchives
                 );
 
                 // Show completion dialog with 0 imports
@@ -841,7 +858,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                         mobileFiles,
                         provider,
                         extractionResult.analysisInfo,
-                        extractionResult.fileStats
+                        extractionResult.fileStats,
+                        extractionResult.ignoredArchives
                     );
                 },
                 this,
@@ -863,7 +881,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         files: File[],
         provider: string,
         analysisInfo?: any,
-        fileStats?: Map<string, any>
+        fileStats?: Map<string, any>,
+        ignoredArchives?: IgnoredArchiveInfo[]
     ): Promise<void> {
         try {
             this.setImportCheckpoint({
@@ -884,7 +903,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 new Notice(t('notices.import_no_selected'));
 
                 // Still write report and show dialog
-                const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+                const reportPath = await this.writeConsolidatedReport(
+                    operationReport,
+                    provider,
+                    files,
+                    analysisInfo,
+                    fileStats,
+                    true,
+                    ignoredArchives
+                );
                 if (reportPath) {
                     this.showImportCompletionDialog(operationReport, reportPath);
                 }
@@ -918,7 +945,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
 
             // Write the consolidated report (always, even if some files failed)
-            const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
+            const reportPath = await this.writeConsolidatedReport(
+                operationReport,
+                provider,
+                files,
+                analysisInfo,
+                fileStats,
+                true,
+                ignoredArchives
+            );
 
             // Show completion dialog
             if (reportPath) {
@@ -944,7 +979,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         files: File[],
         analysisInfo?: any,
         fileStats?: Map<string, any>,
-        isSelectiveImport?: boolean
+        isSelectiveImport?: boolean,
+        ignoredArchives?: IgnoredArchiveInfo[]
     ): Promise<string> {
         const reportFolder = this.settings.reportFolder;
         const providerRegistry = createProviderRegistry(this);
@@ -995,6 +1031,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         if (analysisInfo) {
             report.setAnalysisInfo(analysisInfo);
         }
+        report.setIgnoredArchives(ignoredArchives ?? []);
 
         const stats = report.getCompletionStats();
         const processedFiles: string[] = [];
