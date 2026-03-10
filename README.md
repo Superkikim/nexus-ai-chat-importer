@@ -6,6 +6,11 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
+> ✅ **v1.5.7** fixes key import reliability issues:
+> provider auto-detection, safer mobile imports, cleaner unsupported ZIP handling,
+> improved reports, and a fix for missing message updates in Claude imports.
+> See [What’s New](#-whats-new) for details.
+
 
 ## 📑 Table of Contents
 
@@ -92,6 +97,7 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly
 - ChatGPT user-uploaded image extraction restored for multi-ZIP imports
 - Claude export format changes handled correctly
+- Missing message updates in Claude imports are now handled correctly
 - Unsupported ZIP files are classified earlier and skipped with clearer messaging
 - Large archive handling no longer relies on loading the whole ZIP into memory
 

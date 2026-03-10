@@ -37,6 +37,7 @@
 
 - ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly
 - ChatGPT user-uploaded image extraction in multi-ZIP flows is restored and stabilized
+- Missing message updates in Claude imports are now handled correctly
 - Unsupported ZIP files are classified earlier and skipped more cleanly
 - Large archive handling no longer relies on full in-memory ZIP loading
 - Mobile logs now expose precise import phases (scan, metadata, attachment map, streaming import) to improve crash diagnostics
