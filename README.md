@@ -376,13 +376,13 @@ Each conversation note contains:
 **1. Frontmatter** - Rich metadata for Obsidian features:
 ```yaml
 ---
-conversation_id: "abc123..."          # Unique identifier
-provider: "chatgpt"                   # chatgpt, claude, or lechat
-title: "Conversation Title"           # Original title
-create_time: "2024-01-15T14:30:22Z"  # Creation timestamp (UTC, ISO 8601)
-update_time: "2024-01-15T16:45:10Z"  # Last update timestamp (UTC, ISO 8601)
-message_count: 42                     # Total messages
-aliases: ["Conversation Title"]       # For linking
+nexus: nexus-ai-chat-importer
+plugin_version: "1.x.x"
+provider: chatgpt                     # chatgpt, claude, or lechat
+aliases: "Conversation Title"         # YAML-safe alias used for linking
+conversation_id: abc123...
+create_time: 2024-01-15T14:30:22.000Z # UTC ISO 8601
+update_time: 2024-01-15T16:45:10.000Z # UTC ISO 8601
 ---
 ```
 
@@ -471,7 +471,7 @@ The timestamps shown in each message can be customized:
 - Use Reading View for best experience
 
 **❌ DON'T**:
-- Modify plugin-generated frontmatter fields (conversation_id, provider, etc.)
+- Modify plugin-generated frontmatter fields (`nexus`, `plugin_version`, `provider`, `aliases`, `conversation_id`, `create_time`, `update_time`)
 - Delete message IDs (hidden in Reading View)
 - Remove messages - they'll be restored on reimport
 
@@ -513,6 +513,23 @@ Attachments are organized by provider:
 - Saved as separate versioned files when content is available
 - Each modification creates a new version (v1, v2, v3...)
 - ⚠️ Note: Claude exports often don't include artifact content - see [Provider Limitations](#-provider-specific-features--limitations)
+
+**Claude artifact notes include provider-specific frontmatter**:
+```yaml
+---
+nexus: nexus-ai-chat-importer
+plugin_version: "1.x.x"
+provider: claude
+artifact_id: artifact_abc123
+version_uuid: 3aa6f6ec-6408-4a30-97d5-3774f289f4f3
+version_number: 2
+command: update
+conversation_id: 09c7...e12f
+create_time: 2024-10-21T14:19:11.000Z
+format: markdown
+aliases: ["Artifact Title", "artifact_abc123_v2"]
+---
+```
 
 #### Missing Attachments
 
