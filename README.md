@@ -466,8 +466,9 @@ The timestamps shown in each message can be customized:
 #### Recommendations
 
 **✅ DO**:
-- Add your own frontmatter fields - the plugin won't touch them
-- Edit message content as needed
+- Add your own frontmatter fields and edit message content as needed
+- Manual edits are preserved during plugin migrations
+- Manual edits are lost if you reprocess/recreate a conversation note
 - Use Reading View for best experience
 
 **❌ DON'T**:
@@ -494,7 +495,7 @@ Attachments are organized by provider:
 **Example**:
 ```
 <attachments>/chatgpt/images/dalle-abc123.png
-<attachments>/claude/artifacts/conv-id/script_v1.py
+<attachments>/claude/artifacts/conversation-title/script_v1.py
 ```
 
 #### What Gets Imported
@@ -542,7 +543,10 @@ The plugin continues importing even with missing attachments. Check import repor
 
 ## 🤖 Provider-Specific Features & Limitations
 
-Each AI provider has unique characteristics in how they export conversations. Here's what you need to know:
+Each AI provider exports data differently.
+
+> **Important**: providers do not publish stable export specs. Export ZIP formats can change at any time.
+> If import behavior changes unexpectedly, please open an issue with clear details (provider, platform/device, plugin version, ZIP size, logs, screenshots).
 
 ### ChatGPT (OpenAI)
 
@@ -553,7 +557,14 @@ Each AI provider has unique characteristics in how they export conversations. He
 - Complete message history
 - Custom instructions and model information
 
-**Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
+**Export Format**:
+- `conversations.json` (single-file exports)
+- `conversations-XXX.json` (split exports)
+- Attachments in the same ZIP
+
+**⚠️ Limitations**:
+- Very large archives (multi-GB) are increasingly common. Mobile stability cannot be guaranteed in those cases.
+- Desktop usually handles larger archives better, but if you hit limits, please report with ZIP size + logs.
 
 ### Claude (Anthropic)
 
@@ -564,15 +575,14 @@ Each AI provider has unique characteristics in how they export conversations. He
 - Artifacts with full content and versioning
 
 **⚠️ Limitations**:
-- **Mobile view limitations**: Conversations viewed on mobile show placeholder text instead of displaying artifacts inline. While artifact files are extracted correctly to the artifacts folder, these mobile placeholders cannot be automatically linked to their corresponding artifact files in the conversation view
-- **Export format change**: Anthropic changed the Claude export format structure over time. Conversations imported with plugin v1.3.x may be missing inline artifact callouts. The v1.4.0 migration automatically restores artifact links at the end of affected notes. To get artifacts positioned inline within messages, delete the note and re-import from your Claude export ZIP
+- Some artifact/tool outputs may be absent from the provider export itself. Missing source data cannot be reconstructed by the plugin.
+- As with all providers, export schema changes may require plugin updates.
 
 **Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
 
 **💡 Tip for Claude Users**:
 - Artifacts are fully extracted and saved with versioning - check your artifacts folder
-- For conversations viewed on mobile, artifact files are still created but inline callouts may not show in messages
-- If you upgraded from v1.3.x and are missing artifact links, they have been restored at the bottom of affected notes during the v1.4.0 migration
+- If artifact rendering looks wrong after a provider-side change, reimport and report the issue with logs
 
 ### Le Chat (Mistral AI)
 
@@ -595,37 +605,15 @@ Each AI provider has unique characteristics in how they export conversations. He
 
 ---
 
-## 🧪 Experimental: Gemini Support
-
-### Google Gemini
-
-**⚠️ Not Currently Supported - Research Stage**
-
-Google Gemini exports present unique technical challenges that may make full support impractical. Unlike other providers, Gemini Takeout data lacks conversation IDs, making it impossible to reconstruct conversations from the export alone.
-
-**Why It's So Hard:**
-- Takeout provides messages without conversation identifiers
-- No way to group related messages into conversations
-- Requires external metadata that Google doesn't include
-
-**Experimental Approach:**
-I'm exploring a solution using a browser extension to capture conversation metadata directly from the Gemini web UI, which would then be combined with Takeout data to reconstruct conversations. However, this is complex, fragile, and may never reach production quality.
-
-**Status:** Research only. No timeline, no guarantees, no promises - just experimentation.
-
-You may notice Gemini code in the repository - it's experimental and disabled in v1.5.0.
-
----
-
 ## 🔄 Reimporting & Updates
 
-You can safely reimport the same ZIP file multiple times. The plugin intelligently handles updates:
+You can reimport the same ZIP multiple times. The plugin supports two behaviors:
 
-**What Happens**:
-- ✅ **New conversations** → Added
-- ✅ **Updated conversations** → Refreshed with new messages
-- ✅ **Unchanged conversations** → Skipped
-- ✅ **No duplicates** → Smart detection prevents duplicates
+**Default behavior (incremental)**:
+- ✅ New conversations are created
+- ✅ Existing conversations with new content are updated
+- ✅ Unchanged conversations are skipped
+- ✅ Duplicates are prevented
 
 **When to Reimport**:
 - You've had more conversations since last export
@@ -633,16 +621,10 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 - Fix issues from previous import
 - Retry failed attachments
 
-**What's Updated**:
-- Messages and content
-- Attachments and artifacts
-- Frontmatter metadata
-- Formatting
-
-**What's Preserved**:
-- Your manual edits (if frontmatter/message IDs intact)
-- Existing attachments
-- Folder structure
+**Reprocess behavior (overwrite)**:
+- Reprocessing an existing conversation note overwrites it with fresh imported content
+- This includes selective reimport when you explicitly select existing conversations
+- Manual edits in overwritten notes (message content and custom frontmatter) are lost
 
 **Mobile note**:
 - In **Full Import** mode, if an archive was already imported, mobile lets you choose between:
@@ -669,6 +651,9 @@ The CLI is included in the plugin source. To use it:
 ```bash
 nexus-cli import --vault /path/to/vault --input export.zip --provider chatgpt [options]
 ```
+
+> **CLI note**: provider auto-detection is a plugin UI feature. In CLI, `--provider` is required.
+> Run one provider per command.
 
 ### Options
 
@@ -711,20 +696,22 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 
 ## ⚠️ Important Notes
 
-**Projects**:
-- Project organization is not currently supported
-- All conversations are imported individually
-- Future versions may add project support
+**Export format volatility**:
+- Providers can change export structures at any time
+- If imports suddenly fail after a provider change, open an issue with logs and archive details
 
-**Performance**:
-- Large archives (1000+ conversations) take several minutes to analyze
-- Obsidian may become temporarily unresponsive during processing
-- Progress dialogs show real-time status
+**Mobile constraints**:
+- Mobile imports run one ZIP at a time
+- Very large archives can exceed memory limits depending on device
 
-**Storage**:
+**Overwrite behavior**:
+- Reprocess/recreate modes overwrite target notes
+- Keep backups if you manually edited notes and plan to reprocess
+
+**Storage impact**:
 - Attachments can significantly increase vault size
 - AI-generated images can be several MB each
-- Consider excluding `<attachments>/` from cloud sync
+- Consider excluding `<attachments>/` from cloud sync if storage/bandwidth is limited
 
 ## 🐛 Troubleshooting
 
@@ -736,13 +723,15 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 - If you manually compressed a folder, make sure it's a valid ZIP format
 
 **Import stuck or slow**:
-- Large archives take 5-10 minutes
+- Large archives can take several minutes
 - Check progress dialog
-- If frozen, restart Obsidian
+- On mobile, import one archive at a time
+- If frozen, restart Obsidian and retry
 
 **No conversations appear**:
-- Verify selected ZIP files belong to the same provider
-- Check provider auto-detection in the import dialog
+- Verify selected ZIP files are from a supported provider
+- In plugin UI, provider is auto-detected from the first supported archive
+- In CLI, verify `--provider` matches the selected ZIP files
 - Check ZIP file is valid export
 - Review import report for errors
 
@@ -776,12 +765,17 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 2. Verify settings are correct
 3. Open issue on [GitHub](https://github.com/Superkikim/nexus-ai-chat-importer/issues) with:
    - Plugin & Obsidian versions
-   - Provider (ChatGPT/Claude/Le Chat)
+   - Provider + import mode (full/selective, plugin/CLI)
+   - Platform (desktop/iOS/Android) + device model
+   - ZIP size (and number of ZIPs)
    - Problem description
+   - Relevant logs and screenshots
 
 ## 🚀 Future Plans
 
-I'm constantly working to improve the plugin. Here's what's planned for future releases:
+Current roadmap:
+- **v1.6.0**: Perplexity provider support
+- **Gemini**: feasibility study in progress (no ETA)
 
 ### How You Can Help
 
