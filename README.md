@@ -283,21 +283,24 @@ Perfect when you want control:
 4. **Review the list** - you'll see:
    - 📝 Conversation title and date
    - 💬 Number of messages
-   - 🆕 **New** / 🔄 **Updated** / ✅ **Already imported**
-   - 📎 Attachments info
+   - 🆕 **New** / 🔄 **Updated** / ✅ **Unchanged**
 5. **Filter conversations** (optional):
    - 🔍 **Search by keyword** - Type in the search box to filter by title
-   - 📊 **Filter by status** - Show only New, Updated, or Already imported
+   - 📊 **Filter by status** - Show New, Updated, or Unchanged
+   - ♻️ **Show existing conversations only** - Shows only Updated + Unchanged entries
    - 📅 **Sort** - By date, title, or status
 6. **Select conversations**:
    - ✅ Check individual conversations
    - ✅ Use "Select All" / "Deselect All" buttons
-   - ✅ Use "Select New Only" to import only new conversations
 7. Click **Import Selected**
+
+**Important behavior:**
+- Selecting an **existing** conversation (Updated or Unchanged) in selective mode will overwrite and reprocess the matching note.
 
 **Cool features:**
 - ✅ **Keyword search** - Find conversations by title instantly
 - ✅ **Smart filtering** - Show only what you need
+- ✅ **Existing-only reprocess filter** - Rebuild selected existing notes intentionally
 - ✅ **Multi-ZIP support (desktop)** - Process multiple exports at once
 - ✅ **Single-ZIP safety mode (mobile)** - One archive per run for stable imports
 - ✅ **Duplicate detection** - Automatically finds duplicates across ZIPs
@@ -625,9 +628,10 @@ You can safely reimport the same ZIP file multiple times. The plugin intelligent
 - Folder structure
 
 **Mobile note**:
-- If an archive was already imported, mobile lets you choose between:
+- In **Full Import** mode, if an archive was already imported, mobile lets you choose between:
   - **Reprocess and recreate all notes**
   - **Add/update missing/updated notes**
+- In **Selective Import**, use **Show existing conversations only** to reprocess specific existing notes.
 
 ## 💻 Command-Line Interface (CLI)
 
@@ -661,6 +665,7 @@ nexus-cli import --vault /path/to/vault --input export.zip --provider chatgpt [o
 | `--report-folder <path>` | Override report folder |
 | `--date-prefix` | Add date prefix to filenames |
 | `--date-format <fmt>` | Date format: `YYYY-MM-DD` or `YYYYMMDD` |
+| `--timestamp-format <fmt>` | Message timestamp format: `locale`, `iso`, `us`, `eu`, `de`, or `jp` |
 | `--dry-run` | Preview what would be imported without writing files |
 | `--verbose` | Show detailed import progress |
 
