@@ -69,38 +69,26 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     private async addReleaseNotes() {
-        // Fallback content (updated for v1.5.7)
-        let content = `## ✨ What's New in v1.5.7
+        // Fallback content used when README fetch is unavailable
+        let content = `## ✨ What's New in v${this.version}
 
-**ZIP pipeline refactor** — Desktop and mobile now use the same archive-reading model:
-central directory scan first, then targeted reads only when needed.
+### New
+- Provider is auto-detected from the first supported selected ZIP archive
+- Import reports are split into three linked files:
+  - import summary
+  - index heavy
+  - index mobile
 
-**Improved mobile diagnostics** — Import logs now expose the exact phase reached during
-metadata extraction, attachment indexing, ZIP scanning, and conversation streaming.
+### Improved
+- Desktop and mobile use a unified ZIP-reading model (scan first, targeted reads only)
+- Mobile imports run in single-archive mode for better reliability on constrained devices
+- Unsupported archives are identified earlier and skipped more cleanly
 
-**Safer archive detection** — Unsupported ZIP files are classified earlier and skipped more
-cleanly instead of falling into generic extraction errors.
-
----
-
-## v1.5.0 — UI Localization
-
-### 🌍 Full UI Localization — 10 Languages
-
-- **Automatic language detection** — the plugin UI matches your Obsidian interface language, no configuration needed
-- **10 supported languages**: English, French, German, Spanish, Italian, Russian, Chinese (Simplified), Japanese, Portuguese, Korean
-- **Complete coverage** — all dialogs, settings panels, progress modals, notices, and status labels are translated
-- **English fallback** — any missing key falls back to English automatically
-
-> Import reports and conversation notes remain in English — only the plugin UI is localized.
-
-## v1.4.0 in brief
-
-- **🤖 Le Chat (Mistral AI)** — Full support with attachments, references, and citations
-- **💻 CLI for Bulk Import** — Import from the terminal without opening Obsidian
-- **📁 Human-readable artifact folders** — Claude artifacts stored in folders named after the conversation, not UUIDs
-- **📐 LaTeX math** — Math equations converted to Obsidian \`$$...$$\` / \`$...$\` syntax
-- **🐛 Bug fixes** — Multi-attachment callouts, Claude format changes, mobile placeholders, binary artifacts`;
+### Bug Fixes
+- ChatGPT numbered exports (\`conversations-XXX.json\`) are recognised correctly
+- Multi-ZIP attachment handling for ChatGPT imports is more robust
+- Large archive handling avoids full ZIP in-memory loading by default
+`;
 
         try {
             // Try to fetch Overview section from README

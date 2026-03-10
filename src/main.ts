@@ -103,7 +103,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Show installation welcome dialog for fresh installs
             if (upgradeResult?.isFreshInstall) {
-                new InstallationWelcomeDialog(this.app, this.manifest.version).open();
+                new InstallationWelcomeDialog(
+                    this.app,
+                    this.manifest.version,
+                    () => this.openPluginSettings()
+                ).open();
             }
 
             // Show upgrade completion dialog if upgrade was performed
@@ -264,6 +268,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     }
 
     /**
+     * Open Obsidian settings directly on this plugin tab.
+     * Uses runtime APIs not exposed in the public TypeScript definitions.
+     */
+    private openPluginSettings(): void {
+        const settingsApi = (this.app as unknown as {
+            setting?: {
+                open?: () => void;
+                openTabById?: (id: string) => void;
+            };
+        }).setting;
+
+        if (!settingsApi?.open) {
+            this.logger.warn("Unable to open settings automatically: app.setting.open is unavailable");
+            return;
+        }
+
+        settingsApi.open();
+        settingsApi.openTabById?.(this.manifest.id);
+    }
+
+    /**
      * Show provider selection dialog and then file selection
      * Ensures migration is complete before allowing import
      */
@@ -327,8 +352,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     /**
      * Handle the result from enhanced file selection dialog
      */
-		    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
-		        const { files, mode, provider } = result;
+    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
+        const { files, mode, provider } = result;
 
 		        if (files.length === 0) {
 		            return;
@@ -349,12 +374,33 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 	                zipFiles = [zipFiles[0]];
 	            }
 
-	        if (provider === "gemini") {
-	            if (zipFiles.length === 0) {
-	                new Notice(t('notices.import_no_zip_gemini'));
-	                this.logger.warn("[Gemini] No ZIP files selected for import");
-	                return;
-	            }
+        const sortedZipFiles = sortFilesForImport(zipFiles);
+        const lockedProvider = await this.resolveProviderLockFromSelection(sortedZipFiles);
+        if (!lockedProvider) {
+            new Notice(
+                t("notices.import_error_analyzing", {
+                    error: "No supported archive was detected in the selected ZIP files.",
+                })
+            );
+            return;
+        }
+
+        if (lockedProvider.provider !== provider) {
+            this.logger.child("ImportFlow").warn("Provider selection overridden by first supported archive", {
+                selectedProvider: provider,
+                lockedProvider: lockedProvider.provider,
+                lockSourceFile: lockedProvider.fileName,
+            });
+        }
+
+        const effectiveProvider = lockedProvider.provider;
+
+        if (effectiveProvider === "gemini") {
+            if (zipFiles.length === 0) {
+                new Notice(t('notices.import_no_zip_gemini'));
+                this.logger.warn("[Gemini] No ZIP files selected for import");
+                return;
+            }
 
 	            // Load index from the latest JSON file, if provided
 	            let index: GeminiIndex | null = null;
@@ -389,37 +435,33 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 	            this.importService.setGeminiIndex(index);
 
 	            // Sort only the ZIP exports by timestamp
-	            const sortedZipFiles = sortFilesForImport(zipFiles);
+            if (mode === "all") {
+                // Import all conversations with analysis (new optimized workflow)
+                await this.handleImportAll(sortedZipFiles, effectiveProvider);
+            } else {
+                // Selective import - show conversation selection dialog
+                await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
+            }
+        } else {
+            // Non-Gemini providers: ensure we do not keep a stale Gemini index
+            if (this.currentGeminiIndex) {
+                this.currentGeminiIndex = null;
+                this.importService.setGeminiIndex(null);
+            }
 
-	            if (mode === "all") {
-	                // Import all conversations with analysis (new optimized workflow)
-	                await this.handleImportAll(sortedZipFiles, provider);
-	            } else {
-	                // Selective import - show conversation selection dialog
-	                await this.handleSelectiveImport(sortedZipFiles, provider);
-	            }
-	        } else {
-	            // Non-Gemini providers: ensure we do not keep a stale Gemini index
-	            if (this.currentGeminiIndex) {
-	                this.currentGeminiIndex = null;
-	                this.importService.setGeminiIndex(null);
-	            }
+            if (zipFiles.length === 0) {
+                new Notice(t('notices.import_no_zip'));
+                this.logger.warn(`[${effectiveProvider}] No ZIP files selected for import`);
+                return;
+            }
 
-	            if (zipFiles.length === 0) {
-	                new Notice(t('notices.import_no_zip'));
-	                this.logger.warn(`[${provider}] No ZIP files selected for import`);
-	                return;
-	            }
-
-	            const sortedZipFiles = sortFilesForImport(zipFiles);
-
-	            if (mode === "all") {
-	                await this.handleImportAll(sortedZipFiles, provider);
-	            } else {
-	                await this.handleSelectiveImport(sortedZipFiles, provider);
-	            }
-	        }
-	    }
+            if (mode === "all") {
+                await this.handleImportAll(sortedZipFiles, effectiveProvider);
+            } else {
+                await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
+            }
+        }
+    }
 
     /**
      * Handle "Import All" mode with analysis and auto-selection
@@ -1119,6 +1161,40 @@ ${report.generateMobileIndexContent(files, links)}
 
     private isMobileTaskQueueMode(): boolean {
         return Platform.isMobileApp || Platform.isMobile;
+    }
+
+    private async resolveProviderLockFromSelection(
+        files: File[]
+    ): Promise<{ provider: string; fileName: string } | null> {
+        const providerRegistry = createProviderRegistry(this);
+        for (const file of files) {
+            try {
+                const zip = await createZipArchiveReader(file);
+                const entries = await zip.listEntries();
+                const classification = classifyArchiveEntries(entries.map((entry) => entry.path));
+                if (!classification.supported) {
+                    continue;
+                }
+
+                // Lock only to currently enabled providers.
+                if (!providerRegistry.getAdapter(classification.provider)) {
+                    this.logger.child("ImportFlow").warn("Detected provider is not enabled; skipping as lock source", {
+                        fileName: file.name,
+                        detectedProvider: classification.provider,
+                    });
+                    continue;
+                }
+
+                return { provider: classification.provider, fileName: file.name };
+            } catch (error) {
+                this.logger.child("ImportFlow").warn("Failed to analyze ZIP while resolving provider lock", {
+                    fileName: file.name,
+                    message: error instanceof Error ? error.message : String(error),
+                });
+            }
+        }
+
+        return null;
     }
 
     private async resolveMobileArchiveImportMode(file: File, provider: string): Promise<MobileArchiveImportMode> {

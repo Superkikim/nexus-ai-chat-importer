@@ -7,10 +7,12 @@ import { t } from '../i18n';
  */
 export class InstallationWelcomeDialog extends Modal {
     private version: string;
+    private onGetStarted?: () => void;
 
-    constructor(app: App, version: string) {
+    constructor(app: App, version: string, onGetStarted?: () => void) {
         super(app);
         this.version = version;
+        this.onGetStarted = onGetStarted;
     }
 
     onOpen() {
@@ -137,6 +139,7 @@ export class InstallationWelcomeDialog extends Modal {
 
         closeButton.addEventListener('click', () => {
             this.close();
+            this.onGetStarted?.();
         });
     }
 
@@ -216,4 +219,3 @@ export class InstallationWelcomeDialog extends Modal {
         contentEl.empty();
     }
 }
-

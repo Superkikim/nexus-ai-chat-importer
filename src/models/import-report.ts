@@ -246,27 +246,45 @@ export class ImportReport {
 
         lines.push("## Overview");
         lines.push("");
-        lines.push(`- Files analyzed: ${totalFilesAnalyzed}`);
-        lines.push(`- Files processed: ${processedSet.size}`);
-        lines.push(`- Files skipped: ${skippedSet.size}`);
-        lines.push(`- Conversations created: ${stats.created}`);
-        lines.push(`- Conversations updated: ${stats.updated}`);
-        lines.push(`- Conversations skipped: ${analysisInfo?.conversationsIgnored ?? stats.skipped}`);
-        lines.push(`- Conversations failed: ${stats.failed}`);
+        lines.push("### Files");
+        lines.push("");
+        lines.push("| Metric | Value |");
+        lines.push("| --- | ---: |");
+        lines.push(`| Analyzed | ${totalFilesAnalyzed} |`);
+        lines.push(`| Processed | ${processedSet.size} |`);
+        lines.push(`| Skipped | ${skippedSet.size} |`);
+        lines.push("");
+
+        lines.push("### Conversations");
+        lines.push("");
+        lines.push("| Metric | Value |");
+        lines.push("| --- | ---: |");
+        lines.push(`| Created | ${stats.created} |`);
+        lines.push(`| Updated | ${stats.updated} |`);
+        lines.push(`| Skipped | ${analysisInfo?.conversationsIgnored ?? stats.skipped} |`);
+        lines.push(`| Failed | ${stats.failed} |`);
         if (analysisInfo) {
-            lines.push(`- Conversations found (raw): ${analysisInfo.totalConversationsFound || 0}`);
-            lines.push(`- Conversations kept (unique): ${analysisInfo.uniqueConversationsKept || 0}`);
-            lines.push(`- Duplicates removed: ${analysisInfo.duplicatesRemoved || 0}`);
+            lines.push(`| Found (raw) | ${analysisInfo.totalConversationsFound || 0} |`);
+            lines.push(`| Kept (unique) | ${analysisInfo.uniqueConversationsKept || 0} |`);
+            lines.push(`| Duplicates removed | ${analysisInfo.duplicatesRemoved || 0} |`);
         }
-        lines.push(`- Attachments extracted: ${totalAttachments.found}/${totalAttachments.total}`);
-        lines.push(`- Attachments missing: ${totalAttachments.missing}`);
-        lines.push(`- Attachments failed: ${totalAttachments.failed}`);
+        lines.push("");
+
+        lines.push("### Attachments");
+        lines.push("");
+        lines.push("| Metric | Value |");
+        lines.push("| --- | ---: |");
+        lines.push(`| Extracted | ${totalAttachments.found}/${totalAttachments.total} |`);
+        lines.push(`| Missing | ${totalAttachments.missing} |`);
+        lines.push(`| Failed | ${totalAttachments.failed} |`);
         lines.push("");
 
         if (allFiles && allFiles.length > 0) {
             const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
             lines.push("## Archives");
             lines.push("");
+            lines.push("| Archive | Status | Conversations | Selected | Created | Updated | Failed | Duplicates |");
+            lines.push("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |");
 
             for (const file of sortedFiles) {
                 const section = this.fileSections.get(file.name);
@@ -280,19 +298,21 @@ export class ImportReport {
                 const conversationCount = perFileStats?.totalConversations ?? selectedCount;
                 const status = processedSet.has(file.name) ? "processed" : "skipped";
 
-                lines.push(`- \`${shortName}\` · ${status} · conversations=${conversationCount} · selected=${selectedCount} · created=${createdCount} · updated=${updatedCount} · failed=${failedCount} · duplicates=${duplicateCount}`);
+                lines.push(`| \`${shortName}\` | ${status} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`);
             }
             lines.push("");
 
             if (archiveDisplayNames && archiveDisplayNames.size > 0) {
                 lines.push("## Archive Name Map");
                 lines.push("");
+                lines.push("| Short Name | Original File Name |");
+                lines.push("| --- | --- |");
                 for (const file of sortedFiles) {
                     const shortName = archiveDisplayNames.get(file.name);
                     if (!shortName || shortName === file.name) {
                         continue;
                     }
-                    lines.push(`- \`${shortName}\` -> \`${file.name}\``);
+                    lines.push(`| \`${shortName}\` | \`${file.name}\` |`);
                 }
                 lines.push("");
             }
@@ -372,8 +392,37 @@ export class ImportReport {
         links?: ReportCrossLinks
     ): string {
         const fileNames = this.getOrderedFileNames(allFiles);
-        const createdOrUpdatedByPath = new Map<string, { title: string; filePath: string; updateTime: number; sourceFile?: string }>();
+        const createdOrUpdatedByPath = new Map<string, {
+            title: string;
+            filePath: string;
+            updateTime: number;
+            sourceFile?: string;
+            status: "created" | "updated";
+        }>();
         const failedEntries: ReportEntry[] = [];
+
+        const upsertEntry = (entry: ReportEntry, status: "created" | "updated") => {
+            const current = createdOrUpdatedByPath.get(entry.filePath);
+            if (!current) {
+                createdOrUpdatedByPath.set(entry.filePath, {
+                    title: entry.title,
+                    filePath: entry.filePath,
+                    updateTime: entry.updateTime,
+                    sourceFile: entry.sourceFile,
+                    status,
+                });
+                return;
+            }
+
+            const shouldRefreshMetadata = entry.updateTime >= current.updateTime;
+            createdOrUpdatedByPath.set(entry.filePath, {
+                title: shouldRefreshMetadata ? entry.title : current.title,
+                filePath: current.filePath,
+                updateTime: shouldRefreshMetadata ? entry.updateTime : current.updateTime,
+                sourceFile: shouldRefreshMetadata ? entry.sourceFile : current.sourceFile,
+                status: current.status === "updated" || status === "updated" ? "updated" : "created",
+            });
+        };
 
         for (const fileName of fileNames) {
             const section = this.fileSections.get(fileName);
@@ -381,22 +430,25 @@ export class ImportReport {
                 continue;
             }
 
-            for (const entry of [...section.created, ...section.updated]) {
-                const current = createdOrUpdatedByPath.get(entry.filePath);
-                if (!current || entry.updateTime >= current.updateTime) {
-                    createdOrUpdatedByPath.set(entry.filePath, {
-                        title: entry.title,
-                        filePath: entry.filePath,
-                        updateTime: entry.updateTime,
-                        sourceFile: entry.sourceFile,
-                    });
-                }
+            for (const entry of section.created) {
+                upsertEntry(entry, "created");
+            }
+            for (const entry of section.updated) {
+                upsertEntry(entry, "updated");
             }
 
             failedEntries.push(...section.failed);
         }
 
-        const indexedEntries = Array.from(createdOrUpdatedByPath.values()).sort((a, b) => {
+        const indexedEntries = Array.from(createdOrUpdatedByPath.values());
+        const createdEntries = indexedEntries
+            .filter((entry) => entry.status === "created")
+            .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+        const updatedEntries = indexedEntries
+            .filter((entry) => entry.status === "updated")
+            .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+
+        const sortedAllEntries = [...indexedEntries].sort((a, b) => {
             return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
         });
 
@@ -410,20 +462,36 @@ export class ImportReport {
         }
         lines.push("## Index Summary");
         lines.push("");
-        lines.push(`- Conversations listed: ${indexedEntries.length}`);
+        lines.push(`- Conversations listed: ${sortedAllEntries.length}`);
+        lines.push(`- New notes: ${createdEntries.length}`);
+        lines.push(`- Updated notes: ${updatedEntries.length}`);
         lines.push(`- Failed conversations: ${failedEntries.length}`);
         lines.push("");
 
-        lines.push("## Conversations");
+        lines.push("## ✨ New Notes");
         lines.push("");
-        if (indexedEntries.length === 0) {
+        if (createdEntries.length === 0) {
             lines.push("- None");
             lines.push("");
         } else {
-            for (const entry of indexedEntries) {
+            for (const entry of createdEntries) {
                 const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
                 const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
-                lines.push(`- ${titleLink}`);
+                lines.push(`- ✨ ${titleLink}`);
+            }
+            lines.push("");
+        }
+
+        lines.push("## 🔄 Updated Notes");
+        lines.push("");
+        if (updatedEntries.length === 0) {
+            lines.push("- None");
+            lines.push("");
+        } else {
+            for (const entry of updatedEntries) {
+                const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
+                const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
+                lines.push(`- 🔄 ${titleLink}`);
             }
             lines.push("");
         }

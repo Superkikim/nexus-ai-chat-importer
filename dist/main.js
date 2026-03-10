@@ -571,15 +571,19 @@ var init_fr = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "Exports de conversations OpenAI ChatGPT"
+            description: "Exports de conversations OpenAI ChatGPT",
+            file_formats_0: "conversations.json (ancien format) ou fichiers conversations-XXX.json"
           },
           claude: {
             name: "Claude",
-            description: "Exports de conversations Anthropic Claude"
+            description: "Exports de conversations Anthropic Claude",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json (optionnel)"
           },
           lechat: {
             name: "Le Chat",
-            description: "Exports de conversations Mistral AI Le Chat"
+            description: "Exports de conversations Mistral AI Le Chat",
+            file_formats_0: "fichiers chat-<uuid>.json"
           }
         },
         buttons: {
@@ -1067,15 +1071,19 @@ var init_de = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "OpenAI ChatGPT Gespr\xE4chsexporte"
+            description: "OpenAI ChatGPT Gespr\xE4chsexporte",
+            file_formats_0: "conversations.json (Legacy) oder conversations-XXX.json-Dateien"
           },
           claude: {
             name: "Claude",
-            description: "Anthropic Claude Gespr\xE4chsexporte"
+            description: "Anthropic Claude Gespr\xE4chsexporte",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json (optional)"
           },
           lechat: {
             name: "Le Chat",
-            description: "Mistral AI Le Chat Gespr\xE4chsexporte"
+            description: "Mistral AI Le Chat Gespr\xE4chsexporte",
+            file_formats_0: "chat-<uuid>.json-Dateien"
           }
         },
         buttons: {
@@ -1563,15 +1571,19 @@ var init_es = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "Exportaciones de conversaciones OpenAI ChatGPT"
+            description: "Exportaciones de conversaciones OpenAI ChatGPT",
+            file_formats_0: "conversations.json (legado) o archivos conversations-XXX.json"
           },
           claude: {
             name: "Claude",
-            description: "Exportaciones de conversaciones Anthropic Claude"
+            description: "Exportaciones de conversaciones Anthropic Claude",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json (opcional)"
           },
           lechat: {
             name: "Le Chat",
-            description: "Exportaciones de conversaciones Mistral AI Le Chat"
+            description: "Exportaciones de conversaciones Mistral AI Le Chat",
+            file_formats_0: "archivos chat-<uuid>.json"
           }
         },
         buttons: {
@@ -2059,15 +2071,19 @@ var init_it = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "Esportazioni di conversazioni OpenAI ChatGPT"
+            description: "Esportazioni di conversazioni OpenAI ChatGPT",
+            file_formats_0: "conversations.json (legacy) o file conversations-XXX.json"
           },
           claude: {
             name: "Claude",
-            description: "Esportazioni di conversazioni Anthropic Claude"
+            description: "Esportazioni di conversazioni Anthropic Claude",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json (opzionale)"
           },
           lechat: {
             name: "Le Chat",
-            description: "Esportazioni di conversazioni Mistral AI Le Chat"
+            description: "Esportazioni di conversazioni Mistral AI Le Chat",
+            file_formats_0: "file chat-<uuid>.json"
           }
         },
         buttons: {
@@ -2555,15 +2571,19 @@ var init_ru = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 OpenAI ChatGPT"
+            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 OpenAI ChatGPT",
+            file_formats_0: "conversations.json (\u0441\u0442\u0430\u0440\u044B\u0439 \u0444\u043E\u0440\u043C\u0430\u0442) \u0438\u043B\u0438 \u0444\u0430\u0439\u043B\u044B conversations-XXX.json"
           },
           claude: {
             name: "Claude",
-            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 Anthropic Claude"
+            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 Anthropic Claude",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json (\u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E)"
           },
           lechat: {
             name: "Le Chat",
-            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 Mistral AI Le Chat"
+            description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 Mistral AI Le Chat",
+            file_formats_0: "\u0444\u0430\u0439\u043B\u044B chat-<uuid>.json"
           }
         },
         buttons: {
@@ -3051,15 +3071,19 @@ var init_zh = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "OpenAI ChatGPT \u5BF9\u8BDD\u5BFC\u51FA"
+            description: "OpenAI ChatGPT \u5BF9\u8BDD\u5BFC\u51FA",
+            file_formats_0: "conversations.json\uFF08\u65E7\u683C\u5F0F\uFF09\u6216 conversations-XXX.json \u6587\u4EF6"
           },
           claude: {
             name: "Claude",
-            description: "Anthropic Claude \u5BF9\u8BDD\u5BFC\u51FA"
+            description: "Anthropic Claude \u5BF9\u8BDD\u5BFC\u51FA",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json\uFF08\u53EF\u9009\uFF09"
           },
           lechat: {
             name: "Le Chat",
-            description: "Mistral AI Le Chat \u5BF9\u8BDD\u5BFC\u51FA"
+            description: "Mistral AI Le Chat \u5BF9\u8BDD\u5BFC\u51FA",
+            file_formats_0: "chat-<uuid>.json \u6587\u4EF6"
           }
         },
         buttons: {
@@ -3547,15 +3571,19 @@ var init_ja = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "OpenAI ChatGPT \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8"
+            description: "OpenAI ChatGPT \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8",
+            file_formats_0: "conversations.json\uFF08\u65E7\u5F62\u5F0F\uFF09\u307E\u305F\u306F conversations-XXX.json \u30D5\u30A1\u30A4\u30EB"
           },
           claude: {
             name: "Claude",
-            description: "Anthropic Claude \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8"
+            description: "Anthropic Claude \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json\uFF08\u4EFB\u610F\uFF09"
           },
           lechat: {
             name: "Le Chat",
-            description: "Mistral AI Le Chat \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8"
+            description: "Mistral AI Le Chat \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8",
+            file_formats_0: "chat-<uuid>.json \u30D5\u30A1\u30A4\u30EB"
           }
         },
         buttons: {
@@ -4043,15 +4071,19 @@ var init_pt = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "Exporta\xE7\xF5es de conversas do OpenAI ChatGPT"
+            description: "Exporta\xE7\xF5es de conversas do OpenAI ChatGPT",
+            file_formats_0: "conversations.json (legado) ou arquivos conversations-XXX.json"
           },
           claude: {
             name: "Claude",
-            description: "Exporta\xE7\xF5es de conversas do Anthropic Claude"
+            description: "Exporta\xE7\xF5es de conversas do Anthropic Claude",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json (opcional)"
           },
           lechat: {
             name: "Le Chat",
-            description: "Exporta\xE7\xF5es de conversas do Mistral AI Le Chat"
+            description: "Exporta\xE7\xF5es de conversas do Mistral AI Le Chat",
+            file_formats_0: "arquivos chat-<uuid>.json"
           }
         },
         buttons: {
@@ -4539,15 +4571,19 @@ var init_ko = __esm({
         providers: {
           chatgpt: {
             name: "ChatGPT",
-            description: "OpenAI ChatGPT \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30"
+            description: "OpenAI ChatGPT \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30",
+            file_formats_0: "conversations.json(\uB808\uAC70\uC2DC) \uB610\uB294 conversations-XXX.json \uD30C\uC77C"
           },
           claude: {
             name: "Claude",
-            description: "Anthropic Claude \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30"
+            description: "Anthropic Claude \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30",
+            file_formats_0: "conversations.json + users.json",
+            file_formats_1: "projects.json(\uC120\uD0DD \uC0AC\uD56D)"
           },
           lechat: {
             name: "Le Chat",
-            description: "Mistral AI Le Chat \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30"
+            description: "Mistral AI Le Chat \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30",
+            file_formats_0: "chat-<uuid>.json \uD30C\uC77C"
           }
         },
         buttons: {
@@ -11922,37 +11958,25 @@ var init_upgrade_complete_modal = __esm({
         this.addStyles();
       }
       async addReleaseNotes() {
-        let content = `## \u2728 What's New in v1.5.7
+        let content = `## \u2728 What's New in v${this.version}
 
-**ZIP pipeline refactor** \u2014 Desktop and mobile now use the same archive-reading model:
-central directory scan first, then targeted reads only when needed.
+### New
+- Provider is auto-detected from the first supported selected ZIP archive
+- Import reports are split into three linked files:
+  - import summary
+  - index heavy
+  - index mobile
 
-**Improved mobile diagnostics** \u2014 Import logs now expose the exact phase reached during
-metadata extraction, attachment indexing, ZIP scanning, and conversation streaming.
+### Improved
+- Desktop and mobile use a unified ZIP-reading model (scan first, targeted reads only)
+- Mobile imports run in single-archive mode for better reliability on constrained devices
+- Unsupported archives are identified earlier and skipped more cleanly
 
-**Safer archive detection** \u2014 Unsupported ZIP files are classified earlier and skipped more
-cleanly instead of falling into generic extraction errors.
-
----
-
-## v1.5.0 \u2014 UI Localization
-
-### \u{1F30D} Full UI Localization \u2014 10 Languages
-
-- **Automatic language detection** \u2014 the plugin UI matches your Obsidian interface language, no configuration needed
-- **10 supported languages**: English, French, German, Spanish, Italian, Russian, Chinese (Simplified), Japanese, Portuguese, Korean
-- **Complete coverage** \u2014 all dialogs, settings panels, progress modals, notices, and status labels are translated
-- **English fallback** \u2014 any missing key falls back to English automatically
-
-> Import reports and conversation notes remain in English \u2014 only the plugin UI is localized.
-
-## v1.4.0 in brief
-
-- **\u{1F916} Le Chat (Mistral AI)** \u2014 Full support with attachments, references, and citations
-- **\u{1F4BB} CLI for Bulk Import** \u2014 Import from the terminal without opening Obsidian
-- **\u{1F4C1} Human-readable artifact folders** \u2014 Claude artifacts stored in folders named after the conversation, not UUIDs
-- **\u{1F4D0} LaTeX math** \u2014 Math equations converted to Obsidian \`$$...$$\` / \`$...$\` syntax
-- **\u{1F41B} Bug fixes** \u2014 Multi-attachment callouts, Claude format changes, mobile placeholders, binary artifacts`;
+### Bug Fixes
+- ChatGPT numbered exports (\`conversations-XXX.json\`) are recognised correctly
+- Multi-ZIP attachment handling for ChatGPT imports is more robust
+- Large archive handling avoids full ZIP in-memory loading by default
+`;
         try {
           const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
           if (response.ok) {
@@ -13164,26 +13188,42 @@ var ImportReport = class {
     }
     lines.push("## Overview");
     lines.push("");
-    lines.push(`- Files analyzed: ${totalFilesAnalyzed}`);
-    lines.push(`- Files processed: ${processedSet.size}`);
-    lines.push(`- Files skipped: ${skippedSet.size}`);
-    lines.push(`- Conversations created: ${stats.created}`);
-    lines.push(`- Conversations updated: ${stats.updated}`);
-    lines.push(`- Conversations skipped: ${(_a = analysisInfo == null ? void 0 : analysisInfo.conversationsIgnored) != null ? _a : stats.skipped}`);
-    lines.push(`- Conversations failed: ${stats.failed}`);
+    lines.push("### Files");
+    lines.push("");
+    lines.push("| Metric | Value |");
+    lines.push("| --- | ---: |");
+    lines.push(`| Analyzed | ${totalFilesAnalyzed} |`);
+    lines.push(`| Processed | ${processedSet.size} |`);
+    lines.push(`| Skipped | ${skippedSet.size} |`);
+    lines.push("");
+    lines.push("### Conversations");
+    lines.push("");
+    lines.push("| Metric | Value |");
+    lines.push("| --- | ---: |");
+    lines.push(`| Created | ${stats.created} |`);
+    lines.push(`| Updated | ${stats.updated} |`);
+    lines.push(`| Skipped | ${(_a = analysisInfo == null ? void 0 : analysisInfo.conversationsIgnored) != null ? _a : stats.skipped} |`);
+    lines.push(`| Failed | ${stats.failed} |`);
     if (analysisInfo) {
-      lines.push(`- Conversations found (raw): ${analysisInfo.totalConversationsFound || 0}`);
-      lines.push(`- Conversations kept (unique): ${analysisInfo.uniqueConversationsKept || 0}`);
-      lines.push(`- Duplicates removed: ${analysisInfo.duplicatesRemoved || 0}`);
+      lines.push(`| Found (raw) | ${analysisInfo.totalConversationsFound || 0} |`);
+      lines.push(`| Kept (unique) | ${analysisInfo.uniqueConversationsKept || 0} |`);
+      lines.push(`| Duplicates removed | ${analysisInfo.duplicatesRemoved || 0} |`);
     }
-    lines.push(`- Attachments extracted: ${totalAttachments.found}/${totalAttachments.total}`);
-    lines.push(`- Attachments missing: ${totalAttachments.missing}`);
-    lines.push(`- Attachments failed: ${totalAttachments.failed}`);
+    lines.push("");
+    lines.push("### Attachments");
+    lines.push("");
+    lines.push("| Metric | Value |");
+    lines.push("| --- | ---: |");
+    lines.push(`| Extracted | ${totalAttachments.found}/${totalAttachments.total} |`);
+    lines.push(`| Missing | ${totalAttachments.missing} |`);
+    lines.push(`| Failed | ${totalAttachments.failed} |`);
     lines.push("");
     if (allFiles && allFiles.length > 0) {
       const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
       lines.push("## Archives");
       lines.push("");
+      lines.push("| Archive | Status | Conversations | Selected | Created | Updated | Failed | Duplicates |");
+      lines.push("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |");
       for (const file of sortedFiles) {
         const section = this.fileSections.get(file.name);
         const perFileStats = fileStats == null ? void 0 : fileStats.get(file.name);
@@ -13195,18 +13235,20 @@ var ImportReport = class {
         const duplicateCount = (_c = perFileStats == null ? void 0 : perFileStats.duplicates) != null ? _c : 0;
         const conversationCount = (_d = perFileStats == null ? void 0 : perFileStats.totalConversations) != null ? _d : selectedCount;
         const status = processedSet.has(file.name) ? "processed" : "skipped";
-        lines.push(`- \`${shortName}\` \xB7 ${status} \xB7 conversations=${conversationCount} \xB7 selected=${selectedCount} \xB7 created=${createdCount} \xB7 updated=${updatedCount} \xB7 failed=${failedCount} \xB7 duplicates=${duplicateCount}`);
+        lines.push(`| \`${shortName}\` | ${status} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`);
       }
       lines.push("");
       if (archiveDisplayNames && archiveDisplayNames.size > 0) {
         lines.push("## Archive Name Map");
         lines.push("");
+        lines.push("| Short Name | Original File Name |");
+        lines.push("| --- | --- |");
         for (const file of sortedFiles) {
           const shortName = archiveDisplayNames.get(file.name);
           if (!shortName || shortName === file.name) {
             continue;
           }
-          lines.push(`- \`${shortName}\` -> \`${file.name}\``);
+          lines.push(`| \`${shortName}\` | \`${file.name}\` |`);
         }
         lines.push("");
       }
@@ -13272,25 +13314,44 @@ var ImportReport = class {
     const fileNames = this.getOrderedFileNames(allFiles);
     const createdOrUpdatedByPath = /* @__PURE__ */ new Map();
     const failedEntries = [];
+    const upsertEntry = /* @__PURE__ */ __name((entry, status) => {
+      const current = createdOrUpdatedByPath.get(entry.filePath);
+      if (!current) {
+        createdOrUpdatedByPath.set(entry.filePath, {
+          title: entry.title,
+          filePath: entry.filePath,
+          updateTime: entry.updateTime,
+          sourceFile: entry.sourceFile,
+          status
+        });
+        return;
+      }
+      const shouldRefreshMetadata = entry.updateTime >= current.updateTime;
+      createdOrUpdatedByPath.set(entry.filePath, {
+        title: shouldRefreshMetadata ? entry.title : current.title,
+        filePath: current.filePath,
+        updateTime: shouldRefreshMetadata ? entry.updateTime : current.updateTime,
+        sourceFile: shouldRefreshMetadata ? entry.sourceFile : current.sourceFile,
+        status: current.status === "updated" || status === "updated" ? "updated" : "created"
+      });
+    }, "upsertEntry");
     for (const fileName of fileNames) {
       const section = this.fileSections.get(fileName);
       if (!section) {
         continue;
       }
-      for (const entry of [...section.created, ...section.updated]) {
-        const current = createdOrUpdatedByPath.get(entry.filePath);
-        if (!current || entry.updateTime >= current.updateTime) {
-          createdOrUpdatedByPath.set(entry.filePath, {
-            title: entry.title,
-            filePath: entry.filePath,
-            updateTime: entry.updateTime,
-            sourceFile: entry.sourceFile
-          });
-        }
+      for (const entry of section.created) {
+        upsertEntry(entry, "created");
+      }
+      for (const entry of section.updated) {
+        upsertEntry(entry, "updated");
       }
       failedEntries.push(...section.failed);
     }
-    const indexedEntries = Array.from(createdOrUpdatedByPath.values()).sort((a, b) => {
+    const indexedEntries = Array.from(createdOrUpdatedByPath.values());
+    const createdEntries = indexedEntries.filter((entry) => entry.status === "created").sort((a, b) => a.title.localeCompare(b.title, void 0, { sensitivity: "base" }));
+    const updatedEntries = indexedEntries.filter((entry) => entry.status === "updated").sort((a, b) => a.title.localeCompare(b.title, void 0, { sensitivity: "base" }));
+    const sortedAllEntries = [...indexedEntries].sort((a, b) => {
       return a.title.localeCompare(b.title, void 0, { sensitivity: "base" });
     });
     const lines = [];
@@ -13303,19 +13364,34 @@ var ImportReport = class {
     }
     lines.push("## Index Summary");
     lines.push("");
-    lines.push(`- Conversations listed: ${indexedEntries.length}`);
+    lines.push(`- Conversations listed: ${sortedAllEntries.length}`);
+    lines.push(`- New notes: ${createdEntries.length}`);
+    lines.push(`- Updated notes: ${updatedEntries.length}`);
     lines.push(`- Failed conversations: ${failedEntries.length}`);
     lines.push("");
-    lines.push("## Conversations");
+    lines.push("## \u2728 New Notes");
     lines.push("");
-    if (indexedEntries.length === 0) {
+    if (createdEntries.length === 0) {
       lines.push("- None");
       lines.push("");
     } else {
-      for (const entry of indexedEntries) {
+      for (const entry of createdEntries) {
         const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
         const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
-        lines.push(`- ${titleLink}`);
+        lines.push(`- \u2728 ${titleLink}`);
+      }
+      lines.push("");
+    }
+    lines.push("## \u{1F504} Updated Notes");
+    lines.push("");
+    if (updatedEntries.length === 0) {
+      lines.push("- None");
+      lines.push("");
+    } else {
+      for (const entry of updatedEntries) {
+        const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
+        const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
+        lines.push(`- \u{1F504} ${titleLink}`);
       }
       lines.push("");
     }
@@ -22804,9 +22880,10 @@ var import_obsidian29 = require("obsidian");
 init_support_box();
 init_i18n();
 var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
-  constructor(app, version) {
+  constructor(app, version, onGetStarted) {
     super(app);
     this.version = version;
+    this.onGetStarted = onGetStarted;
   }
   onOpen() {
     const { contentEl, modalEl, titleEl } = this;
@@ -22905,7 +22982,9 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
             font-size: 1.05em;
         `;
     closeButton.addEventListener("click", () => {
+      var _a;
       this.close();
+      (_a = this.onGetStarted) == null ? void 0 : _a.call(this);
     });
   }
   /**
@@ -23915,7 +23994,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       ribbonIconEl.addClass("nexus-ai-chat-ribbon");
       const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
       if (upgradeResult == null ? void 0 : upgradeResult.isFreshInstall) {
-        new InstallationWelcomeDialog(this.app, this.manifest.version).open();
+        new InstallationWelcomeDialog(
+          this.app,
+          this.manifest.version,
+          () => this.openPluginSettings()
+        ).open();
       }
       if ((upgradeResult == null ? void 0 : upgradeResult.showCompletionDialog) && (upgradeResult == null ? void 0 : upgradeResult.upgradedToVersion)) {
         await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
@@ -24033,6 +24116,20 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     return this.upgradeManager;
   }
   /**
+   * Open Obsidian settings directly on this plugin tab.
+   * Uses runtime APIs not exposed in the public TypeScript definitions.
+   */
+  openPluginSettings() {
+    var _a;
+    const settingsApi = this.app.setting;
+    if (!(settingsApi == null ? void 0 : settingsApi.open)) {
+      this.logger.warn("Unable to open settings automatically: app.setting.open is unavailable");
+      return;
+    }
+    settingsApi.open();
+    (_a = settingsApi.openTabById) == null ? void 0 : _a.call(settingsApi, this.manifest.id);
+  }
+  /**
    * Show provider selection dialog and then file selection
    * Ensures migration is complete before allowing import
    */
@@ -24101,7 +24198,25 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       new import_obsidian33.Notice(t("notices.import_mobile_single_zip_only"));
       zipFiles = [zipFiles[0]];
     }
-    if (provider === "gemini") {
+    const sortedZipFiles = sortFilesForImport(zipFiles);
+    const lockedProvider = await this.resolveProviderLockFromSelection(sortedZipFiles);
+    if (!lockedProvider) {
+      new import_obsidian33.Notice(
+        t("notices.import_error_analyzing", {
+          error: "No supported archive was detected in the selected ZIP files."
+        })
+      );
+      return;
+    }
+    if (lockedProvider.provider !== provider) {
+      this.logger.child("ImportFlow").warn("Provider selection overridden by first supported archive", {
+        selectedProvider: provider,
+        lockedProvider: lockedProvider.provider,
+        lockSourceFile: lockedProvider.fileName
+      });
+    }
+    const effectiveProvider = lockedProvider.provider;
+    if (effectiveProvider === "gemini") {
       if (zipFiles.length === 0) {
         new import_obsidian33.Notice(t("notices.import_no_zip_gemini"));
         this.logger.warn("[Gemini] No ZIP files selected for import");
@@ -24132,11 +24247,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       }
       this.currentGeminiIndex = index;
       this.importService.setGeminiIndex(index);
-      const sortedZipFiles = sortFilesForImport(zipFiles);
       if (mode === "all") {
-        await this.handleImportAll(sortedZipFiles, provider);
+        await this.handleImportAll(sortedZipFiles, effectiveProvider);
       } else {
-        await this.handleSelectiveImport(sortedZipFiles, provider);
+        await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
       }
     } else {
       if (this.currentGeminiIndex) {
@@ -24145,14 +24259,13 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       }
       if (zipFiles.length === 0) {
         new import_obsidian33.Notice(t("notices.import_no_zip"));
-        this.logger.warn(`[${provider}] No ZIP files selected for import`);
+        this.logger.warn(`[${effectiveProvider}] No ZIP files selected for import`);
         return;
       }
-      const sortedZipFiles = sortFilesForImport(zipFiles);
       if (mode === "all") {
-        await this.handleImportAll(sortedZipFiles, provider);
+        await this.handleImportAll(sortedZipFiles, effectiveProvider);
       } else {
-        await this.handleSelectiveImport(sortedZipFiles, provider);
+        await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
       }
     }
   }
@@ -24729,6 +24842,33 @@ ${report.generateMobileIndexContent(files, links)}
   }
   isMobileTaskQueueMode() {
     return import_obsidian33.Platform.isMobileApp || import_obsidian33.Platform.isMobile;
+  }
+  async resolveProviderLockFromSelection(files) {
+    const providerRegistry = createProviderRegistry(this);
+    for (const file of files) {
+      try {
+        const zip = await createZipArchiveReader(file);
+        const entries = await zip.listEntries();
+        const classification = classifyArchiveEntries(entries.map((entry) => entry.path));
+        if (!classification.supported) {
+          continue;
+        }
+        if (!providerRegistry.getAdapter(classification.provider)) {
+          this.logger.child("ImportFlow").warn("Detected provider is not enabled; skipping as lock source", {
+            fileName: file.name,
+            detectedProvider: classification.provider
+          });
+          continue;
+        }
+        return { provider: classification.provider, fileName: file.name };
+      } catch (error) {
+        this.logger.child("ImportFlow").warn("Failed to analyze ZIP while resolving provider lock", {
+          fileName: file.name,
+          message: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+    return null;
   }
   async resolveMobileArchiveImportMode(file, provider) {
     if (!this.isMobileTaskQueueMode()) {
