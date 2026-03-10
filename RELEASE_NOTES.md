@@ -41,6 +41,7 @@
 - Unsupported ZIP files are classified earlier and skipped more cleanly
 - Large archive handling no longer relies on full in-memory ZIP loading
 - Mobile logs now expose precise import phases (scan, metadata, attachment map, streaming import) to improve crash diagnostics
+- CLI now forces the desktop ZIP reader path in Node.js and stamps notes with the current plugin version
 
 ---
 

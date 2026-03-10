@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+cli/dist/
 
 # Local resources
 local_resources/

@@ -1,7 +1,7 @@
 {
   "name": "nexus-cli",
   "version": "1.0.0",
-  "description": "CLI for importing ChatGPT/Claude exports into an Obsidian vault",
+  "description": "CLI for importing ChatGPT/Claude/Le Chat exports into an Obsidian vault",
   "bin": {
     "nexus-cli": "dist/nexus-cli.js"
   },

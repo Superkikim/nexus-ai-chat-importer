@@ -13,6 +13,7 @@ import { StorageService } from "../../src/services/storage-service";
 import { FileService } from "../../src/services/file-service";
 import { ImportReport } from "../../src/models/import-report";
 import { Logger } from "../../src/logger";
+import pluginManifest from "../../manifest.json";
 
 export interface ImportOptions {
   vault: string;
@@ -29,14 +30,11 @@ export interface ImportOptions {
 }
 
 /**
- * Shim for browser `File` API.
- *
- * JSZip 3.x in Node.js doesn't understand browser Blob/File, but it does
- * accept Buffer. We store the raw buffer and monkey-patch JSZip.loadAsync
- * to convert NodeFile → Buffer before loading.
+ * Shim for browser `File` API used by the plugin import services.
  */
 class NodeFile {
   name: string;
+  path: string;
   lastModified: number;
   size: number;
   type = "application/zip";
@@ -44,12 +42,14 @@ class NodeFile {
   _buffer: Buffer;
 
   constructor(filePath: string) {
-    this._buffer = fs.readFileSync(filePath);
-    this.name = path.basename(filePath);
+    const absolutePath = path.resolve(filePath);
+    this._buffer = fs.readFileSync(absolutePath);
+    this.path = absolutePath;
+    this.name = path.basename(absolutePath);
     this.size = this._buffer.length;
 
     try {
-      this.lastModified = fs.statSync(filePath).mtimeMs;
+      this.lastModified = fs.statSync(absolutePath).mtimeMs;
     } catch {
       this.lastModified = Date.now();
     }
@@ -62,16 +62,6 @@ class NodeFile {
     );
   }
 }
-
-// Monkey-patch JSZip so loadAsync converts NodeFile → Buffer transparently
-import JSZip from "jszip";
-const origLoadAsync = JSZip.prototype.loadAsync;
-JSZip.prototype.loadAsync = function (data: any, options?: any) {
-  if (data && data._buffer instanceof Buffer) {
-    return origLoadAsync.call(this, data._buffer, options);
-  }
-  return origLoadAsync.call(this, data, options);
-};
 
 /**
  * Read saved plugin settings from the vault's data.json.
@@ -106,7 +96,7 @@ function createMockPlugin(opts: ImportOptions): any {
   const manifest = {
     id: "nexus-ai-chat-importer",
     name: "Nexus AI Chat Importer",
-    version: "1.3.3",
+    version: pluginManifest.version || "1.5.7",
   };
 
   // Layer 1: hardcoded defaults

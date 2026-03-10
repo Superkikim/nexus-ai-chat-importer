@@ -100,6 +100,7 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - Missing message updates in Claude imports are now handled correctly
 - Unsupported ZIP files are classified earlier and skipped with clearer messaging
 - Large archive handling no longer relies on loading the whole ZIP into memory
+- CLI now uses the desktop ZIP backend reliably in Node.js and writes correct plugin version metadata
 
 ---
 
@@ -637,8 +638,10 @@ Import conversations without opening Obsidian — useful for automation, large a
 The CLI is included in the plugin source. To use it:
 
 1. Clone or download the [repository](https://github.com/Superkikim/nexus-ai-chat-importer)
-2. Run `npm install` then `npm run build`
-3. Use the CLI from the `cli/` directory
+2. Run `npm install` (plugin dependencies)
+3. Run `npm --prefix cli install` (CLI dependencies)
+4. Build the CLI with `npm --prefix cli run build`
+5. Run `nexus-cli` from `cli/dist/` (or add it to your PATH)
 
 ### Usage
 
