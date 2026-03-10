@@ -270,7 +270,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
                         // Show result to user
                         if (result.success && result.skipped === 0) {
                             // Perfect success - simple notice
-                            new Notice(`✅ Files moved to ${newPath}`);
+                            new Notice(t('folder_migration.notices.files_moved', { path: newPath }));
                         } else {
                             // Some files skipped or errors - show detailed dialog
                             this.showMergeResultDialog(result, oldPath, newPath);
@@ -278,7 +278,10 @@ export class ConfigureFolderLocationsDialog extends Modal {
                     } catch (error) {
                         this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
                         const errorMessage = error instanceof Error ? error.message : String(error);
-                        this.showErrorDialog("Migration Failed", `Failed to move files: ${errorMessage}`);
+                        this.showErrorDialog(
+                            t('folder_migration.error_migration_failed.title'),
+                            t('folder_migration.error_migration_failed.message_move', { error: errorMessage })
+                        );
                     }
                 } else if (action === 'cancel') {
                     // Revert setting
@@ -530,4 +533,3 @@ export class ConfigureFolderLocationsDialog extends Modal {
         modal.open();
     }
 }
-

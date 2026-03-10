@@ -254,7 +254,7 @@ export class FolderTreeBrowserModal extends Modal {
         if (this.validatePath) {
             const validation = this.validatePath(newFolderPath);
             if (!validation.valid) {
-                new Notice(t('folder_browser.notices.invalid_location', { error: validation.error ?? "Invalid folder location" }));
+                new Notice(t('folder_browser.notices.invalid_location', { error: validation.error ?? t('folder_browser.notices.invalid_location_default') }));
                 return;
             }
         }
@@ -343,7 +343,7 @@ export class FolderTreeBrowserModal extends Modal {
         if (this.validatePath) {
             const validation = this.validatePath(path);
             if (!validation.valid) {
-                new Notice(t('folder_browser.notices.invalid_location', { error: validation.error ?? "Invalid folder location" }));
+                new Notice(t('folder_browser.notices.invalid_location', { error: validation.error ?? t('folder_browser.notices.invalid_location_default') }));
                 return;
             }
         }

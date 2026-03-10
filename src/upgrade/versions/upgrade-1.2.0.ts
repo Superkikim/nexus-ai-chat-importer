@@ -22,6 +22,7 @@ import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } fro
 import { App, Modal, MarkdownRenderer } from "obsidian";
 import NexusAiChatImporterPlugin from "../../main";
 import { logger } from "../../logger";
+import { t } from "../../i18n";
 
 /**
  * Convert indentations to callouts (automatic operation)
@@ -631,7 +632,7 @@ export class NexusUpgradeModal extends Modal {
         containerEl.classList.add('nexus-upgrade-modal');
 
         // Set title like Excalidraw
-        titleEl.setText(`🚀 Nexus AI Chat Importer ${this.version}`);
+        titleEl.setText(t("upgrade.legacy_120_modal.title", { version: this.version }));
         this.modalEl.querySelector('.modal-close-button')?.remove();
         this.createForm();
     }
@@ -648,17 +649,7 @@ export class NexusUpgradeModal extends Modal {
             ? `https://nexus-prod.dev/${upgradeLocale}/nexus-ai-chat-importer/support`
             : 'https://nexus-prod.dev/nexus-ai-chat-importer/support';
 
-        let message = `🎉 **Upgrade to v1.2.0**
-
-Your conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.
-
-**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
-
----
-
-## Support My Work
-
-[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](${upgradeSupportUrl})`;
+        let message = t("upgrade.legacy_120_modal.fallback_message", { support_url: upgradeSupportUrl });
 
         try {
             // Try to fetch release notes from GitHub
@@ -690,7 +681,7 @@ Your conversations will be reorganized with provider structure and modern callou
             el.style.borderTop = "1px solid var(--background-modifier-border)";
 
             const btnOk = el.createEl("button", {
-                text: "Proceed",
+                text: t("upgrade.legacy_120_modal.buttons.proceed"),
                 cls: "nexus-btn-primary"
             });
             btnOk.onclick = () => {

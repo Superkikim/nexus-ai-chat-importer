@@ -325,6 +325,18 @@
       "buttons": {
         "got_it": "Capito!"
       }
+    },
+    "notices": {
+      "migration_cancelled": "Migration cancelled. Please complete the migration before importing.",
+      "upgrade_failed_console": "Upgrade failed - see console for details",
+      "upgraded_to_version": "Upgraded to Nexus AI Chat Importer v{{version}}"
+    },
+    "legacy_120_modal": {
+      "title": "🚀 Nexus AI Chat Importer {{version}}",
+      "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+      "buttons": {
+        "proceed": "Proceed"
+      }
     }
   },
   "folder_migration": {
@@ -380,6 +392,15 @@
       "title": "Migrazione non riuscita",
       "message_move": "Impossibile spostare i file: {{error}}",
       "message_links": "Impossibile spostare i file o aggiornare i collegamenti: {{error}}"
+    },
+    "notices": {
+      "change_cancelled_reverted": "Change cancelled. Folder setting reverted.",
+      "failed_revert": "Failed to revert setting: {{error}}",
+      "setting_updated_files_remain": "Folder setting updated. Files remain in {{path}}",
+      "failed_update": "Failed to update setting: {{error}}",
+      "files_moved": "Files moved to {{path}}",
+      "failed_move": "Failed to move files: {{error}}",
+      "files_moved_links_updated": "✅ {{moved}} files moved to {{path}}. {{links}} links updated"
     }
   },
   "folder_browser": {
@@ -405,7 +426,8 @@
       "invalid_location": "❌ {{error}}",
       "created_success": "✅ Cartella creata: {{name}}",
       "create_failed": "❌ Impossibile creare la cartella: {{error}}",
-      "select_first": "⚠️ Seleziona prima una cartella"
+      "select_first": "⚠️ Seleziona prima una cartella",
+      "invalid_location_default": "Invalid folder location"
     }
   },
   "configure_folder_dialog": {
@@ -476,7 +498,8 @@
     "import_gemini_json_failed": "Impossibile leggere il JSON dell'indice Gemini. Continuo senza indice.",
     "report_failed": "Impossibile creare il file di log. Consulta la console per maggiori dettagli.",
     "attachment_map_failed": "Impossibile costruire la mappa degli allegati. Consulta la console per maggiori dettagli.",
-    "ribbon_tooltip": "Nexus AI Chat Importer - Importa nuovo file"
+    "ribbon_tooltip": "Nexus AI Chat Importer - Importa nuovo file",
+    "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
   },
   "commands": {
     "import_conversations": {

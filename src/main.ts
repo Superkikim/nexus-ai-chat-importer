@@ -517,7 +517,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             });
 
             if (extractionResult.supportedFiles.length === 0) {
-                new Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
+                new Notice(t('notices.import_no_supported_archives', { provider }));
                 return;
             }
 
@@ -812,7 +812,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             });
 
             if (extractionResult.supportedFiles.length === 0) {
-                new Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
+                new Notice(t('notices.import_no_supported_archives', { provider }));
                 return;
             }
 

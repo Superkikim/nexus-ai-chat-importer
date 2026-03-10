@@ -360,6 +360,18 @@ var init_en = __esm({
           buttons: {
             got_it: "Got it!"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -415,6 +427,15 @@ var init_en = __esm({
           title: "Migration Failed",
           message_move: "Failed to move files: {{error}}",
           message_links: "Failed to move files or update links: {{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -440,7 +461,8 @@ var init_en = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 Created folder: {{name}}",
           create_failed: "\u274C Failed to create folder: {{error}}",
-          select_first: "\u26A0\uFE0F Please select a folder first"
+          select_first: "\u26A0\uFE0F Please select a folder first",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -511,7 +533,8 @@ var init_en = __esm({
         import_gemini_json_failed: "Failed to read Gemini index JSON. Continuing without index.",
         report_failed: "Failed to create log file. Check console for details.",
         attachment_map_failed: "Failed to build attachment map. Check console for details.",
-        ribbon_tooltip: "Nexus AI Chat Importer - Import new file"
+        ribbon_tooltip: "Nexus AI Chat Importer - Import new file",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -861,6 +884,18 @@ var init_fr = __esm({
           buttons: {
             got_it: "Compris !"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -916,6 +951,15 @@ var init_fr = __esm({
           title: "\xC9chec de la migration",
           message_move: "\xC9chec du d\xE9placement des fichiers : {{error}}",
           message_links: "\xC9chec du d\xE9placement des fichiers ou de la mise \xE0 jour des liens : {{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -941,7 +985,8 @@ var init_fr = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 Dossier cr\xE9\xE9 : {{name}}",
           create_failed: "\u274C \xC9chec de la cr\xE9ation du dossier : {{error}}",
-          select_first: "\u26A0\uFE0F Veuillez d'abord s\xE9lectionner un dossier"
+          select_first: "\u26A0\uFE0F Veuillez d'abord s\xE9lectionner un dossier",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -1012,7 +1057,8 @@ var init_fr = __esm({
         import_gemini_json_failed: "\xC9chec de la lecture du JSON d'index Gemini. Continuation sans index.",
         report_failed: "\xC9chec de la cr\xE9ation du fichier journal. Consultez la console pour plus de d\xE9tails.",
         attachment_map_failed: "\xC9chec de la construction de la carte des pi\xE8ces jointes. Consultez la console pour plus de d\xE9tails.",
-        ribbon_tooltip: "Nexus AI Chat Importer - Importer un nouveau fichier"
+        ribbon_tooltip: "Nexus AI Chat Importer - Importer un nouveau fichier",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -1362,6 +1408,18 @@ var init_de = __esm({
           buttons: {
             got_it: "Verstanden!"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -1417,6 +1475,15 @@ var init_de = __esm({
           title: "Migration fehlgeschlagen",
           message_move: "Dateien konnten nicht verschoben werden: {{error}}",
           message_links: "Dateien konnten nicht verschoben oder Links nicht aktualisiert werden: {{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -1442,7 +1509,8 @@ var init_de = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 Ordner erstellt: {{name}}",
           create_failed: "\u274C Ordner konnte nicht erstellt werden: {{error}}",
-          select_first: "\u26A0\uFE0F Bitte zuerst einen Ordner ausw\xE4hlen"
+          select_first: "\u26A0\uFE0F Bitte zuerst einen Ordner ausw\xE4hlen",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -1513,7 +1581,8 @@ var init_de = __esm({
         import_gemini_json_failed: "Gemini-Index JSON konnte nicht gelesen werden. Fortfahren ohne Index.",
         report_failed: "Protokolldatei konnte nicht erstellt werden. Weitere Details in der Konsole.",
         attachment_map_failed: "Anhangskarte konnte nicht erstellt werden. Weitere Details in der Konsole.",
-        ribbon_tooltip: "Nexus AI Chat Importer - Neue Datei importieren"
+        ribbon_tooltip: "Nexus AI Chat Importer - Neue Datei importieren",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -1863,6 +1932,18 @@ var init_es = __esm({
           buttons: {
             got_it: "\xA1Entendido!"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -1918,6 +1999,15 @@ var init_es = __esm({
           title: "La migraci\xF3n ha fallado",
           message_move: "Error al mover archivos: {{error}}",
           message_links: "Error al mover archivos o actualizar enlaces: {{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -1943,7 +2033,8 @@ var init_es = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 Carpeta creada: {{name}}",
           create_failed: "\u274C Error al crear la carpeta: {{error}}",
-          select_first: "\u26A0\uFE0F Por favor, seleccione primero una carpeta"
+          select_first: "\u26A0\uFE0F Por favor, seleccione primero una carpeta",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -2014,7 +2105,8 @@ var init_es = __esm({
         import_gemini_json_failed: "No se pudo leer el JSON de \xEDndice de Gemini. Continuando sin \xEDndice.",
         report_failed: "No se pudo crear el archivo de registro. Consulte la consola para m\xE1s detalles.",
         attachment_map_failed: "No se pudo construir el mapa de adjuntos. Consulte la consola para m\xE1s detalles.",
-        ribbon_tooltip: "Nexus AI Chat Importer - Importar nuevo archivo"
+        ribbon_tooltip: "Nexus AI Chat Importer - Importar nuevo archivo",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -2364,6 +2456,18 @@ var init_it = __esm({
           buttons: {
             got_it: "Capito!"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -2419,6 +2523,15 @@ var init_it = __esm({
           title: "Migrazione non riuscita",
           message_move: "Impossibile spostare i file: {{error}}",
           message_links: "Impossibile spostare i file o aggiornare i collegamenti: {{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -2444,7 +2557,8 @@ var init_it = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 Cartella creata: {{name}}",
           create_failed: "\u274C Impossibile creare la cartella: {{error}}",
-          select_first: "\u26A0\uFE0F Seleziona prima una cartella"
+          select_first: "\u26A0\uFE0F Seleziona prima una cartella",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -2515,7 +2629,8 @@ var init_it = __esm({
         import_gemini_json_failed: "Impossibile leggere il JSON dell'indice Gemini. Continuo senza indice.",
         report_failed: "Impossibile creare il file di log. Consulta la console per maggiori dettagli.",
         attachment_map_failed: "Impossibile costruire la mappa degli allegati. Consulta la console per maggiori dettagli.",
-        ribbon_tooltip: "Nexus AI Chat Importer - Importa nuovo file"
+        ribbon_tooltip: "Nexus AI Chat Importer - Importa nuovo file",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -2865,6 +2980,18 @@ var init_ru = __esm({
           buttons: {
             got_it: "\u041F\u043E\u043D\u044F\u0442\u043D\u043E!"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -2920,6 +3047,15 @@ var init_ru = __esm({
           title: "\u041C\u0438\u0433\u0440\u0430\u0446\u0438\u044F \u043D\u0435 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430",
           message_move: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B: {{error}}",
           message_links: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B \u0438\u043B\u0438 \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u0441\u044B\u043B\u043A\u0438: {{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -2945,7 +3081,8 @@ var init_ru = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 \u041F\u0430\u043F\u043A\u0430 \u0441\u043E\u0437\u0434\u0430\u043D\u0430: {{name}}",
           create_failed: "\u274C \u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u043F\u0430\u043F\u043A\u0443: {{error}}",
-          select_first: "\u26A0\uFE0F \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0430\u043F\u043A\u0443"
+          select_first: "\u26A0\uFE0F \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0430\u043F\u043A\u0443",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -3016,7 +3153,8 @@ var init_ru = __esm({
         import_gemini_json_failed: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0440\u043E\u0447\u0438\u0442\u0430\u0442\u044C JSON-\u0438\u043D\u0434\u0435\u043A\u0441 Gemini. \u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435 \u0431\u0435\u0437 \u0438\u043D\u0434\u0435\u043A\u0441\u0430.",
         report_failed: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u0444\u0430\u0439\u043B \u0436\u0443\u0440\u043D\u0430\u043B\u0430. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043A\u043E\u043D\u0441\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u044F \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0439 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438.",
         attachment_map_failed: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u043A\u0430\u0440\u0442\u0443 \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043A\u043E\u043D\u0441\u043E\u043B\u044C \u0434\u043B\u044F \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u044F \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0439 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438.",
-        ribbon_tooltip: "Nexus AI Chat Importer \u2014 \u0438\u043C\u043F\u043E\u0440\u0442 \u043D\u043E\u0432\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430"
+        ribbon_tooltip: "Nexus AI Chat Importer \u2014 \u0438\u043C\u043F\u043E\u0440\u0442 \u043D\u043E\u0432\u043E\u0433\u043E \u0444\u0430\u0439\u043B\u0430",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -3366,6 +3504,18 @@ var init_zh = __esm({
           buttons: {
             got_it: "\u77E5\u9053\u4E86\uFF01"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -3421,6 +3571,15 @@ var init_zh = __esm({
           title: "\u8FC1\u79FB\u5931\u8D25",
           message_move: "\u79FB\u52A8\u6587\u4EF6\u5931\u8D25\uFF1A{{error}}",
           message_links: "\u79FB\u52A8\u6587\u4EF6\u6216\u66F4\u65B0\u94FE\u63A5\u5931\u8D25\uFF1A{{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -3446,7 +3605,8 @@ var init_zh = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 \u5DF2\u521B\u5EFA\u6587\u4EF6\u5939\uFF1A{{name}}",
           create_failed: "\u274C \u521B\u5EFA\u6587\u4EF6\u5939\u5931\u8D25\uFF1A{{error}}",
-          select_first: "\u26A0\uFE0F \u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u6587\u4EF6\u5939"
+          select_first: "\u26A0\uFE0F \u8BF7\u5148\u9009\u62E9\u4E00\u4E2A\u6587\u4EF6\u5939",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -3517,7 +3677,8 @@ var init_zh = __esm({
         import_gemini_json_failed: "\u8BFB\u53D6 Gemini \u7D22\u5F15 JSON \u5931\u8D25\uFF0C\u5C06\u5728\u4E0D\u4F7F\u7528\u7D22\u5F15\u7684\u60C5\u51B5\u4E0B\u7EE7\u7EED\u3002",
         report_failed: "\u521B\u5EFA\u65E5\u5FD7\u6587\u4EF6\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u83B7\u53D6\u8BE6\u7EC6\u4FE1\u606F\u3002",
         attachment_map_failed: "\u6784\u5EFA\u9644\u4EF6\u6620\u5C04\u5931\u8D25\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u83B7\u53D6\u8BE6\u7EC6\u4FE1\u606F\u3002",
-        ribbon_tooltip: "Nexus AI Chat Importer - \u5BFC\u5165\u65B0\u6587\u4EF6"
+        ribbon_tooltip: "Nexus AI Chat Importer - \u5BFC\u5165\u65B0\u6587\u4EF6",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -3867,6 +4028,18 @@ var init_ja = __esm({
           buttons: {
             got_it: "\u4E86\u89E3\uFF01"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -3922,6 +4095,15 @@ var init_ja = __esm({
           title: "\u79FB\u884C\u306B\u5931\u6557\u3057\u307E\u3057\u305F",
           message_move: "\u30D5\u30A1\u30A4\u30EB\u306E\u79FB\u52D5\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{{error}}",
           message_links: "\u30D5\u30A1\u30A4\u30EB\u306E\u79FB\u52D5\u307E\u305F\u306F\u30EA\u30F3\u30AF\u306E\u66F4\u65B0\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -3947,7 +4129,8 @@ var init_ja = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 \u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210\u3057\u307E\u3057\u305F\uFF1A{{name}}",
           create_failed: "\u274C \u30D5\u30A9\u30EB\u30C0\u30FC\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{{error}}",
-          select_first: "\u26A0\uFE0F \u6700\u521D\u306B\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044"
+          select_first: "\u26A0\uFE0F \u6700\u521D\u306B\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -4018,7 +4201,8 @@ var init_ja = __esm({
         import_gemini_json_failed: "Gemini \u30A4\u30F3\u30C7\u30C3\u30AF\u30B9 JSON \u306E\u8AAD\u307F\u8FBC\u307F\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u30A4\u30F3\u30C7\u30C3\u30AF\u30B9\u306A\u3057\u3067\u7D9A\u884C\u3057\u307E\u3059\u3002",
         report_failed: "\u30ED\u30B0\u30D5\u30A1\u30A4\u30EB\u306E\u4F5C\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u8A73\u7D30\u306F\u30B3\u30F3\u30BD\u30FC\u30EB\u3092\u3054\u78BA\u8A8D\u304F\u3060\u3055\u3044\u3002",
         attachment_map_failed: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u30DE\u30C3\u30D7\u306E\u69CB\u7BC9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u8A73\u7D30\u306F\u30B3\u30F3\u30BD\u30FC\u30EB\u3092\u3054\u78BA\u8A8D\u304F\u3060\u3055\u3044\u3002",
-        ribbon_tooltip: "Nexus AI Chat Importer - \u65B0\u3057\u3044\u30D5\u30A1\u30A4\u30EB\u3092\u30A4\u30F3\u30DD\u30FC\u30C8"
+        ribbon_tooltip: "Nexus AI Chat Importer - \u65B0\u3057\u3044\u30D5\u30A1\u30A4\u30EB\u3092\u30A4\u30F3\u30DD\u30FC\u30C8",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -4368,6 +4552,18 @@ var init_pt = __esm({
           buttons: {
             got_it: "Entendido!"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -4423,6 +4619,15 @@ var init_pt = __esm({
           title: "Migra\xE7\xE3o falhou",
           message_move: "Falha ao mover ficheiros: {{error}}",
           message_links: "Falha ao mover ficheiros ou atualizar liga\xE7\xF5es: {{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -4448,7 +4653,8 @@ var init_pt = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 Pasta criada: {{name}}",
           create_failed: "\u274C Falha ao criar pasta: {{error}}",
-          select_first: "\u26A0\uFE0F Por favor, selecione primeiro uma pasta"
+          select_first: "\u26A0\uFE0F Por favor, selecione primeiro uma pasta",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -4519,7 +4725,8 @@ var init_pt = __esm({
         import_gemini_json_failed: "Falha ao ler o \xEDndice JSON do Gemini. A continuar sem \xEDndice.",
         report_failed: "Falha ao criar o ficheiro de registo. Consulte a consola para mais detalhes.",
         attachment_map_failed: "Falha ao construir o mapa de anexos. Consulte a consola para mais detalhes.",
-        ribbon_tooltip: "Nexus AI Chat Importer - Importar novo ficheiro"
+        ribbon_tooltip: "Nexus AI Chat Importer - Importar novo ficheiro",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -4869,6 +5076,18 @@ var init_ko = __esm({
           buttons: {
             got_it: "\uC54C\uACA0\uC5B4\uC694!"
           }
+        },
+        notices: {
+          migration_cancelled: "Migration cancelled. Please complete the migration before importing.",
+          upgrade_failed_console: "Upgrade failed - see console for details",
+          upgraded_to_version: "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        legacy_120_modal: {
+          title: "\u{1F680} Nexus AI Chat Importer {{version}}",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          buttons: {
+            proceed: "Proceed"
+          }
         }
       },
       folder_migration: {
@@ -4924,6 +5143,15 @@ var init_ko = __esm({
           title: "\uB9C8\uC774\uADF8\uB808\uC774\uC158 \uC2E4\uD328",
           message_move: "\uD30C\uC77C \uC774\uB3D9 \uC2E4\uD328: {{error}}",
           message_links: "\uD30C\uC77C \uC774\uB3D9 \uB610\uB294 \uB9C1\uD06C \uC5C5\uB370\uC774\uD2B8 \uC2E4\uD328: {{error}}"
+        },
+        notices: {
+          change_cancelled_reverted: "Change cancelled. Folder setting reverted.",
+          failed_revert: "Failed to revert setting: {{error}}",
+          setting_updated_files_remain: "Folder setting updated. Files remain in {{path}}",
+          failed_update: "Failed to update setting: {{error}}",
+          files_moved: "Files moved to {{path}}",
+          failed_move: "Failed to move files: {{error}}",
+          files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
       folder_browser: {
@@ -4949,7 +5177,8 @@ var init_ko = __esm({
           invalid_location: "\u274C {{error}}",
           created_success: "\u2705 \uD3F4\uB354\uB97C \uB9CC\uB4E4\uC5C8\uC2B5\uB2C8\uB2E4: {{name}}",
           create_failed: "\u274C \uD3F4\uB354 \uB9CC\uB4E4\uAE30 \uC2E4\uD328: {{error}}",
-          select_first: "\u26A0\uFE0F \uBA3C\uC800 \uD3F4\uB354\uB97C \uC120\uD0DD\uD558\uC138\uC694"
+          select_first: "\u26A0\uFE0F \uBA3C\uC800 \uD3F4\uB354\uB97C \uC120\uD0DD\uD558\uC138\uC694",
+          invalid_location_default: "Invalid folder location"
         }
       },
       configure_folder_dialog: {
@@ -5020,7 +5249,8 @@ var init_ko = __esm({
         import_gemini_json_failed: "Gemini \uC778\uB371\uC2A4 JSON\uC744 \uC77D\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC778\uB371\uC2A4 \uC5C6\uC774 \uACC4\uC18D \uC9C4\uD589\uD569\uB2C8\uB2E4.",
         report_failed: "\uB85C\uADF8 \uD30C\uC77C\uC744 \uB9CC\uB4E4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC790\uC138\uD55C \uB0B4\uC6A9\uC740 \uCF58\uC194\uC744 \uD655\uC778\uD558\uC138\uC694.",
         attachment_map_failed: "\uCCA8\uBD80 \uD30C\uC77C \uB9F5\uC744 \uB9CC\uB4E4\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC790\uC138\uD55C \uB0B4\uC6A9\uC740 \uCF58\uC194\uC744 \uD655\uC778\uD558\uC138\uC694.",
-        ribbon_tooltip: "Nexus AI Chat Importer - \uC0C8 \uD30C\uC77C \uAC00\uC838\uC624\uAE30"
+        ribbon_tooltip: "Nexus AI Chat Importer - \uC0C8 \uD30C\uC77C \uAC00\uC838\uC624\uAE30",
+        import_no_supported_archives: "No supported {{provider}} archives were found in the selected ZIP files."
       },
       commands: {
         import_conversations: {
@@ -5393,7 +5623,7 @@ var init_folder_tree_browser_modal = __esm({
         if (this.validatePath) {
           const validation = this.validatePath(newFolderPath);
           if (!validation.valid) {
-            new import_obsidian3.Notice(t("folder_browser.notices.invalid_location", { error: (_a = validation.error) != null ? _a : "Invalid folder location" }));
+            new import_obsidian3.Notice(t("folder_browser.notices.invalid_location", { error: (_a = validation.error) != null ? _a : t("folder_browser.notices.invalid_location_default") }));
             return;
           }
         }
@@ -5462,7 +5692,7 @@ var init_folder_tree_browser_modal = __esm({
         if (this.validatePath) {
           const validation = this.validatePath(path);
           if (!validation.valid) {
-            new import_obsidian3.Notice(t("folder_browser.notices.invalid_location", { error: (_a = validation.error) != null ? _a : "Invalid folder location" }));
+            new import_obsidian3.Notice(t("folder_browser.notices.invalid_location", { error: (_a = validation.error) != null ? _a : t("folder_browser.notices.invalid_location_default") }));
             return;
           }
         }
@@ -6737,10 +6967,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("cancel");
-            new import_obsidian7.Notice(`Change cancelled. Folder setting reverted.`);
+            new import_obsidian7.Notice(t("folder_migration.notices.change_cancelled_reverted"));
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian7.Notice(`Failed to revert setting: ${errorMessage}`);
+            new import_obsidian7.Notice(t("folder_migration.notices.failed_revert", { error: errorMessage }));
           }
         });
         const keepButton = buttonContainer.createEl("button", {
@@ -6751,10 +6981,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("keep");
-            new import_obsidian7.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+            new import_obsidian7.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian7.Notice(`Failed to update setting: ${errorMessage}`);
+            new import_obsidian7.Notice(t("folder_migration.notices.failed_update", { error: errorMessage }));
           }
         });
         const moveButton = buttonContainer.createEl("button", {
@@ -6768,10 +6998,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           } else {
             try {
               await this.onComplete("move");
-              new import_obsidian7.Notice(`Files moved to ${this.newPath}`);
+              new import_obsidian7.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
             } catch (error) {
               const errorMessage = error instanceof Error ? error.message : String(error);
-              new import_obsidian7.Notice(`Failed to move files: ${errorMessage}`);
+              new import_obsidian7.Notice(t("folder_migration.notices.failed_move", { error: errorMessage }));
             }
           }
         });
@@ -6857,7 +7087,11 @@ var init_enhanced_folder_migration_dialog = __esm({
             t("folder_migration.progress.complete_message", { moved: String(moveResult.moved), links: String(linksUpdated) })
           );
           progressModal.closeAfterDelay(3e3);
-          new import_obsidian7.Notice(`\u2705 ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
+          new import_obsidian7.Notice(t("folder_migration.notices.files_moved_links_updated", {
+            moved: String(moveResult.moved),
+            path: this.newPath,
+            links: String(linksUpdated)
+          }));
           await this.onComplete("move");
         } catch (error) {
           if (progressModal) {
@@ -9613,6 +9847,7 @@ var init_upgrade_1_2_0 = __esm({
     init_upgrade_interface();
     import_obsidian19 = require("obsidian");
     init_logger();
+    init_i18n();
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -10074,7 +10309,7 @@ ${cleanContent}`;
         var _a;
         const { containerEl, titleEl } = this;
         containerEl.classList.add("nexus-upgrade-modal");
-        titleEl.setText(`\u{1F680} Nexus AI Chat Importer ${this.version}`);
+        titleEl.setText(t("upgrade.legacy_120_modal.title", { version: this.version }));
         (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
         this.createForm();
       }
@@ -10085,17 +10320,7 @@ ${cleanContent}`;
         const upgradeLocale = window.moment.locale();
         const upgradeSupportedLocales = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
         const upgradeSupportUrl = upgradeSupportedLocales.includes(upgradeLocale) ? `https://nexus-prod.dev/${upgradeLocale}/nexus-ai-chat-importer/support` : "https://nexus-prod.dev/nexus-ai-chat-importer/support";
-        let message = `\u{1F389} **Upgrade to v1.2.0**
-
-Your conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.
-
-**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.
-
----
-
-## Support My Work
-
-[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](${upgradeSupportUrl})`;
+        let message = t("upgrade.legacy_120_modal.fallback_message", { support_url: upgradeSupportUrl });
         try {
           const response = await fetch("https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.2.0");
           if (response.ok) {
@@ -10119,7 +10344,7 @@ Your conversations will be reorganized with provider structure and modern callou
           el.style.paddingTop = "15px";
           el.style.borderTop = "1px solid var(--background-modifier-border)";
           const btnOk = el.createEl("button", {
-            text: "Proceed",
+            text: t("upgrade.legacy_120_modal.buttons.proceed"),
             cls: "nexus-btn-primary"
           });
           btnOk.onclick = () => {
@@ -10351,14 +10576,17 @@ To change the folder location:
                 const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
                 folderInfo.filesMoved = result.moved;
                 if (result.success && result.skipped === 0) {
-                  new import_obsidian20.Notice(`\u2705 Files moved to ${newPath}`);
+                  new import_obsidian20.Notice(t("folder_migration.notices.files_moved", { path: newPath }));
                 } else {
                   this.showMergeResultDialog(result, oldPath, newPath);
                 }
               } catch (error) {
                 this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                this.showErrorDialog("Migration Failed", `Failed to move files: ${errorMessage}`);
+                this.showErrorDialog(
+                  t("folder_migration.error_migration_failed.title"),
+                  t("folder_migration.error_migration_failed.message_move", { error: errorMessage })
+                );
               }
             } else if (action === "cancel") {
               this.plugin.settings[folderType] = oldPath;
@@ -12409,9 +12637,9 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
       this.close();
       try {
         await this.onComplete("cancel");
-        new import_obsidian2.Notice(`Change cancelled. Folder setting reverted.`);
+        new import_obsidian2.Notice(t("folder_migration.notices.change_cancelled_reverted"));
       } catch (error) {
-        new import_obsidian2.Notice(`Failed to revert setting: ${error instanceof Error ? error.message : String(error)}`);
+        new import_obsidian2.Notice(t("folder_migration.notices.failed_revert", { error: error instanceof Error ? error.message : String(error) }));
       }
     });
     const keepButton = buttonContainer.createEl("button", {
@@ -12422,9 +12650,9 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
       this.close();
       try {
         await this.onComplete("keep");
-        new import_obsidian2.Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+        new import_obsidian2.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
       } catch (error) {
-        new import_obsidian2.Notice(`Failed to update setting: ${error instanceof Error ? error.message : String(error)}`);
+        new import_obsidian2.Notice(t("folder_migration.notices.failed_update", { error: error instanceof Error ? error.message : String(error) }));
       }
     });
     const moveButton = buttonContainer.createEl("button", {
@@ -12435,9 +12663,9 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
       this.close();
       try {
         await this.onComplete("move");
-        new import_obsidian2.Notice(`Files moved to ${this.newPath}`);
+        new import_obsidian2.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
       } catch (error) {
-        new import_obsidian2.Notice(`Failed to move files: ${error instanceof Error ? error.message : String(error)}`);
+        new import_obsidian2.Notice(t("folder_migration.notices.failed_move", { error: error instanceof Error ? error.message : String(error) }));
       }
     });
     this.addStyles();
@@ -20921,6 +21149,7 @@ __name(MultiOperationProgressModal, "MultiOperationProgressModal");
 
 // src/upgrade/incremental-upgrade-manager.ts
 init_utils();
+init_i18n();
 var logger4 = new Logger();
 var IncrementalUpgradeManager = class {
   constructor(plugin) {
@@ -21004,7 +21233,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       logger4.error("Incremental upgrade failed:", error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
-        new import_obsidian25.Notice("Migration cancelled. Please complete the migration before importing.");
+        new import_obsidian25.Notice(t("upgrade.notices.migration_cancelled"));
         return {
           success: false,
           upgradesExecuted: 0,
@@ -21014,7 +21243,7 @@ var IncrementalUpgradeManager = class {
         };
       }
       logger4.error("Error during incremental upgrade:", error);
-      new import_obsidian25.Notice("Upgrade failed - see console for details");
+      new import_obsidian25.Notice(t("upgrade.notices.upgrade_failed_console"));
       return {
         success: false,
         upgradesExecuted: 0,
@@ -21366,11 +21595,11 @@ var IncrementalUpgradeManager = class {
         const { UpgradeCompleteModal: UpgradeCompleteModal2 } = await Promise.resolve().then(() => (init_upgrade_complete_modal(), upgrade_complete_modal_exports));
         new UpgradeCompleteModal2(this.plugin.app, this.plugin, version).open();
       } else {
-        new import_obsidian25.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+        new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version }));
       }
     } catch (error) {
       logger4.error("Error showing upgrade complete dialog:", error);
-      new import_obsidian25.Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+      new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version }));
     }
   }
   /**
@@ -21439,7 +21668,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger4.error("Error showing upgrade dialog:", error);
-      new import_obsidian25.Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+      new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version: currentVersion }));
     }
   }
   /**
@@ -24307,7 +24536,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian33.Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
+        new import_obsidian33.Notice(t("notices.import_no_supported_archives", { provider }));
         return;
       }
       const operationReport = new ImportReport();
@@ -24558,7 +24787,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian33.Notice(`No supported ${provider} archives were found in the selected ZIP files.`);
+        new import_obsidian33.Notice(t("notices.import_no_supported_archives", { provider }));
         return;
       }
       if (extractionResult.conversations.length === 0) {

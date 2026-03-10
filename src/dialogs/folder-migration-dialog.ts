@@ -95,9 +95,9 @@ export class FolderMigrationDialog extends Modal {
             this.close();
             try {
                 await this.onComplete('cancel');
-                new Notice(`Change cancelled. Folder setting reverted.`);
+                new Notice(t('folder_migration.notices.change_cancelled_reverted'));
             } catch (error) {
-                new Notice(`Failed to revert setting: ${error instanceof Error ? error.message : String(error)}`);
+                new Notice(t('folder_migration.notices.failed_revert', { error: error instanceof Error ? error.message : String(error) }));
             }
         });
 
@@ -110,9 +110,9 @@ export class FolderMigrationDialog extends Modal {
             this.close();
             try {
                 await this.onComplete('keep');
-                new Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+                new Notice(t('folder_migration.notices.setting_updated_files_remain', { path: this.oldPath }));
             } catch (error) {
-                new Notice(`Failed to update setting: ${error instanceof Error ? error.message : String(error)}`);
+                new Notice(t('folder_migration.notices.failed_update', { error: error instanceof Error ? error.message : String(error) }));
             }
         });
 
@@ -125,9 +125,9 @@ export class FolderMigrationDialog extends Modal {
             this.close();
             try {
                 await this.onComplete('move');
-                new Notice(`Files moved to ${this.newPath}`);
+                new Notice(t('folder_migration.notices.files_moved', { path: this.newPath }));
             } catch (error) {
-                new Notice(`Failed to move files: ${error instanceof Error ? error.message : String(error)}`);
+                new Notice(t('folder_migration.notices.failed_move', { error: error instanceof Error ? error.message : String(error) }));
             }
         });
 
@@ -218,4 +218,3 @@ export class FolderMigrationDialog extends Modal {
         contentEl.empty();
     }
 }
-

@@ -27,6 +27,7 @@ import { GITHUB } from "../config/constants";
 import { MultiOperationProgressModal, OperationStatus } from "./utils/multi-operation-progress-modal";
 import type NexusAiChatImporterPlugin from "../main";
 import { ensureFolderExists } from "../utils";
+import { t } from "../i18n";
 
 const logger = new Logger();
 
@@ -166,7 +167,7 @@ export class IncrementalUpgradeManager {
 
             // Check if user cancelled
             if (error instanceof Error && error.message === "User cancelled upgrade") {
-                new Notice("Migration cancelled. Please complete the migration before importing.");
+                new Notice(t("upgrade.notices.migration_cancelled"));
                 return {
                     success: false,
                     upgradesExecuted: 0,
@@ -178,7 +179,7 @@ export class IncrementalUpgradeManager {
 
             // Other errors
             logger.error("Error during incremental upgrade:", error);
-            new Notice("Upgrade failed - see console for details");
+            new Notice(t("upgrade.notices.upgrade_failed_console"));
             return {
                 success: false,
                 upgradesExecuted: 0,
@@ -628,11 +629,11 @@ export class IncrementalUpgradeManager {
                 new UpgradeCompleteModal(this.plugin.app, this.plugin, version).open();
             } else {
                 // For older versions, just show a simple notice
-                new Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+                new Notice(t("upgrade.notices.upgraded_to_version", { version }));
             }
         } catch (error) {
             logger.error("Error showing upgrade complete dialog:", error);
-            new Notice(`Upgraded to Nexus AI Chat Importer v${version}`);
+            new Notice(t("upgrade.notices.upgraded_to_version", { version }));
         }
     }
 
@@ -721,7 +722,7 @@ export class IncrementalUpgradeManager {
             }
         } catch (error) {
             logger.error("Error showing upgrade dialog:", error);
-            new Notice(`Upgraded to Nexus AI Chat Importer v${currentVersion}`);
+            new Notice(t("upgrade.notices.upgraded_to_version", { version: currentVersion }));
         }
     }
 

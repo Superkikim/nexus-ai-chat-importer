@@ -164,10 +164,10 @@ export class EnhancedFolderMigrationDialog extends Modal {
             this.close();
             try {
                 await this.onComplete('cancel');
-                new Notice(`Change cancelled. Folder setting reverted.`);
+                new Notice(t('folder_migration.notices.change_cancelled_reverted'));
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                new Notice(`Failed to revert setting: ${errorMessage}`);
+                new Notice(t('folder_migration.notices.failed_revert', { error: errorMessage }));
             }
         });
 
@@ -180,10 +180,10 @@ export class EnhancedFolderMigrationDialog extends Modal {
             this.close();
             try {
                 await this.onComplete('keep');
-                new Notice(`Folder setting updated. Files remain in ${this.oldPath}`);
+                new Notice(t('folder_migration.notices.setting_updated_files_remain', { path: this.oldPath }));
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                new Notice(`Failed to update setting: ${errorMessage}`);
+                new Notice(t('folder_migration.notices.failed_update', { error: errorMessage }));
             }
         });
 
@@ -200,10 +200,10 @@ export class EnhancedFolderMigrationDialog extends Modal {
             } else {
                 try {
                     await this.onComplete('move');
-                    new Notice(`Files moved to ${this.newPath}`);
+                    new Notice(t('folder_migration.notices.files_moved', { path: this.newPath }));
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : String(error);
-                    new Notice(`Failed to move files: ${errorMessage}`);
+                    new Notice(t('folder_migration.notices.failed_move', { error: errorMessage }));
                 }
             }
         });
@@ -315,7 +315,11 @@ export class EnhancedFolderMigrationDialog extends Modal {
             );
             progressModal.closeAfterDelay(3000);
 
-            new Notice(`✅ ${moveResult.moved} files moved to ${this.newPath}. ${linksUpdated} links updated`);
+            new Notice(t('folder_migration.notices.files_moved_links_updated', {
+                moved: String(moveResult.moved),
+                path: this.newPath,
+                links: String(linksUpdated)
+            }));
 
             // Save the setting change
             await this.onComplete('move');
