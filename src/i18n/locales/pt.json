@@ -198,18 +198,6 @@
         "desc": "Local onde os anexos são guardados (⚠️ Excluir da sincronização para poupar espaço)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Procurar pastas ou criar uma nova"
-      },
-      "legacy_path_repair": {
-        "name": "Reparar caminho legado (1.2.x)",
-        "desc": "Corrige a pasta de conversas para upgrades de versões antigas com archiveFolder.",
-        "button": "Reparar caminho legado",
-        "confirm_title": "Reparar pasta legada de conversas",
-        "confirm_message": "Usar a pasta legada `{{archive}}` como pasta de conversas em vez de `{{current}}`?",
-        "fixed_notice": "Pasta de conversas corrigida: {{path}}",
-        "move_title": "Mover ficheiros para a pasta corrigida?",
-        "move_message": "Deseja mover agora os ficheiros de `{{from}}` para `{{to}}`?",
-        "no_files_notice": "Nenhum ficheiro encontrado na pasta de conversas anterior.",
-        "move_success_notice": "Ficheiros movidos para {{path}}"
       }
     },
     "display": {

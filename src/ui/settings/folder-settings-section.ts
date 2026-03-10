@@ -24,7 +24,6 @@ import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
 import { FolderTreeBrowserModal } from "../../dialogs/folder-tree-browser-modal";
 import { validateFolderNesting } from "../../utils/folder-validation";
 import { moveAndMergeFolders, type FolderMergeResult } from "../../utils";
-import { showDialog } from "../../dialogs";
 import { t } from '../../i18n';
 
 export class FolderSettingsSection extends BaseSettingsSection {
@@ -77,20 +76,6 @@ export class FolderSettingsSection extends BaseSettingsSection {
                         modal.open();
                     });
             });
-
-        if (this.shouldShowLegacyPathRepair()) {
-            new Setting(containerEl)
-                .setName(t('settings.folders.legacy_path_repair.name'))
-                .setDesc(t('settings.folders.legacy_path_repair.desc'))
-                .addButton((button) => {
-                    button
-                        .setButtonText(t('settings.folders.legacy_path_repair.button'))
-                        .setTooltip(t('settings.folders.legacy_path_repair.button'))
-                        .onClick(async () => {
-                            await this.repairLegacyConversationPath();
-                        });
-                });
-        }
 
         // Report Folder
         let reportFolderTextComponent: any;
@@ -288,90 +273,6 @@ export class FolderSettingsSection extends BaseSettingsSection {
         }
     }
 
-    private shouldShowLegacyPathRepair(): boolean {
-        const archiveFolder = this.plugin.settings.archiveFolder?.trim();
-        const conversationFolder = this.plugin.settings.conversationFolder?.trim();
-        return !!archiveFolder && !!conversationFolder && archiveFolder !== conversationFolder;
-    }
-
-    private async repairLegacyConversationPath(): Promise<void> {
-        const archiveFolder = this.plugin.settings.archiveFolder?.trim();
-        if (!archiveFolder) {
-            return;
-        }
-
-        const previousConversationFolder = this.plugin.settings.conversationFolder;
-        const confirmed = await showDialog(
-            this.plugin.app,
-            "confirmation",
-            t('settings.folders.legacy_path_repair.confirm_title'),
-            [t('settings.folders.legacy_path_repair.confirm_message', {
-                archive: archiveFolder,
-                current: previousConversationFolder
-            })],
-            undefined,
-            {
-                button1: t('common.buttons.proceed'),
-                button2: t('common.buttons.cancel')
-            }
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        this.plugin.settings.conversationFolder = archiveFolder;
-        await this.plugin.saveSettings();
-        new Notice(t('settings.folders.legacy_path_repair.fixed_notice', { path: archiveFolder }));
-        this.redraw();
-
-        if (!previousConversationFolder || previousConversationFolder === archiveFolder) {
-            return;
-        }
-
-        const moveConfirmed = await showDialog(
-            this.plugin.app,
-            "confirmation",
-            t('settings.folders.legacy_path_repair.move_title'),
-            [t('settings.folders.legacy_path_repair.move_message', {
-                from: previousConversationFolder,
-                to: archiveFolder
-            })],
-            undefined,
-            {
-                button1: t('common.buttons.proceed'),
-                button2: t('common.buttons.cancel')
-            }
-        );
-
-        if (!moveConfirmed) {
-            return;
-        }
-
-        const oldFolder = this.plugin.app.vault.getAbstractFileByPath(previousConversationFolder);
-        if (!oldFolder || !(oldFolder instanceof TFolder) || oldFolder.children.length === 0) {
-            new Notice(t('settings.folders.legacy_path_repair.no_files_notice'));
-            return;
-        }
-
-        try {
-            const result = await moveAndMergeFolders(oldFolder, archiveFolder, this.plugin.app.vault);
-            await this.updateLinksAfterMove('conversationFolder', previousConversationFolder, archiveFolder);
-
-            if (result.success && result.skipped === 0) {
-                new Notice(t('settings.folders.legacy_path_repair.move_success_notice', { path: archiveFolder }));
-            } else {
-                this.showMergeResultDialog(result, previousConversationFolder, archiveFolder);
-            }
-        } catch (error: any) {
-            this.plugin.logger.error("[FolderSettings] Legacy path repair move failed:", error);
-            this.showErrorDialog(
-                t('folder_migration.error_migration_failed.title'),
-                t('folder_migration.error_migration_failed.message_move', { error: error.message || String(error) })
-            );
-        }
-    }
-
     /**
      * Handle migration action (extracted for reuse between dialog types)
      */
@@ -562,3 +463,4 @@ export class FolderSettingsSection extends BaseSettingsSection {
         modal.open();
     }
 }
+

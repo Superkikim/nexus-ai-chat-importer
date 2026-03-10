@@ -233,18 +233,6 @@ var init_en = __esm({
             desc: "Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Browse folders or create a new one"
-          },
-          legacy_path_repair: {
-            name: "Legacy path repair (1.2.x)",
-            desc: "Fix conversation folder when upgrading from old versions that used archiveFolder.",
-            button: "Repair legacy path",
-            confirm_title: "Repair legacy conversation folder",
-            confirm_message: "Use legacy folder `{{archive}}` as the conversation folder instead of `{{current}}`?",
-            fixed_notice: "Conversation folder repaired: {{path}}",
-            move_title: "Move files to repaired folder?",
-            move_message: "Do you want to move files from `{{from}}` to `{{to}}` now?",
-            no_files_notice: "No files found in the previous conversation folder.",
-            move_success_notice: "Files moved to {{path}}"
           }
         },
         display: {
@@ -771,18 +759,6 @@ var init_fr = __esm({
             desc: "O\xF9 les pi\xE8ces jointes sont stock\xE9es (\u26A0\uFE0F Exclure de la synchronisation pour \xE9conomiser de l'espace)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Parcourir les dossiers ou en cr\xE9er un nouveau"
-          },
-          legacy_path_repair: {
-            name: "R\xE9parer le chemin legacy (1.2.x)",
-            desc: "Corrige le dossier des conversations pour les anciennes versions bas\xE9es sur archiveFolder.",
-            button: "R\xE9parer le chemin legacy",
-            confirm_title: "R\xE9parer le dossier legacy des conversations",
-            confirm_message: "Utiliser le dossier legacy `{{archive}}` comme dossier des conversations \xE0 la place de `{{current}}` ?",
-            fixed_notice: "Dossier des conversations corrig\xE9 : {{path}}",
-            move_title: "D\xE9placer les fichiers vers le dossier corrig\xE9 ?",
-            move_message: "Voulez-vous d\xE9placer les fichiers de `{{from}}` vers `{{to}}` maintenant ?",
-            no_files_notice: "Aucun fichier trouv\xE9 dans l'ancien dossier des conversations.",
-            move_success_notice: "Fichiers d\xE9plac\xE9s vers {{path}}"
           }
         },
         display: {
@@ -1309,18 +1285,6 @@ var init_de = __esm({
             desc: "Speicherort f\xFCr Anh\xE4nge (\u26A0\uFE0F Von der Synchronisierung ausschlie\xDFen, um Speicherplatz zu sparen)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Ordner durchsuchen oder neuen erstellen"
-          },
-          legacy_path_repair: {
-            name: "Legacy-Pfad reparieren (1.2.x)",
-            desc: "Korrigiert den Gespr\xE4chsordner bei Upgrades von alten archiveFolder-Versionen.",
-            button: "Legacy-Pfad reparieren",
-            confirm_title: "Legacy-Gespr\xE4chsordner reparieren",
-            confirm_message: "Legacy-Ordner `{{archive}}` als Gespr\xE4chsordner statt `{{current}}` verwenden?",
-            fixed_notice: "Gespr\xE4chsordner repariert: {{path}}",
-            move_title: "Dateien in den reparierten Ordner verschieben?",
-            move_message: "Dateien jetzt von `{{from}}` nach `{{to}}` verschieben?",
-            no_files_notice: "Keine Dateien im vorherigen Gespr\xE4chsordner gefunden.",
-            move_success_notice: "Dateien nach {{path}} verschoben"
           }
         },
         display: {
@@ -1847,18 +1811,6 @@ var init_es = __esm({
             desc: "D\xF3nde se almacenan los adjuntos (\u26A0\uFE0F Excluir de la sincronizaci\xF3n para ahorrar espacio)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Explorar carpetas o crear una nueva"
-          },
-          legacy_path_repair: {
-            name: "Reparar ruta heredada (1.2.x)",
-            desc: "Corrige la carpeta de conversaciones al actualizar desde versiones antiguas con archiveFolder.",
-            button: "Reparar ruta heredada",
-            confirm_title: "Reparar carpeta heredada de conversaciones",
-            confirm_message: "\xBFUsar la carpeta heredada `{{archive}}` como carpeta de conversaciones en lugar de `{{current}}`?",
-            fixed_notice: "Carpeta de conversaciones corregida: {{path}}",
-            move_title: "\xBFMover archivos a la carpeta corregida?",
-            move_message: "\xBFQuieres mover ahora los archivos de `{{from}}` a `{{to}}`?",
-            no_files_notice: "No se encontraron archivos en la carpeta anterior de conversaciones.",
-            move_success_notice: "Archivos movidos a {{path}}"
           }
         },
         display: {
@@ -2385,18 +2337,6 @@ var init_it = __esm({
             desc: "Dove vengono archiviati gli allegati (\u26A0\uFE0F Escludere dalla sincronizzazione per risparmiare spazio)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Sfoglia le cartelle o creane una nuova"
-          },
-          legacy_path_repair: {
-            name: "Ripara percorso legacy (1.2.x)",
-            desc: "Corregge la cartella conversazioni per upgrade da versioni vecchie con archiveFolder.",
-            button: "Ripara percorso legacy",
-            confirm_title: "Ripara cartella conversazioni legacy",
-            confirm_message: "Usare la cartella legacy `{{archive}}` come cartella conversazioni invece di `{{current}}`?",
-            fixed_notice: "Cartella conversazioni corretta: {{path}}",
-            move_title: "Spostare i file nella cartella corretta?",
-            move_message: "Vuoi spostare ora i file da `{{from}}` a `{{to}}`?",
-            no_files_notice: "Nessun file trovato nella cartella conversazioni precedente.",
-            move_success_notice: "File spostati in {{path}}"
           }
         },
         display: {
@@ -2923,18 +2863,6 @@ var init_ru = __esm({
             desc: "\u041C\u0435\u0441\u0442\u043E \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 (\u26A0\uFE0F \u0418\u0441\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u0438\u0437 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0430\u0446\u0438\u0438 \u0434\u043B\u044F \u044D\u043A\u043E\u043D\u043E\u043C\u0438\u0438 \u043C\u0435\u0441\u0442\u0430)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u041E\u0431\u0437\u043E\u0440 \u043F\u0430\u043F\u043E\u043A \u0438\u043B\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0435 \u043D\u043E\u0432\u043E\u0439"
-          },
-          legacy_path_repair: {
-            name: "\u0418\u0441\u043F\u0440\u0430\u0432\u0438\u0442\u044C legacy-\u043F\u0443\u0442\u044C (1.2.x)",
-            desc: "\u0418\u0441\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u043F\u0430\u043F\u043A\u0443 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u043F\u043E\u0441\u043B\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u0441\u043E \u0441\u0442\u0430\u0440\u044B\u0445 \u0432\u0435\u0440\u0441\u0438\u0439 \u0441 archiveFolder.",
-            button: "\u0418\u0441\u043F\u0440\u0430\u0432\u0438\u0442\u044C legacy-\u043F\u0443\u0442\u044C",
-            confirm_title: "\u0418\u0441\u043F\u0440\u0430\u0432\u0438\u0442\u044C legacy-\u043F\u0430\u043F\u043A\u0443 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432",
-            confirm_message: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C legacy-\u043F\u0430\u043F\u043A\u0443 `{{archive}}` \u043A\u0430\u043A \u043F\u0430\u043F\u043A\u0443 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u0432\u043C\u0435\u0441\u0442\u043E `{{current}}`?",
-            fixed_notice: "\u041F\u0430\u043F\u043A\u0430 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u0438\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0430: {{path}}",
-            move_title: "\u041F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B \u0432 \u0438\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043D\u0443\u044E \u043F\u0430\u043F\u043A\u0443?",
-            move_message: "\u041F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B\u044B \u0438\u0437 `{{from}}` \u0432 `{{to}}` \u0441\u0435\u0439\u0447\u0430\u0441?",
-            no_files_notice: "\u0412 \u043F\u0440\u0435\u0434\u044B\u0434\u0443\u0449\u0435\u0439 \u043F\u0430\u043F\u043A\u0435 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u0444\u0430\u0439\u043B\u044B \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u044B.",
-            move_success_notice: "\u0424\u0430\u0439\u043B\u044B \u043F\u0435\u0440\u0435\u043C\u0435\u0449\u0435\u043D\u044B \u0432 {{path}}"
           }
         },
         display: {
@@ -3461,18 +3389,6 @@ var init_zh = __esm({
             desc: "\u9644\u4EF6\u5B58\u653E\u4F4D\u7F6E\uFF08\u26A0\uFE0F \u8BF7\u5C06\u5176\u6392\u9664\u5728\u540C\u6B65\u8303\u56F4\u4E4B\u5916\u4EE5\u8282\u7701\u7A7A\u95F4\uFF09",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u6D4F\u89C8\u6587\u4EF6\u5939\u6216\u65B0\u5EFA\u6587\u4EF6\u5939"
-          },
-          legacy_path_repair: {
-            name: "\u4FEE\u590D\u65E7\u7248\u8DEF\u5F84 (1.2.x)",
-            desc: "\u4FEE\u590D\u4ECE\u4F7F\u7528 archiveFolder \u7684\u65E7\u7248\u672C\u5347\u7EA7\u540E\u4F1A\u8BDD\u6587\u4EF6\u5939\u8DEF\u5F84\u9519\u8BEF\u7684\u95EE\u9898\u3002",
-            button: "\u4FEE\u590D\u65E7\u7248\u8DEF\u5F84",
-            confirm_title: "\u4FEE\u590D\u65E7\u7248\u4F1A\u8BDD\u6587\u4EF6\u5939",
-            confirm_message: "\u662F\u5426\u5C06\u65E7\u8DEF\u5F84 `{{archive}}` \u4F5C\u4E3A\u4F1A\u8BDD\u6587\u4EF6\u5939\uFF0C\u800C\u4E0D\u662F `{{current}}`\uFF1F",
-            fixed_notice: "\u4F1A\u8BDD\u6587\u4EF6\u5939\u5DF2\u4FEE\u590D\uFF1A{{path}}",
-            move_title: "\u8981\u5C06\u6587\u4EF6\u79FB\u52A8\u5230\u4FEE\u590D\u540E\u7684\u6587\u4EF6\u5939\u5417\uFF1F",
-            move_message: "\u662F\u5426\u73B0\u5728\u5C06\u6587\u4EF6\u4ECE `{{from}}` \u79FB\u52A8\u5230 `{{to}}`\uFF1F",
-            no_files_notice: "\u5728\u4E4B\u524D\u7684\u4F1A\u8BDD\u6587\u4EF6\u5939\u4E2D\u672A\u627E\u5230\u6587\u4EF6\u3002",
-            move_success_notice: "\u6587\u4EF6\u5DF2\u79FB\u52A8\u5230 {{path}}"
           }
         },
         display: {
@@ -3999,18 +3915,6 @@ var init_ja = __esm({
             desc: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u4FDD\u5B58\u5148\uFF08\u26A0\uFE0F \u5BB9\u91CF\u7BC0\u7D04\u306E\u305F\u3081\u540C\u671F\u304B\u3089\u9664\u5916\u3059\u308B\u3053\u3068\u3092\u63A8\u5968\uFF09",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u53C2\u7167\u3059\u308B\u304B\u3001\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210"
-          },
-          legacy_path_repair: {
-            name: "\u65E7\u30D1\u30B9\u4FEE\u5FA9 (1.2.x)",
-            desc: "archiveFolder \u3092\u4F7F\u3063\u3066\u3044\u305F\u65E7\u30D0\u30FC\u30B8\u30E7\u30F3\u304B\u3089\u306E\u30A2\u30C3\u30D7\u30B0\u30EC\u30FC\u30C9\u6642\u306B\u4F1A\u8A71\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4FEE\u6B63\u3057\u307E\u3059\u3002",
-            button: "\u65E7\u30D1\u30B9\u3092\u4FEE\u5FA9",
-            confirm_title: "\u65E7\u4F1A\u8A71\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4FEE\u5FA9",
-            confirm_message: "\u4F1A\u8A71\u30D5\u30A9\u30EB\u30C0\u30FC\u3068\u3057\u3066 `{{current}}` \u306E\u4EE3\u308F\u308A\u306B\u65E7\u30D5\u30A9\u30EB\u30C0\u30FC `{{archive}}` \u3092\u4F7F\u7528\u3057\u307E\u3059\u304B\uFF1F",
-            fixed_notice: "\u4F1A\u8A71\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4FEE\u5FA9\u3057\u307E\u3057\u305F: {{path}}",
-            move_title: "\u4FEE\u5FA9\u5F8C\u30D5\u30A9\u30EB\u30C0\u30FC\u3078\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3057\u307E\u3059\u304B\uFF1F",
-            move_message: "`{{from}}` \u304B\u3089 `{{to}}` \u3078\u4ECA\u3059\u3050\u30D5\u30A1\u30A4\u30EB\u3092\u79FB\u52D5\u3057\u307E\u3059\u304B\uFF1F",
-            no_files_notice: "\u4EE5\u524D\u306E\u4F1A\u8A71\u30D5\u30A9\u30EB\u30C0\u30FC\u306B\u30D5\u30A1\u30A4\u30EB\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093\u3067\u3057\u305F\u3002",
-            move_success_notice: "\u30D5\u30A1\u30A4\u30EB\u3092 {{path}} \u306B\u79FB\u52D5\u3057\u307E\u3057\u305F"
           }
         },
         display: {
@@ -4537,18 +4441,6 @@ var init_pt = __esm({
             desc: "Local onde os anexos s\xE3o guardados (\u26A0\uFE0F Excluir da sincroniza\xE7\xE3o para poupar espa\xE7o)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Procurar pastas ou criar uma nova"
-          },
-          legacy_path_repair: {
-            name: "Reparar caminho legado (1.2.x)",
-            desc: "Corrige a pasta de conversas para upgrades de vers\xF5es antigas com archiveFolder.",
-            button: "Reparar caminho legado",
-            confirm_title: "Reparar pasta legada de conversas",
-            confirm_message: "Usar a pasta legada `{{archive}}` como pasta de conversas em vez de `{{current}}`?",
-            fixed_notice: "Pasta de conversas corrigida: {{path}}",
-            move_title: "Mover ficheiros para a pasta corrigida?",
-            move_message: "Deseja mover agora os ficheiros de `{{from}}` para `{{to}}`?",
-            no_files_notice: "Nenhum ficheiro encontrado na pasta de conversas anterior.",
-            move_success_notice: "Ficheiros movidos para {{path}}"
           }
         },
         display: {
@@ -5075,18 +4967,6 @@ var init_ko = __esm({
             desc: "\uCCA8\uBD80 \uD30C\uC77C\uC774 \uC800\uC7A5\uB418\uB294 \uC704\uCE58 (\u26A0\uFE0F \uC6A9\uB7C9 \uC808\uC57D\uC744 \uC704\uD574 \uB3D9\uAE30\uD654\uC5D0\uC11C \uC81C\uC678\uD558\uC138\uC694)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\uD3F4\uB354 \uCC3E\uC544\uBCF4\uAE30 \uB610\uB294 \uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30"
-          },
-          legacy_path_repair: {
-            name: "\uB808\uAC70\uC2DC \uACBD\uB85C \uBCF5\uAD6C (1.2.x)",
-            desc: "archiveFolder \uAE30\uBC18 \uAD6C\uBC84\uC804\uC5D0\uC11C \uC5C5\uADF8\uB808\uC774\uB4DC\uD55C \uACBD\uC6B0 \uB300\uD654 \uD3F4\uB354 \uACBD\uB85C\uB97C \uBCF5\uAD6C\uD569\uB2C8\uB2E4.",
-            button: "\uB808\uAC70\uC2DC \uACBD\uB85C \uBCF5\uAD6C",
-            confirm_title: "\uB808\uAC70\uC2DC \uB300\uD654 \uD3F4\uB354 \uBCF5\uAD6C",
-            confirm_message: "\uD604\uC7AC `{{current}}` \uB300\uC2E0 \uB808\uAC70\uC2DC \uD3F4\uB354 `{{archive}}`\uB97C \uB300\uD654 \uD3F4\uB354\uB85C \uC0AC\uC6A9\uD560\uAE4C\uC694?",
-            fixed_notice: "\uB300\uD654 \uD3F4\uB354\uAC00 \uBCF5\uAD6C\uB418\uC5C8\uC2B5\uB2C8\uB2E4: {{path}}",
-            move_title: "\uD30C\uC77C\uC744 \uBCF5\uAD6C\uB41C \uD3F4\uB354\uB85C \uC774\uB3D9\uD560\uAE4C\uC694?",
-            move_message: "\uC9C0\uAE08 `{{from}}`\uC5D0\uC11C `{{to}}`\uB85C \uD30C\uC77C\uC744 \uC774\uB3D9\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?",
-            no_files_notice: "\uC774\uC804 \uB300\uD654 \uD3F4\uB354\uC5D0\uC11C \uD30C\uC77C\uC744 \uCC3E\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.",
-            move_success_notice: "\uD30C\uC77C\uC774 {{path}}(\uC73C)\uB85C \uC774\uB3D9\uB418\uC5C8\uC2B5\uB2C8\uB2E4"
           }
         },
         display: {
@@ -6428,101 +6308,6 @@ var init_utils = __esm({
   }
 });
 
-// src/dialogs.ts
-function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian6.Modal(app);
-  modal.contentEl.addClass("nexus-ai-chat-importer-modal");
-  const titleEl = modal.contentEl.createEl("h2", {
-    text: title,
-    cls: "modal-title"
-  });
-  const contentContainer = modal.contentEl.createDiv({ cls: "modal-content" });
-  paragraphs.forEach((paragraph, paragraphIndex) => {
-    const paragraphWithSpacing = paragraph + "\n\n";
-    const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
-    const sections = paragraphWithSpacing.split("\n\n").filter((section) => section.trim() !== "");
-    sections.forEach((section, sectionIndex) => {
-      const sectionDiv = paragraphDiv.createDiv({ cls: "modal-section" });
-      const lines = section.split("\n").filter((line) => line.trim() !== "");
-      lines.forEach((line) => {
-        const lineDiv = sectionDiv.createDiv({ cls: "modal-line" });
-        let htmlContent = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
-        if (line.trim().endsWith(":") && line.trim().length < 30) {
-          lineDiv.innerHTML = `<strong class="section-header">${htmlContent}</strong>`;
-        } else if (line.trim().startsWith("\u2022") || line.trim().startsWith("-")) {
-          lineDiv.innerHTML = htmlContent;
-          lineDiv.addClass("modal-list-item");
-        } else {
-          lineDiv.innerHTML = htmlContent;
-        }
-      });
-      if (sectionIndex < sections.length - 1) {
-        paragraphDiv.createDiv({ cls: "modal-section-break" });
-      }
-    });
-  });
-  if (note) {
-    contentContainer.createDiv({ cls: "modal-major-break" });
-    const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
-    let noteContent = note.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
-    noteDiv.innerHTML = noteContent;
-  }
-  return modal;
-}
-function addButtons(modal, type, resolve, customLabels) {
-  const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-  if (type === "information") {
-    const buttonLabel = (customLabels == null ? void 0 : customLabels.button1) || "Understood";
-    const button = buttonContainer.createEl("button", {
-      text: buttonLabel,
-      cls: "mod-cta"
-      // Obsidian's primary button class
-    });
-    button.addEventListener("click", () => {
-      modal.close();
-      resolve(true);
-    });
-  } else {
-    const noLabel = (customLabels == null ? void 0 : customLabels.button2) || "No";
-    const yesLabel = (customLabels == null ? void 0 : customLabels.button1) || "Yes";
-    const noButton = buttonContainer.createEl("button", {
-      text: noLabel,
-      cls: "mod-muted"
-      // Obsidian's secondary button class
-    });
-    noButton.addEventListener("click", () => {
-      modal.close();
-      resolve(false);
-    });
-    const yesButton = buttonContainer.createEl("button", {
-      text: yesLabel,
-      cls: "mod-cta"
-      // Obsidian's primary button class
-    });
-    yesButton.addEventListener("click", () => {
-      modal.close();
-      resolve(true);
-    });
-  }
-}
-async function showDialog(app, type, title, paragraphs, note, customLabels) {
-  return new Promise((resolve) => {
-    const modal = displayModal(app, title, paragraphs, note);
-    addButtons(modal, type, resolve, customLabels);
-    modal.open();
-  });
-}
-var import_obsidian6;
-var init_dialogs = __esm({
-  "src/dialogs.ts"() {
-    "use strict";
-    import_obsidian6 = require("obsidian");
-    __name(displayModal, "displayModal");
-    __name(addButtons, "addButtons");
-    __name(showDialog, "showDialog");
-  }
-});
-
 // src/services/link-update-service.ts
 var link_update_service_exports = {};
 __export(link_update_service_exports, {
@@ -6976,13 +6761,13 @@ __export(progress_modal_exports, {
   ProgressModal: () => UpgradeProgressModal,
   UpgradeProgressModal: () => UpgradeProgressModal
 });
-var import_obsidian7, UpgradeProgressModal;
+var import_obsidian6, UpgradeProgressModal;
 var init_progress_modal = __esm({
   "src/upgrade/utils/progress-modal.ts"() {
     "use strict";
-    import_obsidian7 = require("obsidian");
+    import_obsidian6 = require("obsidian");
     init_i18n();
-    UpgradeProgressModal = class extends import_obsidian7.Modal {
+    UpgradeProgressModal = class extends import_obsidian6.Modal {
       constructor(app, title, totalSteps = 100) {
         super(app);
         this.currentStep = 0;
@@ -7102,13 +6887,13 @@ var enhanced_folder_migration_dialog_exports = {};
 __export(enhanced_folder_migration_dialog_exports, {
   EnhancedFolderMigrationDialog: () => EnhancedFolderMigrationDialog
 });
-var import_obsidian8, EnhancedFolderMigrationDialog;
+var import_obsidian7, EnhancedFolderMigrationDialog;
 var init_enhanced_folder_migration_dialog = __esm({
   "src/dialogs/enhanced-folder-migration-dialog.ts"() {
     "use strict";
-    import_obsidian8 = require("obsidian");
+    import_obsidian7 = require("obsidian");
     init_i18n();
-    EnhancedFolderMigrationDialog = class extends import_obsidian8.Modal {
+    EnhancedFolderMigrationDialog = class extends import_obsidian7.Modal {
       constructor(plugin, oldPath, newPath, folderType, onComplete) {
         super(plugin.app);
         this.estimatedTime = 0;
@@ -7202,10 +6987,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("cancel");
-            new import_obsidian8.Notice(t("folder_migration.notices.change_cancelled_reverted"));
+            new import_obsidian7.Notice(t("folder_migration.notices.change_cancelled_reverted"));
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian8.Notice(t("folder_migration.notices.failed_revert", { error: errorMessage }));
+            new import_obsidian7.Notice(t("folder_migration.notices.failed_revert", { error: errorMessage }));
           }
         });
         const keepButton = buttonContainer.createEl("button", {
@@ -7216,10 +7001,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("keep");
-            new import_obsidian8.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
+            new import_obsidian7.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian8.Notice(t("folder_migration.notices.failed_update", { error: errorMessage }));
+            new import_obsidian7.Notice(t("folder_migration.notices.failed_update", { error: errorMessage }));
           }
         });
         const moveButton = buttonContainer.createEl("button", {
@@ -7233,10 +7018,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           } else {
             try {
               await this.onComplete("move");
-              new import_obsidian8.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
+              new import_obsidian7.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
             } catch (error) {
               const errorMessage = error instanceof Error ? error.message : String(error);
-              new import_obsidian8.Notice(t("folder_migration.notices.failed_move", { error: errorMessage }));
+              new import_obsidian7.Notice(t("folder_migration.notices.failed_move", { error: errorMessage }));
             }
           }
         });
@@ -7261,7 +7046,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             progress: 5
           });
           const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
-          if (!oldFolder || !(oldFolder instanceof import_obsidian8.TFolder)) {
+          if (!oldFolder || !(oldFolder instanceof import_obsidian7.TFolder)) {
             throw new Error(`Source folder not found: ${this.oldPath}`);
           }
           const moveResult = await moveAndMergeFolders2(
@@ -7322,7 +7107,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             t("folder_migration.progress.complete_message", { moved: String(moveResult.moved), links: String(linksUpdated) })
           );
           progressModal.closeAfterDelay(3e3);
-          new import_obsidian8.Notice(t("folder_migration.notices.files_moved_links_updated", {
+          new import_obsidian7.Notice(t("folder_migration.notices.files_moved_links_updated", {
             moved: String(moveResult.moved),
             path: this.newPath,
             links: String(linksUpdated)
@@ -7439,7 +7224,7 @@ var init_enhanced_folder_migration_dialog = __esm({
         document.head.appendChild(styleEl);
       }
       showErrorDialog(title, message) {
-        const modal = new import_obsidian8.Modal(this.app);
+        const modal = new import_obsidian7.Modal(this.app);
         modal.titleEl.setText(title);
         modal.contentEl.createEl("p", {
           text: message,
@@ -7462,6 +7247,101 @@ var init_enhanced_folder_migration_dialog = __esm({
       }
     };
     __name(EnhancedFolderMigrationDialog, "EnhancedFolderMigrationDialog");
+  }
+});
+
+// src/dialogs.ts
+function displayModal(app, title, paragraphs, note) {
+  const modal = new import_obsidian13.Modal(app);
+  modal.contentEl.addClass("nexus-ai-chat-importer-modal");
+  const titleEl = modal.contentEl.createEl("h2", {
+    text: title,
+    cls: "modal-title"
+  });
+  const contentContainer = modal.contentEl.createDiv({ cls: "modal-content" });
+  paragraphs.forEach((paragraph, paragraphIndex) => {
+    const paragraphWithSpacing = paragraph + "\n\n";
+    const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
+    const sections = paragraphWithSpacing.split("\n\n").filter((section) => section.trim() !== "");
+    sections.forEach((section, sectionIndex) => {
+      const sectionDiv = paragraphDiv.createDiv({ cls: "modal-section" });
+      const lines = section.split("\n").filter((line) => line.trim() !== "");
+      lines.forEach((line) => {
+        const lineDiv = sectionDiv.createDiv({ cls: "modal-line" });
+        let htmlContent = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        if (line.trim().endsWith(":") && line.trim().length < 30) {
+          lineDiv.innerHTML = `<strong class="section-header">${htmlContent}</strong>`;
+        } else if (line.trim().startsWith("\u2022") || line.trim().startsWith("-")) {
+          lineDiv.innerHTML = htmlContent;
+          lineDiv.addClass("modal-list-item");
+        } else {
+          lineDiv.innerHTML = htmlContent;
+        }
+      });
+      if (sectionIndex < sections.length - 1) {
+        paragraphDiv.createDiv({ cls: "modal-section-break" });
+      }
+    });
+  });
+  if (note) {
+    contentContainer.createDiv({ cls: "modal-major-break" });
+    const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
+    let noteContent = note.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    noteDiv.innerHTML = noteContent;
+  }
+  return modal;
+}
+function addButtons(modal, type, resolve, customLabels) {
+  const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
+  if (type === "information") {
+    const buttonLabel = (customLabels == null ? void 0 : customLabels.button1) || "Understood";
+    const button = buttonContainer.createEl("button", {
+      text: buttonLabel,
+      cls: "mod-cta"
+      // Obsidian's primary button class
+    });
+    button.addEventListener("click", () => {
+      modal.close();
+      resolve(true);
+    });
+  } else {
+    const noLabel = (customLabels == null ? void 0 : customLabels.button2) || "No";
+    const yesLabel = (customLabels == null ? void 0 : customLabels.button1) || "Yes";
+    const noButton = buttonContainer.createEl("button", {
+      text: noLabel,
+      cls: "mod-muted"
+      // Obsidian's secondary button class
+    });
+    noButton.addEventListener("click", () => {
+      modal.close();
+      resolve(false);
+    });
+    const yesButton = buttonContainer.createEl("button", {
+      text: yesLabel,
+      cls: "mod-cta"
+      // Obsidian's primary button class
+    });
+    yesButton.addEventListener("click", () => {
+      modal.close();
+      resolve(true);
+    });
+  }
+}
+async function showDialog(app, type, title, paragraphs, note, customLabels) {
+  return new Promise((resolve) => {
+    const modal = displayModal(app, title, paragraphs, note);
+    addButtons(modal, type, resolve, customLabels);
+    modal.open();
+  });
+}
+var import_obsidian13;
+var init_dialogs = __esm({
+  "src/dialogs.ts"() {
+    "use strict";
+    import_obsidian13 = require("obsidian");
+    __name(displayModal, "displayModal");
+    __name(addButtons, "addButtons");
+    __name(showDialog, "showDialog");
   }
 });
 
@@ -10958,7 +10838,7 @@ var upgrade_1_3_0_exports = {};
 __export(upgrade_1_3_0_exports, {
   Upgrade130: () => Upgrade130
 });
-var import_obsidian21, NormalizeLegacyConversationFolderOperation, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
+var import_obsidian21, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
 var init_upgrade_1_3_0 = __esm({
   "src/upgrade/versions/upgrade-1.3.0.ts"() {
     "use strict";
@@ -10967,67 +10847,6 @@ var init_upgrade_1_3_0 = __esm({
     init_date_parser();
     import_obsidian21 = require("obsidian");
     init_configure_folder_locations_dialog();
-    NormalizeLegacyConversationFolderOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "normalize-legacy-conversation-folder";
-        this.name = "Normalize Legacy Conversation Folder";
-        this.description = "Aligns conversation folder setting with legacy archiveFolder path for users upgrading from older versions.";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        var _a, _b;
-        const archiveFolder = (_a = context.plugin.settings.archiveFolder) == null ? void 0 : _a.trim();
-        const conversationFolder = (_b = context.plugin.settings.conversationFolder) == null ? void 0 : _b.trim();
-        const defaultConversationFolder = "Nexus/Conversations";
-        if (!archiveFolder) {
-          return false;
-        }
-        if (!conversationFolder) {
-          return true;
-        }
-        if (conversationFolder === archiveFolder) {
-          return false;
-        }
-        if (conversationFolder === defaultConversationFolder) {
-          return true;
-        }
-        const legacyFolder = context.plugin.app.vault.getAbstractFileByPath(archiveFolder);
-        if (legacyFolder instanceof import_obsidian21.TFolder && legacyFolder.children.length > 0) {
-          return true;
-        }
-        return false;
-      }
-      async execute(context) {
-        var _a;
-        const archiveFolder = (_a = context.plugin.settings.archiveFolder) == null ? void 0 : _a.trim();
-        if (!archiveFolder) {
-          return {
-            success: true,
-            message: "No legacy archive folder detected."
-          };
-        }
-        const previousConversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
-        context.plugin.settings.conversationFolder = archiveFolder;
-        await context.plugin.saveSettings();
-        return {
-          success: true,
-          message: `Conversation folder normalized: ${previousConversationFolder} -> ${archiveFolder}`,
-          details: [
-            "Setting updated only. No files were moved during this operation."
-          ]
-        };
-      }
-      async verify(context) {
-        var _a;
-        const archiveFolder = (_a = context.plugin.settings.archiveFolder) == null ? void 0 : _a.trim();
-        if (!archiveFolder) {
-          return true;
-        }
-        return context.plugin.settings.conversationFolder === archiveFolder;
-      }
-    };
-    __name(NormalizeLegacyConversationFolderOperation, "NormalizeLegacyConversationFolderOperation");
     ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -11943,7 +11762,6 @@ ${sampleText}`);
         super(...arguments);
         this.version = "1.3.0";
         this.automaticOperations = [
-          new NormalizeLegacyConversationFolderOperation(),
           new MigrateToSeparateFoldersOperation(),
           new ConvertToISO8601TimestampsOperation(),
           new FixFrontmatterAliasesOperation(),
@@ -12719,7 +12537,7 @@ init_i18n();
 init_constants();
 
 // src/ui/settings-tab.ts
-var import_obsidian12 = require("obsidian");
+var import_obsidian11 = require("obsidian");
 
 // src/ui/settings/support-section.ts
 var import_obsidian = require("obsidian");
@@ -12789,7 +12607,7 @@ var SupportSection = class extends BaseSettingsSection {
 __name(SupportSection, "SupportSection");
 
 // src/ui/settings/folder-settings-section.ts
-var import_obsidian9 = require("obsidian");
+var import_obsidian8 = require("obsidian");
 
 // src/dialogs/folder-migration-dialog.ts
 var import_obsidian2 = require("obsidian");
@@ -12960,7 +12778,6 @@ __name(FolderMigrationDialog, "FolderMigrationDialog");
 init_folder_tree_browser_modal();
 init_folder_validation();
 init_utils();
-init_dialogs();
 init_i18n();
 var FolderSettingsSection = class extends BaseSettingsSection {
   constructor() {
@@ -12972,7 +12789,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     let conversationFolderTextComponent;
-    new import_obsidian9.Setting(containerEl).setName(t("settings.folders.conversation_folder.name")).setDesc(t("settings.folders.conversation_folder.desc")).addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.conversation_folder.name")).setDesc(t("settings.folders.conversation_folder.desc")).addText((text) => {
       conversationFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.conversation_folder.placeholder")).setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -13001,15 +12818,8 @@ var FolderSettingsSection = class extends BaseSettingsSection {
         modal.open();
       });
     });
-    if (this.shouldShowLegacyPathRepair()) {
-      new import_obsidian9.Setting(containerEl).setName(t("settings.folders.legacy_path_repair.name")).setDesc(t("settings.folders.legacy_path_repair.desc")).addButton((button) => {
-        button.setButtonText(t("settings.folders.legacy_path_repair.button")).setTooltip(t("settings.folders.legacy_path_repair.button")).onClick(async () => {
-          await this.repairLegacyConversationPath();
-        });
-      });
-    }
     let reportFolderTextComponent;
-    new import_obsidian9.Setting(containerEl).setName(t("settings.folders.reports_folder.name")).setDesc(t("settings.folders.reports_folder.desc")).addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.reports_folder.name")).setDesc(t("settings.folders.reports_folder.desc")).addText((text) => {
       reportFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.reports_folder.placeholder")).setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -13039,7 +12849,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       });
     });
     let attachmentFolderTextComponent;
-    new import_obsidian9.Setting(containerEl).setName(t("settings.folders.attachment_folder.name")).setDesc(t("settings.folders.attachment_folder.desc")).addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.attachment_folder.name")).setDesc(t("settings.folders.attachment_folder.desc")).addText((text) => {
       attachmentFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.attachment_folder.placeholder")).setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -13088,7 +12898,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       return;
     }
     const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-    if (!oldFolder || !(oldFolder instanceof import_obsidian9.TFolder)) {
+    if (!oldFolder || !(oldFolder instanceof import_obsidian8.TFolder)) {
       this.plugin.settings[settingKey] = newPath;
       await this.plugin.saveSettings();
       return;
@@ -13100,7 +12910,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       return;
     }
     const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
-    if (newFolder && newFolder instanceof import_obsidian9.TFolder && newFolder.children.length > 0) {
+    if (newFolder && newFolder instanceof import_obsidian8.TFolder && newFolder.children.length > 0) {
       this.showErrorDialog(
         t("folder_migration.error_target_not_empty.title"),
         t("folder_migration.error_target_not_empty.message", { path: newPath })
@@ -13147,81 +12957,6 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       dialog.open();
     }
   }
-  shouldShowLegacyPathRepair() {
-    var _a, _b;
-    const archiveFolder = (_a = this.plugin.settings.archiveFolder) == null ? void 0 : _a.trim();
-    const conversationFolder = (_b = this.plugin.settings.conversationFolder) == null ? void 0 : _b.trim();
-    return !!archiveFolder && !!conversationFolder && archiveFolder !== conversationFolder;
-  }
-  async repairLegacyConversationPath() {
-    var _a;
-    const archiveFolder = (_a = this.plugin.settings.archiveFolder) == null ? void 0 : _a.trim();
-    if (!archiveFolder) {
-      return;
-    }
-    const previousConversationFolder = this.plugin.settings.conversationFolder;
-    const confirmed = await showDialog(
-      this.plugin.app,
-      "confirmation",
-      t("settings.folders.legacy_path_repair.confirm_title"),
-      [t("settings.folders.legacy_path_repair.confirm_message", {
-        archive: archiveFolder,
-        current: previousConversationFolder
-      })],
-      void 0,
-      {
-        button1: t("common.buttons.proceed"),
-        button2: t("common.buttons.cancel")
-      }
-    );
-    if (!confirmed) {
-      return;
-    }
-    this.plugin.settings.conversationFolder = archiveFolder;
-    await this.plugin.saveSettings();
-    new import_obsidian9.Notice(t("settings.folders.legacy_path_repair.fixed_notice", { path: archiveFolder }));
-    this.redraw();
-    if (!previousConversationFolder || previousConversationFolder === archiveFolder) {
-      return;
-    }
-    const moveConfirmed = await showDialog(
-      this.plugin.app,
-      "confirmation",
-      t("settings.folders.legacy_path_repair.move_title"),
-      [t("settings.folders.legacy_path_repair.move_message", {
-        from: previousConversationFolder,
-        to: archiveFolder
-      })],
-      void 0,
-      {
-        button1: t("common.buttons.proceed"),
-        button2: t("common.buttons.cancel")
-      }
-    );
-    if (!moveConfirmed) {
-      return;
-    }
-    const oldFolder = this.plugin.app.vault.getAbstractFileByPath(previousConversationFolder);
-    if (!oldFolder || !(oldFolder instanceof import_obsidian9.TFolder) || oldFolder.children.length === 0) {
-      new import_obsidian9.Notice(t("settings.folders.legacy_path_repair.no_files_notice"));
-      return;
-    }
-    try {
-      const result = await moveAndMergeFolders(oldFolder, archiveFolder, this.plugin.app.vault);
-      await this.updateLinksAfterMove("conversationFolder", previousConversationFolder, archiveFolder);
-      if (result.success && result.skipped === 0) {
-        new import_obsidian9.Notice(t("settings.folders.legacy_path_repair.move_success_notice", { path: archiveFolder }));
-      } else {
-        this.showMergeResultDialog(result, previousConversationFolder, archiveFolder);
-      }
-    } catch (error) {
-      this.plugin.logger.error("[FolderSettings] Legacy path repair move failed:", error);
-      this.showErrorDialog(
-        t("folder_migration.error_migration_failed.title"),
-        t("folder_migration.error_migration_failed.message_move", { error: error.message || String(error) })
-      );
-    }
-  }
   /**
    * Handle migration action (extracted for reuse between dialog types)
    */
@@ -13237,7 +12972,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
           await this.updateLinksAfterMove(settingKey, oldPath, newPath);
         }
         if (result.success && result.skipped === 0) {
-          new import_obsidian9.Notice(`\u2705 Files moved to ${newPath}`);
+          new import_obsidian8.Notice(`\u2705 Files moved to ${newPath}`);
         } else {
           this.showMergeResultDialog(result, oldPath, newPath);
         }
@@ -13264,14 +12999,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       }
     } catch (error) {
       this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
-      new import_obsidian9.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
+      new import_obsidian8.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
     }
   }
   /**
    * Show dialog with merge result details when files were skipped or errors occurred
    */
   showMergeResultDialog(result, _oldPath, _newPath) {
-    const modal = new import_obsidian9.Modal(this.plugin.app);
+    const modal = new import_obsidian8.Modal(this.plugin.app);
     modal.titleEl.setText(t("folder_migration.result_dialog.title"));
     const { contentEl } = modal;
     const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
@@ -13346,7 +13081,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     modal.open();
   }
   showErrorDialog(title, message) {
-    const modal = new import_obsidian9.Modal(this.plugin.app);
+    const modal = new import_obsidian8.Modal(this.plugin.app);
     modal.titleEl.setText(title);
     modal.contentEl.createEl("p", {
       text: message,
@@ -13367,7 +13102,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
 __name(FolderSettingsSection, "FolderSettingsSection");
 
 // src/ui/settings/display-settings-section.ts
-var import_obsidian10 = require("obsidian");
+var import_obsidian9 = require("obsidian");
 init_i18n();
 var DisplaySettingsSection = class extends BaseSettingsSection {
   constructor() {
@@ -13379,7 +13114,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-date-prefix-section" });
-    const setting = new import_obsidian10.Setting(sectionContainer).setName(t("settings.display.add_date_prefix.name")).setDesc(t("settings.display.add_date_prefix.desc"));
+    const setting = new import_obsidian9.Setting(sectionContainer).setName(t("settings.display.add_date_prefix.name")).setDesc(t("settings.display.add_date_prefix.desc"));
     if (this.plugin.settings.addDatePrefix) {
       setting.controlEl.createSpan({
         text: t("settings.display.add_date_prefix.format_label"),
@@ -13406,7 +13141,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
 __name(DisplaySettingsSection, "DisplaySettingsSection");
 
 // src/ui/settings/message-date-format-section.ts
-var import_obsidian11 = require("obsidian");
+var import_obsidian10 = require("obsidian");
 init_constants();
 init_utils();
 init_i18n();
@@ -13420,7 +13155,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-message-date-section" });
-    new import_obsidian11.Setting(sectionContainer).setName(t("settings.timestamps.custom_format.name")).setDesc(t("settings.timestamps.custom_format.desc")).addToggle(
+    new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.custom_format.name")).setDesc(t("settings.timestamps.custom_format.desc")).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.useCustomMessageTimestampFormat).onChange(async (value) => {
         this.plugin.settings.useCustomMessageTimestampFormat = value;
         await this.plugin.saveSettings();
@@ -13428,7 +13163,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
       })
     );
     if (this.plugin.settings.useCustomMessageTimestampFormat) {
-      new import_obsidian11.Setting(sectionContainer).setName(t("settings.timestamps.timestamp_format.name")).setDesc(t("settings.timestamps.timestamp_format.desc")).addDropdown((dropdown) => {
+      new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.timestamp_format.name")).setDesc(t("settings.timestamps.timestamp_format.desc")).addDropdown((dropdown) => {
         Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
           dropdown.addOption(key, config.label);
         });
@@ -13464,7 +13199,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
 __name(MessageDateFormatSection, "MessageDateFormatSection");
 
 // src/ui/settings-tab.ts
-var NexusAiChatImporterPluginSettingTab = class extends import_obsidian12.PluginSettingTab {
+var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -13517,7 +13252,7 @@ var CommandRegistry = class {
 __name(CommandRegistry, "CommandRegistry");
 
 // src/events/event-handlers.ts
-var import_obsidian13 = require("obsidian");
+var import_obsidian12 = require("obsidian");
 var EventHandlers = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -13525,7 +13260,7 @@ var EventHandlers = class {
   registerEvents() {
     this.plugin.registerEvent(
       this.plugin.app.vault.on("delete", async (file) => {
-        if (file instanceof import_obsidian13.TFile) {
+        if (file instanceof import_obsidian12.TFile) {
           await this.plugin.getFileService().handleConversationFileDeletion(file);
         }
       })

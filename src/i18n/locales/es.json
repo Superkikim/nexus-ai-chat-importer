@@ -198,18 +198,6 @@
         "desc": "Dónde se almacenan los adjuntos (⚠️ Excluir de la sincronización para ahorrar espacio)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Explorar carpetas o crear una nueva"
-      },
-      "legacy_path_repair": {
-        "name": "Reparar ruta heredada (1.2.x)",
-        "desc": "Corrige la carpeta de conversaciones al actualizar desde versiones antiguas con archiveFolder.",
-        "button": "Reparar ruta heredada",
-        "confirm_title": "Reparar carpeta heredada de conversaciones",
-        "confirm_message": "¿Usar la carpeta heredada `{{archive}}` como carpeta de conversaciones en lugar de `{{current}}`?",
-        "fixed_notice": "Carpeta de conversaciones corregida: {{path}}",
-        "move_title": "¿Mover archivos a la carpeta corregida?",
-        "move_message": "¿Quieres mover ahora los archivos de `{{from}}` a `{{to}}`?",
-        "no_files_notice": "No se encontraron archivos en la carpeta anterior de conversaciones.",
-        "move_success_notice": "Archivos movidos a {{path}}"
       }
     },
     "display": {

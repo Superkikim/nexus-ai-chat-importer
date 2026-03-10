@@ -198,18 +198,6 @@
         "desc": "添付ファイルの保存先（⚠️ 容量節約のため同期から除外することを推奨）",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "フォルダーを参照するか、新しいフォルダーを作成"
-      },
-      "legacy_path_repair": {
-        "name": "旧パス修復 (1.2.x)",
-        "desc": "archiveFolder を使っていた旧バージョンからのアップグレード時に会話フォルダーを修正します。",
-        "button": "旧パスを修復",
-        "confirm_title": "旧会話フォルダーを修復",
-        "confirm_message": "会話フォルダーとして `{{current}}` の代わりに旧フォルダー `{{archive}}` を使用しますか？",
-        "fixed_notice": "会話フォルダーを修復しました: {{path}}",
-        "move_title": "修復後フォルダーへファイルを移動しますか？",
-        "move_message": "`{{from}}` から `{{to}}` へ今すぐファイルを移動しますか？",
-        "no_files_notice": "以前の会話フォルダーにファイルが見つかりませんでした。",
-        "move_success_notice": "ファイルを {{path}} に移動しました"
       }
     },
     "display": {

@@ -198,18 +198,6 @@
         "desc": "附件存放位置（⚠️ 请将其排除在同步范围之外以节省空间）",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "浏览文件夹或新建文件夹"
-      },
-      "legacy_path_repair": {
-        "name": "修复旧版路径 (1.2.x)",
-        "desc": "修复从使用 archiveFolder 的旧版本升级后会话文件夹路径错误的问题。",
-        "button": "修复旧版路径",
-        "confirm_title": "修复旧版会话文件夹",
-        "confirm_message": "是否将旧路径 `{{archive}}` 作为会话文件夹，而不是 `{{current}}`？",
-        "fixed_notice": "会话文件夹已修复：{{path}}",
-        "move_title": "要将文件移动到修复后的文件夹吗？",
-        "move_message": "是否现在将文件从 `{{from}}` 移动到 `{{to}}`？",
-        "no_files_notice": "在之前的会话文件夹中未找到文件。",
-        "move_success_notice": "文件已移动到 {{path}}"
       }
     },
     "display": {

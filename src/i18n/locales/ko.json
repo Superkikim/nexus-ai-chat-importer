@@ -198,18 +198,6 @@
         "desc": "첨부 파일이 저장되는 위치 (⚠️ 용량 절약을 위해 동기화에서 제외하세요)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "폴더 찾아보기 또는 새 폴더 만들기"
-      },
-      "legacy_path_repair": {
-        "name": "레거시 경로 복구 (1.2.x)",
-        "desc": "archiveFolder 기반 구버전에서 업그레이드한 경우 대화 폴더 경로를 복구합니다.",
-        "button": "레거시 경로 복구",
-        "confirm_title": "레거시 대화 폴더 복구",
-        "confirm_message": "현재 `{{current}}` 대신 레거시 폴더 `{{archive}}`를 대화 폴더로 사용할까요?",
-        "fixed_notice": "대화 폴더가 복구되었습니다: {{path}}",
-        "move_title": "파일을 복구된 폴더로 이동할까요?",
-        "move_message": "지금 `{{from}}`에서 `{{to}}`로 파일을 이동하시겠습니까?",
-        "no_files_notice": "이전 대화 폴더에서 파일을 찾지 못했습니다.",
-        "move_success_notice": "파일이 {{path}}(으)로 이동되었습니다"
       }
     },
     "display": {
