@@ -54,7 +54,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         contentEl.addClass('nexus-file-selection-dialog');
 
         // Set title in modal title bar
-        titleEl.setText(t('file_selection.title', { provider: this.provider.charAt(0).toUpperCase() + this.provider.slice(1) }));
+        titleEl.setText(this.getDialogTitle());
 
         // Import mode selection
         this.createImportModeSection(contentEl);
@@ -171,8 +171,8 @@ export class EnhancedFileSelectionDialog extends Modal {
 
         const dropText = dropZone.createEl("div", { cls: 'nexus-drop-zone-text' });
 
-        // Different text for Gemini (supports JSON index)
-        if (this.provider === 'gemini') {
+        // Gemini and auto-detection modes both allow optional JSON index files.
+        if (this.provider === 'gemini' || this.provider === 'auto') {
             dropText.textContent = t('file_selection.file_area.drop_text_gemini');
         } else {
             dropText.textContent = t('file_selection.file_area.drop_text_default');
@@ -180,7 +180,7 @@ export class EnhancedFileSelectionDialog extends Modal {
 
         const dropSubtext = dropZone.createEl("div", { cls: 'nexus-drop-zone-subtext' });
 
-        if (this.provider === 'gemini') {
+        if (this.provider === 'gemini' || this.provider === 'auto') {
             dropSubtext.textContent = t('file_selection.file_area.drop_subtext_gemini');
         } else {
             dropSubtext.textContent = t('file_selection.file_area.drop_subtext_default');
@@ -189,14 +189,14 @@ export class EnhancedFileSelectionDialog extends Modal {
         // File input (hidden)
         const fileInput = section.createEl("input", { type: "file" });
 
-        // For Gemini, accept both ZIP and JSON
-        if (this.provider === 'gemini') {
+        // Gemini and auto-detection modes accept both ZIP and optional JSON index files.
+        if (this.provider === 'gemini' || this.provider === 'auto') {
             fileInput.accept = ".zip,.json";
         } else {
             fileInput.accept = ".zip";
         }
 
-        const allowMultipleSelection = this.provider === 'gemini' || !this.isMobileRuntime();
+        const allowMultipleSelection = this.provider === 'gemini' || this.provider === 'auto' || !this.isMobileRuntime();
         fileInput.multiple = allowMultipleSelection;
         fileInput.style.display = "none";
 
@@ -277,8 +277,8 @@ export class EnhancedFileSelectionDialog extends Modal {
         if (event.dataTransfer?.files) {
             const files = Array.from(event.dataTransfer.files).filter(file => {
                 const fileName = file.name.toLowerCase();
-                // For Gemini, allow both ZIP and JSON files
-                if (this.provider === 'gemini') {
+                // Gemini and auto-detection modes allow both ZIP and JSON files.
+                if (this.provider === 'gemini' || this.provider === 'auto') {
                     return fileName.endsWith('.zip') || fileName.endsWith('.json');
                 }
                 // For other providers, only ZIP
@@ -356,6 +356,13 @@ export class EnhancedFileSelectionDialog extends Modal {
 
     private updateImportModeDescription() {
         // Could add dynamic description updates here if needed
+    }
+
+    private getDialogTitle(): string {
+        if (this.provider === 'auto') {
+            return t('commands.import_conversations.name');
+        }
+        return t('file_selection.title', { provider: this.provider.charAt(0).toUpperCase() + this.provider.slice(1) });
     }
 
     private async handleImport() {

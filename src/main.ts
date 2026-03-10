@@ -29,7 +29,6 @@ import { StorageService } from "./services/storage-service";
 import { FileService } from "./services/file-service";
 import { IncrementalUpgradeManager } from "./upgrade/incremental-upgrade-manager";
 import { Logger } from "./logger";
-import { ProviderSelectionDialog } from "./dialogs/provider-selection-dialog";
 import { EnhancedFileSelectionDialog } from "./dialogs/enhanced-file-selection-dialog";
 import { ConversationSelectionDialog } from "./dialogs/conversation-selection-dialog";
 import { InstallationWelcomeDialog } from "./dialogs/installation-welcome-dialog";
@@ -289,8 +288,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     }
 
     /**
-     * Show provider selection dialog and then file selection
-     * Ensures migration is complete before allowing import
+     * Entry point for imports.
+     * Provider is auto-detected from the first supported selected ZIP.
      */
     async showProviderSelectionDialog(): Promise<void> {
         // Check if migration is needed before allowing import
@@ -305,34 +304,22 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // If upgradeResult.success === true: migration completed successfully
         // In both cases, continue with import
 
-        const providerRegistry = createProviderRegistry(this);
+        const importFlowLogger = this.logger.child("ImportFlow");
+        importFlowLogger.info("Opening file selection dialog with provider auto-detection", {
+            isMobile: this.isMobileTaskQueueMode(),
+        });
 
-        new ProviderSelectionDialog(
-            this.app,
-            providerRegistry,
-            (selectedProvider: string) => {
-                const importFlowLogger = this.logger.child("ImportFlow");
-                importFlowLogger.info("Provider selected from dialog", {
-                    selectedProvider,
-                    isMobile: this.isMobileTaskQueueMode(),
-                });
-
-                try {
-                    this.showEnhancedFileSelectionDialog(selectedProvider);
-                    importFlowLogger.info("Enhanced file selection dialog opened", {
-                        selectedProvider,
-                    });
-                } catch (error) {
-                    const message = error instanceof Error ? error.message : String(error);
-                    importFlowLogger.error("Failed to open enhanced file selection dialog", {
-                        selectedProvider,
-                        message,
-                        stack: error instanceof Error ? error.stack : undefined,
-                    });
-                    new Notice(t("notices.import_error", { error: message }));
-                }
-            }
-        ).open();
+        try {
+            this.showEnhancedFileSelectionDialog("auto");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            importFlowLogger.error("Failed to open enhanced file selection dialog", {
+                selectedProvider: "auto",
+                message,
+                stack: error instanceof Error ? error.stack : undefined,
+            });
+            new Notice(t("notices.import_error", { error: message }));
+        }
     }
 
     /**
@@ -385,9 +372,14 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             return;
         }
 
-        if (lockedProvider.provider !== provider) {
+        if (provider !== "auto" && lockedProvider.provider !== provider) {
             this.logger.child("ImportFlow").warn("Provider selection overridden by first supported archive", {
                 selectedProvider: provider,
+                lockedProvider: lockedProvider.provider,
+                lockSourceFile: lockedProvider.fileName,
+            });
+        } else if (provider === "auto") {
+            this.logger.child("ImportFlow").info("Provider auto-detected from selected archives", {
                 lockedProvider: lockedProvider.provider,
                 lockSourceFile: lockedProvider.fileName,
             });

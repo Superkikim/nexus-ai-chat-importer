@@ -12512,7 +12512,7 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian33 = require("obsidian");
+var import_obsidian32 = require("obsidian");
 init_i18n();
 init_constants();
 
@@ -21840,80 +21840,10 @@ __name(IncrementalUpgradeManager, "IncrementalUpgradeManager");
 // src/main.ts
 init_logger();
 
-// src/dialogs/provider-selection-dialog.ts
+// src/dialogs/enhanced-file-selection-dialog.ts
 var import_obsidian26 = require("obsidian");
 init_i18n();
-var ProviderSelectionDialog = class extends import_obsidian26.Modal {
-  constructor(app, providerRegistry, onProviderSelected) {
-    super(app);
-    this.selectedProvider = null;
-    this.onProviderSelected = onProviderSelected;
-    this.providers = this.getAvailableProviders(providerRegistry);
-  }
-  getAvailableProviders(registry) {
-    const providers = [];
-    if (registry.getAdapter("chatgpt")) {
-      providers.push({
-        id: "chatgpt",
-        name: t("provider_selection.providers.chatgpt.name"),
-        description: t("provider_selection.providers.chatgpt.description"),
-        fileFormats: [t("provider_selection.providers.chatgpt.file_formats_0")]
-      });
-    }
-    if (registry.getAdapter("claude")) {
-      providers.push({
-        id: "claude",
-        name: t("provider_selection.providers.claude.name"),
-        description: t("provider_selection.providers.claude.description"),
-        fileFormats: [
-          t("provider_selection.providers.claude.file_formats_0"),
-          t("provider_selection.providers.claude.file_formats_1")
-        ]
-      });
-    }
-    if (registry.getAdapter("lechat")) {
-      providers.push({
-        id: "lechat",
-        name: t("provider_selection.providers.lechat.name"),
-        description: t("provider_selection.providers.lechat.description"),
-        fileFormats: [t("provider_selection.providers.lechat.file_formats_0")]
-      });
-    }
-    return providers;
-  }
-  onOpen() {
-    const { contentEl, modalEl } = this;
-    contentEl.empty();
-    modalEl.addClass("nexus-provider-selection-dialog");
-    contentEl.addClass("nexus-ai-chat-importer-modal");
-    contentEl.createEl("h2", { text: t("provider_selection.title") });
-    this.providers.forEach((provider) => {
-      new import_obsidian26.Setting(contentEl).setName(provider.name).setDesc(this.createProviderDescription(provider)).addButton((button) => {
-        button.setButtonText(t("provider_selection.buttons.select")).setCta().onClick(() => {
-          this.selectedProvider = provider.id;
-          this.close();
-          this.onProviderSelected(provider.id);
-        });
-      });
-    });
-    const buttonContainer = contentEl.createDiv({ cls: "nexus-dialog-actions" });
-    const cancelButton = buttonContainer.createEl("button", { text: t("provider_selection.buttons.cancel") });
-    cancelButton.onclick = () => this.close();
-  }
-  createProviderDescription(provider) {
-    return provider.description;
-  }
-  onClose() {
-    const { contentEl } = this;
-    contentEl.empty();
-  }
-};
-__name(ProviderSelectionDialog, "ProviderSelectionDialog");
-
-// src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian27 = require("obsidian");
-init_i18n();
-var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
+var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -21930,7 +21860,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     contentEl.empty();
     modalEl.addClass("nexus-file-selection-dialog");
     contentEl.addClass("nexus-file-selection-dialog");
-    titleEl.setText(t("file_selection.title", { provider: this.provider.charAt(0).toUpperCase() + this.provider.slice(1) }));
+    titleEl.setText(this.getDialogTitle());
     this.createImportModeSection(contentEl);
     this.createFileSelectionArea(contentEl);
     this.createFilePreviewArea(contentEl);
@@ -22010,24 +21940,24 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     const dropIcon = dropZone.createEl("div", { cls: "nexus-drop-zone-icon" });
     dropIcon.textContent = "\u{1F4C1}";
     const dropText = dropZone.createEl("div", { cls: "nexus-drop-zone-text" });
-    if (this.provider === "gemini") {
+    if (this.provider === "gemini" || this.provider === "auto") {
       dropText.textContent = t("file_selection.file_area.drop_text_gemini");
     } else {
       dropText.textContent = t("file_selection.file_area.drop_text_default");
     }
     const dropSubtext = dropZone.createEl("div", { cls: "nexus-drop-zone-subtext" });
-    if (this.provider === "gemini") {
+    if (this.provider === "gemini" || this.provider === "auto") {
       dropSubtext.textContent = t("file_selection.file_area.drop_subtext_gemini");
     } else {
       dropSubtext.textContent = t("file_selection.file_area.drop_subtext_default");
     }
     const fileInput = section.createEl("input", { type: "file" });
-    if (this.provider === "gemini") {
+    if (this.provider === "gemini" || this.provider === "auto") {
       fileInput.accept = ".zip,.json";
     } else {
       fileInput.accept = ".zip";
     }
-    const allowMultipleSelection = this.provider === "gemini" || !this.isMobileRuntime();
+    const allowMultipleSelection = this.provider === "gemini" || this.provider === "auto" || !this.isMobileRuntime();
     fileInput.multiple = allowMultipleSelection;
     fileInput.style.display = "none";
     dropZone.addEventListener("click", () => fileInput.click());
@@ -22089,7 +22019,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     if ((_a = event.dataTransfer) == null ? void 0 : _a.files) {
       const files = Array.from(event.dataTransfer.files).filter((file) => {
         const fileName = file.name.toLowerCase();
-        if (this.provider === "gemini") {
+        if (this.provider === "gemini" || this.provider === "auto") {
           return fileName.endsWith(".zip") || fileName.endsWith(".json");
         }
         return fileName.endsWith(".zip");
@@ -22102,7 +22032,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     }
   }
   isMobileRuntime() {
-    return import_obsidian27.Platform.isMobileApp || import_obsidian27.Platform.isMobile;
+    return import_obsidian26.Platform.isMobileApp || import_obsidian26.Platform.isMobile;
   }
   enforceMobileSingleZipSelection(files) {
     if (!this.isMobileRuntime()) {
@@ -22114,7 +22044,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     }
     const firstZip = zipFiles[0];
     const nonZipFiles = files.filter((file) => !file.name.toLowerCase().endsWith(".zip"));
-    new import_obsidian27.Notice(t("notices.import_mobile_single_zip_only"));
+    new import_obsidian26.Notice(t("notices.import_mobile_single_zip_only"));
     return [firstZip, ...nonZipFiles];
   }
   updateFilePreview() {
@@ -22150,6 +22080,12 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
     importButton.disabled = this.selectedFiles.length === 0;
   }
   updateImportModeDescription() {
+  }
+  getDialogTitle() {
+    if (this.provider === "auto") {
+      return t("commands.import_conversations.name");
+    }
+    return t("file_selection.title", { provider: this.provider.charAt(0).toUpperCase() + this.provider.slice(1) });
   }
   async handleImport() {
     var _a, _b;
@@ -22218,9 +22154,9 @@ var EnhancedFileSelectionDialog = class extends import_obsidian27.Modal {
 __name(EnhancedFileSelectionDialog, "EnhancedFileSelectionDialog");
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian28 = require("obsidian");
+var import_obsidian27 = require("obsidian");
 init_i18n();
-var ConversationSelectionDialog = class extends import_obsidian28.Modal {
+var ConversationSelectionDialog = class extends import_obsidian27.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -23097,10 +23033,10 @@ var ConversationSelectionDialog = class extends import_obsidian28.Modal {
 __name(ConversationSelectionDialog, "ConversationSelectionDialog");
 
 // src/dialogs/installation-welcome-dialog.ts
-var import_obsidian29 = require("obsidian");
+var import_obsidian28 = require("obsidian");
 init_support_box();
 init_i18n();
-var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
+var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
   constructor(app, version, onGetStarted) {
     super(app);
     this.version = version;
@@ -23269,11 +23205,11 @@ var InstallationWelcomeDialog = class extends import_obsidian29.Modal {
 __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 
 // src/dialogs/new-version-modal.ts
-var import_obsidian30 = require("obsidian");
+var import_obsidian29 = require("obsidian");
 init_support_box();
 init_constants();
 init_i18n();
-var NewVersionModal = class extends import_obsidian30.Modal {
+var NewVersionModal = class extends import_obsidian29.Modal {
   constructor(app, plugin, version, fallbackMessage) {
     super(app);
     this.plugin = plugin;
@@ -23304,7 +23240,7 @@ var NewVersionModal = class extends import_obsidian30.Modal {
     } catch (error) {
     }
     const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-    await import_obsidian30.MarkdownRenderer.render(
+    await import_obsidian29.MarkdownRenderer.render(
       this.app,
       message,
       contentDiv,
@@ -23423,7 +23359,7 @@ __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
 init_dialogs();
 
 // src/services/conversation-metadata-extractor.ts
-var import_obsidian31 = require("obsidian");
+var import_obsidian30 = require("obsidian");
 init_utils();
 init_logger();
 var ConversationMetadataExtractor = class {
@@ -23455,8 +23391,8 @@ var ConversationMetadataExtractor = class {
       }
     } else {
       for await (const rawConversation of extractConversationsStream(zip, {
-        mobileRuntime: import_obsidian31.Platform.isMobile,
-        enforceChunkedForLargeJsonOnMobile: import_obsidian31.Platform.isMobile,
+        mobileRuntime: import_obsidian30.Platform.isMobile,
+        enforceChunkedForLargeJsonOnMobile: import_obsidian30.Platform.isMobile,
         largeJsonThresholdBytes: 32 * 1024 * 1024,
         streamYieldEvery: 25
       })) {
@@ -23954,12 +23890,12 @@ var ConversationMetadataExtractor = class {
 __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian32 = require("obsidian");
+var import_obsidian31 = require("obsidian");
 init_support_box();
 init_logger();
 init_i18n();
 var logger5 = new Logger();
-var ImportCompletionDialog = class extends import_obsidian32.Modal {
+var ImportCompletionDialog = class extends import_obsidian31.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -24187,7 +24123,7 @@ __name(ImportCompletionDialog, "ImportCompletionDialog");
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -24351,40 +24287,29 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     (_a = settingsApi.openTabById) == null ? void 0 : _a.call(settingsApi, this.manifest.id);
   }
   /**
-   * Show provider selection dialog and then file selection
-   * Ensures migration is complete before allowing import
+   * Entry point for imports.
+   * Provider is auto-detected from the first supported selected ZIP.
    */
   async showProviderSelectionDialog() {
     const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
     if (upgradeResult !== null && !upgradeResult.success) {
       return;
     }
-    const providerRegistry = createProviderRegistry(this);
-    new ProviderSelectionDialog(
-      this.app,
-      providerRegistry,
-      (selectedProvider) => {
-        const importFlowLogger = this.logger.child("ImportFlow");
-        importFlowLogger.info("Provider selected from dialog", {
-          selectedProvider,
-          isMobile: this.isMobileTaskQueueMode()
-        });
-        try {
-          this.showEnhancedFileSelectionDialog(selectedProvider);
-          importFlowLogger.info("Enhanced file selection dialog opened", {
-            selectedProvider
-          });
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          importFlowLogger.error("Failed to open enhanced file selection dialog", {
-            selectedProvider,
-            message,
-            stack: error instanceof Error ? error.stack : void 0
-          });
-          new import_obsidian33.Notice(t("notices.import_error", { error: message }));
-        }
-      }
-    ).open();
+    const importFlowLogger = this.logger.child("ImportFlow");
+    importFlowLogger.info("Opening file selection dialog with provider auto-detection", {
+      isMobile: this.isMobileTaskQueueMode()
+    });
+    try {
+      this.showEnhancedFileSelectionDialog("auto");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      importFlowLogger.error("Failed to open enhanced file selection dialog", {
+        selectedProvider: "auto",
+        message,
+        stack: error instanceof Error ? error.stack : void 0
+      });
+      new import_obsidian32.Notice(t("notices.import_error", { error: message }));
+    }
   }
   /**
    * Show enhanced file selection dialog with import mode choice
@@ -24416,22 +24341,27 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         selectedZipCount: zipFiles.length,
         keptFileName: zipFiles[0].name
       });
-      new import_obsidian33.Notice(t("notices.import_mobile_single_zip_only"));
+      new import_obsidian32.Notice(t("notices.import_mobile_single_zip_only"));
       zipFiles = [zipFiles[0]];
     }
     const sortedZipFiles = sortFilesForImport(zipFiles);
     const lockedProvider = await this.resolveProviderLockFromSelection(sortedZipFiles);
     if (!lockedProvider) {
-      new import_obsidian33.Notice(
+      new import_obsidian32.Notice(
         t("notices.import_error_analyzing", {
           error: "No supported archive was detected in the selected ZIP files."
         })
       );
       return;
     }
-    if (lockedProvider.provider !== provider) {
+    if (provider !== "auto" && lockedProvider.provider !== provider) {
       this.logger.child("ImportFlow").warn("Provider selection overridden by first supported archive", {
         selectedProvider: provider,
+        lockedProvider: lockedProvider.provider,
+        lockSourceFile: lockedProvider.fileName
+      });
+    } else if (provider === "auto") {
+      this.logger.child("ImportFlow").info("Provider auto-detected from selected archives", {
         lockedProvider: lockedProvider.provider,
         lockSourceFile: lockedProvider.fileName
       });
@@ -24439,7 +24369,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     const effectiveProvider = lockedProvider.provider;
     if (effectiveProvider === "gemini") {
       if (zipFiles.length === 0) {
-        new import_obsidian33.Notice(t("notices.import_no_zip_gemini"));
+        new import_obsidian32.Notice(t("notices.import_no_zip_gemini"));
         this.logger.warn("[Gemini] No ZIP files selected for import");
         return;
       }
@@ -24463,7 +24393,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
           }
         } catch (error) {
           this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
-          new import_obsidian33.Notice(t("notices.import_gemini_json_failed"));
+          new import_obsidian32.Notice(t("notices.import_gemini_json_failed"));
         }
       }
       this.currentGeminiIndex = index;
@@ -24479,7 +24409,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         this.importService.setGeminiIndex(null);
       }
       if (zipFiles.length === 0) {
-        new import_obsidian33.Notice(t("notices.import_no_zip"));
+        new import_obsidian32.Notice(t("notices.import_no_zip"));
         this.logger.warn(`[${effectiveProvider}] No ZIP files selected for import`);
         return;
       }
@@ -24511,7 +24441,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         provider,
         fileCount: files.length
       });
-      new import_obsidian33.Notice(t("notices.import_analyzing", { count: String(files.length) }));
+      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -24536,7 +24466,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian33.Notice(t("notices.import_no_supported_archives", { provider }));
+        new import_obsidian32.Notice(t("notices.import_no_supported_archives", { provider }));
         return;
       }
       const operationReport = new ImportReport();
@@ -24544,7 +24474,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian33.Notice(t("notices.import_no_new"));
+        new import_obsidian32.Notice(t("notices.import_no_new"));
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, extractionResult.analysisInfo, extractionResult.fileStats, false);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
@@ -24554,7 +24484,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       const allIds = extractionResult.conversations.map((c) => c.id);
       const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
       const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
-      new import_obsidian33.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
+      new import_obsidian32.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -24583,11 +24513,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian33.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "import-all");
-      new import_obsidian33.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       await this.runPostImportCleanup("import-all");
     }
@@ -24725,13 +24655,13 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian33.Notice(t("notices.import_completed_fallback", {
+      new import_obsidian32.Notice(t("notices.import_completed_fallback", {
         created: String(operationReport.getCreatedCount()),
         updated: String(operationReport.getUpdatedCount())
       }));
     }
     if (skippedUnsupported > 0) {
-      new import_obsidian33.Notice(
+      new import_obsidian32.Notice(
         `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
         5e3
       );
@@ -24750,7 +24680,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
           selectedFileCount: files.length,
           keptFileName: (_b = (_a = mobileFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
         });
-        new import_obsidian33.Notice(t("notices.import_mobile_single_zip_only"));
+        new import_obsidian32.Notice(t("notices.import_mobile_single_zip_only"));
       }
       this.setImportCheckpoint({
         operation: "selective-analysis",
@@ -24762,7 +24692,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         provider,
         fileCount: mobileFiles.length
       });
-      new import_obsidian33.Notice(t("notices.import_analyzing", { count: String(mobileFiles.length) }));
+      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(mobileFiles.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -24787,11 +24717,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian33.Notice(t("notices.import_no_supported_archives", { provider }));
+        new import_obsidian32.Notice(t("notices.import_no_supported_archives", { provider }));
         return;
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian33.Notice(t("notices.import_no_new"));
+        new import_obsidian32.Notice(t("notices.import_no_new"));
         const operationReport = new ImportReport();
         const reportPath = await this.writeConsolidatedReport(
           operationReport,
@@ -24825,7 +24755,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       ).open();
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-analysis");
-      new import_obsidian33.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
     }
   }
   /**
@@ -24844,14 +24774,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (result.selectedIds.length === 0) {
-        new import_obsidian33.Notice(t("notices.import_no_selected"));
+        new import_obsidian32.Notice(t("notices.import_no_selected"));
         const reportPath2 = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
         if (reportPath2) {
           this.showImportCompletionDialog(operationReport, reportPath2);
         }
         return;
       }
-      new import_obsidian33.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
+      new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
       const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
       const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
       this.setImportCheckpoint({
@@ -24872,11 +24802,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian33.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-import");
-      new import_obsidian33.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       await this.runPostImportCleanup("selective-import");
     }
@@ -24899,7 +24829,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian33.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian33.Notice(t("notices.report_failed"));
+      new import_obsidian32.Notice(t("notices.report_failed"));
       return "";
     }
     const now = Date.now() / 1e3;
@@ -24992,7 +24922,7 @@ ${report.generateMobileIndexContent(files, links)}
     } catch (error) {
       this.logger.error(`Failed to write consolidated reports`, error);
       this.logger.error("Full error:", error);
-      new import_obsidian33.Notice(t("notices.report_failed"));
+      new import_obsidian32.Notice(t("notices.report_failed"));
       return "";
     }
   }
@@ -25062,7 +24992,7 @@ ${report.generateMobileIndexContent(files, links)}
     return conversationsByFile;
   }
   isMobileTaskQueueMode() {
-    return import_obsidian33.Platform.isMobileApp || import_obsidian33.Platform.isMobile;
+    return import_obsidian32.Platform.isMobileApp || import_obsidian32.Platform.isMobile;
   }
   async resolveProviderLockFromSelection(files) {
     const providerRegistry = createProviderRegistry(this);
@@ -25234,7 +25164,7 @@ ${report.generateMobileIndexContent(files, links)}
         );
       } catch (error) {
         this.logger.error(`Error processing file ${file.name}:`, error);
-        new import_obsidian33.Notice(t("notices.import_error_file", { filename: file.name }));
+        new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
       } finally {
         if (mobileTaskQueueMode) {
           this.importService.clearAttachmentMap();
@@ -25298,7 +25228,7 @@ ${report.generateMobileIndexContent(files, links)}
         message: archive.message
       }))
     });
-    new import_obsidian33.Notice(
+    new import_obsidian32.Notice(
       `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,
       5e3
     );
