@@ -224,10 +224,11 @@ Want to reorganize? No problem!
 1. **Change a folder path** in settings
 2. **Click Save**
 3. **Choose what to do**:
-   - ✅ **Move files**: Everything moves automatically, links stay working
+   - ✅ **Move files**: Existing files are moved/merged to the new location
+     - For conversation/attachment folder moves, links are updated after migration
    - ❌ **Leave files**: They stay put (but won't be managed by the plugin anymore)
 
-> **💡 Pro tip:** The plugin is smart - it merges folders instead of overwriting, so your existing files are safe!
+> **💡 Pro tip:** The plugin uses move+merge (not blind overwrite). If the target folder is not empty, migration is blocked to prevent conflicts.
 
 ## 📤 Importing Conversations
 
@@ -328,7 +329,7 @@ Each import now writes three cross-linked reports:
 
 1. **Import Summary**
 - Global counters (files, conversations, attachments)
-- Per-archive status table
+- Per-archive status table (`processed` / `skipped`) with reason
 - Consolidated errors
 
 2. **Index Heavy**
@@ -410,7 +411,7 @@ Chat URL: https://chatgpt.com/c/abc123...
 >
 > Your message here...
 
-> [!nexus_assistant]
+> [!nexus_agent]
 > **Assistant** - 2024-01-15 14:31:05
 >
 > AI response here...
@@ -418,10 +419,10 @@ Chat URL: https://chatgpt.com/c/abc123...
 
 **Callout Types**:
 - 👤 **nexus_user**: Blue callouts for user messages
-- 🤖 **nexus_assistant**: Green callouts for AI responses
+- 🤖 **nexus_agent**: Green callouts for AI responses
 - 📎 **nexus_attachment**: Amber callouts for attachments
 - ✨ **nexus_artifact**: Purple callouts for Claude artifacts
-- 🪄 **nexus_prompt**: Red callouts for DALL-E prompts
+- 🪄 **nexus_prompt**: Red callouts for prompt blocks (including DALL-E prompts)
 
 **Viewing Modes**:
 - **Reading View**: Full visual experience with colored callouts
@@ -469,14 +470,14 @@ The timestamps shown in each message can be customized:
 
 **✅ DO**:
 - Add your own frontmatter fields and edit message content as needed
-- Manual edits are preserved during plugin migrations
-- Manual edits are lost if you reprocess/recreate a conversation note
+- Manual edits are usually preserved during migrations and incremental updates
+- Keep backups if you plan to reprocess/recreate existing notes
 - Use Reading View for best experience
 
 **❌ DON'T**:
 - Modify plugin-generated frontmatter fields (`nexus`, `plugin_version`, `provider`, `aliases`, `conversation_id`, `create_time`, `update_time`)
 - Delete message IDs (hidden in Reading View)
-- Remove messages - they'll be restored on reimport
+- Remove messages and expect skipped/incremental runs to always restore them automatically
 
 > **Why?** The plugin uses conversation_id and message IDs to detect updates and avoid duplicates. Modifying them breaks this functionality.
 
@@ -499,6 +500,8 @@ Attachments are organized by provider:
 <attachments>/chatgpt/images/dalle-abc123.png
 <attachments>/claude/artifacts/conversation-title/script_v1.py
 ```
+
+`conversation-title` follows the same naming rules as conversation notes (including date prefix if enabled).
 
 #### What Gets Imported
 
@@ -734,6 +737,7 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 - Verify selected ZIP files are from a supported provider
 - In plugin UI, provider is auto-detected from the first supported archive
 - In CLI, verify `--provider` matches the selected ZIP files
+- On mobile, only one ZIP is processed per import run
 - Check ZIP file is valid export
 - Review import report for errors
 
