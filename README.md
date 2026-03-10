@@ -101,6 +101,7 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - Unsupported ZIP files are classified earlier and skipped with clearer messaging
 - Large archive handling no longer relies on loading the whole ZIP into memory
 - CLI now uses the desktop ZIP backend reliably in Node.js and writes correct plugin version metadata
+- Legacy folder-path upgrades are now normalized (`archiveFolder` -> `conversationFolder`) for users coming from old versions
 
 ---
 
@@ -198,6 +199,8 @@ Choose where your files are stored:
 - **Conversations Folder**: Your chat notes (default: `Nexus/Conversations`)
 - **Attachments Folder**: Images, files, and Claude artifacts (default: `Nexus/Attachments`)
 - **Reports Folder**: Import summaries (default: `Nexus/Reports`)
+
+If available, use **Repair legacy path (1.2.x)** to fix an old upgrade where conversations stayed in legacy `archiveFolder` while settings pointed elsewhere.
 
 **💡 Tip:** You can organize these folders however you like! Put them all together, or spread them across your vault.
 
@@ -760,6 +763,12 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 - On mobile, only one ZIP is processed per import run
 - Check ZIP file is valid export
 - Review import report for errors
+
+**Conversations missing after upgrade from very old versions (1.2.x / 1.3.x)**:
+- Open Settings -> Folder Structure
+- Use `Repair legacy path (1.2.x)` if shown
+- This restores `conversationFolder` from legacy `archiveFolder`
+- If needed, move conversation files manually into the configured conversation folder
 
 **Archive is skipped as unsupported**:
 - This means the file does not match a supported export structure

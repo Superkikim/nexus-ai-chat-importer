@@ -42,6 +42,8 @@
 - Large archive handling no longer relies on full in-memory ZIP loading
 - Mobile logs now expose precise import phases (scan, metadata, attachment map, streaming import) to improve crash diagnostics
 - CLI now forces the desktop ZIP reader path in Node.js and stamps notes with the current plugin version
+- Fixed legacy folder-path upgrades (`archiveFolder` -> `conversationFolder`) for users jumping from older versions
+- Added in-settings recovery action: **Repair legacy path (1.2.x)** for users already affected before this fix
 
 ---
 

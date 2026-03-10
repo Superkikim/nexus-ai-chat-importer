@@ -198,6 +198,18 @@
         "desc": "Dove vengono archiviati gli allegati (⚠️ Escludere dalla sincronizzazione per risparmiare spazio)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Sfoglia le cartelle o creane una nuova"
+      },
+      "legacy_path_repair": {
+        "name": "Ripara percorso legacy (1.2.x)",
+        "desc": "Corregge la cartella conversazioni per upgrade da versioni vecchie con archiveFolder.",
+        "button": "Ripara percorso legacy",
+        "confirm_title": "Ripara cartella conversazioni legacy",
+        "confirm_message": "Usare la cartella legacy `{{archive}}` come cartella conversazioni invece di `{{current}}`?",
+        "fixed_notice": "Cartella conversazioni corretta: {{path}}",
+        "move_title": "Spostare i file nella cartella corretta?",
+        "move_message": "Vuoi spostare ora i file da `{{from}}` a `{{to}}`?",
+        "no_files_notice": "Nessun file trovato nella cartella conversazioni precedente.",
+        "move_success_notice": "File spostati in {{path}}"
       }
     },
     "display": {

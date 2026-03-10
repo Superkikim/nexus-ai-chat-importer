@@ -27,6 +27,78 @@ import { ConfigureFolderLocationsDialog, FolderConfigurationResult } from "../..
 import { logger } from "../../logger";
 
 /**
+ * Normalize legacy folder setting from pre-1.3.x (`archiveFolder`) to
+ * current setting (`conversationFolder`) without moving files.
+ */
+class NormalizeLegacyConversationFolderOperation extends UpgradeOperation {
+    readonly id = "normalize-legacy-conversation-folder";
+    readonly name = "Normalize Legacy Conversation Folder";
+    readonly description = "Aligns conversation folder setting with legacy archiveFolder path for users upgrading from older versions.";
+    readonly type = "automatic" as const;
+
+    async canRun(context: UpgradeContext): Promise<boolean> {
+        const archiveFolder = context.plugin.settings.archiveFolder?.trim();
+        const conversationFolder = context.plugin.settings.conversationFolder?.trim();
+        const defaultConversationFolder = "Nexus/Conversations";
+
+        if (!archiveFolder) {
+            return false;
+        }
+
+        if (!conversationFolder) {
+            return true;
+        }
+
+        if (conversationFolder === archiveFolder) {
+            return false;
+        }
+
+        // Legacy users often keep custom archiveFolder while conversationFolder
+        // falls back to default during upgrade.
+        if (conversationFolder === defaultConversationFolder) {
+            return true;
+        }
+
+        const legacyFolder = context.plugin.app.vault.getAbstractFileByPath(archiveFolder);
+        if (legacyFolder instanceof TFolder && legacyFolder.children.length > 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        const archiveFolder = context.plugin.settings.archiveFolder?.trim();
+        if (!archiveFolder) {
+            return {
+                success: true,
+                message: "No legacy archive folder detected."
+            };
+        }
+
+        const previousConversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+        context.plugin.settings.conversationFolder = archiveFolder;
+        await context.plugin.saveSettings();
+
+        return {
+            success: true,
+            message: `Conversation folder normalized: ${previousConversationFolder} -> ${archiveFolder}`,
+            details: [
+                "Setting updated only. No files were moved during this operation."
+            ]
+        };
+    }
+
+    async verify(context: UpgradeContext): Promise<boolean> {
+        const archiveFolder = context.plugin.settings.archiveFolder?.trim();
+        if (!archiveFolder) {
+            return true;
+        }
+        return context.plugin.settings.conversationFolder === archiveFolder;
+    }
+}
+
+/**
  * Convert timestamps to ISO 8601 format in all existing frontmatter
  * This resolves locale-dependent parsing issues and provides a universal timestamp format.
  * Migration converts US format (MM/DD/YYYY at H:MM:SS AM/PM) to ISO 8601 (YYYY-MM-DDTHH:MM:SSZ)
@@ -1292,6 +1364,7 @@ export class Upgrade130 extends VersionUpgrade {
     readonly version = "1.3.0";
 
     readonly automaticOperations = [
+        new NormalizeLegacyConversationFolderOperation(),
         new MigrateToSeparateFoldersOperation(),
         new ConvertToISO8601TimestampsOperation(),
         new FixFrontmatterAliasesOperation(),

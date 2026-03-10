@@ -198,6 +198,18 @@
         "desc": "Speicherort für Anhänge (⚠️ Von der Synchronisierung ausschließen, um Speicherplatz zu sparen)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Ordner durchsuchen oder neuen erstellen"
+      },
+      "legacy_path_repair": {
+        "name": "Legacy-Pfad reparieren (1.2.x)",
+        "desc": "Korrigiert den Gesprächsordner bei Upgrades von alten archiveFolder-Versionen.",
+        "button": "Legacy-Pfad reparieren",
+        "confirm_title": "Legacy-Gesprächsordner reparieren",
+        "confirm_message": "Legacy-Ordner `{{archive}}` als Gesprächsordner statt `{{current}}` verwenden?",
+        "fixed_notice": "Gesprächsordner repariert: {{path}}",
+        "move_title": "Dateien in den reparierten Ordner verschieben?",
+        "move_message": "Dateien jetzt von `{{from}}` nach `{{to}}` verschieben?",
+        "no_files_notice": "Keine Dateien im vorherigen Gesprächsordner gefunden.",
+        "move_success_notice": "Dateien nach {{path}} verschoben"
       }
     },
     "display": {

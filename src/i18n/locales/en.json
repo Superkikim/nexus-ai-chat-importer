@@ -198,6 +198,18 @@
         "desc": "Where attachments are stored (⚠️ Exclude from sync to save space)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Browse folders or create a new one"
+      },
+      "legacy_path_repair": {
+        "name": "Legacy path repair (1.2.x)",
+        "desc": "Fix conversation folder when upgrading from old versions that used archiveFolder.",
+        "button": "Repair legacy path",
+        "confirm_title": "Repair legacy conversation folder",
+        "confirm_message": "Use legacy folder `{{archive}}` as the conversation folder instead of `{{current}}`?",
+        "fixed_notice": "Conversation folder repaired: {{path}}",
+        "move_title": "Move files to repaired folder?",
+        "move_message": "Do you want to move files from `{{from}}` to `{{to}}` now?",
+        "no_files_notice": "No files found in the previous conversation folder.",
+        "move_success_notice": "Files moved to {{path}}"
       }
     },
     "display": {

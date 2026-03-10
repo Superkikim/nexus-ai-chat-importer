@@ -198,6 +198,18 @@
         "desc": "Où les pièces jointes sont stockées (⚠️ Exclure de la synchronisation pour économiser de l'espace)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Parcourir les dossiers ou en créer un nouveau"
+      },
+      "legacy_path_repair": {
+        "name": "Réparer le chemin legacy (1.2.x)",
+        "desc": "Corrige le dossier des conversations pour les anciennes versions basées sur archiveFolder.",
+        "button": "Réparer le chemin legacy",
+        "confirm_title": "Réparer le dossier legacy des conversations",
+        "confirm_message": "Utiliser le dossier legacy `{{archive}}` comme dossier des conversations à la place de `{{current}}` ?",
+        "fixed_notice": "Dossier des conversations corrigé : {{path}}",
+        "move_title": "Déplacer les fichiers vers le dossier corrigé ?",
+        "move_message": "Voulez-vous déplacer les fichiers de `{{from}}` vers `{{to}}` maintenant ?",
+        "no_files_notice": "Aucun fichier trouvé dans l'ancien dossier des conversations.",
+        "move_success_notice": "Fichiers déplacés vers {{path}}"
       }
     },
     "display": {
