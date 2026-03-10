@@ -72,7 +72,8 @@ export class ConversationProcessor {
         isReprocess: boolean = false,
         forcedProvider?: string,
         progressCallback?: ImportProgressCallback,
-        existingConversationsMap?: Map<string, ConversationCatalogEntry>
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>,
+        reprocessConversationIds?: Set<string>
     ): Promise<ImportReport> {
         // Use forced provider or detect from raw data structure
         const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
@@ -92,7 +93,8 @@ export class ConversationProcessor {
             zip,
             isReprocess,
             progressCallback,
-            existingConversationsMap
+            existingConversationsMap,
+            reprocessConversationIds
         );
     }
 
@@ -105,7 +107,8 @@ export class ConversationProcessor {
         selectedIds?: Set<string>,
         progressCallback?: ImportProgressCallback,
         approxTotal?: number,
-        existingConversationsMap?: Map<string, ConversationCatalogEntry>
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>,
+        reprocessConversationIds?: Set<string>
     ): Promise<ImportReport> {
         this.currentProvider = provider;
         const adapter = this.providerRegistry.getAdapter(provider);
@@ -156,7 +159,15 @@ export class ConversationProcessor {
             }
 
             yieldedCount++;
-            await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
+            await this.processSingleChat(
+                adapter,
+                chat,
+                conversationsMap,
+                importReport,
+                zip,
+                isReprocess,
+                reprocessConversationIds
+            );
 
             processedCount++;
             progressCallback?.({
@@ -200,7 +211,8 @@ export class ConversationProcessor {
         zip?: ZipArchiveReader,
         isReprocess: boolean = false,
         progressCallback?: ImportProgressCallback,
-        existingConversationsMap?: Map<string, ConversationCatalogEntry>
+        existingConversationsMap?: Map<string, ConversationCatalogEntry>,
+        reprocessConversationIds?: Set<string>
     ): Promise<ImportReport> {
         this.currentProvider = provider;
         const adapter = this.providerRegistry.getAdapter(provider);
@@ -242,7 +254,15 @@ export class ConversationProcessor {
 
         let processedCount = 0;
         for (const chat of conversationsToProcess) {
-            await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
+            await this.processSingleChat(
+                adapter,
+                chat,
+                conversationsMap,
+                importReport,
+                zip,
+                isReprocess,
+                reprocessConversationIds
+            );
 
             processedCount++;
             progressCallback?.({
@@ -263,7 +283,8 @@ export class ConversationProcessor {
         existingConversations: Map<string, ConversationCatalogEntry>,
         importReport: ImportReport,
         zip?: ZipArchiveReader,
-        isReprocess: boolean = false
+        isReprocess: boolean = false,
+        reprocessConversationIds?: Set<string>
     ): Promise<void> {
         const processLogger = this.plugin.logger.child("Process");
         try {
@@ -283,11 +304,20 @@ export class ConversationProcessor {
             }
 
             const existingEntry = existingConversations.get(chatId);
+            const forceReprocess = isReprocess || !!reprocessConversationIds?.has(chatId);
 
             let resolvedPath: string;
             if (existingEntry) {
                 resolvedPath = existingEntry.path;
-                await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess, isStandardConversation);
+                await this.handleExistingChat(
+                    adapter,
+                    chat,
+                    existingEntry,
+                    importReport,
+                    zip,
+                    forceReprocess,
+                    isStandardConversation
+                );
             } else {
                 const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
                 resolvedPath = filePath;

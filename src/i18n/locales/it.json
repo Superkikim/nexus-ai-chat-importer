@@ -88,7 +88,9 @@
       "select_none": "Deseleziona tutto",
       "search_placeholder": "Cerca conversazioni...",
       "status_label": "Stato:",
-      "show_label": "Mostra:"
+      "show_label": "Mostra:",
+      "existing_only_label": "Mostra solo le conversazioni esistenti",
+      "existing_only_help": "Se selezioni una conversazione esistente, la nota corrispondente verrà sovrascritta e rielaborata."
     },
     "status_filter_options": {
       "all": "Tutti",

@@ -88,7 +88,9 @@
       "select_none": "선택 해제",
       "search_placeholder": "대화 검색...",
       "status_label": "상태:",
-      "show_label": "표시:"
+      "show_label": "표시:",
+      "existing_only_label": "기존 대화만 표시",
+      "existing_only_help": "기존 대화를 선택하면 해당 노트가 덮어쓰기되어 다시 처리됩니다."
     },
     "status_filter_options": {
       "all": "전체",

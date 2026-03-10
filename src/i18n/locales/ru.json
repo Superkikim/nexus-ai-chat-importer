@@ -88,7 +88,9 @@
       "select_none": "Снять выбор",
       "search_placeholder": "Поиск разговоров...",
       "status_label": "Статус:",
-      "show_label": "Показать:"
+      "show_label": "Показать:",
+      "existing_only_label": "Показывать только существующие беседы",
+      "existing_only_help": "При выборе существующей беседы соответствующая заметка будет перезаписана и обработана заново."
     },
     "status_filter_options": {
       "all": "Все",

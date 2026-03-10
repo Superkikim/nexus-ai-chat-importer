@@ -88,7 +88,9 @@
       "select_none": "選択解除",
       "search_placeholder": "会話を検索...",
       "status_label": "ステータス：",
-      "show_label": "表示："
+      "show_label": "表示：",
+      "existing_only_label": "既存の会話のみ表示",
+      "existing_only_help": "既存の会話を選択すると、対応するノートは上書きされ再処理されます。"
     },
     "status_filter_options": {
       "all": "すべて",

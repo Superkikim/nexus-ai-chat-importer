@@ -88,7 +88,9 @@
       "select_none": "取消全选",
       "search_placeholder": "搜索对话...",
       "status_label": "状态：",
-      "show_label": "显示："
+      "show_label": "显示：",
+      "existing_only_label": "仅显示已存在的会话",
+      "existing_only_help": "选择已存在的会话会覆盖并重新处理对应笔记。"
     },
     "status_filter_options": {
       "all": "全部",

@@ -896,6 +896,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             // Group selected conversations by source file for efficient processing
             const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
             const filesToImport = files.filter(file => conversationsByFile.has(file.name));
+            const selectedExistingConversationIds = this.collectSelectedExistingConversationIds(
+                result.selectedIds,
+                availableConversations
+            );
 
             this.setImportCheckpoint({
                 operation: "selective-import",
@@ -909,7 +913,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 filesToImport,
                 conversationsByFile,
-                operationReport
+                operationReport,
+                selectedExistingConversationIds
             );
 
             // Write the consolidated report (always, even if some files failed)
@@ -1272,7 +1277,8 @@ ${report.generateMobileIndexContent(files, links)}
         provider: string,
         filesToImport: File[],
         conversationsByFile: Map<string, string[]>,
-        operationReport: ImportReport
+        operationReport: ImportReport,
+        selectedExistingConversationIds?: Set<string>
     ): Promise<void> {
         const importFlowLogger = this.logger.child("ImportFlow");
         const mobileTaskQueueMode = this.isMobileTaskQueueMode();
@@ -1344,9 +1350,13 @@ ${report.generateMobileIndexContent(files, links)}
                     mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard",
                 });
 
-                const archiveImportMode = mobileTaskQueueMode
+                const archiveImportMode = mobileTaskQueueMode && operation === "import-all"
                     ? await this.resolveMobileArchiveImportMode(file, provider)
                     : undefined;
+                const fileReprocessIds = selectedExistingConversationIds
+                    ? conversationsForFile.filter((id) => selectedExistingConversationIds.has(id))
+                    : [];
+                const hasFileReprocessIds = fileReprocessIds.length > 0;
 
                 await this.importService.handleZipFile(
                     file,
@@ -1354,7 +1364,12 @@ ${report.generateMobileIndexContent(files, links)}
                     conversationsForFile,
                     operationReport,
                     undefined,
-                    archiveImportMode ? { archiveImportMode } : undefined
+                    archiveImportMode || hasFileReprocessIds
+                        ? {
+                            archiveImportMode,
+                            reprocessConversationIds: hasFileReprocessIds ? fileReprocessIds : undefined,
+                        }
+                        : undefined
                 );
             } catch (error) {
                 this.logger.error(`Error processing file ${file.name}:`, error);
@@ -1377,6 +1392,23 @@ ${report.generateMobileIndexContent(files, links)}
         if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
             this.importService.clearAttachmentMap();
         }
+    }
+
+    private collectSelectedExistingConversationIds(selectedIds: string[], availableConversations: any[]): Set<string> {
+        const selectedSet = new Set(selectedIds);
+        const reprocessIds = new Set<string>();
+
+        for (const conversation of availableConversations) {
+            if (!selectedSet.has(conversation.id)) {
+                continue;
+            }
+
+            if (conversation.existenceStatus === "updated" || conversation.existenceStatus === "unchanged") {
+                reprocessIds.add(conversation.id);
+            }
+        }
+
+        return reprocessIds;
     }
 
     private setImportCheckpoint(checkpoint: Omit<ImportCheckpoint, "timestampMs">): void {

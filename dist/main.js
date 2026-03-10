@@ -123,7 +123,9 @@ var init_en = __esm({
           select_none: "Select None",
           search_placeholder: "Search conversations...",
           status_label: "Status:",
-          show_label: "Show:"
+          show_label: "Show:",
+          existing_only_label: "Show existing conversations only",
+          existing_only_help: "Selecting an existing conversation will overwrite and reprocess the matching note."
         },
         status_filter_options: {
           all: "All",
@@ -647,7 +649,9 @@ var init_fr = __esm({
           select_none: "Tout d\xE9s\xE9lectionner",
           search_placeholder: "Rechercher des conversations...",
           status_label: "Statut :",
-          show_label: "Afficher :"
+          show_label: "Afficher :",
+          existing_only_label: "Afficher uniquement les conversations existantes",
+          existing_only_help: "S\xE9lectionner une conversation existante \xE9crase et retraite la note correspondante."
         },
         status_filter_options: {
           all: "Tous",
@@ -1171,7 +1175,9 @@ var init_de = __esm({
           select_none: "Keine ausw\xE4hlen",
           search_placeholder: "Gespr\xE4che suchen...",
           status_label: "Status:",
-          show_label: "Anzeigen:"
+          show_label: "Anzeigen:",
+          existing_only_label: "Nur vorhandene Konversationen anzeigen",
+          existing_only_help: "Wenn Sie eine vorhandene Konversation ausw\xE4hlen, wird die zugeh\xF6rige Notiz \xFCberschrieben und neu verarbeitet."
         },
         status_filter_options: {
           all: "Alle",
@@ -1695,7 +1701,9 @@ var init_es = __esm({
           select_none: "Deseleccionar todo",
           search_placeholder: "Buscar conversaciones...",
           status_label: "Estado:",
-          show_label: "Mostrar:"
+          show_label: "Mostrar:",
+          existing_only_label: "Mostrar solo conversaciones existentes",
+          existing_only_help: "Seleccionar una conversaci\xF3n existente sobrescribir\xE1 y reprocesar\xE1 la nota correspondiente."
         },
         status_filter_options: {
           all: "Todos",
@@ -2219,7 +2227,9 @@ var init_it = __esm({
           select_none: "Deseleziona tutto",
           search_placeholder: "Cerca conversazioni...",
           status_label: "Stato:",
-          show_label: "Mostra:"
+          show_label: "Mostra:",
+          existing_only_label: "Mostra solo le conversazioni esistenti",
+          existing_only_help: "Se selezioni una conversazione esistente, la nota corrispondente verr\xE0 sovrascritta e rielaborata."
         },
         status_filter_options: {
           all: "Tutti",
@@ -2743,7 +2753,9 @@ var init_ru = __esm({
           select_none: "\u0421\u043D\u044F\u0442\u044C \u0432\u044B\u0431\u043E\u0440",
           search_placeholder: "\u041F\u043E\u0438\u0441\u043A \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432...",
           status_label: "\u0421\u0442\u0430\u0442\u0443\u0441:",
-          show_label: "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C:"
+          show_label: "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C:",
+          existing_only_label: "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0442\u043E\u043B\u044C\u043A\u043E \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0438\u0435 \u0431\u0435\u0441\u0435\u0434\u044B",
+          existing_only_help: "\u041F\u0440\u0438 \u0432\u044B\u0431\u043E\u0440\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0435\u0439 \u0431\u0435\u0441\u0435\u0434\u044B \u0441\u043E\u043E\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u044E\u0449\u0430\u044F \u0437\u0430\u043C\u0435\u0442\u043A\u0430 \u0431\u0443\u0434\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0438\u0441\u0430\u043D\u0430 \u0438 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u0430 \u0437\u0430\u043D\u043E\u0432\u043E."
         },
         status_filter_options: {
           all: "\u0412\u0441\u0435",
@@ -3267,7 +3279,9 @@ var init_zh = __esm({
           select_none: "\u53D6\u6D88\u5168\u9009",
           search_placeholder: "\u641C\u7D22\u5BF9\u8BDD...",
           status_label: "\u72B6\u6001\uFF1A",
-          show_label: "\u663E\u793A\uFF1A"
+          show_label: "\u663E\u793A\uFF1A",
+          existing_only_label: "\u4EC5\u663E\u793A\u5DF2\u5B58\u5728\u7684\u4F1A\u8BDD",
+          existing_only_help: "\u9009\u62E9\u5DF2\u5B58\u5728\u7684\u4F1A\u8BDD\u4F1A\u8986\u76D6\u5E76\u91CD\u65B0\u5904\u7406\u5BF9\u5E94\u7B14\u8BB0\u3002"
         },
         status_filter_options: {
           all: "\u5168\u90E8",
@@ -3791,7 +3805,9 @@ var init_ja = __esm({
           select_none: "\u9078\u629E\u89E3\u9664",
           search_placeholder: "\u4F1A\u8A71\u3092\u691C\u7D22...",
           status_label: "\u30B9\u30C6\u30FC\u30BF\u30B9\uFF1A",
-          show_label: "\u8868\u793A\uFF1A"
+          show_label: "\u8868\u793A\uFF1A",
+          existing_only_label: "\u65E2\u5B58\u306E\u4F1A\u8A71\u306E\u307F\u8868\u793A",
+          existing_only_help: "\u65E2\u5B58\u306E\u4F1A\u8A71\u3092\u9078\u629E\u3059\u308B\u3068\u3001\u5BFE\u5FDC\u3059\u308B\u30CE\u30FC\u30C8\u306F\u4E0A\u66F8\u304D\u3055\u308C\u518D\u51E6\u7406\u3055\u308C\u307E\u3059\u3002"
         },
         status_filter_options: {
           all: "\u3059\u3079\u3066",
@@ -4315,7 +4331,9 @@ var init_pt = __esm({
           select_none: "Desselecionar tudo",
           search_placeholder: "Pesquisar conversas...",
           status_label: "Estado:",
-          show_label: "Mostrar:"
+          show_label: "Mostrar:",
+          existing_only_label: "Mostrar apenas conversas existentes",
+          existing_only_help: "Ao selecionar uma conversa existente, a nota correspondente ser\xE1 sobrescrita e reprocessada."
         },
         status_filter_options: {
           all: "Todas",
@@ -4839,7 +4857,9 @@ var init_ko = __esm({
           select_none: "\uC120\uD0DD \uD574\uC81C",
           search_placeholder: "\uB300\uD654 \uAC80\uC0C9...",
           status_label: "\uC0C1\uD0DC:",
-          show_label: "\uD45C\uC2DC:"
+          show_label: "\uD45C\uC2DC:",
+          existing_only_label: "\uAE30\uC874 \uB300\uD654\uB9CC \uD45C\uC2DC",
+          existing_only_help: "\uAE30\uC874 \uB300\uD654\uB97C \uC120\uD0DD\uD558\uBA74 \uD574\uB2F9 \uB178\uD2B8\uAC00 \uB36E\uC5B4\uC4F0\uAE30\uB418\uC5B4 \uB2E4\uC2DC \uCC98\uB9AC\uB429\uB2C8\uB2E4."
         },
         status_filter_options: {
           all: "\uC804\uCCB4",
@@ -14429,7 +14449,7 @@ var ConversationProcessor = class {
   /**
    * Process raw conversations (provider agnostic entry point)
    */
-  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider, progressCallback, existingConversationsMap) {
+  async processRawConversations(rawConversations, importReport, zip, isReprocess = false, forcedProvider, progressCallback, existingConversationsMap, reprocessConversationIds) {
     const provider = forcedProvider || this.providerRegistry.detectProvider(rawConversations);
     if (provider === "unknown") {
       const errorMsg = forcedProvider ? `Forced provider '${forcedProvider}' is not available or registered` : `Could not detect conversation provider from data structure`;
@@ -14443,10 +14463,11 @@ var ConversationProcessor = class {
       zip,
       isReprocess,
       progressCallback,
-      existingConversationsMap
+      existingConversationsMap,
+      reprocessConversationIds
     );
   }
-  async processConversationStream(provider, generator, importReport, zip, isReprocess = false, selectedIds, progressCallback, approxTotal, existingConversationsMap) {
+  async processConversationStream(provider, generator, importReport, zip, isReprocess = false, selectedIds, progressCallback, approxTotal, existingConversationsMap, reprocessConversationIds) {
     var _a;
     this.currentProvider = provider;
     const adapter = this.providerRegistry.getAdapter(provider);
@@ -14495,7 +14516,15 @@ var ConversationProcessor = class {
         }
       }
       yieldedCount++;
-      await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
+      await this.processSingleChat(
+        adapter,
+        chat,
+        conversationsMap,
+        importReport,
+        zip,
+        isReprocess,
+        reprocessConversationIds
+      );
       processedCount++;
       progressCallback == null ? void 0 : progressCallback({
         phase: "processing",
@@ -14523,7 +14552,7 @@ var ConversationProcessor = class {
   /**
    * Process conversations using the detected provider
    */
-  async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false, progressCallback, existingConversationsMap) {
+  async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false, progressCallback, existingConversationsMap, reprocessConversationIds) {
     var _a;
     this.currentProvider = provider;
     const adapter = this.providerRegistry.getAdapter(provider);
@@ -14557,7 +14586,15 @@ var ConversationProcessor = class {
     this.counters.totalExistingConversations = conversationsMap.size;
     let processedCount = 0;
     for (const chat of conversationsToProcess) {
-      await this.processSingleChat(adapter, chat, conversationsMap, importReport, zip, isReprocess);
+      await this.processSingleChat(
+        adapter,
+        chat,
+        conversationsMap,
+        importReport,
+        zip,
+        isReprocess,
+        reprocessConversationIds
+      );
       processedCount++;
       progressCallback == null ? void 0 : progressCallback({
         phase: "processing",
@@ -14569,7 +14606,7 @@ var ConversationProcessor = class {
     }
     return importReport;
   }
-  async processSingleChat(adapter, chat, existingConversations, importReport, zip, isReprocess = false) {
+  async processSingleChat(adapter, chat, existingConversations, importReport, zip, isReprocess = false, reprocessConversationIds) {
     var _a, _b, _c;
     const processLogger = this.plugin.logger.child("Process");
     try {
@@ -14584,10 +14621,19 @@ var ConversationProcessor = class {
         return;
       }
       const existingEntry = existingConversations.get(chatId);
+      const forceReprocess = isReprocess || !!(reprocessConversationIds == null ? void 0 : reprocessConversationIds.has(chatId));
       let resolvedPath;
       if (existingEntry) {
         resolvedPath = existingEntry.path;
-        await this.handleExistingChat(adapter, chat, existingEntry, importReport, zip, isReprocess, isStandardConversation);
+        await this.handleExistingChat(
+          adapter,
+          chat,
+          existingEntry,
+          importReport,
+          zip,
+          forceReprocess,
+          isStandardConversation
+        );
       } else {
         const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
         resolvedPath = filePath;
@@ -20391,6 +20437,13 @@ Do NOT extract and re-compress the file - just rename it!`;
           archiveImportMode
         });
       }
+      const reprocessConversationIds = (options == null ? void 0 : options.reprocessConversationIds) && options.reprocessConversationIds.length > 0 ? new Set(options.reprocessConversationIds) : void 0;
+      if (reprocessConversationIds && reprocessConversationIds.size > 0) {
+        importLogger.info("Selective existing conversations will be force reprocessed", {
+          fileName: file.name,
+          count: reprocessConversationIds.size
+        });
+      }
       processingStarted = true;
       this.updateRuntimePhase("conversation-processing");
       importLogger.info(`Begin conversation processing`, {
@@ -20405,6 +20458,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         forcedProvider,
         progressCallback,
         selectedConversationIds,
+        reprocessConversationIds,
         progressModal,
         file.size,
         existingConversationsMap
@@ -20525,7 +20579,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       );
     }
   }
-  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, progressModal, zipSizeBytes, existingConversationsMap) {
+  async processConversations(zip, file, isReprocess, forcedProvider, progressCallback, selectedConversationIds, reprocessConversationIds, progressModal, zipSizeBytes, existingConversationsMap) {
     var _a, _b, _c;
     const importLogger = this.plugin.logger.child("Import");
     try {
@@ -20565,7 +20619,8 @@ Do NOT extract and re-compress the file - just rename it!`;
           selectedIds,
           progressCallback,
           selectedConversationIds == null ? void 0 : selectedConversationIds.length,
-          existingConversationsMap
+          existingConversationsMap,
+          reprocessConversationIds
         );
         this.importReport = report;
         this.importReport.setFileCounters(this.conversationProcessor.getCounters());
@@ -20622,7 +20677,8 @@ Do NOT extract and re-compress the file - just rename it!`;
           isReprocess,
           forcedProvider,
           progressCallback,
-          existingConversationsMap
+          existingConversationsMap,
+          reprocessConversationIds
         );
         this.importReport = report;
         this.importReport.setFileCounters(this.conversationProcessor.getCounters());
@@ -22180,8 +22236,8 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
         direction: "desc"
       },
       filter: {
-        existenceStatus: "all"
-        // Default to show all conversations
+        existenceStatus: "all",
+        existingOnly: false
       },
       isLoading: false
     };
@@ -22266,6 +22322,37 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       this.updateSummary();
       this.updatePagination();
     });
+    const existingOnlyControl = section.createDiv("nexus-existing-only-control");
+    const existingOnlyCheckboxId = `nexus-existing-only-${Date.now()}`;
+    const existingOnlyCheckbox = existingOnlyControl.createEl("input", {
+      type: "checkbox",
+      cls: "nexus-existing-only-checkbox"
+    });
+    existingOnlyCheckbox.id = existingOnlyCheckboxId;
+    existingOnlyCheckbox.checked = !!this.state.filter.existingOnly;
+    const existingOnlyLabel = existingOnlyControl.createEl("label", {
+      cls: "nexus-filter-label nexus-existing-only-label"
+    });
+    existingOnlyLabel.htmlFor = existingOnlyCheckboxId;
+    existingOnlyLabel.textContent = t("conversation_selection.controls.existing_only_label");
+    const syncExistingOnlyState = /* @__PURE__ */ __name(() => {
+      const existingOnlyEnabled = !!this.state.filter.existingOnly;
+      statusSelect.disabled = existingOnlyEnabled;
+      statusLabel.classList.toggle("is-disabled", existingOnlyEnabled);
+      if (existingOnlyEnabled) {
+        this.state.filter.existenceStatus = "all";
+        statusSelect.value = "all";
+      }
+    }, "syncExistingOnlyState");
+    existingOnlyCheckbox.addEventListener("change", () => {
+      this.state.filter.existingOnly = existingOnlyCheckbox.checked;
+      syncExistingOnlyState();
+      this.applyFiltersAndSort();
+      this.renderConversationList();
+      this.updateSummary();
+      this.updatePagination();
+    });
+    syncExistingOnlyState();
     const pageSizeLabel = section.createEl("label", { cls: "nexus-filter-label" });
     pageSizeLabel.textContent = t("conversation_selection.controls.show_label");
     const pageSizeSelect = section.createEl("select", { cls: "nexus-custom-select nexus-filter-select" });
@@ -22288,6 +22375,8 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       this.updatePagination();
       this.renderConversationList();
     });
+    const existingOnlyHelp = section.createDiv("nexus-existing-only-help");
+    existingOnlyHelp.textContent = t("conversation_selection.controls.existing_only_help");
   }
   createConversationListSection(container) {
     const section = container.createDiv("conversation-list-section nexus-dialog-section");
@@ -22392,6 +22481,11 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
     if (this.state.filter.existenceStatus && this.state.filter.existenceStatus !== "all") {
       filtered = filtered.filter(
         (conv) => conv.existenceStatus === this.state.filter.existenceStatus
+      );
+    }
+    if (this.state.filter.existingOnly) {
+      filtered = filtered.filter(
+        (conv) => conv.existenceStatus === "updated" || conv.existenceStatus === "unchanged"
       );
     }
     filtered.sort((a, b) => {
@@ -22727,8 +22821,34 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
                 white-space: nowrap;
             }
 
+            .nexus-conversation-selection-dialog .nexus-filter-label.is-disabled {
+                opacity: 0.65;
+            }
+
             .nexus-conversation-selection-dialog .nexus-filter-select {
                 min-width: 0;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-existing-only-control {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-existing-only-checkbox {
+                margin: 0;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-existing-only-label {
+                cursor: pointer;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-existing-only-help {
+                flex: 1 1 100%;
+                font-size: 0.85em;
+                color: var(--text-muted);
+                margin-top: 2px;
             }
 
             /* Table container with independent scroll */
@@ -22997,6 +23117,10 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
                 .nexus-conversation-selection-dialog .nexus-conversation-search {
                     flex: 1 1 100%;
                     order: -1;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-existing-only-control {
+                    flex: 1 1 100%;
                 }
 
                 .nexus-conversation-selection-dialog .nexus-pagination-section {
@@ -24784,6 +24908,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
       const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
       const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
+      const selectedExistingConversationIds = this.collectSelectedExistingConversationIds(
+        result.selectedIds,
+        availableConversations
+      );
       this.setImportCheckpoint({
         operation: "selective-import",
         phase: "file-processing-start",
@@ -24796,7 +24924,8 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         filesToImport,
         conversationsByFile,
-        operationReport
+        operationReport,
+        selectedExistingConversationIds
       );
       const reportPath = await this.writeConsolidatedReport(operationReport, provider, files, analysisInfo, fileStats, true);
       if (reportPath) {
@@ -25088,7 +25217,7 @@ ${report.generateMobileIndexContent(files, links)}
       isMobile
     });
   }
-  async processFilesWithStrategy(operation, provider, filesToImport, conversationsByFile, operationReport) {
+  async processFilesWithStrategy(operation, provider, filesToImport, conversationsByFile, operationReport, selectedExistingConversationIds) {
     var _a, _b;
     const importFlowLogger = this.logger.child("ImportFlow");
     const mobileTaskQueueMode = this.isMobileTaskQueueMode();
@@ -25153,14 +25282,19 @@ ${report.generateMobileIndexContent(files, links)}
           task: `${i + 1}/${executionFiles.length}`,
           mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard"
         });
-        const archiveImportMode = mobileTaskQueueMode ? await this.resolveMobileArchiveImportMode(file, provider) : void 0;
+        const archiveImportMode = mobileTaskQueueMode && operation === "import-all" ? await this.resolveMobileArchiveImportMode(file, provider) : void 0;
+        const fileReprocessIds = selectedExistingConversationIds ? conversationsForFile.filter((id) => selectedExistingConversationIds.has(id)) : [];
+        const hasFileReprocessIds = fileReprocessIds.length > 0;
         await this.importService.handleZipFile(
           file,
           provider,
           conversationsForFile,
           operationReport,
           void 0,
-          archiveImportMode ? { archiveImportMode } : void 0
+          archiveImportMode || hasFileReprocessIds ? {
+            archiveImportMode,
+            reprocessConversationIds: hasFileReprocessIds ? fileReprocessIds : void 0
+          } : void 0
         );
       } catch (error) {
         this.logger.error(`Error processing file ${file.name}:`, error);
@@ -25182,6 +25316,19 @@ ${report.generateMobileIndexContent(files, links)}
     if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
       this.importService.clearAttachmentMap();
     }
+  }
+  collectSelectedExistingConversationIds(selectedIds, availableConversations) {
+    const selectedSet = new Set(selectedIds);
+    const reprocessIds = /* @__PURE__ */ new Set();
+    for (const conversation of availableConversations) {
+      if (!selectedSet.has(conversation.id)) {
+        continue;
+      }
+      if (conversation.existenceStatus === "updated" || conversation.existenceStatus === "unchanged") {
+        reprocessIds.add(conversation.id);
+      }
+    }
+    return reprocessIds;
   }
   setImportCheckpoint(checkpoint) {
     var _a, _b, _c;

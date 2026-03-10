@@ -74,6 +74,7 @@ export interface FilterOptions {
     showStarred?: boolean;
     showArchived?: boolean;
     existenceStatus?: 'all' | 'new' | 'updated' | 'unchanged'; // New filter for existence status
+    existingOnly?: boolean;
 }
 
 /**

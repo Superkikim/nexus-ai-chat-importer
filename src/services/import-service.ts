@@ -61,6 +61,7 @@ export type ArchiveImportMode = "auto" | "reprocess" | "incremental";
 
 export interface HandleZipFileOptions {
     archiveImportMode?: ArchiveImportMode;
+    reprocessConversationIds?: string[];
 }
 
 function getRuntimeMemorySnapshot(): string {
@@ -299,6 +300,17 @@ export class ImportService {
                 });
             }
 
+            const reprocessConversationIds =
+                options?.reprocessConversationIds && options.reprocessConversationIds.length > 0
+                    ? new Set(options.reprocessConversationIds)
+                    : undefined;
+            if (reprocessConversationIds && reprocessConversationIds.size > 0) {
+                importLogger.info("Selective existing conversations will be force reprocessed", {
+                    fileName: file.name,
+                    count: reprocessConversationIds.size,
+                });
+            }
+
 		            processingStarted = true;
                     this.updateRuntimePhase("conversation-processing");
 		            importLogger.info(`Begin conversation processing`, {
@@ -313,6 +325,7 @@ export class ImportService {
 	                forcedProvider,
 	                progressCallback,
 	                selectedConversationIds,
+                    reprocessConversationIds,
 	                progressModal,
 		                file.size,
                         existingConversationsMap
@@ -469,6 +482,7 @@ export class ImportService {
         forcedProvider?: string,
         progressCallback?: ImportProgressCallback,
         selectedConversationIds?: string[],
+        reprocessConversationIds?: Set<string>,
         progressModal?: ImportProgressModal,
         zipSizeBytes?: number,
         existingConversationsMap?: Map<string, ConversationCatalogEntry>
@@ -515,7 +529,8 @@ export class ImportService {
                     selectedIds,
                     progressCallback,
                     selectedConversationIds?.length,
-                    existingConversationsMap
+                    existingConversationsMap,
+                    reprocessConversationIds
                 );
 
                 this.importReport = report;
@@ -582,7 +597,8 @@ export class ImportService {
                     isReprocess,
                     forcedProvider,
                     progressCallback,
-                    existingConversationsMap
+                    existingConversationsMap,
+                    reprocessConversationIds
                 );
 
                 this.importReport = report;

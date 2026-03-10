@@ -88,7 +88,9 @@
       "select_none": "Keine auswählen",
       "search_placeholder": "Gespräche suchen...",
       "status_label": "Status:",
-      "show_label": "Anzeigen:"
+      "show_label": "Anzeigen:",
+      "existing_only_label": "Nur vorhandene Konversationen anzeigen",
+      "existing_only_help": "Wenn Sie eine vorhandene Konversation auswählen, wird die zugehörige Notiz überschrieben und neu verarbeitet."
     },
     "status_filter_options": {
       "all": "Alle",

@@ -66,7 +66,8 @@ export class ConversationSelectionDialog extends Modal {
                 direction: 'desc'
             },
             filter: {
-                existenceStatus: 'all' // Default to show all conversations
+                existenceStatus: 'all',
+                existingOnly: false
             },
             isLoading: false
         };
@@ -189,6 +190,42 @@ export class ConversationSelectionDialog extends Modal {
             this.updatePagination();
         });
 
+        // Existing-only toggle (reprocess selected existing conversations)
+        const existingOnlyControl = section.createDiv("nexus-existing-only-control");
+        const existingOnlyCheckboxId = `nexus-existing-only-${Date.now()}`;
+        const existingOnlyCheckbox = existingOnlyControl.createEl("input", {
+            type: "checkbox",
+            cls: "nexus-existing-only-checkbox",
+        });
+        existingOnlyCheckbox.id = existingOnlyCheckboxId;
+        existingOnlyCheckbox.checked = !!this.state.filter.existingOnly;
+
+        const existingOnlyLabel = existingOnlyControl.createEl("label", {
+            cls: "nexus-filter-label nexus-existing-only-label",
+        });
+        existingOnlyLabel.htmlFor = existingOnlyCheckboxId;
+        existingOnlyLabel.textContent = t("conversation_selection.controls.existing_only_label");
+
+        const syncExistingOnlyState = () => {
+            const existingOnlyEnabled = !!this.state.filter.existingOnly;
+            statusSelect.disabled = existingOnlyEnabled;
+            statusLabel.classList.toggle("is-disabled", existingOnlyEnabled);
+            if (existingOnlyEnabled) {
+                this.state.filter.existenceStatus = "all";
+                statusSelect.value = "all";
+            }
+        };
+
+        existingOnlyCheckbox.addEventListener("change", () => {
+            this.state.filter.existingOnly = existingOnlyCheckbox.checked;
+            syncExistingOnlyState();
+            this.applyFiltersAndSort();
+            this.renderConversationList();
+            this.updateSummary();
+            this.updatePagination();
+        });
+        syncExistingOnlyState();
+
         // Page size dropdown
         const pageSizeLabel = section.createEl("label", { cls: "nexus-filter-label" });
         pageSizeLabel.textContent = t('conversation_selection.controls.show_label');
@@ -218,6 +255,9 @@ export class ConversationSelectionDialog extends Modal {
             this.updatePagination();
             this.renderConversationList();
         });
+
+        const existingOnlyHelp = section.createDiv("nexus-existing-only-help");
+        existingOnlyHelp.textContent = t("conversation_selection.controls.existing_only_help");
     }
 
 
@@ -356,6 +396,13 @@ export class ConversationSelectionDialog extends Modal {
         if (this.state.filter.existenceStatus && this.state.filter.existenceStatus !== 'all') {
             filtered = filtered.filter(conv =>
                 conv.existenceStatus === this.state.filter.existenceStatus
+            );
+        }
+
+        // Show only conversations that already exist in vault.
+        if (this.state.filter.existingOnly) {
+            filtered = filtered.filter((conv) =>
+                conv.existenceStatus === "updated" || conv.existenceStatus === "unchanged"
             );
         }
 
@@ -754,8 +801,34 @@ export class ConversationSelectionDialog extends Modal {
                 white-space: nowrap;
             }
 
+            .nexus-conversation-selection-dialog .nexus-filter-label.is-disabled {
+                opacity: 0.65;
+            }
+
             .nexus-conversation-selection-dialog .nexus-filter-select {
                 min-width: 0;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-existing-only-control {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-existing-only-checkbox {
+                margin: 0;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-existing-only-label {
+                cursor: pointer;
+            }
+
+            .nexus-conversation-selection-dialog .nexus-existing-only-help {
+                flex: 1 1 100%;
+                font-size: 0.85em;
+                color: var(--text-muted);
+                margin-top: 2px;
             }
 
             /* Table container with independent scroll */
@@ -1024,6 +1097,10 @@ export class ConversationSelectionDialog extends Modal {
                 .nexus-conversation-selection-dialog .nexus-conversation-search {
                     flex: 1 1 100%;
                     order: -1;
+                }
+
+                .nexus-conversation-selection-dialog .nexus-existing-only-control {
+                    flex: 1 1 100%;
                 }
 
                 .nexus-conversation-selection-dialog .nexus-pagination-section {

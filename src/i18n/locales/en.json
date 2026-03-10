@@ -88,7 +88,9 @@
       "select_none": "Select None",
       "search_placeholder": "Search conversations...",
       "status_label": "Status:",
-      "show_label": "Show:"
+      "show_label": "Show:",
+      "existing_only_label": "Show existing conversations only",
+      "existing_only_help": "Selecting an existing conversation will overwrite and reprocess the matching note."
     },
     "status_filter_options": {
       "all": "All",
