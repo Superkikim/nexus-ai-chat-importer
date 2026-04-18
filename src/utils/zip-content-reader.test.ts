@@ -68,4 +68,42 @@ describe("zip-content-reader", () => {
 
         expect(ids).toEqual(["c1", "c2"]);
     });
+
+    it("extracts Perplexity thread JSON files", async () => {
+        const reader = new MemoryZipReader({
+            "perplexity_selected_0001_test.json": JSON.stringify({
+                metadata: { thread_id: "t1", thread_title: "Thread 1" },
+                conversations: [{ uuid: "u1", query: "Q", answer: "A" }],
+            }),
+            "perplexity_selected_0002_test.json": JSON.stringify({
+                metadata: { thread_id: "t2", thread_title: "Thread 2" },
+                conversations: [{ uuid: "u2", query: "Q2", answer: "A2" }],
+            }),
+        });
+
+        const result = await extractRawConversations(reader);
+
+        expect(result.conversations).toHaveLength(2);
+        expect(result.conversations.map(conv => conv.metadata.thread_id)).toEqual(["t1", "t2"]);
+    });
+
+    it("streams Perplexity thread JSON one file at a time", async () => {
+        const reader = new MemoryZipReader({
+            "perplexity_selected_0001_test.json": JSON.stringify({
+                metadata: { thread_id: "t1", thread_title: "Thread 1" },
+                conversations: [{ uuid: "u1", query: "Q", answer: "A" }],
+            }),
+            "perplexity_selected_0002_test.json": JSON.stringify({
+                metadata: { thread_id: "t2", thread_title: "Thread 2" },
+                conversations: [{ uuid: "u2", query: "Q2", answer: "A2" }],
+            }),
+        });
+
+        const ids: string[] = [];
+        for await (const conversation of extractConversationsStream(reader)) {
+            ids.push(conversation.metadata.thread_id);
+        }
+
+        expect(ids).toEqual(["t1", "t2"]);
+    });
 });

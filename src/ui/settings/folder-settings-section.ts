@@ -18,12 +18,17 @@
 
 
 // src/ui/settings/folder-settings-section.ts
-import { Setting, TFolder, TextComponent, Notice, Modal } from "obsidian";
+import { Setting, TFolder, TextComponent, Notice, Modal, DropdownComponent } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
 import { FolderTreeBrowserModal } from "../../dialogs/folder-tree-browser-modal";
 import { validateFolderNesting } from "../../utils/folder-validation";
-import { moveAndMergeFolders, type FolderMergeResult } from "../../utils";
+import { ensureFolderExists, moveAndMergeFolders, type FolderMergeResult } from "../../utils";
+import type { ConversationHierarchyOrder, PluginSettings } from "../../types/plugin";
+import { SettingMigrationEngine } from "../../settings-migrations/setting-migration-engine";
+import { ConversationHierarchyMigrationWorkflow } from "../../settings-migrations/workflows/conversation-hierarchy-migration-workflow";
+import { SettingMigrationDecisionDialog, type SettingMigrationDecision } from "../../dialogs/setting-migration-decision-dialog";
+import type { SettingMigrationPlan } from "../../settings-migrations/setting-migration-types";
 import { t } from '../../i18n';
 
 export class FolderSettingsSection extends BaseSettingsSection {
@@ -74,6 +79,34 @@ export class FolderSettingsSection extends BaseSettingsSection {
                             )
                         );
                         modal.open();
+                    });
+            });
+
+        // Conversation hierarchy order
+        let hierarchyOrderDropdown: DropdownComponent | null = null;
+        new Setting(containerEl)
+            .setName(t("settings.folders.hierarchy_order.name"))
+            .setDesc(t("settings.folders.hierarchy_order.desc"))
+            .addDropdown((dropdown) => {
+                hierarchyOrderDropdown = dropdown;
+                dropdown
+                    .addOption(
+                        "provider-year-month",
+                        t("settings.folders.hierarchy_order.options.provider_year_month")
+                    )
+                    .addOption(
+                        "year-month-provider",
+                        t("settings.folders.hierarchy_order.options.year_month_provider")
+                    )
+                    .setValue(this.plugin.settings.conversationHierarchyOrder)
+                    .onChange(async (value: string) => {
+                        if (value !== "provider-year-month" && value !== "year-month-provider") {
+                            return;
+                        }
+                        await this.handleConversationHierarchyOrderChange(
+                            value,
+                            hierarchyOrderDropdown
+                        );
                     });
             });
 
@@ -273,6 +306,250 @@ export class FolderSettingsSection extends BaseSettingsSection {
         }
     }
 
+    private async handleConversationHierarchyOrderChange(
+        newOrder: ConversationHierarchyOrder,
+        dropdown: DropdownComponent | null
+    ): Promise<void> {
+        const oldOrder = this.plugin.settings.conversationHierarchyOrder;
+        if (oldOrder === newOrder) {
+            return;
+        }
+
+        const oldSettings: PluginSettings = { ...this.plugin.settings };
+        const newSettings: PluginSettings = {
+            ...this.plugin.settings,
+            conversationHierarchyOrder: newOrder,
+        };
+
+        const migrationEngine = new SettingMigrationEngine();
+        migrationEngine.register(new ConversationHierarchyMigrationWorkflow(this.plugin));
+
+        const plan = await migrationEngine.createPlan("conversationHierarchyOrder", {
+            oldSettings,
+            newSettings,
+        });
+
+        if (!plan || plan.operationCount === 0) {
+            this.plugin.settings.conversationHierarchyOrder = newOrder;
+            await this.plugin.saveSettings();
+            return;
+        }
+
+        const settingLabel = t("settings.folders.hierarchy_order.name");
+        new SettingMigrationDecisionDialog(
+            this.plugin.app,
+            settingLabel,
+            plan.operationCount,
+            async (decision: SettingMigrationDecision) => {
+                await this.applyConversationHierarchyDecision(
+                    decision,
+                    oldOrder,
+                    newOrder,
+                    plan,
+                    migrationEngine,
+                    oldSettings,
+                    newSettings,
+                    dropdown
+                );
+            }
+        ).open();
+    }
+
+    private async applyConversationHierarchyDecision(
+        decision: SettingMigrationDecision,
+        oldOrder: ConversationHierarchyOrder,
+        newOrder: ConversationHierarchyOrder,
+        plan: SettingMigrationPlan,
+        migrationEngine: SettingMigrationEngine,
+        oldSettings: PluginSettings,
+        newSettings: PluginSettings,
+        dropdown: DropdownComponent | null
+    ): Promise<void> {
+        if (decision === "cancel") {
+            dropdown?.setValue(oldOrder);
+            return;
+        }
+
+        if (decision === "apply-only") {
+            this.plugin.settings.conversationHierarchyOrder = newOrder;
+            await this.plugin.saveSettings();
+            new Notice(t("settings_migration.notices.apply_only"));
+            return;
+        }
+
+        const { UpgradeProgressModal } = await import("../../upgrade/utils/progress-modal");
+        const progressModal = new UpgradeProgressModal(
+            this.plugin.app,
+            t("settings_migration.progress.title"),
+            100
+        );
+        progressModal.open();
+
+        try {
+            progressModal.updateProgress({
+                title: t("settings_migration.progress.preparing"),
+                detail: t("settings_migration.progress.preparing_detail", { count: String(plan.operationCount) }),
+                progress: 5,
+            });
+
+            const result = await migrationEngine.execute("conversationHierarchyOrder", plan, {
+                oldSettings,
+                newSettings,
+                onProgress: (progress) => {
+                    const total = Math.max(1, progress.total);
+                    const percentage = 5 + Math.round((progress.current / total) * 90);
+                    progressModal.updateProgress({
+                        title: t("settings_migration.progress.executing"),
+                        detail: progress.detail,
+                        progress: Math.min(95, percentage),
+                    });
+                },
+            });
+
+            this.plugin.settings.conversationHierarchyOrder = newOrder;
+            await this.plugin.saveSettings();
+
+            if (!result) {
+                new Notice(t("settings_migration.notices.no_result"));
+                dropdown?.setValue(newOrder);
+                progressModal.close();
+                return;
+            }
+
+            progressModal.updateProgress({
+                title: t("settings_migration.progress.finalizing"),
+                detail: t("settings_migration.progress.finalizing_detail"),
+                progress: 100,
+            });
+            progressModal.showComplete(
+                t("settings_migration.progress.complete", {
+                    moved: String(result.moved),
+                    skipped: String(result.skipped),
+                    errors: String(result.errors),
+                })
+            );
+            progressModal.closeAfterDelay(1500);
+
+            const reportPath = await this.writeSettingMigrationReport(result, oldOrder, newOrder);
+            this.showSettingMigrationResultDialog(result, newOrder, reportPath);
+            dropdown?.setValue(newOrder);
+        } catch (error) {
+            progressModal.close();
+            dropdown?.setValue(oldOrder);
+            const message = error instanceof Error ? error.message : String(error);
+            this.showErrorDialog(
+                t("settings_migration.errors.title"),
+                t("settings_migration.errors.message", { error: message })
+            );
+        }
+    }
+
+    private showSettingMigrationResultDialog(
+        result: { moved: number; skipped: number; errors: number; details: string[]; durationMs: number },
+        newOrder: ConversationHierarchyOrder,
+        reportPath?: string
+    ): void {
+        const modal = new Modal(this.plugin.app);
+        modal.titleEl.setText(t("settings_migration.result.title"));
+        const { contentEl } = modal;
+
+        contentEl.createEl("p", {
+            text: t("settings_migration.result.summary", {
+                moved: String(result.moved),
+                skipped: String(result.skipped),
+                errors: String(result.errors),
+                duration: String(Math.round(result.durationMs / 1000)),
+            }),
+        });
+        contentEl.createEl("p", {
+            text: t("settings_migration.result.new_order", {
+                order:
+                    newOrder === "provider-year-month"
+                        ? t("settings.folders.hierarchy_order.options.provider_year_month")
+                        : t("settings.folders.hierarchy_order.options.year_month_provider"),
+            }),
+        });
+
+        if (result.details.length > 0) {
+            const detailsEl = contentEl.createEl("details");
+            detailsEl.createEl("summary", {
+                text: t("settings_migration.result.details"),
+            });
+            const list = detailsEl.createEl("ul");
+            for (const detail of result.details.slice(0, 100)) {
+                list.createEl("li", { text: detail });
+            }
+            if (result.details.length > 100) {
+                list.createEl("li", {
+                    text: t("settings_migration.result.details_truncated", {
+                        hidden: String(result.details.length - 100),
+                    }),
+                });
+            }
+        }
+
+        if (reportPath) {
+            contentEl.createEl("p", {
+                text: t("settings_migration.result.report", { path: reportPath }),
+            });
+        }
+
+        const buttonRow = contentEl.createDiv({ cls: "modal-button-container" });
+        const closeButton = buttonRow.createEl("button", {
+            text: t("common.buttons.ok"),
+            cls: "mod-cta",
+        });
+        closeButton.addEventListener("click", () => modal.close());
+        modal.open();
+    }
+
+    private async writeSettingMigrationReport(
+        result: { moved: number; skipped: number; errors: number; details: string[]; durationMs: number },
+        oldOrder: ConversationHierarchyOrder,
+        newOrder: ConversationHierarchyOrder
+    ): Promise<string | undefined> {
+        try {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+            const reportFolder = `${this.plugin.settings.reportFolder}/settings-migrations`;
+            const ensure = await ensureFolderExists(reportFolder, this.plugin.app.vault);
+            if (!ensure.success) {
+                return undefined;
+            }
+
+            const oldOrderLabel = oldOrder === "provider-year-month"
+                ? t("settings.folders.hierarchy_order.options.provider_year_month")
+                : t("settings.folders.hierarchy_order.options.year_month_provider");
+            const newOrderLabel = newOrder === "provider-year-month"
+                ? t("settings.folders.hierarchy_order.options.provider_year_month")
+                : t("settings.folders.hierarchy_order.options.year_month_provider");
+
+            const reportPath = `${reportFolder}/${timestamp} - conversation hierarchy migration report.md`;
+            const reportContent = `# Conversation Hierarchy Migration Report
+
+Generated: ${new Date().toISOString()}
+
+## Change
+- From: ${oldOrderLabel}
+- To: ${newOrderLabel}
+
+## Results
+- Moved: ${result.moved}
+- Skipped: ${result.skipped}
+- Errors: ${result.errors}
+- Duration (seconds): ${Math.round(result.durationMs / 1000)}
+
+## Details
+${result.details.length > 0 ? result.details.map((line) => `- ${line}`).join("\n") : "- No details"}
+`;
+
+            await this.plugin.getFileService().writeToFile(reportPath, reportContent);
+            return reportPath;
+        } catch (error) {
+            this.plugin.logger.warn("Failed to write settings migration report:", error);
+            return undefined;
+        }
+    }
+
     /**
      * Handle migration action (extracted for reuse between dialog types)
      */
@@ -463,4 +740,3 @@ export class FolderSettingsSection extends BaseSettingsSection {
         modal.open();
     }
 }
-

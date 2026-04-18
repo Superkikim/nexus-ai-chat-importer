@@ -22,6 +22,7 @@ import { TFile } from "obsidian";
 import { ConversationCatalogEntry } from "../types/plugin";
 import { StandardConversation, StandardMessage } from "../types/standard";
 import { ImportReport } from "../models/import-report";
+import { buildConversationFolderPath } from "./conversation-path-resolver";
 import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
@@ -547,9 +548,6 @@ export class ConversationProcessor {
 
                 // Unified update logic - use convertChat for consistency
                 if (newMessages.length > 0) {
-                    // Update metadata only when there are new messages
-                    content = this.updateMetadata(content, chatUpdateTime);
-
                     // Get or convert to standard conversation
                     let standardConversation: StandardConversation;
                     if (isStandardConversation) {
@@ -557,6 +555,9 @@ export class ConversationProcessor {
                     } else {
                         standardConversation = await adapter.convertChat(chat);
                     }
+
+                    // Update frontmatter metadata only when there are new messages.
+                    content = this.updateMetadata(content, chatUpdateTime, standardConversation);
 
                     // Filter only new messages for formatting.
                     // Use note message IDs as source of truth because adapter.getNewMessages()
@@ -579,6 +580,7 @@ export class ConversationProcessor {
                     attachmentStats = this.calculateAttachmentStats(processedNewMessages);
 
                     content += "\n\n" + this.messageFormatter.formatMessages(processedNewMessages);
+                    content = this.updateRelatedQueriesSection(content, standardConversation);
                     this.counters.totalConversationsActuallyUpdated++;
                     this.counters.totalNonEmptyMessagesAdded += newMessages.length;
                 }
@@ -693,14 +695,90 @@ export class ConversationProcessor {
 
 
 
-    private updateMetadata(content: string, updateTime: number): string {
+    private updateMetadata(content: string, updateTime: number, conversation?: StandardConversation): string {
         // Use ISO 8601 format for frontmatter (consistent with create_time)
         const updateTimeStr = new Date(updateTime * 1000).toISOString();
         content = content.replace(/^update_time: .*$/m, `update_time: ${updateTimeStr}`);
 
         // Note: "Last Updated" field is not used in current note format, but kept for backward compatibility
         content = content.replace(/^Last Updated: .*$/m, `Last Updated: ${updateTimeStr}`);
-        return content;
+
+        if (!conversation) {
+            return content;
+        }
+
+        const mode = typeof conversation.metadata?.mode === "string"
+            ? conversation.metadata.mode.trim()
+            : "";
+        const models = this.collectConversationModels(conversation);
+
+        return this.updateFrontmatterModeAndModels(content, mode, models);
+    }
+
+    private collectConversationModels(conversation: StandardConversation): string[] {
+        const metadata = conversation.metadata || {};
+        const fromMetadata = Array.isArray(conversation.metadata?.models)
+            ? (metadata.models as string[])
+            : [];
+        const fromMessages = conversation.messages
+            .map(message => message.model)
+            .filter((model): model is string => typeof model === "string" && model.trim().length > 0);
+
+        const seen = new Set<string>();
+        const models: string[] = [];
+        for (const model of [...fromMetadata, ...fromMessages]) {
+            const normalized = model.trim();
+            if (!normalized || seen.has(normalized)) continue;
+            seen.add(normalized);
+            models.push(normalized);
+        }
+
+        return models;
+    }
+
+    private updateFrontmatterModeAndModels(content: string, mode: string, models: string[]): string {
+        const frontmatterMatch = content.match(/^---\n[\s\S]*?\n---/);
+        if (!frontmatterMatch) {
+            return content;
+        }
+
+        let frontmatter = frontmatterMatch[0];
+        frontmatter = frontmatter.replace(/^mode: .*$/m, "").replace(/\n{3,}/g, "\n\n");
+        frontmatter = frontmatter.replace(/^models:\n(?:\s+- .*\n?)*/m, "").replace(/\n{3,}/g, "\n\n");
+
+        const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"\n` : "";
+        const modelsBlock = models.length > 0
+            ? `models:\n${models.map(model => `  - "${model.replace(/"/g, '\\"')}"`).join("\n")}\n`
+            : "";
+
+        if (modeLine || modelsBlock) {
+            frontmatter = frontmatter.replace(/\n---$/, `\n${modeLine}${modelsBlock}---`);
+        }
+
+        return content.replace(frontmatterMatch[0], frontmatter);
+    }
+
+    private updateRelatedQueriesSection(content: string, conversation: StandardConversation): string {
+        const metadata = conversation.metadata || {};
+        const relatedQueries = Array.isArray(conversation.metadata?.related_queries)
+            ? (metadata.related_queries as unknown[])
+                .filter((query): query is string => typeof query === "string")
+                .map(query => query.trim())
+                .filter(query => query.length > 0)
+            : [];
+
+        if (relatedQueries.length === 0) {
+            return content;
+        }
+
+        const uniqueQueries = [...new Set(relatedQueries)];
+        const section = `\n## Related Queries\n${uniqueQueries.map(query => `- ${query}`).join("\n")}`;
+
+        if (/\n## Related Queries\n[\s\S]*$/.test(content)) {
+            return content.replace(/\n## Related Queries\n[\s\S]*$/, section);
+        }
+
+        return `${content.trimEnd()}\n${section}`;
     }
 
 
@@ -720,12 +798,12 @@ export class ConversationProcessor {
         const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
         const providerName = isStandardConversation ? chat.provider : adapter.getProviderName();
 
-        const date = new Date(createTime * 1000);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-
-        // New structure: <conversationFolder>/<provider>/<year>/<month>/
-        const folderPath = `${this.plugin.settings.conversationFolder}/${providerName}/${year}/${month}`;
+        const folderPath = buildConversationFolderPath(
+            this.plugin.settings.conversationFolder,
+            createTime,
+            providerName,
+            this.plugin.settings.conversationHierarchyOrder
+        );
 
         const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
         if (!folderResult.success) {

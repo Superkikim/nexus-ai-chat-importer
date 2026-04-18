@@ -49,6 +49,11 @@
         "name": "Le Chat",
         "description": "Esportazioni di conversazioni Mistral AI Le Chat",
         "file_formats_0": "file chat-<uuid>.json"
+      },
+      "perplexity": {
+        "name": "Perplexity",
+        "description": "Archivi JSON di Perplexity Thread Exporter",
+        "file_formats_0": "file perplexity_*.json (metadata + conversations[])"
       }
     },
     "buttons": {
@@ -198,6 +203,14 @@
         "desc": "Dove vengono archiviati gli allegati (⚠️ Escludere dalla sincronizzazione per risparmiare spazio)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Sfoglia le cartelle o creane una nuova"
+      },
+      "hierarchy_order": {
+        "name": "Conversation hierarchy order",
+        "desc": "Choose how conversation folders are organized inside the conversation root",
+        "options": {
+          "provider_year_month": "Provider / Year / Month",
+          "year_month_provider": "Year / Month / Provider"
+        }
       }
     },
     "display": {
@@ -515,5 +528,38 @@
     "default_message": "Se questo plugin ti semplifica la vita, una donazione significherebbe moltissimo per me e aiuterebbe a tenerli in vita.",
     "reality_check": "Grazie! Migliaia di ore di lavoro sono state dedicate a questi plugin, e ogni donazione mi aiuta a continuare a migliorarli mentre gestisco problemi di salute continuativi. Se questo plugin ti semplifica la vita, considera di supportarmi.",
     "button_alt": "Supportare il mio lavoro"
+  },
+  "settings_migration": {
+    "decision": {
+      "title": "Apply Setting Change",
+      "description": "The setting \"{{setting}}\" affects {{count}} existing conversation file(s). Choose how to proceed:",
+      "apply_and_migrate": "Apply and migrate now",
+      "apply_only": "Apply only (future imports)"
+    },
+    "progress": {
+      "title": "Applying setting migration",
+      "preparing": "Preparing migration...",
+      "preparing_detail": "{{count}} file move(s) planned",
+      "executing": "Executing migration...",
+      "finalizing": "Finalizing",
+      "finalizing_detail": "Saving setting and validating results",
+      "complete": "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+    },
+    "result": {
+      "title": "Setting Migration Result",
+      "summary": "Moved: {{moved}} • Skipped: {{skipped}} • Errors: {{errors}} • Duration: {{duration}}s",
+      "new_order": "New hierarchy order: {{order}}",
+      "details": "Details",
+      "details_truncated": "... {{hidden}} additional line(s) not shown",
+      "report": "Report saved to: {{path}}"
+    },
+    "notices": {
+      "apply_only": "Setting applied. Existing files were not moved.",
+      "no_result": "Migration finished but no summary was returned."
+    },
+    "errors": {
+      "title": "Setting Migration Failed",
+      "message": "Failed to apply migration: {{error}}"
+    }
   }
 }

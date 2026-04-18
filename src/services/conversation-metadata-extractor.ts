@@ -455,6 +455,9 @@ export class ConversationMetadataExtractor {
         if (forcedProvider === "gemini") {
             return "This ZIP file does not look like a Gemini Takeout export.";
         }
+        if (forcedProvider === "perplexity") {
+            return "This ZIP file does not look like a Perplexity Thread Exporter archive.";
+        }
 
         return "This ZIP file does not match any supported export format.";
     }
@@ -474,6 +477,8 @@ export class ConversationMetadataExtractor {
                 return this.extractLeChatMetadata(rawConversations);
             case "gemini":
                 return this.extractGeminiMetadata(rawConversations);
+            case "perplexity":
+                return this.extractPerplexityMetadata(rawConversations);
             default:
                 throw new Error(`Unsupported provider: ${provider}`);
         }
@@ -608,6 +613,55 @@ export class ConversationMetadataExtractor {
                     isArchived: false,
                 };
             });
+    }
+
+    private extractPerplexityMetadata(conversations: any[]): ConversationMetadata[] {
+        return conversations
+            .filter(chat => {
+                if (!chat || typeof chat !== "object") {
+                    this.plugin.logger.warn("Skipping invalid Perplexity conversation: not an object");
+                    return false;
+                }
+
+                if (!chat.metadata?.thread_id || !Array.isArray(chat.conversations)) {
+                    this.plugin.logger.warn("Skipping Perplexity conversation with missing metadata.thread_id or conversations[]");
+                    return false;
+                }
+
+                return chat.conversations.length > 0;
+            })
+            .map(chat => {
+                const turns = [...chat.conversations].sort((a: any, b: any) => {
+                    const timeA = new Date(a.timestamp || 0).getTime();
+                    const timeB = new Date(b.timestamp || 0).getTime();
+                    return timeA - timeB;
+                });
+
+                const timestamps = turns
+                    .map((turn: any) => new Date(turn.timestamp || 0).getTime())
+                    .filter((ts: number) => Number.isFinite(ts) && ts > 0);
+
+                const metaCreateMs = new Date(chat.metadata?.thread_created_at || "").getTime();
+                const metaUpdateMs = new Date(chat.metadata?.thread_updated_at || "").getTime();
+                const createTime = Number.isFinite(metaCreateMs) && metaCreateMs > 0
+                    ? Math.floor(metaCreateMs / 1000)
+                    : timestamps.length > 0 ? Math.floor(Math.min(...timestamps) / 1000) : 0;
+                const updateTime = Number.isFinite(metaUpdateMs) && metaUpdateMs > 0
+                    ? Math.floor(metaUpdateMs / 1000)
+                    : timestamps.length > 0 ? Math.floor(Math.max(...timestamps) / 1000) : 0;
+
+                return {
+                    id: chat.metadata.thread_id,
+                    title: (chat.metadata.thread_title || "Untitled").trim() || "Untitled",
+                    createTime,
+                    updateTime,
+                    messageCount: turns.length * 2,
+                    provider: "perplexity",
+                    isStarred: false,
+                    isArchived: false,
+                };
+            })
+            .filter(metadata => metadata.messageCount > 0);
     }
 
     private countChatGPTMessages(chat: Chat): number {

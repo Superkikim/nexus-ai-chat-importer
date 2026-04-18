@@ -361,6 +361,106 @@ export class LinkUpdateService {
     }
 
     /**
+     * Update conversation links for multiple old→new note path mappings in a single pass.
+     * This is used as a safety fallback for workflows where notes were moved and some links
+     * were not rewritten automatically by Obsidian.
+     */
+    async updateConversationLinksBatch(
+        pathMappings: Array<{oldPath: string, newPath: string}>,
+        progressCallback?: (progress: LinkUpdateProgress) => void
+    ): Promise<LinkUpdateStats> {
+        const stats: LinkUpdateStats = {
+            conversationsScanned: 0,
+            reportsScanned: 0,
+            attachmentLinksUpdated: 0,
+            conversationLinksUpdated: 0,
+            filesModified: 0,
+            errors: 0
+        };
+
+        if (pathMappings.length === 0) {
+            return stats;
+        }
+
+        const reportFiles = await this.getReportFiles();
+        const artifactFiles = await this.getClaudeArtifactFiles();
+        const files = [...reportFiles, ...artifactFiles];
+        stats.reportsScanned = reportFiles.length;
+
+        progressCallback?.({
+            phase: "scanning",
+            current: 0,
+            total: files.length,
+            detail: `Checking links in ${files.length} files`,
+        });
+
+        const batchSize = 10;
+        for (let i = 0; i < files.length; i += batchSize) {
+            const batch = files.slice(i, i + batchSize);
+
+            progressCallback?.({
+                phase: "updating-conversations",
+                current: i,
+                total: files.length,
+                detail: `Updating conversation links: ${i}/${files.length}`,
+            });
+
+            for (const file of batch) {
+                try {
+                    const content = await this.plugin.app.vault.read(file);
+                    let updated = content;
+                    let updatedCountForFile = 0;
+
+                    for (const mapping of pathMappings) {
+                        const oldPath = mapping.oldPath.replace(/\/+$/, "");
+                        const newPath = mapping.newPath.replace(/\/+$/, "");
+                        const escaped = this.escapeRegExp(oldPath);
+
+                        const patterns = [
+                            new RegExp(`(\\[\\[)${escaped}(\\|[^\\]]+\\]\\])`, "g"),
+                            new RegExp(`(\\[\\[)${escaped}(\\]\\])`, "g"),
+                            new RegExp(`(conversation_link:\\s*\"\\[\\[)${escaped}(\\]\\]\")`, "g"),
+                        ];
+
+                        for (const pattern of patterns) {
+                            pattern.lastIndex = 0;
+                            const before = updated;
+                            updated = updated.replace(pattern, `$1${newPath}$2`);
+                            if (before !== updated) {
+                                pattern.lastIndex = 0;
+                                const matches = before.match(pattern);
+                                updatedCountForFile += matches ? matches.length : 1;
+                            }
+                        }
+                    }
+
+                    if (updated !== content) {
+                        await this.plugin.app.vault.modify(file, updated);
+                        stats.filesModified++;
+                        stats.conversationLinksUpdated += updatedCountForFile;
+                    }
+                } catch (error) {
+                    stats.errors++;
+                    this.plugin.logger.error(`Error updating conversation links in ${file.path}:`, error);
+                }
+            }
+
+            if (i + batchSize < files.length) {
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+        }
+
+        progressCallback?.({
+            phase: "complete",
+            current: files.length,
+            total: files.length,
+            detail: `Fixed ${stats.conversationLinksUpdated} conversation link(s)`,
+        });
+
+        return stats;
+    }
+
+    /**
      * Estimate time for link updates based on file count
      */
     async estimateUpdateTime(folderType: 'attachments' | 'conversations'): Promise<{ fileCount: number; estimatedSeconds: number }> {

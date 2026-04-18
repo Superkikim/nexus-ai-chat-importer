@@ -142,5 +142,18 @@ describe("filterConversationsByIds", () => {
         expect(result).toHaveLength(1);
         expect(result[0].uuid).toBe("u2");
     });
-});
 
+    it("handles Perplexity-style thread objects via fallback heuristics", () => {
+        const registry = new DefaultProviderRegistry();
+
+        const conversations = [
+            { metadata: { thread_id: "p1" }, conversations: [] },
+            { metadata: { thread_id: "p2" }, conversations: [] }
+        ];
+
+        const result = filterConversationsByIds(conversations, ["p2"], registry, "perplexity");
+
+        expect(result).toHaveLength(1);
+        expect(result[0].metadata.thread_id).toBe("p2");
+    });
+});

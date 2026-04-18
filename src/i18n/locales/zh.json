@@ -49,6 +49,11 @@
         "name": "Le Chat",
         "description": "Mistral AI Le Chat 对话导出",
         "file_formats_0": "chat-<uuid>.json 文件"
+      },
+      "perplexity": {
+        "name": "Perplexity",
+        "description": "Perplexity Thread Exporter JSON 存档",
+        "file_formats_0": "perplexity_*.json 文件（metadata + conversations[]）"
       }
     },
     "buttons": {
@@ -198,6 +203,14 @@
         "desc": "附件存放位置（⚠️ 请将其排除在同步范围之外以节省空间）",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "浏览文件夹或新建文件夹"
+      },
+      "hierarchy_order": {
+        "name": "Conversation hierarchy order",
+        "desc": "Choose how conversation folders are organized inside the conversation root",
+        "options": {
+          "provider_year_month": "Provider / Year / Month",
+          "year_month_provider": "Year / Month / Provider"
+        }
       }
     },
     "display": {
@@ -515,5 +528,38 @@
     "default_message": "如果这个插件让您的生活更便捷，一笔捐款对我意义重大，也将帮助这些项目持续运转。",
     "reality_check": "感谢您！这些插件凝聚了数千小时的心血，每一笔捐款都帮助我在应对持续健康问题的同时不断改进它们。如果这个插件让您的生活更便捷，请考虑支持我。",
     "button_alt": "支持我的工作"
+  },
+  "settings_migration": {
+    "decision": {
+      "title": "Apply Setting Change",
+      "description": "The setting \"{{setting}}\" affects {{count}} existing conversation file(s). Choose how to proceed:",
+      "apply_and_migrate": "Apply and migrate now",
+      "apply_only": "Apply only (future imports)"
+    },
+    "progress": {
+      "title": "Applying setting migration",
+      "preparing": "Preparing migration...",
+      "preparing_detail": "{{count}} file move(s) planned",
+      "executing": "Executing migration...",
+      "finalizing": "Finalizing",
+      "finalizing_detail": "Saving setting and validating results",
+      "complete": "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+    },
+    "result": {
+      "title": "Setting Migration Result",
+      "summary": "Moved: {{moved}} • Skipped: {{skipped}} • Errors: {{errors}} • Duration: {{duration}}s",
+      "new_order": "New hierarchy order: {{order}}",
+      "details": "Details",
+      "details_truncated": "... {{hidden}} additional line(s) not shown",
+      "report": "Report saved to: {{path}}"
+    },
+    "notices": {
+      "apply_only": "Setting applied. Existing files were not moved.",
+      "no_result": "Migration finished but no summary was returned."
+    },
+    "errors": {
+      "title": "Setting Migration Failed",
+      "message": "Failed to apply migration: {{error}}"
+    }
   }
 }

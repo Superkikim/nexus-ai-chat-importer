@@ -30,6 +30,7 @@ export class ChatGPTConverter {
      */
     static convertChat(chat: Chat): StandardConversation {
         const messages = this.extractMessagesFromMapping(chat);
+        const models = this.extractConversationModels(chat, messages);
         
         return {
             id: chat.id || "",
@@ -39,6 +40,7 @@ export class ChatGPTConverter {
             updateTime: chat.update_time || 0,
             messages: messages,
             metadata: {
+                models,
                 conversation_template_id: chat.conversation_template_id,
                 gizmo_id: chat.gizmo_id,
                 gizmo_type: chat.gizmo_type,
@@ -58,14 +60,36 @@ export class ChatGPTConverter {
      */
     private static convertMessage(chatMessage: ChatMessage, conversationId?: string): StandardMessage {
         const contentResult = this.extractContent(chatMessage, conversationId);
+        const model = typeof chatMessage.metadata?.model_slug === "string"
+            ? chatMessage.metadata.model_slug
+            : undefined;
 
         return {
             id: chatMessage.id || "",
             role: chatMessage.author?.role === "user" ? "user" : "assistant",
             content: contentResult.content,
             timestamp: chatMessage.create_time || 0,
+            model,
             attachments: contentResult.attachments || []
         };
+    }
+
+    private static extractConversationModels(chat: Chat, messages: StandardMessage[]): string[] {
+        const candidates = [
+            chat.default_model_slug,
+            ...messages.map(message => message.model),
+        ];
+
+        const seen = new Set<string>();
+        const models: string[] = [];
+        for (const candidate of candidates) {
+            const normalized = (candidate || "").trim();
+            if (!normalized || seen.has(normalized)) continue;
+            seen.add(normalized);
+            models.push(normalized);
+        }
+
+        return models;
     }
 
     /**

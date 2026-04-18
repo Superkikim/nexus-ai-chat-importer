@@ -58,6 +58,7 @@ export class ClaudeConverter {
         // Normalize title to "Untitled" if missing (fix for artifact conversation links)
         const conversationTitle = chat.name || "Untitled";
         const messages = await this.convertMessages(chat.chat_messages, chat.uuid, conversationTitle, createTime);
+        const normalizedModel = (chat.model || "").trim();
 
         return {
             id: chat.uuid,
@@ -68,7 +69,8 @@ export class ClaudeConverter {
             provider: "claude",
             chatUrl: `https://claude.ai/chat/${chat.uuid}`,
             metadata: {
-                model: chat.model || "claude-3",
+                models: normalizedModel ? [normalizedModel] : [],
+                ...(normalizedModel ? { model: normalizedModel } : {}),
                 summary: chat.summary || "",
                 is_starred: chat.is_starred,
                 current_leaf_message_uuid: chat.current_leaf_message_uuid,

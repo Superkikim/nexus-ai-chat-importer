@@ -84,6 +84,13 @@ export function filterConversationsByIds(
                 return conversation.uuid || "";
             }
 
+            if (
+                forcedProvider === "perplexity" ||
+                (conversation && conversation.metadata?.thread_id && Array.isArray(conversation.conversations))
+            ) {
+                return conversation.metadata?.thread_id || "";
+            }
+
             // Default: ChatGPT-style conversation with id field
             return (conversation && conversation.id) || "";
         } catch {
@@ -97,4 +104,3 @@ export function filterConversationsByIds(
         return selectedIdsSet.has(conversationId);
     });
 }
-

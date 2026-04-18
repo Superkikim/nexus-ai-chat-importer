@@ -6,7 +6,7 @@ import { ZipArchiveReader } from "./zip-loader";
 const DEFAULT_LARGE_JSON_THRESHOLD_BYTES = 32 * 1024 * 1024; // 32 MB
 const DEFAULT_STREAM_YIELD_EVERY = 25;
 
-export type SupportedArchiveProvider = "chatgpt" | "claude" | "lechat" | "gemini";
+export type SupportedArchiveProvider = "chatgpt" | "claude" | "lechat" | "gemini" | "perplexity";
 
 export type ArchiveClassification =
     | {
@@ -40,6 +40,15 @@ export function findGeminiActivityJsonFiles(fileNames: string[]): string[] {
     return geminiJsonFiles;
 }
 
+export function findPerplexityJsonFiles(fileNames: string[]): string[] {
+    return fileNames.filter((name) => {
+        const lower = name.toLowerCase();
+        if (!lower.endsWith(".json")) return false;
+        const baseName = lower.split("/").pop() ?? lower;
+        return baseName.startsWith("perplexity_");
+    });
+}
+
 export function classifyArchiveEntries(
     fileNames: string[],
     forcedProvider?: string
@@ -57,12 +66,15 @@ export function classifyArchiveEntries(
     const hasUsersJson = fileNames.includes("users.json");
     const hasLeChatFiles = fileNames.some(name => /^chat-[a-f0-9-]+\.json$/.test(name));
     const hasGeminiActivityJson = findGeminiActivityJsonFiles(fileNames).length > 0;
+    const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
 
     const detectedProvider: SupportedArchiveProvider | undefined =
         hasLeChatFiles && !hasConversationsJson
             ? "lechat"
             : hasGeminiActivityJson && !hasConversationsJson && !hasLeChatFiles
             ? "gemini"
+            : hasPerplexityFiles && !hasConversationsJson && !hasLeChatFiles && !hasGeminiActivityJson
+            ? "perplexity"
             : hasConversationsJson && hasUsersJson
             ? "claude"
             : hasConversationsJson
@@ -117,6 +129,18 @@ export function classifyArchiveEntries(
                 supported: false,
                 reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
                 message: "This ZIP file does not look like a Gemini Takeout export.",
+            };
+        }
+
+        if (expectedProvider === "perplexity") {
+            if (detectedProvider === "perplexity") {
+                return { supported: true, provider: "perplexity", reason: "supported" };
+            }
+
+            return {
+                supported: false,
+                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
+                message: "This ZIP file does not look like a Perplexity Thread Exporter archive.",
             };
         }
     }
@@ -212,6 +236,23 @@ async function collectLeChatConversationFromEntry(entry: {
     );
 }
 
+async function collectJsonObjectFromEntry(entry: {
+    readText(): Promise<string>;
+}): Promise<{ item: any; uncompressedBytes: number }> {
+    const text = await entry.readText();
+    const uncompressedBytes = text.length;
+    const parsed = JSON.parse(text);
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new NexusAiChatImporterError(
+            "Invalid Perplexity JSON format",
+            "Expected a JSON object with metadata and conversations fields."
+        );
+    }
+
+    return { item: parsed, uncompressedBytes };
+}
+
 function formatRuntimeMemorySnapshot(): string {
     const perf = globalThis.performance as Performance & {
         memory?: {
@@ -275,6 +316,29 @@ export async function extractRawConversations(
         return { conversations, uncompressedBytes };
     }
 
+    const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
+    if (perplexityJsonFiles.length > 0) {
+        const conversations: any[] = [];
+        let uncompressedBytes = 0;
+
+        for (const fileName of perplexityJsonFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            const { item, uncompressedBytes: fileBytes } = await collectJsonObjectFromEntry(entry);
+            uncompressedBytes += fileBytes;
+            conversations.push(item);
+        }
+
+        if (conversations.length === 0) {
+            throw new NexusAiChatImporterError(
+                "Empty Perplexity export",
+                "No thread JSON files found in the Perplexity archive."
+            );
+        }
+
+        return { conversations, uncompressedBytes };
+    }
+
     const numberedConvFiles = fileNames.filter(name => /^conversations-\d+\.json$/.test(name)).sort();
     if (numberedConvFiles.length > 0) {
         const conversations: any[] = [];
@@ -305,7 +369,7 @@ export async function extractRawConversations(
     if (!conversationsFile) {
         throw new NexusAiChatImporterError(
             "Missing conversations.json",
-            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or a Gemini activity JSON file."
+            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Gemini activity JSON file."
         );
     }
 
@@ -381,6 +445,31 @@ export async function* extractConversationsStream(
             "Gemini streaming not supported",
             "Gemini imports still require all-at-once processing."
         );
+    }
+
+    const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
+    if (perplexityJsonFiles.length > 0) {
+        streamLogger.info("Using Perplexity conversation stream", {
+            fileCount: perplexityJsonFiles.length,
+        });
+        let yieldedCount = 0;
+        for (const fileName of perplexityJsonFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            const { item, uncompressedBytes } = await collectJsonObjectFromEntry(entry);
+            streamLogger.info("Perplexity thread file read complete", {
+                fileName,
+                textLength: uncompressedBytes,
+            });
+            yieldedCount++;
+            yield item;
+            await yieldToEventLoopIfNeeded(yieldedCount);
+        }
+        streamLogger.info("Perplexity conversation stream complete", {
+            yieldedCount,
+            durationMs: Date.now() - startedAt,
+        });
+        return;
     }
 
     const numberedConvFiles = fileNames.filter(name => /^conversations-\d+\.json$/.test(name)).sort();
@@ -460,7 +549,7 @@ export async function* extractConversationsStream(
     if (!conversationsFile) {
         throw new NexusAiChatImporterError(
             "Missing conversations.json",
-            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or a Gemini activity JSON file."
+            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Gemini activity JSON file."
         );
     }
 

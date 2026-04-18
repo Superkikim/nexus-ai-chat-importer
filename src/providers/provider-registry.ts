@@ -23,6 +23,7 @@ import { ChatGPTAdapter } from "./chatgpt/chatgpt-adapter";
 import { ClaudeAdapter } from "./claude/claude-adapter";
 import { LeChatAdapter } from "./lechat/lechat-adapter";
 import { GeminiAdapter } from "./gemini/gemini-adapter";
+import { PerplexityAdapter } from "./perplexity/perplexity-adapter";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**
@@ -39,6 +40,9 @@ export function createProviderRegistry(plugin: NexusAiChatImporterPlugin): Defau
 
     // Register Le Chat provider
     registry.register("lechat", new LeChatAdapter(plugin));
+
+    // Register Perplexity provider
+    registry.register("perplexity", new PerplexityAdapter(plugin));
 
     // Register Gemini provider (disabled for v1.4.0 - complex format requiring additional validation)
     // Will be re-enabled in future release

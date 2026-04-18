@@ -50,6 +50,7 @@ export class NoteFormatter {
 
         let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation);
         content += this.generateMessagesContent(conversation);
+        content += this.generateRelatedQueriesSection(conversation);
 
         return content;
     }
@@ -69,6 +70,13 @@ export class NoteFormatter {
             chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(conversationId);
         }
 
+        const mode = this.extractMode(conversation);
+        const models = this.extractModels(conversation);
+        const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"\n` : "";
+        const modelsBlock = models.length > 0
+            ? `models:\n${models.map(model => `  - "${model.replace(/"/g, '\\"')}"`).join("\n")}\n`
+            : "";
+
         // Build frontmatter with plugin_version after nexus
         // Timestamps in ISO 8601 format (v1.3.0+)
         let frontmatter = `---
@@ -79,8 +87,7 @@ aliases: ${title}
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
----
-
+${modeLine}${modelsBlock}---
 `;
 
         // Build header content - use original title for display, safe title for frontmatter
@@ -100,5 +107,50 @@ update_time: ${updateTimeStr}
 
     private generateMessagesContent(conversation: StandardConversation): string {
         return this.messageFormatter.formatMessages(conversation.messages);
+    }
+
+    private extractMode(conversation: StandardConversation): string | undefined {
+        const mode = conversation.metadata?.mode;
+        return typeof mode === "string" && mode.trim().length > 0 ? mode.trim() : undefined;
+    }
+
+    private extractModels(conversation: StandardConversation): string[] {
+        const metadata = conversation.metadata || {};
+        const fromMetadata = Array.isArray(conversation.metadata?.models)
+            ? (metadata.models as string[])
+            : [];
+        const fromMessages = conversation.messages
+            .map(message => message.model)
+            .filter((model): model is string => typeof model === "string" && model.trim().length > 0);
+
+        const seen = new Set<string>();
+        const models: string[] = [];
+        for (const model of [...fromMetadata, ...fromMessages]) {
+            const normalized = model.trim();
+            if (!normalized || seen.has(normalized)) continue;
+            seen.add(normalized);
+            models.push(normalized);
+        }
+        return models;
+    }
+
+    private generateRelatedQueriesSection(conversation: StandardConversation): string {
+        const relatedQueries = conversation.metadata?.related_queries;
+        if (!Array.isArray(relatedQueries)) {
+            return "";
+        }
+
+        const normalized = relatedQueries
+            .filter((query): query is string => typeof query === "string")
+            .map(query => query.trim())
+            .filter(query => query.length > 0);
+
+        if (normalized.length === 0) {
+            return "";
+        }
+
+        const uniqueQueries = [...new Set(normalized)];
+        const lines = uniqueQueries.map(query => `- ${query}`).join("\n");
+        return `\n\n## Related Queries\n${lines}`;
     }
 }

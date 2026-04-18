@@ -81,6 +81,16 @@ export class ProviderSelectionDialog extends Modal {
             });
         }
 
+        // Perplexity
+        if (registry.getAdapter("perplexity")) {
+            providers.push({
+                id: "perplexity",
+                name: t('provider_selection.providers.perplexity.name'),
+                description: t('provider_selection.providers.perplexity.description'),
+                fileFormats: [t('provider_selection.providers.perplexity.file_formats_0')]
+            });
+        }
+
         // Gemini - Temporarily disabled for v1.4.0 (complex export format)
         // Will be re-enabled in future release after additional testing and validation
         // if (registry.getAdapter("gemini")) {

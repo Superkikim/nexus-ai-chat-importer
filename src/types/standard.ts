@@ -72,6 +72,7 @@ export interface StandardMessage {
     role: 'user' | 'assistant';
     content: string;
     timestamp: number; // Unix timestamp
+    model?: string; // Optional per-message model label (provider-specific)
     attachments?: StandardAttachment[];
 }
 
@@ -107,6 +108,9 @@ export const URL_GENERATORS: Record<string, UrlGenerator> = {
     },
     claude: {
         generateChatUrl: PROVIDER_URLS.CLAUDE.CHAT
+    },
+    perplexity: {
+        generateChatUrl: PROVIDER_URLS.PERPLEXITY.CHAT
     }
 };
 

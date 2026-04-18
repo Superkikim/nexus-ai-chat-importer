@@ -1,5 +1,34 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.0 — Perplexity Provider + Universal Metadata
+
+![Version](https://img.shields.io/badge/version-1.6.0-blue) ![New Provider](https://img.shields.io/badge/new_provider-Perplexity-green)
+
+### ✨ New
+
+- **Perplexity provider support**
+  - Import Perplexity Thread Exporter ZIP archives containing `perplexity_*.json` thread files
+  - Full append behavior preserved using per-turn UUIDs (`append, don't overwrite`)
+  - Provider selection UI now includes Perplexity
+
+- **Universal frontmatter metadata**
+  - Added optional `mode` field when provider mode is available and stable
+  - Added optional `models` field (deduplicated list) for cross-provider querying
+  - Added assistant header model labeling when available: `Assistant · <model>`
+
+### 🔧 Improved
+
+- **Perplexity rendering**
+  - `answer` content is preserved as Markdown
+  - Optional `sources` arrays are rendered as references blocks per assistant message
+  - Optional `related_queries` are aggregated and appended in a dedicated section at note end
+
+- **Archive detection**
+  - ZIP classification now recognizes Perplexity archive layouts (`perplexity_*.json`)
+  - Provider mismatch handling includes dedicated Perplexity messaging
+
+---
+
 ## Version 1.5.7 — ZIP Pipeline Refactor, Mobile Hardening, and UX Updates
 
 ![Version](https://img.shields.io/badge/version-1.5.7-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)

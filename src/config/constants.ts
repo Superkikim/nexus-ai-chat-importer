@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     conversationFolder: "Nexus/Conversations",
     reportFolder: "Nexus/Reports",
     attachmentFolder: "Nexus/Attachments",
+    conversationHierarchyOrder: "provider-year-month",
 
     // ========================================
     // 🎨 DISPLAY OPTIONS
@@ -73,6 +74,10 @@ export const PROVIDER_URLS = {
     LECHAT: {
         BASE: 'https://chat.mistral.ai',
         CHAT: (id: string) => `https://chat.mistral.ai/chat/${id}`
+    },
+    PERPLEXITY: {
+        BASE: 'https://www.perplexity.ai',
+        CHAT: (id: string) => `https://www.perplexity.ai/search/${id}`
     }
 } as const;
 
@@ -82,7 +87,8 @@ export const PROVIDER_URLS = {
 export const PROVIDERS = {
     CHATGPT: 'chatgpt',
     CLAUDE: 'claude',
-    LECHAT: 'lechat'
+    LECHAT: 'lechat',
+    PERPLEXITY: 'perplexity'
 } as const;
 
 export type Provider = typeof PROVIDERS[keyof typeof PROVIDERS];

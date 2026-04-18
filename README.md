@@ -6,9 +6,9 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.5.7** fixes key import reliability issues:
-> provider auto-detection, safer mobile imports, cleaner unsupported ZIP handling,
-> improved reports, and a fix for missing message updates in Claude imports.
+> ✅ **v1.6.0** adds Perplexity provider support and universal `mode/models` frontmatter:
+> Perplexity Thread Exporter archives are now supported, assistant model labels are shown inline,
+> and related queries can be preserved at the end of notes.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -17,7 +17,7 @@
 ### 🚀 Getting Started
 - [⚡ Quickstart](#-quickstart) - Get up and running in 2 minutes
 - [📥 Installation](#-installation--settings) - Install from Community Plugins
-- [📤 Export Your Chats](#-importing-conversations) - Get your data from ChatGPT/Claude/Le Chat
+- [📤 Export Your Chats](#-importing-conversations) - Get your data from ChatGPT/Claude/Le Chat/Perplexity
 
 ### 💡 Using the Plugin
 - [📥 Import Conversations](#-importing-conversations) - Quick or selective import
@@ -27,7 +27,7 @@
 
 ### 🔧 Advanced
 - [📎 Attachments](#attachments) - Images, DALL-E, artifacts
-- [🤖 Provider Differences](#-provider-specific-features--limitations) - ChatGPT, Claude, Le Chat specifics
+- [🤖 Provider Differences](#-provider-specific-features--limitations) - ChatGPT, Claude, Le Chat, Perplexity specifics
 - [💻 CLI](#-command-line-interface-cli) - Import from command line
 - [⚙️ Settings](#plugin-settings) - Customize folders and formatting
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
@@ -48,6 +48,7 @@
    - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
    - **Claude**: Settings → Privacy → Export data → Download ZIP
    - **Le Chat**: Click your name → Profile → Le Chat: Export → Download
+   - **Perplexity**: Export via Perplexity Thread Exporter (ZIP with `perplexity_*.json`)
 3. **Import**: Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar or use command palette → "Import AI conversations"
 4. **Select** your ZIP file(s) and import mode (all or selective)
 5. **Provider is auto-detected** from the first supported archive in your selection
@@ -59,11 +60,11 @@
 
 ## Overview
 
-Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** exports into Obsidian as beautifully formatted Markdown files.
+Import your AI chat conversations from **ChatGPT**, **Claude**, **Le Chat**, and **Perplexity** exports into Obsidian as beautifully formatted Markdown files.
 
 ### 🔍 Features in a Glance
 
-- Multi-provider support (ChatGPT, Claude, Le Chat)
+- Multi-provider support (ChatGPT, Claude, Le Chat, Perplexity)
 - Selective import with interactive preview
 - Smart deduplication across multiple ZIPs
 - Attachment handling — images, documents, DALL-E, artifacts (provider-dependent)
@@ -75,6 +76,20 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, and **Le Chat** 
 - Full UI localization in 10 languages
 
 ### ✨ What's New
+
+#### v1.6.0 — Perplexity + Universal Metadata
+
+✨ **New**
+- Perplexity provider support (Perplexity Thread Exporter ZIP archives)
+- Per-turn model-aware assistant headers (`Assistant · <model>`)
+- Universal frontmatter metadata keys:
+  - `mode` (when provider exposes stable mode)
+  - `models` (deduplicated list)
+
+🔧 **Improved**
+- Perplexity answer Markdown is preserved as-is
+- Related queries can be appended at the end of imported notes
+- Provider auto-detection now recognizes Perplexity archives (`perplexity_*.json`)
 
 #### v1.5.x — Highlights
 
@@ -127,7 +142,7 @@ I'm working on Nexus projects full-time while unemployed and dealing with health
 ## ✨ Key Features
 
 - 🎯 **Selective Import**: Choose exactly which conversations to import with interactive preview
-- 💬 **Multi-Provider Support**: Full support for ChatGPT, Claude, and Le Chat conversations
+- 💬 **Multi-Provider Support**: Full support for ChatGPT, Claude, Le Chat, and Perplexity conversations
 - 🎨 **Beautiful Formatting**: Custom callouts with role-specific colors and icons
 - 📎 **Complete Attachment Handling**: Images, documents, DALL-E creations with prompts
 - 🎨 **Claude Artifact Versioning**: Separate files for each artifact modification
@@ -255,7 +270,7 @@ Want to reorganize? No problem!
 - Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar, OR
 - Press **Ctrl/Cmd+P** → type "**Import AI conversations**"
 
-### Provider Detection Rules (v1.5.7)
+### Provider Detection Rules (v1.6.0)
 
 - The plugin auto-detects the provider from the **first supported ZIP** in your selection
 - Files that don't match that provider are ignored and reported as skipped
@@ -452,7 +467,7 @@ Rich metadata written at the top of every note:
 ---
 nexus: nexus-ai-chat-importer        # Plugin identifier (do not modify)
 plugin_version: "1.x.x"             # Plugin version at import time
-provider: chatgpt                    # chatgpt, claude, or lechat
+provider: chatgpt                    # chatgpt, claude, lechat, or perplexity
 aliases: My Conversation Title       # YAML-safe alias for Obsidian linking
 conversation_id: abc123...
 create_time: 2024-01-15T14:30:22.000Z # UTC ISO 8601
@@ -772,7 +787,7 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 - **Solution**: Disable auto-unzip in Safari:
   - Safari → Preferences → General
   - Uncheck "Open 'safe' files after downloading"
-  - Re-download the export from ChatGPT/Claude/Le Chat
+  - Re-download the export from ChatGPT/Claude/Le Chat/Perplexity
 - **Note**: This is a Safari feature, not a plugin bug
 - **Do NOT manually re-compress** unzipped folders (creates incorrect structure)
 
@@ -800,7 +815,7 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 ## 🚀 Future Plans
 
 Current roadmap:
-- **v1.6.0**: Perplexity provider support
+- **v1.6.x**: Perplexity follow-up improvements (sources/citations variants, richer metadata)
 - **Gemini**: feasibility study in progress (no ETA)
 
 ### How You Can Help

@@ -49,6 +49,11 @@
         "name": "Le Chat",
         "description": "Exports de conversations Mistral AI Le Chat",
         "file_formats_0": "fichiers chat-<uuid>.json"
+      },
+      "perplexity": {
+        "name": "Perplexity",
+        "description": "Archives JSON Perplexity Thread Exporter",
+        "file_formats_0": "fichiers perplexity_*.json (metadata + conversations[])"
       }
     },
     "buttons": {
@@ -198,6 +203,14 @@
         "desc": "Où les pièces jointes sont stockées (⚠️ Exclure de la synchronisation pour économiser de l'espace)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Parcourir les dossiers ou en créer un nouveau"
+      },
+      "hierarchy_order": {
+        "name": "Ordre de hiérarchie des conversations",
+        "desc": "Choisir l'organisation des dossiers de conversations dans le dossier racine",
+        "options": {
+          "provider_year_month": "Fournisseur / Année / Mois",
+          "year_month_provider": "Année / Mois / Fournisseur"
+        }
       }
     },
     "display": {
@@ -403,6 +416,39 @@
       "files_moved": "Files moved to {{path}}",
       "failed_move": "Failed to move files: {{error}}",
       "files_moved_links_updated": "✅ {{moved}} files moved to {{path}}. {{links}} links updated"
+    }
+  },
+  "settings_migration": {
+    "decision": {
+      "title": "Appliquer le changement de paramètre",
+      "description": "Le paramètre « {{setting}} » impacte {{count}} fichier(s) de conversation existant(s). Choisissez comment continuer :",
+      "apply_and_migrate": "Appliquer et migrer maintenant",
+      "apply_only": "Appliquer uniquement (imports futurs)"
+    },
+    "progress": {
+      "title": "Application de la migration de paramètre",
+      "preparing": "Préparation de la migration...",
+      "preparing_detail": "{{count}} déplacement(s) de fichier planifié(s)",
+      "executing": "Exécution de la migration...",
+      "finalizing": "Finalisation",
+      "finalizing_detail": "Sauvegarde du paramètre et validation des résultats",
+      "complete": "Migration terminée : {{moved}} déplacés, {{skipped}} ignorés, {{errors}} erreurs"
+    },
+    "result": {
+      "title": "Résultat de migration de paramètre",
+      "summary": "Déplacés : {{moved}} • Ignorés : {{skipped}} • Erreurs : {{errors}} • Durée : {{duration}}s",
+      "new_order": "Nouvel ordre hiérarchique : {{order}}",
+      "report": "Rapport enregistré dans : {{path}}",
+      "details": "Détails",
+      "details_truncated": "... {{hidden}} ligne(s) supplémentaire(s) non affichée(s)"
+    },
+    "notices": {
+      "apply_only": "Paramètre appliqué. Les fichiers existants n'ont pas été déplacés.",
+      "no_result": "La migration est terminée mais aucun résumé n'a été retourné."
+    },
+    "errors": {
+      "title": "Échec de migration du paramètre",
+      "message": "Impossible d'appliquer la migration : {{error}}"
     }
   },
   "folder_browser": {

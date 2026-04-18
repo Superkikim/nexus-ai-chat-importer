@@ -60,7 +60,11 @@ export class MessageFormatter {
 
         const messageTime = formatMessageTimestamp(message.timestamp, customFormat);
 
-        const authorName = message.role === "user" ? "User" : "Assistant";
+        const authorName = message.role === "assistant" && message.model
+            ? `Assistant · ${message.model}`
+            : message.role === "user"
+            ? "User"
+            : "Assistant";
         const calloutType = message.role === "user" ? MessageFormatter.CALLOUTS.USER : MessageFormatter.CALLOUTS.AGENT;
 
         // Create callout with timestamp and content

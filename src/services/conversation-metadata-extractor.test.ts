@@ -4,9 +4,11 @@ import { DefaultProviderRegistry } from "../providers/provider-adapter";
 import { Chat } from "../providers/chatgpt/chatgpt-types";
 import { ClaudeConversation } from "../providers/claude/claude-types";
 import { LeChatConversation } from "../providers/lechat/lechat-types";
+import { PerplexityConversationFile } from "../providers/perplexity/perplexity-types";
 import { ChatGPTAdapter } from "../providers/chatgpt/chatgpt-adapter";
 import { ClaudeAdapter } from "../providers/claude/claude-adapter";
 import { LeChatAdapter } from "../providers/lechat/lechat-adapter";
+import { PerplexityAdapter } from "../providers/perplexity/perplexity-adapter";
 
 /**
  * Tests that ConversationMetadataExtractor stays aligned with
@@ -133,5 +135,38 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
         expect(m.provider).toBe(adapter.getProviderName());
         expect(m.messageCount).toBe(conversation.length);
     });
-});
 
+    it("uses the same identifiers and timestamps as PerplexityAdapter", () => {
+        const plugin = createTestPlugin();
+        const registry = new DefaultProviderRegistry();
+        const extractor = new ConversationMetadataExtractor(registry as any, plugin as any);
+        const adapter = new PerplexityAdapter();
+
+        const conversation: PerplexityConversationFile = {
+            metadata: {
+                thread_id: "perp-1",
+                thread_title: "Test Perplexity",
+                thread_created_at: "2024-03-01T10:00:00.000Z",
+                thread_updated_at: "2024-03-01T10:10:00.000Z",
+            },
+            conversations: [
+                {
+                    uuid: "turn-1",
+                    query: "Hi",
+                    answer: "Hello",
+                    timestamp: "2024-03-01T10:00:05.000Z",
+                },
+            ],
+        };
+
+        const metadata = (extractor as any).extractPerplexityMetadata([conversation]) as any[];
+        expect(metadata).toHaveLength(1);
+
+        const m = metadata[0];
+        expect(m.id).toBe(adapter.getId(conversation));
+        expect(m.createTime).toBe(adapter.getCreateTime(conversation));
+        expect(m.updateTime).toBe(adapter.getUpdateTime(conversation));
+        expect(m.provider).toBe(adapter.getProviderName());
+        expect(m.messageCount).toBe(2);
+    });
+});

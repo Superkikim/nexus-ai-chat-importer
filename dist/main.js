@@ -84,6 +84,11 @@ var init_en = __esm({
             name: "Le Chat",
             description: "Mistral AI Le Chat conversation exports",
             file_formats_0: "chat-<uuid>.json files"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Perplexity Thread Exporter JSON archives",
+            file_formats_0: "perplexity_*.json files (metadata + conversations[])"
           }
         },
         buttons: {
@@ -233,6 +238,14 @@ var init_en = __esm({
             desc: "Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Browse folders or create a new one"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -440,6 +453,39 @@ var init_en = __esm({
           files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          report: "Report saved to: {{path}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
+      },
       folder_browser: {
         title: "Select Folder",
         vault_root: "Vault Root (/)",
@@ -610,6 +656,11 @@ var init_fr = __esm({
             name: "Le Chat",
             description: "Exports de conversations Mistral AI Le Chat",
             file_formats_0: "fichiers chat-<uuid>.json"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Archives JSON Perplexity Thread Exporter",
+            file_formats_0: "fichiers perplexity_*.json (metadata + conversations[])"
           }
         },
         buttons: {
@@ -759,6 +810,14 @@ var init_fr = __esm({
             desc: "O\xF9 les pi\xE8ces jointes sont stock\xE9es (\u26A0\uFE0F Exclure de la synchronisation pour \xE9conomiser de l'espace)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Parcourir les dossiers ou en cr\xE9er un nouveau"
+          },
+          hierarchy_order: {
+            name: "Ordre de hi\xE9rarchie des conversations",
+            desc: "Choisir l'organisation des dossiers de conversations dans le dossier racine",
+            options: {
+              provider_year_month: "Fournisseur / Ann\xE9e / Mois",
+              year_month_provider: "Ann\xE9e / Mois / Fournisseur"
+            }
           }
         },
         display: {
@@ -966,6 +1025,39 @@ var init_fr = __esm({
           files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
+      settings_migration: {
+        decision: {
+          title: "Appliquer le changement de param\xE8tre",
+          description: "Le param\xE8tre \xAB {{setting}} \xBB impacte {{count}} fichier(s) de conversation existant(s). Choisissez comment continuer :",
+          apply_and_migrate: "Appliquer et migrer maintenant",
+          apply_only: "Appliquer uniquement (imports futurs)"
+        },
+        progress: {
+          title: "Application de la migration de param\xE8tre",
+          preparing: "Pr\xE9paration de la migration...",
+          preparing_detail: "{{count}} d\xE9placement(s) de fichier planifi\xE9(s)",
+          executing: "Ex\xE9cution de la migration...",
+          finalizing: "Finalisation",
+          finalizing_detail: "Sauvegarde du param\xE8tre et validation des r\xE9sultats",
+          complete: "Migration termin\xE9e : {{moved}} d\xE9plac\xE9s, {{skipped}} ignor\xE9s, {{errors}} erreurs"
+        },
+        result: {
+          title: "R\xE9sultat de migration de param\xE8tre",
+          summary: "D\xE9plac\xE9s : {{moved}} \u2022 Ignor\xE9s : {{skipped}} \u2022 Erreurs : {{errors}} \u2022 Dur\xE9e : {{duration}}s",
+          new_order: "Nouvel ordre hi\xE9rarchique : {{order}}",
+          report: "Rapport enregistr\xE9 dans : {{path}}",
+          details: "D\xE9tails",
+          details_truncated: "... {{hidden}} ligne(s) suppl\xE9mentaire(s) non affich\xE9e(s)"
+        },
+        notices: {
+          apply_only: "Param\xE8tre appliqu\xE9. Les fichiers existants n'ont pas \xE9t\xE9 d\xE9plac\xE9s.",
+          no_result: "La migration est termin\xE9e mais aucun r\xE9sum\xE9 n'a \xE9t\xE9 retourn\xE9."
+        },
+        errors: {
+          title: "\xC9chec de migration du param\xE8tre",
+          message: "Impossible d'appliquer la migration : {{error}}"
+        }
+      },
       folder_browser: {
         title: "S\xE9lectionner un dossier",
         vault_root: "Racine du Vault (/)",
@@ -1136,6 +1228,11 @@ var init_de = __esm({
             name: "Le Chat",
             description: "Mistral AI Le Chat Gespr\xE4chsexporte",
             file_formats_0: "chat-<uuid>.json-Dateien"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Perplexity Thread Exporter JSON-Archive",
+            file_formats_0: "perplexity_*.json-Dateien (metadata + conversations[])"
           }
         },
         buttons: {
@@ -1285,6 +1382,14 @@ var init_de = __esm({
             desc: "Speicherort f\xFCr Anh\xE4nge (\u26A0\uFE0F Von der Synchronisierung ausschlie\xDFen, um Speicherplatz zu sparen)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Ordner durchsuchen oder neuen erstellen"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -1602,6 +1707,39 @@ var init_de = __esm({
         default_message: "Wenn dieses Plugin Ihr Leben leichter macht, w\xFCrde mir eine Spende sehr viel bedeuten und dazu beitragen, die Projekte am Leben zu erhalten.",
         reality_check: "Danke! Tausende Stunden Arbeit stecken in diesen Plugins, und jede Spende hilft mir, sie weiterzuentwickeln, w\xE4hrend ich mit anhaltenden gesundheitlichen Problemen umgehe. Wenn dieses Plugin Ihr Leben leichter macht, erw\xE4gen Sie bitte, mich zu unterst\xFCtzen.",
         button_alt: "Meine Arbeit unterst\xFCtzen"
+      },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown",
+          report: "Report saved to: {{path}}"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
       }
     };
   }
@@ -1662,6 +1800,11 @@ var init_es = __esm({
             name: "Le Chat",
             description: "Exportaciones de conversaciones Mistral AI Le Chat",
             file_formats_0: "archivos chat-<uuid>.json"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Archivos JSON de Perplexity Thread Exporter",
+            file_formats_0: "archivos perplexity_*.json (metadata + conversations[])"
           }
         },
         buttons: {
@@ -1811,6 +1954,14 @@ var init_es = __esm({
             desc: "D\xF3nde se almacenan los adjuntos (\u26A0\uFE0F Excluir de la sincronizaci\xF3n para ahorrar espacio)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Explorar carpetas o crear una nueva"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -2128,6 +2279,39 @@ var init_es = __esm({
         default_message: "Si este plugin te facilita la vida, una donaci\xF3n significar\xEDa much\xEDsimo para m\xED y ayudar\xEDa a mantenerlos activos.",
         reality_check: "\xA1Gracias! Miles de horas de trabajo han ido a estos plugins, y cada donaci\xF3n me ayuda a seguir mejor\xE1ndolos mientras gestiono problemas de salud continuos. Si este plugin te facilita la vida, por favor considera apoyarme.",
         button_alt: "Apoyar mi trabajo"
+      },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown",
+          report: "Report saved to: {{path}}"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
       }
     };
   }
@@ -2188,6 +2372,11 @@ var init_it = __esm({
             name: "Le Chat",
             description: "Esportazioni di conversazioni Mistral AI Le Chat",
             file_formats_0: "file chat-<uuid>.json"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Archivi JSON di Perplexity Thread Exporter",
+            file_formats_0: "file perplexity_*.json (metadata + conversations[])"
           }
         },
         buttons: {
@@ -2337,6 +2526,14 @@ var init_it = __esm({
             desc: "Dove vengono archiviati gli allegati (\u26A0\uFE0F Escludere dalla sincronizzazione per risparmiare spazio)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Sfoglia le cartelle o creane una nuova"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -2654,6 +2851,39 @@ var init_it = __esm({
         default_message: "Se questo plugin ti semplifica la vita, una donazione significherebbe moltissimo per me e aiuterebbe a tenerli in vita.",
         reality_check: "Grazie! Migliaia di ore di lavoro sono state dedicate a questi plugin, e ogni donazione mi aiuta a continuare a migliorarli mentre gestisco problemi di salute continuativi. Se questo plugin ti semplifica la vita, considera di supportarmi.",
         button_alt: "Supportare il mio lavoro"
+      },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown",
+          report: "Report saved to: {{path}}"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
       }
     };
   }
@@ -2714,6 +2944,11 @@ var init_ru = __esm({
             name: "Le Chat",
             description: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 Mistral AI Le Chat",
             file_formats_0: "\u0444\u0430\u0439\u043B\u044B chat-<uuid>.json"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "JSON-\u0430\u0440\u0445\u0438\u0432\u044B Perplexity Thread Exporter",
+            file_formats_0: "\u0444\u0430\u0439\u043B\u044B perplexity_*.json (metadata + conversations[])"
           }
         },
         buttons: {
@@ -2863,6 +3098,14 @@ var init_ru = __esm({
             desc: "\u041C\u0435\u0441\u0442\u043E \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 (\u26A0\uFE0F \u0418\u0441\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u0438\u0437 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0430\u0446\u0438\u0438 \u0434\u043B\u044F \u044D\u043A\u043E\u043D\u043E\u043C\u0438\u0438 \u043C\u0435\u0441\u0442\u0430)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u041E\u0431\u0437\u043E\u0440 \u043F\u0430\u043F\u043E\u043A \u0438\u043B\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0435 \u043D\u043E\u0432\u043E\u0439"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -3180,6 +3423,39 @@ var init_ru = __esm({
         default_message: "\u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u0431\u0443\u0434\u0435\u0442 \u0434\u043B\u044F \u043C\u0435\u043D\u044F \u043E\u0447\u0435\u043D\u044C \u0437\u043D\u0430\u0447\u0438\u043C\u044B\u043C \u0438 \u043F\u043E\u043C\u043E\u0436\u0435\u0442 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0442\u044C \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0432 \u0440\u0430\u0431\u043E\u0447\u0435\u043C \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0438.",
         reality_check: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E! \u041D\u0430 \u044D\u0442\u0438 \u043F\u043B\u0430\u0433\u0438\u043D\u044B \u0443\u0448\u043B\u0438 \u0442\u044B\u0441\u044F\u0447\u0438 \u0447\u0430\u0441\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B, \u0438 \u043A\u0430\u0436\u0434\u043E\u0435 \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u043C\u043D\u0435 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0442\u044C \u0438\u0445 \u0443\u043B\u0443\u0447\u0448\u0430\u0442\u044C, \u0441\u043F\u0440\u0430\u0432\u043B\u044F\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C. \u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0440\u0430\u0441\u0441\u043C\u043E\u0442\u0440\u0438\u0442\u0435 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438.",
         button_alt: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043C\u043E\u044E \u0440\u0430\u0431\u043E\u0442\u0443"
+      },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown",
+          report: "Report saved to: {{path}}"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
       }
     };
   }
@@ -3240,6 +3516,11 @@ var init_zh = __esm({
             name: "Le Chat",
             description: "Mistral AI Le Chat \u5BF9\u8BDD\u5BFC\u51FA",
             file_formats_0: "chat-<uuid>.json \u6587\u4EF6"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Perplexity Thread Exporter JSON \u5B58\u6863",
+            file_formats_0: "perplexity_*.json \u6587\u4EF6\uFF08metadata + conversations[]\uFF09"
           }
         },
         buttons: {
@@ -3389,6 +3670,14 @@ var init_zh = __esm({
             desc: "\u9644\u4EF6\u5B58\u653E\u4F4D\u7F6E\uFF08\u26A0\uFE0F \u8BF7\u5C06\u5176\u6392\u9664\u5728\u540C\u6B65\u8303\u56F4\u4E4B\u5916\u4EE5\u8282\u7701\u7A7A\u95F4\uFF09",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u6D4F\u89C8\u6587\u4EF6\u5939\u6216\u65B0\u5EFA\u6587\u4EF6\u5939"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -3706,6 +3995,39 @@ var init_zh = __esm({
         default_message: "\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u4E00\u7B14\u6350\u6B3E\u5BF9\u6211\u610F\u4E49\u91CD\u5927\uFF0C\u4E5F\u5C06\u5E2E\u52A9\u8FD9\u4E9B\u9879\u76EE\u6301\u7EED\u8FD0\u8F6C\u3002",
         reality_check: "\u611F\u8C22\u60A8\uFF01\u8FD9\u4E9B\u63D2\u4EF6\u51DD\u805A\u4E86\u6570\u5343\u5C0F\u65F6\u7684\u5FC3\u8840\uFF0C\u6BCF\u4E00\u7B14\u6350\u6B3E\u90FD\u5E2E\u52A9\u6211\u5728\u5E94\u5BF9\u6301\u7EED\u5065\u5EB7\u95EE\u9898\u7684\u540C\u65F6\u4E0D\u65AD\u6539\u8FDB\u5B83\u4EEC\u3002\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u8BF7\u8003\u8651\u652F\u6301\u6211\u3002",
         button_alt: "\u652F\u6301\u6211\u7684\u5DE5\u4F5C"
+      },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown",
+          report: "Report saved to: {{path}}"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
       }
     };
   }
@@ -3766,6 +4088,11 @@ var init_ja = __esm({
             name: "Le Chat",
             description: "Mistral AI Le Chat \u306E\u4F1A\u8A71\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8",
             file_formats_0: "chat-<uuid>.json \u30D5\u30A1\u30A4\u30EB"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Perplexity Thread Exporter \u306E JSON \u30A2\u30FC\u30AB\u30A4\u30D6",
+            file_formats_0: "perplexity_*.json \u30D5\u30A1\u30A4\u30EB\uFF08metadata + conversations[]\uFF09"
           }
         },
         buttons: {
@@ -3915,6 +4242,14 @@ var init_ja = __esm({
             desc: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u4FDD\u5B58\u5148\uFF08\u26A0\uFE0F \u5BB9\u91CF\u7BC0\u7D04\u306E\u305F\u3081\u540C\u671F\u304B\u3089\u9664\u5916\u3059\u308B\u3053\u3068\u3092\u63A8\u5968\uFF09",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u53C2\u7167\u3059\u308B\u304B\u3001\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -4232,6 +4567,39 @@ var init_ja = __esm({
         default_message: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u5BC4\u4ED8\u306F\u3068\u3066\u3082\u5927\u304D\u306A\u52B1\u307F\u306B\u306A\u308A\u3001\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u7D99\u7D9A\u3092\u652F\u3048\u3066\u304F\u308C\u307E\u3059\u3002",
         reality_check: "\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\uFF01\u3053\u308C\u3089\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u306F\u6570\u5343\u6642\u9593\u306E\u4F5C\u696D\u304C\u6CE8\u304E\u8FBC\u307E\u308C\u3066\u304A\u308A\u3001\u3054\u652F\u63F4\u304C\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3068\u5411\u304D\u5408\u3044\u306A\u304C\u3089\u6539\u5584\u3092\u7D9A\u3051\u308B\u79C1\u306E\u529B\u306B\u306A\u308A\u307E\u3059\u3002\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u304A\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u305C\u3072\u30B5\u30DD\u30FC\u30C8\u3092\u3054\u691C\u8A0E\u304F\u3060\u3055\u3044\u3002",
         button_alt: "\u79C1\u306E\u6D3B\u52D5\u3092\u652F\u63F4\u3059\u308B"
+      },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown",
+          report: "Report saved to: {{path}}"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
       }
     };
   }
@@ -4292,6 +4660,11 @@ var init_pt = __esm({
             name: "Le Chat",
             description: "Exporta\xE7\xF5es de conversas do Mistral AI Le Chat",
             file_formats_0: "arquivos chat-<uuid>.json"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Arquivos JSON do Perplexity Thread Exporter",
+            file_formats_0: "arquivos perplexity_*.json (metadata + conversations[])"
           }
         },
         buttons: {
@@ -4441,6 +4814,14 @@ var init_pt = __esm({
             desc: "Local onde os anexos s\xE3o guardados (\u26A0\uFE0F Excluir da sincroniza\xE7\xE3o para poupar espa\xE7o)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Procurar pastas ou criar uma nova"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -4758,6 +5139,39 @@ var init_pt = __esm({
         default_message: "Se este plugin facilita a sua vida, uma doa\xE7\xE3o significaria muito para mim e ajudaria a mant\xEA-los vivos.",
         reality_check: "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada doa\xE7\xE3o ajuda-me a continuar a melhor\xE1-los enquanto lido com problemas de sa\xFAde cont\xEDnuos. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
         button_alt: "Apoiar o meu trabalho"
+      },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown",
+          report: "Report saved to: {{path}}"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
       }
     };
   }
@@ -4818,6 +5232,11 @@ var init_ko = __esm({
             name: "Le Chat",
             description: "Mistral AI Le Chat \uB300\uD654 \uB0B4\uBCF4\uB0B4\uAE30",
             file_formats_0: "chat-<uuid>.json \uD30C\uC77C"
+          },
+          perplexity: {
+            name: "Perplexity",
+            description: "Perplexity Thread Exporter JSON \uC544\uCE74\uC774\uBE0C",
+            file_formats_0: "perplexity_*.json \uD30C\uC77C (metadata + conversations[])"
           }
         },
         buttons: {
@@ -4967,6 +5386,14 @@ var init_ko = __esm({
             desc: "\uCCA8\uBD80 \uD30C\uC77C\uC774 \uC800\uC7A5\uB418\uB294 \uC704\uCE58 (\u26A0\uFE0F \uC6A9\uB7C9 \uC808\uC57D\uC744 \uC704\uD574 \uB3D9\uAE30\uD654\uC5D0\uC11C \uC81C\uC678\uD558\uC138\uC694)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\uD3F4\uB354 \uCC3E\uC544\uBCF4\uAE30 \uB610\uB294 \uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30"
+          },
+          hierarchy_order: {
+            name: "Conversation hierarchy order",
+            desc: "Choose how conversation folders are organized inside the conversation root",
+            options: {
+              provider_year_month: "Provider / Year / Month",
+              year_month_provider: "Year / Month / Provider"
+            }
           }
         },
         display: {
@@ -5284,6 +5711,39 @@ var init_ko = __esm({
         default_message: "\uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uB3C4\uC6C0\uC774 \uB41C\uB2E4\uBA74, \uD6C4\uC6D0\uC740 \uC800\uC5D0\uAC8C \uD070 \uD798\uC774 \uB418\uACE0 \uD504\uB85C\uC81D\uD2B8\uB97C \uC9C0\uC18D\uD558\uB294 \uB370 \uD070 \uB3C4\uC6C0\uC774 \uB429\uB2C8\uB2E4.",
         reality_check: "\uAC10\uC0AC\uD569\uB2C8\uB2E4! \uC774 \uD50C\uB7EC\uADF8\uC778\uB4E4\uC5D0\uB294 \uC218\uCC9C \uC2DC\uAC04\uC758 \uC791\uC5C5\uC774 \uB2F4\uACA8 \uC788\uC73C\uBA70, \uD6C4\uC6D0 \uD558\uB098\uD558\uB098\uAC00 \uC9C0\uC18D\uC801\uC778 \uAC74\uAC15 \uBB38\uC81C\uB97C \uC548\uACE0\uB3C4 \uAC1C\uC120\uC744 \uC774\uC5B4\uB098\uAC00\uB294 \uC800\uC5D0\uAC8C \uD798\uC774 \uB429\uB2C8\uB2E4. \uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uC0B6\uC744 \uD3B8\uB9AC\uD558\uAC8C \uD574\uC900\uB2E4\uBA74 \uD6C4\uC6D0\uC744 \uACE0\uB824\uD574 \uC8FC\uC138\uC694.",
         button_alt: "\uB0B4 \uC791\uC5C5 \uD6C4\uC6D0\uD558\uAE30"
+      },
+      settings_migration: {
+        decision: {
+          title: "Apply Setting Change",
+          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
+          apply_and_migrate: "Apply and migrate now",
+          apply_only: "Apply only (future imports)"
+        },
+        progress: {
+          title: "Applying setting migration",
+          preparing: "Preparing migration...",
+          preparing_detail: "{{count}} file move(s) planned",
+          executing: "Executing migration...",
+          finalizing: "Finalizing",
+          finalizing_detail: "Saving setting and validating results",
+          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
+        },
+        result: {
+          title: "Setting Migration Result",
+          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
+          new_order: "New hierarchy order: {{order}}",
+          details: "Details",
+          details_truncated: "... {{hidden}} additional line(s) not shown",
+          report: "Report saved to: {{path}}"
+        },
+        notices: {
+          apply_only: "Setting applied. Existing files were not moved.",
+          no_result: "Migration finished but no summary was returned."
+        },
+        errors: {
+          title: "Setting Migration Failed",
+          message: "Failed to apply migration: {{error}}"
+        }
       }
     };
   }
@@ -5350,6 +5810,7 @@ var init_constants = __esm({
       conversationFolder: "Nexus/Conversations",
       reportFolder: "Nexus/Reports",
       attachmentFolder: "Nexus/Attachments",
+      conversationHierarchyOrder: "provider-year-month",
       // ========================================
       // 🎨 DISPLAY OPTIONS
       // ========================================
@@ -5387,6 +5848,10 @@ var init_constants = __esm({
       LECHAT: {
         BASE: "https://chat.mistral.ai",
         CHAT: (id) => `https://chat.mistral.ai/chat/${id}`
+      },
+      PERPLEXITY: {
+        BASE: "https://www.perplexity.ai",
+        CHAT: (id) => `https://www.perplexity.ai/search/${id}`
       }
     };
     MESSAGE_TIMESTAMP_FORMATS = {
@@ -6577,6 +7042,89 @@ var init_link_update_service = __esm({
         }
       }
       /**
+       * Update conversation links for multiple old→new note path mappings in a single pass.
+       * This is used as a safety fallback for workflows where notes were moved and some links
+       * were not rewritten automatically by Obsidian.
+       */
+      async updateConversationLinksBatch(pathMappings, progressCallback) {
+        const stats = {
+          conversationsScanned: 0,
+          reportsScanned: 0,
+          attachmentLinksUpdated: 0,
+          conversationLinksUpdated: 0,
+          filesModified: 0,
+          errors: 0
+        };
+        if (pathMappings.length === 0) {
+          return stats;
+        }
+        const reportFiles = await this.getReportFiles();
+        const artifactFiles = await this.getClaudeArtifactFiles();
+        const files = [...reportFiles, ...artifactFiles];
+        stats.reportsScanned = reportFiles.length;
+        progressCallback == null ? void 0 : progressCallback({
+          phase: "scanning",
+          current: 0,
+          total: files.length,
+          detail: `Checking links in ${files.length} files`
+        });
+        const batchSize = 10;
+        for (let i = 0; i < files.length; i += batchSize) {
+          const batch = files.slice(i, i + batchSize);
+          progressCallback == null ? void 0 : progressCallback({
+            phase: "updating-conversations",
+            current: i,
+            total: files.length,
+            detail: `Updating conversation links: ${i}/${files.length}`
+          });
+          for (const file of batch) {
+            try {
+              const content = await this.plugin.app.vault.read(file);
+              let updated = content;
+              let updatedCountForFile = 0;
+              for (const mapping of pathMappings) {
+                const oldPath = mapping.oldPath.replace(/\/+$/, "");
+                const newPath = mapping.newPath.replace(/\/+$/, "");
+                const escaped = this.escapeRegExp(oldPath);
+                const patterns = [
+                  new RegExp(`(\\[\\[)${escaped}(\\|[^\\]]+\\]\\])`, "g"),
+                  new RegExp(`(\\[\\[)${escaped}(\\]\\])`, "g"),
+                  new RegExp(`(conversation_link:\\s*"\\[\\[)${escaped}(\\]\\]")`, "g")
+                ];
+                for (const pattern of patterns) {
+                  pattern.lastIndex = 0;
+                  const before = updated;
+                  updated = updated.replace(pattern, `$1${newPath}$2`);
+                  if (before !== updated) {
+                    pattern.lastIndex = 0;
+                    const matches = before.match(pattern);
+                    updatedCountForFile += matches ? matches.length : 1;
+                  }
+                }
+              }
+              if (updated !== content) {
+                await this.plugin.app.vault.modify(file, updated);
+                stats.filesModified++;
+                stats.conversationLinksUpdated += updatedCountForFile;
+              }
+            } catch (error) {
+              stats.errors++;
+              this.plugin.logger.error(`Error updating conversation links in ${file.path}:`, error);
+            }
+          }
+          if (i + batchSize < files.length) {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+        }
+        progressCallback == null ? void 0 : progressCallback({
+          phase: "complete",
+          current: files.length,
+          total: files.length,
+          detail: `Fixed ${stats.conversationLinksUpdated} conversation link(s)`
+        });
+        return stats;
+      }
+      /**
        * Estimate time for link updates based on file count
        */
       async estimateUpdateTime(folderType) {
@@ -6761,13 +7309,13 @@ __export(progress_modal_exports, {
   ProgressModal: () => UpgradeProgressModal,
   UpgradeProgressModal: () => UpgradeProgressModal
 });
-var import_obsidian6, UpgradeProgressModal;
+var import_obsidian8, UpgradeProgressModal;
 var init_progress_modal = __esm({
   "src/upgrade/utils/progress-modal.ts"() {
     "use strict";
-    import_obsidian6 = require("obsidian");
+    import_obsidian8 = require("obsidian");
     init_i18n();
-    UpgradeProgressModal = class extends import_obsidian6.Modal {
+    UpgradeProgressModal = class extends import_obsidian8.Modal {
       constructor(app, title, totalSteps = 100) {
         super(app);
         this.currentStep = 0;
@@ -6887,13 +7435,13 @@ var enhanced_folder_migration_dialog_exports = {};
 __export(enhanced_folder_migration_dialog_exports, {
   EnhancedFolderMigrationDialog: () => EnhancedFolderMigrationDialog
 });
-var import_obsidian7, EnhancedFolderMigrationDialog;
+var import_obsidian9, EnhancedFolderMigrationDialog;
 var init_enhanced_folder_migration_dialog = __esm({
   "src/dialogs/enhanced-folder-migration-dialog.ts"() {
     "use strict";
-    import_obsidian7 = require("obsidian");
+    import_obsidian9 = require("obsidian");
     init_i18n();
-    EnhancedFolderMigrationDialog = class extends import_obsidian7.Modal {
+    EnhancedFolderMigrationDialog = class extends import_obsidian9.Modal {
       constructor(plugin, oldPath, newPath, folderType, onComplete) {
         super(plugin.app);
         this.estimatedTime = 0;
@@ -6987,10 +7535,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("cancel");
-            new import_obsidian7.Notice(t("folder_migration.notices.change_cancelled_reverted"));
+            new import_obsidian9.Notice(t("folder_migration.notices.change_cancelled_reverted"));
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian7.Notice(t("folder_migration.notices.failed_revert", { error: errorMessage }));
+            new import_obsidian9.Notice(t("folder_migration.notices.failed_revert", { error: errorMessage }));
           }
         });
         const keepButton = buttonContainer.createEl("button", {
@@ -7001,10 +7549,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("keep");
-            new import_obsidian7.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
+            new import_obsidian9.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian7.Notice(t("folder_migration.notices.failed_update", { error: errorMessage }));
+            new import_obsidian9.Notice(t("folder_migration.notices.failed_update", { error: errorMessage }));
           }
         });
         const moveButton = buttonContainer.createEl("button", {
@@ -7018,10 +7566,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           } else {
             try {
               await this.onComplete("move");
-              new import_obsidian7.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
+              new import_obsidian9.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
             } catch (error) {
               const errorMessage = error instanceof Error ? error.message : String(error);
-              new import_obsidian7.Notice(t("folder_migration.notices.failed_move", { error: errorMessage }));
+              new import_obsidian9.Notice(t("folder_migration.notices.failed_move", { error: errorMessage }));
             }
           }
         });
@@ -7046,7 +7594,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             progress: 5
           });
           const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
-          if (!oldFolder || !(oldFolder instanceof import_obsidian7.TFolder)) {
+          if (!oldFolder || !(oldFolder instanceof import_obsidian9.TFolder)) {
             throw new Error(`Source folder not found: ${this.oldPath}`);
           }
           const moveResult = await moveAndMergeFolders2(
@@ -7107,7 +7655,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             t("folder_migration.progress.complete_message", { moved: String(moveResult.moved), links: String(linksUpdated) })
           );
           progressModal.closeAfterDelay(3e3);
-          new import_obsidian7.Notice(t("folder_migration.notices.files_moved_links_updated", {
+          new import_obsidian9.Notice(t("folder_migration.notices.files_moved_links_updated", {
             moved: String(moveResult.moved),
             path: this.newPath,
             links: String(linksUpdated)
@@ -7224,7 +7772,7 @@ var init_enhanced_folder_migration_dialog = __esm({
         document.head.appendChild(styleEl);
       }
       showErrorDialog(title, message) {
-        const modal = new import_obsidian7.Modal(this.app);
+        const modal = new import_obsidian9.Modal(this.app);
         modal.titleEl.setText(title);
         modal.contentEl.createEl("p", {
           text: message,
@@ -7252,7 +7800,7 @@ var init_enhanced_folder_migration_dialog = __esm({
 
 // src/dialogs.ts
 function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian13.Modal(app);
+  const modal = new import_obsidian15.Modal(app);
   modal.contentEl.addClass("nexus-ai-chat-importer-modal");
   const titleEl = modal.contentEl.createEl("h2", {
     text: title,
@@ -7334,11 +7882,11 @@ async function showDialog(app, type, title, paragraphs, note, customLabels) {
     modal.open();
   });
 }
-var import_obsidian13;
+var import_obsidian15;
 var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
-    import_obsidian13 = require("obsidian");
+    import_obsidian15 = require("obsidian");
     __name(displayModal, "displayModal");
     __name(addButtons, "addButtons");
     __name(showDialog, "showDialog");
@@ -9860,12 +10408,12 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian19, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian21, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian19 = require("obsidian");
+    import_obsidian21 = require("obsidian");
     init_logger();
     init_i18n();
     ConvertToCalloutsOperation = class extends UpgradeOperation {
@@ -10318,7 +10866,7 @@ ${cleanContent}`;
       }
     };
     __name(MoveYearFoldersOperation, "MoveYearFoldersOperation");
-    NexusUpgradeModal = class extends import_obsidian19.Modal {
+    NexusUpgradeModal = class extends import_obsidian21.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -10351,7 +10899,7 @@ ${cleanContent}`;
           }
         } catch (error) {
         }
-        await import_obsidian19.MarkdownRenderer.render(
+        await import_obsidian21.MarkdownRenderer.render(
           this.app,
           message,
           this.contentEl,
@@ -10427,17 +10975,17 @@ ${cleanContent}`;
 });
 
 // src/dialogs/configure-folder-locations-dialog.ts
-var import_obsidian20, ConfigureFolderLocationsDialog;
+var import_obsidian22, ConfigureFolderLocationsDialog;
 var init_configure_folder_locations_dialog = __esm({
   "src/dialogs/configure-folder-locations-dialog.ts"() {
     "use strict";
-    import_obsidian20 = require("obsidian");
+    import_obsidian22 = require("obsidian");
     init_enhanced_folder_migration_dialog();
     init_folder_tree_browser_modal();
     init_folder_validation();
     init_utils();
     init_i18n();
-    ConfigureFolderLocationsDialog = class extends import_obsidian20.Modal {
+    ConfigureFolderLocationsDialog = class extends import_obsidian22.Modal {
       // Track if onComplete was already called
       constructor(plugin, onComplete) {
         super(plugin.app);
@@ -10571,7 +11119,7 @@ var init_configure_folder_locations_dialog = __esm({
         const oldPath = folderInfo.oldPath;
         const newPath = folderInfo.newPath;
         const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
-        if (newFolder && newFolder instanceof import_obsidian20.TFolder && newFolder.children.length > 0) {
+        if (newFolder && newFolder instanceof import_obsidian22.TFolder && newFolder.children.length > 0) {
           this.showErrorDialog(
             "Target Folder Not Empty",
             `The folder "${newPath}" already contains files.
@@ -10585,7 +11133,7 @@ To change the folder location:
         this.plugin.settings[folderType] = newPath;
         await this.plugin.saveSettings();
         const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-        if (!oldFolder || !(oldFolder instanceof import_obsidian20.TFolder) || oldFolder.children.length === 0) {
+        if (!oldFolder || !(oldFolder instanceof import_obsidian22.TFolder) || oldFolder.children.length === 0) {
           return;
         }
         const folderTypeLabel = folderType === "conversationFolder" ? "conversations" : folderType === "reportFolder" ? "reports" : "attachments";
@@ -10596,7 +11144,7 @@ To change the folder location:
                 const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
                 folderInfo.filesMoved = result.moved;
                 if (result.success && result.skipped === 0) {
-                  new import_obsidian20.Notice(t("folder_migration.notices.files_moved", { path: newPath }));
+                  new import_obsidian22.Notice(t("folder_migration.notices.files_moved", { path: newPath }));
                 } else {
                   this.showMergeResultDialog(result, oldPath, newPath);
                 }
@@ -10628,7 +11176,7 @@ To change the folder location:
        * Show dialog with merge result details when files were skipped or errors occurred
        */
       showMergeResultDialog(result, oldPath, newPath) {
-        const modal = new import_obsidian20.Modal(this.plugin.app);
+        const modal = new import_obsidian22.Modal(this.plugin.app);
         modal.titleEl.setText(t("folder_migration.result_dialog.title"));
         const { contentEl } = modal;
         const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
@@ -10811,7 +11359,7 @@ To change the folder location:
         }
       }
       showErrorDialog(title, message) {
-        const modal = new import_obsidian20.Modal(this.plugin.app);
+        const modal = new import_obsidian22.Modal(this.plugin.app);
         modal.titleEl.setText(title);
         modal.contentEl.createEl("p", {
           text: message,
@@ -10838,14 +11386,14 @@ var upgrade_1_3_0_exports = {};
 __export(upgrade_1_3_0_exports, {
   Upgrade130: () => Upgrade130
 });
-var import_obsidian21, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
+var import_obsidian23, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
 var init_upgrade_1_3_0 = __esm({
   "src/upgrade/versions/upgrade-1.3.0.ts"() {
     "use strict";
     init_upgrade_interface();
     init_utils();
     init_date_parser();
-    import_obsidian21 = require("obsidian");
+    import_obsidian23 = require("obsidian");
     init_configure_folder_locations_dialog();
     ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
       constructor() {
@@ -11328,7 +11876,7 @@ ${frontmatter}
           const newReportPath = "Nexus Reports";
           const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
           let reportsMoved = false;
-          if (oldReportFolder && oldReportFolder instanceof import_obsidian21.TFolder) {
+          if (oldReportFolder && oldReportFolder instanceof import_obsidian23.TFolder) {
             try {
               const result = await moveAndMergeFolders(oldReportFolder, newReportPath, context.plugin.app.vault);
               reportsMoved = result.moved > 0;
@@ -11336,7 +11884,7 @@ ${frontmatter}
                 const stillExists = await context.plugin.app.vault.adapter.exists(oldReportPath);
                 if (stillExists) {
                   const folderToDelete = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
-                  if (folderToDelete && folderToDelete instanceof import_obsidian21.TFolder) {
+                  if (folderToDelete && folderToDelete instanceof import_obsidian23.TFolder) {
                     await context.plugin.app.vault.delete(folderToDelete);
                   }
                 }
@@ -11408,7 +11956,7 @@ ${frontmatter}
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!folder || !(folder instanceof import_obsidian21.TFolder)) {
+          if (!folder || !(folder instanceof import_obsidian23.TFolder)) {
             return false;
           }
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
@@ -11797,12 +12345,12 @@ plugin_version: "${version}"
 `
   );
 }
-var import_obsidian22, UUID_REGEX, TARGET_VERSION, RenameClaudeArtifactFoldersOperation, RestoreMissingArtifactCalloutsOperation, FixCalloutEmptyLinesOperation, Upgrade140;
+var import_obsidian24, UUID_REGEX, TARGET_VERSION, RenameClaudeArtifactFoldersOperation, RestoreMissingArtifactCalloutsOperation, FixCalloutEmptyLinesOperation, Upgrade140;
 var init_upgrade_1_4_0 = __esm({
   "src/upgrade/versions/upgrade-1.4.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian22 = require("obsidian");
+    import_obsidian24 = require("obsidian");
     init_storage_service();
     init_link_update_service();
     UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -11821,11 +12369,11 @@ var init_upgrade_1_4_0 = __esm({
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!folder || !(folder instanceof import_obsidian22.TFolder)) {
+          if (!folder || !(folder instanceof import_obsidian24.TFolder)) {
             return false;
           }
           for (const child of folder.children) {
-            if (child instanceof import_obsidian22.TFolder && UUID_REGEX.test(child.name)) {
+            if (child instanceof import_obsidian24.TFolder && UUID_REGEX.test(child.name)) {
               return true;
             }
           }
@@ -11845,7 +12393,7 @@ var init_upgrade_1_4_0 = __esm({
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const artifactsFolder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!artifactsFolder || !(artifactsFolder instanceof import_obsidian22.TFolder)) {
+          if (!artifactsFolder || !(artifactsFolder instanceof import_obsidian24.TFolder)) {
             return {
               success: true,
               message: "No Claude artifacts folder found, nothing to migrate."
@@ -11853,7 +12401,7 @@ var init_upgrade_1_4_0 = __esm({
           }
           const uuidFolders = [];
           for (const child of artifactsFolder.children) {
-            if (child instanceof import_obsidian22.TFolder && UUID_REGEX.test(child.name)) {
+            if (child instanceof import_obsidian24.TFolder && UUID_REGEX.test(child.name)) {
               uuidFolders.push(child);
             }
           }
@@ -11952,7 +12500,7 @@ var init_upgrade_1_4_0 = __esm({
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          return !!(folder && folder instanceof import_obsidian22.TFolder && folder.children.length > 0);
+          return !!(folder && folder instanceof import_obsidian24.TFolder && folder.children.length > 0);
         } catch (e) {
           return false;
         }
@@ -11967,12 +12515,12 @@ var init_upgrade_1_4_0 = __esm({
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const artifactsRoot = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!artifactsRoot || !(artifactsRoot instanceof import_obsidian22.TFolder)) {
+          if (!artifactsRoot || !(artifactsRoot instanceof import_obsidian24.TFolder)) {
             return { success: true, message: "No Claude artifacts folder found." };
           }
           const artifactFolders = [];
           for (const child of artifactsRoot.children) {
-            if (child instanceof import_obsidian22.TFolder) {
+            if (child instanceof import_obsidian24.TFolder) {
               artifactFolders.push(child);
             }
           }
@@ -11991,7 +12539,7 @@ var init_upgrade_1_4_0 = __esm({
             }
             try {
               const artifactFiles = folder.children.filter(
-                (f) => f instanceof import_obsidian22.TFile && f.extension === "md"
+                (f) => f instanceof import_obsidian24.TFile && f.extension === "md"
               );
               if (artifactFiles.length === 0) {
                 continue;
@@ -12010,7 +12558,7 @@ var init_upgrade_1_4_0 = __esm({
                 continue;
               }
               const noteFile = context.plugin.app.vault.getAbstractFileByPath(entry.path);
-              if (!noteFile || !(noteFile instanceof import_obsidian22.TFile)) {
+              if (!noteFile || !(noteFile instanceof import_obsidian24.TFile)) {
                 skippedCount++;
                 continue;
               }
@@ -12101,7 +12649,7 @@ var init_upgrade_1_4_0 = __esm({
         try {
           const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
           const folder = context.plugin.app.vault.getAbstractFileByPath(conversationFolder);
-          return !!(folder && folder instanceof import_obsidian22.TFolder);
+          return !!(folder && folder instanceof import_obsidian24.TFolder);
         } catch (e) {
           return false;
         }
@@ -12185,14 +12733,14 @@ var upgrade_complete_modal_exports = {};
 __export(upgrade_complete_modal_exports, {
   UpgradeCompleteModal: () => UpgradeCompleteModal
 });
-var import_obsidian23, UpgradeCompleteModal;
+var import_obsidian25, UpgradeCompleteModal;
 var init_upgrade_complete_modal = __esm({
   "src/dialogs/upgrade-complete-modal.ts"() {
     "use strict";
-    import_obsidian23 = require("obsidian");
+    import_obsidian25 = require("obsidian");
     init_support_box();
     init_i18n();
-    UpgradeCompleteModal = class extends import_obsidian23.Modal {
+    UpgradeCompleteModal = class extends import_obsidian25.Modal {
       constructor(app, plugin, version) {
         super(app);
         this.plugin = plugin;
@@ -12229,7 +12777,7 @@ var init_upgrade_complete_modal = __esm({
         } catch (error) {
         }
         const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-notes" });
-        await import_obsidian23.MarkdownRenderer.render(
+        await import_obsidian25.MarkdownRenderer.render(
           this.app,
           content,
           contentDiv,
@@ -12329,14 +12877,14 @@ var upgrade_modal_1_3_0_exports = {};
 __export(upgrade_modal_1_3_0_exports, {
   NexusUpgradeModal130: () => NexusUpgradeModal130
 });
-var import_obsidian24, NexusUpgradeModal130;
+var import_obsidian26, NexusUpgradeModal130;
 var init_upgrade_modal_1_3_0 = __esm({
   "src/dialogs/upgrade-modal-1.3.0.ts"() {
     "use strict";
-    import_obsidian24 = require("obsidian");
+    import_obsidian26 = require("obsidian");
     init_support_box();
     init_i18n();
-    NexusUpgradeModal130 = class extends import_obsidian24.Modal {
+    NexusUpgradeModal130 = class extends import_obsidian26.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.hasResolved = false;
@@ -12386,7 +12934,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         } catch (error) {
         }
         const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-        await import_obsidian24.MarkdownRenderer.render(
+        await import_obsidian26.MarkdownRenderer.render(
           this.app,
           message,
           contentDiv,
@@ -12532,12 +13080,12 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian32 = require("obsidian");
+var import_obsidian34 = require("obsidian");
 init_i18n();
 init_constants();
 
 // src/ui/settings-tab.ts
-var import_obsidian11 = require("obsidian");
+var import_obsidian13 = require("obsidian");
 
 // src/ui/settings/support-section.ts
 var import_obsidian = require("obsidian");
@@ -12607,7 +13155,7 @@ var SupportSection = class extends BaseSettingsSection {
 __name(SupportSection, "SupportSection");
 
 // src/ui/settings/folder-settings-section.ts
-var import_obsidian8 = require("obsidian");
+var import_obsidian10 = require("obsidian");
 
 // src/dialogs/folder-migration-dialog.ts
 var import_obsidian2 = require("obsidian");
@@ -12778,6 +13326,276 @@ __name(FolderMigrationDialog, "FolderMigrationDialog");
 init_folder_tree_browser_modal();
 init_folder_validation();
 init_utils();
+
+// src/settings-migrations/setting-migration-engine.ts
+var SettingMigrationEngine = class {
+  constructor() {
+    this.workflows = /* @__PURE__ */ new Map();
+  }
+  register(workflow) {
+    this.workflows.set(workflow.settingKey, workflow);
+  }
+  getWorkflow(settingKey) {
+    return this.workflows.get(settingKey);
+  }
+  async createPlan(settingKey, context) {
+    const workflow = this.workflows.get(settingKey);
+    if (!workflow || !workflow.isApplicable(context)) {
+      return null;
+    }
+    return workflow.createPlan(context);
+  }
+  async execute(settingKey, plan, context) {
+    const workflow = this.workflows.get(settingKey);
+    if (!workflow || !workflow.isApplicable(context)) {
+      return null;
+    }
+    return workflow.execute(plan, context);
+  }
+};
+__name(SettingMigrationEngine, "SettingMigrationEngine");
+
+// src/settings-migrations/workflows/conversation-hierarchy-migration-workflow.ts
+var import_obsidian6 = require("obsidian");
+init_utils();
+
+// src/services/conversation-path-resolver.ts
+function getConversationPathParts(createTimeUnixSeconds, provider) {
+  const date = new Date(createTimeUnixSeconds * 1e3);
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return {
+    provider,
+    year,
+    month
+  };
+}
+__name(getConversationPathParts, "getConversationPathParts");
+function buildConversationRelativeFolder(parts, hierarchyOrder) {
+  if (hierarchyOrder === "year-month-provider") {
+    return `${parts.year}/${parts.month}/${parts.provider}`;
+  }
+  return `${parts.provider}/${parts.year}/${parts.month}`;
+}
+__name(buildConversationRelativeFolder, "buildConversationRelativeFolder");
+function buildConversationFolderPath(baseConversationFolder, createTimeUnixSeconds, provider, hierarchyOrder) {
+  const parts = getConversationPathParts(createTimeUnixSeconds, provider);
+  const relativeFolder = buildConversationRelativeFolder(parts, hierarchyOrder);
+  return `${baseConversationFolder}/${relativeFolder}`;
+}
+__name(buildConversationFolderPath, "buildConversationFolderPath");
+
+// src/settings-migrations/workflows/conversation-hierarchy-migration-workflow.ts
+init_link_update_service();
+var ConversationHierarchyMigrationWorkflow = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.id = "conversation-hierarchy-order";
+    this.settingKey = "conversationHierarchyOrder";
+  }
+  isApplicable(context) {
+    return context.oldSettings.conversationHierarchyOrder !== context.newSettings.conversationHierarchyOrder;
+  }
+  async createPlan(context) {
+    var _a;
+    const operations = [];
+    const files = this.getNexusConversationFiles(context.newSettings.conversationFolder);
+    for (const file of files) {
+      const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+      const provider = this.resolveProvider(frontmatter == null ? void 0 : frontmatter.provider, file.path, context.oldSettings.conversationFolder, context.oldSettings.conversationHierarchyOrder);
+      if (!provider) {
+        continue;
+      }
+      const createTimeUnixSeconds = this.resolveCreateTime(file, frontmatter == null ? void 0 : frontmatter.create_time);
+      const targetFolder = buildConversationFolderPath(
+        context.newSettings.conversationFolder,
+        createTimeUnixSeconds,
+        provider,
+        context.newSettings.conversationHierarchyOrder
+      );
+      const toPath = `${targetFolder}/${file.name}`;
+      if (toPath !== file.path) {
+        operations.push({ fromPath: file.path, toPath });
+      }
+    }
+    return {
+      workflowId: this.id,
+      settingKey: this.settingKey,
+      operationCount: operations.length,
+      operations,
+      estimatedSeconds: Math.max(2, Math.ceil(operations.length * 0.06))
+    };
+  }
+  async execute(plan, context) {
+    var _a, _b;
+    const startedAt = Date.now();
+    const details = [];
+    let moved = 0;
+    let skipped = 0;
+    let errors = 0;
+    const movedPathMappings = [];
+    const total = plan.operations.length;
+    for (let i = 0; i < total; i++) {
+      const operation = plan.operations[i];
+      (_a = context.onProgress) == null ? void 0 : _a.call(context, {
+        current: i,
+        total,
+        detail: `Moving ${i + 1}/${total}: ${operation.fromPath}`
+      });
+      try {
+        const abstractFile = this.plugin.app.vault.getAbstractFileByPath(operation.fromPath);
+        if (!(abstractFile instanceof import_obsidian6.TFile)) {
+          skipped++;
+          details.push(`Skipped (not found): ${operation.fromPath}`);
+          continue;
+        }
+        const targetExists = await this.plugin.app.vault.adapter.exists(operation.toPath);
+        if (targetExists) {
+          skipped++;
+          details.push(`Skipped (target exists): ${operation.toPath}`);
+          continue;
+        }
+        const targetFolder = operation.toPath.slice(0, operation.toPath.lastIndexOf("/"));
+        const ensureResult = await ensureFolderExists(targetFolder, this.plugin.app.vault);
+        if (!ensureResult.success) {
+          errors++;
+          details.push(`Error (create folder): ${targetFolder}`);
+          continue;
+        }
+        await this.plugin.app.fileManager.renameFile(abstractFile, operation.toPath);
+        moved++;
+        movedPathMappings.push({
+          oldPath: operation.fromPath,
+          newPath: operation.toPath
+        });
+      } catch (error) {
+        errors++;
+        details.push(`Error moving ${operation.fromPath}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    if (movedPathMappings.length > 0) {
+      try {
+        const linkUpdateService = new LinkUpdateService(this.plugin);
+        const fallbackStats = await linkUpdateService.updateConversationLinksBatch(
+          movedPathMappings
+        );
+        if (fallbackStats.conversationLinksUpdated > 0) {
+          details.push(
+            `Fallback link update: fixed ${fallbackStats.conversationLinksUpdated} links in ${fallbackStats.filesModified} files`
+          );
+        }
+      } catch (error) {
+        details.push(
+          `Fallback link update failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    }
+    (_b = context.onProgress) == null ? void 0 : _b.call(context, {
+      current: total,
+      total,
+      detail: `Migration complete: moved=${moved}, skipped=${skipped}, errors=${errors}`
+    });
+    return {
+      workflowId: this.id,
+      moved,
+      skipped,
+      errors,
+      durationMs: Date.now() - startedAt,
+      details
+    };
+  }
+  getNexusConversationFiles(conversationFolder) {
+    const markdownFiles = this.plugin.app.vault.getMarkdownFiles();
+    return markdownFiles.filter((file) => {
+      var _a;
+      if (!file.path.startsWith(`${conversationFolder}/`)) {
+        return false;
+      }
+      const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+      return (frontmatter == null ? void 0 : frontmatter.nexus) === this.plugin.manifest.id && typeof (frontmatter == null ? void 0 : frontmatter.conversation_id) === "string";
+    });
+  }
+  resolveCreateTime(file, rawCreateTime) {
+    if (typeof rawCreateTime === "number") {
+      if (rawCreateTime > 1e12) {
+        return Math.floor(rawCreateTime / 1e3);
+      }
+      return Math.floor(rawCreateTime);
+    }
+    if (typeof rawCreateTime === "string") {
+      const parsed = Date.parse(rawCreateTime);
+      if (!Number.isNaN(parsed)) {
+        return Math.floor(parsed / 1e3);
+      }
+    }
+    return Math.floor(file.stat.ctime / 1e3);
+  }
+  resolveProvider(rawProvider, filePath, conversationFolder, oldOrder) {
+    if (typeof rawProvider === "string" && rawProvider.trim().length > 0) {
+      return rawProvider.trim();
+    }
+    const prefix = `${conversationFolder}/`;
+    const relative = filePath.startsWith(prefix) ? filePath.slice(prefix.length) : filePath;
+    const segments = relative.split("/").filter(Boolean);
+    if (segments.length < 3) {
+      return null;
+    }
+    if (oldOrder === "provider-year-month") {
+      return segments[0] || null;
+    }
+    return segments[2] || null;
+  }
+};
+__name(ConversationHierarchyMigrationWorkflow, "ConversationHierarchyMigrationWorkflow");
+
+// src/dialogs/setting-migration-decision-dialog.ts
+var import_obsidian7 = require("obsidian");
+init_i18n();
+var SettingMigrationDecisionDialog = class extends import_obsidian7.Modal {
+  constructor(app, settingLabel, impactedCount, onDecision) {
+    super(app);
+    this.settingLabel = settingLabel;
+    this.impactedCount = impactedCount;
+    this.onDecision = onDecision;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: t("settings_migration.decision.title") });
+    contentEl.createEl("p", {
+      text: t("settings_migration.decision.description", {
+        setting: this.settingLabel,
+        count: String(this.impactedCount)
+      })
+    });
+    const buttonRow = contentEl.createDiv({ cls: "modal-button-container" });
+    const cancelButton = buttonRow.createEl("button", {
+      text: t("common.buttons.cancel")
+    });
+    cancelButton.addEventListener("click", async () => {
+      this.close();
+      await this.onDecision("cancel");
+    });
+    const applyOnlyButton = buttonRow.createEl("button", {
+      text: t("settings_migration.decision.apply_only")
+    });
+    applyOnlyButton.addEventListener("click", async () => {
+      this.close();
+      await this.onDecision("apply-only");
+    });
+    const migrateButton = buttonRow.createEl("button", {
+      text: t("settings_migration.decision.apply_and_migrate"),
+      cls: "mod-cta"
+    });
+    migrateButton.addEventListener("click", async () => {
+      this.close();
+      await this.onDecision("migrate");
+    });
+  }
+};
+__name(SettingMigrationDecisionDialog, "SettingMigrationDecisionDialog");
+
+// src/ui/settings/folder-settings-section.ts
 init_i18n();
 var FolderSettingsSection = class extends BaseSettingsSection {
   constructor() {
@@ -12789,7 +13607,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     let conversationFolderTextComponent;
-    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.conversation_folder.name")).setDesc(t("settings.folders.conversation_folder.desc")).addText((text) => {
+    new import_obsidian10.Setting(containerEl).setName(t("settings.folders.conversation_folder.name")).setDesc(t("settings.folders.conversation_folder.desc")).addText((text) => {
       conversationFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.conversation_folder.placeholder")).setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -12818,8 +13636,27 @@ var FolderSettingsSection = class extends BaseSettingsSection {
         modal.open();
       });
     });
+    let hierarchyOrderDropdown = null;
+    new import_obsidian10.Setting(containerEl).setName(t("settings.folders.hierarchy_order.name")).setDesc(t("settings.folders.hierarchy_order.desc")).addDropdown((dropdown) => {
+      hierarchyOrderDropdown = dropdown;
+      dropdown.addOption(
+        "provider-year-month",
+        t("settings.folders.hierarchy_order.options.provider_year_month")
+      ).addOption(
+        "year-month-provider",
+        t("settings.folders.hierarchy_order.options.year_month_provider")
+      ).setValue(this.plugin.settings.conversationHierarchyOrder).onChange(async (value) => {
+        if (value !== "provider-year-month" && value !== "year-month-provider") {
+          return;
+        }
+        await this.handleConversationHierarchyOrderChange(
+          value,
+          hierarchyOrderDropdown
+        );
+      });
+    });
     let reportFolderTextComponent;
-    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.reports_folder.name")).setDesc(t("settings.folders.reports_folder.desc")).addText((text) => {
+    new import_obsidian10.Setting(containerEl).setName(t("settings.folders.reports_folder.name")).setDesc(t("settings.folders.reports_folder.desc")).addText((text) => {
       reportFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.reports_folder.placeholder")).setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -12849,7 +13686,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       });
     });
     let attachmentFolderTextComponent;
-    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.attachment_folder.name")).setDesc(t("settings.folders.attachment_folder.desc")).addText((text) => {
+    new import_obsidian10.Setting(containerEl).setName(t("settings.folders.attachment_folder.name")).setDesc(t("settings.folders.attachment_folder.desc")).addText((text) => {
       attachmentFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.attachment_folder.placeholder")).setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -12898,7 +13735,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       return;
     }
     const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-    if (!oldFolder || !(oldFolder instanceof import_obsidian8.TFolder)) {
+    if (!oldFolder || !(oldFolder instanceof import_obsidian10.TFolder)) {
       this.plugin.settings[settingKey] = newPath;
       await this.plugin.saveSettings();
       return;
@@ -12910,7 +13747,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       return;
     }
     const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
-    if (newFolder && newFolder instanceof import_obsidian8.TFolder && newFolder.children.length > 0) {
+    if (newFolder && newFolder instanceof import_obsidian10.TFolder && newFolder.children.length > 0) {
       this.showErrorDialog(
         t("folder_migration.error_target_not_empty.title"),
         t("folder_migration.error_target_not_empty.message", { path: newPath })
@@ -12957,6 +13794,199 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       dialog.open();
     }
   }
+  async handleConversationHierarchyOrderChange(newOrder, dropdown) {
+    const oldOrder = this.plugin.settings.conversationHierarchyOrder;
+    if (oldOrder === newOrder) {
+      return;
+    }
+    const oldSettings = { ...this.plugin.settings };
+    const newSettings = {
+      ...this.plugin.settings,
+      conversationHierarchyOrder: newOrder
+    };
+    const migrationEngine = new SettingMigrationEngine();
+    migrationEngine.register(new ConversationHierarchyMigrationWorkflow(this.plugin));
+    const plan = await migrationEngine.createPlan("conversationHierarchyOrder", {
+      oldSettings,
+      newSettings
+    });
+    if (!plan || plan.operationCount === 0) {
+      this.plugin.settings.conversationHierarchyOrder = newOrder;
+      await this.plugin.saveSettings();
+      return;
+    }
+    const settingLabel = t("settings.folders.hierarchy_order.name");
+    new SettingMigrationDecisionDialog(
+      this.plugin.app,
+      settingLabel,
+      plan.operationCount,
+      async (decision) => {
+        await this.applyConversationHierarchyDecision(
+          decision,
+          oldOrder,
+          newOrder,
+          plan,
+          migrationEngine,
+          oldSettings,
+          newSettings,
+          dropdown
+        );
+      }
+    ).open();
+  }
+  async applyConversationHierarchyDecision(decision, oldOrder, newOrder, plan, migrationEngine, oldSettings, newSettings, dropdown) {
+    if (decision === "cancel") {
+      dropdown == null ? void 0 : dropdown.setValue(oldOrder);
+      return;
+    }
+    if (decision === "apply-only") {
+      this.plugin.settings.conversationHierarchyOrder = newOrder;
+      await this.plugin.saveSettings();
+      new import_obsidian10.Notice(t("settings_migration.notices.apply_only"));
+      return;
+    }
+    const { UpgradeProgressModal: UpgradeProgressModal2 } = await Promise.resolve().then(() => (init_progress_modal(), progress_modal_exports));
+    const progressModal = new UpgradeProgressModal2(
+      this.plugin.app,
+      t("settings_migration.progress.title"),
+      100
+    );
+    progressModal.open();
+    try {
+      progressModal.updateProgress({
+        title: t("settings_migration.progress.preparing"),
+        detail: t("settings_migration.progress.preparing_detail", { count: String(plan.operationCount) }),
+        progress: 5
+      });
+      const result = await migrationEngine.execute("conversationHierarchyOrder", plan, {
+        oldSettings,
+        newSettings,
+        onProgress: (progress) => {
+          const total = Math.max(1, progress.total);
+          const percentage = 5 + Math.round(progress.current / total * 90);
+          progressModal.updateProgress({
+            title: t("settings_migration.progress.executing"),
+            detail: progress.detail,
+            progress: Math.min(95, percentage)
+          });
+        }
+      });
+      this.plugin.settings.conversationHierarchyOrder = newOrder;
+      await this.plugin.saveSettings();
+      if (!result) {
+        new import_obsidian10.Notice(t("settings_migration.notices.no_result"));
+        dropdown == null ? void 0 : dropdown.setValue(newOrder);
+        progressModal.close();
+        return;
+      }
+      progressModal.updateProgress({
+        title: t("settings_migration.progress.finalizing"),
+        detail: t("settings_migration.progress.finalizing_detail"),
+        progress: 100
+      });
+      progressModal.showComplete(
+        t("settings_migration.progress.complete", {
+          moved: String(result.moved),
+          skipped: String(result.skipped),
+          errors: String(result.errors)
+        })
+      );
+      progressModal.closeAfterDelay(1500);
+      const reportPath = await this.writeSettingMigrationReport(result, oldOrder, newOrder);
+      this.showSettingMigrationResultDialog(result, newOrder, reportPath);
+      dropdown == null ? void 0 : dropdown.setValue(newOrder);
+    } catch (error) {
+      progressModal.close();
+      dropdown == null ? void 0 : dropdown.setValue(oldOrder);
+      const message = error instanceof Error ? error.message : String(error);
+      this.showErrorDialog(
+        t("settings_migration.errors.title"),
+        t("settings_migration.errors.message", { error: message })
+      );
+    }
+  }
+  showSettingMigrationResultDialog(result, newOrder, reportPath) {
+    const modal = new import_obsidian10.Modal(this.plugin.app);
+    modal.titleEl.setText(t("settings_migration.result.title"));
+    const { contentEl } = modal;
+    contentEl.createEl("p", {
+      text: t("settings_migration.result.summary", {
+        moved: String(result.moved),
+        skipped: String(result.skipped),
+        errors: String(result.errors),
+        duration: String(Math.round(result.durationMs / 1e3))
+      })
+    });
+    contentEl.createEl("p", {
+      text: t("settings_migration.result.new_order", {
+        order: newOrder === "provider-year-month" ? t("settings.folders.hierarchy_order.options.provider_year_month") : t("settings.folders.hierarchy_order.options.year_month_provider")
+      })
+    });
+    if (result.details.length > 0) {
+      const detailsEl = contentEl.createEl("details");
+      detailsEl.createEl("summary", {
+        text: t("settings_migration.result.details")
+      });
+      const list = detailsEl.createEl("ul");
+      for (const detail of result.details.slice(0, 100)) {
+        list.createEl("li", { text: detail });
+      }
+      if (result.details.length > 100) {
+        list.createEl("li", {
+          text: t("settings_migration.result.details_truncated", {
+            hidden: String(result.details.length - 100)
+          })
+        });
+      }
+    }
+    if (reportPath) {
+      contentEl.createEl("p", {
+        text: t("settings_migration.result.report", { path: reportPath })
+      });
+    }
+    const buttonRow = contentEl.createDiv({ cls: "modal-button-container" });
+    const closeButton = buttonRow.createEl("button", {
+      text: t("common.buttons.ok"),
+      cls: "mod-cta"
+    });
+    closeButton.addEventListener("click", () => modal.close());
+    modal.open();
+  }
+  async writeSettingMigrationReport(result, oldOrder, newOrder) {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const reportFolder = `${this.plugin.settings.reportFolder}/settings-migrations`;
+      const ensure = await ensureFolderExists(reportFolder, this.plugin.app.vault);
+      if (!ensure.success) {
+        return void 0;
+      }
+      const oldOrderLabel = oldOrder === "provider-year-month" ? t("settings.folders.hierarchy_order.options.provider_year_month") : t("settings.folders.hierarchy_order.options.year_month_provider");
+      const newOrderLabel = newOrder === "provider-year-month" ? t("settings.folders.hierarchy_order.options.provider_year_month") : t("settings.folders.hierarchy_order.options.year_month_provider");
+      const reportPath = `${reportFolder}/${timestamp} - conversation hierarchy migration report.md`;
+      const reportContent = `# Conversation Hierarchy Migration Report
+
+Generated: ${new Date().toISOString()}
+
+## Change
+- From: ${oldOrderLabel}
+- To: ${newOrderLabel}
+
+## Results
+- Moved: ${result.moved}
+- Skipped: ${result.skipped}
+- Errors: ${result.errors}
+- Duration (seconds): ${Math.round(result.durationMs / 1e3)}
+
+## Details
+${result.details.length > 0 ? result.details.map((line) => `- ${line}`).join("\n") : "- No details"}
+`;
+      await this.plugin.getFileService().writeToFile(reportPath, reportContent);
+      return reportPath;
+    } catch (error) {
+      this.plugin.logger.warn("Failed to write settings migration report:", error);
+      return void 0;
+    }
+  }
   /**
    * Handle migration action (extracted for reuse between dialog types)
    */
@@ -12972,7 +14002,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
           await this.updateLinksAfterMove(settingKey, oldPath, newPath);
         }
         if (result.success && result.skipped === 0) {
-          new import_obsidian8.Notice(`\u2705 Files moved to ${newPath}`);
+          new import_obsidian10.Notice(`\u2705 Files moved to ${newPath}`);
         } else {
           this.showMergeResultDialog(result, oldPath, newPath);
         }
@@ -12999,14 +14029,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       }
     } catch (error) {
       this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
-      new import_obsidian8.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
+      new import_obsidian10.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
     }
   }
   /**
    * Show dialog with merge result details when files were skipped or errors occurred
    */
   showMergeResultDialog(result, _oldPath, _newPath) {
-    const modal = new import_obsidian8.Modal(this.plugin.app);
+    const modal = new import_obsidian10.Modal(this.plugin.app);
     modal.titleEl.setText(t("folder_migration.result_dialog.title"));
     const { contentEl } = modal;
     const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
@@ -13081,7 +14111,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     modal.open();
   }
   showErrorDialog(title, message) {
-    const modal = new import_obsidian8.Modal(this.plugin.app);
+    const modal = new import_obsidian10.Modal(this.plugin.app);
     modal.titleEl.setText(title);
     modal.contentEl.createEl("p", {
       text: message,
@@ -13102,7 +14132,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
 __name(FolderSettingsSection, "FolderSettingsSection");
 
 // src/ui/settings/display-settings-section.ts
-var import_obsidian9 = require("obsidian");
+var import_obsidian11 = require("obsidian");
 init_i18n();
 var DisplaySettingsSection = class extends BaseSettingsSection {
   constructor() {
@@ -13114,7 +14144,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-date-prefix-section" });
-    const setting = new import_obsidian9.Setting(sectionContainer).setName(t("settings.display.add_date_prefix.name")).setDesc(t("settings.display.add_date_prefix.desc"));
+    const setting = new import_obsidian11.Setting(sectionContainer).setName(t("settings.display.add_date_prefix.name")).setDesc(t("settings.display.add_date_prefix.desc"));
     if (this.plugin.settings.addDatePrefix) {
       setting.controlEl.createSpan({
         text: t("settings.display.add_date_prefix.format_label"),
@@ -13141,7 +14171,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
 __name(DisplaySettingsSection, "DisplaySettingsSection");
 
 // src/ui/settings/message-date-format-section.ts
-var import_obsidian10 = require("obsidian");
+var import_obsidian12 = require("obsidian");
 init_constants();
 init_utils();
 init_i18n();
@@ -13155,7 +14185,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-message-date-section" });
-    new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.custom_format.name")).setDesc(t("settings.timestamps.custom_format.desc")).addToggle(
+    new import_obsidian12.Setting(sectionContainer).setName(t("settings.timestamps.custom_format.name")).setDesc(t("settings.timestamps.custom_format.desc")).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.useCustomMessageTimestampFormat).onChange(async (value) => {
         this.plugin.settings.useCustomMessageTimestampFormat = value;
         await this.plugin.saveSettings();
@@ -13163,7 +14193,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
       })
     );
     if (this.plugin.settings.useCustomMessageTimestampFormat) {
-      new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.timestamp_format.name")).setDesc(t("settings.timestamps.timestamp_format.desc")).addDropdown((dropdown) => {
+      new import_obsidian12.Setting(sectionContainer).setName(t("settings.timestamps.timestamp_format.name")).setDesc(t("settings.timestamps.timestamp_format.desc")).addDropdown((dropdown) => {
         Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
           dropdown.addOption(key, config.label);
         });
@@ -13199,7 +14229,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
 __name(MessageDateFormatSection, "MessageDateFormatSection");
 
 // src/ui/settings-tab.ts
-var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.PluginSettingTab {
+var NexusAiChatImporterPluginSettingTab = class extends import_obsidian13.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -13252,7 +14282,7 @@ var CommandRegistry = class {
 __name(CommandRegistry, "CommandRegistry");
 
 // src/events/event-handlers.ts
-var import_obsidian12 = require("obsidian");
+var import_obsidian14 = require("obsidian");
 var EventHandlers = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -13260,7 +14290,7 @@ var EventHandlers = class {
   registerEvents() {
     this.plugin.registerEvent(
       this.plugin.app.vault.on("delete", async (file) => {
-        if (file instanceof import_obsidian12.TFile) {
+        if (file instanceof import_obsidian14.TFile) {
           await this.plugin.getFileService().handleConversationFileDeletion(file);
         }
       })
@@ -13272,7 +14302,7 @@ var EventHandlers = class {
 __name(EventHandlers, "EventHandlers");
 
 // src/services/import-service.ts
-var import_obsidian17 = require("obsidian");
+var import_obsidian19 = require("obsidian");
 init_utils();
 init_dialogs();
 
@@ -14078,7 +15108,7 @@ var ImportReport = class {
 __name(ImportReport, "ImportReport");
 
 // src/services/conversation-processor.ts
-var import_obsidian15 = require("obsidian");
+var import_obsidian17 = require("obsidian");
 
 // src/formatters/message-formatter.ts
 init_utils();
@@ -14193,7 +15223,7 @@ var _MessageFormatter = class {
     }
     const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
     const messageTime = formatMessageTimestamp(message.timestamp, customFormat);
-    const authorName = message.role === "user" ? "User" : "Assistant";
+    const authorName = message.role === "assistant" && message.model ? `Assistant \xB7 ${message.model}` : message.role === "user" ? "User" : "Assistant";
     const calloutType = message.role === "user" ? _MessageFormatter.CALLOUTS.USER : _MessageFormatter.CALLOUTS.AGENT;
     let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}
 `;
@@ -14353,6 +15383,9 @@ var URL_GENERATORS = {
   },
   claude: {
     generateChatUrl: PROVIDER_URLS.CLAUDE.CHAT
+  },
+  perplexity: {
+    generateChatUrl: PROVIDER_URLS.PERPLEXITY.CHAT
   }
 };
 
@@ -14373,6 +15406,7 @@ var NoteFormatter = class {
     const updateTimeDisplay = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
     let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation);
     content += this.generateMessagesContent(conversation);
+    content += this.generateRelatedQueriesSection(conversation);
     return content;
   }
   generateHeader(title, conversationId, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation) {
@@ -14380,6 +15414,13 @@ var NoteFormatter = class {
     if (!chatUrl && URL_GENERATORS[conversation.provider]) {
       chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(conversationId);
     }
+    const mode = this.extractMode(conversation);
+    const models = this.extractModels(conversation);
+    const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"
+` : "";
+    const modelsBlock = models.length > 0 ? `models:
+${models.map((model) => `  - "${model.replace(/"/g, '\\"')}"`).join("\n")}
+` : "";
     let frontmatter = `---
 nexus: ${this.pluginId}
 plugin_version: "${this.pluginVersion}"
@@ -14388,8 +15429,7 @@ aliases: ${title}
 conversation_id: ${conversationId}
 create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
----
-
+${modeLine}${modelsBlock}---
 `;
     let header = `# Title: ${conversation.title}
 
@@ -14408,11 +15448,49 @@ update_time: ${updateTimeStr}
   generateMessagesContent(conversation) {
     return this.messageFormatter.formatMessages(conversation.messages);
   }
+  extractMode(conversation) {
+    var _a;
+    const mode = (_a = conversation.metadata) == null ? void 0 : _a.mode;
+    return typeof mode === "string" && mode.trim().length > 0 ? mode.trim() : void 0;
+  }
+  extractModels(conversation) {
+    var _a;
+    const metadata = conversation.metadata || {};
+    const fromMetadata = Array.isArray((_a = conversation.metadata) == null ? void 0 : _a.models) ? metadata.models : [];
+    const fromMessages = conversation.messages.map((message) => message.model).filter((model) => typeof model === "string" && model.trim().length > 0);
+    const seen = /* @__PURE__ */ new Set();
+    const models = [];
+    for (const model of [...fromMetadata, ...fromMessages]) {
+      const normalized = model.trim();
+      if (!normalized || seen.has(normalized))
+        continue;
+      seen.add(normalized);
+      models.push(normalized);
+    }
+    return models;
+  }
+  generateRelatedQueriesSection(conversation) {
+    var _a;
+    const relatedQueries = (_a = conversation.metadata) == null ? void 0 : _a.related_queries;
+    if (!Array.isArray(relatedQueries)) {
+      return "";
+    }
+    const normalized = relatedQueries.filter((query) => typeof query === "string").map((query) => query.trim()).filter((query) => query.length > 0);
+    if (normalized.length === 0) {
+      return "";
+    }
+    const uniqueQueries = [...new Set(normalized)];
+    const lines = uniqueQueries.map((query) => `- ${query}`).join("\n");
+    return `
+
+## Related Queries
+${lines}`;
+  }
 };
 __name(NoteFormatter, "NoteFormatter");
 
 // src/services/file-service.ts
-var import_obsidian14 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 var FileService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -14420,9 +15498,9 @@ var FileService = class {
   async writeToFile(filePath, content) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian14.TFile) {
+      if (file instanceof import_obsidian16.TFile) {
         await this.plugin.app.vault.modify(file, content);
-      } else if (file instanceof import_obsidian14.TFolder) {
+      } else if (file instanceof import_obsidian16.TFolder) {
         throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
       } else {
         await this.plugin.app.vault.create(filePath, content);
@@ -14775,7 +15853,7 @@ var ConversationProcessor = class {
   async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false, isStandardConversation = false) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian15.TFile) {
+      if (file instanceof import_obsidian17.TFile) {
         let content = await this.plugin.app.vault.read(file);
         const originalContent = content;
         const chatUpdateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
@@ -14821,13 +15899,13 @@ var ConversationProcessor = class {
           return;
         }
         if (newMessages.length > 0) {
-          content = this.updateMetadata(content, chatUpdateTime);
           let standardConversation;
           if (isStandardConversation) {
             standardConversation = chat;
           } else {
             standardConversation = await adapter.convertChat(chat);
           }
+          content = this.updateMetadata(content, chatUpdateTime, standardConversation);
           const newStandardMessages = standardConversation.messages.filter(
             (msg) => !existingMessageIds.includes(msg.id)
           );
@@ -14841,6 +15919,7 @@ var ConversationProcessor = class {
           }
           attachmentStats = this.calculateAttachmentStats(processedNewMessages);
           content += "\n\n" + this.messageFormatter.formatMessages(processedNewMessages);
+          content = this.updateRelatedQueriesSection(content, standardConversation);
           this.counters.totalConversationsActuallyUpdated++;
           this.counters.totalNonEmptyMessagesAdded += newMessages.length;
         }
@@ -14925,11 +16004,69 @@ var ConversationProcessor = class {
       throw error;
     }
   }
-  updateMetadata(content, updateTime) {
+  updateMetadata(content, updateTime, conversation) {
+    var _a;
     const updateTimeStr = new Date(updateTime * 1e3).toISOString();
     content = content.replace(/^update_time: .*$/m, `update_time: ${updateTimeStr}`);
     content = content.replace(/^Last Updated: .*$/m, `Last Updated: ${updateTimeStr}`);
-    return content;
+    if (!conversation) {
+      return content;
+    }
+    const mode = typeof ((_a = conversation.metadata) == null ? void 0 : _a.mode) === "string" ? conversation.metadata.mode.trim() : "";
+    const models = this.collectConversationModels(conversation);
+    return this.updateFrontmatterModeAndModels(content, mode, models);
+  }
+  collectConversationModels(conversation) {
+    var _a;
+    const metadata = conversation.metadata || {};
+    const fromMetadata = Array.isArray((_a = conversation.metadata) == null ? void 0 : _a.models) ? metadata.models : [];
+    const fromMessages = conversation.messages.map((message) => message.model).filter((model) => typeof model === "string" && model.trim().length > 0);
+    const seen = /* @__PURE__ */ new Set();
+    const models = [];
+    for (const model of [...fromMetadata, ...fromMessages]) {
+      const normalized = model.trim();
+      if (!normalized || seen.has(normalized))
+        continue;
+      seen.add(normalized);
+      models.push(normalized);
+    }
+    return models;
+  }
+  updateFrontmatterModeAndModels(content, mode, models) {
+    const frontmatterMatch = content.match(/^---\n[\s\S]*?\n---/);
+    if (!frontmatterMatch) {
+      return content;
+    }
+    let frontmatter = frontmatterMatch[0];
+    frontmatter = frontmatter.replace(/^mode: .*$/m, "").replace(/\n{3,}/g, "\n\n");
+    frontmatter = frontmatter.replace(/^models:\n(?:\s+- .*\n?)*/m, "").replace(/\n{3,}/g, "\n\n");
+    const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"
+` : "";
+    const modelsBlock = models.length > 0 ? `models:
+${models.map((model) => `  - "${model.replace(/"/g, '\\"')}"`).join("\n")}
+` : "";
+    if (modeLine || modelsBlock) {
+      frontmatter = frontmatter.replace(/\n---$/, `
+${modeLine}${modelsBlock}---`);
+    }
+    return content.replace(frontmatterMatch[0], frontmatter);
+  }
+  updateRelatedQueriesSection(content, conversation) {
+    var _a;
+    const metadata = conversation.metadata || {};
+    const relatedQueries = Array.isArray((_a = conversation.metadata) == null ? void 0 : _a.related_queries) ? metadata.related_queries.filter((query) => typeof query === "string").map((query) => query.trim()).filter((query) => query.length > 0) : [];
+    if (relatedQueries.length === 0) {
+      return content;
+    }
+    const uniqueQueries = [...new Set(relatedQueries)];
+    const section = `
+## Related Queries
+${uniqueQueries.map((query) => `- ${query}`).join("\n")}`;
+    if (/\n## Related Queries\n[\s\S]*$/.test(content)) {
+      return content.replace(/\n## Related Queries\n[\s\S]*$/, section);
+    }
+    return `${content.trimEnd()}
+${section}`;
   }
   extractMessageUIDsFromNote(content) {
     const uidRegex = /<!-- UID: (.*?) -->/g;
@@ -14944,10 +16081,12 @@ var ConversationProcessor = class {
     const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
     const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
     const providerName = isStandardConversation ? chat.provider : adapter.getProviderName();
-    const date = new Date(createTime * 1e3);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const folderPath = `${this.plugin.settings.conversationFolder}/${providerName}/${year}/${month}`;
+    const folderPath = buildConversationFolderPath(
+      this.plugin.settings.conversationFolder,
+      createTime,
+      providerName,
+      this.plugin.settings.conversationHierarchyOrder
+    );
     const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       throw new Error(folderResult.error || "Failed to ensure folder exists.");
@@ -15393,6 +16532,7 @@ var ChatGPTConverter = class {
    */
   static convertChat(chat) {
     const messages = this.extractMessagesFromMapping(chat);
+    const models = this.extractConversationModels(chat, messages);
     return {
       id: chat.id || "",
       title: chat.title || "Untitled",
@@ -15401,6 +16541,7 @@ var ChatGPTConverter = class {
       updateTime: chat.update_time || 0,
       messages,
       metadata: {
+        models,
         conversation_template_id: chat.conversation_template_id,
         gizmo_id: chat.gizmo_id,
         gizmo_type: chat.gizmo_type,
@@ -15416,15 +16557,33 @@ var ChatGPTConverter = class {
    * Convert single ChatGPT ChatMessage to StandardMessage
    */
   static convertMessage(chatMessage, conversationId) {
-    var _a;
+    var _a, _b;
     const contentResult = this.extractContent(chatMessage, conversationId);
+    const model = typeof ((_a = chatMessage.metadata) == null ? void 0 : _a.model_slug) === "string" ? chatMessage.metadata.model_slug : void 0;
     return {
       id: chatMessage.id || "",
-      role: ((_a = chatMessage.author) == null ? void 0 : _a.role) === "user" ? "user" : "assistant",
+      role: ((_b = chatMessage.author) == null ? void 0 : _b.role) === "user" ? "user" : "assistant",
       content: contentResult.content,
       timestamp: chatMessage.create_time || 0,
+      model,
       attachments: contentResult.attachments || []
     };
+  }
+  static extractConversationModels(chat, messages) {
+    const candidates = [
+      chat.default_model_slug,
+      ...messages.map((message) => message.model)
+    ];
+    const seen = /* @__PURE__ */ new Set();
+    const models = [];
+    for (const candidate of candidates) {
+      const normalized = (candidate || "").trim();
+      if (!normalized || seen.has(normalized))
+        continue;
+      seen.add(normalized);
+      models.push(normalized);
+    }
+    return models;
   }
   /**
    * Extract messages from ChatGPT mapping structure with DALL-E prompt association
@@ -17065,6 +18224,7 @@ var ClaudeConverter = class {
     const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0;
     const conversationTitle = chat.name || "Untitled";
     const messages = await this.convertMessages(chat.chat_messages, chat.uuid, conversationTitle, createTime);
+    const normalizedModel = (chat.model || "").trim();
     return {
       id: chat.uuid,
       title: conversationTitle,
@@ -17074,7 +18234,8 @@ var ClaudeConverter = class {
       provider: "claude",
       chatUrl: `https://claude.ai/chat/${chat.uuid}`,
       metadata: {
-        model: chat.model || "claude-3",
+        models: normalizedModel ? [normalizedModel] : [],
+        ...normalizedModel ? { model: normalizedModel } : {},
         summary: chat.summary || "",
         is_starred: chat.is_starred,
         current_leaf_message_uuid: chat.current_leaf_message_uuid,
@@ -19068,20 +20229,224 @@ var LeChatAdapter = class extends BaseProviderAdapter {
 };
 __name(LeChatAdapter, "LeChatAdapter");
 
+// src/providers/perplexity/perplexity-converter.ts
+init_constants();
+var PerplexityConverter = class {
+  static convertChat(chat) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const turns = [...chat.conversations || []].filter((turn) => !!(turn == null ? void 0 : turn.uuid)).sort((a, b) => this.parseTimestamp(a.timestamp) - this.parseTimestamp(b.timestamp));
+    const messages = [];
+    for (const turn of turns) {
+      const timestamp = this.parseTimestamp(turn.timestamp);
+      const query = (turn.query || "").trim();
+      const answer = (turn.answer || "").trim();
+      if (query.length > 0) {
+        messages.push({
+          id: `${turn.uuid}-user`,
+          role: "user",
+          content: query,
+          timestamp
+        });
+      }
+      if (answer.length > 0) {
+        messages.push({
+          id: turn.uuid,
+          role: "assistant",
+          content: this.withReferences(answer, turn.sources),
+          timestamp: timestamp + 1,
+          model: turn.model
+        });
+      }
+    }
+    const uniqueModels = this.uniqueNonEmpty(turns.map((turn) => turn.model));
+    const uniqueModes = this.uniqueNonEmpty(turns.map((turn) => turn.mode));
+    const relatedQueries = this.uniqueNonEmpty(turns.flatMap((turn) => turn.related_queries || []));
+    const threadId = ((_a = chat.metadata) == null ? void 0 : _a.thread_id) || "";
+    const title = (((_b = chat.metadata) == null ? void 0 : _b.thread_title) || "").trim() || "Untitled";
+    const createTime = this.parseTimestamp((_c = chat.metadata) == null ? void 0 : _c.thread_created_at) || this.getMinTimestamp(turns);
+    const updateTime = this.parseTimestamp((_d = chat.metadata) == null ? void 0 : _d.thread_updated_at) || this.getMaxTimestamp(turns);
+    return {
+      id: threadId,
+      title,
+      provider: "perplexity",
+      createTime,
+      updateTime,
+      messages,
+      chatUrl: this.buildThreadUrl((_e = chat.metadata) == null ? void 0 : _e.thread_url),
+      metadata: {
+        mode: uniqueModes.length === 1 ? uniqueModes[0] : void 0,
+        models: uniqueModels,
+        related_queries: relatedQueries,
+        thread_url: (_f = chat.metadata) == null ? void 0 : _f.thread_url,
+        exported_at: (_g = chat.metadata) == null ? void 0 : _g.exported_at,
+        export_version: (_h = chat.metadata) == null ? void 0 : _h.export_version
+      }
+    };
+  }
+  static withReferences(answer, sources) {
+    if (!sources || sources.length === 0) {
+      return answer;
+    }
+    const referenceLines = sources.map((source, index) => {
+      const title = (source.title || "").trim() || `Source ${index + 1}`;
+      const url = (source.url || "").trim();
+      const snippet = (source.snippet || "").trim();
+      let line = `${index + 1}. ${url ? `[${title}](${url})` : title}`;
+      if (snippet) {
+        line += `
+   - ${snippet}`;
+      }
+      return line;
+    }).filter(Boolean);
+    if (referenceLines.length === 0) {
+      return answer;
+    }
+    return `${answer}
+
+### References
+${referenceLines.join("\n")}`;
+  }
+  static parseTimestamp(value) {
+    if (!value)
+      return 0;
+    const timestamp = new Date(value).getTime();
+    if (Number.isNaN(timestamp))
+      return 0;
+    return Math.floor(timestamp / 1e3);
+  }
+  static getMinTimestamp(turns) {
+    const timestamps = turns.map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
+    return timestamps.length > 0 ? Math.min(...timestamps) : 0;
+  }
+  static getMaxTimestamp(turns) {
+    const timestamps = turns.map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
+    return timestamps.length > 0 ? Math.max(...timestamps) : 0;
+  }
+  static uniqueNonEmpty(values) {
+    const seen = /* @__PURE__ */ new Set();
+    const result = [];
+    for (const value of values) {
+      const normalized = (value || "").trim();
+      if (!normalized || seen.has(normalized))
+        continue;
+      seen.add(normalized);
+      result.push(normalized);
+    }
+    return result;
+  }
+  static buildThreadUrl(threadUrl) {
+    const value = (threadUrl || "").trim();
+    if (!value)
+      return void 0;
+    if (value.startsWith("http://") || value.startsWith("https://")) {
+      return value;
+    }
+    return `${PROVIDER_URLS.PERPLEXITY.BASE}/search/${value}`;
+  }
+};
+__name(PerplexityConverter, "PerplexityConverter");
+
+// src/providers/perplexity/perplexity-report-naming.ts
+var PerplexityReportNamingStrategy = class {
+  extractReportPrefix(zipFileName) {
+    const patterns = [/(\d{4})-(\d{2})-(\d{2})/];
+    return extractReportPrefixFromZip(zipFileName, patterns);
+  }
+  getProviderName() {
+    return "perplexity";
+  }
+  getProviderSpecificColumn() {
+    return {
+      header: "Turns",
+      getValue: (_adapter, chat) => Array.isArray(chat == null ? void 0 : chat.conversations) ? chat.conversations.length : 0
+    };
+  }
+};
+__name(PerplexityReportNamingStrategy, "PerplexityReportNamingStrategy");
+
+// src/providers/perplexity/perplexity-adapter.ts
+var PerplexityAdapter = class {
+  constructor(_plugin) {
+    this.reportNamingStrategy = new PerplexityReportNamingStrategy();
+  }
+  detect(rawConversations) {
+    if (!Array.isArray(rawConversations) || rawConversations.length === 0) {
+      return false;
+    }
+    const sample = rawConversations[0];
+    if (!sample || typeof sample !== "object")
+      return false;
+    if (!sample.metadata || !Array.isArray(sample.conversations))
+      return false;
+    if (!sample.metadata.thread_id || !sample.metadata.thread_title)
+      return false;
+    if (sample.conversations.length === 0)
+      return false;
+    const firstTurn = sample.conversations[0];
+    return !!((firstTurn == null ? void 0 : firstTurn.uuid) && ("query" in firstTurn || "answer" in firstTurn));
+  }
+  getId(chat) {
+    var _a;
+    return ((_a = chat.metadata) == null ? void 0 : _a.thread_id) || "";
+  }
+  getTitle(chat) {
+    var _a;
+    return (((_a = chat.metadata) == null ? void 0 : _a.thread_title) || "").trim() || "Untitled";
+  }
+  getCreateTime(chat) {
+    var _a;
+    const fromMeta = this.parseTimestamp((_a = chat.metadata) == null ? void 0 : _a.thread_created_at);
+    if (fromMeta > 0)
+      return fromMeta;
+    const timestamps = (chat.conversations || []).map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
+    return timestamps.length > 0 ? Math.min(...timestamps) : 0;
+  }
+  getUpdateTime(chat) {
+    var _a;
+    const fromMeta = this.parseTimestamp((_a = chat.metadata) == null ? void 0 : _a.thread_updated_at);
+    if (fromMeta > 0)
+      return fromMeta;
+    const timestamps = (chat.conversations || []).map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
+    return timestamps.length > 0 ? Math.max(...timestamps) : 0;
+  }
+  convertChat(chat) {
+    return PerplexityConverter.convertChat(chat);
+  }
+  getProviderName() {
+    return "perplexity";
+  }
+  getNewMessages(chat, existingMessageIds) {
+    return (chat.conversations || []).filter((turn) => !!(turn == null ? void 0 : turn.uuid) && !existingMessageIds.includes(turn.uuid));
+  }
+  getReportNamingStrategy() {
+    return this.reportNamingStrategy;
+  }
+  parseTimestamp(value) {
+    if (!value)
+      return 0;
+    const timestamp = new Date(value).getTime();
+    if (Number.isNaN(timestamp))
+      return 0;
+    return Math.floor(timestamp / 1e3);
+  }
+};
+__name(PerplexityAdapter, "PerplexityAdapter");
+
 // src/providers/provider-registry.ts
 function createProviderRegistry(plugin) {
   const registry = new DefaultProviderRegistry();
   registry.register("chatgpt", new ChatGPTAdapter(plugin));
   registry.register("claude", new ClaudeAdapter(plugin));
   registry.register("lechat", new LeChatAdapter(plugin));
+  registry.register("perplexity", new PerplexityAdapter(plugin));
   return registry;
 }
 __name(createProviderRegistry, "createProviderRegistry");
 
 // src/ui/import-progress-modal.ts
-var import_obsidian16 = require("obsidian");
+var import_obsidian18 = require("obsidian");
 init_i18n();
-var ImportProgressModal = class extends import_obsidian16.Modal {
+var ImportProgressModal = class extends import_obsidian18.Modal {
   constructor(app, fileName) {
     super(app);
     this.totalConversations = 0;
@@ -19796,6 +21161,17 @@ function findGeminiActivityJsonFiles(fileNames) {
   return geminiJsonFiles;
 }
 __name(findGeminiActivityJsonFiles, "findGeminiActivityJsonFiles");
+function findPerplexityJsonFiles(fileNames) {
+  return fileNames.filter((name) => {
+    var _a;
+    const lower = name.toLowerCase();
+    if (!lower.endsWith(".json"))
+      return false;
+    const baseName = (_a = lower.split("/").pop()) != null ? _a : lower;
+    return baseName.startsWith("perplexity_");
+  });
+}
+__name(findPerplexityJsonFiles, "findPerplexityJsonFiles");
 function classifyArchiveEntries(fileNames, forcedProvider) {
   if (fileNames.length === 0) {
     return {
@@ -19808,7 +21184,8 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
   const hasUsersJson = fileNames.includes("users.json");
   const hasLeChatFiles = fileNames.some((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
   const hasGeminiActivityJson = findGeminiActivityJsonFiles(fileNames).length > 0;
-  const detectedProvider = hasLeChatFiles && !hasConversationsJson ? "lechat" : hasGeminiActivityJson && !hasConversationsJson && !hasLeChatFiles ? "gemini" : hasConversationsJson && hasUsersJson ? "claude" : hasConversationsJson ? "chatgpt" : void 0;
+  const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
+  const detectedProvider = hasLeChatFiles && !hasConversationsJson ? "lechat" : hasGeminiActivityJson && !hasConversationsJson && !hasLeChatFiles ? "gemini" : hasPerplexityFiles && !hasConversationsJson && !hasLeChatFiles && !hasGeminiActivityJson ? "perplexity" : hasConversationsJson && hasUsersJson ? "claude" : hasConversationsJson ? "chatgpt" : void 0;
   if (forcedProvider) {
     const expectedProvider = forcedProvider;
     if (expectedProvider === "chatgpt") {
@@ -19849,6 +21226,16 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
         supported: false,
         reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
         message: "This ZIP file does not look like a Gemini Takeout export."
+      };
+    }
+    if (expectedProvider === "perplexity") {
+      if (detectedProvider === "perplexity") {
+        return { supported: true, provider: "perplexity", reason: "supported" };
+      }
+      return {
+        supported: false,
+        reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
+        message: "This ZIP file does not look like a Perplexity Thread Exporter archive."
       };
     }
   }
@@ -19921,6 +21308,19 @@ async function collectLeChatConversationFromEntry(entry) {
   );
 }
 __name(collectLeChatConversationFromEntry, "collectLeChatConversationFromEntry");
+async function collectJsonObjectFromEntry(entry) {
+  const text = await entry.readText();
+  const uncompressedBytes = text.length;
+  const parsed = JSON.parse(text);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new NexusAiChatImporterError(
+      "Invalid Perplexity JSON format",
+      "Expected a JSON object with metadata and conversations fields."
+    );
+  }
+  return { item: parsed, uncompressedBytes };
+}
+__name(collectJsonObjectFromEntry, "collectJsonObjectFromEntry");
 function formatRuntimeMemorySnapshot() {
   const perf = globalThis.performance;
   const memory = perf == null ? void 0 : perf.memory;
@@ -19967,6 +21367,26 @@ async function extractRawConversations(zip) {
     }
     return { conversations: conversations2, uncompressedBytes: uncompressedBytes2 };
   }
+  const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
+  if (perplexityJsonFiles.length > 0) {
+    const conversations2 = [];
+    let uncompressedBytes2 = 0;
+    for (const fileName of perplexityJsonFiles) {
+      const entry = zip.get(fileName);
+      if (!entry)
+        continue;
+      const { item, uncompressedBytes: fileBytes } = await collectJsonObjectFromEntry(entry);
+      uncompressedBytes2 += fileBytes;
+      conversations2.push(item);
+    }
+    if (conversations2.length === 0) {
+      throw new NexusAiChatImporterError(
+        "Empty Perplexity export",
+        "No thread JSON files found in the Perplexity archive."
+      );
+    }
+    return { conversations: conversations2, uncompressedBytes: uncompressedBytes2 };
+  }
   const numberedConvFiles = fileNames.filter((name) => /^conversations-\d+\.json$/.test(name)).sort();
   if (numberedConvFiles.length > 0) {
     const conversations2 = [];
@@ -19993,7 +21413,7 @@ async function extractRawConversations(zip) {
   if (!conversationsFile) {
     throw new NexusAiChatImporterError(
       "Missing conversations.json",
-      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or a Gemini activity JSON file."
+      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Gemini activity JSON file."
     );
   }
   const { items: conversations, uncompressedBytes } = await collectJsonArrayFromEntry(conversationsFile);
@@ -20062,6 +21482,31 @@ async function* extractConversationsStream(zip, options = {}) {
       "Gemini streaming not supported",
       "Gemini imports still require all-at-once processing."
     );
+  }
+  const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
+  if (perplexityJsonFiles.length > 0) {
+    streamLogger.info("Using Perplexity conversation stream", {
+      fileCount: perplexityJsonFiles.length
+    });
+    let yieldedCount2 = 0;
+    for (const fileName of perplexityJsonFiles) {
+      const entry = zip.get(fileName);
+      if (!entry)
+        continue;
+      const { item, uncompressedBytes } = await collectJsonObjectFromEntry(entry);
+      streamLogger.info("Perplexity thread file read complete", {
+        fileName,
+        textLength: uncompressedBytes
+      });
+      yieldedCount2++;
+      yield item;
+      await yieldToEventLoopIfNeeded(yieldedCount2);
+    }
+    streamLogger.info("Perplexity conversation stream complete", {
+      yieldedCount: yieldedCount2,
+      durationMs: Date.now() - startedAt
+    });
+    return;
   }
   const numberedConvFiles = fileNames.filter((name) => /^conversations-\d+\.json$/.test(name)).sort();
   if (numberedConvFiles.length > 0) {
@@ -20140,7 +21585,7 @@ async function* extractConversationsStream(zip, options = {}) {
   if (!conversationsFile) {
     throw new NexusAiChatImporterError(
       "Missing conversations.json",
-      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or a Gemini activity JSON file."
+      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Gemini activity JSON file."
     );
   }
   const conversationEntrySize = entrySizeMap.get("conversations.json");
@@ -20224,7 +21669,7 @@ function filterConversationsByIds(rawConversations, selectedIds, providerRegistr
   const detectedProvider = forcedProvider || providerRegistry.detectProvider(rawConversations);
   const adapter = detectedProvider !== "unknown" ? providerRegistry.getAdapter(detectedProvider) : void 0;
   const getConversationId = /* @__PURE__ */ __name((conversation) => {
-    var _a, _b;
+    var _a, _b, _c, _d;
     if (adapter && typeof adapter.getId === "function") {
       try {
         const id = adapter.getId(conversation);
@@ -20244,6 +21689,9 @@ function filterConversationsByIds(rawConversations, selectedIds, providerRegistr
       }
       if (forcedProvider === "claude" || conversation && conversation.uuid && conversation.name) {
         return conversation.uuid || "";
+      }
+      if (forcedProvider === "perplexity" || conversation && ((_c = conversation.metadata) == null ? void 0 : _c.thread_id) && Array.isArray(conversation.conversations)) {
+        return ((_d = conversation.metadata) == null ? void 0 : _d.thread_id) || "";
       }
       return conversation && conversation.id || "";
     } catch (e) {
@@ -20359,7 +21807,7 @@ Only ZIP files are supported. The file must have a .zip extension.
 \u{1F4DD} Known Issue: When downloading Claude exports with Firefox on Mac, the file may have a .dat extension instead of .zip. Simply rename the file to change the extension from .dat to .zip, then try importing again.
 
 Do NOT extract and re-compress the file - just rename it!`;
-      new import_obsidian17.Notice(errorMessage, 1e4);
+      new import_obsidian19.Notice(errorMessage, 1e4);
       this.plugin.logger.error("Invalid file extension", {
         fileName: file.name,
         expectedExtension: ".zip"
@@ -20442,7 +21890,7 @@ Do NOT extract and re-compress the file - just rename it!`;
             { button1: "Let's do this", button2: "Skip this file" }
           );
           if (!shouldReimport) {
-            new import_obsidian17.Notice(`Skipping ${file.name} (already imported).`);
+            new import_obsidian19.Notice(`Skipping ${file.name} (already imported).`);
             progressModal.close();
             return;
           }
@@ -20536,7 +21984,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
         if (!progressModal.isComplete) {
-          new import_obsidian17.Notice(
+          new import_obsidian19.Notice(
             this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
           );
         }
@@ -20861,7 +22309,7 @@ Do NOT extract and re-compress the file - just rename it!`;
     this.runtimeContext = null;
   }
   isMobileRuntime() {
-    return import_obsidian17.Platform.isMobileApp || import_obsidian17.Platform.isMobile;
+    return import_obsidian19.Platform.isMobileApp || import_obsidian19.Platform.isMobile;
   }
   async yieldToEventLoopIfMobile() {
     if (!this.isMobileRuntime()) {
@@ -20941,7 +22389,7 @@ var ReportWriter = class {
     const folderResult = await ensureFolderExists(reportInfo.folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
-      new import_obsidian17.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian19.Notice("Failed to create log file. Check console for details.");
       return;
     }
     let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
@@ -20969,7 +22417,7 @@ ${report.generateReportContent()}
       await this.plugin.app.vault.create(logFilePath, logContent);
     } catch (error) {
       this.plugin.logger.error(`Failed to write import log`, error.message);
-      new import_obsidian17.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian19.Notice("Failed to create log file. Check console for details.");
     }
   }
   getReportGenerationInfo(zipFileName, provider) {
@@ -21009,16 +22457,16 @@ __name(ReportWriter, "ReportWriter");
 init_storage_service();
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian25 = require("obsidian");
+var import_obsidian27 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
 init_constants();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
-var import_obsidian18 = require("obsidian");
+var import_obsidian20 = require("obsidian");
 init_i18n();
-var MultiOperationProgressModal = class extends import_obsidian18.Modal {
+var MultiOperationProgressModal = class extends import_obsidian20.Modal {
   constructor(app, title, operations) {
     super(app);
     this.canClose = false;
@@ -21322,7 +22770,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       logger4.error("Incremental upgrade failed:", error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
-        new import_obsidian25.Notice(t("upgrade.notices.migration_cancelled"));
+        new import_obsidian27.Notice(t("upgrade.notices.migration_cancelled"));
         return {
           success: false,
           upgradesExecuted: 0,
@@ -21332,7 +22780,7 @@ var IncrementalUpgradeManager = class {
         };
       }
       logger4.error("Error during incremental upgrade:", error);
-      new import_obsidian25.Notice(t("upgrade.notices.upgrade_failed_console"));
+      new import_obsidian27.Notice(t("upgrade.notices.upgrade_failed_console"));
       return {
         success: false,
         upgradesExecuted: 0,
@@ -21684,11 +23132,11 @@ var IncrementalUpgradeManager = class {
         const { UpgradeCompleteModal: UpgradeCompleteModal2 } = await Promise.resolve().then(() => (init_upgrade_complete_modal(), upgrade_complete_modal_exports));
         new UpgradeCompleteModal2(this.plugin.app, this.plugin, version).open();
       } else {
-        new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version }));
+        new import_obsidian27.Notice(t("upgrade.notices.upgraded_to_version", { version }));
       }
     } catch (error) {
       logger4.error("Error showing upgrade complete dialog:", error);
-      new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version }));
+      new import_obsidian27.Notice(t("upgrade.notices.upgraded_to_version", { version }));
     }
   }
   /**
@@ -21757,7 +23205,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger4.error("Error showing upgrade dialog:", error);
-      new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version: currentVersion }));
+      new import_obsidian27.Notice(t("upgrade.notices.upgraded_to_version", { version: currentVersion }));
     }
   }
   /**
@@ -21930,9 +23378,9 @@ __name(IncrementalUpgradeManager, "IncrementalUpgradeManager");
 init_logger();
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian26 = require("obsidian");
+var import_obsidian28 = require("obsidian");
 init_i18n();
-var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
+var EnhancedFileSelectionDialog = class extends import_obsidian28.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -22121,7 +23569,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     }
   }
   isMobileRuntime() {
-    return import_obsidian26.Platform.isMobileApp || import_obsidian26.Platform.isMobile;
+    return import_obsidian28.Platform.isMobileApp || import_obsidian28.Platform.isMobile;
   }
   enforceMobileSingleZipSelection(files) {
     if (!this.isMobileRuntime()) {
@@ -22133,7 +23581,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     }
     const firstZip = zipFiles[0];
     const nonZipFiles = files.filter((file) => !file.name.toLowerCase().endsWith(".zip"));
-    new import_obsidian26.Notice(t("notices.import_mobile_single_zip_only"));
+    new import_obsidian28.Notice(t("notices.import_mobile_single_zip_only"));
     return [firstZip, ...nonZipFiles];
   }
   updateFilePreview() {
@@ -22243,9 +23691,9 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
 __name(EnhancedFileSelectionDialog, "EnhancedFileSelectionDialog");
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian27 = require("obsidian");
+var import_obsidian29 = require("obsidian");
 init_i18n();
-var ConversationSelectionDialog = class extends import_obsidian27.Modal {
+var ConversationSelectionDialog = class extends import_obsidian29.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -23190,10 +24638,10 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
 __name(ConversationSelectionDialog, "ConversationSelectionDialog");
 
 // src/dialogs/installation-welcome-dialog.ts
-var import_obsidian28 = require("obsidian");
+var import_obsidian30 = require("obsidian");
 init_support_box();
 init_i18n();
-var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
+var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
   constructor(app, version, onGetStarted) {
     super(app);
     this.version = version;
@@ -23362,11 +24810,11 @@ var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
 __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 
 // src/dialogs/new-version-modal.ts
-var import_obsidian29 = require("obsidian");
+var import_obsidian31 = require("obsidian");
 init_support_box();
 init_constants();
 init_i18n();
-var NewVersionModal = class extends import_obsidian29.Modal {
+var NewVersionModal = class extends import_obsidian31.Modal {
   constructor(app, plugin, version, fallbackMessage) {
     super(app);
     this.plugin = plugin;
@@ -23397,7 +24845,7 @@ var NewVersionModal = class extends import_obsidian29.Modal {
     } catch (error) {
     }
     const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-    await import_obsidian29.MarkdownRenderer.render(
+    await import_obsidian31.MarkdownRenderer.render(
       this.app,
       message,
       contentDiv,
@@ -23516,7 +24964,7 @@ __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
 init_dialogs();
 
 // src/services/conversation-metadata-extractor.ts
-var import_obsidian30 = require("obsidian");
+var import_obsidian32 = require("obsidian");
 init_utils();
 init_logger();
 var ConversationMetadataExtractor = class {
@@ -23548,8 +24996,8 @@ var ConversationMetadataExtractor = class {
       }
     } else {
       for await (const rawConversation of extractConversationsStream(zip, {
-        mobileRuntime: import_obsidian30.Platform.isMobile,
-        enforceChunkedForLargeJsonOnMobile: import_obsidian30.Platform.isMobile,
+        mobileRuntime: import_obsidian32.Platform.isMobile,
+        enforceChunkedForLargeJsonOnMobile: import_obsidian32.Platform.isMobile,
         largeJsonThresholdBytes: 32 * 1024 * 1024,
         streamYieldEvery: 25
       })) {
@@ -23822,6 +25270,9 @@ var ConversationMetadataExtractor = class {
     if (forcedProvider === "gemini") {
       return "This ZIP file does not look like a Gemini Takeout export.";
     }
+    if (forcedProvider === "perplexity") {
+      return "This ZIP file does not look like a Perplexity Thread Exporter archive.";
+    }
     return "This ZIP file does not match any supported export format.";
   }
   extractSingleMetadataByProvider(rawConversation, provider) {
@@ -23838,6 +25289,8 @@ var ConversationMetadataExtractor = class {
         return this.extractLeChatMetadata(rawConversations);
       case "gemini":
         return this.extractGeminiMetadata(rawConversations);
+      case "perplexity":
+        return this.extractPerplexityMetadata(rawConversations);
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
@@ -23950,6 +25403,42 @@ var ConversationMetadataExtractor = class {
       };
     });
   }
+  extractPerplexityMetadata(conversations) {
+    return conversations.filter((chat) => {
+      var _a;
+      if (!chat || typeof chat !== "object") {
+        this.plugin.logger.warn("Skipping invalid Perplexity conversation: not an object");
+        return false;
+      }
+      if (!((_a = chat.metadata) == null ? void 0 : _a.thread_id) || !Array.isArray(chat.conversations)) {
+        this.plugin.logger.warn("Skipping Perplexity conversation with missing metadata.thread_id or conversations[]");
+        return false;
+      }
+      return chat.conversations.length > 0;
+    }).map((chat) => {
+      var _a, _b;
+      const turns = [...chat.conversations].sort((a, b) => {
+        const timeA = new Date(a.timestamp || 0).getTime();
+        const timeB = new Date(b.timestamp || 0).getTime();
+        return timeA - timeB;
+      });
+      const timestamps = turns.map((turn) => new Date(turn.timestamp || 0).getTime()).filter((ts) => Number.isFinite(ts) && ts > 0);
+      const metaCreateMs = new Date(((_a = chat.metadata) == null ? void 0 : _a.thread_created_at) || "").getTime();
+      const metaUpdateMs = new Date(((_b = chat.metadata) == null ? void 0 : _b.thread_updated_at) || "").getTime();
+      const createTime = Number.isFinite(metaCreateMs) && metaCreateMs > 0 ? Math.floor(metaCreateMs / 1e3) : timestamps.length > 0 ? Math.floor(Math.min(...timestamps) / 1e3) : 0;
+      const updateTime = Number.isFinite(metaUpdateMs) && metaUpdateMs > 0 ? Math.floor(metaUpdateMs / 1e3) : timestamps.length > 0 ? Math.floor(Math.max(...timestamps) / 1e3) : 0;
+      return {
+        id: chat.metadata.thread_id,
+        title: (chat.metadata.thread_title || "Untitled").trim() || "Untitled",
+        createTime,
+        updateTime,
+        messageCount: turns.length * 2,
+        provider: "perplexity",
+        isStarred: false,
+        isArchived: false
+      };
+    }).filter((metadata) => metadata.messageCount > 0);
+  }
   countChatGPTMessages(chat) {
     if (!chat.mapping) {
       return 0;
@@ -24047,12 +25536,12 @@ var ConversationMetadataExtractor = class {
 __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian31 = require("obsidian");
+var import_obsidian33 = require("obsidian");
 init_support_box();
 init_logger();
 init_i18n();
 var logger5 = new Logger();
-var ImportCompletionDialog = class extends import_obsidian31.Modal {
+var ImportCompletionDialog = class extends import_obsidian33.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -24280,7 +25769,7 @@ __name(ImportCompletionDialog, "ImportCompletionDialog");
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -24465,7 +25954,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         message,
         stack: error instanceof Error ? error.stack : void 0
       });
-      new import_obsidian32.Notice(t("notices.import_error", { error: message }));
+      new import_obsidian34.Notice(t("notices.import_error", { error: message }));
     }
   }
   /**
@@ -24498,13 +25987,13 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         selectedZipCount: zipFiles.length,
         keptFileName: zipFiles[0].name
       });
-      new import_obsidian32.Notice(t("notices.import_mobile_single_zip_only"));
+      new import_obsidian34.Notice(t("notices.import_mobile_single_zip_only"));
       zipFiles = [zipFiles[0]];
     }
     const sortedZipFiles = sortFilesForImport(zipFiles);
     const lockedProvider = await this.resolveProviderLockFromSelection(sortedZipFiles);
     if (!lockedProvider) {
-      new import_obsidian32.Notice(
+      new import_obsidian34.Notice(
         t("notices.import_error_analyzing", {
           error: "No supported archive was detected in the selected ZIP files."
         })
@@ -24526,7 +26015,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const effectiveProvider = lockedProvider.provider;
     if (effectiveProvider === "gemini") {
       if (zipFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_zip_gemini"));
+        new import_obsidian34.Notice(t("notices.import_no_zip_gemini"));
         this.logger.warn("[Gemini] No ZIP files selected for import");
         return;
       }
@@ -24550,7 +26039,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           }
         } catch (error) {
           this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
-          new import_obsidian32.Notice(t("notices.import_gemini_json_failed"));
+          new import_obsidian34.Notice(t("notices.import_gemini_json_failed"));
         }
       }
       this.currentGeminiIndex = index;
@@ -24566,7 +26055,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         this.importService.setGeminiIndex(null);
       }
       if (zipFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_zip"));
+        new import_obsidian34.Notice(t("notices.import_no_zip"));
         this.logger.warn(`[${effectiveProvider}] No ZIP files selected for import`);
         return;
       }
@@ -24598,7 +26087,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         fileCount: files.length
       });
-      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
+      new import_obsidian34.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -24623,7 +26112,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_supported_archives", { provider }));
+        new import_obsidian34.Notice(t("notices.import_no_supported_archives", { provider }));
         return;
       }
       const operationReport = new ImportReport();
@@ -24631,7 +26120,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_new"));
+        new import_obsidian34.Notice(t("notices.import_no_new"));
         const reportPath2 = await this.writeConsolidatedReport(
           operationReport,
           provider,
@@ -24649,7 +26138,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const allIds = extractionResult.conversations.map((c) => c.id);
       const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
       const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
-      new import_obsidian32.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
+      new import_obsidian34.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -24686,11 +26175,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian34.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "import-all");
-      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian34.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       await this.runPostImportCleanup("import-all");
     }
@@ -24828,13 +26317,13 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian32.Notice(t("notices.import_completed_fallback", {
+      new import_obsidian34.Notice(t("notices.import_completed_fallback", {
         created: String(operationReport.getCreatedCount()),
         updated: String(operationReport.getUpdatedCount())
       }));
     }
     if (skippedUnsupported > 0) {
-      new import_obsidian32.Notice(
+      new import_obsidian34.Notice(
         `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
         5e3
       );
@@ -24853,7 +26342,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           selectedFileCount: files.length,
           keptFileName: (_b = (_a = mobileFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
         });
-        new import_obsidian32.Notice(t("notices.import_mobile_single_zip_only"));
+        new import_obsidian34.Notice(t("notices.import_mobile_single_zip_only"));
       }
       this.setImportCheckpoint({
         operation: "selective-analysis",
@@ -24865,7 +26354,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         fileCount: mobileFiles.length
       });
-      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(mobileFiles.length) }));
+      new import_obsidian34.Notice(t("notices.import_analyzing", { count: String(mobileFiles.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -24890,11 +26379,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_supported_archives", { provider }));
+        new import_obsidian34.Notice(t("notices.import_no_supported_archives", { provider }));
         return;
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_new"));
+        new import_obsidian34.Notice(t("notices.import_no_new"));
         const operationReport = new ImportReport();
         const reportPath = await this.writeConsolidatedReport(
           operationReport,
@@ -24930,7 +26419,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       ).open();
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-analysis");
-      new import_obsidian32.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian34.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
     }
   }
   /**
@@ -24949,7 +26438,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (result.selectedIds.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_selected"));
+        new import_obsidian34.Notice(t("notices.import_no_selected"));
         const reportPath2 = await this.writeConsolidatedReport(
           operationReport,
           provider,
@@ -24964,7 +26453,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         }
         return;
       }
-      new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
+      new import_obsidian34.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
       const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
       const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
       const selectedExistingConversationIds = this.collectSelectedExistingConversationIds(
@@ -24998,11 +26487,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian34.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-import");
-      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian34.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       await this.runPostImportCleanup("selective-import");
     }
@@ -25025,7 +26514,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian32.Notice(t("notices.report_failed"));
+      new import_obsidian34.Notice(t("notices.report_failed"));
       return "";
     }
     const now = Date.now() / 1e3;
@@ -25119,7 +26608,7 @@ ${report.generateMobileIndexContent(files, links)}
     } catch (error) {
       this.logger.error(`Failed to write consolidated reports`, error);
       this.logger.error("Full error:", error);
-      new import_obsidian32.Notice(t("notices.report_failed"));
+      new import_obsidian34.Notice(t("notices.report_failed"));
       return "";
     }
   }
@@ -25189,7 +26678,7 @@ ${report.generateMobileIndexContent(files, links)}
     return conversationsByFile;
   }
   isMobileTaskQueueMode() {
-    return import_obsidian32.Platform.isMobileApp || import_obsidian32.Platform.isMobile;
+    return import_obsidian34.Platform.isMobileApp || import_obsidian34.Platform.isMobile;
   }
   async resolveProviderLockFromSelection(files) {
     const providerRegistry = createProviderRegistry(this);
@@ -25366,7 +26855,7 @@ ${report.generateMobileIndexContent(files, links)}
         );
       } catch (error) {
         this.logger.error(`Error processing file ${file.name}:`, error);
-        new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
+        new import_obsidian34.Notice(t("notices.import_error_file", { filename: file.name }));
       } finally {
         if (mobileTaskQueueMode) {
           this.importService.clearAttachmentMap();
@@ -25443,7 +26932,7 @@ ${report.generateMobileIndexContent(files, links)}
         message: archive.message
       }))
     });
-    new import_obsidian32.Notice(
+    new import_obsidian34.Notice(
       `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,
       5e3
     );
