@@ -25,7 +25,6 @@ export interface PluginSettings {
     conversationFolder: string;
     reportFolder: string;
     attachmentFolder: string;
-    conversationHierarchyOrder: ConversationHierarchyOrder;
 
     // ========================================
     // 🎨 DISPLAY OPTIONS
@@ -63,10 +62,6 @@ export interface PluginSettings {
     conversationPageSize?: number;  // Replaced by lastConversationsPerPage
     autoSelectAllOnOpen?: boolean;  // Removed
 }
-
-export type ConversationHierarchyOrder =
-    | "provider-year-month"
-    | "year-month-provider";
 
 export interface ConversationRecord {
     path: string;

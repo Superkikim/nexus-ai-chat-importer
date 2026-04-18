@@ -27,7 +27,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     conversationFolder: "Nexus/Conversations",
     reportFolder: "Nexus/Reports",
     attachmentFolder: "Nexus/Attachments",
-    conversationHierarchyOrder: "provider-year-month",
 
     // ========================================
     // 🎨 DISPLAY OPTIONS

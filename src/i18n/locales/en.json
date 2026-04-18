@@ -203,14 +203,6 @@
         "desc": "Where attachments are stored (⚠️ Exclude from sync to save space)",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "Browse folders or create a new one"
-      },
-      "hierarchy_order": {
-        "name": "Conversation hierarchy order",
-        "desc": "Choose how conversation folders are organized inside the conversation root",
-        "options": {
-          "provider_year_month": "Provider / Year / Month",
-          "year_month_provider": "Year / Month / Provider"
-        }
       }
     },
     "display": {
@@ -416,39 +408,6 @@
       "files_moved": "Files moved to {{path}}",
       "failed_move": "Failed to move files: {{error}}",
       "files_moved_links_updated": "✅ {{moved}} files moved to {{path}}. {{links}} links updated"
-    }
-  },
-  "settings_migration": {
-    "decision": {
-      "title": "Apply Setting Change",
-      "description": "The setting \"{{setting}}\" affects {{count}} existing conversation file(s). Choose how to proceed:",
-      "apply_and_migrate": "Apply and migrate now",
-      "apply_only": "Apply only (future imports)"
-    },
-    "progress": {
-      "title": "Applying setting migration",
-      "preparing": "Preparing migration...",
-      "preparing_detail": "{{count}} file move(s) planned",
-      "executing": "Executing migration...",
-      "finalizing": "Finalizing",
-      "finalizing_detail": "Saving setting and validating results",
-      "complete": "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-    },
-    "result": {
-      "title": "Setting Migration Result",
-      "summary": "Moved: {{moved}} • Skipped: {{skipped}} • Errors: {{errors}} • Duration: {{duration}}s",
-      "new_order": "New hierarchy order: {{order}}",
-      "report": "Report saved to: {{path}}",
-      "details": "Details",
-      "details_truncated": "... {{hidden}} additional line(s) not shown"
-    },
-    "notices": {
-      "apply_only": "Setting applied. Existing files were not moved.",
-      "no_result": "Migration finished but no summary was returned."
-    },
-    "errors": {
-      "title": "Setting Migration Failed",
-      "message": "Failed to apply migration: {{error}}"
     }
   },
   "folder_browser": {

@@ -203,14 +203,6 @@
         "desc": "添付ファイルの保存先（⚠️ 容量節約のため同期から除外することを推奨）",
         "placeholder": "Nexus/Attachments",
         "browse_tooltip": "フォルダーを参照するか、新しいフォルダーを作成"
-      },
-      "hierarchy_order": {
-        "name": "Conversation hierarchy order",
-        "desc": "Choose how conversation folders are organized inside the conversation root",
-        "options": {
-          "provider_year_month": "Provider / Year / Month",
-          "year_month_provider": "Year / Month / Provider"
-        }
       }
     },
     "display": {
@@ -528,38 +520,5 @@
     "default_message": "このプラグインが役に立っているなら、寄付はとても大きな励みになり、プロジェクトの継続を支えてくれます。",
     "reality_check": "ありがとうございます！これらのプラグインには数千時間の作業が注ぎ込まれており、ご支援が健康上の問題と向き合いながら改善を続ける私の力になります。このプラグインがお役に立っているなら、ぜひサポートをご検討ください。",
     "button_alt": "私の活動を支援する"
-  },
-  "settings_migration": {
-    "decision": {
-      "title": "Apply Setting Change",
-      "description": "The setting \"{{setting}}\" affects {{count}} existing conversation file(s). Choose how to proceed:",
-      "apply_and_migrate": "Apply and migrate now",
-      "apply_only": "Apply only (future imports)"
-    },
-    "progress": {
-      "title": "Applying setting migration",
-      "preparing": "Preparing migration...",
-      "preparing_detail": "{{count}} file move(s) planned",
-      "executing": "Executing migration...",
-      "finalizing": "Finalizing",
-      "finalizing_detail": "Saving setting and validating results",
-      "complete": "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-    },
-    "result": {
-      "title": "Setting Migration Result",
-      "summary": "Moved: {{moved}} • Skipped: {{skipped}} • Errors: {{errors}} • Duration: {{duration}}s",
-      "new_order": "New hierarchy order: {{order}}",
-      "details": "Details",
-      "details_truncated": "... {{hidden}} additional line(s) not shown",
-      "report": "Report saved to: {{path}}"
-    },
-    "notices": {
-      "apply_only": "Setting applied. Existing files were not moved.",
-      "no_result": "Migration finished but no summary was returned."
-    },
-    "errors": {
-      "title": "Setting Migration Failed",
-      "message": "Failed to apply migration: {{error}}"
-    }
   }
 }

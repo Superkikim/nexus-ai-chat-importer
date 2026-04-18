@@ -22,7 +22,6 @@ import { TFile } from "obsidian";
 import { ConversationCatalogEntry } from "../types/plugin";
 import { StandardConversation, StandardMessage } from "../types/standard";
 import { ImportReport } from "../models/import-report";
-import { buildConversationFolderPath } from "./conversation-path-resolver";
 import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
@@ -798,12 +797,12 @@ export class ConversationProcessor {
         const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
         const providerName = isStandardConversation ? chat.provider : adapter.getProviderName();
 
-        const folderPath = buildConversationFolderPath(
-            this.plugin.settings.conversationFolder,
-            createTime,
-            providerName,
-            this.plugin.settings.conversationHierarchyOrder
-        );
+        const date = new Date(createTime * 1000);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+
+        // New structure: <conversationFolder>/<provider>/<year>/<month>/
+        const folderPath = `${this.plugin.settings.conversationFolder}/${providerName}/${year}/${month}`;
 
         const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
         if (!folderResult.success) {
