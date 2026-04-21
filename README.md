@@ -125,7 +125,7 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, **Le Chat**, and
 
 ## ☕ Support My Work
 
-I'm working on Nexus projects full-time while unemployed and dealing with health issues.
+I actively maintain and improve Nexus projects to keep them reliable, fast, and up to date.
 
 **Over 7,000 downloads so far! Thank you to everyone who has supported this project.**
 

@@ -17,7 +17,7 @@ export function createSupportBox(container: HTMLElement, message?: string): void
     const header = supportBox.createDiv('nexus-support-header');
     header.innerHTML = `<span class="nexus-support-header-highlight">${t('support_box.header_highlight')}</span>`;
 
-    // Message with emphasis on unemployment + health issues
+    // Message with emphasis on active project maintenance
     const messageEl = supportBox.createDiv('nexus-support-message');
 
     if (message) {
@@ -32,14 +32,14 @@ export function createSupportBox(container: HTMLElement, message?: string): void
             return `<p>${p}</p>`;
         }).join('');
     } else {
-        // Default message - emphasize unemployment + health issues
+        // Default message - emphasize active maintenance and ongoing updates
         messageEl.innerHTML = `
             <p><span class="nexus-support-message-emphasis">${t('support_box.default_message_emphasis')}</span></p>
             <p>${t('support_box.default_message')}</p>
         `;
     }
 
-	    // Appreciation message (still honest about health situation, but more positive)
+	    // Appreciation message focused on impact and sustained support
 	    const realityCheck = supportBox.createDiv('nexus-support-reality-check');
 	    realityCheck.innerHTML = t('support_box.reality_check');
 
@@ -56,5 +56,4 @@ export function createSupportBox(container: HTMLElement, message?: string): void
         </a>
     `;
 }
-
 

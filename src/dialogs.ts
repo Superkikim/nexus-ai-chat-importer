@@ -227,9 +227,9 @@ class BeautifulUpgradeDialog extends Modal {
         const supportSection = container.createDiv('nexus-support-section');
         supportSection.innerHTML = `
             <div class="nexus-support-text">
-                I'm working on Nexus projects full-time while unemployed and dealing with health issues. Over 1,000 users are now using these plugins!
+                I actively maintain and improve Nexus projects to keep these plugins reliable, fast, and up to date. Over 1,000 users are now using these plugins!
 
-                If these plugins help you, even a small donation would mean the world and help keep them alive.
+                If these plugins help you, even a small donation would mean the world and help accelerate updates and long-term maintenance.
             </div>
             <div class="nexus-support-button-div">
                 <a href="${supportUrl}" target="_blank" class="nexus-support-link">

@@ -238,14 +238,6 @@ var init_en = __esm({
             desc: "Where attachments are stored (\u26A0\uFE0F Exclude from sync to save space)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Browse folders or create a new one"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -453,39 +445,6 @@ var init_en = __esm({
           files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          report: "Report saved to: {{path}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
-      },
       folder_browser: {
         title: "Select Folder",
         vault_root: "Vault Root (/)",
@@ -592,9 +551,9 @@ var init_en = __esm({
       support_box: {
         header: "Support This Plugin",
         header_highlight: "Support This Plugin",
-        default_message_emphasis: "I'm working on Nexus projects full-time while unemployed and dealing with health issues.",
+        default_message_emphasis: "I actively maintain and improve Nexus projects to keep them reliable, fast, and up to date.",
         default_message: "If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.",
-        reality_check: "Thank you! Thousands of hours of work have gone into these plugins, and every donation helps me keep improving them while managing ongoing health issues. If this plugin makes your life easier, please consider supporting me.",
+        reality_check: "Thank you! Thousands of hours of work have gone into these plugins, and every donation helps me ship improvements faster and provide better support. If this plugin makes your life easier, please consider supporting me.",
         button_alt: "Support my work"
       }
     };
@@ -810,14 +769,6 @@ var init_fr = __esm({
             desc: "O\xF9 les pi\xE8ces jointes sont stock\xE9es (\u26A0\uFE0F Exclure de la synchronisation pour \xE9conomiser de l'espace)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Parcourir les dossiers ou en cr\xE9er un nouveau"
-          },
-          hierarchy_order: {
-            name: "Ordre de hi\xE9rarchie des conversations",
-            desc: "Choisir l'organisation des dossiers de conversations dans le dossier racine",
-            options: {
-              provider_year_month: "Fournisseur / Ann\xE9e / Mois",
-              year_month_provider: "Ann\xE9e / Mois / Fournisseur"
-            }
           }
         },
         display: {
@@ -1025,39 +976,6 @@ var init_fr = __esm({
           files_moved_links_updated: "\u2705 {{moved}} files moved to {{path}}. {{links}} links updated"
         }
       },
-      settings_migration: {
-        decision: {
-          title: "Appliquer le changement de param\xE8tre",
-          description: "Le param\xE8tre \xAB {{setting}} \xBB impacte {{count}} fichier(s) de conversation existant(s). Choisissez comment continuer :",
-          apply_and_migrate: "Appliquer et migrer maintenant",
-          apply_only: "Appliquer uniquement (imports futurs)"
-        },
-        progress: {
-          title: "Application de la migration de param\xE8tre",
-          preparing: "Pr\xE9paration de la migration...",
-          preparing_detail: "{{count}} d\xE9placement(s) de fichier planifi\xE9(s)",
-          executing: "Ex\xE9cution de la migration...",
-          finalizing: "Finalisation",
-          finalizing_detail: "Sauvegarde du param\xE8tre et validation des r\xE9sultats",
-          complete: "Migration termin\xE9e : {{moved}} d\xE9plac\xE9s, {{skipped}} ignor\xE9s, {{errors}} erreurs"
-        },
-        result: {
-          title: "R\xE9sultat de migration de param\xE8tre",
-          summary: "D\xE9plac\xE9s : {{moved}} \u2022 Ignor\xE9s : {{skipped}} \u2022 Erreurs : {{errors}} \u2022 Dur\xE9e : {{duration}}s",
-          new_order: "Nouvel ordre hi\xE9rarchique : {{order}}",
-          report: "Rapport enregistr\xE9 dans : {{path}}",
-          details: "D\xE9tails",
-          details_truncated: "... {{hidden}} ligne(s) suppl\xE9mentaire(s) non affich\xE9e(s)"
-        },
-        notices: {
-          apply_only: "Param\xE8tre appliqu\xE9. Les fichiers existants n'ont pas \xE9t\xE9 d\xE9plac\xE9s.",
-          no_result: "La migration est termin\xE9e mais aucun r\xE9sum\xE9 n'a \xE9t\xE9 retourn\xE9."
-        },
-        errors: {
-          title: "\xC9chec de migration du param\xE8tre",
-          message: "Impossible d'appliquer la migration : {{error}}"
-        }
-      },
       folder_browser: {
         title: "S\xE9lectionner un dossier",
         vault_root: "Racine du Vault (/)",
@@ -1164,9 +1082,9 @@ var init_fr = __esm({
       support_box: {
         header: "Soutenir ce plugin",
         header_highlight: "Soutenir ce plugin",
-        default_message_emphasis: "Je travaille \xE0 temps plein sur les projets Nexus tout en \xE9tant sans emploi et en faisant face \xE0 des probl\xE8mes de sant\xE9.",
+        default_message_emphasis: "Je maintiens et am\xE9liore activement les projets Nexus pour les garder fiables, rapides et \xE0 jour.",
         default_message: "Si ce plugin vous facilite la vie, un don repr\xE9senterait \xE9norm\xE9ment pour moi et m'aiderait \xE0 les maintenir en vie.",
-        reality_check: "Merci ! Des milliers d'heures de travail ont \xE9t\xE9 investies dans ces plugins, et chaque don m'aide \xE0 continuer \xE0 les am\xE9liorer tout en g\xE9rant des probl\xE8mes de sant\xE9 persistants. Si ce plugin vous facilite la vie, pensez \xE0 me soutenir.",
+        reality_check: "Merci ! Des milliers d'heures de travail ont \xE9t\xE9 investies dans ces plugins, et chaque don m'aide \xE0 livrer des am\xE9liorations plus vite et \xE0 offrir un meilleur support. Si ce plugin vous facilite la vie, pensez \xE0 me soutenir.",
         button_alt: "Soutenir mon travail"
       }
     };
@@ -1382,14 +1300,6 @@ var init_de = __esm({
             desc: "Speicherort f\xFCr Anh\xE4nge (\u26A0\uFE0F Von der Synchronisierung ausschlie\xDFen, um Speicherplatz zu sparen)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Ordner durchsuchen oder neuen erstellen"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -1703,43 +1613,10 @@ var init_de = __esm({
       support_box: {
         header: "Dieses Plugin unterst\xFCtzen",
         header_highlight: "Dieses Plugin unterst\xFCtzen",
-        default_message_emphasis: "Ich arbeite Vollzeit an Nexus-Projekten, bin arbeitslos und k\xE4mpfe mit gesundheitlichen Problemen.",
+        default_message_emphasis: "Ich pflege und verbessere die Nexus-Projekte aktiv, damit sie zuverl\xE4ssig, schnell und aktuell bleiben.",
         default_message: "Wenn dieses Plugin Ihr Leben leichter macht, w\xFCrde mir eine Spende sehr viel bedeuten und dazu beitragen, die Projekte am Leben zu erhalten.",
-        reality_check: "Danke! Tausende Stunden Arbeit stecken in diesen Plugins, und jede Spende hilft mir, sie weiterzuentwickeln, w\xE4hrend ich mit anhaltenden gesundheitlichen Problemen umgehe. Wenn dieses Plugin Ihr Leben leichter macht, erw\xE4gen Sie bitte, mich zu unterst\xFCtzen.",
+        reality_check: "Danke! Tausende Stunden Arbeit stecken in diesen Plugins, und jede Spende hilft mir, Verbesserungen schneller zu liefern und besseren Support anzubieten. Wenn dieses Plugin Ihr Leben leichter macht, erw\xE4gen Sie bitte, mich zu unterst\xFCtzen.",
         button_alt: "Meine Arbeit unterst\xFCtzen"
-      },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown",
-          report: "Report saved to: {{path}}"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
       }
     };
   }
@@ -1954,14 +1831,6 @@ var init_es = __esm({
             desc: "D\xF3nde se almacenan los adjuntos (\u26A0\uFE0F Excluir de la sincronizaci\xF3n para ahorrar espacio)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Explorar carpetas o crear una nueva"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -2275,43 +2144,10 @@ var init_es = __esm({
       support_box: {
         header: "Apoyar este plugin",
         header_highlight: "Apoyar este plugin",
-        default_message_emphasis: "Trabajo a tiempo completo en los proyectos Nexus estando desempleado y enfrentando problemas de salud.",
+        default_message_emphasis: "Mantengo y mejoro activamente los proyectos Nexus para que sigan siendo fiables, r\xE1pidos y actualizados.",
         default_message: "Si este plugin te facilita la vida, una donaci\xF3n significar\xEDa much\xEDsimo para m\xED y ayudar\xEDa a mantenerlos activos.",
-        reality_check: "\xA1Gracias! Miles de horas de trabajo han ido a estos plugins, y cada donaci\xF3n me ayuda a seguir mejor\xE1ndolos mientras gestiono problemas de salud continuos. Si este plugin te facilita la vida, por favor considera apoyarme.",
+        reality_check: "\xA1Gracias! Se han invertido miles de horas de trabajo en estos plugins, y cada donaci\xF3n me ayuda a lanzar mejoras m\xE1s r\xE1pido y ofrecer mejor soporte. Si este plugin te facilita la vida, por favor considera apoyarme.",
         button_alt: "Apoyar mi trabajo"
-      },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown",
-          report: "Report saved to: {{path}}"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
       }
     };
   }
@@ -2526,14 +2362,6 @@ var init_it = __esm({
             desc: "Dove vengono archiviati gli allegati (\u26A0\uFE0F Escludere dalla sincronizzazione per risparmiare spazio)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Sfoglia le cartelle o creane una nuova"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -2847,43 +2675,10 @@ var init_it = __esm({
       support_box: {
         header: "Supporta questo plugin",
         header_highlight: "Supporta questo plugin",
-        default_message_emphasis: "Lavoro a tempo pieno sui progetti Nexus mentre sono disoccupato e affronto problemi di salute.",
+        default_message_emphasis: "Mantengo e miglioro attivamente i progetti Nexus per mantenerli affidabili, veloci e aggiornati.",
         default_message: "Se questo plugin ti semplifica la vita, una donazione significherebbe moltissimo per me e aiuterebbe a tenerli in vita.",
-        reality_check: "Grazie! Migliaia di ore di lavoro sono state dedicate a questi plugin, e ogni donazione mi aiuta a continuare a migliorarli mentre gestisco problemi di salute continuativi. Se questo plugin ti semplifica la vita, considera di supportarmi.",
+        reality_check: "Grazie! Migliaia di ore di lavoro sono state dedicate a questi plugin, e ogni donazione mi aiuta a rilasciare miglioramenti pi\xF9 rapidamente e a offrire un supporto migliore. Se questo plugin ti semplifica la vita, considera di supportarmi.",
         button_alt: "Supportare il mio lavoro"
-      },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown",
-          report: "Report saved to: {{path}}"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
       }
     };
   }
@@ -3098,14 +2893,6 @@ var init_ru = __esm({
             desc: "\u041C\u0435\u0441\u0442\u043E \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u0432\u043B\u043E\u0436\u0435\u043D\u0438\u0439 (\u26A0\uFE0F \u0418\u0441\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u0438\u0437 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0430\u0446\u0438\u0438 \u0434\u043B\u044F \u044D\u043A\u043E\u043D\u043E\u043C\u0438\u0438 \u043C\u0435\u0441\u0442\u0430)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u041E\u0431\u0437\u043E\u0440 \u043F\u0430\u043F\u043E\u043A \u0438\u043B\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0435 \u043D\u043E\u0432\u043E\u0439"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -3419,43 +3206,10 @@ var init_ru = __esm({
       support_box: {
         header: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
         header_highlight: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
-        default_message_emphasis: "\u042F \u0440\u0430\u0431\u043E\u0442\u0430\u044E \u043D\u0430\u0434 \u043F\u0440\u043E\u0435\u043A\u0442\u0430\u043C\u0438 Nexus \u043D\u0430 \u043F\u043E\u043B\u043D\u0443\u044E \u0441\u0442\u0430\u0432\u043A\u0443, \u0431\u0443\u0434\u0443\u0447\u0438 \u0431\u0435\u0437\u0440\u0430\u0431\u043E\u0442\u043D\u044B\u043C \u0438 \u0431\u043E\u0440\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C.",
+        default_message_emphasis: "\u042F \u0430\u043A\u0442\u0438\u0432\u043D\u043E \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044E \u0438 \u0443\u043B\u0443\u0447\u0448\u0430\u044E \u043F\u0440\u043E\u0435\u043A\u0442\u044B Nexus, \u0447\u0442\u043E\u0431\u044B \u043E\u043D\u0438 \u043E\u0441\u0442\u0430\u0432\u0430\u043B\u0438\u0441\u044C \u043D\u0430\u0434\u0451\u0436\u043D\u044B\u043C\u0438, \u0431\u044B\u0441\u0442\u0440\u044B\u043C\u0438 \u0438 \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u044B\u043C\u0438.",
         default_message: "\u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u0431\u0443\u0434\u0435\u0442 \u0434\u043B\u044F \u043C\u0435\u043D\u044F \u043E\u0447\u0435\u043D\u044C \u0437\u043D\u0430\u0447\u0438\u043C\u044B\u043C \u0438 \u043F\u043E\u043C\u043E\u0436\u0435\u0442 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0442\u044C \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0432 \u0440\u0430\u0431\u043E\u0447\u0435\u043C \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0438.",
-        reality_check: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E! \u041D\u0430 \u044D\u0442\u0438 \u043F\u043B\u0430\u0433\u0438\u043D\u044B \u0443\u0448\u043B\u0438 \u0442\u044B\u0441\u044F\u0447\u0438 \u0447\u0430\u0441\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B, \u0438 \u043A\u0430\u0436\u0434\u043E\u0435 \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u043C\u043D\u0435 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0442\u044C \u0438\u0445 \u0443\u043B\u0443\u0447\u0448\u0430\u0442\u044C, \u0441\u043F\u0440\u0430\u0432\u043B\u044F\u044F\u0441\u044C \u0441 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u043C\u0438 \u0441\u043E \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435\u043C. \u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0440\u0430\u0441\u0441\u043C\u043E\u0442\u0440\u0438\u0442\u0435 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438.",
+        reality_check: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E! \u041D\u0430 \u044D\u0442\u0438 \u043F\u043B\u0430\u0433\u0438\u043D\u044B \u0443\u0448\u043B\u0438 \u0442\u044B\u0441\u044F\u0447\u0438 \u0447\u0430\u0441\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B, \u0438 \u043A\u0430\u0436\u0434\u043E\u0435 \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u043C\u043D\u0435 \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u0432\u044B\u043F\u0443\u0441\u043A\u0430\u0442\u044C \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0438 \u043E\u0431\u0435\u0441\u043F\u0435\u0447\u0438\u0432\u0430\u0442\u044C \u0431\u043E\u043B\u0435\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u0443\u044E \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0443. \u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0440\u0430\u0441\u0441\u043C\u043E\u0442\u0440\u0438\u0442\u0435 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438.",
         button_alt: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043C\u043E\u044E \u0440\u0430\u0431\u043E\u0442\u0443"
-      },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown",
-          report: "Report saved to: {{path}}"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
       }
     };
   }
@@ -3670,14 +3424,6 @@ var init_zh = __esm({
             desc: "\u9644\u4EF6\u5B58\u653E\u4F4D\u7F6E\uFF08\u26A0\uFE0F \u8BF7\u5C06\u5176\u6392\u9664\u5728\u540C\u6B65\u8303\u56F4\u4E4B\u5916\u4EE5\u8282\u7701\u7A7A\u95F4\uFF09",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u6D4F\u89C8\u6587\u4EF6\u5939\u6216\u65B0\u5EFA\u6587\u4EF6\u5939"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -3991,43 +3737,10 @@ var init_zh = __esm({
       support_box: {
         header: "\u652F\u6301\u6B64\u63D2\u4EF6",
         header_highlight: "\u652F\u6301\u6B64\u63D2\u4EF6",
-        default_message_emphasis: "\u6211\u5728\u5931\u4E1A\u5E76\u4E0E\u5065\u5EB7\u95EE\u9898\u6297\u4E89\u7684\u540C\u65F6\uFF0C\u5168\u804C\u6295\u5165\u4E8E Nexus \u9879\u76EE\u7684\u5F00\u53D1\u3002",
+        default_message_emphasis: "\u6211\u4F1A\u6301\u7EED\u7EF4\u62A4\u5E76\u6539\u8FDB Nexus \u9879\u76EE\uFF0C\u8BA9\u5B83\u4EEC\u4FDD\u6301\u7A33\u5B9A\u3001\u5FEB\u901F\u5E76\u6301\u7EED\u66F4\u65B0\u3002",
         default_message: "\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u4E00\u7B14\u6350\u6B3E\u5BF9\u6211\u610F\u4E49\u91CD\u5927\uFF0C\u4E5F\u5C06\u5E2E\u52A9\u8FD9\u4E9B\u9879\u76EE\u6301\u7EED\u8FD0\u8F6C\u3002",
-        reality_check: "\u611F\u8C22\u60A8\uFF01\u8FD9\u4E9B\u63D2\u4EF6\u51DD\u805A\u4E86\u6570\u5343\u5C0F\u65F6\u7684\u5FC3\u8840\uFF0C\u6BCF\u4E00\u7B14\u6350\u6B3E\u90FD\u5E2E\u52A9\u6211\u5728\u5E94\u5BF9\u6301\u7EED\u5065\u5EB7\u95EE\u9898\u7684\u540C\u65F6\u4E0D\u65AD\u6539\u8FDB\u5B83\u4EEC\u3002\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u8BF7\u8003\u8651\u652F\u6301\u6211\u3002",
+        reality_check: "\u611F\u8C22\u60A8\uFF01\u8FD9\u4E9B\u63D2\u4EF6\u51DD\u805A\u4E86\u6570\u5343\u5C0F\u65F6\u7684\u6295\u5165\uFF0C\u6BCF\u4E00\u7B14\u6350\u6B3E\u90FD\u80FD\u5E2E\u52A9\u6211\u66F4\u5FEB\u53D1\u5E03\u6539\u8FDB\u5E76\u63D0\u4F9B\u66F4\u597D\u7684\u652F\u6301\u3002\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u8BF7\u8003\u8651\u652F\u6301\u6211\u3002",
         button_alt: "\u652F\u6301\u6211\u7684\u5DE5\u4F5C"
-      },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown",
-          report: "Report saved to: {{path}}"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
       }
     };
   }
@@ -4242,14 +3955,6 @@ var init_ja = __esm({
             desc: "\u6DFB\u4ED8\u30D5\u30A1\u30A4\u30EB\u306E\u4FDD\u5B58\u5148\uFF08\u26A0\uFE0F \u5BB9\u91CF\u7BC0\u7D04\u306E\u305F\u3081\u540C\u671F\u304B\u3089\u9664\u5916\u3059\u308B\u3053\u3068\u3092\u63A8\u5968\uFF09",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u53C2\u7167\u3059\u308B\u304B\u3001\u65B0\u3057\u3044\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u4F5C\u6210"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -4563,43 +4268,10 @@ var init_ja = __esm({
       support_box: {
         header: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
         header_highlight: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
-        default_message_emphasis: "\u79C1\u306F\u5931\u696D\u4E2D\u3067\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3092\u62B1\u3048\u306A\u304C\u3089\u3001Nexus \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306B\u30D5\u30EB\u30BF\u30A4\u30E0\u3067\u53D6\u308A\u7D44\u3093\u3067\u3044\u307E\u3059\u3002",
+        default_message_emphasis: "Nexus \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u3092\u5B89\u5B9A\u30FB\u9AD8\u901F\u30FB\u6700\u65B0\u306E\u72B6\u614B\u306B\u4FDD\u3064\u305F\u3081\u3001\u7D99\u7D9A\u7684\u306B\u4FDD\u5B88\u3068\u6539\u5584\u3092\u884C\u3063\u3066\u3044\u307E\u3059\u3002",
         default_message: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u5BC4\u4ED8\u306F\u3068\u3066\u3082\u5927\u304D\u306A\u52B1\u307F\u306B\u306A\u308A\u3001\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u7D99\u7D9A\u3092\u652F\u3048\u3066\u304F\u308C\u307E\u3059\u3002",
-        reality_check: "\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\uFF01\u3053\u308C\u3089\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u306F\u6570\u5343\u6642\u9593\u306E\u4F5C\u696D\u304C\u6CE8\u304E\u8FBC\u307E\u308C\u3066\u304A\u308A\u3001\u3054\u652F\u63F4\u304C\u5065\u5EB7\u4E0A\u306E\u554F\u984C\u3068\u5411\u304D\u5408\u3044\u306A\u304C\u3089\u6539\u5584\u3092\u7D9A\u3051\u308B\u79C1\u306E\u529B\u306B\u306A\u308A\u307E\u3059\u3002\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u304A\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u305C\u3072\u30B5\u30DD\u30FC\u30C8\u3092\u3054\u691C\u8A0E\u304F\u3060\u3055\u3044\u3002",
+        reality_check: "\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\uFF01\u3053\u308C\u3089\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u306F\u6570\u5343\u6642\u9593\u306E\u4F5C\u696D\u304C\u6CE8\u304E\u8FBC\u307E\u308C\u3066\u304A\u308A\u3001\u3054\u652F\u63F4\u304C\u3042\u308B\u3053\u3068\u3067\u3001\u3088\u308A\u901F\u304F\u6539\u5584\u3092\u5C4A\u3051\u3001\u3088\u308A\u826F\u3044\u30B5\u30DD\u30FC\u30C8\u3092\u63D0\u4F9B\u3067\u304D\u307E\u3059\u3002\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u304A\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u305C\u3072\u30B5\u30DD\u30FC\u30C8\u3092\u3054\u691C\u8A0E\u304F\u3060\u3055\u3044\u3002",
         button_alt: "\u79C1\u306E\u6D3B\u52D5\u3092\u652F\u63F4\u3059\u308B"
-      },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown",
-          report: "Report saved to: {{path}}"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
       }
     };
   }
@@ -4814,14 +4486,6 @@ var init_pt = __esm({
             desc: "Local onde os anexos s\xE3o guardados (\u26A0\uFE0F Excluir da sincroniza\xE7\xE3o para poupar espa\xE7o)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "Procurar pastas ou criar uma nova"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -5135,43 +4799,10 @@ var init_pt = __esm({
       support_box: {
         header: "Apoiar este plugin",
         header_highlight: "Apoiar este plugin",
-        default_message_emphasis: "Estou a trabalhar nos projetos Nexus a tempo inteiro enquanto estou desempregado e a lidar com problemas de sa\xFAde.",
+        default_message_emphasis: "Mantenho e melhoro ativamente os projetos Nexus para que continuem fi\xE1veis, r\xE1pidos e atualizados.",
         default_message: "Se este plugin facilita a sua vida, uma doa\xE7\xE3o significaria muito para mim e ajudaria a mant\xEA-los vivos.",
-        reality_check: "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada doa\xE7\xE3o ajuda-me a continuar a melhor\xE1-los enquanto lido com problemas de sa\xFAde cont\xEDnuos. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
+        reality_check: "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada doa\xE7\xE3o ajuda-me a lan\xE7ar melhorias mais rapidamente e a oferecer melhor suporte. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
         button_alt: "Apoiar o meu trabalho"
-      },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown",
-          report: "Report saved to: {{path}}"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
       }
     };
   }
@@ -5386,14 +5017,6 @@ var init_ko = __esm({
             desc: "\uCCA8\uBD80 \uD30C\uC77C\uC774 \uC800\uC7A5\uB418\uB294 \uC704\uCE58 (\u26A0\uFE0F \uC6A9\uB7C9 \uC808\uC57D\uC744 \uC704\uD574 \uB3D9\uAE30\uD654\uC5D0\uC11C \uC81C\uC678\uD558\uC138\uC694)",
             placeholder: "Nexus/Attachments",
             browse_tooltip: "\uD3F4\uB354 \uCC3E\uC544\uBCF4\uAE30 \uB610\uB294 \uC0C8 \uD3F4\uB354 \uB9CC\uB4E4\uAE30"
-          },
-          hierarchy_order: {
-            name: "Conversation hierarchy order",
-            desc: "Choose how conversation folders are organized inside the conversation root",
-            options: {
-              provider_year_month: "Provider / Year / Month",
-              year_month_provider: "Year / Month / Provider"
-            }
           }
         },
         display: {
@@ -5707,43 +5330,10 @@ var init_ko = __esm({
       support_box: {
         header: "\uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
         header_highlight: "\uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
-        default_message_emphasis: "\uC800\uB294 \uC2E4\uC9C1 \uC0C1\uD0DC\uC5D0\uC11C \uAC74\uAC15 \uBB38\uC81C\uB97C \uACAA\uC73C\uBA74\uC11C\uB3C4 Nexus \uD504\uB85C\uC81D\uD2B8\uC5D0 \uD480\uD0C0\uC784\uC73C\uB85C \uC784\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
+        default_message_emphasis: "Nexus \uD504\uB85C\uC81D\uD2B8\uB97C \uC548\uC815\uC801\uC774\uACE0 \uBE60\uB974\uBA70 \uCD5C\uC2E0 \uC0C1\uD0DC\uB85C \uC720\uC9C0\uD558\uAE30 \uC704\uD574 \uC9C0\uC18D\uC801\uC73C\uB85C \uC720\uC9C0\uBCF4\uC218\uC640 \uAC1C\uC120\uC744 \uC9C4\uD589\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
         default_message: "\uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uB3C4\uC6C0\uC774 \uB41C\uB2E4\uBA74, \uD6C4\uC6D0\uC740 \uC800\uC5D0\uAC8C \uD070 \uD798\uC774 \uB418\uACE0 \uD504\uB85C\uC81D\uD2B8\uB97C \uC9C0\uC18D\uD558\uB294 \uB370 \uD070 \uB3C4\uC6C0\uC774 \uB429\uB2C8\uB2E4.",
-        reality_check: "\uAC10\uC0AC\uD569\uB2C8\uB2E4! \uC774 \uD50C\uB7EC\uADF8\uC778\uB4E4\uC5D0\uB294 \uC218\uCC9C \uC2DC\uAC04\uC758 \uC791\uC5C5\uC774 \uB2F4\uACA8 \uC788\uC73C\uBA70, \uD6C4\uC6D0 \uD558\uB098\uD558\uB098\uAC00 \uC9C0\uC18D\uC801\uC778 \uAC74\uAC15 \uBB38\uC81C\uB97C \uC548\uACE0\uB3C4 \uAC1C\uC120\uC744 \uC774\uC5B4\uB098\uAC00\uB294 \uC800\uC5D0\uAC8C \uD798\uC774 \uB429\uB2C8\uB2E4. \uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uC0B6\uC744 \uD3B8\uB9AC\uD558\uAC8C \uD574\uC900\uB2E4\uBA74 \uD6C4\uC6D0\uC744 \uACE0\uB824\uD574 \uC8FC\uC138\uC694.",
+        reality_check: "\uAC10\uC0AC\uD569\uB2C8\uB2E4! \uC774 \uD50C\uB7EC\uADF8\uC778\uB4E4\uC5D0\uB294 \uC218\uCC9C \uC2DC\uAC04\uC758 \uC791\uC5C5\uC774 \uB2F4\uACA8 \uC788\uC73C\uBA70, \uD6C4\uC6D0 \uD558\uB098\uD558\uB098\uAC00 \uB354 \uBE60\uB978 \uAC1C\uC120 \uBC30\uD3EC\uC640 \uB354 \uB098\uC740 \uC9C0\uC6D0\uC5D0 \uD070 \uB3C4\uC6C0\uC774 \uB429\uB2C8\uB2E4. \uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uB3C4\uC6C0\uC774 \uB41C\uB2E4\uBA74 \uD6C4\uC6D0\uC744 \uACE0\uB824\uD574 \uC8FC\uC138\uC694.",
         button_alt: "\uB0B4 \uC791\uC5C5 \uD6C4\uC6D0\uD558\uAE30"
-      },
-      settings_migration: {
-        decision: {
-          title: "Apply Setting Change",
-          description: 'The setting "{{setting}}" affects {{count}} existing conversation file(s). Choose how to proceed:',
-          apply_and_migrate: "Apply and migrate now",
-          apply_only: "Apply only (future imports)"
-        },
-        progress: {
-          title: "Applying setting migration",
-          preparing: "Preparing migration...",
-          preparing_detail: "{{count}} file move(s) planned",
-          executing: "Executing migration...",
-          finalizing: "Finalizing",
-          finalizing_detail: "Saving setting and validating results",
-          complete: "Migration complete: {{moved}} moved, {{skipped}} skipped, {{errors}} errors"
-        },
-        result: {
-          title: "Setting Migration Result",
-          summary: "Moved: {{moved}} \u2022 Skipped: {{skipped}} \u2022 Errors: {{errors}} \u2022 Duration: {{duration}}s",
-          new_order: "New hierarchy order: {{order}}",
-          details: "Details",
-          details_truncated: "... {{hidden}} additional line(s) not shown",
-          report: "Report saved to: {{path}}"
-        },
-        notices: {
-          apply_only: "Setting applied. Existing files were not moved.",
-          no_result: "Migration finished but no summary was returned."
-        },
-        errors: {
-          title: "Setting Migration Failed",
-          message: "Failed to apply migration: {{error}}"
-        }
       }
     };
   }
@@ -5810,7 +5400,6 @@ var init_constants = __esm({
       conversationFolder: "Nexus/Conversations",
       reportFolder: "Nexus/Reports",
       attachmentFolder: "Nexus/Attachments",
-      conversationHierarchyOrder: "provider-year-month",
       // ========================================
       // 🎨 DISPLAY OPTIONS
       // ========================================
@@ -7042,89 +6631,6 @@ var init_link_update_service = __esm({
         }
       }
       /**
-       * Update conversation links for multiple old→new note path mappings in a single pass.
-       * This is used as a safety fallback for workflows where notes were moved and some links
-       * were not rewritten automatically by Obsidian.
-       */
-      async updateConversationLinksBatch(pathMappings, progressCallback) {
-        const stats = {
-          conversationsScanned: 0,
-          reportsScanned: 0,
-          attachmentLinksUpdated: 0,
-          conversationLinksUpdated: 0,
-          filesModified: 0,
-          errors: 0
-        };
-        if (pathMappings.length === 0) {
-          return stats;
-        }
-        const reportFiles = await this.getReportFiles();
-        const artifactFiles = await this.getClaudeArtifactFiles();
-        const files = [...reportFiles, ...artifactFiles];
-        stats.reportsScanned = reportFiles.length;
-        progressCallback == null ? void 0 : progressCallback({
-          phase: "scanning",
-          current: 0,
-          total: files.length,
-          detail: `Checking links in ${files.length} files`
-        });
-        const batchSize = 10;
-        for (let i = 0; i < files.length; i += batchSize) {
-          const batch = files.slice(i, i + batchSize);
-          progressCallback == null ? void 0 : progressCallback({
-            phase: "updating-conversations",
-            current: i,
-            total: files.length,
-            detail: `Updating conversation links: ${i}/${files.length}`
-          });
-          for (const file of batch) {
-            try {
-              const content = await this.plugin.app.vault.read(file);
-              let updated = content;
-              let updatedCountForFile = 0;
-              for (const mapping of pathMappings) {
-                const oldPath = mapping.oldPath.replace(/\/+$/, "");
-                const newPath = mapping.newPath.replace(/\/+$/, "");
-                const escaped = this.escapeRegExp(oldPath);
-                const patterns = [
-                  new RegExp(`(\\[\\[)${escaped}(\\|[^\\]]+\\]\\])`, "g"),
-                  new RegExp(`(\\[\\[)${escaped}(\\]\\])`, "g"),
-                  new RegExp(`(conversation_link:\\s*"\\[\\[)${escaped}(\\]\\]")`, "g")
-                ];
-                for (const pattern of patterns) {
-                  pattern.lastIndex = 0;
-                  const before = updated;
-                  updated = updated.replace(pattern, `$1${newPath}$2`);
-                  if (before !== updated) {
-                    pattern.lastIndex = 0;
-                    const matches = before.match(pattern);
-                    updatedCountForFile += matches ? matches.length : 1;
-                  }
-                }
-              }
-              if (updated !== content) {
-                await this.plugin.app.vault.modify(file, updated);
-                stats.filesModified++;
-                stats.conversationLinksUpdated += updatedCountForFile;
-              }
-            } catch (error) {
-              stats.errors++;
-              this.plugin.logger.error(`Error updating conversation links in ${file.path}:`, error);
-            }
-          }
-          if (i + batchSize < files.length) {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-          }
-        }
-        progressCallback == null ? void 0 : progressCallback({
-          phase: "complete",
-          current: files.length,
-          total: files.length,
-          detail: `Fixed ${stats.conversationLinksUpdated} conversation link(s)`
-        });
-        return stats;
-      }
-      /**
        * Estimate time for link updates based on file count
        */
       async estimateUpdateTime(folderType) {
@@ -7309,13 +6815,13 @@ __export(progress_modal_exports, {
   ProgressModal: () => UpgradeProgressModal,
   UpgradeProgressModal: () => UpgradeProgressModal
 });
-var import_obsidian8, UpgradeProgressModal;
+var import_obsidian6, UpgradeProgressModal;
 var init_progress_modal = __esm({
   "src/upgrade/utils/progress-modal.ts"() {
     "use strict";
-    import_obsidian8 = require("obsidian");
+    import_obsidian6 = require("obsidian");
     init_i18n();
-    UpgradeProgressModal = class extends import_obsidian8.Modal {
+    UpgradeProgressModal = class extends import_obsidian6.Modal {
       constructor(app, title, totalSteps = 100) {
         super(app);
         this.currentStep = 0;
@@ -7435,13 +6941,13 @@ var enhanced_folder_migration_dialog_exports = {};
 __export(enhanced_folder_migration_dialog_exports, {
   EnhancedFolderMigrationDialog: () => EnhancedFolderMigrationDialog
 });
-var import_obsidian9, EnhancedFolderMigrationDialog;
+var import_obsidian7, EnhancedFolderMigrationDialog;
 var init_enhanced_folder_migration_dialog = __esm({
   "src/dialogs/enhanced-folder-migration-dialog.ts"() {
     "use strict";
-    import_obsidian9 = require("obsidian");
+    import_obsidian7 = require("obsidian");
     init_i18n();
-    EnhancedFolderMigrationDialog = class extends import_obsidian9.Modal {
+    EnhancedFolderMigrationDialog = class extends import_obsidian7.Modal {
       constructor(plugin, oldPath, newPath, folderType, onComplete) {
         super(plugin.app);
         this.estimatedTime = 0;
@@ -7535,10 +7041,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("cancel");
-            new import_obsidian9.Notice(t("folder_migration.notices.change_cancelled_reverted"));
+            new import_obsidian7.Notice(t("folder_migration.notices.change_cancelled_reverted"));
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian9.Notice(t("folder_migration.notices.failed_revert", { error: errorMessage }));
+            new import_obsidian7.Notice(t("folder_migration.notices.failed_revert", { error: errorMessage }));
           }
         });
         const keepButton = buttonContainer.createEl("button", {
@@ -7549,10 +7055,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           this.close();
           try {
             await this.onComplete("keep");
-            new import_obsidian9.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
+            new import_obsidian7.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian9.Notice(t("folder_migration.notices.failed_update", { error: errorMessage }));
+            new import_obsidian7.Notice(t("folder_migration.notices.failed_update", { error: errorMessage }));
           }
         });
         const moveButton = buttonContainer.createEl("button", {
@@ -7566,10 +7072,10 @@ var init_enhanced_folder_migration_dialog = __esm({
           } else {
             try {
               await this.onComplete("move");
-              new import_obsidian9.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
+              new import_obsidian7.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
             } catch (error) {
               const errorMessage = error instanceof Error ? error.message : String(error);
-              new import_obsidian9.Notice(t("folder_migration.notices.failed_move", { error: errorMessage }));
+              new import_obsidian7.Notice(t("folder_migration.notices.failed_move", { error: errorMessage }));
             }
           }
         });
@@ -7594,7 +7100,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             progress: 5
           });
           const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
-          if (!oldFolder || !(oldFolder instanceof import_obsidian9.TFolder)) {
+          if (!oldFolder || !(oldFolder instanceof import_obsidian7.TFolder)) {
             throw new Error(`Source folder not found: ${this.oldPath}`);
           }
           const moveResult = await moveAndMergeFolders2(
@@ -7655,7 +7161,7 @@ var init_enhanced_folder_migration_dialog = __esm({
             t("folder_migration.progress.complete_message", { moved: String(moveResult.moved), links: String(linksUpdated) })
           );
           progressModal.closeAfterDelay(3e3);
-          new import_obsidian9.Notice(t("folder_migration.notices.files_moved_links_updated", {
+          new import_obsidian7.Notice(t("folder_migration.notices.files_moved_links_updated", {
             moved: String(moveResult.moved),
             path: this.newPath,
             links: String(linksUpdated)
@@ -7772,7 +7278,7 @@ var init_enhanced_folder_migration_dialog = __esm({
         document.head.appendChild(styleEl);
       }
       showErrorDialog(title, message) {
-        const modal = new import_obsidian9.Modal(this.app);
+        const modal = new import_obsidian7.Modal(this.app);
         modal.titleEl.setText(title);
         modal.contentEl.createEl("p", {
           text: message,
@@ -7800,7 +7306,7 @@ var init_enhanced_folder_migration_dialog = __esm({
 
 // src/dialogs.ts
 function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian15.Modal(app);
+  const modal = new import_obsidian13.Modal(app);
   modal.contentEl.addClass("nexus-ai-chat-importer-modal");
   const titleEl = modal.contentEl.createEl("h2", {
     text: title,
@@ -7882,11 +7388,11 @@ async function showDialog(app, type, title, paragraphs, note, customLabels) {
     modal.open();
   });
 }
-var import_obsidian15;
+var import_obsidian13;
 var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
-    import_obsidian15 = require("obsidian");
+    import_obsidian13 = require("obsidian");
     __name(displayModal, "displayModal");
     __name(addButtons, "addButtons");
     __name(showDialog, "showDialog");
@@ -10408,12 +9914,12 @@ __export(upgrade_1_2_0_exports, {
   NexusUpgradeModal: () => NexusUpgradeModal,
   Upgrade120: () => Upgrade120
 });
-var import_obsidian21, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
+var import_obsidian19, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
 var init_upgrade_1_2_0 = __esm({
   "src/upgrade/versions/upgrade-1.2.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian21 = require("obsidian");
+    import_obsidian19 = require("obsidian");
     init_logger();
     init_i18n();
     ConvertToCalloutsOperation = class extends UpgradeOperation {
@@ -10866,7 +10372,7 @@ ${cleanContent}`;
       }
     };
     __name(MoveYearFoldersOperation, "MoveYearFoldersOperation");
-    NexusUpgradeModal = class extends import_obsidian21.Modal {
+    NexusUpgradeModal = class extends import_obsidian19.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.plugin = plugin;
@@ -10899,7 +10405,7 @@ ${cleanContent}`;
           }
         } catch (error) {
         }
-        await import_obsidian21.MarkdownRenderer.render(
+        await import_obsidian19.MarkdownRenderer.render(
           this.app,
           message,
           this.contentEl,
@@ -10975,17 +10481,17 @@ ${cleanContent}`;
 });
 
 // src/dialogs/configure-folder-locations-dialog.ts
-var import_obsidian22, ConfigureFolderLocationsDialog;
+var import_obsidian20, ConfigureFolderLocationsDialog;
 var init_configure_folder_locations_dialog = __esm({
   "src/dialogs/configure-folder-locations-dialog.ts"() {
     "use strict";
-    import_obsidian22 = require("obsidian");
+    import_obsidian20 = require("obsidian");
     init_enhanced_folder_migration_dialog();
     init_folder_tree_browser_modal();
     init_folder_validation();
     init_utils();
     init_i18n();
-    ConfigureFolderLocationsDialog = class extends import_obsidian22.Modal {
+    ConfigureFolderLocationsDialog = class extends import_obsidian20.Modal {
       // Track if onComplete was already called
       constructor(plugin, onComplete) {
         super(plugin.app);
@@ -11119,7 +10625,7 @@ var init_configure_folder_locations_dialog = __esm({
         const oldPath = folderInfo.oldPath;
         const newPath = folderInfo.newPath;
         const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
-        if (newFolder && newFolder instanceof import_obsidian22.TFolder && newFolder.children.length > 0) {
+        if (newFolder && newFolder instanceof import_obsidian20.TFolder && newFolder.children.length > 0) {
           this.showErrorDialog(
             "Target Folder Not Empty",
             `The folder "${newPath}" already contains files.
@@ -11133,7 +10639,7 @@ To change the folder location:
         this.plugin.settings[folderType] = newPath;
         await this.plugin.saveSettings();
         const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-        if (!oldFolder || !(oldFolder instanceof import_obsidian22.TFolder) || oldFolder.children.length === 0) {
+        if (!oldFolder || !(oldFolder instanceof import_obsidian20.TFolder) || oldFolder.children.length === 0) {
           return;
         }
         const folderTypeLabel = folderType === "conversationFolder" ? "conversations" : folderType === "reportFolder" ? "reports" : "attachments";
@@ -11144,7 +10650,7 @@ To change the folder location:
                 const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
                 folderInfo.filesMoved = result.moved;
                 if (result.success && result.skipped === 0) {
-                  new import_obsidian22.Notice(t("folder_migration.notices.files_moved", { path: newPath }));
+                  new import_obsidian20.Notice(t("folder_migration.notices.files_moved", { path: newPath }));
                 } else {
                   this.showMergeResultDialog(result, oldPath, newPath);
                 }
@@ -11176,7 +10682,7 @@ To change the folder location:
        * Show dialog with merge result details when files were skipped or errors occurred
        */
       showMergeResultDialog(result, oldPath, newPath) {
-        const modal = new import_obsidian22.Modal(this.plugin.app);
+        const modal = new import_obsidian20.Modal(this.plugin.app);
         modal.titleEl.setText(t("folder_migration.result_dialog.title"));
         const { contentEl } = modal;
         const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
@@ -11359,7 +10865,7 @@ To change the folder location:
         }
       }
       showErrorDialog(title, message) {
-        const modal = new import_obsidian22.Modal(this.plugin.app);
+        const modal = new import_obsidian20.Modal(this.plugin.app);
         modal.titleEl.setText(title);
         modal.contentEl.createEl("p", {
           text: message,
@@ -11386,14 +10892,14 @@ var upgrade_1_3_0_exports = {};
 __export(upgrade_1_3_0_exports, {
   Upgrade130: () => Upgrade130
 });
-var import_obsidian23, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
+var import_obsidian21, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
 var init_upgrade_1_3_0 = __esm({
   "src/upgrade/versions/upgrade-1.3.0.ts"() {
     "use strict";
     init_upgrade_interface();
     init_utils();
     init_date_parser();
-    import_obsidian23 = require("obsidian");
+    import_obsidian21 = require("obsidian");
     init_configure_folder_locations_dialog();
     ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
       constructor() {
@@ -11876,7 +11382,7 @@ ${frontmatter}
           const newReportPath = "Nexus Reports";
           const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
           let reportsMoved = false;
-          if (oldReportFolder && oldReportFolder instanceof import_obsidian23.TFolder) {
+          if (oldReportFolder && oldReportFolder instanceof import_obsidian21.TFolder) {
             try {
               const result = await moveAndMergeFolders(oldReportFolder, newReportPath, context.plugin.app.vault);
               reportsMoved = result.moved > 0;
@@ -11884,7 +11390,7 @@ ${frontmatter}
                 const stillExists = await context.plugin.app.vault.adapter.exists(oldReportPath);
                 if (stillExists) {
                   const folderToDelete = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
-                  if (folderToDelete && folderToDelete instanceof import_obsidian23.TFolder) {
+                  if (folderToDelete && folderToDelete instanceof import_obsidian21.TFolder) {
                     await context.plugin.app.vault.delete(folderToDelete);
                   }
                 }
@@ -11956,7 +11462,7 @@ ${frontmatter}
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!folder || !(folder instanceof import_obsidian23.TFolder)) {
+          if (!folder || !(folder instanceof import_obsidian21.TFolder)) {
             return false;
           }
           const allFiles = context.plugin.app.vault.getMarkdownFiles();
@@ -12345,12 +11851,12 @@ plugin_version: "${version}"
 `
   );
 }
-var import_obsidian24, UUID_REGEX, TARGET_VERSION, RenameClaudeArtifactFoldersOperation, RestoreMissingArtifactCalloutsOperation, FixCalloutEmptyLinesOperation, Upgrade140;
+var import_obsidian22, UUID_REGEX, TARGET_VERSION, RenameClaudeArtifactFoldersOperation, RestoreMissingArtifactCalloutsOperation, FixCalloutEmptyLinesOperation, Upgrade140;
 var init_upgrade_1_4_0 = __esm({
   "src/upgrade/versions/upgrade-1.4.0.ts"() {
     "use strict";
     init_upgrade_interface();
-    import_obsidian24 = require("obsidian");
+    import_obsidian22 = require("obsidian");
     init_storage_service();
     init_link_update_service();
     UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -12369,11 +11875,11 @@ var init_upgrade_1_4_0 = __esm({
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!folder || !(folder instanceof import_obsidian24.TFolder)) {
+          if (!folder || !(folder instanceof import_obsidian22.TFolder)) {
             return false;
           }
           for (const child of folder.children) {
-            if (child instanceof import_obsidian24.TFolder && UUID_REGEX.test(child.name)) {
+            if (child instanceof import_obsidian22.TFolder && UUID_REGEX.test(child.name)) {
               return true;
             }
           }
@@ -12393,7 +11899,7 @@ var init_upgrade_1_4_0 = __esm({
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const artifactsFolder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!artifactsFolder || !(artifactsFolder instanceof import_obsidian24.TFolder)) {
+          if (!artifactsFolder || !(artifactsFolder instanceof import_obsidian22.TFolder)) {
             return {
               success: true,
               message: "No Claude artifacts folder found, nothing to migrate."
@@ -12401,7 +11907,7 @@ var init_upgrade_1_4_0 = __esm({
           }
           const uuidFolders = [];
           for (const child of artifactsFolder.children) {
-            if (child instanceof import_obsidian24.TFolder && UUID_REGEX.test(child.name)) {
+            if (child instanceof import_obsidian22.TFolder && UUID_REGEX.test(child.name)) {
               uuidFolders.push(child);
             }
           }
@@ -12500,7 +12006,7 @@ var init_upgrade_1_4_0 = __esm({
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          return !!(folder && folder instanceof import_obsidian24.TFolder && folder.children.length > 0);
+          return !!(folder && folder instanceof import_obsidian22.TFolder && folder.children.length > 0);
         } catch (e) {
           return false;
         }
@@ -12515,12 +12021,12 @@ var init_upgrade_1_4_0 = __esm({
           const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
           const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
           const artifactsRoot = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!artifactsRoot || !(artifactsRoot instanceof import_obsidian24.TFolder)) {
+          if (!artifactsRoot || !(artifactsRoot instanceof import_obsidian22.TFolder)) {
             return { success: true, message: "No Claude artifacts folder found." };
           }
           const artifactFolders = [];
           for (const child of artifactsRoot.children) {
-            if (child instanceof import_obsidian24.TFolder) {
+            if (child instanceof import_obsidian22.TFolder) {
               artifactFolders.push(child);
             }
           }
@@ -12539,7 +12045,7 @@ var init_upgrade_1_4_0 = __esm({
             }
             try {
               const artifactFiles = folder.children.filter(
-                (f) => f instanceof import_obsidian24.TFile && f.extension === "md"
+                (f) => f instanceof import_obsidian22.TFile && f.extension === "md"
               );
               if (artifactFiles.length === 0) {
                 continue;
@@ -12558,7 +12064,7 @@ var init_upgrade_1_4_0 = __esm({
                 continue;
               }
               const noteFile = context.plugin.app.vault.getAbstractFileByPath(entry.path);
-              if (!noteFile || !(noteFile instanceof import_obsidian24.TFile)) {
+              if (!noteFile || !(noteFile instanceof import_obsidian22.TFile)) {
                 skippedCount++;
                 continue;
               }
@@ -12649,7 +12155,7 @@ var init_upgrade_1_4_0 = __esm({
         try {
           const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
           const folder = context.plugin.app.vault.getAbstractFileByPath(conversationFolder);
-          return !!(folder && folder instanceof import_obsidian24.TFolder);
+          return !!(folder && folder instanceof import_obsidian22.TFolder);
         } catch (e) {
           return false;
         }
@@ -12733,14 +12239,14 @@ var upgrade_complete_modal_exports = {};
 __export(upgrade_complete_modal_exports, {
   UpgradeCompleteModal: () => UpgradeCompleteModal
 });
-var import_obsidian25, UpgradeCompleteModal;
+var import_obsidian23, UpgradeCompleteModal;
 var init_upgrade_complete_modal = __esm({
   "src/dialogs/upgrade-complete-modal.ts"() {
     "use strict";
-    import_obsidian25 = require("obsidian");
+    import_obsidian23 = require("obsidian");
     init_support_box();
     init_i18n();
-    UpgradeCompleteModal = class extends import_obsidian25.Modal {
+    UpgradeCompleteModal = class extends import_obsidian23.Modal {
       constructor(app, plugin, version) {
         super(app);
         this.plugin = plugin;
@@ -12777,7 +12283,7 @@ var init_upgrade_complete_modal = __esm({
         } catch (error) {
         }
         const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-notes" });
-        await import_obsidian25.MarkdownRenderer.render(
+        await import_obsidian23.MarkdownRenderer.render(
           this.app,
           content,
           contentDiv,
@@ -12877,14 +12383,14 @@ var upgrade_modal_1_3_0_exports = {};
 __export(upgrade_modal_1_3_0_exports, {
   NexusUpgradeModal130: () => NexusUpgradeModal130
 });
-var import_obsidian26, NexusUpgradeModal130;
+var import_obsidian24, NexusUpgradeModal130;
 var init_upgrade_modal_1_3_0 = __esm({
   "src/dialogs/upgrade-modal-1.3.0.ts"() {
     "use strict";
-    import_obsidian26 = require("obsidian");
+    import_obsidian24 = require("obsidian");
     init_support_box();
     init_i18n();
-    NexusUpgradeModal130 = class extends import_obsidian26.Modal {
+    NexusUpgradeModal130 = class extends import_obsidian24.Modal {
       constructor(app, plugin, version, resolve) {
         super(app);
         this.hasResolved = false;
@@ -12934,7 +12440,7 @@ Try the new **selective import** feature on your next import - you'll love the c
         } catch (error) {
         }
         const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-        await import_obsidian26.MarkdownRenderer.render(
+        await import_obsidian24.MarkdownRenderer.render(
           this.app,
           message,
           contentDiv,
@@ -13080,12 +12586,12 @@ __export(main_exports, {
   default: () => NexusAiChatImporterPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian34 = require("obsidian");
+var import_obsidian32 = require("obsidian");
 init_i18n();
 init_constants();
 
 // src/ui/settings-tab.ts
-var import_obsidian13 = require("obsidian");
+var import_obsidian11 = require("obsidian");
 
 // src/ui/settings/support-section.ts
 var import_obsidian = require("obsidian");
@@ -13155,7 +12661,7 @@ var SupportSection = class extends BaseSettingsSection {
 __name(SupportSection, "SupportSection");
 
 // src/ui/settings/folder-settings-section.ts
-var import_obsidian10 = require("obsidian");
+var import_obsidian8 = require("obsidian");
 
 // src/dialogs/folder-migration-dialog.ts
 var import_obsidian2 = require("obsidian");
@@ -13326,276 +12832,6 @@ __name(FolderMigrationDialog, "FolderMigrationDialog");
 init_folder_tree_browser_modal();
 init_folder_validation();
 init_utils();
-
-// src/settings-migrations/setting-migration-engine.ts
-var SettingMigrationEngine = class {
-  constructor() {
-    this.workflows = /* @__PURE__ */ new Map();
-  }
-  register(workflow) {
-    this.workflows.set(workflow.settingKey, workflow);
-  }
-  getWorkflow(settingKey) {
-    return this.workflows.get(settingKey);
-  }
-  async createPlan(settingKey, context) {
-    const workflow = this.workflows.get(settingKey);
-    if (!workflow || !workflow.isApplicable(context)) {
-      return null;
-    }
-    return workflow.createPlan(context);
-  }
-  async execute(settingKey, plan, context) {
-    const workflow = this.workflows.get(settingKey);
-    if (!workflow || !workflow.isApplicable(context)) {
-      return null;
-    }
-    return workflow.execute(plan, context);
-  }
-};
-__name(SettingMigrationEngine, "SettingMigrationEngine");
-
-// src/settings-migrations/workflows/conversation-hierarchy-migration-workflow.ts
-var import_obsidian6 = require("obsidian");
-init_utils();
-
-// src/services/conversation-path-resolver.ts
-function getConversationPathParts(createTimeUnixSeconds, provider) {
-  const date = new Date(createTimeUnixSeconds * 1e3);
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return {
-    provider,
-    year,
-    month
-  };
-}
-__name(getConversationPathParts, "getConversationPathParts");
-function buildConversationRelativeFolder(parts, hierarchyOrder) {
-  if (hierarchyOrder === "year-month-provider") {
-    return `${parts.year}/${parts.month}/${parts.provider}`;
-  }
-  return `${parts.provider}/${parts.year}/${parts.month}`;
-}
-__name(buildConversationRelativeFolder, "buildConversationRelativeFolder");
-function buildConversationFolderPath(baseConversationFolder, createTimeUnixSeconds, provider, hierarchyOrder) {
-  const parts = getConversationPathParts(createTimeUnixSeconds, provider);
-  const relativeFolder = buildConversationRelativeFolder(parts, hierarchyOrder);
-  return `${baseConversationFolder}/${relativeFolder}`;
-}
-__name(buildConversationFolderPath, "buildConversationFolderPath");
-
-// src/settings-migrations/workflows/conversation-hierarchy-migration-workflow.ts
-init_link_update_service();
-var ConversationHierarchyMigrationWorkflow = class {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.id = "conversation-hierarchy-order";
-    this.settingKey = "conversationHierarchyOrder";
-  }
-  isApplicable(context) {
-    return context.oldSettings.conversationHierarchyOrder !== context.newSettings.conversationHierarchyOrder;
-  }
-  async createPlan(context) {
-    var _a;
-    const operations = [];
-    const files = this.getNexusConversationFiles(context.newSettings.conversationFolder);
-    for (const file of files) {
-      const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-      const provider = this.resolveProvider(frontmatter == null ? void 0 : frontmatter.provider, file.path, context.oldSettings.conversationFolder, context.oldSettings.conversationHierarchyOrder);
-      if (!provider) {
-        continue;
-      }
-      const createTimeUnixSeconds = this.resolveCreateTime(file, frontmatter == null ? void 0 : frontmatter.create_time);
-      const targetFolder = buildConversationFolderPath(
-        context.newSettings.conversationFolder,
-        createTimeUnixSeconds,
-        provider,
-        context.newSettings.conversationHierarchyOrder
-      );
-      const toPath = `${targetFolder}/${file.name}`;
-      if (toPath !== file.path) {
-        operations.push({ fromPath: file.path, toPath });
-      }
-    }
-    return {
-      workflowId: this.id,
-      settingKey: this.settingKey,
-      operationCount: operations.length,
-      operations,
-      estimatedSeconds: Math.max(2, Math.ceil(operations.length * 0.06))
-    };
-  }
-  async execute(plan, context) {
-    var _a, _b;
-    const startedAt = Date.now();
-    const details = [];
-    let moved = 0;
-    let skipped = 0;
-    let errors = 0;
-    const movedPathMappings = [];
-    const total = plan.operations.length;
-    for (let i = 0; i < total; i++) {
-      const operation = plan.operations[i];
-      (_a = context.onProgress) == null ? void 0 : _a.call(context, {
-        current: i,
-        total,
-        detail: `Moving ${i + 1}/${total}: ${operation.fromPath}`
-      });
-      try {
-        const abstractFile = this.plugin.app.vault.getAbstractFileByPath(operation.fromPath);
-        if (!(abstractFile instanceof import_obsidian6.TFile)) {
-          skipped++;
-          details.push(`Skipped (not found): ${operation.fromPath}`);
-          continue;
-        }
-        const targetExists = await this.plugin.app.vault.adapter.exists(operation.toPath);
-        if (targetExists) {
-          skipped++;
-          details.push(`Skipped (target exists): ${operation.toPath}`);
-          continue;
-        }
-        const targetFolder = operation.toPath.slice(0, operation.toPath.lastIndexOf("/"));
-        const ensureResult = await ensureFolderExists(targetFolder, this.plugin.app.vault);
-        if (!ensureResult.success) {
-          errors++;
-          details.push(`Error (create folder): ${targetFolder}`);
-          continue;
-        }
-        await this.plugin.app.fileManager.renameFile(abstractFile, operation.toPath);
-        moved++;
-        movedPathMappings.push({
-          oldPath: operation.fromPath,
-          newPath: operation.toPath
-        });
-      } catch (error) {
-        errors++;
-        details.push(`Error moving ${operation.fromPath}: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    }
-    if (movedPathMappings.length > 0) {
-      try {
-        const linkUpdateService = new LinkUpdateService(this.plugin);
-        const fallbackStats = await linkUpdateService.updateConversationLinksBatch(
-          movedPathMappings
-        );
-        if (fallbackStats.conversationLinksUpdated > 0) {
-          details.push(
-            `Fallback link update: fixed ${fallbackStats.conversationLinksUpdated} links in ${fallbackStats.filesModified} files`
-          );
-        }
-      } catch (error) {
-        details.push(
-          `Fallback link update failed: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    }
-    (_b = context.onProgress) == null ? void 0 : _b.call(context, {
-      current: total,
-      total,
-      detail: `Migration complete: moved=${moved}, skipped=${skipped}, errors=${errors}`
-    });
-    return {
-      workflowId: this.id,
-      moved,
-      skipped,
-      errors,
-      durationMs: Date.now() - startedAt,
-      details
-    };
-  }
-  getNexusConversationFiles(conversationFolder) {
-    const markdownFiles = this.plugin.app.vault.getMarkdownFiles();
-    return markdownFiles.filter((file) => {
-      var _a;
-      if (!file.path.startsWith(`${conversationFolder}/`)) {
-        return false;
-      }
-      const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-      return (frontmatter == null ? void 0 : frontmatter.nexus) === this.plugin.manifest.id && typeof (frontmatter == null ? void 0 : frontmatter.conversation_id) === "string";
-    });
-  }
-  resolveCreateTime(file, rawCreateTime) {
-    if (typeof rawCreateTime === "number") {
-      if (rawCreateTime > 1e12) {
-        return Math.floor(rawCreateTime / 1e3);
-      }
-      return Math.floor(rawCreateTime);
-    }
-    if (typeof rawCreateTime === "string") {
-      const parsed = Date.parse(rawCreateTime);
-      if (!Number.isNaN(parsed)) {
-        return Math.floor(parsed / 1e3);
-      }
-    }
-    return Math.floor(file.stat.ctime / 1e3);
-  }
-  resolveProvider(rawProvider, filePath, conversationFolder, oldOrder) {
-    if (typeof rawProvider === "string" && rawProvider.trim().length > 0) {
-      return rawProvider.trim();
-    }
-    const prefix = `${conversationFolder}/`;
-    const relative = filePath.startsWith(prefix) ? filePath.slice(prefix.length) : filePath;
-    const segments = relative.split("/").filter(Boolean);
-    if (segments.length < 3) {
-      return null;
-    }
-    if (oldOrder === "provider-year-month") {
-      return segments[0] || null;
-    }
-    return segments[2] || null;
-  }
-};
-__name(ConversationHierarchyMigrationWorkflow, "ConversationHierarchyMigrationWorkflow");
-
-// src/dialogs/setting-migration-decision-dialog.ts
-var import_obsidian7 = require("obsidian");
-init_i18n();
-var SettingMigrationDecisionDialog = class extends import_obsidian7.Modal {
-  constructor(app, settingLabel, impactedCount, onDecision) {
-    super(app);
-    this.settingLabel = settingLabel;
-    this.impactedCount = impactedCount;
-    this.onDecision = onDecision;
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.createEl("h2", { text: t("settings_migration.decision.title") });
-    contentEl.createEl("p", {
-      text: t("settings_migration.decision.description", {
-        setting: this.settingLabel,
-        count: String(this.impactedCount)
-      })
-    });
-    const buttonRow = contentEl.createDiv({ cls: "modal-button-container" });
-    const cancelButton = buttonRow.createEl("button", {
-      text: t("common.buttons.cancel")
-    });
-    cancelButton.addEventListener("click", async () => {
-      this.close();
-      await this.onDecision("cancel");
-    });
-    const applyOnlyButton = buttonRow.createEl("button", {
-      text: t("settings_migration.decision.apply_only")
-    });
-    applyOnlyButton.addEventListener("click", async () => {
-      this.close();
-      await this.onDecision("apply-only");
-    });
-    const migrateButton = buttonRow.createEl("button", {
-      text: t("settings_migration.decision.apply_and_migrate"),
-      cls: "mod-cta"
-    });
-    migrateButton.addEventListener("click", async () => {
-      this.close();
-      await this.onDecision("migrate");
-    });
-  }
-};
-__name(SettingMigrationDecisionDialog, "SettingMigrationDecisionDialog");
-
-// src/ui/settings/folder-settings-section.ts
 init_i18n();
 var FolderSettingsSection = class extends BaseSettingsSection {
   constructor() {
@@ -13607,7 +12843,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     let conversationFolderTextComponent;
-    new import_obsidian10.Setting(containerEl).setName(t("settings.folders.conversation_folder.name")).setDesc(t("settings.folders.conversation_folder.desc")).addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.conversation_folder.name")).setDesc(t("settings.folders.conversation_folder.desc")).addText((text) => {
       conversationFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.conversation_folder.placeholder")).setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -13636,27 +12872,8 @@ var FolderSettingsSection = class extends BaseSettingsSection {
         modal.open();
       });
     });
-    let hierarchyOrderDropdown = null;
-    new import_obsidian10.Setting(containerEl).setName(t("settings.folders.hierarchy_order.name")).setDesc(t("settings.folders.hierarchy_order.desc")).addDropdown((dropdown) => {
-      hierarchyOrderDropdown = dropdown;
-      dropdown.addOption(
-        "provider-year-month",
-        t("settings.folders.hierarchy_order.options.provider_year_month")
-      ).addOption(
-        "year-month-provider",
-        t("settings.folders.hierarchy_order.options.year_month_provider")
-      ).setValue(this.plugin.settings.conversationHierarchyOrder).onChange(async (value) => {
-        if (value !== "provider-year-month" && value !== "year-month-provider") {
-          return;
-        }
-        await this.handleConversationHierarchyOrderChange(
-          value,
-          hierarchyOrderDropdown
-        );
-      });
-    });
     let reportFolderTextComponent;
-    new import_obsidian10.Setting(containerEl).setName(t("settings.folders.reports_folder.name")).setDesc(t("settings.folders.reports_folder.desc")).addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.reports_folder.name")).setDesc(t("settings.folders.reports_folder.desc")).addText((text) => {
       reportFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.reports_folder.placeholder")).setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -13686,7 +12903,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       });
     });
     let attachmentFolderTextComponent;
-    new import_obsidian10.Setting(containerEl).setName(t("settings.folders.attachment_folder.name")).setDesc(t("settings.folders.attachment_folder.desc")).addText((text) => {
+    new import_obsidian8.Setting(containerEl).setName(t("settings.folders.attachment_folder.name")).setDesc(t("settings.folders.attachment_folder.desc")).addText((text) => {
       attachmentFolderTextComponent = text;
       text.setPlaceholder(t("settings.folders.attachment_folder.placeholder")).setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addClass("nexus-folder-path-input");
@@ -13735,7 +12952,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       return;
     }
     const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-    if (!oldFolder || !(oldFolder instanceof import_obsidian10.TFolder)) {
+    if (!oldFolder || !(oldFolder instanceof import_obsidian8.TFolder)) {
       this.plugin.settings[settingKey] = newPath;
       await this.plugin.saveSettings();
       return;
@@ -13747,7 +12964,7 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       return;
     }
     const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
-    if (newFolder && newFolder instanceof import_obsidian10.TFolder && newFolder.children.length > 0) {
+    if (newFolder && newFolder instanceof import_obsidian8.TFolder && newFolder.children.length > 0) {
       this.showErrorDialog(
         t("folder_migration.error_target_not_empty.title"),
         t("folder_migration.error_target_not_empty.message", { path: newPath })
@@ -13794,199 +13011,6 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       dialog.open();
     }
   }
-  async handleConversationHierarchyOrderChange(newOrder, dropdown) {
-    const oldOrder = this.plugin.settings.conversationHierarchyOrder;
-    if (oldOrder === newOrder) {
-      return;
-    }
-    const oldSettings = { ...this.plugin.settings };
-    const newSettings = {
-      ...this.plugin.settings,
-      conversationHierarchyOrder: newOrder
-    };
-    const migrationEngine = new SettingMigrationEngine();
-    migrationEngine.register(new ConversationHierarchyMigrationWorkflow(this.plugin));
-    const plan = await migrationEngine.createPlan("conversationHierarchyOrder", {
-      oldSettings,
-      newSettings
-    });
-    if (!plan || plan.operationCount === 0) {
-      this.plugin.settings.conversationHierarchyOrder = newOrder;
-      await this.plugin.saveSettings();
-      return;
-    }
-    const settingLabel = t("settings.folders.hierarchy_order.name");
-    new SettingMigrationDecisionDialog(
-      this.plugin.app,
-      settingLabel,
-      plan.operationCount,
-      async (decision) => {
-        await this.applyConversationHierarchyDecision(
-          decision,
-          oldOrder,
-          newOrder,
-          plan,
-          migrationEngine,
-          oldSettings,
-          newSettings,
-          dropdown
-        );
-      }
-    ).open();
-  }
-  async applyConversationHierarchyDecision(decision, oldOrder, newOrder, plan, migrationEngine, oldSettings, newSettings, dropdown) {
-    if (decision === "cancel") {
-      dropdown == null ? void 0 : dropdown.setValue(oldOrder);
-      return;
-    }
-    if (decision === "apply-only") {
-      this.plugin.settings.conversationHierarchyOrder = newOrder;
-      await this.plugin.saveSettings();
-      new import_obsidian10.Notice(t("settings_migration.notices.apply_only"));
-      return;
-    }
-    const { UpgradeProgressModal: UpgradeProgressModal2 } = await Promise.resolve().then(() => (init_progress_modal(), progress_modal_exports));
-    const progressModal = new UpgradeProgressModal2(
-      this.plugin.app,
-      t("settings_migration.progress.title"),
-      100
-    );
-    progressModal.open();
-    try {
-      progressModal.updateProgress({
-        title: t("settings_migration.progress.preparing"),
-        detail: t("settings_migration.progress.preparing_detail", { count: String(plan.operationCount) }),
-        progress: 5
-      });
-      const result = await migrationEngine.execute("conversationHierarchyOrder", plan, {
-        oldSettings,
-        newSettings,
-        onProgress: (progress) => {
-          const total = Math.max(1, progress.total);
-          const percentage = 5 + Math.round(progress.current / total * 90);
-          progressModal.updateProgress({
-            title: t("settings_migration.progress.executing"),
-            detail: progress.detail,
-            progress: Math.min(95, percentage)
-          });
-        }
-      });
-      this.plugin.settings.conversationHierarchyOrder = newOrder;
-      await this.plugin.saveSettings();
-      if (!result) {
-        new import_obsidian10.Notice(t("settings_migration.notices.no_result"));
-        dropdown == null ? void 0 : dropdown.setValue(newOrder);
-        progressModal.close();
-        return;
-      }
-      progressModal.updateProgress({
-        title: t("settings_migration.progress.finalizing"),
-        detail: t("settings_migration.progress.finalizing_detail"),
-        progress: 100
-      });
-      progressModal.showComplete(
-        t("settings_migration.progress.complete", {
-          moved: String(result.moved),
-          skipped: String(result.skipped),
-          errors: String(result.errors)
-        })
-      );
-      progressModal.closeAfterDelay(1500);
-      const reportPath = await this.writeSettingMigrationReport(result, oldOrder, newOrder);
-      this.showSettingMigrationResultDialog(result, newOrder, reportPath);
-      dropdown == null ? void 0 : dropdown.setValue(newOrder);
-    } catch (error) {
-      progressModal.close();
-      dropdown == null ? void 0 : dropdown.setValue(oldOrder);
-      const message = error instanceof Error ? error.message : String(error);
-      this.showErrorDialog(
-        t("settings_migration.errors.title"),
-        t("settings_migration.errors.message", { error: message })
-      );
-    }
-  }
-  showSettingMigrationResultDialog(result, newOrder, reportPath) {
-    const modal = new import_obsidian10.Modal(this.plugin.app);
-    modal.titleEl.setText(t("settings_migration.result.title"));
-    const { contentEl } = modal;
-    contentEl.createEl("p", {
-      text: t("settings_migration.result.summary", {
-        moved: String(result.moved),
-        skipped: String(result.skipped),
-        errors: String(result.errors),
-        duration: String(Math.round(result.durationMs / 1e3))
-      })
-    });
-    contentEl.createEl("p", {
-      text: t("settings_migration.result.new_order", {
-        order: newOrder === "provider-year-month" ? t("settings.folders.hierarchy_order.options.provider_year_month") : t("settings.folders.hierarchy_order.options.year_month_provider")
-      })
-    });
-    if (result.details.length > 0) {
-      const detailsEl = contentEl.createEl("details");
-      detailsEl.createEl("summary", {
-        text: t("settings_migration.result.details")
-      });
-      const list = detailsEl.createEl("ul");
-      for (const detail of result.details.slice(0, 100)) {
-        list.createEl("li", { text: detail });
-      }
-      if (result.details.length > 100) {
-        list.createEl("li", {
-          text: t("settings_migration.result.details_truncated", {
-            hidden: String(result.details.length - 100)
-          })
-        });
-      }
-    }
-    if (reportPath) {
-      contentEl.createEl("p", {
-        text: t("settings_migration.result.report", { path: reportPath })
-      });
-    }
-    const buttonRow = contentEl.createDiv({ cls: "modal-button-container" });
-    const closeButton = buttonRow.createEl("button", {
-      text: t("common.buttons.ok"),
-      cls: "mod-cta"
-    });
-    closeButton.addEventListener("click", () => modal.close());
-    modal.open();
-  }
-  async writeSettingMigrationReport(result, oldOrder, newOrder) {
-    try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const reportFolder = `${this.plugin.settings.reportFolder}/settings-migrations`;
-      const ensure = await ensureFolderExists(reportFolder, this.plugin.app.vault);
-      if (!ensure.success) {
-        return void 0;
-      }
-      const oldOrderLabel = oldOrder === "provider-year-month" ? t("settings.folders.hierarchy_order.options.provider_year_month") : t("settings.folders.hierarchy_order.options.year_month_provider");
-      const newOrderLabel = newOrder === "provider-year-month" ? t("settings.folders.hierarchy_order.options.provider_year_month") : t("settings.folders.hierarchy_order.options.year_month_provider");
-      const reportPath = `${reportFolder}/${timestamp} - conversation hierarchy migration report.md`;
-      const reportContent = `# Conversation Hierarchy Migration Report
-
-Generated: ${new Date().toISOString()}
-
-## Change
-- From: ${oldOrderLabel}
-- To: ${newOrderLabel}
-
-## Results
-- Moved: ${result.moved}
-- Skipped: ${result.skipped}
-- Errors: ${result.errors}
-- Duration (seconds): ${Math.round(result.durationMs / 1e3)}
-
-## Details
-${result.details.length > 0 ? result.details.map((line) => `- ${line}`).join("\n") : "- No details"}
-`;
-      await this.plugin.getFileService().writeToFile(reportPath, reportContent);
-      return reportPath;
-    } catch (error) {
-      this.plugin.logger.warn("Failed to write settings migration report:", error);
-      return void 0;
-    }
-  }
   /**
    * Handle migration action (extracted for reuse between dialog types)
    */
@@ -14002,7 +13026,7 @@ ${result.details.length > 0 ? result.details.map((line) => `- ${line}`).join("\n
           await this.updateLinksAfterMove(settingKey, oldPath, newPath);
         }
         if (result.success && result.skipped === 0) {
-          new import_obsidian10.Notice(`\u2705 Files moved to ${newPath}`);
+          new import_obsidian8.Notice(`\u2705 Files moved to ${newPath}`);
         } else {
           this.showMergeResultDialog(result, oldPath, newPath);
         }
@@ -14029,14 +13053,14 @@ ${result.details.length > 0 ? result.details.map((line) => `- ${line}`).join("\n
       }
     } catch (error) {
       this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
-      new import_obsidian10.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
+      new import_obsidian8.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
     }
   }
   /**
    * Show dialog with merge result details when files were skipped or errors occurred
    */
   showMergeResultDialog(result, _oldPath, _newPath) {
-    const modal = new import_obsidian10.Modal(this.plugin.app);
+    const modal = new import_obsidian8.Modal(this.plugin.app);
     modal.titleEl.setText(t("folder_migration.result_dialog.title"));
     const { contentEl } = modal;
     const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
@@ -14111,7 +13135,7 @@ ${result.details.length > 0 ? result.details.map((line) => `- ${line}`).join("\n
     modal.open();
   }
   showErrorDialog(title, message) {
-    const modal = new import_obsidian10.Modal(this.plugin.app);
+    const modal = new import_obsidian8.Modal(this.plugin.app);
     modal.titleEl.setText(title);
     modal.contentEl.createEl("p", {
       text: message,
@@ -14132,7 +13156,7 @@ ${result.details.length > 0 ? result.details.map((line) => `- ${line}`).join("\n
 __name(FolderSettingsSection, "FolderSettingsSection");
 
 // src/ui/settings/display-settings-section.ts
-var import_obsidian11 = require("obsidian");
+var import_obsidian9 = require("obsidian");
 init_i18n();
 var DisplaySettingsSection = class extends BaseSettingsSection {
   constructor() {
@@ -14144,7 +13168,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-date-prefix-section" });
-    const setting = new import_obsidian11.Setting(sectionContainer).setName(t("settings.display.add_date_prefix.name")).setDesc(t("settings.display.add_date_prefix.desc"));
+    const setting = new import_obsidian9.Setting(sectionContainer).setName(t("settings.display.add_date_prefix.name")).setDesc(t("settings.display.add_date_prefix.desc"));
     if (this.plugin.settings.addDatePrefix) {
       setting.controlEl.createSpan({
         text: t("settings.display.add_date_prefix.format_label"),
@@ -14171,7 +13195,7 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
 __name(DisplaySettingsSection, "DisplaySettingsSection");
 
 // src/ui/settings/message-date-format-section.ts
-var import_obsidian12 = require("obsidian");
+var import_obsidian10 = require("obsidian");
 init_constants();
 init_utils();
 init_i18n();
@@ -14185,7 +13209,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
   }
   render(containerEl) {
     const sectionContainer = containerEl.createDiv({ cls: "nexus-message-date-section" });
-    new import_obsidian12.Setting(sectionContainer).setName(t("settings.timestamps.custom_format.name")).setDesc(t("settings.timestamps.custom_format.desc")).addToggle(
+    new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.custom_format.name")).setDesc(t("settings.timestamps.custom_format.desc")).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.useCustomMessageTimestampFormat).onChange(async (value) => {
         this.plugin.settings.useCustomMessageTimestampFormat = value;
         await this.plugin.saveSettings();
@@ -14193,7 +13217,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
       })
     );
     if (this.plugin.settings.useCustomMessageTimestampFormat) {
-      new import_obsidian12.Setting(sectionContainer).setName(t("settings.timestamps.timestamp_format.name")).setDesc(t("settings.timestamps.timestamp_format.desc")).addDropdown((dropdown) => {
+      new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.timestamp_format.name")).setDesc(t("settings.timestamps.timestamp_format.desc")).addDropdown((dropdown) => {
         Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
           dropdown.addOption(key, config.label);
         });
@@ -14229,7 +13253,7 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
 __name(MessageDateFormatSection, "MessageDateFormatSection");
 
 // src/ui/settings-tab.ts
-var NexusAiChatImporterPluginSettingTab = class extends import_obsidian13.PluginSettingTab {
+var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -14282,7 +13306,7 @@ var CommandRegistry = class {
 __name(CommandRegistry, "CommandRegistry");
 
 // src/events/event-handlers.ts
-var import_obsidian14 = require("obsidian");
+var import_obsidian12 = require("obsidian");
 var EventHandlers = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -14290,7 +13314,7 @@ var EventHandlers = class {
   registerEvents() {
     this.plugin.registerEvent(
       this.plugin.app.vault.on("delete", async (file) => {
-        if (file instanceof import_obsidian14.TFile) {
+        if (file instanceof import_obsidian12.TFile) {
           await this.plugin.getFileService().handleConversationFileDeletion(file);
         }
       })
@@ -14302,7 +13326,7 @@ var EventHandlers = class {
 __name(EventHandlers, "EventHandlers");
 
 // src/services/import-service.ts
-var import_obsidian19 = require("obsidian");
+var import_obsidian17 = require("obsidian");
 init_utils();
 init_dialogs();
 
@@ -15108,7 +14132,7 @@ var ImportReport = class {
 __name(ImportReport, "ImportReport");
 
 // src/services/conversation-processor.ts
-var import_obsidian17 = require("obsidian");
+var import_obsidian15 = require("obsidian");
 
 // src/formatters/message-formatter.ts
 init_utils();
@@ -15490,7 +14514,7 @@ ${lines}`;
 __name(NoteFormatter, "NoteFormatter");
 
 // src/services/file-service.ts
-var import_obsidian16 = require("obsidian");
+var import_obsidian14 = require("obsidian");
 var FileService = class {
   constructor(plugin) {
     this.plugin = plugin;
@@ -15498,9 +14522,9 @@ var FileService = class {
   async writeToFile(filePath, content) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian16.TFile) {
+      if (file instanceof import_obsidian14.TFile) {
         await this.plugin.app.vault.modify(file, content);
-      } else if (file instanceof import_obsidian16.TFolder) {
+      } else if (file instanceof import_obsidian14.TFolder) {
         throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
       } else {
         await this.plugin.app.vault.create(filePath, content);
@@ -15853,7 +14877,7 @@ var ConversationProcessor = class {
   async updateExistingNote(adapter, chat, filePath, totalMessageCount, importReport, zip, forceUpdate = false, isStandardConversation = false) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-      if (file instanceof import_obsidian17.TFile) {
+      if (file instanceof import_obsidian15.TFile) {
         let content = await this.plugin.app.vault.read(file);
         const originalContent = content;
         const chatUpdateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
@@ -16081,12 +15105,10 @@ ${section}`;
     const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
     const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
     const providerName = isStandardConversation ? chat.provider : adapter.getProviderName();
-    const folderPath = buildConversationFolderPath(
-      this.plugin.settings.conversationFolder,
-      createTime,
-      providerName,
-      this.plugin.settings.conversationHierarchyOrder
-    );
+    const date = new Date(createTime * 1e3);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const folderPath = `${this.plugin.settings.conversationFolder}/${providerName}/${year}/${month}`;
     const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       throw new Error(folderResult.error || "Failed to ensure folder exists.");
@@ -20444,9 +19466,9 @@ function createProviderRegistry(plugin) {
 __name(createProviderRegistry, "createProviderRegistry");
 
 // src/ui/import-progress-modal.ts
-var import_obsidian18 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 init_i18n();
-var ImportProgressModal = class extends import_obsidian18.Modal {
+var ImportProgressModal = class extends import_obsidian16.Modal {
   constructor(app, fileName) {
     super(app);
     this.totalConversations = 0;
@@ -21807,7 +20829,7 @@ Only ZIP files are supported. The file must have a .zip extension.
 \u{1F4DD} Known Issue: When downloading Claude exports with Firefox on Mac, the file may have a .dat extension instead of .zip. Simply rename the file to change the extension from .dat to .zip, then try importing again.
 
 Do NOT extract and re-compress the file - just rename it!`;
-      new import_obsidian19.Notice(errorMessage, 1e4);
+      new import_obsidian17.Notice(errorMessage, 1e4);
       this.plugin.logger.error("Invalid file extension", {
         fileName: file.name,
         expectedExtension: ".zip"
@@ -21890,7 +20912,7 @@ Do NOT extract and re-compress the file - just rename it!`;
             { button1: "Let's do this", button2: "Skip this file" }
           );
           if (!shouldReimport) {
-            new import_obsidian19.Notice(`Skipping ${file.name} (already imported).`);
+            new import_obsidian17.Notice(`Skipping ${file.name} (already imported).`);
             progressModal.close();
             return;
           }
@@ -21984,7 +21006,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       if (processingStarted && !isSharedReport) {
         await this.writeImportReport(file.name);
         if (!progressModal.isComplete) {
-          new import_obsidian19.Notice(
+          new import_obsidian17.Notice(
             this.importReport.hasErrors() ? "An error occurred during import. Please check the log file for details." : "Import completed. Log file created in the archive folder."
           );
         }
@@ -22309,7 +21331,7 @@ Do NOT extract and re-compress the file - just rename it!`;
     this.runtimeContext = null;
   }
   isMobileRuntime() {
-    return import_obsidian19.Platform.isMobileApp || import_obsidian19.Platform.isMobile;
+    return import_obsidian17.Platform.isMobileApp || import_obsidian17.Platform.isMobile;
   }
   async yieldToEventLoopIfMobile() {
     if (!this.isMobileRuntime()) {
@@ -22389,7 +21411,7 @@ var ReportWriter = class {
     const folderResult = await ensureFolderExists(reportInfo.folderPath, this.plugin.app.vault);
     if (!folderResult.success) {
       this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
-      new import_obsidian19.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian17.Notice("Failed to create log file. Check console for details.");
       return;
     }
     let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
@@ -22417,7 +21439,7 @@ ${report.generateReportContent()}
       await this.plugin.app.vault.create(logFilePath, logContent);
     } catch (error) {
       this.plugin.logger.error(`Failed to write import log`, error.message);
-      new import_obsidian19.Notice("Failed to create log file. Check console for details.");
+      new import_obsidian17.Notice("Failed to create log file. Check console for details.");
     }
   }
   getReportGenerationInfo(zipFileName, provider) {
@@ -22457,16 +21479,16 @@ __name(ReportWriter, "ReportWriter");
 init_storage_service();
 
 // src/upgrade/incremental-upgrade-manager.ts
-var import_obsidian27 = require("obsidian");
+var import_obsidian25 = require("obsidian");
 init_version_utils();
 init_dialogs();
 init_logger();
 init_constants();
 
 // src/upgrade/utils/multi-operation-progress-modal.ts
-var import_obsidian20 = require("obsidian");
+var import_obsidian18 = require("obsidian");
 init_i18n();
-var MultiOperationProgressModal = class extends import_obsidian20.Modal {
+var MultiOperationProgressModal = class extends import_obsidian18.Modal {
   constructor(app, title, operations) {
     super(app);
     this.canClose = false;
@@ -22770,7 +21792,7 @@ var IncrementalUpgradeManager = class {
     } catch (error) {
       logger4.error("Incremental upgrade failed:", error);
       if (error instanceof Error && error.message === "User cancelled upgrade") {
-        new import_obsidian27.Notice(t("upgrade.notices.migration_cancelled"));
+        new import_obsidian25.Notice(t("upgrade.notices.migration_cancelled"));
         return {
           success: false,
           upgradesExecuted: 0,
@@ -22780,7 +21802,7 @@ var IncrementalUpgradeManager = class {
         };
       }
       logger4.error("Error during incremental upgrade:", error);
-      new import_obsidian27.Notice(t("upgrade.notices.upgrade_failed_console"));
+      new import_obsidian25.Notice(t("upgrade.notices.upgrade_failed_console"));
       return {
         success: false,
         upgradesExecuted: 0,
@@ -23132,11 +22154,11 @@ var IncrementalUpgradeManager = class {
         const { UpgradeCompleteModal: UpgradeCompleteModal2 } = await Promise.resolve().then(() => (init_upgrade_complete_modal(), upgrade_complete_modal_exports));
         new UpgradeCompleteModal2(this.plugin.app, this.plugin, version).open();
       } else {
-        new import_obsidian27.Notice(t("upgrade.notices.upgraded_to_version", { version }));
+        new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version }));
       }
     } catch (error) {
       logger4.error("Error showing upgrade complete dialog:", error);
-      new import_obsidian27.Notice(t("upgrade.notices.upgraded_to_version", { version }));
+      new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version }));
     }
   }
   /**
@@ -23205,7 +22227,7 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger4.error("Error showing upgrade dialog:", error);
-      new import_obsidian27.Notice(t("upgrade.notices.upgraded_to_version", { version: currentVersion }));
+      new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version: currentVersion }));
     }
   }
   /**
@@ -23378,9 +22400,9 @@ __name(IncrementalUpgradeManager, "IncrementalUpgradeManager");
 init_logger();
 
 // src/dialogs/enhanced-file-selection-dialog.ts
-var import_obsidian28 = require("obsidian");
+var import_obsidian26 = require("obsidian");
 init_i18n();
-var EnhancedFileSelectionDialog = class extends import_obsidian28.Modal {
+var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
   constructor(app, provider, onFileSelectionComplete, plugin) {
     super(app);
     this.plugin = plugin;
@@ -23569,7 +22591,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian28.Modal {
     }
   }
   isMobileRuntime() {
-    return import_obsidian28.Platform.isMobileApp || import_obsidian28.Platform.isMobile;
+    return import_obsidian26.Platform.isMobileApp || import_obsidian26.Platform.isMobile;
   }
   enforceMobileSingleZipSelection(files) {
     if (!this.isMobileRuntime()) {
@@ -23581,7 +22603,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian28.Modal {
     }
     const firstZip = zipFiles[0];
     const nonZipFiles = files.filter((file) => !file.name.toLowerCase().endsWith(".zip"));
-    new import_obsidian28.Notice(t("notices.import_mobile_single_zip_only"));
+    new import_obsidian26.Notice(t("notices.import_mobile_single_zip_only"));
     return [firstZip, ...nonZipFiles];
   }
   updateFilePreview() {
@@ -23691,9 +22713,9 @@ var EnhancedFileSelectionDialog = class extends import_obsidian28.Modal {
 __name(EnhancedFileSelectionDialog, "EnhancedFileSelectionDialog");
 
 // src/dialogs/conversation-selection-dialog.ts
-var import_obsidian29 = require("obsidian");
+var import_obsidian27 = require("obsidian");
 init_i18n();
-var ConversationSelectionDialog = class extends import_obsidian29.Modal {
+var ConversationSelectionDialog = class extends import_obsidian27.Modal {
   // Information about analysis and filtering
   constructor(app, conversations, onSelectionComplete, plugin, analysisInfo) {
     var _a, _b;
@@ -24638,10 +23660,10 @@ var ConversationSelectionDialog = class extends import_obsidian29.Modal {
 __name(ConversationSelectionDialog, "ConversationSelectionDialog");
 
 // src/dialogs/installation-welcome-dialog.ts
-var import_obsidian30 = require("obsidian");
+var import_obsidian28 = require("obsidian");
 init_support_box();
 init_i18n();
-var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
+var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
   constructor(app, version, onGetStarted) {
     super(app);
     this.version = version;
@@ -24810,11 +23832,11 @@ var InstallationWelcomeDialog = class extends import_obsidian30.Modal {
 __name(InstallationWelcomeDialog, "InstallationWelcomeDialog");
 
 // src/dialogs/new-version-modal.ts
-var import_obsidian31 = require("obsidian");
+var import_obsidian29 = require("obsidian");
 init_support_box();
 init_constants();
 init_i18n();
-var NewVersionModal = class extends import_obsidian31.Modal {
+var NewVersionModal = class extends import_obsidian29.Modal {
   constructor(app, plugin, version, fallbackMessage) {
     super(app);
     this.plugin = plugin;
@@ -24845,7 +23867,7 @@ var NewVersionModal = class extends import_obsidian31.Modal {
     } catch (error) {
     }
     const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
-    await import_obsidian31.MarkdownRenderer.render(
+    await import_obsidian29.MarkdownRenderer.render(
       this.app,
       message,
       contentDiv,
@@ -24964,7 +23986,7 @@ __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
 init_dialogs();
 
 // src/services/conversation-metadata-extractor.ts
-var import_obsidian32 = require("obsidian");
+var import_obsidian30 = require("obsidian");
 init_utils();
 init_logger();
 var ConversationMetadataExtractor = class {
@@ -24996,8 +24018,8 @@ var ConversationMetadataExtractor = class {
       }
     } else {
       for await (const rawConversation of extractConversationsStream(zip, {
-        mobileRuntime: import_obsidian32.Platform.isMobile,
-        enforceChunkedForLargeJsonOnMobile: import_obsidian32.Platform.isMobile,
+        mobileRuntime: import_obsidian30.Platform.isMobile,
+        enforceChunkedForLargeJsonOnMobile: import_obsidian30.Platform.isMobile,
         largeJsonThresholdBytes: 32 * 1024 * 1024,
         streamYieldEvery: 25
       })) {
@@ -25536,12 +24558,12 @@ var ConversationMetadataExtractor = class {
 __name(ConversationMetadataExtractor, "ConversationMetadataExtractor");
 
 // src/dialogs/import-completion-dialog.ts
-var import_obsidian33 = require("obsidian");
+var import_obsidian31 = require("obsidian");
 init_support_box();
 init_logger();
 init_i18n();
 var logger5 = new Logger();
-var ImportCompletionDialog = class extends import_obsidian33.Modal {
+var ImportCompletionDialog = class extends import_obsidian31.Modal {
   constructor(app, stats, reportFilePath) {
     super(app);
     this.stats = stats;
@@ -25769,7 +24791,7 @@ __name(ImportCompletionDialog, "ImportCompletionDialog");
 
 // src/main.ts
 init_utils();
-var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
+var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
@@ -25954,7 +24976,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         message,
         stack: error instanceof Error ? error.stack : void 0
       });
-      new import_obsidian34.Notice(t("notices.import_error", { error: message }));
+      new import_obsidian32.Notice(t("notices.import_error", { error: message }));
     }
   }
   /**
@@ -25987,13 +25009,13 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         selectedZipCount: zipFiles.length,
         keptFileName: zipFiles[0].name
       });
-      new import_obsidian34.Notice(t("notices.import_mobile_single_zip_only"));
+      new import_obsidian32.Notice(t("notices.import_mobile_single_zip_only"));
       zipFiles = [zipFiles[0]];
     }
     const sortedZipFiles = sortFilesForImport(zipFiles);
     const lockedProvider = await this.resolveProviderLockFromSelection(sortedZipFiles);
     if (!lockedProvider) {
-      new import_obsidian34.Notice(
+      new import_obsidian32.Notice(
         t("notices.import_error_analyzing", {
           error: "No supported archive was detected in the selected ZIP files."
         })
@@ -26015,7 +25037,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
     const effectiveProvider = lockedProvider.provider;
     if (effectiveProvider === "gemini") {
       if (zipFiles.length === 0) {
-        new import_obsidian34.Notice(t("notices.import_no_zip_gemini"));
+        new import_obsidian32.Notice(t("notices.import_no_zip_gemini"));
         this.logger.warn("[Gemini] No ZIP files selected for import");
         return;
       }
@@ -26039,7 +25061,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
           }
         } catch (error) {
           this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
-          new import_obsidian34.Notice(t("notices.import_gemini_json_failed"));
+          new import_obsidian32.Notice(t("notices.import_gemini_json_failed"));
         }
       }
       this.currentGeminiIndex = index;
@@ -26055,7 +25077,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         this.importService.setGeminiIndex(null);
       }
       if (zipFiles.length === 0) {
-        new import_obsidian34.Notice(t("notices.import_no_zip"));
+        new import_obsidian32.Notice(t("notices.import_no_zip"));
         this.logger.warn(`[${effectiveProvider}] No ZIP files selected for import`);
         return;
       }
@@ -26087,7 +25109,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         provider,
         fileCount: files.length
       });
-      new import_obsidian34.Notice(t("notices.import_analyzing", { count: String(files.length) }));
+      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -26112,7 +25134,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian34.Notice(t("notices.import_no_supported_archives", { provider }));
+        new import_obsidian32.Notice(t("notices.import_no_supported_archives", { provider }));
         return;
       }
       const operationReport = new ImportReport();
@@ -26120,7 +25142,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian34.Notice(t("notices.import_no_new"));
+        new import_obsidian32.Notice(t("notices.import_no_new"));
         const reportPath2 = await this.writeConsolidatedReport(
           operationReport,
           provider,
@@ -26138,7 +25160,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
       const allIds = extractionResult.conversations.map((c) => c.id);
       const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
       const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
-      new import_obsidian34.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
+      new import_obsidian32.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -26175,11 +25197,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian34.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "import-all");
-      new import_obsidian34.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       await this.runPostImportCleanup("import-all");
     }
@@ -26317,13 +25339,13 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian34.Notice(t("notices.import_completed_fallback", {
+      new import_obsidian32.Notice(t("notices.import_completed_fallback", {
         created: String(operationReport.getCreatedCount()),
         updated: String(operationReport.getUpdatedCount())
       }));
     }
     if (skippedUnsupported > 0) {
-      new import_obsidian34.Notice(
+      new import_obsidian32.Notice(
         `${skippedUnsupported} archive(s) were skipped because they are unsupported for ${provider}.`,
         5e3
       );
@@ -26342,7 +25364,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
           selectedFileCount: files.length,
           keptFileName: (_b = (_a = mobileFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
         });
-        new import_obsidian34.Notice(t("notices.import_mobile_single_zip_only"));
+        new import_obsidian32.Notice(t("notices.import_mobile_single_zip_only"));
       }
       this.setImportCheckpoint({
         operation: "selective-analysis",
@@ -26354,7 +25376,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         provider,
         fileCount: mobileFiles.length
       });
-      new import_obsidian34.Notice(t("notices.import_analyzing", { count: String(mobileFiles.length) }));
+      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(mobileFiles.length) }));
       const providerRegistry = createProviderRegistry(this);
       const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
       const storage = this.getStorageService();
@@ -26379,11 +25401,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian34.Notice(t("notices.import_no_supported_archives", { provider }));
+        new import_obsidian32.Notice(t("notices.import_no_supported_archives", { provider }));
         return;
       }
       if (extractionResult.conversations.length === 0) {
-        new import_obsidian34.Notice(t("notices.import_no_new"));
+        new import_obsidian32.Notice(t("notices.import_no_new"));
         const operationReport = new ImportReport();
         const reportPath = await this.writeConsolidatedReport(
           operationReport,
@@ -26419,7 +25441,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
       ).open();
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-analysis");
-      new import_obsidian34.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
     }
   }
   /**
@@ -26438,7 +25460,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
       }
       if (result.selectedIds.length === 0) {
-        new import_obsidian34.Notice(t("notices.import_no_selected"));
+        new import_obsidian32.Notice(t("notices.import_no_selected"));
         const reportPath2 = await this.writeConsolidatedReport(
           operationReport,
           provider,
@@ -26453,7 +25475,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
         }
         return;
       }
-      new import_obsidian34.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
+      new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
       const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
       const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
       const selectedExistingConversationIds = this.collectSelectedExistingConversationIds(
@@ -26487,11 +25509,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian34.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-import");
-      new import_obsidian34.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       await this.runPostImportCleanup("selective-import");
     }
@@ -26514,7 +25536,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian34.Plugin {
     const folderResult = await ensureFolderExists(folderPath, this.app.vault);
     if (!folderResult.success) {
       this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-      new import_obsidian34.Notice(t("notices.report_failed"));
+      new import_obsidian32.Notice(t("notices.report_failed"));
       return "";
     }
     const now = Date.now() / 1e3;
@@ -26608,7 +25630,7 @@ ${report.generateMobileIndexContent(files, links)}
     } catch (error) {
       this.logger.error(`Failed to write consolidated reports`, error);
       this.logger.error("Full error:", error);
-      new import_obsidian34.Notice(t("notices.report_failed"));
+      new import_obsidian32.Notice(t("notices.report_failed"));
       return "";
     }
   }
@@ -26678,7 +25700,7 @@ ${report.generateMobileIndexContent(files, links)}
     return conversationsByFile;
   }
   isMobileTaskQueueMode() {
-    return import_obsidian34.Platform.isMobileApp || import_obsidian34.Platform.isMobile;
+    return import_obsidian32.Platform.isMobileApp || import_obsidian32.Platform.isMobile;
   }
   async resolveProviderLockFromSelection(files) {
     const providerRegistry = createProviderRegistry(this);
@@ -26855,7 +25877,7 @@ ${report.generateMobileIndexContent(files, links)}
         );
       } catch (error) {
         this.logger.error(`Error processing file ${file.name}:`, error);
-        new import_obsidian34.Notice(t("notices.import_error_file", { filename: file.name }));
+        new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
       } finally {
         if (mobileTaskQueueMode) {
           this.importService.clearAttachmentMap();
@@ -26932,7 +25954,7 @@ ${report.generateMobileIndexContent(files, links)}
         message: archive.message
       }))
     });
-    new import_obsidian34.Notice(
+    new import_obsidian32.Notice(
       `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,
       5e3
     );
