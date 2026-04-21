@@ -127,7 +127,7 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, **Le Chat**, and
 
 I actively maintain and improve Nexus projects to keep them reliable, fast, and up to date.
 
-**Over 7,000 downloads so far! Thank you to everyone who has supported this project.**
+**Already used by thousands of people. Thank you to everyone who has supported this project.**
 
 **If this plugin makes your life easier, a donation would mean the world to me and help keep development going strong.**
 
