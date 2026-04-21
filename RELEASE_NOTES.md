@@ -1,5 +1,17 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.1 — Documentation and Donation Messaging Update
+
+![Version](https://img.shields.io/badge/version-1.6.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+- Includes all **1.6.0** improvements for the 1.6.x line:
+  - Perplexity provider support
+  - Universal `mode/models` metadata
+- Documentation update
+- Donation information update
+
+---
+
 ## Version 1.6.0 — Perplexity Provider + Universal Metadata
 
 ![Version](https://img.shields.io/badge/version-1.6.0-blue) ![New Provider](https://img.shields.io/badge/new_provider-Perplexity-green)

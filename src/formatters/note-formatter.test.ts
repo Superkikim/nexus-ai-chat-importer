@@ -25,7 +25,7 @@ async function createFormatter() {
             messageTimestampFormat: "locale",
         },
     } as any;
-    return new NoteFormatter(logger, "nexus-ai-chat-importer", "1.6.0", plugin as any);
+    return new NoteFormatter(logger, "nexus-ai-chat-importer", "1.6.1", plugin as any);
 }
 
 describe("NoteFormatter", () => {
