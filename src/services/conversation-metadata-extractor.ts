@@ -27,6 +27,8 @@ import {
     classifyArchiveEntries,
     extractConversationsStream,
     extractRawConversations,
+    getArchiveProviderMismatchMessage,
+    getArchiveUnsupportedFormatMessage,
     SupportedArchiveProvider,
 } from "../utils/zip-content-reader";
 import { decideArchiveMode } from "./archive-mode-decider";
@@ -445,22 +447,22 @@ export class ConversationMetadataExtractor {
 
     private getUnsupportedArchiveMessage(forcedProvider?: string): string {
         if (forcedProvider === "chatgpt") {
-            return "This ZIP file does not look like a ChatGPT export.";
+            return getArchiveProviderMismatchMessage("chatgpt");
         }
         if (forcedProvider === "claude") {
-            return "This ZIP file does not look like a Claude export.";
+            return getArchiveProviderMismatchMessage("claude");
         }
         if (forcedProvider === "lechat") {
-            return "This ZIP file does not look like a Le Chat export.";
+            return getArchiveProviderMismatchMessage("lechat");
         }
         if (forcedProvider === "gemini") {
-            return "This ZIP file does not look like a Gemini Takeout export.";
+            return getArchiveProviderMismatchMessage("gemini");
         }
         if (forcedProvider === "perplexity") {
-            return "This ZIP file does not look like a Perplexity Thread Exporter archive.";
+            return getArchiveProviderMismatchMessage("perplexity");
         }
 
-        return "This ZIP file does not match any supported export format.";
+        return getArchiveUnsupportedFormatMessage();
     }
 
     private extractSingleMetadataByProvider(rawConversation: any, provider: string): ConversationMetadata | null {

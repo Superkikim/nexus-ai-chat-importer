@@ -37,6 +37,8 @@ import {
     classifyArchiveEntries,
     extractConversationsStream,
     extractRawConversations,
+    getArchiveEmptyMessage,
+    getArchiveUnsupportedFormatMessage,
 } from "../utils/zip-content-reader";
 import { filterConversationsByIds as filterConversationsByIdsUsingAdapters } from "../utils/conversation-filter";
 import { sortFilesForImport } from "../utils/file-sort";
@@ -420,14 +422,14 @@ export class ImportService {
             if (classification.reason === "empty") {
                 throw new NexusAiChatImporterError(
                     "Empty ZIP file",
-                    "The ZIP file contains no files. Please check that you selected the correct export file."
+                    getArchiveEmptyMessage()
                 );
             }
 
             if (!classification.supported) {
                 throw new NexusAiChatImporterError(
                     classification.reason === "provider-mismatch" ? "Provider mismatch" : "Unsupported ZIP structure",
-                    classification.message || "This ZIP file does not match a supported export format."
+                    classification.message || getArchiveUnsupportedFormatMessage()
                 );
             }
 
@@ -470,7 +472,7 @@ export class ImportService {
             throw new NexusAiChatImporterError(
                 "Error reading ZIP file",
                 `Failed to read the ZIP file: ${message || 'Unknown error'}. ` +
-		                "Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, or Gemini."
+                    "Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, Perplexity, or Gemini."
             );
         }
     }

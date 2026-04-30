@@ -1,5 +1,34 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.2 — Perplexity Thread Exporter Compatibility Patch
+
+![Version](https://img.shields.io/badge/version-1.6.2-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### ✨ New
+
+- **Perplexity multi-schema support**
+  - Added support for both Perplexity Thread Exporter schema variants:
+    - `metadata + conversations[]`
+    - `status + entries + thread_metadata`
+  - Imports now normalize both formats through a shared canonical Perplexity model before conversion
+
+- **Nested ZIP guidance**
+  - Added explicit detection for outer ZIP containers that only include inner ZIP archives (`part1of3.zip`, etc.)
+  - Clear user guidance now explains: extract the outer ZIP first, then import inner part ZIP files directly
+
+### 🔧 Improved
+
+- **Perplexity ID stability**
+  - Conversation identity now prefers `context_uuid` when available (with stable fallbacks) to reduce duplicate-note risk across schema variants
+
+- **Selective import parity**
+  - Metadata extraction for selective import now uses the same Perplexity normalizer as full import, avoiding false “no importable conversations” outcomes
+
+- **Message consistency**
+  - Archive mismatch / unsupported-format messaging is centralized, including Perplexity-specific mismatch and nested-ZIP guidance text
+
+---
+
 ## Version 1.6.1 — Documentation and Donation Messaging Update
 
 ![Version](https://img.shields.io/badge/version-1.6.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)

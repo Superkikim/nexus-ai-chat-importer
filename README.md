@@ -6,9 +6,9 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.0** adds Perplexity provider support and universal `mode/models` frontmatter:
-> Perplexity Thread Exporter archives are now supported, assistant model labels are shown inline,
-> and related queries can be preserved at the end of notes.
+> ✅ **v1.6.2** improves Perplexity Thread Exporter compatibility:
+> both schema variants are supported (`metadata + conversations[]` and `status + entries + thread_metadata`),
+> with explicit guidance for outer ZIP files that contain inner `part*.zip` archives.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -76,6 +76,19 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, **Le Chat**, and
 - Full UI localization in 10 languages
 
 ### ✨ What's New
+
+#### v1.6.2 — Perplexity Compatibility Patch
+
+✨ **New**
+- Perplexity Thread Exporter dual-schema support:
+  - `metadata + conversations[]`
+  - `status + entries + thread_metadata`
+- Better nested ZIP guidance when an outer archive only contains inner `part*.zip` files
+
+🔧 **Improved**
+- Perplexity conversation IDs are now normalized more reliably (`context_uuid` first) to avoid duplicate notes across schema variants
+- Selective import metadata extraction now uses the same Perplexity normalization path as full import
+- Archive validation messages for provider mismatch / unsupported format are now centralized for consistency
 
 #### v1.6.0 — Perplexity + Universal Metadata
 
@@ -285,7 +298,7 @@ Want to reorganize? No problem!
 - Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar, OR
 - Press **Ctrl/Cmd+P** → type "**Import AI conversations**"
 
-### Provider Detection Rules (v1.6.0)
+### Provider Detection Rules (v1.6.x)
 
 - The plugin auto-detects the provider from the **first supported ZIP** in your selection
 - Files that don't match that provider are ignored and reported as skipped

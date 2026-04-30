@@ -508,6 +508,21 @@
     "ribbon_tooltip": "Nexus AI Chat Importer - Import new file",
     "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
   },
+  "archive_messages": {
+    "empty": "The ZIP file contains no files. Please check that you selected the correct export file.",
+    "unsupported_format": "This ZIP file does not match any supported export format.",
+    "nested_zip": {
+      "generic": "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly.",
+      "perplexity": "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner Perplexity part*.zip files directly."
+    },
+    "provider_mismatch": {
+      "chatgpt": "This ZIP file does not look like a ChatGPT export.",
+      "claude": "This ZIP file does not look like a Claude export.",
+      "lechat": "This ZIP file does not look like a Le Chat export.",
+      "gemini": "This ZIP file does not look like a Gemini Takeout export.",
+      "perplexity": "This ZIP file does not look like a Perplexity Thread Exporter archive."
+    }
+  },
   "commands": {
     "import_conversations": {
       "name": "Import AI conversations"
