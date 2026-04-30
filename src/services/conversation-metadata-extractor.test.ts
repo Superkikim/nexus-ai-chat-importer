@@ -185,6 +185,7 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             entries: [
                 {
                     uuid: "entry-1",
+                    context_uuid: "context-abc",
                     thread_url_slug: "entries-thread-abc",
                     thread_title: "Entries Thread",
                     query_str: "Question?",
@@ -204,7 +205,7 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
-        expect(m.id).toBe("entries-thread-abc");
+        expect(m.id).toBe("context-abc");
         expect(m.title).toBe("Entries Thread");
         expect(m.provider).toBe("perplexity");
         expect(m.messageCount).toBe(2);

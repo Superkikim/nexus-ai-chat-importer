@@ -37,6 +37,7 @@ describe("PerplexityAdapter", () => {
             entries: [
                 {
                     uuid: "entry-1",
+                    context_uuid: "context-abc",
                     thread_url_slug: "entries-thread-abc",
                     thread_title: "Entries Thread",
                     query_str: "Question?",
@@ -55,7 +56,7 @@ describe("PerplexityAdapter", () => {
         };
 
         expect(adapter.detect([entriesChat])).toBe(true);
-        expect(adapter.getId(entriesChat as any)).toBe("entries-thread-abc");
+        expect(adapter.getId(entriesChat as any)).toBe("context-abc");
         expect(adapter.getTitle(entriesChat as any)).toBe("Entries Thread");
         expect(adapter.getCreateTime(entriesChat as any)).toBe(1706745600);
         expect(adapter.getUpdateTime(entriesChat as any)).toBe(1706749200);
@@ -72,6 +73,7 @@ describe("PerplexityAdapter", () => {
             entries: [
                 {
                     uuid: "entry-1",
+                    context_uuid: "context-abc",
                     thread_url_slug: "entries-thread-abc",
                     query_str: "Question?",
                     entry_created_datetime: "2024-02-01T00:10:00.000Z",
@@ -101,6 +103,7 @@ describe("PerplexityAdapter", () => {
             entries: [
                 {
                     uuid: "entry-1",
+                    context_uuid: "context-abc",
                     thread_url_slug: "entries-thread-abc",
                     thread_title: "Entries Thread",
                     query_str: "Question?",
@@ -120,7 +123,7 @@ describe("PerplexityAdapter", () => {
         };
 
         const converted = adapter.convertChat(entriesChat as any);
-        expect(converted.id).toBe("entries-thread-abc");
+        expect(converted.id).toBe("context-abc");
         expect(converted.provider).toBe("perplexity");
         expect(converted.messages).toHaveLength(2);
         expect(converted.messages[1].model).toBe("sonar");

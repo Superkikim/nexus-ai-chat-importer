@@ -69,6 +69,7 @@ export interface PerplexityRelatedQueryItem {
 export interface PerplexityEntry {
     uuid?: string;
     backend_uuid?: string;
+    context_uuid?: string;
     thread_title?: string;
     thread_url_slug?: string;
     query_str?: string;

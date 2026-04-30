@@ -81,6 +81,7 @@ function tryNormalizeEntriesExport(raw: Partial<PerplexityEntryExportFile>): Per
     }
 
     const firstEntry = raw.entries.find(isRecord) as PerplexityEntry | undefined;
+    const contextUuid = normalizeString(firstEntry?.context_uuid);
     const slug = normalizeString(firstEntry?.thread_url_slug);
     const firstEntryTimestamp = normalizeString(firstEntry?.entry_created_datetime)
         || normalizeString(firstEntry?.entry_updated_datetime)
@@ -100,7 +101,9 @@ function tryNormalizeEntriesExport(raw: Partial<PerplexityEntryExportFile>): Per
         })
         .pop() as PerplexityEntry | undefined;
 
-    const threadId = slug || turns[0].uuid;
+    // Prefer context_uuid for backward compatibility with existing Perplexity notes
+    // imported from older exporter shapes; fall back to thread URL slug.
+    const threadId = contextUuid || slug || turns[0].uuid;
     const threadTitle = normalizeString(raw.thread_metadata?.title)
         || normalizeString(firstEntry?.thread_title)
         || "Untitled";

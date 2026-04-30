@@ -43,6 +43,7 @@ describe("PerplexityNormalizer", () => {
             entries: [
                 {
                     uuid: "entry-1",
+                    context_uuid: "context-abc",
                     thread_url_slug: "entries-thread-abc",
                     thread_title: "Entries Thread",
                     query_str: "Question?",
@@ -64,7 +65,7 @@ describe("PerplexityNormalizer", () => {
         const normalized = normalizePerplexityConversationFile(raw as any);
 
         expect(normalized).not.toBeNull();
-        expect(normalized?.metadata.thread_id).toBe("entries-thread-abc");
+        expect(normalized?.metadata.thread_id).toBe("context-abc");
         expect(normalized?.metadata.thread_title).toBe("Entries Thread");
         expect(normalized?.metadata.thread_url).toBe("entries-thread-abc");
         expect(normalized?.metadata.thread_created_at).toBe("2024-02-01T00:00:00.000Z");
@@ -101,5 +102,28 @@ describe("PerplexityNormalizer", () => {
 
         expect(normalized).not.toBeNull();
         expect(normalized?.conversations[0].answer).toBe("chunked answer");
+    });
+
+    it("falls back to thread_url_slug when context_uuid is absent", () => {
+        const raw = {
+            entries: [
+                {
+                    uuid: "entry-3",
+                    thread_url_slug: "entries-thread-fallback",
+                    query_str: "Question?",
+                    entry_created_datetime: "2024-02-01T00:10:00.000Z",
+                    blocks: [
+                        {
+                            markdown_block: {
+                                answer: "Answer text",
+                            },
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const normalized = normalizePerplexityConversationFile(raw as any);
+        expect(normalized?.metadata.thread_id).toBe("entries-thread-fallback");
     });
 });

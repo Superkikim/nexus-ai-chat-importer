@@ -19434,6 +19434,7 @@ function tryNormalizeEntriesExport(raw) {
     return null;
   }
   const firstEntry = raw.entries.find(isRecord);
+  const contextUuid = normalizeString(firstEntry == null ? void 0 : firstEntry.context_uuid);
   const slug = normalizeString(firstEntry == null ? void 0 : firstEntry.thread_url_slug);
   const firstEntryTimestamp = normalizeString(firstEntry == null ? void 0 : firstEntry.entry_created_datetime) || normalizeString(firstEntry == null ? void 0 : firstEntry.entry_updated_datetime) || normalizeString(firstEntry == null ? void 0 : firstEntry.updated_datetime);
   const lastEntry = [...raw.entries].filter(isRecord).sort((a, b) => {
@@ -19443,7 +19444,7 @@ function tryNormalizeEntriesExport(raw) {
     const bTimestamp = normalizeString(bEntry.entry_updated_datetime) || normalizeString(bEntry.updated_datetime) || normalizeString(bEntry.entry_created_datetime);
     return parseTimestampMs(aTimestamp) - parseTimestampMs(bTimestamp);
   }).pop();
-  const threadId = slug || turns[0].uuid;
+  const threadId = contextUuid || slug || turns[0].uuid;
   const threadTitle = normalizeString((_a = raw.thread_metadata) == null ? void 0 : _a.title) || normalizeString(firstEntry == null ? void 0 : firstEntry.thread_title) || "Untitled";
   const threadCreatedAt = normalizeString((_b = raw.thread_metadata) == null ? void 0 : _b.created_at) || firstEntryTimestamp || turns[0].timestamp;
   const threadUpdatedAt = normalizeString((_c = raw.thread_metadata) == null ? void 0 : _c.updated_at) || normalizeString(lastEntry == null ? void 0 : lastEntry.entry_updated_datetime) || normalizeString(lastEntry == null ? void 0 : lastEntry.updated_datetime) || turns[turns.length - 1].timestamp;
