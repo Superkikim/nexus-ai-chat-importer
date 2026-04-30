@@ -146,7 +146,7 @@ async function readCentralDirectoryInfo(file: File): Promise<CentralDirectoryInf
         centralDirectoryOffset === 0xffffffff;
 
     if (usesZip64) {
-        mobileZipLogger.info(`ZIP64 central directory detected for ${file.name}`, {
+        mobileZipLogger.debug(`ZIP64 central directory detected for ${file.name}`, {
             fileSize: file.size,
             eocdOffset,
         });
@@ -496,14 +496,14 @@ export async function readMobileZipEntries(
     shouldInclude?: (entryName: string, uncompressedSize: number) => boolean
 ): Promise<MobileZipEntryRecord[]> {
     const startedAt = Date.now();
-    mobileZipLogger.info(`Begin ZIP scan for ${file.name}`, {
+    mobileZipLogger.debug(`Begin ZIP scan for ${file.name}`, {
         fileSize: file.size,
         hasFilter: !!shouldInclude,
     });
 
     try {
         const centralDirectoryInfo = await readCentralDirectoryInfo(file);
-        mobileZipLogger.info(`Central directory located for ${file.name}`, {
+        mobileZipLogger.debug(`Central directory located for ${file.name}`, {
             entryCount: centralDirectoryInfo.entryCount,
             centralDirectoryOffset: centralDirectoryInfo.centralDirectoryOffset,
             centralDirectorySize: centralDirectoryInfo.centralDirectorySize,
@@ -514,7 +514,7 @@ export async function readMobileZipEntries(
             ? entries.filter(entry => shouldInclude(entry.path, entry.size))
             : entries;
 
-        mobileZipLogger.info(`ZIP scan complete for ${file.name}`, {
+        mobileZipLogger.debug(`ZIP scan complete for ${file.name}`, {
             totalEntries: entries.length,
             returnedEntries: filteredEntries.length,
             durationMs: Date.now() - startedAt,

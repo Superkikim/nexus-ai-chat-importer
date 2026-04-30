@@ -5893,10 +5893,38 @@ var init_folder_validation = __esm({
 });
 
 // src/logger.ts
-var ScopedLogger, Logger, logger;
+function isValidLogLevel(value) {
+  return value === "debug" || value === "info" || value === "warn" || value === "error";
+}
+function resolveConfiguredLogLevel() {
+  var _a;
+  const globalValue = globalThis == null ? void 0 : globalThis.NEXUS_LOG_LEVEL;
+  if (isValidLogLevel(globalValue)) {
+    return globalValue;
+  }
+  try {
+    const stored = (_a = globalThis == null ? void 0 : globalThis.localStorage) == null ? void 0 : _a.getItem(LOG_LEVEL_STORAGE_KEY);
+    if (isValidLogLevel(stored)) {
+      return stored;
+    }
+  } catch (e) {
+  }
+  return DEFAULT_LOG_LEVEL;
+}
+var LOG_LEVEL_PRIORITY, DEFAULT_LOG_LEVEL, LOG_LEVEL_STORAGE_KEY, ScopedLogger, Logger, logger;
 var init_logger = __esm({
   "src/logger.ts"() {
     "use strict";
+    LOG_LEVEL_PRIORITY = {
+      debug: 10,
+      info: 20,
+      warn: 30,
+      error: 40
+    };
+    DEFAULT_LOG_LEVEL = "warn";
+    LOG_LEVEL_STORAGE_KEY = "nexus-ai-chat-importer:log-level";
+    __name(isValidLogLevel, "isValidLogLevel");
+    __name(resolveConfiguredLogLevel, "resolveConfiguredLogLevel");
     ScopedLogger = class {
       constructor(parent, moduleName) {
         this.parent = parent;
@@ -5917,6 +5945,9 @@ var init_logger = __esm({
     };
     __name(ScopedLogger, "ScopedLogger");
     Logger = class {
+      constructor() {
+        this.minLevel = resolveConfiguredLogLevel();
+      }
       debug(message, details) {
         this.log("debug", "Core", message, details);
       }
@@ -5933,6 +5964,9 @@ var init_logger = __esm({
         return new ScopedLogger(this, moduleName);
       }
       log(level, moduleName, message, details) {
+        if (!this.shouldLog(level)) {
+          return;
+        }
         const prefix = `[Nexus-${moduleName}][${this.formatTimestamp()}] ${message}`;
         if (level === "debug") {
           if (details !== void 0) {
@@ -5963,6 +5997,9 @@ var init_logger = __esm({
         } else {
           console.error(prefix);
         }
+      }
+      shouldLog(level) {
+        return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.minLevel];
       }
       formatTimestamp() {
         const now = new Date();
@@ -9091,7 +9128,7 @@ var init_storage_service = __esm({
       async scanExistingConversations() {
         const storageLogger = this.plugin.logger.child("Storage");
         const startedAt = Date.now();
-        storageLogger.info("Begin scanExistingConversations");
+        storageLogger.debug("Begin scanExistingConversations");
         await this.waitForCacheClean(1e3);
         const conversations = /* @__PURE__ */ new Map();
         const conversationFolder = this.plugin.settings.conversationFolder || this.plugin.settings.archiveFolder || "Nexus/Conversations";
@@ -9109,7 +9146,7 @@ var init_storage_service = __esm({
         let foundViaCache = 0;
         let foundViaManual = 0;
         let errors = 0;
-        storageLogger.info("Conversation files discovered for scan", {
+        storageLogger.debug("Conversation files discovered for scan", {
           conversationFolder,
           markdownFileCount: allFiles.length,
           conversationFileCount: conversationFiles.length
@@ -9140,7 +9177,7 @@ var init_storage_service = __esm({
             await new Promise((resolve) => setTimeout(resolve, 1));
           }
         }
-        storageLogger.info("scanExistingConversations complete", {
+        storageLogger.debug("scanExistingConversations complete", {
           conversationCount: conversations.size,
           processed,
           foundViaCache,
@@ -14631,20 +14668,20 @@ var ConversationProcessor = class {
     let conversationsMap;
     if (existingConversationsMap) {
       conversationsMap = existingConversationsMap;
-      processLogger.info("Using preloaded existing conversations map", {
+      processLogger.debug("Using preloaded existing conversations map", {
         provider,
         existingConversationCount: conversationsMap.size
       });
     } else {
       const storage = this.plugin.getStorageService();
       const scanStartedAt = Date.now();
-      processLogger.info("Scan existing conversations started", {
+      processLogger.debug("Scan existing conversations started", {
         provider,
         selectedConversationCount: (_a = selectedIds == null ? void 0 : selectedIds.size) != null ? _a : null,
         approxTotal: approxTotal != null ? approxTotal : null
       });
       conversationsMap = await storage.scanExistingConversations();
-      processLogger.info("Scan existing conversations complete", {
+      processLogger.debug("Scan existing conversations complete", {
         provider,
         existingConversationCount: conversationsMap.size,
         durationMs: Date.now() - scanStartedAt
@@ -14686,7 +14723,7 @@ var ConversationProcessor = class {
         total: approxTotal
       });
     }
-    processLogger.info("Streaming conversation processing loop complete", {
+    processLogger.debug("Streaming conversation processing loop complete", {
       provider,
       seenCount,
       yieldedCount,
@@ -14722,12 +14759,12 @@ var ConversationProcessor = class {
       });
       const groupedConversations = adapter.convertAllWithIndex(rawConversations);
       conversationsToProcess = groupedConversations;
-      this.plugin.logger.info(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
+      this.plugin.logger.debug(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
     }
     let conversationsMap;
     if (existingConversationsMap) {
       conversationsMap = existingConversationsMap;
-      processLogger.info("Using preloaded existing conversations map", {
+      processLogger.debug("Using preloaded existing conversations map", {
         provider,
         existingConversationCount: conversationsMap.size
       });
@@ -16127,7 +16164,7 @@ async function readCentralDirectoryInfo(file) {
   const centralDirectoryOffset = view.getUint32(16, true);
   const usesZip64 = entryCount === 65535 || centralDirectorySize === 4294967295 || centralDirectoryOffset === 4294967295;
   if (usesZip64) {
-    mobileZipLogger.info(`ZIP64 central directory detected for ${file.name}`, {
+    mobileZipLogger.debug(`ZIP64 central directory detected for ${file.name}`, {
       fileSize: file.size,
       eocdOffset
     });
@@ -16416,20 +16453,20 @@ var MobileZipArchiveReader = class {
 __name(MobileZipArchiveReader, "MobileZipArchiveReader");
 async function readMobileZipEntries(file, shouldInclude) {
   const startedAt = Date.now();
-  mobileZipLogger.info(`Begin ZIP scan for ${file.name}`, {
+  mobileZipLogger.debug(`Begin ZIP scan for ${file.name}`, {
     fileSize: file.size,
     hasFilter: !!shouldInclude
   });
   try {
     const centralDirectoryInfo = await readCentralDirectoryInfo(file);
-    mobileZipLogger.info(`Central directory located for ${file.name}`, {
+    mobileZipLogger.debug(`Central directory located for ${file.name}`, {
       entryCount: centralDirectoryInfo.entryCount,
       centralDirectoryOffset: centralDirectoryInfo.centralDirectoryOffset,
       centralDirectorySize: centralDirectoryInfo.centralDirectorySize
     });
     const entries = await parseCentralDirectory(file, centralDirectoryInfo);
     const filteredEntries = shouldInclude ? entries.filter((entry) => shouldInclude(entry.path, entry.size)) : entries;
-    mobileZipLogger.info(`ZIP scan complete for ${file.name}`, {
+    mobileZipLogger.debug(`ZIP scan complete for ${file.name}`, {
       totalEntries: entries.length,
       returnedEntries: filteredEntries.length,
       durationMs: Date.now() - startedAt
@@ -19856,14 +19893,14 @@ var AttachmentMapBuilder = class {
   async buildAttachmentMap(files) {
     const attachmentMap = /* @__PURE__ */ new Map();
     const startedAt = Date.now();
-    this.attachmentLogger.info(`Begin attachment map build`, {
+    this.attachmentLogger.debug(`Begin attachment map build`, {
       fileCount: files.length
     });
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileStartedAt = Date.now();
       try {
-        this.attachmentLogger.info(`Scan attachments [${i + 1}/${files.length}]`, {
+        this.attachmentLogger.debug(`Scan attachments [${i + 1}/${files.length}]`, {
           fileName: file.name,
           fileSize: file.size
         });
@@ -19885,7 +19922,7 @@ var AttachmentMapBuilder = class {
             });
           }
         }
-        this.attachmentLogger.info(`Attachment scan complete`, {
+        this.attachmentLogger.debug(`Attachment scan complete`, {
           fileName: file.name,
           entryCount: entries.length,
           mappedIdsForFile,
@@ -19900,7 +19937,7 @@ var AttachmentMapBuilder = class {
         });
       }
     }
-    this.attachmentLogger.info(`Attachment map build complete`, {
+    this.attachmentLogger.debug(`Attachment map build complete`, {
       fileCount: files.length,
       uniqueFileIds: attachmentMap.size,
       durationMs: Date.now() - startedAt
@@ -20728,17 +20765,17 @@ async function* extractConversationsStream(zip, options = {}) {
     }
     await new Promise((resolve) => window.setTimeout(resolve, 0));
   }, "yieldToEventLoopIfNeeded");
-  streamLogger.info("Begin conversation stream extraction");
+  streamLogger.debug("Begin conversation stream extraction");
   const entries = await zip.listEntries();
   const fileNames = entries.map((entry) => entry.path);
   const entrySizeMap = new Map(entries.map((entry) => [entry.path, entry.size]));
-  streamLogger.info("ZIP entry listing complete for stream extraction", {
+  streamLogger.debug("ZIP entry listing complete for stream extraction", {
     entryCount: fileNames.length,
     durationMs: Date.now() - startedAt
   });
   const leChatFiles = fileNames.filter((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
   if (leChatFiles.length > 0) {
-    streamLogger.info("Using Le Chat conversation stream", {
+    streamLogger.debug("Using Le Chat conversation stream", {
       fileCount: leChatFiles.length
     });
     let yieldedCount2 = 0;
@@ -20746,16 +20783,16 @@ async function* extractConversationsStream(zip, options = {}) {
       const entry = zip.get(fileName);
       if (!entry)
         continue;
-      streamLogger.info("Reading Le Chat conversation file", { fileName });
+      streamLogger.debug("Reading Le Chat conversation file", { fileName });
       const { messages, uncompressedBytes } = await collectLeChatConversationFromEntry(entry);
-      streamLogger.info("Le Chat conversation file read complete", {
+      streamLogger.debug("Le Chat conversation file read complete", {
         fileName,
         textLength: uncompressedBytes
       });
       yieldedCount2++;
       yield messages;
     }
-    streamLogger.info("Le Chat conversation stream complete", {
+    streamLogger.debug("Le Chat conversation stream complete", {
       yieldedCount: yieldedCount2,
       durationMs: Date.now() - startedAt
     });
@@ -20770,7 +20807,7 @@ async function* extractConversationsStream(zip, options = {}) {
   }
   const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
   if (perplexityJsonFiles.length > 0) {
-    streamLogger.info("Using Perplexity conversation stream", {
+    streamLogger.debug("Using Perplexity conversation stream", {
       fileCount: perplexityJsonFiles.length
     });
     let yieldedCount2 = 0;
@@ -20779,7 +20816,7 @@ async function* extractConversationsStream(zip, options = {}) {
       if (!entry)
         continue;
       const { item, uncompressedBytes } = await collectJsonObjectFromEntry(entry);
-      streamLogger.info("Perplexity thread file read complete", {
+      streamLogger.debug("Perplexity thread file read complete", {
         fileName,
         textLength: uncompressedBytes
       });
@@ -20787,7 +20824,7 @@ async function* extractConversationsStream(zip, options = {}) {
       yield item;
       await yieldToEventLoopIfNeeded(yieldedCount2);
     }
-    streamLogger.info("Perplexity conversation stream complete", {
+    streamLogger.debug("Perplexity conversation stream complete", {
       yieldedCount: yieldedCount2,
       durationMs: Date.now() - startedAt
     });
@@ -20795,7 +20832,7 @@ async function* extractConversationsStream(zip, options = {}) {
   }
   const numberedConvFiles = fileNames.filter((name) => /^conversations-\d+\.json$/.test(name)).sort();
   if (numberedConvFiles.length > 0) {
-    streamLogger.info("Using numbered conversation stream", {
+    streamLogger.debug("Using numbered conversation stream", {
       fileCount: numberedConvFiles.length
     });
     let yieldedCount2 = 0;
@@ -20808,11 +20845,11 @@ async function* extractConversationsStream(zip, options = {}) {
       const isLargeJsonFile = typeof entrySize === "number" && entrySize >= largeJsonThresholdBytes;
       const chunkReader2 = (_d = entry.readTextChunks) == null ? void 0 : _d.bind(entry);
       const canUseChunkedReader2 = !!chunkReader2;
-      streamLogger.info(
+      streamLogger.debug(
         `Reading numbered conversation file (${fileName}) [entrySize=${entrySize != null ? entrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
       );
       if (isLargeJsonFile) {
-        streamLogger.info("Large JSON mode activated for numbered conversation file", {
+        streamLogger.debug("Large JSON mode activated for numbered conversation file", {
           fileName,
           entrySize,
           thresholdBytes: largeJsonThresholdBytes,
@@ -20821,14 +20858,14 @@ async function* extractConversationsStream(zip, options = {}) {
         });
       }
       if (chunkReader2) {
-        streamLogger.info("Using chunked numbered conversation reader", {
+        streamLogger.debug("Using chunked numbered conversation reader", {
           fileName,
           entrySize: entrySize != null ? entrySize : null
         });
         for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader2())) {
           yieldedCount2++;
           if (yieldedCount2 <= 3 || yieldedCount2 % 100 === 0) {
-            streamLogger.info("Yielding streamed conversation", {
+            streamLogger.debug("Yielding streamed conversation", {
               source: fileName,
               yieldedCount: yieldedCount2
             });
@@ -20836,7 +20873,7 @@ async function* extractConversationsStream(zip, options = {}) {
           yield conv;
           await yieldToEventLoopIfNeeded(yieldedCount2);
         }
-        streamLogger.info("Chunked numbered conversation file parse complete", {
+        streamLogger.debug("Chunked numbered conversation file parse complete", {
           fileName,
           readDurationMs: Date.now() - fileReadStartedAt,
           memorySnapshot: formatRuntimeMemorySnapshot()
@@ -20860,7 +20897,7 @@ async function* extractConversationsStream(zip, options = {}) {
         );
       }
     }
-    streamLogger.info("Numbered conversation stream complete", {
+    streamLogger.debug("Numbered conversation stream complete", {
       yieldedCount: yieldedCount2,
       durationMs: Date.now() - startedAt
     });
@@ -20878,11 +20915,11 @@ async function* extractConversationsStream(zip, options = {}) {
   const isLargeConversationsJson = typeof conversationEntrySize === "number" && conversationEntrySize >= largeJsonThresholdBytes;
   const chunkReader = (_e = conversationsFile.readTextChunks) == null ? void 0 : _e.bind(conversationsFile);
   const canUseChunkedReader = !!chunkReader;
-  streamLogger.info(
+  streamLogger.debug(
     `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize != null ? conversationEntrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
   );
   if (isLargeConversationsJson) {
-    streamLogger.info("Large JSON mode activated for conversations.json", {
+    streamLogger.debug("Large JSON mode activated for conversations.json", {
       entrySize: conversationEntrySize != null ? conversationEntrySize : null,
       thresholdBytes: largeJsonThresholdBytes,
       mobileRuntime: isMobileRuntime,
@@ -20891,14 +20928,14 @@ async function* extractConversationsStream(zip, options = {}) {
   }
   let yieldedCount = 0;
   if (chunkReader) {
-    streamLogger.info("Using chunked conversations.json reader", {
+    streamLogger.debug("Using chunked conversations.json reader", {
       entrySize: conversationEntrySize != null ? conversationEntrySize : null
     });
     try {
       for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader())) {
         yieldedCount++;
         if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-          streamLogger.info("Yielding streamed conversation", {
+          streamLogger.debug("Yielding streamed conversation", {
             source: "conversations.json",
             yieldedCount
           });
@@ -20915,7 +20952,7 @@ async function* extractConversationsStream(zip, options = {}) {
       });
       throw error;
     }
-    streamLogger.info("Conversation stream extraction complete", {
+    streamLogger.debug("Conversation stream extraction complete", {
       yieldedCount,
       parseDurationMs: Date.now() - readStartedAt,
       durationMs: Date.now() - startedAt,
@@ -21059,7 +21096,7 @@ var ImportService = class {
     if (adapter && typeof adapter.setIndex === "function") {
       adapter.setIndex(index);
       const status = index ? `loaded (conversations=${(_b = (_a = index.conversations) == null ? void 0 : _a.length) != null ? _b : 0})` : "cleared";
-      this.plugin.logger.info(`[Gemini] Index ${status} on ImportService adapter`);
+      this.plugin.logger.debug(`[Gemini] Index ${status} on ImportService adapter`);
     } else {
       this.plugin.logger.warn("[Gemini] Unable to set index: Gemini adapter not found or setIndex() missing");
     }
@@ -21122,7 +21159,7 @@ Do NOT extract and re-compress the file - just rename it!`;
     if (selectedConversationIds && selectedConversationIds.length > 0) {
     }
     try {
-      importLogger.info(`Begin file import`, {
+      importLogger.debug(`Begin file import`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
         selectedConversationCount: (_a = selectedConversationIds == null ? void 0 : selectedConversationIds.length) != null ? _a : null,
@@ -21137,7 +21174,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       });
       this.updateRuntimePhase("zip-validation");
       zip = await this.validateZipFile(file, forcedProvider);
-      importLogger.info(`ZIP validated`, {
+      importLogger.debug(`ZIP validated`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto"
       });
@@ -21151,13 +21188,13 @@ Do NOT extract and re-compress the file - just rename it!`;
           detail: "Checking file hash and import history"
         });
         this.updateRuntimePhase("hash-validation");
-        importLogger.info("Archive tracking fingerprint start", {
+        importLogger.debug("Archive tracking fingerprint start", {
           fileName: file.name,
           strategy: "metadata-fingerprint",
           fileSize: file.size
         });
         fileHash = getFileFingerprint(file);
-        importLogger.info("Archive tracking fingerprint complete", {
+        importLogger.debug("Archive tracking fingerprint complete", {
           fileName: file.name,
           strategy: "metadata-fingerprint"
         });
@@ -21187,7 +21224,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         }
       } else {
         fileHash = getFileFingerprint(file);
-        importLogger.info("Archive tracking fingerprint generated", {
+        importLogger.debug("Archive tracking fingerprint generated", {
           fileName: file.name,
           strategy: "metadata-fingerprint",
           fileSize: file.size
@@ -21196,27 +21233,27 @@ Do NOT extract and re-compress the file - just rename it!`;
       const archiveImportMode = (_b = options == null ? void 0 : options.archiveImportMode) != null ? _b : "auto";
       if (archiveImportMode === "reprocess") {
         isReprocess = true;
-        importLogger.info("Archive import mode override applied", {
+        importLogger.debug("Archive import mode override applied", {
           fileName: file.name,
           archiveImportMode
         });
       } else if (archiveImportMode === "incremental") {
         isReprocess = false;
-        importLogger.info("Archive import mode override applied", {
+        importLogger.debug("Archive import mode override applied", {
           fileName: file.name,
           archiveImportMode
         });
       }
       const reprocessConversationIds = (options == null ? void 0 : options.reprocessConversationIds) && options.reprocessConversationIds.length > 0 ? new Set(options.reprocessConversationIds) : void 0;
       if (reprocessConversationIds && reprocessConversationIds.size > 0) {
-        importLogger.info("Selective existing conversations will be force reprocessed", {
+        importLogger.debug("Selective existing conversations will be force reprocessed", {
           fileName: file.name,
           count: reprocessConversationIds.size
         });
       }
       processingStarted = true;
       this.updateRuntimePhase("conversation-processing");
-      importLogger.info(`Begin conversation processing`, {
+      importLogger.debug(`Begin conversation processing`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
         memorySnapshot: getRuntimeMemorySnapshot()
@@ -21242,7 +21279,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         title: "Import completed successfully!",
         detail: `Processed ${this.conversationProcessor.getCounters().totalNewConversationsToImport + this.conversationProcessor.getCounters().totalExistingConversationsToUpdate} conversations`
       });
-      importLogger.info(`File import completed`, {
+      importLogger.debug(`File import completed`, {
         fileName: file.name,
         created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
         updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
@@ -21286,7 +21323,7 @@ Do NOT extract and re-compress the file - just rename it!`;
     try {
       const adapter = forcedProvider ? this.providerRegistry.getAdapter(forcedProvider) : void 0;
       const entryFilter = (_a = adapter == null ? void 0 : adapter.shouldIncludeZipEntry) == null ? void 0 : _a.bind(adapter);
-      importLogger.info(`Validate ZIP`, {
+      importLogger.debug(`Validate ZIP`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
         hasEntryFilter: !!entryFilter
@@ -21295,7 +21332,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       const entries = await zip.listEntries();
       const fileNames = entries.map((entry) => entry.path);
       const classification = classifyArchiveEntries(fileNames, forcedProvider);
-      importLogger.info(`ZIP classification complete`, {
+      importLogger.debug(`ZIP classification complete`, {
         fileName: file.name,
         entryCount: entries.length,
         supported: classification.supported,
@@ -21359,7 +21396,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         detail: "Reading conversation data from ZIP file"
       });
       const useStreaming = !!forcedProvider && forcedProvider !== "gemini";
-      importLogger.info(`Conversation processing strategy selected`, {
+      importLogger.debug(`Conversation processing strategy selected`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
         useStreaming,
@@ -21395,7 +21432,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         this.importReport = report;
         this.importReport.setFileCounters(this.conversationProcessor.getCounters());
         await this.yieldToEventLoopIfMobile();
-        importLogger.info(`Streaming conversation processing complete`, {
+        importLogger.debug(`Streaming conversation processing complete`, {
           fileName: file.name,
           created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
           updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate
@@ -21405,7 +21442,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         let rawConversations = extractionResult.conversations;
         const archiveModeDecision = extractionResult.archiveModeDecision;
         await this.yieldToEventLoopIfMobile();
-        importLogger.info(`Raw conversations extracted`, {
+        importLogger.debug(`Raw conversations extracted`, {
           fileName: file.name,
           conversationCount: rawConversations.length,
           archiveMode: (_b = archiveModeDecision == null ? void 0 : archiveModeDecision.mode) != null ? _b : "default",
@@ -21454,7 +21491,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         this.importReport.setFileCounters(this.conversationProcessor.getCounters());
         rawConversations = [];
         await this.yieldToEventLoopIfMobile();
-        importLogger.info(`Raw conversation processing complete`, {
+        importLogger.debug(`Raw conversation processing complete`, {
           fileName: file.name,
           created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
           updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate
@@ -21624,7 +21661,7 @@ Do NOT extract and re-compress the file - just rename it!`;
     if (!this.runtimeContext) {
       return;
     }
-    this.plugin.logger.child("Import").info("Runtime context released", {
+    this.plugin.logger.child("Import").debug("Runtime context released", {
       fileName: this.runtimeContext.fileName,
       provider: this.runtimeContext.provider,
       phase: this.runtimeContext.currentPhase,
@@ -24268,7 +24305,7 @@ var ConversationMetadataExtractor = class {
     const entries = await zip.listEntries();
     const classification = classifyArchiveEntries(entries.map((entry) => entry.path), forcedProvider);
     if (!classification.supported) {
-      this.metadataLogger.info(`Archive skipped during single-file metadata extraction`, {
+      this.metadataLogger.debug(`Archive skipped during single-file metadata extraction`, {
         sourceFileName,
         reason: classification.reason,
         message: classification.message,
@@ -24331,7 +24368,7 @@ var ConversationMetadataExtractor = class {
       }
       return enhanced;
     });
-    this.metadataLogger.info(`Metadata extracted from archive`, {
+    this.metadataLogger.debug(`Metadata extracted from archive`, {
       sourceFileName,
       provider,
       entryCount: entries.length,
@@ -24343,7 +24380,7 @@ var ConversationMetadataExtractor = class {
   async extractMetadataFromMultipleZips(files, forcedProvider, existingConversations) {
     var _a, _b, _c;
     const batchStartedAt = Date.now();
-    this.metadataLogger.info(`Begin metadata extraction batch`, {
+    this.metadataLogger.debug(`Begin metadata extraction batch`, {
       fileCount: files.length,
       forcedProvider: forcedProvider || "auto"
     });
@@ -24359,13 +24396,13 @@ var ConversationMetadataExtractor = class {
       const file = files[i];
       const fileStartedAt = Date.now();
       try {
-        this.metadataLogger.info(`Analyze archive [${i + 1}/${files.length}]`, {
+        this.metadataLogger.debug(`Analyze archive [${i + 1}/${files.length}]`, {
           fileName: file.name,
           fileSize: file.size
         });
         const archiveModeDecision = decideArchiveMode({ zipSizeBytes: file.size });
         if (archiveModeDecision.mode === "large-archive") {
-          this.metadataLogger.info(`Large archive detected`, {
+          this.metadataLogger.debug(`Large archive detected`, {
             fileName: file.name,
             reason: archiveModeDecision.reason,
             fileSize: file.size
@@ -24374,7 +24411,7 @@ var ConversationMetadataExtractor = class {
         const zip = await createZipArchiveReader(file, entryFilter);
         const entries = await zip.listEntries();
         const classification = classifyArchiveEntries(entries.map((entry) => entry.path), forcedProvider);
-        this.metadataLogger.info(`Archive classified`, {
+        this.metadataLogger.debug(`Archive classified`, {
           fileName: file.name,
           entryCount: entries.length,
           supported: classification.supported,
@@ -24388,7 +24425,7 @@ var ConversationMetadataExtractor = class {
             reason: classification.reason,
             message: (_b = classification.message) != null ? _b : "Unsupported archive format."
           });
-          this.metadataLogger.info(`Skipping unsupported archive`, {
+          this.metadataLogger.debug(`Skipping unsupported archive`, {
             fileName: file.name,
             reason: classification.reason,
             message: classification.message,
@@ -24405,7 +24442,7 @@ var ConversationMetadataExtractor = class {
         );
         supportedFiles.push(file);
         allConversationsFound.push(...metadata);
-        this.metadataLogger.info(`Archive metadata extraction complete`, {
+        this.metadataLogger.debug(`Archive metadata extraction complete`, {
           fileName: file.name,
           provider: classification.provider,
           conversationCount: metadata.length,
@@ -24520,7 +24557,7 @@ var ConversationMetadataExtractor = class {
       supportedFiles,
       ignoredArchives
     };
-    this.metadataLogger.info(`Metadata extraction batch complete`, {
+    this.metadataLogger.debug(`Metadata extraction batch complete`, {
       fileCount: files.length,
       supportedFileCount: supportedFiles.length,
       ignoredArchiveCount: ignoredArchives.length,
@@ -25238,7 +25275,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       return;
     }
     const importFlowLogger = this.logger.child("ImportFlow");
-    importFlowLogger.info("Opening file selection dialog with provider auto-detection", {
+    importFlowLogger.debug("Opening file selection dialog with provider auto-detection", {
       isMobile: this.isMobileTaskQueueMode()
     });
     try {
@@ -25303,7 +25340,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         lockSourceFile: lockedProvider.fileName
       });
     } else if (provider === "auto") {
-      this.logger.child("ImportFlow").info("Provider auto-detected from selected archives", {
+      this.logger.child("ImportFlow").debug("Provider auto-detected from selected archives", {
         lockedProvider: lockedProvider.provider,
         lockSourceFile: lockedProvider.fileName
       });
@@ -25325,7 +25362,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           const parsed = JSON.parse(content);
           if (parsed && typeof parsed === "object" && Array.isArray(parsed.conversations)) {
             index = parsed;
-            this.logger.info(
+            this.logger.debug(
               `[Gemini] Loaded index file "${latestIndexFile.name}" with ${parsed.conversations.length} conversations`
             );
           } else {
@@ -25379,7 +25416,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         task: `0/${files.length}`
       });
-      this.logger.child("ImportFlow").info(`Import-all analysis started`, {
+      this.logger.child("ImportFlow").debug(`Import-all analysis started`, {
         provider,
         fileCount: files.length
       });
@@ -25400,7 +25437,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         existingConversations
       );
       this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "import-all");
-      this.logger.child("ImportFlow").info(`Import-all analysis finished`, {
+      this.logger.child("ImportFlow").debug(`Import-all analysis finished`, {
         provider,
         fileCount: files.length,
         supportedFileCount: extractionResult.supportedFiles.length,
@@ -25496,7 +25533,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       provider,
       task: `0/${mobileFiles.length}`
     });
-    this.logger.child("ImportFlow").info("Mobile import-all running in direct sequential mode", {
+    this.logger.child("ImportFlow").debug("Mobile import-all running in direct sequential mode", {
       provider,
       fileCount: mobileFiles.length
     });
@@ -25515,7 +25552,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     });
     const existingScanStartedAt = Date.now();
     let existingConversationsMap = await storage.scanExistingConversations();
-    this.logger.child("ImportFlow").info("Mobile direct import existing conversation scan complete", {
+    this.logger.child("ImportFlow").debug("Mobile direct import existing conversation scan complete", {
       provider,
       conversationCount: existingConversationsMap.size,
       durationMs: Date.now() - existingScanStartedAt
@@ -25598,7 +25635,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const rescanStartedAt = Date.now();
       existingConversationsMap.clear();
       existingConversationsMap = await storage.scanExistingConversations();
-      this.logger.child("ImportFlow").info("Mobile direct import existing conversation map refreshed", {
+      this.logger.child("ImportFlow").debug("Mobile direct import existing conversation map refreshed", {
         provider,
         fileName: file.name,
         conversationCount: existingConversationsMap.size,
@@ -25646,7 +25683,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         task: `0/${mobileFiles.length}`
       });
-      this.logger.child("ImportFlow").info(`Selective analysis started`, {
+      this.logger.child("ImportFlow").debug(`Selective analysis started`, {
         provider,
         fileCount: mobileFiles.length
       });
@@ -25667,7 +25704,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         existingConversations
       );
       this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "selective-analysis");
-      this.logger.child("ImportFlow").info(`Selective analysis finished`, {
+      this.logger.child("ImportFlow").debug(`Selective analysis finished`, {
         provider,
         fileCount: mobileFiles.length,
         supportedFileCount: extractionResult.supportedFiles.length,
@@ -26013,7 +26050,7 @@ ${report.generateMobileIndexContent(files, links)}
     if (!alreadyImported) {
       return "incremental";
     }
-    this.logger.child("ImportFlow").info("Mobile archive already processed, prompting for import mode", {
+    this.logger.child("ImportFlow").debug("Mobile archive already processed, prompting for import mode", {
       provider,
       fileName: file.name,
       fingerprint: archiveFingerprint
@@ -26033,7 +26070,7 @@ ${report.generateMobileIndexContent(files, links)}
       }
     );
     const selectedMode = shouldReprocess ? "reprocess" : "incremental";
-    this.logger.child("ImportFlow").info("Mobile archive import mode selected", {
+    this.logger.child("ImportFlow").debug("Mobile archive import mode selected", {
       provider,
       fileName: file.name,
       selectedMode
@@ -26051,7 +26088,7 @@ ${report.generateMobileIndexContent(files, links)}
       phase: "cleanup-start",
       provider: "n/a"
     });
-    importFlowLogger.info(`Post-import cleanup started`, {
+    importFlowLogger.debug(`Post-import cleanup started`, {
       operation,
       isMobile
     });
@@ -26065,7 +26102,7 @@ ${report.generateMobileIndexContent(files, links)}
       phase: "cleanup-complete",
       provider: "n/a"
     });
-    importFlowLogger.info(`Post-import cleanup complete`, {
+    importFlowLogger.debug(`Post-import cleanup complete`, {
       operation,
       isMobile
     });
@@ -26090,7 +26127,7 @@ ${report.generateMobileIndexContent(files, links)}
         provider,
         task: `0/${executionFiles.length}`
       });
-      importFlowLogger.info(`Building multi-ZIP attachment map`, {
+      importFlowLogger.debug(`Building multi-ZIP attachment map`, {
         provider,
         fileCount: executionFiles.length,
         mode: "desktop-multi-zip"
@@ -26113,7 +26150,7 @@ ${report.generateMobileIndexContent(files, links)}
             task: `${i + 1}/${executionFiles.length}`,
             conversationCount: conversationsForFile.length
           });
-          importFlowLogger.info(`Building single-ZIP attachment map for mobile task`, {
+          importFlowLogger.debug(`Building single-ZIP attachment map for mobile task`, {
             provider,
             fileName: file.name,
             task: `${i + 1}/${executionFiles.length}`
@@ -26128,7 +26165,7 @@ ${report.generateMobileIndexContent(files, links)}
           task: `${i + 1}/${executionFiles.length}`,
           conversationCount: conversationsForFile.length
         });
-        importFlowLogger.info(`Importing file`, {
+        importFlowLogger.debug(`Importing file`, {
           provider,
           fileName: file.name,
           conversationCount: conversationsForFile.length,
@@ -26190,7 +26227,7 @@ ${report.generateMobileIndexContent(files, links)}
       timestampMs: Date.now()
     };
     this.lastImportCheckpoint = nextCheckpoint;
-    this.logger.child("ImportCheckpoint").info("Checkpoint reached", {
+    this.logger.child("ImportCheckpoint").debug("Checkpoint reached", {
       operation: nextCheckpoint.operation,
       phase: nextCheckpoint.phase,
       provider: nextCheckpoint.provider,

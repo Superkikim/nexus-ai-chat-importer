@@ -44,7 +44,7 @@ export class AttachmentMapBuilder {
         const attachmentMap: AttachmentMap = new Map();
         const startedAt = Date.now();
 
-        this.attachmentLogger.info(`Begin attachment map build`, {
+        this.attachmentLogger.debug(`Begin attachment map build`, {
             fileCount: files.length,
         });
 
@@ -53,7 +53,7 @@ export class AttachmentMapBuilder {
             const fileStartedAt = Date.now();
 
             try {
-                this.attachmentLogger.info(`Scan attachments [${i + 1}/${files.length}]`, {
+                this.attachmentLogger.debug(`Scan attachments [${i + 1}/${files.length}]`, {
                     fileName: file.name,
                     fileSize: file.size,
                 });
@@ -85,7 +85,7 @@ export class AttachmentMapBuilder {
                     }
                 }
 
-                this.attachmentLogger.info(`Attachment scan complete`, {
+                this.attachmentLogger.debug(`Attachment scan complete`, {
                     fileName: file.name,
                     entryCount: entries.length,
                     mappedIdsForFile,
@@ -101,7 +101,7 @@ export class AttachmentMapBuilder {
             }
         }
 
-        this.attachmentLogger.info(`Attachment map build complete`, {
+        this.attachmentLogger.debug(`Attachment map build complete`, {
             fileCount: files.length,
             uniqueFileIds: attachmentMap.size,
             durationMs: Date.now() - startedAt,

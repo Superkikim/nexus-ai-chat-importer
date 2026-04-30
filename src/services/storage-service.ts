@@ -121,7 +121,7 @@ export class StorageService {
     async scanExistingConversations(): Promise<Map<string, ConversationCatalogEntry>> {
         const storageLogger = this.plugin.logger.child("Storage");
         const startedAt = Date.now();
-        storageLogger.info("Begin scanExistingConversations");
+        storageLogger.debug("Begin scanExistingConversations");
 
         // Step 1: Wait for cache to be clean (with timeout)
         await this.waitForCacheClean(1000); // Max 1 second wait
@@ -155,7 +155,7 @@ export class StorageService {
         let foundViaManual = 0;
         let errors = 0;
 
-        storageLogger.info("Conversation files discovered for scan", {
+        storageLogger.debug("Conversation files discovered for scan", {
             conversationFolder,
             markdownFileCount: allFiles.length,
             conversationFileCount: conversationFiles.length,
@@ -197,7 +197,7 @@ export class StorageService {
             }
         }
 
-        storageLogger.info("scanExistingConversations complete", {
+        storageLogger.debug("scanExistingConversations complete", {
             conversationCount: conversations.size,
             processed,
             foundViaCache,

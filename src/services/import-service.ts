@@ -111,7 +111,7 @@ export class ImportService {
 	        if (adapter && typeof adapter.setIndex === "function") {
 	            adapter.setIndex(index);
 	            const status = index ? `loaded (conversations=${index.conversations?.length ?? 0})` : "cleared";
-	            this.plugin.logger.info(`[Gemini] Index ${status} on ImportService adapter`);
+	            this.plugin.logger.debug(`[Gemini] Index ${status} on ImportService adapter`);
 	        } else {
 	            this.plugin.logger.warn("[Gemini] Unable to set index: Gemini adapter not found or setIndex() missing");
 	        }
@@ -201,7 +201,7 @@ export class ImportService {
         }
 
         try {
-            importLogger.info(`Begin file import`, {
+            importLogger.debug(`Begin file import`, {
                 fileName: file.name,
                 forcedProvider: forcedProvider || "auto",
                 selectedConversationCount: selectedConversationIds?.length ?? null,
@@ -218,7 +218,7 @@ export class ImportService {
             this.updateRuntimePhase("zip-validation");
 
             zip = await this.validateZipFile(file, forcedProvider);
-            importLogger.info(`ZIP validated`, {
+            importLogger.debug(`ZIP validated`, {
                 fileName: file.name,
                 forcedProvider: forcedProvider || "auto",
             });
@@ -238,13 +238,13 @@ export class ImportService {
                 });
                 this.updateRuntimePhase("hash-validation");
 
-                importLogger.info("Archive tracking fingerprint start", {
+                importLogger.debug("Archive tracking fingerprint start", {
                     fileName: file.name,
                     strategy: "metadata-fingerprint",
                     fileSize: file.size,
                 });
                 fileHash = getFileFingerprint(file);
-                importLogger.info("Archive tracking fingerprint complete", {
+                importLogger.debug("Archive tracking fingerprint complete", {
                     fileName: file.name,
                     strategy: "metadata-fingerprint",
                 });
@@ -280,7 +280,7 @@ export class ImportService {
             } else {
                 // Shared-report workflow (multi-file): avoid loading full ZIP into memory on mobile.
                 fileHash = getFileFingerprint(file);
-                importLogger.info("Archive tracking fingerprint generated", {
+                importLogger.debug("Archive tracking fingerprint generated", {
                     fileName: file.name,
                     strategy: "metadata-fingerprint",
                     fileSize: file.size,
@@ -290,13 +290,13 @@ export class ImportService {
             const archiveImportMode = options?.archiveImportMode ?? "auto";
             if (archiveImportMode === "reprocess") {
                 isReprocess = true;
-                importLogger.info("Archive import mode override applied", {
+                importLogger.debug("Archive import mode override applied", {
                     fileName: file.name,
                     archiveImportMode,
                 });
             } else if (archiveImportMode === "incremental") {
                 isReprocess = false;
-                importLogger.info("Archive import mode override applied", {
+                importLogger.debug("Archive import mode override applied", {
                     fileName: file.name,
                     archiveImportMode,
                 });
@@ -307,7 +307,7 @@ export class ImportService {
                     ? new Set(options.reprocessConversationIds)
                     : undefined;
             if (reprocessConversationIds && reprocessConversationIds.size > 0) {
-                importLogger.info("Selective existing conversations will be force reprocessed", {
+                importLogger.debug("Selective existing conversations will be force reprocessed", {
                     fileName: file.name,
                     count: reprocessConversationIds.size,
                 });
@@ -315,7 +315,7 @@ export class ImportService {
 
 		            processingStarted = true;
                     this.updateRuntimePhase("conversation-processing");
-		            importLogger.info(`Begin conversation processing`, {
+		            importLogger.debug(`Begin conversation processing`, {
 	                fileName: file.name,
 	                forcedProvider: forcedProvider || "auto",
                     memorySnapshot: getRuntimeMemorySnapshot(),
@@ -345,7 +345,7 @@ export class ImportService {
                 detail: `Processed ${this.conversationProcessor.getCounters().totalNewConversationsToImport + this.conversationProcessor.getCounters().totalExistingConversationsToUpdate} conversations`
             });
 
-            importLogger.info(`File import completed`, {
+            importLogger.debug(`File import completed`, {
                 fileName: file.name,
                 created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
                 updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
@@ -401,7 +401,7 @@ export class ImportService {
         try {
             const adapter = forcedProvider ? this.providerRegistry.getAdapter(forcedProvider) : undefined;
             const entryFilter = adapter?.shouldIncludeZipEntry?.bind(adapter);
-            importLogger.info(`Validate ZIP`, {
+            importLogger.debug(`Validate ZIP`, {
                 fileName: file.name,
                 forcedProvider: forcedProvider || "auto",
                 hasEntryFilter: !!entryFilter,
@@ -411,7 +411,7 @@ export class ImportService {
             const fileNames = entries.map(entry => entry.path);
             const classification = classifyArchiveEntries(fileNames, forcedProvider);
 
-            importLogger.info(`ZIP classification complete`, {
+            importLogger.debug(`ZIP classification complete`, {
                 fileName: file.name,
                 entryCount: entries.length,
                 supported: classification.supported,
@@ -498,7 +498,7 @@ export class ImportService {
             });
 
             const useStreaming = !!forcedProvider && forcedProvider !== 'gemini';
-            importLogger.info(`Conversation processing strategy selected`, {
+            importLogger.debug(`Conversation processing strategy selected`, {
                 fileName: file.name,
                 forcedProvider: forcedProvider || "auto",
                 useStreaming,
@@ -538,7 +538,7 @@ export class ImportService {
                 this.importReport = report;
                 this.importReport.setFileCounters(this.conversationProcessor.getCounters());
                 await this.yieldToEventLoopIfMobile();
-                importLogger.info(`Streaming conversation processing complete`, {
+                importLogger.debug(`Streaming conversation processing complete`, {
                     fileName: file.name,
                     created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
                     updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
@@ -548,7 +548,7 @@ export class ImportService {
                 let rawConversations = extractionResult.conversations;
                 const archiveModeDecision = extractionResult.archiveModeDecision;
                 await this.yieldToEventLoopIfMobile();
-                importLogger.info(`Raw conversations extracted`, {
+                importLogger.debug(`Raw conversations extracted`, {
                     fileName: file.name,
                     conversationCount: rawConversations.length,
                     archiveMode: archiveModeDecision?.mode ?? "default",
@@ -607,7 +607,7 @@ export class ImportService {
                 this.importReport.setFileCounters(this.conversationProcessor.getCounters());
                 rawConversations = [];
                 await this.yieldToEventLoopIfMobile();
-                importLogger.info(`Raw conversation processing complete`, {
+                importLogger.debug(`Raw conversation processing complete`, {
                     fileName: file.name,
                     created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
                     updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate,
@@ -829,7 +829,7 @@ export class ImportService {
             return;
         }
 
-        this.plugin.logger.child("Import").info("Runtime context released", {
+        this.plugin.logger.child("Import").debug("Runtime context released", {
             fileName: this.runtimeContext.fileName,
             provider: this.runtimeContext.provider,
             phase: this.runtimeContext.currentPhase,

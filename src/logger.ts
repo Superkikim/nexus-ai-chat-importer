@@ -19,6 +19,37 @@
 
 // logger.ts
 type LogLevel = "debug" | "info" | "warn" | "error";
+const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
+    debug: 10,
+    info: 20,
+    warn: 30,
+    error: 40,
+};
+
+const DEFAULT_LOG_LEVEL: LogLevel = "warn";
+const LOG_LEVEL_STORAGE_KEY = "nexus-ai-chat-importer:log-level";
+
+function isValidLogLevel(value: unknown): value is LogLevel {
+    return value === "debug" || value === "info" || value === "warn" || value === "error";
+}
+
+function resolveConfiguredLogLevel(): LogLevel {
+    const globalValue = (globalThis as any)?.NEXUS_LOG_LEVEL;
+    if (isValidLogLevel(globalValue)) {
+        return globalValue;
+    }
+
+    try {
+        const stored = globalThis?.localStorage?.getItem(LOG_LEVEL_STORAGE_KEY);
+        if (isValidLogLevel(stored)) {
+            return stored;
+        }
+    } catch {
+        // Ignore storage access errors (private mode, restricted webview, etc.)
+    }
+
+    return DEFAULT_LOG_LEVEL;
+}
 
 export class ScopedLogger {
     constructor(private parent: Logger, private moduleName: string) {}
@@ -41,6 +72,8 @@ export class ScopedLogger {
 }
 
 export class Logger {
+    private readonly minLevel: LogLevel = resolveConfiguredLogLevel();
+
     debug(message: string, details?: unknown): void {
         this.log("debug", "Core", message, details);
     }
@@ -62,6 +95,10 @@ export class Logger {
     }
 
     log(level: LogLevel, moduleName: string, message: string, details?: unknown): void {
+        if (!this.shouldLog(level)) {
+            return;
+        }
+
         const prefix = `[Nexus-${moduleName}][${this.formatTimestamp()}] ${message}`;
 
         if (level === "debug") {
@@ -96,6 +133,10 @@ export class Logger {
         } else {
             console.error(prefix);
         }
+    }
+
+    private shouldLog(level: LogLevel): boolean {
+        return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.minLevel];
     }
 
     private formatTimestamp(): string {

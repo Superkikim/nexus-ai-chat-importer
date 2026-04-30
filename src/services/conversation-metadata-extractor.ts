@@ -114,7 +114,7 @@ export class ConversationMetadataExtractor {
         const classification = classifyArchiveEntries(entries.map(entry => entry.path), forcedProvider);
 
         if (!classification.supported) {
-            this.metadataLogger.info(`Archive skipped during single-file metadata extraction`, {
+            this.metadataLogger.debug(`Archive skipped during single-file metadata extraction`, {
                 sourceFileName,
                 reason: classification.reason,
                 message: classification.message,
@@ -186,7 +186,7 @@ export class ConversationMetadataExtractor {
             return enhanced;
         });
 
-        this.metadataLogger.info(`Metadata extracted from archive`, {
+        this.metadataLogger.debug(`Metadata extracted from archive`, {
             sourceFileName,
             provider,
             entryCount: entries.length,
@@ -203,7 +203,7 @@ export class ConversationMetadataExtractor {
         existingConversations?: Map<string, any>
     ): Promise<MetadataExtractionResult> {
         const batchStartedAt = Date.now();
-        this.metadataLogger.info(`Begin metadata extraction batch`, {
+        this.metadataLogger.debug(`Begin metadata extraction batch`, {
             fileCount: files.length,
             forcedProvider: forcedProvider || "auto",
         });
@@ -223,14 +223,14 @@ export class ConversationMetadataExtractor {
             const fileStartedAt = Date.now();
 
             try {
-                this.metadataLogger.info(`Analyze archive [${i + 1}/${files.length}]`, {
+                this.metadataLogger.debug(`Analyze archive [${i + 1}/${files.length}]`, {
                     fileName: file.name,
                     fileSize: file.size,
                 });
 
                 const archiveModeDecision = decideArchiveMode({ zipSizeBytes: file.size });
                 if (archiveModeDecision.mode === "large-archive") {
-                    this.metadataLogger.info(`Large archive detected`, {
+                    this.metadataLogger.debug(`Large archive detected`, {
                         fileName: file.name,
                         reason: archiveModeDecision.reason,
                         fileSize: file.size,
@@ -241,7 +241,7 @@ export class ConversationMetadataExtractor {
                 const entries = await zip.listEntries();
                 const classification = classifyArchiveEntries(entries.map(entry => entry.path), forcedProvider);
 
-                this.metadataLogger.info(`Archive classified`, {
+                this.metadataLogger.debug(`Archive classified`, {
                     fileName: file.name,
                     entryCount: entries.length,
                     supported: classification.supported,
@@ -256,7 +256,7 @@ export class ConversationMetadataExtractor {
                         reason: classification.reason,
                         message: classification.message ?? "Unsupported archive format.",
                     });
-                    this.metadataLogger.info(`Skipping unsupported archive`, {
+                    this.metadataLogger.debug(`Skipping unsupported archive`, {
                         fileName: file.name,
                         reason: classification.reason,
                         message: classification.message,
@@ -276,7 +276,7 @@ export class ConversationMetadataExtractor {
                 supportedFiles.push(file);
                 allConversationsFound.push(...metadata);
 
-                this.metadataLogger.info(`Archive metadata extraction complete`, {
+                this.metadataLogger.debug(`Archive metadata extraction complete`, {
                     fileName: file.name,
                     provider: classification.provider,
                     conversationCount: metadata.length,
@@ -405,7 +405,7 @@ export class ConversationMetadataExtractor {
             ignoredArchives,
         };
 
-        this.metadataLogger.info(`Metadata extraction batch complete`, {
+        this.metadataLogger.debug(`Metadata extraction batch complete`, {
             fileCount: files.length,
             supportedFileCount: supportedFiles.length,
             ignoredArchiveCount: ignoredArchives.length,

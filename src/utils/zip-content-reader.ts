@@ -447,34 +447,34 @@ export async function* extractConversationsStream(
         await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
     };
 
-    streamLogger.info("Begin conversation stream extraction");
+    streamLogger.debug("Begin conversation stream extraction");
     const entries = await zip.listEntries();
     const fileNames = entries.map((entry) => entry.path);
     const entrySizeMap = new Map(entries.map((entry) => [entry.path, entry.size]));
-    streamLogger.info("ZIP entry listing complete for stream extraction", {
+    streamLogger.debug("ZIP entry listing complete for stream extraction", {
         entryCount: fileNames.length,
         durationMs: Date.now() - startedAt,
     });
 
     const leChatFiles = fileNames.filter(name => /^chat-[a-f0-9-]+\.json$/.test(name));
     if (leChatFiles.length > 0) {
-        streamLogger.info("Using Le Chat conversation stream", {
+        streamLogger.debug("Using Le Chat conversation stream", {
             fileCount: leChatFiles.length,
         });
         let yieldedCount = 0;
         for (const fileName of leChatFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            streamLogger.info("Reading Le Chat conversation file", { fileName });
+            streamLogger.debug("Reading Le Chat conversation file", { fileName });
             const { messages, uncompressedBytes } = await collectLeChatConversationFromEntry(entry);
-            streamLogger.info("Le Chat conversation file read complete", {
+            streamLogger.debug("Le Chat conversation file read complete", {
                 fileName,
                 textLength: uncompressedBytes,
             });
             yieldedCount++;
             yield messages;
         }
-        streamLogger.info("Le Chat conversation stream complete", {
+        streamLogger.debug("Le Chat conversation stream complete", {
             yieldedCount,
             durationMs: Date.now() - startedAt,
         });
@@ -491,7 +491,7 @@ export async function* extractConversationsStream(
 
     const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
     if (perplexityJsonFiles.length > 0) {
-        streamLogger.info("Using Perplexity conversation stream", {
+        streamLogger.debug("Using Perplexity conversation stream", {
             fileCount: perplexityJsonFiles.length,
         });
         let yieldedCount = 0;
@@ -499,7 +499,7 @@ export async function* extractConversationsStream(
             const entry = zip.get(fileName);
             if (!entry) continue;
             const { item, uncompressedBytes } = await collectJsonObjectFromEntry(entry);
-            streamLogger.info("Perplexity thread file read complete", {
+            streamLogger.debug("Perplexity thread file read complete", {
                 fileName,
                 textLength: uncompressedBytes,
             });
@@ -507,7 +507,7 @@ export async function* extractConversationsStream(
             yield item;
             await yieldToEventLoopIfNeeded(yieldedCount);
         }
-        streamLogger.info("Perplexity conversation stream complete", {
+        streamLogger.debug("Perplexity conversation stream complete", {
             yieldedCount,
             durationMs: Date.now() - startedAt,
         });
@@ -516,7 +516,7 @@ export async function* extractConversationsStream(
 
     const numberedConvFiles = fileNames.filter(name => /^conversations-\d+\.json$/.test(name)).sort();
     if (numberedConvFiles.length > 0) {
-        streamLogger.info("Using numbered conversation stream", {
+        streamLogger.debug("Using numbered conversation stream", {
             fileCount: numberedConvFiles.length,
         });
         let yieldedCount = 0;
@@ -528,11 +528,11 @@ export async function* extractConversationsStream(
             const isLargeJsonFile = typeof entrySize === "number" && entrySize >= largeJsonThresholdBytes;
             const chunkReader = entry.readTextChunks?.bind(entry);
             const canUseChunkedReader = !!chunkReader;
-            streamLogger.info(
+            streamLogger.debug(
                 `Reading numbered conversation file (${fileName}) [entrySize=${entrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
             );
             if (isLargeJsonFile) {
-                streamLogger.info("Large JSON mode activated for numbered conversation file", {
+                streamLogger.debug("Large JSON mode activated for numbered conversation file", {
                     fileName,
                     entrySize,
                     thresholdBytes: largeJsonThresholdBytes,
@@ -541,14 +541,14 @@ export async function* extractConversationsStream(
                 });
             }
             if (chunkReader) {
-                streamLogger.info("Using chunked numbered conversation reader", {
+                streamLogger.debug("Using chunked numbered conversation reader", {
                     fileName,
                     entrySize: entrySize ?? null,
                 });
                 for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader())) {
                     yieldedCount++;
                     if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-                        streamLogger.info("Yielding streamed conversation", {
+                        streamLogger.debug("Yielding streamed conversation", {
                             source: fileName,
                             yieldedCount,
                         });
@@ -556,7 +556,7 @@ export async function* extractConversationsStream(
                     yield conv;
                     await yieldToEventLoopIfNeeded(yieldedCount);
                 }
-                streamLogger.info("Chunked numbered conversation file parse complete", {
+                streamLogger.debug("Chunked numbered conversation file parse complete", {
                     fileName,
                     readDurationMs: Date.now() - fileReadStartedAt,
                     memorySnapshot: formatRuntimeMemorySnapshot(),
@@ -580,7 +580,7 @@ export async function* extractConversationsStream(
                 );
             }
         }
-        streamLogger.info("Numbered conversation stream complete", {
+        streamLogger.debug("Numbered conversation stream complete", {
             yieldedCount,
             durationMs: Date.now() - startedAt,
         });
@@ -600,11 +600,11 @@ export async function* extractConversationsStream(
     const isLargeConversationsJson = typeof conversationEntrySize === "number" && conversationEntrySize >= largeJsonThresholdBytes;
     const chunkReader = conversationsFile.readTextChunks?.bind(conversationsFile);
     const canUseChunkedReader = !!chunkReader;
-    streamLogger.info(
+    streamLogger.debug(
         `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
     );
     if (isLargeConversationsJson) {
-        streamLogger.info("Large JSON mode activated for conversations.json", {
+        streamLogger.debug("Large JSON mode activated for conversations.json", {
             entrySize: conversationEntrySize ?? null,
             thresholdBytes: largeJsonThresholdBytes,
             mobileRuntime: isMobileRuntime,
@@ -613,14 +613,14 @@ export async function* extractConversationsStream(
     }
     let yieldedCount = 0;
     if (chunkReader) {
-        streamLogger.info("Using chunked conversations.json reader", {
+        streamLogger.debug("Using chunked conversations.json reader", {
             entrySize: conversationEntrySize ?? null,
         });
         try {
             for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader())) {
                 yieldedCount++;
                 if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
-                    streamLogger.info("Yielding streamed conversation", {
+                    streamLogger.debug("Yielding streamed conversation", {
                         source: "conversations.json",
                         yieldedCount,
                     });
@@ -637,7 +637,7 @@ export async function* extractConversationsStream(
             });
             throw error;
         }
-        streamLogger.info("Conversation stream extraction complete", {
+        streamLogger.debug("Conversation stream extraction complete", {
             yieldedCount,
             parseDurationMs: Date.now() - readStartedAt,
             durationMs: Date.now() - startedAt,

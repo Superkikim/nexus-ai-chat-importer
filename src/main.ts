@@ -305,7 +305,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // In both cases, continue with import
 
         const importFlowLogger = this.logger.child("ImportFlow");
-        importFlowLogger.info("Opening file selection dialog with provider auto-detection", {
+        importFlowLogger.debug("Opening file selection dialog with provider auto-detection", {
             isMobile: this.isMobileTaskQueueMode(),
         });
 
@@ -379,7 +379,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 lockSourceFile: lockedProvider.fileName,
             });
         } else if (provider === "auto") {
-            this.logger.child("ImportFlow").info("Provider auto-detected from selected archives", {
+            this.logger.child("ImportFlow").debug("Provider auto-detected from selected archives", {
                 lockedProvider: lockedProvider.provider,
                 lockSourceFile: lockedProvider.fileName,
             });
@@ -408,7 +408,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
 	                    if (parsed && typeof parsed === "object" && Array.isArray((parsed as any).conversations)) {
 	                        index = parsed as GeminiIndex;
-	                        this.logger.info(
+	                        this.logger.debug(
 	                            `[Gemini] Loaded index file "${latestIndexFile.name}" with ${(parsed as any).conversations.length} conversations`
 	                        );
 	                    } else {
@@ -472,7 +472,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 task: `0/${files.length}`,
             });
-            this.logger.child("ImportFlow").info(`Import-all analysis started`, {
+            this.logger.child("ImportFlow").debug(`Import-all analysis started`, {
                 provider,
                 fileCount: files.length,
             });
@@ -500,7 +500,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
             this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "import-all");
 
-            this.logger.child("ImportFlow").info(`Import-all analysis finished`, {
+            this.logger.child("ImportFlow").debug(`Import-all analysis finished`, {
                 provider,
                 fileCount: files.length,
                 supportedFileCount: extractionResult.supportedFiles.length,
@@ -620,7 +620,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             provider,
             task: `0/${mobileFiles.length}`,
         });
-        this.logger.child("ImportFlow").info("Mobile import-all running in direct sequential mode", {
+        this.logger.child("ImportFlow").debug("Mobile import-all running in direct sequential mode", {
             provider,
             fileCount: mobileFiles.length,
         });
@@ -641,7 +641,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         });
         const existingScanStartedAt = Date.now();
         let existingConversationsMap: Map<string, ConversationCatalogEntry> = await storage.scanExistingConversations();
-        this.logger.child("ImportFlow").info("Mobile direct import existing conversation scan complete", {
+        this.logger.child("ImportFlow").debug("Mobile direct import existing conversation scan complete", {
             provider,
             conversationCount: existingConversationsMap.size,
             durationMs: Date.now() - existingScanStartedAt,
@@ -731,7 +731,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const rescanStartedAt = Date.now();
             existingConversationsMap.clear();
             existingConversationsMap = await storage.scanExistingConversations();
-            this.logger.child("ImportFlow").info("Mobile direct import existing conversation map refreshed", {
+            this.logger.child("ImportFlow").debug("Mobile direct import existing conversation map refreshed", {
                 provider,
                 fileName: file.name,
                 conversationCount: existingConversationsMap.size,
@@ -783,7 +783,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 task: `0/${mobileFiles.length}`,
             });
-            this.logger.child("ImportFlow").info(`Selective analysis started`, {
+            this.logger.child("ImportFlow").debug(`Selective analysis started`, {
                 provider,
                 fileCount: mobileFiles.length,
             });
@@ -811,7 +811,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
             this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "selective-analysis");
 
-            this.logger.child("ImportFlow").info(`Selective analysis finished`, {
+            this.logger.child("ImportFlow").debug(`Selective analysis finished`, {
                 provider,
                 fileCount: mobileFiles.length,
                 supportedFileCount: extractionResult.supportedFiles.length,
@@ -1243,7 +1243,7 @@ ${report.generateMobileIndexContent(files, links)}
             return "incremental";
         }
 
-        this.logger.child("ImportFlow").info("Mobile archive already processed, prompting for import mode", {
+        this.logger.child("ImportFlow").debug("Mobile archive already processed, prompting for import mode", {
             provider,
             fileName: file.name,
             fingerprint: archiveFingerprint,
@@ -1265,7 +1265,7 @@ ${report.generateMobileIndexContent(files, links)}
         );
 
         const selectedMode: MobileArchiveImportMode = shouldReprocess ? "reprocess" : "incremental";
-        this.logger.child("ImportFlow").info("Mobile archive import mode selected", {
+        this.logger.child("ImportFlow").debug("Mobile archive import mode selected", {
             provider,
             fileName: file.name,
             selectedMode,
@@ -1287,7 +1287,7 @@ ${report.generateMobileIndexContent(files, links)}
             phase: "cleanup-start",
             provider: "n/a",
         });
-        importFlowLogger.info(`Post-import cleanup started`, {
+        importFlowLogger.debug(`Post-import cleanup started`, {
             operation,
             isMobile,
         });
@@ -1303,7 +1303,7 @@ ${report.generateMobileIndexContent(files, links)}
             phase: "cleanup-complete",
             provider: "n/a",
         });
-        importFlowLogger.info(`Post-import cleanup complete`, {
+        importFlowLogger.debug(`Post-import cleanup complete`, {
             operation,
             isMobile,
         });
@@ -1337,7 +1337,7 @@ ${report.generateMobileIndexContent(files, links)}
                 provider,
                 task: `0/${executionFiles.length}`,
             });
-            importFlowLogger.info(`Building multi-ZIP attachment map`, {
+            importFlowLogger.debug(`Building multi-ZIP attachment map`, {
                 provider,
                 fileCount: executionFiles.length,
                 mode: "desktop-multi-zip",
@@ -1363,7 +1363,7 @@ ${report.generateMobileIndexContent(files, links)}
                         task: `${i + 1}/${executionFiles.length}`,
                         conversationCount: conversationsForFile.length,
                     });
-                    importFlowLogger.info(`Building single-ZIP attachment map for mobile task`, {
+                    importFlowLogger.debug(`Building single-ZIP attachment map for mobile task`, {
                         provider,
                         fileName: file.name,
                         task: `${i + 1}/${executionFiles.length}`,
@@ -1379,7 +1379,7 @@ ${report.generateMobileIndexContent(files, links)}
                     task: `${i + 1}/${executionFiles.length}`,
                     conversationCount: conversationsForFile.length,
                 });
-                importFlowLogger.info(`Importing file`, {
+                importFlowLogger.debug(`Importing file`, {
                     provider,
                     fileName: file.name,
                     conversationCount: conversationsForFile.length,
@@ -1455,7 +1455,7 @@ ${report.generateMobileIndexContent(files, links)}
         };
         this.lastImportCheckpoint = nextCheckpoint;
 
-        this.logger.child("ImportCheckpoint").info("Checkpoint reached", {
+        this.logger.child("ImportCheckpoint").debug("Checkpoint reached", {
             operation: nextCheckpoint.operation,
             phase: nextCheckpoint.phase,
             provider: nextCheckpoint.provider,

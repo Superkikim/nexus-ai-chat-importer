@@ -122,20 +122,20 @@ export class ConversationProcessor {
         let conversationsMap: Map<string, ConversationCatalogEntry>;
         if (existingConversationsMap) {
             conversationsMap = existingConversationsMap;
-            processLogger.info("Using preloaded existing conversations map", {
+            processLogger.debug("Using preloaded existing conversations map", {
                 provider,
                 existingConversationCount: conversationsMap.size,
             });
         } else {
             const storage = this.plugin.getStorageService();
             const scanStartedAt = Date.now();
-            processLogger.info("Scan existing conversations started", {
+            processLogger.debug("Scan existing conversations started", {
                 provider,
                 selectedConversationCount: selectedIds?.size ?? null,
                 approxTotal: approxTotal ?? null,
             });
             conversationsMap = await storage.scanExistingConversations();
-            processLogger.info("Scan existing conversations complete", {
+            processLogger.debug("Scan existing conversations complete", {
                 provider,
                 existingConversationCount: conversationsMap.size,
                 durationMs: Date.now() - scanStartedAt,
@@ -181,7 +181,7 @@ export class ConversationProcessor {
             });
         }
 
-        processLogger.info("Streaming conversation processing loop complete", {
+        processLogger.debug("Streaming conversation processing loop complete", {
             provider,
             seenCount,
             yieldedCount,
@@ -236,13 +236,13 @@ export class ConversationProcessor {
             const groupedConversations = (adapter as any).convertAllWithIndex(rawConversations);
             conversationsToProcess = groupedConversations;
 
-            this.plugin.logger.info(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
+            this.plugin.logger.debug(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
         }
 
         let conversationsMap: Map<string, ConversationCatalogEntry>;
         if (existingConversationsMap) {
             conversationsMap = existingConversationsMap;
-            processLogger.info("Using preloaded existing conversations map", {
+            processLogger.debug("Using preloaded existing conversations map", {
                 provider,
                 existingConversationCount: conversationsMap.size,
             });
