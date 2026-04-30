@@ -322,7 +322,7 @@
     },
     "complete_modal": {
       "title": "✅ Upgrade Complete - v{{version}}",
-      "fallback_content": "## ✨ What's New in v{{version}}\n\n### New\n- Provider is auto-detected from the first supported selected ZIP archive\n- Import reports are split into three linked files:\n  - import summary\n  - index heavy\n  - index mobile\n\n### Improved\n- Desktop and mobile use a unified ZIP-reading model (scan first, targeted reads only)\n- Mobile imports run in single-archive mode for better reliability on constrained devices\n- Unsupported archives are identified earlier and skipped more cleanly\n\n### Bug Fixes\n- ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly\n- Multi-ZIP attachment handling for ChatGPT imports is more robust\n- Large archive handling avoids full ZIP in-memory loading by default",
+      "fallback_content": "## ✨ What's New in v{{version}}\n\n### New\n- Perplexity support (Perplexity Thread Exporter ZIP imports)\n- Universal frontmatter metadata: `mode` and `models`\n- Provider auto-detection now includes Perplexity archives\n\n### Improved\n- Perplexity dual-schema compatibility:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- Better guidance when an outer ZIP contains inner `part*.zip` files\n- Improved conversation ID normalization to reduce duplicate note risk across schema variants\n\n### Reliability\n- Includes previous 1.5.7 reliability improvements for ZIP processing and mobile imports.",
       "buttons": {
         "got_it": "Got it!"
       }
@@ -456,7 +456,7 @@
     "title": "Nexus AI Chat Importer {{version}}",
     "icon": "🎉",
     "heading": "Thank you for installing Nexus AI Chat Importer!",
-    "description": "Import and manage your ChatGPT, Claude, and Le Chat conversations directly in your Obsidian vault.",
+    "description": "Import and manage your ChatGPT, Claude, Le Chat, and Perplexity conversations directly in your Obsidian vault.",
     "resources_title": "Resources",
     "resources": {
       "documentation": {

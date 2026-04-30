@@ -322,7 +322,7 @@
     },
     "complete_modal": {
       "title": "✅ Aggiornamento completato - v{{version}}",
-      "fallback_content": "## ✨ Novità della v{{version}}\n\n### Novità\n- Il provider viene rilevato automaticamente dal primo archivio ZIP supportato selezionato\n- I report di importazione sono suddivisi in tre file collegati:\n  - import summary\n  - index heavy\n  - index mobile\n\n### Miglioramenti\n- Desktop e mobile usano un modello unificato di lettura ZIP (prima scansione, poi letture mirate)\n- Su mobile, le importazioni vengono eseguite in modalità archivio singolo per maggiore affidabilità su dispositivi limitati\n- Gli archivi non supportati vengono identificati prima e ignorati in modo più pulito\n\n### Correzioni\n- Le esportazioni numerate di ChatGPT (`conversations-XXX.json`) sono riconosciute correttamente\n- La gestione degli allegati ChatGPT in multi-ZIP è più robusta\n- La gestione degli archivi grandi evita il caricamento completo dello ZIP in memoria per impostazione predefinita",
+      "fallback_content": "## ✨ Novità della v{{version}}\n\n### Novità\n- Supporto Perplexity (import ZIP di Perplexity Thread Exporter)\n- Metadati frontmatter universali: `mode` e `models`\n- Il rilevamento automatico del provider ora include anche gli archivi Perplexity\n\n### Miglioramenti\n- Compatibilità Perplexity con due schemi:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- Guida migliorata quando uno ZIP esterno contiene ZIP interni `part*.zip`\n- Normalizzazione migliorata degli ID conversazione per ridurre il rischio di note duplicate tra schemi\n\n### Affidabilità\n- Include i miglioramenti di affidabilità della 1.5.7 per elaborazione ZIP e import su mobile.",
       "buttons": {
         "got_it": "Capito!"
       }
@@ -456,7 +456,7 @@
     "title": "Nexus AI Chat Importer {{version}}",
     "icon": "🎉",
     "heading": "Grazie per aver installato Nexus AI Chat Importer!",
-    "description": "Importa e gestisci le tue conversazioni ChatGPT, Claude e Le Chat direttamente nel tuo Vault Obsidian.",
+    "description": "Importa e gestisci le tue conversazioni ChatGPT, Claude, Le Chat e Perplexity direttamente nel tuo vault Obsidian.",
     "resources_title": "Risorse",
     "resources": {
       "documentation": {
