@@ -18,7 +18,7 @@ export type ArchiveClassification =
     | {
         supported: false;
         provider?: undefined;
-        reason: "empty" | "unsupported-format" | "provider-mismatch";
+        reason: "empty" | "unsupported-format" | "provider-mismatch" | "nested-zip-container";
         message?: string;
     };
 
@@ -49,6 +49,14 @@ export function findPerplexityJsonFiles(fileNames: string[]): string[] {
     });
 }
 
+function hasNestedZipContainerSignature(fileNames: string[]): boolean {
+    const zipEntries = fileNames.filter((name) => name.toLowerCase().endsWith(".zip"));
+    if (zipEntries.length === 0) return false;
+
+    const hasJsonEntries = fileNames.some((name) => name.toLowerCase().endsWith(".json"));
+    return !hasJsonEntries;
+}
+
 export function classifyArchiveEntries(
     fileNames: string[],
     forcedProvider?: string
@@ -67,6 +75,7 @@ export function classifyArchiveEntries(
     const hasLeChatFiles = fileNames.some(name => /^chat-[a-f0-9-]+\.json$/.test(name));
     const hasGeminiActivityJson = findGeminiActivityJsonFiles(fileNames).length > 0;
     const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
+    const nestedZipContainer = hasNestedZipContainerSignature(fileNames);
 
     const detectedProvider: SupportedArchiveProvider | undefined =
         hasLeChatFiles && !hasConversationsJson
@@ -91,8 +100,10 @@ export function classifyArchiveEntries(
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-                message: "This ZIP file does not look like a ChatGPT export.",
+                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                message: nestedZipContainer
+                    ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly."
+                    : "This ZIP file does not look like a ChatGPT export.",
             };
         }
 
@@ -103,8 +114,10 @@ export function classifyArchiveEntries(
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-                message: "This ZIP file does not look like a Claude export.",
+                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                message: nestedZipContainer
+                    ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly."
+                    : "This ZIP file does not look like a Claude export.",
             };
         }
 
@@ -115,8 +128,10 @@ export function classifyArchiveEntries(
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-                message: "This ZIP file does not look like a Le Chat export.",
+                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                message: nestedZipContainer
+                    ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly."
+                    : "This ZIP file does not look like a Le Chat export.",
             };
         }
 
@@ -127,8 +142,10 @@ export function classifyArchiveEntries(
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-                message: "This ZIP file does not look like a Gemini Takeout export.",
+                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                message: nestedZipContainer
+                    ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly."
+                    : "This ZIP file does not look like a Gemini Takeout export.",
             };
         }
 
@@ -139,8 +156,10 @@ export function classifyArchiveEntries(
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-                message: "This ZIP file does not look like a Perplexity Thread Exporter archive.",
+                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                message: nestedZipContainer
+                    ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner Perplexity part*.zip files directly."
+                    : "This ZIP file does not look like a Perplexity Thread Exporter archive.",
             };
         }
     }
@@ -148,8 +167,10 @@ export function classifyArchiveEntries(
     if (!detectedProvider) {
         return {
             supported: false,
-            reason: "unsupported-format",
-            message: "This ZIP file does not match any supported export format.",
+            reason: nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+            message: nestedZipContainer
+                ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly."
+                : "This ZIP file does not match any supported export format.",
         };
     }
 
@@ -246,7 +267,7 @@ async function collectJsonObjectFromEntry(entry: {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new NexusAiChatImporterError(
             "Invalid Perplexity JSON format",
-            "Expected a JSON object with metadata and conversations fields."
+            "Expected a JSON object for a Perplexity thread export."
         );
     }
 

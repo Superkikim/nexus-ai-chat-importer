@@ -169,4 +169,46 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
         expect(m.provider).toBe(adapter.getProviderName());
         expect(m.messageCount).toBe(2);
     });
+
+    it("extracts metadata from Perplexity entries[] export format", () => {
+        const plugin = createTestPlugin();
+        const registry = new DefaultProviderRegistry();
+        const extractor = new ConversationMetadataExtractor(registry as any, plugin as any);
+
+        const conversation = {
+            status: "success",
+            thread_metadata: {
+                title: "Entries Thread",
+                created_at: "2024-02-01T00:00:00.000Z",
+                updated_at: "2024-02-01T01:00:00.000Z",
+            },
+            entries: [
+                {
+                    uuid: "entry-1",
+                    thread_url_slug: "entries-thread-abc",
+                    thread_title: "Entries Thread",
+                    query_str: "Question?",
+                    entry_created_datetime: "2024-02-01T00:10:00.000Z",
+                    blocks: [
+                        {
+                            markdown_block: {
+                                answer: "Answer text",
+                            },
+                        },
+                    ],
+                },
+            ],
+        } as any;
+
+        const metadata = (extractor as any).extractPerplexityMetadata([conversation]) as any[];
+        expect(metadata).toHaveLength(1);
+
+        const m = metadata[0];
+        expect(m.id).toBe("entries-thread-abc");
+        expect(m.title).toBe("Entries Thread");
+        expect(m.provider).toBe("perplexity");
+        expect(m.messageCount).toBe(2);
+        expect(m.createTime).toBe(1706745600);
+        expect(m.updateTime).toBe(1706749200);
+    });
 });

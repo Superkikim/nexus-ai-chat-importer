@@ -88,7 +88,7 @@ var init_en = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Perplexity Thread Exporter JSON archives",
-            file_formats_0: "perplexity_*.json files (metadata + conversations[])"
+            file_formats_0: "perplexity_*.json files (metadata + conversations[] | status + entries[])"
           }
         },
         buttons: {
@@ -619,7 +619,7 @@ var init_fr = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Archives JSON Perplexity Thread Exporter",
-            file_formats_0: "fichiers perplexity_*.json (metadata + conversations[])"
+            file_formats_0: "fichiers perplexity_*.json (metadata + conversations[] | status + entries[])"
           }
         },
         buttons: {
@@ -1150,7 +1150,7 @@ var init_de = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Perplexity Thread Exporter JSON-Archive",
-            file_formats_0: "perplexity_*.json-Dateien (metadata + conversations[])"
+            file_formats_0: "perplexity_*.json-Dateien (metadata + conversations[] | status + entries[])"
           }
         },
         buttons: {
@@ -1681,7 +1681,7 @@ var init_es = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Archivos JSON de Perplexity Thread Exporter",
-            file_formats_0: "archivos perplexity_*.json (metadata + conversations[])"
+            file_formats_0: "archivos perplexity_*.json (metadata + conversations[] | status + entries[])"
           }
         },
         buttons: {
@@ -2212,7 +2212,7 @@ var init_it = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Archivi JSON di Perplexity Thread Exporter",
-            file_formats_0: "file perplexity_*.json (metadata + conversations[])"
+            file_formats_0: "file perplexity_*.json (metadata + conversations[] | status + entries[])"
           }
         },
         buttons: {
@@ -2743,7 +2743,7 @@ var init_ru = __esm({
           perplexity: {
             name: "Perplexity",
             description: "JSON-\u0430\u0440\u0445\u0438\u0432\u044B Perplexity Thread Exporter",
-            file_formats_0: "\u0444\u0430\u0439\u043B\u044B perplexity_*.json (metadata + conversations[])"
+            file_formats_0: "\u0444\u0430\u0439\u043B\u044B perplexity_*.json (metadata + conversations[] | status + entries[])"
           }
         },
         buttons: {
@@ -3274,7 +3274,7 @@ var init_zh = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Perplexity Thread Exporter JSON \u5B58\u6863",
-            file_formats_0: "perplexity_*.json \u6587\u4EF6\uFF08metadata + conversations[]\uFF09"
+            file_formats_0: "perplexity_*.json \u6587\u4EF6\uFF08metadata + conversations[] | status + entries[]\uFF09"
           }
         },
         buttons: {
@@ -3805,7 +3805,7 @@ var init_ja = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Perplexity Thread Exporter \u306E JSON \u30A2\u30FC\u30AB\u30A4\u30D6",
-            file_formats_0: "perplexity_*.json \u30D5\u30A1\u30A4\u30EB\uFF08metadata + conversations[]\uFF09"
+            file_formats_0: "perplexity_*.json \u30D5\u30A1\u30A4\u30EB\uFF08metadata + conversations[] | status + entries[]\uFF09"
           }
         },
         buttons: {
@@ -4336,7 +4336,7 @@ var init_pt = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Arquivos JSON do Perplexity Thread Exporter",
-            file_formats_0: "arquivos perplexity_*.json (metadata + conversations[])"
+            file_formats_0: "arquivos perplexity_*.json (metadata + conversations[] | status + entries[])"
           }
         },
         buttons: {
@@ -4867,7 +4867,7 @@ var init_ko = __esm({
           perplexity: {
             name: "Perplexity",
             description: "Perplexity Thread Exporter JSON \uC544\uCE74\uC774\uBE0C",
-            file_formats_0: "perplexity_*.json \uD30C\uC77C (metadata + conversations[])"
+            file_formats_0: "perplexity_*.json \uD30C\uC77C (metadata + conversations[] | status + entries[])"
           }
         },
         buttons: {
@@ -14120,6 +14120,8 @@ var ImportReport = class {
         return "provider mismatch";
       case "unsupported-format":
         return "unsupported format";
+      case "nested-zip-container":
+        return "nested ZIP container";
       case "empty":
         return "empty archive";
       case "read-error":
@@ -19386,6 +19388,206 @@ var PerplexityReportNamingStrategy = class {
 };
 __name(PerplexityReportNamingStrategy, "PerplexityReportNamingStrategy");
 
+// src/providers/perplexity/perplexity-normalizer.ts
+function normalizePerplexityConversationFile(raw) {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+  const legacy = tryNormalizeLegacy(raw);
+  if (legacy) {
+    return legacy;
+  }
+  return tryNormalizeEntriesExport(raw);
+}
+__name(normalizePerplexityConversationFile, "normalizePerplexityConversationFile");
+function tryNormalizeLegacy(raw) {
+  var _a;
+  if (!raw.metadata || !Array.isArray(raw.conversations)) {
+    return null;
+  }
+  const turns = raw.conversations.map((turn) => normalizeTurnFromLegacy(turn)).filter((turn) => turn !== null);
+  const threadId = normalizeString(raw.metadata.thread_id) || ((_a = turns[0]) == null ? void 0 : _a.uuid) || "";
+  const threadTitle = normalizeString(raw.metadata.thread_title) || "Untitled";
+  const threadUrl = normalizeString(raw.metadata.thread_url);
+  return {
+    metadata: {
+      thread_id: threadId,
+      thread_title: threadTitle,
+      thread_url: threadUrl,
+      total_entries: raw.metadata.total_entries,
+      exported_at: normalizeString(raw.metadata.exported_at),
+      export_version: normalizeString(raw.metadata.export_version),
+      thread_created_at: normalizeString(raw.metadata.thread_created_at),
+      thread_updated_at: normalizeString(raw.metadata.thread_updated_at)
+    },
+    conversations: turns
+  };
+}
+__name(tryNormalizeLegacy, "tryNormalizeLegacy");
+function tryNormalizeEntriesExport(raw) {
+  var _a, _b, _c;
+  if (!Array.isArray(raw.entries)) {
+    return null;
+  }
+  const turns = raw.entries.map((entry) => normalizeTurnFromEntry(entry)).filter((turn) => turn !== null).sort((a, b) => parseTimestampMs(a.timestamp) - parseTimestampMs(b.timestamp));
+  if (turns.length === 0) {
+    return null;
+  }
+  const firstEntry = raw.entries.find(isRecord);
+  const slug = normalizeString(firstEntry == null ? void 0 : firstEntry.thread_url_slug);
+  const firstEntryTimestamp = normalizeString(firstEntry == null ? void 0 : firstEntry.entry_created_datetime) || normalizeString(firstEntry == null ? void 0 : firstEntry.entry_updated_datetime) || normalizeString(firstEntry == null ? void 0 : firstEntry.updated_datetime);
+  const lastEntry = [...raw.entries].filter(isRecord).sort((a, b) => {
+    const aEntry = a;
+    const bEntry = b;
+    const aTimestamp = normalizeString(aEntry.entry_updated_datetime) || normalizeString(aEntry.updated_datetime) || normalizeString(aEntry.entry_created_datetime);
+    const bTimestamp = normalizeString(bEntry.entry_updated_datetime) || normalizeString(bEntry.updated_datetime) || normalizeString(bEntry.entry_created_datetime);
+    return parseTimestampMs(aTimestamp) - parseTimestampMs(bTimestamp);
+  }).pop();
+  const threadId = slug || turns[0].uuid;
+  const threadTitle = normalizeString((_a = raw.thread_metadata) == null ? void 0 : _a.title) || normalizeString(firstEntry == null ? void 0 : firstEntry.thread_title) || "Untitled";
+  const threadCreatedAt = normalizeString((_b = raw.thread_metadata) == null ? void 0 : _b.created_at) || firstEntryTimestamp || turns[0].timestamp;
+  const threadUpdatedAt = normalizeString((_c = raw.thread_metadata) == null ? void 0 : _c.updated_at) || normalizeString(lastEntry == null ? void 0 : lastEntry.entry_updated_datetime) || normalizeString(lastEntry == null ? void 0 : lastEntry.updated_datetime) || turns[turns.length - 1].timestamp;
+  return {
+    metadata: {
+      thread_id: threadId,
+      thread_title: threadTitle,
+      thread_url: slug,
+      total_entries: raw.entries.length,
+      thread_created_at: threadCreatedAt,
+      thread_updated_at: threadUpdatedAt
+    },
+    conversations: turns
+  };
+}
+__name(tryNormalizeEntriesExport, "tryNormalizeEntriesExport");
+function normalizeTurnFromLegacy(raw) {
+  if (!isRecord(raw))
+    return null;
+  const uuid = normalizeString(raw.uuid);
+  if (!uuid)
+    return null;
+  const query = normalizeString(raw.query);
+  const answer = normalizeString(raw.answer);
+  if (!query && !answer) {
+    return null;
+  }
+  return {
+    uuid,
+    query,
+    answer,
+    model: normalizeString(raw.model),
+    mode: normalizeString(raw.mode),
+    timestamp: normalizeString(raw.timestamp),
+    language: normalizeString(raw.language),
+    related_queries: normalizeRelatedQueries(raw.related_queries),
+    sources: normalizeSources(raw.sources)
+  };
+}
+__name(normalizeTurnFromLegacy, "normalizeTurnFromLegacy");
+function normalizeTurnFromEntry(raw) {
+  if (!isRecord(raw))
+    return null;
+  const entry = raw;
+  const uuid = normalizeString(entry.uuid) || normalizeString(entry.backend_uuid);
+  if (!uuid)
+    return null;
+  const query = normalizeString(entry.query_str);
+  const answer = extractAnswer(entry);
+  if (!query && !answer) {
+    return null;
+  }
+  const relatedQueries = normalizeRelatedQueries(entry.related_queries) || normalizeRelatedQueryItems(entry.related_query_items);
+  return {
+    uuid,
+    query,
+    answer,
+    model: normalizeString(entry.display_model) || normalizeString(entry.user_selected_model),
+    mode: normalizeString(entry.mode),
+    timestamp: normalizeString(entry.entry_created_datetime) || normalizeString(entry.entry_updated_datetime) || normalizeString(entry.updated_datetime),
+    related_queries: relatedQueries
+  };
+}
+__name(normalizeTurnFromEntry, "normalizeTurnFromEntry");
+function extractAnswer(entry) {
+  if (!Array.isArray(entry.blocks))
+    return void 0;
+  for (const block of entry.blocks) {
+    if (!isRecord(block) || !isRecord(block.markdown_block))
+      continue;
+    const directAnswer = normalizeString(block.markdown_block.answer);
+    if (directAnswer)
+      return directAnswer;
+    if (Array.isArray(block.markdown_block.chunks)) {
+      const merged = block.markdown_block.chunks.filter((chunk) => typeof chunk === "string").join("").trim();
+      if (merged.length > 0)
+        return merged;
+    }
+  }
+  return void 0;
+}
+__name(extractAnswer, "extractAnswer");
+function normalizeRelatedQueries(value) {
+  if (!Array.isArray(value))
+    return void 0;
+  const seen = /* @__PURE__ */ new Set();
+  const queries = [];
+  for (const item of value) {
+    const text = normalizeString(item);
+    if (!text || seen.has(text))
+      continue;
+    seen.add(text);
+    queries.push(text);
+  }
+  return queries.length > 0 ? queries : void 0;
+}
+__name(normalizeRelatedQueries, "normalizeRelatedQueries");
+function normalizeRelatedQueryItems(value) {
+  if (!Array.isArray(value))
+    return void 0;
+  const seen = /* @__PURE__ */ new Set();
+  const queries = [];
+  for (const item of value) {
+    if (!isRecord(item))
+      continue;
+    const text = normalizeString(item.text);
+    if (!text || seen.has(text))
+      continue;
+    seen.add(text);
+    queries.push(text);
+  }
+  return queries.length > 0 ? queries : void 0;
+}
+__name(normalizeRelatedQueryItems, "normalizeRelatedQueryItems");
+function normalizeSources(value) {
+  if (!Array.isArray(value))
+    return void 0;
+  const sources = value.filter(isRecord).map((source) => ({
+    title: normalizeString(source.title),
+    url: normalizeString(source.url),
+    snippet: normalizeString(source.snippet)
+  })).filter((source) => !!(source.title || source.url || source.snippet));
+  return sources.length > 0 ? sources : void 0;
+}
+__name(normalizeSources, "normalizeSources");
+function normalizeString(value) {
+  if (typeof value !== "string")
+    return void 0;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : void 0;
+}
+__name(normalizeString, "normalizeString");
+function parseTimestampMs(value) {
+  if (!value)
+    return 0;
+  const ts = new Date(value).getTime();
+  return Number.isFinite(ts) ? ts : 0;
+}
+__name(parseTimestampMs, "parseTimestampMs");
+function isRecord(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+__name(isRecord, "isRecord");
+
 // src/providers/perplexity/perplexity-adapter.ts
 var PerplexityAdapter = class {
   constructor(_plugin) {
@@ -19395,10 +19597,8 @@ var PerplexityAdapter = class {
     if (!Array.isArray(rawConversations) || rawConversations.length === 0) {
       return false;
     }
-    const sample = rawConversations[0];
-    if (!sample || typeof sample !== "object")
-      return false;
-    if (!sample.metadata || !Array.isArray(sample.conversations))
+    const sample = this.normalize(rawConversations[0]);
+    if (!sample)
       return false;
     if (!sample.metadata.thread_id || !sample.metadata.thread_title)
       return false;
@@ -19409,36 +19609,51 @@ var PerplexityAdapter = class {
   }
   getId(chat) {
     var _a;
-    return ((_a = chat.metadata) == null ? void 0 : _a.thread_id) || "";
+    const normalized = this.normalize(chat);
+    return ((_a = normalized == null ? void 0 : normalized.metadata) == null ? void 0 : _a.thread_id) || "";
   }
   getTitle(chat) {
     var _a;
-    return (((_a = chat.metadata) == null ? void 0 : _a.thread_title) || "").trim() || "Untitled";
+    const normalized = this.normalize(chat);
+    return (((_a = normalized == null ? void 0 : normalized.metadata) == null ? void 0 : _a.thread_title) || "").trim() || "Untitled";
   }
   getCreateTime(chat) {
     var _a;
-    const fromMeta = this.parseTimestamp((_a = chat.metadata) == null ? void 0 : _a.thread_created_at);
+    const normalized = this.normalize(chat);
+    if (!normalized)
+      return 0;
+    const fromMeta = this.parseTimestamp((_a = normalized.metadata) == null ? void 0 : _a.thread_created_at);
     if (fromMeta > 0)
       return fromMeta;
-    const timestamps = (chat.conversations || []).map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
+    const timestamps = (normalized.conversations || []).map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
     return timestamps.length > 0 ? Math.min(...timestamps) : 0;
   }
   getUpdateTime(chat) {
     var _a;
-    const fromMeta = this.parseTimestamp((_a = chat.metadata) == null ? void 0 : _a.thread_updated_at);
+    const normalized = this.normalize(chat);
+    if (!normalized)
+      return 0;
+    const fromMeta = this.parseTimestamp((_a = normalized.metadata) == null ? void 0 : _a.thread_updated_at);
     if (fromMeta > 0)
       return fromMeta;
-    const timestamps = (chat.conversations || []).map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
+    const timestamps = (normalized.conversations || []).map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
     return timestamps.length > 0 ? Math.max(...timestamps) : 0;
   }
   convertChat(chat) {
-    return PerplexityConverter.convertChat(chat);
+    const normalized = this.normalize(chat);
+    if (!normalized) {
+      throw new Error("Invalid Perplexity conversation format");
+    }
+    return PerplexityConverter.convertChat(normalized);
   }
   getProviderName() {
     return "perplexity";
   }
   getNewMessages(chat, existingMessageIds) {
-    return (chat.conversations || []).filter((turn) => !!(turn == null ? void 0 : turn.uuid) && !existingMessageIds.includes(turn.uuid));
+    const normalized = this.normalize(chat);
+    if (!normalized)
+      return [];
+    return (normalized.conversations || []).filter((turn) => !!(turn == null ? void 0 : turn.uuid) && !existingMessageIds.includes(turn.uuid));
   }
   getReportNamingStrategy() {
     return this.reportNamingStrategy;
@@ -19450,6 +19665,9 @@ var PerplexityAdapter = class {
     if (Number.isNaN(timestamp))
       return 0;
     return Math.floor(timestamp / 1e3);
+  }
+  normalize(chat) {
+    return normalizePerplexityConversationFile(chat);
   }
 };
 __name(PerplexityAdapter, "PerplexityAdapter");
@@ -20194,6 +20412,14 @@ function findPerplexityJsonFiles(fileNames) {
   });
 }
 __name(findPerplexityJsonFiles, "findPerplexityJsonFiles");
+function hasNestedZipContainerSignature(fileNames) {
+  const zipEntries = fileNames.filter((name) => name.toLowerCase().endsWith(".zip"));
+  if (zipEntries.length === 0)
+    return false;
+  const hasJsonEntries = fileNames.some((name) => name.toLowerCase().endsWith(".json"));
+  return !hasJsonEntries;
+}
+__name(hasNestedZipContainerSignature, "hasNestedZipContainerSignature");
 function classifyArchiveEntries(fileNames, forcedProvider) {
   if (fileNames.length === 0) {
     return {
@@ -20207,6 +20433,7 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
   const hasLeChatFiles = fileNames.some((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
   const hasGeminiActivityJson = findGeminiActivityJsonFiles(fileNames).length > 0;
   const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
+  const nestedZipContainer = hasNestedZipContainerSignature(fileNames);
   const detectedProvider = hasLeChatFiles && !hasConversationsJson ? "lechat" : hasGeminiActivityJson && !hasConversationsJson && !hasLeChatFiles ? "gemini" : hasPerplexityFiles && !hasConversationsJson && !hasLeChatFiles && !hasGeminiActivityJson ? "perplexity" : hasConversationsJson && hasUsersJson ? "claude" : hasConversationsJson ? "chatgpt" : void 0;
   if (forcedProvider) {
     const expectedProvider = forcedProvider;
@@ -20216,8 +20443,8 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
       }
       return {
         supported: false,
-        reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-        message: "This ZIP file does not look like a ChatGPT export."
+        reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+        message: nestedZipContainer ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly." : "This ZIP file does not look like a ChatGPT export."
       };
     }
     if (expectedProvider === "claude") {
@@ -20226,8 +20453,8 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
       }
       return {
         supported: false,
-        reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-        message: "This ZIP file does not look like a Claude export."
+        reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+        message: nestedZipContainer ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly." : "This ZIP file does not look like a Claude export."
       };
     }
     if (expectedProvider === "lechat") {
@@ -20236,8 +20463,8 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
       }
       return {
         supported: false,
-        reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-        message: "This ZIP file does not look like a Le Chat export."
+        reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+        message: nestedZipContainer ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly." : "This ZIP file does not look like a Le Chat export."
       };
     }
     if (expectedProvider === "gemini") {
@@ -20246,8 +20473,8 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
       }
       return {
         supported: false,
-        reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-        message: "This ZIP file does not look like a Gemini Takeout export."
+        reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+        message: nestedZipContainer ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly." : "This ZIP file does not look like a Gemini Takeout export."
       };
     }
     if (expectedProvider === "perplexity") {
@@ -20256,16 +20483,16 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
       }
       return {
         supported: false,
-        reason: detectedProvider ? "provider-mismatch" : "unsupported-format",
-        message: "This ZIP file does not look like a Perplexity Thread Exporter archive."
+        reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+        message: nestedZipContainer ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner Perplexity part*.zip files directly." : "This ZIP file does not look like a Perplexity Thread Exporter archive."
       };
     }
   }
   if (!detectedProvider) {
     return {
       supported: false,
-      reason: "unsupported-format",
-      message: "This ZIP file does not match any supported export format."
+      reason: nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+      message: nestedZipContainer ? "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly." : "This ZIP file does not match any supported export format."
     };
   }
   return {
@@ -20337,7 +20564,7 @@ async function collectJsonObjectFromEntry(entry) {
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new NexusAiChatImporterError(
       "Invalid Perplexity JSON format",
-      "Expected a JSON object with metadata and conversations fields."
+      "Expected a JSON object for a Perplexity thread export."
     );
   }
   return { item: parsed, uncompressedBytes };
@@ -20712,8 +20939,12 @@ function filterConversationsByIds(rawConversations, selectedIds, providerRegistr
       if (forcedProvider === "claude" || conversation && conversation.uuid && conversation.name) {
         return conversation.uuid || "";
       }
-      if (forcedProvider === "perplexity" || conversation && ((_c = conversation.metadata) == null ? void 0 : _c.thread_id) && Array.isArray(conversation.conversations)) {
+      if (conversation && ((_c = conversation.metadata) == null ? void 0 : _c.thread_id) && Array.isArray(conversation.conversations)) {
         return ((_d = conversation.metadata) == null ? void 0 : _d.thread_id) || "";
+      }
+      if (conversation && Array.isArray(conversation.entries)) {
+        const firstEntry = Array.isArray(conversation.entries) ? conversation.entries[0] : void 0;
+        return (firstEntry == null ? void 0 : firstEntry.thread_url_slug) || (firstEntry == null ? void 0 : firstEntry.uuid) || (firstEntry == null ? void 0 : firstEntry.backend_uuid) || "";
       }
       return conversation && conversation.id || "";
     } catch (e) {
@@ -24428,33 +24659,40 @@ var ConversationMetadataExtractor = class {
   extractPerplexityMetadata(conversations) {
     return conversations.filter((chat) => {
       var _a;
-      if (!chat || typeof chat !== "object") {
+      const normalized = normalizePerplexityConversationFile(chat);
+      if (!normalized) {
         this.plugin.logger.warn("Skipping invalid Perplexity conversation: not an object");
         return false;
       }
-      if (!((_a = chat.metadata) == null ? void 0 : _a.thread_id) || !Array.isArray(chat.conversations)) {
-        this.plugin.logger.warn("Skipping Perplexity conversation with missing metadata.thread_id or conversations[]");
+      if (!((_a = normalized.metadata) == null ? void 0 : _a.thread_id) || !Array.isArray(normalized.conversations)) {
+        this.plugin.logger.warn("Skipping Perplexity conversation with missing normalized metadata.thread_id or conversations[]");
         return false;
       }
-      return chat.conversations.length > 0;
+      return normalized.conversations.length > 0;
     }).map((chat) => {
       var _a, _b;
-      const turns = [...chat.conversations].sort((a, b) => {
+      const normalized = normalizePerplexityConversationFile(chat);
+      const turns = [...normalized.conversations].sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
         const timeB = new Date(b.timestamp || 0).getTime();
         return timeA - timeB;
       });
       const timestamps = turns.map((turn) => new Date(turn.timestamp || 0).getTime()).filter((ts) => Number.isFinite(ts) && ts > 0);
-      const metaCreateMs = new Date(((_a = chat.metadata) == null ? void 0 : _a.thread_created_at) || "").getTime();
-      const metaUpdateMs = new Date(((_b = chat.metadata) == null ? void 0 : _b.thread_updated_at) || "").getTime();
+      const metaCreateMs = new Date(((_a = normalized.metadata) == null ? void 0 : _a.thread_created_at) || "").getTime();
+      const metaUpdateMs = new Date(((_b = normalized.metadata) == null ? void 0 : _b.thread_updated_at) || "").getTime();
       const createTime = Number.isFinite(metaCreateMs) && metaCreateMs > 0 ? Math.floor(metaCreateMs / 1e3) : timestamps.length > 0 ? Math.floor(Math.min(...timestamps) / 1e3) : 0;
       const updateTime = Number.isFinite(metaUpdateMs) && metaUpdateMs > 0 ? Math.floor(metaUpdateMs / 1e3) : timestamps.length > 0 ? Math.floor(Math.max(...timestamps) / 1e3) : 0;
+      const messageCount = turns.reduce((count, turn) => {
+        const query = typeof turn.query === "string" ? turn.query.trim() : "";
+        const answer = typeof turn.answer === "string" ? turn.answer.trim() : "";
+        return count + (query ? 1 : 0) + (answer ? 1 : 0);
+      }, 0);
       return {
-        id: chat.metadata.thread_id,
-        title: (chat.metadata.thread_title || "Untitled").trim() || "Untitled",
+        id: normalized.metadata.thread_id || "",
+        title: (normalized.metadata.thread_title || "Untitled").trim() || "Untitled",
         createTime,
         updateTime,
-        messageCount: turns.length * 2,
+        messageCount,
         provider: "perplexity",
         isStarred: false,
         isArchived: false

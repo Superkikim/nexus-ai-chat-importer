@@ -84,11 +84,13 @@ export function filterConversationsByIds(
                 return conversation.uuid || "";
             }
 
-            if (
-                forcedProvider === "perplexity" ||
-                (conversation && conversation.metadata?.thread_id && Array.isArray(conversation.conversations))
-            ) {
+            if (conversation && conversation.metadata?.thread_id && Array.isArray(conversation.conversations)) {
                 return conversation.metadata?.thread_id || "";
+            }
+
+            if (conversation && Array.isArray(conversation.entries)) {
+                const firstEntry = Array.isArray(conversation.entries) ? conversation.entries[0] : undefined;
+                return firstEntry?.thread_url_slug || firstEntry?.uuid || firstEntry?.backend_uuid || "";
             }
 
             // Default: ChatGPT-style conversation with id field

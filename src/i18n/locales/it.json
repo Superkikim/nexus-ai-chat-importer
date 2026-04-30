@@ -53,7 +53,7 @@
       "perplexity": {
         "name": "Perplexity",
         "description": "Archivi JSON di Perplexity Thread Exporter",
-        "file_formats_0": "file perplexity_*.json (metadata + conversations[])"
+        "file_formats_0": "file perplexity_*.json (metadata + conversations[] | status + entries[])"
       }
     },
     "buttons": {

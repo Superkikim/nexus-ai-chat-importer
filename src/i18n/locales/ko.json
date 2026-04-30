@@ -53,7 +53,7 @@
       "perplexity": {
         "name": "Perplexity",
         "description": "Perplexity Thread Exporter JSON 아카이브",
-        "file_formats_0": "perplexity_*.json 파일 (metadata + conversations[])"
+        "file_formats_0": "perplexity_*.json 파일 (metadata + conversations[] | status + entries[])"
       }
     },
     "buttons": {

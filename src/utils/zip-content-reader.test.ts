@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractConversationsStream, extractRawConversations } from "./zip-content-reader";
+import { classifyArchiveEntries, extractConversationsStream, extractRawConversations } from "./zip-content-reader";
 import { ZipArchiveReader, ZipEntryHandle, ZipEntryMeta } from "./zip-loader";
 
 class MemoryZipEntry implements ZipEntryHandle {
@@ -105,5 +105,78 @@ describe("zip-content-reader", () => {
         }
 
         expect(ids).toEqual(["t1", "t2"]);
+    });
+
+    it("extracts Perplexity entries[] JSON files", async () => {
+        const reader = new MemoryZipReader({
+            "perplexity_entries_0001.json": JSON.stringify({
+                status: "success",
+                thread_metadata: {
+                    title: "Entries Thread",
+                },
+                entries: [
+                    {
+                        uuid: "entry-1",
+                        thread_url_slug: "entries-thread-abc",
+                        query_str: "Question?",
+                        blocks: [
+                            {
+                                markdown_block: {
+                                    answer: "Answer text",
+                                },
+                            },
+                        ],
+                    },
+                ],
+            }),
+        });
+
+        const result = await extractRawConversations(reader);
+
+        expect(result.conversations).toHaveLength(1);
+        expect(Array.isArray(result.conversations[0].entries)).toBe(true);
+    });
+
+    it("streams Perplexity entries[] JSON one file at a time", async () => {
+        const reader = new MemoryZipReader({
+            "perplexity_entries_0001.json": JSON.stringify({
+                status: "success",
+                entries: [
+                    {
+                        uuid: "entry-1",
+                        thread_url_slug: "entries-thread-abc",
+                        query_str: "Question?",
+                        blocks: [
+                            {
+                                markdown_block: {
+                                    answer: "Answer text",
+                                },
+                            },
+                        ],
+                    },
+                ],
+            }),
+        });
+
+        const streamed: any[] = [];
+        for await (const conversation of extractConversationsStream(reader)) {
+            streamed.push(conversation);
+        }
+
+        expect(streamed).toHaveLength(1);
+        expect(Array.isArray(streamed[0].entries)).toBe(true);
+    });
+
+    it("classifies nested ZIP containers with a dedicated guidance message", () => {
+        const classification = classifyArchiveEntries([
+            "perplexity_export_1777357714391_part1of3.zip",
+            "perplexity_export_1777357714391_part2of3.zip",
+            "perplexity_export_1777357714391_part3of3.zip",
+        ], "perplexity");
+
+        expect(classification.supported).toBe(false);
+        if (classification.supported) return;
+        expect(classification.reason).toBe("nested-zip-container");
+        expect(classification.message).toContain("Extract the outer ZIP");
     });
 });

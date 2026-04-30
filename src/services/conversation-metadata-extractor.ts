@@ -31,6 +31,7 @@ import {
 } from "../utils/zip-content-reader";
 import { decideArchiveMode } from "./archive-mode-decider";
 import { Logger, ScopedLogger } from "../logger";
+import { normalizePerplexityConversationFile } from "../providers/perplexity/perplexity-normalizer";
 
 export type ConversationExistenceStatus = "new" | "updated" | "unchanged" | "unknown";
 
@@ -73,7 +74,7 @@ export interface FileAnalysisStats {
 
 export interface IgnoredArchiveInfo {
     fileName: string;
-    reason: "unsupported-format" | "provider-mismatch" | "empty" | "read-error";
+    reason: "unsupported-format" | "provider-mismatch" | "empty" | "nested-zip-container" | "read-error";
     message: string;
 }
 
@@ -618,20 +619,22 @@ export class ConversationMetadataExtractor {
     private extractPerplexityMetadata(conversations: any[]): ConversationMetadata[] {
         return conversations
             .filter(chat => {
-                if (!chat || typeof chat !== "object") {
+                const normalized = normalizePerplexityConversationFile(chat);
+                if (!normalized) {
                     this.plugin.logger.warn("Skipping invalid Perplexity conversation: not an object");
                     return false;
                 }
 
-                if (!chat.metadata?.thread_id || !Array.isArray(chat.conversations)) {
-                    this.plugin.logger.warn("Skipping Perplexity conversation with missing metadata.thread_id or conversations[]");
+                if (!normalized.metadata?.thread_id || !Array.isArray(normalized.conversations)) {
+                    this.plugin.logger.warn("Skipping Perplexity conversation with missing normalized metadata.thread_id or conversations[]");
                     return false;
                 }
 
-                return chat.conversations.length > 0;
+                return normalized.conversations.length > 0;
             })
             .map(chat => {
-                const turns = [...chat.conversations].sort((a: any, b: any) => {
+                const normalized = normalizePerplexityConversationFile(chat)!;
+                const turns = [...normalized.conversations].sort((a: any, b: any) => {
                     const timeA = new Date(a.timestamp || 0).getTime();
                     const timeB = new Date(b.timestamp || 0).getTime();
                     return timeA - timeB;
@@ -641,21 +644,26 @@ export class ConversationMetadataExtractor {
                     .map((turn: any) => new Date(turn.timestamp || 0).getTime())
                     .filter((ts: number) => Number.isFinite(ts) && ts > 0);
 
-                const metaCreateMs = new Date(chat.metadata?.thread_created_at || "").getTime();
-                const metaUpdateMs = new Date(chat.metadata?.thread_updated_at || "").getTime();
+                const metaCreateMs = new Date(normalized.metadata?.thread_created_at || "").getTime();
+                const metaUpdateMs = new Date(normalized.metadata?.thread_updated_at || "").getTime();
                 const createTime = Number.isFinite(metaCreateMs) && metaCreateMs > 0
                     ? Math.floor(metaCreateMs / 1000)
                     : timestamps.length > 0 ? Math.floor(Math.min(...timestamps) / 1000) : 0;
                 const updateTime = Number.isFinite(metaUpdateMs) && metaUpdateMs > 0
                     ? Math.floor(metaUpdateMs / 1000)
                     : timestamps.length > 0 ? Math.floor(Math.max(...timestamps) / 1000) : 0;
+                const messageCount = turns.reduce((count: number, turn: any) => {
+                    const query = typeof turn.query === "string" ? turn.query.trim() : "";
+                    const answer = typeof turn.answer === "string" ? turn.answer.trim() : "";
+                    return count + (query ? 1 : 0) + (answer ? 1 : 0);
+                }, 0);
 
                 return {
-                    id: chat.metadata.thread_id,
-                    title: (chat.metadata.thread_title || "Untitled").trim() || "Untitled",
+                    id: normalized.metadata.thread_id || "",
+                    title: (normalized.metadata.thread_title || "Untitled").trim() || "Untitled",
                     createTime,
                     updateTime,
-                    messageCount: turns.length * 2,
+                    messageCount,
                     provider: "perplexity",
                     isStarred: false,
                     isArchived: false,

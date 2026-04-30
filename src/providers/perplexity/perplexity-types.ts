@@ -50,3 +50,49 @@ export interface PerplexityConversationFile {
     metadata: PerplexityThreadMetadata;
     conversations: PerplexityTurn[];
 }
+
+export interface PerplexityEntryMarkdownBlock {
+    answer?: string;
+    chunks?: string[];
+}
+
+export interface PerplexityEntryBlock {
+    intended_usage?: string;
+    markdown_block?: PerplexityEntryMarkdownBlock;
+}
+
+export interface PerplexityRelatedQueryItem {
+    text?: string;
+    type?: string;
+}
+
+export interface PerplexityEntry {
+    uuid?: string;
+    backend_uuid?: string;
+    thread_title?: string;
+    thread_url_slug?: string;
+    query_str?: string;
+    display_model?: string;
+    user_selected_model?: string;
+    mode?: string;
+    related_queries?: string[];
+    related_query_items?: PerplexityRelatedQueryItem[];
+    blocks?: PerplexityEntryBlock[];
+    entry_created_datetime?: string;
+    entry_updated_datetime?: string;
+    updated_datetime?: string;
+}
+
+export interface PerplexityEntryThreadMetadata {
+    title?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface PerplexityEntryExportFile {
+    status?: string;
+    entries?: PerplexityEntry[];
+    thread_metadata?: PerplexityEntryThreadMetadata;
+}
+
+export type PerplexityRawConversationFile = PerplexityConversationFile | PerplexityEntryExportFile;

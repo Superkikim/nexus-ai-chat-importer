@@ -1002,6 +1002,8 @@ export class ImportReport {
                 return "provider mismatch";
             case "unsupported-format":
                 return "unsupported format";
+            case "nested-zip-container":
+                return "nested ZIP container";
             case "empty":
                 return "empty archive";
             case "read-error":
