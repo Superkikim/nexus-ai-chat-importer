@@ -19,6 +19,7 @@
 import { App } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { NewVersionModal } from "./new-version-modal";
+import { getCommunityForumUrl } from "../utils/support-links";
 
 /**
  * Upgrade notice for v1.3.2
@@ -26,6 +27,7 @@ import { NewVersionModal } from "./new-version-modal";
  */
 export class UpgradeNotice132Dialog {
 	    static open(app: App, plugin: NexusAiChatImporterPlugin): void {
+        const forumUrl = getCommunityForumUrl();
 	        const fallbackMessage = `## 🔄 What Changed
 
 **Claude changed their export format.** If you imported Claude conversations recently and noticed missing code files or strange links, v1.3.2 fixes this.
@@ -49,7 +51,7 @@ export class UpgradeNotice132Dialog {
 
 ## 🙏 Questions?
 
-If something doesn't work as expected, please report it on the [forum thread](https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664).`;
+If something doesn't work as expected, please report it on the [forum thread](${forumUrl}).`;
 
 		        new NewVersionModal(
 		            app,
@@ -59,4 +61,3 @@ If something doesn't work as expected, please report it on the [forum thread](ht
 		        ).open();
     }
 }
-

@@ -1,5 +1,8 @@
 const NEXUS_DOCS_BASE = "https://nexus-prod.dev";
 const NEXUS_DOCS_SLUG = "nexus-ai-chat-importer";
+const GITHUB_REPO_BASE = "https://github.com/Superkikim/nexus-ai-chat-importer";
+const GITHUB_ISSUES_URL = "https://github.com/superkikim/nexus-ai-chat-importer/issues";
+const NEXUS_FORUM_THREAD_URL = "https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664";
 const SUPPORTED_NEXUS_LOCALES = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"] as const;
 
 type SupportedNexusLocale = typeof SUPPORTED_NEXUS_LOCALES[number];
@@ -35,3 +38,14 @@ export function getLocalizedSupportUrl(locale?: string): string {
     return `${getLocalizedDocsUrl(locale)}/support`;
 }
 
+export function getReleaseNotesUrl(ref: string = "master"): string {
+    return `${GITHUB_REPO_BASE}/blob/${ref}/RELEASE_NOTES.md`;
+}
+
+export function getIssuesUrl(): string {
+    return GITHUB_ISSUES_URL;
+}
+
+export function getCommunityForumUrl(): string {
+    return NEXUS_FORUM_THREAD_URL;
+}

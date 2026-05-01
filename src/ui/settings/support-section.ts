@@ -22,7 +22,12 @@ import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { createSupportBox } from "../components/support-box";
 import { t } from '../../i18n';
-import { getLocalizedDocsUrl } from "../../utils/support-links";
+import {
+    getCommunityForumUrl,
+    getIssuesUrl,
+    getLocalizedDocsUrl,
+    getReleaseNotesUrl,
+} from "../../utils/support-links";
 
 export class SupportSection extends BaseSettingsSection {
     get title() { return t('settings.support.section_title'); }
@@ -49,21 +54,21 @@ export class SupportSection extends BaseSettingsSection {
                 button
                     .setButtonText(t('settings.support.resources.release_notes'))
                     .onClick(() => {
-                        window.open("https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
+                        window.open(getReleaseNotesUrl(), "_blank");
                     })
             )
             .addButton((button) =>
                 button
                     .setButtonText(t('settings.support.resources.issues'))
                     .onClick(() => {
-                        window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
+                        window.open(getIssuesUrl(), "_blank");
                     })
             )
             .addButton((button) =>
                 button
                     .setButtonText(t('settings.support.resources.forum'))
                     .onClick(() => {
-                        window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
+                        window.open(getCommunityForumUrl(), "_blank");
                     })
             );
     }

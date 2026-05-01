@@ -1,7 +1,12 @@
 import { App, Modal } from "obsidian";
 import { createSupportBox } from "../ui/components/support-box";
 import { t } from '../i18n';
-import { getLocalizedDocsUrl } from "../utils/support-links";
+import {
+    getCommunityForumUrl,
+    getIssuesUrl,
+    getLocalizedDocsUrl,
+    getReleaseNotesUrl,
+} from "../utils/support-links";
 
 /**
  * Welcome dialog shown on first installation
@@ -94,19 +99,19 @@ export class InstallationWelcomeDialog extends Modal {
                 icon: '📝',
                 title: t('welcome.resources.release_notes.title'),
                 description: t('welcome.resources.release_notes.description'),
-                url: 'https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md'
+                url: getReleaseNotesUrl()
             },
             {
                 icon: '🐛',
                 title: t('welcome.resources.report_issues.title'),
                 description: t('welcome.resources.report_issues.description'),
-                url: 'https://github.com/superkikim/nexus-ai-chat-importer/issues'
+                url: getIssuesUrl()
             },
             {
                 icon: '💬',
                 title: t('welcome.resources.community_forum.title'),
                 description: t('welcome.resources.community_forum.description'),
-                url: 'https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664'
+                url: getCommunityForumUrl()
             }
         ];
 

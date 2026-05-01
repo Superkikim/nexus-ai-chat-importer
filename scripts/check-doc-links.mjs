@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const FILES_TO_CHECK = ["README.md", "RELEASE_NOTES.md"];
+const ROOT_FILES_TO_CHECK = ["README.md", "RELEASE_NOTES.md"];
+const DOCS_DIR = "docs";
 const SUPPORTED_LOCALES = new Set(["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"]);
 const URL_PATTERN = /https:\/\/nexus-prod\.dev\/[^\s)>"']+/g;
 
@@ -21,11 +22,33 @@ function extractUrls(content) {
     return content.match(URL_PATTERN) || [];
 }
 
+function collectMarkdownFiles(dirPath) {
+    if (!fs.existsSync(dirPath)) return [];
+
+    const results = [];
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const fullPath = path.join(dirPath, entry.name);
+        if (entry.isDirectory()) {
+            results.push(...collectMarkdownFiles(fullPath));
+            continue;
+        }
+
+        if (entry.isFile() && entry.name.toLowerCase().endsWith(".md")) {
+            results.push(fullPath);
+        }
+    }
+
+    return results;
+}
+
 function main() {
+    const filesToCheck = [...ROOT_FILES_TO_CHECK, ...collectMarkdownFiles(DOCS_DIR)];
     const failures = [];
     let checkedCount = 0;
 
-    for (const file of FILES_TO_CHECK) {
+    for (const file of filesToCheck) {
         const absolutePath = path.resolve(process.cwd(), file);
         const content = fs.readFileSync(absolutePath, "utf8");
         const urls = extractUrls(content);
@@ -58,8 +81,7 @@ function main() {
         process.exit(1);
     }
 
-    console.log(`Documentation link check passed (${checkedCount} nexus-prod.dev URLs validated).`);
+    console.log(`Documentation link check passed (${checkedCount} nexus-prod.dev URLs validated across ${filesToCheck.length} markdown files).`);
 }
 
 main();
-

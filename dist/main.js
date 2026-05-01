@@ -5528,17 +5528,32 @@ function getLocalizedDocsUrl(locale) {
 function getLocalizedSupportUrl(locale) {
   return `${getLocalizedDocsUrl(locale)}/support`;
 }
-var NEXUS_DOCS_BASE, NEXUS_DOCS_SLUG, SUPPORTED_NEXUS_LOCALES;
+function getReleaseNotesUrl(ref = "master") {
+  return `${GITHUB_REPO_BASE}/blob/${ref}/RELEASE_NOTES.md`;
+}
+function getIssuesUrl() {
+  return GITHUB_ISSUES_URL;
+}
+function getCommunityForumUrl() {
+  return NEXUS_FORUM_THREAD_URL;
+}
+var NEXUS_DOCS_BASE, NEXUS_DOCS_SLUG, GITHUB_REPO_BASE, GITHUB_ISSUES_URL, NEXUS_FORUM_THREAD_URL, SUPPORTED_NEXUS_LOCALES;
 var init_support_links = __esm({
   "src/utils/support-links.ts"() {
     "use strict";
     NEXUS_DOCS_BASE = "https://nexus-prod.dev";
     NEXUS_DOCS_SLUG = "nexus-ai-chat-importer";
+    GITHUB_REPO_BASE = "https://github.com/Superkikim/nexus-ai-chat-importer";
+    GITHUB_ISSUES_URL = "https://github.com/superkikim/nexus-ai-chat-importer/issues";
+    NEXUS_FORUM_THREAD_URL = "https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664";
     SUPPORTED_NEXUS_LOCALES = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
     __name(normalizeLocale, "normalizeLocale");
     __name(isSupportedLocale, "isSupportedLocale");
     __name(getLocalizedDocsUrl, "getLocalizedDocsUrl");
     __name(getLocalizedSupportUrl, "getLocalizedSupportUrl");
+    __name(getReleaseNotesUrl, "getReleaseNotesUrl");
+    __name(getIssuesUrl, "getIssuesUrl");
+    __name(getCommunityForumUrl, "getCommunityForumUrl");
   }
 });
 
@@ -12729,15 +12744,15 @@ var SupportSection = class extends BaseSettingsSection {
       })
     ).addButton(
       (button) => button.setButtonText(t("settings.support.resources.release_notes")).onClick(() => {
-        window.open("https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md", "_blank");
+        window.open(getReleaseNotesUrl(), "_blank");
       })
     ).addButton(
       (button) => button.setButtonText(t("settings.support.resources.issues")).onClick(() => {
-        window.open("https://github.com/superkikim/nexus-ai-chat-importer/issues", "_blank");
+        window.open(getIssuesUrl(), "_blank");
       })
     ).addButton(
       (button) => button.setButtonText(t("settings.support.resources.forum")).onClick(() => {
-        window.open("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664", "_blank");
+        window.open(getCommunityForumUrl(), "_blank");
       })
     );
   }
@@ -24066,19 +24081,19 @@ var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
         icon: "\u{1F4DD}",
         title: t("welcome.resources.release_notes.title"),
         description: t("welcome.resources.release_notes.description"),
-        url: "https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md"
+        url: getReleaseNotesUrl()
       },
       {
         icon: "\u{1F41B}",
         title: t("welcome.resources.report_issues.title"),
         description: t("welcome.resources.report_issues.description"),
-        url: "https://github.com/superkikim/nexus-ai-chat-importer/issues"
+        url: getIssuesUrl()
       },
       {
         icon: "\u{1F4AC}",
         title: t("welcome.resources.community_forum.title"),
         description: t("welcome.resources.community_forum.description"),
-        url: "https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664"
+        url: getCommunityForumUrl()
       }
     ];
     resources.forEach((resource) => {
@@ -24280,8 +24295,10 @@ var NewVersionModal = class extends import_obsidian29.Modal {
 __name(NewVersionModal, "NewVersionModal");
 
 // src/dialogs/upgrade-notice-1.3.2-dialog.ts
+init_support_links();
 var UpgradeNotice132Dialog = class {
   static open(app, plugin) {
+    const forumUrl = getCommunityForumUrl();
     const fallbackMessage = `## \u{1F504} What Changed
 
 **Claude changed their export format.** If you imported Claude conversations recently and noticed missing code files or strange links, v1.3.2 fixes this.
@@ -24305,7 +24322,7 @@ var UpgradeNotice132Dialog = class {
 
 ## \u{1F64F} Questions?
 
-If something doesn't work as expected, please report it on the [forum thread](https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664).`;
+If something doesn't work as expected, please report it on the [forum thread](${forumUrl}).`;
     new NewVersionModal(
       app,
       plugin,

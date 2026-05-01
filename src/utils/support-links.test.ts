@@ -2,8 +2,11 @@ import fs from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
 import {
+    getCommunityForumUrl,
     getLocalizedDocsUrl,
     getLocalizedSupportUrl,
+    getIssuesUrl,
+    getReleaseNotesUrl,
     getSupportedNexusLocales,
 } from "./support-links";
 
@@ -28,6 +31,13 @@ describe("support-links", () => {
         expect(getSupportedNexusLocales()).toEqual(["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"]);
     });
 
+    it("returns centralized resource links", () => {
+        expect(getReleaseNotesUrl()).toBe("https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md");
+        expect(getReleaseNotesUrl("dev-1.6.2")).toBe("https://github.com/Superkikim/nexus-ai-chat-importer/blob/dev-1.6.2/RELEASE_NOTES.md");
+        expect(getIssuesUrl()).toBe("https://github.com/superkikim/nexus-ai-chat-importer/issues");
+        expect(getCommunityForumUrl()).toBe("https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664");
+    });
+
     it("ensures migrated call-sites no longer hardcode support URLs", () => {
         const filesToCheck = [
             "src/ui/components/support-box.ts",
@@ -42,4 +52,3 @@ describe("support-links", () => {
         });
     });
 });
-
