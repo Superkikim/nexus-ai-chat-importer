@@ -13,7 +13,8 @@
         "test": "vitest",
         "test:ui": "vitest --ui",
         "test:run": "vitest run",
-        "test:coverage": "vitest run --coverage"
+        "test:coverage": "vitest run --coverage",
+        "check:docs-links": "node scripts/check-doc-links.mjs"
     },
     "keywords": [],
     "author": "Akim Sissaoui (Superkikim)",

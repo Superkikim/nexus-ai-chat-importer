@@ -4,6 +4,7 @@
  * All styles are defined in styles.css under "SUPPORT BOX" section
  */
 import { t } from '../../i18n';
+import { getLocalizedSupportUrl } from "../../utils/support-links";
 
 /**
  * Create a support callout box
@@ -43,11 +44,7 @@ export function createSupportBox(container: HTMLElement, message?: string): void
 	    const realityCheck = supportBox.createDiv('nexus-support-reality-check');
 	    realityCheck.innerHTML = t('support_box.reality_check');
 
-    const locale = window.moment.locale();
-    const supported = ['fr','de','es','it','ru','zh','ja','pt','ko'];
-    const supportUrl = supported.includes(locale)
-        ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer/support`
-        : 'https://nexus-prod.dev/nexus-ai-chat-importer/support';
+    const supportUrl = getLocalizedSupportUrl();
 
     const buttonContainer = supportBox.createDiv('nexus-support-button-container');
     buttonContainer.innerHTML = `
@@ -56,4 +53,3 @@ export function createSupportBox(container: HTMLElement, message?: string): void
         </a>
     `;
 }
-

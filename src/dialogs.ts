@@ -19,6 +19,7 @@
 
 // src/dialogs.ts
 import { Modal, App } from "obsidian";
+import { createSupportBox } from "./ui/components/support-box";
 
 // Function to show the modal with improved spacing
 function displayModal(app: App, title: string, paragraphs: string[], note?: string): Modal {
@@ -217,26 +218,8 @@ class BeautifulUpgradeDialog extends Modal {
         const content = container.createDiv('nexus-upgrade-content');
         content.innerHTML = this.options.message;
 
-        // Support section
-        const supportLocale = window.moment.locale();
-        const supportedLocales = ['fr','de','es','it','ru','zh','ja','pt','ko'];
-        const supportUrl = supportedLocales.includes(supportLocale)
-            ? `https://nexus-prod.dev/${supportLocale}/nexus-ai-chat-importer/support`
-            : 'https://nexus-prod.dev/nexus-ai-chat-importer/support';
-
-        const supportSection = container.createDiv('nexus-support-section');
-        supportSection.innerHTML = `
-            <div class="nexus-support-text">
-                I actively maintain and improve Nexus projects to keep these plugins reliable, fast, and up to date. Over 1,000 users are now using these plugins!
-
-                If these plugins help you, even a small donation would mean the world and help accelerate updates and long-term maintenance.
-            </div>
-            <div class="nexus-support-button-div">
-                <a href="${supportUrl}" target="_blank" class="nexus-support-link">
-                    Support my work
-                </a>
-            </div>
-        `;
+        // Centralized support section
+        createSupportBox(container);
 
         // Buttons container
         const buttonsContainer = container.createDiv('nexus-upgrade-buttons');

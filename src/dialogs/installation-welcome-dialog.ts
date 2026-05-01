@@ -1,6 +1,7 @@
 import { App, Modal } from "obsidian";
 import { createSupportBox } from "../ui/components/support-box";
 import { t } from '../i18n';
+import { getLocalizedDocsUrl } from "../utils/support-links";
 
 /**
  * Welcome dialog shown on first installation
@@ -82,18 +83,12 @@ export class InstallationWelcomeDialog extends Modal {
         `;
 
         // Resource links
-        const locale = window.moment.locale();
-        const supported = ['fr','de','es','it','ru','zh','ja','pt','ko'];
-        const docUrl = supported.includes(locale)
-            ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer`
-            : 'https://nexus-prod.dev/nexus-ai-chat-importer';
-
         const resources = [
             {
                 icon: '📖',
                 title: t('welcome.resources.documentation.title'),
                 description: t('welcome.resources.documentation.description'),
-                url: docUrl
+                url: getLocalizedDocsUrl()
             },
             {
                 icon: '📝',

@@ -375,7 +375,7 @@ var init_en = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -921,7 +921,7 @@ var init_fr = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -1452,7 +1452,7 @@ var init_de = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -1983,7 +1983,7 @@ var init_es = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -2514,7 +2514,7 @@ var init_it = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -3045,7 +3045,7 @@ var init_ru = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -3576,7 +3576,7 @@ var init_zh = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -4107,7 +4107,7 @@ var init_ja = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -4638,7 +4638,7 @@ var init_pt = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -5169,7 +5169,7 @@ var init_ko = __esm({
         },
         legacy_120_modal: {
           title: "\u{1F680} Nexus AI Chat Importer {{version}}",
-          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.\n\n---\n\n## Support My Work\n\n[![Support my work](https://img.shields.io/badge/Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)]({{support_url}})",
+          fallback_message: "\u{1F389} **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**\u{1F4A1} To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
           buttons: {
             proceed: "Proceed"
           }
@@ -5507,6 +5507,41 @@ var init_constants = __esm({
   }
 });
 
+// src/utils/support-links.ts
+function normalizeLocale(locale) {
+  var _a, _b, _c, _d;
+  const runtimeLocale = (_d = locale != null ? locale : (_c = (_b = (_a = globalThis == null ? void 0 : globalThis.window) == null ? void 0 : _a.moment) == null ? void 0 : _b.locale) == null ? void 0 : _c.call(_b)) != null ? _d : "en";
+  return runtimeLocale.toLowerCase().split(/[-_]/)[0];
+}
+function isSupportedLocale(locale) {
+  if (!locale)
+    return false;
+  return SUPPORTED_NEXUS_LOCALES.includes(locale);
+}
+function getLocalizedDocsUrl(locale) {
+  const normalized = normalizeLocale(locale);
+  if (isSupportedLocale(normalized)) {
+    return `${NEXUS_DOCS_BASE}/${normalized}/${NEXUS_DOCS_SLUG}`;
+  }
+  return `${NEXUS_DOCS_BASE}/${NEXUS_DOCS_SLUG}`;
+}
+function getLocalizedSupportUrl(locale) {
+  return `${getLocalizedDocsUrl(locale)}/support`;
+}
+var NEXUS_DOCS_BASE, NEXUS_DOCS_SLUG, SUPPORTED_NEXUS_LOCALES;
+var init_support_links = __esm({
+  "src/utils/support-links.ts"() {
+    "use strict";
+    NEXUS_DOCS_BASE = "https://nexus-prod.dev";
+    NEXUS_DOCS_SLUG = "nexus-ai-chat-importer";
+    SUPPORTED_NEXUS_LOCALES = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
+    __name(normalizeLocale, "normalizeLocale");
+    __name(isSupportedLocale, "isSupportedLocale");
+    __name(getLocalizedDocsUrl, "getLocalizedDocsUrl");
+    __name(getLocalizedSupportUrl, "getLocalizedSupportUrl");
+  }
+});
+
 // src/ui/components/support-box.ts
 function createSupportBox(container, message) {
   const supportBox = container.createDiv("nexus-support-box");
@@ -5530,9 +5565,7 @@ function createSupportBox(container, message) {
   }
   const realityCheck = supportBox.createDiv("nexus-support-reality-check");
   realityCheck.innerHTML = t("support_box.reality_check");
-  const locale = window.moment.locale();
-  const supported = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
-  const supportUrl = supported.includes(locale) ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer/support` : "https://nexus-prod.dev/nexus-ai-chat-importer/support";
+  const supportUrl = getLocalizedSupportUrl();
   const buttonContainer = supportBox.createDiv("nexus-support-button-container");
   buttonContainer.innerHTML = `
         <a href="${supportUrl}" target="_blank" class="nexus-support-link">
@@ -5544,6 +5577,7 @@ var init_support_box = __esm({
   "src/ui/components/support-box.ts"() {
     "use strict";
     init_i18n();
+    init_support_links();
     __name(createSupportBox, "createSupportBox");
   }
 });
@@ -7445,6 +7479,7 @@ var init_dialogs = __esm({
   "src/dialogs.ts"() {
     "use strict";
     import_obsidian13 = require("obsidian");
+    init_support_box();
     __name(displayModal, "displayModal");
     __name(addButtons, "addButtons");
     __name(showDialog, "showDialog");
@@ -9974,6 +10009,7 @@ var init_upgrade_1_2_0 = __esm({
     import_obsidian19 = require("obsidian");
     init_logger();
     init_i18n();
+    init_support_box();
     ConvertToCalloutsOperation = class extends UpgradeOperation {
       constructor() {
         super(...arguments);
@@ -10443,10 +10479,7 @@ ${cleanContent}`;
         this.contentEl.empty();
       }
       async createForm() {
-        const upgradeLocale = window.moment.locale();
-        const upgradeSupportedLocales = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
-        const upgradeSupportUrl = upgradeSupportedLocales.includes(upgradeLocale) ? `https://nexus-prod.dev/${upgradeLocale}/nexus-ai-chat-importer/support` : "https://nexus-prod.dev/nexus-ai-chat-importer/support";
-        let message = t("upgrade.legacy_120_modal.fallback_message", { support_url: upgradeSupportUrl });
+        let message = t("upgrade.legacy_120_modal.fallback_message");
         try {
           const response = await fetch("https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.2.0");
           if (response.ok) {
@@ -10464,6 +10497,7 @@ ${cleanContent}`;
           "",
           this.plugin
         );
+        createSupportBox(this.contentEl);
         this.contentEl.createEl("div", { cls: "nexus-upgrade-buttons" }, (el) => {
           el.style.textAlign = "right";
           el.style.marginTop = "20px";
@@ -12677,6 +12711,7 @@ __name(BaseSettingsSection, "BaseSettingsSection");
 // src/ui/settings/support-section.ts
 init_support_box();
 init_i18n();
+init_support_links();
 var SupportSection = class extends BaseSettingsSection {
   constructor() {
     super(...arguments);
@@ -12690,10 +12725,7 @@ var SupportSection = class extends BaseSettingsSection {
     createSupportBox(supportContainer);
     new import_obsidian.Setting(supportContainer).setName(t("settings.support.resources.name")).setDesc(t("settings.support.resources.desc")).addButton(
       (button) => button.setButtonText(t("settings.support.resources.documentation")).onClick(() => {
-        const locale = window.moment.locale();
-        const supported = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
-        const docUrl = supported.includes(locale) ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer` : "https://nexus-prod.dev/nexus-ai-chat-importer";
-        window.open(docUrl, "_blank");
+        window.open(getLocalizedDocsUrl(), "_blank");
       })
     ).addButton(
       (button) => button.setButtonText(t("settings.support.resources.release_notes")).onClick(() => {
@@ -23967,6 +23999,7 @@ __name(ConversationSelectionDialog, "ConversationSelectionDialog");
 var import_obsidian28 = require("obsidian");
 init_support_box();
 init_i18n();
+init_support_links();
 var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
   constructor(app, version, onGetStarted) {
     super(app);
@@ -24022,15 +24055,12 @@ var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
             gap: 12px;
             margin-bottom: 24px;
         `;
-    const locale = window.moment.locale();
-    const supported = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
-    const docUrl = supported.includes(locale) ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer` : "https://nexus-prod.dev/nexus-ai-chat-importer";
     const resources = [
       {
         icon: "\u{1F4D6}",
         title: t("welcome.resources.documentation.title"),
         description: t("welcome.resources.documentation.description"),
-        url: docUrl
+        url: getLocalizedDocsUrl()
       },
       {
         icon: "\u{1F4DD}",

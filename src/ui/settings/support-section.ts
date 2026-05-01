@@ -22,6 +22,7 @@ import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
 import { createSupportBox } from "../components/support-box";
 import { t } from '../../i18n';
+import { getLocalizedDocsUrl } from "../../utils/support-links";
 
 export class SupportSection extends BaseSettingsSection {
     get title() { return t('settings.support.section_title'); }
@@ -41,12 +42,7 @@ export class SupportSection extends BaseSettingsSection {
                 button
                     .setButtonText(t('settings.support.resources.documentation'))
                     .onClick(() => {
-                        const locale = window.moment.locale();
-                        const supported = ['fr','de','es','it','ru','zh','ja','pt','ko'];
-                        const docUrl = supported.includes(locale)
-                            ? `https://nexus-prod.dev/${locale}/nexus-ai-chat-importer`
-                            : 'https://nexus-prod.dev/nexus-ai-chat-importer';
-                        window.open(docUrl, "_blank");
+                        window.open(getLocalizedDocsUrl(), "_blank");
                     })
             )
             .addButton((button) =>
@@ -72,4 +68,3 @@ export class SupportSection extends BaseSettingsSection {
             );
     }
 }
-

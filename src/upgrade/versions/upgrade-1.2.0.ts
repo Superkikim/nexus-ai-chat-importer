@@ -23,6 +23,7 @@ import { App, Modal, MarkdownRenderer } from "obsidian";
 import NexusAiChatImporterPlugin from "../../main";
 import { logger } from "../../logger";
 import { t } from "../../i18n";
+import { createSupportBox } from "../../ui/components/support-box";
 
 /**
  * Convert indentations to callouts (automatic operation)
@@ -643,13 +644,7 @@ export class NexusUpgradeModal extends Modal {
 
     async createForm() {
         // Fetch release notes from GitHub
-        const upgradeLocale = window.moment.locale();
-        const upgradeSupportedLocales = ['fr','de','es','it','ru','zh','ja','pt','ko'];
-        const upgradeSupportUrl = upgradeSupportedLocales.includes(upgradeLocale)
-            ? `https://nexus-prod.dev/${upgradeLocale}/nexus-ai-chat-importer/support`
-            : 'https://nexus-prod.dev/nexus-ai-chat-importer/support';
-
-        let message = t("upgrade.legacy_120_modal.fallback_message", { support_url: upgradeSupportUrl });
+        let message = t("upgrade.legacy_120_modal.fallback_message");
 
         try {
             // Try to fetch release notes from GitHub
@@ -672,6 +667,8 @@ export class NexusUpgradeModal extends Modal {
             "",
             this.plugin,
         );
+
+        createSupportBox(this.contentEl);
 
         // Add single confirmation button
         this.contentEl.createEl("div", { cls: "nexus-upgrade-buttons" }, (el) => {
