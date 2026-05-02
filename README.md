@@ -874,7 +874,6 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 
 Current roadmap:
 - **v1.6.x**: Perplexity follow-up improvements (sources/citations variants, richer metadata)
-- **Gemini**: feasibility study in progress (no ETA)
 
 ### How You Can Help
 
