@@ -516,9 +516,9 @@
   "support_box": {
     "header": "Apoyar este plugin",
     "header_highlight": "Apoyar este plugin",
-    "default_message_emphasis": "Mantengo y mejoro activamente los proyectos Nexus para que sigan siendo fiables, rápidos y actualizados.",
-    "default_message": "Si este plugin te facilita la vida, una donación significaría muchísimo para mí y ayudaría a mantenerlos activos.",
-    "reality_check": "¡Gracias! Se han invertido miles de horas de trabajo en estos plugins, y cada donación me ayuda a lanzar mejoras más rápido y ofrecer mejor soporte. Si este plugin te facilita la vida, por favor considera apoyarme.",
+    "default_message_emphasis": "Nexus ha superado las 9.000 descargas. Ahora mismo, solo unas 5 personas al mes donan para apoyar el desarrollo.",
+    "default_message": "Mantengo este plugin en mi tiempo libre, y mantener en marcha mi entorno de desarrollo tiene costes continuos. Añadir nuevos proveedores también requiere suscripciones de pago para poder probar y ofrecer soporte fiable.",
+    "reality_check": "Si Nexus te resulta valioso, considera hacer una donación puntual o mensual. Gracias a todas las personas que ya apoyan el proyecto.",
     "button_alt": "Apoyar mi trabajo"
   }
 }
