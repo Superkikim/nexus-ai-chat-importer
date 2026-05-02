@@ -566,9 +566,9 @@ var init_en = __esm({
       support_box: {
         header: "Support This Plugin",
         header_highlight: "Support This Plugin",
-        default_message_emphasis: "I actively maintain and improve Nexus projects to keep them reliable, fast, and up to date.",
-        default_message: "If this plugin makes your life easier, a donation would mean the world to me and help keep them alive.",
-        reality_check: "Thank you! Thousands of hours of work have gone into these plugins, and every donation helps me ship improvements faster and provide better support. If this plugin makes your life easier, please consider supporting me.",
+        default_message_emphasis: "Nexus has reached 9,000+ downloads. Right now, only about 5 users per month donate to support development.",
+        default_message: "I maintain this plugin in my own time, and keeping my dev ecosystem running has ongoing costs. Adding new providers also requires paid subscriptions so I can test and deliver accurate support.",
+        reality_check: "If Nexus is valuable to you, please consider a one-time or monthly donation. Thank you to everyone already supporting the project.",
         button_alt: "Support my work"
       }
     };
@@ -1097,9 +1097,9 @@ var init_fr = __esm({
       support_box: {
         header: "Soutenir ce plugin",
         header_highlight: "Soutenir ce plugin",
-        default_message_emphasis: "Je maintiens et am\xE9liore activement les projets Nexus pour les garder fiables, rapides et \xE0 jour.",
-        default_message: "Si ce plugin vous facilite la vie, un don repr\xE9senterait \xE9norm\xE9ment pour moi et m'aiderait \xE0 les maintenir en vie.",
-        reality_check: "Merci ! Des milliers d'heures de travail ont \xE9t\xE9 investies dans ces plugins, et chaque don m'aide \xE0 livrer des am\xE9liorations plus vite et \xE0 offrir un meilleur support. Si ce plugin vous facilite la vie, pensez \xE0 me soutenir.",
+        default_message_emphasis: "Nexus a d\xE9pass\xE9 les 9 000 t\xE9l\xE9chargements. Aujourd'hui, seulement environ 5 utilisateurs par mois font un don pour soutenir le d\xE9veloppement.",
+        default_message: "Je maintiens ce plugin sur mon temps personnel, et maintenir mon environnement de d\xE9veloppement entra\xEEne des co\xFBts continus. Ajouter de nouveaux providers n\xE9cessite aussi des abonnements payants afin de tester et de fournir un support fiable.",
+        reality_check: "Si Nexus vous est utile, pensez \xE0 faire un don ponctuel ou mensuel. Merci \xE0 toutes les personnes qui soutiennent d\xE9j\xE0 le projet.",
         button_alt: "Soutenir mon travail"
       }
     };
@@ -1628,9 +1628,9 @@ var init_de = __esm({
       support_box: {
         header: "Dieses Plugin unterst\xFCtzen",
         header_highlight: "Dieses Plugin unterst\xFCtzen",
-        default_message_emphasis: "Ich pflege und verbessere die Nexus-Projekte aktiv, damit sie zuverl\xE4ssig, schnell und aktuell bleiben.",
-        default_message: "Wenn dieses Plugin Ihr Leben leichter macht, w\xFCrde mir eine Spende sehr viel bedeuten und dazu beitragen, die Projekte am Leben zu erhalten.",
-        reality_check: "Danke! Tausende Stunden Arbeit stecken in diesen Plugins, und jede Spende hilft mir, Verbesserungen schneller zu liefern und besseren Support anzubieten. Wenn dieses Plugin Ihr Leben leichter macht, erw\xE4gen Sie bitte, mich zu unterst\xFCtzen.",
+        default_message_emphasis: "Nexus hat \xFCber 9.000 Downloads erreicht. Derzeit spenden nur etwa 5 Nutzer pro Monat, um die Entwicklung zu unterst\xFCtzen.",
+        default_message: "Ich pflege dieses Plugin in meiner Freizeit, und meine Entwicklungsumgebung verursacht laufende Kosten. Das Hinzuf\xFCgen neuer Provider erfordert au\xDFerdem kostenpflichtige Abonnements, damit ich zuverl\xE4ssig testen und verl\xE4sslichen Support liefern kann.",
+        reality_check: "Wenn Nexus f\xFCr Sie wertvoll ist, unterst\xFCtzen Sie das Projekt bitte mit einer einmaligen oder monatlichen Spende. Danke an alle, die das Projekt bereits unterst\xFCtzen.",
         button_alt: "Meine Arbeit unterst\xFCtzen"
       }
     };
@@ -2159,9 +2159,9 @@ var init_es = __esm({
       support_box: {
         header: "Apoyar este plugin",
         header_highlight: "Apoyar este plugin",
-        default_message_emphasis: "Mantengo y mejoro activamente los proyectos Nexus para que sigan siendo fiables, r\xE1pidos y actualizados.",
-        default_message: "Si este plugin te facilita la vida, una donaci\xF3n significar\xEDa much\xEDsimo para m\xED y ayudar\xEDa a mantenerlos activos.",
-        reality_check: "\xA1Gracias! Se han invertido miles de horas de trabajo en estos plugins, y cada donaci\xF3n me ayuda a lanzar mejoras m\xE1s r\xE1pido y ofrecer mejor soporte. Si este plugin te facilita la vida, por favor considera apoyarme.",
+        default_message_emphasis: "Nexus ha superado las 9.000 descargas. Ahora mismo, solo unas 5 personas al mes donan para apoyar el desarrollo.",
+        default_message: "Mantengo este plugin en mi tiempo libre, y mantener en marcha mi entorno de desarrollo tiene costes continuos. A\xF1adir nuevos proveedores tambi\xE9n requiere suscripciones de pago para poder probar y ofrecer soporte fiable.",
+        reality_check: "Si Nexus te resulta valioso, considera hacer una donaci\xF3n puntual o mensual. Gracias a todas las personas que ya apoyan el proyecto.",
         button_alt: "Apoyar mi trabajo"
       }
     };
@@ -2690,9 +2690,9 @@ var init_it = __esm({
       support_box: {
         header: "Supporta questo plugin",
         header_highlight: "Supporta questo plugin",
-        default_message_emphasis: "Mantengo e miglioro attivamente i progetti Nexus per mantenerli affidabili, veloci e aggiornati.",
-        default_message: "Se questo plugin ti semplifica la vita, una donazione significherebbe moltissimo per me e aiuterebbe a tenerli in vita.",
-        reality_check: "Grazie! Migliaia di ore di lavoro sono state dedicate a questi plugin, e ogni donazione mi aiuta a rilasciare miglioramenti pi\xF9 rapidamente e a offrire un supporto migliore. Se questo plugin ti semplifica la vita, considera di supportarmi.",
+        default_message_emphasis: "Nexus ha superato i 9.000 download. Al momento, solo circa 5 utenti al mese fanno una donazione per sostenere lo sviluppo.",
+        default_message: "Mantengo questo plugin nel mio tempo libero e mantenere operativo il mio ambiente di sviluppo comporta costi continui. Aggiungere nuovi provider richiede anche abbonamenti a pagamento per poter testare e offrire un supporto affidabile.",
+        reality_check: "Se Nexus ti \xE8 utile, considera una donazione una tantum o mensile. Grazie a tutte le persone che gi\xE0 supportano il progetto.",
         button_alt: "Supportare il mio lavoro"
       }
     };
@@ -3221,9 +3221,9 @@ var init_ru = __esm({
       support_box: {
         header: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
         header_highlight: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u043B\u0430\u0433\u0438\u043D",
-        default_message_emphasis: "\u042F \u0430\u043A\u0442\u0438\u0432\u043D\u043E \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044E \u0438 \u0443\u043B\u0443\u0447\u0448\u0430\u044E \u043F\u0440\u043E\u0435\u043A\u0442\u044B Nexus, \u0447\u0442\u043E\u0431\u044B \u043E\u043D\u0438 \u043E\u0441\u0442\u0430\u0432\u0430\u043B\u0438\u0441\u044C \u043D\u0430\u0434\u0451\u0436\u043D\u044B\u043C\u0438, \u0431\u044B\u0441\u0442\u0440\u044B\u043C\u0438 \u0438 \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u044B\u043C\u0438.",
-        default_message: "\u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u0431\u0443\u0434\u0435\u0442 \u0434\u043B\u044F \u043C\u0435\u043D\u044F \u043E\u0447\u0435\u043D\u044C \u0437\u043D\u0430\u0447\u0438\u043C\u044B\u043C \u0438 \u043F\u043E\u043C\u043E\u0436\u0435\u0442 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0442\u044C \u043F\u0440\u043E\u0435\u043A\u0442\u044B \u0432 \u0440\u0430\u0431\u043E\u0447\u0435\u043C \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0438.",
-        reality_check: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E! \u041D\u0430 \u044D\u0442\u0438 \u043F\u043B\u0430\u0433\u0438\u043D\u044B \u0443\u0448\u043B\u0438 \u0442\u044B\u0441\u044F\u0447\u0438 \u0447\u0430\u0441\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B, \u0438 \u043A\u0430\u0436\u0434\u043E\u0435 \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u043C\u043D\u0435 \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u0432\u044B\u043F\u0443\u0441\u043A\u0430\u0442\u044C \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0438 \u043E\u0431\u0435\u0441\u043F\u0435\u0447\u0438\u0432\u0430\u0442\u044C \u0431\u043E\u043B\u0435\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u0443\u044E \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0443. \u0415\u0441\u043B\u0438 \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0443\u043F\u0440\u043E\u0449\u0430\u0435\u0442 \u0432\u0430\u0448\u0443 \u0436\u0438\u0437\u043D\u044C, \u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u0440\u0430\u0441\u0441\u043C\u043E\u0442\u0440\u0438\u0442\u0435 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438.",
+        default_message_emphasis: "Nexus \u043F\u0440\u0435\u0432\u044B\u0441\u0438\u043B 9 000 \u0437\u0430\u0433\u0440\u0443\u0437\u043E\u043A. \u0421\u0435\u0439\u0447\u0430\u0441 \u0442\u043E\u043B\u044C\u043A\u043E \u043E\u043A\u043E\u043B\u043E 5 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439 \u0432 \u043C\u0435\u0441\u044F\u0446 \u0434\u0435\u043B\u0430\u044E\u0442 \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u044F \u0432 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0443 \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0438.",
+        default_message: "\u042F \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044E \u044D\u0442\u043E\u0442 \u043F\u043B\u0430\u0433\u0438\u043D \u0432 \u043B\u0438\u0447\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F, \u0430 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435 \u043C\u043E\u0435\u0439 \u0441\u0440\u0435\u0434\u044B \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0438 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043F\u043E\u0441\u0442\u043E\u044F\u043D\u043D\u044B\u0445 \u0437\u0430\u0442\u0440\u0430\u0442. \u0414\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043D\u043E\u0432\u044B\u0445 \u043F\u0440\u043E\u0432\u0430\u0439\u0434\u0435\u0440\u043E\u0432 \u0442\u0430\u043A\u0436\u0435 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043F\u043B\u0430\u0442\u043D\u044B\u0445 \u043F\u043E\u0434\u043F\u0438\u0441\u043E\u043A, \u0447\u0442\u043E\u0431\u044B \u044F \u043C\u043E\u0433 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u043E \u0442\u0435\u0441\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0438 \u043E\u0431\u0435\u0441\u043F\u0435\u0447\u0438\u0432\u0430\u0442\u044C \u043D\u0430\u0434\u0435\u0436\u043D\u0443\u044E \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0443.",
+        reality_check: "\u0415\u0441\u043B\u0438 Nexus \u043F\u043E\u043B\u0435\u0437\u0435\u043D \u0434\u043B\u044F \u0432\u0430\u0441, \u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0442\u0435 \u043F\u0440\u043E\u0435\u043A\u0442 \u0440\u0430\u0437\u043E\u0432\u044B\u043C \u0438\u043B\u0438 \u0435\u0436\u0435\u043C\u0435\u0441\u044F\u0447\u043D\u044B\u043C \u043F\u043E\u0436\u0435\u0440\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0435\u043C. \u0421\u043F\u0430\u0441\u0438\u0431\u043E \u0432\u0441\u0435\u043C, \u043A\u0442\u043E \u0443\u0436\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 \u043F\u0440\u043E\u0435\u043A\u0442.",
         button_alt: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043C\u043E\u044E \u0440\u0430\u0431\u043E\u0442\u0443"
       }
     };
@@ -3752,9 +3752,9 @@ var init_zh = __esm({
       support_box: {
         header: "\u652F\u6301\u6B64\u63D2\u4EF6",
         header_highlight: "\u652F\u6301\u6B64\u63D2\u4EF6",
-        default_message_emphasis: "\u6211\u4F1A\u6301\u7EED\u7EF4\u62A4\u5E76\u6539\u8FDB Nexus \u9879\u76EE\uFF0C\u8BA9\u5B83\u4EEC\u4FDD\u6301\u7A33\u5B9A\u3001\u5FEB\u901F\u5E76\u6301\u7EED\u66F4\u65B0\u3002",
-        default_message: "\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u4E00\u7B14\u6350\u6B3E\u5BF9\u6211\u610F\u4E49\u91CD\u5927\uFF0C\u4E5F\u5C06\u5E2E\u52A9\u8FD9\u4E9B\u9879\u76EE\u6301\u7EED\u8FD0\u8F6C\u3002",
-        reality_check: "\u611F\u8C22\u60A8\uFF01\u8FD9\u4E9B\u63D2\u4EF6\u51DD\u805A\u4E86\u6570\u5343\u5C0F\u65F6\u7684\u6295\u5165\uFF0C\u6BCF\u4E00\u7B14\u6350\u6B3E\u90FD\u80FD\u5E2E\u52A9\u6211\u66F4\u5FEB\u53D1\u5E03\u6539\u8FDB\u5E76\u63D0\u4F9B\u66F4\u597D\u7684\u652F\u6301\u3002\u5982\u679C\u8FD9\u4E2A\u63D2\u4EF6\u8BA9\u60A8\u7684\u751F\u6D3B\u66F4\u4FBF\u6377\uFF0C\u8BF7\u8003\u8651\u652F\u6301\u6211\u3002",
+        default_message_emphasis: "Nexus \u5DF2\u8D85\u8FC7 9,000 \u6B21\u4E0B\u8F7D\u3002\u5F53\u524D\u6BCF\u6708\u53EA\u6709\u7EA6 5 \u4F4D\u7528\u6237\u901A\u8FC7\u6350\u8D60\u652F\u6301\u5F00\u53D1\u3002",
+        default_message: "\u6211\u5728\u4E2A\u4EBA\u65F6\u95F4\u7EF4\u62A4\u8FD9\u4E2A\u63D2\u4EF6\uFF0C\u7EF4\u6301\u5F00\u53D1\u73AF\u5883\u4E5F\u6709\u6301\u7EED\u6210\u672C\u3002\u65B0\u589E provider \u652F\u6301\u8FD8\u9700\u8981\u4ED8\u8D39\u8BA2\u9605\uFF0C\u624D\u80FD\u8FDB\u884C\u51C6\u786E\u6D4B\u8BD5\u5E76\u63D0\u4F9B\u53EF\u9760\u652F\u6301\u3002",
+        reality_check: "\u5982\u679C Nexus \u5BF9\u4F60\u6709\u4EF7\u503C\uFF0C\u6B22\u8FCE\u8003\u8651\u4E00\u6B21\u6027\u6216\u6309\u6708\u6350\u8D60\u3002\u611F\u8C22\u6240\u6709\u5DF2\u7ECF\u5728\u652F\u6301\u8FD9\u4E2A\u9879\u76EE\u7684\u7528\u6237\u3002",
         button_alt: "\u652F\u6301\u6211\u7684\u5DE5\u4F5C"
       }
     };
@@ -4283,9 +4283,9 @@ var init_ja = __esm({
       support_box: {
         header: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
         header_highlight: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u3092\u652F\u63F4\u3059\u308B",
-        default_message_emphasis: "Nexus \u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u3092\u5B89\u5B9A\u30FB\u9AD8\u901F\u30FB\u6700\u65B0\u306E\u72B6\u614B\u306B\u4FDD\u3064\u305F\u3081\u3001\u7D99\u7D9A\u7684\u306B\u4FDD\u5B88\u3068\u6539\u5584\u3092\u884C\u3063\u3066\u3044\u307E\u3059\u3002",
-        default_message: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u5BC4\u4ED8\u306F\u3068\u3066\u3082\u5927\u304D\u306A\u52B1\u307F\u306B\u306A\u308A\u3001\u30D7\u30ED\u30B8\u30A7\u30AF\u30C8\u306E\u7D99\u7D9A\u3092\u652F\u3048\u3066\u304F\u308C\u307E\u3059\u3002",
-        reality_check: "\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\uFF01\u3053\u308C\u3089\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u306B\u306F\u6570\u5343\u6642\u9593\u306E\u4F5C\u696D\u304C\u6CE8\u304E\u8FBC\u307E\u308C\u3066\u304A\u308A\u3001\u3054\u652F\u63F4\u304C\u3042\u308B\u3053\u3068\u3067\u3001\u3088\u308A\u901F\u304F\u6539\u5584\u3092\u5C4A\u3051\u3001\u3088\u308A\u826F\u3044\u30B5\u30DD\u30FC\u30C8\u3092\u63D0\u4F9B\u3067\u304D\u307E\u3059\u3002\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u304C\u304A\u5F79\u306B\u7ACB\u3063\u3066\u3044\u308B\u306A\u3089\u3001\u305C\u3072\u30B5\u30DD\u30FC\u30C8\u3092\u3054\u691C\u8A0E\u304F\u3060\u3055\u3044\u3002",
+        default_message_emphasis: "Nexus \u306F 9,000 \u4EE5\u4E0A\u306E\u30C0\u30A6\u30F3\u30ED\u30FC\u30C9\u306B\u5230\u9054\u3057\u307E\u3057\u305F\u3002\u73FE\u5728\u3001\u5BC4\u4ED8\u3067\u958B\u767A\u3092\u652F\u3048\u3066\u304F\u3060\u3055\u308B\u306E\u306F\u6708\u306B\u5E73\u5747\u7D04 5 \u4EBA\u3067\u3059\u3002",
+        default_message: "\u3053\u306E\u30D7\u30E9\u30B0\u30A4\u30F3\u306F\u79C1\u306E\u500B\u4EBA\u6642\u9593\u3067\u4FDD\u5B88\u3057\u3066\u304A\u308A\u3001\u958B\u767A\u74B0\u5883\u306E\u7DAD\u6301\u306B\u306F\u7D99\u7D9A\u7684\u306A\u8CBB\u7528\u304C\u304B\u304B\u308A\u307E\u3059\u3002\u65B0\u3057\u3044\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3078\u306E\u5BFE\u5FDC\u306B\u306F\u3001\u6B63\u78BA\u306A\u691C\u8A3C\u3068\u5B89\u5B9A\u3057\u305F\u30B5\u30DD\u30FC\u30C8\u306E\u305F\u3081\u306E\u6709\u6599\u30B5\u30D6\u30B9\u30AF\u30EA\u30D7\u30B7\u30E7\u30F3\u3082\u5FC5\u8981\u3067\u3059\u3002",
+        reality_check: "Nexus \u304C\u5F79\u7ACB\u3063\u3066\u3044\u308B\u5834\u5408\u306F\u3001\u5358\u767A\u307E\u305F\u306F\u6BCE\u6708\u306E\u5BC4\u4ED8\u3092\u3054\u691C\u8A0E\u304F\u3060\u3055\u3044\u3002\u3059\u3067\u306B\u652F\u63F4\u3057\u3066\u304F\u3060\u3055\u3063\u3066\u3044\u308B\u7686\u3055\u307E\u3001\u672C\u5F53\u306B\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059\u3002",
         button_alt: "\u79C1\u306E\u6D3B\u52D5\u3092\u652F\u63F4\u3059\u308B"
       }
     };
@@ -4814,9 +4814,9 @@ var init_pt = __esm({
       support_box: {
         header: "Apoiar este plugin",
         header_highlight: "Apoiar este plugin",
-        default_message_emphasis: "Mantenho e melhoro ativamente os projetos Nexus para que continuem fi\xE1veis, r\xE1pidos e atualizados.",
-        default_message: "Se este plugin facilita a sua vida, uma doa\xE7\xE3o significaria muito para mim e ajudaria a mant\xEA-los vivos.",
-        reality_check: "Obrigado! Milhares de horas de trabalho foram dedicadas a estes plugins, e cada doa\xE7\xE3o ajuda-me a lan\xE7ar melhorias mais rapidamente e a oferecer melhor suporte. Se este plugin facilita a sua vida, por favor considere apoiar-me.",
+        default_message_emphasis: "O Nexus ultrapassou os 9.000 downloads. Neste momento, apenas cerca de 5 utilizadores por m\xEAs fazem doa\xE7\xF5es para apoiar o desenvolvimento.",
+        default_message: "Mantenho este plugin no meu tempo livre, e manter o meu ecossistema de desenvolvimento a funcionar tem custos cont\xEDnuos. Adicionar novos providers tamb\xE9m exige subscri\xE7\xF5es pagas para eu poder testar e oferecer suporte fi\xE1vel.",
+        reality_check: "Se o Nexus \xE9 valioso para si, considere uma doa\xE7\xE3o \xFAnica ou mensal. Obrigado a todas as pessoas que j\xE1 apoiam o projeto.",
         button_alt: "Apoiar o meu trabalho"
       }
     };
@@ -5345,9 +5345,9 @@ var init_ko = __esm({
       support_box: {
         header: "\uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
         header_highlight: "\uC774 \uD50C\uB7EC\uADF8\uC778 \uD6C4\uC6D0\uD558\uAE30",
-        default_message_emphasis: "Nexus \uD504\uB85C\uC81D\uD2B8\uB97C \uC548\uC815\uC801\uC774\uACE0 \uBE60\uB974\uBA70 \uCD5C\uC2E0 \uC0C1\uD0DC\uB85C \uC720\uC9C0\uD558\uAE30 \uC704\uD574 \uC9C0\uC18D\uC801\uC73C\uB85C \uC720\uC9C0\uBCF4\uC218\uC640 \uAC1C\uC120\uC744 \uC9C4\uD589\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4.",
-        default_message: "\uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uB3C4\uC6C0\uC774 \uB41C\uB2E4\uBA74, \uD6C4\uC6D0\uC740 \uC800\uC5D0\uAC8C \uD070 \uD798\uC774 \uB418\uACE0 \uD504\uB85C\uC81D\uD2B8\uB97C \uC9C0\uC18D\uD558\uB294 \uB370 \uD070 \uB3C4\uC6C0\uC774 \uB429\uB2C8\uB2E4.",
-        reality_check: "\uAC10\uC0AC\uD569\uB2C8\uB2E4! \uC774 \uD50C\uB7EC\uADF8\uC778\uB4E4\uC5D0\uB294 \uC218\uCC9C \uC2DC\uAC04\uC758 \uC791\uC5C5\uC774 \uB2F4\uACA8 \uC788\uC73C\uBA70, \uD6C4\uC6D0 \uD558\uB098\uD558\uB098\uAC00 \uB354 \uBE60\uB978 \uAC1C\uC120 \uBC30\uD3EC\uC640 \uB354 \uB098\uC740 \uC9C0\uC6D0\uC5D0 \uD070 \uB3C4\uC6C0\uC774 \uB429\uB2C8\uB2E4. \uC774 \uD50C\uB7EC\uADF8\uC778\uC774 \uB3C4\uC6C0\uC774 \uB41C\uB2E4\uBA74 \uD6C4\uC6D0\uC744 \uACE0\uB824\uD574 \uC8FC\uC138\uC694.",
+        default_message_emphasis: "Nexus\uB294 9,000\uD68C \uC774\uC0C1 \uB2E4\uC6B4\uB85C\uB4DC\uB418\uC5C8\uC2B5\uB2C8\uB2E4. \uD604\uC7AC \uAC1C\uBC1C\uC744 \uD6C4\uC6D0\uD558\uB294 \uAE30\uBD80\uB294 \uC6D4 \uD3C9\uADE0 \uC57D 5\uBA85 \uC218\uC900\uC785\uB2C8\uB2E4.",
+        default_message: "\uC774 \uD50C\uB7EC\uADF8\uC778\uC740 \uC81C \uAC1C\uC778 \uC2DC\uAC04\uC5D0 \uC720\uC9C0\uBCF4\uC218\uD558\uACE0 \uC788\uC73C\uBA70, \uAC1C\uBC1C \uD658\uACBD\uC744 \uC720\uC9C0\uD558\uB294 \uB370\uB294 \uC9C0\uC18D\uC801\uC778 \uBE44\uC6A9\uC774 \uB4ED\uB2C8\uB2E4. \uC0C8\uB85C\uC6B4 \uC81C\uACF5\uC790 \uC9C0\uC6D0\uC744 \uCD94\uAC00\uD558\uB824\uBA74 \uC815\uD655\uD55C \uD14C\uC2A4\uD2B8\uC640 \uC9C0\uC6D0\uC744 \uC704\uD574 \uC720\uB8CC \uAD6C\uB3C5\uB3C4 \uD544\uC694\uD569\uB2C8\uB2E4.",
+        reality_check: "Nexus\uAC00 \uB3C4\uC6C0\uC774 \uB41C\uB2E4\uBA74 \uC77C\uD68C\uC131 \uB610\uB294 \uC815\uAE30 \uD6C4\uC6D0\uC744 \uBD80\uD0C1\uB4DC\uB9BD\uB2C8\uB2E4. \uC774\uBBF8 \uD6C4\uC6D0\uD574 \uC8FC\uC2DC\uB294 \uBAA8\uB4E0 \uBD84\uB4E4\uAED8 \uC9C4\uC2EC\uC73C\uB85C \uAC10\uC0AC\uB4DC\uB9BD\uB2C8\uB2E4.",
         button_alt: "\uB0B4 \uC791\uC5C5 \uD6C4\uC6D0\uD558\uAE30"
       }
     };

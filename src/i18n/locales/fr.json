@@ -517,7 +517,7 @@
     "header": "Soutenir ce plugin",
     "header_highlight": "Soutenir ce plugin",
     "default_message_emphasis": "Nexus a dépassé les 9 000 téléchargements. Aujourd'hui, seulement environ 5 utilisateurs par mois font un don pour soutenir le développement.",
-    "default_message": "Je maintiens ce plugin sur mon temps personnel, et faire tourner mon environnement de développement a un coût permanent. Ajouter de nouveaux providers nécessite aussi des abonnements payants pour tester et livrer un support fiable.",
+    "default_message": "Je maintiens ce plugin sur mon temps personnel, et maintenir mon environnement de développement entraîne des coûts continus. Ajouter de nouveaux providers nécessite aussi des abonnements payants afin de tester et de fournir un support fiable.",
     "reality_check": "Si Nexus vous est utile, pensez à faire un don ponctuel ou mensuel. Merci à toutes les personnes qui soutiennent déjà le projet.",
     "button_alt": "Soutenir mon travail"
   }

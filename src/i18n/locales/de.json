@@ -517,8 +517,8 @@
     "header": "Dieses Plugin unterstützen",
     "header_highlight": "Dieses Plugin unterstützen",
     "default_message_emphasis": "Nexus hat über 9.000 Downloads erreicht. Derzeit spenden nur etwa 5 Nutzer pro Monat, um die Entwicklung zu unterstützen.",
-    "default_message": "Ich pflege dieses Plugin in meiner Freizeit, und meine Entwicklungsumgebung verursacht laufende Kosten. Das Hinzufügen neuer Provider erfordert außerdem kostenpflichtige Abos, damit ich zuverlässig testen und guten Support liefern kann.",
-    "reality_check": "Wenn Nexus für dich wertvoll ist, unterstütze das Projekt bitte mit einer einmaligen oder monatlichen Spende. Danke an alle, die das Projekt bereits unterstützen.",
+    "default_message": "Ich pflege dieses Plugin in meiner Freizeit, und meine Entwicklungsumgebung verursacht laufende Kosten. Das Hinzufügen neuer Provider erfordert außerdem kostenpflichtige Abonnements, damit ich zuverlässig testen und verlässlichen Support liefern kann.",
+    "reality_check": "Wenn Nexus für Sie wertvoll ist, unterstützen Sie das Projekt bitte mit einer einmaligen oder monatlichen Spende. Danke an alle, die das Projekt bereits unterstützen.",
     "button_alt": "Meine Arbeit unterstützen"
   }
 }
