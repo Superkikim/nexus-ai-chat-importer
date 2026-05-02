@@ -138,11 +138,11 @@ Import your AI chat conversations from **ChatGPT**, **Claude**, **Le Chat**, and
 
 ## ☕ Support My Work
 
-I actively maintain and improve Nexus projects to keep them reliable, fast, and up to date.
+Nexus has reached 9,000+ downloads. Right now, only about 5 users per month donate to support development.
 
-**Over 8,000 downloads on Obsidian so far. Thank you to everyone who has supported this project.**
+I maintain this plugin in my own time, and keeping my dev ecosystem running has ongoing costs. Adding new providers also requires paid subscriptions so I can test and deliver accurate support.
 
-**If this plugin makes your life easier, a donation would mean the world to me and help keep development going strong.**
+If Nexus is valuable to you, please consider a one-time or monthly donation. Thank you to everyone already supporting the project.
 
 [![Support my work](https://img.shields.io/badge/☕_Support_my_work-nexus--prod.dev-FF5E5B?style=for-the-badge)](https://nexus-prod.dev/nexus-ai-chat-importer/support)
 
