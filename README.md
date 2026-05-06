@@ -60,7 +60,7 @@
 
 ## Overview
 
-Import your AI chat conversations from **ChatGPT**, **Claude**, **Le Chat**, and **Perplexity** exports into Obsidian as beautifully formatted Markdown files.
+Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le Chat**, **Perplexity**, and more in your local Obsidian vault, so you stay in control of your data.
 
 ### 🔍 Features in a Glance
 

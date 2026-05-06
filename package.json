@@ -1,7 +1,7 @@
 {
     "name": "nexus-ai-chat-importer",
     "version": "1.6.2",
-    "description": "Import AI conversations from ChatGPT, Claude, Le Chat, and Perplexity exports into your Obsidian vault.",
+    "description": "Import and organize AI chat exports from ChatGPT, Claude, Mistral Le Chat, Perplexity, and more in your local vault, so you stay in control of your data.",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs && cp styles.css build/styles.css && chokidar \"styles.css\" -c \"cp styles.css build/styles.css\"",

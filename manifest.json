@@ -5,5 +5,5 @@
     "author": "Superkikim",
     "authorUrl": "https://github.com/Superkikim",
     "minAppVersion": "0.15.0",
-    "description": "Import AI conversations from ChatGPT, Claude, Le Chat, and Perplexity exports into Obsidian."
+    "description": "Import and organize AI chat exports from ChatGPT, Claude, Mistral Le Chat, Perplexity, and more in your local vault, so you stay in control of your data."
 }
