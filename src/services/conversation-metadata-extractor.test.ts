@@ -130,6 +130,7 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
 
         const m = metadata[0];
         expect(m.id).toBe(adapter.getId(conversation));
+        expect(m.title).toBe(adapter.getTitle(conversation));
         expect(m.createTime).toBe(adapter.getCreateTime(conversation));
         expect(m.updateTime).toBe(adapter.getUpdateTime(conversation));
         expect(m.provider).toBe(adapter.getProviderName());

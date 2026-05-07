@@ -6067,11 +6067,13 @@ var init_logger = __esm({
 // src/utils.ts
 var utils_exports = {};
 __export(utils_exports, {
+  CONVERSATION_NOTE_FILENAME_MAX_BYTES: () => CONVERSATION_NOTE_FILENAME_MAX_BYTES,
   addPrefix: () => addPrefix,
   checkConversationLink: () => checkConversationLink,
   compareTimestampsIgnoringSeconds: () => compareTimestampsIgnoringSeconds,
   createDatePrefix: () => createDatePrefix,
   doesFilePathExist: () => doesFilePathExist,
+  enforceFileNameByteLimit: () => enforceFileNameByteLimit,
   ensureFolderExists: () => ensureFolderExists,
   formatMessageTimestamp: () => formatMessageTimestamp,
   formatTimestamp: () => formatTimestamp,
@@ -6082,11 +6084,13 @@ __export(utils_exports, {
   generateUniqueFileName: () => generateUniqueFileName,
   generateYearMonthFolder: () => generateYearMonthFolder,
   getFileFingerprint: () => getFileFingerprint,
+  getUtf8ByteLength: () => getUtf8ByteLength,
   isCustomError: () => isCustomError,
   isNexusRelated: () => isNexusRelated,
   isValidMessage: () => isValidMessage,
   moveAndMergeFolders: () => moveAndMergeFolders,
-  truncateToMinute: () => truncateToMinute
+  truncateToMinute: () => truncateToMinute,
+  truncateToUtf8Bytes: () => truncateToUtf8Bytes
 });
 function truncateToMinute(unixTime) {
   return Math.floor(unixTime / 60) * 60;
@@ -6154,12 +6158,71 @@ function createDatePrefix(timeStamp, dateFormat) {
   }
   return prefix;
 }
-async function generateUniqueFileName(filePath, vaultAdapter) {
-  let uniqueFileName = filePath;
-  const baseName = filePath.replace(/\.md$/, "");
+function getUtf8ByteLength(value) {
+  return utf8Encoder.encode(value).length;
+}
+function truncateToUtf8Bytes(value, maxBytes) {
+  if (maxBytes <= 0 || !value)
+    return "";
+  if (getUtf8ByteLength(value) <= maxBytes)
+    return value;
+  let result = "";
+  let usedBytes = 0;
+  for (const char of value) {
+    const charBytes = getUtf8ByteLength(char);
+    if (usedBytes + charBytes > maxBytes)
+      break;
+    result += char;
+    usedBytes += charBytes;
+  }
+  return result;
+}
+function enforceFileNameByteLimit(fileName, maxBytes, preserveExtension = true) {
+  const normalized = (fileName || "").trim() || "Untitled";
+  if (maxBytes <= 0 || getUtf8ByteLength(normalized) <= maxBytes) {
+    return normalized;
+  }
+  if (!preserveExtension) {
+    const truncated = truncateToUtf8Bytes(normalized, maxBytes).trim();
+    return truncated.length > 0 ? truncated : "Untitled";
+  }
+  const dotIndex = normalized.lastIndexOf(".");
+  const hasExtension = dotIndex > 0 && dotIndex < normalized.length - 1;
+  const extension = hasExtension ? normalized.slice(dotIndex) : "";
+  const baseName = hasExtension ? normalized.slice(0, dotIndex) : normalized;
+  const extensionBytes = getUtf8ByteLength(extension);
+  const availableBaseBytes = Math.max(1, maxBytes - extensionBytes);
+  const truncatedBase = truncateToUtf8Bytes(baseName, availableBaseBytes).trim() || "Untitled";
+  const finalName = `${truncatedBase}${extension}`;
+  if (getUtf8ByteLength(finalName) <= maxBytes) {
+    return finalName;
+  }
+  return truncateToUtf8Bytes(finalName, maxBytes).trim() || "Untitled";
+}
+async function generateUniqueFileName(filePath, vaultAdapter, maxFileNameBytes) {
+  const lastSlash = filePath.lastIndexOf("/");
+  const folderPath = lastSlash >= 0 ? filePath.substring(0, lastSlash) : "";
+  const initialFileName = lastSlash >= 0 ? filePath.substring(lastSlash + 1) : filePath;
+  const extensionIndex = initialFileName.lastIndexOf(".");
+  const extension = extensionIndex > 0 ? initialFileName.substring(extensionIndex) : "";
+  const originalBaseName = extensionIndex > 0 ? initialFileName.substring(0, extensionIndex) : initialFileName;
+  const buildCandidatePath = /* @__PURE__ */ __name((counter2) => {
+    const suffix = counter2 > 0 ? ` (${counter2})` : "";
+    let candidateFileName = `${originalBaseName}${suffix}${extension}`;
+    if (typeof maxFileNameBytes === "number" && maxFileNameBytes > 0) {
+      const suffixBytes = getUtf8ByteLength(suffix);
+      const extensionBytes = getUtf8ByteLength(extension);
+      const allowedBaseBytes = Math.max(1, maxFileNameBytes - suffixBytes - extensionBytes);
+      const boundedBaseName = truncateToUtf8Bytes(originalBaseName, allowedBaseBytes).trim() || "Untitled";
+      candidateFileName = `${boundedBaseName}${suffix}${extension}`;
+      candidateFileName = enforceFileNameByteLimit(candidateFileName, maxFileNameBytes, true);
+    }
+    return folderPath ? `${folderPath}/${candidateFileName}` : candidateFileName;
+  }, "buildCandidatePath");
+  let uniqueFileName = buildCandidatePath(0);
   let counter = 1;
   while (await vaultAdapter.exists(uniqueFileName)) {
-    uniqueFileName = `${baseName} (${counter++}).md`;
+    uniqueFileName = buildCandidatePath(counter++);
   }
   return uniqueFileName;
 }
@@ -6171,7 +6234,7 @@ function getFileFingerprint(file) {
   const safeName = encodeURIComponent(file.name);
   return `meta:${safeName}:${file.size}:${file.lastModified}`;
 }
-function generateConversationFileName(chatTitle, createTime, addDatePrefix, dateFormat) {
+function generateConversationFileName(chatTitle, createTime, addDatePrefix, dateFormat, options) {
   const date = new Date(createTime * 1e3);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -6185,6 +6248,9 @@ function generateConversationFileName(chatTitle, createTime, addDatePrefix, date
       prefix = `${year}${month}${day}`;
     }
     fileName = `${prefix} - ${fileName}`;
+  }
+  if ((options == null ? void 0 : options.maxBytes) && options.maxBytes > 0) {
+    fileName = enforceFileNameByteLimit(fileName, options.maxBytes, false);
   }
   return fileName;
 }
@@ -6430,7 +6496,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
     };
   }
 }
-var import_obsidian4, import_obsidian5, moment, logger2;
+var import_obsidian4, import_obsidian5, moment, logger2, utf8Encoder, CONVERSATION_NOTE_FILENAME_MAX_BYTES;
 var init_utils = __esm({
   "src/utils.ts"() {
     "use strict";
@@ -6440,6 +6506,8 @@ var init_utils = __esm({
     init_constants();
     moment = window.moment;
     logger2 = new Logger();
+    utf8Encoder = new TextEncoder();
+    CONVERSATION_NOTE_FILENAME_MAX_BYTES = 120;
     __name(truncateToMinute, "truncateToMinute");
     __name(compareTimestampsIgnoringSeconds, "compareTimestampsIgnoringSeconds");
     __name(formatMessageTimestamp, "formatMessageTimestamp");
@@ -6449,6 +6517,9 @@ var init_utils = __esm({
     __name(generateFileName, "generateFileName");
     __name(addPrefix, "addPrefix");
     __name(createDatePrefix, "createDatePrefix");
+    __name(getUtf8ByteLength, "getUtf8ByteLength");
+    __name(truncateToUtf8Bytes, "truncateToUtf8Bytes");
+    __name(enforceFileNameByteLimit, "enforceFileNameByteLimit");
     __name(generateUniqueFileName, "generateUniqueFileName");
     __name(doesFilePathExist, "doesFilePathExist");
     __name(getFileFingerprint, "getFileFingerprint");
@@ -14860,8 +14931,7 @@ var ConversationProcessor = class {
       const forceReprocess = isReprocess || !!(reprocessConversationIds == null ? void 0 : reprocessConversationIds.has(chatId));
       let resolvedPath;
       if (existingEntry) {
-        resolvedPath = existingEntry.path;
-        await this.handleExistingChat(
+        resolvedPath = await this.handleExistingChat(
           adapter,
           chat,
           existingEntry,
@@ -14872,8 +14942,7 @@ var ConversationProcessor = class {
         );
       } else {
         const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
-        resolvedPath = filePath;
-        await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
+        resolvedPath = await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
       }
       const previousEntry = existingConversations.get(chatId);
       const previousUpdateTime = (_b = (_a = previousEntry == null ? void 0 : previousEntry.update_time) != null ? _a : previousEntry == null ? void 0 : previousEntry.updateTime) != null ? _b : 0;
@@ -14914,13 +14983,12 @@ var ConversationProcessor = class {
     const totalMessageCount = await this.countMessages(adapter, chat, isStandardConversation);
     const fileExists = await this.plugin.app.vault.adapter.exists(existingRecord.path);
     if (!fileExists) {
-      await this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip, isStandardConversation);
-      return;
+      return this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip, isStandardConversation);
     }
     if (isReprocess) {
       this.counters.totalExistingConversationsToUpdate++;
       await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true, isStandardConversation);
-      return;
+      return existingRecord.path;
     }
     const comparison = compareTimestampsIgnoringSeconds(updateTime, existingRecord.updateTime);
     if (comparison <= 0) {
@@ -14936,10 +15004,11 @@ var ConversationProcessor = class {
       this.counters.totalExistingConversationsToUpdate++;
       await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, false, isStandardConversation);
     }
+    return existingRecord.path;
   }
   async handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation = false) {
     this.counters.totalNewConversationsToImport++;
-    await this.createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation);
+    return this.createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation);
   }
   /**
    * Count messages in a chat using provider-specific logic
@@ -15097,15 +15166,35 @@ var ConversationProcessor = class {
         attachmentStats = this.calculateAttachmentStats(standardConversation.messages);
       }
       const content = this.noteFormatter.generateMarkdownContent(standardConversation);
-      await this.fileService.writeToFile(filePath, content);
+      const chatTitle = standardConversation.title;
+      let finalFilePath = filePath;
+      try {
+        await this.fileService.writeToFile(finalFilePath, content);
+      } catch (error) {
+        if (!this.isNameTooLongError(error)) {
+          throw error;
+        }
+        const fallbackPath = this.buildFallbackConversationPath(finalFilePath, chatId);
+        this.plugin.logger.warn("Conversation filename exceeded platform limits; retrying with fallback name", {
+          provider: standardConversation.provider,
+          conversationId: chatId,
+          originalPath: finalFilePath,
+          fallbackPath
+        });
+        finalFilePath = await generateUniqueFileName(
+          fallbackPath,
+          this.plugin.app.vault.adapter,
+          CONVERSATION_NOTE_FILENAME_MAX_BYTES
+        );
+        await this.fileService.writeToFile(finalFilePath, content);
+      }
       const messageCount = standardConversation.messages.length;
       const createTime = standardConversation.createTime;
       const updateTime = standardConversation.updateTime;
-      const chatTitle = standardConversation.title;
       const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
       importReport.addCreated(
         chatTitle,
-        filePath,
+        finalFilePath,
         createTime,
         updateTime,
         messageCount,
@@ -15114,6 +15203,7 @@ var ConversationProcessor = class {
       );
       this.counters.totalNewConversationsSuccessfullyImported++;
       this.counters.totalNonEmptyMessagesToImport += messageCount;
+      return finalFilePath;
     } catch (error) {
       this.plugin.logger.error("Error creating new note", error.message);
       const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
@@ -15214,17 +15304,38 @@ ${section}`;
     if (!folderResult.success) {
       throw new Error(folderResult.error || "Failed to ensure folder exists.");
     }
+    const markdownExtensionBytes = 3;
+    const maxBaseNameBytes = Math.max(1, CONVERSATION_NOTE_FILENAME_MAX_BYTES - markdownExtensionBytes);
     let fileName = generateConversationFileName(
       chatTitle,
       createTime,
       this.plugin.settings.addDatePrefix,
-      this.plugin.settings.dateFormat
+      this.plugin.settings.dateFormat,
+      { maxBytes: maxBaseNameBytes }
     ) + ".md";
     let filePath = `${folderPath}/${fileName}`;
     if (await doesFilePathExist(filePath, this.plugin.app.vault)) {
-      filePath = await generateUniqueFileName(filePath, this.plugin.app.vault.adapter);
+      filePath = await generateUniqueFileName(
+        filePath,
+        this.plugin.app.vault.adapter,
+        CONVERSATION_NOTE_FILENAME_MAX_BYTES
+      );
     }
     return filePath;
+  }
+  isNameTooLongError(error) {
+    if (!error)
+      return false;
+    const message = typeof (error == null ? void 0 : error.message) === "string" ? error.message : String(error);
+    const code = typeof (error == null ? void 0 : error.code) === "string" ? error.code : "";
+    return code === "ENAMETOOLONG" || message.includes("ENAMETOOLONG");
+  }
+  buildFallbackConversationPath(originalPath, conversationId) {
+    const slashIndex = originalPath.lastIndexOf("/");
+    const folderPath = slashIndex >= 0 ? originalPath.substring(0, slashIndex) : "";
+    const safeConversationId = (conversationId || "unknown").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "unknown";
+    const fallbackFileName = `conversation-${safeConversationId}.md`;
+    return folderPath ? `${folderPath}/${fallbackFileName}` : fallbackFileName;
   }
   getCounters() {
     return this.counters;
@@ -18788,6 +18899,28 @@ var ClaudeAdapter = class extends BaseProviderAdapter {
 };
 __name(ClaudeAdapter, "ClaudeAdapter");
 
+// src/providers/lechat/lechat-title.ts
+var LECHAT_VISIBLE_TITLE_MAX_CHARS = 50;
+function truncateLeChatTitle(content) {
+  const trimmed = (content || "").trim();
+  if (!trimmed)
+    return "Untitled";
+  if (trimmed.length <= LECHAT_VISIBLE_TITLE_MAX_CHARS)
+    return trimmed;
+  return `${trimmed.substring(0, LECHAT_VISIBLE_TITLE_MAX_CHARS).trim()}...`;
+}
+__name(truncateLeChatTitle, "truncateLeChatTitle");
+function deriveLeChatConversationTitle(messages, options) {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return "Untitled";
+  }
+  const source = (options == null ? void 0 : options.assumeSorted) ? messages : [...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const firstUserMessage = source.find((msg) => msg.role === "user");
+  const content = (firstUserMessage == null ? void 0 : firstUserMessage.content) || "";
+  return truncateLeChatTitle(content);
+}
+__name(deriveLeChatConversationTitle, "deriveLeChatConversationTitle");
+
 // src/providers/lechat/lechat-converter.ts
 var LeChatConverter = class {
   /**
@@ -18982,15 +19115,7 @@ var LeChatConverter = class {
    * IMPORTANT: Assumes messages are already sorted chronologically
    */
   static deriveConversationTitle(chat) {
-    const firstUserMessage = chat.find((msg) => msg.role === "user");
-    if (firstUserMessage && firstUserMessage.content) {
-      const content = firstUserMessage.content.trim();
-      if (content.length > 50) {
-        return content.substring(0, 50).trim() + "...";
-      }
-      return content;
-    }
-    return "Untitled";
+    return deriveLeChatConversationTitle(chat, { assumeSorted: true });
   }
   /**
    * Get minimum timestamp from messages (conversation create time)
@@ -19284,15 +19409,7 @@ var LeChatAdapter = class extends BaseProviderAdapter {
    * Derived from first user message (truncated to 50 chars)
    */
   getTitle(chat) {
-    const firstUserMessage = chat.find((msg) => msg.role === "user");
-    if (firstUserMessage && firstUserMessage.content) {
-      const content = firstUserMessage.content.trim();
-      if (content.length > 50) {
-        return content.substring(0, 50).trim() + "...";
-      }
-      return content;
-    }
-    return "Untitled";
+    return deriveLeChatConversationTitle(chat);
   }
   /**
    * Get conversation creation time (minimum message timestamp)
@@ -24731,12 +24848,7 @@ var ConversationMetadataExtractor = class {
         return timeA - timeB;
       });
       const chatId = sortedChat[0].chatId;
-      const firstUserMessage = sortedChat.find((msg) => msg.role === "user");
-      let title = "Untitled";
-      if (firstUserMessage && firstUserMessage.content) {
-        const content = firstUserMessage.content.trim();
-        title = content.length > 50 ? `${content.substring(0, 50).trim()}...` : content;
-      }
+      const title = deriveLeChatConversationTitle(sortedChat, { assumeSorted: true });
       const timestamps = sortedChat.map((msg) => new Date(msg.createdAt).getTime() / 1e3);
       return {
         id: chatId,

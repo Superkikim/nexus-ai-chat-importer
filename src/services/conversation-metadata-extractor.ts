@@ -34,6 +34,7 @@ import {
 import { decideArchiveMode } from "./archive-mode-decider";
 import { Logger, ScopedLogger } from "../logger";
 import { normalizePerplexityConversationFile } from "../providers/perplexity/perplexity-normalizer";
+import { deriveLeChatConversationTitle } from "../providers/lechat/lechat-title";
 
 export type ConversationExistenceStatus = "new" | "updated" | "unchanged" | "unknown";
 
@@ -563,13 +564,7 @@ export class ConversationMetadataExtractor {
                 });
 
                 const chatId = sortedChat[0].chatId;
-                const firstUserMessage = sortedChat.find((msg: any) => msg.role === "user");
-                let title = "Untitled";
-
-                if (firstUserMessage && firstUserMessage.content) {
-                    const content = firstUserMessage.content.trim();
-                    title = content.length > 50 ? `${content.substring(0, 50).trim()}...` : content;
-                }
+                const title = deriveLeChatConversationTitle(sortedChat as any, { assumeSorted: true });
 
                 const timestamps = sortedChat.map((msg: any) => new Date(msg.createdAt).getTime() / 1000);
 

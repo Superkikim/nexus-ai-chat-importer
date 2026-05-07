@@ -21,6 +21,7 @@ import { LeChatConverter } from "./lechat-converter";
 import { LeChatAttachmentExtractor } from "./lechat-attachment-extractor";
 import { LeChatReportNamingStrategy } from "./lechat-report-naming";
 import { LeChatConversation, LeChatMessage } from "./lechat-types";
+import { deriveLeChatConversationTitle } from "./lechat-title";
 import type NexusAiChatImporterPlugin from "../../main";
 import { BaseProviderAdapter, AttachmentExtractor } from "../base/base-provider-adapter";
 
@@ -74,17 +75,7 @@ export class LeChatAdapter extends BaseProviderAdapter<LeChatConversation> {
      * Derived from first user message (truncated to 50 chars)
      */
     getTitle(chat: LeChatConversation): string {
-        const firstUserMessage = chat.find(msg => msg.role === 'user');
-        
-        if (firstUserMessage && firstUserMessage.content) {
-            const content = firstUserMessage.content.trim();
-            if (content.length > 50) {
-                return content.substring(0, 50).trim() + '...';
-            }
-            return content;
-        }
-
-        return "Untitled";
+        return deriveLeChatConversationTitle(chat);
     }
 
     /**
@@ -156,4 +147,3 @@ export class LeChatAdapter extends BaseProviderAdapter<LeChatConversation> {
         }
     }
 }
-

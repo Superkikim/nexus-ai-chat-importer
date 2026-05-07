@@ -28,6 +28,9 @@ import type { MessageTimestampFormat } from "./types/plugin";
 const moment = (window as any).moment;
 
 const logger = new Logger();
+const utf8Encoder = new TextEncoder();
+
+export const CONVERSATION_NOTE_FILENAME_MAX_BYTES = 120;
 
 /**
  * Truncate Unix timestamp to minute precision (remove seconds)
@@ -178,20 +181,94 @@ export function createDatePrefix(
     return prefix;
 }
 
+export function getUtf8ByteLength(value: string): number {
+    return utf8Encoder.encode(value).length;
+}
+
+export function truncateToUtf8Bytes(value: string, maxBytes: number): string {
+    if (maxBytes <= 0 || !value) return "";
+    if (getUtf8ByteLength(value) <= maxBytes) return value;
+
+    let result = "";
+    let usedBytes = 0;
+
+    for (const char of value) {
+        const charBytes = getUtf8ByteLength(char);
+        if (usedBytes + charBytes > maxBytes) break;
+        result += char;
+        usedBytes += charBytes;
+    }
+
+    return result;
+}
+
+export function enforceFileNameByteLimit(
+    fileName: string,
+    maxBytes: number,
+    preserveExtension: boolean = true
+): string {
+    const normalized = (fileName || "").trim() || "Untitled";
+    if (maxBytes <= 0 || getUtf8ByteLength(normalized) <= maxBytes) {
+        return normalized;
+    }
+
+    if (!preserveExtension) {
+        const truncated = truncateToUtf8Bytes(normalized, maxBytes).trim();
+        return truncated.length > 0 ? truncated : "Untitled";
+    }
+
+    const dotIndex = normalized.lastIndexOf(".");
+    const hasExtension = dotIndex > 0 && dotIndex < normalized.length - 1;
+    const extension = hasExtension ? normalized.slice(dotIndex) : "";
+    const baseName = hasExtension ? normalized.slice(0, dotIndex) : normalized;
+
+    const extensionBytes = getUtf8ByteLength(extension);
+    const availableBaseBytes = Math.max(1, maxBytes - extensionBytes);
+    const truncatedBase = truncateToUtf8Bytes(baseName, availableBaseBytes).trim() || "Untitled";
+
+    const finalName = `${truncatedBase}${extension}`;
+    if (getUtf8ByteLength(finalName) <= maxBytes) {
+        return finalName;
+    }
+
+    // Safety fallback when extension itself consumes most of the budget.
+    return truncateToUtf8Bytes(finalName, maxBytes).trim() || "Untitled";
+}
+
 export async function generateUniqueFileName(
     filePath: string,
-    vaultAdapter: any
+    vaultAdapter: any,
+    maxFileNameBytes?: number
 ): Promise<string> {
-    let uniqueFileName = filePath;
+    const lastSlash = filePath.lastIndexOf("/");
+    const folderPath = lastSlash >= 0 ? filePath.substring(0, lastSlash) : "";
+    const initialFileName = lastSlash >= 0 ? filePath.substring(lastSlash + 1) : filePath;
+    const extensionIndex = initialFileName.lastIndexOf(".");
+    const extension = extensionIndex > 0 ? initialFileName.substring(extensionIndex) : "";
+    const originalBaseName = extensionIndex > 0 ? initialFileName.substring(0, extensionIndex) : initialFileName;
 
-    // Extract the base name and extension
-    const baseName = filePath.replace(/\.md$/, ""); // Remove the .md extension for unique name generation
+    const buildCandidatePath = (counter: number): string => {
+        const suffix = counter > 0 ? ` (${counter})` : "";
+        let candidateFileName = `${originalBaseName}${suffix}${extension}`;
+
+        if (typeof maxFileNameBytes === "number" && maxFileNameBytes > 0) {
+            const suffixBytes = getUtf8ByteLength(suffix);
+            const extensionBytes = getUtf8ByteLength(extension);
+            const allowedBaseBytes = Math.max(1, maxFileNameBytes - suffixBytes - extensionBytes);
+            const boundedBaseName = truncateToUtf8Bytes(originalBaseName, allowedBaseBytes).trim() || "Untitled";
+            candidateFileName = `${boundedBaseName}${suffix}${extension}`;
+            candidateFileName = enforceFileNameByteLimit(candidateFileName, maxFileNameBytes, true);
+        }
+
+        return folderPath ? `${folderPath}/${candidateFileName}` : candidateFileName;
+    };
+
+    let uniqueFileName = buildCandidatePath(0);
     let counter = 1;
 
     // Check for existence and generate unique names
     while (await vaultAdapter.exists(uniqueFileName)) {
-        // Create a new name with counter appended
-        uniqueFileName = `${baseName} (${counter++}).md`; // Append the counter and keep .md
+        uniqueFileName = buildCandidatePath(counter++);
     }
 
     return uniqueFileName; // Return the unique file name
@@ -223,7 +300,8 @@ export function generateConversationFileName(
     chatTitle: string,
     createTime: number,
     addDatePrefix: boolean,
-    dateFormat: string
+    dateFormat: string,
+    options?: { maxBytes?: number }
 ): string {
     const date = new Date(createTime * 1000);
     const year = date.getFullYear();
@@ -240,6 +318,10 @@ export function generateConversationFileName(
             prefix = `${year}${month}${day}`;
         }
         fileName = `${prefix} - ${fileName}`;
+    }
+
+    if (options?.maxBytes && options.maxBytes > 0) {
+        fileName = enforceFileNameByteLimit(fileName, options.maxBytes, false);
     }
 
     return fileName;

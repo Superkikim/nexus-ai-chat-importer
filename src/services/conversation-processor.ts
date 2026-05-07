@@ -33,6 +33,7 @@ import {
     doesFilePathExist,
     generateUniqueFileName,
     generateConversationFileName,
+    CONVERSATION_NOTE_FILENAME_MAX_BYTES,
     compareTimestampsIgnoringSeconds
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
@@ -308,8 +309,7 @@ export class ConversationProcessor {
 
             let resolvedPath: string;
             if (existingEntry) {
-                resolvedPath = existingEntry.path;
-                await this.handleExistingChat(
+                resolvedPath = await this.handleExistingChat(
                     adapter,
                     chat,
                     existingEntry,
@@ -320,8 +320,7 @@ export class ConversationProcessor {
                 );
             } else {
                 const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
-                resolvedPath = filePath;
-                await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
+                resolvedPath = await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
             }
 
             const previousEntry = existingConversations.get(chatId);
@@ -373,7 +372,7 @@ export class ConversationProcessor {
         zip?: ZipArchiveReader,
         isReprocess: boolean = false,
         isStandardConversation: boolean = false
-    ): Promise<void> {
+    ): Promise<string> {
         const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
         const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
         const updateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
@@ -386,15 +385,14 @@ export class ConversationProcessor {
 
         if (!fileExists) {
             // File was deleted, recreate it
-            await this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip, isStandardConversation);
-            return;
+            return this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip, isStandardConversation);
         }
 
         // REPROCESS LOGIC: Force update if this is a reprocess operation
         if (isReprocess) {
             this.counters.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true, isStandardConversation); // Force update
-            return;
+            return existingRecord.path;
         }
 
         // Normal logic: Check timestamps (ignoring seconds for v1.2.0 → v1.3.0 compatibility)
@@ -414,6 +412,8 @@ export class ConversationProcessor {
             this.counters.totalExistingConversationsToUpdate++;
             await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, false, isStandardConversation);
         }
+
+        return existingRecord.path;
     }
 
     private async handleNewChat(
@@ -423,9 +423,9 @@ export class ConversationProcessor {
         importReport: ImportReport,
         zip?: ZipArchiveReader,
         isStandardConversation: boolean = false
-    ): Promise<void> {
+    ): Promise<string> {
         this.counters.totalNewConversationsToImport++;
-        await this.createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation);
+        return this.createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation);
     }
 
     /**
@@ -618,7 +618,7 @@ export class ConversationProcessor {
         importReport: ImportReport,
         zip?: ZipArchiveReader,
         isStandardConversation: boolean = false
-    ): Promise<void> {
+    ): Promise<string> {
         try {
             // Ensure the folder exists (in case it was deleted)
             const folderPath = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -651,20 +651,42 @@ export class ConversationProcessor {
             }
 
             const content = this.noteFormatter.generateMarkdownContent(standardConversation);
+            const chatTitle = standardConversation.title;
+            let finalFilePath = filePath;
 
-            await this.fileService.writeToFile(filePath, content);
+            try {
+                await this.fileService.writeToFile(finalFilePath, content);
+            } catch (error: any) {
+                if (!this.isNameTooLongError(error)) {
+                    throw error;
+                }
+
+                const fallbackPath = this.buildFallbackConversationPath(finalFilePath, chatId);
+                this.plugin.logger.warn("Conversation filename exceeded platform limits; retrying with fallback name", {
+                    provider: standardConversation.provider,
+                    conversationId: chatId,
+                    originalPath: finalFilePath,
+                    fallbackPath,
+                });
+
+                finalFilePath = await generateUniqueFileName(
+                    fallbackPath,
+                    this.plugin.app.vault.adapter,
+                    CONVERSATION_NOTE_FILENAME_MAX_BYTES
+                );
+                await this.fileService.writeToFile(finalFilePath, content);
+            }
 
             const messageCount = standardConversation.messages.length;
             const createTime = standardConversation.createTime;
             const updateTime = standardConversation.updateTime;
-            const chatTitle = standardConversation.title;
 
             // Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
             const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
 
             importReport.addCreated(
                 chatTitle,
-                filePath,
+                finalFilePath,
                 createTime,
                 updateTime,
                 messageCount,
@@ -674,6 +696,7 @@ export class ConversationProcessor {
 
             this.counters.totalNewConversationsSuccessfullyImported++;
             this.counters.totalNonEmptyMessagesToImport += messageCount;
+            return finalFilePath;
 
         } catch (error: any) {
             this.plugin.logger.error("Error creating new note", error.message);
@@ -809,19 +832,46 @@ export class ConversationProcessor {
             throw new Error(folderResult.error || "Failed to ensure folder exists.");
         }
 
+        const markdownExtensionBytes = 3; // ".md"
+        const maxBaseNameBytes = Math.max(1, CONVERSATION_NOTE_FILENAME_MAX_BYTES - markdownExtensionBytes);
+
         let fileName = generateConversationFileName(
             chatTitle,
             createTime,
             this.plugin.settings.addDatePrefix,
-            this.plugin.settings.dateFormat
+            this.plugin.settings.dateFormat,
+            { maxBytes: maxBaseNameBytes }
         ) + ".md";
 
         let filePath = `${folderPath}/${fileName}`;
         if (await doesFilePathExist(filePath, this.plugin.app.vault)) {
-            filePath = await generateUniqueFileName(filePath, this.plugin.app.vault.adapter);
+            filePath = await generateUniqueFileName(
+                filePath,
+                this.plugin.app.vault.adapter,
+                CONVERSATION_NOTE_FILENAME_MAX_BYTES
+            );
         }
 
         return filePath;
+    }
+
+    private isNameTooLongError(error: any): boolean {
+        if (!error) return false;
+        const message = typeof error?.message === "string" ? error.message : String(error);
+        const code = typeof error?.code === "string" ? error.code : "";
+        return code === "ENAMETOOLONG" || message.includes("ENAMETOOLONG");
+    }
+
+    private buildFallbackConversationPath(originalPath: string, conversationId: string): string {
+        const slashIndex = originalPath.lastIndexOf("/");
+        const folderPath = slashIndex >= 0 ? originalPath.substring(0, slashIndex) : "";
+        const safeConversationId = (conversationId || "unknown")
+            .replace(/[^a-zA-Z0-9_-]+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "")
+            .slice(0, 48) || "unknown";
+        const fallbackFileName = `conversation-${safeConversationId}.md`;
+        return folderPath ? `${folderPath}/${fallbackFileName}` : fallbackFileName;
     }
 
     getCounters() {

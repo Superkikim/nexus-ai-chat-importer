@@ -18,6 +18,7 @@
 
 import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
 import { LeChatConversation, LeChatMessage, LeChatContentChunk, LeChatToolCallChunk, LeChatImageUrlChunk } from "./lechat-types";
+import { deriveLeChatConversationTitle } from "./lechat-title";
 
 /**
  * Converter for Le Chat (Mistral AI) export format
@@ -266,18 +267,7 @@ export class LeChatConverter {
      * IMPORTANT: Assumes messages are already sorted chronologically
      */
     private static deriveConversationTitle(chat: LeChatConversation): string {
-        // Find first user message (should be first or second message after sorting)
-        const firstUserMessage = chat.find(msg => msg.role === 'user');
-
-        if (firstUserMessage && firstUserMessage.content) {
-            const content = firstUserMessage.content.trim();
-            if (content.length > 50) {
-                return content.substring(0, 50).trim() + '...';
-            }
-            return content;
-        }
-
-        return "Untitled";
+        return deriveLeChatConversationTitle(chat, { assumeSorted: true });
     }
 
     /**
@@ -314,4 +304,3 @@ export class LeChatConverter {
         }
     }
 }
-

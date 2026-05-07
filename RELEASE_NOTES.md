@@ -1,5 +1,24 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.3 — Filename Length Hardening for Long Conversation Titles
+
+![Version](https://img.shields.io/badge/version-1.6.3-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🐛 Fixed
+
+- **Long conversation titles no longer fail with `ENAMETOOLONG`**
+  - Added a centralized filename byte-length guard for conversation note names
+  - Filename collision suffixes (`(1)`, `(2)`, …) now stay within the same length budget
+  - Added retry fallback when a platform still rejects a path because of filename length
+
+### 🔧 Improved
+
+- **Unified Le Chat title handling**
+  - Le Chat title derivation now uses one shared logic across adapter, converter, and metadata extraction
+  - Existing visible title policy is preserved (`50` chars + ellipsis when needed)
+
+---
+
 ## Version 1.6.2 — Perplexity Thread Exporter Compatibility Patch
 
 ![Version](https://img.shields.io/badge/version-1.6.2-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
