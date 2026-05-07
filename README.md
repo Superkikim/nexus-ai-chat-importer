@@ -6,9 +6,9 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.2** improves Perplexity Thread Exporter compatibility:
-> both schema variants are supported (`metadata + conversations[]` and `status + entries + thread_metadata`),
-> with explicit guidance for outer ZIP files that contain inner `part*.zip` archives.
+> ✅ **v1.6.3** hardens filename generation for long conversation titles:
+> imports now enforce a shared filename length budget across providers and include a safe fallback
+> when the filesystem rejects very long names (`ENAMETOOLONG`).
 > See [What’s New](#-whats-new) for details.
 
 
@@ -76,6 +76,16 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le C
 - Full UI localization in 10 languages
 
 ### ✨ What's New
+
+#### v1.6.3 — Filename Length Hardening
+
+✨ **New**
+- Shared filename length guard for conversation note files across providers
+- Safe fallback retry naming when a filesystem rejects a path with `ENAMETOOLONG`
+
+🔧 **Improved**
+- Collision suffixes like ` (1)`, ` (2)` are now kept inside the filename length budget
+- Le Chat title derivation is now centralized so title behavior stays consistent across import paths
 
 #### v1.6.2 — Perplexity Compatibility Patch
 
