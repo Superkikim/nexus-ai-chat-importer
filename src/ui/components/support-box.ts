@@ -3,7 +3,7 @@
  * Used in upgrade dialogs, installation dialog, etc.
  * All styles are defined in styles.css under "SUPPORT BOX" section
  */
-import { t } from '../../i18n';
+import { t } from "../../i18n";
 import { getLocalizedSupportUrl } from "../../utils/support-links";
 
 /**
@@ -11,45 +11,59 @@ import { getLocalizedSupportUrl } from "../../utils/support-links";
  * @param container - The HTML element to append the box to
  * @param message - Optional custom message (default: standard support message)
  */
-export function createSupportBox(container: HTMLElement, message?: string): void {
-    const supportBox = container.createDiv('nexus-support-box');
+export function createSupportBox(
+    container: HTMLElement,
+    message?: string
+): void {
+    const supportBox = container.createDiv("nexus-support-box");
 
     // Header
-    const header = supportBox.createDiv('nexus-support-header');
-    header.innerHTML = `<span class="nexus-support-header-highlight">${t('support_box.header_highlight')}</span>`;
+    const header = supportBox.createDiv("nexus-support-header");
+    header.createEl("span", {
+        cls: "nexus-support-header-highlight",
+        text: t("support_box.header_highlight"),
+    });
 
     // Message with emphasis on active project maintenance
-    const messageEl = supportBox.createDiv('nexus-support-message');
+    const messageEl = supportBox.createDiv("nexus-support-message");
 
     if (message) {
         // Custom message - split by \n\n for paragraphs
-        const paragraphs = message.split('\n\n');
-        messageEl.innerHTML = paragraphs.map(p => {
-            // Check if paragraph contains stats (numbers) to make it bold
-            const hasStats = /\d{1,3}[',]\d{3}|\$\d+/.test(p);
+        const paragraphs = message.split("\n\n");
+        paragraphs.forEach((pText) => {
+            const hasStats = /\d{1,3}[',]\d{3}|\$\d+/.test(pText);
+            const p = messageEl.createEl("p");
             if (hasStats) {
-                return `<p><span class="nexus-support-message-emphasis">${p}</span></p>`;
+                p.createEl("span", {
+                    cls: "nexus-support-message-emphasis",
+                    text: pText,
+                });
+            } else {
+                p.setText(pText);
             }
-            return `<p>${p}</p>`;
-        }).join('');
+        });
     } else {
         // Default message - emphasize active maintenance and ongoing updates
-        messageEl.innerHTML = `
-            <p><span class="nexus-support-message-emphasis">${t('support_box.default_message_emphasis')}</span></p>
-            <p>${t('support_box.default_message')}</p>
-        `;
+        messageEl.createEl("p").createEl("span", {
+            cls: "nexus-support-message-emphasis",
+            text: t("support_box.default_message_emphasis"),
+        });
+        messageEl.createEl("p", { text: t("support_box.default_message") });
     }
 
-	    // Appreciation message focused on impact and sustained support
-	    const realityCheck = supportBox.createDiv('nexus-support-reality-check');
-	    realityCheck.innerHTML = t('support_box.reality_check');
+    // Appreciation message focused on impact and sustained support
+    const realityCheck = supportBox.createDiv("nexus-support-reality-check");
+    realityCheck.setText(t("support_box.reality_check"));
 
     const supportUrl = getLocalizedSupportUrl();
 
-    const buttonContainer = supportBox.createDiv('nexus-support-button-container');
-    buttonContainer.innerHTML = `
-        <a href="${supportUrl}" target="_blank" class="nexus-support-link">
-            ${t('support_box.button_alt')}
-        </a>
-    `;
+    const buttonContainer = supportBox.createDiv(
+        "nexus-support-button-container"
+    );
+    const supportLink = buttonContainer.createEl("a", {
+        cls: "nexus-support-link",
+        text: t("support_box.button_alt"),
+        href: supportUrl,
+    });
+    supportLink.setAttr("target", "_blank");
 }

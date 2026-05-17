@@ -32,13 +32,18 @@ function extractFileIds(path: string): string[] {
         ids.push(hashMatch[1]);
     }
 
-    const baseName = fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp|pdf|txt|md)$/i, "");
+    const baseName = fileName.replace(
+        /\.(dat|png|jpg|jpeg|gif|webp|pdf|txt|md)$/i,
+        ""
+    );
     if (baseName) ids.push(baseName);
 
     return Array.from(new Set(ids.filter(Boolean)));
 }
 
-export function buildAttachmentLookupIndex(entries: ZipEntryMeta[]): AttachmentLookupIndex {
+export function buildAttachmentLookupIndex(
+    entries: ZipEntryMeta[]
+): AttachmentLookupIndex {
     const index: AttachmentLookupIndex = {
         byExactPath: new Map(),
         byBaseName: new Map(),

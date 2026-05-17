@@ -1,21 +1,20 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/providers/claude/claude-types.ts
 
@@ -64,7 +63,7 @@ export interface ClaudeContentBlock {
     id?: string;
     start_timestamp: string;
     stop_timestamp: string;
-    type: 'text' | 'thinking' | 'tool_use' | 'tool_result';
+    type: "text" | "thinking" | "tool_use" | "tool_result";
     text?: string;
     thinking?: string;
     citations?: any[];
@@ -84,7 +83,7 @@ export interface ClaudeContentBlock {
 export interface ClaudeMessage {
     uuid: string;
     text: string;
-    sender: 'human' | 'assistant';
+    sender: "human" | "assistant";
     created_at: string;
     content: ClaudeContentBlock[];
     attachments: any[]; // Usually empty, files are used instead

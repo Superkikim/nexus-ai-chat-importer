@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { deriveLeChatConversationTitle, LECHAT_VISIBLE_TITLE_MAX_CHARS } from "./lechat-title";
+import {
+    deriveLeChatConversationTitle,
+    LECHAT_VISIBLE_TITLE_MAX_CHARS,
+} from "./lechat-title";
 import { LeChatConversation } from "./lechat-types";
 
 describe("Le Chat title helper", () => {
@@ -10,7 +13,8 @@ describe("Le Chat title helper", () => {
                 version: 0,
                 chatId: "chat-1",
                 role: "user",
-                content: "This is a very long message that should be truncated to fifty characters maximum",
+                content:
+                    "This is a very long message that should be truncated to fifty characters maximum",
                 contentChunks: null,
                 createdAt: "2025-09-19T16:18:19.236Z",
                 reaction: "neutral",
@@ -26,8 +30,12 @@ describe("Le Chat title helper", () => {
         ];
 
         const title = deriveLeChatConversationTitle(chat);
-        expect(title).toBe("This is a very long message that should be truncat...");
-        expect(title.length).toBeLessThanOrEqual(LECHAT_VISIBLE_TITLE_MAX_CHARS + 3);
+        expect(title).toBe(
+            "This is a very long message that should be truncat..."
+        );
+        expect(title.length).toBeLessThanOrEqual(
+            LECHAT_VISIBLE_TITLE_MAX_CHARS + 3
+        );
     });
 
     it("derives title from first chronological user message", () => {

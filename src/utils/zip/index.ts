@@ -1,5 +1,11 @@
-import { DesktopZipArchiveReader, readDesktopZipEntries } from "./desktop-zip-reader";
-import { MobileZipArchiveReader, readMobileZipEntries } from "./mobile-zip-reader";
+import {
+    DesktopZipArchiveReader,
+    readDesktopZipEntries,
+} from "./desktop-zip-reader";
+import {
+    MobileZipArchiveReader,
+    readMobileZipEntries,
+} from "./mobile-zip-reader";
 import { ZipArchiveReader, ZipEntryMeta } from "./types";
 
 export * from "./types";

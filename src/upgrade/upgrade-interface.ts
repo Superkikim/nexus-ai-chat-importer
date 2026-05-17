@@ -1,41 +1,36 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/upgrade/upgrade-interface.ts
 import type NexusAiChatImporterPlugin from "../main";
 import { VersionUtils } from "./utils/version-utils";
 import { showDialog } from "../dialogs";
-import { Logger } from "../logger";
-
-const logger = new Logger();
-
 export interface OperationResult {
     success: boolean;
     message: string;
-    details?: any;
+    details?: unknown;
 }
 
 export interface UpgradeContext {
     plugin: NexusAiChatImporterPlugin;
     fromVersion: string;
     toVersion: string;
-    pluginData: any;
+    pluginData: unknown;
     /** Optional callback for operations to report progress (0-100) and detail text */
     onProgress?: (progress: number, detail?: string) => void;
 }
@@ -44,12 +39,12 @@ export abstract class UpgradeOperation {
     abstract readonly id: string;
     abstract readonly name: string;
     abstract readonly description: string;
-    abstract readonly type: 'automatic' | 'manual';
+    abstract readonly type: "automatic" | "manual";
 
     /**
      * Check if operation can run (prerequisites)
      */
-    async canRun(context: UpgradeContext): Promise<boolean> {
+    async canRun(_context: UpgradeContext): Promise<boolean> {
         return true;
     }
 
@@ -61,7 +56,7 @@ export abstract class UpgradeOperation {
     /**
      * Verify operation completed successfully
      */
-    async verify(context: UpgradeContext): Promise<boolean> {
+    async verify(_context: UpgradeContext): Promise<boolean> {
         return true;
     }
 }
@@ -76,8 +71,10 @@ export abstract class VersionUpgrade {
      */
     shouldRun(fromVersion: string, toVersion: string): boolean {
         // Run if target version >= this upgrade version and user is upgrading to/past it
-        return VersionUtils.compareVersions(toVersion, this.version) >= 0 &&
-               VersionUtils.compareVersions(fromVersion, this.version) < 0;
+        return (
+            VersionUtils.compareVersions(toVersion, this.version) >= 0 &&
+            VersionUtils.compareVersions(fromVersion, this.version) < 0
+        );
     }
 
     /**
@@ -85,9 +82,10 @@ export abstract class VersionUpgrade {
      */
     async executeAutomaticOperations(context: UpgradeContext): Promise<{
         success: boolean;
-        results: Array<{operationId: string; result: OperationResult}>;
+        results: Array<{ operationId: string; result: OperationResult }>;
     }> {
-        const results: Array<{operationId: string; result: OperationResult}> = [];
+        const results: Array<{ operationId: string; result: OperationResult }> =
+            [];
         let allSuccess = true;
 
         for (const operation of this.automaticOperations) {
@@ -96,7 +94,7 @@ export abstract class VersionUpgrade {
                 if (await this.isOperationCompleted(operation.id, context)) {
                     results.push({
                         operationId: operation.id,
-                        result: { success: true, message: "Already completed" }
+                        result: { success: true, message: "Already completed" },
                     });
                     continue;
                 }
@@ -105,7 +103,10 @@ export abstract class VersionUpgrade {
                 if (!(await operation.canRun(context))) {
                     results.push({
                         operationId: operation.id,
-                        result: { success: false, message: "Prerequisites not met" }
+                        result: {
+                            success: false,
+                            message: "Prerequisites not met",
+                        },
                     });
                     allSuccess = false;
                     continue;
@@ -120,14 +121,16 @@ export abstract class VersionUpgrade {
                 } else {
                     allSuccess = false;
                 }
-
             } catch (error) {
                 const errorResult = {
                     success: false,
                     message: `Operation failed: ${error}`,
-                    details: { error: String(error) }
+                    details: { error: String(error) },
                 };
-                results.push({ operationId: operation.id, result: errorResult });
+                results.push({
+                    operationId: operation.id,
+                    result: errorResult,
+                });
                 allSuccess = false;
             }
         }
@@ -140,13 +143,15 @@ export abstract class VersionUpgrade {
      */
     async showManualOperationsDialog(context: UpgradeContext): Promise<{
         success: boolean;
-        results: Array<{operationId: string; result: OperationResult}>;
+        results: Array<{ operationId: string; result: OperationResult }>;
     }> {
         // Filter operations that can run and aren't completed
         const availableOperations = [];
         for (const operation of this.manualOperations) {
-            if (!(await this.isOperationCompleted(operation.id, context)) &&
-                await operation.canRun(context)) {
+            if (
+                !(await this.isOperationCompleted(operation.id, context)) &&
+                (await operation.canRun(context))
+            ) {
                 availableOperations.push(operation);
             }
         }
@@ -160,7 +165,9 @@ export abstract class VersionUpgrade {
             `**Version ${this.version} Manual Operations**`,
             "The following optional operations are available:",
             "",
-            ...availableOperations.map(op => `• **${op.name}**: ${op.description}`)
+            ...availableOperations.map(
+                (op) => `• **${op.name}**: ${op.description}`
+            ),
         ];
 
         const shouldExecute = await showDialog(
@@ -172,7 +179,8 @@ export abstract class VersionUpgrade {
             { button1: "Run All Now", button2: "Skip (Run Later)" }
         );
 
-        const results: Array<{operationId: string; result: OperationResult}> = [];
+        const results: Array<{ operationId: string; result: OperationResult }> =
+            [];
 
         if (shouldExecute) {
             // Execute all available manual operations
@@ -182,54 +190,70 @@ export abstract class VersionUpgrade {
                     results.push({ operationId: operation.id, result });
 
                     if (result.success) {
-                        await this.markOperationCompleted(operation.id, context);
+                        await this.markOperationCompleted(
+                            operation.id,
+                            context
+                        );
                     }
                 } catch (error) {
                     const errorResult = {
                         success: false,
                         message: `Operation failed: ${error}`,
-                        details: { error: String(error) }
+                        details: { error: String(error) },
                     };
-                    results.push({ operationId: operation.id, result: errorResult });
+                    results.push({
+                        operationId: operation.id,
+                        result: errorResult,
+                    });
                 }
             }
         }
 
-        return { 
-            success: results.every(r => r.result.success), 
-            results 
+        return {
+            success: results.every((r) => r.result.success),
+            results,
         };
     }
 
     /**
      * Get manual operations status for settings UI
      */
-    async getManualOperationsStatus(context: UpgradeContext): Promise<Array<{
-        operation: UpgradeOperation;
-        completed: boolean;
-        canRun: boolean;
-    }>> {
+    async getManualOperationsStatus(context: UpgradeContext): Promise<
+        Array<{
+            operation: UpgradeOperation;
+            completed: boolean;
+            canRun: boolean;
+        }>
+    > {
         const status = [];
-        
+
         for (const operation of this.manualOperations) {
-            const completed = await this.isOperationCompleted(operation.id, context);
-            const canRun = !completed && await operation.canRun(context);
-            
+            const completed = await this.isOperationCompleted(
+                operation.id,
+                context
+            );
+            const canRun = !completed && (await operation.canRun(context));
+
             status.push({
                 operation,
                 completed,
-                canRun
+                canRun,
             });
         }
-        
+
         return status;
     }
 
     /**
      * Execute single manual operation (from settings)
      */
-    async executeManualOperation(operationId: string, context: UpgradeContext): Promise<OperationResult> {
-        const operation = this.manualOperations.find(op => op.id === operationId);
+    async executeManualOperation(
+        operationId: string,
+        context: UpgradeContext
+    ): Promise<OperationResult> {
+        const operation = this.manualOperations.find(
+            (op) => op.id === operationId
+        );
         if (!operation) {
             return { success: false, message: "Operation not found" };
         }
@@ -252,7 +276,7 @@ export abstract class VersionUpgrade {
             return {
                 success: false,
                 message: `Operation failed: ${error}`,
-                details: { error: String(error) }
+                details: { error: String(error) },
             };
         }
     }
@@ -260,35 +284,50 @@ export abstract class VersionUpgrade {
     /**
      * Check if operation was completed using structured upgrade history
      */
-    private async isOperationCompleted(operationId: string, context: UpgradeContext): Promise<boolean> {
+    private async isOperationCompleted(
+        operationId: string,
+        context: UpgradeContext
+    ): Promise<boolean> {
         const data = await context.plugin.loadData();
-        const operationKey = `operation_${this.version.replace(/\./g, '_')}_${operationId}`;
-        return data?.upgradeHistory?.completedOperations?.[operationKey]?.completed || false;
+        const operationKey = `operation_${this.version.replace(
+            /\./g,
+            "_"
+        )}_${operationId}`;
+        return (
+            data?.upgradeHistory?.completedOperations?.[operationKey]
+                ?.completed || false
+        );
     }
 
     /**
      * Mark operation as completed using structured upgrade history
      */
-    private async markOperationCompleted(operationId: string, context: UpgradeContext): Promise<void> {
-        const data = await context.plugin.loadData() || {};
-        
+    private async markOperationCompleted(
+        operationId: string,
+        context: UpgradeContext
+    ): Promise<void> {
+        const data = (await context.plugin.loadData()) || {};
+
         // Initialize upgrade history structure if needed
         if (!data.upgradeHistory) {
             data.upgradeHistory = {
                 completedUpgrades: {},
-                completedOperations: {}
+                completedOperations: {},
             };
         }
-        
+
         // Mark operation as completed in structured format
-        const operationKey = `operation_${this.version.replace(/\./g, '_')}_${operationId}`;
+        const operationKey = `operation_${this.version.replace(
+            /\./g,
+            "_"
+        )}_${operationId}`;
         data.upgradeHistory.completedOperations[operationKey] = {
             operationId: operationId,
             version: this.version,
             date: new Date().toISOString(),
-            completed: true
+            completed: true,
         };
-        
+
         await context.plugin.saveData(data);
     }
 }

@@ -29,8 +29,8 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
     it("uses the same identifiers and timestamps as ChatGPTAdapter", () => {
         const plugin = createTestPlugin();
         const registry = new DefaultProviderRegistry();
-        const extractor = new ConversationMetadataExtractor(registry as any, plugin as any);
-        const adapter = new ChatGPTAdapter(plugin as any);
+        const extractor = new ConversationMetadataExtractor(registry, plugin);
+        const adapter = new ChatGPTAdapter(plugin);
 
         const chat: Chat = {
             id: "chat-1",
@@ -55,7 +55,9 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             },
         } as any;
 
-        const metadata = (extractor as any).extractChatGPTMetadata([chat]) as any[];
+        const metadata = (extractor as any).extractChatGPTMetadata([
+            chat,
+        ]) as any[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
@@ -69,8 +71,8 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
     it("uses the same identifiers and timestamps as ClaudeAdapter", () => {
         const plugin = createTestPlugin();
         const registry = new DefaultProviderRegistry();
-        const extractor = new ConversationMetadataExtractor(registry as any, plugin as any);
-        const adapter = new ClaudeAdapter(plugin as any);
+        const extractor = new ConversationMetadataExtractor(registry, plugin);
+        const adapter = new ClaudeAdapter(plugin);
 
         const conv: ClaudeConversation = {
             uuid: "claude-1",
@@ -89,7 +91,9 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             ],
         } as any;
 
-        const metadata = (extractor as any).extractClaudeMetadata([conv]) as any[];
+        const metadata = (extractor as any).extractClaudeMetadata([
+            conv,
+        ]) as any[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
@@ -103,8 +107,8 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
     it("uses the same identifiers and timestamps as LeChatAdapter", () => {
         const plugin = createTestPlugin();
         const registry = new DefaultProviderRegistry();
-        const extractor = new ConversationMetadataExtractor(registry as any, plugin as any);
-        const adapter = new LeChatAdapter(plugin as any);
+        const extractor = new ConversationMetadataExtractor(registry, plugin);
+        const adapter = new LeChatAdapter(plugin);
 
         const conversation: LeChatConversation = [
             {
@@ -125,7 +129,9 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             },
         ] as any;
 
-        const metadata = (extractor as any).extractLeChatMetadata([conversation]) as any[];
+        const metadata = (extractor as any).extractLeChatMetadata([
+            conversation,
+        ]) as any[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
@@ -140,7 +146,7 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
     it("uses the same identifiers and timestamps as PerplexityAdapter", () => {
         const plugin = createTestPlugin();
         const registry = new DefaultProviderRegistry();
-        const extractor = new ConversationMetadataExtractor(registry as any, plugin as any);
+        const extractor = new ConversationMetadataExtractor(registry, plugin);
         const adapter = new PerplexityAdapter();
 
         const conversation: PerplexityConversationFile = {
@@ -160,7 +166,9 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             ],
         };
 
-        const metadata = (extractor as any).extractPerplexityMetadata([conversation]) as any[];
+        const metadata = (extractor as any).extractPerplexityMetadata([
+            conversation,
+        ]) as any[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
@@ -174,7 +182,7 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
     it("extracts metadata from Perplexity entries[] export format", () => {
         const plugin = createTestPlugin();
         const registry = new DefaultProviderRegistry();
-        const extractor = new ConversationMetadataExtractor(registry as any, plugin as any);
+        const extractor = new ConversationMetadataExtractor(registry, plugin);
 
         const conversation = {
             status: "success",
@@ -202,7 +210,9 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             ],
         } as any;
 
-        const metadata = (extractor as any).extractPerplexityMetadata([conversation]) as any[];
+        const metadata = (extractor as any).extractPerplexityMetadata([
+            conversation,
+        ]) as any[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];

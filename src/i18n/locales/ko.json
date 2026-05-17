@@ -1,524 +1,524 @@
 {
-  "common": {
-    "buttons": {
-      "cancel": "취소",
-      "ok": "확인",
-      "select": "선택",
-      "browse": "찾아보기",
-      "continue": "계속",
-      "proceed": "진행",
-      "close": "알겠어요!",
-      "create": "만들기",
-      "remove": "제거",
-      "run": "실행",
-      "complete": "완료",
-      "view_report": "보고서 보기",
-      "get_started": "시작하기",
-      "create_new_folder": "새 폴더 만들기"
-    },
-    "status": {
-      "new": "신규",
-      "updated": "업데이트됨",
-      "unchanged": "변경 없음",
-      "unknown": "알 수 없음"
-    },
-    "progress": {
-      "phase_validation": "🔍 유효성 검사",
-      "phase_scanning": "📋 스캔 중",
-      "phase_processing": "⚙️ 처리 중",
-      "phase_writing": "💾 쓰는 중",
-      "phase_complete": "✅ 완료",
-      "phase_error": "❌ 오류"
-    }
-  },
-  "provider_selection": {
-    "title": "아카이브 제공자 선택",
-    "providers": {
-      "chatgpt": {
-        "name": "ChatGPT",
-        "description": "OpenAI ChatGPT 대화 내보내기",
-        "file_formats_0": "conversations.json(레거시) 또는 conversations-XXX.json 파일"
-      },
-      "claude": {
-        "name": "Claude",
-        "description": "Anthropic Claude 대화 내보내기",
-        "file_formats_0": "conversations.json + users.json",
-        "file_formats_1": "projects.json(선택 사항)"
-      },
-      "lechat": {
-        "name": "Le Chat",
-        "description": "Mistral AI Le Chat 대화 내보내기",
-        "file_formats_0": "chat-<uuid>.json 파일"
-      },
-      "perplexity": {
-        "name": "Perplexity",
-        "description": "Perplexity Thread Exporter JSON 아카이브",
-        "file_formats_0": "perplexity_*.json 파일 (metadata + conversations[] | status + entries[])"
-      }
-    },
-    "buttons": {
-      "select": "선택",
-      "cancel": "취소"
-    }
-  },
-  "file_selection": {
-    "title": "{{provider}} 대화 가져오기",
-    "import_mode": {
-      "section_title": "가져오기 방식",
-      "all_label": "전체 가져오기",
-      "all_description": "모든 대화를 가져옵니다 (더 빠름)",
-      "selective_label": "개별 선택",
-      "selective_description": "대화를 미리 보고 선택합니다"
-    },
-    "file_area": {
-      "section_title": "파일 선택",
-      "drop_text_default": "ZIP 파일을 여기에 끌어다 놓거나 클릭하여 찾아보기",
-      "drop_text_gemini": "ZIP 및 JSON 파일을 여기에 끌어다 놓거나 클릭하여 찾아보기",
-      "drop_subtext_default": "여러 파일 선택 지원",
-      "drop_subtext_gemini": "ZIP (Takeout) + 선택적 JSON (확장 프로그램의 인덱스)"
-    },
-    "selected_files": {
-      "section_title": "선택된 파일",
-      "remove_button": "제거"
-    },
-    "buttons": {
-      "cancel": "취소",
-      "continue": "계속"
-    }
-  },
-  "conversation_selection": {
-    "title": "가져올 대화 선택",
-    "controls": {
-      "select_all": "전체 선택",
-      "select_none": "선택 해제",
-      "search_placeholder": "대화 검색...",
-      "status_label": "상태:",
-      "show_label": "표시:",
-      "existing_only_label": "기존 대화만 표시",
-      "existing_only_help": "기존 대화를 선택하면 해당 노트가 덮어쓰기되어 다시 처리됩니다."
-    },
-    "status_filter_options": {
-      "all": "전체",
-      "new": "신규",
-      "updated": "업데이트됨",
-      "unchanged": "변경 없음"
-    },
-    "table_headers": {
-      "title": "제목",
-      "created": "생성일",
-      "updated": "업데이트일",
-      "messages": "메시지",
-      "status": "상태"
-    },
-    "status_badges": {
-      "new": "신규",
-      "updated": "업데이트됨",
-      "unchanged": "변경 없음",
-      "unknown": "알 수 없음",
-      "tooltip_new": "이 대화는 보관함에 없습니다",
-      "tooltip_updated": "이 대화는 보관함의 버전보다 최신 내용을 포함합니다 ({{existing_date}} → {{new_date}})",
-      "tooltip_unchanged": "이 대화는 보관함의 버전과 동일합니다"
-    },
-    "pagination": {
-      "showing": "전체 {{total}}개 중 {{start}}–{{end}}개 표시",
-      "page_of": "{{total}}페이지 중 {{current}}페이지",
-      "previous": "이전",
-      "next": "다음"
-    },
-    "summary": {
-      "unique_conversations": "고유 대화",
-      "new": "신규",
-      "updated": "업데이트됨",
-      "unchanged": "변경 없음",
-      "selected_of": "{{total}}개 중 {{selected}}개 선택됨"
-    },
-    "buttons": {
-      "cancel": "취소",
-      "import_selected": "선택 항목 가져오기",
-      "import_selected_count": "선택한 {{count}}개 가져오기"
-    },
-    "date_unknown": "알 수 없음"
-  },
-  "import_progress": {
-    "title": "{{filename}} 가져오는 중",
-    "initial": {
-      "title": "가져오기 준비 중...",
-      "detail": "ZIP 파일 구조를 확인하는 중"
-    },
-    "conversation_counter": "{{current}}/{{total}}개 대화",
-    "conversation_counter_selective": "{{current}}/{{total}}개 선택된 대화",
-    "selective_mode_indicator": "📋 선택 가져오기: {{total}}개 중 {{selected}}개",
-    "complete": {
-      "message": "가져오기가 성공적으로 완료되었습니다",
-      "detail": "이 창을 닫을 수 있습니다"
-    },
-    "error": {
-      "message": "가져오는 중 오류가 발생했습니다",
-      "detail": "자세한 내용은 콘솔을 확인하세요"
-    }
-  },
-  "import_completion": {
-    "title": "가져오기 완료",
-    "success_message": "✅ 대화를 성공적으로 가져왔습니다",
-    "stats": {
-      "zip_files_processed": "처리된 ZIP 파일",
-      "unique_conversations": "고유 대화",
-      "duplicates": "중복",
-      "new": "신규",
-      "updated": "업데이트됨",
-      "skipped": "건너뜀",
-      "failed": "실패"
-    },
-    "attachments": {
-      "label": "첨부 파일:",
-      "summary": "{{found}}/{{total}}개 추출됨 ({{percentage}}%)",
-      "missing_failed": "{{missing}}개 없음, {{failed}}개 실패"
-    },
-    "report": {
-      "label": "📄 상세 보고서:"
-    },
-    "buttons": {
-      "view_report": "보고서 보기",
-      "ok": "확인"
-    }
-  },
-  "settings": {
-    "tab_title": "Nexus AI Chat Importer",
-    "folders": {
-      "section_title": "📁 폴더 구조",
-      "conversation_folder": {
-        "name": "대화 폴더",
-        "desc": "가져온 대화가 저장되는 위치",
-        "placeholder": "Nexus/Conversations",
-        "browse_tooltip": "폴더 찾아보기 또는 새 폴더 만들기"
-      },
-      "reports_folder": {
-        "name": "보고서 폴더",
-        "desc": "가져오기 보고서가 저장되는 위치",
-        "placeholder": "Nexus Reports",
-        "browse_tooltip": "폴더 찾아보기 또는 새 폴더 만들기"
-      },
-      "attachment_folder": {
-        "name": "첨부 파일 폴더",
-        "desc": "첨부 파일이 저장되는 위치 (⚠️ 용량 절약을 위해 동기화에서 제외하세요)",
-        "placeholder": "Nexus/Attachments",
-        "browse_tooltip": "폴더 찾아보기 또는 새 폴더 만들기"
-      }
-    },
-    "display": {
-      "section_title": "📅 날짜 접두사",
-      "add_date_prefix": {
-        "name": "파일 이름에 날짜 접두사 추가",
-        "desc": "대화 파일 이름 앞에 생성 날짜를 접두사로 추가합니다",
-        "format_label": "날짜 형식 선택: "
-      }
-    },
-    "timestamps": {
-      "section_title": "📅 메시지 날짜 형식",
-      "custom_format": {
-        "name": "메시지 타임스탬프 형식 사용자 지정",
-        "desc": "메시지 헤더의 기본 로케일 기반 타임스탬프 형식을 재정의합니다. 비활성화되면 타임스탬프는 Obsidian의 언어 설정을 따릅니다. Obsidian이 영어로 설정된 경우 미국 형식(YYYY/DD/MM)이 적용됩니다."
-      },
-      "timestamp_format": {
-        "name": "타임스탬프 형식",
-        "desc": "대화 노트의 메시지 타임스탬프 형식을 선택합니다"
-      },
-      "preview_label": "미리 보기: "
-    },
-    "attachments": {
-      "section_title": "첨부 파일 설정",
-      "import_attachments": {
-        "name": "첨부 파일 가져오기",
-        "desc": "첨부 파일을 디스크에 저장하고 대화에 연결합니다 ('최선 노력' 전략 사용)"
-      },
-      "handle_missing": {
-        "name": "누락된 첨부 파일 처리",
-        "desc": "내보내기에 첨부 파일이 없을 때 건너뛰는 대신 안내 노트를 만듭니다"
-      },
-      "show_details": {
-        "name": "보고서에 첨부 파일 세부 정보 표시",
-        "desc": "가져오기 보고서에 상세한 첨부 파일 처리 통계를 포함합니다"
-      },
-      "info_box": {
-        "title": "📎 첨부 파일 처리 방식",
-        "best_effort": "최선 노력 전략: 내보내기에서 찾은 파일은 추출하여 연결하고, 없는 파일은 안내 노트를 만듭니다.",
-        "platform_diff": "플랫폼 차이: ChatGPT 내보내기에는 특히 오래된 대화의 첨부 파일이 모두 포함되지 않을 수 있습니다.",
-        "organization": "간단한 구성: 파일은 attachments/provider/category/ 형식으로 구성됩니다 (예: attachments/chatgpt/images/).",
-        "sync_tip": "동기화 팁: 대용량 파일 업로드를 방지하려면 첨부 파일 폴더를 동기화에서 제외하는 것을 권장합니다.",
-        "tip": "💡 팁: '첨부 파일 세부 정보 표시'를 활성화하면 가져오기 중 찾은 파일, 없는 파일, 실패한 파일을 정확하게 확인할 수 있습니다."
-      }
-    },
-    "migrations": {
-      "section_title": "마이그레이션",
-      "description_manual": "수동 작업: 편리한 시간에 실행할 수 있는 선택적 업그레이드 작업입니다.",
-      "description_automatic": "자동 작업(예: 이전 데이터 제거)은 업그레이드 중 자동으로 실행되며 여기에 표시되지 않습니다.",
-      "version_header": "버전 {{version}}",
-      "no_migrations": {
-        "title": "수동 작업이 없습니다",
-        "desc": "모든 업그레이드 작업이 자동으로 완료되었습니다."
-      },
-      "operation_completed_suffix": " ✅ 완료됨",
-      "buttons": {
-        "completed": "✅ 완료됨",
-        "cannot_run": "실행 불가",
-        "run": "실행",
-        "running": "실행 중..."
-      },
-      "tooltips": {
-        "completed": "이 작업은 이미 완료되었습니다",
-        "cannot_run": "이 작업의 전제 조건이 충족되지 않았습니다",
-        "run": "{{operation_name}} 실행"
-      },
-      "error_loading": "마이그레이션 로드 오류:"
-    },
-    "support": {
-      "section_title": "💝 지원 및 도움말",
-      "resources": {
-        "name": "📚 리소스",
-        "desc": "문서, 릴리스 노트, 커뮤니티 링크",
-        "documentation": "📖 문서",
-        "release_notes": "📝 릴리스 노트",
-        "issues": "🐛 문제 보고",
-        "forum": "💬 포럼"
-      }
-    }
-  },
-  "upgrade": {
-    "progress_modal": {
-      "starting": "시작 중...",
-      "progress_label": "진행률: {{percentage}}%",
-      "step_label": "단계 {{current}}/{{total}}",
-      "complete_label": "완료",
-      "complete_message": "성공적으로 완료되었습니다",
-      "error_message": "오류가 발생했습니다"
-    },
-    "multi_operation_modal": {
-      "progress_label": "진행률: {{completed}}/{{total}}개 작업",
-      "progress_with_failures": "진행률: {{completed}}/{{total}}개 작업 ({{failed}}개 실패)",
-      "all_completed": "총 {{total}}개 작업이 모두 성공적으로 완료되었습니다",
-      "mark_complete_default": "모든 작업이 성공적으로 완료되었습니다",
-      "buttons": {
-        "complete": "완료",
-        "close": "닫기"
-      }
-    },
-    "modal_130": {
-      "title": "🎉 Nexus AI Chat Importer {{version}}",
-      "migration_section": {
-        "title": "🔄 마이그레이션 필요",
-        "message": "데이터를 v1.3.0으로 업그레이드하기 위해 다음 작업이 자동으로 실행됩니다:",
-        "tasks": {
-          "folder_settings": "✓ 폴더 설정을 새 구조로 마이그레이션",
-          "timestamps": "✓ 타임스탬프를 ISO 8601 형식으로 업데이트",
-          "aliases": "✓ frontmatter 별칭 수정",
-          "reports": "✓ 보고서 폴더를 올바른 위치로 이동",
-          "artifacts": "✓ 아티팩트 메타데이터 업데이트"
+    "common": {
+        "buttons": {
+            "cancel": "취소",
+            "ok": "확인",
+            "select": "선택",
+            "browse": "찾아보기",
+            "continue": "계속",
+            "proceed": "진행",
+            "close": "알겠어요!",
+            "create": "만들기",
+            "remove": "제거",
+            "run": "실행",
+            "complete": "완료",
+            "view_report": "보고서 보기",
+            "get_started": "시작하기",
+            "create_new_folder": "새 폴더 만들기"
         },
-        "estimate": "몇 초가 소요됩니다."
-      },
-      "buttons": {
-        "run_migration": "🚀 마이그레이션 작업 실행"
-      }
+        "status": {
+            "new": "신규",
+            "updated": "업데이트됨",
+            "unchanged": "변경 없음",
+            "unknown": "알 수 없음"
+        },
+        "progress": {
+            "phase_validation": "🔍 유효성 검사",
+            "phase_scanning": "📋 스캔 중",
+            "phase_processing": "⚙️ 처리 중",
+            "phase_writing": "💾 쓰는 중",
+            "phase_complete": "✅ 완료",
+            "phase_error": "❌ 오류"
+        }
     },
-    "complete_modal": {
-      "title": "✅ 업그레이드 완료 - v{{version}}",
-      "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### 신규\n- Perplexity 지원 (Perplexity Thread Exporter ZIP 가져오기)\n- 범용 프론트매터 메타데이터: `mode`, `models`\n- 제공자 자동 감지가 이제 Perplexity 아카이브를 포함\n\n### 개선\n- Perplexity 두 가지 스키마 호환:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- 바깥 ZIP 안에 `part*.zip`가 있는 경우 안내 개선\n- 스키마 차이로 인한 중복 노트 위험을 줄이기 위해 대화 ID 정규화 개선\n\n### 안정성\n- ZIP 처리 및 모바일 가져오기에 대한 1.5.7 안정성 개선 포함.",
-      "buttons": {
-        "got_it": "알겠어요!"
-      }
+    "provider_selection": {
+        "title": "아카이브 제공자 선택",
+        "providers": {
+            "chatgpt": {
+                "name": "ChatGPT",
+                "description": "OpenAI ChatGPT 대화 내보내기",
+                "file_formats_0": "conversations.json(레거시) 또는 conversations-XXX.json 파일"
+            },
+            "claude": {
+                "name": "Claude",
+                "description": "Anthropic Claude 대화 내보내기",
+                "file_formats_0": "conversations.json + users.json",
+                "file_formats_1": "projects.json(선택 사항)"
+            },
+            "lechat": {
+                "name": "Le Chat",
+                "description": "Mistral AI Le Chat 대화 내보내기",
+                "file_formats_0": "chat-<uuid>.json 파일"
+            },
+            "perplexity": {
+                "name": "Perplexity",
+                "description": "Perplexity Thread Exporter JSON 아카이브",
+                "file_formats_0": "perplexity_*.json 파일 (metadata + conversations[] | status + entries[])"
+            }
+        },
+        "buttons": {
+            "select": "선택",
+            "cancel": "취소"
+        }
     },
-    "new_version_modal": {
-      "title": "🎉 Nexus AI Chat Importer {{version}}",
-      "buttons": {
-        "got_it": "알겠어요!"
-      }
+    "file_selection": {
+        "title": "{{provider}} 대화 가져오기",
+        "import_mode": {
+            "section_title": "가져오기 방식",
+            "all_label": "전체 가져오기",
+            "all_description": "모든 대화를 가져옵니다 (더 빠름)",
+            "selective_label": "개별 선택",
+            "selective_description": "대화를 미리 보고 선택합니다"
+        },
+        "file_area": {
+            "section_title": "파일 선택",
+            "drop_text_default": "ZIP 파일을 여기에 끌어다 놓거나 클릭하여 찾아보기",
+            "drop_text_gemini": "ZIP 및 JSON 파일을 여기에 끌어다 놓거나 클릭하여 찾아보기",
+            "drop_subtext_default": "여러 파일 선택 지원",
+            "drop_subtext_gemini": "ZIP (Takeout) + 선택적 JSON (확장 프로그램의 인덱스)"
+        },
+        "selected_files": {
+            "section_title": "선택된 파일",
+            "remove_button": "제거"
+        },
+        "buttons": {
+            "cancel": "취소",
+            "continue": "계속"
+        }
+    },
+    "conversation_selection": {
+        "title": "가져올 대화 선택",
+        "controls": {
+            "select_all": "전체 선택",
+            "select_none": "선택 해제",
+            "search_placeholder": "대화 검색...",
+            "status_label": "상태:",
+            "show_label": "표시:",
+            "existing_only_label": "기존 대화만 표시",
+            "existing_only_help": "기존 대화를 선택하면 해당 노트가 덮어쓰기되어 다시 처리됩니다."
+        },
+        "status_filter_options": {
+            "all": "전체",
+            "new": "신규",
+            "updated": "업데이트됨",
+            "unchanged": "변경 없음"
+        },
+        "table_headers": {
+            "title": "제목",
+            "created": "생성일",
+            "updated": "업데이트일",
+            "messages": "메시지",
+            "status": "상태"
+        },
+        "status_badges": {
+            "new": "신규",
+            "updated": "업데이트됨",
+            "unchanged": "변경 없음",
+            "unknown": "알 수 없음",
+            "tooltip_new": "이 대화는 보관함에 없습니다",
+            "tooltip_updated": "이 대화는 보관함의 버전보다 최신 내용을 포함합니다 ({{existing_date}} → {{new_date}})",
+            "tooltip_unchanged": "이 대화는 보관함의 버전과 동일합니다"
+        },
+        "pagination": {
+            "showing": "전체 {{total}}개 중 {{start}}–{{end}}개 표시",
+            "page_of": "{{total}}페이지 중 {{current}}페이지",
+            "previous": "이전",
+            "next": "다음"
+        },
+        "summary": {
+            "unique_conversations": "고유 대화",
+            "new": "신규",
+            "updated": "업데이트됨",
+            "unchanged": "변경 없음",
+            "selected_of": "{{total}}개 중 {{selected}}개 선택됨"
+        },
+        "buttons": {
+            "cancel": "취소",
+            "import_selected": "선택 항목 가져오기",
+            "import_selected_count": "선택한 {{count}}개 가져오기"
+        },
+        "date_unknown": "알 수 없음"
+    },
+    "import_progress": {
+        "title": "{{filename}} 가져오는 중",
+        "initial": {
+            "title": "가져오기 준비 중...",
+            "detail": "ZIP 파일 구조를 확인하는 중"
+        },
+        "conversation_counter": "{{current}}/{{total}}개 대화",
+        "conversation_counter_selective": "{{current}}/{{total}}개 선택된 대화",
+        "selective_mode_indicator": "📋 선택 가져오기: {{total}}개 중 {{selected}}개",
+        "complete": {
+            "message": "가져오기가 성공적으로 완료되었습니다",
+            "detail": "이 창을 닫을 수 있습니다"
+        },
+        "error": {
+            "message": "가져오는 중 오류가 발생했습니다",
+            "detail": "자세한 내용은 콘솔을 확인하세요"
+        }
+    },
+    "import_completion": {
+        "title": "가져오기 완료",
+        "success_message": "✅ 대화를 성공적으로 가져왔습니다",
+        "stats": {
+            "zip_files_processed": "처리된 ZIP 파일",
+            "unique_conversations": "고유 대화",
+            "duplicates": "중복",
+            "new": "신규",
+            "updated": "업데이트됨",
+            "skipped": "건너뜀",
+            "failed": "실패"
+        },
+        "attachments": {
+            "label": "첨부 파일:",
+            "summary": "{{found}}/{{total}}개 추출됨 ({{percentage}}%)",
+            "missing_failed": "{{missing}}개 없음, {{failed}}개 실패"
+        },
+        "report": {
+            "label": "📄 상세 보고서:"
+        },
+        "buttons": {
+            "view_report": "보고서 보기",
+            "ok": "확인"
+        }
+    },
+    "settings": {
+        "tab_title": "Nexus AI Chat Importer",
+        "folders": {
+            "section_title": "📁 폴더 구조",
+            "conversation_folder": {
+                "name": "대화 폴더",
+                "desc": "가져온 대화가 저장되는 위치",
+                "placeholder": "Nexus/Conversations",
+                "browse_tooltip": "폴더 찾아보기 또는 새 폴더 만들기"
+            },
+            "reports_folder": {
+                "name": "보고서 폴더",
+                "desc": "가져오기 보고서가 저장되는 위치",
+                "placeholder": "Nexus Reports",
+                "browse_tooltip": "폴더 찾아보기 또는 새 폴더 만들기"
+            },
+            "attachment_folder": {
+                "name": "첨부 파일 폴더",
+                "desc": "첨부 파일이 저장되는 위치 (⚠️ 용량 절약을 위해 동기화에서 제외하세요)",
+                "placeholder": "Nexus/Attachments",
+                "browse_tooltip": "폴더 찾아보기 또는 새 폴더 만들기"
+            }
+        },
+        "display": {
+            "section_title": "📅 날짜 접두사",
+            "add_date_prefix": {
+                "name": "파일 이름에 날짜 접두사 추가",
+                "desc": "대화 파일 이름 앞에 생성 날짜를 접두사로 추가합니다",
+                "format_label": "날짜 형식 선택: "
+            }
+        },
+        "timestamps": {
+            "section_title": "📅 메시지 날짜 형식",
+            "custom_format": {
+                "name": "메시지 타임스탬프 형식 사용자 지정",
+                "desc": "메시지 헤더의 기본 로케일 기반 타임스탬프 형식을 재정의합니다. 비활성화되면 타임스탬프는 Obsidian의 언어 설정을 따릅니다. Obsidian이 영어로 설정된 경우 미국 형식(YYYY/DD/MM)이 적용됩니다."
+            },
+            "timestamp_format": {
+                "name": "타임스탬프 형식",
+                "desc": "대화 노트의 메시지 타임스탬프 형식을 선택합니다"
+            },
+            "preview_label": "미리 보기: "
+        },
+        "attachments": {
+            "section_title": "첨부 파일 설정",
+            "import_attachments": {
+                "name": "첨부 파일 가져오기",
+                "desc": "첨부 파일을 디스크에 저장하고 대화에 연결합니다 ('최선 노력' 전략 사용)"
+            },
+            "handle_missing": {
+                "name": "누락된 첨부 파일 처리",
+                "desc": "내보내기에 첨부 파일이 없을 때 건너뛰는 대신 안내 노트를 만듭니다"
+            },
+            "show_details": {
+                "name": "보고서에 첨부 파일 세부 정보 표시",
+                "desc": "가져오기 보고서에 상세한 첨부 파일 처리 통계를 포함합니다"
+            },
+            "info_box": {
+                "title": "📎 첨부 파일 처리 방식",
+                "best_effort": "최선 노력 전략: 내보내기에서 찾은 파일은 추출하여 연결하고, 없는 파일은 안내 노트를 만듭니다.",
+                "platform_diff": "플랫폼 차이: ChatGPT 내보내기에는 특히 오래된 대화의 첨부 파일이 모두 포함되지 않을 수 있습니다.",
+                "organization": "간단한 구성: 파일은 attachments/provider/category/ 형식으로 구성됩니다 (예: attachments/chatgpt/images/).",
+                "sync_tip": "동기화 팁: 대용량 파일 업로드를 방지하려면 첨부 파일 폴더를 동기화에서 제외하는 것을 권장합니다.",
+                "tip": "💡 팁: '첨부 파일 세부 정보 표시'를 활성화하면 가져오기 중 찾은 파일, 없는 파일, 실패한 파일을 정확하게 확인할 수 있습니다."
+            }
+        },
+        "migrations": {
+            "section_title": "마이그레이션",
+            "description_manual": "수동 작업: 편리한 시간에 실행할 수 있는 선택적 업그레이드 작업입니다.",
+            "description_automatic": "자동 작업(예: 이전 데이터 제거)은 업그레이드 중 자동으로 실행되며 여기에 표시되지 않습니다.",
+            "version_header": "버전 {{version}}",
+            "no_migrations": {
+                "title": "수동 작업이 없습니다",
+                "desc": "모든 업그레이드 작업이 자동으로 완료되었습니다."
+            },
+            "operation_completed_suffix": " ✅ 완료됨",
+            "buttons": {
+                "completed": "✅ 완료됨",
+                "cannot_run": "실행 불가",
+                "run": "실행",
+                "running": "실행 중..."
+            },
+            "tooltips": {
+                "completed": "이 작업은 이미 완료되었습니다",
+                "cannot_run": "이 작업의 전제 조건이 충족되지 않았습니다",
+                "run": "{{operation_name}} 실행"
+            },
+            "error_loading": "마이그레이션 로드 오류:"
+        },
+        "support": {
+            "section_title": "💝 지원 및 도움말",
+            "resources": {
+                "name": "📚 리소스",
+                "desc": "문서, 릴리스 노트, 커뮤니티 링크",
+                "documentation": "📖 문서",
+                "release_notes": "📝 릴리스 노트",
+                "issues": "🐛 문제 보고",
+                "forum": "💬 포럼"
+            }
+        }
+    },
+    "upgrade": {
+        "progress_modal": {
+            "starting": "시작 중...",
+            "progress_label": "진행률: {{percentage}}%",
+            "step_label": "단계 {{current}}/{{total}}",
+            "complete_label": "완료",
+            "complete_message": "성공적으로 완료되었습니다",
+            "error_message": "오류가 발생했습니다"
+        },
+        "multi_operation_modal": {
+            "progress_label": "진행률: {{completed}}/{{total}}개 작업",
+            "progress_with_failures": "진행률: {{completed}}/{{total}}개 작업 ({{failed}}개 실패)",
+            "all_completed": "총 {{total}}개 작업이 모두 성공적으로 완료되었습니다",
+            "mark_complete_default": "모든 작업이 성공적으로 완료되었습니다",
+            "buttons": {
+                "complete": "완료",
+                "close": "닫기"
+            }
+        },
+        "modal_130": {
+            "title": "🎉 Nexus AI Chat Importer {{version}}",
+            "migration_section": {
+                "title": "🔄 마이그레이션 필요",
+                "message": "데이터를 v1.3.0으로 업그레이드하기 위해 다음 작업이 자동으로 실행됩니다:",
+                "tasks": {
+                    "folder_settings": "✓ 폴더 설정을 새 구조로 마이그레이션",
+                    "timestamps": "✓ 타임스탬프를 ISO 8601 형식으로 업데이트",
+                    "aliases": "✓ frontmatter 별칭 수정",
+                    "reports": "✓ 보고서 폴더를 올바른 위치로 이동",
+                    "artifacts": "✓ 아티팩트 메타데이터 업데이트"
+                },
+                "estimate": "몇 초가 소요됩니다."
+            },
+            "buttons": {
+                "run_migration": "🚀 마이그레이션 작업 실행"
+            }
+        },
+        "complete_modal": {
+            "title": "✅ 업그레이드 완료 - v{{version}}",
+            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### 신규\n- Perplexity 지원 (Perplexity Thread Exporter ZIP 가져오기)\n- 범용 프론트매터 메타데이터: `mode`, `models`\n- 제공자 자동 감지가 이제 Perplexity 아카이브를 포함\n\n### 개선\n- Perplexity 두 가지 스키마 호환:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- 바깥 ZIP 안에 `part*.zip`가 있는 경우 안내 개선\n- 스키마 차이로 인한 중복 노트 위험을 줄이기 위해 대화 ID 정규화 개선\n\n### 안정성\n- ZIP 처리 및 모바일 가져오기에 대한 1.5.7 안정성 개선 포함.",
+            "buttons": {
+                "got_it": "알겠어요!"
+            }
+        },
+        "new_version_modal": {
+            "title": "🎉 Nexus AI Chat Importer {{version}}",
+            "buttons": {
+                "got_it": "알겠어요!"
+            }
+        },
+        "notices": {
+            "migration_cancelled": "Migration cancelled. Please complete the migration before importing.",
+            "upgrade_failed_console": "Upgrade failed - see console for details",
+            "upgraded_to_version": "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        "legacy_120_modal": {
+            "title": "🚀 Nexus AI Chat Importer {{version}}",
+            "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
+            "buttons": {
+                "proceed": "Proceed"
+            }
+        }
+    },
+    "folder_migration": {
+        "title": "기존 파일을 이동하시겠습니까?",
+        "message_intro": "{{folder_type}} 폴더 위치를 변경하고 있습니다:",
+        "path_from": "이전 위치: {{path}}",
+        "path_to": "새 위치: {{path}}",
+        "question": "기존 파일을 새 위치로 이동하시겠습니까?",
+        "link_updates": {
+            "title": "🔗 링크 업데이트:",
+            "attachments_text": "첨부 파일을 이동하면 해당 파일을 참조하는 모든 대화 노트도 업데이트됩니다.",
+            "conversations_text": "대화를 이동하면 해당 대화를 참조하는 모든 보고서와 첨부 파일도 업데이트됩니다.",
+            "estimated_time_seconds": "예상 시간: 약 {{seconds}}초",
+            "estimated_time_minutes": "예상 시간: 약 {{minutes}}분"
+        },
+        "warning": {
+            "title": "⚠️ 중요:",
+            "text": "'아니요'를 선택하면 기존 파일이 이전 위치에 그대로 남아 향후 업데이트에 영향을 받지 않습니다."
+        },
+        "buttons": {
+            "cancel": "취소",
+            "keep": "아니요, 이전 위치에 파일 유지",
+            "move": "예, 파일 이동",
+            "move_with_links": "예, 파일 이동 및 링크 업데이트"
+        },
+        "progress": {
+            "title_moving": "{{folder_type}} 이동 및 링크 업데이트 중",
+            "step_moving_title": "파일 이동 중...",
+            "step_moving_detail": "{{old_path}}에서 {{new_path}}로 이동 중",
+            "step_moving_count": "{{current}} / {{total}}개 파일 처리됨",
+            "step_moved_title": "파일 이동 완료",
+            "step_moved_detail": "{{moved}}개 파일 이동됨, {{skipped}}개 건너뜀. 링크 업데이트 준비 중...",
+            "step_updating_attachment_links": "첨부 파일 링크 업데이트 중...",
+            "step_updating_conversation_links": "대화 링크 업데이트 중...",
+            "step_updating_report_links": "보고서의 링크 업데이트 중...",
+            "step_updating_artifact_links": "아티팩트의 링크 업데이트 중...",
+            "complete_message": "{{moved}}개 파일 이동됨. {{links}}개 링크가 성공적으로 업데이트되었습니다"
+        },
+        "result_dialog": {
+            "title": "폴더 마이그레이션 결과",
+            "summary_title": "마이그레이션 요약",
+            "moved": "✅ 성공적으로 이동됨: {{count}}개 파일",
+            "skipped": "⚠️ 건너뜀 (이미 존재): {{count}}개 파일",
+            "errors": "❌ 오류: {{count}}개 파일",
+            "explanation": "대상 위치에 이미 존재하는 파일은 데이터를 보호하기 위해 덮어쓰지 않았습니다.",
+            "error_details_title": "오류 세부 정보:"
+        },
+        "error_target_not_empty": {
+            "title": "대상 폴더가 비어 있지 않습니다",
+            "message": "폴더 \"{{path}}\"에 이미 파일이 있습니다.\n\n폴더 위치를 변경하려면:\n• Obsidian에서 기존 파일을 수동으로 이동하거나\n• 비어 있는 폴더를 선택하거나 새 폴더를 만드세요"
+        },
+        "error_migration_failed": {
+            "title": "마이그레이션 실패",
+            "message_move": "파일 이동 실패: {{error}}",
+            "message_links": "파일 이동 또는 링크 업데이트 실패: {{error}}"
+        },
+        "notices": {
+            "change_cancelled_reverted": "Change cancelled. Folder setting reverted.",
+            "failed_revert": "Failed to revert setting: {{error}}",
+            "setting_updated_files_remain": "Folder setting updated. Files remain in {{path}}",
+            "failed_update": "Failed to update setting: {{error}}",
+            "files_moved": "Files moved to {{path}}",
+            "failed_move": "Failed to move files: {{error}}",
+            "files_moved_links_updated": "✅ {{moved}} files moved to {{path}}. {{links}} links updated"
+        }
+    },
+    "folder_browser": {
+        "title": "폴더 선택",
+        "vault_root": "보관함 루트 (/)",
+        "buttons": {
+            "create_new_folder": "새 폴더 만들기",
+            "cancel": "취소",
+            "select": "선택"
+        },
+        "create_folder_dialog": {
+            "title": "새 폴더 만들기",
+            "folder_name_label": "폴더 이름:",
+            "buttons": {
+                "cancel": "취소",
+                "create": "만들기"
+            }
+        },
+        "notices": {
+            "select_parent_first": "⚠️ 먼저 상위 폴더를 선택하세요",
+            "invalid_name": "❌ 잘못된 폴더 이름: 사용할 수 없는 문자가 포함되어 있습니다",
+            "already_exists": "❌ 폴더가 이미 존재합니다",
+            "invalid_location": "❌ {{error}}",
+            "created_success": "✅ 폴더를 만들었습니다: {{name}}",
+            "create_failed": "❌ 폴더 만들기 실패: {{error}}",
+            "select_first": "⚠️ 먼저 폴더를 선택하세요",
+            "invalid_location_default": "Invalid folder location"
+        }
+    },
+    "configure_folder_dialog": {
+        "title": "🎉 Nexus AI Chat Importer v1.3.0",
+        "description": "버전 1.3.0에서는 보고서 폴더를 지정할 수 있습니다. 기존 보고서는 {{folder}}로 이동되며, 아래에서 원하는 폴더를 선택할 수도 있습니다.",
+        "note": "참고: 이 폴더는 대화 또는 첨부 파일 폴더 안에 있을 수 없습니다.",
+        "report_folder_label": "📊 보고서 폴더",
+        "report_folder_placeholder": "Nexus Reports",
+        "buttons": {
+            "browse": "찾아보기",
+            "proceed": "진행"
+        },
+        "error_invalid_folder": {
+            "title": "잘못된 폴더 위치",
+            "message": "{{error}}"
+        }
+    },
+    "welcome": {
+        "title": "Nexus AI Chat Importer {{version}}",
+        "icon": "🎉",
+        "heading": "Nexus AI Chat Importer를 설치해 주셔서 감사합니다!",
+        "description": "ChatGPT, Claude, Le Chat, Perplexity 대화를 Obsidian 볼트로 직접 가져오고 관리하세요.",
+        "resources_title": "리소스",
+        "resources": {
+            "documentation": {
+                "title": "문서",
+                "description": "플러그인 사용법 알아보기"
+            },
+            "release_notes": {
+                "title": "릴리스 노트",
+                "description": "이번 버전의 새로운 기능"
+            },
+            "report_issues": {
+                "title": "문제 보고",
+                "description": "버그를 발견하셨나요? 알려주세요"
+            },
+            "community_forum": {
+                "title": "커뮤니티 포럼",
+                "description": "토론에 참여하기"
+            }
+        },
+        "buttons": {
+            "get_started": "시작하기"
+        }
+    },
+    "mobile_archive_processed_dialog": {
+        "title": "이미 처리된 아카이브입니다",
+        "description": "파일 {{filename}} 는 이 기기에서 이미 가져왔습니다.",
+        "choice_help": "모바일에서 계속할 방식을 선택하세요:",
+        "button_reprocess": "다시 처리하고 모든 노트 재생성",
+        "button_incremental": "누락되었거나 업데이트된 노트만 추가/업데이트"
     },
     "notices": {
-      "migration_cancelled": "Migration cancelled. Please complete the migration before importing.",
-      "upgrade_failed_console": "Upgrade failed - see console for details",
-      "upgraded_to_version": "Upgraded to Nexus AI Chat Importer v{{version}}"
+        "import_analyzing": "{{count}}개 파일에서 대화를 분석하는 중...",
+        "import_no_new": "새로운 대화나 업데이트된 대화가 없습니다. 모든 대화가 이미 최신 상태입니다.",
+        "import_starting": "{{count}}개 대화를 가져오는 중 (신규 {{new}}개, 업데이트됨 {{updated}}개)...",
+        "import_starting_selected": "{{files}}개 파일에서 선택한 {{count}}개 대화를 가져오는 중...",
+        "import_completed_fallback": "가져오기 완료. {{created}}개 생성됨, {{updated}}개 업데이트됨.",
+        "import_error": "가져오는 중 오류 발생: {{error}}",
+        "import_error_analyzing": "대화 분석 중 오류 발생: {{error}}",
+        "import_error_file": "{{filename}} 처리 중 오류가 발생했습니다. 자세한 내용은 콘솔을 확인하세요.",
+        "import_error_file_report": "파일 가져오기에 실패했습니다: {{filename}}",
+        "import_error_mobile_large_json": "이 ZIP에는 매우 큰 대화 파일({{size_mb}} MB)이 포함되어 있습니다. 이번 실행에서는 모바일 기기에서 안정적으로 처리할 수 없었습니다. 한 번에 선택하는 ZIP 파일 수를 줄여 다시 시도하세요.",
+        "import_mobile_single_zip_only": "모바일에서는 한 번에 ZIP 파일 1개만 가져올 수 있습니다. ZIP 파일 하나만 선택하세요.",
+        "import_no_selected": "가져올 대화가 선택되지 않았습니다.",
+        "import_no_zip_gemini": "Gemini Takeout ZIP 파일을 하나 이상 선택하세요 (확장 프로그램의 JSON 인덱스는 선택 사항).",
+        "import_no_zip": "ZIP 내보내기 파일을 하나 이상 선택하세요.",
+        "import_gemini_json_failed": "Gemini 인덱스 JSON을 읽지 못했습니다. 인덱스 없이 계속 진행합니다.",
+        "report_failed": "로그 파일을 만들지 못했습니다. 자세한 내용은 콘솔을 확인하세요.",
+        "attachment_map_failed": "첨부 파일 맵을 만들지 못했습니다. 자세한 내용은 콘솔을 확인하세요.",
+        "ribbon_tooltip": "Nexus AI Chat Importer - 새 파일 가져오기",
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
     },
-    "legacy_120_modal": {
-      "title": "🚀 Nexus AI Chat Importer {{version}}",
-      "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
-      "buttons": {
-        "proceed": "Proceed"
-      }
+    "commands": {
+        "import_conversations": {
+            "name": "AI 대화 가져오기"
+        }
+    },
+    "support_box": {
+        "header": "이 플러그인 후원하기",
+        "header_highlight": "이 플러그인 후원하기",
+        "default_message_emphasis": "Nexus는 9,000회 이상 다운로드되었습니다. 현재 개발을 후원하는 기부는 월 평균 약 5명 수준입니다.",
+        "default_message": "이 플러그인은 제 개인 시간에 유지보수하고 있으며, 개발 환경을 유지하는 데는 지속적인 비용이 듭니다. 새로운 제공자 지원을 추가하려면 정확한 테스트와 지원을 위해 유료 구독도 필요합니다.",
+        "reality_check": "Nexus가 도움이 된다면 일회성 또는 정기 후원을 부탁드립니다. 이미 후원해 주시는 모든 분들께 진심으로 감사드립니다.",
+        "button_alt": "내 작업 후원하기"
     }
-  },
-  "folder_migration": {
-    "title": "기존 파일을 이동하시겠습니까?",
-    "message_intro": "{{folder_type}} 폴더 위치를 변경하고 있습니다:",
-    "path_from": "이전 위치: {{path}}",
-    "path_to": "새 위치: {{path}}",
-    "question": "기존 파일을 새 위치로 이동하시겠습니까?",
-    "link_updates": {
-      "title": "🔗 링크 업데이트:",
-      "attachments_text": "첨부 파일을 이동하면 해당 파일을 참조하는 모든 대화 노트도 업데이트됩니다.",
-      "conversations_text": "대화를 이동하면 해당 대화를 참조하는 모든 보고서와 첨부 파일도 업데이트됩니다.",
-      "estimated_time_seconds": "예상 시간: 약 {{seconds}}초",
-      "estimated_time_minutes": "예상 시간: 약 {{minutes}}분"
-    },
-    "warning": {
-      "title": "⚠️ 중요:",
-      "text": "'아니요'를 선택하면 기존 파일이 이전 위치에 그대로 남아 향후 업데이트에 영향을 받지 않습니다."
-    },
-    "buttons": {
-      "cancel": "취소",
-      "keep": "아니요, 이전 위치에 파일 유지",
-      "move": "예, 파일 이동",
-      "move_with_links": "예, 파일 이동 및 링크 업데이트"
-    },
-    "progress": {
-      "title_moving": "{{folder_type}} 이동 및 링크 업데이트 중",
-      "step_moving_title": "파일 이동 중...",
-      "step_moving_detail": "{{old_path}}에서 {{new_path}}로 이동 중",
-      "step_moving_count": "{{current}} / {{total}}개 파일 처리됨",
-      "step_moved_title": "파일 이동 완료",
-      "step_moved_detail": "{{moved}}개 파일 이동됨, {{skipped}}개 건너뜀. 링크 업데이트 준비 중...",
-      "step_updating_attachment_links": "첨부 파일 링크 업데이트 중...",
-      "step_updating_conversation_links": "대화 링크 업데이트 중...",
-      "step_updating_report_links": "보고서의 링크 업데이트 중...",
-      "step_updating_artifact_links": "아티팩트의 링크 업데이트 중...",
-      "complete_message": "{{moved}}개 파일 이동됨. {{links}}개 링크가 성공적으로 업데이트되었습니다"
-    },
-    "result_dialog": {
-      "title": "폴더 마이그레이션 결과",
-      "summary_title": "마이그레이션 요약",
-      "moved": "✅ 성공적으로 이동됨: {{count}}개 파일",
-      "skipped": "⚠️ 건너뜀 (이미 존재): {{count}}개 파일",
-      "errors": "❌ 오류: {{count}}개 파일",
-      "explanation": "대상 위치에 이미 존재하는 파일은 데이터를 보호하기 위해 덮어쓰지 않았습니다.",
-      "error_details_title": "오류 세부 정보:"
-    },
-    "error_target_not_empty": {
-      "title": "대상 폴더가 비어 있지 않습니다",
-      "message": "폴더 \"{{path}}\"에 이미 파일이 있습니다.\n\n폴더 위치를 변경하려면:\n• Obsidian에서 기존 파일을 수동으로 이동하거나\n• 비어 있는 폴더를 선택하거나 새 폴더를 만드세요"
-    },
-    "error_migration_failed": {
-      "title": "마이그레이션 실패",
-      "message_move": "파일 이동 실패: {{error}}",
-      "message_links": "파일 이동 또는 링크 업데이트 실패: {{error}}"
-    },
-    "notices": {
-      "change_cancelled_reverted": "Change cancelled. Folder setting reverted.",
-      "failed_revert": "Failed to revert setting: {{error}}",
-      "setting_updated_files_remain": "Folder setting updated. Files remain in {{path}}",
-      "failed_update": "Failed to update setting: {{error}}",
-      "files_moved": "Files moved to {{path}}",
-      "failed_move": "Failed to move files: {{error}}",
-      "files_moved_links_updated": "✅ {{moved}} files moved to {{path}}. {{links}} links updated"
-    }
-  },
-  "folder_browser": {
-    "title": "폴더 선택",
-    "vault_root": "보관함 루트 (/)",
-    "buttons": {
-      "create_new_folder": "새 폴더 만들기",
-      "cancel": "취소",
-      "select": "선택"
-    },
-    "create_folder_dialog": {
-      "title": "새 폴더 만들기",
-      "folder_name_label": "폴더 이름:",
-      "buttons": {
-        "cancel": "취소",
-        "create": "만들기"
-      }
-    },
-    "notices": {
-      "select_parent_first": "⚠️ 먼저 상위 폴더를 선택하세요",
-      "invalid_name": "❌ 잘못된 폴더 이름: 사용할 수 없는 문자가 포함되어 있습니다",
-      "already_exists": "❌ 폴더가 이미 존재합니다",
-      "invalid_location": "❌ {{error}}",
-      "created_success": "✅ 폴더를 만들었습니다: {{name}}",
-      "create_failed": "❌ 폴더 만들기 실패: {{error}}",
-      "select_first": "⚠️ 먼저 폴더를 선택하세요",
-      "invalid_location_default": "Invalid folder location"
-    }
-  },
-  "configure_folder_dialog": {
-    "title": "🎉 Nexus AI Chat Importer v1.3.0",
-    "description": "버전 1.3.0에서는 보고서 폴더를 지정할 수 있습니다. 기존 보고서는 {{folder}}로 이동되며, 아래에서 원하는 폴더를 선택할 수도 있습니다.",
-    "note": "참고: 이 폴더는 대화 또는 첨부 파일 폴더 안에 있을 수 없습니다.",
-    "report_folder_label": "📊 보고서 폴더",
-    "report_folder_placeholder": "Nexus Reports",
-    "buttons": {
-      "browse": "찾아보기",
-      "proceed": "진행"
-    },
-    "error_invalid_folder": {
-      "title": "잘못된 폴더 위치",
-      "message": "{{error}}"
-    }
-  },
-  "welcome": {
-    "title": "Nexus AI Chat Importer {{version}}",
-    "icon": "🎉",
-    "heading": "Nexus AI Chat Importer를 설치해 주셔서 감사합니다!",
-    "description": "ChatGPT, Claude, Le Chat, Perplexity 대화를 Obsidian 볼트로 직접 가져오고 관리하세요.",
-    "resources_title": "리소스",
-    "resources": {
-      "documentation": {
-        "title": "문서",
-        "description": "플러그인 사용법 알아보기"
-      },
-      "release_notes": {
-        "title": "릴리스 노트",
-        "description": "이번 버전의 새로운 기능"
-      },
-      "report_issues": {
-        "title": "문제 보고",
-        "description": "버그를 발견하셨나요? 알려주세요"
-      },
-      "community_forum": {
-        "title": "커뮤니티 포럼",
-        "description": "토론에 참여하기"
-      }
-    },
-    "buttons": {
-      "get_started": "시작하기"
-    }
-  },
-  "mobile_archive_processed_dialog": {
-    "title": "이미 처리된 아카이브입니다",
-    "description": "파일 {{filename}} 는 이 기기에서 이미 가져왔습니다.",
-    "choice_help": "모바일에서 계속할 방식을 선택하세요:",
-    "button_reprocess": "다시 처리하고 모든 노트 재생성",
-    "button_incremental": "누락되었거나 업데이트된 노트만 추가/업데이트"
-  },
-  "notices": {
-    "import_analyzing": "{{count}}개 파일에서 대화를 분석하는 중...",
-    "import_no_new": "새로운 대화나 업데이트된 대화가 없습니다. 모든 대화가 이미 최신 상태입니다.",
-    "import_starting": "{{count}}개 대화를 가져오는 중 (신규 {{new}}개, 업데이트됨 {{updated}}개)...",
-    "import_starting_selected": "{{files}}개 파일에서 선택한 {{count}}개 대화를 가져오는 중...",
-    "import_completed_fallback": "가져오기 완료. {{created}}개 생성됨, {{updated}}개 업데이트됨.",
-    "import_error": "가져오는 중 오류 발생: {{error}}",
-    "import_error_analyzing": "대화 분석 중 오류 발생: {{error}}",
-    "import_error_file": "{{filename}} 처리 중 오류가 발생했습니다. 자세한 내용은 콘솔을 확인하세요.",
-    "import_error_file_report": "파일 가져오기에 실패했습니다: {{filename}}",
-    "import_error_mobile_large_json": "이 ZIP에는 매우 큰 대화 파일({{size_mb}} MB)이 포함되어 있습니다. 이번 실행에서는 모바일 기기에서 안정적으로 처리할 수 없었습니다. 한 번에 선택하는 ZIP 파일 수를 줄여 다시 시도하세요.",
-    "import_mobile_single_zip_only": "모바일에서는 한 번에 ZIP 파일 1개만 가져올 수 있습니다. ZIP 파일 하나만 선택하세요.",
-    "import_no_selected": "가져올 대화가 선택되지 않았습니다.",
-    "import_no_zip_gemini": "Gemini Takeout ZIP 파일을 하나 이상 선택하세요 (확장 프로그램의 JSON 인덱스는 선택 사항).",
-    "import_no_zip": "ZIP 내보내기 파일을 하나 이상 선택하세요.",
-    "import_gemini_json_failed": "Gemini 인덱스 JSON을 읽지 못했습니다. 인덱스 없이 계속 진행합니다.",
-    "report_failed": "로그 파일을 만들지 못했습니다. 자세한 내용은 콘솔을 확인하세요.",
-    "attachment_map_failed": "첨부 파일 맵을 만들지 못했습니다. 자세한 내용은 콘솔을 확인하세요.",
-    "ribbon_tooltip": "Nexus AI Chat Importer - 새 파일 가져오기",
-    "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
-  },
-  "commands": {
-    "import_conversations": {
-      "name": "AI 대화 가져오기"
-    }
-  },
-  "support_box": {
-    "header": "이 플러그인 후원하기",
-    "header_highlight": "이 플러그인 후원하기",
-    "default_message_emphasis": "Nexus는 9,000회 이상 다운로드되었습니다. 현재 개발을 후원하는 기부는 월 평균 약 5명 수준입니다.",
-    "default_message": "이 플러그인은 제 개인 시간에 유지보수하고 있으며, 개발 환경을 유지하는 데는 지속적인 비용이 듭니다. 새로운 제공자 지원을 추가하려면 정확한 테스트와 지원을 위해 유료 구독도 필요합니다.",
-    "reality_check": "Nexus가 도움이 된다면 일회성 또는 정기 후원을 부탁드립니다. 이미 후원해 주시는 모든 분들께 진심으로 감사드립니다.",
-    "button_alt": "내 작업 후원하기"
-  }
 }

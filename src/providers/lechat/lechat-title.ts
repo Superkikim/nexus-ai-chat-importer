@@ -19,9 +19,13 @@ export function deriveLeChatConversationTitle(
 
     const source = options?.assumeSorted
         ? messages
-        : [...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        : [...messages].sort(
+              (a, b) =>
+                  new Date(a.createdAt).getTime() -
+                  new Date(b.createdAt).getTime()
+          );
 
-    const firstUserMessage = source.find(msg => msg.role === "user");
+    const firstUserMessage = source.find((msg) => msg.role === "user");
     const content = firstUserMessage?.content || "";
     return truncateLeChatTitle(content);
 }

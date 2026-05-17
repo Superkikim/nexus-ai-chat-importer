@@ -1,7 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from "builtin-modules";
-import fs from "fs-extra";
+import { builtinModules } from "module";
+import { access, stat, copyFile, readdir, rm, mkdir } from "fs/promises";
 import path from "path";
 const banner =
 `/*
@@ -13,6 +13,26 @@ if you want to view the source, please visit the github repository of this plugi
 const prod = (process.argv[2] === "production");
 const ios = (process.argv[2] === "ios");
 
+async function pathExists(p) {
+    try {
+        await access(p);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function emptyDir(dir) {
+    try {
+        const entries = await readdir(dir);
+        await Promise.all(
+            entries.map((entry) => rm(path.join(dir, entry), { recursive: true, force: true }))
+        );
+    } catch {
+        await mkdir(dir, { recursive: true });
+    }
+}
+
 async function copyFiles() {
     const filesToCopy = ["manifest.json", "styles.css"];
 
@@ -21,22 +41,22 @@ async function copyFiles() {
         const destPath = path.join(process.cwd(), "dist", file);
 
         // Check if the file exists
-        if (await fs.pathExists(srcPath)) {
+        if (await pathExists(srcPath)) {
             // Check if the destination file exists and if it has changed
-            if (await fs.pathExists(destPath)) {
-                const srcStats = await fs.stat(srcPath);
-                const destStats = await fs.stat(destPath);
+            if (await pathExists(destPath)) {
+                const srcStats = await stat(srcPath);
+                const destStats = await stat(destPath);
 
                 // Copy only if the source file has been modified after the destination file
                 if (srcStats.mtime > destStats.mtime) {
-                    await fs.copyFile(srcPath, destPath);
+                    await copyFile(srcPath, destPath);
                     console.log(`Copied ${file} to dist/`);
                 } else {
                     console.log(`${file} is unchanged, not copying.`);
                 }
             } else {
                 // If the destination file does not exist, copy it
-                await fs.copyFile(srcPath, destPath);
+                await copyFile(srcPath, destPath);
                 console.log(`Copied ${file} to dist/`);
             }
         } else {
@@ -47,7 +67,7 @@ async function copyFiles() {
 
 
 async function build() {
-    await fs.emptyDir("dist");
+    await emptyDir("dist");
 
     const context = await esbuild.context({
         banner: {
@@ -69,7 +89,7 @@ async function build() {
             "@lezer/common",
             "@lezer/highlight",
             "@lezer/lr",
-            ...builtins],
+            ...builtinModules],
         format: "cjs",
         target: "es2018",
         logLevel: "info",

@@ -38,7 +38,7 @@ describe("ConversationProcessor filename fallback", () => {
             },
         };
 
-        const processor = Object.create(ConversationProcessor.prototype) as any;
+        const processor = Object.create(ConversationProcessor.prototype);
         processor.plugin = plugin;
         processor.counters = {
             totalExistingConversations: 0,
@@ -74,13 +74,25 @@ describe("ConversationProcessor filename fallback", () => {
             metadata: {},
         };
 
-        const initialPath = "Nexus/Conversations/perplexity/2024/02/" + "x".repeat(240) + ".md";
-        const finalPath = await processor.createNewNote({}, conversation, initialPath, importReport, undefined, true);
+        const initialPath =
+            "Nexus/Conversations/perplexity/2024/02/" + "x".repeat(240) + ".md";
+        const finalPath = await processor.createNewNote(
+            {},
+            conversation,
+            initialPath,
+            importReport,
+            undefined,
+            true
+        );
 
         expect(writeToFile).toHaveBeenCalledTimes(2);
         expect(writeToFile.mock.calls[0][0]).toBe(initialPath);
-        expect(writeToFile.mock.calls[1][0]).toContain("conversation-70882304-4d64-4395-a98a-3501c8c282ca.md");
-        expect(finalPath).toContain("conversation-70882304-4d64-4395-a98a-3501c8c282ca.md");
+        expect(writeToFile.mock.calls[1][0]).toContain(
+            "conversation-70882304-4d64-4395-a98a-3501c8c282ca.md"
+        );
+        expect(finalPath).toContain(
+            "conversation-70882304-4d64-4395-a98a-3501c8c282ca.md"
+        );
         expect(logger.warn).toHaveBeenCalled();
     });
 });

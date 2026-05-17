@@ -53,10 +53,13 @@ export class AttachmentMapBuilder {
             const fileStartedAt = Date.now();
 
             try {
-                this.attachmentLogger.debug(`Scan attachments [${i + 1}/${files.length}]`, {
-                    fileName: file.name,
-                    fileSize: file.size,
-                });
+                this.attachmentLogger.debug(
+                    `Scan attachments [${i + 1}/${files.length}]`,
+                    {
+                        fileName: file.name,
+                        fileSize: file.size,
+                    }
+                );
 
                 // enumerateZipEntries reads ZIP metadata only (central directory parsing)
                 // on both desktop and mobile, without extracting attachment payloads.
@@ -80,7 +83,7 @@ export class AttachmentMapBuilder {
                             zipIndex: i,
                             path: entry.path,
                             size: entry.size,
-                            zipFileName: file.name
+                            zipFileName: file.name,
                         });
                     }
                 }
@@ -96,7 +99,8 @@ export class AttachmentMapBuilder {
                     fileName: file.name,
                     fileSize: file.size,
                     durationMs: Date.now() - fileStartedAt,
-                    message: error instanceof Error ? error.message : String(error),
+                    message:
+                        error instanceof Error ? error.message : String(error),
                 });
             }
         }
@@ -119,7 +123,7 @@ export class AttachmentMapBuilder {
      */
     private extractFileIds(path: string): string[] {
         const fileIds: string[] = [];
-        const fileName = path.split('/').pop() || '';
+        const fileName = path.split("/").pop() || "";
 
         // Pattern 1: file_XXXXX.dat or file_XXXXX-uuid.ext (old .dat format, hex IDs)
         const filePattern = /file_([a-f0-9]+)/i;
@@ -147,12 +151,16 @@ export class AttachmentMapBuilder {
         // Pattern 2: XXXXX.dat (just the hash)
         const hashPattern = /^([a-f0-9]{32,})(?:[-.]|$)/i;
         const hashMatch = fileName.match(hashPattern);
-        if (hashMatch && !fileMatch) { // Don't duplicate if already matched above
+        if (hashMatch && !fileMatch) {
+            // Don't duplicate if already matched above
             fileIds.push(hashMatch[1]);
         }
 
         // Pattern 3: Full filename as ID (for exact matches)
-        const baseFileName = fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, '');
+        const baseFileName = fileName.replace(
+            /\.(dat|png|jpg|jpeg|gif|webp)$/i,
+            ""
+        );
         if (baseFileName && !fileIds.includes(baseFileName)) {
             fileIds.push(baseFileName);
         }
@@ -165,7 +173,10 @@ export class AttachmentMapBuilder {
      * Returns the NEWEST available location (last in array)
      * Falls back to older locations if needed
      */
-    findBestLocation(attachmentMap: AttachmentMap, fileId: string): AttachmentLocation | null {
+    findBestLocation(
+        attachmentMap: AttachmentMap,
+        fileId: string
+    ): AttachmentLocation | null {
         const locations = attachmentMap.get(fileId);
         if (!locations || locations.length === 0) {
             return null;
@@ -178,7 +189,10 @@ export class AttachmentMapBuilder {
     /**
      * Find all locations for a file ID (for debugging/logging)
      */
-    findAllLocations(attachmentMap: AttachmentMap, fileId: string): AttachmentLocation[] {
+    findAllLocations(
+        attachmentMap: AttachmentMap,
+        fileId: string
+    ): AttachmentLocation[] {
         return attachmentMap.get(fileId) || [];
     }
 }

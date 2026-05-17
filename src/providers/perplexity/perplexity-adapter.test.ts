@@ -63,7 +63,7 @@ describe("PerplexityAdapter", () => {
     });
 
     it("uses turn uuid for incremental append detection", () => {
-        const newTurns = adapter.getNewMessages(sampleChat as any, ["turn-1"]);
+        const newTurns = adapter.getNewMessages(sampleChat, ["turn-1"]);
         expect(newTurns).toHaveLength(0);
     });
 
@@ -88,7 +88,7 @@ describe("PerplexityAdapter", () => {
             ],
         };
 
-        const newTurns = adapter.getNewMessages(entriesChat as any, ["entry-1"]);
+        const newTurns = adapter.getNewMessages(entriesChat, ["entry-1"]);
         expect(newTurns).toHaveLength(0);
     });
 
@@ -122,7 +122,7 @@ describe("PerplexityAdapter", () => {
             ],
         };
 
-        const converted = adapter.convertChat(entriesChat as any);
+        const converted = adapter.convertChat(entriesChat);
         expect(converted.id).toBe("context-abc");
         expect(converted.provider).toBe("perplexity");
         expect(converted.messages).toHaveLength(2);

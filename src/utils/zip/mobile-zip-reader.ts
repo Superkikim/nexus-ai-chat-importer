@@ -37,14 +37,21 @@ function shouldRetryReadError(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     const name = error instanceof Error ? error.name : "";
     const normalized = `${name} ${message}`.toLowerCase();
-    return normalized.includes("notfounderror") || normalized.includes("object can not be found here");
+    return (
+        normalized.includes("notfounderror") ||
+        normalized.includes("object can not be found here")
+    );
 }
 
 function wait(ms: number): Promise<void> {
     return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-async function readSlice(file: File, start: number, length: number): Promise<ArrayBuffer> {
+async function readSlice(
+    file: File,
+    start: number,
+    length: number
+): Promise<ArrayBuffer> {
     if (length <= 0) {
         return Promise.resolve(new ArrayBuffer(0));
     }
@@ -53,18 +60,22 @@ async function readSlice(file: File, start: number, length: number): Promise<Arr
     const safeEnd = Math.min(file.size, safeStart + length);
     const safeLength = Math.max(0, safeEnd - safeStart);
     const maxAttempts = 3;
-    let lastError: unknown = null;
+    let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
             return await new Promise<ArrayBuffer>((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result as ArrayBuffer);
-                reader.onerror = () => reject(reader.error ?? new Error("ZIP read failed"));
-                reader.readAsArrayBuffer(file.slice(safeStart, safeStart + safeLength));
+                reader.onerror = () =>
+                    reject(reader.error ?? new Error("ZIP read failed"));
+                reader.readAsArrayBuffer(
+                    file.slice(safeStart, safeStart + safeLength)
+                );
             });
         } catch (error) {
-            lastError = error;
+            lastError =
+                error instanceof Error ? error : new Error(String(error));
             const retryable = shouldRetryReadError(error);
             if (!retryable || attempt === maxAttempts) {
                 break;
@@ -91,7 +102,9 @@ function getUint64(view: DataView, offset: number): number {
     return high * 0x1_0000_0000 + low;
 }
 
-async function findEndOfCentralDirectory(file: File): Promise<{ offset: number; view: DataView }> {
+async function findEndOfCentralDirectory(
+    file: File
+): Promise<{ offset: number; view: DataView }> {
     const searchSize = Math.min(65557, file.size);
     const sliceStart = file.size - searchSize;
     const buffer = await readSlice(file, sliceStart, searchSize);
@@ -99,14 +112,22 @@ async function findEndOfCentralDirectory(file: File): Promise<{ offset: number; 
 
     for (let pos = buffer.byteLength - 22; pos >= 0; pos--) {
         if (view.getUint32(pos, true) === EOCD_SIGNATURE) {
-            return { offset: sliceStart + pos, view: new DataView(buffer, pos) };
+            return {
+                offset: sliceStart + pos,
+                view: new DataView(buffer, pos),
+            };
         }
     }
 
-    throw new Error("ZIP central directory not found (archive is invalid or unsupported)");
+    throw new Error(
+        "ZIP central directory not found (archive is invalid or unsupported)"
+    );
 }
 
-async function readZip64CentralDirectoryInfo(file: File, eocdOffset: number): Promise<CentralDirectoryInfo> {
+async function readZip64CentralDirectoryInfo(
+    file: File,
+    eocdOffset: number
+): Promise<CentralDirectoryInfo> {
     const locatorOffset = eocdOffset - 20;
     if (locatorOffset < 0) {
         throw new Error("ZIP64 locator is missing");
@@ -134,7 +155,9 @@ async function readZip64CentralDirectoryInfo(file: File, eocdOffset: number): Pr
     };
 }
 
-async function readCentralDirectoryInfo(file: File): Promise<CentralDirectoryInfo> {
+async function readCentralDirectoryInfo(
+    file: File
+): Promise<CentralDirectoryInfo> {
     const { offset: eocdOffset, view } = await findEndOfCentralDirectory(file);
     const entryCount = view.getUint16(10, true);
     const centralDirectorySize = view.getUint32(12, true);
@@ -146,10 +169,13 @@ async function readCentralDirectoryInfo(file: File): Promise<CentralDirectoryInf
         centralDirectoryOffset === 0xffffffff;
 
     if (usesZip64) {
-        mobileZipLogger.debug(`ZIP64 central directory detected for ${file.name}`, {
-            fileSize: file.size,
-            eocdOffset,
-        });
+        mobileZipLogger.debug(
+            `ZIP64 central directory detected for ${file.name}`,
+            {
+                fileSize: file.size,
+                eocdOffset,
+            }
+        );
         return readZip64CentralDirectoryInfo(file, eocdOffset);
     }
 
@@ -162,7 +188,11 @@ async function readCentralDirectoryInfo(file: File): Promise<CentralDirectoryInf
 
 function parseZip64ExtraField(
     extraFieldBytes: Uint8Array,
-    needs: { uncompressedSize?: boolean; compressedSize?: boolean; localHeaderOffset?: boolean }
+    needs: {
+        uncompressedSize?: boolean;
+        compressedSize?: boolean;
+        localHeaderOffset?: boolean;
+    }
 ): {
     uncompressedSize?: number;
     compressedSize?: number;
@@ -186,7 +216,11 @@ function parseZip64ExtraField(
 
         if (headerId === ZIP64_EXTRA_FIELD_ID) {
             let valueOffset = pos;
-            const result: { uncompressedSize?: number; compressedSize?: number; localHeaderOffset?: number } = {};
+            const result: {
+                uncompressedSize?: number;
+                compressedSize?: number;
+                localHeaderOffset?: number;
+            } = {};
 
             if (needs.uncompressedSize) {
                 result.uncompressedSize = getUint64(view, valueOffset);
@@ -209,8 +243,15 @@ function parseZip64ExtraField(
     throw new Error("ZIP64 extra field is missing required values");
 }
 
-async function parseCentralDirectory(file: File, info: CentralDirectoryInfo): Promise<MobileZipEntryRecord[]> {
-    const buffer = await readSlice(file, info.centralDirectoryOffset, info.centralDirectorySize);
+async function parseCentralDirectory(
+    file: File,
+    info: CentralDirectoryInfo
+): Promise<MobileZipEntryRecord[]> {
+    const buffer = await readSlice(
+        file,
+        info.centralDirectoryOffset,
+        info.centralDirectorySize
+    );
     const view = new DataView(buffer);
     const utf8Decoder = new TextDecoder("utf-8");
     const entries: MobileZipEntryRecord[] = [];
@@ -239,8 +280,16 @@ async function parseCentralDirectory(file: File, info: CentralDirectoryInfo): Pr
             throw new Error("ZIP central directory entry is truncated");
         }
 
-        const fileNameBytes = new Uint8Array(buffer, fileNameStart, fileNameLength);
-        const extraFieldBytes = new Uint8Array(buffer, extraFieldStart, extraFieldLength);
+        const fileNameBytes = new Uint8Array(
+            buffer,
+            fileNameStart,
+            fileNameLength
+        );
+        const extraFieldBytes = new Uint8Array(
+            buffer,
+            extraFieldStart,
+            extraFieldLength
+        );
         const fileName = utf8Decoder.decode(fileNameBytes);
 
         if (
@@ -256,7 +305,8 @@ async function parseCentralDirectory(file: File, info: CentralDirectoryInfo): Pr
 
             compressedSize = zip64Values.compressedSize ?? compressedSize;
             uncompressedSize = zip64Values.uncompressedSize ?? uncompressedSize;
-            localHeaderOffset = zip64Values.localHeaderOffset ?? localHeaderOffset;
+            localHeaderOffset =
+                zip64Values.localHeaderOffset ?? localHeaderOffset;
         }
 
         if (!fileName.endsWith("/")) {
@@ -276,12 +326,21 @@ async function parseCentralDirectory(file: File, info: CentralDirectoryInfo): Pr
     return entries;
 }
 
-async function readCompressedFileData(file: File, entry: MobileZipEntryRecord): Promise<Uint8Array> {
-    const { dataStart, compressedSize } = await getLocalFileDataRange(file, entry);
+async function readCompressedFileData(
+    file: File,
+    entry: MobileZipEntryRecord
+): Promise<Uint8Array> {
+    const { dataStart, compressedSize } = await getLocalFileDataRange(
+        file,
+        entry
+    );
     return new Uint8Array(await readSlice(file, dataStart, compressedSize));
 }
 
-async function getLocalFileDataRange(file: File, entry: MobileZipEntryRecord): Promise<LocalFileDataRange> {
+async function getLocalFileDataRange(
+    file: File,
+    entry: MobileZipEntryRecord
+): Promise<LocalFileDataRange> {
     const localHeader = await readSlice(file, entry.localHeaderOffset, 30);
     const headerView = new DataView(localHeader);
 
@@ -291,14 +350,18 @@ async function getLocalFileDataRange(file: File, entry: MobileZipEntryRecord): P
 
     const fileNameLength = headerView.getUint16(26, true);
     const extraFieldLength = headerView.getUint16(28, true);
-    const dataStart = entry.localHeaderOffset + 30 + fileNameLength + extraFieldLength;
+    const dataStart =
+        entry.localHeaderOffset + 30 + fileNameLength + extraFieldLength;
     return {
         dataStart,
         compressedSize: entry.compressedSize,
     };
 }
 
-async function inflateRawDeflate(data: Uint8Array, expectedLength: number): Promise<Uint8Array> {
+async function inflateRawDeflate(
+    data: Uint8Array,
+    expectedLength: number
+): Promise<Uint8Array> {
     if (typeof DecompressionStream === "undefined") {
         throw new Error("DecompressionStream is unavailable on this device");
     }
@@ -306,10 +369,14 @@ async function inflateRawDeflate(data: Uint8Array, expectedLength: number): Prom
     const chunks: Uint8Array[] = [];
     let totalLength = 0;
 
+    const dataBlob = new Blob([
+        data.buffer.slice(
+            data.byteOffset,
+            data.byteOffset + data.byteLength
+        ) as ArrayBuffer,
+    ]);
     const response = new Response(
-        new Blob([data]).stream().pipeThrough(
-            new DecompressionStream("deflate-raw") as unknown as TransformStream<Uint8Array, Uint8Array>
-        )
+        dataBlob.stream().pipeThrough(new DecompressionStream("deflate-raw"))
     );
 
     const reader = response.body?.getReader();
@@ -344,7 +411,10 @@ async function inflateRawDeflate(data: Uint8Array, expectedLength: number): Prom
     return result;
 }
 
-async function readLocalFileData(file: File, entry: MobileZipEntryRecord): Promise<Uint8Array> {
+async function readLocalFileData(
+    file: File,
+    entry: MobileZipEntryRecord
+): Promise<Uint8Array> {
     const compressed = await readCompressedFileData(file, entry);
 
     if (entry.compressionMethod === 0) {
@@ -355,7 +425,9 @@ async function readLocalFileData(file: File, entry: MobileZipEntryRecord): Promi
         return inflateRawDeflate(compressed, entry.size);
     }
 
-    throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`);
+    throw new Error(
+        `Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`
+    );
 }
 
 async function* readCompressedDataChunks(
@@ -366,7 +438,9 @@ async function* readCompressedDataChunks(
     let offset = 0;
     while (offset < range.compressedSize) {
         const length = Math.min(chunkSize, range.compressedSize - offset);
-        const chunk = new Uint8Array(await readSlice(file, range.dataStart + offset, length));
+        const chunk = new Uint8Array(
+            await readSlice(file, range.dataStart + offset, length)
+        );
         offset += chunk.byteLength;
         if (chunk.byteLength > 0) {
             yield chunk;
@@ -374,7 +448,10 @@ async function* readCompressedDataChunks(
     }
 }
 
-async function* readLocalFileTextChunks(file: File, entry: MobileZipEntryRecord): AsyncGenerator<string> {
+async function* readLocalFileTextChunks(
+    file: File,
+    entry: MobileZipEntryRecord
+): AsyncGenerator<string> {
     const range = await getLocalFileDataRange(file, entry);
     const decoder = new TextDecoder("utf-8");
 
@@ -393,20 +470,27 @@ async function* readLocalFileTextChunks(file: File, entry: MobileZipEntryRecord)
     }
 
     if (entry.compressionMethod !== 8) {
-        throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`);
+        throw new Error(
+            `Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`
+        );
     }
 
     if (typeof DecompressionStream === "undefined") {
         throw new Error("DecompressionStream is unavailable on this device");
     }
 
-    const decompressor = new DecompressionStream("deflate-raw") as unknown as TransformStream<Uint8Array, Uint8Array>;
+    const decompressor = new DecompressionStream(
+        "deflate-raw"
+    ) as unknown as TransformStream<Uint8Array, Uint8Array>;
     const writer = decompressor.writable.getWriter();
     const reader = decompressor.readable.getReader();
 
     const pumpCompressed = (async () => {
         try {
-            for await (const compressedChunk of readCompressedDataChunks(file, range)) {
+            for await (const compressedChunk of readCompressedDataChunks(
+                file,
+                range
+            )) {
                 await writer.write(compressedChunk);
             }
             await writer.close();
@@ -459,7 +543,10 @@ class MobileZipEntryHandle implements ZipEntryHandle {
     }
 
     async *readTextChunks(): AsyncGenerator<string> {
-        for await (const chunk of readLocalFileTextChunks(this.file, this.entry)) {
+        for await (const chunk of readLocalFileTextChunks(
+            this.file,
+            this.entry
+        )) {
             yield chunk;
         }
     }
@@ -475,7 +562,10 @@ export class MobileZipArchiveReader implements ZipArchiveReader {
     }
 
     async listEntries(): Promise<ZipEntryMeta[]> {
-        return Array.from(this.entryMap.values()).map(({ path, size }) => ({ path, size }));
+        return Array.from(this.entryMap.values()).map(({ path, size }) => ({
+            path,
+            size,
+        }));
     }
 
     has(name: string): boolean {
@@ -511,7 +601,7 @@ export async function readMobileZipEntries(
 
         const entries = await parseCentralDirectory(file, centralDirectoryInfo);
         const filteredEntries = shouldInclude
-            ? entries.filter(entry => shouldInclude(entry.path, entry.size))
+            ? entries.filter((entry) => shouldInclude(entry.path, entry.size))
             : entries;
 
         mobileZipLogger.debug(`ZIP scan complete for ${file.name}`, {

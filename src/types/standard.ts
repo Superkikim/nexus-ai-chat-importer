@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PROVIDER_URLS } from '../config/constants';
+import { PROVIDER_URLS } from "../config/constants";
 
 // src/types/standard.ts
 
@@ -27,7 +27,11 @@ export interface AttachmentStatus {
     processed: boolean;
     found: boolean;
     localPath?: string;
-    reason?: 'missing_from_export' | 'corrupted' | 'unsupported_format' | 'extraction_failed';
+    reason?:
+        | "missing_from_export"
+        | "corrupted"
+        | "unsupported_format"
+        | "extraction_failed";
     note?: string;
 }
 
@@ -35,13 +39,13 @@ export interface AttachmentStatus {
  * Attachment type enumeration for provider-agnostic classification
  */
 export type AttachmentType =
-    | 'file'              // File uploaded by user
-    | 'generated_image'   // Generated image (DALL-E, Midjourney, etc.)
-    | 'artifact'          // Generated code/document (Claude artifacts, etc.)
-    | 'transcription'     // Audio/video transcription
-    | 'analysis'          // Document/image analysis
-    | 'audio'             // Audio files (voice conversations)
-    | 'link';             // External link
+    | "file" // File uploaded by user
+    | "generated_image" // Generated image (DALL-E, Midjourney, etc.)
+    | "artifact" // Generated code/document (Claude artifacts, etc.)
+    | "transcription" // Audio/video transcription
+    | "analysis" // Document/image analysis
+    | "audio" // Audio files (voice conversations)
+    | "link"; // External link
 
 /**
  * Provider-agnostic attachment interface with status tracking
@@ -69,7 +73,7 @@ export interface StandardAttachment {
  */
 export interface StandardMessage {
     id: string;
-    role: 'user' | 'assistant';
+    role: "user" | "assistant";
     content: string;
     timestamp: number; // Unix timestamp
     model?: string; // Optional per-message model label (provider-specific)
@@ -104,14 +108,14 @@ export interface UrlGenerator {
  */
 export const URL_GENERATORS: Record<string, UrlGenerator> = {
     chatgpt: {
-        generateChatUrl: PROVIDER_URLS.CHATGPT.CHAT
+        generateChatUrl: PROVIDER_URLS.CHATGPT.CHAT,
     },
     claude: {
-        generateChatUrl: PROVIDER_URLS.CLAUDE.CHAT
+        generateChatUrl: PROVIDER_URLS.CLAUDE.CHAT,
     },
     perplexity: {
-        generateChatUrl: PROVIDER_URLS.PERPLEXITY.CHAT
-    }
+        generateChatUrl: PROVIDER_URLS.PERPLEXITY.CHAT,
+    },
 };
 
 /**
@@ -147,6 +151,6 @@ export interface ReportNamingStrategy {
 export interface ReportGenerationInfo {
     provider: string;
     prefix: string;
-    folderPath: string;  // e.g., "Reports/chatgpt"
+    folderPath: string; // e.g., "Reports/chatgpt"
     baseFileName: string; // e.g., "2025.04.25 - import report.md"
 }

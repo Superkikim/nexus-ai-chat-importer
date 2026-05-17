@@ -5362,7 +5362,10 @@ function initLocale() {
 function t(key, vars) {
   var _a, _b;
   const keys = key.split(".");
-  const resolve = /* @__PURE__ */ __name((obj) => keys.reduce((o, k) => o && typeof o === "object" ? o[k] : void 0, obj), "resolve");
+  const resolve = /* @__PURE__ */ __name((obj) => keys.reduce(
+    (o, k) => o && typeof o === "object" ? o[k] : void 0,
+    obj
+  ), "resolve");
   let str = (_b = (_a = resolve(locales[_locale])) != null ? _a : resolve(locales["en"])) != null ? _b : key;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
@@ -5510,7 +5513,7 @@ var init_constants = __esm({
 // src/utils/support-links.ts
 function normalizeLocale(locale) {
   var _a, _b, _c, _d;
-  const runtimeLocale = (_d = locale != null ? locale : (_c = (_b = (_a = globalThis == null ? void 0 : globalThis.window) == null ? void 0 : _a.moment) == null ? void 0 : _b.locale) == null ? void 0 : _c.call(_b)) != null ? _d : "en";
+  const runtimeLocale = (_d = locale != null ? locale : (_c = (_b = (_a = window == null ? void 0 : window.window) == null ? void 0 : _a.moment) == null ? void 0 : _b.locale) == null ? void 0 : _c.call(_b)) != null ? _d : "en";
   return runtimeLocale.toLowerCase().split(/[-_]/)[0];
 }
 function isSupportedLocale(locale) {
@@ -5546,7 +5549,17 @@ var init_support_links = __esm({
     GITHUB_REPO_BASE = "https://github.com/Superkikim/nexus-ai-chat-importer";
     GITHUB_ISSUES_URL = "https://github.com/superkikim/nexus-ai-chat-importer/issues";
     NEXUS_FORUM_THREAD_URL = "https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664";
-    SUPPORTED_NEXUS_LOCALES = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"];
+    SUPPORTED_NEXUS_LOCALES = [
+      "fr",
+      "de",
+      "es",
+      "it",
+      "ru",
+      "zh",
+      "ja",
+      "pt",
+      "ko"
+    ];
     __name(normalizeLocale, "normalizeLocale");
     __name(isSupportedLocale, "isSupportedLocale");
     __name(getLocalizedDocsUrl, "getLocalizedDocsUrl");
@@ -5561,32 +5574,44 @@ var init_support_links = __esm({
 function createSupportBox(container, message) {
   const supportBox = container.createDiv("nexus-support-box");
   const header = supportBox.createDiv("nexus-support-header");
-  header.innerHTML = `<span class="nexus-support-header-highlight">${t("support_box.header_highlight")}</span>`;
+  header.createEl("span", {
+    cls: "nexus-support-header-highlight",
+    text: t("support_box.header_highlight")
+  });
   const messageEl = supportBox.createDiv("nexus-support-message");
   if (message) {
     const paragraphs = message.split("\n\n");
-    messageEl.innerHTML = paragraphs.map((p) => {
-      const hasStats = /\d{1,3}[',]\d{3}|\$\d+/.test(p);
+    paragraphs.forEach((pText) => {
+      const hasStats = /\d{1,3}[',]\d{3}|\$\d+/.test(pText);
+      const p = messageEl.createEl("p");
       if (hasStats) {
-        return `<p><span class="nexus-support-message-emphasis">${p}</span></p>`;
+        p.createEl("span", {
+          cls: "nexus-support-message-emphasis",
+          text: pText
+        });
+      } else {
+        p.setText(pText);
       }
-      return `<p>${p}</p>`;
-    }).join("");
+    });
   } else {
-    messageEl.innerHTML = `
-            <p><span class="nexus-support-message-emphasis">${t("support_box.default_message_emphasis")}</span></p>
-            <p>${t("support_box.default_message")}</p>
-        `;
+    messageEl.createEl("p").createEl("span", {
+      cls: "nexus-support-message-emphasis",
+      text: t("support_box.default_message_emphasis")
+    });
+    messageEl.createEl("p", { text: t("support_box.default_message") });
   }
   const realityCheck = supportBox.createDiv("nexus-support-reality-check");
-  realityCheck.innerHTML = t("support_box.reality_check");
+  realityCheck.setText(t("support_box.reality_check"));
   const supportUrl = getLocalizedSupportUrl();
-  const buttonContainer = supportBox.createDiv("nexus-support-button-container");
-  buttonContainer.innerHTML = `
-        <a href="${supportUrl}" target="_blank" class="nexus-support-link">
-            ${t("support_box.button_alt")}
-        </a>
-    `;
+  const buttonContainer = supportBox.createDiv(
+    "nexus-support-button-container"
+  );
+  const supportLink = buttonContainer.createEl("a", {
+    cls: "nexus-support-link",
+    text: t("support_box.button_alt"),
+    href: supportUrl
+  });
+  supportLink.setAttr("target", "_blank");
 }
 var init_support_box = __esm({
   "src/ui/components/support-box.ts"() {
@@ -5597,362 +5622,18 @@ var init_support_box = __esm({
   }
 });
 
-// src/dialogs/folder-tree-browser-modal.ts
-var import_obsidian3, FolderTreeBrowserModal;
-var init_folder_tree_browser_modal = __esm({
-  "src/dialogs/folder-tree-browser-modal.ts"() {
-    "use strict";
-    import_obsidian3 = require("obsidian");
-    init_i18n();
-    FolderTreeBrowserModal = class extends import_obsidian3.Modal {
-      // Track folders created during this session
-      constructor(app, onSubmit, initialPath, validatePath) {
-        super(app);
-        this.selectedFolder = null;
-        this.expandedFolders = /* @__PURE__ */ new Set();
-        this.createdFolders = /* @__PURE__ */ new Set();
-        this.onSubmit = onSubmit;
-        this.validatePath = validatePath;
-        if (initialPath) {
-          const folder = this.app.vault.getAbstractFileByPath(initialPath);
-          if (folder instanceof import_obsidian3.TFolder) {
-            this.selectedFolder = folder;
-            let current = folder.parent;
-            while (current && current.path !== "/") {
-              this.expandedFolders.add(current.path);
-              current = current.parent;
-            }
-            this.expandedFolders.add(folder.path);
-          }
-        }
-      }
-      onOpen() {
-        const { contentEl, modalEl } = this;
-        modalEl.addClass("nexus-folder-browser-modal");
-        contentEl.addClass("nexus-ai-chat-importer-modal");
-        contentEl.createEl("h3", { text: t("folder_browser.title") });
-        this.treeContainer = contentEl.createDiv({ cls: "nexus-folder-tree-container" });
-        this.renderTree();
-        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container nexus-dialog-actions" });
-        const createButton = buttonContainer.createEl("button", { text: t("folder_browser.buttons.create_new_folder") });
-        createButton.addEventListener("click", () => this.handleCreateFolder());
-        const cancelButton = buttonContainer.createEl("button", { text: t("folder_browser.buttons.cancel") });
-        cancelButton.addEventListener("click", () => this.handleCancel());
-        const selectButton = buttonContainer.createEl("button", {
-          text: t("folder_browser.buttons.select"),
-          cls: "mod-cta"
-        });
-        selectButton.addEventListener("click", () => this.handleSelect());
-      }
-      renderTree() {
-        this.treeContainer.empty();
-        const root = this.app.vault.getRoot();
-        const rootItem = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
-        if (this.selectedFolder === root) {
-          rootItem.addClass("is-selected");
-        }
-        const rootIcon = rootItem.createSpan({ text: "\u{1F4C1} " });
-        const rootLabel = rootItem.createSpan({ text: t("folder_browser.vault_root") });
-        rootLabel.style.fontWeight = "bold";
-        rootItem.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.handleFolderClick(root);
-        });
-        this.renderFolderChildren(root, 0);
-      }
-      renderFolderChildren(folder, depth) {
-        const children = folder.children.filter((child) => child instanceof import_obsidian3.TFolder).sort((a, b) => a.name.localeCompare(b.name));
-        for (const child of children) {
-          this.renderFolder(child, depth + 1);
-        }
-      }
-      renderFolder(folder, depth) {
-        var _a;
-        const isExpanded = this.expandedFolders.has(folder.path);
-        const isSelected = ((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path;
-        const hasChildren = folder.children.some((c) => c instanceof import_obsidian3.TFolder);
-        const item = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
-        item.style.paddingLeft = `${depth * 20 + 8}px`;
-        if (isSelected) {
-          item.addClass("is-selected");
-        }
-        const expandIcon = item.createSpan();
-        expandIcon.style.width = "16px";
-        expandIcon.style.marginRight = "4px";
-        if (hasChildren) {
-          expandIcon.setText(isExpanded ? "\u25BC" : "\u25B6");
-        } else {
-          expandIcon.setText(" ");
-        }
-        item.createSpan({ text: "\u{1F4C1} " });
-        item.createSpan({ text: folder.name });
-        item.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.handleFolderClick(folder);
-        });
-        item.addEventListener("mouseenter", () => {
-          if (!isSelected) {
-            item.addClass("is-hovered");
-          }
-        });
-        item.addEventListener("mouseleave", () => {
-          if (!isSelected) {
-            item.removeClass("is-hovered");
-          }
-        });
-        if (isExpanded && hasChildren) {
-          this.renderFolderChildren(folder, depth);
-        }
-      }
-      handleFolderClick(folder) {
-        var _a;
-        const wasExpanded = this.expandedFolders.has(folder.path);
-        if (((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path) {
-          if (wasExpanded) {
-            this.expandedFolders.delete(folder.path);
-            this.collapseAllChildren(folder);
-          } else {
-            this.expandedFolders.add(folder.path);
-          }
-        } else {
-          if (folder.parent) {
-            const siblings = folder.parent.children.filter((c) => c instanceof import_obsidian3.TFolder);
-            for (const sibling of siblings) {
-              if (sibling.path !== folder.path) {
-                this.expandedFolders.delete(sibling.path);
-                this.collapseAllChildren(sibling);
-              }
-            }
-          }
-          this.selectedFolder = folder;
-          this.expandedFolders.add(folder.path);
-        }
-        this.renderTree();
-      }
-      collapseAllChildren(folder) {
-        for (const child of folder.children) {
-          if (child instanceof import_obsidian3.TFolder) {
-            this.expandedFolders.delete(child.path);
-            this.collapseAllChildren(child);
-          }
-        }
-      }
-      async handleCreateFolder() {
-        var _a;
-        if (!this.selectedFolder) {
-          new import_obsidian3.Notice(t("folder_browser.notices.select_parent_first"));
-          return;
-        }
-        const folderName = await this.promptForFolderName();
-        if (!folderName) {
-          return;
-        }
-        if (folderName.includes("/") || folderName.includes("\\") || folderName.includes(":") || folderName.includes("*") || folderName.includes("?") || folderName.includes('"') || folderName.includes("<") || folderName.includes(">") || folderName.includes("|")) {
-          new import_obsidian3.Notice(t("folder_browser.notices.invalid_name"));
-          return;
-        }
-        const parentPath = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
-        const newFolderPath = parentPath ? `${parentPath}/${folderName}` : folderName;
-        const exists = this.app.vault.getAbstractFileByPath(newFolderPath);
-        if (exists) {
-          new import_obsidian3.Notice(t("folder_browser.notices.already_exists"));
-          return;
-        }
-        if (this.validatePath) {
-          const validation = this.validatePath(newFolderPath);
-          if (!validation.valid) {
-            new import_obsidian3.Notice(t("folder_browser.notices.invalid_location", { error: (_a = validation.error) != null ? _a : t("folder_browser.notices.invalid_location_default") }));
-            return;
-          }
-        }
-        try {
-          await this.app.vault.createFolder(newFolderPath);
-          this.createdFolders.add(newFolderPath);
-          new import_obsidian3.Notice(t("folder_browser.notices.created_success", { name: folderName }));
-          this.expandedFolders.add(this.selectedFolder.path);
-          const newFolder = this.app.vault.getAbstractFileByPath(newFolderPath);
-          if (newFolder instanceof import_obsidian3.TFolder) {
-            this.selectedFolder = newFolder;
-            this.expandedFolders.add(newFolder.path);
-          }
-          this.renderTree();
-        } catch (error) {
-          new import_obsidian3.Notice(t("folder_browser.notices.create_failed", { error: error.message }));
-        }
-      }
-      promptForFolderName() {
-        return new Promise((resolve) => {
-          const modal = new import_obsidian3.Modal(this.app);
-          modal.titleEl.setText(t("folder_browser.create_folder_dialog.title"));
-          const inputContainer = modal.contentEl.createDiv();
-          inputContainer.style.marginBottom = "20px";
-          inputContainer.createEl("label", { text: t("folder_browser.create_folder_dialog.folder_name_label") });
-          const input = inputContainer.createEl("input", { type: "text" });
-          input.style.width = "100%";
-          input.style.marginTop = "8px";
-          const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-          const cancelButton = buttonContainer.createEl("button", { text: t("folder_browser.create_folder_dialog.buttons.cancel") });
-          cancelButton.addEventListener("click", () => {
-            modal.close();
-            resolve(null);
-          });
-          const createButton = buttonContainer.createEl("button", {
-            text: t("folder_browser.create_folder_dialog.buttons.create"),
-            cls: "mod-cta"
-          });
-          createButton.addEventListener("click", () => {
-            const value = input.value.trim();
-            modal.close();
-            resolve(value || null);
-          });
-          input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const value = input.value.trim();
-              modal.close();
-              resolve(value || null);
-            } else if (e.key === "Escape") {
-              modal.close();
-              resolve(null);
-            }
-          });
-          modal.open();
-          input.focus();
-        });
-      }
-      handleSelect() {
-        var _a;
-        if (!this.selectedFolder) {
-          new import_obsidian3.Notice(t("folder_browser.notices.select_first"));
-          return;
-        }
-        const path = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
-        if (this.validatePath) {
-          const validation = this.validatePath(path);
-          if (!validation.valid) {
-            new import_obsidian3.Notice(t("folder_browser.notices.invalid_location", { error: (_a = validation.error) != null ? _a : t("folder_browser.notices.invalid_location_default") }));
-            return;
-          }
-        }
-        this.createdFolders.clear();
-        this.onSubmit(path);
-        this.close();
-      }
-      async handleCancel() {
-        await this.cleanupCreatedFolders();
-        this.close();
-      }
-      async cleanupCreatedFolders() {
-        const sortedFolders = Array.from(this.createdFolders).sort((a, b) => {
-          const depthA = a.split("/").length;
-          const depthB = b.split("/").length;
-          return depthB - depthA;
-        });
-        for (const folderPath of sortedFolders) {
-          try {
-            const folder = this.app.vault.getAbstractFileByPath(folderPath);
-            if (folder instanceof import_obsidian3.TFolder && folder.children.length === 0) {
-              await this.app.vault.delete(folder);
-            }
-          } catch (error) {
-          }
-        }
-      }
-      onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
-      }
-    };
-    __name(FolderTreeBrowserModal, "FolderTreeBrowserModal");
-  }
-});
-
-// src/utils/folder-validation.ts
-function isPathInsidePath(pathToCheck, existingPath) {
-  if (!pathToCheck || !existingPath) {
-    return false;
-  }
-  const normalizedCheck = pathToCheck.replace(/\/$/, "");
-  const normalizedExisting = existingPath.replace(/\/$/, "");
-  if (normalizedCheck === normalizedExisting) {
-    return false;
-  }
-  return normalizedCheck.startsWith(normalizedExisting + "/");
-}
-function validateFolderNesting(folderType, newPath, conversationFolder, reportFolder, attachmentFolder) {
-  const normalizedNewPath = newPath.trim().replace(/\/$/, "");
-  if (!normalizedNewPath) {
-    return {
-      valid: false,
-      error: "Folder path cannot be empty"
-    };
-  }
-  switch (folderType) {
-    case "conversationFolder":
-      if (isPathInsidePath(normalizedNewPath, reportFolder)) {
-        return {
-          valid: false,
-          error: `Conversation folder cannot be inside the Report folder (${reportFolder})`
-        };
-      }
-      if (isPathInsidePath(normalizedNewPath, attachmentFolder)) {
-        return {
-          valid: false,
-          error: `Conversation folder cannot be inside the Attachment folder (${attachmentFolder})`
-        };
-      }
-      break;
-    case "reportFolder":
-      if (isPathInsidePath(normalizedNewPath, conversationFolder)) {
-        return {
-          valid: false,
-          error: `Report folder cannot be inside the Conversation folder (${conversationFolder})`
-        };
-      }
-      if (isPathInsidePath(normalizedNewPath, attachmentFolder)) {
-        return {
-          valid: false,
-          error: `Report folder cannot be inside the Attachment folder (${attachmentFolder})`
-        };
-      }
-      break;
-    case "attachmentFolder":
-      if (isPathInsidePath(normalizedNewPath, conversationFolder)) {
-        return {
-          valid: false,
-          error: `Attachment folder cannot be inside the Conversation folder (${conversationFolder})`
-        };
-      }
-      if (isPathInsidePath(normalizedNewPath, reportFolder)) {
-        return {
-          valid: false,
-          error: `Attachment folder cannot be inside the Report folder (${reportFolder})`
-        };
-      }
-      break;
-  }
-  return { valid: true };
-}
-var init_folder_validation = __esm({
-  "src/utils/folder-validation.ts"() {
-    "use strict";
-    __name(isPathInsidePath, "isPathInsidePath");
-    __name(validateFolderNesting, "validateFolderNesting");
-  }
-});
-
 // src/logger.ts
 function isValidLogLevel(value) {
   return value === "debug" || value === "info" || value === "warn" || value === "error";
 }
 function resolveConfiguredLogLevel() {
   var _a;
-  const globalValue = globalThis == null ? void 0 : globalThis.NEXUS_LOG_LEVEL;
+  const globalValue = window == null ? void 0 : window["NEXUS_LOG_LEVEL"];
   if (isValidLogLevel(globalValue)) {
     return globalValue;
   }
   try {
-    const stored = (_a = globalThis == null ? void 0 : globalThis.localStorage) == null ? void 0 : _a.getItem(LOG_LEVEL_STORAGE_KEY);
+    const stored = (_a = window == null ? void 0 : window.localStorage) == null ? void 0 : _a.getItem(LOG_LEVEL_STORAGE_KEY);
     if (isValidLogLevel(stored)) {
       return stored;
     }
@@ -6104,7 +5785,9 @@ function formatMessageTimestamp(unixTime, customFormat) {
     return `${date.format("L")} at ${date.format("LTS")}`;
   }
   const format = MESSAGE_TIMESTAMP_FORMATS[customFormat];
-  return `${date.format(format.dateFormat)}${format.separator}${date.format(format.timeFormat)}`;
+  return `${date.format(format.dateFormat)}${format.separator}${date.format(
+    format.timeFormat
+  )}`;
 }
 function formatTimestamp(unixTime, format) {
   const date = moment(unixTime * 1e3);
@@ -6127,7 +5810,7 @@ function formatTitle(title) {
   return title.trim() || "Untitled";
 }
 function generateFileName(title) {
-  let fileName = formatTitle(title).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>:"\/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
+  let fileName = formatTitle(title).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>:"/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
   fileName = fileName.replace(/^[^\w\d\s]+/, "");
   fileName = fileName.replace(/\s+/g, " ").trim();
   if (!fileName || fileName.length === 0) {
@@ -6212,10 +5895,20 @@ async function generateUniqueFileName(filePath, vaultAdapter, maxFileNameBytes) 
     if (typeof maxFileNameBytes === "number" && maxFileNameBytes > 0) {
       const suffixBytes = getUtf8ByteLength(suffix);
       const extensionBytes = getUtf8ByteLength(extension);
-      const allowedBaseBytes = Math.max(1, maxFileNameBytes - suffixBytes - extensionBytes);
-      const boundedBaseName = truncateToUtf8Bytes(originalBaseName, allowedBaseBytes).trim() || "Untitled";
+      const allowedBaseBytes = Math.max(
+        1,
+        maxFileNameBytes - suffixBytes - extensionBytes
+      );
+      const boundedBaseName = truncateToUtf8Bytes(
+        originalBaseName,
+        allowedBaseBytes
+      ).trim() || "Untitled";
       candidateFileName = `${boundedBaseName}${suffix}${extension}`;
-      candidateFileName = enforceFileNameByteLimit(candidateFileName, maxFileNameBytes, true);
+      candidateFileName = enforceFileNameByteLimit(
+        candidateFileName,
+        maxFileNameBytes,
+        true
+      );
     }
     return folderPath ? `${folderPath}/${candidateFileName}` : candidateFileName;
   }, "buildCandidatePath");
@@ -6259,7 +5952,7 @@ function generateSafeAlias(title) {
     return "Untitled";
   }
   const startsWithYamlSpecial = title.startsWith("#") || title.startsWith("&") || title.startsWith("*") || title.startsWith("!") || title.startsWith("|") || title.startsWith(">") || title.startsWith("%") || title.startsWith("@") || title.startsWith("`");
-  let cleanName = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>\/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
+  let cleanName = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
   cleanName = cleanName.replace(/^[^\w\d\s"']+/, "");
   cleanName = cleanName.replace(/\s+/g, " ").trim();
   if (!cleanName || cleanName.length === 0) {
@@ -6286,25 +5979,23 @@ function generateSafeAlias(title) {
   return cleanName;
 }
 function isValidMessage(message) {
-  return message && typeof message === "object" && message.content && typeof message.content === "object" && Array.isArray(message.content.parts) && message.content.parts.length > 0 && message.content.parts.some(
-    (part) => {
-      if (typeof part === "string" && part.trim() !== "") {
+  return message && typeof message === "object" && message.content && typeof message.content === "object" && Array.isArray(message.content.parts) && message.content.parts.length > 0 && message.content.parts.some((part) => {
+    if (typeof part === "string" && part.trim() !== "") {
+      return true;
+    }
+    if (typeof part === "object" && part !== null) {
+      if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
         return true;
       }
-      if (typeof part === "object" && part !== null) {
-        if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
-          return true;
-        }
-        if (part.content_type === "text" && part.text && part.text.trim() !== "") {
-          return true;
-        }
-        if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
-          return true;
-        }
+      if (part.content_type === "text" && part.text && part.text.trim() !== "") {
+        return true;
       }
-      return false;
+      if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
+        return true;
+      }
     }
-  );
+    return false;
+  });
 }
 function isCustomError(error) {
   return error && typeof error.message === "string";
@@ -6446,12 +6137,16 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
         if (isEmpty) {
           await vault.adapter.rmdir(folder.path, true);
         } else {
-          logger2.warn(`[moveAndMergeFolders] \u26A0\uFE0F Folder not empty, skipping deletion: ${folder.path} (${visibleFiles.length} files, ${folderContents.folders.length} folders)`);
+          logger2.warn(
+            `[moveAndMergeFolders] \u26A0\uFE0F Folder not empty, skipping deletion: ${folder.path} (${visibleFiles.length} files, ${folderContents.folders.length} folders)`
+          );
         }
       } catch (error) {
         const errorMsg = error.message || String(error);
         if (!errorMsg.includes("does not exist") && !errorMsg.includes("ENOENT")) {
-          logger2.warn(`[moveAndMergeFolders] \u274C Could not delete folder ${folder.path}: ${errorMsg}`);
+          logger2.warn(
+            `[moveAndMergeFolders] \u274C Could not delete folder ${folder.path}: ${errorMsg}`
+          );
         }
       }
     }
@@ -6462,7 +6157,9 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
         if (!exists) {
           break;
         }
-        const folderContents = await vault.adapter.list(currentFolder.path);
+        const folderContents = await vault.adapter.list(
+          currentFolder.path
+        );
         const visibleFiles = folderContents.files.filter((f) => {
           const fileName = f.split("/").pop() || "";
           return !fileName.startsWith(".");
@@ -6474,7 +6171,7 @@ async function moveAndMergeFolders(oldFolder, newPath, vault, onProgress) {
         } else {
           break;
         }
-      } catch (error) {
+      } catch (e) {
         break;
       }
     }
@@ -6579,18 +6276,27 @@ var init_link_update_service = __esm({
             });
             for (const file of batch) {
               try {
-                const result = await this.updateAttachmentLinksInFile(file, oldAttachmentPath, newAttachmentPath);
+                const result = await this.updateAttachmentLinksInFile(
+                  file,
+                  oldAttachmentPath,
+                  newAttachmentPath
+                );
                 stats.attachmentLinksUpdated += result.linksUpdated;
                 if (result.fileModified) {
                   stats.filesModified++;
                 }
               } catch (error) {
                 stats.errors++;
-                this.plugin.logger.error(`Error updating attachment links in ${file.path}:`, error);
+                this.plugin.logger.error(
+                  `Error updating attachment links in ${file.path}:`,
+                  error
+                );
               }
             }
             if (i + batchSize < conversationFiles.length) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
+              await new Promise(
+                (resolve) => window.setTimeout(resolve, 10)
+              );
             }
           }
           progressCallback == null ? void 0 : progressCallback({
@@ -6646,19 +6352,28 @@ var init_link_update_service = __esm({
             });
             for (const file of batch) {
               try {
-                const result = await this.updateConversationLinksInFile(file, oldConversationPath, newConversationPath);
+                const result = await this.updateConversationLinksInFile(
+                  file,
+                  oldConversationPath,
+                  newConversationPath
+                );
                 stats.conversationLinksUpdated += result.linksUpdated;
                 if (result.fileModified) {
                   stats.filesModified++;
                 }
               } catch (error) {
                 stats.errors++;
-                this.plugin.logger.error(`Error updating conversation links in ${file.path}:`, error);
+                this.plugin.logger.error(
+                  `Error updating conversation links in ${file.path}:`,
+                  error
+                );
               }
             }
             processedCount += batch.length;
             if (i + batchSize < reportFiles.length) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
+              await new Promise(
+                (resolve) => window.setTimeout(resolve, 10)
+              );
             }
           }
           for (let i = 0; i < artifactFiles.length; i += batchSize) {
@@ -6671,7 +6386,11 @@ var init_link_update_service = __esm({
             });
             for (const file of batch) {
               try {
-                const result = await this.updateConversationLinkInArtifactFrontmatter(file, oldConversationPath, newConversationPath);
+                const result = await this.updateConversationLinkInArtifactFrontmatter(
+                  file,
+                  oldConversationPath,
+                  newConversationPath
+                );
                 if (result.linksUpdated > 0) {
                   stats.conversationLinksUpdated += result.linksUpdated;
                 }
@@ -6680,12 +6399,17 @@ var init_link_update_service = __esm({
                 }
               } catch (error) {
                 stats.errors++;
-                this.plugin.logger.error(`Error updating conversation link in artifact ${file.path}:`, error);
+                this.plugin.logger.error(
+                  `Error updating conversation link in artifact ${file.path}:`,
+                  error
+                );
               }
             }
             processedCount += batch.length;
             if (i + batchSize < artifactFiles.length) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
+              await new Promise(
+                (resolve) => window.setTimeout(resolve, 10)
+              );
             }
           }
           progressCallback == null ? void 0 : progressCallback({
@@ -6696,7 +6420,10 @@ var init_link_update_service = __esm({
           });
           return stats;
         } catch (error) {
-          this.plugin.logger.error("Error updating conversation links:", error);
+          this.plugin.logger.error(
+            "Error updating conversation links:",
+            error
+          );
           progressCallback == null ? void 0 : progressCallback({
             phase: "error",
             current: 0,
@@ -6738,10 +6465,34 @@ var init_link_update_service = __esm({
             const escaped = this.escapeRegExp(normalizedOld);
             return {
               patterns: [
-                { regex: new RegExp(`(!\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`, "g"), replacement: `$1${normalizedNew}$2` },
-                { regex: new RegExp(`(\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`, "g"), replacement: `$1${normalizedNew}$2` },
-                { regex: new RegExp(`(!\\[\\[)${escaped}(/[^\\]]+\\]\\])`, "g"), replacement: `$1${normalizedNew}$2` },
-                { regex: new RegExp(`(\\[\\[)${escaped}(/[^\\]]+\\]\\])`, "g"), replacement: `$1${normalizedNew}$2` }
+                {
+                  regex: new RegExp(
+                    `(!\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`,
+                    "g"
+                  ),
+                  replacement: `$1${normalizedNew}$2`
+                },
+                {
+                  regex: new RegExp(
+                    `(\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`,
+                    "g"
+                  ),
+                  replacement: `$1${normalizedNew}$2`
+                },
+                {
+                  regex: new RegExp(
+                    `(!\\[\\[)${escaped}(/[^\\]]+\\]\\])`,
+                    "g"
+                  ),
+                  replacement: `$1${normalizedNew}$2`
+                },
+                {
+                  regex: new RegExp(
+                    `(\\[\\[)${escaped}(/[^\\]]+\\]\\])`,
+                    "g"
+                  ),
+                  replacement: `$1${normalizedNew}$2`
+                }
               ]
             };
           });
@@ -6762,10 +6513,16 @@ var init_link_update_service = __esm({
                 let updatedContent = content;
                 let fileLinksUpdated = 0;
                 for (const mapping of mappingPatterns) {
-                  for (const { regex, replacement } of mapping.patterns) {
+                  for (const {
+                    regex,
+                    replacement
+                  } of mapping.patterns) {
                     regex.lastIndex = 0;
                     const before = updatedContent;
-                    updatedContent = updatedContent.replace(regex, replacement);
+                    updatedContent = updatedContent.replace(
+                      regex,
+                      replacement
+                    );
                     if (updatedContent !== before) {
                       regex.lastIndex = 0;
                       const matches = before.match(regex);
@@ -6776,18 +6533,29 @@ var init_link_update_service = __esm({
                 stats.attachmentLinksUpdated += fileLinksUpdated;
                 if (content !== updatedContent) {
                   if (pluginVersion) {
-                    updatedContent = this.updatePluginVersion(updatedContent, pluginVersion);
+                    updatedContent = this.updatePluginVersion(
+                      updatedContent,
+                      pluginVersion
+                    );
                   }
-                  await this.plugin.app.vault.modify(file, updatedContent);
+                  await this.plugin.app.vault.modify(
+                    file,
+                    updatedContent
+                  );
                   stats.filesModified++;
                 }
               } catch (error) {
                 stats.errors++;
-                this.plugin.logger.error(`Error updating attachment links in ${file.path}:`, error);
+                this.plugin.logger.error(
+                  `Error updating attachment links in ${file.path}:`,
+                  error
+                );
               }
             }
             if (i + batchSize < conversationFiles.length) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
+              await new Promise(
+                (resolve) => window.setTimeout(resolve, 10)
+              );
             }
           }
           progressCallback == null ? void 0 : progressCallback({
@@ -6798,7 +6566,10 @@ var init_link_update_service = __esm({
           });
           return stats;
         } catch (error) {
-          this.plugin.logger.error("Error in batch attachment link update:", error);
+          this.plugin.logger.error(
+            "Error in batch attachment link update:",
+            error
+          );
           throw error;
         }
       }
@@ -6826,7 +6597,9 @@ var init_link_update_service = __esm({
         return allFiles.filter((file) => {
           if (!file.path.startsWith(conversationFolder))
             return false;
-          const relativePath = file.path.substring(conversationFolder.length + 1);
+          const relativePath = file.path.substring(
+            conversationFolder.length + 1
+          );
           if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
             return false;
           }
@@ -6848,7 +6621,9 @@ var init_link_update_service = __esm({
         const attachmentFolder = this.plugin.settings.attachmentFolder;
         const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
-        return allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
+        return allFiles.filter(
+          (file) => file.path.startsWith(claudeArtifactsPath)
+        );
       }
       /**
        * Update attachment links in a single file
@@ -6860,26 +6635,50 @@ var init_link_update_service = __esm({
         const normalizedOldPath = oldAttachmentPath.replace(/\/+$/, "");
         const normalizedNewPath = newAttachmentPath.replace(/\/+$/, "");
         const escapedOldPath = this.escapeRegExp(normalizedOldPath);
-        const imagePattern = new RegExp(`(!\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, "g");
-        updatedContent = updatedContent.replace(imagePattern, (match, prefix, suffix) => {
-          linksUpdated++;
-          return `${prefix}${normalizedNewPath}${suffix}`;
-        });
-        const linkPattern = new RegExp(`(\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, "g");
-        updatedContent = updatedContent.replace(linkPattern, (match, prefix, suffix) => {
-          linksUpdated++;
-          return `${prefix}${normalizedNewPath}${suffix}`;
-        });
-        const obsidianImagePattern = new RegExp(`(!\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
-        updatedContent = updatedContent.replace(obsidianImagePattern, (match, prefix, suffix) => {
-          linksUpdated++;
-          return `${prefix}${normalizedNewPath}${suffix}`;
-        });
-        const obsidianLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
-        updatedContent = updatedContent.replace(obsidianLinkPattern, (match, prefix, suffix) => {
-          linksUpdated++;
-          return `${prefix}${normalizedNewPath}${suffix}`;
-        });
+        const imagePattern = new RegExp(
+          `(!\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(
+          imagePattern,
+          (match, prefix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${normalizedNewPath}${suffix}`;
+          }
+        );
+        const linkPattern = new RegExp(
+          `(\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(
+          linkPattern,
+          (match, prefix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${normalizedNewPath}${suffix}`;
+          }
+        );
+        const obsidianImagePattern = new RegExp(
+          `(!\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(
+          obsidianImagePattern,
+          (match, prefix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${normalizedNewPath}${suffix}`;
+          }
+        );
+        const obsidianLinkPattern = new RegExp(
+          `(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(
+          obsidianLinkPattern,
+          (match, prefix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${normalizedNewPath}${suffix}`;
+          }
+        );
         const fileModified = content !== updatedContent;
         if (fileModified) {
           await this.plugin.app.vault.modify(file, updatedContent);
@@ -6896,16 +6695,28 @@ var init_link_update_service = __esm({
         const normalizedOldPath = oldConversationPath.replace(/\/+$/, "");
         const normalizedNewPath = newConversationPath.replace(/\/+$/, "");
         const escapedOldPath = this.escapeRegExp(normalizedOldPath);
-        const linkWithAliasPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`, "g");
-        updatedContent = updatedContent.replace(linkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
-          linksUpdated++;
-          return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
-        });
-        const simpleLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, "g");
-        updatedContent = updatedContent.replace(simpleLinkPattern, (match, prefix, suffix) => {
-          linksUpdated++;
-          return `${prefix}${normalizedNewPath}${suffix}`;
-        });
+        const linkWithAliasPattern = new RegExp(
+          `(\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(
+          linkWithAliasPattern,
+          (match, prefix, pathSuffix, aliasSuffix) => {
+            linksUpdated++;
+            return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
+          }
+        );
+        const simpleLinkPattern = new RegExp(
+          `(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+          "g"
+        );
+        updatedContent = updatedContent.replace(
+          simpleLinkPattern,
+          (match, prefix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${normalizedNewPath}${suffix}`;
+          }
+        );
         const fileModified = content !== updatedContent;
         if (fileModified) {
           await this.plugin.app.vault.modify(file, updatedContent);
@@ -6926,26 +6737,35 @@ var init_link_update_service = __esm({
           `(conversation_link:\\s*"\\[\\[)${escapedOldPath}(/[^\\]]+)(\\]\\]")`,
           "g"
         );
-        updatedContent = updatedContent.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
-          linksUpdated++;
-          return `${prefix}${normalizedNewPath}${pathSuffix}${suffix}`;
-        });
+        updatedContent = updatedContent.replace(
+          frontmatterLinkPattern,
+          (match, prefix, pathSuffix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${normalizedNewPath}${pathSuffix}${suffix}`;
+          }
+        );
         const bodyLinkWithAliasPattern = new RegExp(
           `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
           "g"
         );
-        updatedContent = updatedContent.replace(bodyLinkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
-          linksUpdated++;
-          return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
-        });
+        updatedContent = updatedContent.replace(
+          bodyLinkWithAliasPattern,
+          (match, prefix, pathSuffix, aliasSuffix) => {
+            linksUpdated++;
+            return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
+          }
+        );
         const bodyLinkSimplePattern = new RegExp(
           `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
           "g"
         );
-        updatedContent = updatedContent.replace(bodyLinkSimplePattern, (match, prefix, suffix) => {
-          linksUpdated++;
-          return `${prefix}${newConversationPath}${suffix}`;
-        });
+        updatedContent = updatedContent.replace(
+          bodyLinkSimplePattern,
+          (match, prefix, suffix) => {
+            linksUpdated++;
+            return `${prefix}${newConversationPath}${suffix}`;
+          }
+        );
         const fileModified = content !== updatedContent;
         if (fileModified) {
           await this.plugin.app.vault.modify(file, updatedContent);
@@ -7015,7 +6835,9 @@ var init_progress_modal = __esm({
             font-weight: 500;
             color: var(--text-normal);
         `;
-        const progressContainer = contentContainer.createDiv({ cls: "progress-container" });
+        const progressContainer = contentContainer.createDiv({
+          cls: "progress-container"
+        });
         progressContainer.style.cssText = `
             background: var(--background-secondary);
             border-radius: 8px;
@@ -7023,7 +6845,9 @@ var init_progress_modal = __esm({
             margin: 20px 0;
             border: 1px solid var(--background-modifier-border);
         `;
-        this.progressBarEl = progressContainer.createDiv({ cls: "progress-bar" });
+        this.progressBarEl = progressContainer.createDiv({
+          cls: "progress-bar"
+        });
         this.progressBarEl.style.cssText = `
             background: var(--interactive-accent);
             height: 20px;
@@ -7031,21 +6855,28 @@ var init_progress_modal = __esm({
             width: 0%;
             transition: width 0.3s ease;
         `;
-        this.statusEl = contentContainer.createEl("div", { cls: "status-text" });
+        this.statusEl = contentContainer.createEl("div", {
+          cls: "status-text"
+        });
         this.statusEl.style.cssText = `
             text-align: center;
             margin: 15px 0;
             font-weight: 500;
             color: var(--text-normal);
         `;
-        this.detailEl = contentContainer.createEl("div", { cls: "detail-text" });
+        this.detailEl = contentContainer.createEl("div", {
+          cls: "detail-text"
+        });
         this.detailEl.style.cssText = `
             text-align: center;
             color: var(--text-muted);
             font-size: 0.9em;
             min-height: 1.2em;
         `;
-        this.updateProgress({ title: t("upgrade.progress_modal.starting"), progress: 0 });
+        this.updateProgress({
+          title: t("upgrade.progress_modal.starting"),
+          progress: 0
+        });
       }
       /**
        * Update progress with step information
@@ -7054,12 +6885,20 @@ var init_progress_modal = __esm({
         if (step.progress !== void 0) {
           const percentage = Math.min(100, Math.max(0, step.progress));
           this.progressBarEl.style.width = `${percentage}%`;
-          this.stepEl.textContent = t("upgrade.progress_modal.progress_label", { percentage: String(Math.round(percentage)) });
+          this.stepEl.textContent = t(
+            "upgrade.progress_modal.progress_label",
+            { percentage: String(Math.round(percentage)) }
+          );
         } else {
           this.currentStep++;
-          const percentage = Math.round(this.currentStep / this.totalSteps * 100);
+          const percentage = Math.round(
+            this.currentStep / this.totalSteps * 100
+          );
           this.progressBarEl.style.width = `${percentage}%`;
-          this.stepEl.textContent = t("upgrade.progress_modal.step_label", { current: String(this.currentStep), total: String(this.totalSteps) });
+          this.stepEl.textContent = t("upgrade.progress_modal.step_label", {
+            current: String(this.currentStep),
+            total: String(this.totalSteps)
+          });
         }
         this.statusEl.textContent = step.title;
         this.detailEl.textContent = step.detail || "";
@@ -7071,7 +6910,10 @@ var init_progress_modal = __esm({
         this.currentStep = stepNumber;
         const percentage = Math.round(stepNumber / this.totalSteps * 100);
         this.progressBarEl.style.width = `${percentage}%`;
-        this.stepEl.textContent = t("upgrade.progress_modal.step_label", { current: String(stepNumber), total: String(this.totalSteps) });
+        this.stepEl.textContent = t("upgrade.progress_modal.step_label", {
+          current: String(stepNumber),
+          total: String(this.totalSteps)
+        });
         this.statusEl.textContent = step.title;
         this.detailEl.textContent = step.detail || "";
       }
@@ -7079,11 +6921,11 @@ var init_progress_modal = __esm({
        * Show completion state
        */
       showComplete(message = t("upgrade.progress_modal.complete_message")) {
-        this.progressBarEl.style.width = "100%";
+        this.progressBarEl.addClass("nexus-progress-complete");
+        this.progressBarEl.removeClass("nexus-progress-error");
         this.stepEl.textContent = t("upgrade.progress_modal.complete_label");
         this.statusEl.textContent = message;
         this.detailEl.textContent = "";
-        this.progressBarEl.style.background = "var(--text-success)";
       }
       /**
        * Show error state
@@ -7091,13 +6933,14 @@ var init_progress_modal = __esm({
       showError(message = t("upgrade.progress_modal.error_message")) {
         this.statusEl.textContent = message;
         this.detailEl.textContent = "";
-        this.progressBarEl.style.background = "var(--text-error)";
+        this.progressBarEl.addClass("nexus-progress-error");
+        this.progressBarEl.removeClass("nexus-progress-complete");
       }
       /**
        * Close after delay
        */
       closeAfterDelay(delay = 2e3) {
-        setTimeout(() => this.close(), delay);
+        window.setTimeout(() => this.close(), delay);
       }
       onClose() {
         const { contentEl } = this;
@@ -7137,11 +6980,17 @@ var init_enhanced_folder_migration_dialog = __esm({
           text: t("folder_migration.title"),
           cls: "nexus-migration-title"
         });
-        const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
-        messageContainer.createEl("p", {
-          text: t("folder_migration.message_intro", { folder_type: this.folderType })
+        const messageContainer = contentEl.createDiv({
+          cls: "nexus-migration-message"
         });
-        const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
+        messageContainer.createEl("p", {
+          text: t("folder_migration.message_intro", {
+            folder_type: this.folderType
+          })
+        });
+        const pathContainer = messageContainer.createDiv({
+          cls: "nexus-migration-paths"
+        });
         pathContainer.createEl("div", {
           text: t("folder_migration.path_from", { path: this.oldPath }),
           cls: "nexus-migration-path-old"
@@ -7156,35 +7005,49 @@ var init_enhanced_folder_migration_dialog = __esm({
         if (this.shouldShowLinkUpdateInfo()) {
           this.createLinkUpdateInfo(contentEl);
         }
-        const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
-        warningBox.createEl("strong", { text: t("folder_migration.warning.title") });
+        const warningBox = contentEl.createDiv({
+          cls: "nexus-migration-warning"
+        });
+        warningBox.createEl("strong", {
+          text: t("folder_migration.warning.title")
+        });
         warningBox.createEl("p", {
           text: t("folder_migration.warning.text")
         });
         this.createButtons(contentEl);
-        this.addStyles();
       }
       async loadEstimates() {
         try {
           const { LinkUpdateService: LinkUpdateService2 } = await Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports));
           const linkUpdateService = new LinkUpdateService2(this.plugin);
           if (this.folderType === "attachments") {
-            const estimate = await linkUpdateService.estimateUpdateTime("attachments");
+            const estimate = await linkUpdateService.estimateUpdateTime(
+              "attachments"
+            );
             this.estimatedTime = estimate.estimatedSeconds;
           } else if (this.folderType === "conversations") {
-            const estimate = await linkUpdateService.estimateUpdateTime("conversations");
+            const estimate = await linkUpdateService.estimateUpdateTime(
+              "conversations"
+            );
             this.estimatedTime = estimate.estimatedSeconds;
           }
         } catch (error) {
-          this.plugin.logger.warn("Failed to load link update estimates:", error);
+          this.plugin.logger.warn(
+            "Failed to load link update estimates:",
+            error
+          );
         }
       }
       shouldShowLinkUpdateInfo() {
         return this.folderType === "attachments" || this.folderType === "conversations";
       }
       createLinkUpdateInfo(contentEl) {
-        const linkUpdateBox = contentEl.createDiv({ cls: "nexus-link-update-info" });
-        linkUpdateBox.createEl("strong", { text: t("folder_migration.link_updates.title") });
+        const linkUpdateBox = contentEl.createDiv({
+          cls: "nexus-link-update-info"
+        });
+        linkUpdateBox.createEl("strong", {
+          text: t("folder_migration.link_updates.title")
+        });
         const infoText = linkUpdateBox.createDiv();
         if (this.folderType === "attachments") {
           infoText.createEl("p", {
@@ -7196,7 +7059,17 @@ var init_enhanced_folder_migration_dialog = __esm({
           });
         }
         if (this.estimatedTime > 0) {
-          const timeText = this.estimatedTime < 60 ? t("folder_migration.link_updates.estimated_time_seconds", { seconds: String(this.estimatedTime) }) : t("folder_migration.link_updates.estimated_time_minutes", { minutes: String(Math.ceil(this.estimatedTime / 60)) });
+          const timeText = this.estimatedTime < 60 ? t(
+            "folder_migration.link_updates.estimated_time_seconds",
+            { seconds: String(this.estimatedTime) }
+          ) : t(
+            "folder_migration.link_updates.estimated_time_minutes",
+            {
+              minutes: String(
+                Math.ceil(this.estimatedTime / 60)
+              )
+            }
+          );
           infoText.createEl("p", {
             text: timeText,
             cls: "nexus-time-estimate"
@@ -7204,74 +7077,119 @@ var init_enhanced_folder_migration_dialog = __esm({
         }
       }
       createButtons(contentEl) {
-        const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
+        const buttonContainer = contentEl.createDiv({
+          cls: "nexus-migration-buttons"
+        });
         const cancelButton = buttonContainer.createEl("button", {
           text: t("folder_migration.buttons.cancel"),
           cls: "nexus-migration-button-cancel"
         });
-        cancelButton.addEventListener("click", async () => {
-          this.close();
-          try {
-            await this.onComplete("cancel");
-            new import_obsidian7.Notice(t("folder_migration.notices.change_cancelled_reverted"));
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian7.Notice(t("folder_migration.notices.failed_revert", { error: errorMessage }));
-          }
+        cancelButton.addEventListener("click", () => {
+          void (async () => {
+            this.close();
+            try {
+              await this.onComplete("cancel");
+              new import_obsidian7.Notice(
+                t("folder_migration.notices.change_cancelled_reverted")
+              );
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              new import_obsidian7.Notice(
+                t("folder_migration.notices.failed_revert", {
+                  error: errorMessage
+                })
+              );
+            }
+          })();
         });
         const keepButton = buttonContainer.createEl("button", {
           text: t("folder_migration.buttons.keep"),
           cls: "nexus-migration-button-keep"
         });
-        keepButton.addEventListener("click", async () => {
-          this.close();
-          try {
-            await this.onComplete("keep");
-            new import_obsidian7.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            new import_obsidian7.Notice(t("folder_migration.notices.failed_update", { error: errorMessage }));
-          }
+        keepButton.addEventListener("click", () => {
+          void (async () => {
+            this.close();
+            try {
+              await this.onComplete("keep");
+              new import_obsidian7.Notice(
+                t(
+                  "folder_migration.notices.setting_updated_files_remain",
+                  {
+                    path: this.oldPath
+                  }
+                )
+              );
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              new import_obsidian7.Notice(
+                t("folder_migration.notices.failed_update", {
+                  error: errorMessage
+                })
+              );
+            }
+          })();
         });
         const moveButton = buttonContainer.createEl("button", {
           text: this.shouldShowLinkUpdateInfo() ? t("folder_migration.buttons.move_with_links") : t("folder_migration.buttons.move"),
           cls: "mod-cta nexus-migration-button-move"
         });
-        moveButton.addEventListener("click", async () => {
-          this.close();
-          if (this.shouldShowLinkUpdateInfo()) {
-            await this.handleMoveWithLinkUpdates();
-          } else {
-            try {
-              await this.onComplete("move");
-              new import_obsidian7.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
-              new import_obsidian7.Notice(t("folder_migration.notices.failed_move", { error: errorMessage }));
+        moveButton.addEventListener("click", () => {
+          void (async () => {
+            this.close();
+            if (this.shouldShowLinkUpdateInfo()) {
+              await this.handleMoveWithLinkUpdates();
+            } else {
+              try {
+                await this.onComplete("move");
+                new import_obsidian7.Notice(
+                  t("folder_migration.notices.files_moved", {
+                    path: this.newPath
+                  })
+                );
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                new import_obsidian7.Notice(
+                  t("folder_migration.notices.failed_move", {
+                    error: errorMessage
+                  })
+                );
+              }
             }
-          }
+          })();
         });
       }
       async handleMoveWithLinkUpdates() {
         let progressModal = null;
         try {
-          const [{ UpgradeProgressModal: UpgradeProgressModal2 }, { LinkUpdateService: LinkUpdateService2 }, { moveAndMergeFolders: moveAndMergeFolders2 }] = await Promise.all([
+          const [
+            { UpgradeProgressModal: UpgradeProgressModal2 },
+            { LinkUpdateService: LinkUpdateService2 },
+            { moveAndMergeFolders: moveAndMergeFolders2 }
+          ] = await Promise.all([
             Promise.resolve().then(() => (init_progress_modal(), progress_modal_exports)),
             Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports)),
             Promise.resolve().then(() => (init_utils(), utils_exports))
           ]);
           progressModal = new UpgradeProgressModal2(
             this.app,
-            t("folder_migration.progress.title_moving", { folder_type: this.folderType }),
+            t("folder_migration.progress.title_moving", {
+              folder_type: this.folderType
+            }),
             100
           );
           progressModal.open();
+          const pm = progressModal;
           progressModal.updateProgress({
             title: t("folder_migration.progress.step_moving_title"),
-            detail: t("folder_migration.progress.step_moving_detail", { old_path: this.oldPath, new_path: this.newPath }),
+            detail: t("folder_migration.progress.step_moving_detail", {
+              old_path: this.oldPath,
+              new_path: this.newPath
+            }),
             progress: 5
           });
-          const oldFolder = this.app.vault.getAbstractFileByPath(this.oldPath);
+          const oldFolder = this.app.vault.getAbstractFileByPath(
+            this.oldPath
+          );
           if (!oldFolder || !(oldFolder instanceof import_obsidian7.TFolder)) {
             throw new Error(`Source folder not found: ${this.oldPath}`);
           }
@@ -7281,16 +7199,22 @@ var init_enhanced_folder_migration_dialog = __esm({
             this.app.vault,
             (current, total) => {
               const percentage = 5 + Math.round(current / total * 25);
-              progressModal.updateProgress({
+              pm.updateProgress({
                 title: t("folder_migration.progress.step_moving_title"),
-                detail: t("folder_migration.progress.step_moving_count", { current: String(current), total: String(total) }),
+                detail: t(
+                  "folder_migration.progress.step_moving_count",
+                  { current: String(current), total: String(total) }
+                ),
                 progress: percentage
               });
             }
           );
           progressModal.updateProgress({
             title: t("folder_migration.progress.step_moved_title"),
-            detail: t("folder_migration.progress.step_moved_detail", { moved: String(moveResult.moved), skipped: String(moveResult.skipped) }),
+            detail: t("folder_migration.progress.step_moved_detail", {
+              moved: String(moveResult.moved),
+              skipped: String(moveResult.skipped)
+            }),
             progress: 30
           });
           const linkUpdateService = new LinkUpdateService2(this.plugin);
@@ -7300,9 +7224,13 @@ var init_enhanced_folder_migration_dialog = __esm({
               this.oldPath,
               this.newPath,
               (progress) => {
-                const percentage = 30 + Math.round(progress.current / progress.total * 70);
-                progressModal.updateProgress({
-                  title: t("folder_migration.progress.step_updating_attachment_links"),
+                const percentage = 30 + Math.round(
+                  progress.current / progress.total * 70
+                );
+                pm.updateProgress({
+                  title: t(
+                    "folder_migration.progress.step_updating_attachment_links"
+                  ),
                   detail: progress.detail,
                   progress: percentage
                 });
@@ -7313,14 +7241,22 @@ var init_enhanced_folder_migration_dialog = __esm({
               this.oldPath,
               this.newPath,
               (progress) => {
-                const percentage = 30 + Math.round(progress.current / progress.total * 70);
-                let title = t("folder_migration.progress.step_updating_conversation_links");
+                const percentage = 30 + Math.round(
+                  progress.current / progress.total * 70
+                );
+                let title = t(
+                  "folder_migration.progress.step_updating_conversation_links"
+                );
                 if (progress.phase === "updating-conversations") {
-                  title = t("folder_migration.progress.step_updating_report_links");
+                  title = t(
+                    "folder_migration.progress.step_updating_report_links"
+                  );
                 } else if (progress.phase === "updating-artifacts") {
-                  title = t("folder_migration.progress.step_updating_artifact_links");
+                  title = t(
+                    "folder_migration.progress.step_updating_artifact_links"
+                  );
                 }
-                progressModal.updateProgress({
+                pm.updateProgress({
                   title,
                   detail: progress.detail,
                   progress: percentage
@@ -7330,124 +7266,32 @@ var init_enhanced_folder_migration_dialog = __esm({
           }
           const linksUpdated = this.folderType === "attachments" ? (stats == null ? void 0 : stats.attachmentLinksUpdated) || 0 : (stats == null ? void 0 : stats.conversationLinksUpdated) || 0;
           progressModal.showComplete(
-            t("folder_migration.progress.complete_message", { moved: String(moveResult.moved), links: String(linksUpdated) })
+            t("folder_migration.progress.complete_message", {
+              moved: String(moveResult.moved),
+              links: String(linksUpdated)
+            })
           );
           progressModal.closeAfterDelay(3e3);
-          new import_obsidian7.Notice(t("folder_migration.notices.files_moved_links_updated", {
-            moved: String(moveResult.moved),
-            path: this.newPath,
-            links: String(linksUpdated)
-          }));
+          new import_obsidian7.Notice(
+            t("folder_migration.notices.files_moved_links_updated", {
+              moved: String(moveResult.moved),
+              path: this.newPath,
+              links: String(linksUpdated)
+            })
+          );
           await this.onComplete("move");
         } catch (error) {
           if (progressModal) {
             progressModal.close();
           }
           const errorMessage = error instanceof Error ? error.message : String(error);
-          this.showErrorDialog(t("folder_migration.error_migration_failed.title"), t("folder_migration.error_migration_failed.message_links", { error: errorMessage }));
+          this.showErrorDialog(
+            t("folder_migration.error_migration_failed.title"),
+            t("folder_migration.error_migration_failed.message_links", {
+              error: errorMessage
+            })
+          );
         }
-      }
-      addStyles() {
-        const styleEl = document.createElement("style");
-        styleEl.textContent = `
-            .nexus-migration-title {
-                margin-bottom: 1em;
-                color: var(--text-normal);
-            }
-
-            .nexus-migration-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-migration-paths {
-                background-color: var(--background-secondary);
-                padding: 1em;
-                margin: 1em 0;
-                border-radius: 4px;
-                font-family: var(--font-monospace);
-                font-size: 0.9em;
-            }
-
-            .nexus-migration-path-old {
-                color: var(--text-muted);
-                margin-bottom: 0.5em;
-            }
-
-            .nexus-migration-path-new {
-                color: var(--interactive-accent);
-                font-weight: 500;
-            }
-
-            .nexus-link-update-info {
-                background-color: var(--background-modifier-success-hover);
-                border-left: 4px solid var(--text-success);
-                padding: 1em;
-                margin-bottom: 1em;
-                border-radius: 4px;
-            }
-
-            .nexus-link-update-info strong {
-                display: block;
-                margin-bottom: 0.5em;
-                color: var(--text-success);
-            }
-
-            .nexus-link-update-info p {
-                margin: 0.3em 0;
-                color: var(--text-normal);
-            }
-
-            .nexus-time-estimate {
-                font-style: italic;
-                color: var(--text-muted) !important;
-                font-size: 0.9em;
-            }
-
-            .nexus-migration-warning {
-                background-color: var(--background-modifier-error-hover);
-                border-left: 4px solid var(--text-error);
-                padding: 1em;
-                margin-bottom: 1.5em;
-                border-radius: 4px;
-            }
-
-            .nexus-migration-warning strong {
-                display: block;
-                margin-bottom: 0.5em;
-                color: var(--text-error);
-            }
-
-            .nexus-migration-warning p {
-                margin: 0;
-                color: var(--text-normal);
-            }
-
-            .nexus-migration-buttons {
-                display: flex;
-                justify-content: space-between;
-                gap: 10px;
-            }
-
-            .nexus-migration-buttons button {
-                padding: 8px 16px;
-                flex: 1;
-            }
-
-            .nexus-migration-button-cancel {
-                background-color: var(--background-modifier-border);
-                color: var(--text-muted);
-            }
-
-            .nexus-migration-button-keep {
-                background-color: var(--background-modifier-border);
-            }
-
-            .nexus-migration-button-move {
-                /* Uses mod-cta class for primary styling */
-            }
-        `;
-        document.head.appendChild(styleEl);
       }
       showErrorDialog(title, message) {
         const modal = new import_obsidian7.Modal(this.app);
@@ -7456,10 +7300,9 @@ var init_enhanced_folder_migration_dialog = __esm({
           text: message,
           cls: "nexus-error-message"
         });
-        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.justifyContent = "flex-end";
-        buttonContainer.style.marginTop = "1em";
+        const buttonContainer = modal.contentEl.createDiv({
+          cls: "modal-button-container nexus-button-container-flex-end"
+        });
         const okButton = buttonContainer.createEl("button", {
           text: t("common.buttons.ok"),
           cls: "mod-cta"
@@ -7473,102 +7316,6 @@ var init_enhanced_folder_migration_dialog = __esm({
       }
     };
     __name(EnhancedFolderMigrationDialog, "EnhancedFolderMigrationDialog");
-  }
-});
-
-// src/dialogs.ts
-function displayModal(app, title, paragraphs, note) {
-  const modal = new import_obsidian13.Modal(app);
-  modal.contentEl.addClass("nexus-ai-chat-importer-modal");
-  const titleEl = modal.contentEl.createEl("h2", {
-    text: title,
-    cls: "modal-title"
-  });
-  const contentContainer = modal.contentEl.createDiv({ cls: "modal-content" });
-  paragraphs.forEach((paragraph, paragraphIndex) => {
-    const paragraphWithSpacing = paragraph + "\n\n";
-    const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
-    const sections = paragraphWithSpacing.split("\n\n").filter((section) => section.trim() !== "");
-    sections.forEach((section, sectionIndex) => {
-      const sectionDiv = paragraphDiv.createDiv({ cls: "modal-section" });
-      const lines = section.split("\n").filter((line) => line.trim() !== "");
-      lines.forEach((line) => {
-        const lineDiv = sectionDiv.createDiv({ cls: "modal-line" });
-        let htmlContent = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
-        if (line.trim().endsWith(":") && line.trim().length < 30) {
-          lineDiv.innerHTML = `<strong class="section-header">${htmlContent}</strong>`;
-        } else if (line.trim().startsWith("\u2022") || line.trim().startsWith("-")) {
-          lineDiv.innerHTML = htmlContent;
-          lineDiv.addClass("modal-list-item");
-        } else {
-          lineDiv.innerHTML = htmlContent;
-        }
-      });
-      if (sectionIndex < sections.length - 1) {
-        paragraphDiv.createDiv({ cls: "modal-section-break" });
-      }
-    });
-  });
-  if (note) {
-    contentContainer.createDiv({ cls: "modal-major-break" });
-    const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
-    let noteContent = note.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
-    noteDiv.innerHTML = noteContent;
-  }
-  return modal;
-}
-function addButtons(modal, type, resolve, customLabels) {
-  const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-  if (type === "information") {
-    const buttonLabel = (customLabels == null ? void 0 : customLabels.button1) || "Understood";
-    const button = buttonContainer.createEl("button", {
-      text: buttonLabel,
-      cls: "mod-cta"
-      // Obsidian's primary button class
-    });
-    button.addEventListener("click", () => {
-      modal.close();
-      resolve(true);
-    });
-  } else {
-    const noLabel = (customLabels == null ? void 0 : customLabels.button2) || "No";
-    const yesLabel = (customLabels == null ? void 0 : customLabels.button1) || "Yes";
-    const noButton = buttonContainer.createEl("button", {
-      text: noLabel,
-      cls: "mod-muted"
-      // Obsidian's secondary button class
-    });
-    noButton.addEventListener("click", () => {
-      modal.close();
-      resolve(false);
-    });
-    const yesButton = buttonContainer.createEl("button", {
-      text: yesLabel,
-      cls: "mod-cta"
-      // Obsidian's primary button class
-    });
-    yesButton.addEventListener("click", () => {
-      modal.close();
-      resolve(true);
-    });
-  }
-}
-async function showDialog(app, type, title, paragraphs, note, customLabels) {
-  return new Promise((resolve) => {
-    const modal = displayModal(app, title, paragraphs, note);
-    addButtons(modal, type, resolve, customLabels);
-    modal.open();
-  });
-}
-var import_obsidian13;
-var init_dialogs = __esm({
-  "src/dialogs.ts"() {
-    "use strict";
-    import_obsidian13 = require("obsidian");
-    init_support_box();
-    __name(displayModal, "displayModal");
-    __name(addButtons, "addButtons");
-    __name(showDialog, "showDialog");
   }
 });
 
@@ -8938,3474 +8685,6 @@ var require_yauzl = __commonJS({
   }
 });
 
-// src/utils/date-parser.ts
-var moment2, DateParser;
-var init_date_parser = __esm({
-  "src/utils/date-parser.ts"() {
-    "use strict";
-    init_logger();
-    moment2 = window.moment;
-    DateParser = class {
-      /**
-       * Parse a date string with automatic format detection
-       * Returns Unix timestamp (seconds) or 0 if parsing fails
-       * @param dateStr - Date string to parse
-       * @param contextId - Optional context identifier for logging (e.g., "Artifact abc123_v1", "Conversation xyz")
-       */
-      static parseDate(dateStr, contextId) {
-        const ctx = contextId ? `[${contextId}] ` : "";
-        if (!dateStr || typeof dateStr !== "string") {
-          return 0;
-        }
-        try {
-          const isoDate = moment2(dateStr, moment2.ISO_8601, true);
-          if (isoDate.isValid()) {
-            return isoDate.unix();
-          }
-          const format = this.detectFormat(dateStr);
-          if (!format) {
-            logger.warn(`${ctx}parseDate - FAILED: could not detect format`);
-            return 0;
-          }
-          const parsed = this.parseWithFormat(dateStr, format);
-          if (parsed === 0) {
-            logger.warn(`${ctx}parseDate - FAILED: parsing returned 0`);
-          }
-          return parsed;
-        } catch (error) {
-          logger.warn(`${ctx}parseDate - FAILED: exception:`, error);
-          return 0;
-        }
-      }
-      /**
-       * Parse a date string with a forced component order (YMD/DMY/MDY)
-       * Keeps other parts auto-detected from the string (separator, time format, seconds)
-       */
-      static parseDateWithOrder(dateStr, order) {
-        if (!dateStr || typeof dateStr !== "string")
-          return 0;
-        const isoDate = moment2(dateStr, moment2.ISO_8601, true);
-        if (isoDate.isValid())
-          return isoDate.unix();
-        const detected = this.detectFormat(dateStr);
-        if (!detected)
-          return 0;
-        const forced = { ...detected, order };
-        return this.parseWithFormat(dateStr, forced);
-      }
-      /**
-       * Convert a date string to ISO 8601 with a forced component order
-       */
-      static convertToISO8601WithOrder(dateStr, order) {
-        const unixTime = this.parseDateWithOrder(dateStr, order);
-        if (unixTime === 0)
-          return null;
-        return new Date(unixTime * 1e3).toISOString();
-      }
-      /**
-       * Detect date format from a single date string
-       */
-      static detectFormat(dateStr) {
-        if (dateStr.match(/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/)) {
-          return {
-            separator: "-",
-            order: "YMD",
-            timeFormat: "24h",
-            hasSeconds: dateStr.includes(":") && dateStr.split(":").length >= 3
-          };
-        }
-        let separator = "/";
-        if (dateStr.includes("-") && !dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
-          separator = "-";
-        } else if (dateStr.includes(".")) {
-          separator = ".";
-        } else if (dateStr.includes("/")) {
-          separator = "/";
-        } else {
-          return null;
-        }
-        const hasAMPM = /\s(AM|PM)$/i.test(dateStr);
-        const timeFormat = hasAMPM ? "12h" : "24h";
-        const timeMatch = dateStr.match(/\s(\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?)/i);
-        const timePart = timeMatch ? timeMatch[1] : "";
-        const hasSeconds = timePart.split(":").length >= 3;
-        const datePart = dateStr.split(/\s/)[0];
-        const parts = datePart.split(separator).map((p) => parseInt(p, 10));
-        if (parts.length !== 3 || parts.some(isNaN)) {
-          return null;
-        }
-        const order = this.detectOrder(parts, separator, hasAMPM);
-        return {
-          separator,
-          order,
-          timeFormat,
-          hasSeconds
-        };
-      }
-      /**
-       * Detect date component order (YMD, DMY, MDY)
-       * @param parts - Date parts [first, second, third]
-       * @param separator - Date separator ('/', '-', '.')
-       * @param hasAMPM - Whether the time uses AM/PM format (hint for US format)
-       */
-      static detectOrder(parts, separator, hasAMPM) {
-        const [first, second, third] = parts;
-        if (first > 31) {
-          return "YMD";
-        }
-        if (third > 31) {
-          if (first > 12) {
-            return "DMY";
-          }
-          if (second > 12) {
-            return "MDY";
-          }
-          if (separator === ".") {
-            return "DMY";
-          }
-          if (hasAMPM) {
-            return "MDY";
-          }
-          return "DMY";
-        }
-        if (first > 12) {
-          return "DMY";
-        }
-        if (second > 12) {
-          return "MDY";
-        }
-        if (separator === "-") {
-          return "YMD";
-        } else if (separator === ".") {
-          return "DMY";
-        } else if (hasAMPM) {
-          return "MDY";
-        }
-        return "DMY";
-      }
-      /**
-       * Parse date string with detected format
-       */
-      static parseWithFormat(dateStr, format) {
-        let datePattern;
-        switch (format.order) {
-          case "YMD":
-            datePattern = format.separator === "-" ? "YYYY-MM-DD" : "YYYY/MM/DD";
-            break;
-          case "DMY":
-            datePattern = format.separator === "." ? "DD.MM.YYYY" : "DD/MM/YYYY";
-            break;
-          case "MDY":
-            datePattern = "MM/DD/YYYY";
-            break;
-        }
-        const timePattern = format.timeFormat === "12h" ? format.hasSeconds ? "h:mm:ss A" : "h:mm A" : format.hasSeconds ? "HH:mm:ss" : "HH:mm";
-        const patterns = [
-          `${datePattern} ${timePattern}`,
-          // Standard space
-          `${datePattern}[T]${timePattern}`,
-          // ISO 8601 T
-          `${datePattern}[ at ]${timePattern}`
-          // English "at"
-        ];
-        for (const pattern of patterns) {
-          const date = moment2(dateStr, pattern, true);
-          if (date.isValid()) {
-            return date.unix();
-          }
-        }
-        if (format.hasSeconds) {
-          const timePatternNoSec = format.timeFormat === "12h" ? "h:mm A" : "HH:mm";
-          const fallbackPatterns = [
-            `${datePattern} ${timePatternNoSec}`,
-            `${datePattern}[T]${timePatternNoSec}`,
-            `${datePattern}[ at ]${timePatternNoSec}`
-          ];
-          for (const pattern of fallbackPatterns) {
-            const date = moment2(dateStr, pattern, true);
-            if (date.isValid()) {
-              return date.unix();
-            }
-          }
-        }
-        return 0;
-      }
-      /**
-       * Convert any date format to ISO 8601
-       * Returns ISO 8601 string or null if parsing fails
-       */
-      static convertToISO8601(dateStr) {
-        const unixTime = this.parseDate(dateStr);
-        if (unixTime === 0) {
-          logger.warn(`convertToISO8601 - parsing returned 0`);
-          return null;
-        }
-        return new Date(unixTime * 1e3).toISOString();
-      }
-      /**
-       * Detect format from multiple date samples (more reliable)
-       * Used for batch processing (e.g., upgrade operations)
-       */
-      static detectFormatFromSamples(dates) {
-        if (!dates || dates.length === 0) {
-          return null;
-        }
-        for (const dateStr of dates.slice(0, 20)) {
-          const format = this.detectFormat(dateStr);
-          if (format) {
-            const datePart = dateStr.split(/\s/)[0];
-            const parts = datePart.split(format.separator).map((p) => parseInt(p, 10));
-            if (parts.some((p) => p > 12)) {
-              return format;
-            }
-          }
-        }
-        return this.detectFormat(dates[0]);
-      }
-    };
-    __name(DateParser, "DateParser");
-  }
-});
-
-// src/services/storage-service.ts
-var StorageService;
-var init_storage_service = __esm({
-  "src/services/storage-service.ts"() {
-    "use strict";
-    init_date_parser();
-    StorageService = class {
-      constructor(plugin) {
-        this.plugin = plugin;
-        this.importedArchives = {};
-        this.isDirty = false;
-        this.saveTimeout = null;
-      }
-      async loadData() {
-        try {
-          const data = await this.plugin.loadData();
-          this.importedArchives = (data == null ? void 0 : data.importedArchives) || {};
-          this.isDirty = false;
-        } catch (error) {
-          this.plugin.logger.error("loadData failed:", error);
-          throw error;
-        }
-      }
-      async saveData(data) {
-        try {
-          await this.plugin.saveData(data);
-          this.isDirty = false;
-        } catch (error) {
-          this.plugin.logger.error("saveData failed:", error);
-        }
-      }
-      debouncedSave() {
-        if (this.saveTimeout) {
-          clearTimeout(this.saveTimeout);
-        }
-        this.saveTimeout = window.setTimeout(async () => {
-          if (this.isDirty) {
-            await this.plugin.saveSettings();
-          }
-        }, 1e3);
-      }
-      // ========================================
-      // ARCHIVE TRACKING - HYBRID DETECTION (1.0.x + 1.1.0)
-      // ========================================
-      getImportedArchives() {
-        return this.importedArchives;
-      }
-      /**
-       * HYBRID detection: Works with both 1.0.x (filename as key) and 1.1.0 (hash as key)
-       * FIXED: Handle both old format (string values) and new format (object values)
-       */
-      isArchiveImported(key) {
-        if (this.importedArchives[key]) {
-          return true;
-        }
-        return Object.values(this.importedArchives).some((archive) => {
-          if (typeof archive === "object" && archive !== null && archive.fileName) {
-            return archive.fileName === key;
-          }
-          return false;
-        });
-      }
-      addImportedArchive(fileHash, fileName) {
-        this.importedArchives[fileHash] = {
-          fileName,
-          date: new Date().toISOString()
-        };
-        this.isDirty = true;
-        this.debouncedSave();
-      }
-      // ========================================
-      // NEW: VAULT-BASED CONVERSATION DISCOVERY (HYBRID)
-      // ========================================
-      /**
-       * Scan vault for existing Nexus conversations using HYBRID approach:
-       * 1. Wait for cache to be clean (fast)
-       * 2. Use metadataCache (optimal performance)  
-       * 3. Fallback to manual parsing for problematic files
-       */
-      async scanExistingConversations() {
-        const storageLogger = this.plugin.logger.child("Storage");
-        const startedAt = Date.now();
-        storageLogger.debug("Begin scanExistingConversations");
-        await this.waitForCacheClean(1e3);
-        const conversations = /* @__PURE__ */ new Map();
-        const conversationFolder = this.plugin.settings.conversationFolder || this.plugin.settings.archiveFolder || "Nexus/Conversations";
-        const allFiles = this.plugin.app.vault.getMarkdownFiles();
-        const conversationFiles = allFiles.filter((file) => {
-          if (!file.path.startsWith(conversationFolder))
-            return false;
-          const relativePath = file.path.substring(conversationFolder.length + 1);
-          if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-            return false;
-          }
-          return true;
-        });
-        let processed = 0;
-        let foundViaCache = 0;
-        let foundViaManual = 0;
-        let errors = 0;
-        storageLogger.debug("Conversation files discovered for scan", {
-          conversationFolder,
-          markdownFileCount: allFiles.length,
-          conversationFileCount: conversationFiles.length
-        });
-        const batchSize = 100;
-        for (let i = 0; i < conversationFiles.length; i += batchSize) {
-          const batch = conversationFiles.slice(i, i + batchSize);
-          for (const file of batch) {
-            processed++;
-            try {
-              let entry = await this.parseWithCache(file);
-              if (entry) {
-                conversations.set(entry.conversationId, entry);
-                foundViaCache++;
-                continue;
-              }
-              entry = await this.parseConversationFileManually(file);
-              if (entry) {
-                conversations.set(entry.conversationId, entry);
-                foundViaManual++;
-              }
-            } catch (error) {
-              errors++;
-              this.plugin.logger.warn(`Error parsing conversation file ${file.path}:`, error);
-            }
-          }
-          if (i + batchSize < conversationFiles.length) {
-            await new Promise((resolve) => setTimeout(resolve, 1));
-          }
-        }
-        storageLogger.debug("scanExistingConversations complete", {
-          conversationCount: conversations.size,
-          processed,
-          foundViaCache,
-          foundViaManual,
-          errors,
-          durationMs: Date.now() - startedAt
-        });
-        return conversations;
-      }
-      /**
-       * Wait for metadata cache to be clean with timeout
-       */
-      async waitForCacheClean(maxWaitMs = 1e3) {
-        const startTime = Date.now();
-        const metadataCache = this.plugin.app.metadataCache;
-        while (!metadataCache.isCacheClean()) {
-          if (Date.now() - startTime > maxWaitMs) {
-            break;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      }
-      /**
-       * Parse conversation using metadataCache (fast but potentially unreliable)
-       */
-      async parseWithCache(file) {
-        var _a;
-        try {
-          const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-          if (!frontmatter) {
-            this.plugin.logger.warn(`[parseWithCache] No frontmatter found for ${file.path}`);
-            return null;
-          }
-          if (!frontmatter.nexus || frontmatter.nexus !== this.plugin.manifest.id) {
-            this.plugin.logger.warn(`[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`);
-            return null;
-          }
-          if (!frontmatter.conversation_id) {
-            this.plugin.logger.warn(`[parseWithCache] No conversation_id for ${file.path}`);
-            return null;
-          }
-          const createTime = this.parseTimeString(frontmatter.create_time);
-          const updateTime = this.parseTimeString(frontmatter.update_time);
-          if (createTime === 0 || updateTime === 0) {
-            this.plugin.logger.warn(`[parseWithCache] Failed to parse timestamps for ${file.path}: create=${frontmatter.create_time} (${createTime}), update=${frontmatter.update_time} (${updateTime})`);
-            return null;
-          }
-          return {
-            conversationId: frontmatter.conversation_id,
-            provider: frontmatter.provider || "unknown",
-            path: file.path,
-            updateTime,
-            create_time: createTime,
-            update_time: updateTime
-          };
-        } catch (error) {
-          this.plugin.logger.warn(`[parseWithCache] Exception parsing ${file.path}:`, error);
-          return null;
-        }
-      }
-      /**
-       * Parse single conversation file manually (robust fallback)
-       */
-      async parseConversationFileManually(file) {
-        try {
-          const content = await this.plugin.app.vault.read(file);
-          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-          if (!frontmatterMatch) {
-            return null;
-          }
-          const frontmatterContent = frontmatterMatch[1];
-          const frontmatterData = {};
-          const lines = frontmatterContent.split("\n");
-          for (const line of lines) {
-            const colonIndex = line.indexOf(":");
-            if (colonIndex > 0) {
-              const key = line.substring(0, colonIndex).trim();
-              let value = line.substring(colonIndex + 1).trim();
-              if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
-                value = value.slice(1, -1);
-              }
-              frontmatterData[key] = value;
-            }
-          }
-          const nexusId = this.plugin.manifest.id;
-          if (frontmatterData.nexus !== nexusId) {
-            return null;
-          }
-          if (!frontmatterData.conversation_id) {
-            return null;
-          }
-          const createTime = this.parseTimeString(frontmatterData.create_time);
-          const updateTime = this.parseTimeString(frontmatterData.update_time);
-          return {
-            conversationId: frontmatterData.conversation_id,
-            provider: frontmatterData.provider || "unknown",
-            path: file.path,
-            updateTime,
-            create_time: createTime,
-            update_time: updateTime
-          };
-        } catch (error) {
-          this.plugin.logger.error(`Error manually parsing ${file.path}:`, error);
-          return null;
-        }
-      }
-      /**
-       * Parse time string from frontmatter (handle multiple formats)
-       * Supports all formats: ISO 8601, US, EU, DE, JP, and locale-based
-       * Uses intelligent format detection from DateParser utility
-       */
-      parseTimeString(timeStr) {
-        const result = DateParser.parseDate(timeStr);
-        if (result === 0) {
-          this.plugin.logger.warn(`[parseTimeString] Failed to parse: "${timeStr}"`);
-        }
-        return result;
-      }
-      /**
-       * Fast check if a specific conversation exists
-       */
-      async conversationExists(conversationId) {
-        const conversations = await this.scanExistingConversations();
-        return conversations.has(conversationId);
-      }
-      /**
-       * Get conversation entry by ID (single lookup)
-       */
-      async getConversationById(conversationId) {
-        const conversations = await this.scanExistingConversations();
-        return conversations.get(conversationId) || null;
-      }
-      /**
-       * Get conversations by provider (for reporting/stats)
-       */
-      async getConversationsByProvider(provider) {
-        const allConversations = await this.scanExistingConversations();
-        return Array.from(allConversations.values()).filter((entry) => entry.provider === provider);
-      }
-      // ========================================
-      // LEGACY SUPPORT & CLEANUP
-      // ========================================
-      async resetCatalogs() {
-        try {
-          this.importedArchives = {};
-          this.isDirty = false;
-          if (this.saveTimeout) {
-            clearTimeout(this.saveTimeout);
-            this.saveTimeout = null;
-          }
-          await this.plugin.saveData({
-            settings: this.plugin.settings
-            // Note: No conversation catalog to reset - it's now vault-based
-          });
-        } catch (error) {
-          this.plugin.logger.error("resetCatalogs failed:", error);
-        }
-      }
-      // Statistics for debugging
-      getStats() {
-        return {
-          totalArchives: Object.keys(this.importedArchives).length,
-          isDirty: this.isDirty,
-          hasPendingSave: this.saveTimeout !== null,
-          catalogMethod: "vault-based-hybrid",
-          trackingMethod: "hybrid-hash-filename"
-        };
-      }
-      async forceSave() {
-        if (this.saveTimeout) {
-          clearTimeout(this.saveTimeout);
-          this.saveTimeout = null;
-        }
-        if (this.isDirty) {
-          await this.plugin.saveSettings();
-        }
-      }
-    };
-    __name(StorageService, "StorageService");
-  }
-});
-
-// src/upgrade/utils/version-utils.ts
-var VersionUtils;
-var init_version_utils = __esm({
-  "src/upgrade/utils/version-utils.ts"() {
-    "use strict";
-    VersionUtils = class {
-      /**
-       * Parse version string into components
-       */
-      static parseVersion(version) {
-        const parts = version.split(".").map(Number);
-        return {
-          major: parts[0] || 0,
-          minor: parts[1] || 0,
-          patch: parts[2] || 0,
-          original: version
-        };
-      }
-      /**
-       * Compare two versions
-       * Returns: -1 (v1 < v2), 0 (v1 = v2), 1 (v1 > v2)
-       */
-      static compareVersions(version1, version2) {
-        const v1 = this.parseVersion(version1);
-        const v2 = this.parseVersion(version2);
-        if (v1.major !== v2.major)
-          return v1.major - v2.major;
-        if (v1.minor !== v2.minor)
-          return v1.minor - v2.minor;
-        return v1.patch - v2.patch;
-      }
-      /**
-       * Check if version is in range [min, max]
-       */
-      static isInRange(version, minVersion, maxVersion) {
-        const isAboveMin = this.compareVersions(version, minVersion) >= 0;
-        if (!maxVersion)
-          return isAboveMin;
-        const isBelowMax = this.compareVersions(version, maxVersion) <= 0;
-        return isAboveMin && isBelowMax;
-      }
-      /**
-       * Check if migration should run based on version range
-       */
-      static shouldRunMigration(fromVersion, toVersion, migrationFromVersion, migrationToVersion) {
-        const userFrom = this.parseVersion(fromVersion);
-        const userTo = this.parseVersion(toVersion);
-        const migrationFrom = this.parseVersion(migrationFromVersion);
-        const migrationTo = migrationToVersion ? this.parseVersion(migrationToVersion) : userTo;
-        const wasInRange = this.compareVersions(fromVersion, migrationFromVersion) >= 0;
-        const isUpgradingTo = this.compareVersions(toVersion, migrationTo.original) >= 0;
-        return wasInRange && isUpgradingTo;
-      }
-      /**
-       * Get all versions between two versions (for sequential migrations)
-       */
-      static getVersionsInRange(fromVersion, toVersion, availableVersions) {
-        return availableVersions.filter(
-          (v) => this.compareVersions(v, fromVersion) > 0 && this.compareVersions(v, toVersion) <= 0
-        ).sort((a, b) => this.compareVersions(a, b));
-      }
-      /**
-       * Format version for display
-       */
-      static formatVersion(version) {
-        const parsed = this.parseVersion(version);
-        return `v${parsed.major}.${parsed.minor}.${parsed.patch}`;
-      }
-    };
-    __name(VersionUtils, "VersionUtils");
-  }
-});
-
-// src/upgrade/upgrade-interface.ts
-var logger3, UpgradeOperation, VersionUpgrade;
-var init_upgrade_interface = __esm({
-  "src/upgrade/upgrade-interface.ts"() {
-    "use strict";
-    init_version_utils();
-    init_dialogs();
-    init_logger();
-    logger3 = new Logger();
-    UpgradeOperation = class {
-      /**
-       * Check if operation can run (prerequisites)
-       */
-      async canRun(context) {
-        return true;
-      }
-      /**
-       * Verify operation completed successfully
-       */
-      async verify(context) {
-        return true;
-      }
-    };
-    __name(UpgradeOperation, "UpgradeOperation");
-    VersionUpgrade = class {
-      /**
-       * Check if this upgrade should run for the version range
-       */
-      shouldRun(fromVersion, toVersion) {
-        return VersionUtils.compareVersions(toVersion, this.version) >= 0 && VersionUtils.compareVersions(fromVersion, this.version) < 0;
-      }
-      /**
-       * Execute all automatic operations
-       */
-      async executeAutomaticOperations(context) {
-        const results = [];
-        let allSuccess = true;
-        for (const operation of this.automaticOperations) {
-          try {
-            if (await this.isOperationCompleted(operation.id, context)) {
-              results.push({
-                operationId: operation.id,
-                result: { success: true, message: "Already completed" }
-              });
-              continue;
-            }
-            if (!await operation.canRun(context)) {
-              results.push({
-                operationId: operation.id,
-                result: { success: false, message: "Prerequisites not met" }
-              });
-              allSuccess = false;
-              continue;
-            }
-            const result = await operation.execute(context);
-            results.push({ operationId: operation.id, result });
-            if (result.success) {
-              await this.markOperationCompleted(operation.id, context);
-            } else {
-              allSuccess = false;
-            }
-          } catch (error) {
-            const errorResult = {
-              success: false,
-              message: `Operation failed: ${error}`,
-              details: { error: String(error) }
-            };
-            results.push({ operationId: operation.id, result: errorResult });
-            allSuccess = false;
-          }
-        }
-        return { success: allSuccess, results };
-      }
-      /**
-       * Show manual operations dialog and execute selected ones
-       */
-      async showManualOperationsDialog(context) {
-        const availableOperations = [];
-        for (const operation of this.manualOperations) {
-          if (!await this.isOperationCompleted(operation.id, context) && await operation.canRun(context)) {
-            availableOperations.push(operation);
-          }
-        }
-        if (availableOperations.length === 0) {
-          return { success: true, results: [] };
-        }
-        const paragraphs = [
-          `**Version ${this.version} Manual Operations**`,
-          "The following optional operations are available:",
-          "",
-          ...availableOperations.map((op) => `\u2022 **${op.name}**: ${op.description}`)
-        ];
-        const shouldExecute = await showDialog(
-          context.plugin.app,
-          "confirmation",
-          `Optional Operations - v${this.version}`,
-          paragraphs,
-          "These operations are optional and can be run later from Settings \u2192 Migrations",
-          { button1: "Run All Now", button2: "Skip (Run Later)" }
-        );
-        const results = [];
-        if (shouldExecute) {
-          for (const operation of availableOperations) {
-            try {
-              const result = await operation.execute(context);
-              results.push({ operationId: operation.id, result });
-              if (result.success) {
-                await this.markOperationCompleted(operation.id, context);
-              }
-            } catch (error) {
-              const errorResult = {
-                success: false,
-                message: `Operation failed: ${error}`,
-                details: { error: String(error) }
-              };
-              results.push({ operationId: operation.id, result: errorResult });
-            }
-          }
-        }
-        return {
-          success: results.every((r) => r.result.success),
-          results
-        };
-      }
-      /**
-       * Get manual operations status for settings UI
-       */
-      async getManualOperationsStatus(context) {
-        const status = [];
-        for (const operation of this.manualOperations) {
-          const completed = await this.isOperationCompleted(operation.id, context);
-          const canRun = !completed && await operation.canRun(context);
-          status.push({
-            operation,
-            completed,
-            canRun
-          });
-        }
-        return status;
-      }
-      /**
-       * Execute single manual operation (from settings)
-       */
-      async executeManualOperation(operationId, context) {
-        const operation = this.manualOperations.find((op) => op.id === operationId);
-        if (!operation) {
-          return { success: false, message: "Operation not found" };
-        }
-        if (await this.isOperationCompleted(operation.id, context)) {
-          return { success: true, message: "Already completed" };
-        }
-        if (!await operation.canRun(context)) {
-          return { success: false, message: "Prerequisites not met" };
-        }
-        try {
-          const result = await operation.execute(context);
-          if (result.success) {
-            await this.markOperationCompleted(operation.id, context);
-          }
-          return result;
-        } catch (error) {
-          return {
-            success: false,
-            message: `Operation failed: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      /**
-       * Check if operation was completed using structured upgrade history
-       */
-      async isOperationCompleted(operationId, context) {
-        var _a, _b, _c;
-        const data = await context.plugin.loadData();
-        const operationKey = `operation_${this.version.replace(/\./g, "_")}_${operationId}`;
-        return ((_c = (_b = (_a = data == null ? void 0 : data.upgradeHistory) == null ? void 0 : _a.completedOperations) == null ? void 0 : _b[operationKey]) == null ? void 0 : _c.completed) || false;
-      }
-      /**
-       * Mark operation as completed using structured upgrade history
-       */
-      async markOperationCompleted(operationId, context) {
-        const data = await context.plugin.loadData() || {};
-        if (!data.upgradeHistory) {
-          data.upgradeHistory = {
-            completedUpgrades: {},
-            completedOperations: {}
-          };
-        }
-        const operationKey = `operation_${this.version.replace(/\./g, "_")}_${operationId}`;
-        data.upgradeHistory.completedOperations[operationKey] = {
-          operationId,
-          version: this.version,
-          date: new Date().toISOString(),
-          completed: true
-        };
-        await context.plugin.saveData(data);
-      }
-    };
-    __name(VersionUpgrade, "VersionUpgrade");
-  }
-});
-
-// src/upgrade/versions/upgrade-1.1.0.ts
-var upgrade_1_1_0_exports = {};
-__export(upgrade_1_1_0_exports, {
-  Upgrade110: () => Upgrade110
-});
-var DeleteCatalogOperation, CleanMetadataOperation, Upgrade110;
-var init_upgrade_1_1_0 = __esm({
-  "src/upgrade/versions/upgrade-1.1.0.ts"() {
-    "use strict";
-    init_upgrade_interface();
-    init_logger();
-    DeleteCatalogOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "delete-catalog";
-        this.name = "Delete Old Catalog";
-        this.description = "Remove legacy conversation catalog data";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const data = await context.plugin.loadData();
-          const catalog = data == null ? void 0 : data.conversationCatalog;
-          const hasData = catalog && typeof catalog === "object" && Object.keys(catalog).length > 0;
-          if (catalog) {
-          }
-          return hasData;
-        } catch (error) {
-          logger.error(`DeleteCatalog.canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        try {
-          const data = await context.plugin.loadData();
-          const catalog = (data == null ? void 0 : data.conversationCatalog) || {};
-          const catalogSize = Object.keys(catalog).length;
-          if (catalogSize === 0) {
-            return {
-              success: true,
-              message: "No legacy catalog found to delete"
-            };
-          }
-          const existingImportedArchives = data == null ? void 0 : data.importedArchives;
-          const cleanedData = {
-            settings: data.settings || context.plugin.settings,
-            // CRITICAL FIX: Force preservation of importedArchives
-            importedArchives: existingImportedArchives || {},
-            upgradeHistory: data.upgradeHistory || {
-              completedUpgrades: {},
-              completedOperations: {}
-            },
-            // Remove conversationCatalog - key change
-            catalogDeletionDate: new Date().toISOString(),
-            catalogDeletionStats: { entriesDeleted: catalogSize }
-          };
-          await context.plugin.saveData(cleanedData);
-          const verifyData = await context.plugin.loadData();
-          const verifyArchives = (verifyData == null ? void 0 : verifyData.importedArchives) || {};
-          if (Object.keys(verifyArchives).length === 0 && Object.keys(existingImportedArchives || {}).length > 0) {
-            logger.error(`DeleteCatalog: CRITICAL - importedArchives were lost during save!`);
-            return {
-              success: false,
-              message: `Critical error: importedArchives were lost during migration`,
-              details: {
-                beforeCount: Object.keys(existingImportedArchives || {}).length,
-                afterCount: Object.keys(verifyArchives).length
-              }
-            };
-          }
-          return {
-            success: true,
-            message: `Legacy catalog deleted: ${catalogSize} entries removed, ${Object.keys(verifyArchives).length} imported archives preserved`,
-            details: { entriesDeleted: catalogSize, archivesPreserved: Object.keys(verifyArchives).length }
-          };
-        } catch (error) {
-          logger.error(`DeleteCatalog.execute failed:`, error);
-          return {
-            success: false,
-            message: `Failed to delete legacy catalog: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      async verify(context) {
-        try {
-          const data = await context.plugin.loadData();
-          const hasNoCatalog = !(data == null ? void 0 : data.conversationCatalog);
-          const hasImportedArchives = (data == null ? void 0 : data.importedArchives) && Object.keys(data.importedArchives).length > 0;
-          return hasNoCatalog;
-        } catch (error) {
-          logger.error(`DeleteCatalog.verify failed:`, error);
-          return false;
-        }
-      }
-    };
-    __name(DeleteCatalogOperation, "DeleteCatalogOperation");
-    CleanMetadataOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "clean-metadata";
-        this.name = "Clean & Version Metadata";
-        this.description = "Remove unnecessary metadata and add plugin version to conversation notes";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          });
-          const canRun = conversationFiles.length > 0;
-          return canRun;
-        } catch (error) {
-          logger.error(`CleanMetadata.canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          });
-          if (conversationFiles.length === 0) {
-            return {
-              success: true,
-              message: "No conversation files found to clean",
-              details: { processed: 0, cleaned: 0, errors: 0 }
-            };
-          }
-          let processed = 0;
-          let cleaned = 0;
-          let errors = 0;
-          const batchSize = 10;
-          for (let i = 0; i < conversationFiles.length; i += batchSize) {
-            const batch = conversationFiles.slice(i, i + batchSize);
-            for (const file of batch) {
-              processed++;
-              try {
-                const content = await context.plugin.app.vault.read(file);
-                const cleanedContent = this.cleanFrontmatterRobust(content, context.toVersion, file.basename);
-                if (content !== cleanedContent) {
-                  await context.plugin.app.vault.modify(file, cleanedContent);
-                  cleaned++;
-                }
-              } catch (error) {
-                errors++;
-                logger.error(`Error cleaning metadata for ${file.path}:`, error);
-              }
-            }
-            if (i + batchSize < conversationFiles.length) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
-            }
-          }
-          return {
-            success: errors === 0,
-            message: `Metadata cleanup completed: ${cleaned} files cleaned, ${errors} errors`,
-            details: { processed, cleaned, errors }
-          };
-        } catch (error) {
-          logger.error(`CleanMetadata.execute failed:`, error);
-          return {
-            success: false,
-            message: `Metadata cleanup failed: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      /**
-       * Clean frontmatter with robust parsing and safe alias generation
-       */
-      cleanFrontmatterRobust(content, pluginVersion, fileName) {
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-        if (!frontmatterMatch) {
-          if (content.includes("nexus:") || content.includes("conversation_id:")) {
-            logger.warn(`File ${fileName} appears to be Nexus but has malformed frontmatter`);
-          }
-          return content;
-        }
-        const frontmatterContent = frontmatterMatch[1];
-        const restOfContent = content.substring(frontmatterMatch[0].length);
-        const frontmatterData = {};
-        const lines = frontmatterContent.split("\n");
-        for (const line of lines) {
-          const colonIndex = line.indexOf(":");
-          if (colonIndex > 0) {
-            const key = line.substring(0, colonIndex).trim();
-            let value = line.substring(colonIndex + 1).trim();
-            if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
-              value = value.slice(1, -1);
-            }
-            frontmatterData[key] = value;
-          }
-        }
-        const nexusId = "nexus-ai-chat-importer";
-        if (frontmatterData.nexus !== nexusId) {
-          return content;
-        }
-        const safeAlias = this.generateSafeAlias(fileName);
-        const newFrontmatter = [];
-        newFrontmatter.push(`nexus: ${nexusId}`);
-        newFrontmatter.push(`plugin_version: "1.0.x"`);
-        if (frontmatterData.provider) {
-          newFrontmatter.push(`provider: ${frontmatterData.provider}`);
-        }
-        newFrontmatter.push(`aliases: ${safeAlias}`);
-        if (frontmatterData.conversation_id) {
-          newFrontmatter.push(`conversation_id: ${frontmatterData.conversation_id}`);
-        }
-        if (frontmatterData.create_time) {
-          newFrontmatter.push(`create_time: ${frontmatterData.create_time}`);
-        }
-        if (frontmatterData.update_time) {
-          newFrontmatter.push(`update_time: ${frontmatterData.update_time}`);
-        }
-        const cleanedFrontmatter = newFrontmatter.join("\n");
-        return `---
-${cleanedFrontmatter}
----${restOfContent}`;
-      }
-      /**
-       * Generate safe alias from filename (reuse the robust filename logic)
-       */
-      generateSafeAlias(fileName) {
-        let cleanName = fileName.replace(/^\d{8}\s*-\s*/, "").replace(/^\d{4}-\d{2}-\d{2}\s*-\s*/, "");
-        cleanName = cleanName.replace(/\.md$/, "");
-        cleanName = cleanName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>:"\/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
-        cleanName = cleanName.replace(/^[^\w\d\s]+/, "");
-        cleanName = cleanName.replace(/\s+/g, " ").trim();
-        if (!cleanName || cleanName.length === 0) {
-          cleanName = "Untitled";
-        }
-        if (cleanName.startsWith(".")) {
-          cleanName = cleanName.substring(1);
-        }
-        if (!cleanName || cleanName.length === 0) {
-          cleanName = "Untitled";
-        }
-        return cleanName;
-      }
-      async verify(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          }).slice(0, 5);
-          for (const file of conversationFiles) {
-            try {
-              const content = await context.plugin.app.vault.read(file);
-              const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-              if (!frontmatterMatch)
-                continue;
-              const frontmatterContent = frontmatterMatch[1];
-              if (!frontmatterContent.includes("plugin_version:")) {
-                return false;
-              }
-              const forbiddenFields = [
-                "conversation_template_id:",
-                "gizmo_id:",
-                "gizmo_type:",
-                "default_model_slug:",
-                "is_archived:",
-                "is_starred:",
-                "current_node:",
-                "memory_scope:"
-              ];
-              const hasUnwantedFields = forbiddenFields.some(
-                (field) => frontmatterContent.includes(field)
-              );
-              if (hasUnwantedFields) {
-                return false;
-              }
-            } catch (error) {
-              logger.error(`CleanMetadata.verify error for ${file.path}:`, error);
-              return false;
-            }
-          }
-          return true;
-        } catch (error) {
-          logger.error(`CleanMetadata.verify failed:`, error);
-          return false;
-        }
-      }
-    };
-    __name(CleanMetadataOperation, "CleanMetadataOperation");
-    Upgrade110 = class extends VersionUpgrade {
-      constructor() {
-        super(...arguments);
-        this.version = "1.1.0";
-        this.automaticOperations = [
-          new DeleteCatalogOperation(),
-          new CleanMetadataOperation()
-        ];
-        this.manualOperations = [
-          // No manual operations for 1.1.0 - all operations are automatic
-          // Future versions can add manual operations here for truly optional tasks
-        ];
-      }
-    };
-    __name(Upgrade110, "Upgrade110");
-  }
-});
-
-// src/upgrade/versions/upgrade-1.2.0.ts
-var upgrade_1_2_0_exports = {};
-__export(upgrade_1_2_0_exports, {
-  NexusUpgradeModal: () => NexusUpgradeModal,
-  Upgrade120: () => Upgrade120
-});
-var import_obsidian19, ConvertToCalloutsOperation, MoveReportsToProviderOperation, UpdateReportLinksOperation, MoveYearFoldersOperation, NexusUpgradeModal, OfferReimportOperation, Upgrade120;
-var init_upgrade_1_2_0 = __esm({
-  "src/upgrade/versions/upgrade-1.2.0.ts"() {
-    "use strict";
-    init_upgrade_interface();
-    import_obsidian19 = require("obsidian");
-    init_logger();
-    init_i18n();
-    init_support_box();
-    ConvertToCalloutsOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "convert-to-callouts";
-        this.name = "Convert to Modern Callouts";
-        this.description = "Transform old indentations (>, >>) to beautiful Nexus callouts";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          });
-          for (const file of conversationFiles.slice(0, 10)) {
-            try {
-              const content = await context.plugin.app.vault.read(file);
-              if (this.hasOldIndentationFormat(content)) {
-                return true;
-              }
-            } catch (error) {
-              logger.error(`Error checking file ${file.path}:`, error);
-            }
-          }
-          return false;
-        } catch (error) {
-          logger.error(`ConvertToCallouts.canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          });
-          let processed = 0;
-          let converted = 0;
-          let errors = 0;
-          const batchSize = 10;
-          for (let i = 0; i < conversationFiles.length; i += batchSize) {
-            const batch = conversationFiles.slice(i, i + batchSize);
-            for (const file of batch) {
-              processed++;
-              try {
-                const content = await context.plugin.app.vault.read(file);
-                if (!this.hasOldIndentationFormat(content)) {
-                  continue;
-                }
-                const convertedContent = this.convertIndentationsToCallouts(content);
-                if (content !== convertedContent) {
-                  const finalContent = this.updatePluginVersion(convertedContent, "1.2.0");
-                  await context.plugin.app.vault.modify(file, finalContent);
-                  converted++;
-                }
-              } catch (error) {
-                errors++;
-                logger.error(`Error converting ${file.path}:`, error);
-              }
-            }
-            if (i + batchSize < conversationFiles.length) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
-            }
-          }
-          return {
-            success: errors === 0,
-            message: `Callout conversion completed: ${converted} files converted, ${errors} errors`,
-            details: { processed, converted, errors }
-          };
-        } catch (error) {
-          logger.error(`ConvertToCallouts.execute failed:`, error);
-          return {
-            success: false,
-            message: `Callout conversion failed: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      /**
-       * Check if content has old indentation format (v1.1.0)
-       */
-      hasOldIndentationFormat(content) {
-        const oldPatterns = [
-          /^### User, on .* at .*;\n>/m,
-          // User messages with indentation
-          /^#### Assistant, on .* at .*;\n>>/m,
-          // Assistant messages with indentation
-          /<div class="nexus-attachment-box">/,
-          // Old attachment divs
-          /<div class="nexus-artifact-box">/,
-          // Old artifact divs
-          />\[!note\] 📎 \*\*Attachment:\*\*/
-          // Old note callouts for attachments
-        ];
-        return oldPatterns.some((pattern) => pattern.test(content));
-      }
-      /**
-       * Convert old indentations to modern callouts
-       */
-      convertIndentationsToCallouts(content) {
-        let converted = content;
-        converted = converted.replace(
-          /^### User, on (.*?) at (.*?);\n((?:> .*(?:\n|$))*)/gm,
-          (match, date, time, quotedContent) => {
-            const cleanContent = quotedContent.replace(/^> /gm, "> ");
-            return `>[!nexus_user] **User** - ${date} at ${time}
-${cleanContent}`;
-          }
-        );
-        converted = converted.replace(
-          /^#### Assistant, on (.*?) at (.*?);\n((?:>> .*(?:\n|$))*)/gm,
-          (match, date, time, quotedContent) => {
-            const cleanContent = quotedContent.replace(/^>> /gm, "> ");
-            return `>[!nexus_agent] **Assistant** - ${date} at ${time}
-${cleanContent}`;
-          }
-        );
-        converted = converted.replace(
-          /<div class="nexus-attachment-box">\s*\n\s*\*\*📎 Attachment:\*\* ([^(]+)\(([^)]+)\)([\s\S]*?)<\/div>/g,
-          (match, fileName, fileType, content2) => {
-            const cleanFileName = fileName.trim();
-            let cleanContent = content2.trim();
-            if (cleanContent.includes("**Content:**")) {
-              cleanContent = cleanContent.replace(/\*\*Content:\*\*/g, "").trim();
-            }
-            if (cleanContent.includes("**Status:**")) {
-              cleanContent = cleanContent.replace(/\*\*Status:\*\*/g, "").trim();
-            }
-            cleanContent = cleanContent.replace(/\n/g, "\n> ").trim();
-            if (cleanContent && !cleanContent.startsWith(">")) {
-              cleanContent = "> " + cleanContent;
-            }
-            return `>[!nexus_attachment] **${cleanFileName}** (${fileType})
-${cleanContent}`;
-          }
-        );
-        converted = converted.replace(
-          /<div class="nexus-artifact-box">\s*([\s\S]*?)\s*<\/div>/g,
-          (match, content2) => {
-            let cleanContent = content2.trim();
-            const titleMatch = cleanContent.match(/\*\*([^*]+)\*\*/);
-            const title = titleMatch ? titleMatch[1] : "Artifact";
-            cleanContent = cleanContent.replace(/\*\*[^*]+\*\*/g, "").trim();
-            cleanContent = cleanContent.replace(/\n/g, "\n> ").trim();
-            if (cleanContent && !cleanContent.startsWith(">")) {
-              cleanContent = "> " + cleanContent;
-            }
-            return `>[!nexus_artifact] **${title}**
-${cleanContent}`;
-          }
-        );
-        converted = converted.replace(
-          />\[!note\] 📎 \*\*Attachment:\*\* ([^(]+)\(([^)]+)\)(.*?)(?=\n\n|\n>|\n<!--|\n---|$)/gs,
-          (match, fileName, fileType, content2) => {
-            const cleanFileName = fileName.trim();
-            let cleanContent = content2.trim();
-            cleanContent = cleanContent.replace(/\n/g, "\n> ").trim();
-            if (cleanContent && !cleanContent.startsWith(">")) {
-              cleanContent = "> " + cleanContent;
-            }
-            return `>[!nexus_attachment] **${cleanFileName}** (${fileType})
-${cleanContent}`;
-          }
-        );
-        return converted;
-      }
-      /**
-       * Update plugin_version in frontmatter
-       */
-      updatePluginVersion(content, version) {
-        return content.replace(
-          /^plugin_version: ".*?"$/m,
-          `plugin_version: "${version}"`
-        );
-      }
-      async verify(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          }).slice(0, 5);
-          for (const file of conversationFiles) {
-            try {
-              const content = await context.plugin.app.vault.read(file);
-              if (this.hasOldIndentationFormat(content)) {
-                return false;
-              }
-              if (!content.includes('plugin_version: "1.2.0"')) {
-                return false;
-              }
-            } catch (error) {
-              logger.error(`Error verifying file ${file.path}:`, error);
-              return false;
-            }
-          }
-          return true;
-        } catch (error) {
-          logger.error(`ConvertToCallouts.verify failed:`, error);
-          return false;
-        }
-      }
-    };
-    __name(ConvertToCalloutsOperation, "ConvertToCalloutsOperation");
-    MoveReportsToProviderOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "move-reports-to-provider";
-        this.name = "Organize Reports by Provider";
-        this.description = "Move reports from root Reports/ folder to Reports/chatgpt/";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const reportFolder = context.plugin.settings.reportFolder;
-          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
-            if (!f.path.startsWith(reportFolder + "/"))
-              return false;
-            const relativePath = f.path.substring(reportFolder.length + 1);
-            if (relativePath.includes("/"))
-              return false;
-            return f.name.includes("import report") || f.name.includes("import_");
-          });
-          return reportFiles.length > 0;
-        } catch (error) {
-          logger.error(`MoveReportsToProviderOperation.canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        try {
-          const reportFolder = context.plugin.settings.reportFolder;
-          let processed = 0;
-          let moved = 0;
-          let errors = 0;
-          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
-            if (!f.path.startsWith(reportFolder + "/"))
-              return false;
-            const relativePath = f.path.substring(reportFolder.length + 1);
-            if (relativePath.includes("/"))
-              return false;
-            return f.name.includes("import report") || f.name.includes("import_");
-          });
-          const chatgptReportFolder = `${reportFolder}/chatgpt`;
-          try {
-            await context.plugin.app.vault.adapter.mkdir(chatgptReportFolder);
-          } catch (e) {
-          }
-          for (const file of reportFiles) {
-            try {
-              processed++;
-              const newPath = `${chatgptReportFolder}/${file.name}`;
-              if (await context.plugin.app.vault.adapter.exists(newPath)) {
-                continue;
-              }
-              await context.plugin.app.vault.adapter.rename(file.path, newPath);
-              moved++;
-            } catch (error) {
-              errors++;
-              logger.error(`Error moving report ${file.path}:`, error);
-            }
-          }
-          return {
-            success: errors === 0,
-            message: `Reports organized: ${moved} files moved to provider structure, ${errors} errors`,
-            details: { processed, moved, errors }
-          };
-        } catch (error) {
-          logger.error(`MoveReportsToProviderOperation.execute failed:`, error);
-          return {
-            success: false,
-            message: `Report organization failed: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      async verify(_context) {
-        return true;
-      }
-    };
-    __name(MoveReportsToProviderOperation, "MoveReportsToProviderOperation");
-    UpdateReportLinksOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "update-report-links";
-        this.name = "Update Report Links";
-        this.description = "Insert 'chatgpt/' before year in report links inside reports";
-        this.type = "automatic";
-      }
-      async canRun(_context) {
-        return true;
-      }
-      escapeRegExp(str) {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      }
-      async execute(context) {
-        try {
-          const reportFolder = context.plugin.settings.reportFolder;
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const escapedArchive = this.escapeRegExp(conversationFolder);
-          let processed = 0;
-          let updated = 0;
-          let errors = 0;
-          const reportPrefixChatgpt = `${reportFolder}/chatgpt/`;
-          const reportPrefixRoot = `${reportFolder}/`;
-          const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
-            if (f.path.startsWith(reportPrefixChatgpt))
-              return true;
-            if (f.path.startsWith(reportPrefixRoot)) {
-              const relativePath = f.path.substring(reportPrefixRoot.length);
-              if (!relativePath.includes("/") && (f.name.includes("import report") || f.name.includes("import_"))) {
-                return true;
-              }
-            }
-            return false;
-          });
-          const linkPattern = new RegExp(`(\\[\\[${escapedArchive}/)(\\d{4}/\\d{2}/)`, "g");
-          for (const file of reportFiles) {
-            try {
-              processed++;
-              const content = await context.plugin.app.vault.read(file);
-              const replaced = content.replace(linkPattern, "$1chatgpt/$2");
-              if (replaced !== content) {
-                await context.plugin.app.vault.modify(file, replaced);
-                updated++;
-              }
-            } catch (e) {
-              errors++;
-              logger.error(`UpdateReportLinksOperation error in ${file.path}:`, e);
-            }
-          }
-          return {
-            success: errors === 0,
-            message: `Report links updated: ${updated} files changed, ${errors} errors`,
-            details: { processed, updated, errors }
-          };
-        } catch (error) {
-          logger.error(`UpdateReportLinksOperation.execute failed:`, error);
-          return {
-            success: false,
-            message: `Report link update failed: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      async verify(_context) {
-        return true;
-      }
-    };
-    __name(UpdateReportLinksOperation, "UpdateReportLinksOperation");
-    MoveYearFoldersOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "move-year-folders";
-        this.name = "Organize Conversations by Provider";
-        this.description = "Move year folders to chatgpt provider structure";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const yearFolders = await this.findYearFolders(context, conversationFolder);
-          return yearFolders.length > 0;
-        } catch (error) {
-          logger.error(`MoveYearFolders.canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          let movedFolders = 0;
-          let errors = 0;
-          const yearFolders = await this.findYearFolders(context, conversationFolder);
-          for (const yearFolder of yearFolders) {
-            try {
-              const chatgptFolder = `${conversationFolder}/chatgpt`;
-              await context.plugin.app.vault.adapter.mkdir(chatgptFolder);
-              const newPath = `${chatgptFolder}/${yearFolder}`;
-              const oldPath = `${conversationFolder}/${yearFolder}`;
-              await context.plugin.app.vault.adapter.rename(oldPath, newPath);
-              movedFolders++;
-            } catch (error) {
-              errors++;
-              logger.error(`Error moving year folder ${yearFolder}:`, error);
-            }
-          }
-          return {
-            success: errors === 0,
-            message: `Conversation organization completed: ${movedFolders} year folders moved to chatgpt structure, ${errors} errors`,
-            details: { movedFolders, errors }
-          };
-        } catch (error) {
-          logger.error(`MoveYearFolders.execute failed:`, error);
-          return {
-            success: false,
-            message: `Conversation organization failed: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      async verify(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder;
-          const remainingYearFolders = await this.findYearFolders(context, conversationFolder);
-          if (remainingYearFolders.length > 0) {
-            return false;
-          }
-          return true;
-        } catch (error) {
-          logger.error(`MoveYearFolders.verify failed:`, error);
-          return false;
-        }
-      }
-      /**
-       * Find year folders (YYYY) directly in conversation folder
-       */
-      async findYearFolders(context, conversationFolder) {
-        try {
-          const folders = await context.plugin.app.vault.adapter.list(conversationFolder);
-          return folders.folders.filter((folder) => {
-            const folderName = folder.split("/").pop() || "";
-            return /^\d{4}$/.test(folderName) && folderName !== "chatgpt";
-          }).map((folder) => folder.split("/").pop() || "");
-        } catch (error) {
-          return [];
-        }
-      }
-    };
-    __name(MoveYearFoldersOperation, "MoveYearFoldersOperation");
-    NexusUpgradeModal = class extends import_obsidian19.Modal {
-      constructor(app, plugin, version, resolve) {
-        super(app);
-        this.plugin = plugin;
-        this.version = version;
-        this.resolve = resolve;
-      }
-      onOpen() {
-        var _a;
-        const { containerEl, titleEl } = this;
-        containerEl.classList.add("nexus-upgrade-modal");
-        titleEl.setText(t("upgrade.legacy_120_modal.title", { version: this.version }));
-        (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
-        this.createForm();
-      }
-      async onClose() {
-        this.contentEl.empty();
-      }
-      async createForm() {
-        let message = t("upgrade.legacy_120_modal.fallback_message");
-        try {
-          const response = await fetch("https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.2.0");
-          if (response.ok) {
-            const release = await response.json();
-            if (release.body) {
-              message = release.body;
-            }
-          }
-        } catch (error) {
-        }
-        await import_obsidian19.MarkdownRenderer.render(
-          this.app,
-          message,
-          this.contentEl,
-          "",
-          this.plugin
-        );
-        createSupportBox(this.contentEl);
-        this.contentEl.createEl("div", { cls: "nexus-upgrade-buttons" }, (el) => {
-          el.style.textAlign = "right";
-          el.style.marginTop = "20px";
-          el.style.paddingTop = "15px";
-          el.style.borderTop = "1px solid var(--background-modifier-border)";
-          const btnOk = el.createEl("button", {
-            text: t("upgrade.legacy_120_modal.buttons.proceed"),
-            cls: "nexus-btn-primary"
-          });
-          btnOk.onclick = () => {
-            this.close();
-            this.resolve("ok");
-          };
-        });
-      }
-    };
-    __name(NexusUpgradeModal, "NexusUpgradeModal");
-    OfferReimportOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "offer-reimport";
-        this.name = "Full Feature Reimport";
-        this.description = "Optionally reimport conversations to get all v1.2.0 features (attachments, chronological order, etc.)";
-        this.type = "manual";
-      }
-      async canRun(_context) {
-        return true;
-      }
-      async execute(_context) {
-        try {
-          return {
-            success: true,
-            message: "Upgrade information provided to user",
-            details: { action: "info_displayed" }
-          };
-        } catch (error) {
-          logger.error(`OfferReimport.execute failed:`, error);
-          return {
-            success: false,
-            message: `Failed to complete reimport operation: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      async verify(_context) {
-        return true;
-      }
-    };
-    __name(OfferReimportOperation, "OfferReimportOperation");
-    Upgrade120 = class extends VersionUpgrade {
-      constructor() {
-        super(...arguments);
-        this.version = "1.2.0";
-        this.automaticOperations = [
-          new MoveYearFoldersOperation(),
-          new MoveReportsToProviderOperation(),
-          new UpdateReportLinksOperation(),
-          new ConvertToCalloutsOperation()
-        ];
-        this.manualOperations = [
-          new OfferReimportOperation()
-        ];
-      }
-    };
-    __name(Upgrade120, "Upgrade120");
-  }
-});
-
-// src/dialogs/configure-folder-locations-dialog.ts
-var import_obsidian20, ConfigureFolderLocationsDialog;
-var init_configure_folder_locations_dialog = __esm({
-  "src/dialogs/configure-folder-locations-dialog.ts"() {
-    "use strict";
-    import_obsidian20 = require("obsidian");
-    init_enhanced_folder_migration_dialog();
-    init_folder_tree_browser_modal();
-    init_folder_validation();
-    init_utils();
-    init_i18n();
-    ConfigureFolderLocationsDialog = class extends import_obsidian20.Modal {
-      // Track if onComplete was already called
-      constructor(plugin, onComplete) {
-        super(plugin.app);
-        this.plugin = plugin;
-        this.reportFolderInput = null;
-        this.completed = false;
-        this.onComplete = onComplete;
-        this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
-      }
-      onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-        contentEl.createEl("h2", {
-          text: t("configure_folder_dialog.title"),
-          cls: "nexus-upgrade-title"
-        });
-        const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
-        const descriptionEl = messageContainer.createDiv({ cls: "nexus-upgrade-description" });
-        descriptionEl.createEl("p", {
-          text: t("configure_folder_dialog.description", { folder: this.originalReportFolder })
-        });
-        descriptionEl.createEl("p", {
-          text: t("configure_folder_dialog.note"),
-          cls: "nexus-upgrade-note"
-        });
-        const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
-        folderSection.createEl("div", {
-          text: t("configure_folder_dialog.report_folder_label"),
-          cls: "nexus-upgrade-folder-label"
-        });
-        const inputContainer = folderSection.createDiv({ cls: "nexus-upgrade-input-container" });
-        this.reportFolderInput = inputContainer.createEl("input", {
-          type: "text",
-          placeholder: t("configure_folder_dialog.report_folder_placeholder"),
-          value: this.originalReportFolder,
-          cls: "nexus-upgrade-folder-input"
-        });
-        this.reportFolderInput.readOnly = true;
-        this.reportFolderInput.style.cursor = "default";
-        const browseButton = inputContainer.createEl("button", {
-          text: t("configure_folder_dialog.buttons.browse"),
-          cls: "mod-cta nexus-upgrade-browse-button"
-        });
-        browseButton.addEventListener("click", () => {
-          const modal = new FolderTreeBrowserModal(
-            this.plugin.app,
-            (path) => {
-              if (this.reportFolderInput) {
-                this.reportFolderInput.value = path;
-              }
-            },
-            this.originalReportFolder
-          );
-          modal.open();
-        });
-        const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container-centered" });
-        const proceedButton = buttonContainer.createEl("button", {
-          text: t("configure_folder_dialog.buttons.proceed"),
-          cls: "mod-cta nexus-upgrade-proceed-button"
-        });
-        proceedButton.addEventListener("click", async () => {
-          await this.handleSave();
-        });
-        this.addStyles();
-      }
-      async handleSave() {
-        var _a;
-        if (this.completed)
-          return;
-        if (!this.reportFolderInput) {
-          this.completed = true;
-          this.close();
-          this.onComplete({
-            conversationFolder: {
-              changed: false,
-              oldPath: this.plugin.settings.conversationFolder,
-              newPath: this.plugin.settings.conversationFolder
-            },
-            reportFolder: {
-              changed: false,
-              oldPath: this.originalReportFolder,
-              newPath: this.originalReportFolder
-            },
-            attachmentFolder: {
-              changed: false,
-              oldPath: this.plugin.settings.attachmentFolder,
-              newPath: this.plugin.settings.attachmentFolder
-            }
-          });
-          return;
-        }
-        const newReportFolder = this.reportFolderInput.value.trim();
-        const validation = validateFolderNesting(
-          "reportFolder",
-          newReportFolder,
-          this.plugin.settings.conversationFolder,
-          this.originalReportFolder,
-          // Use original to avoid self-check
-          this.plugin.settings.attachmentFolder
-        );
-        if (!validation.valid) {
-          this.showErrorDialog(t("configure_folder_dialog.error_invalid_folder.title"), t("configure_folder_dialog.error_invalid_folder.message", { error: (_a = validation.error) != null ? _a : "Invalid folder configuration" }));
-          return;
-        }
-        const result = {
-          conversationFolder: {
-            changed: false,
-            oldPath: this.plugin.settings.conversationFolder,
-            newPath: this.plugin.settings.conversationFolder
-          },
-          reportFolder: {
-            changed: newReportFolder !== this.originalReportFolder,
-            oldPath: this.originalReportFolder,
-            newPath: newReportFolder
-          },
-          attachmentFolder: {
-            changed: false,
-            oldPath: this.plugin.settings.attachmentFolder,
-            newPath: this.plugin.settings.attachmentFolder
-          }
-        };
-        this.completed = true;
-        this.close();
-        await this.handleFolderChange("reportFolder", result.reportFolder);
-        this.onComplete(result);
-      }
-      async handleFolderChange(folderType, folderInfo) {
-        if (!folderInfo.changed) {
-          return;
-        }
-        const oldPath = folderInfo.oldPath;
-        const newPath = folderInfo.newPath;
-        const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
-        if (newFolder && newFolder instanceof import_obsidian20.TFolder && newFolder.children.length > 0) {
-          this.showErrorDialog(
-            "Target Folder Not Empty",
-            `The folder "${newPath}" already contains files.
-
-To change the folder location:
-\u2022 Move existing files manually in Obsidian, OR
-\u2022 Choose an empty folder or create a new one`
-          );
-          return;
-        }
-        this.plugin.settings[folderType] = newPath;
-        await this.plugin.saveSettings();
-        const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
-        if (!oldFolder || !(oldFolder instanceof import_obsidian20.TFolder) || oldFolder.children.length === 0) {
-          return;
-        }
-        const folderTypeLabel = folderType === "conversationFolder" ? "conversations" : folderType === "reportFolder" ? "reports" : "attachments";
-        await new Promise((resolve) => {
-          const handleMigrationAction = /* @__PURE__ */ __name(async (action) => {
-            if (action === "move") {
-              try {
-                const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
-                folderInfo.filesMoved = result.moved;
-                if (result.success && result.skipped === 0) {
-                  new import_obsidian20.Notice(t("folder_migration.notices.files_moved", { path: newPath }));
-                } else {
-                  this.showMergeResultDialog(result, oldPath, newPath);
-                }
-              } catch (error) {
-                this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                this.showErrorDialog(
-                  t("folder_migration.error_migration_failed.title"),
-                  t("folder_migration.error_migration_failed.message_move", { error: errorMessage })
-                );
-              }
-            } else if (action === "cancel") {
-              this.plugin.settings[folderType] = oldPath;
-              await this.plugin.saveSettings();
-            }
-            resolve();
-          }, "handleMigrationAction");
-          const dialog = new EnhancedFolderMigrationDialog(
-            this.plugin,
-            oldPath,
-            newPath,
-            folderTypeLabel,
-            handleMigrationAction
-          );
-          dialog.open();
-        });
-      }
-      /**
-       * Show dialog with merge result details when files were skipped or errors occurred
-       */
-      showMergeResultDialog(result, oldPath, newPath) {
-        const modal = new import_obsidian20.Modal(this.plugin.app);
-        modal.titleEl.setText(t("folder_migration.result_dialog.title"));
-        const { contentEl } = modal;
-        const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
-        summary.createEl("h3", { text: t("folder_migration.result_dialog.summary_title") });
-        const stats = summary.createDiv({ cls: "nexus-merge-stats" });
-        stats.createEl("p", { text: t("folder_migration.result_dialog.moved", { count: String(result.moved) }) });
-        if (result.skipped > 0) {
-          stats.createEl("p", {
-            text: t("folder_migration.result_dialog.skipped", { count: String(result.skipped) }),
-            cls: "nexus-merge-warning"
-          });
-        }
-        if (result.errors > 0) {
-          stats.createEl("p", {
-            text: t("folder_migration.result_dialog.errors", { count: String(result.errors) }),
-            cls: "nexus-merge-error"
-          });
-        }
-        const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
-        explanation.createEl("p", {
-          text: t("folder_migration.result_dialog.explanation")
-        });
-        if (result.errorDetails && result.errorDetails.length > 0) {
-          const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
-          errorSection.createEl("h4", { text: t("folder_migration.result_dialog.error_details_title") });
-          const errorList = errorSection.createEl("ul");
-          for (const error of result.errorDetails) {
-            errorList.createEl("li", { text: error });
-          }
-        }
-        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-        const closeButton = buttonContainer.createEl("button", { text: t("common.buttons.ok"), cls: "mod-cta" });
-        closeButton.addEventListener("click", () => modal.close());
-        const styleEl = document.createElement("style");
-        styleEl.textContent = `
-            .nexus-merge-summary {
-                margin-bottom: 20px;
-            }
-            .nexus-merge-stats p {
-                margin: 8px 0;
-                font-size: 14px;
-            }
-            .nexus-merge-warning {
-                color: var(--text-warning);
-            }
-            .nexus-merge-error {
-                color: var(--text-error);
-            }
-            .nexus-merge-explanation {
-                padding: 12px;
-                background: var(--background-secondary);
-                border-radius: 4px;
-                margin: 16px 0;
-            }
-            .nexus-merge-errors {
-                margin-top: 16px;
-                padding: 12px;
-                background: var(--background-modifier-error);
-                border-radius: 4px;
-            }
-            .nexus-merge-errors ul {
-                margin: 8px 0;
-                padding-left: 20px;
-            }
-            .nexus-merge-errors li {
-                margin: 4px 0;
-                font-size: 12px;
-                font-family: var(--font-monospace);
-            }
-        `;
-        document.head.appendChild(styleEl);
-        modal.open();
-      }
-      addStyles() {
-        const styleEl = document.createElement("style");
-        styleEl.textContent = `
-            .nexus-upgrade-title {
-                margin-bottom: 1em;
-                color: var(--text-normal);
-                text-align: center;
-            }
-
-            .nexus-upgrade-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-upgrade-description {
-                font-size: 1.05em;
-                line-height: 1.6;
-                margin-bottom: 1.5em;
-            }
-
-            .nexus-upgrade-description p {
-                margin: 0.8em 0;
-            }
-
-            .nexus-upgrade-note {
-                font-size: 0.95em;
-                color: var(--text-muted);
-                font-style: italic;
-            }
-
-            .nexus-upgrade-folder-section {
-                background-color: var(--background-secondary);
-                padding: 1.5em;
-                margin: 1em 0;
-                border-radius: 8px;
-            }
-
-            .nexus-upgrade-folder-label {
-                font-size: 1.1em;
-                font-weight: 600;
-                margin-bottom: 0.8em;
-                color: var(--text-normal);
-            }
-
-            .nexus-upgrade-input-container {
-                display: flex;
-                gap: 0.8em;
-                align-items: stretch;
-                width: 100%;
-            }
-
-            .nexus-upgrade-folder-input {
-                flex: 1;
-                padding: 0.6em 0.8em;
-                font-size: 1em;
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                background-color: var(--background-primary);
-                color: var(--text-normal);
-                min-width: 0;
-            }
-
-            .nexus-upgrade-browse-button {
-                padding: 0.6em 1.2em !important;
-                font-size: 1em !important;
-                white-space: nowrap;
-                flex-shrink: 0;
-            }
-
-            .nexus-upgrade-button-container-centered {
-                display: flex;
-                justify-content: center;
-                margin-top: 2em;
-            }
-
-            .nexus-upgrade-proceed-button {
-                padding: 12px 48px !important;
-                font-size: 16px !important;
-                font-weight: 600 !important;
-                min-width: 200px;
-            }
-        `;
-        document.head.appendChild(styleEl);
-      }
-      onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
-        if (!this.completed && this.onComplete) {
-          this.completed = true;
-          this.onComplete({
-            conversationFolder: {
-              changed: false,
-              oldPath: this.plugin.settings.conversationFolder,
-              newPath: this.plugin.settings.conversationFolder
-            },
-            reportFolder: {
-              changed: false,
-              oldPath: this.originalReportFolder,
-              newPath: this.originalReportFolder
-            },
-            attachmentFolder: {
-              changed: false,
-              oldPath: this.plugin.settings.attachmentFolder,
-              newPath: this.plugin.settings.attachmentFolder
-            }
-          });
-        }
-      }
-      showErrorDialog(title, message) {
-        const modal = new import_obsidian20.Modal(this.plugin.app);
-        modal.titleEl.setText(title);
-        modal.contentEl.createEl("p", {
-          text: message,
-          cls: "nexus-error-message"
-        });
-        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.justifyContent = "flex-end";
-        buttonContainer.style.marginTop = "1em";
-        const okButton = buttonContainer.createEl("button", {
-          text: t("common.buttons.ok"),
-          cls: "mod-cta"
-        });
-        okButton.addEventListener("click", () => modal.close());
-        modal.open();
-      }
-    };
-    __name(ConfigureFolderLocationsDialog, "ConfigureFolderLocationsDialog");
-  }
-});
-
-// src/upgrade/versions/upgrade-1.3.0.ts
-var upgrade_1_3_0_exports = {};
-__export(upgrade_1_3_0_exports, {
-  Upgrade130: () => Upgrade130
-});
-var import_obsidian21, ConvertToISO8601TimestampsOperation, FixFrontmatterAliasesOperation, MigrateToSeparateFoldersOperation, MigrateClaudeArtifactsOperation, ConfigureFolderLocationsOperation, Upgrade130;
-var init_upgrade_1_3_0 = __esm({
-  "src/upgrade/versions/upgrade-1.3.0.ts"() {
-    "use strict";
-    init_upgrade_interface();
-    init_utils();
-    init_date_parser();
-    import_obsidian21 = require("obsidian");
-    init_configure_folder_locations_dialog();
-    ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "convert-to-iso8601-timestamps";
-        this.name = "Convert Timestamps to ISO 8601";
-        this.description = "Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ). This fixes parsing issues with locale-specific date formats and ensures consistent timestamps across all regions.";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        var _a;
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          });
-          const samples = [];
-          let foundNonISO = false;
-          for (const file of conversationFiles) {
-            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-            if (!fm || fm.nexus !== context.plugin.manifest.id)
-              continue;
-            const vals = [fm.create_time, fm.update_time].filter((v) => typeof v === "string");
-            for (const v of vals) {
-              if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(v)) {
-                samples.push(v);
-                foundNonISO = true;
-              }
-            }
-          }
-          if (samples.length) {
-            const format = DateParser.detectFormatFromSamples(samples);
-            this.globalOrder = format == null ? void 0 : format.order;
-          }
-          if (foundNonISO) {
-            return true;
-          }
-          return false;
-        } catch (error) {
-          console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        var _a;
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          });
-          if (!this.globalOrder) {
-            const samples = [];
-            for (const file of conversationFiles) {
-              const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-              if (!fm || fm.nexus !== context.plugin.manifest.id)
-                continue;
-              const vals = [fm.create_time, fm.update_time].filter((v) => typeof v === "string");
-              for (const v of vals) {
-                if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(v)) {
-                  samples.push(v);
-                }
-              }
-            }
-            if (samples.length) {
-              const format = DateParser.detectFormatFromSamples(samples);
-              this.globalOrder = format == null ? void 0 : format.order;
-            }
-          }
-          let processed = 0;
-          let converted = 0;
-          let skipped = 0;
-          let alreadyISO = 0;
-          let failed = 0;
-          let errors = 0;
-          const batchSize = 10;
-          for (let i = 0; i < conversationFiles.length; i += batchSize) {
-            const batch = conversationFiles.slice(i, i + batchSize);
-            for (const file of batch) {
-              processed++;
-              try {
-                const content = await context.plugin.app.vault.read(file);
-                if (!this.isNexusFile(content)) {
-                  skipped++;
-                  continue;
-                }
-                const hadNonISO = this.hasNonISOTimestamps(content);
-                if (!hadNonISO) {
-                  alreadyISO++;
-                  continue;
-                }
-                const convertedContent = this.convertTimestampsToISO8601(content);
-                if (content !== convertedContent) {
-                  const finalContent = this.updatePluginVersion(convertedContent, "1.3.0");
-                  await context.plugin.app.vault.modify(file, finalContent);
-                  converted++;
-                } else {
-                  failed++;
-                }
-              } catch (error) {
-                errors++;
-                console.error(`Error converting timestamps in ${file.path}:`, error);
-              }
-            }
-            if (i + batchSize < conversationFiles.length) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
-            }
-          }
-          const results = [];
-          results.push(`**What this does:**`);
-          results.push(`Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).`);
-          results.push(`This fixes parsing issues with locale-specific date formats.`);
-          results.push(``);
-          results.push(`**Summary:**`);
-          results.push(``);
-          results.push(`- Total files scanned: ${processed}`);
-          results.push(`- Already in ISO format: ${alreadyISO}`);
-          results.push(`- Converted to ISO: ${converted}`);
-          results.push(`- Skipped (non-Nexus): ${skipped}`);
-          if (failed > 0) {
-            results.push(`- Failed to convert: ${failed}`);
-          }
-          if (errors > 0) {
-            results.push(`- Errors: ${errors}`);
-          }
-          return {
-            success: errors === 0,
-            message: `Converted ${converted} conversation(s) to ISO 8601 format.`,
-            details: results
-          };
-        } catch (error) {
-          console.error(`ConvertToISO8601Timestamps.execute failed:`, error);
-          return {
-            success: false,
-            message: `Timestamp conversion failed: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      /**
-       * Check if file belongs to Nexus plugin
-       */
-      isNexusFile(content) {
-        return content.includes("nexus: nexus-ai-chat-importer");
-      }
-      /**
-       * Check if content has non-ISO timestamps (need conversion to ISO 8601)
-       * Detects any format that is not already ISO 8601
-       */
-      hasNonISOTimestamps(content) {
-        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-        if (!frontmatterMatch) {
-          return false;
-        }
-        const frontmatter = frontmatterMatch[1];
-        const hasISO = /^(create|update)_time: \d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/m.test(frontmatter);
-        if (hasISO) {
-          return false;
-        }
-        const hasNonISO = /^(create|update)_time: \d{1,4}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/m.test(frontmatter);
-        return hasNonISO;
-      }
-      /**
-       * Convert any date format to ISO 8601 in frontmatter only
-       * Supports: US, EU, DE, JP, and all locale-based formats
-       * Uses intelligent DateParser for automatic format detection
-       */
-      convertTimestampsToISO8601(content) {
-        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-        if (!frontmatterMatch) {
-          return content;
-        }
-        let frontmatter = frontmatterMatch[1];
-        const restOfContent = content.substring(frontmatterMatch[0].length);
-        let conversionCount = 0;
-        frontmatter = frontmatter.replace(
-          /^(create|update)_time: (.+)$/gm,
-          (match, field, dateStr) => {
-            if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(dateStr)) {
-              return match;
-            }
-            let isoDate = DateParser.convertToISO8601(dateStr);
-            if (!isoDate && this.globalOrder) {
-              isoDate = DateParser.convertToISO8601WithOrder(dateStr, this.globalOrder);
-            }
-            if (!isoDate) {
-              console.warn(`convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`);
-              return match;
-            }
-            conversionCount++;
-            return `${field}_time: ${isoDate}`;
-          }
-        );
-        return `---
-${frontmatter}
----${restOfContent}`;
-      }
-      /**
-       * Update plugin_version in frontmatter
-       */
-      updatePluginVersion(content, version) {
-        return content.replace(
-          /^plugin_version: ".*?"$/m,
-          `plugin_version: "${version}"`
-        );
-      }
-      async verify(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          }).slice(0, 5);
-          for (const file of conversationFiles) {
-            try {
-              const content = await context.plugin.app.vault.read(file);
-              if (!this.isNexusFile(content)) {
-                continue;
-              }
-              if (this.hasNonISOTimestamps(content)) {
-                return false;
-              }
-              if (!content.includes('plugin_version: "1.3.0"')) {
-                return false;
-              }
-            } catch (error) {
-              console.error(`Error verifying file ${file.path}:`, error);
-              return false;
-            }
-          }
-          return true;
-        } catch (error) {
-          console.error(`ConvertToISO8601Timestamps.verify failed:`, error);
-          return false;
-        }
-      }
-    };
-    __name(ConvertToISO8601TimestampsOperation, "ConvertToISO8601TimestampsOperation");
-    FixFrontmatterAliasesOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "fix-frontmatter-aliases";
-        this.name = "Fix Frontmatter Aliases";
-        this.description = "Fixes YAML syntax errors in conversation aliases. Properly quotes titles containing special characters (colons, brackets, etc.) to prevent frontmatter parsing errors.";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          });
-          for (const file of conversationFiles.slice(0, 10)) {
-            try {
-              const content = await context.plugin.app.vault.read(file);
-              if (!this.isNexusFile(content)) {
-                continue;
-              }
-              if (this.hasProblematicAlias(content)) {
-                return true;
-              }
-            } catch (error) {
-              console.error(`Error checking file ${file.path}:`, error);
-            }
-          }
-          return false;
-        } catch (error) {
-          console.error(`FixFrontmatterAliases.canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          });
-          let processed = 0;
-          let fixed = 0;
-          let skipped = 0;
-          let errors = 0;
-          const batchSize = 10;
-          for (let i = 0; i < conversationFiles.length; i += batchSize) {
-            const batch = conversationFiles.slice(i, i + batchSize);
-            for (const file of batch) {
-              processed++;
-              try {
-                const content = await context.plugin.app.vault.read(file);
-                if (!this.isNexusFile(content)) {
-                  skipped++;
-                  continue;
-                }
-                if (!this.hasProblematicAlias(content)) {
-                  continue;
-                }
-                const fixedContent = this.fixAliases(content);
-                if (content !== fixedContent) {
-                  await context.plugin.app.vault.modify(file, fixedContent);
-                  fixed++;
-                }
-              } catch (error) {
-                errors++;
-                console.error(`Error fixing aliases in ${file.path}:`, error);
-              }
-            }
-            if (i + batchSize < conversationFiles.length) {
-              await new Promise((resolve) => setTimeout(resolve, 10));
-            }
-          }
-          const results = [];
-          results.push(`**What this does:**`);
-          results.push(`Fixes YAML syntax errors in conversation aliases caused by special characters.`);
-          results.push(`Properly quotes titles containing colons, brackets, etc. to prevent parsing errors.`);
-          results.push(``);
-          results.push(`**Summary:**`);
-          results.push(``);
-          results.push(`- Total files scanned: ${processed}`);
-          results.push(`- Fixed: ${fixed}`);
-          results.push(`- Skipped (non-Nexus): ${skipped}`);
-          if (errors > 0) {
-            results.push(`- Errors: ${errors}`);
-          }
-          return {
-            success: errors === 0,
-            message: `Fixed ${fixed} conversation(s) with problematic aliases.`,
-            details: results
-          };
-        } catch (error) {
-          console.error(`FixFrontmatterAliases.execute failed:`, error);
-          return {
-            success: false,
-            message: `Alias fix failed: ${error}`,
-            details: { error: String(error) }
-          };
-        }
-      }
-      /**
-       * Check if file belongs to Nexus plugin
-       */
-      isNexusFile(content) {
-        return content.includes("nexus: nexus-ai-chat-importer");
-      }
-      /**
-       * Check if content has problematic aliases (YAML special characters without proper quoting)
-       */
-      hasProblematicAlias(content) {
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-        if (!frontmatterMatch)
-          return false;
-        const frontmatter = frontmatterMatch[1];
-        const aliasMatch = frontmatter.match(/^aliases: (.+)$/m);
-        if (!aliasMatch)
-          return false;
-        const aliasValue = aliasMatch[1];
-        if (aliasValue.startsWith("'") && aliasValue.endsWith("'")) {
-          return false;
-        }
-        if (aliasValue.startsWith('"') && aliasValue.endsWith('"')) {
-          return true;
-        }
-        const needsQuoting = aliasValue.includes(":") || aliasValue.includes("[") || aliasValue.includes("]") || aliasValue.includes("{") || aliasValue.includes("}") || aliasValue.includes('"') || /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(aliasValue) || aliasValue.startsWith("#") || aliasValue.startsWith("&") || aliasValue.startsWith("*") || aliasValue.startsWith("!") || aliasValue.startsWith("|") || aliasValue.startsWith(">") || aliasValue.startsWith("%") || aliasValue.startsWith("@") || aliasValue.startsWith("`");
-        return needsQuoting;
-      }
-      /**
-       * Fix aliases in frontmatter using generateSafeAlias
-       */
-      fixAliases(content) {
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-        if (!frontmatterMatch)
-          return content;
-        let frontmatter = frontmatterMatch[1];
-        const restOfContent = content.substring(frontmatterMatch[0].length);
-        frontmatter = frontmatter.replace(
-          /^aliases: (.+)$/m,
-          (_m, aliasValue) => {
-            let cleanAlias = aliasValue.trim();
-            if (cleanAlias.startsWith('"') && cleanAlias.endsWith('"') || cleanAlias.startsWith("'") && cleanAlias.endsWith("'")) {
-              cleanAlias = cleanAlias.slice(1, -1);
-            }
-            cleanAlias = cleanAlias.replace(/''/g, "'");
-            const safeAlias = generateSafeAlias(cleanAlias);
-            return `aliases: ${safeAlias}`;
-          }
-        );
-        return `---
-${frontmatter}
----${restOfContent}`;
-      }
-      async verify(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((file) => {
-            if (!file.path.startsWith(conversationFolder))
-              return false;
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
-              return false;
-            }
-            return true;
-          }).slice(0, 5);
-          for (const file of conversationFiles) {
-            try {
-              const content = await context.plugin.app.vault.read(file);
-              if (!this.isNexusFile(content)) {
-                continue;
-              }
-              if (this.hasProblematicAlias(content)) {
-                return false;
-              }
-            } catch (error) {
-              console.error(`Error verifying file ${file.path}:`, error);
-              return false;
-            }
-          }
-          return true;
-        } catch (error) {
-          console.error(`FixFrontmatterAliases.verify failed:`, error);
-          return false;
-        }
-      }
-    };
-    __name(FixFrontmatterAliasesOperation, "FixFrontmatterAliasesOperation");
-    MigrateToSeparateFoldersOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "migrate-to-separate-folders";
-        this.name = "Implement Separate Folder Settings";
-        this.description = "Creates dedicated settings for Reports folder location and moves Reports from inside Conversations to the vault root for better organization.";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        const reportFolder = context.plugin.settings.reportFolder;
-        const archiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
-        const oldReportPath = `${archiveFolder}/Reports`;
-        return !reportFolder || reportFolder === "" || reportFolder === oldReportPath;
-      }
-      async execute(context) {
-        const results = [];
-        try {
-          results.push(`**What this does:**`);
-          results.push(`Version 1.3.0 adds a dedicated setting for the Reports folder location.`);
-          results.push(`To prevent reports from moving when you reorganize conversations, we're moving the Reports folder to the vault root.`);
-          results.push(``);
-          const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
-          const oldReportPath = `${oldArchiveFolder}/Reports`;
-          const newReportPath = "Nexus Reports";
-          const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
-          let reportsMoved = false;
-          if (oldReportFolder && oldReportFolder instanceof import_obsidian21.TFolder) {
-            try {
-              const result = await moveAndMergeFolders(oldReportFolder, newReportPath, context.plugin.app.vault);
-              reportsMoved = result.moved > 0;
-              try {
-                const stillExists = await context.plugin.app.vault.adapter.exists(oldReportPath);
-                if (stillExists) {
-                  const folderToDelete = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
-                  if (folderToDelete && folderToDelete instanceof import_obsidian21.TFolder) {
-                    await context.plugin.app.vault.delete(folderToDelete);
-                  }
-                }
-              } catch (deleteError) {
-              }
-              if (result.success && result.skipped === 0) {
-                results.push(`\u2705 Reports folder moved: \`${oldReportPath}\` \u2192 \`${newReportPath}\` (${result.moved} file(s))`);
-              } else {
-                results.push(`\u26A0\uFE0F Reports folder migration completed with warnings:`);
-                results.push(`   - Successfully moved: ${result.moved} file(s)`);
-                if (result.skipped > 0) {
-                  results.push(`   - Skipped (already exist): ${result.skipped} file(s)`);
-                }
-                if (result.errors > 0) {
-                  results.push(`   - Errors: ${result.errors} file(s)`);
-                }
-              }
-            } catch (error) {
-              console.error(`[MigrateReportsFolder] Failed to move Reports folder:`, error);
-              context.plugin.settings.reportFolder = oldReportPath;
-              results.push(`\u26A0\uFE0F Reports folder could not be moved automatically.`);
-              results.push(`   Current location: \`${oldReportPath}\``);
-              results.push(`   You can move it manually later in settings.`);
-            }
-          } else {
-            results.push(`\u2139\uFE0F No existing Reports folder found. New reports will be created in \`${newReportPath}\``);
-          }
-          if (reportsMoved || !oldReportFolder) {
-            context.plugin.settings.reportFolder = newReportPath;
-          }
-          await context.plugin.saveSettings();
-          return {
-            success: true,
-            message: "Reports folder migrated successfully",
-            details: results
-          };
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          console.error(`[MigrateReportsFolder] Failed:`, error);
-          results.push(`\u274C Error: ${errorMsg}`);
-          return {
-            success: false,
-            message: `Failed to migrate Reports folder: ${errorMsg}`,
-            details: results
-          };
-        }
-      }
-      async verify(context) {
-        try {
-          return !!context.plugin.settings.reportFolder;
-        } catch (error) {
-          console.error(`MigrateReportsFolder.verify failed:`, error);
-          return false;
-        }
-      }
-    };
-    __name(MigrateToSeparateFoldersOperation, "MigrateToSeparateFoldersOperation");
-    MigrateClaudeArtifactsOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "migrate-claude-artifacts";
-        this.name = "Migrate Claude Artifacts";
-        this.description = "Updates existing Claude artifacts: removes redundant header information (already in frontmatter), adds missing conversation links, and adds creation timestamps for better organization.";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        var _a;
-        try {
-          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
-          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
-          const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!folder || !(folder instanceof import_obsidian21.TFolder)) {
-            return false;
-          }
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
-          if (artifactFiles.length === 0) {
-            return false;
-          }
-          for (const file of artifactFiles) {
-            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-            if (!fm || fm.provider !== "claude")
-              continue;
-            if (!fm.create_time) {
-              return true;
-            }
-            const content = await context.plugin.app.vault.read(file);
-            if (content.includes("**Type:** Claude Artifact") || content.includes("**Command:**") || content.includes("**UUID:**")) {
-              return true;
-            }
-          }
-          return false;
-        } catch (error) {
-          console.error(`MigrateClaudeArtifacts.canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        var _a;
-        const results = [];
-        let totalFiles = 0;
-        let processedCount = 0;
-        let skippedCount = 0;
-        let updatedCount = 0;
-        let errorCount = 0;
-        let warningCount = 0;
-        try {
-          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
-          const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
-          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
-          totalFiles = artifactFiles.length;
-          results.push(`**What this does:**`);
-          results.push(`Updates your existing Claude artifacts to the new format:`);
-          results.push(`- Removes redundant header information (Type, Language, Command, etc.)`);
-          results.push(`- Adds missing conversation links`);
-          results.push(`- Adds creation timestamps for better organization`);
-          results.push(``);
-          results.push(`**Processing ${totalFiles} artifact file(s)...**`);
-          results.push(``);
-          for (const file of artifactFiles) {
-            try {
-              const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-              if (!fm || fm.provider !== "claude") {
-                skippedCount++;
-                continue;
-              }
-              processedCount++;
-              let content = await context.plugin.app.vault.read(file);
-              let modified = false;
-              let warnings = [];
-              const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-              if (!fmMatch) {
-                errorCount++;
-                results.push(`\u274C ${file.basename}: Invalid frontmatter format`);
-                continue;
-              }
-              let frontmatter = fmMatch[1];
-              let body = fmMatch[2];
-              if (!fm.create_time) {
-                const createTime = await this.extractArtifactCreateTime(
-                  fm,
-                  conversationFolder,
-                  context.plugin,
-                  file
-                );
-                if (createTime.source === "message") {
-                  frontmatter += `
-create_time: ${createTime.value}`;
-                  modified = true;
-                } else if (createTime.source === "conversation") {
-                  frontmatter += `
-create_time: ${createTime.value}`;
-                  warnings.push(`Used conversation create_time (message not found)`);
-                  warningCount++;
-                  modified = true;
-                } else {
-                  warnings.push(`Could not determine create_time`);
-                  warningCount++;
-                  console.warn(`${file.basename}: TASK 1 - FAILED to determine create_time`);
-                }
-              } else {
-              }
-              const headerRegex = /\n\n\*\*Type:\*\* Claude Artifact\n\*\*Language:\*\*[^\n]*(?:\n\*\*Command:\*\*[^\n]*)?(?:\n\*\*Version:\*\*[^\n]*)?(?:\n\*\*ID:\*\*[^\n]*)?(?:\n\*\*UUID:\*\*[^\n]*)?/;
-              if (headerRegex.test(body)) {
-                body = body.replace(headerRegex, "");
-                modified = true;
-              } else {
-              }
-              if (!body.includes("**Conversation:**") && fm.conversation_id) {
-                const conversationLink = await this.findConversationLink(
-                  fm.conversation_id,
-                  conversationFolder,
-                  context.plugin
-                );
-                if (conversationLink) {
-                  const titleMatch = body.match(/^# [^\n]+\n/);
-                  if (titleMatch) {
-                    const insertPos = titleMatch[0].length;
-                    body = body.substring(0, insertPos) + `
-**Conversation:** ${conversationLink}
-` + body.substring(insertPos);
-                    modified = true;
-                  } else {
-                    console.warn(`${file.basename}: TASK 3 - Could not find title to insert link after`);
-                  }
-                } else {
-                  warnings.push(`Conversation note not found (ID: ${fm.conversation_id})`);
-                  warningCount++;
-                  console.warn(`${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`);
-                }
-              } else if (body.includes("**Conversation:**")) {
-              } else {
-              }
-              const needsVersionUpdate = !frontmatter.includes('plugin_version: "1.3.0"');
-              if (modified || needsVersionUpdate) {
-                if (frontmatter.includes("plugin_version:")) {
-                  frontmatter = frontmatter.replace(
-                    /^plugin_version: .*$/m,
-                    `plugin_version: "1.3.0"`
-                  );
-                } else {
-                  frontmatter += `
-plugin_version: "1.3.0"`;
-                }
-                const newContent = `---
-${frontmatter}
----
-${body}`;
-                await context.plugin.app.vault.modify(file, newContent);
-                updatedCount++;
-                if (modified) {
-                } else {
-                }
-                if (warnings.length > 0) {
-                  results.push(`\u26A0\uFE0F  ${file.basename}: ${warnings.join(", ")}`);
-                }
-              } else {
-              }
-            } catch (error) {
-              errorCount++;
-              console.error(`${file.basename}: \u274C ERROR:`, error);
-              results.push(`\u274C ${file.basename}: ${error.message}`);
-            }
-          }
-          results.push(``);
-          results.push(`**Summary:**`);
-          results.push(``);
-          results.push(`- Total files found: ${totalFiles}`);
-          results.push(`- Claude artifacts: ${processedCount}`);
-          results.push(`- Skipped (non-Claude): ${skippedCount}`);
-          results.push(`- Updated: ${updatedCount}`);
-          results.push(`- Warnings: ${warningCount}`);
-          results.push(`- Errors: ${errorCount}`);
-          results.push(``);
-          if (skippedCount > 0) {
-            results.push(`*Note: ${skippedCount} file(s) were skipped because they are not Claude artifacts.*`);
-          }
-          return {
-            success: errorCount === 0,
-            message: `Migrated ${updatedCount} artifact(s) with ${warningCount} warning(s) and ${errorCount} error(s)`,
-            details: results
-          };
-        } catch (error) {
-          return {
-            success: false,
-            message: `Migration failed: ${error.message}`,
-            details: results
-          };
-        }
-      }
-      /**
-       * Extract artifact create_time from conversation note
-       */
-      async extractArtifactCreateTime(artifactFm, conversationFolder, plugin, artifactFile) {
-        var _a, _b, _c;
-        const artifactId = artifactFm.artifact_id;
-        const versionNumber = artifactFm.version_number;
-        const conversationId = artifactFm.conversation_id;
-        const artifactRef = `${artifactId}_v${versionNumber}`;
-        try {
-          if (!conversationId) {
-            console.warn(`Artifact ${artifactRef}: No conversation_id in frontmatter`);
-            return { value: "", source: "none" };
-          }
-          const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
-          if (!conversationFile) {
-            console.warn(`Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`);
-            return { value: "", source: "none" };
-          }
-          const content = await plugin.app.vault.read(conversationFile);
-          if (!artifactId || !versionNumber) {
-            console.warn(`Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`);
-            const fm2 = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
-            if (fm2 == null ? void 0 : fm2.create_time) {
-              return { value: fm2.create_time, source: "conversation" };
-            }
-            return { value: "", source: "none" };
-          }
-          const artifactLinkPath = artifactFile.path.replace(/\.md$/, "");
-          const escapedPath = artifactLinkPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const linkPattern = new RegExp(`\\[\\[${escapedPath}\\|View Artifact\\]\\]`, "m");
-          const linkMatch = content.match(linkPattern);
-          if (!linkMatch || linkMatch.index === void 0) {
-            console.warn(`Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`);
-            const fm2 = (_b = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _b.frontmatter;
-            if (fm2 == null ? void 0 : fm2.create_time) {
-              return { value: fm2.create_time, source: "conversation" };
-            }
-            return { value: "", source: "none" };
-          }
-          const linkIndex = linkMatch.index;
-          const textBeforeLink = content.substring(0, linkIndex);
-          const contextStart = Math.max(0, linkIndex - 300);
-          const contextText = content.substring(contextStart, linkIndex);
-          const agentPattern = />\[!nexus_agent\] \*\*Assistant\*\* - ([^\n]+)/gm;
-          let lastMatch = null;
-          let match;
-          let matchCount = 0;
-          while ((match = agentPattern.exec(textBeforeLink)) !== null) {
-            matchCount++;
-            lastMatch = match;
-          }
-          if (lastMatch && lastMatch[1]) {
-            const timestampStr = lastMatch[1];
-            const timestamp = DateParser.parseDate(timestampStr, artifactRef);
-            if (timestamp > 0) {
-              const isoDate = new Date(timestamp * 1e3).toISOString();
-              return {
-                value: isoDate,
-                source: "message"
-              };
-            } else {
-              console.warn(`Artifact ${artifactRef}: \u274C Timestamp parsing FAILED (returned 0), using conversation fallback`);
-              console.warn(`Artifact ${artifactRef}: Failed timestamp string was: "${timestampStr}"`);
-            }
-          } else {
-            console.warn(`Artifact ${artifactRef}: \u274C No agent callout found before artifact link, using conversation fallback`);
-            const sampleText = textBeforeLink.substring(Math.max(0, textBeforeLink.length - 500));
-            console.warn(`Artifact ${artifactRef}: Last 500 chars of search text:
-${sampleText}`);
-          }
-          const fm = (_c = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _c.frontmatter;
-          if (fm == null ? void 0 : fm.create_time) {
-            return { value: fm.create_time, source: "conversation" };
-          }
-          console.warn(`Artifact ${artifactRef}: No create_time available`);
-          return { value: "", source: "none" };
-        } catch (error) {
-          console.error(`Artifact ${artifactRef}: Exception during create_time extraction:`, error);
-          return { value: "", source: "none" };
-        }
-      }
-      /**
-       * Find conversation file by ID
-       */
-      async findConversationFile(conversationId, conversationFolder, plugin) {
-        var _a;
-        const allFiles = plugin.app.vault.getMarkdownFiles();
-        const claudePath = `${conversationFolder}/claude`;
-        for (const file of allFiles) {
-          if (!file.path.startsWith(claudePath))
-            continue;
-          const fm = (_a = plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-          if ((fm == null ? void 0 : fm.conversation_id) === conversationId) {
-            return file;
-          }
-        }
-        return null;
-      }
-      /**
-       * Find and generate conversation link
-       */
-      async findConversationLink(conversationId, conversationFolder, plugin) {
-        var _a;
-        const conversationFile = await this.findConversationFile(conversationId, conversationFolder, plugin);
-        if (!conversationFile) {
-          return null;
-        }
-        const fm = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
-        const title = (fm == null ? void 0 : fm.aliases) || conversationFile.basename;
-        const linkPath = conversationFile.path.replace(/\.md$/, "");
-        return `[[${linkPath}|${title}]]`;
-      }
-      async verify(context) {
-        var _a;
-        try {
-          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
-          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const artifactFiles = allFiles.filter((file) => file.path.startsWith(claudeArtifactsPath));
-          for (const file of artifactFiles) {
-            const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-            if ((fm == null ? void 0 : fm.provider) === "claude" && !fm.create_time) {
-              return false;
-            }
-          }
-          return true;
-        } catch (error) {
-          console.error(`MigrateClaudeArtifacts.verify failed:`, error);
-          return false;
-        }
-      }
-    };
-    __name(MigrateClaudeArtifactsOperation, "MigrateClaudeArtifactsOperation");
-    ConfigureFolderLocationsOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "configure-folder-locations";
-        this.name = "Configure Folder Locations";
-        this.description = "Configure separate folder locations for conversations, reports, and attachments. Optionally migrate existing files to new locations.";
-        this.type = "automatic";
-      }
-      async canRun(_context) {
-        return true;
-      }
-      async execute(context) {
-        return new Promise((resolve) => {
-          const dialog = new ConfigureFolderLocationsDialog(
-            context.plugin,
-            async (result) => {
-              const details = [];
-              if (result.reportFolder.changed) {
-                details.push(`\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath}`);
-              } else {
-                details.push(`\u2139\uFE0F  Report folder: ${result.reportFolder.newPath} (unchanged)`);
-              }
-              resolve({
-                success: true,
-                message: "Report folder location configured successfully",
-                details
-              });
-            }
-          );
-          dialog.open();
-        });
-      }
-    };
-    __name(ConfigureFolderLocationsOperation, "ConfigureFolderLocationsOperation");
-    Upgrade130 = class extends VersionUpgrade {
-      constructor() {
-        super(...arguments);
-        this.version = "1.3.0";
-        this.automaticOperations = [
-          new MigrateToSeparateFoldersOperation(),
-          new ConvertToISO8601TimestampsOperation(),
-          new FixFrontmatterAliasesOperation(),
-          new MigrateClaudeArtifactsOperation(),
-          new ConfigureFolderLocationsOperation()
-        ];
-        this.manualOperations = [
-          // No manual operations for this version
-        ];
-      }
-    };
-    __name(Upgrade130, "Upgrade130");
-  }
-});
-
-// src/upgrade/versions/upgrade-1.4.0.ts
-var upgrade_1_4_0_exports = {};
-__export(upgrade_1_4_0_exports, {
-  Upgrade140: () => Upgrade140
-});
-function updatePluginVersion(content, version) {
-  if (content.includes("plugin_version:")) {
-    return content.replace(
-      /^plugin_version: .*$/m,
-      `plugin_version: "${version}"`
-    );
-  }
-  return content.replace(
-    /\n---\n/,
-    `
-plugin_version: "${version}"
----
-`
-  );
-}
-var import_obsidian22, UUID_REGEX, TARGET_VERSION, RenameClaudeArtifactFoldersOperation, RestoreMissingArtifactCalloutsOperation, FixCalloutEmptyLinesOperation, Upgrade140;
-var init_upgrade_1_4_0 = __esm({
-  "src/upgrade/versions/upgrade-1.4.0.ts"() {
-    "use strict";
-    init_upgrade_interface();
-    import_obsidian22 = require("obsidian");
-    init_storage_service();
-    init_link_update_service();
-    UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    TARGET_VERSION = "1.4.0";
-    __name(updatePluginVersion, "updatePluginVersion");
-    RenameClaudeArtifactFoldersOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "rename-claude-artifact-folders";
-        this.name = "Rename Claude Artifact Folders";
-        this.description = "Renames Claude artifact folders from UUID to human-readable names matching the conversation file.";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
-          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
-          const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!folder || !(folder instanceof import_obsidian22.TFolder)) {
-            return false;
-          }
-          for (const child of folder.children) {
-            if (child instanceof import_obsidian22.TFolder && UUID_REGEX.test(child.name)) {
-              return true;
-            }
-          }
-          return false;
-        } catch (error) {
-          console.error(`[RenameClaudeArtifactFolders] canRun failed:`, error);
-          return false;
-        }
-      }
-      async execute(context) {
-        var _a, _b, _c, _d, _e, _f, _g;
-        let renamedCount = 0;
-        let skippedCount = 0;
-        let errorCount = 0;
-        const details = [];
-        try {
-          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
-          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
-          const artifactsFolder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!artifactsFolder || !(artifactsFolder instanceof import_obsidian22.TFolder)) {
-            return {
-              success: true,
-              message: "No Claude artifacts folder found, nothing to migrate."
-            };
-          }
-          const uuidFolders = [];
-          for (const child of artifactsFolder.children) {
-            if (child instanceof import_obsidian22.TFolder && UUID_REGEX.test(child.name)) {
-              uuidFolders.push(child);
-            }
-          }
-          if (uuidFolders.length === 0) {
-            return {
-              success: true,
-              message: "No UUID-named artifact folders found."
-            };
-          }
-          (_a = context.onProgress) == null ? void 0 : _a.call(context, 0, "Scanning conversation catalog...");
-          const storageService = new StorageService(context.plugin);
-          const conversationMap = await storageService.scanExistingConversations();
-          const total = uuidFolders.length;
-          const pathMappings = [];
-          for (let i = 0; i < uuidFolders.length; i++) {
-            const folder = uuidFolders[i];
-            const conversationId = folder.name;
-            const progress = Math.round((i + 1) / total * 80);
-            try {
-              const entry = conversationMap.get(conversationId) || null;
-              if (!entry || !entry.path) {
-                skippedCount++;
-                details.push(`Skipped: ${conversationId} (conversation not found in vault)`);
-                (_b = context.onProgress) == null ? void 0 : _b.call(context, progress, `Skipped ${i + 1}/${total}`);
-                continue;
-              }
-              const pathParts = entry.path.split("/");
-              const fileNameWithExt = pathParts[pathParts.length - 1];
-              const conversationFileName = fileNameWithExt.replace(/\.md$/, "");
-              if (!conversationFileName) {
-                skippedCount++;
-                details.push(`Skipped: ${conversationId} (could not determine file name)`);
-                (_c = context.onProgress) == null ? void 0 : _c.call(context, progress, `Skipped ${i + 1}/${total}`);
-                continue;
-              }
-              const newFolderPath = `${claudeArtifactsPath}/${conversationFileName}`;
-              const existingTarget = context.plugin.app.vault.getAbstractFileByPath(newFolderPath);
-              if (existingTarget) {
-                skippedCount++;
-                details.push(`Skipped: ${conversationId} \u2192 "${conversationFileName}" (target folder already exists)`);
-                (_d = context.onProgress) == null ? void 0 : _d.call(context, progress, `Skipped ${i + 1}/${total}`);
-                continue;
-              }
-              const oldFolderPath = folder.path;
-              (_e = context.onProgress) == null ? void 0 : _e.call(context, progress, `Renaming ${i + 1}/${total}: ${conversationFileName}`);
-              await context.plugin.app.vault.rename(folder, newFolderPath);
-              pathMappings.push({ oldPath: oldFolderPath, newPath: newFolderPath });
-              renamedCount++;
-              details.push(`Renamed: ${conversationId} \u2192 "${conversationFileName}"`);
-            } catch (error) {
-              errorCount++;
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              details.push(`Error: ${conversationId} \u2014 ${errorMsg}`);
-              (_f = context.onProgress) == null ? void 0 : _f.call(context, progress, `Error ${i + 1}/${total}`);
-            }
-          }
-          if (pathMappings.length > 0) {
-            (_g = context.onProgress) == null ? void 0 : _g.call(context, 80, "Verifying wikilinks...");
-            const linkUpdateService = new LinkUpdateService(context.plugin);
-            const linkStats = await linkUpdateService.updateAttachmentLinksBatch(pathMappings, (progress) => {
-              var _a2;
-              const overallProgress = 80 + Math.round(progress.current / Math.max(progress.total, 1) * 20);
-              (_a2 = context.onProgress) == null ? void 0 : _a2.call(context, overallProgress, progress.detail);
-            }, TARGET_VERSION);
-            if (linkStats.filesModified > 0) {
-              details.push(`Fixed ${linkStats.attachmentLinksUpdated} stale link(s) in ${linkStats.filesModified} file(s)`);
-            }
-          }
-          const summary = `Renamed ${renamedCount} folder(s), skipped ${skippedCount}, errors ${errorCount}.`;
-          return {
-            success: errorCount === 0,
-            message: summary,
-            details
-          };
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          return {
-            success: false,
-            message: `Migration failed: ${errorMsg}`,
-            details
-          };
-        }
-      }
-    };
-    __name(RenameClaudeArtifactFoldersOperation, "RenameClaudeArtifactFoldersOperation");
-    RestoreMissingArtifactCalloutsOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "restore-missing-artifact-callouts";
-        this.name = "Restore Missing Artifact Callouts";
-        this.description = "Restores artifact links in Claude conversation notes affected by Anthropic's export format change.";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
-          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
-          const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          return !!(folder && folder instanceof import_obsidian22.TFolder && folder.children.length > 0);
-        } catch (e) {
-          return false;
-        }
-      }
-      async execute(context) {
-        var _a, _b, _c;
-        let restoredCount = 0;
-        let skippedCount = 0;
-        let errorCount = 0;
-        const details = [];
-        try {
-          const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
-          const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
-          const artifactsRoot = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-          if (!artifactsRoot || !(artifactsRoot instanceof import_obsidian22.TFolder)) {
-            return { success: true, message: "No Claude artifacts folder found." };
-          }
-          const artifactFolders = [];
-          for (const child of artifactsRoot.children) {
-            if (child instanceof import_obsidian22.TFolder) {
-              artifactFolders.push(child);
-            }
-          }
-          if (artifactFolders.length === 0) {
-            return { success: true, message: "No artifact folders found." };
-          }
-          (_a = context.onProgress) == null ? void 0 : _a.call(context, 0, "Scanning conversation catalog...");
-          const storageService = new StorageService(context.plugin);
-          const conversationMap = await storageService.scanExistingConversations();
-          const total = artifactFolders.length;
-          for (let i = 0; i < artifactFolders.length; i++) {
-            const folder = artifactFolders[i];
-            const progress = Math.round((i + 1) / total * 100);
-            if (i % 10 === 0 || i === total - 1) {
-              (_b = context.onProgress) == null ? void 0 : _b.call(context, progress, `Checking ${i + 1}/${total}: ${folder.name}`);
-            }
-            try {
-              const artifactFiles = folder.children.filter(
-                (f) => f instanceof import_obsidian22.TFile && f.extension === "md"
-              );
-              if (artifactFiles.length === 0) {
-                continue;
-              }
-              const sampleContent = await context.plugin.app.vault.read(artifactFiles[0]);
-              const conversationId = this.extractFrontmatterField(sampleContent, "conversation_id");
-              if (!conversationId) {
-                skippedCount++;
-                details.push(`Skipped: ${folder.name} (no conversation_id in artifact)`);
-                continue;
-              }
-              const entry = conversationMap.get(conversationId);
-              if (!entry || !entry.path) {
-                skippedCount++;
-                details.push(`Skipped: ${folder.name} (conversation not found in vault)`);
-                continue;
-              }
-              const noteFile = context.plugin.app.vault.getAbstractFileByPath(entry.path);
-              if (!noteFile || !(noteFile instanceof import_obsidian22.TFile)) {
-                skippedCount++;
-                continue;
-              }
-              const noteContent = await context.plugin.app.vault.read(noteFile);
-              if (noteContent.includes("nexus_artifact")) {
-                skippedCount++;
-                continue;
-              }
-              const artifactEntries = [];
-              for (const artFile of artifactFiles) {
-                const artContent = await context.plugin.app.vault.read(artFile);
-                const artifactId = this.extractFrontmatterField(artContent, "artifact_id") || "unknown";
-                const versionStr = this.extractFrontmatterField(artContent, "version_number");
-                const versionNumber = versionStr ? parseInt(versionStr, 10) : 1;
-                const title = this.extractArtifactTitle(artContent, artifactId);
-                const filePath = artFile.path.replace(/\.md$/, "");
-                artifactEntries.push({ artifactId, versionNumber, title, filePath });
-              }
-              artifactEntries.sort((a, b) => {
-                const idCmp = a.artifactId.localeCompare(b.artifactId);
-                return idCmp !== 0 ? idCmp : a.versionNumber - b.versionNumber;
-              });
-              const nestedCalloutLines = artifactEntries.map(
-                (art) => `>>[!nexus_artifact] **${art.title}** v${art.versionNumber}
->> \u{1F3A8} [[${art.filePath}|View Artifact]]`
-              );
-              const section = [
-                "",
-                "> [!info] Restored Artifacts",
-                "> Due to a change in Anthropic's Claude export format, artifact references were not included when this conversation was originally imported. The artifacts below have been restored during the v1.4.0 migration.",
-                "> To get artifacts positioned inline within messages, delete this note and re-import from your Claude export ZIP.",
-                ">",
-                nestedCalloutLines.join("\n>\n")
-              ].join("\n");
-              let updatedContent = noteContent + section + "\n";
-              updatedContent = updatePluginVersion(updatedContent, TARGET_VERSION);
-              await context.plugin.app.vault.modify(noteFile, updatedContent);
-              restoredCount++;
-              details.push(`Restored ${artifactEntries.length} artifact(s): ${entry.path}`);
-              (_c = context.onProgress) == null ? void 0 : _c.call(context, progress, `Restored: ${noteFile.name}`);
-            } catch (error) {
-              errorCount++;
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              details.push(`Error: ${folder.name} \u2014 ${errorMsg}`);
-            }
-          }
-          const summary = `Restored artifacts in ${restoredCount} note(s), skipped ${skippedCount}, errors ${errorCount}.`;
-          return {
-            success: errorCount === 0,
-            message: summary,
-            details
-          };
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          return {
-            success: false,
-            message: `Migration failed: ${errorMsg}`,
-            details
-          };
-        }
-      }
-      extractFrontmatterField(content, field) {
-        const match = content.match(new RegExp(`^${field}:\\s*"?([^"\\n]+)"?`, "m"));
-        return match ? match[1].trim() : null;
-      }
-      extractArtifactTitle(content, fallbackId) {
-        const aliasMatch = content.match(/^aliases:\s*\[([^\]]+)\]/m);
-        if (aliasMatch) {
-          const firstAlias = aliasMatch[1].split(",")[0].trim();
-          const cleaned = firstAlias.replace(/^["']|["']$/g, "");
-          if (cleaned && cleaned !== "Untitled Artifact") {
-            return cleaned;
-          }
-        }
-        return fallbackId;
-      }
-    };
-    __name(RestoreMissingArtifactCalloutsOperation, "RestoreMissingArtifactCalloutsOperation");
-    FixCalloutEmptyLinesOperation = class extends UpgradeOperation {
-      constructor() {
-        super(...arguments);
-        this.id = "fix-callout-empty-lines";
-        this.name = "Fix Callout Empty Lines";
-        this.description = "Fixes nested callout rendering in conversation notes created by previous versions.";
-        this.type = "automatic";
-      }
-      async canRun(context) {
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
-          const folder = context.plugin.app.vault.getAbstractFileByPath(conversationFolder);
-          return !!(folder && folder instanceof import_obsidian22.TFolder);
-        } catch (e) {
-          return false;
-        }
-      }
-      async execute(context) {
-        var _a, _b;
-        let fixedCount = 0;
-        let scannedCount = 0;
-        let errorCount = 0;
-        const details = [];
-        try {
-          const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
-          const allFiles = context.plugin.app.vault.getMarkdownFiles();
-          const conversationFiles = allFiles.filter((f) => f.path.startsWith(conversationFolder));
-          const brokenPattern = /^>>$/gm;
-          const total = conversationFiles.length;
-          for (let i = 0; i < conversationFiles.length; i++) {
-            const file = conversationFiles[i];
-            scannedCount++;
-            const progress = Math.round((i + 1) / total * 100);
-            if (i % 10 === 0 || i === total - 1) {
-              (_a = context.onProgress) == null ? void 0 : _a.call(context, progress, `Scanning ${i + 1}/${total}: ${file.name}`);
-            }
-            try {
-              const content = await context.plugin.app.vault.read(file);
-              if (!brokenPattern.test(content)) {
-                continue;
-              }
-              brokenPattern.lastIndex = 0;
-              let fixed = content.replace(/^>>(\n>>\[!nexus_)/gm, ">$1");
-              if (fixed !== content) {
-                fixed = updatePluginVersion(fixed, TARGET_VERSION);
-                await context.plugin.app.vault.modify(file, fixed);
-                fixedCount++;
-                details.push(`Fixed: ${file.path}`);
-                (_b = context.onProgress) == null ? void 0 : _b.call(context, progress, `Fixed: ${file.name}`);
-              }
-            } catch (error) {
-              errorCount++;
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              details.push(`Error: ${file.path} \u2014 ${errorMsg}`);
-            }
-          }
-          const summary = `Scanned ${scannedCount} file(s), fixed ${fixedCount}, errors ${errorCount}.`;
-          return {
-            success: errorCount === 0,
-            message: summary,
-            details
-          };
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          return {
-            success: false,
-            message: `Migration failed: ${errorMsg}`,
-            details
-          };
-        }
-      }
-    };
-    __name(FixCalloutEmptyLinesOperation, "FixCalloutEmptyLinesOperation");
-    Upgrade140 = class extends VersionUpgrade {
-      constructor() {
-        super(...arguments);
-        this.version = "1.4.0";
-        this.automaticOperations = [
-          new RenameClaudeArtifactFoldersOperation(),
-          new RestoreMissingArtifactCalloutsOperation(),
-          new FixCalloutEmptyLinesOperation()
-        ];
-        this.manualOperations = [
-          // No manual operations for this version
-        ];
-      }
-    };
-    __name(Upgrade140, "Upgrade140");
-  }
-});
-
 // src/dialogs/upgrade-complete-modal.ts
 var upgrade_complete_modal_exports = {};
 __export(upgrade_complete_modal_exports, {
@@ -12428,8 +8707,10 @@ var init_upgrade_complete_modal = __esm({
         const { contentEl, titleEl, modalEl } = this;
         modalEl.classList.add("nexus-upgrade-complete-modal");
         contentEl.classList.add("nexus-ai-chat-importer-modal");
-        titleEl.setText(t("upgrade.complete_modal.title", { version: this.version }));
-        this.createContent();
+        titleEl.setText(
+          t("upgrade.complete_modal.title", { version: this.version })
+        );
+        void this.createContent();
       }
       onClose() {
         this.contentEl.empty();
@@ -12439,32 +8720,43 @@ var init_upgrade_complete_modal = __esm({
         createSupportBox(contentEl);
         await this.addReleaseNotes();
         this.addCloseButton();
-        this.addStyles();
       }
       async addReleaseNotes() {
-        let content = t("upgrade.complete_modal.fallback_content", { version: this.version });
+        let content = t("upgrade.complete_modal.fallback_content", {
+          version: this.version
+        });
         try {
-          const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
-          if (response.ok) {
-            const readme = await response.text();
-            const overviewMatch = readme.match(/## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/);
+          const response = await (0, import_obsidian23.requestUrl)({
+            url: `https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`,
+            method: "GET"
+          });
+          if (response.status >= 200 && response.status < 300) {
+            const overviewMatch = response.text.match(
+              /## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/
+            );
             if (overviewMatch && overviewMatch[1]) {
               content = overviewMatch[1].trim();
             }
           }
-        } catch (error) {
+        } catch (e) {
         }
-        const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-notes" });
+        const contentDiv = this.contentEl.createDiv({
+          cls: "nexus-upgrade-notes"
+        });
+        const renderComponent = new import_obsidian23.Component();
+        renderComponent.load();
         await import_obsidian23.MarkdownRenderer.render(
           this.app,
           content,
           contentDiv,
           "",
-          this.plugin
+          renderComponent
         );
       }
       addCloseButton() {
-        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container nexus-dialog-actions" });
+        const buttonContainer = this.contentEl.createDiv({
+          cls: "nexus-upgrade-button-container nexus-dialog-actions"
+        });
         const button = buttonContainer.createEl("button", {
           text: t("upgrade.complete_modal.buttons.got_it"),
           cls: "mod-cta nexus-upgrade-button"
@@ -12472,78 +8764,6 @@ var init_upgrade_complete_modal = __esm({
         button.addEventListener("click", () => {
           this.close();
         });
-      }
-      addStyles() {
-        const style = document.createElement("style");
-        style.textContent = `
-            /* Modal sizing */
-            .nexus-upgrade-complete-modal .modal {
-                max-height: 85vh;
-            }
-
-            .nexus-upgrade-complete-modal .modal-content {
-                padding: 20px 24px;
-                overflow-y: auto;
-                max-height: calc(85vh - 100px);
-            }
-
-            /* Release notes content */
-            .nexus-upgrade-notes {
-                padding: 0 1em;
-                margin-bottom: 2em;
-                overflow-wrap: anywhere;
-            }
-
-            .nexus-upgrade-notes h2 {
-                color: var(--text-accent);
-                margin-top: 1.5em;
-                margin-bottom: 0.8em;
-                border-bottom: 2px solid var(--background-modifier-border);
-                padding-bottom: 0.3em;
-            }
-
-            .nexus-upgrade-notes h2:first-child {
-                margin-top: 0;
-            }
-
-            .nexus-upgrade-notes ul {
-                margin-left: 1.5em;
-                line-height: 1.8;
-            }
-
-            .nexus-upgrade-notes li {
-                margin: 0.5em 0;
-            }
-
-            /* Close button */
-            .nexus-upgrade-button-container {
-                padding: 1.5em 0;
-                border-top: 1px solid var(--background-modifier-border);
-                margin-top: 1em;
-            }
-
-            .nexus-upgrade-button {
-                padding: 0.8em 3em;
-                font-size: 1.1em;
-                font-weight: 600;
-                border-radius: 8px;
-            }
-
-            @media (max-width: 700px) {
-                .nexus-upgrade-complete-modal .modal-content {
-                    padding: 16px !important;
-                }
-
-                .nexus-upgrade-notes {
-                    padding: 0;
-                }
-
-                .nexus-upgrade-button {
-                    width: 100%;
-                }
-            }
-        `;
-        document.head.appendChild(style);
       }
     };
     __name(UpgradeCompleteModal, "UpgradeCompleteModal");
@@ -12572,11 +8792,13 @@ var init_upgrade_modal_1_3_0 = __esm({
       }
       onOpen() {
         var _a;
-        const { containerEl, titleEl, modalEl } = this;
+        const { titleEl, modalEl } = this;
         modalEl.classList.add("nexus-upgrade-modal-130");
-        titleEl.setText(t("upgrade.modal_130.title", { version: this.version }));
+        titleEl.setText(
+          t("upgrade.modal_130.title", { version: this.version })
+        );
         (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
-        this.createForm();
+        void this.createForm();
       }
       onClose() {
         if (!this.hasResolved) {
@@ -12602,54 +8824,80 @@ var init_upgrade_modal_1_3_0 = __esm({
 
 Try the new **selective import** feature on your next import - you'll love the control it gives you!`;
         try {
-          const response = await fetch("https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.3.0");
-          if (response.ok) {
-            const release = await response.json();
+          const response = await (0, import_obsidian24.requestUrl)({
+            url: "https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.3.0",
+            method: "GET"
+          });
+          if (response.status >= 200 && response.status < 300) {
+            const release = response.json;
             if (release.body) {
               message = release.body;
             }
           }
-        } catch (error) {
+        } catch (e) {
         }
-        const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
+        const contentDiv = this.contentEl.createDiv({
+          cls: "nexus-upgrade-content"
+        });
+        const renderComponent = new import_obsidian24.Component();
+        renderComponent.load();
         await import_obsidian24.MarkdownRenderer.render(
           this.app,
           message,
           contentDiv,
           "",
-          this.plugin
+          renderComponent
         );
-        this.addStyles();
       }
       addMigrationSection() {
-        const migrationSection = this.contentEl.createDiv({ cls: "nexus-migration-section" });
-        const header = migrationSection.createDiv({ cls: "nexus-migration-header" });
-        header.innerHTML = `
-            <div class="nexus-migration-title">
-                ${t("upgrade.modal_130.migration_section.title")}
-            </div>
-        `;
-        const message = migrationSection.createDiv({ cls: "nexus-migration-message" });
-        message.innerHTML = `
-            <p>${t("upgrade.modal_130.migration_section.message")}</p>
-        `;
-        const taskList = migrationSection.createDiv({ cls: "nexus-migration-tasks" });
-        taskList.innerHTML = `
-            <ul>
-                <li>${t("upgrade.modal_130.migration_section.tasks.folder_settings")}</li>
-                <li>${t("upgrade.modal_130.migration_section.tasks.timestamps")}</li>
-                <li>${t("upgrade.modal_130.migration_section.tasks.aliases")}</li>
-                <li>${t("upgrade.modal_130.migration_section.tasks.reports")}</li>
-                <li>${t("upgrade.modal_130.migration_section.tasks.artifacts")}</li>
-            </ul>
-        `;
-        const estimate = migrationSection.createDiv({ cls: "nexus-migration-estimate" });
-        estimate.innerHTML = `
-            <p><em>${t("upgrade.modal_130.migration_section.estimate")}</em></p>
-        `;
+        const migrationSection = this.contentEl.createDiv({
+          cls: "nexus-migration-section"
+        });
+        const header = migrationSection.createDiv({
+          cls: "nexus-migration-header"
+        });
+        header.createDiv({
+          cls: "nexus-migration-title",
+          text: t("upgrade.modal_130.migration_section.title")
+        });
+        const message = migrationSection.createDiv({
+          cls: "nexus-migration-message"
+        });
+        message.createEl("p", {
+          text: t("upgrade.modal_130.migration_section.message")
+        });
+        const taskList = migrationSection.createDiv({
+          cls: "nexus-migration-tasks"
+        });
+        const ul = taskList.createEl("ul");
+        ul.createEl("li", {
+          text: t(
+            "upgrade.modal_130.migration_section.tasks.folder_settings"
+          )
+        });
+        ul.createEl("li", {
+          text: t("upgrade.modal_130.migration_section.tasks.timestamps")
+        });
+        ul.createEl("li", {
+          text: t("upgrade.modal_130.migration_section.tasks.aliases")
+        });
+        ul.createEl("li", {
+          text: t("upgrade.modal_130.migration_section.tasks.reports")
+        });
+        ul.createEl("li", {
+          text: t("upgrade.modal_130.migration_section.tasks.artifacts")
+        });
+        const estimate = migrationSection.createDiv({
+          cls: "nexus-migration-estimate"
+        });
+        estimate.createEl("p").createEl("em", {
+          text: t("upgrade.modal_130.migration_section.estimate")
+        });
       }
       addMigrationButton() {
-        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-migration-button-container" });
+        const buttonContainer = this.contentEl.createDiv({
+          cls: "nexus-migration-button-container"
+        });
         const migrationButton = buttonContainer.createEl("button", {
           text: t("upgrade.modal_130.buttons.run_migration"),
           cls: "mod-cta nexus-migration-button"
@@ -12659,93 +8907,6 @@ Try the new **selective import** feature on your next import - you'll love the c
           this.resolve("ok");
           this.close();
         };
-      }
-      addStyles() {
-        const styleEl = document.createElement("style");
-        styleEl.textContent = `
-            .modal.nexus-upgrade-modal-130 {
-                max-width: 1050px !important;
-                width: 1050px !important;
-            }
-
-            .nexus-upgrade-content {
-                margin-bottom: 20px;
-                line-height: 1.6;
-            }
-
-            /* Migration Section Styles */
-            .nexus-migration-section {
-                background: var(--background-secondary);
-                border: 2px solid var(--interactive-accent);
-                border-radius: 12px;
-                padding: 24px;
-                margin: 24px 0;
-            }
-
-            .nexus-migration-header {
-                margin-bottom: 16px;
-            }
-
-            .nexus-migration-title {
-                font-size: 1.3em;
-                text-align: center;
-                color: var(--text-normal);
-            }
-
-            .nexus-migration-title strong {
-                color: var(--interactive-accent);
-            }
-
-            .nexus-migration-message {
-                text-align: center;
-                margin-bottom: 16px;
-                color: var(--text-muted);
-            }
-
-            .nexus-migration-tasks {
-                margin: 16px 0;
-            }
-
-            .nexus-migration-tasks ul {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-
-            .nexus-migration-tasks li {
-                padding: 8px 0;
-                font-size: 0.95em;
-                color: var(--text-normal);
-            }
-
-            .nexus-migration-estimate {
-                text-align: center;
-                margin-top: 16px;
-                color: var(--text-muted);
-                font-size: 0.9em;
-            }
-
-            /* Migration Button Styles */
-            .nexus-migration-button-container {
-                text-align: center;
-                margin: 32px 0;
-            }
-
-            .nexus-migration-button {
-                padding: 16px 48px !important;
-                font-size: 1.2em !important;
-                font-weight: 700 !important;
-                border-radius: 8px !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-                transition: all 0.2s ease !important;
-            }
-
-            .nexus-migration-button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
-            }
-        `;
-        document.head.appendChild(styleEl);
       }
     };
     __name(NexusUpgradeModal130, "NexusUpgradeModal130");
@@ -12807,14 +8968,20 @@ var SupportSection = class extends BaseSettingsSection {
     return t("settings.support.section_title");
   }
   render(containerEl) {
-    const supportContainer = containerEl.createDiv({ cls: "nexus-support-section" });
+    const supportContainer = containerEl.createDiv({
+      cls: "nexus-support-section"
+    });
     createSupportBox(supportContainer);
     new import_obsidian.Setting(supportContainer).setName(t("settings.support.resources.name")).setDesc(t("settings.support.resources.desc")).addButton(
-      (button) => button.setButtonText(t("settings.support.resources.documentation")).onClick(() => {
+      (button) => button.setButtonText(
+        t("settings.support.resources.documentation")
+      ).onClick(() => {
         window.open(getLocalizedDocsUrl(), "_blank");
       })
     ).addButton(
-      (button) => button.setButtonText(t("settings.support.resources.release_notes")).onClick(() => {
+      (button) => button.setButtonText(
+        t("settings.support.resources.release_notes")
+      ).onClick(() => {
         window.open(getReleaseNotesUrl(), "_blank");
       })
     ).addButton(
@@ -12851,11 +9018,17 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
       text: t("folder_migration.title"),
       cls: "nexus-migration-title"
     });
-    const messageContainer = contentEl.createDiv({ cls: "nexus-migration-message" });
-    messageContainer.createEl("p", {
-      text: t("folder_migration.message_intro", { folder_type: this.folderType })
+    const messageContainer = contentEl.createDiv({
+      cls: "nexus-migration-message"
     });
-    const pathContainer = messageContainer.createDiv({ cls: "nexus-migration-paths" });
+    messageContainer.createEl("p", {
+      text: t("folder_migration.message_intro", {
+        folder_type: this.folderType
+      })
+    });
+    const pathContainer = messageContainer.createDiv({
+      cls: "nexus-migration-paths"
+    });
     pathContainer.createEl("div", {
       text: t("folder_migration.path_from", { path: this.oldPath }),
       cls: "nexus-migration-path-old"
@@ -12867,129 +9040,88 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
     messageContainer.createEl("p", {
       text: t("folder_migration.question")
     });
-    const warningBox = contentEl.createDiv({ cls: "nexus-migration-warning" });
-    warningBox.createEl("strong", { text: t("folder_migration.warning.title") });
+    const warningBox = contentEl.createDiv({
+      cls: "nexus-migration-warning"
+    });
+    warningBox.createEl("strong", {
+      text: t("folder_migration.warning.title")
+    });
     warningBox.createEl("p", {
       text: t("folder_migration.warning.text")
     });
-    const buttonContainer = contentEl.createDiv({ cls: "nexus-migration-buttons" });
+    const buttonContainer = contentEl.createDiv({
+      cls: "nexus-migration-buttons"
+    });
     const cancelButton = buttonContainer.createEl("button", {
       text: t("folder_migration.buttons.cancel"),
       cls: "nexus-migration-button-cancel"
     });
-    cancelButton.addEventListener("click", async () => {
-      this.close();
-      try {
-        await this.onComplete("cancel");
-        new import_obsidian2.Notice(t("folder_migration.notices.change_cancelled_reverted"));
-      } catch (error) {
-        new import_obsidian2.Notice(t("folder_migration.notices.failed_revert", { error: error instanceof Error ? error.message : String(error) }));
-      }
+    cancelButton.addEventListener("click", () => {
+      void (async () => {
+        this.close();
+        try {
+          await this.onComplete("cancel");
+          new import_obsidian2.Notice(
+            t("folder_migration.notices.change_cancelled_reverted")
+          );
+        } catch (error) {
+          new import_obsidian2.Notice(
+            t("folder_migration.notices.failed_revert", {
+              error: error instanceof Error ? error.message : String(error)
+            })
+          );
+        }
+      })();
     });
     const keepButton = buttonContainer.createEl("button", {
       text: t("folder_migration.buttons.keep"),
       cls: "nexus-migration-button-keep"
     });
-    keepButton.addEventListener("click", async () => {
-      this.close();
-      try {
-        await this.onComplete("keep");
-        new import_obsidian2.Notice(t("folder_migration.notices.setting_updated_files_remain", { path: this.oldPath }));
-      } catch (error) {
-        new import_obsidian2.Notice(t("folder_migration.notices.failed_update", { error: error instanceof Error ? error.message : String(error) }));
-      }
+    keepButton.addEventListener("click", () => {
+      void (async () => {
+        this.close();
+        try {
+          await this.onComplete("keep");
+          new import_obsidian2.Notice(
+            t(
+              "folder_migration.notices.setting_updated_files_remain",
+              {
+                path: this.oldPath
+              }
+            )
+          );
+        } catch (error) {
+          new import_obsidian2.Notice(
+            t("folder_migration.notices.failed_update", {
+              error: error instanceof Error ? error.message : String(error)
+            })
+          );
+        }
+      })();
     });
     const moveButton = buttonContainer.createEl("button", {
       text: t("folder_migration.buttons.move"),
       cls: "mod-cta nexus-migration-button-move"
     });
-    moveButton.addEventListener("click", async () => {
-      this.close();
-      try {
-        await this.onComplete("move");
-        new import_obsidian2.Notice(t("folder_migration.notices.files_moved", { path: this.newPath }));
-      } catch (error) {
-        new import_obsidian2.Notice(t("folder_migration.notices.failed_move", { error: error instanceof Error ? error.message : String(error) }));
-      }
+    moveButton.addEventListener("click", () => {
+      void (async () => {
+        this.close();
+        try {
+          await this.onComplete("move");
+          new import_obsidian2.Notice(
+            t("folder_migration.notices.files_moved", {
+              path: this.newPath
+            })
+          );
+        } catch (error) {
+          new import_obsidian2.Notice(
+            t("folder_migration.notices.failed_move", {
+              error: error instanceof Error ? error.message : String(error)
+            })
+          );
+        }
+      })();
     });
-    this.addStyles();
-  }
-  addStyles() {
-    const styleEl = document.createElement("style");
-    styleEl.textContent = `
-            .nexus-migration-title {
-                margin-bottom: 1em;
-                color: var(--text-normal);
-            }
-
-            .nexus-migration-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-migration-paths {
-                background-color: var(--background-secondary);
-                padding: 1em;
-                margin: 1em 0;
-                border-radius: 4px;
-                font-family: var(--font-monospace);
-                font-size: 0.9em;
-            }
-
-            .nexus-migration-path-old {
-                color: var(--text-muted);
-                margin-bottom: 0.5em;
-            }
-
-            .nexus-migration-path-new {
-                color: var(--interactive-accent);
-                font-weight: 500;
-            }
-
-            .nexus-migration-warning {
-                background-color: var(--background-modifier-error-hover);
-                border-left: 4px solid var(--text-error);
-                padding: 1em;
-                margin-bottom: 1.5em;
-                border-radius: 4px;
-            }
-
-            .nexus-migration-warning strong {
-                display: block;
-                margin-bottom: 0.5em;
-                color: var(--text-error);
-            }
-
-            .nexus-migration-warning p {
-                margin: 0;
-                color: var(--text-normal);
-            }
-
-            .nexus-migration-buttons {
-                display: flex;
-                justify-content: space-between;
-                gap: 10px;
-            }
-
-            .nexus-migration-buttons button {
-                padding: 8px 16px;
-                flex: 1;
-            }
-
-            .nexus-migration-button-cancel {
-                background-color: var(--background-modifier-border);
-                color: var(--text-muted);
-            }
-
-            .nexus-migration-button-keep {
-                background-color: var(--background-modifier-border);
-            }
-
-            .nexus-migration-button-move {
-                /* Uses mod-cta class for primary styling */
-            }
-        `;
-    document.head.appendChild(styleEl);
   }
   onClose() {
     const { contentEl } = this;
@@ -12998,9 +9130,386 @@ var FolderMigrationDialog = class extends import_obsidian2.Modal {
 };
 __name(FolderMigrationDialog, "FolderMigrationDialog");
 
+// src/dialogs/folder-tree-browser-modal.ts
+var import_obsidian3 = require("obsidian");
+init_i18n();
+var FolderTreeBrowserModal = class extends import_obsidian3.Modal {
+  // Track folders created during this session
+  constructor(app, onSubmit, initialPath, validatePath) {
+    super(app);
+    this.selectedFolder = null;
+    this.expandedFolders = /* @__PURE__ */ new Set();
+    this.createdFolders = /* @__PURE__ */ new Set();
+    this.onSubmit = onSubmit;
+    this.validatePath = validatePath;
+    if (initialPath) {
+      const folder = this.app.vault.getAbstractFileByPath(initialPath);
+      if (folder instanceof import_obsidian3.TFolder) {
+        this.selectedFolder = folder;
+        let current = folder.parent;
+        while (current && current.path !== "/") {
+          this.expandedFolders.add(current.path);
+          current = current.parent;
+        }
+        this.expandedFolders.add(folder.path);
+      }
+    }
+  }
+  onOpen() {
+    const { contentEl, modalEl } = this;
+    modalEl.addClass("nexus-folder-browser-modal");
+    contentEl.addClass("nexus-ai-chat-importer-modal");
+    contentEl.createEl("h3", { text: t("folder_browser.title") });
+    this.treeContainer = contentEl.createDiv({
+      cls: "nexus-folder-tree-container"
+    });
+    this.renderTree();
+    const buttonContainer = contentEl.createDiv({
+      cls: "modal-button-container nexus-dialog-actions"
+    });
+    const createButton = buttonContainer.createEl("button", {
+      text: t("folder_browser.buttons.create_new_folder")
+    });
+    createButton.addEventListener("click", () => {
+      void this.handleCreateFolder();
+    });
+    const cancelButton = buttonContainer.createEl("button", {
+      text: t("folder_browser.buttons.cancel")
+    });
+    cancelButton.addEventListener("click", () => {
+      void this.handleCancel();
+    });
+    const selectButton = buttonContainer.createEl("button", {
+      text: t("folder_browser.buttons.select"),
+      cls: "mod-cta"
+    });
+    selectButton.addEventListener("click", () => this.handleSelect());
+  }
+  renderTree() {
+    this.treeContainer.empty();
+    const root = this.app.vault.getRoot();
+    const rootItem = this.treeContainer.createDiv({
+      cls: "nexus-tree-item"
+    });
+    if (this.selectedFolder === root) {
+      rootItem.addClass("is-selected");
+    }
+    rootItem.createSpan({ text: "\u{1F4C1} " });
+    const rootLabel = rootItem.createSpan({
+      text: t("folder_browser.vault_root")
+    });
+    rootLabel.addClass("nexus-font-bold");
+    rootItem.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleFolderClick(root);
+    });
+    this.renderFolderChildren(root, 0);
+  }
+  renderFolderChildren(folder, depth) {
+    const children = folder.children.filter((child) => child instanceof import_obsidian3.TFolder).sort((a, b) => a.name.localeCompare(b.name));
+    for (const child of children) {
+      this.renderFolder(child, depth + 1);
+    }
+  }
+  renderFolder(folder, depth) {
+    var _a;
+    const isExpanded = this.expandedFolders.has(folder.path);
+    const isSelected = ((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path;
+    const hasChildren = folder.children.some((c) => c instanceof import_obsidian3.TFolder);
+    const item = this.treeContainer.createDiv({ cls: "nexus-tree-item" });
+    item.style.paddingLeft = `${depth * 20 + 8}px`;
+    if (isSelected) {
+      item.addClass("is-selected");
+    }
+    const expandIcon = item.createSpan();
+    expandIcon.addClass("nexus-expand-icon");
+    if (hasChildren) {
+      expandIcon.setText(isExpanded ? "\u25BC" : "\u25B6");
+    } else {
+      expandIcon.setText(" ");
+    }
+    item.createSpan({ text: "\u{1F4C1} " });
+    item.createSpan({ text: folder.name });
+    item.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleFolderClick(folder);
+    });
+    item.addEventListener("mouseenter", () => {
+      if (!isSelected) {
+        item.addClass("is-hovered");
+      }
+    });
+    item.addEventListener("mouseleave", () => {
+      if (!isSelected) {
+        item.removeClass("is-hovered");
+      }
+    });
+    if (isExpanded && hasChildren) {
+      this.renderFolderChildren(folder, depth);
+    }
+  }
+  handleFolderClick(folder) {
+    var _a;
+    const wasExpanded = this.expandedFolders.has(folder.path);
+    if (((_a = this.selectedFolder) == null ? void 0 : _a.path) === folder.path) {
+      if (wasExpanded) {
+        this.expandedFolders.delete(folder.path);
+        this.collapseAllChildren(folder);
+      } else {
+        this.expandedFolders.add(folder.path);
+      }
+    } else {
+      if (folder.parent) {
+        const siblings = folder.parent.children.filter(
+          (c) => c instanceof import_obsidian3.TFolder
+        );
+        for (const sibling of siblings) {
+          if (sibling.path !== folder.path) {
+            this.expandedFolders.delete(sibling.path);
+            this.collapseAllChildren(sibling);
+          }
+        }
+      }
+      this.selectedFolder = folder;
+      this.expandedFolders.add(folder.path);
+    }
+    this.renderTree();
+  }
+  collapseAllChildren(folder) {
+    for (const child of folder.children) {
+      if (child instanceof import_obsidian3.TFolder) {
+        this.expandedFolders.delete(child.path);
+        this.collapseAllChildren(child);
+      }
+    }
+  }
+  async handleCreateFolder() {
+    var _a;
+    if (!this.selectedFolder) {
+      new import_obsidian3.Notice(t("folder_browser.notices.select_parent_first"));
+      return;
+    }
+    const folderName = await this.promptForFolderName();
+    if (!folderName) {
+      return;
+    }
+    if (folderName.includes("/") || folderName.includes("\\") || folderName.includes(":") || folderName.includes("*") || folderName.includes("?") || folderName.includes('"') || folderName.includes("<") || folderName.includes(">") || folderName.includes("|")) {
+      new import_obsidian3.Notice(t("folder_browser.notices.invalid_name"));
+      return;
+    }
+    const parentPath = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
+    const newFolderPath = parentPath ? `${parentPath}/${folderName}` : folderName;
+    const exists = this.app.vault.getAbstractFileByPath(newFolderPath);
+    if (exists) {
+      new import_obsidian3.Notice(t("folder_browser.notices.already_exists"));
+      return;
+    }
+    if (this.validatePath) {
+      const validation = this.validatePath(newFolderPath);
+      if (!validation.valid) {
+        new import_obsidian3.Notice(
+          t("folder_browser.notices.invalid_location", {
+            error: (_a = validation.error) != null ? _a : t(
+              "folder_browser.notices.invalid_location_default"
+            )
+          })
+        );
+        return;
+      }
+    }
+    try {
+      await this.app.vault.createFolder(newFolderPath);
+      this.createdFolders.add(newFolderPath);
+      new import_obsidian3.Notice(
+        t("folder_browser.notices.created_success", {
+          name: folderName
+        })
+      );
+      this.expandedFolders.add(this.selectedFolder.path);
+      const newFolder = this.app.vault.getAbstractFileByPath(newFolderPath);
+      if (newFolder instanceof import_obsidian3.TFolder) {
+        this.selectedFolder = newFolder;
+        this.expandedFolders.add(newFolder.path);
+      }
+      this.renderTree();
+    } catch (error) {
+      new import_obsidian3.Notice(
+        t("folder_browser.notices.create_failed", {
+          error: error.message
+        })
+      );
+    }
+  }
+  promptForFolderName() {
+    return new Promise((resolve) => {
+      const modal = new import_obsidian3.Modal(this.app);
+      modal.titleEl.setText(
+        t("folder_browser.create_folder_dialog.title")
+      );
+      const inputContainer = modal.contentEl.createDiv();
+      inputContainer.addClass("nexus-input-container-mb");
+      inputContainer.createEl("label", {
+        text: t(
+          "folder_browser.create_folder_dialog.folder_name_label"
+        )
+      });
+      const input = inputContainer.createEl("input", { type: "text" });
+      input.addClass("nexus-input-full-width");
+      const buttonContainer = modal.contentEl.createDiv({
+        cls: "modal-button-container"
+      });
+      const cancelButton = buttonContainer.createEl("button", {
+        text: t("folder_browser.create_folder_dialog.buttons.cancel")
+      });
+      cancelButton.addEventListener("click", () => {
+        modal.close();
+        resolve(null);
+      });
+      const createButton = buttonContainer.createEl("button", {
+        text: t("folder_browser.create_folder_dialog.buttons.create"),
+        cls: "mod-cta"
+      });
+      createButton.addEventListener("click", () => {
+        const value = input.value.trim();
+        modal.close();
+        resolve(value || null);
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const value = input.value.trim();
+          modal.close();
+          resolve(value || null);
+        } else if (e.key === "Escape") {
+          modal.close();
+          resolve(null);
+        }
+      });
+      modal.open();
+      input.focus();
+    });
+  }
+  handleSelect() {
+    var _a;
+    if (!this.selectedFolder) {
+      new import_obsidian3.Notice(t("folder_browser.notices.select_first"));
+      return;
+    }
+    const path = this.selectedFolder.path === "/" ? "" : this.selectedFolder.path;
+    if (this.validatePath) {
+      const validation = this.validatePath(path);
+      if (!validation.valid) {
+        new import_obsidian3.Notice(
+          t("folder_browser.notices.invalid_location", {
+            error: (_a = validation.error) != null ? _a : t(
+              "folder_browser.notices.invalid_location_default"
+            )
+          })
+        );
+        return;
+      }
+    }
+    this.createdFolders.clear();
+    this.onSubmit(path);
+    this.close();
+  }
+  async handleCancel() {
+    await this.cleanupCreatedFolders();
+    this.close();
+  }
+  async cleanupCreatedFolders() {
+    const sortedFolders = Array.from(this.createdFolders).sort((a, b) => {
+      const depthA = a.split("/").length;
+      const depthB = b.split("/").length;
+      return depthB - depthA;
+    });
+    for (const folderPath of sortedFolders) {
+      try {
+        const folder = this.app.vault.getAbstractFileByPath(folderPath);
+        if (folder instanceof import_obsidian3.TFolder && folder.children.length === 0) {
+          await this.app.fileManager.trashFile(folder);
+        }
+      } catch (e) {
+      }
+    }
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+__name(FolderTreeBrowserModal, "FolderTreeBrowserModal");
+
+// src/utils/folder-validation.ts
+function isPathInsidePath(pathToCheck, existingPath) {
+  if (!pathToCheck || !existingPath) {
+    return false;
+  }
+  const normalizedCheck = pathToCheck.replace(/\/$/, "");
+  const normalizedExisting = existingPath.replace(/\/$/, "");
+  if (normalizedCheck === normalizedExisting) {
+    return false;
+  }
+  return normalizedCheck.startsWith(normalizedExisting + "/");
+}
+__name(isPathInsidePath, "isPathInsidePath");
+function validateFolderNesting(folderType, newPath, conversationFolder, reportFolder, attachmentFolder) {
+  const normalizedNewPath = newPath.trim().replace(/\/$/, "");
+  if (!normalizedNewPath) {
+    return {
+      valid: false,
+      error: "Folder path cannot be empty"
+    };
+  }
+  switch (folderType) {
+    case "conversationFolder":
+      if (isPathInsidePath(normalizedNewPath, reportFolder)) {
+        return {
+          valid: false,
+          error: `Conversation folder cannot be inside the Report folder (${reportFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, attachmentFolder)) {
+        return {
+          valid: false,
+          error: `Conversation folder cannot be inside the Attachment folder (${attachmentFolder})`
+        };
+      }
+      break;
+    case "reportFolder":
+      if (isPathInsidePath(normalizedNewPath, conversationFolder)) {
+        return {
+          valid: false,
+          error: `Report folder cannot be inside the Conversation folder (${conversationFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, attachmentFolder)) {
+        return {
+          valid: false,
+          error: `Report folder cannot be inside the Attachment folder (${attachmentFolder})`
+        };
+      }
+      break;
+    case "attachmentFolder":
+      if (isPathInsidePath(normalizedNewPath, conversationFolder)) {
+        return {
+          valid: false,
+          error: `Attachment folder cannot be inside the Conversation folder (${conversationFolder})`
+        };
+      }
+      if (isPathInsidePath(normalizedNewPath, reportFolder)) {
+        return {
+          valid: false,
+          error: `Attachment folder cannot be inside the Report folder (${reportFolder})`
+        };
+      }
+      break;
+  }
+  return { valid: true };
+}
+__name(validateFolderNesting, "validateFolderNesting");
+
 // src/ui/settings/folder-settings-section.ts
-init_folder_tree_browser_modal();
-init_folder_validation();
 init_utils();
 init_i18n();
 var FolderSettingsSection = class extends BaseSettingsSection {
@@ -13015,19 +9524,30 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     let conversationFolderTextComponent;
     new import_obsidian8.Setting(containerEl).setName(t("settings.folders.conversation_folder.name")).setDesc(t("settings.folders.conversation_folder.desc")).addText((text) => {
       conversationFolderTextComponent = text;
-      text.setPlaceholder(t("settings.folders.conversation_folder.placeholder")).setValue(this.plugin.settings.conversationFolder);
+      text.setPlaceholder(
+        t("settings.folders.conversation_folder.placeholder")
+      ).setValue(this.plugin.settings.conversationFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-conversation-folder-input");
       text.inputEl.readOnly = true;
-      text.inputEl.style.cursor = "default";
+      text.inputEl.addClass("nexus-cursor-default");
     }).addButton((button) => {
-      button.setButtonText(t("common.buttons.browse")).setTooltip(t("settings.folders.conversation_folder.browse_tooltip")).onClick(async () => {
+      button.setButtonText(t("common.buttons.browse")).setTooltip(
+        t("settings.folders.conversation_folder.browse_tooltip")
+      ).onClick(() => {
         const modal = new FolderTreeBrowserModal(
           this.plugin.app,
-          async (path) => {
+          (path) => {
             if (conversationFolderTextComponent) {
-              conversationFolderTextComponent.setValue(path);
-              await this.handleFolderChange("conversationFolder", path, "conversations", conversationFolderTextComponent);
+              conversationFolderTextComponent.setValue(
+                path
+              );
+              void this.handleFolderChange(
+                "conversationFolder",
+                path,
+                "conversations",
+                conversationFolderTextComponent
+              );
             }
           },
           this.plugin.settings.conversationFolder,
@@ -13045,19 +9565,28 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     let reportFolderTextComponent;
     new import_obsidian8.Setting(containerEl).setName(t("settings.folders.reports_folder.name")).setDesc(t("settings.folders.reports_folder.desc")).addText((text) => {
       reportFolderTextComponent = text;
-      text.setPlaceholder(t("settings.folders.reports_folder.placeholder")).setValue(this.plugin.settings.reportFolder);
+      text.setPlaceholder(
+        t("settings.folders.reports_folder.placeholder")
+      ).setValue(this.plugin.settings.reportFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-report-folder-input");
       text.inputEl.readOnly = true;
-      text.inputEl.style.cursor = "default";
+      text.inputEl.addClass("nexus-cursor-default");
     }).addButton((button) => {
-      button.setButtonText(t("common.buttons.browse")).setTooltip(t("settings.folders.reports_folder.browse_tooltip")).onClick(async () => {
+      button.setButtonText(t("common.buttons.browse")).setTooltip(
+        t("settings.folders.reports_folder.browse_tooltip")
+      ).onClick(() => {
         const modal = new FolderTreeBrowserModal(
           this.plugin.app,
-          async (path) => {
+          (path) => {
             if (reportFolderTextComponent) {
               reportFolderTextComponent.setValue(path);
-              await this.handleFolderChange("reportFolder", path, "reports", reportFolderTextComponent);
+              void this.handleFolderChange(
+                "reportFolder",
+                path,
+                "reports",
+                reportFolderTextComponent
+              );
             }
           },
           this.plugin.settings.reportFolder,
@@ -13075,19 +9604,30 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     let attachmentFolderTextComponent;
     new import_obsidian8.Setting(containerEl).setName(t("settings.folders.attachment_folder.name")).setDesc(t("settings.folders.attachment_folder.desc")).addText((text) => {
       attachmentFolderTextComponent = text;
-      text.setPlaceholder(t("settings.folders.attachment_folder.placeholder")).setValue(this.plugin.settings.attachmentFolder);
+      text.setPlaceholder(
+        t("settings.folders.attachment_folder.placeholder")
+      ).setValue(this.plugin.settings.attachmentFolder);
       text.inputEl.addClass("nexus-folder-path-input");
       text.inputEl.addClass("nexus-attachment-folder-input");
       text.inputEl.readOnly = true;
-      text.inputEl.style.cursor = "default";
+      text.inputEl.addClass("nexus-cursor-default");
     }).addButton((button) => {
-      button.setButtonText(t("common.buttons.browse")).setTooltip(t("settings.folders.attachment_folder.browse_tooltip")).onClick(async () => {
+      button.setButtonText(t("common.buttons.browse")).setTooltip(
+        t("settings.folders.attachment_folder.browse_tooltip")
+      ).onClick(() => {
         const modal = new FolderTreeBrowserModal(
           this.plugin.app,
-          async (path) => {
+          (path) => {
             if (attachmentFolderTextComponent) {
-              attachmentFolderTextComponent.setValue(path);
-              await this.handleFolderChange("attachmentFolder", path, "attachments", attachmentFolderTextComponent);
+              attachmentFolderTextComponent.setValue(
+                path
+              );
+              void this.handleFolderChange(
+                "attachmentFolder",
+                path,
+                "attachments",
+                attachmentFolderTextComponent
+              );
             }
           },
           this.plugin.settings.attachmentFolder,
@@ -13117,7 +9657,12 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       this.plugin.settings.attachmentFolder
     );
     if (!validation.valid) {
-      this.showErrorDialog(t("configure_folder_dialog.error_invalid_folder.title"), t("configure_folder_dialog.error_invalid_folder.message", { error: (_a = validation.error) != null ? _a : "Invalid folder configuration" }));
+      this.showErrorDialog(
+        t("configure_folder_dialog.error_invalid_folder.title"),
+        t("configure_folder_dialog.error_invalid_folder.message", {
+          error: (_a = validation.error) != null ? _a : "Invalid folder configuration"
+        })
+      );
       textComponent.setValue(oldPath);
       return;
     }
@@ -13137,7 +9682,9 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     if (newFolder && newFolder instanceof import_obsidian8.TFolder && newFolder.children.length > 0) {
       this.showErrorDialog(
         t("folder_migration.error_target_not_empty.title"),
-        t("folder_migration.error_target_not_empty.message", { path: newPath })
+        t("folder_migration.error_target_not_empty.message", {
+          path: newPath
+        })
       );
       textComponent.setValue(oldPath);
       return;
@@ -13151,19 +9698,36 @@ var FolderSettingsSection = class extends BaseSettingsSection {
           newPath,
           folderType,
           async (action) => {
-            await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
+            await this.handleMigrationAction(
+              action,
+              oldPath,
+              newPath,
+              oldFolder,
+              settingKey,
+              textComponent
+            );
           }
         );
         dialog.open();
       }).catch((error) => {
-        this.plugin.logger.error("Failed to load enhanced dialog:", error);
+        this.plugin.logger.error(
+          "Failed to load enhanced dialog:",
+          error
+        );
         const dialog = new FolderMigrationDialog(
           this.plugin,
           oldPath,
           newPath,
           folderType,
           async (action) => {
-            await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
+            await this.handleMigrationAction(
+              action,
+              oldPath,
+              newPath,
+              oldFolder,
+              settingKey,
+              textComponent
+            );
           }
         );
         dialog.open();
@@ -13175,7 +9739,14 @@ var FolderSettingsSection = class extends BaseSettingsSection {
         newPath,
         folderType,
         async (action) => {
-          await this.handleMigrationAction(action, oldPath, newPath, oldFolder, settingKey, textComponent);
+          await this.handleMigrationAction(
+            action,
+            oldPath,
+            newPath,
+            oldFolder,
+            settingKey,
+            textComponent
+          );
         }
       );
       dialog.open();
@@ -13191,9 +9762,17 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     }
     if (action === "move") {
       try {
-        const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
+        const result = await moveAndMergeFolders(
+          oldFolder,
+          newPath,
+          this.plugin.app.vault
+        );
         if (settingKey === "conversationFolder" || settingKey === "attachmentFolder") {
-          await this.updateLinksAfterMove(settingKey, oldPath, newPath);
+          await this.updateLinksAfterMove(
+            settingKey,
+            oldPath,
+            newPath
+          );
         }
         if (result.success && result.skipped === 0) {
           new import_obsidian8.Notice(`\u2705 Files moved to ${newPath}`);
@@ -13201,8 +9780,16 @@ var FolderSettingsSection = class extends BaseSettingsSection {
           this.showMergeResultDialog(result, oldPath, newPath);
         }
       } catch (error) {
-        this.plugin.logger.error(`[FolderSettings] Migration failed:`, error);
-        this.showErrorDialog(t("folder_migration.error_migration_failed.title"), t("folder_migration.error_migration_failed.message_move", { error: error.message }));
+        this.plugin.logger.error(
+          `[FolderSettings] Migration failed:`,
+          error
+        );
+        this.showErrorDialog(
+          t("folder_migration.error_migration_failed.title"),
+          t("folder_migration.error_migration_failed.message_move", {
+            error: error.message
+          })
+        );
         throw error;
       }
     }
@@ -13217,13 +9804,21 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       const { LinkUpdateService: LinkUpdateService2 } = await Promise.resolve().then(() => (init_link_update_service(), link_update_service_exports));
       const linkUpdateService = new LinkUpdateService2(this.plugin);
       if (settingKey === "conversationFolder") {
-        await linkUpdateService.updateConversationLinks(oldPath, newPath);
+        await linkUpdateService.updateConversationLinks(
+          oldPath,
+          newPath
+        );
       } else if (settingKey === "attachmentFolder") {
         await linkUpdateService.updateAttachmentLinks(oldPath, newPath);
       }
     } catch (error) {
-      this.plugin.logger.error(`[FolderSettings] Failed to update links:`, error);
-      new import_obsidian8.Notice(`\u26A0\uFE0F Files moved but some links may not have been updated`);
+      this.plugin.logger.error(
+        `[FolderSettings] Failed to update links:`,
+        error
+      );
+      new import_obsidian8.Notice(
+        `\u26A0\uFE0F files moved but some links may not have been updated`
+      );
     }
   }
   /**
@@ -13234,74 +9829,57 @@ var FolderSettingsSection = class extends BaseSettingsSection {
     modal.titleEl.setText(t("folder_migration.result_dialog.title"));
     const { contentEl } = modal;
     const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
-    summary.createEl("h3", { text: t("folder_migration.result_dialog.summary_title") });
+    summary.createEl("h3", {
+      text: t("folder_migration.result_dialog.summary_title")
+    });
     const stats = summary.createDiv({ cls: "nexus-merge-stats" });
-    stats.createEl("p", { text: t("folder_migration.result_dialog.moved", { count: String(result.moved) }) });
+    stats.createEl("p", {
+      text: t("folder_migration.result_dialog.moved", {
+        count: String(result.moved)
+      })
+    });
     if (result.skipped > 0) {
       stats.createEl("p", {
-        text: t("folder_migration.result_dialog.skipped", { count: String(result.skipped) }),
+        text: t("folder_migration.result_dialog.skipped", {
+          count: String(result.skipped)
+        }),
         cls: "nexus-merge-warning"
       });
     }
     if (result.errors > 0) {
       stats.createEl("p", {
-        text: t("folder_migration.result_dialog.errors", { count: String(result.errors) }),
+        text: t("folder_migration.result_dialog.errors", {
+          count: String(result.errors)
+        }),
         cls: "nexus-merge-error"
       });
     }
-    const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
+    const explanation = contentEl.createDiv({
+      cls: "nexus-merge-explanation"
+    });
     explanation.createEl("p", {
       text: t("folder_migration.result_dialog.explanation")
     });
     if (result.errorDetails && result.errorDetails.length > 0) {
-      const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
-      errorSection.createEl("h4", { text: t("folder_migration.result_dialog.error_details_title") });
+      const errorSection = contentEl.createDiv({
+        cls: "nexus-merge-errors"
+      });
+      errorSection.createEl("h4", {
+        text: t("folder_migration.result_dialog.error_details_title")
+      });
       const errorList = errorSection.createEl("ul");
       for (const error of result.errorDetails) {
         errorList.createEl("li", { text: error });
       }
     }
-    const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-    const closeButton = buttonContainer.createEl("button", { text: t("common.buttons.ok"), cls: "mod-cta" });
+    const buttonContainer = contentEl.createDiv({
+      cls: "modal-button-container"
+    });
+    const closeButton = buttonContainer.createEl("button", {
+      text: t("common.buttons.ok"),
+      cls: "mod-cta"
+    });
     closeButton.addEventListener("click", () => modal.close());
-    const styleEl = document.createElement("style");
-    styleEl.textContent = `
-            .nexus-merge-summary {
-                margin-bottom: 20px;
-            }
-            .nexus-merge-stats p {
-                margin: 8px 0;
-                font-size: 14px;
-            }
-            .nexus-merge-warning {
-                color: var(--text-warning);
-            }
-            .nexus-merge-error {
-                color: var(--text-error);
-            }
-            .nexus-merge-explanation {
-                padding: 12px;
-                background: var(--background-secondary);
-                border-radius: 4px;
-                margin: 16px 0;
-            }
-            .nexus-merge-errors {
-                margin-top: 16px;
-                padding: 12px;
-                background: var(--background-modifier-error);
-                border-radius: 4px;
-            }
-            .nexus-merge-errors ul {
-                margin: 8px 0;
-                padding-left: 20px;
-            }
-            .nexus-merge-errors li {
-                margin: 4px 0;
-                font-size: 12px;
-                font-family: var(--font-monospace);
-            }
-        `;
-    document.head.appendChild(styleEl);
     modal.open();
   }
   showErrorDialog(title, message) {
@@ -13311,10 +9889,9 @@ var FolderSettingsSection = class extends BaseSettingsSection {
       text: message,
       cls: "nexus-error-message"
     });
-    const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.justifyContent = "flex-end";
-    buttonContainer.style.marginTop = "1em";
+    const buttonContainer = modal.contentEl.createDiv({
+      cls: "modal-button-container nexus-button-container-flex-end"
+    });
     const okButton = buttonContainer.createEl("button", {
       text: t("common.buttons.ok"),
       cls: "mod-cta"
@@ -13337,7 +9914,9 @@ var DisplaySettingsSection = class extends BaseSettingsSection {
     return t("settings.display.section_title");
   }
   render(containerEl) {
-    const sectionContainer = containerEl.createDiv({ cls: "nexus-date-prefix-section" });
+    const sectionContainer = containerEl.createDiv({
+      cls: "nexus-date-prefix-section"
+    });
     const setting = new import_obsidian9.Setting(sectionContainer).setName(t("settings.display.add_date_prefix.name")).setDesc(t("settings.display.add_date_prefix.desc"));
     if (this.plugin.settings.addDatePrefix) {
       setting.controlEl.createSpan({
@@ -13378,9 +9957,13 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
     return t("settings.timestamps.section_title");
   }
   render(containerEl) {
-    const sectionContainer = containerEl.createDiv({ cls: "nexus-message-date-section" });
+    const sectionContainer = containerEl.createDiv({
+      cls: "nexus-message-date-section"
+    });
     new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.custom_format.name")).setDesc(t("settings.timestamps.custom_format.desc")).addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.useCustomMessageTimestampFormat).onChange(async (value) => {
+      (toggle) => toggle.setValue(
+        this.plugin.settings.useCustomMessageTimestampFormat
+      ).onChange(async (value) => {
         this.plugin.settings.useCustomMessageTimestampFormat = value;
         await this.plugin.saveSettings();
         this.redraw();
@@ -13388,17 +9971,27 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
     );
     if (this.plugin.settings.useCustomMessageTimestampFormat) {
       new import_obsidian10.Setting(sectionContainer).setName(t("settings.timestamps.timestamp_format.name")).setDesc(t("settings.timestamps.timestamp_format.desc")).addDropdown((dropdown) => {
-        Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(([key, config]) => {
-          dropdown.addOption(key, config.label);
-        });
+        Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(
+          ([key, config]) => {
+            dropdown.addOption(key, config.label);
+          }
+        );
         dropdown.setValue(this.plugin.settings.messageTimestampFormat).onChange(async (value) => {
           this.plugin.settings.messageTimestampFormat = value;
           await this.plugin.saveSettings();
-          this.updateTimestampPreview(previewContainer, value);
+          this.updateTimestampPreview(
+            previewContainer,
+            value
+          );
         });
       });
-      const previewContainer = sectionContainer.createDiv({ cls: "nexus-timestamp-preview" });
-      this.updateTimestampPreview(previewContainer, this.plugin.settings.messageTimestampFormat);
+      const previewContainer = sectionContainer.createDiv({
+        cls: "nexus-timestamp-preview"
+      });
+      this.updateTimestampPreview(
+        previewContainer,
+        this.plugin.settings.messageTimestampFormat
+      );
     }
   }
   /**
@@ -13409,8 +10002,13 @@ var MessageDateFormatSection = class extends BaseSettingsSection {
     const preview = formatMessageTimestamp(now, format);
     container.empty();
     const previewLine = container.createDiv({ cls: "nexus-preview-line" });
-    previewLine.createEl("strong", { text: t("settings.timestamps.preview_label") });
-    previewLine.createEl("code", { text: preview, cls: "nexus-preview-code" });
+    previewLine.createEl("strong", {
+      text: t("settings.timestamps.preview_label")
+    });
+    previewLine.createEl("code", {
+      text: preview,
+      cls: "nexus-preview-code"
+    });
     const config = MESSAGE_TIMESTAMP_FORMATS[format];
     if (config) {
       container.createEl("div", {
@@ -13444,12 +10042,12 @@ var NexusAiChatImporterPluginSettingTab = class extends import_obsidian11.Plugin
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    this.renderSections(containerEl);
+    void this.renderSections(containerEl);
   }
   async renderSections(containerEl) {
     for (const section of this.sections) {
       if (section.title) {
-        containerEl.createEl("h2", { text: section.title });
+        new import_obsidian11.Setting(containerEl).setName("").setHeading();
       }
       await section.render(containerEl);
     }
@@ -13465,10 +10063,10 @@ var CommandRegistry = class {
   }
   registerCommands() {
     this.plugin.addCommand({
-      id: "nexus-ai-chat-importer-select-zip",
+      id: "select-zip",
       name: t("commands.import_conversations.name"),
       callback: () => {
-        this.plugin.showProviderSelectionDialog();
+        void this.plugin.showProviderSelectionDialog();
       }
     });
   }
@@ -13498,7 +10096,112 @@ __name(EventHandlers, "EventHandlers");
 // src/services/import-service.ts
 var import_obsidian17 = require("obsidian");
 init_utils();
-init_dialogs();
+
+// src/dialogs.ts
+var import_obsidian13 = require("obsidian");
+init_support_box();
+function displayModal(app, title, paragraphs, note) {
+  const modal = new import_obsidian13.Modal(app);
+  modal.contentEl.addClass("nexus-ai-chat-importer-modal");
+  modal.contentEl.createEl("h2", {
+    text: title,
+    cls: "modal-title"
+  });
+  const contentContainer = modal.contentEl.createDiv({
+    cls: "modal-content"
+  });
+  paragraphs.forEach((paragraph, _paragraphIndex) => {
+    const paragraphWithSpacing = paragraph + "\n\n";
+    const paragraphDiv = contentContainer.createDiv({
+      cls: "modal-paragraph"
+    });
+    const sections = paragraphWithSpacing.split("\n\n").filter((section) => section.trim() !== "");
+    sections.forEach((section, sectionIndex) => {
+      const sectionDiv = paragraphDiv.createDiv({ cls: "modal-section" });
+      const lines = section.split("\n").filter((line) => line.trim() !== "");
+      lines.forEach((line) => {
+        const lineDiv = sectionDiv.createDiv({ cls: "modal-line" });
+        let htmlContent = line.replace(
+          /\[([^\]]+)\]\(([^)]+)\)/g,
+          '<a href="$2" class="external-link" target="_blank">$1</a>'
+        ).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        if (line.trim().endsWith(":") && line.trim().length < 30) {
+          lineDiv.append(
+            (0, import_obsidian13.sanitizeHTMLToDom)(
+              `<strong class="section-header">${htmlContent}</strong>`
+            )
+          );
+        } else if (line.trim().startsWith("\u2022") || line.trim().startsWith("-")) {
+          lineDiv.append((0, import_obsidian13.sanitizeHTMLToDom)(htmlContent));
+          lineDiv.addClass("modal-list-item");
+        } else {
+          lineDiv.append((0, import_obsidian13.sanitizeHTMLToDom)(htmlContent));
+        }
+      });
+      if (sectionIndex < sections.length - 1) {
+        paragraphDiv.createDiv({ cls: "modal-section-break" });
+      }
+    });
+  });
+  if (note) {
+    contentContainer.createDiv({ cls: "modal-major-break" });
+    const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
+    let noteContent = note.replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      '<a href="$2" class="external-link" target="_blank">$1</a>'
+    ).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    noteDiv.append((0, import_obsidian13.sanitizeHTMLToDom)(noteContent));
+  }
+  return modal;
+}
+__name(displayModal, "displayModal");
+function addButtons(modal, type, resolve, customLabels) {
+  const buttonContainer = modal.contentEl.createDiv({
+    cls: "modal-button-container"
+  });
+  if (type === "information") {
+    const buttonLabel = (customLabels == null ? void 0 : customLabels.button1) || "Understood";
+    const button = buttonContainer.createEl("button", {
+      text: buttonLabel,
+      cls: "mod-cta"
+      // Obsidian's primary button class
+    });
+    button.addEventListener("click", () => {
+      modal.close();
+      resolve(true);
+    });
+  } else {
+    const noLabel = (customLabels == null ? void 0 : customLabels.button2) || "No";
+    const yesLabel = (customLabels == null ? void 0 : customLabels.button1) || "Yes";
+    const noButton = buttonContainer.createEl("button", {
+      text: noLabel,
+      cls: "mod-muted"
+      // Obsidian's secondary button class
+    });
+    noButton.addEventListener("click", () => {
+      modal.close();
+      resolve(false);
+    });
+    const yesButton = buttonContainer.createEl("button", {
+      text: yesLabel,
+      cls: "mod-cta"
+      // Obsidian's primary button class
+    });
+    yesButton.addEventListener("click", () => {
+      modal.close();
+      resolve(true);
+    });
+  }
+}
+__name(addButtons, "addButtons");
+async function showDialog(app, type, title, paragraphs, note, customLabels) {
+  return new Promise((resolve) => {
+    const modal = displayModal(app, title, paragraphs, note);
+    addButtons(modal, type, resolve, customLabels);
+    modal.open();
+  });
+}
+__name(showDialog, "showDialog");
 
 // src/models/import-report.ts
 init_utils();
@@ -13607,30 +10310,72 @@ var ImportReport = class {
       totalProcessed += section.counters.totalConversationsProcessed;
       newMessages += section.counters.totalNonEmptyMessagesAdded;
     });
-    return { created, updated, skipped, failed, totalProcessed, newMessages };
+    return {
+      created,
+      updated,
+      skipped,
+      failed,
+      totalProcessed,
+      newMessages
+    };
   }
   addCreated(title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      section.created.push({
+        title,
+        filePath,
+        createTime,
+        updateTime,
+        messageCount,
+        attachmentStats,
+        providerSpecificCount,
+        sourceFile: this.currentFileName
+      });
     }
   }
   addUpdated(title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      section.updated.push({
+        title,
+        filePath,
+        createTime,
+        updateTime,
+        newMessageCount,
+        attachmentStats,
+        providerSpecificCount,
+        sourceFile: this.currentFileName
+      });
     }
   }
   addSkipped(title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount) {
     const section = this.getCurrentSection();
     if (section) {
-      section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+      section.skipped.push({
+        title,
+        filePath,
+        createTime,
+        updateTime,
+        messageCount,
+        reason,
+        attachmentStats,
+        providerSpecificCount,
+        sourceFile: this.currentFileName
+      });
     }
   }
   addFailed(title, filePath, createTime, updateTime, errorMessage) {
     const section = this.getCurrentSection();
     if (section) {
-      section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
+      section.failed.push({
+        title,
+        filePath,
+        createTime,
+        updateTime,
+        errorMessage,
+        sourceFile: this.currentFileName
+      });
     }
   }
   addError(message, details) {
@@ -13667,28 +10412,44 @@ var ImportReport = class {
     lines.push("| --- | ---: |");
     lines.push(`| Created | ${stats.created} |`);
     lines.push(`| Updated | ${stats.updated} |`);
-    lines.push(`| Skipped | ${(_a = analysisInfo == null ? void 0 : analysisInfo.conversationsIgnored) != null ? _a : stats.skipped} |`);
+    lines.push(
+      `| Skipped | ${(_a = analysisInfo == null ? void 0 : analysisInfo.conversationsIgnored) != null ? _a : stats.skipped} |`
+    );
     lines.push(`| Failed | ${stats.failed} |`);
     if (analysisInfo) {
-      lines.push(`| Found (raw) | ${analysisInfo.totalConversationsFound || 0} |`);
-      lines.push(`| Kept (unique) | ${analysisInfo.uniqueConversationsKept || 0} |`);
-      lines.push(`| Duplicates removed | ${analysisInfo.duplicatesRemoved || 0} |`);
+      lines.push(
+        `| Found (raw) | ${analysisInfo.totalConversationsFound || 0} |`
+      );
+      lines.push(
+        `| Kept (unique) | ${analysisInfo.uniqueConversationsKept || 0} |`
+      );
+      lines.push(
+        `| Duplicates removed | ${analysisInfo.duplicatesRemoved || 0} |`
+      );
     }
     lines.push("");
     lines.push("### Attachments");
     lines.push("");
     lines.push("| Metric | Value |");
     lines.push("| --- | ---: |");
-    lines.push(`| Extracted | ${totalAttachments.found}/${totalAttachments.total} |`);
+    lines.push(
+      `| Extracted | ${totalAttachments.found}/${totalAttachments.total} |`
+    );
     lines.push(`| Missing | ${totalAttachments.missing} |`);
     lines.push(`| Failed | ${totalAttachments.failed} |`);
     lines.push("");
     if (allFiles && allFiles.length > 0) {
-      const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
+      const sortedFiles = [...allFiles].sort(
+        (a, b) => a.lastModified - b.lastModified
+      );
       lines.push("## Archives");
       lines.push("");
-      lines.push("| Archive | Status | Reason | Conversations | Selected | Created | Updated | Failed | Duplicates |");
-      lines.push("| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |");
+      lines.push(
+        "| Archive | Status | Reason | Conversations | Selected | Created | Updated | Failed | Duplicates |"
+      );
+      lines.push(
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |"
+      );
       for (const file of sortedFiles) {
         const section = this.fileSections.get(file.name);
         const perFileStats = fileStats == null ? void 0 : fileStats.get(file.name);
@@ -13700,8 +10461,14 @@ var ImportReport = class {
         const duplicateCount = (_c = perFileStats == null ? void 0 : perFileStats.duplicates) != null ? _c : 0;
         const conversationCount = (_d = perFileStats == null ? void 0 : perFileStats.totalConversations) != null ? _d : selectedCount;
         const status = processedSet.has(file.name) ? "processed" : "skipped";
-        const reason = this.buildArchiveReason(file.name, status, isSelectiveImport);
-        lines.push(`| \`${shortName}\` | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`);
+        const reason = this.buildArchiveReason(
+          file.name,
+          status,
+          isSelectiveImport
+        );
+        lines.push(
+          `| \`${shortName}\` | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`
+        );
       }
       lines.push("");
       if (archiveDisplayNames && archiveDisplayNames.size > 0) {
@@ -13768,7 +10535,10 @@ var ImportReport = class {
         lines.push(`## ${fileName}`);
         lines.push("");
       }
-      const sectionContent = this.generateFileContent(section, multipleFiles).trim();
+      const sectionContent = this.generateFileContent(
+        section,
+        multipleFiles
+      ).trim();
       if (sectionContent.length > 0) {
         lines.push(sectionContent);
         lines.push("");
@@ -13815,10 +10585,20 @@ var ImportReport = class {
       failedEntries.push(...section.failed);
     }
     const indexedEntries = Array.from(createdOrUpdatedByPath.values());
-    const createdEntries = indexedEntries.filter((entry) => entry.status === "created").sort((a, b) => a.title.localeCompare(b.title, void 0, { sensitivity: "base" }));
-    const updatedEntries = indexedEntries.filter((entry) => entry.status === "updated").sort((a, b) => a.title.localeCompare(b.title, void 0, { sensitivity: "base" }));
+    const createdEntries = indexedEntries.filter((entry) => entry.status === "created").sort(
+      (a, b) => a.title.localeCompare(b.title, void 0, {
+        sensitivity: "base"
+      })
+    );
+    const updatedEntries = indexedEntries.filter((entry) => entry.status === "updated").sort(
+      (a, b) => a.title.localeCompare(b.title, void 0, {
+        sensitivity: "base"
+      })
+    );
     const sortedAllEntries = [...indexedEntries].sort((a, b) => {
-      return a.title.localeCompare(b.title, void 0, { sensitivity: "base" });
+      return a.title.localeCompare(b.title, void 0, {
+        sensitivity: "base"
+      });
     });
     const lines = [];
     lines.push("# Nexus AI Chat Importer Index (Mobile)");
@@ -13862,12 +10642,18 @@ var ImportReport = class {
       lines.push("");
     }
     if (failedEntries.length > 0) {
-      const sortedFailures = [...failedEntries].sort((a, b) => a.title.localeCompare(b.title, void 0, { sensitivity: "base" }));
+      const sortedFailures = [...failedEntries].sort(
+        (a, b) => a.title.localeCompare(b.title, void 0, {
+          sensitivity: "base"
+        })
+      );
       lines.push("## Failed");
       lines.push("");
       for (const entry of sortedFailures) {
         const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
-        lines.push(`- ${sanitizedTitle} \u2014 ${entry.errorMessage || "Unknown error"}`);
+        lines.push(
+          `- ${sanitizedTitle} \u2014 ${entry.errorMessage || "Unknown error"}`
+        );
       }
       lines.push("");
     }
@@ -13875,9 +10661,19 @@ var ImportReport = class {
   }
   generateReportContent(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) {
     let content = "# Nexus AI Chat Importer Report\n\n";
-    content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) + "\n\n";
+    content += this.generateGlobalSummary(
+      allFiles,
+      processedFiles,
+      skippedFiles,
+      analysisInfo,
+      fileStats,
+      isSelectiveImport
+    ) + "\n\n";
     if (skippedFiles && skippedFiles.length > 0) {
-      content += this.generateSkippedFilesSection(skippedFiles, isSelectiveImport) + "\n\n";
+      content += this.generateSkippedFilesSection(
+        skippedFiles,
+        isSelectiveImport
+      ) + "\n\n";
     }
     const fileNames = Array.from(this.fileSections.keys());
     if (fileNames.length === 0) {
@@ -13913,7 +10709,9 @@ var ImportReport = class {
     if (!allFiles || allFiles.length === 0) {
       return Array.from(this.fileSections.keys());
     }
-    const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
+    const sortedFiles = [...allFiles].sort(
+      (a, b) => a.lastModified - b.lastModified
+    );
     const orderedNames = [];
     for (const file of sortedFiles) {
       if (this.fileSections.has(file.name)) {
@@ -13942,7 +10740,11 @@ var ImportReport = class {
     section += `> 
 `;
     skippedFiles.forEach((fileName) => {
-      const reason = this.buildArchiveReason(fileName, "skipped", isSelectiveImport);
+      const reason = this.buildArchiveReason(
+        fileName,
+        "skipped",
+        isSelectiveImport
+      );
       section += `> - \`${fileName}\` \u2014 ${reason}
 `;
     });
@@ -13955,9 +10757,6 @@ var ImportReport = class {
   generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) {
     const stats = this.getGlobalStats();
     const totalAttachments = this.getTotalAttachmentStats();
-    const fileCount = this.fileSections.size;
-    const totalFilesAnalyzed = allFiles ? allFiles.length : fileCount;
-    const filesSkipped = skippedFiles ? skippedFiles.length : 0;
     let summary = `## \u{1F4CA} Import Summary
 
 `;
@@ -14105,7 +10904,10 @@ var ImportReport = class {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
-      const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
+      const createDate = formatMessageTimestamp(
+        entry.createTime,
+        this.customTimestampFormat
+      );
       const providerSpecificDisplay = providerSpecificValue > 0 ? `\u2705 ${providerSpecificValue}` : providerSpecificValue;
       table += `| \u2728 | ${titleLink} | ${createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |
 `;
@@ -14127,7 +10929,10 @@ var ImportReport = class {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
       const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
       const providerSpecificValue = entry.providerSpecificCount || 0;
-      const updateDate = formatMessageTimestamp(entry.updateTime, this.customTimestampFormat);
+      const updateDate = formatMessageTimestamp(
+        entry.updateTime,
+        this.customTimestampFormat
+      );
       const providerSpecificDisplay = providerSpecificValue > 0 ? `\u2705 ${providerSpecificValue}` : providerSpecificValue;
       table += `| \u{1F504} | ${titleLink} | ${updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |
 `;
@@ -14146,7 +10951,10 @@ var ImportReport = class {
     });
     sortedEntries.forEach((entry) => {
       const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
-      const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
+      const createDate = formatMessageTimestamp(
+        entry.createTime,
+        this.customTimestampFormat
+      );
       table += `| \u{1F6AB} | ${sanitizedTitle} | ${createDate} | ${entry.errorMessage || "Unknown error"} |
 `;
     });
@@ -14168,7 +10976,7 @@ var ImportReport = class {
     if (!stats || stats.total === 0) {
       return "0";
     }
-    const { total, found, missing, failed } = stats;
+    const { total, found } = stats;
     if (found === total) {
       return `\u2705 ${found}`;
     } else if (found === 0) {
@@ -14332,12 +11140,36 @@ function isImageFile(attachment) {
     return true;
   }
   const lowerFileName = fileName.toLowerCase();
-  const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".tiff"];
+  const imageExtensions = [
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".svg",
+    ".bmp",
+    ".tiff"
+  ];
   return imageExtensions.some((ext) => lowerFileName.endsWith(ext));
 }
 __name(isImageFile, "isImageFile");
 function isTextFile(fileName) {
-  const textExtensions = [".txt", ".md", ".json", ".csv", ".xml", ".html", ".css", ".js", ".ts", ".py", ".java", ".cpp", ".c", ".h"];
+  const textExtensions = [
+    ".txt",
+    ".md",
+    ".json",
+    ".csv",
+    ".xml",
+    ".html",
+    ".css",
+    ".js",
+    ".ts",
+    ".py",
+    ".java",
+    ".cpp",
+    ".c",
+    ".h"
+  ];
   return textExtensions.some((ext) => fileName.toLowerCase().endsWith(ext));
 }
 __name(isTextFile, "isTextFile");
@@ -14372,7 +11204,7 @@ function detectFileFormat(fileContent) {
 }
 __name(detectFileFormat, "detectFileFormat");
 function sanitizeFileName(fileName) {
-  return fileName.trim().replace(/[<>:"\/\\|?*]/g, "_").replace(/\s+/g, "_");
+  return fileName.trim().replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_");
 }
 __name(sanitizeFileName, "sanitizeFileName");
 function getFileCategory(fileName, fileType) {
@@ -14418,13 +11250,18 @@ var _MessageFormatter = class {
       return "";
     }
     const customFormat = this.plugin.settings.useCustomMessageTimestampFormat ? this.plugin.settings.messageTimestampFormat : void 0;
-    const messageTime = formatMessageTimestamp(message.timestamp, customFormat);
+    const messageTime = formatMessageTimestamp(
+      message.timestamp,
+      customFormat
+    );
     const authorName = message.role === "assistant" && message.model ? `Assistant \xB7 ${message.model}` : message.role === "user" ? "User" : "Assistant";
     const calloutType = message.role === "user" ? _MessageFormatter.CALLOUTS.USER : _MessageFormatter.CALLOUTS.AGENT;
     let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}
 `;
     if (message.content) {
-      const contentWithMath = _MessageFormatter.convertLatexDelimiters(message.content);
+      const contentWithMath = _MessageFormatter.convertLatexDelimiters(
+        message.content
+      );
       const lines = contentWithMath.split("\n");
       const formattedLines = lines.map((line) => {
         if (line.trim() === "") {
@@ -14491,9 +11328,13 @@ var _MessageFormatter = class {
     } else if (attachment.status && !attachment.status.found) {
       if (attachment.status.reason === "missing_from_export") {
         const link = attachment.url ? ` [Open original conversation](${attachment.url})` : "";
-        content += `>> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}.${link}`;
+        content += `>> \u26A0\uFE0F ${this.getStatusMessage(
+          attachment.status.reason
+        )}.${link}`;
       } else {
-        content += `>> \u26A0\uFE0F ${this.getStatusMessage(attachment.status.reason)}`;
+        content += `>> \u26A0\uFE0F ${this.getStatusMessage(
+          attachment.status.reason
+        )}`;
         if (attachment.status.note) {
           content += `
 >> **Note:** ${attachment.status.note}`;
@@ -14517,7 +11358,10 @@ var _MessageFormatter = class {
     let match;
     while ((match = codePattern.exec(text)) !== null) {
       if (match.index > lastIndex) {
-        segments.push({ text: text.slice(lastIndex, match.index), isCode: false });
+        segments.push({
+          text: text.slice(lastIndex, match.index),
+          isCode: false
+        });
       }
       segments.push({ text: match[0], isCode: true });
       lastIndex = match.index + match[0].length;
@@ -14529,8 +11373,14 @@ var _MessageFormatter = class {
       if (segment.isCode)
         return segment.text;
       let result = segment.text;
-      result = result.replace(/(?<!\\)\\\[([\s\S]*?)(?<!\\)\\\]/g, "$$$$$1$$$$");
-      result = result.replace(/(?<!\\)\\\((.*?)(?<!\\)\\\)/g, "$$$1$$");
+      result = result.replace(
+        /(?<!\\)\\\[([\s\S]*?)(?<!\\)\\\]/g,
+        "$$$$$1$$$$"
+      );
+      result = result.replace(
+        /(?<!\\)\\\((.*?)(?<!\\)\\\)/g,
+        "$$$1$$"
+      );
       return result;
     }).join("");
   }
@@ -14596,11 +11446,29 @@ var NoteFormatter = class {
   }
   generateMarkdownContent(conversation) {
     const safeTitle = generateSafeAlias(conversation.title);
-    const createTimeStr = new Date(conversation.createTime * 1e3).toISOString();
-    const updateTimeStr = new Date(conversation.updateTime * 1e3).toISOString();
-    const createTimeDisplay = `${formatTimestamp(conversation.createTime, "date")} at ${formatTimestamp(conversation.createTime, "time")}`;
-    const updateTimeDisplay = `${formatTimestamp(conversation.updateTime, "date")} at ${formatTimestamp(conversation.updateTime, "time")}`;
-    let content = this.generateHeader(safeTitle, conversation.id, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation);
+    const createTimeStr = new Date(
+      conversation.createTime * 1e3
+    ).toISOString();
+    const updateTimeStr = new Date(
+      conversation.updateTime * 1e3
+    ).toISOString();
+    const createTimeDisplay = `${formatTimestamp(
+      conversation.createTime,
+      "date"
+    )} at ${formatTimestamp(conversation.createTime, "time")}`;
+    const updateTimeDisplay = `${formatTimestamp(
+      conversation.updateTime,
+      "date"
+    )} at ${formatTimestamp(conversation.updateTime, "time")}`;
+    let content = this.generateHeader(
+      safeTitle,
+      conversation.id,
+      createTimeStr,
+      updateTimeStr,
+      createTimeDisplay,
+      updateTimeDisplay,
+      conversation
+    );
     content += this.generateMessagesContent(conversation);
     content += this.generateRelatedQueriesSection(conversation);
     return content;
@@ -14608,7 +11476,9 @@ var NoteFormatter = class {
   generateHeader(title, conversationId, createTimeStr, updateTimeStr, createTimeDisplay, updateTimeDisplay, conversation) {
     let chatUrl = conversation.chatUrl;
     if (!chatUrl && URL_GENERATORS[conversation.provider]) {
-      chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(conversationId);
+      chatUrl = URL_GENERATORS[conversation.provider].generateChatUrl(
+        conversationId
+      );
     }
     const mode = this.extractMode(conversation);
     const models = this.extractModels(conversation);
@@ -14653,7 +11523,9 @@ ${modeLine}${modelsBlock}---
     var _a;
     const metadata = conversation.metadata || {};
     const fromMetadata = Array.isArray((_a = conversation.metadata) == null ? void 0 : _a.models) ? metadata.models : [];
-    const fromMessages = conversation.messages.map((message) => message.model).filter((model) => typeof model === "string" && model.trim().length > 0);
+    const fromMessages = conversation.messages.map((message) => message.model).filter(
+      (model) => typeof model === "string" && model.trim().length > 0
+    );
     const seen = /* @__PURE__ */ new Set();
     const models = [];
     for (const model of [...fromMetadata, ...fromMessages]) {
@@ -14697,12 +11569,17 @@ var FileService = class {
       if (file instanceof import_obsidian14.TFile) {
         await this.plugin.app.vault.modify(file, content);
       } else if (file instanceof import_obsidian14.TFolder) {
-        throw new Error(`Cannot write to '${filePath}'; it is a folder.`);
+        throw new Error(
+          `Cannot write to '${filePath}'; it is a folder.`
+        );
       } else {
         await this.plugin.app.vault.create(filePath, content);
       }
     } catch (error) {
-      this.plugin.logger.error(`Error creating or modifying file '${filePath}'`, error.message);
+      this.plugin.logger.error(
+        `Error creating or modifying file '${filePath}'`,
+        error.message
+      );
       throw error;
     }
   }
@@ -14714,7 +11591,10 @@ var FileService = class {
         return;
       }
     } catch (error) {
-      this.plugin.logger.error("Error handling conversation file deletion:", error);
+      this.plugin.logger.error(
+        "Error handling conversation file deletion:",
+        error
+      );
     }
   }
   /**
@@ -14750,7 +11630,12 @@ var ConversationProcessor = class {
     this.currentProvider = "unknown";
     this.messageFormatter = new MessageFormatter(plugin.logger, plugin);
     this.fileService = new FileService(plugin);
-    this.noteFormatter = new NoteFormatter(plugin.logger, plugin.manifest.id, plugin.manifest.version, plugin);
+    this.noteFormatter = new NoteFormatter(
+      plugin.logger,
+      plugin.manifest.id,
+      plugin.manifest.version,
+      plugin
+    );
     this.providerRegistry = providerRegistry;
   }
   /**
@@ -14780,7 +11665,10 @@ var ConversationProcessor = class {
     const adapter = this.providerRegistry.getAdapter(provider);
     const processLogger = this.plugin.logger.child("Process");
     if (!adapter) {
-      importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
+      importReport.addError(
+        "Provider adapter not found",
+        `No adapter found for provider: ${provider}`
+      );
       return importReport;
     }
     let conversationsMap;
@@ -14860,25 +11748,17 @@ var ConversationProcessor = class {
    * Process conversations using the detected provider
    */
   async processConversationsWithProvider(provider, rawConversations, importReport, zip, isReprocess = false, progressCallback, existingConversationsMap, reprocessConversationIds) {
-    var _a;
     this.currentProvider = provider;
     const adapter = this.providerRegistry.getAdapter(provider);
     const processLogger = this.plugin.logger.child("Process");
     if (!adapter) {
-      importReport.addError("Provider adapter not found", `No adapter found for provider: ${provider}`);
+      importReport.addError(
+        "Provider adapter not found",
+        `No adapter found for provider: ${provider}`
+      );
       return importReport;
     }
-    let conversationsToProcess = rawConversations;
-    if (provider === "gemini" && ((_a = adapter.hasIndex) == null ? void 0 : _a.call(adapter))) {
-      progressCallback == null ? void 0 : progressCallback({
-        phase: "processing",
-        title: "Grouping Gemini conversations...",
-        detail: "Using index to reconstruct full conversations"
-      });
-      const groupedConversations = adapter.convertAllWithIndex(rawConversations);
-      conversationsToProcess = groupedConversations;
-      this.plugin.logger.debug(`[Gemini] Grouped ${rawConversations.length} entries into ${groupedConversations.length} conversations`);
-    }
+    const conversationsToProcess = rawConversations;
     let conversationsMap;
     if (existingConversationsMap) {
       conversationsMap = existingConversationsMap;
@@ -14923,8 +11803,16 @@ var ConversationProcessor = class {
       const chatCreateTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
       const chatUpdateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
       if (!chatId || chatId.trim() === "") {
-        this.plugin.logger.warn(`Skipping conversation with missing ID: ${chatTitle}`);
-        importReport.addFailed(chatTitle, "N/A", 0, 0, "Missing conversation ID");
+        this.plugin.logger.warn(
+          `Skipping conversation with missing ID: ${chatTitle}`
+        );
+        importReport.addFailed(
+          chatTitle,
+          "N/A",
+          0,
+          0,
+          "Missing conversation ID"
+        );
         return;
       }
       const existingEntry = existingConversations.get(chatId);
@@ -14941,12 +11829,26 @@ var ConversationProcessor = class {
           isStandardConversation
         );
       } else {
-        const filePath = await this.generateFilePathForChat(adapter, chat, isStandardConversation);
-        resolvedPath = await this.handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation);
+        const filePath = await this.generateFilePathForChat(
+          adapter,
+          chat,
+          isStandardConversation
+        );
+        resolvedPath = await this.handleNewChat(
+          adapter,
+          chat,
+          filePath,
+          importReport,
+          zip,
+          isStandardConversation
+        );
       }
       const previousEntry = existingConversations.get(chatId);
       const previousUpdateTime = (_b = (_a = previousEntry == null ? void 0 : previousEntry.update_time) != null ? _a : previousEntry == null ? void 0 : previousEntry.updateTime) != null ? _b : 0;
-      const nextUpdateTime = Math.max(previousUpdateTime, Number(chatUpdateTime) || 0);
+      const nextUpdateTime = Math.max(
+        previousUpdateTime,
+        Number(chatUpdateTime) || 0
+      );
       const nextCreateTime = (_c = previousEntry == null ? void 0 : previousEntry.create_time) != null ? _c : Number(chatCreateTime) || 0;
       const nextPath = (previousEntry == null ? void 0 : previousEntry.path) || resolvedPath;
       existingConversations.set(chatId, {
@@ -14967,7 +11869,10 @@ var ConversationProcessor = class {
         chatTitle,
         message: errorMessage
       });
-      importReport.addError(`Error processing chat: ${chatTitle}`, errorMessage);
+      importReport.addError(
+        `Error processing chat: ${chatTitle}`,
+        errorMessage
+      );
     }
   }
   /**
@@ -14980,17 +11885,42 @@ var ConversationProcessor = class {
     const chatTitle = isStandardConversation ? chat.title : adapter.getTitle(chat);
     const createTime = isStandardConversation ? chat.createTime : adapter.getCreateTime(chat);
     const updateTime = isStandardConversation ? chat.updateTime : adapter.getUpdateTime(chat);
-    const totalMessageCount = await this.countMessages(adapter, chat, isStandardConversation);
-    const fileExists = await this.plugin.app.vault.adapter.exists(existingRecord.path);
+    const totalMessageCount = await this.countMessages(
+      adapter,
+      chat,
+      isStandardConversation
+    );
+    const fileExists = await this.plugin.app.vault.adapter.exists(
+      existingRecord.path
+    );
     if (!fileExists) {
-      return this.handleNewChat(adapter, chat, existingRecord.path, importReport, zip, isStandardConversation);
+      return this.handleNewChat(
+        adapter,
+        chat,
+        existingRecord.path,
+        importReport,
+        zip,
+        isStandardConversation
+      );
     }
     if (isReprocess) {
       this.counters.totalExistingConversationsToUpdate++;
-      await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, true, isStandardConversation);
+      await this.updateExistingNote(
+        adapter,
+        chat,
+        existingRecord.path,
+        totalMessageCount,
+        importReport,
+        zip,
+        true,
+        isStandardConversation
+      );
       return existingRecord.path;
     }
-    const comparison = compareTimestampsIgnoringSeconds(updateTime, existingRecord.updateTime);
+    const comparison = compareTimestampsIgnoringSeconds(
+      updateTime,
+      existingRecord.updateTime
+    );
     if (comparison <= 0) {
       importReport.addSkipped(
         chatTitle,
@@ -15002,13 +11932,29 @@ var ConversationProcessor = class {
       );
     } else {
       this.counters.totalExistingConversationsToUpdate++;
-      await this.updateExistingNote(adapter, chat, existingRecord.path, totalMessageCount, importReport, zip, false, isStandardConversation);
+      await this.updateExistingNote(
+        adapter,
+        chat,
+        existingRecord.path,
+        totalMessageCount,
+        importReport,
+        zip,
+        false,
+        isStandardConversation
+      );
     }
     return existingRecord.path;
   }
   async handleNewChat(adapter, chat, filePath, importReport, zip, isStandardConversation = false) {
     this.counters.totalNewConversationsToImport++;
-    return this.createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation);
+    return this.createNewNote(
+      adapter,
+      chat,
+      filePath,
+      importReport,
+      zip,
+      isStandardConversation
+    );
   }
   /**
    * Count messages in a chat using provider-specific logic
@@ -15021,9 +11967,11 @@ var ConversationProcessor = class {
     try {
       const standardConversation = await adapter.convertChat(chat);
       return ((_b = standardConversation.messages) == null ? void 0 : _b.length) || 0;
-    } catch (error) {
+    } catch (e) {
       if (chat.mapping) {
-        return Object.values(chat.mapping).filter((msg) => isValidMessage(msg.message)).length;
+        return Object.values(chat.mapping).filter(
+          (msg) => isValidMessage(msg.message)
+        ).length;
       } else if (chat.messages) {
         return Array.isArray(chat.messages) ? chat.messages.length : 0;
       }
@@ -15040,7 +11988,7 @@ var ConversationProcessor = class {
         const columnInfo = strategy.getProviderSpecificColumn();
         return columnInfo.getValue(adapter, chat);
       }
-    } catch (error) {
+    } catch (e) {
     }
     return 0;
   }
@@ -15061,7 +12009,10 @@ var ConversationProcessor = class {
             (msg) => !existingMessageIds.includes(msg.id)
           );
         } else {
-          newMessages = adapter.getNewMessages(chat, existingMessageIds);
+          newMessages = adapter.getNewMessages(
+            chat,
+            existingMessageIds
+          );
         }
         let attachmentStats = void 0;
         if (forceUpdate) {
@@ -15077,9 +12028,13 @@ var ConversationProcessor = class {
               chatId,
               zip
             );
-            attachmentStats = this.calculateAttachmentStats(standardConversation.messages);
+            attachmentStats = this.calculateAttachmentStats(
+              standardConversation.messages
+            );
           }
-          const newContent = this.noteFormatter.generateMarkdownContent(standardConversation);
+          const newContent = this.noteFormatter.generateMarkdownContent(
+            standardConversation
+          );
           await this.fileService.writeToFile(filePath, newContent);
           importReport.addUpdated(
             chatTitle,
@@ -15099,7 +12054,11 @@ var ConversationProcessor = class {
           } else {
             standardConversation = await adapter.convertChat(chat);
           }
-          content = this.updateMetadata(content, chatUpdateTime, standardConversation);
+          content = this.updateMetadata(
+            content,
+            chatUpdateTime,
+            standardConversation
+          );
           const newStandardMessages = standardConversation.messages.filter(
             (msg) => !existingMessageIds.includes(msg.id)
           );
@@ -15112,8 +12071,13 @@ var ConversationProcessor = class {
             );
           }
           attachmentStats = this.calculateAttachmentStats(processedNewMessages);
-          content += "\n\n" + this.messageFormatter.formatMessages(processedNewMessages);
-          content = this.updateRelatedQueriesSection(content, standardConversation);
+          content += "\n\n" + this.messageFormatter.formatMessages(
+            processedNewMessages
+          );
+          content = this.updateRelatedQueriesSection(
+            content,
+            standardConversation
+          );
           this.counters.totalConversationsActuallyUpdated++;
           this.counters.totalNonEmptyMessagesAdded += newMessages.length;
         }
@@ -15145,9 +12109,14 @@ var ConversationProcessor = class {
   async createNewNote(adapter, chat, filePath, importReport, zip, isStandardConversation = false) {
     try {
       const folderPath = filePath.substring(0, filePath.lastIndexOf("/"));
-      const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
+      const folderResult = await ensureFolderExists(
+        folderPath,
+        this.plugin.app.vault
+      );
       if (!folderResult.success) {
-        throw new Error(folderResult.error || "Failed to ensure folder exists.");
+        throw new Error(
+          folderResult.error || "Failed to ensure folder exists."
+        );
       }
       let standardConversation;
       if (isStandardConversation) {
@@ -15163,9 +12132,13 @@ var ConversationProcessor = class {
           chatId,
           zip
         );
-        attachmentStats = this.calculateAttachmentStats(standardConversation.messages);
+        attachmentStats = this.calculateAttachmentStats(
+          standardConversation.messages
+        );
       }
-      const content = this.noteFormatter.generateMarkdownContent(standardConversation);
+      const content = this.noteFormatter.generateMarkdownContent(
+        standardConversation
+      );
       const chatTitle = standardConversation.title;
       let finalFilePath = filePath;
       try {
@@ -15174,13 +12147,19 @@ var ConversationProcessor = class {
         if (!this.isNameTooLongError(error)) {
           throw error;
         }
-        const fallbackPath = this.buildFallbackConversationPath(finalFilePath, chatId);
-        this.plugin.logger.warn("Conversation filename exceeded platform limits; retrying with fallback name", {
-          provider: standardConversation.provider,
-          conversationId: chatId,
-          originalPath: finalFilePath,
-          fallbackPath
-        });
+        const fallbackPath = this.buildFallbackConversationPath(
+          finalFilePath,
+          chatId
+        );
+        this.plugin.logger.warn(
+          "Conversation filename exceeded platform limits; retrying with fallback name",
+          {
+            provider: standardConversation.provider,
+            conversationId: chatId,
+            originalPath: finalFilePath,
+            fallbackPath
+          }
+        );
         finalFilePath = await generateUniqueFileName(
           fallbackPath,
           this.plugin.app.vault.adapter,
@@ -15191,7 +12170,10 @@ var ConversationProcessor = class {
       const messageCount = standardConversation.messages.length;
       const createTime = standardConversation.createTime;
       const updateTime = standardConversation.updateTime;
-      const providerSpecificCount = this.getProviderSpecificCount(adapter, chat);
+      const providerSpecificCount = this.getProviderSpecificCount(
+        adapter,
+        chat
+      );
       importReport.addCreated(
         chatTitle,
         finalFilePath,
@@ -15222,8 +12204,14 @@ var ConversationProcessor = class {
   updateMetadata(content, updateTime, conversation) {
     var _a;
     const updateTimeStr = new Date(updateTime * 1e3).toISOString();
-    content = content.replace(/^update_time: .*$/m, `update_time: ${updateTimeStr}`);
-    content = content.replace(/^Last Updated: .*$/m, `Last Updated: ${updateTimeStr}`);
+    content = content.replace(
+      /^update_time: .*$/m,
+      `update_time: ${updateTimeStr}`
+    );
+    content = content.replace(
+      /^Last Updated: .*$/m,
+      `Last Updated: ${updateTimeStr}`
+    );
     if (!conversation) {
       return content;
     }
@@ -15235,7 +12223,9 @@ var ConversationProcessor = class {
     var _a;
     const metadata = conversation.metadata || {};
     const fromMetadata = Array.isArray((_a = conversation.metadata) == null ? void 0 : _a.models) ? metadata.models : [];
-    const fromMessages = conversation.messages.map((message) => message.model).filter((model) => typeof model === "string" && model.trim().length > 0);
+    const fromMessages = conversation.messages.map((message) => message.model).filter(
+      (model) => typeof model === "string" && model.trim().length > 0
+    );
     const seen = /* @__PURE__ */ new Set();
     const models = [];
     for (const model of [...fromMetadata, ...fromMessages]) {
@@ -15261,15 +12251,20 @@ var ConversationProcessor = class {
 ${models.map((model) => `  - "${model.replace(/"/g, '\\"')}"`).join("\n")}
 ` : "";
     if (modeLine || modelsBlock) {
-      frontmatter = frontmatter.replace(/\n---$/, `
-${modeLine}${modelsBlock}---`);
+      frontmatter = frontmatter.replace(
+        /\n---$/,
+        `
+${modeLine}${modelsBlock}---`
+      );
     }
     return content.replace(frontmatterMatch[0], frontmatter);
   }
   updateRelatedQueriesSection(content, conversation) {
     var _a;
     const metadata = conversation.metadata || {};
-    const relatedQueries = Array.isArray((_a = conversation.metadata) == null ? void 0 : _a.related_queries) ? metadata.related_queries.filter((query) => typeof query === "string").map((query) => query.trim()).filter((query) => query.length > 0) : [];
+    const relatedQueries = Array.isArray(
+      (_a = conversation.metadata) == null ? void 0 : _a.related_queries
+    ) ? metadata.related_queries.filter((query) => typeof query === "string").map((query) => query.trim()).filter((query) => query.length > 0) : [];
     if (relatedQueries.length === 0) {
       return content;
     }
@@ -15300,12 +12295,20 @@ ${section}`;
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const folderPath = `${this.plugin.settings.conversationFolder}/${providerName}/${year}/${month}`;
-    const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
+    const folderResult = await ensureFolderExists(
+      folderPath,
+      this.plugin.app.vault
+    );
     if (!folderResult.success) {
-      throw new Error(folderResult.error || "Failed to ensure folder exists.");
+      throw new Error(
+        folderResult.error || "Failed to ensure folder exists."
+      );
     }
     const markdownExtensionBytes = 3;
-    const maxBaseNameBytes = Math.max(1, CONVERSATION_NOTE_FILENAME_MAX_BYTES - markdownExtensionBytes);
+    const maxBaseNameBytes = Math.max(
+      1,
+      CONVERSATION_NOTE_FILENAME_MAX_BYTES - markdownExtensionBytes
+    );
     let fileName = generateConversationFileName(
       chatTitle,
       createTime,
@@ -15326,7 +12329,7 @@ ${section}`;
   isNameTooLongError(error) {
     if (!error)
       return false;
-    const message = typeof (error == null ? void 0 : error.message) === "string" ? error.message : String(error);
+    const message = typeof (error == null ? void 0 : error.message) === "string" ? error.message : typeof error === "string" ? error : "[unknown error]";
     const code = typeof (error == null ? void 0 : error.code) === "string" ? error.code : "";
     return code === "ENAMETOOLONG" || message.includes("ENAMETOOLONG");
   }
@@ -15407,7 +12410,7 @@ var DefaultProviderRegistry = class {
       try {
         if (adapter.detect(rawConversations))
           return name;
-      } catch (_) {
+      } catch (e) {
       }
     }
     return "unknown";
@@ -15425,15 +12428,11 @@ var ChatGPTDalleProcessor = class {
     var _a;
     const imagePrompts = /* @__PURE__ */ new Map();
     const orphanedPrompts = /* @__PURE__ */ new Map();
-    let promptMessagesFound = 0;
-    let promptsWithImages = 0;
-    let orphanedPromptsCount = 0;
     for (const messageObj of Object.values(chat.mapping)) {
       const message = messageObj == null ? void 0 : messageObj.message;
       if (!message || ((_a = message.author) == null ? void 0 : _a.role) !== "assistant")
         continue;
       if (this.isDallePromptMessage(message)) {
-        promptMessagesFound++;
         const prompt = this.extractPromptFromJson(message);
         if (prompt) {
           const imageMessageId = this.findDalleImageInDescendants(
@@ -15441,13 +12440,11 @@ var ChatGPTDalleProcessor = class {
             messageObj.id || ""
           );
           if (imageMessageId) {
-            promptsWithImages++;
             imagePrompts.set(imageMessageId, {
               prompt,
               timestamp: message.create_time || 0
             });
           } else {
-            orphanedPromptsCount++;
             orphanedPrompts.set(messageObj.id || "", prompt);
           }
         } else {
@@ -15539,7 +12536,7 @@ var ChatGPTDalleProcessor = class {
         const extractedPrompt = parsed.prompt || null;
         return extractedPrompt;
       }
-    } catch (error) {
+    } catch (e) {
     }
     return null;
   }
@@ -15625,7 +12622,11 @@ var ChatGPTDalleProcessor = class {
       if (typeof part === "object" && part !== null) {
         const contentPart = part;
         if (contentPart.content_type === "image_asset_pointer" && contentPart.asset_pointer && ((_b = contentPart.metadata) == null ? void 0 : _b.dalle) && contentPart.metadata.dalle !== null) {
-          const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt, true);
+          const dalleAttachment = this.createDalleAttachment(
+            contentPart,
+            associatedPrompt,
+            true
+          );
           attachments.push(dalleAttachment);
         }
       }
@@ -15713,21 +12714,27 @@ var ChatGPTMessageFilter = class {
       if (ChatGPTDalleProcessor.isDallePromptMessage(message)) {
         return false;
       }
-      const excludedContentTypes = ["code", "system_error", "execution_output"];
+      const excludedContentTypes = [
+        "code",
+        "system_error",
+        "execution_output"
+      ];
       if (((_e = message.content) == null ? void 0 : _e.content_type) && excludedContentTypes.includes(message.content.content_type)) {
         return false;
       }
       if (((_f = message.content) == null ? void 0 : _f.content_type) === "multimodal_text") {
         if (((_g = message.content) == null ? void 0 : _g.parts) && Array.isArray(message.content.parts)) {
-          const hasTextContent = message.content.parts.some((part) => {
-            if (typeof part === "string" && part.trim() !== "") {
-              return true;
+          const hasTextContent = message.content.parts.some(
+            (part) => {
+              if (typeof part === "string" && part.trim() !== "") {
+                return true;
+              }
+              if (typeof part === "object" && part !== null && "text" in part) {
+                return typeof part.text === "string" && part.text.trim() !== "";
+              }
+              return false;
             }
-            if (typeof part === "object" && part !== null && "text" in part) {
-              return typeof part.text === "string" && part.text.trim() !== "";
-            }
-            return false;
-          });
+          );
           if (!hasTextContent) {
             return false;
           }
@@ -15844,7 +12851,10 @@ var ChatGPTConverter = class {
       } else if (orphanedPrompts.has(messageObj.id || "")) {
         const prompt = orphanedPrompts.get(messageObj.id || "");
         if (prompt) {
-          const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(message, prompt);
+          const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(
+            message,
+            prompt
+          );
           messages.push(orphanedMessage);
         }
       } else if (ChatGPTMessageFilter.shouldIncludeMessage(message)) {
@@ -15908,14 +12918,20 @@ ${codeContent}
             textContent = part.text;
           }
         } else if ("content_type" in part && part.content_type === "image_asset_pointer" && "asset_pointer" in part) {
-          const attachment = this.extractImageAttachment(part, conversationId);
+          const attachment = this.extractImageAttachment(
+            part,
+            conversationId
+          );
           if (attachment) {
             attachments.push(attachment);
           }
         }
       }
       if (textContent) {
-        textContent = this.cleanChatGPTArtifacts(textContent, conversationId);
+        textContent = this.cleanChatGPTArtifacts(
+          textContent,
+          conversationId
+        );
         if (textContent.trim() !== "") {
           contentParts.push(textContent);
         }
@@ -15940,7 +12956,7 @@ ${codeContent}
   /**
    * Extract image attachment from content part
    */
-  static extractImageAttachment(part, conversationId) {
+  static extractImageAttachment(part, _conversationId) {
     var _a;
     if (!part.asset_pointer)
       return null;
@@ -15980,13 +12996,25 @@ __name(ChatGPTConverter, "ChatGPTConverter");
 // Pre-compiled regex patterns for performance
 ChatGPTConverter.CLEANUP_PATTERNS = [
   // SMART: Replace sandbox links with actual links to original conversation
-  { pattern: /📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g, replacement: (chatUrl) => `\u{1F4C4} [$1](${chatUrl}) *(visit original conversation to download)*` },
-  { pattern: /📄 ([^-\n]+) - File not available in archive/g, replacement: (chatUrl) => `\u{1F4C4} [$1](${chatUrl}) *(visit original conversation to download)*` },
-  { pattern: /\[([^\]]+)\]\(sandbox:\/[^)]+\)/g, replacement: (chatUrl) => `[$1](${chatUrl}) *(visit original conversation to download)*` },
-  { pattern: /([^-\n]+) - File not available in archive\. Visit the original conversation to access it/g, replacement: (chatUrl) => `[$1](${chatUrl}) *(visit original conversation to download)*` },
+  {
+    pattern: /📄 \[([^\]]+)\]\(sandbox:\/[^)]+\)/g,
+    replacement: (chatUrl) => `\u{1F4C4} [$1](${chatUrl}) *(visit original conversation to download)*`
+  },
+  {
+    pattern: /📄 ([^-\n]+) - File not available in archive/g,
+    replacement: (chatUrl) => `\u{1F4C4} [$1](${chatUrl}) *(visit original conversation to download)*`
+  },
+  {
+    pattern: /\[([^\]]+)\]\(sandbox:\/[^)]+\)/g,
+    replacement: (chatUrl) => `[$1](${chatUrl}) *(visit original conversation to download)*`
+  },
+  {
+    pattern: /([^-\n]+) - File not available in archive\. Visit the original conversation to access it/g,
+    replacement: (chatUrl) => `[$1](${chatUrl}) *(visit original conversation to download)*`
+  },
   // Remove patterns (static replacements)
-  { pattern: /cite[a-zA-Z0-9_\-]+/g, replacement: () => "" },
-  { pattern: /link[a-zA-Z0-9_\-]+/g, replacement: () => "" },
+  { pattern: /cite[a-zA-Z0-9_-]+/g, replacement: () => "" },
+  { pattern: /link[a-zA-Z0-9_-]+/g, replacement: () => "" },
   { pattern: /turn\d+search\d+/g, replacement: () => "" },
   { pattern: /[\uE000-\uF8FF]/g, replacement: () => "" },
   // Unicode control characters
@@ -16003,12 +13031,16 @@ init_utils();
 function openYauzl(filePath) {
   return new Promise((resolve, reject) => {
     const yauzl = require_yauzl();
-    yauzl.open(filePath, { lazyEntries: true, autoClose: true }, (err, zipfile) => {
-      if (err)
-        reject(err);
-      else
-        resolve(zipfile);
-    });
+    yauzl.open(
+      filePath,
+      { lazyEntries: true, autoClose: true },
+      (err, zipfile) => {
+        if (err)
+          reject(err);
+        else
+          resolve(zipfile);
+      }
+    );
   });
 }
 __name(openYauzl, "openYauzl");
@@ -16016,7 +13048,7 @@ function normalizeChunk(chunk) {
   if (typeof chunk === "string") {
     return new TextEncoder().encode(chunk);
   }
-  return chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk);
+  return chunk;
 }
 __name(normalizeChunk, "normalizeChunk");
 async function* streamToByteChunks(stream) {
@@ -16091,42 +13123,50 @@ async function streamToBuffer(stream) {
 __name(streamToBuffer, "streamToBuffer");
 async function openDesktopEntryReadStream(filePath, entryName) {
   const zipfile = await openYauzl(filePath);
-  return await new Promise((resolve, reject) => {
-    let settled = false;
-    const fail = /* @__PURE__ */ __name((error) => {
-      if (settled)
-        return;
-      settled = true;
-      zipfile.close();
-      reject(error);
-    }, "fail");
-    zipfile.on("error", fail);
-    zipfile.on("end", () => {
-      if (!settled)
-        fail(new Error(`Entry not found in ZIP: ${entryName}`));
-    });
-    zipfile.on("entry", (entry) => {
-      if (entry.fileName !== entryName) {
-        zipfile.readEntry();
-        return;
-      }
-      zipfile.openReadStream(entry, async (err, stream) => {
-        if (err) {
-          fail(err);
+  return await new Promise(
+    (resolve, reject) => {
+      let settled = false;
+      const fail = /* @__PURE__ */ __name((error) => {
+        if (settled)
+          return;
+        settled = true;
+        zipfile.close();
+        reject(error);
+      }, "fail");
+      zipfile.on("error", fail);
+      zipfile.on("end", () => {
+        if (!settled)
+          fail(new Error(`Entry not found in ZIP: ${entryName}`));
+      });
+      zipfile.on("entry", (entry) => {
+        if (entry.fileName !== entryName) {
+          zipfile.readEntry();
           return;
         }
-        if (!settled) {
-          settled = true;
-          resolve({ zipfile, stream });
-        }
+        zipfile.openReadStream(
+          entry,
+          (err, stream) => {
+            if (err) {
+              fail(err);
+              return;
+            }
+            if (!settled) {
+              settled = true;
+              resolve({ zipfile, stream });
+            }
+          }
+        );
       });
-    });
-    zipfile.readEntry();
-  });
+      zipfile.readEntry();
+    }
+  );
 }
 __name(openDesktopEntryReadStream, "openDesktopEntryReadStream");
 async function readDesktopEntry(filePath, entryName) {
-  const { zipfile, stream } = await openDesktopEntryReadStream(filePath, entryName);
+  const { zipfile, stream } = await openDesktopEntryReadStream(
+    filePath,
+    entryName
+  );
   try {
     return await streamToBuffer(stream);
   } finally {
@@ -16147,7 +13187,10 @@ var DesktopZipEntryHandle = class {
     return new TextDecoder("utf-8").decode(bytes);
   }
   async *readTextChunks() {
-    const { zipfile, stream } = await openDesktopEntryReadStream(this.filePath, this.name);
+    const { zipfile, stream } = await openDesktopEntryReadStream(
+      this.filePath,
+      this.name
+    );
     const decoder = new TextDecoder("utf-8");
     try {
       for await (const chunk of streamToByteChunks(stream)) {
@@ -16175,7 +13218,10 @@ var DesktopZipArchiveReader = class {
     }
   }
   async listEntries() {
-    return Array.from(this.entryMap.values()).map(({ path, size }) => ({ path, size }));
+    return Array.from(this.entryMap.values()).map(({ path, size }) => ({
+      path,
+      size
+    }));
   }
   has(name) {
     return this.entryMap.has(name);
@@ -16251,10 +13297,12 @@ async function readSlice(file, start, length) {
           var _a;
           return reject((_a = reader.error) != null ? _a : new Error("ZIP read failed"));
         };
-        reader.readAsArrayBuffer(file.slice(safeStart, safeStart + safeLength));
+        reader.readAsArrayBuffer(
+          file.slice(safeStart, safeStart + safeLength)
+        );
       });
     } catch (error) {
-      lastError = error;
+      lastError = error instanceof Error ? error : new Error(String(error));
       const retryable = shouldRetryReadError(error);
       if (!retryable || attempt === maxAttempts) {
         break;
@@ -16286,10 +13334,15 @@ async function findEndOfCentralDirectory(file) {
   const view = new DataView(buffer);
   for (let pos = buffer.byteLength - 22; pos >= 0; pos--) {
     if (view.getUint32(pos, true) === EOCD_SIGNATURE) {
-      return { offset: sliceStart + pos, view: new DataView(buffer, pos) };
+      return {
+        offset: sliceStart + pos,
+        view: new DataView(buffer, pos)
+      };
     }
   }
-  throw new Error("ZIP central directory not found (archive is invalid or unsupported)");
+  throw new Error(
+    "ZIP central directory not found (archive is invalid or unsupported)"
+  );
 }
 __name(findEndOfCentralDirectory, "findEndOfCentralDirectory");
 async function readZip64CentralDirectoryInfo(file, eocdOffset) {
@@ -16322,10 +13375,13 @@ async function readCentralDirectoryInfo(file) {
   const centralDirectoryOffset = view.getUint32(16, true);
   const usesZip64 = entryCount === 65535 || centralDirectorySize === 4294967295 || centralDirectoryOffset === 4294967295;
   if (usesZip64) {
-    mobileZipLogger.debug(`ZIP64 central directory detected for ${file.name}`, {
-      fileSize: file.size,
-      eocdOffset
-    });
+    mobileZipLogger.debug(
+      `ZIP64 central directory detected for ${file.name}`,
+      {
+        fileSize: file.size,
+        eocdOffset
+      }
+    );
     return readZip64CentralDirectoryInfo(file, eocdOffset);
   }
   return {
@@ -16372,7 +13428,11 @@ function parseZip64ExtraField(extraFieldBytes, needs) {
 __name(parseZip64ExtraField, "parseZip64ExtraField");
 async function parseCentralDirectory(file, info) {
   var _a, _b, _c;
-  const buffer = await readSlice(file, info.centralDirectoryOffset, info.centralDirectorySize);
+  const buffer = await readSlice(
+    file,
+    info.centralDirectoryOffset,
+    info.centralDirectorySize
+  );
   const view = new DataView(buffer);
   const utf8Decoder = new TextDecoder("utf-8");
   const entries = [];
@@ -16396,8 +13456,16 @@ async function parseCentralDirectory(file, info) {
     if (recordEnd > buffer.byteLength) {
       throw new Error("ZIP central directory entry is truncated");
     }
-    const fileNameBytes = new Uint8Array(buffer, fileNameStart, fileNameLength);
-    const extraFieldBytes = new Uint8Array(buffer, extraFieldStart, extraFieldLength);
+    const fileNameBytes = new Uint8Array(
+      buffer,
+      fileNameStart,
+      fileNameLength
+    );
+    const extraFieldBytes = new Uint8Array(
+      buffer,
+      extraFieldStart,
+      extraFieldLength
+    );
     const fileName = utf8Decoder.decode(fileNameBytes);
     if (compressedSize === 4294967295 || uncompressedSize === 4294967295 || localHeaderOffset === 4294967295) {
       const zip64Values = parseZip64ExtraField(extraFieldBytes, {
@@ -16425,7 +13493,10 @@ async function parseCentralDirectory(file, info) {
 }
 __name(parseCentralDirectory, "parseCentralDirectory");
 async function readCompressedFileData(file, entry) {
-  const { dataStart, compressedSize } = await getLocalFileDataRange(file, entry);
+  const { dataStart, compressedSize } = await getLocalFileDataRange(
+    file,
+    entry
+  );
   return new Uint8Array(await readSlice(file, dataStart, compressedSize));
 }
 __name(readCompressedFileData, "readCompressedFileData");
@@ -16451,10 +13522,14 @@ async function inflateRawDeflate(data, expectedLength) {
   }
   const chunks = [];
   let totalLength = 0;
-  const response = new Response(
-    new Blob([data]).stream().pipeThrough(
-      new DecompressionStream("deflate-raw")
+  const dataBlob = new Blob([
+    data.buffer.slice(
+      data.byteOffset,
+      data.byteOffset + data.byteLength
     )
+  ]);
+  const response = new Response(
+    dataBlob.stream().pipeThrough(new DecompressionStream("deflate-raw"))
   );
   const reader = (_a = response.body) == null ? void 0 : _a.getReader();
   if (!reader) {
@@ -16491,14 +13566,18 @@ async function readLocalFileData(file, entry) {
   if (entry.compressionMethod === 8) {
     return inflateRawDeflate(compressed, entry.size);
   }
-  throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`);
+  throw new Error(
+    `Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`
+  );
 }
 __name(readLocalFileData, "readLocalFileData");
 async function* readCompressedDataChunks(file, range, chunkSize = 512 * 1024) {
   let offset = 0;
   while (offset < range.compressedSize) {
     const length = Math.min(chunkSize, range.compressedSize - offset);
-    const chunk = new Uint8Array(await readSlice(file, range.dataStart + offset, length));
+    const chunk = new Uint8Array(
+      await readSlice(file, range.dataStart + offset, length)
+    );
     offset += chunk.byteLength;
     if (chunk.byteLength > 0) {
       yield chunk;
@@ -16523,17 +13602,24 @@ async function* readLocalFileTextChunks(file, entry) {
     return;
   }
   if (entry.compressionMethod !== 8) {
-    throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`);
+    throw new Error(
+      `Unsupported ZIP compression method ${entry.compressionMethod} for ${entry.path}`
+    );
   }
   if (typeof DecompressionStream === "undefined") {
     throw new Error("DecompressionStream is unavailable on this device");
   }
-  const decompressor = new DecompressionStream("deflate-raw");
+  const decompressor = new DecompressionStream(
+    "deflate-raw"
+  );
   const writer = decompressor.writable.getWriter();
   const reader = decompressor.readable.getReader();
   const pumpCompressed = (async () => {
     try {
-      for await (const compressedChunk of readCompressedDataChunks(file, range)) {
+      for await (const compressedChunk of readCompressedDataChunks(
+        file,
+        range
+      )) {
         await writer.write(compressedChunk);
       }
       await writer.close();
@@ -16580,7 +13666,10 @@ var MobileZipEntryHandle = class {
     return new TextDecoder("utf-8").decode(bytes);
   }
   async *readTextChunks() {
-    for await (const chunk of readLocalFileTextChunks(this.file, this.entry)) {
+    for await (const chunk of readLocalFileTextChunks(
+      this.file,
+      this.entry
+    )) {
       yield chunk;
     }
   }
@@ -16595,7 +13684,10 @@ var MobileZipArchiveReader = class {
     }
   }
   async listEntries() {
-    return Array.from(this.entryMap.values()).map(({ path, size }) => ({ path, size }));
+    return Array.from(this.entryMap.values()).map(({ path, size }) => ({
+      path,
+      size
+    }));
   }
   has(name) {
     return this.entryMap.has(name);
@@ -16671,7 +13763,10 @@ function extractFileIds(path) {
   if (hashMatch && !legacyMatch) {
     ids.push(hashMatch[1]);
   }
-  const baseName = fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp|pdf|txt|md)$/i, "");
+  const baseName = fileName.replace(
+    /\.(dat|png|jpg|jpeg|gif|webp|pdf|txt|md)$/i,
+    ""
+  );
   if (baseName)
     ids.push(baseName);
   return Array.from(new Set(ids.filter(Boolean)));
@@ -16712,7 +13807,10 @@ async function writeZipEntryToVault(entry, targetPath, vault) {
     detectedExtension: (_b = detected.extension) != null ? _b : void 0
   };
   const resolvedTargetPath = typeof targetPath === "function" ? await targetPath(result) : targetPath;
-  await vault.adapter.writeBinary(resolvedTargetPath, bytes.buffer);
+  await vault.adapter.writeBinary(
+    resolvedTargetPath,
+    bytes.buffer
+  );
   bytes = null;
   return {
     ...result,
@@ -16772,17 +13870,28 @@ var ChatGPTAttachmentExtractor = class {
    */
   async extractAttachments(zip, conversationId, attachments, messageId) {
     if (attachments.length === 0) {
-      return attachments.map((att) => ({ ...att, status: { processed: false, found: false } }));
+      return attachments.map((att) => ({
+        ...att,
+        status: { processed: false, found: false }
+      }));
     }
     const processedAttachments = [];
     for (const attachment of attachments) {
       try {
-        const result = await this.processAttachmentBestEffort(zip, conversationId, attachment, messageId);
+        const result = await this.processAttachmentBestEffort(
+          zip,
+          conversationId,
+          attachment,
+          messageId
+        );
         processedAttachments.push(result);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const context = messageId ? `conversation: ${conversationId}, message: ${messageId}` : `conversation: ${conversationId}`;
-        this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
+        this.logger.error(
+          `Failed to process ChatGPT attachment: ${attachment.fileName} (${context})`,
+          errorMessage
+        );
         processedAttachments.push({
           ...attachment,
           status: {
@@ -16800,7 +13909,12 @@ var ChatGPTAttachmentExtractor = class {
    * Process single attachment with best effort strategy
    */
   async processAttachmentBestEffort(zip, conversationId, attachment, messageId) {
-    const locatedFile = await this.findChatGPTFileById(zip, attachment, conversationId, messageId);
+    const locatedFile = await this.findChatGPTFileById(
+      zip,
+      attachment,
+      conversationId,
+      messageId
+    );
     if (!locatedFile) {
       let finalExtractedContent = attachment.extractedContent;
       if (attachment.attachmentType === "generated_image" && attachment.extractedContent) {
@@ -16821,11 +13935,18 @@ var ChatGPTAttachmentExtractor = class {
       };
     }
     try {
-      const extractResult = await this.extractSingleAttachment(conversationId, attachment, locatedFile);
+      const extractResult = await this.extractSingleAttachment(
+        conversationId,
+        attachment,
+        locatedFile
+      );
       if (extractResult) {
         let finalExtractedContent = attachment.extractedContent;
         if (attachment.attachmentType === "generated_image" && attachment.extractedContent) {
-          finalExtractedContent = attachment.extractedContent.replace("{{FILENAME}}", extractResult.finalFileName).replace("{{FILETYPE}}", extractResult.actualFileType).replace("{{FILESIZE}}", formatFileSize(attachment.fileSize || 0)).replace("{{URL}}", extractResult.localPath);
+          finalExtractedContent = attachment.extractedContent.replace("{{FILENAME}}", extractResult.finalFileName).replace("{{FILETYPE}}", extractResult.actualFileType).replace(
+            "{{FILESIZE}}",
+            formatFileSize(attachment.fileSize || 0)
+          ).replace("{{URL}}", extractResult.localPath);
         }
         return {
           ...attachment,
@@ -16864,7 +13985,10 @@ var ChatGPTAttachmentExtractor = class {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const context = messageId ? `conversation: ${conversationId}, message: ${messageId}` : `conversation: ${conversationId}`;
-      this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
+      this.logger.error(
+        `Error extracting ChatGPT attachment: ${attachment.fileName} (${context})`,
+        errorMessage
+      );
       let finalExtractedContent = attachment.extractedContent;
       if (attachment.attachmentType === "generated_image" && attachment.extractedContent) {
         finalExtractedContent = attachment.extractedContent.replace(
@@ -16894,13 +14018,18 @@ var ChatGPTAttachmentExtractor = class {
     let finalFileType = attachment.fileType;
     const entry = locatedFile.reader.get(locatedFile.path);
     if (!entry) {
-      throw new Error(`Attachment entry disappeared from ZIP reader: ${locatedFile.path}`);
+      throw new Error(
+        `Attachment entry disappeared from ZIP reader: ${locatedFile.path}`
+      );
     }
     const writeResult = await writeZipEntryToVault(
       entry,
       async (detection) => {
         if (attachment.attachmentType === "generated_image" && detection.detectedExtension) {
-          const baseName = attachment.fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, "");
+          const baseName = attachment.fileName.replace(
+            /\.(dat|png|jpg|jpeg|gif|webp)$/i,
+            ""
+          );
           finalFileName = `${baseName}.${detection.detectedExtension}`;
           finalFileType = detection.detectedMimeType || attachment.fileType;
         }
@@ -16909,10 +14038,18 @@ var ChatGPTAttachmentExtractor = class {
           fileName: finalFileName,
           fileType: finalFileType
         });
-        const folderPath = targetPath.substring(0, targetPath.lastIndexOf("/"));
-        const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
+        const folderPath = targetPath.substring(
+          0,
+          targetPath.lastIndexOf("/")
+        );
+        const folderResult = await ensureFolderExists(
+          folderPath,
+          this.plugin.app.vault
+        );
         if (!folderResult.success) {
-          throw new Error(`Failed to create attachment folder: ${folderResult.error}`);
+          throw new Error(
+            `Failed to create attachment folder: ${folderResult.error}`
+          );
         }
         return this.resolveFileConflict(targetPath);
       },
@@ -16949,7 +14086,9 @@ var ChatGPTAttachmentExtractor = class {
   async findChatGPTFileById(zip, attachment, conversationId, messageId) {
     if (!attachment.fileId) {
       const context = conversationId && messageId ? `conversation: ${conversationId}, message: ${messageId}` : conversationId ? `conversation: ${conversationId}` : "unknown context";
-      this.logger.warn(`No fileId provided for attachment: ${attachment.fileName} (${context})`);
+      this.logger.warn(
+        `No fileId provided for attachment: ${attachment.fileName} (${context})`
+      );
       if (zip.has(attachment.fileName)) {
         return { reader: zip, path: attachment.fileName };
       }
@@ -16960,7 +14099,11 @@ var ChatGPTAttachmentExtractor = class {
       return this.zipFileCache.get(cacheKey);
     }
     if (this.attachmentMap && this.allZips.length > 0) {
-      const result = await this.findFileUsingAttachmentMap(attachment, conversationId, messageId);
+      const result = await this.findFileUsingAttachmentMap(
+        attachment,
+        conversationId,
+        messageId
+      );
       if (result) {
         this.zipFileCache.set(cacheKey, result);
         return result;
@@ -16973,7 +14116,10 @@ var ChatGPTAttachmentExtractor = class {
       return located;
     }
     if (attachment.fileName.startsWith("dalle_")) {
-      const dalleFiles = this.findCandidatePaths(index.byDalleId, attachment.fileId);
+      const dalleFiles = this.findCandidatePaths(
+        index.byDalleId,
+        attachment.fileId
+      );
       if (dalleFiles.length > 0) {
         const located = { reader: zip, path: dalleFiles[0] };
         this.zipFileCache.set(cacheKey, located);
@@ -16995,7 +14141,10 @@ var ChatGPTAttachmentExtractor = class {
         return located;
       }
     }
-    const candidates = this.findCandidatePaths(index.byFileId, attachment.fileId);
+    const candidates = this.findCandidatePaths(
+      index.byFileId,
+      attachment.fileId
+    );
     const foundFile = candidates.length > 0 ? { reader: zip, path: candidates[0] } : null;
     this.zipFileCache.set(cacheKey, foundFile);
     return foundFile;
@@ -17004,11 +14153,10 @@ var ChatGPTAttachmentExtractor = class {
    * Find file using attachment map (multi-ZIP fallback)
    * Tries to find the file in any of the available ZIPs, preferring newer exports
    */
-  async findFileUsingAttachmentMap(attachment, conversationId, messageId) {
+  async findFileUsingAttachmentMap(attachment, _conversationId, _messageId) {
     if (!this.attachmentMap || this.allZips.length === 0) {
       return null;
     }
-    const context = conversationId && messageId ? `conversation: ${conversationId}, message: ${messageId}` : conversationId ? `conversation: ${conversationId}` : "unknown context";
     const fileId = attachment.fileId || "";
     if (!fileId) {
       return null;
@@ -17019,7 +14167,9 @@ var ChatGPTAttachmentExtractor = class {
       for (const altId of alternativeIds) {
         const altLocations = this.attachmentMap.get(altId);
         if (altLocations && altLocations.length > 0) {
-          return this.getFileFromLocation(altLocations[altLocations.length - 1]);
+          return this.getFileFromLocation(
+            altLocations[altLocations.length - 1]
+          );
         }
       }
       return null;
@@ -17050,12 +14200,16 @@ var ChatGPTAttachmentExtractor = class {
    */
   getFileFromLocation(location) {
     if (location.zipIndex >= this.allZips.length) {
-      this.logger.error(`Invalid ZIP index ${location.zipIndex} (only ${this.allZips.length} ZIPs available)`);
+      this.logger.error(
+        `Invalid ZIP index ${location.zipIndex} (only ${this.allZips.length} ZIPs available)`
+      );
       return null;
     }
     const zip = this.allZips[location.zipIndex];
     if (!zip.has(location.path)) {
-      this.logger.error(`File not found in ZIP ${location.zipIndex}: ${location.path}`);
+      this.logger.error(
+        `File not found in ZIP ${location.zipIndex}: ${location.path}`
+      );
       return null;
     }
     return { reader: zip, path: location.path };
@@ -17139,18 +14293,24 @@ var ChatGPTAttachmentExtractor = class {
   getStatistics(attachments) {
     return {
       total: attachments.length,
-      found: attachments.filter((a) => {
-        var _a, _b;
-        return ((_a = a.status) == null ? void 0 : _a.found) && ((_b = a.status) == null ? void 0 : _b.processed);
-      }).length,
-      missing: attachments.filter((a) => {
-        var _a, _b;
-        return !((_a = a.status) == null ? void 0 : _a.found) && ((_b = a.status) == null ? void 0 : _b.reason) === "missing_from_export";
-      }).length,
-      failed: attachments.filter((a) => {
-        var _a;
-        return ((_a = a.status) == null ? void 0 : _a.reason) === "extraction_failed";
-      }).length
+      found: attachments.filter(
+        (a) => {
+          var _a, _b;
+          return ((_a = a.status) == null ? void 0 : _a.found) && ((_b = a.status) == null ? void 0 : _b.processed);
+        }
+      ).length,
+      missing: attachments.filter(
+        (a) => {
+          var _a, _b;
+          return !((_a = a.status) == null ? void 0 : _a.found) && ((_b = a.status) == null ? void 0 : _b.reason) === "missing_from_export";
+        }
+      ).length,
+      failed: attachments.filter(
+        (a) => {
+          var _a;
+          return ((_a = a.status) == null ? void 0 : _a.reason) === "extraction_failed";
+        }
+      ).length
     };
   }
 };
@@ -17239,14 +14399,14 @@ __name(ChatGPTReportNamingStrategy, "ChatGPTReportNamingStrategy");
 var BaseProviderAdapter = class {
   /**
    * Process message attachments - COMMON IMPLEMENTATION
-   * 
+   *
    * This method is shared by all providers and handles:
    * - Iterating through messages
    * - Extracting attachments using provider-specific extractor
    * - Preserving message structure
-   * 
+   *
    * Subclasses only need to provide their attachment extractor via getAttachmentExtractor()
-   * 
+   *
    * @param messages - Array of messages to process
    * @param conversationId - ID of the conversation
    * @param zip - ZIP reader instance containing attachments
@@ -17289,7 +14449,10 @@ var ChatGPTAdapter = class extends BaseProviderAdapter {
   constructor(plugin) {
     super();
     this.plugin = plugin;
-    this.attachmentExtractor = new ChatGPTAttachmentExtractor(plugin, plugin.logger);
+    this.attachmentExtractor = new ChatGPTAttachmentExtractor(
+      plugin,
+      plugin.logger
+    );
     this.reportNamingStrategy = new ChatGPTReportNamingStrategy();
   }
   detect(rawConversations) {
@@ -17338,19 +14501,24 @@ var ChatGPTAdapter = class extends BaseProviderAdapter {
               author: { role: dalleMessage.role },
               content: { parts: [dalleMessage.content] },
               create_time: dalleMessage.timestamp,
-              attachments: (_b = dalleMessage.attachments) == null ? void 0 : _b.map((att) => ({
-                file_name: att.fileName,
-                file_size: att.fileSize,
-                file_type: att.fileType,
-                extracted_content: att.extractedContent
-              }))
+              attachments: (_b = dalleMessage.attachments) == null ? void 0 : _b.map(
+                (att) => ({
+                  file_name: att.fileName,
+                  file_size: att.fileSize,
+                  file_type: att.fileType,
+                  extracted_content: att.extractedContent
+                })
+              )
             };
             newMessages.push(chatMessage);
           }
         } else if (orphanedPrompts.has(messageObj.id || "")) {
           const prompt = orphanedPrompts.get(messageObj.id || "");
           if (prompt) {
-            const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(message, prompt);
+            const orphanedMessage = ChatGPTDalleProcessor.createOrphanedPromptMessage(
+              message,
+              prompt
+            );
             const chatMessage = {
               id: orphanedMessage.id,
               author: { role: orphanedMessage.role },
@@ -17457,7 +14625,12 @@ var ClaudeConverter = class {
   static async convertChat(chat) {
     const createTime = chat.created_at ? Math.floor(new Date(chat.created_at).getTime() / 1e3) : 0;
     const conversationTitle = chat.name || "Untitled";
-    const messages = await this.convertMessages(chat.chat_messages, chat.uuid, conversationTitle, createTime);
+    const messages = await this.convertMessages(
+      chat.chat_messages,
+      chat.uuid,
+      conversationTitle,
+      createTime
+    );
     const normalizedModel = (chat.model || "").trim();
     return {
       id: chat.uuid,
@@ -17490,7 +14663,7 @@ var ClaudeConverter = class {
       if (message.content) {
         for (const block of message.content) {
           if (block.type === "text" && block.text) {
-            const computerLinkRegex = /computer:\/\/\/([^\)]+)/g;
+            const computerLinkRegex = /computer:\/\/\/([^)]+)/g;
             let match;
             while ((match = computerLinkRegex.exec(block.text)) !== null) {
               linksInMessage.add(match[1]);
@@ -17513,7 +14686,9 @@ var ClaudeConverter = class {
             const command = block.input.command || "create";
             const versionUuid = block.input.version_uuid;
             if (command !== "view" && versionUuid) {
-              const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+              const messageTimestamp = message.created_at ? Math.floor(
+                new Date(message.created_at).getTime() / 1e3
+              ) : 0;
               allArtifacts.push({
                 artifact: block.input,
                 messageIndex: msgIndex,
@@ -17534,15 +14709,23 @@ var ClaudeConverter = class {
                   let matchingLink = null;
                   for (const link of computerLinksInMessage) {
                     const linkFileName = link.split("/").pop() || "";
-                    if (linkFileName === fileName || linkFileName.startsWith(fileName.replace(/\.[^.]+$/, ""))) {
+                    if (linkFileName === fileName || linkFileName.startsWith(
+                      fileName.replace(/\.[^.]+$/, "")
+                    )) {
                       matchingLink = linkFileName;
                       break;
                     }
                   }
                   if (matchingLink) {
                     const extension = ((_c = matchingLink.split(".").pop()) == null ? void 0 : _c.toLowerCase()) || "";
-                    if (this.isTextExploitableExtension(extension)) {
-                      const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+                    if (this.isTextExploitableExtension(
+                      extension
+                    )) {
+                      const messageTimestamp = message.created_at ? Math.floor(
+                        new Date(
+                          message.created_at
+                        ).getTime() / 1e3
+                      ) : 0;
                       allArtifacts.push({
                         artifact: {
                           ...block.input,
@@ -17555,12 +14738,18 @@ var ClaudeConverter = class {
                         messageTimestamp
                       });
                     } else {
-                      const toolOnlyId = this.extractArtifactIdFromPath(filePath);
+                      const toolOnlyId = this.extractArtifactIdFromPath(
+                        filePath
+                      );
                       toolOnlyArtifactIds.add(toolOnlyId);
                     }
                   }
                 } else {
-                  const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+                  const messageTimestamp = message.created_at ? Math.floor(
+                    new Date(
+                      message.created_at
+                    ).getTime() / 1e3
+                  ) : 0;
                   allArtifacts.push({
                     artifact: {
                       ...block.input,
@@ -17581,7 +14770,9 @@ var ClaudeConverter = class {
             if (toolOnlyArtifactIds.has(artifactIdFromPath)) {
               continue;
             }
-            const messageTimestamp = message.created_at ? Math.floor(new Date(message.created_at).getTime() / 1e3) : 0;
+            const messageTimestamp = message.created_at ? Math.floor(
+              new Date(message.created_at).getTime() / 1e3
+            ) : 0;
             allArtifacts.push({
               artifact: {
                 ...block.input,
@@ -17622,7 +14813,9 @@ var ClaudeConverter = class {
         id: message.uuid,
         role: message.sender === "human" ? "user" : "assistant",
         content: text || message.text || "",
-        timestamp: Math.floor(new Date(message.created_at).getTime() / 1e3),
+        timestamp: Math.floor(
+          new Date(message.created_at).getTime() / 1e3
+        ),
         attachments: [...attachments, ...fileAttachments]
       };
       standardMessages.push(standardMessage);
@@ -17655,7 +14848,11 @@ var ClaudeConverter = class {
     const versionCounters = /* @__PURE__ */ new Map();
     const artifactContents = /* @__PURE__ */ new Map();
     const artifactLanguages = /* @__PURE__ */ new Map();
-    for (const { artifact, messageIndex, messageTimestamp } of allArtifacts) {
+    for (const {
+      artifact,
+      messageIndex,
+      messageTimestamp
+    } of allArtifacts) {
       const isNewFormat = artifact._format === "create_file" || artifact._format === "str_replace";
       const artifactId = isNewFormat ? this.extractArtifactIdFromPath(artifact.path) : artifact.id || "unknown";
       const command = artifact.command || "create";
@@ -17669,12 +14866,18 @@ var ClaudeConverter = class {
           finalContent = artifact.content || "";
         }
         artifactContents.set(artifactId, finalContent);
-        const detectedLanguage = isNewFormat ? this.detectLanguageFromPath(artifact.path) : this.detectLanguageFromContent(finalContent, artifact.type);
+        const detectedLanguage = isNewFormat ? this.detectLanguageFromPath(artifact.path) : this.detectLanguageFromContent(
+          finalContent,
+          artifact.type
+        );
         artifactLanguages.set(artifactId, detectedLanguage);
       } else if (command === "update") {
         const previousContent = artifactContents.get(artifactId) || "";
         if (artifact.old_str && artifact.new_str) {
-          finalContent = previousContent.replace(artifact.old_str, artifact.new_str);
+          finalContent = previousContent.replace(
+            artifact.old_str,
+            artifact.new_str
+          );
         } else if (artifact.content && artifact.content.length > 0) {
           finalContent = artifact.content;
         } else {
@@ -17706,17 +14909,26 @@ var ClaudeConverter = class {
           if (fileName) {
             const title = artifact.title || artifactId;
             const artifactFileName = `${artifactId}_v${currentVersion}`;
-            const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}/${artifactFileName}`;
+            const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(
+              conversationTitle,
+              conversationCreateTime
+            )}/${artifactFileName}`;
             const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}
 > \u{1F3A8} [[${artifactPath}|View Artifact]]`;
             if (!messageArtifactCallouts.has(messageIndex)) {
-              messageArtifactCallouts.set(messageIndex, /* @__PURE__ */ new Map());
+              messageArtifactCallouts.set(
+                messageIndex,
+                /* @__PURE__ */ new Map()
+              );
             }
             messageArtifactCallouts.get(messageIndex).set(fileName, callout);
           }
         }
       } catch (error) {
-        this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
+        this.plugin.logger.error(
+          `Failed to save ${artifactId} v${currentVersion}:`,
+          error
+        );
       }
     }
     return { artifactVersionMap, messageArtifactCallouts };
@@ -17735,8 +14947,16 @@ var ClaudeConverter = class {
       switch (block.type) {
         case "text":
           if (block.text) {
-            let processedText = this.filterArtifactPlaceholders(block.text, conversationId);
-            processedText = this.replaceComputerLinks(processedText, conversationId, artifactCalloutMap, true);
+            let processedText = this.filterArtifactPlaceholders(
+              block.text,
+              conversationId
+            );
+            processedText = this.replaceComputerLinks(
+              processedText,
+              conversationId,
+              artifactCalloutMap,
+              true
+            );
             textParts.push(processedText);
           }
           break;
@@ -17744,13 +14964,18 @@ var ClaudeConverter = class {
           break;
         case "tool_use":
           if (block.name === "artifacts" && ((_a = block.input) == null ? void 0 : _a.version_uuid)) {
-            const versionInfo = artifactVersionMap.get(block.input.version_uuid);
+            const versionInfo = artifactVersionMap.get(
+              block.input.version_uuid
+            );
             if (versionInfo) {
-              const artifactId = block.input.id || "unknown";
+              const artifactId = typeof block.input.id === "string" ? block.input.id : "unknown";
               const versionNumber = versionInfo.versionNumber;
-              const title = versionInfo.title || "Artifact";
+              const title = typeof versionInfo.title === "string" ? versionInfo.title : "Artifact";
               const artifactFileName = `${artifactId}_v${versionNumber}`;
-              const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}/${artifactFileName}`;
+              const artifactPath = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(
+                conversationTitle,
+                conversationCreateTime
+              )}/${artifactFileName}`;
               const callout = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${versionNumber}
 > \u{1F3A8} [[${artifactPath}|View Artifact]]`;
               textParts.push(callout);
@@ -17812,25 +15037,28 @@ var ClaudeConverter = class {
         const description = block.input.description || "";
         if (filePath && fileText) {
           const fileName = filePath.split("/").pop() || "";
-          const artifactId = fileName.replace(/\.(md|py|js|ts|html|css|txt|json|java|cpp|c|go|rs|rb|php|swift|kt)$/, "");
+          const artifactId = fileName.replace(
+            /\.(md|py|js|ts|html|css|txt|json|java|cpp|c|go|rs|rb|php|swift|kt)$/,
+            ""
+          );
           const ext = ((_a = fileName.split(".").pop()) == null ? void 0 : _a.toLowerCase()) || "text";
           const languageMap = {
-            "md": "markdown",
-            "py": "python",
-            "js": "javascript",
-            "ts": "typescript",
-            "html": "html",
-            "css": "css",
-            "json": "json",
-            "java": "java",
-            "cpp": "cpp",
-            "c": "c",
-            "go": "go",
-            "rs": "rust",
-            "rb": "ruby",
-            "php": "php",
-            "swift": "swift",
-            "kt": "kotlin"
+            md: "markdown",
+            py: "python",
+            js: "javascript",
+            ts: "typescript",
+            html: "html",
+            css: "css",
+            json: "json",
+            java: "java",
+            cpp: "cpp",
+            c: "c",
+            go: "go",
+            rs: "rust",
+            rb: "ruby",
+            php: "php",
+            swift: "swift",
+            kt: "kotlin"
           };
           const language = languageMap[ext] || "text";
           const artifactInput = {
@@ -17857,7 +15085,10 @@ var ClaudeConverter = class {
       switch (block.type) {
         case "text":
           if (block.text) {
-            const processedText = this.filterArtifactPlaceholders(block.text, conversationId);
+            const processedText = this.filterArtifactPlaceholders(
+              block.text,
+              conversationId
+            );
             textParts.push(processedText);
           }
           break;
@@ -17868,7 +15099,7 @@ var ClaudeConverter = class {
             break;
           }
           if (block.name === "artifacts" && block.input) {
-            const artifactId = block.input.id || "unknown";
+            const artifactId = typeof block.input.id === "string" ? block.input.id : "unknown";
             const command = block.input.command || "create";
             const versionUuid = block.input.version_uuid;
             if (command === "view") {
@@ -17884,7 +15115,10 @@ var ClaudeConverter = class {
               } else if (command === "update") {
                 const previousContent = artifactContents.get(artifactId) || "";
                 if (block.input.old_str && block.input.new_str) {
-                  finalContent = previousContent.replace(block.input.old_str, block.input.new_str);
+                  finalContent = previousContent.replace(
+                    block.input.old_str,
+                    block.input.new_str
+                  );
                 } else if (block.input.content && block.input.content.length > 0) {
                   finalContent = block.input.content;
                 } else {
@@ -17902,26 +15136,36 @@ var ClaudeConverter = class {
                   conversationTitle,
                   conversationCreateTime
                 );
-                const title = block.input.title || artifactId;
-                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}`;
+                const title = typeof block.input.title === "string" ? block.input.title : artifactId;
+                const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(
+                  conversationTitle,
+                  conversationCreateTime
+                )}`;
                 const versionFile = `${conversationFolder}/${artifactId}_v${currentVersion}`;
                 const specificLink = `>[!${this.CALLOUTS.ARTIFACT}] **${title}** v${currentVersion}
 > \u{1F3A8} [[${versionFile}|View Artifact]]`;
                 textParts.push(specificLink);
               } catch (error) {
-                this.plugin.logger.error(`Failed to save ${artifactId} v${currentVersion}:`, error);
-                textParts.push(`>[!${this.CALLOUTS.ARTIFACT}] **${block.input.title || artifactId}** v${currentVersion}
-> \u274C Error saving artifact`);
+                this.plugin.logger.error(
+                  `Failed to save ${artifactId} v${currentVersion}:`,
+                  error
+                );
+                textParts.push(
+                  `>[!${this.CALLOUTS.ARTIFACT}] **${typeof block.input.title === "string" ? block.input.title : artifactId}** v${currentVersion}
+> \u274C Error saving artifact`
+                );
               }
             }
           } else if (block.name === "web_search") {
             break;
           } else if (block.name && block.input) {
             const code = block.input.code || JSON.stringify(block.input, null, 2);
-            textParts.push(`**[Tool: ${block.name}]**
+            textParts.push(
+              `**[Tool: ${block.name}]**
 \`\`\`
 ${code}
-\`\`\``);
+\`\`\``
+            );
           }
           break;
         case "tool_result":
@@ -17983,16 +15227,30 @@ ${code}
       throw new Error("Plugin not available");
     }
     const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}`;
-    const folderResult = await ensureFolderExists2(conversationFolder, this.plugin.app.vault);
+    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(
+      conversationTitle,
+      conversationCreateTime
+    )}`;
+    const folderResult = await ensureFolderExists2(
+      conversationFolder,
+      this.plugin.app.vault
+    );
     if (!folderResult.success) {
-      throw new Error(`Failed to create artifacts folder: ${folderResult.error}`);
+      throw new Error(
+        `Failed to create artifacts folder: ${folderResult.error}`
+      );
     }
-    const safeArtifactId = artifactId.replace(/[\/\\:*?"<>|]/g, "_");
+    const safeArtifactId = artifactId.replace(/[/\\:*?"<>|]/g, "_");
     const fileName = `${safeArtifactId}_v${versionNumber}.md`;
     const filePath = `${conversationFolder}/${fileName}`;
-    const versionUuid = this.resolveArtifactVersionUuid(artifactData, versionNumber);
-    const shouldSkip = await this.shouldSkipArtifactVersion(filePath, versionUuid);
+    const versionUuid = this.resolveArtifactVersionUuid(
+      artifactData,
+      versionNumber
+    );
+    const shouldSkip = await this.shouldSkipArtifactVersion(
+      filePath,
+      versionUuid
+    );
     if (shouldSkip) {
       return;
     }
@@ -18015,7 +15273,10 @@ ${code}
     const title = info.title || artifactId;
     const totalVersions = info.totalVersions || 1;
     const latestVersion = info.latestVersion || 1;
-    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(conversationTitle, conversationCreateTime)}`;
+    const conversationFolder = `${this.plugin.settings.attachmentFolder}/claude/artifacts/${this.getArtifactFolderName(
+      conversationTitle,
+      conversationCreateTime
+    )}`;
     const latestFile = `${conversationFolder}/${artifactId}_v${latestVersion}`;
     let summary = `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}**`;
     if (totalVersions > 1) {
@@ -18037,7 +15298,9 @@ ${code}
     const title = (firstVersion == null ? void 0 : firstVersion.title) || "Untitled Artifact";
     const versionCount = savedVersions.length;
     if (!latestVersion) {
-      this.plugin.logger.error("Claude converter: No latest version available for artifact summary");
+      this.plugin.logger.error(
+        "Claude converter: No latest version available for artifact summary"
+      );
       return `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}** (Error: No accessible version)</div>`;
     }
     let formattedContent = `<div class="nexus-artifact-box">**\u{1F3A8} Artifact: ${title}**`;
@@ -18063,11 +15326,17 @@ ${code}
     let language = isNewFormat ? "text" : artifactInput.language || "text";
     const command = artifactInput.command || "create";
     const artifactId = isNewFormat ? this.extractArtifactIdFromPath(artifactInput.path) : artifactInput.id || "unknown";
-    const versionUuid = this.resolveArtifactVersionUuid(artifactInput, versionNumber);
+    const versionUuid = this.resolveArtifactVersionUuid(
+      artifactInput,
+      versionNumber
+    );
     if (forcedLanguage) {
       language = forcedLanguage;
     } else if ((language.toLowerCase() === "text" || !language || language === "undefined") && versionContent) {
-      const detectedLanguage = this.detectLanguageFromContent(versionContent, artifactInput.type);
+      const detectedLanguage = this.detectLanguageFromContent(
+        versionContent,
+        artifactInput.type
+      );
       if (detectedLanguage !== "text") {
         language = detectedLanguage;
       }
@@ -18088,7 +15357,9 @@ ${code}
       conversationLink = `[[${conversationPath}|${conversationTitle}]]`;
     }
     const safeArtifactTitle = generateSafeAlias(title);
-    const safeArtifactAlias = generateSafeAlias(`${artifactId}_v${versionNumber}`);
+    const safeArtifactAlias = generateSafeAlias(
+      `${artifactId}_v${versionNumber}`
+    );
     const artifactCreateTime = messageTimestamp || conversationCreateTime || 0;
     const createTimeStr = artifactCreateTime > 0 ? new Date(artifactCreateTime * 1e3).toISOString() : "unknown";
     let markdownContent = `---
@@ -18135,7 +15406,10 @@ ${versionContent}
         });
         return;
       }
-      this.plugin.logger.error(`Failed to create artifact file ${filePath}:`, error);
+      this.plugin.logger.error(
+        `Failed to create artifact file ${filePath}:`,
+        error
+      );
       throw error;
     }
   }
@@ -18172,25 +15446,33 @@ ${versionContent}
       if (!existingFile) {
         return false;
       }
-      const existingContent = await this.plugin.app.vault.read(existingFile);
+      const existingContent = await this.plugin.app.vault.read(
+        existingFile
+      );
       const existingVersionUuid = this.extractVersionUuidFromArtifactContent(existingContent);
       if (existingVersionUuid && existingVersionUuid === versionUuid) {
         return true;
       }
       if (!existingVersionUuid) {
-        this.plugin.logger.child("ClaudeArtifacts").info("Artifact version path already exists without version UUID metadata, skipping", {
-          filePath,
-          incomingVersionUuid: versionUuid
-        });
+        this.plugin.logger.child("ClaudeArtifacts").info(
+          "Artifact version path already exists without version UUID metadata, skipping",
+          {
+            filePath,
+            incomingVersionUuid: versionUuid
+          }
+        );
         return true;
       }
-      this.plugin.logger.child("ClaudeArtifacts").warn("Artifact version path already exists with different artifact version UUID, skipping", {
-        filePath,
-        incomingVersionUuid: versionUuid,
-        existingVersionUuid
-      });
+      this.plugin.logger.child("ClaudeArtifacts").warn(
+        "Artifact version path already exists with different artifact version UUID, skipping",
+        {
+          filePath,
+          incomingVersionUuid: versionUuid,
+          existingVersionUuid
+        }
+      );
       return true;
-    } catch (error) {
+    } catch (e) {
       return false;
     }
   }
@@ -18198,7 +15480,7 @@ ${versionContent}
     if (!error) {
       return false;
     }
-    const message = error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : typeof error === "string" ? error : "[unknown error]";
     return message.toLowerCase().includes("file already exists");
   }
   /**
@@ -18211,10 +15493,10 @@ ${versionContent}
     const currentContent = (current.content || "").length;
     const candidateContent = (candidate.content || "").length;
     const commandPriority = {
-      "create": 4,
-      "rewrite": 3,
-      "update": 2,
-      "view": 1
+      create: 4,
+      rewrite: 3,
+      update: 2,
+      view: 1
     };
     const currentPriority = commandPriority[currentCommand] || 1;
     const candidatePriority = commandPriority[candidateCommand] || 1;
@@ -18514,7 +15796,16 @@ ${versionContent}
 > \u26A0\uFE0F Artifact content not displayed in mobile view. Check the artifacts folder for extracted files, or [open original conversation](${conversationUrl}) to view artifacts.`;
     const codeBlockPattern = /```\s*\n?Viewing artifacts created via the Analysis Tool web feature preview isn't yet supported on mobile\.\s*\n?```/g;
     let result = text.replace(codeBlockPattern, replacementCallout);
-    result = result.replace(new RegExp(mobileArtifactPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), replacementCallout);
+    result = result.replace(
+      new RegExp(
+        mobileArtifactPlaceholder.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&"
+        ),
+        "g"
+      ),
+      replacementCallout
+    );
     return result;
   }
   /**
@@ -18523,14 +15814,14 @@ ${versionContent}
    * @param artifactCalloutMap - Map of artifact file names to their callouts
    * @param insideCallout - If true, use quote-preserving separators for nested callouts
    */
-  static replaceComputerLinks(text, conversationId, artifactCalloutMap, insideCallout = false) {
+  static replaceComputerLinks(text, conversationId, artifactCalloutMap, _insideCallout = false) {
     var _a;
     const computerLinkRegex = /\[([^\]]+)\]\(computer:\/\/\/([^)]+)\)/g;
     const replacements = [];
     let lastIndex = 0;
     let match;
     while ((match = computerLinkRegex.exec(text)) !== null) {
-      const [fullMatch, linkText, filePath] = match;
+      const [fullMatch, , filePath] = match;
       const fileName = filePath.split("/").pop() || "file";
       const textBefore = text.substring(lastIndex, match.index).trim();
       if (textBefore && textBefore !== "|") {
@@ -18575,7 +15866,9 @@ ${versionContent}
           if (block.type === "tool_use" && block.name === "create_file" && ((_b = block.input) == null ? void 0 : _b.path) && ((_c = block.input) == null ? void 0 : _c.file_text)) {
             const fileText = block.input.file_text || "";
             if (fileText.length >= MIN_CONTENT_LENGTH) {
-              const artifactId = this.extractArtifactIdFromPath(block.input.path);
+              const artifactId = this.extractArtifactIdFromPath(
+                block.input.path
+              );
               uniqueArtifacts.add(artifactId);
             }
           }
@@ -18621,10 +15914,17 @@ var ClaudeAttachmentExtractor = class {
     const processedAttachments = [];
     for (const attachment of attachments) {
       try {
-        const processedAttachment = await this.processAttachment(zip, conversationId, attachment);
+        const processedAttachment = await this.processAttachment(
+          zip,
+          conversationId,
+          attachment
+        );
         processedAttachments.push(processedAttachment);
       } catch (error) {
-        this.logger.error(`Failed to process Claude attachment ${attachment.fileName}:`, error);
+        this.logger.error(
+          `Failed to process Claude attachment ${attachment.fileName}:`,
+          error
+        );
         processedAttachments.push({
           ...attachment,
           extractedContent: `\u274C **File: ${attachment.fileName}**
@@ -18643,18 +15943,32 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
     const fileName = attachment.fileName;
     const zipPath = await this.findFileInZip(zip, fileName);
     if (!zipPath) {
-      return this.createFileNotFoundPlaceholder(attachment, conversationId);
+      return this.createFileNotFoundPlaceholder(
+        attachment,
+        conversationId
+      );
     }
     const zipFile = zip.get(zipPath);
     if (!zipFile) {
-      return this.createFileNotFoundPlaceholder(attachment, conversationId);
+      return this.createFileNotFoundPlaceholder(
+        attachment,
+        conversationId
+      );
     }
     if (isImageFile(fileName)) {
-      return await this.processImageAttachment(zipFile, attachment, conversationId);
+      return await this.processImageAttachment(
+        zipFile,
+        attachment,
+        conversationId
+      );
     } else if (isTextFile(fileName)) {
       return await this.processTextAttachment(zipFile, attachment);
     } else {
-      return await this.processBinaryAttachment(zipFile, attachment, conversationId);
+      return await this.processBinaryAttachment(
+        zipFile,
+        attachment,
+        conversationId
+      );
     }
   }
   /**
@@ -18721,15 +16035,25 @@ Error processing attachment: ${error instanceof Error ? error.message : "Unknown
    */
   async processImageAttachment(zipFile, attachment, conversationId) {
     try {
-      const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-      const filePath = await this.saveAttachmentToVault(fileName, zipFile, "images");
+      const fileName = this.generateUniqueFileName(
+        attachment.fileName,
+        conversationId
+      );
+      const filePath = await this.saveAttachmentToVault(
+        fileName,
+        zipFile,
+        "images"
+      );
       return {
         ...attachment,
         fileName,
         extractedContent: `![${attachment.fileName}](${filePath})`
       };
     } catch (error) {
-      this.logger.error(`Error processing Claude image ${attachment.fileName}:`, error);
+      this.logger.error(
+        `Error processing Claude image ${attachment.fileName}:`,
+        error
+      );
       return {
         ...attachment,
         extractedContent: `Error processing image: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -18749,7 +16073,10 @@ ${textContent}
 \`\`\``
       };
     } catch (error) {
-      this.logger.error(`Error processing Claude text file ${attachment.fileName}:`, error);
+      this.logger.error(
+        `Error processing Claude text file ${attachment.fileName}:`,
+        error
+      );
       return {
         ...attachment,
         extractedContent: `Error reading text file: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -18761,15 +16088,25 @@ ${textContent}
    */
   async processBinaryAttachment(zipFile, attachment, conversationId) {
     try {
-      const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-      const filePath = await this.saveAttachmentToVault(fileName, zipFile, "documents");
+      const fileName = this.generateUniqueFileName(
+        attachment.fileName,
+        conversationId
+      );
+      const filePath = await this.saveAttachmentToVault(
+        fileName,
+        zipFile,
+        "documents"
+      );
       return {
         ...attachment,
         fileName,
         extractedContent: `[${attachment.fileName}](${filePath})`
       };
     } catch (error) {
-      this.logger.error(`Error processing Claude binary file ${attachment.fileName}:`, error);
+      this.logger.error(
+        `Error processing Claude binary file ${attachment.fileName}:`,
+        error
+      );
       return {
         ...attachment,
         extractedContent: `Error processing file: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -18792,12 +16129,21 @@ ${textContent}
   async saveAttachmentToVault(fileName, zipFile, category = "files") {
     const attachmentFolder = `${this.plugin.settings.attachmentFolder}/claude/${category}`;
     const { ensureFolderExists: ensureFolderExists2 } = await Promise.resolve().then(() => (init_utils(), utils_exports));
-    const folderResult = await ensureFolderExists2(attachmentFolder, this.plugin.app.vault);
+    const folderResult = await ensureFolderExists2(
+      attachmentFolder,
+      this.plugin.app.vault
+    );
     if (!folderResult.success) {
-      throw new Error(`Failed to create Claude attachment folder: ${folderResult.error}`);
+      throw new Error(
+        `Failed to create Claude attachment folder: ${folderResult.error}`
+      );
     }
     const filePath = `${attachmentFolder}/${fileName}`;
-    const writeResult = await writeZipEntryToVault(zipFile, filePath, this.plugin.app.vault);
+    const writeResult = await writeZipEntryToVault(
+      zipFile,
+      filePath,
+      this.plugin.app.vault
+    );
     return writeResult.targetPath;
   }
 };
@@ -18831,7 +16177,10 @@ var ClaudeAdapter = class extends BaseProviderAdapter {
   constructor(plugin) {
     super();
     this.plugin = plugin;
-    this.attachmentExtractor = new ClaudeAttachmentExtractor(plugin, plugin.logger);
+    this.attachmentExtractor = new ClaudeAttachmentExtractor(
+      plugin,
+      plugin.logger
+    );
     this.reportNamingStrategy = new ClaudeReportNamingStrategy();
   }
   detect(rawConversations) {
@@ -18858,7 +16207,12 @@ var ClaudeAdapter = class extends BaseProviderAdapter {
   }
   async convertMessages(messages, conversationId, conversationTitle, conversationCreateTime) {
     ClaudeConverter.setPlugin(this.plugin);
-    return await ClaudeConverter.convertMessages(messages, conversationId, conversationTitle, conversationCreateTime);
+    return await ClaudeConverter.convertMessages(
+      messages,
+      conversationId,
+      conversationTitle,
+      conversationCreateTime
+    );
   }
   getProviderName() {
     return "claude";
@@ -18914,7 +16268,9 @@ function deriveLeChatConversationTitle(messages, options) {
   if (!Array.isArray(messages) || messages.length === 0) {
     return "Untitled";
   }
-  const source = (options == null ? void 0 : options.assumeSorted) ? messages : [...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const source = (options == null ? void 0 : options.assumeSorted) ? messages : [...messages].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
   const firstUserMessage = source.find((msg) => msg.role === "user");
   const content = (firstUserMessage == null ? void 0 : firstUserMessage.content) || "";
   return truncateLeChatTitle(content);
@@ -18925,7 +16281,7 @@ __name(deriveLeChatConversationTitle, "deriveLeChatConversationTitle");
 var LeChatConverter = class {
   /**
    * Convert Le Chat conversation to StandardConversation
-   * 
+   *
    * Note: Le Chat exports are arrays of messages without conversation-level metadata.
    * We derive conversation metadata from the messages themselves.
    */
@@ -18994,7 +16350,9 @@ var LeChatConverter = class {
    */
   static extractContent(message) {
     if (message.contentChunks && message.contentChunks.length > 0) {
-      const chunksContent = this.processContentChunks(message.contentChunks);
+      const chunksContent = this.processContentChunks(
+        message.contentChunks
+      );
       return chunksContent || "(Empty message)";
     }
     if (message.content && message.content.trim()) {
@@ -19055,7 +16413,9 @@ var LeChatConverter = class {
     if (!message.contentChunks)
       return [];
     const chatUrl = `https://chat.mistral.ai/chat/${message.chatId}`;
-    const imageChunks = message.contentChunks.filter((chunk) => chunk.type === "image_url" && "imageUrl" in chunk);
+    const imageChunks = message.contentChunks.filter(
+      (chunk) => chunk.type === "image_url" && "imageUrl" in chunk
+    );
     return imageChunks.map((chunk, index) => {
       var _a;
       const urlPath = chunk.imageUrl.split("?")[0];
@@ -19138,7 +16498,7 @@ var LeChatConverter = class {
     try {
       const date = new Date(isoString);
       return Math.floor(date.getTime() / 1e3);
-    } catch (error) {
+    } catch (e) {
       return 0;
     }
   }
@@ -19180,12 +16540,20 @@ var LeChatAttachmentExtractor = class {
     const processedAttachments = [];
     for (const attachment of attachments) {
       try {
-        const result = await this.processAttachment(zip, conversationId, attachment, messageId);
+        const result = await this.processAttachment(
+          zip,
+          conversationId,
+          attachment,
+          messageId
+        );
         processedAttachments.push(result);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const context = messageId ? `conversation: ${conversationId}, message: ${messageId}` : `conversation: ${conversationId}`;
-        this.logger.error(`Failed to process Le Chat attachment: ${attachment.fileName} (${context})`, errorMessage);
+        this.logger.error(
+          `Failed to process Le Chat attachment: ${attachment.fileName} (${context})`,
+          errorMessage
+        );
         processedAttachments.push({
           ...attachment,
           status: {
@@ -19212,7 +16580,10 @@ var LeChatAttachmentExtractor = class {
           const zipIndex = this.allZips.indexOf(zip);
           if (zipIndex !== -1 && location.zipIndex < this.allZips.length) {
             const targetZip = this.allZips[location.zipIndex];
-            zipPathMatch = await this.findFileInZip(targetZip, location.path);
+            zipPathMatch = await this.findFileInZip(
+              targetZip,
+              location.path
+            );
             if (zipPathMatch)
               break;
           }
@@ -19232,16 +16603,24 @@ var LeChatAttachmentExtractor = class {
     }
     let finalFileName = attachment.fileName;
     let finalFileType = attachment.fileType;
-    const uniqueFileName = this.generateUniqueFileName(finalFileName, conversationId, messageId);
+    const uniqueFileName = this.generateUniqueFileName(
+      finalFileName,
+      conversationId,
+      messageId
+    );
     const category = getFileCategory(uniqueFileName, finalFileType);
     const attachmentFolder = this.plugin.settings.attachmentFolder;
-    let vaultPath = `${attachmentFolder}/lechat/${category}/${sanitizeFileName(uniqueFileName)}`;
+    let vaultPath = `${attachmentFolder}/lechat/${category}/${sanitizeFileName(
+      uniqueFileName
+    )}`;
     const folderPath = vaultPath.substring(0, vaultPath.lastIndexOf("/"));
     await ensureFolderExists(folderPath, this.plugin.app.vault);
     vaultPath = await this.resolveFileConflict(vaultPath);
     const entry = zip.get(zipPathMatch);
     if (!entry) {
-      throw new Error(`Attachment entry disappeared from ZIP reader: ${zipPathMatch}`);
+      throw new Error(
+        `Attachment entry disappeared from ZIP reader: ${zipPathMatch}`
+      );
     }
     const writeResult = await writeZipEntryToVault(
       entry,
@@ -19325,10 +16704,10 @@ __name(LeChatAttachmentExtractor, "LeChatAttachmentExtractor");
 var LeChatReportNamingStrategy = class {
   /**
    * Extract date prefix from Le Chat ZIP filename
-   * 
+   *
    * Le Chat ZIP format: chat-export-{timestamp}.zip
    * Example: chat-export-1760124530481.zip
-   * 
+   *
    * The timestamp is in milliseconds since Unix epoch.
    */
   extractReportPrefix(zipFileName) {
@@ -19359,7 +16738,7 @@ var LeChatReportNamingStrategy = class {
   getProviderSpecificColumn() {
     return {
       header: "Attachments",
-      getValue: (adapter, chat) => {
+      getValue: (_adapter, chat) => {
         let attachmentCount = 0;
         if (!Array.isArray(chat)) {
           return 0;
@@ -19381,12 +16760,15 @@ var LeChatAdapter = class extends BaseProviderAdapter {
   constructor(plugin) {
     super();
     this.plugin = plugin;
-    this.attachmentExtractor = new LeChatAttachmentExtractor(plugin, plugin.logger);
+    this.attachmentExtractor = new LeChatAttachmentExtractor(
+      plugin,
+      plugin.logger
+    );
     this.reportNamingStrategy = new LeChatReportNamingStrategy();
   }
   /**
    * Detect if raw data is from Le Chat
-   * 
+   *
    * Le Chat format:
    * - Array of messages (not wrapped in conversation object)
    * - Each message has: chatId, contentChunks, createdAt, role
@@ -19462,7 +16844,7 @@ var LeChatAdapter = class extends BaseProviderAdapter {
     try {
       const date = new Date(isoString);
       return Math.floor(date.getTime() / 1e3);
-    } catch (error) {
+    } catch (e) {
       return 0;
     }
   }
@@ -19474,7 +16856,9 @@ init_constants();
 var PerplexityConverter = class {
   static convertChat(chat) {
     var _a, _b, _c, _d, _e, _f, _g, _h;
-    const turns = [...chat.conversations || []].filter((turn) => !!(turn == null ? void 0 : turn.uuid)).sort((a, b) => this.parseTimestamp(a.timestamp) - this.parseTimestamp(b.timestamp));
+    const turns = [...chat.conversations || []].filter((turn) => !!(turn == null ? void 0 : turn.uuid)).sort(
+      (a, b) => this.parseTimestamp(a.timestamp) - this.parseTimestamp(b.timestamp)
+    );
     const messages = [];
     for (const turn of turns) {
       const timestamp = this.parseTimestamp(turn.timestamp);
@@ -19498,9 +16882,13 @@ var PerplexityConverter = class {
         });
       }
     }
-    const uniqueModels = this.uniqueNonEmpty(turns.map((turn) => turn.model));
+    const uniqueModels = this.uniqueNonEmpty(
+      turns.map((turn) => turn.model)
+    );
     const uniqueModes = this.uniqueNonEmpty(turns.map((turn) => turn.mode));
-    const relatedQueries = this.uniqueNonEmpty(turns.flatMap((turn) => turn.related_queries || []));
+    const relatedQueries = this.uniqueNonEmpty(
+      turns.flatMap((turn) => turn.related_queries || [])
+    );
     const threadId = ((_a = chat.metadata) == null ? void 0 : _a.thread_id) || "";
     const title = (((_b = chat.metadata) == null ? void 0 : _b.thread_title) || "").trim() || "Untitled";
     const createTime = this.parseTimestamp((_c = chat.metadata) == null ? void 0 : _c.thread_created_at) || this.getMinTimestamp(turns);
@@ -19609,7 +16997,9 @@ function normalizePerplexityConversationFile(raw) {
   if (!raw || typeof raw !== "object") {
     return null;
   }
-  const legacy = tryNormalizeLegacy(raw);
+  const legacy = tryNormalizeLegacy(
+    raw
+  );
   if (legacy) {
     return legacy;
   }
@@ -19645,7 +17035,9 @@ function tryNormalizeEntriesExport(raw) {
   if (!Array.isArray(raw.entries)) {
     return null;
   }
-  const turns = raw.entries.map((entry) => normalizeTurnFromEntry(entry)).filter((turn) => turn !== null).sort((a, b) => parseTimestampMs(a.timestamp) - parseTimestampMs(b.timestamp));
+  const turns = raw.entries.map((entry) => normalizeTurnFromEntry(entry)).filter((turn) => turn !== null).sort(
+    (a, b) => parseTimestampMs(a.timestamp) - parseTimestampMs(b.timestamp)
+  );
   if (turns.length === 0) {
     return null;
   }
@@ -19839,7 +17231,9 @@ var PerplexityAdapter = class {
     const normalized = this.normalize(chat);
     if (!normalized)
       return 0;
-    const fromMeta = this.parseTimestamp((_a = normalized.metadata) == null ? void 0 : _a.thread_created_at);
+    const fromMeta = this.parseTimestamp(
+      (_a = normalized.metadata) == null ? void 0 : _a.thread_created_at
+    );
     if (fromMeta > 0)
       return fromMeta;
     const timestamps = (normalized.conversations || []).map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
@@ -19850,7 +17244,9 @@ var PerplexityAdapter = class {
     const normalized = this.normalize(chat);
     if (!normalized)
       return 0;
-    const fromMeta = this.parseTimestamp((_a = normalized.metadata) == null ? void 0 : _a.thread_updated_at);
+    const fromMeta = this.parseTimestamp(
+      (_a = normalized.metadata) == null ? void 0 : _a.thread_updated_at
+    );
     if (fromMeta > 0)
       return fromMeta;
     const timestamps = (normalized.conversations || []).map((turn) => this.parseTimestamp(turn.timestamp)).filter((ts) => ts > 0);
@@ -19870,7 +17266,9 @@ var PerplexityAdapter = class {
     const normalized = this.normalize(chat);
     if (!normalized)
       return [];
-    return (normalized.conversations || []).filter((turn) => !!(turn == null ? void 0 : turn.uuid) && !existingMessageIds.includes(turn.uuid));
+    return (normalized.conversations || []).filter(
+      (turn) => !!(turn == null ? void 0 : turn.uuid) && !existingMessageIds.includes(turn.uuid)
+    );
   }
   getReportNamingStrategy() {
     return this.reportNamingStrategy;
@@ -19922,13 +17320,27 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
       cls: "modal-title"
     });
     const contentContainer = contentEl.createDiv({ cls: "modal-content" });
-    this.phaseEl = contentContainer.createEl("div", { cls: "import-phase" });
-    this.importModeEl = contentContainer.createEl("div", { cls: "import-mode" });
-    this.conversationCountEl = contentContainer.createEl("div", { cls: "conversation-counter" });
-    const progressContainer = contentContainer.createDiv({ cls: "progress-container" });
-    this.progressBarEl = progressContainer.createDiv({ cls: "progress-bar" });
-    this.statusEl = contentContainer.createEl("div", { cls: "status-text" });
-    this.detailEl = contentContainer.createEl("div", { cls: "detail-text" });
+    this.phaseEl = contentContainer.createEl("div", {
+      cls: "import-phase"
+    });
+    this.importModeEl = contentContainer.createEl("div", {
+      cls: "import-mode"
+    });
+    this.conversationCountEl = contentContainer.createEl("div", {
+      cls: "conversation-counter"
+    });
+    const progressContainer = contentContainer.createDiv({
+      cls: "progress-container"
+    });
+    this.progressBarEl = progressContainer.createDiv({
+      cls: "progress-bar"
+    });
+    this.statusEl = contentContainer.createEl("div", {
+      cls: "status-text"
+    });
+    this.detailEl = contentContainer.createEl("div", {
+      cls: "detail-text"
+    });
     this.updateProgress({
       phase: "validation",
       title: t("import_progress.initial.title"),
@@ -19940,12 +17352,12 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
    */
   updateProgress(step) {
     const phaseLabels = {
-      "validation": t("common.progress.phase_validation"),
-      "scanning": t("common.progress.phase_scanning"),
-      "processing": t("common.progress.phase_processing"),
-      "writing": t("common.progress.phase_writing"),
-      "complete": t("common.progress.phase_complete"),
-      "error": t("common.progress.phase_error")
+      validation: t("common.progress.phase_validation"),
+      scanning: t("common.progress.phase_scanning"),
+      processing: t("common.progress.phase_processing"),
+      writing: t("common.progress.phase_writing"),
+      complete: t("common.progress.phase_complete"),
+      error: t("common.progress.phase_error")
     };
     this.phaseEl.textContent = phaseLabels[step.phase] || step.phase;
     if (step.total !== void 0) {
@@ -19956,9 +17368,21 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
     }
     if (this.totalConversations > 0) {
       if (this.isSelectiveImport) {
-        this.conversationCountEl.textContent = t("import_progress.conversation_counter_selective", { current: String(this.currentConversation), total: String(this.totalConversations) });
+        this.conversationCountEl.textContent = t(
+          "import_progress.conversation_counter_selective",
+          {
+            current: String(this.currentConversation),
+            total: String(this.totalConversations)
+          }
+        );
       } else {
-        this.conversationCountEl.textContent = t("import_progress.conversation_counter", { current: String(this.currentConversation), total: String(this.totalConversations) });
+        this.conversationCountEl.textContent = t(
+          "import_progress.conversation_counter",
+          {
+            current: String(this.currentConversation),
+            total: String(this.totalConversations)
+          }
+        );
       }
     } else {
       this.conversationCountEl.textContent = "";
@@ -19967,15 +17391,17 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
     if (step.percentage !== void 0) {
       percentage = step.percentage;
     } else if (this.totalConversations > 0 && step.phase === "processing") {
-      percentage = Math.round(this.currentConversation / this.totalConversations * 100);
+      percentage = Math.round(
+        this.currentConversation / this.totalConversations * 100
+      );
     } else {
       const phaseProgress = {
-        "validation": 10,
-        "scanning": 20,
-        "processing": 80,
-        "writing": 95,
-        "complete": 100,
-        "error": 0
+        validation: 10,
+        scanning: 20,
+        processing: 80,
+        writing: 95,
+        complete: 100,
+        error: 0
       };
       percentage = phaseProgress[step.phase] || 0;
     }
@@ -19994,8 +17420,8 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
    */
   showComplete(message = t("import_progress.complete.message")) {
     this.isComplete = true;
-    this.progressBarEl.style.width = "100%";
-    this.progressBarEl.style.background = "var(--text-success)";
+    this.progressBarEl.addClass("nexus-progress-complete");
+    this.progressBarEl.removeClass("nexus-progress-error");
     this.statusEl.textContent = message;
     this.detailEl.textContent = t("import_progress.complete.detail");
     this.closeAfterDelay(3e3);
@@ -20004,7 +17430,7 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
    * Show error state
    */
   showError(message = t("import_progress.error.message")) {
-    this.progressBarEl.style.background = "var(--text-error)";
+    this.progressBarEl.addClass("nexus-progress-error");
     this.statusEl.textContent = message;
     this.detailEl.textContent = t("import_progress.error.detail");
   }
@@ -20012,7 +17438,7 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
    * Close after delay
    */
   closeAfterDelay(delay = 2e3) {
-    setTimeout(() => {
+    window.setTimeout(() => {
       if (this.isComplete) {
         this.close();
       }
@@ -20025,8 +17451,11 @@ var ImportProgressModal = class extends import_obsidian16.Modal {
     this.isSelectiveImport = true;
     this.selectedCount = selectedCount;
     this.totalAvailable = totalAvailable;
-    this.importModeEl.style.display = "block";
-    this.importModeEl.textContent = t("import_progress.selective_mode_indicator", { selected: String(selectedCount), total: String(totalAvailable) });
+    this.importModeEl.addClass("nexus-display-block");
+    this.importModeEl.textContent = t(
+      "import_progress.selective_mode_indicator",
+      { selected: String(selectedCount), total: String(totalAvailable) }
+    );
   }
   /**
    * Get progress callback function
@@ -20064,10 +17493,13 @@ var AttachmentMapBuilder = class {
       const file = files[i];
       const fileStartedAt = Date.now();
       try {
-        this.attachmentLogger.debug(`Scan attachments [${i + 1}/${files.length}]`, {
-          fileName: file.name,
-          fileSize: file.size
-        });
+        this.attachmentLogger.debug(
+          `Scan attachments [${i + 1}/${files.length}]`,
+          {
+            fileName: file.name,
+            fileSize: file.size
+          }
+        );
         const entries = await enumerateZipEntries(file);
         let mappedIdsForFile = 0;
         for (const entry of entries) {
@@ -20141,7 +17573,10 @@ var AttachmentMapBuilder = class {
     if (hashMatch && !fileMatch) {
       fileIds.push(hashMatch[1]);
     }
-    const baseFileName = fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, "");
+    const baseFileName = fileName.replace(
+      /\.(dat|png|jpg|jpeg|gif|webp)$/i,
+      ""
+    );
     if (baseFileName && !fileIds.includes(baseFileName)) {
       fileIds.push(baseFileName);
     }
@@ -20209,7 +17644,7 @@ var StreamingJsonArrayParser = class {
     for (const element of this.streamArrayElements(arraySlice)) {
       try {
         yield JSON.parse(element);
-      } catch (error) {
+      } catch (e) {
         continue;
       }
     }
@@ -20223,14 +17658,11 @@ var StreamingJsonArrayParser = class {
   static async *streamConversationsFromChunks(chunks) {
     const arrayState = await this.findConversationsArrayStart(chunks);
     if (!arrayState) {
-      throw new Error("Could not find conversations array in chunked JSON payload");
+      throw new Error(
+        "Could not find conversations array in chunked JSON payload"
+      );
     }
-    let {
-      buffer,
-      done,
-      pullNextChunk,
-      scanIndex
-    } = arrayState;
+    let { buffer, done, pullNextChunk, scanIndex } = arrayState;
     let inString = false;
     let escape = false;
     let elementDepth = 0;
@@ -20269,7 +17701,9 @@ var StreamingJsonArrayParser = class {
           } else if (ch === "}" || ch === "]") {
             elementDepth--;
             if (elementDepth < 0) {
-              throw new Error("Invalid chunked JSON array: unbalanced brackets");
+              throw new Error(
+                "Invalid chunked JSON array: unbalanced brackets"
+              );
             }
             if (elementDepth === 0) {
               elementEnd = scanIndex + 1;
@@ -20351,20 +17785,26 @@ var StreamingJsonArrayParser = class {
     }
     const keyIndex = json.indexOf('"conversations"');
     if (keyIndex === -1) {
-      throw new Error("Could not find conversations array in JSON payload");
+      throw new Error(
+        "Could not find conversations array in JSON payload"
+      );
     }
     let i = keyIndex + '"conversations"'.length;
     const len = json.length;
     while (i < len && json[i] !== ":")
       i++;
     if (i >= len) {
-      throw new Error("Invalid JSON: missing ':' after conversations key");
+      throw new Error(
+        "Invalid JSON: missing ':' after conversations key"
+      );
     }
     i++;
     while (i < len && /\s/.test(json[i]))
       i++;
     if (i >= len || json[i] !== "[") {
-      throw new Error("Invalid JSON: conversations value is not an array");
+      throw new Error(
+        "Invalid JSON: conversations value is not an array"
+      );
     }
     const start = i;
     const end = this.findMatchingBracket(json, start, "[");
@@ -20412,7 +17852,9 @@ var StreamingJsonArrayParser = class {
           } else if (ch === "}" || ch === "]") {
             depth--;
             if (depth < 0) {
-              throw new Error("Invalid JSON array: unbalanced brackets");
+              throw new Error(
+                "Invalid JSON array: unbalanced brackets"
+              );
             }
             if (depth === 0) {
               i++;
@@ -20465,7 +17907,9 @@ var StreamingJsonArrayParser = class {
       }
       buffer += nextChunk;
       if (buffer.length > maxStartScanBufferChars) {
-        throw new Error("Could not find conversations array in chunked JSON payload");
+        throw new Error(
+          "Could not find conversations array in chunked JSON payload"
+        );
       }
     }
   }
@@ -20481,7 +17925,10 @@ var StreamingJsonArrayParser = class {
     if (firstToken !== "{") {
       return null;
     }
-    return this.findTopLevelConversationsArrayStartIndex(buffer, firstTokenIndex + 1);
+    return this.findTopLevelConversationsArrayStartIndex(
+      buffer,
+      firstTokenIndex + 1
+    );
   }
   static findFirstNonWhitespaceOrBomIndex(source) {
     for (let i = 0; i < source.length; i++) {
@@ -20622,22 +18069,6 @@ function getArchiveEmptyMessage() {
   return t("archive_messages.empty");
 }
 __name(getArchiveEmptyMessage, "getArchiveEmptyMessage");
-function findGeminiActivityJsonFiles(fileNames) {
-  const geminiJsonFiles = [];
-  for (const name of fileNames) {
-    if (!name.toLowerCase().endsWith(".json"))
-      continue;
-    const segments = name.split("/");
-    if (segments.length >= 3 && segments[0] === "Takeout") {
-      const thirdLevel = segments[2];
-      if (thirdLevel.toLowerCase().includes("gemini")) {
-        geminiJsonFiles.push(name);
-      }
-    }
-  }
-  return geminiJsonFiles;
-}
-__name(findGeminiActivityJsonFiles, "findGeminiActivityJsonFiles");
 function findPerplexityJsonFiles(fileNames) {
   return fileNames.filter((name) => {
     var _a;
@@ -20650,10 +18081,14 @@ function findPerplexityJsonFiles(fileNames) {
 }
 __name(findPerplexityJsonFiles, "findPerplexityJsonFiles");
 function hasNestedZipContainerSignature(fileNames) {
-  const zipEntries = fileNames.filter((name) => name.toLowerCase().endsWith(".zip"));
+  const zipEntries = fileNames.filter(
+    (name) => name.toLowerCase().endsWith(".zip")
+  );
   if (zipEntries.length === 0)
     return false;
-  const hasJsonEntries = fileNames.some((name) => name.toLowerCase().endsWith(".json"));
+  const hasJsonEntries = fileNames.some(
+    (name) => name.toLowerCase().endsWith(".json")
+  );
   return !hasJsonEntries;
 }
 __name(hasNestedZipContainerSignature, "hasNestedZipContainerSignature");
@@ -20667,16 +18102,21 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
   }
   const hasConversationsJson = fileNames.includes("conversations.json") || fileNames.some((name) => /^conversations-\d+\.json$/.test(name));
   const hasUsersJson = fileNames.includes("users.json");
-  const hasLeChatFiles = fileNames.some((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
-  const hasGeminiActivityJson = findGeminiActivityJsonFiles(fileNames).length > 0;
+  const hasLeChatFiles = fileNames.some(
+    (name) => /^chat-[a-f0-9-]+\.json$/.test(name)
+  );
   const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
   const nestedZipContainer = hasNestedZipContainerSignature(fileNames);
-  const detectedProvider = hasLeChatFiles && !hasConversationsJson ? "lechat" : hasGeminiActivityJson && !hasConversationsJson && !hasLeChatFiles ? "gemini" : hasPerplexityFiles && !hasConversationsJson && !hasLeChatFiles && !hasGeminiActivityJson ? "perplexity" : hasConversationsJson && hasUsersJson ? "claude" : hasConversationsJson ? "chatgpt" : void 0;
+  const detectedProvider = hasLeChatFiles && !hasConversationsJson ? "lechat" : hasPerplexityFiles && !hasConversationsJson && !hasLeChatFiles ? "perplexity" : hasConversationsJson && hasUsersJson ? "claude" : hasConversationsJson ? "chatgpt" : void 0;
   if (forcedProvider) {
     const expectedProvider = forcedProvider;
     if (expectedProvider === "chatgpt") {
       if (detectedProvider === "chatgpt") {
-        return { supported: true, provider: "chatgpt", reason: "supported" };
+        return {
+          supported: true,
+          provider: "chatgpt",
+          reason: "supported"
+        };
       }
       return {
         supported: false,
@@ -20686,7 +18126,11 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
     }
     if (expectedProvider === "claude") {
       if (detectedProvider === "claude") {
-        return { supported: true, provider: "claude", reason: "supported" };
+        return {
+          supported: true,
+          provider: "claude",
+          reason: "supported"
+        };
       }
       return {
         supported: false,
@@ -20696,7 +18140,11 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
     }
     if (expectedProvider === "lechat") {
       if (detectedProvider === "lechat") {
-        return { supported: true, provider: "lechat", reason: "supported" };
+        return {
+          supported: true,
+          provider: "lechat",
+          reason: "supported"
+        };
       }
       return {
         supported: false,
@@ -20704,19 +18152,13 @@ function classifyArchiveEntries(fileNames, forcedProvider) {
         message: nestedZipContainer ? getArchiveNestedZipMessage(expectedProvider) : getArchiveProviderMismatchMessage("lechat")
       };
     }
-    if (expectedProvider === "gemini") {
-      if (detectedProvider === "gemini") {
-        return { supported: true, provider: "gemini", reason: "supported" };
-      }
-      return {
-        supported: false,
-        reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
-        message: nestedZipContainer ? getArchiveNestedZipMessage(expectedProvider) : getArchiveProviderMismatchMessage("gemini")
-      };
-    }
     if (expectedProvider === "perplexity") {
       if (detectedProvider === "perplexity") {
-        return { supported: true, provider: "perplexity", reason: "supported" };
+        return {
+          supported: true,
+          provider: "perplexity",
+          reason: "supported"
+        };
       }
       return {
         supported: false,
@@ -20758,7 +18200,9 @@ async function collectJsonArrayFromEntry(entry) {
       }
     }
     __name(countingChunks, "countingChunks");
-    for await (const value of StreamingJsonArrayParser.streamConversationsFromChunks(countingChunks())) {
+    for await (const value of StreamingJsonArrayParser.streamConversationsFromChunks(
+      countingChunks()
+    )) {
       items.push(value);
     }
     return { items, uncompressedBytes };
@@ -20783,7 +18227,9 @@ async function collectLeChatConversationFromEntry(entry) {
       }
     }
     __name(countingChunks, "countingChunks");
-    for await (const message of StreamingJsonArrayParser.streamConversationsFromChunks(countingChunks())) {
+    for await (const message of StreamingJsonArrayParser.streamConversationsFromChunks(
+      countingChunks()
+    )) {
       messages.push(message);
     }
     return { messages, uncompressedBytes };
@@ -20808,7 +18254,7 @@ async function collectJsonObjectFromEntry(entry) {
 }
 __name(collectJsonObjectFromEntry, "collectJsonObjectFromEntry");
 function formatRuntimeMemorySnapshot() {
-  const perf = globalThis.performance;
+  const perf = window.performance;
   const memory = perf == null ? void 0 : perf.memory;
   if (!memory || typeof memory.usedJSHeapSize !== "number") {
     return "heap=n/a";
@@ -20821,7 +18267,9 @@ function formatRuntimeMemorySnapshot() {
 __name(formatRuntimeMemorySnapshot, "formatRuntimeMemorySnapshot");
 async function extractRawConversations(zip) {
   const fileNames = await listFileNames(zip);
-  const leChatFiles = fileNames.filter((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
+  const leChatFiles = fileNames.filter(
+    (name) => /^chat-[a-f0-9-]+\.json$/.test(name)
+  );
   if (leChatFiles.length > 0) {
     const conversations2 = [];
     let uncompressedBytes2 = 0;
@@ -20832,24 +18280,6 @@ async function extractRawConversations(zip) {
       const { messages, uncompressedBytes: fileBytes } = await collectLeChatConversationFromEntry(entry);
       uncompressedBytes2 += fileBytes;
       conversations2.push(messages);
-    }
-    return { conversations: conversations2, uncompressedBytes: uncompressedBytes2 };
-  }
-  const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
-  if (geminiJsonFiles.length > 0) {
-    const activityFile = zip.get(geminiJsonFiles[0]);
-    if (!activityFile) {
-      throw new NexusAiChatImporterError(
-        "Missing Gemini activity JSON",
-        "The ZIP file appears to contain a Gemini folder but the activity JSON file is missing."
-      );
-    }
-    const { items: conversations2, uncompressedBytes: uncompressedBytes2 } = await collectJsonArrayFromEntry(activityFile);
-    if (conversations2.length === 0) {
-      throw new NexusAiChatImporterError(
-        "Empty Gemini export",
-        "No entries found in the Gemini activity JSON file."
-      );
     }
     return { conversations: conversations2, uncompressedBytes: uncompressedBytes2 };
   }
@@ -20899,7 +18329,7 @@ async function extractRawConversations(zip) {
   if (!conversationsFile) {
     throw new NexusAiChatImporterError(
       "Missing conversations.json",
-      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Gemini activity JSON file."
+      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or Perplexity thread JSON files."
     );
   }
   const { items: conversations, uncompressedBytes } = await collectJsonArrayFromEntry(conversationsFile);
@@ -20917,7 +18347,10 @@ async function* extractConversationsStream(zip, options = {}) {
   const streamLogger = logger.child("Stream");
   const startedAt = Date.now();
   const largeJsonThresholdBytes = (_a = options.largeJsonThresholdBytes) != null ? _a : DEFAULT_LARGE_JSON_THRESHOLD_BYTES;
-  const streamYieldEvery = Math.max(1, (_b = options.streamYieldEvery) != null ? _b : DEFAULT_STREAM_YIELD_EVERY);
+  const streamYieldEvery = Math.max(
+    1,
+    (_b = options.streamYieldEvery) != null ? _b : DEFAULT_STREAM_YIELD_EVERY
+  );
   const isMobileRuntime = !!options.mobileRuntime;
   const enforceChunkedForLargeJsonOnMobile = (_c = options.enforceChunkedForLargeJsonOnMobile) != null ? _c : isMobileRuntime;
   const yieldToEventLoopIfNeeded = /* @__PURE__ */ __name(async (count) => {
@@ -20932,12 +18365,16 @@ async function* extractConversationsStream(zip, options = {}) {
   streamLogger.debug("Begin conversation stream extraction");
   const entries = await zip.listEntries();
   const fileNames = entries.map((entry) => entry.path);
-  const entrySizeMap = new Map(entries.map((entry) => [entry.path, entry.size]));
+  const entrySizeMap = new Map(
+    entries.map((entry) => [entry.path, entry.size])
+  );
   streamLogger.debug("ZIP entry listing complete for stream extraction", {
     entryCount: fileNames.length,
     durationMs: Date.now() - startedAt
   });
-  const leChatFiles = fileNames.filter((name) => /^chat-[a-f0-9-]+\.json$/.test(name));
+  const leChatFiles = fileNames.filter(
+    (name) => /^chat-[a-f0-9-]+\.json$/.test(name)
+  );
   if (leChatFiles.length > 0) {
     streamLogger.debug("Using Le Chat conversation stream", {
       fileCount: leChatFiles.length
@@ -20947,7 +18384,9 @@ async function* extractConversationsStream(zip, options = {}) {
       const entry = zip.get(fileName);
       if (!entry)
         continue;
-      streamLogger.debug("Reading Le Chat conversation file", { fileName });
+      streamLogger.debug("Reading Le Chat conversation file", {
+        fileName
+      });
       const { messages, uncompressedBytes } = await collectLeChatConversationFromEntry(entry);
       streamLogger.debug("Le Chat conversation file read complete", {
         fileName,
@@ -20961,13 +18400,6 @@ async function* extractConversationsStream(zip, options = {}) {
       durationMs: Date.now() - startedAt
     });
     return;
-  }
-  const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
-  if (geminiJsonFiles.length > 0) {
-    throw new NexusAiChatImporterError(
-      "Gemini streaming not supported",
-      "Gemini imports still require all-at-once processing."
-    );
   }
   const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
   if (perplexityJsonFiles.length > 0) {
@@ -21013,20 +18445,28 @@ async function* extractConversationsStream(zip, options = {}) {
         `Reading numbered conversation file (${fileName}) [entrySize=${entrySize != null ? entrySize : "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
       );
       if (isLargeJsonFile) {
-        streamLogger.debug("Large JSON mode activated for numbered conversation file", {
-          fileName,
-          entrySize,
-          thresholdBytes: largeJsonThresholdBytes,
-          mobileRuntime: isMobileRuntime,
-          chunkedAvailable: canUseChunkedReader2
-        });
+        streamLogger.debug(
+          "Large JSON mode activated for numbered conversation file",
+          {
+            fileName,
+            entrySize,
+            thresholdBytes: largeJsonThresholdBytes,
+            mobileRuntime: isMobileRuntime,
+            chunkedAvailable: canUseChunkedReader2
+          }
+        );
       }
       if (chunkReader2) {
-        streamLogger.debug("Using chunked numbered conversation reader", {
-          fileName,
-          entrySize: entrySize != null ? entrySize : null
-        });
-        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader2())) {
+        streamLogger.debug(
+          "Using chunked numbered conversation reader",
+          {
+            fileName,
+            entrySize: entrySize != null ? entrySize : null
+          }
+        );
+        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(
+          chunkReader2()
+        )) {
           yieldedCount2++;
           if (yieldedCount2 <= 3 || yieldedCount2 % 100 === 0) {
             streamLogger.debug("Yielding streamed conversation", {
@@ -21037,11 +18477,14 @@ async function* extractConversationsStream(zip, options = {}) {
           yield conv;
           await yieldToEventLoopIfNeeded(yieldedCount2);
         }
-        streamLogger.debug("Chunked numbered conversation file parse complete", {
-          fileName,
-          readDurationMs: Date.now() - fileReadStartedAt,
-          memorySnapshot: formatRuntimeMemorySnapshot()
-        });
+        streamLogger.debug(
+          "Chunked numbered conversation file parse complete",
+          {
+            fileName,
+            readDurationMs: Date.now() - fileReadStartedAt,
+            memorySnapshot: formatRuntimeMemorySnapshot()
+          }
+        );
       } else if (isMobileRuntime && isLargeJsonFile && enforceChunkedForLargeJsonOnMobile) {
         throw new NexusAiChatImporterError(
           "MOBILE_LARGE_JSON_STREAM_REQUIRED",
@@ -21052,13 +18495,10 @@ async function* extractConversationsStream(zip, options = {}) {
           }
         );
       } else {
-        throw new NexusAiChatImporterError(
-          "ZIP_TEXT_STREAM_REQUIRED",
-          {
-            fileName,
-            entrySizeBytes: entrySize != null ? entrySize : null
-          }
-        );
+        throw new NexusAiChatImporterError("ZIP_TEXT_STREAM_REQUIRED", {
+          fileName,
+          entrySizeBytes: entrySize != null ? entrySize : null
+        });
       }
     }
     streamLogger.debug("Numbered conversation stream complete", {
@@ -21071,7 +18511,7 @@ async function* extractConversationsStream(zip, options = {}) {
   if (!conversationsFile) {
     throw new NexusAiChatImporterError(
       "Missing conversations.json",
-      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Gemini activity JSON file."
+      "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or Perplexity thread JSON files."
     );
   }
   const conversationEntrySize = entrySizeMap.get("conversations.json");
@@ -21096,7 +18536,9 @@ async function* extractConversationsStream(zip, options = {}) {
       entrySize: conversationEntrySize != null ? conversationEntrySize : null
     });
     try {
-      for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader())) {
+      for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(
+        chunkReader()
+      )) {
         yieldedCount++;
         if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
           streamLogger.debug("Yielding streamed conversation", {
@@ -21108,12 +18550,15 @@ async function* extractConversationsStream(zip, options = {}) {
         await yieldToEventLoopIfNeeded(yieldedCount);
       }
     } catch (error) {
-      streamLogger.error("Failed while chunk-reading conversations.json for stream extraction", {
-        durationMs: Date.now() - readStartedAt,
-        memorySnapshot: formatRuntimeMemorySnapshot(),
-        yieldedCount,
-        message: error instanceof Error ? error.message : String(error)
-      });
+      streamLogger.error(
+        "Failed while chunk-reading conversations.json for stream extraction",
+        {
+          durationMs: Date.now() - readStartedAt,
+          memorySnapshot: formatRuntimeMemorySnapshot(),
+          yieldedCount,
+          message: error instanceof Error ? error.message : String(error)
+        }
+      );
       throw error;
     }
     streamLogger.debug("Conversation stream extraction complete", {
@@ -21133,13 +18578,10 @@ async function* extractConversationsStream(zip, options = {}) {
       }
     );
   } else {
-    throw new NexusAiChatImporterError(
-      "ZIP_TEXT_STREAM_REQUIRED",
-      {
-        fileName: "conversations.json",
-        entrySizeBytes: conversationEntrySize != null ? conversationEntrySize : null
-      }
-    );
+    throw new NexusAiChatImporterError("ZIP_TEXT_STREAM_REQUIRED", {
+      fileName: "conversations.json",
+      entrySizeBytes: conversationEntrySize != null ? conversationEntrySize : null
+    });
   }
 }
 __name(extractConversationsStream, "extractConversationsStream");
@@ -21226,7 +18668,7 @@ __name(extractEmbeddedTimestamp, "extractEmbeddedTimestamp");
 // src/services/import-service.ts
 init_i18n();
 function getRuntimeMemorySnapshot() {
-  const perf = globalThis.performance;
+  const perf = window.performance;
   const memory = perf == null ? void 0 : perf.memory;
   if (!memory || typeof memory.usedJSHeapSize !== "number") {
     return "heap=n/a";
@@ -21246,32 +18688,20 @@ var ImportService = class {
     this.runtimeContext = null;
     this.providerRegistry = createProviderRegistry(plugin);
     this.attachmentMapBuilder = new AttachmentMapBuilder(plugin.logger);
-    this.conversationProcessor = new ConversationProcessor(plugin, this.providerRegistry);
-  }
-  /**
-   * Set or clear the Gemini index on the Gemini adapter.
-   *
-   * When an index JSON generated by the browser extension is provided,
-   * this enables hash-based reconstruction of full Gemini conversations.
-   */
-  setGeminiIndex(index) {
-    var _a, _b;
-    const adapter = this.providerRegistry.getAdapter("gemini");
-    if (adapter && typeof adapter.setIndex === "function") {
-      adapter.setIndex(index);
-      const status = index ? `loaded (conversations=${(_b = (_a = index.conversations) == null ? void 0 : _a.length) != null ? _b : 0})` : "cleared";
-      this.plugin.logger.debug(`[Gemini] Index ${status} on ImportService adapter`);
-    } else {
-      this.plugin.logger.warn("[Gemini] Unable to set index: Gemini adapter not found or setIndex() missing");
-    }
+    this.conversationProcessor = new ConversationProcessor(
+      plugin,
+      this.providerRegistry
+    );
   }
   async selectZipFile() {
-    const input = document.createElement("input");
+    const input = activeDocument.createElement("input");
     input.type = "file";
     input.accept = ".zip";
     input.multiple = true;
     input.onchange = async (e) => {
-      const files = Array.from(e.target.files || []);
+      const files = Array.from(
+        e.target.files || []
+      );
       if (files.length > 0) {
         const sortedFiles = this.sortFilesByTimestamp(files);
         for (const file of sortedFiles) {
@@ -21310,14 +18740,19 @@ Do NOT extract and re-compress the file - just rename it!`;
     const isSharedReport = !!sharedReport;
     this.importReport = sharedReport || new ImportReport();
     if (!isSharedReport && this.plugin.settings.useCustomMessageTimestampFormat) {
-      this.importReport.setCustomTimestampFormat(this.plugin.settings.messageTimestampFormat);
+      this.importReport.setCustomTimestampFormat(
+        this.plugin.settings.messageTimestampFormat
+      );
     }
     this.importReport.startFileSection(file.name);
     this.conversationProcessor.resetCounters();
     const storage = this.plugin.getStorageService();
     let processingStarted = false;
     let zip = null;
-    const progressModal = new ImportProgressModal(this.plugin.app, file.name);
+    const progressModal = new ImportProgressModal(
+      this.plugin.app,
+      file.name
+    );
     const progressCallback = progressModal.getProgressCallback();
     progressModal.open();
     if (selectedConversationIds && selectedConversationIds.length > 0) {
@@ -21410,10 +18845,13 @@ Do NOT extract and re-compress the file - just rename it!`;
       }
       const reprocessConversationIds = (options == null ? void 0 : options.reprocessConversationIds) && options.reprocessConversationIds.length > 0 ? new Set(options.reprocessConversationIds) : void 0;
       if (reprocessConversationIds && reprocessConversationIds.size > 0) {
-        importLogger.debug("Selective existing conversations will be force reprocessed", {
-          fileName: file.name,
-          count: reprocessConversationIds.size
-        });
+        importLogger.debug(
+          "Selective existing conversations will be force reprocessed",
+          {
+            fileName: file.name,
+            count: reprocessConversationIds.size
+          }
+        );
       }
       processingStarted = true;
       this.updateRuntimePhase("conversation-processing");
@@ -21452,7 +18890,9 @@ Do NOT extract and re-compress the file - just rename it!`;
       this.updateRuntimePhase("completed");
     } catch (error) {
       const resolvedError = this.resolveImportError(error, file.name);
-      this.plugin.logger.error("Error handling zip file", { message: resolvedError.rawMessage });
+      this.plugin.logger.error("Error handling zip file", {
+        message: resolvedError.rawMessage
+      });
       importLogger.error(`File import failed`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
@@ -21460,13 +18900,16 @@ Do NOT extract and re-compress the file - just rename it!`;
         runtimeContext: this.runtimeContext,
         memorySnapshot: getRuntimeMemorySnapshot()
       });
-      this.importReport.addError(resolvedError.reportMessage, resolvedError.reportDetails);
+      this.importReport.addError(
+        resolvedError.reportMessage,
+        resolvedError.reportDetails
+      );
       progressCallback({
         phase: "error",
         title: t("import_progress.error.message"),
         detail: resolvedError.userMessage
       });
-      setTimeout(() => progressModal.close(), 5e3);
+      window.setTimeout(() => progressModal.close(), 5e3);
     } finally {
       zip = null;
       await this.yieldToEventLoopIfMobile();
@@ -21495,7 +18938,10 @@ Do NOT extract and re-compress the file - just rename it!`;
       const zip = await createZipArchiveReader(file, entryFilter);
       const entries = await zip.listEntries();
       const fileNames = entries.map((entry) => entry.path);
-      const classification = classifyArchiveEntries(fileNames, forcedProvider);
+      const classification = classifyArchiveEntries(
+        fileNames,
+        forcedProvider
+      );
       importLogger.debug(`ZIP classification complete`, {
         fileName: file.name,
         entryCount: entries.length,
@@ -21546,7 +18992,7 @@ Do NOT extract and re-compress the file - just rename it!`;
       }
       throw new NexusAiChatImporterError(
         "Error reading ZIP file",
-        `Failed to read the ZIP file: ${message || "Unknown error"}. Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, Perplexity, or Gemini.`
+        `Failed to read the ZIP file: ${message || "Unknown error"}. Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, or Perplexity.`
       );
     }
   }
@@ -21559,7 +19005,7 @@ Do NOT extract and re-compress the file - just rename it!`;
         title: "Extracting conversations...",
         detail: "Reading conversation data from ZIP file"
       });
-      const useStreaming = !!forcedProvider && forcedProvider !== "gemini";
+      const useStreaming = !!forcedProvider;
       importLogger.debug(`Conversation processing strategy selected`, {
         fileName: file.name,
         forcedProvider: forcedProvider || "auto",
@@ -21594,15 +19040,23 @@ Do NOT extract and re-compress the file - just rename it!`;
           reprocessConversationIds
         );
         this.importReport = report;
-        this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+        this.importReport.setFileCounters(
+          this.conversationProcessor.getCounters()
+        );
         await this.yieldToEventLoopIfMobile();
-        importLogger.debug(`Streaming conversation processing complete`, {
-          fileName: file.name,
-          created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
-          updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate
-        });
+        importLogger.debug(
+          `Streaming conversation processing complete`,
+          {
+            fileName: file.name,
+            created: this.conversationProcessor.getCounters().totalNewConversationsToImport,
+            updated: this.conversationProcessor.getCounters().totalExistingConversationsToUpdate
+          }
+        );
       } else {
-        const extractionResult = await this.extractRawConversationsFromZip(zip, zipSizeBytes);
+        const extractionResult = await this.extractRawConversationsFromZip(
+          zip,
+          zipSizeBytes
+        );
         let rawConversations = extractionResult.conversations;
         const archiveModeDecision = extractionResult.archiveModeDecision;
         await this.yieldToEventLoopIfMobile();
@@ -21614,9 +19068,16 @@ Do NOT extract and re-compress the file - just rename it!`;
         });
         if (selectedConversationIds && selectedConversationIds.length > 0) {
           const originalCount = rawConversations.length;
-          rawConversations = this.filterConversationsByIds(rawConversations, selectedConversationIds, forcedProvider);
+          rawConversations = this.filterConversationsByIds(
+            rawConversations,
+            selectedConversationIds,
+            forcedProvider
+          );
           if (progressModal) {
-            progressModal.setSelectiveImportMode(rawConversations.length, originalCount);
+            progressModal.setSelectiveImportMode(
+              rawConversations.length,
+              originalCount
+            );
           }
           progressCallback == null ? void 0 : progressCallback({
             phase: "scanning",
@@ -21632,7 +19093,10 @@ Do NOT extract and re-compress the file - just rename it!`;
           total: rawConversations.length
         });
         if (forcedProvider) {
-          this.validateProviderMatch(rawConversations, forcedProvider);
+          this.validateProviderMatch(
+            rawConversations,
+            forcedProvider
+          );
         }
         progressCallback == null ? void 0 : progressCallback({
           phase: "processing",
@@ -21652,7 +19116,9 @@ Do NOT extract and re-compress the file - just rename it!`;
           reprocessConversationIds
         );
         this.importReport = report;
-        this.importReport.setFileCounters(this.conversationProcessor.getCounters());
+        this.importReport.setFileCounters(
+          this.conversationProcessor.getCounters()
+        );
         rawConversations = [];
         await this.yieldToEventLoopIfMobile();
         importLogger.debug(`Raw conversation processing complete`, {
@@ -21668,14 +19134,26 @@ Do NOT extract and re-compress the file - just rename it!`;
       });
     } catch (error) {
       if (error instanceof NexusAiChatImporterError) {
-        this.plugin.logger.error("Error processing conversations", error.message);
-        this.plugin.logger.error("Full NexusAiChatImporterError:", error);
+        this.plugin.logger.error(
+          "Error processing conversations",
+          error.message
+        );
+        this.plugin.logger.error(
+          "Full NexusAiChatImporterError:",
+          error
+        );
       } else if (typeof error === "object" && error instanceof Error) {
-        this.plugin.logger.error("General error processing conversations", error.message);
+        this.plugin.logger.error(
+          "General error processing conversations",
+          error.message
+        );
         this.plugin.logger.error("Full Error:", error);
         this.plugin.logger.error("Stack trace:", error.stack);
       } else {
-        this.plugin.logger.error("Unknown error processing conversations", "An unknown error occurred");
+        this.plugin.logger.error(
+          "Unknown error processing conversations",
+          "An unknown error occurred"
+        );
         this.plugin.logger.error("Unknown error:", error);
       }
       throw error;
@@ -21717,7 +19195,6 @@ Do NOT extract and re-compress the file - just rename it!`;
     const isChatGPT = firstConversation.mapping !== void 0;
     const isClaude = firstConversation.chat_messages !== void 0 || firstConversation.name !== void 0 || firstConversation.summary !== void 0;
     const isLeChat = Array.isArray(firstConversation) && firstConversation.length > 0 && firstConversation[0].chatId !== void 0 && firstConversation[0].contentChunks !== void 0;
-    const isGemini = !!firstConversation && typeof firstConversation.header === "string" && typeof firstConversation.title === "string" && typeof firstConversation.time === "string" && (Array.isArray(firstConversation.safeHtmlItem) || Array.isArray(firstConversation.activityControls) || Array.isArray(firstConversation.products));
     if (forcedProvider === "chatgpt" && !isChatGPT) {
       throw new NexusAiChatImporterError(
         "Provider Mismatch",
@@ -21736,17 +19213,18 @@ Do NOT extract and re-compress the file - just rename it!`;
         "You selected Le Chat but this archive appears to be from another provider. The structure doesn't match Le Chat exports."
       );
     }
-    if (forcedProvider === "gemini" && !isGemini) {
-      throw new NexusAiChatImporterError(
-        "Provider Mismatch",
-        "You selected Gemini but this archive appears to be from another provider. The structure doesn't match Gemini My Activity exports."
-      );
-    }
   }
   async writeImportReport(zipFileName) {
-    const reportWriter = new ReportWriter(this.plugin, this.providerRegistry);
+    const reportWriter = new ReportWriter(
+      this.plugin,
+      this.providerRegistry
+    );
     const currentProvider = this.conversationProcessor.getCurrentProvider();
-    await reportWriter.writeReport(this.importReport, zipFileName, currentProvider);
+    await reportWriter.writeReport(
+      this.importReport,
+      zipFileName,
+      currentProvider
+    );
   }
   /**
    * Build attachment map for multi-ZIP import
@@ -21762,15 +19240,26 @@ Do NOT extract and re-compress the file - just rename it!`;
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         try {
-          const zipContent = await createZipArchiveReader(file, entryFilter);
+          const zipContent = await createZipArchiveReader(
+            file,
+            entryFilter
+          );
           this.currentZips.push(zipContent);
         } catch (error) {
-          this.plugin.logger.warn(`Skipping ZIP for attachment map: ${file.name}`, error);
+          this.plugin.logger.warn(
+            `Skipping ZIP for attachment map: ${file.name}`,
+            error
+          );
         }
       }
-      const chatgptAdapter = this.providerRegistry.getAdapter("chatgpt");
+      const chatgptAdapter = this.providerRegistry.getAdapter(
+        "chatgpt"
+      );
       if (chatgptAdapter && this.currentAttachmentMap) {
-        chatgptAdapter.setAttachmentMap(this.currentAttachmentMap, this.currentZips);
+        chatgptAdapter.setAttachmentMap(
+          this.currentAttachmentMap,
+          this.currentZips
+        );
       }
     } catch (error) {
       this.plugin.logger.error("Error building attachment map:", error);
@@ -21783,7 +19272,9 @@ Do NOT extract and re-compress the file - just rename it!`;
   clearAttachmentMap() {
     this.currentAttachmentMap = null;
     this.currentZips = [];
-    const chatgptAdapter = this.providerRegistry.getAdapter("chatgpt");
+    const chatgptAdapter = this.providerRegistry.getAdapter(
+      "chatgpt"
+    );
     if (chatgptAdapter) {
       chatgptAdapter.clearAttachmentMap();
     }
@@ -21850,14 +19341,18 @@ Do NOT extract and re-compress the file - just rename it!`;
       return {
         rawMessage,
         userMessage,
-        reportMessage: t("notices.import_error_file_report", { filename: fileName }),
+        reportMessage: t("notices.import_error_file_report", {
+          filename: fileName
+        }),
         reportDetails
       };
     }
     return {
       rawMessage,
       userMessage: rawMessage,
-      reportMessage: t("notices.import_error_file_report", { filename: fileName }),
+      reportMessage: t("notices.import_error_file_report", {
+        filename: fileName
+      }),
       reportDetails: rawMessage
     };
   }
@@ -21876,16 +19371,25 @@ var ReportWriter = class {
       const columnInfo = strategy.getProviderSpecificColumn();
       report.setProviderSpecificColumnHeader(columnInfo.header);
     }
-    const folderResult = await ensureFolderExists(reportInfo.folderPath, this.plugin.app.vault);
+    const folderResult = await ensureFolderExists(
+      reportInfo.folderPath,
+      this.plugin.app.vault
+    );
     if (!folderResult.success) {
-      this.plugin.logger.error(`Failed to create or access log folder: ${reportInfo.folderPath}`, folderResult.error);
+      this.plugin.logger.error(
+        `Failed to create or access log folder: ${reportInfo.folderPath}`,
+        folderResult.error
+      );
       new import_obsidian17.Notice("Failed to create log file. Check console for details.");
       return;
     }
     let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
     let counter = 2;
     while (await this.plugin.app.vault.adapter.exists(logFilePath)) {
-      const baseName = reportInfo.baseFileName.replace(" - import report.md", "");
+      const baseName = reportInfo.baseFileName.replace(
+        " - import report.md",
+        ""
+      );
       logFilePath = `${reportInfo.folderPath}/${baseName}-${counter} - import report.md`;
       counter++;
     }
@@ -21906,7 +19410,10 @@ ${report.generateReportContent()}
     try {
       await this.plugin.app.vault.create(logFilePath, logContent);
     } catch (error) {
-      this.plugin.logger.error(`Failed to write import log`, error.message);
+      this.plugin.logger.error(
+        `Failed to write import log`,
+        error.message
+      );
       new import_obsidian17.Notice("Failed to create log file. Check console for details.");
     }
   }
@@ -21922,7 +19429,9 @@ ${report.generateReportContent()}
       };
     }
     const now = new Date();
-    const importDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
+    const importDate = `${now.getFullYear()}.${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
     const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
     const fallbackPrefix = `imported-${importDate}-archive-${archiveDate}`;
     return {
@@ -21938,18 +19447,646 @@ ${report.generateReportContent()}
       return `${year}.${month}.${day}`;
     }
     const now = new Date();
-    return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
+    return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}.${String(now.getDate()).padStart(2, "0")}`;
   }
 };
 __name(ReportWriter, "ReportWriter");
 
-// src/main.ts
-init_storage_service();
+// src/utils/date-parser.ts
+init_logger();
+var moment2 = window.moment;
+var DateParser = class {
+  /**
+   * Parse a date string with automatic format detection
+   * Returns Unix timestamp (seconds) or 0 if parsing fails
+   * @param dateStr - Date string to parse
+   * @param contextId - Optional context identifier for logging (e.g., "Artifact abc123_v1", "Conversation xyz")
+   */
+  static parseDate(dateStr, contextId) {
+    const ctx = contextId ? `[${contextId}] ` : "";
+    if (!dateStr || typeof dateStr !== "string") {
+      return 0;
+    }
+    try {
+      const isoDate = moment2(dateStr, moment2.ISO_8601, true);
+      if (isoDate.isValid()) {
+        return isoDate.unix();
+      }
+      const format = this.detectFormat(dateStr);
+      if (!format) {
+        logger.warn(
+          `${ctx}parseDate - FAILED: could not detect format`
+        );
+        return 0;
+      }
+      const parsed = this.parseWithFormat(dateStr, format);
+      if (parsed === 0) {
+        logger.warn(`${ctx}parseDate - FAILED: parsing returned 0`);
+      }
+      return parsed;
+    } catch (error) {
+      logger.warn(`${ctx}parseDate - FAILED: exception:`, error);
+      return 0;
+    }
+  }
+  /**
+   * Parse a date string with a forced component order (YMD/DMY/MDY)
+   * Keeps other parts auto-detected from the string (separator, time format, seconds)
+   */
+  static parseDateWithOrder(dateStr, order) {
+    if (!dateStr || typeof dateStr !== "string")
+      return 0;
+    const isoDate = moment2(dateStr, moment2.ISO_8601, true);
+    if (isoDate.isValid())
+      return isoDate.unix();
+    const detected = this.detectFormat(dateStr);
+    if (!detected)
+      return 0;
+    const forced = { ...detected, order };
+    return this.parseWithFormat(dateStr, forced);
+  }
+  /**
+   * Convert a date string to ISO 8601 with a forced component order
+   */
+  static convertToISO8601WithOrder(dateStr, order) {
+    const unixTime = this.parseDateWithOrder(dateStr, order);
+    if (unixTime === 0)
+      return null;
+    return new Date(unixTime * 1e3).toISOString();
+  }
+  /**
+   * Detect date format from a single date string
+   */
+  static detectFormat(dateStr) {
+    if (dateStr.match(
+      /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/
+    )) {
+      return {
+        separator: "-",
+        order: "YMD",
+        timeFormat: "24h",
+        hasSeconds: dateStr.includes(":") && dateStr.split(":").length >= 3
+      };
+    }
+    let separator = "/";
+    if (dateStr.includes("-") && !dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+      separator = "-";
+    } else if (dateStr.includes(".")) {
+      separator = ".";
+    } else if (dateStr.includes("/")) {
+      separator = "/";
+    } else {
+      return null;
+    }
+    const hasAMPM = /\s(AM|PM)$/i.test(dateStr);
+    const timeFormat = hasAMPM ? "12h" : "24h";
+    const timeMatch = dateStr.match(
+      /\s(\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?)/i
+    );
+    const timePart = timeMatch ? timeMatch[1] : "";
+    const hasSeconds = timePart.split(":").length >= 3;
+    const datePart = dateStr.split(/\s/)[0];
+    const parts = datePart.split(separator).map((p) => parseInt(p, 10));
+    if (parts.length !== 3 || parts.some(isNaN)) {
+      return null;
+    }
+    const order = this.detectOrder(parts, separator, hasAMPM);
+    return {
+      separator,
+      order,
+      timeFormat,
+      hasSeconds
+    };
+  }
+  /**
+   * Detect date component order (YMD, DMY, MDY)
+   * @param parts - Date parts [first, second, third]
+   * @param separator - Date separator ('/', '-', '.')
+   * @param hasAMPM - Whether the time uses AM/PM format (hint for US format)
+   */
+  static detectOrder(parts, separator, hasAMPM) {
+    const [first, second, third] = parts;
+    if (first > 31) {
+      return "YMD";
+    }
+    if (third > 31) {
+      if (first > 12) {
+        return "DMY";
+      }
+      if (second > 12) {
+        return "MDY";
+      }
+      if (separator === ".") {
+        return "DMY";
+      }
+      if (hasAMPM) {
+        return "MDY";
+      }
+      return "DMY";
+    }
+    if (first > 12) {
+      return "DMY";
+    }
+    if (second > 12) {
+      return "MDY";
+    }
+    if (separator === "-") {
+      return "YMD";
+    } else if (separator === ".") {
+      return "DMY";
+    } else if (hasAMPM) {
+      return "MDY";
+    }
+    return "DMY";
+  }
+  /**
+   * Parse date string with detected format
+   */
+  static parseWithFormat(dateStr, format) {
+    let datePattern;
+    switch (format.order) {
+      case "YMD":
+        datePattern = format.separator === "-" ? "YYYY-MM-DD" : "YYYY/MM/DD";
+        break;
+      case "DMY":
+        datePattern = format.separator === "." ? "DD.MM.YYYY" : "DD/MM/YYYY";
+        break;
+      case "MDY":
+        datePattern = "MM/DD/YYYY";
+        break;
+    }
+    const timePattern = format.timeFormat === "12h" ? format.hasSeconds ? "h:mm:ss A" : "h:mm A" : format.hasSeconds ? "HH:mm:ss" : "HH:mm";
+    const patterns = [
+      `${datePattern} ${timePattern}`,
+      // Standard space
+      `${datePattern}[T]${timePattern}`,
+      // ISO 8601 T
+      `${datePattern}[ at ]${timePattern}`
+      // English "at"
+    ];
+    for (const pattern of patterns) {
+      const date = moment2(dateStr, pattern, true);
+      if (date.isValid()) {
+        return date.unix();
+      }
+    }
+    if (format.hasSeconds) {
+      const timePatternNoSec = format.timeFormat === "12h" ? "h:mm A" : "HH:mm";
+      const fallbackPatterns = [
+        `${datePattern} ${timePatternNoSec}`,
+        `${datePattern}[T]${timePatternNoSec}`,
+        `${datePattern}[ at ]${timePatternNoSec}`
+      ];
+      for (const pattern of fallbackPatterns) {
+        const date = moment2(dateStr, pattern, true);
+        if (date.isValid()) {
+          return date.unix();
+        }
+      }
+    }
+    return 0;
+  }
+  /**
+   * Convert any date format to ISO 8601
+   * Returns ISO 8601 string or null if parsing fails
+   */
+  static convertToISO8601(dateStr) {
+    const unixTime = this.parseDate(dateStr);
+    if (unixTime === 0) {
+      logger.warn(`convertToISO8601 - parsing returned 0`);
+      return null;
+    }
+    return new Date(unixTime * 1e3).toISOString();
+  }
+  /**
+   * Detect format from multiple date samples (more reliable)
+   * Used for batch processing (e.g., upgrade operations)
+   */
+  static detectFormatFromSamples(dates) {
+    if (!dates || dates.length === 0) {
+      return null;
+    }
+    for (const dateStr of dates.slice(0, 20)) {
+      const format = this.detectFormat(dateStr);
+      if (format) {
+        const datePart = dateStr.split(/\s/)[0];
+        const parts = datePart.split(format.separator).map((p) => parseInt(p, 10));
+        if (parts.some((p) => p > 12)) {
+          return format;
+        }
+      }
+    }
+    return this.detectFormat(dates[0]);
+  }
+};
+__name(DateParser, "DateParser");
+
+// src/services/storage-service.ts
+var StorageService = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.importedArchives = {};
+    this.isDirty = false;
+    this.saveTimeout = null;
+  }
+  async loadData() {
+    try {
+      const data = await this.plugin.loadData();
+      this.importedArchives = (data == null ? void 0 : data.importedArchives) || {};
+      this.isDirty = false;
+    } catch (error) {
+      this.plugin.logger.error("loadData failed:", error);
+      throw error;
+    }
+  }
+  async saveData(data) {
+    try {
+      await this.plugin.saveData(data);
+      this.isDirty = false;
+    } catch (error) {
+      this.plugin.logger.error("saveData failed:", error);
+    }
+  }
+  debouncedSave() {
+    if (this.saveTimeout) {
+      window.clearTimeout(this.saveTimeout);
+    }
+    this.saveTimeout = window.setTimeout(() => {
+      if (this.isDirty) {
+        void this.plugin.saveSettings();
+      }
+    }, 1e3);
+  }
+  // ========================================
+  // ARCHIVE TRACKING - HYBRID DETECTION (1.0.x + 1.1.0)
+  // ========================================
+  getImportedArchives() {
+    return this.importedArchives;
+  }
+  /**
+   * HYBRID detection: Works with both 1.0.x (filename as key) and 1.1.0 (hash as key)
+   * FIXED: Handle both old format (string values) and new format (object values)
+   */
+  isArchiveImported(key) {
+    if (this.importedArchives[key]) {
+      return true;
+    }
+    return Object.values(this.importedArchives).some((archive) => {
+      if (typeof archive === "object" && archive !== null && archive.fileName) {
+        return archive.fileName === key;
+      }
+      return false;
+    });
+  }
+  addImportedArchive(fileHash, fileName) {
+    this.importedArchives[fileHash] = {
+      fileName,
+      date: new Date().toISOString()
+    };
+    this.isDirty = true;
+    this.debouncedSave();
+  }
+  // ========================================
+  // NEW: VAULT-BASED CONVERSATION DISCOVERY (HYBRID)
+  // ========================================
+  /**
+   * Scan vault for existing Nexus conversations using HYBRID approach:
+   * 1. Wait for cache to be clean (fast)
+   * 2. Use metadataCache (optimal performance)
+   * 3. Fallback to manual parsing for problematic files
+   */
+  async scanExistingConversations() {
+    const storageLogger = this.plugin.logger.child("Storage");
+    const startedAt = Date.now();
+    storageLogger.debug("Begin scanExistingConversations");
+    await this.waitForCacheClean(1e3);
+    const conversations = /* @__PURE__ */ new Map();
+    const conversationFolder = this.plugin.settings.conversationFolder || this.plugin.settings.archiveFolder || "Nexus/Conversations";
+    const allFiles = this.plugin.app.vault.getMarkdownFiles();
+    const conversationFiles = allFiles.filter((file) => {
+      if (!file.path.startsWith(conversationFolder))
+        return false;
+      const relativePath = file.path.substring(
+        conversationFolder.length + 1
+      );
+      if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+        return false;
+      }
+      return true;
+    });
+    let processed = 0;
+    let foundViaCache = 0;
+    let foundViaManual = 0;
+    let errors = 0;
+    storageLogger.debug("Conversation files discovered for scan", {
+      conversationFolder,
+      markdownFileCount: allFiles.length,
+      conversationFileCount: conversationFiles.length
+    });
+    const batchSize = 100;
+    for (let i = 0; i < conversationFiles.length; i += batchSize) {
+      const batch = conversationFiles.slice(i, i + batchSize);
+      for (const file of batch) {
+        processed++;
+        try {
+          let entry = await this.parseWithCache(file);
+          if (entry) {
+            conversations.set(entry.conversationId, entry);
+            foundViaCache++;
+            continue;
+          }
+          entry = await this.parseConversationFileManually(file);
+          if (entry) {
+            conversations.set(entry.conversationId, entry);
+            foundViaManual++;
+          }
+        } catch (error) {
+          errors++;
+          this.plugin.logger.warn(
+            `Error parsing conversation file ${file.path}:`,
+            error
+          );
+        }
+      }
+      if (i + batchSize < conversationFiles.length) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1));
+      }
+    }
+    storageLogger.debug("scanExistingConversations complete", {
+      conversationCount: conversations.size,
+      processed,
+      foundViaCache,
+      foundViaManual,
+      errors,
+      durationMs: Date.now() - startedAt
+    });
+    return conversations;
+  }
+  /**
+   * Wait for metadata cache to be clean with timeout
+   */
+  async waitForCacheClean(maxWaitMs = 1e3) {
+    const startTime = Date.now();
+    const metadataCache = this.plugin.app.metadataCache;
+    while (!metadataCache.isCacheClean()) {
+      if (Date.now() - startTime > maxWaitMs) {
+        break;
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 10));
+    }
+  }
+  /**
+   * Parse conversation using metadataCache (fast but potentially unreliable)
+   */
+  async parseWithCache(file) {
+    var _a;
+    try {
+      const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+      if (!frontmatter) {
+        this.plugin.logger.warn(
+          `[parseWithCache] No frontmatter found for ${file.path}`
+        );
+        return null;
+      }
+      if (!frontmatter.nexus || frontmatter.nexus !== this.plugin.manifest.id) {
+        this.plugin.logger.warn(
+          `[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`
+        );
+        return null;
+      }
+      if (!frontmatter.conversation_id) {
+        this.plugin.logger.warn(
+          `[parseWithCache] No conversation_id for ${file.path}`
+        );
+        return null;
+      }
+      const createTime = this.parseTimeString(frontmatter.create_time);
+      const updateTime = this.parseTimeString(frontmatter.update_time);
+      if (createTime === 0 || updateTime === 0) {
+        this.plugin.logger.warn(
+          `[parseWithCache] Failed to parse timestamps for ${file.path}: create=${frontmatter.create_time} (${createTime}), update=${frontmatter.update_time} (${updateTime})`
+        );
+        return null;
+      }
+      return {
+        conversationId: frontmatter.conversation_id,
+        provider: frontmatter.provider || "unknown",
+        path: file.path,
+        updateTime,
+        create_time: createTime,
+        update_time: updateTime
+      };
+    } catch (error) {
+      this.plugin.logger.warn(
+        `[parseWithCache] Exception parsing ${file.path}:`,
+        error
+      );
+      return null;
+    }
+  }
+  /**
+   * Parse single conversation file manually (robust fallback)
+   */
+  async parseConversationFileManually(file) {
+    try {
+      const content = await this.plugin.app.vault.read(file);
+      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (!frontmatterMatch) {
+        return null;
+      }
+      const frontmatterContent = frontmatterMatch[1];
+      const frontmatterData = {};
+      const lines = frontmatterContent.split("\n");
+      for (const line of lines) {
+        const colonIndex = line.indexOf(":");
+        if (colonIndex > 0) {
+          const key = line.substring(0, colonIndex).trim();
+          let value = line.substring(colonIndex + 1).trim();
+          if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+            value = value.slice(1, -1);
+          }
+          frontmatterData[key] = value;
+        }
+      }
+      const nexusId = this.plugin.manifest.id;
+      if (frontmatterData.nexus !== nexusId) {
+        return null;
+      }
+      if (!frontmatterData.conversation_id) {
+        return null;
+      }
+      const createTime = this.parseTimeString(
+        frontmatterData.create_time
+      );
+      const updateTime = this.parseTimeString(
+        frontmatterData.update_time
+      );
+      return {
+        conversationId: frontmatterData.conversation_id,
+        provider: frontmatterData.provider || "unknown",
+        path: file.path,
+        updateTime,
+        create_time: createTime,
+        update_time: updateTime
+      };
+    } catch (error) {
+      this.plugin.logger.error(
+        `Error manually parsing ${file.path}:`,
+        error
+      );
+      return null;
+    }
+  }
+  /**
+   * Parse time string from frontmatter (handle multiple formats)
+   * Supports all formats: ISO 8601, US, EU, DE, JP, and locale-based
+   * Uses intelligent format detection from DateParser utility
+   */
+  parseTimeString(timeStr) {
+    const result = DateParser.parseDate(timeStr);
+    if (result === 0) {
+      this.plugin.logger.warn(
+        `[parseTimeString] Failed to parse: "${timeStr}"`
+      );
+    }
+    return result;
+  }
+  /**
+   * Fast check if a specific conversation exists
+   */
+  async conversationExists(conversationId) {
+    const conversations = await this.scanExistingConversations();
+    return conversations.has(conversationId);
+  }
+  /**
+   * Get conversation entry by ID (single lookup)
+   */
+  async getConversationById(conversationId) {
+    const conversations = await this.scanExistingConversations();
+    return conversations.get(conversationId) || null;
+  }
+  /**
+   * Get conversations by provider (for reporting/stats)
+   */
+  async getConversationsByProvider(provider) {
+    const allConversations = await this.scanExistingConversations();
+    return Array.from(allConversations.values()).filter(
+      (entry) => entry.provider === provider
+    );
+  }
+  // ========================================
+  // LEGACY SUPPORT & CLEANUP
+  // ========================================
+  async resetCatalogs() {
+    try {
+      this.importedArchives = {};
+      this.isDirty = false;
+      if (this.saveTimeout) {
+        window.clearTimeout(this.saveTimeout);
+        this.saveTimeout = null;
+      }
+      await this.plugin.saveData({
+        settings: this.plugin.settings
+        // Note: No conversation catalog to reset - it's now vault-based
+      });
+    } catch (error) {
+      this.plugin.logger.error("resetCatalogs failed:", error);
+    }
+  }
+  // Statistics for debugging
+  getStats() {
+    return {
+      totalArchives: Object.keys(this.importedArchives).length,
+      isDirty: this.isDirty,
+      hasPendingSave: this.saveTimeout !== null,
+      catalogMethod: "vault-based-hybrid",
+      trackingMethod: "hybrid-hash-filename"
+    };
+  }
+  async forceSave() {
+    if (this.saveTimeout) {
+      window.clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
+    if (this.isDirty) {
+      await this.plugin.saveSettings();
+    }
+  }
+};
+__name(StorageService, "StorageService");
 
 // src/upgrade/incremental-upgrade-manager.ts
 var import_obsidian25 = require("obsidian");
-init_version_utils();
-init_dialogs();
+
+// src/upgrade/utils/version-utils.ts
+var VersionUtils = class {
+  /**
+   * Parse version string into components
+   */
+  static parseVersion(version) {
+    const parts = version.split(".").map(Number);
+    return {
+      major: parts[0] || 0,
+      minor: parts[1] || 0,
+      patch: parts[2] || 0,
+      original: version
+    };
+  }
+  /**
+   * Compare two versions
+   * Returns: -1 (v1 < v2), 0 (v1 = v2), 1 (v1 > v2)
+   */
+  static compareVersions(version1, version2) {
+    const v1 = this.parseVersion(version1);
+    const v2 = this.parseVersion(version2);
+    if (v1.major !== v2.major)
+      return v1.major - v2.major;
+    if (v1.minor !== v2.minor)
+      return v1.minor - v2.minor;
+    return v1.patch - v2.patch;
+  }
+  /**
+   * Check if version is in range [min, max]
+   */
+  static isInRange(version, minVersion, maxVersion) {
+    const isAboveMin = this.compareVersions(version, minVersion) >= 0;
+    if (!maxVersion)
+      return isAboveMin;
+    const isBelowMax = this.compareVersions(version, maxVersion) <= 0;
+    return isAboveMin && isBelowMax;
+  }
+  /**
+   * Check if migration should run based on version range
+   */
+  static shouldRunMigration(fromVersion, toVersion, migrationFromVersion, migrationToVersion) {
+    const userTo = this.parseVersion(toVersion);
+    const migrationTo = migrationToVersion ? this.parseVersion(migrationToVersion) : userTo;
+    const wasInRange = this.compareVersions(fromVersion, migrationFromVersion) >= 0;
+    const isUpgradingTo = this.compareVersions(toVersion, migrationTo.original) >= 0;
+    return wasInRange && isUpgradingTo;
+  }
+  /**
+   * Get all versions between two versions (for sequential migrations)
+   */
+  static getVersionsInRange(fromVersion, toVersion, availableVersions) {
+    return availableVersions.filter(
+      (v) => this.compareVersions(v, fromVersion) > 0 && this.compareVersions(v, toVersion) <= 0
+    ).sort((a, b) => this.compareVersions(a, b));
+  }
+  /**
+   * Format version for display
+   */
+  static formatVersion(version) {
+    const parsed = this.parseVersion(version);
+    return `v${parsed.major}.${parsed.minor}.${parsed.patch}`;
+  }
+};
+__name(VersionUtils, "VersionUtils");
+
+// src/upgrade/incremental-upgrade-manager.ts
 init_logger();
 init_constants();
 
@@ -21972,13 +20109,17 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
       cls: "modal-title"
     });
     const contentContainer = contentEl.createDiv({ cls: "modal-content" });
-    this.operationsContainer = contentContainer.createDiv({ cls: "operations-container" });
+    this.operationsContainer = contentContainer.createDiv({
+      cls: "operations-container"
+    });
     this.operationsContainer.style.cssText = `
             margin: 20px 0;
             max-height: 300px;
             overflow-y: auto;
         `;
-    this.overallProgressEl = contentContainer.createDiv({ cls: "overall-progress" });
+    this.overallProgressEl = contentContainer.createDiv({
+      cls: "overall-progress"
+    });
     this.overallProgressEl.style.cssText = `
             margin-top: 20px;
             padding: 15px;
@@ -22011,12 +20152,20 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
   /**
    * Mark all operations as complete and allow closing
    */
-  markComplete(message = t("upgrade.multi_operation_modal.mark_complete_default")) {
+  markComplete(message = t(
+    "upgrade.multi_operation_modal.mark_complete_default"
+  )) {
     this.canClose = true;
     this.overallProgressEl.textContent = message;
-    this.overallProgressEl.style.color = "var(--text-success)";
+    this.overallProgressEl.removeClass(
+      "nexus-color-error",
+      "nexus-color-normal"
+    );
+    this.overallProgressEl.addClass("nexus-color-success");
     if (!this.closeButtonEl) {
-      const buttonContainer = this.contentEl.createDiv({ cls: "modal-button-container" });
+      const buttonContainer = this.contentEl.createDiv({
+        cls: "modal-button-container"
+      });
       this.closeButtonEl = buttonContainer.createEl("button", {
         text: t("upgrade.multi_operation_modal.buttons.complete"),
         cls: "mod-cta"
@@ -22030,9 +20179,15 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
   showError(message) {
     this.canClose = true;
     this.overallProgressEl.textContent = message;
-    this.overallProgressEl.style.color = "var(--text-error)";
+    this.overallProgressEl.removeClass(
+      "nexus-color-success",
+      "nexus-color-normal"
+    );
+    this.overallProgressEl.addClass("nexus-color-error");
     if (!this.closeButtonEl) {
-      const buttonContainer = this.contentEl.createDiv({ cls: "modal-button-container" });
+      const buttonContainer = this.contentEl.createDiv({
+        cls: "modal-button-container"
+      });
       this.closeButtonEl = buttonContainer.createEl("button", {
         text: t("upgrade.multi_operation_modal.buttons.close"),
         cls: "mod-warning"
@@ -22046,7 +20201,9 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
   renderOperations() {
     this.operationsContainer.empty();
     for (const operation of this.operations) {
-      const operationEl = this.operationsContainer.createDiv({ cls: "operation-item" });
+      const operationEl = this.operationsContainer.createDiv({
+        cls: "operation-item"
+      });
       operationEl.style.cssText = `
                 display: flex;
                 align-items: center;
@@ -22069,22 +20226,24 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
       switch (operation.status) {
         case "pending":
           iconEl.textContent = "\u25CB";
-          iconEl.style.color = "var(--text-muted)";
+          iconEl.addClass("nexus-color-muted");
           break;
         case "running":
           iconEl.textContent = "\u26A0";
-          iconEl.style.color = "var(--text-accent)";
+          iconEl.addClass("nexus-color-accent");
           break;
         case "completed":
           iconEl.textContent = "\u2713";
-          iconEl.style.color = "var(--text-success)";
+          iconEl.addClass("nexus-color-success");
           break;
         case "failed":
           iconEl.textContent = "\u2717";
-          iconEl.style.color = "var(--text-error)";
+          iconEl.addClass("nexus-color-error");
           break;
       }
-      const contentEl = operationEl.createDiv({ cls: "operation-content" });
+      const contentEl = operationEl.createDiv({
+        cls: "operation-content"
+      });
       contentEl.style.cssText = `flex: 1; min-width: 0;`;
       const nameEl = contentEl.createDiv({ cls: "operation-name" });
       nameEl.textContent = operation.name;
@@ -22094,7 +20253,9 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
                 color: var(--text-normal);
             `;
       if (operation.status === "running" || operation.progress !== void 0 && operation.progress > 0) {
-        const progressContainer = contentEl.createDiv({ cls: "progress-container" });
+        const progressContainer = contentEl.createDiv({
+          cls: "progress-container"
+        });
         progressContainer.style.cssText = `
                     background: var(--background-secondary);
                     border-radius: 4px;
@@ -22102,7 +20263,9 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
                     margin: 5px 0;
                     overflow: hidden;
                 `;
-        const progressBar = progressContainer.createDiv({ cls: "progress-bar" });
+        const progressBar = progressContainer.createDiv({
+          cls: "progress-bar"
+        });
         const progress = operation.progress || 0;
         progressBar.style.cssText = `
                     background: var(--interactive-accent);
@@ -22112,8 +20275,12 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
                 `;
       }
       if (operation.currentDetail) {
-        const detailEl = contentEl.createDiv({ cls: "operation-detail" });
-        detailEl.textContent = this.truncateDetail(operation.currentDetail);
+        const detailEl = contentEl.createDiv({
+          cls: "operation-detail"
+        });
+        detailEl.textContent = this.truncateDetail(
+          operation.currentDetail
+        );
         detailEl.style.cssText = `
                     font-size: 0.9em;
                     color: var(--text-muted);
@@ -22136,18 +20303,40 @@ var MultiOperationProgressModal = class extends import_obsidian18.Modal {
    * Update overall progress display
    */
   updateOverallProgress() {
-    const completed = this.operations.filter((op) => op.status === "completed").length;
-    const failed = this.operations.filter((op) => op.status === "failed").length;
+    const completed = this.operations.filter(
+      (op) => op.status === "completed"
+    ).length;
+    const failed = this.operations.filter(
+      (op) => op.status === "failed"
+    ).length;
     const total = this.operations.length;
+    this.overallProgressEl.removeClass(
+      "nexus-color-error",
+      "nexus-color-success",
+      "nexus-color-normal"
+    );
     if (failed > 0) {
-      this.overallProgressEl.textContent = t("upgrade.multi_operation_modal.progress_with_failures", { completed: String(completed), total: String(total), failed: String(failed) });
-      this.overallProgressEl.style.color = "var(--text-error)";
+      this.overallProgressEl.textContent = t(
+        "upgrade.multi_operation_modal.progress_with_failures",
+        {
+          completed: String(completed),
+          total: String(total),
+          failed: String(failed)
+        }
+      );
+      this.overallProgressEl.addClass("nexus-color-error");
     } else if (completed === total) {
-      this.overallProgressEl.textContent = t("upgrade.multi_operation_modal.all_completed", { total: String(total) });
-      this.overallProgressEl.style.color = "var(--text-success)";
+      this.overallProgressEl.textContent = t(
+        "upgrade.multi_operation_modal.all_completed",
+        { total: String(total) }
+      );
+      this.overallProgressEl.addClass("nexus-color-success");
     } else {
-      this.overallProgressEl.textContent = t("upgrade.multi_operation_modal.progress_label", { completed: String(completed), total: String(total) });
-      this.overallProgressEl.style.color = "var(--text-normal)";
+      this.overallProgressEl.textContent = t(
+        "upgrade.multi_operation_modal.progress_label",
+        { completed: String(completed), total: String(total) }
+      );
+      this.overallProgressEl.addClass("nexus-color-normal");
     }
   }
   /**
@@ -22177,6 +20366,3137 @@ __name(MultiOperationProgressModal, "MultiOperationProgressModal");
 // src/upgrade/incremental-upgrade-manager.ts
 init_utils();
 init_i18n();
+
+// src/upgrade/upgrade-interface.ts
+var UpgradeOperation = class {
+  /**
+   * Check if operation can run (prerequisites)
+   */
+  async canRun(_context) {
+    return true;
+  }
+  /**
+   * Verify operation completed successfully
+   */
+  async verify(_context) {
+    return true;
+  }
+};
+__name(UpgradeOperation, "UpgradeOperation");
+var VersionUpgrade = class {
+  /**
+   * Check if this upgrade should run for the version range
+   */
+  shouldRun(fromVersion, toVersion) {
+    return VersionUtils.compareVersions(toVersion, this.version) >= 0 && VersionUtils.compareVersions(fromVersion, this.version) < 0;
+  }
+  /**
+   * Execute all automatic operations
+   */
+  async executeAutomaticOperations(context) {
+    const results = [];
+    let allSuccess = true;
+    for (const operation of this.automaticOperations) {
+      try {
+        if (await this.isOperationCompleted(operation.id, context)) {
+          results.push({
+            operationId: operation.id,
+            result: { success: true, message: "Already completed" }
+          });
+          continue;
+        }
+        if (!await operation.canRun(context)) {
+          results.push({
+            operationId: operation.id,
+            result: {
+              success: false,
+              message: "Prerequisites not met"
+            }
+          });
+          allSuccess = false;
+          continue;
+        }
+        const result = await operation.execute(context);
+        results.push({ operationId: operation.id, result });
+        if (result.success) {
+          await this.markOperationCompleted(operation.id, context);
+        } else {
+          allSuccess = false;
+        }
+      } catch (error) {
+        const errorResult = {
+          success: false,
+          message: `Operation failed: ${error}`,
+          details: { error: String(error) }
+        };
+        results.push({
+          operationId: operation.id,
+          result: errorResult
+        });
+        allSuccess = false;
+      }
+    }
+    return { success: allSuccess, results };
+  }
+  /**
+   * Show manual operations dialog and execute selected ones
+   */
+  async showManualOperationsDialog(context) {
+    const availableOperations = [];
+    for (const operation of this.manualOperations) {
+      if (!await this.isOperationCompleted(operation.id, context) && await operation.canRun(context)) {
+        availableOperations.push(operation);
+      }
+    }
+    if (availableOperations.length === 0) {
+      return { success: true, results: [] };
+    }
+    const paragraphs = [
+      `**Version ${this.version} Manual Operations**`,
+      "The following optional operations are available:",
+      "",
+      ...availableOperations.map(
+        (op) => `\u2022 **${op.name}**: ${op.description}`
+      )
+    ];
+    const shouldExecute = await showDialog(
+      context.plugin.app,
+      "confirmation",
+      `Optional Operations - v${this.version}`,
+      paragraphs,
+      "These operations are optional and can be run later from Settings \u2192 Migrations",
+      { button1: "Run All Now", button2: "Skip (Run Later)" }
+    );
+    const results = [];
+    if (shouldExecute) {
+      for (const operation of availableOperations) {
+        try {
+          const result = await operation.execute(context);
+          results.push({ operationId: operation.id, result });
+          if (result.success) {
+            await this.markOperationCompleted(
+              operation.id,
+              context
+            );
+          }
+        } catch (error) {
+          const errorResult = {
+            success: false,
+            message: `Operation failed: ${error}`,
+            details: { error: String(error) }
+          };
+          results.push({
+            operationId: operation.id,
+            result: errorResult
+          });
+        }
+      }
+    }
+    return {
+      success: results.every((r) => r.result.success),
+      results
+    };
+  }
+  /**
+   * Get manual operations status for settings UI
+   */
+  async getManualOperationsStatus(context) {
+    const status = [];
+    for (const operation of this.manualOperations) {
+      const completed = await this.isOperationCompleted(
+        operation.id,
+        context
+      );
+      const canRun = !completed && await operation.canRun(context);
+      status.push({
+        operation,
+        completed,
+        canRun
+      });
+    }
+    return status;
+  }
+  /**
+   * Execute single manual operation (from settings)
+   */
+  async executeManualOperation(operationId, context) {
+    const operation = this.manualOperations.find(
+      (op) => op.id === operationId
+    );
+    if (!operation) {
+      return { success: false, message: "Operation not found" };
+    }
+    if (await this.isOperationCompleted(operation.id, context)) {
+      return { success: true, message: "Already completed" };
+    }
+    if (!await operation.canRun(context)) {
+      return { success: false, message: "Prerequisites not met" };
+    }
+    try {
+      const result = await operation.execute(context);
+      if (result.success) {
+        await this.markOperationCompleted(operation.id, context);
+      }
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        message: `Operation failed: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  /**
+   * Check if operation was completed using structured upgrade history
+   */
+  async isOperationCompleted(operationId, context) {
+    var _a, _b, _c;
+    const data = await context.plugin.loadData();
+    const operationKey = `operation_${this.version.replace(
+      /\./g,
+      "_"
+    )}_${operationId}`;
+    return ((_c = (_b = (_a = data == null ? void 0 : data.upgradeHistory) == null ? void 0 : _a.completedOperations) == null ? void 0 : _b[operationKey]) == null ? void 0 : _c.completed) || false;
+  }
+  /**
+   * Mark operation as completed using structured upgrade history
+   */
+  async markOperationCompleted(operationId, context) {
+    const data = await context.plugin.loadData() || {};
+    if (!data.upgradeHistory) {
+      data.upgradeHistory = {
+        completedUpgrades: {},
+        completedOperations: {}
+      };
+    }
+    const operationKey = `operation_${this.version.replace(
+      /\./g,
+      "_"
+    )}_${operationId}`;
+    data.upgradeHistory.completedOperations[operationKey] = {
+      operationId,
+      version: this.version,
+      date: new Date().toISOString(),
+      completed: true
+    };
+    await context.plugin.saveData(data);
+  }
+};
+__name(VersionUpgrade, "VersionUpgrade");
+
+// src/upgrade/versions/upgrade-1.1.0.ts
+init_logger();
+var logger3 = new Logger();
+var DeleteCatalogOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "delete-catalog";
+    this.name = "Delete Old Catalog";
+    this.description = "Remove legacy conversation catalog data";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const data = await context.plugin.loadData();
+      const catalog = data == null ? void 0 : data.conversationCatalog;
+      const hasData = catalog && typeof catalog === "object" && Object.keys(catalog).length > 0;
+      if (catalog) {
+      }
+      return hasData;
+    } catch (error) {
+      logger3.error(`DeleteCatalog.canRun failed:`, error);
+      return false;
+    }
+  }
+  async execute(context) {
+    try {
+      const data = await context.plugin.loadData();
+      const catalog = (data == null ? void 0 : data.conversationCatalog) || {};
+      const catalogSize = Object.keys(catalog).length;
+      if (catalogSize === 0) {
+        return {
+          success: true,
+          message: "No legacy catalog found to delete"
+        };
+      }
+      const existingImportedArchives = data == null ? void 0 : data.importedArchives;
+      const cleanedData = {
+        settings: data.settings || context.plugin.settings,
+        // CRITICAL FIX: Force preservation of importedArchives
+        importedArchives: existingImportedArchives || {},
+        upgradeHistory: data.upgradeHistory || {
+          completedUpgrades: {},
+          completedOperations: {}
+        },
+        // Remove conversationCatalog - key change
+        catalogDeletionDate: new Date().toISOString(),
+        catalogDeletionStats: { entriesDeleted: catalogSize }
+      };
+      await context.plugin.saveData(cleanedData);
+      const verifyData = await context.plugin.loadData();
+      const verifyArchives = (verifyData == null ? void 0 : verifyData.importedArchives) || {};
+      if (Object.keys(verifyArchives).length === 0 && Object.keys(existingImportedArchives || {}).length > 0) {
+        logger3.error(
+          `DeleteCatalog: CRITICAL - importedArchives were lost during save!`
+        );
+        return {
+          success: false,
+          message: `Critical error: importedArchives were lost during migration`,
+          details: {
+            beforeCount: Object.keys(existingImportedArchives || {}).length,
+            afterCount: Object.keys(verifyArchives).length
+          }
+        };
+      }
+      return {
+        success: true,
+        message: `Legacy catalog deleted: ${catalogSize} entries removed, ${Object.keys(verifyArchives).length} imported archives preserved`,
+        details: {
+          entriesDeleted: catalogSize,
+          archivesPreserved: Object.keys(verifyArchives).length
+        }
+      };
+    } catch (error) {
+      logger3.error(`DeleteCatalog.execute failed:`, error);
+      return {
+        success: false,
+        message: `Failed to delete legacy catalog: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  async verify(context) {
+    try {
+      const data = await context.plugin.loadData();
+      const hasNoCatalog = !(data == null ? void 0 : data.conversationCatalog);
+      return hasNoCatalog;
+    } catch (error) {
+      logger3.error(`DeleteCatalog.verify failed:`, error);
+      return false;
+    }
+  }
+};
+__name(DeleteCatalogOperation, "DeleteCatalogOperation");
+var CleanMetadataOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "clean-metadata";
+    this.name = "Clean & Version Metadata";
+    this.description = "Remove unnecessary metadata and add plugin version to conversation notes";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      });
+      const canRun = conversationFiles.length > 0;
+      return canRun;
+    } catch (error) {
+      logger3.error(`CleanMetadata.canRun failed:`, error);
+      return false;
+    }
+  }
+  async execute(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      });
+      if (conversationFiles.length === 0) {
+        return {
+          success: true,
+          message: "No conversation files found to clean",
+          details: { processed: 0, cleaned: 0, errors: 0 }
+        };
+      }
+      let processed = 0;
+      let cleaned = 0;
+      let errors = 0;
+      const batchSize = 10;
+      for (let i = 0; i < conversationFiles.length; i += batchSize) {
+        const batch = conversationFiles.slice(i, i + batchSize);
+        for (const file of batch) {
+          processed++;
+          try {
+            const content = await context.plugin.app.vault.read(
+              file
+            );
+            const cleanedContent = this.cleanFrontmatterRobust(
+              content,
+              context.toVersion,
+              file.basename
+            );
+            if (content !== cleanedContent) {
+              await context.plugin.app.vault.modify(
+                file,
+                cleanedContent
+              );
+              cleaned++;
+            }
+          } catch (error) {
+            errors++;
+            logger3.error(
+              `Error cleaning metadata for ${file.path}:`,
+              error
+            );
+          }
+        }
+        if (i + batchSize < conversationFiles.length) {
+          await new Promise(
+            (resolve) => window.setTimeout(resolve, 10)
+          );
+        }
+      }
+      return {
+        success: errors === 0,
+        message: `Metadata cleanup completed: ${cleaned} files cleaned, ${errors} errors`,
+        details: { processed, cleaned, errors }
+      };
+    } catch (error) {
+      logger3.error(`CleanMetadata.execute failed:`, error);
+      return {
+        success: false,
+        message: `Metadata cleanup failed: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  /**
+   * Clean frontmatter with robust parsing and safe alias generation
+   */
+  cleanFrontmatterRobust(content, pluginVersion, fileName) {
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!frontmatterMatch) {
+      if (content.includes("nexus:") || content.includes("conversation_id:")) {
+        logger3.warn(
+          `File ${fileName} appears to be Nexus but has malformed frontmatter`
+        );
+      }
+      return content;
+    }
+    const frontmatterContent = frontmatterMatch[1];
+    const restOfContent = content.substring(frontmatterMatch[0].length);
+    const frontmatterData = {};
+    const lines = frontmatterContent.split("\n");
+    for (const line of lines) {
+      const colonIndex = line.indexOf(":");
+      if (colonIndex > 0) {
+        const key = line.substring(0, colonIndex).trim();
+        let value = line.substring(colonIndex + 1).trim();
+        if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+          value = value.slice(1, -1);
+        }
+        frontmatterData[key] = value;
+      }
+    }
+    const nexusId = "nexus-ai-chat-importer";
+    if (frontmatterData.nexus !== nexusId) {
+      return content;
+    }
+    const safeAlias = this.generateSafeAlias(fileName);
+    const newFrontmatter = [];
+    newFrontmatter.push(`nexus: ${nexusId}`);
+    newFrontmatter.push(`plugin_version: "1.0.x"`);
+    if (frontmatterData.provider) {
+      newFrontmatter.push(`provider: ${frontmatterData.provider}`);
+    }
+    newFrontmatter.push(`aliases: ${safeAlias}`);
+    if (frontmatterData.conversation_id) {
+      newFrontmatter.push(
+        `conversation_id: ${frontmatterData.conversation_id}`
+      );
+    }
+    if (frontmatterData.create_time) {
+      newFrontmatter.push(`create_time: ${frontmatterData.create_time}`);
+    }
+    if (frontmatterData.update_time) {
+      newFrontmatter.push(`update_time: ${frontmatterData.update_time}`);
+    }
+    const cleanedFrontmatter = newFrontmatter.join("\n");
+    return `---
+${cleanedFrontmatter}
+---${restOfContent}`;
+  }
+  /**
+   * Generate safe alias from filename (reuse the robust filename logic)
+   */
+  generateSafeAlias(fileName) {
+    let cleanName = fileName.replace(/^\d{8}\s*-\s*/, "").replace(/^\d{4}-\d{2}-\d{2}\s*-\s*/, "");
+    cleanName = cleanName.replace(/\.md$/, "");
+    cleanName = cleanName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>:"/\\|?*\n\r]+/g, "").replace(/\.{2,}/g, ".").trim();
+    cleanName = cleanName.replace(/^[^\w\d\s]+/, "");
+    cleanName = cleanName.replace(/\s+/g, " ").trim();
+    if (!cleanName || cleanName.length === 0) {
+      cleanName = "Untitled";
+    }
+    if (cleanName.startsWith(".")) {
+      cleanName = cleanName.substring(1);
+    }
+    if (!cleanName || cleanName.length === 0) {
+      cleanName = "Untitled";
+    }
+    return cleanName;
+  }
+  async verify(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      }).slice(0, 5);
+      for (const file of conversationFiles) {
+        try {
+          const content = await context.plugin.app.vault.read(file);
+          const frontmatterMatch = content.match(
+            /^---\n([\s\S]*?)\n---/
+          );
+          if (!frontmatterMatch)
+            continue;
+          const frontmatterContent = frontmatterMatch[1];
+          if (!frontmatterContent.includes("plugin_version:")) {
+            return false;
+          }
+          const forbiddenFields = [
+            "conversation_template_id:",
+            "gizmo_id:",
+            "gizmo_type:",
+            "default_model_slug:",
+            "is_archived:",
+            "is_starred:",
+            "current_node:",
+            "memory_scope:"
+          ];
+          const hasUnwantedFields = forbiddenFields.some(
+            (field) => frontmatterContent.includes(field)
+          );
+          if (hasUnwantedFields) {
+            return false;
+          }
+        } catch (error) {
+          logger3.error(
+            `CleanMetadata.verify error for ${file.path}:`,
+            error
+          );
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      logger3.error(`CleanMetadata.verify failed:`, error);
+      return false;
+    }
+  }
+};
+__name(CleanMetadataOperation, "CleanMetadataOperation");
+var Upgrade110 = class extends VersionUpgrade {
+  constructor() {
+    super(...arguments);
+    this.version = "1.1.0";
+    this.automaticOperations = [
+      new DeleteCatalogOperation(),
+      new CleanMetadataOperation()
+    ];
+    this.manualOperations = [
+      // No manual operations for 1.1.0 - all operations are automatic
+      // Future versions can add manual operations here for truly optional tasks
+    ];
+  }
+};
+__name(Upgrade110, "Upgrade110");
+
+// src/upgrade/versions/upgrade-1.2.0.ts
+var import_obsidian19 = require("obsidian");
+init_logger();
+init_i18n();
+init_support_box();
+var ConvertToCalloutsOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "convert-to-callouts";
+    this.name = "Convert to Modern Callouts";
+    this.description = "Transform old indentations (>, >>) to beautiful Nexus callouts";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      });
+      for (const file of conversationFiles.slice(0, 10)) {
+        try {
+          const content = await context.plugin.app.vault.read(file);
+          if (this.hasOldIndentationFormat(content)) {
+            return true;
+          }
+        } catch (error) {
+          logger.error(`Error checking file ${file.path}:`, error);
+        }
+      }
+      return false;
+    } catch (error) {
+      logger.error(`ConvertToCallouts.canRun failed:`, error);
+      return false;
+    }
+  }
+  async execute(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      });
+      let processed = 0;
+      let converted = 0;
+      let errors = 0;
+      const batchSize = 10;
+      for (let i = 0; i < conversationFiles.length; i += batchSize) {
+        const batch = conversationFiles.slice(i, i + batchSize);
+        for (const file of batch) {
+          processed++;
+          try {
+            const content = await context.plugin.app.vault.read(
+              file
+            );
+            if (!this.hasOldIndentationFormat(content)) {
+              continue;
+            }
+            const convertedContent = this.convertIndentationsToCallouts(content);
+            if (content !== convertedContent) {
+              const finalContent = this.updatePluginVersion(
+                convertedContent,
+                "1.2.0"
+              );
+              await context.plugin.app.vault.modify(
+                file,
+                finalContent
+              );
+              converted++;
+            }
+          } catch (error) {
+            errors++;
+            logger.error(`Error converting ${file.path}:`, error);
+          }
+        }
+        if (i + batchSize < conversationFiles.length) {
+          await new Promise(
+            (resolve) => window.setTimeout(resolve, 10)
+          );
+        }
+      }
+      return {
+        success: errors === 0,
+        message: `Callout conversion completed: ${converted} files converted, ${errors} errors`,
+        details: { processed, converted, errors }
+      };
+    } catch (error) {
+      logger.error(`ConvertToCallouts.execute failed:`, error);
+      return {
+        success: false,
+        message: `Callout conversion failed: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  /**
+   * Check if content has old indentation format (v1.1.0)
+   */
+  hasOldIndentationFormat(content) {
+    const oldPatterns = [
+      /^### User, on .* at .*;\n>/m,
+      // User messages with indentation
+      /^#### Assistant, on .* at .*;\n>>/m,
+      // Assistant messages with indentation
+      /<div class="nexus-attachment-box">/,
+      // Old attachment divs
+      /<div class="nexus-artifact-box">/,
+      // Old artifact divs
+      />\[!note\] 📎 \*\*Attachment:\*\*/
+      // Old note callouts for attachments
+    ];
+    return oldPatterns.some((pattern) => pattern.test(content));
+  }
+  /**
+   * Convert old indentations to modern callouts
+   */
+  convertIndentationsToCallouts(content) {
+    let converted = content;
+    converted = converted.replace(
+      /^### User, on (.*?) at (.*?);\n((?:> .*(?:\n|$))*)/gm,
+      (match, date, time, quotedContent) => {
+        const cleanContent = quotedContent.replace(/^> /gm, "> ");
+        return `>[!nexus_user] **User** - ${date} at ${time}
+${cleanContent}`;
+      }
+    );
+    converted = converted.replace(
+      /^#### Assistant, on (.*?) at (.*?);\n((?:>> .*(?:\n|$))*)/gm,
+      (match, date, time, quotedContent) => {
+        const cleanContent = quotedContent.replace(/^>> /gm, "> ");
+        return `>[!nexus_agent] **Assistant** - ${date} at ${time}
+${cleanContent}`;
+      }
+    );
+    converted = converted.replace(
+      /<div class="nexus-attachment-box">\s*\n\s*\*\*📎 Attachment:\*\* ([^(]+)\(([^)]+)\)([\s\S]*?)<\/div>/g,
+      (match, fileName, fileType, content2) => {
+        const cleanFileName = fileName.trim();
+        let cleanContent = content2.trim();
+        if (cleanContent.includes("**Content:**")) {
+          cleanContent = cleanContent.replace(/\*\*Content:\*\*/g, "").trim();
+        }
+        if (cleanContent.includes("**Status:**")) {
+          cleanContent = cleanContent.replace(/\*\*Status:\*\*/g, "").trim();
+        }
+        cleanContent = cleanContent.replace(/\n/g, "\n> ").trim();
+        if (cleanContent && !cleanContent.startsWith(">")) {
+          cleanContent = "> " + cleanContent;
+        }
+        return `>[!nexus_attachment] **${cleanFileName}** (${fileType})
+${cleanContent}`;
+      }
+    );
+    converted = converted.replace(
+      /<div class="nexus-artifact-box">\s*([\s\S]*?)\s*<\/div>/g,
+      (match, content2) => {
+        let cleanContent = content2.trim();
+        const titleMatch = cleanContent.match(/\*\*([^*]+)\*\*/);
+        const title = titleMatch ? titleMatch[1] : "Artifact";
+        cleanContent = cleanContent.replace(/\*\*[^*]+\*\*/g, "").trim();
+        cleanContent = cleanContent.replace(/\n/g, "\n> ").trim();
+        if (cleanContent && !cleanContent.startsWith(">")) {
+          cleanContent = "> " + cleanContent;
+        }
+        return `>[!nexus_artifact] **${title}**
+${cleanContent}`;
+      }
+    );
+    converted = converted.replace(
+      />\[!note\] 📎 \*\*Attachment:\*\* ([^(]+)\(([^)]+)\)(.*?)(?=\n\n|\n>|\n<!--|\n---|$)/gs,
+      (match, fileName, fileType, content2) => {
+        const cleanFileName = fileName.trim();
+        let cleanContent = content2.trim();
+        cleanContent = cleanContent.replace(/\n/g, "\n> ").trim();
+        if (cleanContent && !cleanContent.startsWith(">")) {
+          cleanContent = "> " + cleanContent;
+        }
+        return `>[!nexus_attachment] **${cleanFileName}** (${fileType})
+${cleanContent}`;
+      }
+    );
+    return converted;
+  }
+  /**
+   * Update plugin_version in frontmatter
+   */
+  updatePluginVersion(content, version) {
+    return content.replace(
+      /^plugin_version: ".*?"$/m,
+      `plugin_version: "${version}"`
+    );
+  }
+  async verify(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      }).slice(0, 5);
+      for (const file of conversationFiles) {
+        try {
+          const content = await context.plugin.app.vault.read(file);
+          if (this.hasOldIndentationFormat(content)) {
+            return false;
+          }
+          if (!content.includes('plugin_version: "1.2.0"')) {
+            return false;
+          }
+        } catch (error) {
+          logger.error(`Error verifying file ${file.path}:`, error);
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      logger.error(`ConvertToCallouts.verify failed:`, error);
+      return false;
+    }
+  }
+};
+__name(ConvertToCalloutsOperation, "ConvertToCalloutsOperation");
+var MoveReportsToProviderOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "move-reports-to-provider";
+    this.name = "Organize Reports by Provider";
+    this.description = "Move reports from root Reports/ folder to Reports/chatgpt/";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const reportFolder = context.plugin.settings.reportFolder;
+      const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
+        if (!f.path.startsWith(reportFolder + "/"))
+          return false;
+        const relativePath = f.path.substring(
+          reportFolder.length + 1
+        );
+        if (relativePath.includes("/"))
+          return false;
+        return f.name.includes("import report") || f.name.includes("import_");
+      });
+      return reportFiles.length > 0;
+    } catch (error) {
+      logger.error(
+        `MoveReportsToProviderOperation.canRun failed:`,
+        error
+      );
+      return false;
+    }
+  }
+  async execute(context) {
+    try {
+      const reportFolder = context.plugin.settings.reportFolder;
+      let processed = 0;
+      let moved = 0;
+      let errors = 0;
+      const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
+        if (!f.path.startsWith(reportFolder + "/"))
+          return false;
+        const relativePath = f.path.substring(
+          reportFolder.length + 1
+        );
+        if (relativePath.includes("/"))
+          return false;
+        return f.name.includes("import report") || f.name.includes("import_");
+      });
+      const chatgptReportFolder = `${reportFolder}/chatgpt`;
+      try {
+        await context.plugin.app.vault.adapter.mkdir(
+          chatgptReportFolder
+        );
+      } catch (e) {
+      }
+      for (const file of reportFiles) {
+        try {
+          processed++;
+          const newPath = `${chatgptReportFolder}/${file.name}`;
+          if (await context.plugin.app.vault.adapter.exists(newPath)) {
+            continue;
+          }
+          await context.plugin.app.vault.adapter.rename(
+            file.path,
+            newPath
+          );
+          moved++;
+        } catch (error) {
+          errors++;
+          logger.error(`Error moving report ${file.path}:`, error);
+        }
+      }
+      return {
+        success: errors === 0,
+        message: `Reports organized: ${moved} files moved to provider structure, ${errors} errors`,
+        details: { processed, moved, errors }
+      };
+    } catch (error) {
+      logger.error(
+        `MoveReportsToProviderOperation.execute failed:`,
+        error
+      );
+      return {
+        success: false,
+        message: `Report organization failed: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  async verify(_context) {
+    return true;
+  }
+};
+__name(MoveReportsToProviderOperation, "MoveReportsToProviderOperation");
+var UpdateReportLinksOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "update-report-links";
+    this.name = "Update Report Links";
+    this.description = "Insert 'chatgpt/' before year in report links inside reports";
+    this.type = "automatic";
+  }
+  async canRun(_context) {
+    return true;
+  }
+  escapeRegExp(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  async execute(context) {
+    try {
+      const reportFolder = context.plugin.settings.reportFolder;
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const escapedArchive = this.escapeRegExp(conversationFolder);
+      let processed = 0;
+      let updated = 0;
+      let errors = 0;
+      const reportPrefixChatgpt = `${reportFolder}/chatgpt/`;
+      const reportPrefixRoot = `${reportFolder}/`;
+      const reportFiles = context.plugin.app.vault.getMarkdownFiles().filter((f) => {
+        if (f.path.startsWith(reportPrefixChatgpt))
+          return true;
+        if (f.path.startsWith(reportPrefixRoot)) {
+          const relativePath = f.path.substring(
+            reportPrefixRoot.length
+          );
+          if (!relativePath.includes("/") && (f.name.includes("import report") || f.name.includes("import_"))) {
+            return true;
+          }
+        }
+        return false;
+      });
+      const linkPattern = new RegExp(
+        `(\\[\\[${escapedArchive}/)(\\d{4}/\\d{2}/)`,
+        "g"
+      );
+      for (const file of reportFiles) {
+        try {
+          processed++;
+          const content = await context.plugin.app.vault.read(file);
+          const replaced = content.replace(
+            linkPattern,
+            "$1chatgpt/$2"
+          );
+          if (replaced !== content) {
+            await context.plugin.app.vault.modify(file, replaced);
+            updated++;
+          }
+        } catch (e) {
+          errors++;
+          logger.error(
+            `UpdateReportLinksOperation error in ${file.path}:`,
+            e
+          );
+        }
+      }
+      return {
+        success: errors === 0,
+        message: `Report links updated: ${updated} files changed, ${errors} errors`,
+        details: { processed, updated, errors }
+      };
+    } catch (error) {
+      logger.error(`UpdateReportLinksOperation.execute failed:`, error);
+      return {
+        success: false,
+        message: `Report link update failed: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  async verify(_context) {
+    return true;
+  }
+};
+__name(UpdateReportLinksOperation, "UpdateReportLinksOperation");
+var MoveYearFoldersOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "move-year-folders";
+    this.name = "Organize Conversations by Provider";
+    this.description = "Move year folders to chatgpt provider structure";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const yearFolders = await this.findYearFolders(
+        context,
+        conversationFolder
+      );
+      return yearFolders.length > 0;
+    } catch (error) {
+      logger.error(`MoveYearFolders.canRun failed:`, error);
+      return false;
+    }
+  }
+  async execute(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      let movedFolders = 0;
+      let errors = 0;
+      const yearFolders = await this.findYearFolders(
+        context,
+        conversationFolder
+      );
+      for (const yearFolder of yearFolders) {
+        try {
+          const chatgptFolder = `${conversationFolder}/chatgpt`;
+          await context.plugin.app.vault.adapter.mkdir(chatgptFolder);
+          const newPath = `${chatgptFolder}/${yearFolder}`;
+          const oldPath = `${conversationFolder}/${yearFolder}`;
+          await context.plugin.app.vault.adapter.rename(
+            oldPath,
+            newPath
+          );
+          movedFolders++;
+        } catch (error) {
+          errors++;
+          logger.error(
+            `Error moving year folder ${yearFolder}:`,
+            error
+          );
+        }
+      }
+      return {
+        success: errors === 0,
+        message: `Conversation organization completed: ${movedFolders} year folders moved to chatgpt structure, ${errors} errors`,
+        details: { movedFolders, errors }
+      };
+    } catch (error) {
+      logger.error(`MoveYearFolders.execute failed:`, error);
+      return {
+        success: false,
+        message: `Conversation organization failed: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  async verify(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder;
+      const remainingYearFolders = await this.findYearFolders(
+        context,
+        conversationFolder
+      );
+      if (remainingYearFolders.length > 0) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      logger.error(`MoveYearFolders.verify failed:`, error);
+      return false;
+    }
+  }
+  /**
+   * Find year folders (YYYY) directly in conversation folder
+   */
+  async findYearFolders(context, conversationFolder) {
+    try {
+      const folders = await context.plugin.app.vault.adapter.list(
+        conversationFolder
+      );
+      return folders.folders.filter((folder) => {
+        const folderName = folder.split("/").pop() || "";
+        return /^\d{4}$/.test(folderName) && folderName !== "chatgpt";
+      }).map((folder) => folder.split("/").pop() || "");
+    } catch (e) {
+      return [];
+    }
+  }
+};
+__name(MoveYearFoldersOperation, "MoveYearFoldersOperation");
+var NexusUpgradeModal = class extends import_obsidian19.Modal {
+  constructor(app, plugin, version, resolve) {
+    super(app);
+    this.plugin = plugin;
+    this.version = version;
+    this.resolve = resolve;
+  }
+  onOpen() {
+    var _a;
+    const { containerEl, titleEl } = this;
+    containerEl.classList.add("nexus-upgrade-modal");
+    titleEl.setText(
+      t("upgrade.legacy_120_modal.title", { version: this.version })
+    );
+    (_a = this.modalEl.querySelector(".modal-close-button")) == null ? void 0 : _a.remove();
+    void this.createForm();
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+  async createForm() {
+    let message = t("upgrade.legacy_120_modal.fallback_message");
+    try {
+      const response = await (0, import_obsidian19.requestUrl)({
+        url: "https://api.github.com/repos/Superkikim/nexus-ai-chat-importer/releases/tags/v1.2.0",
+        method: "GET"
+      });
+      if (response.status >= 200 && response.status < 300) {
+        const release = response.json;
+        if (release.body) {
+          message = release.body;
+        }
+      }
+    } catch (e) {
+    }
+    const renderComponent = new import_obsidian19.Component();
+    renderComponent.load();
+    await import_obsidian19.MarkdownRenderer.render(
+      this.app,
+      message,
+      this.contentEl,
+      "",
+      renderComponent
+    );
+    createSupportBox(this.contentEl);
+    this.contentEl.createEl(
+      "div",
+      { cls: "nexus-upgrade-buttons" },
+      (el) => {
+        const btnOk = el.createEl("button", {
+          text: t("upgrade.legacy_120_modal.buttons.proceed"),
+          cls: "nexus-btn-primary"
+        });
+        btnOk.onclick = () => {
+          this.close();
+          this.resolve("ok");
+        };
+      }
+    );
+  }
+};
+__name(NexusUpgradeModal, "NexusUpgradeModal");
+var OfferReimportOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "offer-reimport";
+    this.name = "Full Feature Reimport";
+    this.description = "Optionally reimport conversations to get all v1.2.0 features (attachments, chronological order, etc.)";
+    this.type = "manual";
+  }
+  async canRun(_context) {
+    return true;
+  }
+  async execute(_context) {
+    try {
+      return {
+        success: true,
+        message: "Upgrade information provided to user",
+        details: { action: "info_displayed" }
+      };
+    } catch (error) {
+      logger.error(`OfferReimport.execute failed:`, error);
+      return {
+        success: false,
+        message: `Failed to complete reimport operation: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  async verify(_context) {
+    return true;
+  }
+};
+__name(OfferReimportOperation, "OfferReimportOperation");
+var Upgrade120 = class extends VersionUpgrade {
+  constructor() {
+    super(...arguments);
+    this.version = "1.2.0";
+    this.automaticOperations = [
+      new MoveYearFoldersOperation(),
+      new MoveReportsToProviderOperation(),
+      new UpdateReportLinksOperation(),
+      new ConvertToCalloutsOperation()
+    ];
+    this.manualOperations = [new OfferReimportOperation()];
+  }
+};
+__name(Upgrade120, "Upgrade120");
+
+// src/upgrade/versions/upgrade-1.3.0.ts
+init_utils();
+var import_obsidian21 = require("obsidian");
+
+// src/dialogs/configure-folder-locations-dialog.ts
+var import_obsidian20 = require("obsidian");
+init_enhanced_folder_migration_dialog();
+init_utils();
+init_i18n();
+var ConfigureFolderLocationsDialog = class extends import_obsidian20.Modal {
+  // Track if onComplete was already called
+  constructor(plugin, onComplete) {
+    super(plugin.app);
+    this.plugin = plugin;
+    this.reportFolderInput = null;
+    this.completed = false;
+    this.onComplete = onComplete;
+    this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", {
+      text: t("configure_folder_dialog.title"),
+      cls: "nexus-upgrade-title"
+    });
+    const messageContainer = contentEl.createDiv({
+      cls: "nexus-upgrade-message"
+    });
+    const descriptionEl = messageContainer.createDiv({
+      cls: "nexus-upgrade-description"
+    });
+    descriptionEl.createEl("p", {
+      text: t("configure_folder_dialog.description", {
+        folder: this.originalReportFolder
+      })
+    });
+    descriptionEl.createEl("p", {
+      text: t("configure_folder_dialog.note"),
+      cls: "nexus-upgrade-note"
+    });
+    const folderSection = contentEl.createDiv({
+      cls: "nexus-upgrade-folder-section"
+    });
+    folderSection.createEl("div", {
+      text: t("configure_folder_dialog.report_folder_label"),
+      cls: "nexus-upgrade-folder-label"
+    });
+    const inputContainer = folderSection.createDiv({
+      cls: "nexus-upgrade-input-container"
+    });
+    this.reportFolderInput = inputContainer.createEl("input", {
+      type: "text",
+      placeholder: t("configure_folder_dialog.report_folder_placeholder"),
+      value: this.originalReportFolder,
+      cls: "nexus-upgrade-folder-input"
+    });
+    this.reportFolderInput.readOnly = true;
+    this.reportFolderInput.addClass("nexus-cursor-default");
+    const browseButton = inputContainer.createEl("button", {
+      text: t("configure_folder_dialog.buttons.browse"),
+      cls: "mod-cta nexus-upgrade-browse-button"
+    });
+    browseButton.addEventListener("click", () => {
+      const modal = new FolderTreeBrowserModal(
+        this.plugin.app,
+        (path) => {
+          if (this.reportFolderInput) {
+            this.reportFolderInput.value = path;
+          }
+        },
+        this.originalReportFolder
+      );
+      modal.open();
+    });
+    const buttonContainer = contentEl.createDiv({
+      cls: "nexus-upgrade-button-container-centered"
+    });
+    const proceedButton = buttonContainer.createEl("button", {
+      text: t("configure_folder_dialog.buttons.proceed"),
+      cls: "mod-cta nexus-upgrade-proceed-button"
+    });
+    proceedButton.addEventListener("click", () => {
+      void this.handleSave();
+    });
+  }
+  async handleSave() {
+    var _a;
+    if (this.completed)
+      return;
+    if (!this.reportFolderInput) {
+      this.completed = true;
+      this.close();
+      this.onComplete({
+        conversationFolder: {
+          changed: false,
+          oldPath: this.plugin.settings.conversationFolder,
+          newPath: this.plugin.settings.conversationFolder
+        },
+        reportFolder: {
+          changed: false,
+          oldPath: this.originalReportFolder,
+          newPath: this.originalReportFolder
+        },
+        attachmentFolder: {
+          changed: false,
+          oldPath: this.plugin.settings.attachmentFolder,
+          newPath: this.plugin.settings.attachmentFolder
+        }
+      });
+      return;
+    }
+    const newReportFolder = this.reportFolderInput.value.trim();
+    const validation = validateFolderNesting(
+      "reportFolder",
+      newReportFolder,
+      this.plugin.settings.conversationFolder,
+      this.originalReportFolder,
+      // Use original to avoid self-check
+      this.plugin.settings.attachmentFolder
+    );
+    if (!validation.valid) {
+      this.showErrorDialog(
+        t("configure_folder_dialog.error_invalid_folder.title"),
+        t("configure_folder_dialog.error_invalid_folder.message", {
+          error: (_a = validation.error) != null ? _a : "Invalid folder configuration"
+        })
+      );
+      return;
+    }
+    const result = {
+      conversationFolder: {
+        changed: false,
+        oldPath: this.plugin.settings.conversationFolder,
+        newPath: this.plugin.settings.conversationFolder
+      },
+      reportFolder: {
+        changed: newReportFolder !== this.originalReportFolder,
+        oldPath: this.originalReportFolder,
+        newPath: newReportFolder
+      },
+      attachmentFolder: {
+        changed: false,
+        oldPath: this.plugin.settings.attachmentFolder,
+        newPath: this.plugin.settings.attachmentFolder
+      }
+    };
+    this.completed = true;
+    this.close();
+    await this.handleFolderChange("reportFolder", result.reportFolder);
+    this.onComplete(result);
+  }
+  async handleFolderChange(folderType, folderInfo) {
+    if (!folderInfo.changed) {
+      return;
+    }
+    const oldPath = folderInfo.oldPath;
+    const newPath = folderInfo.newPath;
+    const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
+    if (newFolder && newFolder instanceof import_obsidian20.TFolder && newFolder.children.length > 0) {
+      this.showErrorDialog(
+        "Target Folder Not Empty",
+        `The folder "${newPath}" already contains files.
+
+To change the folder location:
+\u2022 Move existing files manually in Obsidian, OR
+\u2022 Choose an empty folder or create a new one`
+      );
+      return;
+    }
+    this.plugin.settings[folderType] = newPath;
+    await this.plugin.saveSettings();
+    const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
+    if (!oldFolder || !(oldFolder instanceof import_obsidian20.TFolder) || oldFolder.children.length === 0) {
+      return;
+    }
+    const folderTypeLabel = folderType === "conversationFolder" ? "conversations" : folderType === "reportFolder" ? "reports" : "attachments";
+    await new Promise((resolve) => {
+      const handleMigrationAction = /* @__PURE__ */ __name(async (action) => {
+        if (action === "move") {
+          try {
+            const result = await moveAndMergeFolders(
+              oldFolder,
+              newPath,
+              this.plugin.app.vault
+            );
+            folderInfo.filesMoved = result.moved;
+            if (result.success && result.skipped === 0) {
+              new import_obsidian20.Notice(
+                t("folder_migration.notices.files_moved", {
+                  path: newPath
+                })
+              );
+            } else {
+              this.showMergeResultDialog(
+                result,
+                oldPath,
+                newPath
+              );
+            }
+          } catch (error) {
+            this.plugin.logger.error(
+              `Failed to move ${folderTypeLabel} folder:`,
+              error
+            );
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.showErrorDialog(
+              t("folder_migration.error_migration_failed.title"),
+              t(
+                "folder_migration.error_migration_failed.message_move",
+                { error: errorMessage }
+              )
+            );
+          }
+        } else if (action === "cancel") {
+          this.plugin.settings[folderType] = oldPath;
+          await this.plugin.saveSettings();
+        }
+        resolve();
+      }, "handleMigrationAction");
+      const dialog = new EnhancedFolderMigrationDialog(
+        this.plugin,
+        oldPath,
+        newPath,
+        folderTypeLabel,
+        handleMigrationAction
+      );
+      dialog.open();
+    });
+  }
+  /**
+   * Show dialog with merge result details when files were skipped or errors occurred
+   */
+  showMergeResultDialog(result, _oldPath, _newPath) {
+    const modal = new import_obsidian20.Modal(this.plugin.app);
+    modal.titleEl.setText(t("folder_migration.result_dialog.title"));
+    const { contentEl } = modal;
+    const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
+    summary.createEl("h3", {
+      text: t("folder_migration.result_dialog.summary_title")
+    });
+    const stats = summary.createDiv({ cls: "nexus-merge-stats" });
+    stats.createEl("p", {
+      text: t("folder_migration.result_dialog.moved", {
+        count: String(result.moved)
+      })
+    });
+    if (result.skipped > 0) {
+      stats.createEl("p", {
+        text: t("folder_migration.result_dialog.skipped", {
+          count: String(result.skipped)
+        }),
+        cls: "nexus-merge-warning"
+      });
+    }
+    if (result.errors > 0) {
+      stats.createEl("p", {
+        text: t("folder_migration.result_dialog.errors", {
+          count: String(result.errors)
+        }),
+        cls: "nexus-merge-error"
+      });
+    }
+    const explanation = contentEl.createDiv({
+      cls: "nexus-merge-explanation"
+    });
+    explanation.createEl("p", {
+      text: t("folder_migration.result_dialog.explanation")
+    });
+    if (result.errorDetails && result.errorDetails.length > 0) {
+      const errorSection = contentEl.createDiv({
+        cls: "nexus-merge-errors"
+      });
+      errorSection.createEl("h4", {
+        text: t("folder_migration.result_dialog.error_details_title")
+      });
+      const errorList = errorSection.createEl("ul");
+      for (const error of result.errorDetails) {
+        errorList.createEl("li", { text: error });
+      }
+    }
+    const buttonContainer = contentEl.createDiv({
+      cls: "modal-button-container"
+    });
+    const closeButton = buttonContainer.createEl("button", {
+      text: t("common.buttons.ok"),
+      cls: "mod-cta"
+    });
+    closeButton.addEventListener("click", () => modal.close());
+    modal.open();
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+    if (!this.completed && this.onComplete) {
+      this.completed = true;
+      this.onComplete({
+        conversationFolder: {
+          changed: false,
+          oldPath: this.plugin.settings.conversationFolder,
+          newPath: this.plugin.settings.conversationFolder
+        },
+        reportFolder: {
+          changed: false,
+          oldPath: this.originalReportFolder,
+          newPath: this.originalReportFolder
+        },
+        attachmentFolder: {
+          changed: false,
+          oldPath: this.plugin.settings.attachmentFolder,
+          newPath: this.plugin.settings.attachmentFolder
+        }
+      });
+    }
+  }
+  showErrorDialog(title, message) {
+    const modal = new import_obsidian20.Modal(this.plugin.app);
+    modal.titleEl.setText(title);
+    modal.contentEl.createEl("p", {
+      text: message,
+      cls: "nexus-error-message"
+    });
+    const buttonContainer = modal.contentEl.createDiv({
+      cls: "modal-button-container nexus-button-container-flex-end"
+    });
+    const okButton = buttonContainer.createEl("button", {
+      text: t("common.buttons.ok"),
+      cls: "mod-cta"
+    });
+    okButton.addEventListener("click", () => modal.close());
+    modal.open();
+  }
+};
+__name(ConfigureFolderLocationsDialog, "ConfigureFolderLocationsDialog");
+
+// src/upgrade/versions/upgrade-1.3.0.ts
+var ConvertToISO8601TimestampsOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "convert-to-iso8601-timestamps";
+    this.name = "Convert Timestamps to ISO 8601";
+    this.description = "Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ). This fixes parsing issues with locale-specific date formats and ensures consistent timestamps across all regions.";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    var _a;
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      });
+      const samples = [];
+      let foundNonISO = false;
+      for (const file of conversationFiles) {
+        const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+        if (!fm || fm.nexus !== context.plugin.manifest.id)
+          continue;
+        const vals = [fm.create_time, fm.update_time].filter(
+          (v) => typeof v === "string"
+        );
+        for (const v of vals) {
+          if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(
+            v
+          )) {
+            samples.push(v);
+            foundNonISO = true;
+          }
+        }
+      }
+      if (samples.length) {
+        const format = DateParser.detectFormatFromSamples(samples);
+        this.globalOrder = format == null ? void 0 : format.order;
+      }
+      if (foundNonISO) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`ConvertToISO8601Timestamps.canRun failed:`, error);
+      return false;
+    }
+  }
+  async execute(context) {
+    var _a;
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      });
+      if (!this.globalOrder) {
+        const samples = [];
+        for (const file of conversationFiles) {
+          const fm = (_a = context.plugin.app.metadataCache.getFileCache(
+            file
+          )) == null ? void 0 : _a.frontmatter;
+          if (!fm || fm.nexus !== context.plugin.manifest.id)
+            continue;
+          const vals = [fm.create_time, fm.update_time].filter(
+            (v) => typeof v === "string"
+          );
+          for (const v of vals) {
+            if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?$/.test(
+              v
+            )) {
+              samples.push(v);
+            }
+          }
+        }
+        if (samples.length) {
+          const format = DateParser.detectFormatFromSamples(samples);
+          this.globalOrder = format == null ? void 0 : format.order;
+        }
+      }
+      let processed = 0;
+      let converted = 0;
+      let skipped = 0;
+      let alreadyISO = 0;
+      let failed = 0;
+      let errors = 0;
+      const batchSize = 10;
+      for (let i = 0; i < conversationFiles.length; i += batchSize) {
+        const batch = conversationFiles.slice(i, i + batchSize);
+        for (const file of batch) {
+          processed++;
+          try {
+            const content = await context.plugin.app.vault.read(
+              file
+            );
+            if (!this.isNexusFile(content)) {
+              skipped++;
+              continue;
+            }
+            const hadNonISO = this.hasNonISOTimestamps(content);
+            if (!hadNonISO) {
+              alreadyISO++;
+              continue;
+            }
+            const convertedContent = this.convertTimestampsToISO8601(content);
+            if (content !== convertedContent) {
+              const finalContent = this.updatePluginVersion(
+                convertedContent,
+                "1.3.0"
+              );
+              await context.plugin.app.vault.modify(
+                file,
+                finalContent
+              );
+              converted++;
+            } else {
+              failed++;
+            }
+          } catch (error) {
+            errors++;
+            console.error(
+              `Error converting timestamps in ${file.path}:`,
+              error
+            );
+          }
+        }
+        if (i + batchSize < conversationFiles.length) {
+          await new Promise(
+            (resolve) => window.setTimeout(resolve, 10)
+          );
+        }
+      }
+      const results = [];
+      results.push(`**What this does:**`);
+      results.push(
+        `Converts conversation timestamps to universal ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ).`
+      );
+      results.push(
+        `This fixes parsing issues with locale-specific date formats.`
+      );
+      results.push(``);
+      results.push(`**Summary:**`);
+      results.push(``);
+      results.push(`- Total files scanned: ${processed}`);
+      results.push(`- Already in ISO format: ${alreadyISO}`);
+      results.push(`- Converted to ISO: ${converted}`);
+      results.push(`- Skipped (non-Nexus): ${skipped}`);
+      if (failed > 0) {
+        results.push(`- Failed to convert: ${failed}`);
+      }
+      if (errors > 0) {
+        results.push(`- Errors: ${errors}`);
+      }
+      return {
+        success: errors === 0,
+        message: `Converted ${converted} conversation(s) to ISO 8601 format.`,
+        details: results
+      };
+    } catch (error) {
+      console.error(`ConvertToISO8601Timestamps.execute failed:`, error);
+      return {
+        success: false,
+        message: `Timestamp conversion failed: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  /**
+   * Check if file belongs to Nexus plugin
+   */
+  isNexusFile(content) {
+    return content.includes("nexus: nexus-ai-chat-importer");
+  }
+  /**
+   * Check if content has non-ISO timestamps (need conversion to ISO 8601)
+   * Detects any format that is not already ISO 8601
+   */
+  hasNonISOTimestamps(content) {
+    const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (!frontmatterMatch) {
+      return false;
+    }
+    const frontmatter = frontmatterMatch[1];
+    const hasISO = /^(create|update)_time: \d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/m.test(
+      frontmatter
+    );
+    if (hasISO) {
+      return false;
+    }
+    const hasNonISO = /^(create|update)_time: \d{1,4}[/.-]\d{1,2}[/.-]\d{2,4}/m.test(
+      frontmatter
+    );
+    return hasNonISO;
+  }
+  /**
+   * Convert any date format to ISO 8601 in frontmatter only
+   * Supports: US, EU, DE, JP, and all locale-based formats
+   * Uses intelligent DateParser for automatic format detection
+   */
+  convertTimestampsToISO8601(content) {
+    const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (!frontmatterMatch) {
+      return content;
+    }
+    let frontmatter = frontmatterMatch[1];
+    const restOfContent = content.substring(frontmatterMatch[0].length);
+    frontmatter = frontmatter.replace(
+      /^(create|update)_time: (.+)$/gm,
+      (match, field, dateStr) => {
+        if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(
+          dateStr
+        )) {
+          return match;
+        }
+        let isoDate = DateParser.convertToISO8601(dateStr);
+        if (!isoDate && this.globalOrder) {
+          isoDate = DateParser.convertToISO8601WithOrder(
+            dateStr,
+            this.globalOrder
+          );
+        }
+        if (!isoDate) {
+          console.warn(
+            `convertTimestampsToISO8601 - FAILED to convert: ${dateStr}`
+          );
+          return match;
+        }
+        return `${field}_time: ${isoDate}`;
+      }
+    );
+    return `---
+${frontmatter}
+---${restOfContent}`;
+  }
+  /**
+   * Update plugin_version in frontmatter
+   */
+  updatePluginVersion(content, version) {
+    return content.replace(
+      /^plugin_version: ".*?"$/m,
+      `plugin_version: "${version}"`
+    );
+  }
+  async verify(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      }).slice(0, 5);
+      for (const file of conversationFiles) {
+        try {
+          const content = await context.plugin.app.vault.read(file);
+          if (!this.isNexusFile(content)) {
+            continue;
+          }
+          if (this.hasNonISOTimestamps(content)) {
+            return false;
+          }
+          if (!content.includes('plugin_version: "1.3.0"')) {
+            return false;
+          }
+        } catch (error) {
+          console.error(`Error verifying file ${file.path}:`, error);
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error(`ConvertToISO8601Timestamps.verify failed:`, error);
+      return false;
+    }
+  }
+};
+__name(ConvertToISO8601TimestampsOperation, "ConvertToISO8601TimestampsOperation");
+var FixFrontmatterAliasesOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "fix-frontmatter-aliases";
+    this.name = "Fix Frontmatter Aliases";
+    this.description = "Fixes YAML syntax errors in conversation aliases. Properly quotes titles containing special characters (colons, brackets, etc.) to prevent frontmatter parsing errors.";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      });
+      for (const file of conversationFiles.slice(0, 10)) {
+        try {
+          const content = await context.plugin.app.vault.read(file);
+          if (!this.isNexusFile(content)) {
+            continue;
+          }
+          if (this.hasProblematicAlias(content)) {
+            return true;
+          }
+        } catch (error) {
+          console.error(`Error checking file ${file.path}:`, error);
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error(`FixFrontmatterAliases.canRun failed:`, error);
+      return false;
+    }
+  }
+  async execute(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      });
+      let processed = 0;
+      let fixed = 0;
+      let skipped = 0;
+      let errors = 0;
+      const batchSize = 10;
+      for (let i = 0; i < conversationFiles.length; i += batchSize) {
+        const batch = conversationFiles.slice(i, i + batchSize);
+        for (const file of batch) {
+          processed++;
+          try {
+            const content = await context.plugin.app.vault.read(
+              file
+            );
+            if (!this.isNexusFile(content)) {
+              skipped++;
+              continue;
+            }
+            if (!this.hasProblematicAlias(content)) {
+              continue;
+            }
+            const fixedContent = this.fixAliases(content);
+            if (content !== fixedContent) {
+              await context.plugin.app.vault.modify(
+                file,
+                fixedContent
+              );
+              fixed++;
+            }
+          } catch (error) {
+            errors++;
+            console.error(
+              `Error fixing aliases in ${file.path}:`,
+              error
+            );
+          }
+        }
+        if (i + batchSize < conversationFiles.length) {
+          await new Promise(
+            (resolve) => window.setTimeout(resolve, 10)
+          );
+        }
+      }
+      const results = [];
+      results.push(`**What this does:**`);
+      results.push(
+        `Fixes YAML syntax errors in conversation aliases caused by special characters.`
+      );
+      results.push(
+        `Properly quotes titles containing colons, brackets, etc. to prevent parsing errors.`
+      );
+      results.push(``);
+      results.push(`**Summary:**`);
+      results.push(``);
+      results.push(`- Total files scanned: ${processed}`);
+      results.push(`- Fixed: ${fixed}`);
+      results.push(`- Skipped (non-Nexus): ${skipped}`);
+      if (errors > 0) {
+        results.push(`- Errors: ${errors}`);
+      }
+      return {
+        success: errors === 0,
+        message: `Fixed ${fixed} conversation(s) with problematic aliases.`,
+        details: results
+      };
+    } catch (error) {
+      console.error(`FixFrontmatterAliases.execute failed:`, error);
+      return {
+        success: false,
+        message: `Alias fix failed: ${error}`,
+        details: { error: String(error) }
+      };
+    }
+  }
+  /**
+   * Check if file belongs to Nexus plugin
+   */
+  isNexusFile(content) {
+    return content.includes("nexus: nexus-ai-chat-importer");
+  }
+  /**
+   * Check if content has problematic aliases (YAML special characters without proper quoting)
+   */
+  hasProblematicAlias(content) {
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!frontmatterMatch)
+      return false;
+    const frontmatter = frontmatterMatch[1];
+    const aliasMatch = frontmatter.match(/^aliases: (.+)$/m);
+    if (!aliasMatch)
+      return false;
+    const aliasValue = aliasMatch[1];
+    if (aliasValue.startsWith("'") && aliasValue.endsWith("'")) {
+      return false;
+    }
+    if (aliasValue.startsWith('"') && aliasValue.endsWith('"')) {
+      return true;
+    }
+    const needsQuoting = aliasValue.includes(":") || aliasValue.includes("[") || aliasValue.includes("]") || aliasValue.includes("{") || aliasValue.includes("}") || aliasValue.includes('"') || /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(
+      aliasValue
+    ) || aliasValue.startsWith("#") || aliasValue.startsWith("&") || aliasValue.startsWith("*") || aliasValue.startsWith("!") || aliasValue.startsWith("|") || aliasValue.startsWith(">") || aliasValue.startsWith("%") || aliasValue.startsWith("@") || aliasValue.startsWith("`");
+    return needsQuoting;
+  }
+  /**
+   * Fix aliases in frontmatter using generateSafeAlias
+   */
+  fixAliases(content) {
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!frontmatterMatch)
+      return content;
+    let frontmatter = frontmatterMatch[1];
+    const restOfContent = content.substring(frontmatterMatch[0].length);
+    frontmatter = frontmatter.replace(
+      /^aliases: (.+)$/m,
+      (_m, aliasValue) => {
+        let cleanAlias = aliasValue.trim();
+        if (cleanAlias.startsWith('"') && cleanAlias.endsWith('"') || cleanAlias.startsWith("'") && cleanAlias.endsWith("'")) {
+          cleanAlias = cleanAlias.slice(1, -1);
+        }
+        cleanAlias = cleanAlias.replace(/''/g, "'");
+        const safeAlias = generateSafeAlias(cleanAlias);
+        return `aliases: ${safeAlias}`;
+      }
+    );
+    return `---
+${frontmatter}
+---${restOfContent}`;
+  }
+  async verify(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder || context.plugin.settings.archiveFolder || "Nexus/Conversations";
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter((file) => {
+        if (!file.path.startsWith(conversationFolder))
+          return false;
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
+        if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
+          return false;
+        }
+        return true;
+      }).slice(0, 5);
+      for (const file of conversationFiles) {
+        try {
+          const content = await context.plugin.app.vault.read(file);
+          if (!this.isNexusFile(content)) {
+            continue;
+          }
+          if (this.hasProblematicAlias(content)) {
+            return false;
+          }
+        } catch (error) {
+          console.error(`Error verifying file ${file.path}:`, error);
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error(`FixFrontmatterAliases.verify failed:`, error);
+      return false;
+    }
+  }
+};
+__name(FixFrontmatterAliasesOperation, "FixFrontmatterAliasesOperation");
+var MigrateToSeparateFoldersOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "migrate-to-separate-folders";
+    this.name = "Implement Separate Folder Settings";
+    this.description = "Creates dedicated settings for Reports folder location and moves Reports from inside Conversations to the vault root for better organization.";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    const reportFolder = context.plugin.settings.reportFolder;
+    const archiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+    const oldReportPath = `${archiveFolder}/Reports`;
+    return !reportFolder || reportFolder === "" || reportFolder === oldReportPath;
+  }
+  async execute(context) {
+    const results = [];
+    try {
+      results.push(`**What this does:**`);
+      results.push(
+        `Version 1.3.0 adds a dedicated setting for the Reports folder location.`
+      );
+      results.push(
+        `To prevent reports from moving when you reorganize conversations, we're moving the Reports folder to the vault root.`
+      );
+      results.push(``);
+      const oldArchiveFolder = context.plugin.settings.archiveFolder || "Nexus/Conversations";
+      const oldReportPath = `${oldArchiveFolder}/Reports`;
+      const newReportPath = "Nexus Reports";
+      const oldReportFolder = context.plugin.app.vault.getAbstractFileByPath(oldReportPath);
+      let reportsMoved = false;
+      if (oldReportFolder && oldReportFolder instanceof import_obsidian21.TFolder) {
+        try {
+          const result = await moveAndMergeFolders(
+            oldReportFolder,
+            newReportPath,
+            context.plugin.app.vault
+          );
+          reportsMoved = result.moved > 0;
+          try {
+            const stillExists = await context.plugin.app.vault.adapter.exists(
+              oldReportPath
+            );
+            if (stillExists) {
+              const folderToDelete = context.plugin.app.vault.getAbstractFileByPath(
+                oldReportPath
+              );
+              if (folderToDelete && folderToDelete instanceof import_obsidian21.TFolder) {
+                await context.plugin.app.fileManager.trashFile(
+                  folderToDelete
+                );
+              }
+            }
+          } catch (e) {
+          }
+          if (result.success && result.skipped === 0) {
+            results.push(
+              `\u2705 Reports folder moved: \`${oldReportPath}\` \u2192 \`${newReportPath}\` (${result.moved} file(s))`
+            );
+          } else {
+            results.push(
+              `\u26A0\uFE0F Reports folder migration completed with warnings:`
+            );
+            results.push(
+              `   - Successfully moved: ${result.moved} file(s)`
+            );
+            if (result.skipped > 0) {
+              results.push(
+                `   - Skipped (already exist): ${result.skipped} file(s)`
+              );
+            }
+            if (result.errors > 0) {
+              results.push(
+                `   - Errors: ${result.errors} file(s)`
+              );
+            }
+          }
+        } catch (error) {
+          console.error(
+            `[MigrateReportsFolder] Failed to move Reports folder:`,
+            error
+          );
+          context.plugin.settings.reportFolder = oldReportPath;
+          results.push(
+            `\u26A0\uFE0F Reports folder could not be moved automatically.`
+          );
+          results.push(`   Current location: \`${oldReportPath}\``);
+          results.push(
+            `   You can move it manually later in settings.`
+          );
+        }
+      } else {
+        results.push(
+          `\u2139\uFE0F No existing Reports folder found. New reports will be created in \`${newReportPath}\``
+        );
+      }
+      if (reportsMoved || !oldReportFolder) {
+        context.plugin.settings.reportFolder = newReportPath;
+      }
+      await context.plugin.saveSettings();
+      return {
+        success: true,
+        message: "Reports folder migrated successfully",
+        details: results
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`[MigrateReportsFolder] Failed:`, error);
+      results.push(`\u274C Error: ${errorMsg}`);
+      return {
+        success: false,
+        message: `Failed to migrate Reports folder: ${errorMsg}`,
+        details: results
+      };
+    }
+  }
+  async verify(context) {
+    try {
+      return !!context.plugin.settings.reportFolder;
+    } catch (error) {
+      console.error(`MigrateReportsFolder.verify failed:`, error);
+      return false;
+    }
+  }
+};
+__name(MigrateToSeparateFoldersOperation, "MigrateToSeparateFoldersOperation");
+var MigrateClaudeArtifactsOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "migrate-claude-artifacts";
+    this.name = "Migrate Claude Artifacts";
+    this.description = "Updates existing Claude artifacts: removes redundant header information (already in frontmatter), adds missing conversation links, and adds creation timestamps for better organization.";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    var _a;
+    try {
+      const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+      const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+      const folder = context.plugin.app.vault.getAbstractFileByPath(
+        claudeArtifactsPath
+      );
+      if (!folder || !(folder instanceof import_obsidian21.TFolder)) {
+        return false;
+      }
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const artifactFiles = allFiles.filter(
+        (file) => file.path.startsWith(claudeArtifactsPath)
+      );
+      if (artifactFiles.length === 0) {
+        return false;
+      }
+      for (const file of artifactFiles) {
+        const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+        if (!fm || fm.provider !== "claude")
+          continue;
+        if (!fm.create_time) {
+          return true;
+        }
+        const content = await context.plugin.app.vault.read(file);
+        if (content.includes("**Type:** Claude Artifact") || content.includes("**Command:**") || content.includes("**UUID:**")) {
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error(`MigrateClaudeArtifacts.canRun failed:`, error);
+      return false;
+    }
+  }
+  async execute(context) {
+    var _a;
+    const results = [];
+    let totalFiles = 0;
+    let processedCount = 0;
+    let skippedCount = 0;
+    let updatedCount = 0;
+    let errorCount = 0;
+    let warningCount = 0;
+    try {
+      const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+      const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+      const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const artifactFiles = allFiles.filter(
+        (file) => file.path.startsWith(claudeArtifactsPath)
+      );
+      totalFiles = artifactFiles.length;
+      results.push(`**What this does:**`);
+      results.push(
+        `Updates your existing Claude artifacts to the new format:`
+      );
+      results.push(
+        `- Removes redundant header information (Type, Language, Command, etc.)`
+      );
+      results.push(`- Adds missing conversation links`);
+      results.push(`- Adds creation timestamps for better organization`);
+      results.push(``);
+      results.push(`**Processing ${totalFiles} artifact file(s)...**`);
+      results.push(``);
+      for (const file of artifactFiles) {
+        try {
+          const fm = (_a = context.plugin.app.metadataCache.getFileCache(
+            file
+          )) == null ? void 0 : _a.frontmatter;
+          if (!fm || fm.provider !== "claude") {
+            skippedCount++;
+            continue;
+          }
+          processedCount++;
+          let content = await context.plugin.app.vault.read(file);
+          let modified = false;
+          let warnings = [];
+          const fmMatch = content.match(
+            /^---\n([\s\S]*?)\n---\n([\s\S]*)$/
+          );
+          if (!fmMatch) {
+            errorCount++;
+            results.push(
+              `\u274C ${file.basename}: Invalid frontmatter format`
+            );
+            continue;
+          }
+          let frontmatter = fmMatch[1];
+          let body = fmMatch[2];
+          if (!fm.create_time) {
+            const createTime = await this.extractArtifactCreateTime(
+              fm,
+              conversationFolder,
+              context.plugin,
+              file
+            );
+            if (createTime.source === "message") {
+              frontmatter += `
+create_time: ${createTime.value}`;
+              modified = true;
+            } else if (createTime.source === "conversation") {
+              frontmatter += `
+create_time: ${createTime.value}`;
+              warnings.push(
+                `Used conversation create_time (message not found)`
+              );
+              warningCount++;
+              modified = true;
+            } else {
+              warnings.push(`Could not determine create_time`);
+              warningCount++;
+              console.warn(
+                `${file.basename}: TASK 1 - FAILED to determine create_time`
+              );
+            }
+          } else {
+          }
+          const headerRegex = /\n\n\*\*Type:\*\* Claude Artifact\n\*\*Language:\*\*[^\n]*(?:\n\*\*Command:\*\*[^\n]*)?(?:\n\*\*Version:\*\*[^\n]*)?(?:\n\*\*ID:\*\*[^\n]*)?(?:\n\*\*UUID:\*\*[^\n]*)?/;
+          if (headerRegex.test(body)) {
+            body = body.replace(headerRegex, "");
+            modified = true;
+          } else {
+          }
+          if (!body.includes("**Conversation:**") && fm.conversation_id) {
+            const conversationLink = await this.findConversationLink(
+              fm.conversation_id,
+              conversationFolder,
+              context.plugin
+            );
+            if (conversationLink) {
+              const titleMatch = body.match(/^# [^\n]+\n/);
+              if (titleMatch) {
+                const insertPos = titleMatch[0].length;
+                body = body.substring(0, insertPos) + `
+**Conversation:** ${conversationLink}
+` + body.substring(insertPos);
+                modified = true;
+              } else {
+                console.warn(
+                  `${file.basename}: TASK 3 - Could not find title to insert link after`
+                );
+              }
+            } else {
+              warnings.push(
+                `Conversation note not found (ID: ${fm.conversation_id})`
+              );
+              warningCount++;
+              console.warn(
+                `${file.basename}: TASK 3 - Conversation note not found for ID ${fm.conversation_id}`
+              );
+            }
+          } else if (body.includes("**Conversation:**")) {
+          } else {
+          }
+          const needsVersionUpdate = !frontmatter.includes(
+            'plugin_version: "1.3.0"'
+          );
+          if (modified || needsVersionUpdate) {
+            if (frontmatter.includes("plugin_version:")) {
+              frontmatter = frontmatter.replace(
+                /^plugin_version: .*$/m,
+                `plugin_version: "1.3.0"`
+              );
+            } else {
+              frontmatter += `
+plugin_version: "1.3.0"`;
+            }
+            const newContent = `---
+${frontmatter}
+---
+${body}`;
+            await context.plugin.app.vault.modify(file, newContent);
+            updatedCount++;
+            if (modified) {
+            } else {
+            }
+            if (warnings.length > 0) {
+              results.push(
+                `\u26A0\uFE0F  ${file.basename}: ${warnings.join(", ")}`
+              );
+            }
+          } else {
+          }
+        } catch (error) {
+          errorCount++;
+          console.error(`${file.basename}: \u274C ERROR:`, error);
+          results.push(`\u274C ${file.basename}: ${error.message}`);
+        }
+      }
+      results.push(``);
+      results.push(`**Summary:**`);
+      results.push(``);
+      results.push(`- Total files found: ${totalFiles}`);
+      results.push(`- Claude artifacts: ${processedCount}`);
+      results.push(`- Skipped (non-Claude): ${skippedCount}`);
+      results.push(`- Updated: ${updatedCount}`);
+      results.push(`- Warnings: ${warningCount}`);
+      results.push(`- Errors: ${errorCount}`);
+      results.push(``);
+      if (skippedCount > 0) {
+        results.push(
+          `*Note: ${skippedCount} file(s) were skipped because they are not Claude artifacts.*`
+        );
+      }
+      return {
+        success: errorCount === 0,
+        message: `Migrated ${updatedCount} artifact(s) with ${warningCount} warning(s) and ${errorCount} error(s)`,
+        details: results
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Migration failed: ${error.message}`,
+        details: results
+      };
+    }
+  }
+  /**
+   * Extract artifact create_time from conversation note
+   */
+  async extractArtifactCreateTime(artifactFm, conversationFolder, plugin, artifactFile) {
+    var _a, _b, _c;
+    const artifactId = artifactFm.artifact_id;
+    const versionNumber = artifactFm.version_number;
+    const conversationId = artifactFm.conversation_id;
+    const artifactRef = `${artifactId}_v${versionNumber}`;
+    try {
+      if (!conversationId) {
+        console.warn(
+          `Artifact ${artifactRef}: No conversation_id in frontmatter`
+        );
+        return { value: "", source: "none" };
+      }
+      const conversationFile = await this.findConversationFile(
+        conversationId,
+        conversationFolder,
+        plugin
+      );
+      if (!conversationFile) {
+        console.warn(
+          `Artifact ${artifactRef}: Conversation file not found for ID ${conversationId}`
+        );
+        return { value: "", source: "none" };
+      }
+      const content = await plugin.app.vault.read(conversationFile);
+      if (!artifactId || !versionNumber) {
+        console.warn(
+          `Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`
+        );
+        const fm2 = (_a = plugin.app.metadataCache.getFileCache(
+          conversationFile
+        )) == null ? void 0 : _a.frontmatter;
+        if (fm2 == null ? void 0 : fm2.create_time) {
+          return { value: fm2.create_time, source: "conversation" };
+        }
+        return { value: "", source: "none" };
+      }
+      const artifactLinkPath = artifactFile.path.replace(/\.md$/, "");
+      const escapedPath = artifactLinkPath.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+      const linkPattern = new RegExp(
+        `\\[\\[${escapedPath}\\|View Artifact\\]\\]`,
+        "m"
+      );
+      const linkMatch = content.match(linkPattern);
+      if (!linkMatch || linkMatch.index === void 0) {
+        console.warn(
+          `Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`
+        );
+        const fm2 = (_b = plugin.app.metadataCache.getFileCache(
+          conversationFile
+        )) == null ? void 0 : _b.frontmatter;
+        if (fm2 == null ? void 0 : fm2.create_time) {
+          return { value: fm2.create_time, source: "conversation" };
+        }
+        return { value: "", source: "none" };
+      }
+      const linkIndex = linkMatch.index;
+      const textBeforeLink = content.substring(0, linkIndex);
+      const agentPattern = />\[!nexus_agent\] \*\*Assistant\*\* - ([^\n]+)/gm;
+      let lastMatch = null;
+      let match;
+      while ((match = agentPattern.exec(textBeforeLink)) !== null) {
+        lastMatch = match;
+      }
+      if (lastMatch && lastMatch[1]) {
+        const timestampStr = lastMatch[1];
+        const timestamp = DateParser.parseDate(
+          timestampStr,
+          artifactRef
+        );
+        if (timestamp > 0) {
+          const isoDate = new Date(timestamp * 1e3).toISOString();
+          return {
+            value: isoDate,
+            source: "message"
+          };
+        } else {
+          console.warn(
+            `Artifact ${artifactRef}: \u274C Timestamp parsing FAILED (returned 0), using conversation fallback`
+          );
+          console.warn(
+            `Artifact ${artifactRef}: Failed timestamp string was: "${timestampStr}"`
+          );
+        }
+      } else {
+        console.warn(
+          `Artifact ${artifactRef}: \u274C No agent callout found before artifact link, using conversation fallback`
+        );
+        const sampleText = textBeforeLink.substring(
+          Math.max(0, textBeforeLink.length - 500)
+        );
+        console.warn(
+          `Artifact ${artifactRef}: Last 500 chars of search text:
+${sampleText}`
+        );
+      }
+      const fm = (_c = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _c.frontmatter;
+      if (fm == null ? void 0 : fm.create_time) {
+        return { value: fm.create_time, source: "conversation" };
+      }
+      console.warn(`Artifact ${artifactRef}: No create_time available`);
+      return { value: "", source: "none" };
+    } catch (error) {
+      console.error(
+        `Artifact ${artifactRef}: Exception during create_time extraction:`,
+        error
+      );
+      return { value: "", source: "none" };
+    }
+  }
+  /**
+   * Find conversation file by ID
+   */
+  async findConversationFile(conversationId, conversationFolder, plugin) {
+    var _a;
+    const allFiles = plugin.app.vault.getMarkdownFiles();
+    const claudePath = `${conversationFolder}/claude`;
+    for (const file of allFiles) {
+      if (!file.path.startsWith(claudePath))
+        continue;
+      const fm = (_a = plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+      if ((fm == null ? void 0 : fm.conversation_id) === conversationId) {
+        return file;
+      }
+    }
+    return null;
+  }
+  /**
+   * Find and generate conversation link
+   */
+  async findConversationLink(conversationId, conversationFolder, plugin) {
+    var _a;
+    const conversationFile = await this.findConversationFile(
+      conversationId,
+      conversationFolder,
+      plugin
+    );
+    if (!conversationFile) {
+      return null;
+    }
+    const fm = (_a = plugin.app.metadataCache.getFileCache(conversationFile)) == null ? void 0 : _a.frontmatter;
+    const title = (fm == null ? void 0 : fm.aliases) || conversationFile.basename;
+    const linkPath = conversationFile.path.replace(/\.md$/, "");
+    return `[[${linkPath}|${title}]]`;
+  }
+  async verify(context) {
+    var _a;
+    try {
+      const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus AI Chat Imports/Attachments";
+      const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const artifactFiles = allFiles.filter(
+        (file) => file.path.startsWith(claudeArtifactsPath)
+      );
+      for (const file of artifactFiles) {
+        const fm = (_a = context.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+        if ((fm == null ? void 0 : fm.provider) === "claude" && !fm.create_time) {
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error(`MigrateClaudeArtifacts.verify failed:`, error);
+      return false;
+    }
+  }
+};
+__name(MigrateClaudeArtifactsOperation, "MigrateClaudeArtifactsOperation");
+var ConfigureFolderLocationsOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "configure-folder-locations";
+    this.name = "Configure Folder Locations";
+    this.description = "Configure separate folder locations for conversations, reports, and attachments. Optionally migrate existing files to new locations.";
+    this.type = "automatic";
+  }
+  async canRun(_context) {
+    return true;
+  }
+  async execute(context) {
+    return new Promise((resolve) => {
+      const dialog = new ConfigureFolderLocationsDialog(
+        context.plugin,
+        (result) => {
+          const details = [];
+          if (result.reportFolder.changed) {
+            details.push(
+              `\u2705 Report folder: ${result.reportFolder.oldPath} \u2192 ${result.reportFolder.newPath}`
+            );
+          } else {
+            details.push(
+              `\u2139\uFE0F  Report folder: ${result.reportFolder.newPath} (unchanged)`
+            );
+          }
+          resolve({
+            success: true,
+            message: "Report folder location configured successfully",
+            details
+          });
+        }
+      );
+      dialog.open();
+    });
+  }
+};
+__name(ConfigureFolderLocationsOperation, "ConfigureFolderLocationsOperation");
+var Upgrade130 = class extends VersionUpgrade {
+  constructor() {
+    super(...arguments);
+    this.version = "1.3.0";
+    this.automaticOperations = [
+      new MigrateToSeparateFoldersOperation(),
+      new ConvertToISO8601TimestampsOperation(),
+      new FixFrontmatterAliasesOperation(),
+      new MigrateClaudeArtifactsOperation(),
+      new ConfigureFolderLocationsOperation()
+    ];
+    this.manualOperations = [
+      // No manual operations for this version
+    ];
+  }
+};
+__name(Upgrade130, "Upgrade130");
+
+// src/upgrade/versions/upgrade-1.4.0.ts
+var import_obsidian22 = require("obsidian");
+init_link_update_service();
+var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+var TARGET_VERSION = "1.4.0";
+function updatePluginVersion(content, version) {
+  if (content.includes("plugin_version:")) {
+    return content.replace(
+      /^plugin_version: .*$/m,
+      `plugin_version: "${version}"`
+    );
+  }
+  return content.replace(/\n---\n/, `
+plugin_version: "${version}"
+---
+`);
+}
+__name(updatePluginVersion, "updatePluginVersion");
+var RenameClaudeArtifactFoldersOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "rename-claude-artifact-folders";
+    this.name = "Rename Claude Artifact Folders";
+    this.description = "Renames Claude artifact folders from UUID to human-readable names matching the conversation file.";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+      const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+      const folder = context.plugin.app.vault.getAbstractFileByPath(
+        claudeArtifactsPath
+      );
+      if (!folder || !(folder instanceof import_obsidian22.TFolder)) {
+        return false;
+      }
+      for (const child of folder.children) {
+        if (child instanceof import_obsidian22.TFolder && UUID_REGEX.test(child.name)) {
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error(
+        `[RenameClaudeArtifactFolders] canRun failed:`,
+        error
+      );
+      return false;
+    }
+  }
+  async execute(context) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    let renamedCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+    const details = [];
+    try {
+      const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+      const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+      const artifactsFolder = context.plugin.app.vault.getAbstractFileByPath(
+        claudeArtifactsPath
+      );
+      if (!artifactsFolder || !(artifactsFolder instanceof import_obsidian22.TFolder)) {
+        return {
+          success: true,
+          message: "No Claude artifacts folder found, nothing to migrate."
+        };
+      }
+      const uuidFolders = [];
+      for (const child of artifactsFolder.children) {
+        if (child instanceof import_obsidian22.TFolder && UUID_REGEX.test(child.name)) {
+          uuidFolders.push(child);
+        }
+      }
+      if (uuidFolders.length === 0) {
+        return {
+          success: true,
+          message: "No UUID-named artifact folders found."
+        };
+      }
+      (_a = context.onProgress) == null ? void 0 : _a.call(context, 0, "Scanning conversation catalog...");
+      const storageService = new StorageService(context.plugin);
+      const conversationMap = await storageService.scanExistingConversations();
+      const total = uuidFolders.length;
+      const pathMappings = [];
+      for (let i = 0; i < uuidFolders.length; i++) {
+        const folder = uuidFolders[i];
+        const conversationId = folder.name;
+        const progress = Math.round((i + 1) / total * 80);
+        try {
+          const entry = conversationMap.get(conversationId) || null;
+          if (!entry || !entry.path) {
+            skippedCount++;
+            details.push(
+              `Skipped: ${conversationId} (conversation not found in vault)`
+            );
+            (_b = context.onProgress) == null ? void 0 : _b.call(
+              context,
+              progress,
+              `Skipped ${i + 1}/${total}`
+            );
+            continue;
+          }
+          const pathParts = entry.path.split("/");
+          const fileNameWithExt = pathParts[pathParts.length - 1];
+          const conversationFileName = fileNameWithExt.replace(
+            /\.md$/,
+            ""
+          );
+          if (!conversationFileName) {
+            skippedCount++;
+            details.push(
+              `Skipped: ${conversationId} (could not determine file name)`
+            );
+            (_c = context.onProgress) == null ? void 0 : _c.call(
+              context,
+              progress,
+              `Skipped ${i + 1}/${total}`
+            );
+            continue;
+          }
+          const newFolderPath = `${claudeArtifactsPath}/${conversationFileName}`;
+          const existingTarget = context.plugin.app.vault.getAbstractFileByPath(
+            newFolderPath
+          );
+          if (existingTarget) {
+            skippedCount++;
+            details.push(
+              `Skipped: ${conversationId} \u2192 "${conversationFileName}" (target folder already exists)`
+            );
+            (_d = context.onProgress) == null ? void 0 : _d.call(
+              context,
+              progress,
+              `Skipped ${i + 1}/${total}`
+            );
+            continue;
+          }
+          const oldFolderPath = folder.path;
+          (_e = context.onProgress) == null ? void 0 : _e.call(
+            context,
+            progress,
+            `Renaming ${i + 1}/${total}: ${conversationFileName}`
+          );
+          await context.plugin.app.vault.rename(
+            folder,
+            newFolderPath
+          );
+          pathMappings.push({
+            oldPath: oldFolderPath,
+            newPath: newFolderPath
+          });
+          renamedCount++;
+          details.push(
+            `Renamed: ${conversationId} \u2192 "${conversationFileName}"`
+          );
+        } catch (error) {
+          errorCount++;
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          details.push(`Error: ${conversationId} \u2014 ${errorMsg}`);
+          (_f = context.onProgress) == null ? void 0 : _f.call(context, progress, `Error ${i + 1}/${total}`);
+        }
+      }
+      if (pathMappings.length > 0) {
+        (_g = context.onProgress) == null ? void 0 : _g.call(context, 80, "Verifying wikilinks...");
+        const linkUpdateService = new LinkUpdateService(context.plugin);
+        const linkStats = await linkUpdateService.updateAttachmentLinksBatch(
+          pathMappings,
+          (progress) => {
+            var _a2;
+            const overallProgress = 80 + Math.round(
+              progress.current / Math.max(progress.total, 1) * 20
+            );
+            (_a2 = context.onProgress) == null ? void 0 : _a2.call(
+              context,
+              overallProgress,
+              progress.detail
+            );
+          },
+          TARGET_VERSION
+        );
+        if (linkStats.filesModified > 0) {
+          details.push(
+            `Fixed ${linkStats.attachmentLinksUpdated} stale link(s) in ${linkStats.filesModified} file(s)`
+          );
+        }
+      }
+      const summary = `Renamed ${renamedCount} folder(s), skipped ${skippedCount}, errors ${errorCount}.`;
+      return {
+        success: errorCount === 0,
+        message: summary,
+        details
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        message: `Migration failed: ${errorMsg}`,
+        details
+      };
+    }
+  }
+};
+__name(RenameClaudeArtifactFoldersOperation, "RenameClaudeArtifactFoldersOperation");
+var RestoreMissingArtifactCalloutsOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "restore-missing-artifact-callouts";
+    this.name = "Restore Missing Artifact Callouts";
+    this.description = "Restores artifact links in Claude conversation notes affected by Anthropic's export format change.";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+      const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+      const folder = context.plugin.app.vault.getAbstractFileByPath(
+        claudeArtifactsPath
+      );
+      return !!(folder && folder instanceof import_obsidian22.TFolder && folder.children.length > 0);
+    } catch (e) {
+      return false;
+    }
+  }
+  async execute(context) {
+    var _a, _b, _c;
+    let restoredCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+    const details = [];
+    try {
+      const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+      const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
+      const artifactsRoot = context.plugin.app.vault.getAbstractFileByPath(
+        claudeArtifactsPath
+      );
+      if (!artifactsRoot || !(artifactsRoot instanceof import_obsidian22.TFolder)) {
+        return {
+          success: true,
+          message: "No Claude artifacts folder found."
+        };
+      }
+      const artifactFolders = [];
+      for (const child of artifactsRoot.children) {
+        if (child instanceof import_obsidian22.TFolder) {
+          artifactFolders.push(child);
+        }
+      }
+      if (artifactFolders.length === 0) {
+        return { success: true, message: "No artifact folders found." };
+      }
+      (_a = context.onProgress) == null ? void 0 : _a.call(context, 0, "Scanning conversation catalog...");
+      const storageService = new StorageService(context.plugin);
+      const conversationMap = await storageService.scanExistingConversations();
+      const total = artifactFolders.length;
+      for (let i = 0; i < artifactFolders.length; i++) {
+        const folder = artifactFolders[i];
+        const progress = Math.round((i + 1) / total * 100);
+        if (i % 10 === 0 || i === total - 1) {
+          (_b = context.onProgress) == null ? void 0 : _b.call(
+            context,
+            progress,
+            `Checking ${i + 1}/${total}: ${folder.name}`
+          );
+        }
+        try {
+          const artifactFiles = folder.children.filter(
+            (f) => f instanceof import_obsidian22.TFile && f.extension === "md"
+          );
+          if (artifactFiles.length === 0) {
+            continue;
+          }
+          const sampleContent = await context.plugin.app.vault.read(
+            artifactFiles[0]
+          );
+          const conversationId = this.extractFrontmatterField(
+            sampleContent,
+            "conversation_id"
+          );
+          if (!conversationId) {
+            skippedCount++;
+            details.push(
+              `Skipped: ${folder.name} (no conversation_id in artifact)`
+            );
+            continue;
+          }
+          const entry = conversationMap.get(conversationId);
+          if (!entry || !entry.path) {
+            skippedCount++;
+            details.push(
+              `Skipped: ${folder.name} (conversation not found in vault)`
+            );
+            continue;
+          }
+          const noteFile = context.plugin.app.vault.getAbstractFileByPath(
+            entry.path
+          );
+          if (!noteFile || !(noteFile instanceof import_obsidian22.TFile)) {
+            skippedCount++;
+            continue;
+          }
+          const noteContent = await context.plugin.app.vault.read(
+            noteFile
+          );
+          if (noteContent.includes("nexus_artifact")) {
+            skippedCount++;
+            continue;
+          }
+          const artifactEntries = [];
+          for (const artFile of artifactFiles) {
+            const artContent = await context.plugin.app.vault.read(
+              artFile
+            );
+            const artifactId = this.extractFrontmatterField(
+              artContent,
+              "artifact_id"
+            ) || "unknown";
+            const versionStr = this.extractFrontmatterField(
+              artContent,
+              "version_number"
+            );
+            const versionNumber = versionStr ? parseInt(versionStr, 10) : 1;
+            const title = this.extractArtifactTitle(
+              artContent,
+              artifactId
+            );
+            const filePath = artFile.path.replace(/\.md$/, "");
+            artifactEntries.push({
+              artifactId,
+              versionNumber,
+              title,
+              filePath
+            });
+          }
+          artifactEntries.sort((a, b) => {
+            const idCmp = a.artifactId.localeCompare(b.artifactId);
+            return idCmp !== 0 ? idCmp : a.versionNumber - b.versionNumber;
+          });
+          const nestedCalloutLines = artifactEntries.map(
+            (art) => `>>[!nexus_artifact] **${art.title}** v${art.versionNumber}
+>> \u{1F3A8} [[${art.filePath}|View Artifact]]`
+          );
+          const section = [
+            "",
+            "> [!info] Restored Artifacts",
+            "> Due to a change in Anthropic's Claude export format, artifact references were not included when this conversation was originally imported. The artifacts below have been restored during the v1.4.0 migration.",
+            "> To get artifacts positioned inline within messages, delete this note and re-import from your Claude export ZIP.",
+            ">",
+            nestedCalloutLines.join("\n>\n")
+          ].join("\n");
+          let updatedContent = noteContent + section + "\n";
+          updatedContent = updatePluginVersion(
+            updatedContent,
+            TARGET_VERSION
+          );
+          await context.plugin.app.vault.modify(
+            noteFile,
+            updatedContent
+          );
+          restoredCount++;
+          details.push(
+            `Restored ${artifactEntries.length} artifact(s): ${entry.path}`
+          );
+          (_c = context.onProgress) == null ? void 0 : _c.call(
+            context,
+            progress,
+            `Restored: ${noteFile.name}`
+          );
+        } catch (error) {
+          errorCount++;
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          details.push(`Error: ${folder.name} \u2014 ${errorMsg}`);
+        }
+      }
+      const summary = `Restored artifacts in ${restoredCount} note(s), skipped ${skippedCount}, errors ${errorCount}.`;
+      return {
+        success: errorCount === 0,
+        message: summary,
+        details
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        message: `Migration failed: ${errorMsg}`,
+        details
+      };
+    }
+  }
+  extractFrontmatterField(content, field) {
+    const match = content.match(
+      new RegExp(`^${field}:\\s*"?([^"\\n]+)"?`, "m")
+    );
+    return match ? match[1].trim() : null;
+  }
+  extractArtifactTitle(content, fallbackId) {
+    const aliasMatch = content.match(/^aliases:\s*\[([^\]]+)\]/m);
+    if (aliasMatch) {
+      const firstAlias = aliasMatch[1].split(",")[0].trim();
+      const cleaned = firstAlias.replace(/^["']|["']$/g, "");
+      if (cleaned && cleaned !== "Untitled Artifact") {
+        return cleaned;
+      }
+    }
+    return fallbackId;
+  }
+};
+__name(RestoreMissingArtifactCalloutsOperation, "RestoreMissingArtifactCalloutsOperation");
+var FixCalloutEmptyLinesOperation = class extends UpgradeOperation {
+  constructor() {
+    super(...arguments);
+    this.id = "fix-callout-empty-lines";
+    this.name = "Fix Callout Empty Lines";
+    this.description = "Fixes nested callout rendering in conversation notes created by previous versions.";
+    this.type = "automatic";
+  }
+  async canRun(context) {
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+      const folder = context.plugin.app.vault.getAbstractFileByPath(
+        conversationFolder
+      );
+      return !!(folder && folder instanceof import_obsidian22.TFolder);
+    } catch (e) {
+      return false;
+    }
+  }
+  async execute(context) {
+    var _a, _b;
+    let fixedCount = 0;
+    let scannedCount = 0;
+    let errorCount = 0;
+    const details = [];
+    try {
+      const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+      const allFiles = context.plugin.app.vault.getMarkdownFiles();
+      const conversationFiles = allFiles.filter(
+        (f) => f.path.startsWith(conversationFolder)
+      );
+      const brokenPattern = /^>>$/gm;
+      const total = conversationFiles.length;
+      for (let i = 0; i < conversationFiles.length; i++) {
+        const file = conversationFiles[i];
+        scannedCount++;
+        const progress = Math.round((i + 1) / total * 100);
+        if (i % 10 === 0 || i === total - 1) {
+          (_a = context.onProgress) == null ? void 0 : _a.call(
+            context,
+            progress,
+            `Scanning ${i + 1}/${total}: ${file.name}`
+          );
+        }
+        try {
+          const content = await context.plugin.app.vault.read(file);
+          if (!brokenPattern.test(content)) {
+            continue;
+          }
+          brokenPattern.lastIndex = 0;
+          let fixed = content.replace(/^>>(\n>>\[!nexus_)/gm, ">$1");
+          if (fixed !== content) {
+            fixed = updatePluginVersion(fixed, TARGET_VERSION);
+            await context.plugin.app.vault.modify(file, fixed);
+            fixedCount++;
+            details.push(`Fixed: ${file.path}`);
+            (_b = context.onProgress) == null ? void 0 : _b.call(context, progress, `Fixed: ${file.name}`);
+          }
+        } catch (error) {
+          errorCount++;
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          details.push(`Error: ${file.path} \u2014 ${errorMsg}`);
+        }
+      }
+      const summary = `Scanned ${scannedCount} file(s), fixed ${fixedCount}, errors ${errorCount}.`;
+      return {
+        success: errorCount === 0,
+        message: summary,
+        details
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        message: `Migration failed: ${errorMsg}`,
+        details
+      };
+    }
+  }
+};
+__name(FixCalloutEmptyLinesOperation, "FixCalloutEmptyLinesOperation");
+var Upgrade140 = class extends VersionUpgrade {
+  constructor() {
+    super(...arguments);
+    this.version = "1.4.0";
+    this.automaticOperations = [
+      new RenameClaudeArtifactFoldersOperation(),
+      new RestoreMissingArtifactCalloutsOperation(),
+      new FixCalloutEmptyLinesOperation()
+    ];
+    this.manualOperations = [
+      // No manual operations for this version
+    ];
+  }
+};
+__name(Upgrade140, "Upgrade140");
+
+// src/upgrade/incremental-upgrade-manager.ts
 var logger4 = new Logger();
 var IncrementalUpgradeManager = class {
   constructor(plugin) {
@@ -22188,15 +23508,11 @@ var IncrementalUpgradeManager = class {
    * Register all available version upgrades
    */
   registerUpgrades() {
-    const { Upgrade110: Upgrade1102 } = (init_upgrade_1_1_0(), __toCommonJS(upgrade_1_1_0_exports));
-    const { Upgrade120: Upgrade1202 } = (init_upgrade_1_2_0(), __toCommonJS(upgrade_1_2_0_exports));
-    const { Upgrade130: Upgrade1302 } = (init_upgrade_1_3_0(), __toCommonJS(upgrade_1_3_0_exports));
-    const { Upgrade140: Upgrade1402 } = (init_upgrade_1_4_0(), __toCommonJS(upgrade_1_4_0_exports));
     this.availableUpgrades = [
-      new Upgrade1102(),
-      new Upgrade1202(),
-      new Upgrade1302(),
-      new Upgrade1402()
+      new Upgrade110(),
+      new Upgrade120(),
+      new Upgrade130(),
+      new Upgrade140()
     ];
     this.availableUpgrades.sort((a, b) => {
       return VersionUtils.compareVersions(a.version, b.version);
@@ -22232,7 +23548,10 @@ var IncrementalUpgradeManager = class {
       if (previousVersion === currentVersion) {
         return null;
       }
-      const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
+      const upgradeChain = this.getUpgradeChain(
+        previousVersion,
+        currentVersion
+      );
       if (upgradeChain.length === 0) {
         await this.markUpgradeComplete(currentVersion);
         return {
@@ -22245,10 +23564,19 @@ var IncrementalUpgradeManager = class {
           results: []
         };
       }
-      const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
+      const result = await this.executeUpgradeChainWithModal(
+        upgradeChain,
+        previousVersion,
+        currentVersion
+      );
       await this.markUpgradeComplete(currentVersion);
       try {
-        await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
+        await this.writeUpgradeReport(
+          previousVersion,
+          currentVersion,
+          upgradeChain,
+          result
+        );
       } catch (e) {
         logger4.error("Failed to write upgrade report:", e);
       }
@@ -22294,11 +23622,15 @@ var IncrementalUpgradeManager = class {
         var _a;
         if (!file.path.startsWith(conversationFolder))
           return false;
-        const relativePath = file.path.substring(conversationFolder.length + 1);
+        const relativePath = file.path.substring(
+          conversationFolder.length + 1
+        );
         if (relativePath.startsWith("Reports/") || relativePath.startsWith("Attachments/") || relativePath.startsWith("reports/") || relativePath.startsWith("attachments/")) {
           return false;
         }
-        const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+        const frontmatter = (_a = this.plugin.app.metadataCache.getFileCache(
+          file
+        )) == null ? void 0 : _a.frontmatter;
         return (frontmatter == null ? void 0 : frontmatter.nexus) === this.plugin.manifest.id;
       });
       const hasExistingConversations = existingConversations.length > 0;
@@ -22343,7 +23675,11 @@ var IncrementalUpgradeManager = class {
     let upgradesFailed = 0;
     try {
       for (const upgrade of upgradeChain) {
-        const context = await this.createUpgradeContext(upgrade, fromVersion, toVersion);
+        const context = await this.createUpgradeContext(
+          upgrade,
+          fromVersion,
+          toVersion
+        );
         const automaticResults = await this.executeOperationsWithProgress(
           upgrade.automaticOperations,
           context,
@@ -22359,8 +23695,10 @@ var IncrementalUpgradeManager = class {
         upgradesExecuted++;
       }
       const overallSuccess = true;
-      progressModal.markComplete(`All operations completed successfully!`);
-      await new Promise((resolve) => setTimeout(resolve, 450));
+      progressModal.markComplete(
+        `All operations completed successfully!`
+      );
+      await new Promise((resolve) => window.setTimeout(resolve, 450));
       progressModal.close();
       return {
         success: overallSuccess,
@@ -22407,7 +23745,10 @@ var IncrementalUpgradeManager = class {
           });
           results.push({
             operationId: operation.id,
-            result: { success: true, message: "Prerequisites not met - nothing to process" }
+            result: {
+              success: true,
+              message: "Prerequisites not met - nothing to process"
+            }
           });
           continue;
         }
@@ -22446,7 +23787,10 @@ var IncrementalUpgradeManager = class {
           message: `Operation failed: ${error}`,
           details: { error: String(error) }
         };
-        results.push({ operationId: operation.id, result: errorResult });
+        results.push({
+          operationId: operation.id,
+          result: errorResult
+        });
         progressModal.updateOperation(modalOperationId, {
           status: "failed",
           error: String(error)
@@ -22459,7 +23803,7 @@ var IncrementalUpgradeManager = class {
   /**
    * Determine if an operation failure is critical
    */
-  isCriticalFailure(result) {
+  isCriticalFailure(_result) {
     return false;
   }
   /**
@@ -22527,14 +23871,23 @@ var IncrementalUpgradeManager = class {
     var _a, _b, _c, _d;
     const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
     const upgradesFolder = `${reportRoot}/Upgrades`;
-    const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
+    const folderResult = await ensureFolderExists(
+      upgradesFolder,
+      this.plugin.app.vault
+    );
     if (!folderResult.success) {
       logger4.error(`\u274C Failed to create folder: ${folderResult.error}`);
-      throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
+      throw new Error(
+        `Failed to create upgrades folder: ${folderResult.error}`
+      );
     }
     const now = new Date();
     const pad = /* @__PURE__ */ __name((n) => n.toString().padStart(2, "0"), "pad");
-    const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(
+      now.getDate()
+    )}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(
+      now.getSeconds()
+    )}`;
     const fileName = `${ts} - Upgrade to ${toVersion}.md`;
     const filePath = `${upgradesFolder}/${fileName}`;
     const opsByVersion = {};
@@ -22547,10 +23900,13 @@ var IncrementalUpgradeManager = class {
     const readmeUrl = `${GITHUB.REPO_BASE}#readme`;
     const issuesUrl = `${GITHUB.REPO_BASE}/issues`;
     const totalVersions = result.results.length;
-    const totalOps = result.results.reduce((acc, v) => {
-      var _a2, _b2;
-      return acc + (((_b2 = (_a2 = v.automaticResults) == null ? void 0 : _a2.results) == null ? void 0 : _b2.length) || 0);
-    }, 0);
+    const totalOps = result.results.reduce(
+      (acc, v) => {
+        var _a2, _b2;
+        return acc + (((_b2 = (_a2 = v.automaticResults) == null ? void 0 : _a2.results) == null ? void 0 : _b2.length) || 0);
+      },
+      0
+    );
     let md = `# Upgrade to v${toVersion}
 
 `;
@@ -22620,9 +23976,15 @@ var IncrementalUpgradeManager = class {
       const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
       if (isV130OrLater) {
         const { UpgradeCompleteModal: UpgradeCompleteModal2 } = await Promise.resolve().then(() => (init_upgrade_complete_modal(), upgrade_complete_modal_exports));
-        new UpgradeCompleteModal2(this.plugin.app, this.plugin, version).open();
+        new UpgradeCompleteModal2(
+          this.plugin.app,
+          this.plugin,
+          version
+        ).open();
       } else {
-        new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version }));
+        new import_obsidian25.Notice(
+          t("upgrade.notices.upgraded_to_version", { version })
+        );
       }
     } catch (error) {
       logger4.error("Error showing upgrade complete dialog:", error);
@@ -22643,40 +24005,61 @@ var IncrementalUpgradeManager = class {
       if (upgradeChain.length > 0) {
         paragraphs.push("");
         paragraphs.push("**Upgrade Operations Required**");
-        paragraphs.push("The following operations will be performed automatically:");
+        paragraphs.push(
+          "The following operations will be performed automatically:"
+        );
         paragraphs.push("");
         const operationsList = [];
         for (const upgrade of upgradeChain) {
           for (const operation of upgrade.automaticOperations) {
-            operationsList.push(`\u2022 **${operation.name}**: ${operation.description}`);
+            operationsList.push(
+              `\u2022 **${operation.name}**: ${operation.description}`
+            );
           }
         }
         paragraphs.push(operationsList.join("\n"));
       } else {
         paragraphs.push("");
-        paragraphs.push("All systems are up to date. No operations required.");
+        paragraphs.push(
+          "All systems are up to date. No operations required."
+        );
       }
       if (upgradeChain.length > 0) {
-        const isV120Upgrade = upgradeChain.some((upgrade) => upgrade.version === "1.2.0");
-        const isV130Upgrade = upgradeChain.some((upgrade) => upgrade.version === "1.3.0");
+        const isV120Upgrade = upgradeChain.some(
+          (upgrade) => upgrade.version === "1.2.0"
+        );
+        const isV130Upgrade = upgradeChain.some(
+          (upgrade) => upgrade.version === "1.3.0"
+        );
         if (isV130Upgrade) {
           const { NexusUpgradeModal130: NexusUpgradeModal1302 } = await Promise.resolve().then(() => (init_upgrade_modal_1_3_0(), upgrade_modal_1_3_0_exports));
           const userChoice = await new Promise((resolve) => {
-            new NexusUpgradeModal1302(this.plugin.app, this.plugin, "1.3.0", resolve).open();
+            new NexusUpgradeModal1302(
+              this.plugin.app,
+              this.plugin,
+              "1.3.0",
+              resolve
+            ).open();
           });
           if (userChoice !== "ok") {
             throw new Error("User cancelled upgrade");
           }
         } else if (isV120Upgrade) {
-          const { NexusUpgradeModal: NexusUpgradeModal2 } = (init_upgrade_1_2_0(), __toCommonJS(upgrade_1_2_0_exports));
           await new Promise((resolve) => {
-            new NexusUpgradeModal2(this.plugin.app, this.plugin, "1.2.0", resolve).open();
+            new NexusUpgradeModal(
+              this.plugin.app,
+              this.plugin,
+              "1.2.0",
+              resolve
+            ).open();
           });
         } else {
           await showDialog(
             this.plugin.app,
             "information",
-            `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
+            `Upgrade to ${VersionUtils.formatVersion(
+              currentVersion
+            )}`,
             paragraphs,
             this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : void 0,
             { button1: "Proceed with Upgrade" }
@@ -22695,7 +24078,11 @@ var IncrementalUpgradeManager = class {
       }
     } catch (error) {
       logger4.error("Error showing upgrade dialog:", error);
-      new import_obsidian25.Notice(t("upgrade.notices.upgraded_to_version", { version: currentVersion }));
+      new import_obsidian25.Notice(
+        t("upgrade.notices.upgraded_to_version", {
+          version: currentVersion
+        })
+      );
     }
   }
   /**
@@ -22705,7 +24092,7 @@ var IncrementalUpgradeManager = class {
   async waitForCssRule(selector, timeoutMs = 2e3) {
     const start = Date.now();
     const hasRule = /* @__PURE__ */ __name(() => {
-      for (const sheet of Array.from(document.styleSheets)) {
+      for (const sheet of Array.from(activeDocument.styleSheets)) {
         let rules;
         try {
           rules = sheet.cssRules;
@@ -22743,7 +24130,10 @@ var IncrementalUpgradeManager = class {
   async isOperationCompleted(operationId, version) {
     var _a, _b, _c;
     const data = await this.plugin.loadData();
-    const operationKey = `operation_${version.replace(/\./g, "_")}_${operationId}`;
+    const operationKey = `operation_${version.replace(
+      /\./g,
+      "_"
+    )}_${operationId}`;
     return ((_c = (_b = (_a = data == null ? void 0 : data.upgradeHistory) == null ? void 0 : _a.completedOperations) == null ? void 0 : _b[operationKey]) == null ? void 0 : _c.completed) || false;
   }
   /**
@@ -22757,7 +24147,10 @@ var IncrementalUpgradeManager = class {
         completedOperations: {}
       };
     }
-    const operationKey = `operation_${version.replace(/\./g, "_")}_${operationId}`;
+    const operationKey = `operation_${version.replace(
+      /\./g,
+      "_"
+    )}_${operationId}`;
     data.upgradeHistory.completedOperations[operationKey] = {
       operationId,
       version,
@@ -22793,8 +24186,7 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
    */
   async fetchReleaseOverview(version) {
     try {
-      const { requestUrl: requestUrl2 } = require("obsidian");
-      const response = await requestUrl2({
+      const response = await (0, import_obsidian25.requestUrl)({
         url: `${GITHUB.RAW_BASE}/${version}/RELEASE_NOTES.md`,
         method: "GET"
       });
@@ -22829,8 +24221,14 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
   async getManualOperationsForSettings() {
     const results = [];
     for (const upgrade of this.availableUpgrades) {
-      const context = await this.createUpgradeContext(upgrade, "0.0.0", this.plugin.manifest.version);
-      const operationsStatus = await upgrade.getManualOperationsStatus(context);
+      const context = await this.createUpgradeContext(
+        upgrade,
+        "0.0.0",
+        this.plugin.manifest.version
+      );
+      const operationsStatus = await upgrade.getManualOperationsStatus(
+        context
+      );
       if (operationsStatus.length > 0) {
         results.push({
           version: upgrade.version,
@@ -22850,12 +24248,21 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
    * Execute single manual operation from settings
    */
   async executeManualOperation(version, operationId) {
-    const upgrade = this.availableUpgrades.find((u) => u.version === version);
+    const upgrade = this.availableUpgrades.find(
+      (u) => u.version === version
+    );
     if (!upgrade) {
       return { success: false, message: "Upgrade version not found" };
     }
-    const context = await this.createUpgradeContext(upgrade, "0.0.0", this.plugin.manifest.version);
-    const result = await upgrade.executeManualOperation(operationId, context);
+    const context = await this.createUpgradeContext(
+      upgrade,
+      "0.0.0",
+      this.plugin.manifest.version
+    );
+    const result = await upgrade.executeManualOperation(
+      operationId,
+      context
+    );
     return {
       success: result.success,
       message: result.message
@@ -22892,16 +24299,21 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     this.createFileSelectionArea(contentEl);
     this.createFilePreviewArea(contentEl);
     this.createActionButtons(contentEl);
-    this.addCustomStyles();
   }
   createImportModeSection(container) {
-    const section = container.createDiv("import-mode-section nexus-dialog-section");
+    const section = container.createDiv(
+      "import-mode-section nexus-dialog-section"
+    );
     section.createEl("h3", {
       text: t("file_selection.import_mode.section_title"),
       cls: "nexus-dialog-title"
     });
-    const optionsContainer = section.createDiv("import-options-container nexus-import-options-grid");
-    const allOption = optionsContainer.createDiv("import-option-box nexus-option-box");
+    const optionsContainer = section.createDiv(
+      "import-options-container nexus-import-options-grid"
+    );
+    const allOption = optionsContainer.createDiv(
+      "import-option-box nexus-option-box"
+    );
     allOption.toggleClass("is-selected", this.importMode === "all");
     const allRadio = allOption.createEl("input", { type: "radio" });
     allRadio.name = "importMode";
@@ -22913,11 +24325,17 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
       this.updateImportModeDescription();
       this.updateImportModeBoxes();
     });
-    const allContent = allOption.createDiv({ cls: "nexus-option-box-content" });
-    const allLabel = allContent.createEl("label", { cls: "nexus-option-box-label" });
+    const allContent = allOption.createDiv({
+      cls: "nexus-option-box-content"
+    });
+    const allLabel = allContent.createEl("label", {
+      cls: "nexus-option-box-label"
+    });
     allLabel.htmlFor = "import-all";
     allLabel.textContent = t("file_selection.import_mode.all_label");
-    const allDesc = allContent.createDiv({ cls: "nexus-option-box-description" });
+    const allDesc = allContent.createDiv({
+      cls: "nexus-option-box-description"
+    });
     allDesc.textContent = t("file_selection.import_mode.all_description");
     allOption.addEventListener("click", () => {
       allRadio.checked = true;
@@ -22925,8 +24343,13 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
       this.updateImportModeDescription();
       this.updateImportModeBoxes();
     });
-    const selectOption = optionsContainer.createDiv("import-option-box nexus-option-box");
-    selectOption.toggleClass("is-selected", this.importMode === "selective");
+    const selectOption = optionsContainer.createDiv(
+      "import-option-box nexus-option-box"
+    );
+    selectOption.toggleClass(
+      "is-selected",
+      this.importMode === "selective"
+    );
     const selectRadio = selectOption.createEl("input", { type: "radio" });
     selectRadio.name = "importMode";
     selectRadio.value = "selective";
@@ -22937,12 +24360,22 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
       this.updateImportModeDescription();
       this.updateImportModeBoxes();
     });
-    const selectContent = selectOption.createDiv({ cls: "nexus-option-box-content" });
-    const selectLabel = selectContent.createEl("label", { cls: "nexus-option-box-label" });
+    const selectContent = selectOption.createDiv({
+      cls: "nexus-option-box-content"
+    });
+    const selectLabel = selectContent.createEl("label", {
+      cls: "nexus-option-box-label"
+    });
     selectLabel.htmlFor = "import-selective";
-    selectLabel.textContent = t("file_selection.import_mode.selective_label");
-    const selectDesc = selectContent.createDiv({ cls: "nexus-option-box-description" });
-    selectDesc.textContent = t("file_selection.import_mode.selective_description");
+    selectLabel.textContent = t(
+      "file_selection.import_mode.selective_label"
+    );
+    const selectDesc = selectContent.createDiv({
+      cls: "nexus-option-box-description"
+    });
+    selectDesc.textContent = t(
+      "file_selection.import_mode.selective_description"
+    );
     selectOption.addEventListener("click", () => {
       selectRadio.checked = true;
       this.importMode = "selective";
@@ -22958,67 +24391,91 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     });
   }
   createFileSelectionArea(container) {
-    const section = container.createDiv("file-selection-section nexus-dialog-section");
+    const section = container.createDiv(
+      "file-selection-section nexus-dialog-section"
+    );
     section.createEl("h3", {
       text: t("file_selection.file_area.section_title"),
       cls: "nexus-dialog-title"
     });
     const dropZone = section.createDiv("drop-zone nexus-drop-zone");
-    const dropIcon = dropZone.createEl("div", { cls: "nexus-drop-zone-icon" });
+    const dropIcon = dropZone.createEl("div", {
+      cls: "nexus-drop-zone-icon"
+    });
     dropIcon.textContent = "\u{1F4C1}";
-    const dropText = dropZone.createEl("div", { cls: "nexus-drop-zone-text" });
-    if (this.provider === "gemini" || this.provider === "auto") {
-      dropText.textContent = t("file_selection.file_area.drop_text_gemini");
-    } else {
-      dropText.textContent = t("file_selection.file_area.drop_text_default");
-    }
-    const dropSubtext = dropZone.createEl("div", { cls: "nexus-drop-zone-subtext" });
-    if (this.provider === "gemini" || this.provider === "auto") {
-      dropSubtext.textContent = t("file_selection.file_area.drop_subtext_gemini");
-    } else {
-      dropSubtext.textContent = t("file_selection.file_area.drop_subtext_default");
-    }
+    const dropText = dropZone.createEl("div", {
+      cls: "nexus-drop-zone-text"
+    });
+    dropText.textContent = t("file_selection.file_area.drop_text_default");
+    const dropSubtext = dropZone.createEl("div", {
+      cls: "nexus-drop-zone-subtext"
+    });
+    dropSubtext.textContent = t(
+      "file_selection.file_area.drop_subtext_default"
+    );
     const fileInput = section.createEl("input", { type: "file" });
-    if (this.provider === "gemini" || this.provider === "auto") {
-      fileInput.accept = ".zip,.json";
-    } else {
-      fileInput.accept = ".zip";
-    }
-    const allowMultipleSelection = this.provider === "gemini" || this.provider === "auto" || !this.isMobileRuntime();
+    fileInput.accept = ".zip";
+    const allowMultipleSelection = !this.isMobileRuntime();
     fileInput.multiple = allowMultipleSelection;
-    fileInput.style.display = "none";
+    fileInput.addClass("nexus-hidden");
     dropZone.addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", (e) => this.handleFileSelection(e));
-    dropZone.addEventListener("dragover", (e) => this.handleDragOver(e, dropZone));
-    dropZone.addEventListener("dragenter", (e) => this.handleDragEnter(e, dropZone));
-    dropZone.addEventListener("dragleave", (e) => this.handleDragLeave(e, dropZone));
+    fileInput.addEventListener(
+      "change",
+      (e) => this.handleFileSelection(e)
+    );
+    dropZone.addEventListener(
+      "dragover",
+      (e) => this.handleDragOver(e, dropZone)
+    );
+    dropZone.addEventListener(
+      "dragenter",
+      (e) => this.handleDragEnter(e, dropZone)
+    );
+    dropZone.addEventListener(
+      "dragleave",
+      (e) => this.handleDragLeave(e, dropZone)
+    );
     dropZone.addEventListener("drop", (e) => this.handleDrop(e, dropZone));
   }
   createFilePreviewArea(container) {
-    const section = container.createDiv("file-preview-section nexus-file-preview-section nexus-dialog-section");
+    const section = container.createDiv(
+      "file-preview-section nexus-file-preview-section nexus-dialog-section"
+    );
     section.id = "file-preview-section";
     section.createEl("h3", {
       text: t("file_selection.selected_files.section_title"),
       cls: "nexus-dialog-title"
     });
-    const fileListContainer = section.createDiv("file-list-container nexus-file-list-container");
+    const fileListContainer = section.createDiv(
+      "file-list-container nexus-file-list-container"
+    );
     const fileList = fileListContainer.createDiv("file-list");
     fileList.id = "file-list";
   }
   createActionButtons(container) {
-    const buttonContainer = container.createDiv("action-buttons nexus-dialog-actions");
-    const cancelButton = buttonContainer.createEl("button", { text: t("file_selection.buttons.cancel") });
+    const buttonContainer = container.createDiv(
+      "action-buttons nexus-dialog-actions"
+    );
+    const cancelButton = buttonContainer.createEl("button", {
+      text: t("file_selection.buttons.cancel")
+    });
     cancelButton.addEventListener("click", () => this.close());
-    const importButton = buttonContainer.createEl("button", { text: t("file_selection.buttons.continue") });
+    const importButton = buttonContainer.createEl("button", {
+      text: t("file_selection.buttons.continue")
+    });
     importButton.id = "import-button";
     importButton.classList.add("mod-cta");
     importButton.disabled = true;
-    importButton.addEventListener("click", () => this.handleImport());
+    importButton.addEventListener("click", () => {
+      void this.handleImport();
+    });
   }
   handleFileSelection(event) {
     const input = event.target;
     if (input.files) {
-      this.selectedFiles = this.enforceMobileSingleZipSelection(Array.from(input.files));
+      this.selectedFiles = this.enforceMobileSingleZipSelection(
+        Array.from(input.files)
+      );
       this.updateFilePreview();
       this.updateImportButton();
     }
@@ -23027,7 +24484,7 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     event.preventDefault();
     dropZone.addClass("is-dragover");
   }
-  handleDragEnter(event, dropZone) {
+  handleDragEnter(event, _dropZone) {
     event.preventDefault();
     this.dragCounter++;
   }
@@ -23044,13 +24501,11 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     this.dragCounter = 0;
     dropZone.removeClass("is-dragover");
     if ((_a = event.dataTransfer) == null ? void 0 : _a.files) {
-      const files = Array.from(event.dataTransfer.files).filter((file) => {
-        const fileName = file.name.toLowerCase();
-        if (this.provider === "gemini" || this.provider === "auto") {
-          return fileName.endsWith(".zip") || fileName.endsWith(".json");
+      const files = Array.from(event.dataTransfer.files).filter(
+        (file) => {
+          return file.name.toLowerCase().endsWith(".zip");
         }
-        return fileName.endsWith(".zip");
-      });
+      );
       if (files.length > 0) {
         this.selectedFiles = this.enforceMobileSingleZipSelection(files);
         this.updateFilePreview();
@@ -23065,33 +24520,52 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     if (!this.isMobileRuntime()) {
       return files;
     }
-    const zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
+    const zipFiles = files.filter(
+      (file) => file.name.toLowerCase().endsWith(".zip")
+    );
     if (zipFiles.length <= 1) {
       return files;
     }
     const firstZip = zipFiles[0];
-    const nonZipFiles = files.filter((file) => !file.name.toLowerCase().endsWith(".zip"));
+    const nonZipFiles = files.filter(
+      (file) => !file.name.toLowerCase().endsWith(".zip")
+    );
     new import_obsidian26.Notice(t("notices.import_mobile_single_zip_only"));
     return [firstZip, ...nonZipFiles];
   }
   updateFilePreview() {
-    const previewSection = this.contentEl.querySelector("#file-preview-section");
-    const fileList = this.contentEl.querySelector("#file-list");
+    const previewSection = this.contentEl.querySelector(
+      "#file-preview-section"
+    );
+    const fileList = this.contentEl.querySelector(
+      "#file-list"
+    );
     if (this.selectedFiles.length > 0) {
       previewSection.addClass("is-visible");
       fileList.empty();
       this.selectedFiles.forEach((file, index) => {
-        const fileItem = fileList.createDiv("file-item nexus-file-list-item");
-        const fileInfo = fileItem.createDiv({ cls: "nexus-file-list-item-info" });
-        const fileName = fileInfo.createEl("span", { cls: "nexus-file-list-item-name" });
+        const fileItem = fileList.createDiv(
+          "file-item nexus-file-list-item"
+        );
+        const fileInfo = fileItem.createDiv({
+          cls: "nexus-file-list-item-info"
+        });
+        const fileName = fileInfo.createEl("span", {
+          cls: "nexus-file-list-item-name"
+        });
         fileName.textContent = file.name;
-        const fileSize = fileInfo.createEl("span", { cls: "nexus-file-list-item-size" });
+        const fileSize = fileInfo.createEl("span", {
+          cls: "nexus-file-list-item-size"
+        });
         fileSize.textContent = formatFileSize(file.size);
         const removeButton = fileItem.createEl("button", {
           text: t("file_selection.selected_files.remove_button"),
           cls: "nexus-file-list-remove"
         });
-        removeButton.addEventListener("click", () => this.removeFile(index));
+        removeButton.addEventListener(
+          "click",
+          () => this.removeFile(index)
+        );
       });
     } else {
       previewSection.removeClass("is-visible");
@@ -23103,7 +24577,9 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     this.updateImportButton();
   }
   updateImportButton() {
-    const importButton = this.contentEl.querySelector("#import-button");
+    const importButton = this.contentEl.querySelector(
+      "#import-button"
+    );
     importButton.disabled = this.selectedFiles.length === 0;
   }
   updateImportModeDescription() {
@@ -23112,7 +24588,9 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     if (this.provider === "auto") {
       return t("commands.import_conversations.name");
     }
-    return t("file_selection.title", { provider: this.provider.charAt(0).toUpperCase() + this.provider.slice(1) });
+    return t("file_selection.title", {
+      provider: this.provider.charAt(0).toUpperCase() + this.provider.slice(1)
+    });
   }
   async handleImport() {
     var _a, _b;
@@ -23141,37 +24619,6 @@ var EnhancedFileSelectionDialog = class extends import_obsidian26.Modal {
     } else {
       this.importMode = this.plugin.settings.defaultImportMode || "all";
     }
-  }
-  addCustomStyles() {
-    const style = document.createElement("style");
-    style.textContent = `
-            .modal.nexus-file-selection-dialog {
-                max-width: min(800px, 90vw) !important;
-                width: min(800px, 90vw) !important;
-                height: auto !important;
-                padding: 0 !important;
-            }
-            .modal.nexus-file-selection-dialog .modal-title {
-                padding: 16px 24px !important;
-                margin: 0 !important;
-            }
-
-            .modal.nexus-file-selection-dialog .modal-content {
-                max-width: 100% !important;
-                width: 100% !important;
-                max-height: 85vh;
-                overflow-y: auto;
-                display: flex;
-                flex-direction: column;
-                padding: 20px 24px 24px 24px;
-            }
-            @media (max-width: 600px) {
-                .modal.nexus-file-selection-dialog .modal-content {
-                    padding: 14px 14px 18px 14px;
-                }
-            }
-        `;
-    document.head.appendChild(style);
   }
   onClose() {
     const { contentEl } = this;
@@ -23230,18 +24677,23 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
     this.createConversationListSection(contentEl);
     this.createPaginationSection(contentEl);
     this.createActionButtons(contentEl);
-    this.addCustomStyles();
     this.renderConversationList();
     this.updateSummary();
     this.updatePagination();
   }
   createSummarySection(container) {
-    const section = container.createDiv("summary-section nexus-summary-grid nexus-dialog-section");
+    const section = container.createDiv(
+      "summary-section nexus-summary-grid nexus-dialog-section"
+    );
     section.id = "conversation-summary";
   }
   createControlsSection(container) {
-    const section = container.createDiv("controls-section nexus-dialog-toolbar nexus-controls-row nexus-dialog-section");
-    const selectAllBtn = section.createEl("button", { text: t("conversation_selection.controls.select_all") });
+    const section = container.createDiv(
+      "controls-section nexus-dialog-toolbar nexus-controls-row nexus-dialog-section"
+    );
+    const selectAllBtn = section.createEl("button", {
+      text: t("conversation_selection.controls.select_all")
+    });
     selectAllBtn.addClass("nexus-control-button");
     selectAllBtn.addEventListener("click", () => {
       this.state.filteredConversations.forEach((conv) => {
@@ -23250,7 +24702,9 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       this.renderConversationList();
       this.updateSummary();
     });
-    const selectNoneBtn = section.createEl("button", { text: t("conversation_selection.controls.select_none") });
+    const selectNoneBtn = section.createEl("button", {
+      text: t("conversation_selection.controls.select_none")
+    });
     selectNoneBtn.addClass("nexus-control-button");
     selectNoneBtn.addEventListener("click", () => {
       this.state.selectedIds.clear();
@@ -23261,7 +24715,9 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       type: "text",
       cls: "nexus-conversation-search"
     });
-    searchInput.placeholder = t("conversation_selection.controls.search_placeholder");
+    searchInput.placeholder = t(
+      "conversation_selection.controls.search_placeholder"
+    );
     searchInput.addEventListener("input", (e) => {
       const target = e.target;
       this.state.filter.searchTerm = target.value;
@@ -23270,14 +24726,34 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       this.updateSummary();
       this.updatePagination();
     });
-    const statusLabel = section.createEl("label", { cls: "nexus-filter-label" });
-    statusLabel.textContent = t("conversation_selection.controls.status_label");
-    const statusSelect = section.createEl("select", { cls: "nexus-custom-select nexus-filter-select" });
+    const statusLabel = section.createEl("label", {
+      cls: "nexus-filter-label"
+    });
+    statusLabel.textContent = t(
+      "conversation_selection.controls.status_label"
+    );
+    const statusSelect = section.createEl("select", {
+      cls: "nexus-custom-select nexus-filter-select"
+    });
     const statusOptions = [
-      { value: "all", text: t("conversation_selection.status_filter_options.all") },
-      { value: "new", text: t("conversation_selection.status_filter_options.new") },
-      { value: "updated", text: t("conversation_selection.status_filter_options.updated") },
-      { value: "unchanged", text: t("conversation_selection.status_filter_options.unchanged") }
+      {
+        value: "all",
+        text: t("conversation_selection.status_filter_options.all")
+      },
+      {
+        value: "new",
+        text: t("conversation_selection.status_filter_options.new")
+      },
+      {
+        value: "updated",
+        text: t("conversation_selection.status_filter_options.updated")
+      },
+      {
+        value: "unchanged",
+        text: t(
+          "conversation_selection.status_filter_options.unchanged"
+        )
+      }
     ];
     statusOptions.forEach((option) => {
       const optionEl = statusSelect.createEl("option");
@@ -23293,7 +24769,9 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       this.updateSummary();
       this.updatePagination();
     });
-    const existingOnlyControl = section.createDiv("nexus-existing-only-control");
+    const existingOnlyControl = section.createDiv(
+      "nexus-existing-only-control"
+    );
     const existingOnlyCheckboxId = `nexus-existing-only-${Date.now()}`;
     const existingOnlyCheckbox = existingOnlyControl.createEl("input", {
       type: "checkbox",
@@ -23305,7 +24783,9 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       cls: "nexus-filter-label nexus-existing-only-label"
     });
     existingOnlyLabel.htmlFor = existingOnlyCheckboxId;
-    existingOnlyLabel.textContent = t("conversation_selection.controls.existing_only_label");
+    existingOnlyLabel.textContent = t(
+      "conversation_selection.controls.existing_only_label"
+    );
     const syncExistingOnlyState = /* @__PURE__ */ __name(() => {
       const existingOnlyEnabled = !!this.state.filter.existingOnly;
       statusSelect.disabled = existingOnlyEnabled;
@@ -23324,9 +24804,15 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       this.updatePagination();
     });
     syncExistingOnlyState();
-    const pageSizeLabel = section.createEl("label", { cls: "nexus-filter-label" });
-    pageSizeLabel.textContent = t("conversation_selection.controls.show_label");
-    const pageSizeSelect = section.createEl("select", { cls: "nexus-custom-select nexus-filter-select" });
+    const pageSizeLabel = section.createEl("label", {
+      cls: "nexus-filter-label"
+    });
+    pageSizeLabel.textContent = t(
+      "conversation_selection.controls.show_label"
+    );
+    const pageSizeSelect = section.createEl("select", {
+      cls: "nexus-custom-select nexus-filter-select"
+    });
     const pageSizeOptions = [10, 20, 50, 100];
     pageSizeOptions.forEach((size) => {
       const optionEl = pageSizeSelect.createEl("option");
@@ -23334,73 +24820,86 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       optionEl.textContent = size.toString();
     });
     pageSizeSelect.value = this.state.pagination.pageSize.toString();
-    pageSizeSelect.addEventListener("change", async (e) => {
+    pageSizeSelect.addEventListener("change", (e) => {
       const target = e.target;
       const newPageSize = parseInt(target.value);
       this.state.pagination.pageSize = newPageSize;
       this.state.pagination.currentPage = 1;
       if (this.plugin) {
         this.plugin.settings.lastConversationsPerPage = newPageSize;
-        await this.plugin.saveSettings();
+        void this.plugin.saveSettings();
       }
       this.updatePagination();
       this.renderConversationList();
     });
     const existingOnlyHelp = section.createDiv("nexus-existing-only-help");
-    existingOnlyHelp.textContent = t("conversation_selection.controls.existing_only_help");
+    existingOnlyHelp.textContent = t(
+      "conversation_selection.controls.existing_only_help"
+    );
   }
   createConversationListSection(container) {
-    const section = container.createDiv("conversation-list-section nexus-dialog-section");
+    const section = container.createDiv(
+      "conversation-list-section nexus-dialog-section"
+    );
     const tableContainer = section.createDiv("table-container");
     tableContainer.classList.add("nexus-table-container");
     const table = tableContainer.createEl("table");
     table.id = "conversation-table";
-    table.style.width = "100%";
-    table.style.borderCollapse = "collapse";
+    table.addClass("nexus-table-full-width");
     const thead = table.createEl("thead");
     const headerRow = thead.createEl("tr");
-    headerRow.style.backgroundColor = "var(--background-secondary)";
-    headerRow.style.position = "sticky";
-    headerRow.style.top = "0";
-    headerRow.style.zIndex = "10";
+    headerRow.addClass("nexus-table-header-row");
     const headers = [
       { text: "", width: "40px", sortField: null },
       // Checkbox - plus compact
-      { text: t("conversation_selection.table_headers.title"), width: "45%", sortField: "title" },
+      {
+        text: t("conversation_selection.table_headers.title"),
+        width: "45%",
+        sortField: "title"
+      },
       // Plus d'espace
-      { text: t("conversation_selection.table_headers.created"), width: "110px", sortField: "createTime" },
+      {
+        text: t("conversation_selection.table_headers.created"),
+        width: "110px",
+        sortField: "createTime"
+      },
       // Réduit
-      { text: t("conversation_selection.table_headers.updated"), width: "110px", sortField: "updateTime" },
+      {
+        text: t("conversation_selection.table_headers.updated"),
+        width: "110px",
+        sortField: "updateTime"
+      },
       // Réduit
-      { text: t("conversation_selection.table_headers.messages"), width: "80px", sortField: "messageCount" },
+      {
+        text: t("conversation_selection.table_headers.messages"),
+        width: "80px",
+        sortField: "messageCount"
+      },
       // Réduit
-      { text: t("conversation_selection.table_headers.status"), width: "100px", sortField: null }
+      {
+        text: t("conversation_selection.table_headers.status"),
+        width: "100px",
+        sortField: null
+      }
       // Réduit
     ];
     headers.forEach((header) => {
       const th = headerRow.createEl("th");
-      th.style.padding = "12px 8px";
-      th.style.textAlign = "left";
-      th.style.borderBottom = "2px solid var(--background-modifier-border)";
-      th.style.fontWeight = "600";
-      th.style.backgroundColor = "var(--background-secondary)";
-      th.style.userSelect = "none";
+      th.addClass("nexus-th-base");
       if (header.width !== "auto") {
         th.style.width = header.width;
       }
       if (header.sortField) {
-        th.style.cursor = "pointer";
+        th.addClass("nexus-cursor-pointer");
         th.classList.add("sortable-header");
         const headerContent = th.createSpan();
         headerContent.textContent = header.text;
         const sortIndicator = th.createSpan();
         sortIndicator.classList.add("sort-indicator");
-        sortIndicator.style.marginLeft = "6px";
-        sortIndicator.style.fontSize = "0.8em";
-        sortIndicator.style.opacity = "0.5";
+        sortIndicator.addClass("nexus-sort-indicator");
         if (this.state.sort.field === header.sortField) {
           sortIndicator.textContent = this.state.sort.direction === "asc" ? "\u25B2" : "\u25BC";
-          sortIndicator.style.opacity = "1";
+          sortIndicator.addClass("nexus-sort-indicator-active");
         } else {
           sortIndicator.textContent = "\u25BC";
         }
@@ -23433,13 +24932,22 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
     pageControls.id = "page-controls";
   }
   createActionButtons(container) {
-    const buttonContainer = container.createDiv("action-buttons nexus-dialog-actions");
-    const cancelButton = buttonContainer.createEl("button", { text: t("conversation_selection.buttons.cancel") });
+    const buttonContainer = container.createDiv(
+      "action-buttons nexus-dialog-actions"
+    );
+    const cancelButton = buttonContainer.createEl("button", {
+      text: t("conversation_selection.buttons.cancel")
+    });
     cancelButton.addEventListener("click", () => this.close());
-    const importButton = buttonContainer.createEl("button", { text: t("conversation_selection.buttons.import_selected") });
+    const importButton = buttonContainer.createEl("button", {
+      text: t("conversation_selection.buttons.import_selected")
+    });
     importButton.id = "import-selected-button";
     importButton.classList.add("mod-cta");
-    importButton.addEventListener("click", () => this.handleImportSelected());
+    importButton.addEventListener(
+      "click",
+      () => this.handleImportSelected()
+    );
   }
   applyFiltersAndSort() {
     let filtered = [...this.state.allConversations];
@@ -23478,17 +24986,26 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
   }
   updatePagination() {
     const totalItems = this.state.filteredConversations.length;
-    const totalPages = Math.ceil(totalItems / this.state.pagination.pageSize);
+    const totalPages = Math.ceil(
+      totalItems / this.state.pagination.pageSize
+    );
     this.state.pagination = {
       ...this.state.pagination,
       totalItems,
       totalPages,
-      currentPage: Math.min(this.state.pagination.currentPage, totalPages || 1)
+      currentPage: Math.min(
+        this.state.pagination.currentPage,
+        totalPages || 1
+      )
     };
   }
   renderConversationList() {
-    const tbody = this.contentEl.querySelector("#conversation-table-body");
-    const mobileList = this.contentEl.querySelector("#conversation-mobile-list");
+    const tbody = this.contentEl.querySelector(
+      "#conversation-table-body"
+    );
+    const mobileList = this.contentEl.querySelector(
+      "#conversation-mobile-list"
+    );
     if (!tbody)
       return;
     tbody.empty();
@@ -23496,11 +25013,16 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
     const { currentPage, pageSize } = this.state.pagination;
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    const pageConversations = this.state.filteredConversations.slice(startIndex, endIndex);
+    const pageConversations = this.state.filteredConversations.slice(
+      startIndex,
+      endIndex
+    );
     pageConversations.forEach((conversation) => {
       const row = tbody.createEl("tr");
       const checkboxCell = row.createEl("td");
-      const checkbox = checkboxCell.createEl("input", { type: "checkbox" });
+      const checkbox = checkboxCell.createEl("input", {
+        type: "checkbox"
+      });
       checkbox.checked = this.state.selectedIds.has(conversation.id);
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
@@ -23511,26 +25033,24 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
         this.updateSummary();
       });
       const titleCell = row.createEl("td");
-      titleCell.style.fontWeight = "500";
+      titleCell.addClass("nexus-td-title");
       titleCell.textContent = conversation.title;
       if (conversation.sourceFile) {
         const sourceInfo = titleCell.createEl("div");
-        sourceInfo.style.fontSize = "0.8em";
-        sourceInfo.style.color = "var(--text-muted)";
-        sourceInfo.style.marginTop = "4px";
+        sourceInfo.addClass("nexus-td-source-info");
         sourceInfo.textContent = `\u{1F4C1} ${conversation.sourceFile}`;
       }
       const createdCell = row.createEl("td");
-      createdCell.style.fontSize = "0.9em";
+      createdCell.addClass("nexus-td-date");
       createdCell.textContent = this.formatDate(conversation.createTime);
       const updatedCell = row.createEl("td");
-      updatedCell.style.fontSize = "0.9em";
+      updatedCell.addClass("nexus-td-date");
       updatedCell.textContent = this.formatDate(conversation.updateTime);
       const messagesCell = row.createEl("td");
-      messagesCell.style.textAlign = "center";
+      messagesCell.addClass("nexus-td-center");
       messagesCell.textContent = conversation.messageCount.toString();
       const statusCell = row.createEl("td");
-      statusCell.style.textAlign = "center";
+      statusCell.addClass("nexus-td-center");
       const statusBadge = this.createStatusBadge(conversation);
       statusCell.appendChild(statusBadge);
       if (mobileList) {
@@ -23555,60 +25075,104 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       }
       this.updateSummary();
     });
-    const titleWrap = header.createDiv("nexus-conversation-card-title-wrap");
+    const titleWrap = header.createDiv(
+      "nexus-conversation-card-title-wrap"
+    );
     const title = titleWrap.createDiv("nexus-conversation-card-title");
     title.textContent = conversation.title;
     if (conversation.sourceFile) {
-      const sourceInfo = titleWrap.createDiv("nexus-conversation-card-source");
+      const sourceInfo = titleWrap.createDiv(
+        "nexus-conversation-card-source"
+      );
       sourceInfo.textContent = `\u{1F4C1} ${conversation.sourceFile}`;
     }
     const badge = this.createStatusBadge(conversation);
     badge.addClass("nexus-conversation-card-badge");
     header.appendChild(badge);
     const meta = card.createDiv("nexus-conversation-card-meta");
-    meta.createDiv({ text: `${t("conversation_selection.table_headers.created")}: ${this.formatDate(conversation.createTime)}` });
-    meta.createDiv({ text: `${t("conversation_selection.table_headers.updated")}: ${this.formatDate(conversation.updateTime)}` });
-    meta.createDiv({ text: `${t("conversation_selection.table_headers.messages")}: ${conversation.messageCount}` });
+    meta.createDiv({
+      text: `${t(
+        "conversation_selection.table_headers.created"
+      )}: ${this.formatDate(conversation.createTime)}`
+    });
+    meta.createDiv({
+      text: `${t(
+        "conversation_selection.table_headers.updated"
+      )}: ${this.formatDate(conversation.updateTime)}`
+    });
+    meta.createDiv({
+      text: `${t("conversation_selection.table_headers.messages")}: ${conversation.messageCount}`
+    });
   }
   createStatusBadge(conversation) {
-    const badge = document.createElement("span");
+    const badge = activeDocument.createElement("span");
     badge.classList.add("status-badge");
     switch (conversation.existenceStatus) {
       case "new":
-        badge.textContent = t("conversation_selection.status_badges.new");
+        badge.textContent = t(
+          "conversation_selection.status_badges.new"
+        );
         badge.classList.add("status-new");
-        badge.title = t("conversation_selection.status_badges.tooltip_new");
+        badge.title = t(
+          "conversation_selection.status_badges.tooltip_new"
+        );
         break;
       case "updated":
-        badge.textContent = t("conversation_selection.status_badges.updated");
+        badge.textContent = t(
+          "conversation_selection.status_badges.updated"
+        );
         badge.classList.add("status-updated");
-        badge.title = t("conversation_selection.status_badges.tooltip_updated", { existing_date: this.formatDate(conversation.existingUpdateTime || 0), new_date: this.formatDate(conversation.updateTime) });
+        badge.title = t(
+          "conversation_selection.status_badges.tooltip_updated",
+          {
+            existing_date: this.formatDate(
+              conversation.existingUpdateTime || 0
+            ),
+            new_date: this.formatDate(conversation.updateTime)
+          }
+        );
         break;
       case "unchanged":
-        badge.textContent = t("conversation_selection.status_badges.unchanged");
+        badge.textContent = t(
+          "conversation_selection.status_badges.unchanged"
+        );
         badge.classList.add("status-unchanged");
-        badge.title = t("conversation_selection.status_badges.tooltip_unchanged");
+        badge.title = t(
+          "conversation_selection.status_badges.tooltip_unchanged"
+        );
         break;
       default:
-        badge.textContent = t("conversation_selection.status_badges.unknown");
+        badge.textContent = t(
+          "conversation_selection.status_badges.unknown"
+        );
         badge.classList.add("status-unchanged");
         break;
     }
     return badge;
   }
   renderPaginationControls() {
-    const pageInfo = this.contentEl.querySelector("#page-info");
-    const pageControls = this.contentEl.querySelector("#page-controls");
+    const pageInfo = this.contentEl.querySelector(
+      "#page-info"
+    );
+    const pageControls = this.contentEl.querySelector(
+      "#page-controls"
+    );
     if (!pageInfo || !pageControls)
       return;
     const { currentPage, totalPages, totalItems, pageSize } = this.state.pagination;
     const startItem = (currentPage - 1) * pageSize + 1;
     const endItem = Math.min(currentPage * pageSize, totalItems);
-    pageInfo.textContent = t("conversation_selection.pagination.showing", { start: String(startItem), end: String(endItem), total: String(totalItems) });
+    pageInfo.textContent = t("conversation_selection.pagination.showing", {
+      start: String(startItem),
+      end: String(endItem),
+      total: String(totalItems)
+    });
     pageControls.empty();
-    const prevBtn = pageControls.createEl("button", { text: t("conversation_selection.pagination.previous") });
+    const prevBtn = pageControls.createEl("button", {
+      text: t("conversation_selection.pagination.previous")
+    });
     prevBtn.disabled = currentPage <= 1;
-    prevBtn.style.padding = "6px 12px";
+    prevBtn.addClass("nexus-pagination-btn");
     prevBtn.addEventListener("click", () => {
       if (currentPage > 1) {
         this.state.pagination.currentPage--;
@@ -23616,11 +25180,16 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       }
     });
     const pageSpan = pageControls.createEl("span");
-    pageSpan.textContent = t("conversation_selection.pagination.page_of", { current: String(currentPage), total: String(totalPages) });
-    pageSpan.style.padding = "6px 12px";
-    const nextBtn = pageControls.createEl("button", { text: t("conversation_selection.pagination.next") });
+    pageSpan.textContent = t("conversation_selection.pagination.page_of", {
+      current: String(currentPage),
+      total: String(totalPages)
+    });
+    pageSpan.addClass("nexus-pagination-btn");
+    const nextBtn = pageControls.createEl("button", {
+      text: t("conversation_selection.pagination.next")
+    });
     nextBtn.disabled = currentPage >= totalPages;
-    nextBtn.style.padding = "6px 12px";
+    nextBtn.addClass("nexus-pagination-btn");
     nextBtn.addEventListener("click", () => {
       if (currentPage < totalPages) {
         this.state.pagination.currentPage++;
@@ -23629,7 +25198,9 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
     });
   }
   updateSummary() {
-    const summary = this.contentEl.querySelector("#conversation-summary");
+    const summary = this.contentEl.querySelector(
+      "#conversation-summary"
+    );
     if (!summary)
       return;
     const selectedCount = this.state.selectedIds.size;
@@ -23644,39 +25215,64 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       const status = conv.existenceStatus || "unknown";
       statusCounts[status]++;
     });
-    summary.innerHTML = this.buildComprehensiveSummary(selectedCount, totalCount, statusCounts);
-    const importButton = this.contentEl.querySelector("#import-selected-button");
+    summary.empty();
+    summary.append(
+      (0, import_obsidian27.sanitizeHTMLToDom)(
+        this.buildComprehensiveSummary(
+          selectedCount,
+          totalCount,
+          statusCounts
+        )
+      )
+    );
+    const importButton = this.contentEl.querySelector(
+      "#import-selected-button"
+    );
     if (importButton) {
       importButton.disabled = selectedCount === 0;
-      importButton.textContent = selectedCount > 0 ? t("conversation_selection.buttons.import_selected_count", { count: String(selectedCount) }) : t("conversation_selection.buttons.import_selected");
+      importButton.textContent = selectedCount > 0 ? t(
+        "conversation_selection.buttons.import_selected_count",
+        { count: String(selectedCount) }
+      ) : t("conversation_selection.buttons.import_selected");
     }
   }
-  buildComprehensiveSummary(selectedCount, totalCount, statusCounts) {
+  buildComprehensiveSummary(selectedCount, totalCount, _statusCounts) {
     if (this.analysisInfo) {
       const info = this.analysisInfo;
       const uniqueCount = info.uniqueConversationsKept;
       return `
                 <div class="nexus-summary-card">
                     <div class="nexus-summary-value nexus-summary-value-primary">${uniqueCount}</div>
-                    <div class="nexus-summary-label">${t("conversation_selection.summary.unique_conversations")}</div>
+                    <div class="nexus-summary-label">${t(
+        "conversation_selection.summary.unique_conversations"
+      )}</div>
                 </div>
                 <div class="nexus-summary-card">
                     <div class="nexus-summary-value nexus-summary-value-success">${info.conversationsNew}</div>
-                    <div class="nexus-summary-label">${t("conversation_selection.summary.new")}</div>
+                    <div class="nexus-summary-label">${t(
+        "conversation_selection.summary.new"
+      )}</div>
                 </div>
                 <div class="nexus-summary-card">
                     <div class="nexus-summary-value nexus-summary-value-warning">${info.conversationsUpdated}</div>
-                    <div class="nexus-summary-label">${t("conversation_selection.summary.updated")}</div>
+                    <div class="nexus-summary-label">${t(
+        "conversation_selection.summary.updated"
+      )}</div>
                 </div>
                 <div class="nexus-summary-card">
                     <div class="nexus-summary-value nexus-summary-value-muted">${info.conversationsIgnored}</div>
-                    <div class="nexus-summary-label">${t("conversation_selection.summary.unchanged")}</div>
+                    <div class="nexus-summary-label">${t(
+        "conversation_selection.summary.unchanged"
+      )}</div>
                 </div>
             `;
     }
     return `
             <div style="text-align: center; padding: 12px;">
-                ${t("conversation_selection.summary.selected_of", { selected: String(selectedCount), total: String(totalCount) })}
+                ${t("conversation_selection.summary.selected_of", {
+      selected: String(selectedCount),
+      total: String(totalCount)
+    })}
             </div>
         `;
   }
@@ -23698,427 +25294,6 @@ var ConversationSelectionDialog = class extends import_obsidian27.Modal {
       return t("conversation_selection.date_unknown");
     const date = new Date(timestamp * 1e3);
     return date.toLocaleDateString();
-  }
-  addCustomStyles() {
-    const style = document.createElement("style");
-    style.textContent = `
-            /* Modal sizing - CRITICAL: Override Obsidian's default constraints */
-            .modal.nexus-conversation-selection-dialog {
-                max-width: min(1000px, 90vw) !important;
-                width: min(1000px, 90vw) !important;
-                height: auto !important;
-                padding: 0 !important;
-            }
-
-            /* Modal title spacing */
-            .modal.nexus-conversation-selection-dialog .modal-title {
-                padding: 16px 24px !important;
-                margin: 0 !important;
-            }
-
-            .modal.nexus-conversation-selection-dialog .modal-content {
-                max-width: 100% !important;
-                width: 100% !important;
-                max-height: 85vh;
-                overflow-y: visible;
-                overflow-x: visible;
-                display: flex;
-                flex-direction: column;
-                padding: 20px 24px 24px 24px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-summary-grid {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 12px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-summary-card {
-                text-align: center;
-                padding: 12px;
-                background-color: var(--background-primary);
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-summary-value {
-                font-weight: 600;
-                font-size: 1.4em;
-                margin-bottom: 4px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-summary-value-primary {
-                color: var(--text-accent);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-summary-value-success {
-                color: var(--color-green);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-summary-value-warning {
-                color: var(--color-orange);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-summary-value-muted {
-                color: var(--text-muted);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-summary-label {
-                color: var(--text-muted);
-                font-size: 0.85em;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-controls-row {
-                background-color: var(--background-primary);
-                padding: 12px;
-                border-radius: 8px;
-                border: 1px solid var(--background-modifier-border);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-control-button {
-                white-space: nowrap;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-conversation-search {
-                flex: 1 1 220px;
-                min-width: 0;
-                padding: 8px 12px;
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-filter-label {
-                font-size: 14px;
-                white-space: nowrap;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-filter-label.is-disabled {
-                opacity: 0.65;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-filter-select {
-                min-width: 0;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-existing-only-control {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                white-space: nowrap;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-existing-only-checkbox {
-                margin: 0;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-existing-only-label {
-                cursor: pointer;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-existing-only-help {
-                flex: 1 1 100%;
-                font-size: 0.85em;
-                color: var(--text-muted);
-                margin-top: 2px;
-            }
-
-            /* Table container with independent scroll */
-            .nexus-conversation-selection-dialog .nexus-table-container {
-                max-height: 450px;
-                overflow-y: auto;
-                overflow-x: auto;
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 8px;
-                margin-bottom: 20px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-mobile-conversation-list {
-                display: none;
-                gap: 10px;
-            }
-
-            /* Table styling */
-            .nexus-conversation-selection-dialog table {
-                font-size: 0.9em;
-                width: 100%;
-                min-width: 900px;
-                border-collapse: collapse;
-            }
-
-            /* Table header - sticky */
-            .nexus-conversation-selection-dialog thead {
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }
-
-            .nexus-conversation-selection-dialog th {
-                background-color: var(--background-secondary);
-                font-weight: 600;
-                white-space: nowrap;
-                position: sticky;
-                top: 0;
-            }
-
-            /* Sortable headers */
-            .nexus-conversation-selection-dialog th.sortable-header {
-                cursor: pointer;
-                user-select: none;
-                transition: background-color 0.2s;
-            }
-
-            .nexus-conversation-selection-dialog th.sortable-header:hover {
-                background-color: var(--background-modifier-hover);
-            }
-
-            .nexus-conversation-selection-dialog .sort-indicator {
-                display: inline-block;
-                margin-left: 6px;
-                font-size: 0.8em;
-                transition: opacity 0.2s;
-            }
-
-            /* Table cells */
-            .nexus-conversation-selection-dialog td {
-                padding: 10px 8px;
-                border-bottom: 1px solid var(--background-modifier-border);
-                vertical-align: middle;
-            }
-
-            /* Title column - allow wrapping */
-            .nexus-conversation-selection-dialog th:nth-child(2),
-            .nexus-conversation-selection-dialog td:nth-child(2) {
-                max-width: 500px;
-                white-space: normal;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-            }
-
-            /* Other columns - no wrapping */
-            .nexus-conversation-selection-dialog th:not(:nth-child(2)),
-            .nexus-conversation-selection-dialog td:not(:nth-child(2)) {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            /* Row hover effect */
-            .nexus-conversation-selection-dialog tbody tr:hover {
-                background-color: var(--background-modifier-hover);
-                cursor: pointer;
-            }
-
-            /* Checkbox column */
-            .nexus-conversation-selection-dialog td:first-child {
-                text-align: center;
-            }
-
-            /* Status badges */
-            .nexus-conversation-selection-dialog .status-badge {
-                display: inline-block;
-                padding: 4px 10px;
-                border-radius: 12px;
-                font-size: 0.85em;
-                font-weight: 500;
-                text-align: center;
-            }
-
-            .nexus-conversation-selection-dialog .status-new {
-                background-color: var(--interactive-accent);
-                color: var(--text-on-accent);
-            }
-
-            .nexus-conversation-selection-dialog .status-updated {
-                background-color: var(--text-warning);
-                color: var(--text-on-accent);
-            }
-
-            .nexus-conversation-selection-dialog .status-unchanged {
-                background-color: var(--background-modifier-border);
-                color: var(--text-muted);
-            }
-
-            /* Select dropdowns */
-            .nexus-conversation-selection-dialog select {
-                font-size: 14px;
-                line-height: 1.4;
-                height: auto;
-                min-height: 36px;
-                background-color: var(--background-primary);
-                color: var(--text-normal);
-                font-family: var(--font-interface);
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                padding: 8px 12px;
-                cursor: pointer;
-            }
-
-            .nexus-conversation-selection-dialog select option {
-                padding: 4px 8px;
-                line-height: 1.4;
-            }
-
-            /* Custom select dropdowns with theme-aware arrows */
-            .nexus-conversation-selection-dialog .nexus-custom-select {
-                appearance: none;
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                padding-right: 32px;
-                background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
-                                  linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
-                background-position: calc(100% - 14px) calc(50% - 2px),
-                                     calc(100% - 10px) calc(50% - 2px);
-                background-size: 4px 4px,
-                                 4px 4px;
-                background-repeat: no-repeat;
-            }
-
-            /* Buttons */
-            .nexus-conversation-selection-dialog button {
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-
-            .nexus-conversation-selection-dialog button:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-
-            /* Summary section */
-            .nexus-conversation-selection-dialog .summary-section {
-                background-color: var(--background-secondary);
-                padding: 12px 16px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-            }
-
-            /* Scrollbar styling for table container */
-            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar {
-                width: 10px;
-                height: 10px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-track {
-                background: var(--background-secondary);
-                border-radius: 5px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-thumb {
-                background: var(--background-modifier-border);
-                border-radius: 5px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-table-container::-webkit-scrollbar-thumb:hover {
-                background: var(--text-muted);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-pagination-section {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 20px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-page-info {
-                font-size: 0.9em;
-                color: var(--text-muted);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-page-controls {
-                display: flex;
-                gap: 8px;
-                align-items: center;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-conversation-card {
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 10px;
-                padding: 12px;
-                background: var(--background-primary);
-            }
-
-            .nexus-conversation-selection-dialog .nexus-conversation-card-header {
-                display: grid;
-                grid-template-columns: auto minmax(0, 1fr) auto;
-                gap: 10px;
-                align-items: start;
-                margin-bottom: 10px;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-conversation-card-title-wrap {
-                min-width: 0;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-conversation-card-title {
-                font-weight: 600;
-                word-break: break-word;
-                line-height: 1.4;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-conversation-card-source {
-                font-size: 0.82em;
-                color: var(--text-muted);
-                margin-top: 4px;
-                word-break: break-word;
-            }
-
-            .nexus-conversation-selection-dialog .nexus-conversation-card-meta {
-                display: grid;
-                gap: 4px;
-                font-size: 0.9em;
-                color: var(--text-muted);
-            }
-
-            @media (max-width: 700px) {
-                .modal.nexus-conversation-selection-dialog .modal-content {
-                    padding: 14px 14px 18px 14px;
-                }
-
-                .nexus-conversation-selection-dialog .nexus-summary-grid {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
-
-                .nexus-conversation-selection-dialog .nexus-controls-row {
-                    flex-wrap: wrap;
-                    align-items: stretch;
-                }
-
-                .nexus-conversation-selection-dialog .nexus-conversation-search {
-                    flex: 1 1 100%;
-                    order: -1;
-                }
-
-                .nexus-conversation-selection-dialog .nexus-existing-only-control {
-                    flex: 1 1 100%;
-                }
-
-                .nexus-conversation-selection-dialog .nexus-pagination-section {
-                    flex-direction: column;
-                    align-items: stretch;
-                }
-
-                .nexus-conversation-selection-dialog .nexus-page-controls {
-                    justify-content: space-between;
-                }
-            }
-
-            @media (max-width: 600px) {
-                .nexus-conversation-selection-dialog .nexus-table-container {
-                    display: none;
-                }
-
-                .nexus-conversation-selection-dialog .nexus-mobile-conversation-list {
-                    display: grid;
-                }
-
-                .nexus-conversation-selection-dialog .nexus-summary-grid {
-                    grid-template-columns: 1fr 1fr;
-                }
-            }
-        `;
-    document.head.appendChild(style);
   }
   onClose() {
     const { contentEl } = this;
@@ -24150,7 +25325,7 @@ var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
             margin-bottom: 24px;
         `;
     const welcomeIcon = welcomeSection.createDiv();
-    welcomeIcon.innerHTML = t("welcome.icon");
+    welcomeIcon.setText(t("welcome.icon"));
     welcomeIcon.style.cssText = `
             font-size: 48px;
             margin-bottom: 12px;
@@ -24255,17 +25430,13 @@ var InstallationWelcomeDialog = class extends import_obsidian28.Modal {
             background: var(--background-secondary);
         `;
     card.addEventListener("mouseenter", () => {
-      card.style.borderColor = "var(--interactive-accent)";
-      card.style.transform = "translateY(-2px)";
-      card.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+      card.addClass("nexus-card-hover");
     });
     card.addEventListener("mouseleave", () => {
-      card.style.borderColor = "var(--background-modifier-border)";
-      card.style.transform = "translateY(0)";
-      card.style.boxShadow = "none";
+      card.removeClass("nexus-card-hover");
     });
     const icon = card.createDiv();
-    icon.innerHTML = resource.icon;
+    icon.setText(resource.icon);
     icon.style.cssText = `
             font-size: 32px;
             margin-bottom: 8px;
@@ -24312,48 +25483,57 @@ var NewVersionModal = class extends import_obsidian29.Modal {
   onOpen() {
     const { titleEl, modalEl } = this;
     modalEl.classList.add("nexus-new-version-modal");
-    titleEl.setText(t("upgrade.new_version_modal.title", { version: this.version }));
-    this.createForm();
+    titleEl.setText(
+      t("upgrade.new_version_modal.title", { version: this.version })
+    );
+    void this.createForm();
   }
   onClose() {
     this.contentEl.empty();
   }
   async createForm() {
+    const renderComponent = new import_obsidian29.Component();
+    renderComponent.load();
     createSupportBox(this.contentEl);
     let message = this.fallbackMessage;
     try {
-      const response = await fetch(`${GITHUB.RAW_BASE}/${this.version}/README.md`);
-      if (response.ok) {
-        const readmeText = await response.text();
-        const overview = this.extractOverviewFromReadme(readmeText);
+      const response = await (0, import_obsidian29.requestUrl)({
+        url: `${GITHUB.RAW_BASE}/${this.version}/README.md`,
+        method: "GET"
+      });
+      if (response.status >= 200 && response.status < 300) {
+        const overview = this.extractOverviewFromReadme(response.text);
         if (overview) {
           message = overview;
         }
       }
-    } catch (error) {
+    } catch (e) {
     }
-    const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-content" });
+    const contentDiv = this.contentEl.createDiv({
+      cls: "nexus-upgrade-content"
+    });
     await import_obsidian29.MarkdownRenderer.render(
       this.app,
       message,
       contentDiv,
       "",
-      this.plugin
+      renderComponent
     );
     this.addCloseButton();
-    this.addStyles();
   }
   /**
    * Extract the "## Overview" section from README content.
    * Returns only the body under the heading (excluding the heading line itself).
    */
   extractOverviewFromReadme(readmeText) {
-    const overviewRegex = /## Overview\s+([\s\S]*?)(?=^##\s|\Z)/m;
+    const overviewRegex = /## Overview\s+([\s\S]*?)(?=^##\s|$)/m;
     const match = readmeText.match(overviewRegex);
     return match ? match[1].trim() : null;
   }
   addCloseButton() {
-    const buttonContainer = this.contentEl.createDiv({ cls: "nexus-close-button-container nexus-dialog-actions" });
+    const buttonContainer = this.contentEl.createDiv({
+      cls: "nexus-close-button-container nexus-dialog-actions"
+    });
     const closeButton = buttonContainer.createEl("button", {
       text: t("upgrade.new_version_modal.buttons.got_it"),
       cls: "mod-cta nexus-close-button"
@@ -24361,52 +25541,6 @@ var NewVersionModal = class extends import_obsidian29.Modal {
     closeButton.onclick = () => {
       this.close();
     };
-  }
-  addStyles() {
-    const styleEl = document.createElement("style");
-    styleEl.textContent = `
-            .modal.nexus-new-version-modal {
-                max-width: min(1050px, 92vw) !important;
-                width: min(1050px, 92vw) !important;
-            }
-
-            .nexus-upgrade-content {
-                margin-bottom: 20px;
-                line-height: 1.6;
-                overflow-wrap: anywhere;
-            }
-
-            /* Close Button Styles */
-            .nexus-close-button-container {
-                margin: 32px 0;
-            }
-
-            .nexus-close-button {
-                padding: 16px 48px !important;
-                font-size: 1.2em !important;
-                font-weight: 700 !important;
-                border-radius: 8px !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-                transition: all 0.2s ease !important;
-            }
-
-            .nexus-close-button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
-            }
-
-            @media (max-width: 700px) {
-                .modal.nexus-new-version-modal .modal-content {
-                    padding: 16px !important;
-                }
-
-                .nexus-close-button {
-                    width: 100%;
-                    padding: 14px 20px !important;
-                }
-            }
-        `;
-    document.head.appendChild(styleEl);
   }
 };
 __name(NewVersionModal, "NewVersionModal");
@@ -24450,9 +25584,6 @@ If something doesn't work as expected, please report it on the [forum thread](${
 };
 __name(UpgradeNotice132Dialog, "UpgradeNotice132Dialog");
 
-// src/main.ts
-init_dialogs();
-
 // src/services/conversation-metadata-extractor.ts
 var import_obsidian30 = require("obsidian");
 init_utils();
@@ -24467,42 +25598,44 @@ var ConversationMetadataExtractor = class {
   async extractMetadataFromZip(zip, forcedProvider, sourceFileName, sourceFileIndex, existingConversations) {
     const startedAt = Date.now();
     const entries = await zip.listEntries();
-    const classification = classifyArchiveEntries(entries.map((entry) => entry.path), forcedProvider);
+    const classification = classifyArchiveEntries(
+      entries.map((entry) => entry.path),
+      forcedProvider
+    );
     if (!classification.supported) {
-      this.metadataLogger.debug(`Archive skipped during single-file metadata extraction`, {
-        sourceFileName,
-        reason: classification.reason,
-        message: classification.message,
-        durationMs: Date.now() - startedAt
-      });
+      this.metadataLogger.debug(
+        `Archive skipped during single-file metadata extraction`,
+        {
+          sourceFileName,
+          reason: classification.reason,
+          message: classification.message,
+          durationMs: Date.now() - startedAt
+        }
+      );
       return [];
     }
     const provider = forcedProvider || classification.provider;
     let metadata = [];
-    if (provider === "gemini") {
-      const rawConversations = await extractRawConversations(zip);
-      if (rawConversations.conversations.length > 0) {
-        metadata = this.extractMetadataByProvider(rawConversations.conversations, provider);
-      }
-    } else {
-      for await (const rawConversation of extractConversationsStream(zip, {
-        mobileRuntime: import_obsidian30.Platform.isMobile,
-        enforceChunkedForLargeJsonOnMobile: import_obsidian30.Platform.isMobile,
-        largeJsonThresholdBytes: 32 * 1024 * 1024,
-        streamYieldEvery: 25
-      })) {
-        const singleConversationMetadata = this.extractSingleMetadataByProvider(rawConversation, provider);
-        if (singleConversationMetadata) {
-          metadata.push(singleConversationMetadata);
-        }
+    for await (const rawConversation of extractConversationsStream(zip, {
+      mobileRuntime: import_obsidian30.Platform.isMobile,
+      enforceChunkedForLargeJsonOnMobile: import_obsidian30.Platform.isMobile,
+      largeJsonThresholdBytes: 32 * 1024 * 1024,
+      streamYieldEvery: 25
+    })) {
+      const singleConversationMetadata = this.extractSingleMetadataByProvider(rawConversation, provider);
+      if (singleConversationMetadata) {
+        metadata.push(singleConversationMetadata);
       }
     }
     if (metadata.length === 0) {
-      this.metadataLogger.warn(`Archive produced no conversations during metadata extraction`, {
-        sourceFileName,
-        provider,
-        durationMs: Date.now() - startedAt
-      });
+      this.metadataLogger.warn(
+        `Archive produced no conversations during metadata extraction`,
+        {
+          sourceFileName,
+          provider,
+          durationMs: Date.now() - startedAt
+        }
+      );
       return [];
     }
     const enhancedMetadata = metadata.map((conv) => {
@@ -24522,7 +25655,10 @@ var ConversationMetadataExtractor = class {
         return enhanced;
       }
       enhanced.existingUpdateTime = existing.updateTime;
-      const comparison = compareTimestampsIgnoringSeconds(conv.updateTime, existing.updateTime);
+      const comparison = compareTimestampsIgnoringSeconds(
+        conv.updateTime,
+        existing.updateTime
+      );
       if (comparison > 0) {
         enhanced.existenceStatus = "updated";
         enhanced.hasNewerContent = true;
@@ -24560,11 +25696,16 @@ var ConversationMetadataExtractor = class {
       const file = files[i];
       const fileStartedAt = Date.now();
       try {
-        this.metadataLogger.debug(`Analyze archive [${i + 1}/${files.length}]`, {
-          fileName: file.name,
-          fileSize: file.size
+        this.metadataLogger.debug(
+          `Analyze archive [${i + 1}/${files.length}]`,
+          {
+            fileName: file.name,
+            fileSize: file.size
+          }
+        );
+        const archiveModeDecision = decideArchiveMode({
+          zipSizeBytes: file.size
         });
-        const archiveModeDecision = decideArchiveMode({ zipSizeBytes: file.size });
         if (archiveModeDecision.mode === "large-archive") {
           this.metadataLogger.debug(`Large archive detected`, {
             fileName: file.name,
@@ -24574,7 +25715,10 @@ var ConversationMetadataExtractor = class {
         }
         const zip = await createZipArchiveReader(file, entryFilter);
         const entries = await zip.listEntries();
-        const classification = classifyArchiveEntries(entries.map((entry) => entry.path), forcedProvider);
+        const classification = classifyArchiveEntries(
+          entries.map((entry) => entry.path),
+          forcedProvider
+        );
         this.metadataLogger.debug(`Archive classified`, {
           fileName: file.name,
           entryCount: entries.length,
@@ -24606,12 +25750,15 @@ var ConversationMetadataExtractor = class {
         );
         supportedFiles.push(file);
         allConversationsFound.push(...metadata);
-        this.metadataLogger.debug(`Archive metadata extraction complete`, {
-          fileName: file.name,
-          provider: classification.provider,
-          conversationCount: metadata.length,
-          durationMs: Date.now() - fileStartedAt
-        });
+        this.metadataLogger.debug(
+          `Archive metadata extraction complete`,
+          {
+            fileName: file.name,
+            provider: classification.provider,
+            conversationCount: metadata.length,
+            durationMs: Date.now() - fileStartedAt
+          }
+        );
         let duplicatesInFile = 0;
         let uniqueFromFile = 0;
         for (const conversation of metadata) {
@@ -24637,7 +25784,9 @@ var ConversationMetadataExtractor = class {
             }
           }
           if (shouldReplace) {
-            const oldFileName = conversationToFileMap.get(conversation.id);
+            const oldFileName = conversationToFileMap.get(
+              conversation.id
+            );
             const oldFileStats = fileStatsMap.get(oldFileName);
             if (oldFileStats) {
               oldFileStats.uniqueContributed--;
@@ -24662,7 +25811,11 @@ var ConversationMetadataExtractor = class {
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        const ignoredArchive = this.classifyReadFailure(file.name, message, forcedProvider);
+        const ignoredArchive = this.classifyReadFailure(
+          file.name,
+          message,
+          forcedProvider
+        );
         ignoredArchives.push(ignoredArchive);
         const logDetails = {
           fileName: file.name,
@@ -24673,9 +25826,15 @@ var ConversationMetadataExtractor = class {
           userMessage: ignoredArchive.message
         };
         if (ignoredArchive.reason === "read-error") {
-          this.metadataLogger.error(`Archive analysis failed and was ignored`, logDetails);
+          this.metadataLogger.error(
+            `Archive analysis failed and was ignored`,
+            logDetails
+          );
         } else {
-          this.metadataLogger.warn(`Archive analysis failed and was ignored`, logDetails);
+          this.metadataLogger.warn(
+            `Archive analysis failed and was ignored`,
+            logDetails
+          );
         }
       }
     }
@@ -24757,16 +25916,16 @@ var ConversationMetadataExtractor = class {
     if (forcedProvider === "lechat") {
       return getArchiveProviderMismatchMessage("lechat");
     }
-    if (forcedProvider === "gemini") {
-      return getArchiveProviderMismatchMessage("gemini");
-    }
     if (forcedProvider === "perplexity") {
       return getArchiveProviderMismatchMessage("perplexity");
     }
     return getArchiveUnsupportedFormatMessage();
   }
   extractSingleMetadataByProvider(rawConversation, provider) {
-    const metadata = this.extractMetadataByProvider([rawConversation], provider);
+    const metadata = this.extractMetadataByProvider(
+      [rawConversation],
+      provider
+    );
     return metadata.length > 0 ? metadata[0] : null;
   }
   extractMetadataByProvider(rawConversations, provider) {
@@ -24777,8 +25936,6 @@ var ConversationMetadataExtractor = class {
         return this.extractClaudeMetadata(rawConversations);
       case "lechat":
         return this.extractLeChatMetadata(rawConversations);
-      case "gemini":
-        return this.extractGeminiMetadata(rawConversations);
       case "perplexity":
         return this.extractPerplexityMetadata(rawConversations);
       default:
@@ -24788,11 +25945,17 @@ var ConversationMetadataExtractor = class {
   extractChatGPTMetadata(conversations) {
     return conversations.filter((chat) => {
       if (!chat.id || chat.id.trim() === "") {
-        this.plugin.logger.warn("Skipping ChatGPT conversation with missing ID", chat.title || "Untitled");
+        this.plugin.logger.warn(
+          "Skipping ChatGPT conversation with missing ID",
+          chat.title || "Untitled"
+        );
         return false;
       }
       if (!chat.create_time || !chat.update_time) {
-        this.plugin.logger.warn("Skipping ChatGPT conversation with missing timestamps", chat.id);
+        this.plugin.logger.warn(
+          "Skipping ChatGPT conversation with missing timestamps",
+          chat.id
+        );
         return false;
       }
       return true;
@@ -24810,19 +25973,29 @@ var ConversationMetadataExtractor = class {
   extractClaudeMetadata(conversations) {
     return conversations.filter((chat) => {
       if (!chat.uuid || chat.uuid.trim() === "") {
-        this.plugin.logger.warn("Skipping Claude conversation with missing UUID", chat.name || "Untitled");
+        this.plugin.logger.warn(
+          "Skipping Claude conversation with missing UUID",
+          chat.name || "Untitled"
+        );
         return false;
       }
       if (!chat.created_at || !chat.updated_at) {
-        this.plugin.logger.warn("Skipping Claude conversation with missing timestamps", chat.uuid);
+        this.plugin.logger.warn(
+          "Skipping Claude conversation with missing timestamps",
+          chat.uuid
+        );
         return false;
       }
       return true;
     }).map((chat) => ({
       id: chat.uuid,
       title: chat.name || "Untitled",
-      createTime: Math.floor(new Date(chat.created_at).getTime() / 1e3),
-      updateTime: Math.floor(new Date(chat.updated_at).getTime() / 1e3),
+      createTime: Math.floor(
+        new Date(chat.created_at).getTime() / 1e3
+      ),
+      updateTime: Math.floor(
+        new Date(chat.updated_at).getTime() / 1e3
+      ),
       messageCount: this.countClaudeMessages(chat),
       provider: "claude",
       isStarred: chat.is_starred || false,
@@ -24832,12 +26005,16 @@ var ConversationMetadataExtractor = class {
   extractLeChatMetadata(conversations) {
     return conversations.filter((chat) => {
       if (!Array.isArray(chat) || chat.length === 0) {
-        this.plugin.logger.warn("Skipping invalid Le Chat conversation: not an array or empty");
+        this.plugin.logger.warn(
+          "Skipping invalid Le Chat conversation: not an array or empty"
+        );
         return false;
       }
       const firstMessage = chat[0];
       if (!firstMessage.chatId || !firstMessage.createdAt) {
-        this.plugin.logger.warn("Skipping Le Chat conversation with missing chatId or createdAt");
+        this.plugin.logger.warn(
+          "Skipping Le Chat conversation with missing chatId or createdAt"
+        );
         return false;
       }
       return true;
@@ -24848,8 +26025,12 @@ var ConversationMetadataExtractor = class {
         return timeA - timeB;
       });
       const chatId = sortedChat[0].chatId;
-      const title = deriveLeChatConversationTitle(sortedChat, { assumeSorted: true });
-      const timestamps = sortedChat.map((msg) => new Date(msg.createdAt).getTime() / 1e3);
+      const title = deriveLeChatConversationTitle(sortedChat, {
+        assumeSorted: true
+      });
+      const timestamps = sortedChat.map(
+        (msg) => new Date(msg.createdAt).getTime() / 1e3
+      );
       return {
         id: chatId,
         title,
@@ -24862,63 +26043,50 @@ var ConversationMetadataExtractor = class {
       };
     }).filter((metadata) => metadata.messageCount > 0);
   }
-  extractGeminiMetadata(entries) {
-    return entries.filter((entry) => {
-      if (!entry.time || !entry.title) {
-        this.plugin.logger.warn("Skipping Gemini entry with missing time or title");
-        return false;
-      }
-      const hasHtmlContent = entry.safeHtmlItem && entry.safeHtmlItem.length > 0;
-      const hasAttachments = entry.attachedFiles && entry.attachedFiles.length > 0;
-      return hasHtmlContent || hasAttachments;
-    }).map((entry) => {
-      const adapter = this.providerRegistry.getAdapter("gemini");
-      if (!adapter) {
-        throw new Error("Gemini adapter not found in registry");
-      }
-      return {
-        id: adapter.getId(entry),
-        title: adapter.getTitle(entry),
-        createTime: adapter.getCreateTime(entry),
-        updateTime: adapter.getUpdateTime(entry),
-        messageCount: 2,
-        provider: "gemini",
-        isStarred: false,
-        isArchived: false
-      };
-    });
-  }
   extractPerplexityMetadata(conversations) {
     return conversations.filter((chat) => {
       var _a;
       const normalized = normalizePerplexityConversationFile(chat);
       if (!normalized) {
-        this.plugin.logger.warn("Skipping invalid Perplexity conversation: not an object");
+        this.plugin.logger.warn(
+          "Skipping invalid Perplexity conversation: not an object"
+        );
         return false;
       }
       if (!((_a = normalized.metadata) == null ? void 0 : _a.thread_id) || !Array.isArray(normalized.conversations)) {
-        this.plugin.logger.warn("Skipping Perplexity conversation with missing normalized metadata.thread_id or conversations[]");
+        this.plugin.logger.warn(
+          "Skipping Perplexity conversation with missing normalized metadata.thread_id or conversations[]"
+        );
         return false;
       }
       return normalized.conversations.length > 0;
     }).map((chat) => {
       var _a, _b;
       const normalized = normalizePerplexityConversationFile(chat);
-      const turns = [...normalized.conversations].sort((a, b) => {
-        const timeA = new Date(a.timestamp || 0).getTime();
-        const timeB = new Date(b.timestamp || 0).getTime();
-        return timeA - timeB;
-      });
+      const turns = [...normalized.conversations].sort(
+        (a, b) => {
+          const timeA = new Date(a.timestamp || 0).getTime();
+          const timeB = new Date(b.timestamp || 0).getTime();
+          return timeA - timeB;
+        }
+      );
       const timestamps = turns.map((turn) => new Date(turn.timestamp || 0).getTime()).filter((ts) => Number.isFinite(ts) && ts > 0);
-      const metaCreateMs = new Date(((_a = normalized.metadata) == null ? void 0 : _a.thread_created_at) || "").getTime();
-      const metaUpdateMs = new Date(((_b = normalized.metadata) == null ? void 0 : _b.thread_updated_at) || "").getTime();
+      const metaCreateMs = new Date(
+        ((_a = normalized.metadata) == null ? void 0 : _a.thread_created_at) || ""
+      ).getTime();
+      const metaUpdateMs = new Date(
+        ((_b = normalized.metadata) == null ? void 0 : _b.thread_updated_at) || ""
+      ).getTime();
       const createTime = Number.isFinite(metaCreateMs) && metaCreateMs > 0 ? Math.floor(metaCreateMs / 1e3) : timestamps.length > 0 ? Math.floor(Math.min(...timestamps) / 1e3) : 0;
       const updateTime = Number.isFinite(metaUpdateMs) && metaUpdateMs > 0 ? Math.floor(metaUpdateMs / 1e3) : timestamps.length > 0 ? Math.floor(Math.max(...timestamps) / 1e3) : 0;
-      const messageCount = turns.reduce((count, turn) => {
-        const query = typeof turn.query === "string" ? turn.query.trim() : "";
-        const answer = typeof turn.answer === "string" ? turn.answer.trim() : "";
-        return count + (query ? 1 : 0) + (answer ? 1 : 0);
-      }, 0);
+      const messageCount = turns.reduce(
+        (count, turn) => {
+          const query = typeof turn.query === "string" ? turn.query.trim() : "";
+          const answer = typeof turn.answer === "string" ? turn.answer.trim() : "";
+          return count + (query ? 1 : 0) + (answer ? 1 : 0);
+        },
+        0
+      );
       return {
         id: normalized.metadata.thread_id || "",
         title: (normalized.metadata.thread_title || "Untitled").trim() || "Untitled",
@@ -24989,7 +26157,9 @@ var ConversationMetadataExtractor = class {
         newCount++;
         continue;
       }
-      const vaultConversation = existingConversations.get(conversation.id);
+      const vaultConversation = existingConversations.get(
+        conversation.id
+      );
       if (!vaultConversation) {
         conversation.existenceStatus = "new";
         conversation.hasNewerContent = true;
@@ -24998,9 +26168,14 @@ var ConversationMetadataExtractor = class {
         continue;
       }
       conversation.existingUpdateTime = vaultConversation.updateTime;
-      const { moment: moment3 } = require("obsidian");
-      const zipUpdateTimeISO = new Date(conversation.updateTime * 1e3).toISOString();
-      const normalizedZipUpdateTime = moment3(zipUpdateTimeISO, moment3.ISO_8601, true).unix();
+      const zipUpdateTimeISO = new Date(
+        conversation.updateTime * 1e3
+      ).toISOString();
+      const normalizedZipUpdateTime = (0, import_obsidian30.moment)(
+        zipUpdateTimeISO,
+        import_obsidian30.moment.ISO_8601,
+        true
+      ).unix();
       const comparison = compareTimestampsIgnoringSeconds(
         normalizedZipUpdateTime,
         vaultConversation.updateTime
@@ -25046,11 +26221,8 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     contentEl.addClass("nexus-import-completion-dialog");
     titleEl.setText(t("import_completion.title"));
     const successMsg = contentEl.createDiv("success-message");
-    successMsg.style.textAlign = "center";
-    successMsg.style.marginBottom = "20px";
-    successMsg.style.fontSize = "1.1em";
-    successMsg.style.color = "var(--color-green)";
-    successMsg.innerHTML = t("import_completion.success_message");
+    successMsg.addClass("nexus-success-message");
+    successMsg.setText(t("import_completion.success_message"));
     this.createStatsSection(contentEl);
     if (this.stats.attachmentsTotal > 0) {
       this.createAttachmentsSection(contentEl);
@@ -25058,18 +26230,59 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     this.createReportSection(contentEl);
     createSupportBox(contentEl);
     this.createActionButtons(contentEl);
-    this.addCustomStyles();
   }
   createStatsSection(container) {
-    const section = container.createDiv("stats-section nexus-stats-grid nexus-dialog-section");
-    this.createStatCartouche(section, "\u{1F4C1}", this.stats.totalFiles.toString(), t("import_completion.stats.zip_files_processed"));
-    this.createStatCartouche(section, "\u{1F4AC}", this.stats.totalConversations.toString(), t("import_completion.stats.unique_conversations"));
-    this.createStatCartouche(section, "\u{1F501}", this.stats.duplicates.toString(), t("import_completion.stats.duplicates"), "var(--text-muted)");
-    this.createStatCartouche(section, "\u2728", this.stats.created.toString(), t("import_completion.stats.new"), "var(--color-green)");
-    this.createStatCartouche(section, "\u{1F504}", this.stats.updated.toString(), t("import_completion.stats.updated"), "var(--color-orange)");
-    this.createStatCartouche(section, "\u23ED\uFE0F", this.stats.skipped.toString(), t("import_completion.stats.skipped"), "var(--text-muted)");
+    const section = container.createDiv(
+      "stats-section nexus-stats-grid nexus-dialog-section"
+    );
+    this.createStatCartouche(
+      section,
+      "\u{1F4C1}",
+      this.stats.totalFiles.toString(),
+      t("import_completion.stats.zip_files_processed")
+    );
+    this.createStatCartouche(
+      section,
+      "\u{1F4AC}",
+      this.stats.totalConversations.toString(),
+      t("import_completion.stats.unique_conversations")
+    );
+    this.createStatCartouche(
+      section,
+      "\u{1F501}",
+      this.stats.duplicates.toString(),
+      t("import_completion.stats.duplicates"),
+      "var(--text-muted)"
+    );
+    this.createStatCartouche(
+      section,
+      "\u2728",
+      this.stats.created.toString(),
+      t("import_completion.stats.new"),
+      "var(--color-green)"
+    );
+    this.createStatCartouche(
+      section,
+      "\u{1F504}",
+      this.stats.updated.toString(),
+      t("import_completion.stats.updated"),
+      "var(--color-orange)"
+    );
+    this.createStatCartouche(
+      section,
+      "\u23ED\uFE0F",
+      this.stats.skipped.toString(),
+      t("import_completion.stats.skipped"),
+      "var(--text-muted)"
+    );
     if (this.stats.failed > 0) {
-      this.createStatCartouche(section, "\u274C", this.stats.failed.toString(), t("import_completion.stats.failed"), "var(--color-red)");
+      this.createStatCartouche(
+        section,
+        "\u274C",
+        this.stats.failed.toString(),
+        t("import_completion.stats.failed"),
+        "var(--color-red)"
+      );
     }
   }
   createStatCartouche(container, icon, value, label, color) {
@@ -25084,173 +26297,88 @@ var ImportCompletionDialog = class extends import_obsidian31.Modal {
     labelEl.textContent = label;
   }
   createAttachmentsSection(container) {
-    const section = container.createDiv("attachments-section nexus-dialog-section nexus-completion-panel nexus-completion-panel-center");
-    const percentage = Math.round(this.stats.attachmentsFound / this.stats.attachmentsTotal * 100);
+    const section = container.createDiv(
+      "attachments-section nexus-dialog-section nexus-completion-panel nexus-completion-panel-center"
+    );
+    const percentage = Math.round(
+      this.stats.attachmentsFound / this.stats.attachmentsTotal * 100
+    );
     const icon = percentage === 100 ? "\u2705" : percentage > 50 ? "\u26A0\uFE0F" : "\u274C";
     const color = percentage === 100 ? "var(--color-green)" : percentage > 50 ? "var(--color-orange)" : "var(--color-red)";
     const attachmentText = section.createDiv();
-    attachmentText.innerHTML = `${icon} <strong>${t("import_completion.attachments.label")}</strong> ${t("import_completion.attachments.summary", { found: String(this.stats.attachmentsFound), total: String(this.stats.attachmentsTotal), percentage: String(percentage) })}`;
+    attachmentText.appendText(`${icon} `);
+    attachmentText.createEl("strong", {
+      text: t("import_completion.attachments.label")
+    });
+    attachmentText.appendText(
+      ` ${t("import_completion.attachments.summary", {
+        found: String(this.stats.attachmentsFound),
+        total: String(this.stats.attachmentsTotal),
+        percentage: String(percentage)
+      })}`
+    );
     attachmentText.style.color = color;
     if (this.stats.attachmentsMissing > 0 || this.stats.attachmentsFailed > 0) {
       const details = section.createDiv();
       details.addClass("nexus-completion-panel-detail");
-      details.textContent = t("import_completion.attachments.missing_failed", { missing: String(this.stats.attachmentsMissing), failed: String(this.stats.attachmentsFailed) });
+      details.textContent = t(
+        "import_completion.attachments.missing_failed",
+        {
+          missing: String(this.stats.attachmentsMissing),
+          failed: String(this.stats.attachmentsFailed)
+        }
+      );
     }
   }
   createReportSection(container) {
-    const section = container.createDiv("report-section nexus-dialog-section nexus-completion-panel");
-    const label = section.createDiv({ cls: "nexus-completion-panel-label" });
+    const section = container.createDiv(
+      "report-section nexus-dialog-section nexus-completion-panel"
+    );
+    const label = section.createDiv({
+      cls: "nexus-completion-panel-label"
+    });
     label.textContent = t("import_completion.report.label");
     const link = section.createEl("a", { cls: "nexus-completion-link" });
     link.textContent = this.reportFilePath;
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      this.openReport();
+      void this.openReport();
     });
     link.addEventListener("mouseenter", () => {
-      link.style.textDecoration = "underline";
+      link.addClass("nexus-link-hover");
     });
     link.addEventListener("mouseleave", () => {
-      link.style.textDecoration = "none";
+      link.removeClass("nexus-link-hover");
     });
   }
   createActionButtons(container) {
-    const buttonContainer = container.createDiv("action-buttons nexus-dialog-actions");
-    const viewReportBtn = buttonContainer.createEl("button", { text: t("import_completion.buttons.view_report") });
+    const buttonContainer = container.createDiv(
+      "action-buttons nexus-dialog-actions"
+    );
+    const viewReportBtn = buttonContainer.createEl("button", {
+      text: t("import_completion.buttons.view_report")
+    });
     viewReportBtn.addEventListener("click", () => {
-      this.openReport();
+      void this.openReport();
       this.close();
     });
-    const okBtn = buttonContainer.createEl("button", { text: t("import_completion.buttons.ok") });
+    const okBtn = buttonContainer.createEl("button", {
+      text: t("import_completion.buttons.ok")
+    });
     okBtn.classList.add("mod-cta");
     okBtn.addEventListener("click", () => this.close());
   }
   async openReport() {
     try {
-      const file = this.app.vault.getAbstractFileByPath(this.reportFilePath);
-      if (file) {
+      const file = this.app.vault.getAbstractFileByPath(
+        this.reportFilePath
+      );
+      if (file instanceof import_obsidian31.TFile) {
         await this.app.workspace.getLeaf(false).openFile(file);
       }
     } catch (error) {
       logger5.error("Failed to open report:", error);
     }
-  }
-  addCustomStyles() {
-    const style = document.createElement("style");
-    style.textContent = `
-            /* Modal sizing */
-            .modal.nexus-import-completion-dialog {
-                max-width: min(700px, 90vw) !important;
-                width: min(700px, 90vw) !important;
-            }
-
-            /* Modal title spacing */
-            .modal.nexus-import-completion-dialog .modal-title {
-                padding: 16px 24px !important;
-                margin: 0 !important;
-            }
-
-            .modal.nexus-import-completion-dialog .modal-content {
-                padding: 20px 24px 24px 24px;
-            }
-
-            .nexus-import-completion-dialog .nexus-stats-grid {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 12px;
-            }
-
-            .nexus-import-completion-dialog .nexus-stat-card {
-                text-align: center;
-                padding: 12px;
-                background-color: var(--background-primary);
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-
-            .nexus-import-completion-dialog .nexus-stat-card-icon {
-                font-size: 1.5em;
-                margin-bottom: 4px;
-            }
-
-            .nexus-import-completion-dialog .nexus-stat-card-value {
-                font-weight: 600;
-                font-size: 1.4em;
-                margin-bottom: 4px;
-            }
-
-            .nexus-import-completion-dialog .nexus-stat-card-label {
-                font-size: 0.85em;
-                color: var(--text-muted);
-            }
-
-            .nexus-import-completion-dialog .nexus-completion-panel {
-                padding: 12px;
-                background-color: var(--background-secondary);
-                border-radius: 6px;
-            }
-
-            .nexus-import-completion-dialog .nexus-completion-panel-center {
-                text-align: center;
-            }
-
-            .nexus-import-completion-dialog .nexus-completion-panel-label {
-                font-size: 0.9em;
-                color: var(--text-muted);
-                margin-bottom: 6px;
-            }
-
-            .nexus-import-completion-dialog .nexus-completion-panel-detail {
-                font-size: 0.85em;
-                color: var(--text-muted);
-                margin-top: 4px;
-            }
-
-            .nexus-import-completion-dialog .nexus-completion-link {
-                color: var(--text-accent);
-                text-decoration: none;
-                cursor: pointer;
-                word-break: break-word;
-            }
-
-            /* Stat cartouches hover effect */
-            .nexus-import-completion-dialog .stat-cartouche {
-                transition: transform 0.2s, box-shadow 0.2s;
-            }
-
-            .nexus-import-completion-dialog .stat-cartouche:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            }
-
-            /* Button hover effects */
-            .nexus-import-completion-dialog button {
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-
-            .nexus-import-completion-dialog button:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-
-            @media (max-width: 700px) {
-                .modal.nexus-import-completion-dialog .modal-content {
-                    padding: 14px 14px 18px 14px;
-                }
-
-                .nexus-import-completion-dialog .nexus-stats-grid {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
-            }
-
-            @media (max-width: 480px) {
-                .nexus-import-completion-dialog .nexus-stats-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-        `;
-    document.head.appendChild(style);
   }
   onClose() {
     const { contentEl } = this;
@@ -25265,7 +26393,6 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
   constructor(app, manifest) {
     super(app, manifest);
     this.logger = new Logger();
-    this.currentGeminiIndex = null;
     this.lastImportCheckpoint = null;
     this.storageService = new StorageService(this);
     this.importService = new ImportService(this);
@@ -25278,7 +26405,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     try {
       initLocale();
       await this.loadSettings();
-      this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
+      this.addSettingTab(
+        new NexusAiChatImporterPluginSettingTab(this.app, this)
+      );
       this.commandRegistry.registerCommands();
       this.eventHandlers.registerEvents();
       const ribbonIconEl = this.addRibbonIcon(
@@ -25296,7 +26425,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         ).open();
       }
       if ((upgradeResult == null ? void 0 : upgradeResult.showCompletionDialog) && (upgradeResult == null ? void 0 : upgradeResult.upgradedToVersion)) {
-        await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
+        await this.upgradeManager.showUpgradeCompleteDialog(
+          upgradeResult.upgradedToVersion
+        );
       }
       if (this.settings.previousVersion === "1.3.0" && !this.settings.hasSeenClaude132UpgradeNotice) {
         UpgradeNotice132Dialog.open(this.app, this);
@@ -25308,23 +26439,19 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       throw error;
     }
   }
-  async onunload() {
-    try {
-      this.importService.resetRuntimeState();
-      if (this.currentGeminiIndex) {
-        this.currentGeminiIndex = null;
-        this.importService.setGeminiIndex(null);
-      }
-      this.eventHandlers.cleanup();
-      await this.saveSettings();
-    } catch (error) {
-      this.logger.error("Plugin unloading failed:", error);
-    }
+  onunload() {
+    this.importService.resetRuntimeState();
+    this.eventHandlers.cleanup();
+    void this.saveSettings();
   }
   async loadSettings() {
     try {
       const data = await this.loadData();
-      this.settings = Object.assign({}, DEFAULT_SETTINGS, (data == null ? void 0 : data.settings) || {});
+      this.settings = Object.assign(
+        {},
+        DEFAULT_SETTINGS,
+        (data == null ? void 0 : data.settings) || {}
+      );
       const currentVersion = this.manifest.version;
       const storedCurrentVersion = this.settings.currentVersion;
       if (!storedCurrentVersion || storedCurrentVersion === "0.0.0") {
@@ -25360,7 +26487,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         return (frontmatter == null ? void 0 : frontmatter.nexus) === this.manifest.id;
       });
     } catch (error) {
-      this.logger.warn("Error checking for existing conversations:", error);
+      this.logger.warn(
+        "Error checking for existing conversations:",
+        error
+      );
       return false;
     }
   }
@@ -25418,7 +26548,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     var _a;
     const settingsApi = this.app.setting;
     if (!(settingsApi == null ? void 0 : settingsApi.open)) {
-      this.logger.warn("Unable to open settings automatically: app.setting.open is unavailable");
+      this.logger.warn(
+        "Unable to open settings automatically: app.setting.open is unavailable"
+      );
       return;
     }
     settingsApi.open();
@@ -25434,18 +26566,24 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       return;
     }
     const importFlowLogger = this.logger.child("ImportFlow");
-    importFlowLogger.debug("Opening file selection dialog with provider auto-detection", {
-      isMobile: this.isMobileTaskQueueMode()
-    });
+    importFlowLogger.debug(
+      "Opening file selection dialog with provider auto-detection",
+      {
+        isMobile: this.isMobileTaskQueueMode()
+      }
+    );
     try {
       this.showEnhancedFileSelectionDialog("auto");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      importFlowLogger.error("Failed to open enhanced file selection dialog", {
-        selectedProvider: "auto",
-        message,
-        stack: error instanceof Error ? error.stack : void 0
-      });
+      importFlowLogger.error(
+        "Failed to open enhanced file selection dialog",
+        {
+          selectedProvider: "auto",
+          message,
+          stack: error instanceof Error ? error.stack : void 0
+        }
+      );
       new import_obsidian32.Notice(t("notices.import_error", { error: message }));
     }
   }
@@ -25470,8 +26608,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     if (files.length === 0) {
       return;
     }
-    let zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
-    const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
+    let zipFiles = files.filter(
+      (file) => file.name.toLowerCase().endsWith(".zip")
+    );
+    files.filter((file) => file.name.toLowerCase().endsWith(".json"));
     const isMobile = this.isMobileTaskQueueMode();
     if (isMobile && zipFiles.length > 1) {
       this.logger.child("ImportFlow").warn("Mobile ZIP selection limited to one archive", {
@@ -25483,7 +26623,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       zipFiles = [zipFiles[0]];
     }
     const sortedZipFiles = sortFilesForImport(zipFiles);
-    const lockedProvider = await this.resolveProviderLockFromSelection(sortedZipFiles);
+    const lockedProvider = await this.resolveProviderLockFromSelection(
+      sortedZipFiles
+    );
     if (!lockedProvider) {
       new import_obsidian32.Notice(
         t("notices.import_error_analyzing", {
@@ -25493,11 +26635,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       return;
     }
     if (provider !== "auto" && lockedProvider.provider !== provider) {
-      this.logger.child("ImportFlow").warn("Provider selection overridden by first supported archive", {
-        selectedProvider: provider,
-        lockedProvider: lockedProvider.provider,
-        lockSourceFile: lockedProvider.fileName
-      });
+      this.logger.child("ImportFlow").warn(
+        "Provider selection overridden by first supported archive",
+        {
+          selectedProvider: provider,
+          lockedProvider: lockedProvider.provider,
+          lockSourceFile: lockedProvider.fileName
+        }
+      );
     } else if (provider === "auto") {
       this.logger.child("ImportFlow").debug("Provider auto-detected from selected archives", {
         lockedProvider: lockedProvider.provider,
@@ -25505,57 +26650,17 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       });
     }
     const effectiveProvider = lockedProvider.provider;
-    if (effectiveProvider === "gemini") {
-      if (zipFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_zip_gemini"));
-        this.logger.warn("[Gemini] No ZIP files selected for import");
-        return;
-      }
-      let index = null;
-      if (jsonFiles.length > 0) {
-        const latestIndexFile = jsonFiles.reduce((latest, current) => {
-          return current.lastModified > latest.lastModified ? current : latest;
-        });
-        try {
-          const content = await latestIndexFile.text();
-          const parsed = JSON.parse(content);
-          if (parsed && typeof parsed === "object" && Array.isArray(parsed.conversations)) {
-            index = parsed;
-            this.logger.debug(
-              `[Gemini] Loaded index file "${latestIndexFile.name}" with ${parsed.conversations.length} conversations`
-            );
-          } else {
-            this.logger.warn(
-              `[Gemini] JSON index file "${latestIndexFile.name}" does not look like a valid GeminiIndex (missing conversations array)`
-            );
-          }
-        } catch (error) {
-          this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
-          new import_obsidian32.Notice(t("notices.import_gemini_json_failed"));
-        }
-      }
-      this.currentGeminiIndex = index;
-      this.importService.setGeminiIndex(index);
-      if (mode === "all") {
-        await this.handleImportAll(sortedZipFiles, effectiveProvider);
-      } else {
-        await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
-      }
+    if (zipFiles.length === 0) {
+      new import_obsidian32.Notice(t("notices.import_no_zip"));
+      this.logger.warn(
+        `[${effectiveProvider}] No ZIP files selected for import`
+      );
+      return;
+    }
+    if (mode === "all") {
+      await this.handleImportAll(sortedZipFiles, effectiveProvider);
     } else {
-      if (this.currentGeminiIndex) {
-        this.currentGeminiIndex = null;
-        this.importService.setGeminiIndex(null);
-      }
-      if (zipFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_zip"));
-        this.logger.warn(`[${effectiveProvider}] No ZIP files selected for import`);
-        return;
-      }
-      if (mode === "all") {
-        await this.handleImportAll(sortedZipFiles, effectiveProvider);
-      } else {
-        await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
-      }
+      await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
     }
   }
   /**
@@ -25579,9 +26684,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         fileCount: files.length
       });
-      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(files.length) }));
+      new import_obsidian32.Notice(
+        t("notices.import_analyzing", { count: String(files.length) })
+      );
       const providerRegistry = createProviderRegistry(this);
-      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
+      const metadataExtractor = new ConversationMetadataExtractor(
+        providerRegistry,
+        this
+      );
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
       this.setImportCheckpoint({
@@ -25595,7 +26705,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         existingConversations
       );
-      this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "import-all");
+      this.logIgnoredArchives(
+        extractionResult.ignoredArchives,
+        provider,
+        "import-all"
+      );
       this.logger.child("ImportFlow").debug(`Import-all analysis finished`, {
         provider,
         fileCount: files.length,
@@ -25604,12 +26718,16 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_supported_archives", { provider }));
+        new import_obsidian32.Notice(
+          t("notices.import_no_supported_archives", { provider })
+        );
         return;
       }
       const operationReport = new ImportReport();
       if (this.settings.useCustomMessageTimestampFormat) {
-        operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+        operationReport.setCustomTimestampFormat(
+          this.settings.messageTimestampFormat
+        );
       }
       if (extractionResult.conversations.length === 0) {
         new import_obsidian32.Notice(t("notices.import_no_new"));
@@ -25623,14 +26741,23 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           extractionResult.ignoredArchives
         );
         if (reportPath2) {
-          this.showImportCompletionDialog(operationReport, reportPath2);
+          this.showImportCompletionDialog(
+            operationReport,
+            reportPath2
+          );
         }
         return;
       }
       const allIds = extractionResult.conversations.map((c) => c.id);
       const newCount = (_b = (_a = extractionResult.analysisInfo) == null ? void 0 : _a.conversationsNew) != null ? _b : 0;
       const updatedCount = (_d = (_c = extractionResult.analysisInfo) == null ? void 0 : _c.conversationsUpdated) != null ? _d : 0;
-      new import_obsidian32.Notice(t("notices.import_starting", { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
+      new import_obsidian32.Notice(
+        t("notices.import_starting", {
+          count: String(allIds.length),
+          new: String(newCount),
+          updated: String(updatedCount)
+        })
+      );
       const conversationsByFile = /* @__PURE__ */ new Map();
       extractionResult.conversations.forEach((conv) => {
         if (conv.sourceFile) {
@@ -25640,7 +26767,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           conversationsByFile.get(conv.sourceFile).push(conv.id);
         }
       });
-      const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
+      const filesToImport = files.filter(
+        (file) => conversationsByFile.has(file.name)
+      );
       this.setImportCheckpoint({
         operation: "import-all",
         phase: "file-processing-start",
@@ -25667,11 +26796,20 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian32.Notice(
+          t("notices.import_completed_fallback", {
+            created: String(operationReport.getCreatedCount()),
+            updated: String(operationReport.getUpdatedCount())
+          })
+        );
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "import-all");
-      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(
+        t("notices.import_error", {
+          error: error instanceof Error ? error.message : String(error)
+        })
+      );
     } finally {
       await this.runPostImportCleanup("import-all");
     }
@@ -25702,7 +26840,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const storage = this.getStorageService();
     const operationReport = new ImportReport();
     if (this.settings.useCustomMessageTimestampFormat) {
-      operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+      operationReport.setCustomTimestampFormat(
+        this.settings.messageTimestampFormat
+      );
     }
     this.setImportCheckpoint({
       operation: "import-all",
@@ -25737,28 +26877,37 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       try {
         const zip = await createZipArchiveReader(file, entryFilter);
         const entries = await zip.listEntries();
-        const classification = classifyArchiveEntries(entries.map((entry) => entry.path), provider);
+        const classification = classifyArchiveEntries(
+          entries.map((entry) => entry.path),
+          provider
+        );
         if (!classification.supported) {
           isSupportedArchive = false;
           skippedUnsupported++;
-          this.logger.child("ImportFlow").warn("Skipping unsupported archive during mobile direct import", {
-            provider,
-            fileName: file.name,
-            reason: classification.reason,
-            message: classification.message,
-            task: `${i + 1}/${mobileFiles.length}`
-          });
+          this.logger.child("ImportFlow").warn(
+            "Skipping unsupported archive during mobile direct import",
+            {
+              provider,
+              fileName: file.name,
+              reason: classification.reason,
+              message: classification.message,
+              task: `${i + 1}/${mobileFiles.length}`
+            }
+          );
         }
       } catch (error) {
         isSupportedArchive = false;
         skippedUnsupported++;
         const errorMessage = error instanceof Error ? error.message : String(error);
-        this.logger.child("ImportFlow").warn("Skipping unreadable archive during mobile direct import", {
-          provider,
-          fileName: file.name,
-          message: errorMessage,
-          task: `${i + 1}/${mobileFiles.length}`
-        });
+        this.logger.child("ImportFlow").warn(
+          "Skipping unreadable archive during mobile direct import",
+          {
+            provider,
+            fileName: file.name,
+            message: errorMessage,
+            task: `${i + 1}/${mobileFiles.length}`
+          }
+        );
       }
       if (!isSupportedArchive) {
         await this.yieldToEventLoop();
@@ -25771,7 +26920,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         fileName: file.name,
         task: `${i + 1}/${mobileFiles.length}`
       });
-      const archiveImportMode = await this.resolveMobileArchiveImportMode(file, provider);
+      const archiveImportMode = await this.resolveMobileArchiveImportMode(
+        file,
+        provider
+      );
       await this.importService.handleZipFile(
         file,
         provider,
@@ -25783,7 +26935,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       this.importService.resetRuntimeState();
       await this.yieldToEventLoop();
       await this.yieldToEventLoop();
-      await new Promise((resolve) => window.setTimeout(resolve, 500));
+      await new Promise(
+        (resolve) => window.setTimeout(resolve, 500)
+      );
       this.setImportCheckpoint({
         operation: "import-all",
         phase: "mobile-direct-existing-rescan",
@@ -25794,25 +26948,34 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       const rescanStartedAt = Date.now();
       existingConversationsMap.clear();
       existingConversationsMap = await storage.scanExistingConversations();
-      this.logger.child("ImportFlow").debug("Mobile direct import existing conversation map refreshed", {
-        provider,
-        fileName: file.name,
-        conversationCount: existingConversationsMap.size,
-        durationMs: Date.now() - rescanStartedAt
-      });
+      this.logger.child("ImportFlow").debug(
+        "Mobile direct import existing conversation map refreshed",
+        {
+          provider,
+          fileName: file.name,
+          conversationCount: existingConversationsMap.size,
+          durationMs: Date.now() - rescanStartedAt
+        }
+      );
       await this.yieldToEventLoop();
     }
     existingConversationsMap.clear();
     existingConversationsMap = /* @__PURE__ */ new Map();
     await this.yieldToEventLoop();
-    const reportPath = await this.writeConsolidatedReport(operationReport, provider, mobileFiles);
+    const reportPath = await this.writeConsolidatedReport(
+      operationReport,
+      provider,
+      mobileFiles
+    );
     if (reportPath) {
       this.showImportCompletionDialog(operationReport, reportPath);
     } else {
-      new import_obsidian32.Notice(t("notices.import_completed_fallback", {
-        created: String(operationReport.getCreatedCount()),
-        updated: String(operationReport.getUpdatedCount())
-      }));
+      new import_obsidian32.Notice(
+        t("notices.import_completed_fallback", {
+          created: String(operationReport.getCreatedCount()),
+          updated: String(operationReport.getUpdatedCount())
+        })
+      );
     }
     if (skippedUnsupported > 0) {
       new import_obsidian32.Notice(
@@ -25829,11 +26992,14 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     try {
       const mobileFiles = this.isMobileTaskQueueMode() ? files.slice(0, 1) : files;
       if (this.isMobileTaskQueueMode() && files.length > 1) {
-        this.logger.child("ImportFlow").warn("Mobile selective import guard kept only one ZIP file", {
-          provider,
-          selectedFileCount: files.length,
-          keptFileName: (_b = (_a = mobileFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
-        });
+        this.logger.child("ImportFlow").warn(
+          "Mobile selective import guard kept only one ZIP file",
+          {
+            provider,
+            selectedFileCount: files.length,
+            keptFileName: (_b = (_a = mobileFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
+          }
+        );
         new import_obsidian32.Notice(t("notices.import_mobile_single_zip_only"));
       }
       this.setImportCheckpoint({
@@ -25846,9 +27012,16 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         fileCount: mobileFiles.length
       });
-      new import_obsidian32.Notice(t("notices.import_analyzing", { count: String(mobileFiles.length) }));
+      new import_obsidian32.Notice(
+        t("notices.import_analyzing", {
+          count: String(mobileFiles.length)
+        })
+      );
       const providerRegistry = createProviderRegistry(this);
-      const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
+      const metadataExtractor = new ConversationMetadataExtractor(
+        providerRegistry,
+        this
+      );
       const storage = this.getStorageService();
       const existingConversations = await storage.scanExistingConversations();
       this.setImportCheckpoint({
@@ -25862,7 +27035,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         provider,
         existingConversations
       );
-      this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "selective-analysis");
+      this.logIgnoredArchives(
+        extractionResult.ignoredArchives,
+        provider,
+        "selective-analysis"
+      );
       this.logger.child("ImportFlow").debug(`Selective analysis finished`, {
         provider,
         fileCount: mobileFiles.length,
@@ -25871,7 +27048,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         conversationCount: extractionResult.conversations.length
       });
       if (extractionResult.supportedFiles.length === 0) {
-        new import_obsidian32.Notice(t("notices.import_no_supported_archives", { provider }));
+        new import_obsidian32.Notice(
+          t("notices.import_no_supported_archives", { provider })
+        );
         return;
       }
       if (extractionResult.conversations.length === 0) {
@@ -25888,7 +27067,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           extractionResult.ignoredArchives
         );
         if (reportPath) {
-          this.showImportCompletionDialog(operationReport, reportPath);
+          this.showImportCompletionDialog(
+            operationReport,
+            reportPath
+          );
         }
         return;
       }
@@ -25896,7 +27078,7 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
         this.app,
         extractionResult.conversations,
         (result) => {
-          this.handleConversationSelectionResult(
+          void this.handleConversationSelectionResult(
             result,
             extractionResult.conversations,
             mobileFiles,
@@ -25911,7 +27093,11 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       ).open();
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-analysis");
-      new import_obsidian32.Notice(t("notices.import_error_analyzing", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(
+        t("notices.import_error_analyzing", {
+          error: error instanceof Error ? error.message : String(error)
+        })
+      );
     }
   }
   /**
@@ -25927,7 +27113,9 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       });
       const operationReport = new ImportReport();
       if (this.settings.useCustomMessageTimestampFormat) {
-        operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+        operationReport.setCustomTimestampFormat(
+          this.settings.messageTimestampFormat
+        );
       }
       if (result.selectedIds.length === 0) {
         new import_obsidian32.Notice(t("notices.import_no_selected"));
@@ -25941,13 +27129,26 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
           ignoredArchives
         );
         if (reportPath2) {
-          this.showImportCompletionDialog(operationReport, reportPath2);
+          this.showImportCompletionDialog(
+            operationReport,
+            reportPath2
+          );
         }
         return;
       }
-      new import_obsidian32.Notice(t("notices.import_starting_selected", { count: String(result.selectedIds.length), files: String(files.length) }));
-      const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
-      const filesToImport = files.filter((file) => conversationsByFile.has(file.name));
+      new import_obsidian32.Notice(
+        t("notices.import_starting_selected", {
+          count: String(result.selectedIds.length),
+          files: String(files.length)
+        })
+      );
+      const conversationsByFile = this.groupConversationsByFile(
+        result.selectedIds,
+        availableConversations
+      );
+      const filesToImport = files.filter(
+        (file) => conversationsByFile.has(file.name)
+      );
       const selectedExistingConversationIds = this.collectSelectedExistingConversationIds(
         result.selectedIds,
         availableConversations
@@ -25979,11 +27180,20 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       if (reportPath) {
         this.showImportCompletionDialog(operationReport, reportPath);
       } else {
-        new import_obsidian32.Notice(t("notices.import_completed_fallback", { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+        new import_obsidian32.Notice(
+          t("notices.import_completed_fallback", {
+            created: String(operationReport.getCreatedCount()),
+            updated: String(operationReport.getUpdatedCount())
+          })
+        );
       }
     } catch (error) {
       this.logImportFailureWithCheckpoint(error, "selective-import");
-      new import_obsidian32.Notice(t("notices.import_error", { error: error instanceof Error ? error.message : String(error) }));
+      new import_obsidian32.Notice(
+        t("notices.import_error", {
+          error: error instanceof Error ? error.message : String(error)
+        })
+      );
     } finally {
       await this.runPostImportCleanup("selective-import");
     }
@@ -26003,9 +27213,15 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
       report.setProviderSpecificColumnHeader(columnInfo.header);
     }
     const folderPath = `${reportFolder}/${providerName}`;
-    const folderResult = await ensureFolderExists(folderPath, this.app.vault);
+    const folderResult = await ensureFolderExists(
+      folderPath,
+      this.app.vault
+    );
     if (!folderResult.success) {
-      this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
+      this.logger.error(
+        `Failed to create or access log folder: ${folderPath}`,
+        folderResult.error
+      );
       new import_obsidian32.Notice(t("notices.report_failed"));
       return "";
     }
@@ -26047,7 +27263,10 @@ var NexusAiChatImporterPlugin = class extends import_obsidian32.Plugin {
     const heavyFileName = heavyPath.split("/").pop() || `${basePrefix} - index heavy.md`;
     const mobileFileName = mobilePath.split("/").pop() || `${basePrefix} - index mobile.md`;
     const links = { summaryFileName, heavyFileName, mobileFileName };
-    const archiveDisplayNames = this.buildArchiveDisplayNames(provider, files);
+    const archiveDisplayNames = this.buildArchiveDisplayNames(
+      provider,
+      files
+    );
     const commonFrontmatter = `importdate: ${currentDate}
 provider: ${provider}
 totalFilesAnalyzed: ${files.length}
@@ -26123,7 +27342,9 @@ ${report.generateMobileIndexContent(files, links)}
     }
     const head = stem.slice(0, 3);
     if (normalizedProvider === "claude") {
-      const timeMatches = Array.from(stem.matchAll(/-(\d{2})-(\d{2})-(\d{2})/g));
+      const timeMatches = Array.from(
+        stem.matchAll(/-(\d{2})-(\d{2})-(\d{2})/g)
+      );
       const lastTime = timeMatches.length > 0 ? timeMatches[timeMatches.length - 1] : null;
       const lastCharMatch = stem.match(/([A-Za-z0-9])$/);
       if (lastTime && lastCharMatch) {
@@ -26147,11 +27368,7 @@ ${report.generateMobileIndexContent(files, links)}
    */
   showImportCompletionDialog(report, reportPath) {
     const stats = report.getCompletionStats();
-    new ImportCompletionDialog(
-      this.app,
-      stats,
-      reportPath
-    ).open();
+    new ImportCompletionDialog(this.app, stats, reportPath).open();
   }
   /**
    * Group selected conversations by their source file for multi-file import
@@ -26178,23 +27395,34 @@ ${report.generateMobileIndexContent(files, links)}
       try {
         const zip = await createZipArchiveReader(file);
         const entries = await zip.listEntries();
-        const classification = classifyArchiveEntries(entries.map((entry) => entry.path));
+        const classification = classifyArchiveEntries(
+          entries.map((entry) => entry.path)
+        );
         if (!classification.supported) {
           continue;
         }
         if (!providerRegistry.getAdapter(classification.provider)) {
-          this.logger.child("ImportFlow").warn("Detected provider is not enabled; skipping as lock source", {
-            fileName: file.name,
-            detectedProvider: classification.provider
-          });
+          this.logger.child("ImportFlow").warn(
+            "Detected provider is not enabled; skipping as lock source",
+            {
+              fileName: file.name,
+              detectedProvider: classification.provider
+            }
+          );
           continue;
         }
-        return { provider: classification.provider, fileName: file.name };
+        return {
+          provider: classification.provider,
+          fileName: file.name
+        };
       } catch (error) {
-        this.logger.child("ImportFlow").warn("Failed to analyze ZIP while resolving provider lock", {
-          fileName: file.name,
-          message: error instanceof Error ? error.message : String(error)
-        });
+        this.logger.child("ImportFlow").warn(
+          "Failed to analyze ZIP while resolving provider lock",
+          {
+            fileName: file.name,
+            message: error instanceof Error ? error.message : String(error)
+          }
+        );
       }
     }
     return null;
@@ -26209,23 +27437,30 @@ ${report.generateMobileIndexContent(files, links)}
     if (!alreadyImported) {
       return "incremental";
     }
-    this.logger.child("ImportFlow").debug("Mobile archive already processed, prompting for import mode", {
-      provider,
-      fileName: file.name,
-      fingerprint: archiveFingerprint
-    });
+    this.logger.child("ImportFlow").debug(
+      "Mobile archive already processed, prompting for import mode",
+      {
+        provider,
+        fileName: file.name,
+        fingerprint: archiveFingerprint
+      }
+    );
     const shouldReprocess = await showDialog(
       this.app,
       "confirmation",
       t("mobile_archive_processed_dialog.title"),
       [
-        t("mobile_archive_processed_dialog.description", { filename: file.name }),
+        t("mobile_archive_processed_dialog.description", {
+          filename: file.name
+        }),
         t("mobile_archive_processed_dialog.choice_help")
       ],
       void 0,
       {
         button1: t("mobile_archive_processed_dialog.button_reprocess"),
-        button2: t("mobile_archive_processed_dialog.button_incremental")
+        button2: t(
+          "mobile_archive_processed_dialog.button_incremental"
+        )
       }
     );
     const selectedMode = shouldReprocess ? "reprocess" : "incremental";
@@ -26272,12 +27507,15 @@ ${report.generateMobileIndexContent(files, links)}
     const mobileTaskQueueMode = this.isMobileTaskQueueMode();
     const executionFiles = mobileTaskQueueMode ? filesToImport.slice(0, 1) : filesToImport;
     if (mobileTaskQueueMode && filesToImport.length > 1) {
-      importFlowLogger.warn("Mobile file strategy guard kept only one ZIP file", {
-        operation,
-        provider,
-        selectedFileCount: filesToImport.length,
-        keptFileName: (_b = (_a = executionFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
-      });
+      importFlowLogger.warn(
+        "Mobile file strategy guard kept only one ZIP file",
+        {
+          operation,
+          provider,
+          selectedFileCount: filesToImport.length,
+          keptFileName: (_b = (_a = executionFiles[0]) == null ? void 0 : _a.name) != null ? _b : null
+        }
+      );
     }
     if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
       this.setImportCheckpoint({
@@ -26291,7 +27529,10 @@ ${report.generateMobileIndexContent(files, links)}
         fileCount: executionFiles.length,
         mode: "desktop-multi-zip"
       });
-      await this.importService.buildAttachmentMapForMultiZip(executionFiles, provider);
+      await this.importService.buildAttachmentMapForMultiZip(
+        executionFiles,
+        provider
+      );
     }
     for (let i = 0; i < executionFiles.length; i++) {
       const file = executionFiles[i];
@@ -26309,12 +27550,18 @@ ${report.generateMobileIndexContent(files, links)}
             task: `${i + 1}/${executionFiles.length}`,
             conversationCount: conversationsForFile.length
           });
-          importFlowLogger.debug(`Building single-ZIP attachment map for mobile task`, {
-            provider,
-            fileName: file.name,
-            task: `${i + 1}/${executionFiles.length}`
-          });
-          await this.importService.buildAttachmentMapForMultiZip([file], provider);
+          importFlowLogger.debug(
+            `Building single-ZIP attachment map for mobile task`,
+            {
+              provider,
+              fileName: file.name,
+              task: `${i + 1}/${executionFiles.length}`
+            }
+          );
+          await this.importService.buildAttachmentMapForMultiZip(
+            [file],
+            provider
+          );
         }
         this.setImportCheckpoint({
           operation,
@@ -26331,8 +27578,13 @@ ${report.generateMobileIndexContent(files, links)}
           task: `${i + 1}/${executionFiles.length}`,
           mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard"
         });
-        const archiveImportMode = mobileTaskQueueMode && operation === "import-all" ? await this.resolveMobileArchiveImportMode(file, provider) : void 0;
-        const fileReprocessIds = selectedExistingConversationIds ? conversationsForFile.filter((id) => selectedExistingConversationIds.has(id)) : [];
+        const archiveImportMode = mobileTaskQueueMode && operation === "import-all" ? await this.resolveMobileArchiveImportMode(
+          file,
+          provider
+        ) : void 0;
+        const fileReprocessIds = selectedExistingConversationIds ? conversationsForFile.filter(
+          (id) => selectedExistingConversationIds.has(id)
+        ) : [];
         const hasFileReprocessIds = fileReprocessIds.length > 0;
         await this.importService.handleZipFile(
           file,
@@ -26347,7 +27599,9 @@ ${report.generateMobileIndexContent(files, links)}
         );
       } catch (error) {
         this.logger.error(`Error processing file ${file.name}:`, error);
-        new import_obsidian32.Notice(t("notices.import_error_file", { filename: file.name }));
+        new import_obsidian32.Notice(
+          t("notices.import_error_file", { filename: file.name })
+        );
       } finally {
         if (mobileTaskQueueMode) {
           this.importService.clearAttachmentMap();
@@ -26409,10 +27663,13 @@ ${report.generateMobileIndexContent(files, links)}
     if (ignoredArchives.length === 0) {
       return;
     }
-    const groupedCounts = ignoredArchives.reduce((acc, archive) => {
-      acc[archive.reason] = (acc[archive.reason] || 0) + 1;
-      return acc;
-    }, {});
+    const groupedCounts = ignoredArchives.reduce(
+      (acc, archive) => {
+        acc[archive.reason] = (acc[archive.reason] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
     this.logger.child("ImportFlow").warn("Archives ignored during metadata extraction", {
       operation,
       provider,

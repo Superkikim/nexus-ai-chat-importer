@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Platform } from "obsidian";
+import { Platform, moment } from "obsidian";
 import { ProviderRegistry } from "../providers/provider-adapter";
 import { Chat } from "../providers/chatgpt/chatgpt-types";
 import { ClaudeConversation } from "../providers/claude/claude-types";
@@ -26,7 +26,6 @@ import { createZipArchiveReader, ZipArchiveReader } from "../utils/zip-loader";
 import {
     classifyArchiveEntries,
     extractConversationsStream,
-    extractRawConversations,
     getArchiveProviderMismatchMessage,
     getArchiveUnsupportedFormatMessage,
     SupportedArchiveProvider,
@@ -36,7 +35,11 @@ import { Logger, ScopedLogger } from "../logger";
 import { normalizePerplexityConversationFile } from "../providers/perplexity/perplexity-normalizer";
 import { deriveLeChatConversationTitle } from "../providers/lechat/lechat-title";
 
-export type ConversationExistenceStatus = "new" | "updated" | "unchanged" | "unknown";
+export type ConversationExistenceStatus =
+    | "new"
+    | "updated"
+    | "unchanged"
+    | "unknown";
 
 export interface AnalysisInfo {
     totalConversationsFound: number;
@@ -77,7 +80,12 @@ export interface FileAnalysisStats {
 
 export interface IgnoredArchiveInfo {
     fileName: string;
-    reason: "unsupported-format" | "provider-mismatch" | "empty" | "nested-zip-container" | "read-error";
+    reason:
+        | "unsupported-format"
+        | "provider-mismatch"
+        | "empty"
+        | "nested-zip-container"
+        | "read-error";
     message: string;
 }
 
@@ -96,7 +104,9 @@ export class ConversationMetadataExtractor {
         private providerRegistry: ProviderRegistry,
         private plugin: NexusAiChatImporterPlugin
     ) {
-        const pluginLogger = plugin.logger as Logger & { child?: (moduleName: string) => ScopedLogger };
+        const pluginLogger = plugin.logger as Logger & {
+            child?: (moduleName: string) => ScopedLogger;
+        };
         this.metadataLogger =
             typeof pluginLogger.child === "function"
                 ? pluginLogger.child("Metadata")
@@ -112,50 +122,54 @@ export class ConversationMetadataExtractor {
     ): Promise<ConversationMetadata[]> {
         const startedAt = Date.now();
         const entries = await zip.listEntries();
-        const classification = classifyArchiveEntries(entries.map(entry => entry.path), forcedProvider);
+        const classification = classifyArchiveEntries(
+            entries.map((entry) => entry.path),
+            forcedProvider
+        );
 
         if (!classification.supported) {
-            this.metadataLogger.debug(`Archive skipped during single-file metadata extraction`, {
-                sourceFileName,
-                reason: classification.reason,
-                message: classification.message,
-                durationMs: Date.now() - startedAt,
-            });
+            this.metadataLogger.debug(
+                `Archive skipped during single-file metadata extraction`,
+                {
+                    sourceFileName,
+                    reason: classification.reason,
+                    message: classification.message,
+                    durationMs: Date.now() - startedAt,
+                }
+            );
             return [];
         }
 
-        const provider = (forcedProvider || classification.provider) as SupportedArchiveProvider;
+        const provider = (forcedProvider ||
+            classification.provider) as SupportedArchiveProvider;
         let metadata: ConversationMetadata[] = [];
 
-        if (provider === "gemini") {
-            const rawConversations = await extractRawConversations(zip);
-            if (rawConversations.conversations.length > 0) {
-                metadata = this.extractMetadataByProvider(rawConversations.conversations, provider);
-            }
-        } else {
-            for await (const rawConversation of extractConversationsStream(zip, {
-                mobileRuntime: Platform.isMobile,
-                enforceChunkedForLargeJsonOnMobile: Platform.isMobile,
-                largeJsonThresholdBytes: 32 * 1024 * 1024,
-                streamYieldEvery: 25,
-            })) {
-                const singleConversationMetadata = this.extractSingleMetadataByProvider(rawConversation, provider);
-                if (singleConversationMetadata) {
-                    metadata.push(singleConversationMetadata);
-                }
+        for await (const rawConversation of extractConversationsStream(zip, {
+            mobileRuntime: Platform.isMobile,
+            enforceChunkedForLargeJsonOnMobile: Platform.isMobile,
+            largeJsonThresholdBytes: 32 * 1024 * 1024,
+            streamYieldEvery: 25,
+        })) {
+            const singleConversationMetadata =
+                this.extractSingleMetadataByProvider(rawConversation, provider);
+            if (singleConversationMetadata) {
+                metadata.push(singleConversationMetadata);
             }
         }
 
         if (metadata.length === 0) {
-            this.metadataLogger.warn(`Archive produced no conversations during metadata extraction`, {
-                sourceFileName,
-                provider,
-                durationMs: Date.now() - startedAt,
-            });
+            this.metadataLogger.warn(
+                `Archive produced no conversations during metadata extraction`,
+                {
+                    sourceFileName,
+                    provider,
+                    durationMs: Date.now() - startedAt,
+                }
+            );
             return [];
         }
 
-        const enhancedMetadata = metadata.map(conv => {
+        const enhancedMetadata = metadata.map((conv) => {
             const enhanced: ConversationMetadata = {
                 ...conv,
                 sourceFile: sourceFileName,
@@ -175,7 +189,10 @@ export class ConversationMetadataExtractor {
             }
 
             enhanced.existingUpdateTime = existing.updateTime;
-            const comparison = compareTimestampsIgnoringSeconds(conv.updateTime, existing.updateTime);
+            const comparison = compareTimestampsIgnoringSeconds(
+                conv.updateTime,
+                existing.updateTime
+            );
             if (comparison > 0) {
                 enhanced.existenceStatus = "updated";
                 enhanced.hasNewerContent = true;
@@ -216,7 +233,9 @@ export class ConversationMetadataExtractor {
         const supportedFiles: File[] = [];
         const ignoredArchives: IgnoredArchiveInfo[] = [];
 
-        const adapter = forcedProvider ? this.providerRegistry.getAdapter(forcedProvider) : undefined;
+        const adapter = forcedProvider
+            ? this.providerRegistry.getAdapter(forcedProvider)
+            : undefined;
         const entryFilter = adapter?.shouldIncludeZipEntry?.bind(adapter);
 
         for (let i = 0; i < files.length; i++) {
@@ -224,12 +243,17 @@ export class ConversationMetadataExtractor {
             const fileStartedAt = Date.now();
 
             try {
-                this.metadataLogger.debug(`Analyze archive [${i + 1}/${files.length}]`, {
-                    fileName: file.name,
-                    fileSize: file.size,
-                });
+                this.metadataLogger.debug(
+                    `Analyze archive [${i + 1}/${files.length}]`,
+                    {
+                        fileName: file.name,
+                        fileSize: file.size,
+                    }
+                );
 
-                const archiveModeDecision = decideArchiveMode({ zipSizeBytes: file.size });
+                const archiveModeDecision = decideArchiveMode({
+                    zipSizeBytes: file.size,
+                });
                 if (archiveModeDecision.mode === "large-archive") {
                     this.metadataLogger.debug(`Large archive detected`, {
                         fileName: file.name,
@@ -240,14 +264,19 @@ export class ConversationMetadataExtractor {
 
                 const zip = await createZipArchiveReader(file, entryFilter);
                 const entries = await zip.listEntries();
-                const classification = classifyArchiveEntries(entries.map(entry => entry.path), forcedProvider);
+                const classification = classifyArchiveEntries(
+                    entries.map((entry) => entry.path),
+                    forcedProvider
+                );
 
                 this.metadataLogger.debug(`Archive classified`, {
                     fileName: file.name,
                     entryCount: entries.length,
                     supported: classification.supported,
                     reason: classification.reason,
-                    provider: classification.supported ? classification.provider : undefined,
+                    provider: classification.supported
+                        ? classification.provider
+                        : undefined,
                     durationMs: Date.now() - fileStartedAt,
                 });
 
@@ -255,7 +284,9 @@ export class ConversationMetadataExtractor {
                     ignoredArchives.push({
                         fileName: file.name,
                         reason: classification.reason,
-                        message: classification.message ?? "Unsupported archive format.",
+                        message:
+                            classification.message ??
+                            "Unsupported archive format.",
                     });
                     this.metadataLogger.debug(`Skipping unsupported archive`, {
                         fileName: file.name,
@@ -277,12 +308,15 @@ export class ConversationMetadataExtractor {
                 supportedFiles.push(file);
                 allConversationsFound.push(...metadata);
 
-                this.metadataLogger.debug(`Archive metadata extraction complete`, {
-                    fileName: file.name,
-                    provider: classification.provider,
-                    conversationCount: metadata.length,
-                    durationMs: Date.now() - fileStartedAt,
-                });
+                this.metadataLogger.debug(
+                    `Archive metadata extraction complete`,
+                    {
+                        fileName: file.name,
+                        provider: classification.provider,
+                        conversationCount: metadata.length,
+                        durationMs: Date.now() - fileStartedAt,
+                    }
+                );
 
                 let duplicatesInFile = 0;
                 let uniqueFromFile = 0;
@@ -306,7 +340,8 @@ export class ConversationMetadataExtractor {
                     if (comparison > 0) {
                         shouldReplace = true;
                     } else if (comparison === 0) {
-                        const currentFileIndex = conversation.sourceFileIndex || 0;
+                        const currentFileIndex =
+                            conversation.sourceFileIndex || 0;
                         const existingFileIndex = existing.sourceFileIndex || 0;
                         if (currentFileIndex > existingFileIndex) {
                             shouldReplace = true;
@@ -314,7 +349,9 @@ export class ConversationMetadataExtractor {
                     }
 
                     if (shouldReplace) {
-                        const oldFileName = conversationToFileMap.get(conversation.id)!;
+                        const oldFileName = conversationToFileMap.get(
+                            conversation.id
+                        )!;
                         const oldFileStats = fileStatsMap.get(oldFileName);
                         if (oldFileStats) {
                             oldFileStats.uniqueContributed--;
@@ -340,8 +377,13 @@ export class ConversationMetadataExtractor {
                     skippedConversations: 0,
                 });
             } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-                const ignoredArchive = this.classifyReadFailure(file.name, message, forcedProvider);
+                const message =
+                    error instanceof Error ? error.message : String(error);
+                const ignoredArchive = this.classifyReadFailure(
+                    file.name,
+                    message,
+                    forcedProvider
+                );
                 ignoredArchives.push(ignoredArchive);
 
                 const logDetails = {
@@ -353,9 +395,15 @@ export class ConversationMetadataExtractor {
                     userMessage: ignoredArchive.message,
                 };
                 if (ignoredArchive.reason === "read-error") {
-                    this.metadataLogger.error(`Archive analysis failed and was ignored`, logDetails);
+                    this.metadataLogger.error(
+                        `Archive analysis failed and was ignored`,
+                        logDetails
+                    );
                 } else {
-                    this.metadataLogger.warn(`Archive analysis failed and was ignored`, logDetails);
+                    this.metadataLogger.warn(
+                        `Archive analysis failed and was ignored`,
+                        logDetails
+                    );
                 }
             }
         }
@@ -395,7 +443,8 @@ export class ConversationMetadataExtractor {
             analysisInfo: {
                 totalConversationsFound: allConversationsFound.length,
                 uniqueConversationsKept: conversationMap.size,
-                duplicatesRemoved: allConversationsFound.length - conversationMap.size,
+                duplicatesRemoved:
+                    allConversationsFound.length - conversationMap.size,
                 hasMultipleFiles: files.length > 1,
                 conversationsNew: filterResult.newCount,
                 conversationsUpdated: filterResult.updatedCount,
@@ -456,9 +505,6 @@ export class ConversationMetadataExtractor {
         if (forcedProvider === "lechat") {
             return getArchiveProviderMismatchMessage("lechat");
         }
-        if (forcedProvider === "gemini") {
-            return getArchiveProviderMismatchMessage("gemini");
-        }
         if (forcedProvider === "perplexity") {
             return getArchiveProviderMismatchMessage("perplexity");
         }
@@ -466,12 +512,21 @@ export class ConversationMetadataExtractor {
         return getArchiveUnsupportedFormatMessage();
     }
 
-    private extractSingleMetadataByProvider(rawConversation: any, provider: string): ConversationMetadata | null {
-        const metadata = this.extractMetadataByProvider([rawConversation], provider);
+    private extractSingleMetadataByProvider(
+        rawConversation: any,
+        provider: string
+    ): ConversationMetadata | null {
+        const metadata = this.extractMetadataByProvider(
+            [rawConversation],
+            provider
+        );
         return metadata.length > 0 ? metadata[0] : null;
     }
 
-    private extractMetadataByProvider(rawConversations: any[], provider: string): ConversationMetadata[] {
+    private extractMetadataByProvider(
+        rawConversations: any[],
+        provider: string
+    ): ConversationMetadata[] {
         switch (provider) {
             case "chatgpt":
                 return this.extractChatGPTMetadata(rawConversations);
@@ -479,8 +534,6 @@ export class ConversationMetadataExtractor {
                 return this.extractClaudeMetadata(rawConversations);
             case "lechat":
                 return this.extractLeChatMetadata(rawConversations);
-            case "gemini":
-                return this.extractGeminiMetadata(rawConversations);
             case "perplexity":
                 return this.extractPerplexityMetadata(rawConversations);
             default:
@@ -488,20 +541,28 @@ export class ConversationMetadataExtractor {
         }
     }
 
-    private extractChatGPTMetadata(conversations: Chat[]): ConversationMetadata[] {
+    private extractChatGPTMetadata(
+        conversations: Chat[]
+    ): ConversationMetadata[] {
         return conversations
-            .filter(chat => {
+            .filter((chat) => {
                 if (!chat.id || chat.id.trim() === "") {
-                    this.plugin.logger.warn("Skipping ChatGPT conversation with missing ID", chat.title || "Untitled");
+                    this.plugin.logger.warn(
+                        "Skipping ChatGPT conversation with missing ID",
+                        chat.title || "Untitled"
+                    );
                     return false;
                 }
                 if (!chat.create_time || !chat.update_time) {
-                    this.plugin.logger.warn("Skipping ChatGPT conversation with missing timestamps", chat.id);
+                    this.plugin.logger.warn(
+                        "Skipping ChatGPT conversation with missing timestamps",
+                        chat.id
+                    );
                     return false;
                 }
                 return true;
             })
-            .map(chat => ({
+            .map((chat) => ({
                 id: chat.id,
                 title: chat.title || "Untitled",
                 createTime: chat.create_time,
@@ -511,52 +572,70 @@ export class ConversationMetadataExtractor {
                 isStarred: chat.is_starred || false,
                 isArchived: chat.is_archived || false,
             }))
-            .filter(metadata => metadata.messageCount > 0);
+            .filter((metadata) => metadata.messageCount > 0);
     }
 
-    private extractClaudeMetadata(conversations: ClaudeConversation[]): ConversationMetadata[] {
+    private extractClaudeMetadata(
+        conversations: ClaudeConversation[]
+    ): ConversationMetadata[] {
         return conversations
-            .filter(chat => {
+            .filter((chat) => {
                 if (!chat.uuid || chat.uuid.trim() === "") {
-                    this.plugin.logger.warn("Skipping Claude conversation with missing UUID", chat.name || "Untitled");
+                    this.plugin.logger.warn(
+                        "Skipping Claude conversation with missing UUID",
+                        chat.name || "Untitled"
+                    );
                     return false;
                 }
                 if (!chat.created_at || !chat.updated_at) {
-                    this.plugin.logger.warn("Skipping Claude conversation with missing timestamps", chat.uuid);
+                    this.plugin.logger.warn(
+                        "Skipping Claude conversation with missing timestamps",
+                        chat.uuid
+                    );
                     return false;
                 }
                 return true;
             })
-            .map(chat => ({
+            .map((chat) => ({
                 id: chat.uuid,
                 title: chat.name || "Untitled",
-                createTime: Math.floor(new Date(chat.created_at).getTime() / 1000),
-                updateTime: Math.floor(new Date(chat.updated_at).getTime() / 1000),
+                createTime: Math.floor(
+                    new Date(chat.created_at).getTime() / 1000
+                ),
+                updateTime: Math.floor(
+                    new Date(chat.updated_at).getTime() / 1000
+                ),
                 messageCount: this.countClaudeMessages(chat),
                 provider: "claude",
                 isStarred: chat.is_starred || false,
                 isArchived: false,
             }))
-            .filter(metadata => metadata.messageCount > 0);
+            .filter((metadata) => metadata.messageCount > 0);
     }
 
-    private extractLeChatMetadata(conversations: any[]): ConversationMetadata[] {
+    private extractLeChatMetadata(
+        conversations: any[]
+    ): ConversationMetadata[] {
         return conversations
-            .filter(chat => {
+            .filter((chat) => {
                 if (!Array.isArray(chat) || chat.length === 0) {
-                    this.plugin.logger.warn("Skipping invalid Le Chat conversation: not an array or empty");
+                    this.plugin.logger.warn(
+                        "Skipping invalid Le Chat conversation: not an array or empty"
+                    );
                     return false;
                 }
 
                 const firstMessage = chat[0];
                 if (!firstMessage.chatId || !firstMessage.createdAt) {
-                    this.plugin.logger.warn("Skipping Le Chat conversation with missing chatId or createdAt");
+                    this.plugin.logger.warn(
+                        "Skipping Le Chat conversation with missing chatId or createdAt"
+                    );
                     return false;
                 }
 
                 return true;
             })
-            .map(chat => {
+            .map((chat) => {
                 const sortedChat = [...chat].sort((a: any, b: any) => {
                     const timeA = new Date(a.createdAt).getTime();
                     const timeB = new Date(b.createdAt).getTime();
@@ -564,9 +643,13 @@ export class ConversationMetadataExtractor {
                 });
 
                 const chatId = sortedChat[0].chatId;
-                const title = deriveLeChatConversationTitle(sortedChat as any, { assumeSorted: true });
+                const title = deriveLeChatConversationTitle(sortedChat as any, {
+                    assumeSorted: true,
+                });
 
-                const timestamps = sortedChat.map((msg: any) => new Date(msg.createdAt).getTime() / 1000);
+                const timestamps = sortedChat.map(
+                    (msg: any) => new Date(msg.createdAt).getTime() / 1000
+                );
 
                 return {
                     id: chatId,
@@ -579,85 +662,87 @@ export class ConversationMetadataExtractor {
                     isArchived: false,
                 };
             })
-            .filter(metadata => metadata.messageCount > 0);
+            .filter((metadata) => metadata.messageCount > 0);
     }
 
-    private extractGeminiMetadata(entries: any[]): ConversationMetadata[] {
-        return entries
-            .filter(entry => {
-                if (!entry.time || !entry.title) {
-                    this.plugin.logger.warn("Skipping Gemini entry with missing time or title");
-                    return false;
-                }
-
-                const hasHtmlContent = entry.safeHtmlItem && entry.safeHtmlItem.length > 0;
-                const hasAttachments = entry.attachedFiles && entry.attachedFiles.length > 0;
-                return hasHtmlContent || hasAttachments;
-            })
-            .map(entry => {
-                const adapter = this.providerRegistry.getAdapter("gemini");
-                if (!adapter) {
-                    throw new Error("Gemini adapter not found in registry");
-                }
-
-                return {
-                    id: adapter.getId(entry),
-                    title: adapter.getTitle(entry),
-                    createTime: adapter.getCreateTime(entry),
-                    updateTime: adapter.getUpdateTime(entry),
-                    messageCount: 2,
-                    provider: "gemini",
-                    isStarred: false,
-                    isArchived: false,
-                };
-            });
-    }
-
-    private extractPerplexityMetadata(conversations: any[]): ConversationMetadata[] {
+    private extractPerplexityMetadata(
+        conversations: any[]
+    ): ConversationMetadata[] {
         return conversations
-            .filter(chat => {
+            .filter((chat) => {
                 const normalized = normalizePerplexityConversationFile(chat);
                 if (!normalized) {
-                    this.plugin.logger.warn("Skipping invalid Perplexity conversation: not an object");
+                    this.plugin.logger.warn(
+                        "Skipping invalid Perplexity conversation: not an object"
+                    );
                     return false;
                 }
 
-                if (!normalized.metadata?.thread_id || !Array.isArray(normalized.conversations)) {
-                    this.plugin.logger.warn("Skipping Perplexity conversation with missing normalized metadata.thread_id or conversations[]");
+                if (
+                    !normalized.metadata?.thread_id ||
+                    !Array.isArray(normalized.conversations)
+                ) {
+                    this.plugin.logger.warn(
+                        "Skipping Perplexity conversation with missing normalized metadata.thread_id or conversations[]"
+                    );
                     return false;
                 }
 
                 return normalized.conversations.length > 0;
             })
-            .map(chat => {
+            .map((chat) => {
                 const normalized = normalizePerplexityConversationFile(chat)!;
-                const turns = [...normalized.conversations].sort((a: any, b: any) => {
-                    const timeA = new Date(a.timestamp || 0).getTime();
-                    const timeB = new Date(b.timestamp || 0).getTime();
-                    return timeA - timeB;
-                });
+                const turns = [...normalized.conversations].sort(
+                    (a: any, b: any) => {
+                        const timeA = new Date(a.timestamp || 0).getTime();
+                        const timeB = new Date(b.timestamp || 0).getTime();
+                        return timeA - timeB;
+                    }
+                );
 
                 const timestamps = turns
                     .map((turn: any) => new Date(turn.timestamp || 0).getTime())
                     .filter((ts: number) => Number.isFinite(ts) && ts > 0);
 
-                const metaCreateMs = new Date(normalized.metadata?.thread_created_at || "").getTime();
-                const metaUpdateMs = new Date(normalized.metadata?.thread_updated_at || "").getTime();
-                const createTime = Number.isFinite(metaCreateMs) && metaCreateMs > 0
-                    ? Math.floor(metaCreateMs / 1000)
-                    : timestamps.length > 0 ? Math.floor(Math.min(...timestamps) / 1000) : 0;
-                const updateTime = Number.isFinite(metaUpdateMs) && metaUpdateMs > 0
-                    ? Math.floor(metaUpdateMs / 1000)
-                    : timestamps.length > 0 ? Math.floor(Math.max(...timestamps) / 1000) : 0;
-                const messageCount = turns.reduce((count: number, turn: any) => {
-                    const query = typeof turn.query === "string" ? turn.query.trim() : "";
-                    const answer = typeof turn.answer === "string" ? turn.answer.trim() : "";
-                    return count + (query ? 1 : 0) + (answer ? 1 : 0);
-                }, 0);
+                const metaCreateMs = new Date(
+                    normalized.metadata?.thread_created_at || ""
+                ).getTime();
+                const metaUpdateMs = new Date(
+                    normalized.metadata?.thread_updated_at || ""
+                ).getTime();
+                const createTime =
+                    Number.isFinite(metaCreateMs) && metaCreateMs > 0
+                        ? Math.floor(metaCreateMs / 1000)
+                        : timestamps.length > 0
+                        ? Math.floor(Math.min(...timestamps) / 1000)
+                        : 0;
+                const updateTime =
+                    Number.isFinite(metaUpdateMs) && metaUpdateMs > 0
+                        ? Math.floor(metaUpdateMs / 1000)
+                        : timestamps.length > 0
+                        ? Math.floor(Math.max(...timestamps) / 1000)
+                        : 0;
+                const messageCount = turns.reduce(
+                    (count: number, turn: any) => {
+                        const query =
+                            typeof turn.query === "string"
+                                ? turn.query.trim()
+                                : "";
+                        const answer =
+                            typeof turn.answer === "string"
+                                ? turn.answer.trim()
+                                : "";
+                        return count + (query ? 1 : 0) + (answer ? 1 : 0);
+                    },
+                    0
+                );
 
                 return {
                     id: normalized.metadata.thread_id || "",
-                    title: (normalized.metadata.thread_title || "Untitled").trim() || "Untitled",
+                    title:
+                        (
+                            normalized.metadata.thread_title || "Untitled"
+                        ).trim() || "Untitled",
                     createTime,
                     updateTime,
                     messageCount,
@@ -666,7 +751,7 @@ export class ConversationMetadataExtractor {
                     isArchived: false,
                 };
             })
-            .filter(metadata => metadata.messageCount > 0);
+            .filter((metadata) => metadata.messageCount > 0);
     }
 
     private countChatGPTMessages(chat: Chat): number {
@@ -705,7 +790,10 @@ export class ConversationMetadataExtractor {
             return false;
         }
 
-        if (message.author.role === "system" || message.author.role === "tool") {
+        if (
+            message.author.role === "system" ||
+            message.author.role === "tool"
+        ) {
             return false;
         }
 
@@ -749,7 +837,9 @@ export class ConversationMetadataExtractor {
                 continue;
             }
 
-            const vaultConversation = existingConversations.get(conversation.id);
+            const vaultConversation = existingConversations.get(
+                conversation.id
+            );
             if (!vaultConversation) {
                 conversation.existenceStatus = "new";
                 conversation.hasNewerContent = true;
@@ -760,9 +850,14 @@ export class ConversationMetadataExtractor {
 
             conversation.existingUpdateTime = vaultConversation.updateTime;
 
-            const { moment } = require("obsidian");
-            const zipUpdateTimeISO = new Date(conversation.updateTime * 1000).toISOString();
-            const normalizedZipUpdateTime = moment(zipUpdateTimeISO, moment.ISO_8601, true).unix();
+            const zipUpdateTimeISO = new Date(
+                conversation.updateTime * 1000
+            ).toISOString();
+            const normalizedZipUpdateTime = (moment as any)(
+                zipUpdateTimeISO,
+                moment.ISO_8601,
+                true
+            ).unix();
             const comparison = compareTimestampsIgnoringSeconds(
                 normalizedZipUpdateTime,
                 vaultConversation.updateTime

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { classifyArchiveEntries, extractConversationsStream, extractRawConversations } from "./zip-content-reader";
+import {
+    classifyArchiveEntries,
+    extractConversationsStream,
+    extractRawConversations,
+} from "./zip-content-reader";
 import { ZipArchiveReader, ZipEntryHandle, ZipEntryMeta } from "./zip-loader";
 
 class MemoryZipEntry implements ZipEntryHandle {
@@ -53,7 +57,10 @@ describe("zip-content-reader", () => {
         const result = await extractRawConversations(reader);
 
         expect(result.conversations).toHaveLength(2);
-        expect(result.conversations.map(conv => conv.id)).toEqual(["c1", "c2"]);
+        expect(result.conversations.map((conv) => conv.id)).toEqual([
+            "c1",
+            "c2",
+        ]);
     });
 
     it("streams legacy conversations.json one conversation at a time", async () => {
@@ -84,7 +91,9 @@ describe("zip-content-reader", () => {
         const result = await extractRawConversations(reader);
 
         expect(result.conversations).toHaveLength(2);
-        expect(result.conversations.map(conv => conv.metadata.thread_id)).toEqual(["t1", "t2"]);
+        expect(
+            result.conversations.map((conv) => conv.metadata.thread_id)
+        ).toEqual(["t1", "t2"]);
     });
 
     it("streams Perplexity thread JSON one file at a time", async () => {
@@ -168,11 +177,14 @@ describe("zip-content-reader", () => {
     });
 
     it("classifies nested ZIP containers with a dedicated guidance message", () => {
-        const classification = classifyArchiveEntries([
-            "perplexity_export_1777357714391_part1of3.zip",
-            "perplexity_export_1777357714391_part2of3.zip",
-            "perplexity_export_1777357714391_part3of3.zip",
-        ], "perplexity");
+        const classification = classifyArchiveEntries(
+            [
+                "perplexity_export_1777357714391_part1of3.zip",
+                "perplexity_export_1777357714391_part2of3.zip",
+                "perplexity_export_1777357714391_part3of3.zip",
+            ],
+            "perplexity"
+        );
 
         expect(classification.supported).toBe(false);
         if (classification.supported) return;

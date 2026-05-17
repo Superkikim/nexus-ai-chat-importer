@@ -26,9 +26,9 @@ import { getCommunityForumUrl } from "../utils/support-links";
  * Uses the universal NewVersionModal template
  */
 export class UpgradeNotice132Dialog {
-	    static open(app: App, plugin: NexusAiChatImporterPlugin): void {
+    static open(app: App, plugin: NexusAiChatImporterPlugin): void {
         const forumUrl = getCommunityForumUrl();
-	        const fallbackMessage = `## 🔄 What Changed
+        const fallbackMessage = `## 🔄 What Changed
 
 **Claude changed their export format.** If you imported Claude conversations recently and noticed missing code files or strange links, v1.3.2 fixes this.
 
@@ -53,11 +53,11 @@ export class UpgradeNotice132Dialog {
 
 If something doesn't work as expected, please report it on the [forum thread](${forumUrl}).`;
 
-		        new NewVersionModal(
-		            app,
-		            plugin,
-		            plugin.manifest.version,
-		            fallbackMessage
-		        ).open();
+        new NewVersionModal(
+            app,
+            plugin,
+            plugin.manifest.version,
+            fallbackMessage
+        ).open();
     }
 }

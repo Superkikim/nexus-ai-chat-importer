@@ -16,18 +16,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/upgrade/incremental-upgrade-manager.ts
-import { Notice } from "obsidian";
+import { Notice, requestUrl } from "obsidian";
 import { VersionUpgrade, UpgradeContext } from "./upgrade-interface";
 import { VersionUtils } from "./utils/version-utils";
 import { showDialog } from "../dialogs";
 import { Logger } from "../logger";
 import { GITHUB } from "../config/constants";
-import { MultiOperationProgressModal, OperationStatus } from "./utils/multi-operation-progress-modal";
+import {
+    MultiOperationProgressModal,
+    OperationStatus,
+} from "./utils/multi-operation-progress-modal";
 import type NexusAiChatImporterPlugin from "../main";
 import { ensureFolderExists } from "../utils";
 import { t } from "../i18n";
+import { Upgrade110 } from "./versions/upgrade-1.1.0";
+import { Upgrade120, NexusUpgradeModal } from "./versions/upgrade-1.2.0";
+import { Upgrade130 } from "./versions/upgrade-1.3.0";
+import { Upgrade140 } from "./versions/upgrade-1.4.0";
 
 const logger = new Logger();
 
@@ -60,10 +66,6 @@ export class IncrementalUpgradeManager {
      */
     private registerUpgrades(): void {
         // Import and register upgrades
-        const { Upgrade110 } = require("./versions/upgrade-1.1.0");
-        const { Upgrade120 } = require("./versions/upgrade-1.2.0");
-        const { Upgrade130 } = require("./versions/upgrade-1.3.0");
-        const { Upgrade140 } = require("./versions/upgrade-1.4.0");
 
         this.availableUpgrades = [
             new Upgrade110(),
@@ -89,8 +91,10 @@ export class IncrementalUpgradeManager {
             // Check if already completed upgrade to this version using new structure
             // This check MUST come BEFORE fresh install detection to prevent welcome dialog on reload
             const data = await this.plugin.loadData();
-            const versionKey = currentVersion.replace(/\./g, '_');
-            const hasCompletedThisUpgrade = data?.upgradeHistory?.completedUpgrades?.[versionKey]?.completed;
+            const versionKey = currentVersion.replace(/\./g, "_");
+            const hasCompletedThisUpgrade =
+                data?.upgradeHistory?.completedUpgrades?.[versionKey]
+                    ?.completed;
 
             if (hasCompletedThisUpgrade) {
                 return null;
@@ -107,7 +111,7 @@ export class IncrementalUpgradeManager {
                     upgradesSkipped: 0,
                     upgradesFailed: 0,
                     isFreshInstall: true, // Flag for showing installation welcome dialog
-                    results: []
+                    results: [],
                 };
             }
 
@@ -117,35 +121,46 @@ export class IncrementalUpgradeManager {
             }
 
             // Get upgrade chain: all upgrades between previousVersion and currentVersion
-	            const upgradeChain = this.getUpgradeChain(previousVersion, currentVersion);
+            const upgradeChain = this.getUpgradeChain(
+                previousVersion,
+                currentVersion
+            );
 
-	            if (upgradeChain.length === 0) {
-	                await this.markUpgradeComplete(currentVersion);
-	                // No migrations needed for this upgrade path, but we still
-	                // want to show the "new version" dialog with support section and
-	                // README Overview (same UX as when migrations ran).
-	                return {
-	                    success: true,
-	                    upgradesExecuted: 0,
-	                    upgradesSkipped: 0,
-	                    upgradesFailed: 0,
-	                    showCompletionDialog: true,
-	                    upgradedToVersion: currentVersion,
-	                    results: []
-	                };
-	            }
-
+            if (upgradeChain.length === 0) {
+                await this.markUpgradeComplete(currentVersion);
+                // No migrations needed for this upgrade path, but we still
+                // want to show the "new version" dialog with support section and
+                // README Overview (same UX as when migrations ran).
+                return {
+                    success: true,
+                    upgradesExecuted: 0,
+                    upgradesSkipped: 0,
+                    upgradesFailed: 0,
+                    showCompletionDialog: true,
+                    upgradedToVersion: currentVersion,
+                    results: [],
+                };
+            }
 
             // PHASE 1: Execute migrations directly (no dialog before)
             // Show progress modal automatically
-            const result = await this.executeUpgradeChainWithModal(upgradeChain, previousVersion, currentVersion);
+            const result = await this.executeUpgradeChainWithModal(
+                upgradeChain,
+                previousVersion,
+                currentVersion
+            );
 
             // Mark overall upgrade complete - ALWAYS (even if some operations were "no-op")
             await this.markUpgradeComplete(currentVersion);
 
             // Write consolidated upgrade report
             try {
-                await this.writeUpgradeReport(previousVersion, currentVersion, upgradeChain, result);
+                await this.writeUpgradeReport(
+                    previousVersion,
+                    currentVersion,
+                    upgradeChain,
+                    result
+                );
             } catch (e) {
                 logger.error("Failed to write upgrade report:", e);
             }
@@ -156,24 +171,23 @@ export class IncrementalUpgradeManager {
             return {
                 ...result,
                 showCompletionDialog: true,
-                upgradedToVersion: currentVersion
+                upgradedToVersion: currentVersion,
             };
-
-
-
-
         } catch (error) {
             logger.error("Incremental upgrade failed:", error);
 
             // Check if user cancelled
-            if (error instanceof Error && error.message === "User cancelled upgrade") {
+            if (
+                error instanceof Error &&
+                error.message === "User cancelled upgrade"
+            ) {
                 new Notice(t("upgrade.notices.migration_cancelled"));
                 return {
                     success: false,
                     upgradesExecuted: 0,
                     upgradesSkipped: 0,
                     upgradesFailed: 0,
-                    results: []
+                    results: [],
                 };
             }
 
@@ -185,7 +199,7 @@ export class IncrementalUpgradeManager {
                 upgradesExecuted: 0,
                 upgradesSkipped: 0,
                 upgradesFailed: 1,
-                results: []
+                results: [],
             };
         }
     }
@@ -197,37 +211,52 @@ export class IncrementalUpgradeManager {
         try {
             // Check 1: No plugin data or very minimal data
             const data = await this.plugin.loadData();
-            const hasLegacyData = !!(data?.conversationCatalog && Object.keys(data.conversationCatalog).length > 0);
-            const hasImportedArchives = !!(data?.importedArchives && Object.keys(data.importedArchives).length > 0);
+            const hasLegacyData = !!(
+                data?.conversationCatalog &&
+                Object.keys(data.conversationCatalog).length > 0
+            );
+            const hasImportedArchives = !!(
+                data?.importedArchives &&
+                Object.keys(data.importedArchives).length > 0
+            );
 
             // Check 2: No existing conversations in vault
             const conversationFolder = this.plugin.settings.conversationFolder;
             const allFiles = this.plugin.app.vault.getMarkdownFiles();
 
-            const existingConversations = allFiles.filter(file => {
+            const existingConversations = allFiles.filter((file) => {
                 if (!file.path.startsWith(conversationFolder)) return false;
 
                 // Exclude Reports and Attachments folders
-                const relativePath = file.path.substring(conversationFolder.length + 1);
-                if (relativePath.startsWith('Reports/') ||
-                    relativePath.startsWith('Attachments/') ||
-                    relativePath.startsWith('reports/') ||
-                    relativePath.startsWith('attachments/')) {
+                const relativePath = file.path.substring(
+                    conversationFolder.length + 1
+                );
+                if (
+                    relativePath.startsWith("Reports/") ||
+                    relativePath.startsWith("Attachments/") ||
+                    relativePath.startsWith("reports/") ||
+                    relativePath.startsWith("attachments/")
+                ) {
                     return false;
                 }
 
                 // Check if it's a Nexus conversation file
-                const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+                const frontmatter =
+                    this.plugin.app.metadataCache.getFileCache(
+                        file
+                    )?.frontmatter;
                 return frontmatter?.nexus === this.plugin.manifest.id;
             });
 
             const hasExistingConversations = existingConversations.length > 0;
 
             // Fresh install criteria: no legacy data AND no imported archives AND no existing conversations
-            const isFreshInstall = !hasLegacyData && !hasImportedArchives && !hasExistingConversations;
+            const isFreshInstall =
+                !hasLegacyData &&
+                !hasImportedArchives &&
+                !hasExistingConversations;
 
             return isFreshInstall;
-
         } catch (error) {
             logger.error("Error detecting fresh install:", error);
             // If we can't determine, assume it's not fresh (safer to run upgrades)
@@ -238,8 +267,11 @@ export class IncrementalUpgradeManager {
     /**
      * Get chain of upgrades to execute incrementally
      */
-    private getUpgradeChain(fromVersion: string, toVersion: string): VersionUpgrade[] {
-        return this.availableUpgrades.filter(upgrade =>
+    private getUpgradeChain(
+        fromVersion: string,
+        toVersion: string
+    ): VersionUpgrade[] {
+        return this.availableUpgrades.filter((upgrade) =>
             upgrade.shouldRun(fromVersion, toVersion)
         );
     }
@@ -252,7 +284,6 @@ export class IncrementalUpgradeManager {
         fromVersion: string,
         toVersion: string
     ): Promise<IncrementalUpgradeResult> {
-
         // Collect all operations from all upgrades
         const allOperations: OperationStatus[] = [];
         for (const upgrade of upgradeChain) {
@@ -260,7 +291,7 @@ export class IncrementalUpgradeManager {
                 allOperations.push({
                     id: `${upgrade.version}_${operation.id}`,
                     name: operation.name,
-                    status: 'pending'
+                    status: "pending",
                 });
             }
         }
@@ -280,17 +311,20 @@ export class IncrementalUpgradeManager {
 
         try {
             for (const upgrade of upgradeChain) {
-
-                const context = await this.createUpgradeContext(upgrade, fromVersion, toVersion);
-
-                // Execute automatic operations with progress updates
-                const automaticResults = await this.executeOperationsWithProgress(
-                    upgrade.automaticOperations,
-                    context,
-                    upgrade.version,
-                    progressModal
+                const context = await this.createUpgradeContext(
+                    upgrade,
+                    fromVersion,
+                    toVersion
                 );
 
+                // Execute automatic operations with progress updates
+                const automaticResults =
+                    await this.executeOperationsWithProgress(
+                        upgrade.automaticOperations,
+                        context,
+                        upgrade.version,
+                        progressModal
+                    );
 
                 // Manual operations will be handled separately if any exist
                 const manualResults = { success: true, results: [] };
@@ -298,7 +332,7 @@ export class IncrementalUpgradeManager {
                 results.push({
                     version: upgrade.version,
                     automaticResults,
-                    manualResults
+                    manualResults,
                 });
 
                 // Count as success even if some operations were "no-op" (smart success logic)
@@ -307,9 +341,11 @@ export class IncrementalUpgradeManager {
 
             const overallSuccess = true; // Always success for automatic operations
 
-            progressModal.markComplete(`All operations completed successfully!`);
+            progressModal.markComplete(
+                `All operations completed successfully!`
+            );
             // Laisser apparaître le message "Completed!" brièvement avant de fermer automatiquement
-            await new Promise((resolve) => setTimeout(resolve, 450));
+            await new Promise((resolve) => window.setTimeout(resolve, 450));
             progressModal.close();
             // No Notice here - completion dialog will be shown after
 
@@ -318,9 +354,8 @@ export class IncrementalUpgradeManager {
                 upgradesExecuted,
                 upgradesSkipped,
                 upgradesFailed,
-                results
+                results,
             };
-
         } catch (error) {
             logger.error("Modal upgrade execution failed:", error);
             progressModal.showError(`Upgrade failed: ${error}`);
@@ -337,7 +372,7 @@ export class IncrementalUpgradeManager {
         version: string,
         progressModal: MultiOperationProgressModal
     ): Promise<any> {
-        const results: Array<{operationId: string; result: any}> = [];
+        const results: Array<{ operationId: string; result: any }> = [];
         let criticalFailures = 0; // Only count actual critical failures
 
         for (const operation of operations) {
@@ -347,33 +382,37 @@ export class IncrementalUpgradeManager {
                 // Check if already completed
                 if (await this.isOperationCompleted(operation.id, version)) {
                     progressModal.updateOperation(modalOperationId, {
-                        status: 'completed',
-                        progress: 100
+                        status: "completed",
+                        progress: 100,
                     });
                     results.push({
                         operationId: operation.id,
-                        result: { success: true, message: "Already completed" }
+                        result: { success: true, message: "Already completed" },
                     });
                     continue;
                 }
 
                 // Mark as running
                 progressModal.updateOperation(modalOperationId, {
-                    status: 'running',
-                    progress: 0
+                    status: "running",
+                    progress: 0,
                 });
 
                 // Check if can run
                 if (!(await operation.canRun(context))) {
                     // NOT a critical failure - just means nothing to do
                     progressModal.updateOperation(modalOperationId, {
-                        status: 'completed',
+                        status: "completed",
                         progress: 100,
-                        currentDetail: "Nothing to process"
+                        currentDetail: "Nothing to process",
                     });
                     results.push({
                         operationId: operation.id,
-                        result: { success: true, message: "Prerequisites not met - nothing to process" }
+                        result: {
+                            success: true,
+                            message:
+                                "Prerequisites not met - nothing to process",
+                        },
                     });
                     continue;
                 }
@@ -391,8 +430,8 @@ export class IncrementalUpgradeManager {
                 if (result.success) {
                     await this.markOperationCompleted(operation.id, version);
                     progressModal.updateOperation(modalOperationId, {
-                        status: 'completed',
-                        progress: 100
+                        status: "completed",
+                        progress: 100,
                     });
                 } else {
                     // Only count as critical failure if it's actually critical
@@ -400,29 +439,31 @@ export class IncrementalUpgradeManager {
                     if (isCritical) {
                         criticalFailures++;
                         progressModal.updateOperation(modalOperationId, {
-                            status: 'failed',
-                            error: result.message
+                            status: "failed",
+                            error: result.message,
                         });
                     } else {
                         // Treat as completed with warning
                         progressModal.updateOperation(modalOperationId, {
-                            status: 'completed',
+                            status: "completed",
                             progress: 100,
-                            currentDetail: "Completed with warnings"
+                            currentDetail: "Completed with warnings",
                         });
                     }
                 }
-
             } catch (error) {
                 const errorResult = {
                     success: false,
                     message: `Operation failed: ${error}`,
-                    details: { error: String(error) }
+                    details: { error: String(error) },
                 };
-                results.push({ operationId: operation.id, result: errorResult });
+                results.push({
+                    operationId: operation.id,
+                    result: errorResult,
+                });
                 progressModal.updateOperation(modalOperationId, {
-                    status: 'failed',
-                    error: String(error)
+                    status: "failed",
+                    error: String(error),
                 });
                 criticalFailures++;
             }
@@ -434,7 +475,7 @@ export class IncrementalUpgradeManager {
     /**
      * Determine if an operation failure is critical
      */
-    private isCriticalFailure(result: any): boolean {
+    private isCriticalFailure(_result: any): boolean {
         // For now, no failures are critical for upgrade operations
         // They're either successful or "nothing to do"
         return false;
@@ -454,11 +495,11 @@ export class IncrementalUpgradeManager {
             ...context,
             onProgress: (progress: number, detail?: string) => {
                 progressModal.updateOperation(modalOperationId, {
-                    status: 'running',
+                    status: "running",
                     progress,
-                    currentDetail: detail
+                    currentDetail: detail,
                 });
-            }
+            },
         };
 
         // Execute the operation with progress reporting
@@ -466,8 +507,8 @@ export class IncrementalUpgradeManager {
 
         // Update progress to 100% when complete
         progressModal.updateOperation(modalOperationId, {
-            status: 'running',
-            progress: 100
+            status: "running",
+            progress: 100,
         });
 
         return result;
@@ -487,7 +528,7 @@ export class IncrementalUpgradeManager {
             plugin: this.plugin,
             fromVersion,
             toVersion,
-            pluginData
+            pluginData,
         };
     }
 
@@ -495,22 +536,22 @@ export class IncrementalUpgradeManager {
      * Mark overall upgrade as complete
      */
     private async markUpgradeComplete(version: string): Promise<void> {
-        const data = await this.plugin.loadData() || {};
+        const data = (await this.plugin.loadData()) || {};
 
         // Initialize upgrade history structure if needed
         if (!data.upgradeHistory) {
             data.upgradeHistory = {
                 completedUpgrades: {},
-                completedOperations: {}
+                completedOperations: {},
             };
         }
 
         // Mark upgrade as completed in structured format
-        const versionKey = version.replace(/\./g, '_');
+        const versionKey = version.replace(/\./g, "_");
         data.upgradeHistory.completedUpgrades[versionKey] = {
             version: version,
             date: new Date().toISOString(),
-            completed: true
+            completed: true,
         };
 
         // Legacy fields for compatibility (can be removed in future versions)
@@ -535,21 +576,29 @@ export class IncrementalUpgradeManager {
         upgradeChain: VersionUpgrade[],
         result: IncrementalUpgradeResult
     ): Promise<void> {
-
         const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
 
         const upgradesFolder = `${reportRoot}/Upgrades`;
 
-        const folderResult = await ensureFolderExists(upgradesFolder, this.plugin.app.vault);
+        const folderResult = await ensureFolderExists(
+            upgradesFolder,
+            this.plugin.app.vault
+        );
 
         if (!folderResult.success) {
             logger.error(`❌ Failed to create folder: ${folderResult.error}`);
-            throw new Error(`Failed to create upgrades folder: ${folderResult.error}`);
+            throw new Error(
+                `Failed to create upgrades folder: ${folderResult.error}`
+            );
         }
 
         const now = new Date();
-        const pad = (n: number) => n.toString().padStart(2, '0');
-        const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(
+            now.getDate()
+        )}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(
+            now.getSeconds()
+        )}`;
         const fileName = `${ts} - Upgrade to ${toVersion}.md`;
         const filePath = `${upgradesFolder}/${fileName}`;
 
@@ -567,7 +616,10 @@ export class IncrementalUpgradeManager {
         const issuesUrl = `${GITHUB.REPO_BASE}/issues`;
 
         const totalVersions = result.results.length;
-        const totalOps = result.results.reduce((acc, v) => acc + (v.automaticResults?.results?.length || 0), 0);
+        const totalOps = result.results.reduce(
+            (acc, v) => acc + (v.automaticResults?.results?.length || 0),
+            0
+        );
 
         let md = `# Upgrade to v${toVersion}\n\n`;
         md += `From v${fromVersion} → v${toVersion}\n\n`;
@@ -589,13 +641,12 @@ export class IncrementalUpgradeManager {
                 const opId = opRes.operationId;
                 const opName = opsByVersion[entry.version]?.[opId] || opId;
                 const ok = opRes.result?.success === true;
-                const status = ok ? '✅' : '⚠️';
-                const msg = opRes.result?.message || '';
+                const status = ok ? "✅" : "⚠️";
+                const msg = opRes.result?.message || "";
                 md += `### ${opName} ${status}\n\n`;
                 if (msg) md += `${msg}\n\n`;
             }
         }
-
 
         try {
             await this.plugin.app.vault.create(filePath, md);
@@ -604,7 +655,7 @@ export class IncrementalUpgradeManager {
             logger.error(`Error details:`, {
                 message: error instanceof Error ? error.message : String(error),
                 filePath,
-                contentLength: md.length
+                contentLength: md.length,
             });
             throw error;
         }
@@ -625,11 +676,19 @@ export class IncrementalUpgradeManager {
             const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
 
             if (isV130OrLater) {
-                const { UpgradeCompleteModal } = await import("../dialogs/upgrade-complete-modal");
-                new UpgradeCompleteModal(this.plugin.app, this.plugin, version).open();
+                const { UpgradeCompleteModal } = await import(
+                    "../dialogs/upgrade-complete-modal"
+                );
+                new UpgradeCompleteModal(
+                    this.plugin.app,
+                    this.plugin,
+                    version
+                ).open();
             } else {
                 // For older versions, just show a simple notice
-                new Notice(t("upgrade.notices.upgraded_to_version", { version }));
+                new Notice(
+                    t("upgrade.notices.upgraded_to_version", { version })
+                );
             }
         } catch (error) {
             logger.error("Error showing upgrade complete dialog:", error);
@@ -641,11 +700,17 @@ export class IncrementalUpgradeManager {
      * Show upgrade dialog - INFORMATION ONLY (no cancel)
      * @deprecated - No longer used in v1.3.0+, kept for compatibility
      */
-    private async showUpgradeDialog(currentVersion: string, lastVersion: string, upgradeChain: VersionUpgrade[]): Promise<void> {
+    private async showUpgradeDialog(
+        currentVersion: string,
+        lastVersion: string,
+        upgradeChain: VersionUpgrade[]
+    ): Promise<void> {
         try {
             // Get overview content
             const overview = await this.fetchReleaseOverview(currentVersion);
-            const baseMessage = overview || `Nexus AI Chat Importer has been upgraded to version ${currentVersion}.`;
+            const baseMessage =
+                overview ||
+                `Nexus AI Chat Importer has been upgraded to version ${currentVersion}.`;
 
             // Build paragraphs array with proper spacing
             const paragraphs: string[] = [];
@@ -658,34 +723,51 @@ export class IncrementalUpgradeManager {
                 // Add information about operations that will run
                 paragraphs.push(""); // Empty paragraph for spacing
                 paragraphs.push("**Upgrade Operations Required**");
-                paragraphs.push("The following operations will be performed automatically:");
+                paragraphs.push(
+                    "The following operations will be performed automatically:"
+                );
                 paragraphs.push(""); // Empty paragraph for spacing
 
                 // List operations from all upgrades
                 const operationsList: string[] = [];
                 for (const upgrade of upgradeChain) {
                     for (const operation of upgrade.automaticOperations) {
-                        operationsList.push(`• **${operation.name}**: ${operation.description}`);
+                        operationsList.push(
+                            `• **${operation.name}**: ${operation.description}`
+                        );
                     }
                 }
-                paragraphs.push(operationsList.join('\n'));
+                paragraphs.push(operationsList.join("\n"));
             } else {
                 // No operations needed
                 paragraphs.push(""); // Empty paragraph for spacing
-                paragraphs.push("All systems are up to date. No operations required.");
+                paragraphs.push(
+                    "All systems are up to date. No operations required."
+                );
             }
 
             // INFORMATION DIALOG - no cancel option
             if (upgradeChain.length > 0) {
                 // Check if this is the v1.2.0 or v1.3.0 upgrade - use beautiful modal
-                const isV120Upgrade = upgradeChain.some(upgrade => upgrade.version === "1.2.0");
-                const isV130Upgrade = upgradeChain.some(upgrade => upgrade.version === "1.3.0");
+                const isV120Upgrade = upgradeChain.some(
+                    (upgrade) => upgrade.version === "1.2.0"
+                );
+                const isV130Upgrade = upgradeChain.some(
+                    (upgrade) => upgrade.version === "1.3.0"
+                );
 
                 if (isV130Upgrade) {
                     // Use beautiful upgrade modal for v1.3.0
-                    const { NexusUpgradeModal130 } = await import("../dialogs/upgrade-modal-1.3.0");
+                    const { NexusUpgradeModal130 } = await import(
+                        "../dialogs/upgrade-modal-1.3.0"
+                    );
                     const userChoice = await new Promise<string>((resolve) => {
-                        new NexusUpgradeModal130(this.plugin.app, this.plugin, "1.3.0", resolve).open();
+                        new NexusUpgradeModal130(
+                            this.plugin.app,
+                            this.plugin,
+                            "1.3.0",
+                            resolve
+                        ).open();
                     });
 
                     // If user cancelled/closed dialog, throw error to abort upgrade
@@ -694,18 +776,26 @@ export class IncrementalUpgradeManager {
                     }
                 } else if (isV120Upgrade) {
                     // Use beautiful upgrade modal for v1.2.0
-                    const { NexusUpgradeModal } = require("./versions/upgrade-1.2.0");
-                    await new Promise<void>((resolve) => {
-                        new NexusUpgradeModal(this.plugin.app, this.plugin, "1.2.0", resolve).open();
+                    await new Promise<string>((resolve) => {
+                        new NexusUpgradeModal(
+                            this.plugin.app,
+                            this.plugin,
+                            "1.2.0",
+                            resolve
+                        ).open();
                     });
                 } else {
                     // Use standard dialog for other upgrades
                     await showDialog(
                         this.plugin.app,
                         "information",
-                        `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
+                        `Upgrade to ${VersionUtils.formatVersion(
+                            currentVersion
+                        )}`,
                         paragraphs,
-                        this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
+                        this.shouldShowUpgradeWarning(lastVersion)
+                            ? this.getUpgradeWarning()
+                            : undefined,
                         { button1: "Proceed with Upgrade" }
                     );
                 }
@@ -716,13 +806,19 @@ export class IncrementalUpgradeManager {
                     "information",
                     `Upgrade to ${VersionUtils.formatVersion(currentVersion)}`,
                     paragraphs,
-                    this.shouldShowUpgradeWarning(lastVersion) ? this.getUpgradeWarning() : undefined,
-                    { button1: "Got it!" }  // ← Juste informatif
+                    this.shouldShowUpgradeWarning(lastVersion)
+                        ? this.getUpgradeWarning()
+                        : undefined,
+                    { button1: "Got it!" } // ← Juste informatif
                 );
             }
         } catch (error) {
             logger.error("Error showing upgrade dialog:", error);
-            new Notice(t("upgrade.notices.upgraded_to_version", { version: currentVersion }));
+            new Notice(
+                t("upgrade.notices.upgraded_to_version", {
+                    version: currentVersion,
+                })
+            );
         }
     }
 
@@ -730,13 +826,16 @@ export class IncrementalUpgradeManager {
      * Wait until a CSS rule (selectorText contains 'selector') is present in document.styleSheets
      * Returns false on timeout, true if found
      */
-    private async waitForCssRule(selector: string, timeoutMs: number = 2000): Promise<boolean> {
+    private async waitForCssRule(
+        selector: string,
+        timeoutMs: number = 2000
+    ): Promise<boolean> {
         const start = Date.now();
         const hasRule = (): boolean => {
-            for (const sheet of Array.from(document.styleSheets)) {
+            for (const sheet of Array.from(activeDocument.styleSheets)) {
                 let rules: CSSRuleList | undefined;
                 try {
-                    rules = (sheet as CSSStyleSheet).cssRules;
+                    rules = sheet.cssRules;
                 } catch {
                     // Some stylesheets may be cross-origin or not yet accessible
                     continue;
@@ -744,7 +843,10 @@ export class IncrementalUpgradeManager {
                 if (!rules) continue;
                 for (let i = 0; i < rules.length; i++) {
                     const rule = rules[i] as CSSStyleRule;
-                    if ((rule as any).selectorText && rule.selectorText.includes(selector)) {
+                    if (
+                        (rule as any).selectorText &&
+                        rule.selectorText.includes(selector)
+                    ) {
                         return true;
                     }
                 }
@@ -770,33 +872,48 @@ export class IncrementalUpgradeManager {
     /**
      * Check if operation was completed using new upgrade history structure
      */
-    private async isOperationCompleted(operationId: string, version: string): Promise<boolean> {
+    private async isOperationCompleted(
+        operationId: string,
+        version: string
+    ): Promise<boolean> {
         const data = await this.plugin.loadData();
-        const operationKey = `operation_${version.replace(/\./g, '_')}_${operationId}`;
-        return data?.upgradeHistory?.completedOperations?.[operationKey]?.completed || false;
+        const operationKey = `operation_${version.replace(
+            /\./g,
+            "_"
+        )}_${operationId}`;
+        return (
+            data?.upgradeHistory?.completedOperations?.[operationKey]
+                ?.completed || false
+        );
     }
 
     /**
      * Mark operation as completed using structured upgrade history
      */
-    private async markOperationCompleted(operationId: string, version: string): Promise<void> {
-        const data = await this.plugin.loadData() || {};
+    private async markOperationCompleted(
+        operationId: string,
+        version: string
+    ): Promise<void> {
+        const data = (await this.plugin.loadData()) || {};
 
         // Initialize upgrade history structure if needed
         if (!data.upgradeHistory) {
             data.upgradeHistory = {
                 completedUpgrades: {},
-                completedOperations: {}
+                completedOperations: {},
             };
         }
 
         // Mark operation as completed in structured format
-        const operationKey = `operation_${version.replace(/\./g, '_')}_${operationId}`;
+        const operationKey = `operation_${version.replace(
+            /\./g,
+            "_"
+        )}_${operationId}`;
         data.upgradeHistory.completedOperations[operationKey] = {
             operationId: operationId,
             version: version,
             date: new Date().toISOString(),
-            completed: true
+            completed: true,
         };
 
         await this.plugin.saveData(data);
@@ -830,12 +947,13 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
     /**
      * Fetch release overview from GitHub
      */
-    private async fetchReleaseOverview(version: string): Promise<string | null> {
+    private async fetchReleaseOverview(
+        version: string
+    ): Promise<string | null> {
         try {
-            const { requestUrl } = require("obsidian");
             const response = await requestUrl({
                 url: `${GITHUB.RAW_BASE}/${version}/RELEASE_NOTES.md`,
-                method: 'GET'
+                method: "GET",
             });
 
             const overviewRegex = /## Overview\s+(.*?)(?=##|$)/s;
@@ -852,8 +970,8 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
      * Returns: -1 if v1 < v2, 0 if equal, 1 if v1 > v2
      */
     private compareVersions(v1: string, v2: string): number {
-        const parts1 = v1.split('.').map(Number);
-        const parts2 = v2.split('.').map(Number);
+        const parts1 = v1.split(".").map(Number);
+        const parts2 = v2.split(".").map(Number);
 
         for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
             const num1 = parts1[i] || 0;
@@ -869,32 +987,40 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
     /**
      * Get manual operations status for settings UI
      */
-    async getManualOperationsForSettings(): Promise<Array<{
-        version: string;
-        operations: Array<{
-            id: string;
-            name: string;
-            description: string;
-            completed: boolean;
-            canRun: boolean;
-        }>;
-    }>> {
+    async getManualOperationsForSettings(): Promise<
+        Array<{
+            version: string;
+            operations: Array<{
+                id: string;
+                name: string;
+                description: string;
+                completed: boolean;
+                canRun: boolean;
+            }>;
+        }>
+    > {
         const results = [];
 
         for (const upgrade of this.availableUpgrades) {
-            const context = await this.createUpgradeContext(upgrade, "0.0.0", this.plugin.manifest.version);
-            const operationsStatus = await upgrade.getManualOperationsStatus(context);
+            const context = await this.createUpgradeContext(
+                upgrade,
+                "0.0.0",
+                this.plugin.manifest.version
+            );
+            const operationsStatus = await upgrade.getManualOperationsStatus(
+                context
+            );
 
             if (operationsStatus.length > 0) {
                 results.push({
                     version: upgrade.version,
-                    operations: operationsStatus.map(status => ({
+                    operations: operationsStatus.map((status) => ({
                         id: status.operation.id,
                         name: status.operation.name,
                         description: status.operation.description,
                         completed: status.completed,
-                        canRun: status.canRun
-                    }))
+                        canRun: status.canRun,
+                    })),
                 });
             }
         }
@@ -905,18 +1031,30 @@ Version 1.0.2 introduced new metadata parameters required for certain features. 
     /**
      * Execute single manual operation from settings
      */
-    async executeManualOperation(version: string, operationId: string): Promise<{success: boolean; message: string}> {
-        const upgrade = this.availableUpgrades.find(u => u.version === version);
+    async executeManualOperation(
+        version: string,
+        operationId: string
+    ): Promise<{ success: boolean; message: string }> {
+        const upgrade = this.availableUpgrades.find(
+            (u) => u.version === version
+        );
         if (!upgrade) {
             return { success: false, message: "Upgrade version not found" };
         }
 
-        const context = await this.createUpgradeContext(upgrade, "0.0.0", this.plugin.manifest.version);
-        const result = await upgrade.executeManualOperation(operationId, context);
+        const context = await this.createUpgradeContext(
+            upgrade,
+            "0.0.0",
+            this.plugin.manifest.version
+        );
+        const result = await upgrade.executeManualOperation(
+            operationId,
+            context
+        );
 
         return {
             success: result.success,
-            message: result.message
+            message: result.message,
         };
     }
 }

@@ -35,13 +35,22 @@ import { InstallationWelcomeDialog } from "./dialogs/installation-welcome-dialog
 import { UpgradeNotice132Dialog } from "./dialogs/upgrade-notice-1.3.2-dialog";
 import { showDialog } from "./dialogs";
 import { createProviderRegistry } from "./providers/provider-registry";
-import { FileSelectionResult, ConversationSelectionResult } from "./types/conversation-selection";
-import { ConversationMetadataExtractor, IgnoredArchiveInfo } from "./services/conversation-metadata-extractor";
+import {
+    FileSelectionResult,
+    ConversationSelectionResult,
+} from "./types/conversation-selection";
+import {
+    ConversationMetadataExtractor,
+    IgnoredArchiveInfo,
+} from "./services/conversation-metadata-extractor";
 import { ImportReport } from "./models/import-report";
 import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
-import { ensureFolderExists, formatTimestamp, getFileFingerprint } from "./utils";
+import {
+    ensureFolderExists,
+    formatTimestamp,
+    getFileFingerprint,
+} from "./utils";
 import { sortFilesForImport } from "./utils/file-sort";
-import type { GeminiIndex } from "./providers/gemini/gemini-types";
 import { createZipArchiveReader } from "./utils/zip-loader";
 import { classifyArchiveEntries } from "./utils/zip-content-reader";
 
@@ -60,19 +69,18 @@ type MobileArchiveImportMode = "reprocess" | "incremental";
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
     logger: Logger = new Logger();
-    
+
     private storageService: StorageService;
     private importService: ImportService;
     private fileService: FileService;
     private commandRegistry: CommandRegistry;
-	    private eventHandlers: EventHandlers;
-	    private upgradeManager: IncrementalUpgradeManager;
-	    private currentGeminiIndex: GeminiIndex | null = null;
-        private lastImportCheckpoint: ImportCheckpoint | null = null;
+    private eventHandlers: EventHandlers;
+    private upgradeManager: IncrementalUpgradeManager;
+    private lastImportCheckpoint: ImportCheckpoint | null = null;
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
-        
+
         this.storageService = new StorageService(this);
         this.importService = new ImportService(this);
         this.fileService = new FileService(this);
@@ -86,19 +94,22 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             initLocale();
             await this.loadSettings();
 
-            this.addSettingTab(new NexusAiChatImporterPluginSettingTab(this.app, this));
+            this.addSettingTab(
+                new NexusAiChatImporterPluginSettingTab(this.app, this)
+            );
             this.commandRegistry.registerCommands();
             this.eventHandlers.registerEvents();
 
             const ribbonIconEl = this.addRibbonIcon(
                 "message-square-plus",
-                t('notices.ribbon_tooltip'),
+                t("notices.ribbon_tooltip"),
                 () => this.showProviderSelectionDialog()
             );
             ribbonIconEl.addClass("nexus-ai-chat-ribbon");
 
             // Check for upgrades and fresh installation
-            const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
+            const upgradeResult =
+                await this.upgradeManager.checkAndPerformUpgrade();
 
             // Show installation welcome dialog for fresh installs
             if (upgradeResult?.isFreshInstall) {
@@ -111,43 +122,44 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Show upgrade completion dialog if upgrade was performed
             // Called AFTER checkAndPerformUpgrade() returns to ensure styles.css is loaded
-            if (upgradeResult?.showCompletionDialog && upgradeResult?.upgradedToVersion) {
-                await this.upgradeManager.showUpgradeCompleteDialog(upgradeResult.upgradedToVersion);
+            if (
+                upgradeResult?.showCompletionDialog &&
+                upgradeResult?.upgradedToVersion
+            ) {
+                await this.upgradeManager.showUpgradeCompleteDialog(
+                    upgradeResult.upgradedToVersion
+                );
             }
 
-	            // Show upgrade notice dialog for users upgrading from 1.3.0 (new Claude format support)
-	            if (
-	                this.settings.previousVersion === "1.3.0" &&
-	                !this.settings.hasSeenClaude132UpgradeNotice
-	            ) {
-	                UpgradeNotice132Dialog.open(this.app, this);
-	                this.settings.hasSeenClaude132UpgradeNotice = true;
-	                await this.saveSettings();
-	            }
+            // Show upgrade notice dialog for users upgrading from 1.3.0 (new Claude format support)
+            if (
+                this.settings.previousVersion === "1.3.0" &&
+                !this.settings.hasSeenClaude132UpgradeNotice
+            ) {
+                UpgradeNotice132Dialog.open(this.app, this);
+                this.settings.hasSeenClaude132UpgradeNotice = true;
+                await this.saveSettings();
+            }
         } catch (error) {
             this.logger.error("Plugin loading failed:", error);
             throw error;
         }
     }
 
-    async onunload() {
-        try {
-            this.importService.resetRuntimeState();
-            if (this.currentGeminiIndex) {
-                this.currentGeminiIndex = null;
-                this.importService.setGeminiIndex(null);
-            }
-            this.eventHandlers.cleanup();
-            await this.saveSettings();
-        } catch (error) {
-            this.logger.error("Plugin unloading failed:", error);
-        }
+    onunload() {
+        this.importService.resetRuntimeState();
+        this.eventHandlers.cleanup();
+        void this.saveSettings();
     }
 
     async loadSettings() {
         try {
             const data = await this.loadData();
-            this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings || {});
+            this.settings = Object.assign(
+                {},
+                DEFAULT_SETTINGS,
+                data?.settings || {}
+            );
 
             // No need to compute reportFolder anymore - it's a direct setting now
             // Migration will handle converting old archiveFolder to new structure
@@ -158,7 +170,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             if (!storedCurrentVersion || storedCurrentVersion === "0.0.0") {
                 // First time with version tracking
-                const hasExistingConversations = await this.hasExistingNexusConversations();
+                const hasExistingConversations =
+                    await this.hasExistingNexusConversations();
 
                 if (hasExistingConversations) {
                     // Existing user upgrading to version tracking for first time
@@ -171,7 +184,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 }
 
                 await this.saveSettings();
-
             } else if (storedCurrentVersion !== currentVersion) {
                 // Normal upgrade
                 this.settings.previousVersion = storedCurrentVersion;
@@ -181,7 +193,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Load storage data
             await this.storageService.loadData();
-            
         } catch (error) {
             this.logger.error("loadSettings failed:", error);
             throw error;
@@ -194,12 +205,16 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private async hasExistingNexusConversations(): Promise<boolean> {
         try {
             const files = this.app.vault.getMarkdownFiles();
-            return files.some(file => {
-                const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+            return files.some((file) => {
+                const frontmatter =
+                    this.app.metadataCache.getFileCache(file)?.frontmatter;
                 return frontmatter?.nexus === this.manifest.id;
             });
         } catch (error) {
-            this.logger.warn("Error checking for existing conversations:", error);
+            this.logger.warn(
+                "Error checking for existing conversations:",
+                error
+            );
             return false;
         }
     }
@@ -207,23 +222,28 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     async saveSettings() {
         try {
             // Load existing data to preserve upgrade history and other data
-            const existingData = await this.loadData() || {};
-            
+            const existingData = (await this.loadData()) || {};
+
             // Preserve existingData.importedArchives if it exists and has data
-            let finalImportedArchives = this.storageService.getImportedArchives();
-            
-            if (existingData.importedArchives && Object.keys(existingData.importedArchives).length > 0) {
+            let finalImportedArchives =
+                this.storageService.getImportedArchives();
+
+            if (
+                existingData.importedArchives &&
+                Object.keys(existingData.importedArchives).length > 0
+            ) {
                 // Existing data has archives - preserve them and merge with storage
                 const existingArchives = existingData.importedArchives;
-                const storageArchives = this.storageService.getImportedArchives();
-                
+                const storageArchives =
+                    this.storageService.getImportedArchives();
+
                 // Merge: storage takes priority for conflicts
                 finalImportedArchives = {
                     ...existingArchives,
-                    ...storageArchives
+                    ...storageArchives,
                 };
             }
-            
+
             // Merge with new data, preserving upgrade history structure
             const mergedData = {
                 ...existingData,
@@ -231,10 +251,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 importedArchives: finalImportedArchives,
                 upgradeHistory: existingData.upgradeHistory || {
                     completedUpgrades: {},
-                    completedOperations: {}
-                }
+                    completedOperations: {},
+                },
             };
-            
+
             await this.storageService.saveData(mergedData);
         } catch (error) {
             this.logger.error("saveSettings failed:", error);
@@ -271,15 +291,19 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      * Uses runtime APIs not exposed in the public TypeScript definitions.
      */
     private openPluginSettings(): void {
-        const settingsApi = (this.app as unknown as {
-            setting?: {
-                open?: () => void;
-                openTabById?: (id: string) => void;
-            };
-        }).setting;
+        const settingsApi = (
+            this.app as unknown as {
+                setting?: {
+                    open?: () => void;
+                    openTabById?: (id: string) => void;
+                };
+            }
+        ).setting;
 
         if (!settingsApi?.open) {
-            this.logger.warn("Unable to open settings automatically: app.setting.open is unavailable");
+            this.logger.warn(
+                "Unable to open settings automatically: app.setting.open is unavailable"
+            );
             return;
         }
 
@@ -293,7 +317,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     async showProviderSelectionDialog(): Promise<void> {
         // Check if migration is needed before allowing import
-        const upgradeResult = await this.upgradeManager.checkAndPerformUpgrade();
+        const upgradeResult =
+            await this.upgradeManager.checkAndPerformUpgrade();
 
         // If migration was needed but failed/cancelled, block import
         if (upgradeResult !== null && !upgradeResult.success) {
@@ -305,19 +330,26 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // In both cases, continue with import
 
         const importFlowLogger = this.logger.child("ImportFlow");
-        importFlowLogger.debug("Opening file selection dialog with provider auto-detection", {
-            isMobile: this.isMobileTaskQueueMode(),
-        });
+        importFlowLogger.debug(
+            "Opening file selection dialog with provider auto-detection",
+            {
+                isMobile: this.isMobileTaskQueueMode(),
+            }
+        );
 
         try {
             this.showEnhancedFileSelectionDialog("auto");
         } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            importFlowLogger.error("Failed to open enhanced file selection dialog", {
-                selectedProvider: "auto",
-                message,
-                stack: error instanceof Error ? error.stack : undefined,
-            });
+            const message =
+                error instanceof Error ? error.message : String(error);
+            importFlowLogger.error(
+                "Failed to open enhanced file selection dialog",
+                {
+                    selectedProvider: "auto",
+                    message,
+                    stack: error instanceof Error ? error.stack : undefined,
+                }
+            );
             new Notice(t("notices.import_error", { error: message }));
         }
     }
@@ -339,30 +371,38 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     /**
      * Handle the result from enhanced file selection dialog
      */
-    private async handleFileSelectionResult(result: FileSelectionResult): Promise<void> {
+    private async handleFileSelectionResult(
+        result: FileSelectionResult
+    ): Promise<void> {
         const { files, mode, provider } = result;
 
-		        if (files.length === 0) {
-		            return;
-		        }
+        if (files.length === 0) {
+            return;
+        }
 
-		        // Separate ZIP exports from optional JSON files
-		        let zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
-		        const jsonFiles = files.filter((file) => file.name.toLowerCase().endsWith(".json"));
-	            const isMobile = this.isMobileTaskQueueMode();
+        // Separate ZIP exports from optional JSON files
+        let zipFiles = files.filter((file) =>
+            file.name.toLowerCase().endsWith(".zip")
+        );
+        files.filter((file) => file.name.toLowerCase().endsWith(".json"));
+        const isMobile = this.isMobileTaskQueueMode();
 
-	            if (isMobile && zipFiles.length > 1) {
-	                this.logger.child("ImportFlow").warn("Mobile ZIP selection limited to one archive", {
-	                    provider,
-	                    selectedZipCount: zipFiles.length,
-	                    keptFileName: zipFiles[0].name,
-	                });
-	                new Notice(t("notices.import_mobile_single_zip_only"));
-	                zipFiles = [zipFiles[0]];
-	            }
+        if (isMobile && zipFiles.length > 1) {
+            this.logger
+                .child("ImportFlow")
+                .warn("Mobile ZIP selection limited to one archive", {
+                    provider,
+                    selectedZipCount: zipFiles.length,
+                    keptFileName: zipFiles[0].name,
+                });
+            new Notice(t("notices.import_mobile_single_zip_only"));
+            zipFiles = [zipFiles[0]];
+        }
 
         const sortedZipFiles = sortFilesForImport(zipFiles);
-        const lockedProvider = await this.resolveProviderLockFromSelection(sortedZipFiles);
+        const lockedProvider = await this.resolveProviderLockFromSelection(
+            sortedZipFiles
+        );
         if (!lockedProvider) {
             new Notice(
                 t("notices.import_error_analyzing", {
@@ -373,92 +413,49 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         if (provider !== "auto" && lockedProvider.provider !== provider) {
-            this.logger.child("ImportFlow").warn("Provider selection overridden by first supported archive", {
-                selectedProvider: provider,
-                lockedProvider: lockedProvider.provider,
-                lockSourceFile: lockedProvider.fileName,
-            });
+            this.logger
+                .child("ImportFlow")
+                .warn(
+                    "Provider selection overridden by first supported archive",
+                    {
+                        selectedProvider: provider,
+                        lockedProvider: lockedProvider.provider,
+                        lockSourceFile: lockedProvider.fileName,
+                    }
+                );
         } else if (provider === "auto") {
-            this.logger.child("ImportFlow").debug("Provider auto-detected from selected archives", {
-                lockedProvider: lockedProvider.provider,
-                lockSourceFile: lockedProvider.fileName,
-            });
+            this.logger
+                .child("ImportFlow")
+                .debug("Provider auto-detected from selected archives", {
+                    lockedProvider: lockedProvider.provider,
+                    lockSourceFile: lockedProvider.fileName,
+                });
         }
 
         const effectiveProvider = lockedProvider.provider;
 
-        if (effectiveProvider === "gemini") {
-            if (zipFiles.length === 0) {
-                new Notice(t('notices.import_no_zip_gemini'));
-                this.logger.warn("[Gemini] No ZIP files selected for import");
-                return;
-            }
+        if (zipFiles.length === 0) {
+            new Notice(t("notices.import_no_zip"));
+            this.logger.warn(
+                `[${effectiveProvider}] No ZIP files selected for import`
+            );
+            return;
+        }
 
-	            // Load index from the latest JSON file, if provided
-	            let index: GeminiIndex | null = null;
-	            if (jsonFiles.length > 0) {
-	                // Prefer the most recently modified JSON file when multiple are selected
-	                const latestIndexFile = jsonFiles.reduce((latest, current) => {
-	                    return current.lastModified > latest.lastModified ? current : latest;
-	                });
-
-	                try {
-	                    const content = await latestIndexFile.text();
-	                    const parsed = JSON.parse(content);
-
-	                    if (parsed && typeof parsed === "object" && Array.isArray((parsed as any).conversations)) {
-	                        index = parsed as GeminiIndex;
-	                        this.logger.debug(
-	                            `[Gemini] Loaded index file "${latestIndexFile.name}" with ${(parsed as any).conversations.length} conversations`
-	                        );
-	                    } else {
-	                        this.logger.warn(
-	                            `[Gemini] JSON index file "${latestIndexFile.name}" does not look like a valid GeminiIndex (missing conversations array)`
-	                        );
-	                    }
-	                } catch (error) {
-	                    this.logger.error("[Gemini] Failed to parse Gemini index JSON", error);
-	                    new Notice(t('notices.import_gemini_json_failed'));
-	                }
-	            }
-
-	            // Store on plugin and push into ImportService adapter
-	            this.currentGeminiIndex = index;
-	            this.importService.setGeminiIndex(index);
-
-	            // Sort only the ZIP exports by timestamp
-            if (mode === "all") {
-                // Import all conversations with analysis (new optimized workflow)
-                await this.handleImportAll(sortedZipFiles, effectiveProvider);
-            } else {
-                // Selective import - show conversation selection dialog
-                await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
-            }
+        if (mode === "all") {
+            await this.handleImportAll(sortedZipFiles, effectiveProvider);
         } else {
-            // Non-Gemini providers: ensure we do not keep a stale Gemini index
-            if (this.currentGeminiIndex) {
-                this.currentGeminiIndex = null;
-                this.importService.setGeminiIndex(null);
-            }
-
-            if (zipFiles.length === 0) {
-                new Notice(t('notices.import_no_zip'));
-                this.logger.warn(`[${effectiveProvider}] No ZIP files selected for import`);
-                return;
-            }
-
-            if (mode === "all") {
-                await this.handleImportAll(sortedZipFiles, effectiveProvider);
-            } else {
-                await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
-            }
+            await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
         }
     }
 
     /**
      * Handle "Import All" mode with analysis and auto-selection
      */
-    private async handleImportAll(files: File[], provider: string): Promise<void> {
+    private async handleImportAll(
+        files: File[],
+        provider: string
+    ): Promise<void> {
         try {
             const isMobile = this.isMobileTaskQueueMode();
             if (isMobile) {
@@ -472,19 +469,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 task: `0/${files.length}`,
             });
-            this.logger.child("ImportFlow").debug(`Import-all analysis started`, {
-                provider,
-                fileCount: files.length,
-            });
-            new Notice(t('notices.import_analyzing', { count: String(files.length) }));
+            this.logger
+                .child("ImportFlow")
+                .debug(`Import-all analysis started`, {
+                    provider,
+                    fileCount: files.length,
+                });
+            new Notice(
+                t("notices.import_analyzing", { count: String(files.length) })
+            );
 
             // Create metadata extractor
             const providerRegistry = createProviderRegistry(this);
-            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
+            const metadataExtractor = new ConversationMetadataExtractor(
+                providerRegistry,
+                this
+            );
 
             // Get existing conversations for status checking
             const storage = this.getStorageService();
-            const existingConversations = await storage.scanExistingConversations();
+            const existingConversations =
+                await storage.scanExistingConversations();
 
             // Extract metadata from all ZIP files (same as selective mode)
             this.setImportCheckpoint({
@@ -493,23 +498,33 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 task: `0/${files.length}`,
             });
-            const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
-                files,
+            const extractionResult =
+                await metadataExtractor.extractMetadataFromMultipleZips(
+                    files,
+                    provider,
+                    existingConversations
+                );
+            this.logIgnoredArchives(
+                extractionResult.ignoredArchives,
                 provider,
-                existingConversations
+                "import-all"
             );
-            this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "import-all");
 
-            this.logger.child("ImportFlow").debug(`Import-all analysis finished`, {
-                provider,
-                fileCount: files.length,
-                supportedFileCount: extractionResult.supportedFiles.length,
-                ignoredArchiveCount: extractionResult.ignoredArchives.length,
-                conversationCount: extractionResult.conversations.length,
-            });
+            this.logger
+                .child("ImportFlow")
+                .debug(`Import-all analysis finished`, {
+                    provider,
+                    fileCount: files.length,
+                    supportedFileCount: extractionResult.supportedFiles.length,
+                    ignoredArchiveCount:
+                        extractionResult.ignoredArchives.length,
+                    conversationCount: extractionResult.conversations.length,
+                });
 
             if (extractionResult.supportedFiles.length === 0) {
-                new Notice(t('notices.import_no_supported_archives', { provider }));
+                new Notice(
+                    t("notices.import_no_supported_archives", { provider })
+                );
                 return;
             }
 
@@ -518,12 +533,14 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Set custom timestamp format if enabled
             if (this.settings.useCustomMessageTimestampFormat) {
-                operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+                operationReport.setCustomTimestampFormat(
+                    this.settings.messageTimestampFormat
+                );
             }
 
             if (extractionResult.conversations.length === 0) {
                 // No conversations to import, but still generate report and show dialog
-                new Notice(t('notices.import_no_new'));
+                new Notice(t("notices.import_no_new"));
 
                 // Write report showing what was analyzed
                 const reportPath = await this.writeConsolidatedReport(
@@ -538,21 +555,32 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
                 // Show completion dialog with 0 imports
                 if (reportPath) {
-                    this.showImportCompletionDialog(operationReport, reportPath);
+                    this.showImportCompletionDialog(
+                        operationReport,
+                        reportPath
+                    );
                 }
                 return;
             }
 
             // Auto-select ALL conversations (NEW + UPDATED)
-            const allIds = extractionResult.conversations.map(c => c.id);
+            const allIds = extractionResult.conversations.map((c) => c.id);
 
-            const newCount = extractionResult.analysisInfo?.conversationsNew ?? 0;
-            const updatedCount = extractionResult.analysisInfo?.conversationsUpdated ?? 0;
-            new Notice(t('notices.import_starting', { count: String(allIds.length), new: String(newCount), updated: String(updatedCount) }));
+            const newCount =
+                extractionResult.analysisInfo?.conversationsNew ?? 0;
+            const updatedCount =
+                extractionResult.analysisInfo?.conversationsUpdated ?? 0;
+            new Notice(
+                t("notices.import_starting", {
+                    count: String(allIds.length),
+                    new: String(newCount),
+                    updated: String(updatedCount),
+                })
+            );
 
             // Group conversations by file and import
             const conversationsByFile = new Map<string, string[]>();
-            extractionResult.conversations.forEach(conv => {
+            extractionResult.conversations.forEach((conv) => {
                 if (conv.sourceFile) {
                     if (!conversationsByFile.has(conv.sourceFile)) {
                         conversationsByFile.set(conv.sourceFile, []);
@@ -561,7 +589,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 }
             });
 
-            const filesToImport = files.filter(file => conversationsByFile.has(file.name));
+            const filesToImport = files.filter((file) =>
+                conversationsByFile.has(file.name)
+            );
             this.setImportCheckpoint({
                 operation: "import-all",
                 phase: "file-processing-start",
@@ -593,25 +623,39 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this.showImportCompletionDialog(operationReport, reportPath);
             } else {
                 // Fallback if report writing failed
-                new Notice(t('notices.import_completed_fallback', { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+                new Notice(
+                    t("notices.import_completed_fallback", {
+                        created: String(operationReport.getCreatedCount()),
+                        updated: String(operationReport.getUpdatedCount()),
+                    })
+                );
             }
-
         } catch (error) {
             this.logImportFailureWithCheckpoint(error, "import-all");
-            new Notice(t('notices.import_error', { error: error instanceof Error ? error.message : String(error) }));
+            new Notice(
+                t("notices.import_error", {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                })
+            );
         } finally {
             await this.runPostImportCleanup("import-all");
         }
     }
 
-    private async handleImportAllMobileSequential(files: File[], provider: string): Promise<void> {
+    private async handleImportAllMobileSequential(
+        files: File[],
+        provider: string
+    ): Promise<void> {
         const mobileFiles = files.slice(0, 1);
         if (files.length > 1) {
-            this.logger.child("ImportFlow").warn("Mobile import-all guard kept only one ZIP file", {
-                provider,
-                selectedFileCount: files.length,
-                keptFileName: mobileFiles[0]?.name ?? null,
-            });
+            this.logger
+                .child("ImportFlow")
+                .warn("Mobile import-all guard kept only one ZIP file", {
+                    provider,
+                    selectedFileCount: files.length,
+                    keptFileName: mobileFiles[0]?.name ?? null,
+                });
         }
 
         this.setImportCheckpoint({
@@ -620,10 +664,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             provider,
             task: `0/${mobileFiles.length}`,
         });
-        this.logger.child("ImportFlow").debug("Mobile import-all running in direct sequential mode", {
-            provider,
-            fileCount: mobileFiles.length,
-        });
+        this.logger
+            .child("ImportFlow")
+            .debug("Mobile import-all running in direct sequential mode", {
+                provider,
+                fileCount: mobileFiles.length,
+            });
 
         const providerRegistry = createProviderRegistry(this);
         const adapter = providerRegistry.getAdapter(provider);
@@ -631,7 +677,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         const storage = this.getStorageService();
         const operationReport = new ImportReport();
         if (this.settings.useCustomMessageTimestampFormat) {
-            operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+            operationReport.setCustomTimestampFormat(
+                this.settings.messageTimestampFormat
+            );
         }
 
         this.setImportCheckpoint({
@@ -640,12 +688,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             provider,
         });
         const existingScanStartedAt = Date.now();
-        let existingConversationsMap: Map<string, ConversationCatalogEntry> = await storage.scanExistingConversations();
-        this.logger.child("ImportFlow").debug("Mobile direct import existing conversation scan complete", {
-            provider,
-            conversationCount: existingConversationsMap.size,
-            durationMs: Date.now() - existingScanStartedAt,
-        });
+        let existingConversationsMap: Map<string, ConversationCatalogEntry> =
+            await storage.scanExistingConversations();
+        this.logger
+            .child("ImportFlow")
+            .debug("Mobile direct import existing conversation scan complete", {
+                provider,
+                conversationCount: existingConversationsMap.size,
+                durationMs: Date.now() - existingScanStartedAt,
+            });
         this.setImportCheckpoint({
             operation: "import-all",
             phase: "mobile-direct-existing-scan-complete",
@@ -670,28 +721,42 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             try {
                 const zip = await createZipArchiveReader(file, entryFilter);
                 const entries = await zip.listEntries();
-                const classification = classifyArchiveEntries(entries.map((entry) => entry.path), provider);
+                const classification = classifyArchiveEntries(
+                    entries.map((entry) => entry.path),
+                    provider
+                );
                 if (!classification.supported) {
                     isSupportedArchive = false;
                     skippedUnsupported++;
-                    this.logger.child("ImportFlow").warn("Skipping unsupported archive during mobile direct import", {
-                        provider,
-                        fileName: file.name,
-                        reason: classification.reason,
-                        message: classification.message,
-                        task: `${i + 1}/${mobileFiles.length}`,
-                    });
+                    this.logger
+                        .child("ImportFlow")
+                        .warn(
+                            "Skipping unsupported archive during mobile direct import",
+                            {
+                                provider,
+                                fileName: file.name,
+                                reason: classification.reason,
+                                message: classification.message,
+                                task: `${i + 1}/${mobileFiles.length}`,
+                            }
+                        );
                 }
             } catch (error) {
                 isSupportedArchive = false;
                 skippedUnsupported++;
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                this.logger.child("ImportFlow").warn("Skipping unreadable archive during mobile direct import", {
-                    provider,
-                    fileName: file.name,
-                    message: errorMessage,
-                    task: `${i + 1}/${mobileFiles.length}`,
-                });
+                const errorMessage =
+                    error instanceof Error ? error.message : String(error);
+                this.logger
+                    .child("ImportFlow")
+                    .warn(
+                        "Skipping unreadable archive during mobile direct import",
+                        {
+                            provider,
+                            fileName: file.name,
+                            message: errorMessage,
+                            task: `${i + 1}/${mobileFiles.length}`,
+                        }
+                    );
             }
 
             if (!isSupportedArchive) {
@@ -706,7 +771,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 fileName: file.name,
                 task: `${i + 1}/${mobileFiles.length}`,
             });
-            const archiveImportMode = await this.resolveMobileArchiveImportMode(file, provider);
+            const archiveImportMode = await this.resolveMobileArchiveImportMode(
+                file,
+                provider
+            );
             await this.importService.handleZipFile(
                 file,
                 provider,
@@ -719,7 +787,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             this.importService.resetRuntimeState();
             await this.yieldToEventLoop();
             await this.yieldToEventLoop();
-            await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+            await new Promise<void>((resolve) =>
+                window.setTimeout(resolve, 500)
+            );
 
             this.setImportCheckpoint({
                 operation: "import-all",
@@ -730,13 +800,19 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             });
             const rescanStartedAt = Date.now();
             existingConversationsMap.clear();
-            existingConversationsMap = await storage.scanExistingConversations();
-            this.logger.child("ImportFlow").debug("Mobile direct import existing conversation map refreshed", {
-                provider,
-                fileName: file.name,
-                conversationCount: existingConversationsMap.size,
-                durationMs: Date.now() - rescanStartedAt,
-            });
+            existingConversationsMap =
+                await storage.scanExistingConversations();
+            this.logger
+                .child("ImportFlow")
+                .debug(
+                    "Mobile direct import existing conversation map refreshed",
+                    {
+                        provider,
+                        fileName: file.name,
+                        conversationCount: existingConversationsMap.size,
+                        durationMs: Date.now() - rescanStartedAt,
+                    }
+                );
             await this.yieldToEventLoop();
         }
 
@@ -744,14 +820,20 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         existingConversationsMap = new Map<string, ConversationCatalogEntry>();
         await this.yieldToEventLoop();
 
-        const reportPath = await this.writeConsolidatedReport(operationReport, provider, mobileFiles);
+        const reportPath = await this.writeConsolidatedReport(
+            operationReport,
+            provider,
+            mobileFiles
+        );
         if (reportPath) {
             this.showImportCompletionDialog(operationReport, reportPath);
         } else {
-            new Notice(t('notices.import_completed_fallback', {
-                created: String(operationReport.getCreatedCount()),
-                updated: String(operationReport.getUpdatedCount()),
-            }));
+            new Notice(
+                t("notices.import_completed_fallback", {
+                    created: String(operationReport.getCreatedCount()),
+                    updated: String(operationReport.getUpdatedCount()),
+                })
+            );
         }
 
         if (skippedUnsupported > 0) {
@@ -765,15 +847,25 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     /**
      * Handle selective import workflow
      */
-    private async handleSelectiveImport(files: File[], provider: string): Promise<void> {
+    private async handleSelectiveImport(
+        files: File[],
+        provider: string
+    ): Promise<void> {
         try {
-            const mobileFiles = this.isMobileTaskQueueMode() ? files.slice(0, 1) : files;
+            const mobileFiles = this.isMobileTaskQueueMode()
+                ? files.slice(0, 1)
+                : files;
             if (this.isMobileTaskQueueMode() && files.length > 1) {
-                this.logger.child("ImportFlow").warn("Mobile selective import guard kept only one ZIP file", {
-                    provider,
-                    selectedFileCount: files.length,
-                    keptFileName: mobileFiles[0]?.name ?? null,
-                });
+                this.logger
+                    .child("ImportFlow")
+                    .warn(
+                        "Mobile selective import guard kept only one ZIP file",
+                        {
+                            provider,
+                            selectedFileCount: files.length,
+                            keptFileName: mobileFiles[0]?.name ?? null,
+                        }
+                    );
                 new Notice(t("notices.import_mobile_single_zip_only"));
             }
 
@@ -783,19 +875,29 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 task: `0/${mobileFiles.length}`,
             });
-            this.logger.child("ImportFlow").debug(`Selective analysis started`, {
-                provider,
-                fileCount: mobileFiles.length,
-            });
-            new Notice(t('notices.import_analyzing', { count: String(mobileFiles.length) }));
+            this.logger
+                .child("ImportFlow")
+                .debug(`Selective analysis started`, {
+                    provider,
+                    fileCount: mobileFiles.length,
+                });
+            new Notice(
+                t("notices.import_analyzing", {
+                    count: String(mobileFiles.length),
+                })
+            );
 
             // Create metadata extractor
             const providerRegistry = createProviderRegistry(this);
-            const metadataExtractor = new ConversationMetadataExtractor(providerRegistry, this);
+            const metadataExtractor = new ConversationMetadataExtractor(
+                providerRegistry,
+                this
+            );
 
             // Get existing conversations for status checking
             const storage = this.getStorageService();
-            const existingConversations = await storage.scanExistingConversations();
+            const existingConversations =
+                await storage.scanExistingConversations();
 
             // Extract metadata from all ZIP files
             this.setImportCheckpoint({
@@ -804,29 +906,39 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 task: `0/${mobileFiles.length}`,
             });
-            const extractionResult = await metadataExtractor.extractMetadataFromMultipleZips(
-                mobileFiles,
+            const extractionResult =
+                await metadataExtractor.extractMetadataFromMultipleZips(
+                    mobileFiles,
+                    provider,
+                    existingConversations
+                );
+            this.logIgnoredArchives(
+                extractionResult.ignoredArchives,
                 provider,
-                existingConversations
+                "selective-analysis"
             );
-            this.logIgnoredArchives(extractionResult.ignoredArchives, provider, "selective-analysis");
 
-            this.logger.child("ImportFlow").debug(`Selective analysis finished`, {
-                provider,
-                fileCount: mobileFiles.length,
-                supportedFileCount: extractionResult.supportedFiles.length,
-                ignoredArchiveCount: extractionResult.ignoredArchives.length,
-                conversationCount: extractionResult.conversations.length,
-            });
+            this.logger
+                .child("ImportFlow")
+                .debug(`Selective analysis finished`, {
+                    provider,
+                    fileCount: mobileFiles.length,
+                    supportedFileCount: extractionResult.supportedFiles.length,
+                    ignoredArchiveCount:
+                        extractionResult.ignoredArchives.length,
+                    conversationCount: extractionResult.conversations.length,
+                });
 
             if (extractionResult.supportedFiles.length === 0) {
-                new Notice(t('notices.import_no_supported_archives', { provider }));
+                new Notice(
+                    t("notices.import_no_supported_archives", { provider })
+                );
                 return;
             }
 
             if (extractionResult.conversations.length === 0) {
                 // No conversations to import - same logic as full import
-                new Notice(t('notices.import_no_new'));
+                new Notice(t("notices.import_no_new"));
 
                 // Write report showing what was analyzed
                 const operationReport = new ImportReport();
@@ -842,7 +954,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
                 // Show completion dialog with 0 imports
                 if (reportPath) {
-                    this.showImportCompletionDialog(operationReport, reportPath);
+                    this.showImportCompletionDialog(
+                        operationReport,
+                        reportPath
+                    );
                 }
                 return;
             }
@@ -852,7 +967,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this.app,
                 extractionResult.conversations,
                 (result: ConversationSelectionResult) => {
-                    this.handleConversationSelectionResult(
+                    void this.handleConversationSelectionResult(
                         result,
                         extractionResult.conversations,
                         mobileFiles,
@@ -865,11 +980,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this,
                 extractionResult.analysisInfo
             ).open();
-
-	        } catch (error) {
-                this.logImportFailureWithCheckpoint(error, "selective-analysis");
-	            new Notice(t('notices.import_error_analyzing', { error: error instanceof Error ? error.message : String(error) }));
-	        }
+        } catch (error) {
+            this.logImportFailureWithCheckpoint(error, "selective-analysis");
+            new Notice(
+                t("notices.import_error_analyzing", {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                })
+            );
+        }
     }
 
     /**
@@ -896,11 +1015,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
             // Set custom timestamp format if enabled
             if (this.settings.useCustomMessageTimestampFormat) {
-                operationReport.setCustomTimestampFormat(this.settings.messageTimestampFormat);
+                operationReport.setCustomTimestampFormat(
+                    this.settings.messageTimestampFormat
+                );
             }
 
             if (result.selectedIds.length === 0) {
-                new Notice(t('notices.import_no_selected'));
+                new Notice(t("notices.import_no_selected"));
 
                 // Still write report and show dialog
                 const reportPath = await this.writeConsolidatedReport(
@@ -913,20 +1034,34 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     ignoredArchives
                 );
                 if (reportPath) {
-                    this.showImportCompletionDialog(operationReport, reportPath);
+                    this.showImportCompletionDialog(
+                        operationReport,
+                        reportPath
+                    );
                 }
                 return;
             }
 
-            new Notice(t('notices.import_starting_selected', { count: String(result.selectedIds.length), files: String(files.length) }));
+            new Notice(
+                t("notices.import_starting_selected", {
+                    count: String(result.selectedIds.length),
+                    files: String(files.length),
+                })
+            );
 
             // Group selected conversations by source file for efficient processing
-            const conversationsByFile = this.groupConversationsByFile(result.selectedIds, availableConversations);
-            const filesToImport = files.filter(file => conversationsByFile.has(file.name));
-            const selectedExistingConversationIds = this.collectSelectedExistingConversationIds(
+            const conversationsByFile = this.groupConversationsByFile(
                 result.selectedIds,
                 availableConversations
             );
+            const filesToImport = files.filter((file) =>
+                conversationsByFile.has(file.name)
+            );
+            const selectedExistingConversationIds =
+                this.collectSelectedExistingConversationIds(
+                    result.selectedIds,
+                    availableConversations
+                );
 
             this.setImportCheckpoint({
                 operation: "selective-import",
@@ -960,11 +1095,21 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 this.showImportCompletionDialog(operationReport, reportPath);
             } else {
                 // Fallback if report writing failed
-                new Notice(t('notices.import_completed_fallback', { created: String(operationReport.getCreatedCount()), updated: String(operationReport.getUpdatedCount()) }));
+                new Notice(
+                    t("notices.import_completed_fallback", {
+                        created: String(operationReport.getCreatedCount()),
+                        updated: String(operationReport.getUpdatedCount()),
+                    })
+                );
             }
         } catch (error) {
             this.logImportFailureWithCheckpoint(error, "selective-import");
-            new Notice(t('notices.import_error', { error: error instanceof Error ? error.message : String(error) }));
+            new Notice(
+                t("notices.import_error", {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                })
+            );
         } finally {
             await this.runPostImportCleanup("selective-import");
         }
@@ -995,16 +1140,24 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         const folderPath = `${reportFolder}/${providerName}`;
-        const folderResult = await ensureFolderExists(folderPath, this.app.vault);
+        const folderResult = await ensureFolderExists(
+            folderPath,
+            this.app.vault
+        );
         if (!folderResult.success) {
-            this.logger.error(`Failed to create or access log folder: ${folderPath}`, folderResult.error);
-            new Notice(t('notices.report_failed'));
+            this.logger.error(
+                `Failed to create or access log folder: ${folderPath}`,
+                folderResult.error
+            );
+            new Notice(t("notices.report_failed"));
             return "";
         }
 
         const now = Date.now() / 1000;
         const datePrefix = formatTimestamp(now, "prefix");
-        const timeStr = formatTimestamp(now, "time").replace(/:/g, "").replace(/ /g, "");
+        const timeStr = formatTimestamp(now, "time")
+            .replace(/:/g, "")
+            .replace(/ /g, "");
         let basePrefix = `${datePrefix}-${timeStr}`;
         let counter = 2;
         let summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
@@ -1012,9 +1165,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         let mobilePath = `${folderPath}/${basePrefix} - index mobile.md`;
 
         while (
-            await this.app.vault.adapter.exists(summaryPath) ||
-            await this.app.vault.adapter.exists(heavyPath) ||
-            await this.app.vault.adapter.exists(mobilePath)
+            (await this.app.vault.adapter.exists(summaryPath)) ||
+            (await this.app.vault.adapter.exists(heavyPath)) ||
+            (await this.app.vault.adapter.exists(mobilePath))
         ) {
             basePrefix = `${datePrefix}-${timeStr}-${counter}`;
             summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
@@ -1037,20 +1190,28 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         const processedFiles: string[] = [];
         const skippedFiles: string[] = [];
         if (stats.totalFiles > 0 || report.getProcessedFileNames().length > 0) {
-            report.getProcessedFileNames().forEach(name => processedFiles.push(name));
+            report
+                .getProcessedFileNames()
+                .forEach((name) => processedFiles.push(name));
         }
 
-        files.forEach(file => {
+        files.forEach((file) => {
             if (!processedFiles.includes(file.name)) {
                 skippedFiles.push(file.name);
             }
         });
 
-        const summaryFileName = summaryPath.split("/").pop() || `${basePrefix} - import summary.md`;
-        const heavyFileName = heavyPath.split("/").pop() || `${basePrefix} - index heavy.md`;
-        const mobileFileName = mobilePath.split("/").pop() || `${basePrefix} - index mobile.md`;
+        const summaryFileName =
+            summaryPath.split("/").pop() || `${basePrefix} - import summary.md`;
+        const heavyFileName =
+            heavyPath.split("/").pop() || `${basePrefix} - index heavy.md`;
+        const mobileFileName =
+            mobilePath.split("/").pop() || `${basePrefix} - index mobile.md`;
         const links = { summaryFileName, heavyFileName, mobileFileName };
-        const archiveDisplayNames = this.buildArchiveDisplayNames(provider, files);
+        const archiveDisplayNames = this.buildArchiveDisplayNames(
+            provider,
+            files
+        );
         const commonFrontmatter = `importdate: ${currentDate}
 provider: ${provider}
 totalFilesAnalyzed: ${files.length}
@@ -1070,15 +1231,15 @@ linkedMobile: ${mobileFileName}
 ---
 
 ${report.generateSummaryReportContent(
-            files,
-            processedFiles,
-            skippedFiles,
-            analysisInfo,
-            fileStats,
-            isSelectiveImport,
-            archiveDisplayNames,
-            links
-        )}
+    files,
+    processedFiles,
+    skippedFiles,
+    analysisInfo,
+    fileStats,
+    isSelectiveImport,
+    archiveDisplayNames,
+    links
+)}
 `;
 
         const heavyContent = `---
@@ -1104,15 +1265,18 @@ ${report.generateMobileIndexContent(files, links)}
             await this.app.vault.create(heavyPath, heavyContent);
             await this.app.vault.create(mobilePath, mobileContent);
             return summaryPath;
-        } catch (error: any) {
+        } catch (error) {
             this.logger.error(`Failed to write consolidated reports`, error);
             this.logger.error("Full error:", error);
-            new Notice(t('notices.report_failed'));
+            new Notice(t("notices.report_failed"));
             return "";
         }
     }
 
-    private buildArchiveDisplayNames(provider: string, files: File[]): Map<string, string> {
+    private buildArchiveDisplayNames(
+        provider: string,
+        files: File[]
+    ): Map<string, string> {
         const map = new Map<string, string>();
         for (const file of files) {
             map.set(file.name, this.getArchiveDisplayName(provider, file.name));
@@ -1135,8 +1299,13 @@ ${report.generateMobileIndexContent(files, links)}
         const head = stem.slice(0, 3);
 
         if (normalizedProvider === "claude") {
-            const timeMatches = Array.from(stem.matchAll(/-(\d{2})-(\d{2})-(\d{2})/g));
-            const lastTime = timeMatches.length > 0 ? timeMatches[timeMatches.length - 1] : null;
+            const timeMatches = Array.from(
+                stem.matchAll(/-(\d{2})-(\d{2})-(\d{2})/g)
+            );
+            const lastTime =
+                timeMatches.length > 0
+                    ? timeMatches[timeMatches.length - 1]
+                    : null;
             const lastCharMatch = stem.match(/([A-Za-z0-9])$/);
             if (lastTime && lastCharMatch) {
                 const mm = lastTime[2];
@@ -1160,14 +1329,13 @@ ${report.generateMobileIndexContent(files, links)}
     /**
      * Show import completion dialog
      */
-    private showImportCompletionDialog(report: ImportReport, reportPath: string): void {
+    private showImportCompletionDialog(
+        report: ImportReport,
+        reportPath: string
+    ): void {
         const stats = report.getCompletionStats();
 
-        new ImportCompletionDialog(
-            this.app,
-            stats,
-            reportPath
-        ).open();
+        new ImportCompletionDialog(this.app, stats, reportPath).open();
     }
 
     /**
@@ -1181,11 +1349,15 @@ ${report.generateMobileIndexContent(files, links)}
 
         const selectedIdsSet = new Set(selectedIds);
         for (const conversation of conversations) {
-            if (!selectedIdsSet.has(conversation.id) || !conversation.sourceFile) {
+            if (
+                !selectedIdsSet.has(conversation.id) ||
+                !conversation.sourceFile
+            ) {
                 continue;
             }
 
-            const fileConversations = conversationsByFile.get(conversation.sourceFile) || [];
+            const fileConversations =
+                conversationsByFile.get(conversation.sourceFile) || [];
             fileConversations.push(conversation.id);
             conversationsByFile.set(conversation.sourceFile, fileConversations);
         }
@@ -1205,71 +1377,107 @@ ${report.generateMobileIndexContent(files, links)}
             try {
                 const zip = await createZipArchiveReader(file);
                 const entries = await zip.listEntries();
-                const classification = classifyArchiveEntries(entries.map((entry) => entry.path));
+                const classification = classifyArchiveEntries(
+                    entries.map((entry) => entry.path)
+                );
                 if (!classification.supported) {
                     continue;
                 }
 
                 // Lock only to currently enabled providers.
                 if (!providerRegistry.getAdapter(classification.provider)) {
-                    this.logger.child("ImportFlow").warn("Detected provider is not enabled; skipping as lock source", {
-                        fileName: file.name,
-                        detectedProvider: classification.provider,
-                    });
+                    this.logger
+                        .child("ImportFlow")
+                        .warn(
+                            "Detected provider is not enabled; skipping as lock source",
+                            {
+                                fileName: file.name,
+                                detectedProvider: classification.provider,
+                            }
+                        );
                     continue;
                 }
 
-                return { provider: classification.provider, fileName: file.name };
-            } catch (error) {
-                this.logger.child("ImportFlow").warn("Failed to analyze ZIP while resolving provider lock", {
+                return {
+                    provider: classification.provider,
                     fileName: file.name,
-                    message: error instanceof Error ? error.message : String(error),
-                });
+                };
+            } catch (error) {
+                this.logger
+                    .child("ImportFlow")
+                    .warn(
+                        "Failed to analyze ZIP while resolving provider lock",
+                        {
+                            fileName: file.name,
+                            message:
+                                error instanceof Error
+                                    ? error.message
+                                    : String(error),
+                        }
+                    );
             }
         }
 
         return null;
     }
 
-    private async resolveMobileArchiveImportMode(file: File, provider: string): Promise<MobileArchiveImportMode> {
+    private async resolveMobileArchiveImportMode(
+        file: File,
+        provider: string
+    ): Promise<MobileArchiveImportMode> {
         if (!this.isMobileTaskQueueMode()) {
             return "incremental";
         }
 
         const storage = this.getStorageService();
         const archiveFingerprint = getFileFingerprint(file);
-        const alreadyImported = storage.isArchiveImported(archiveFingerprint) || storage.isArchiveImported(file.name);
+        const alreadyImported =
+            storage.isArchiveImported(archiveFingerprint) ||
+            storage.isArchiveImported(file.name);
         if (!alreadyImported) {
             return "incremental";
         }
 
-        this.logger.child("ImportFlow").debug("Mobile archive already processed, prompting for import mode", {
-            provider,
-            fileName: file.name,
-            fingerprint: archiveFingerprint,
-        });
+        this.logger
+            .child("ImportFlow")
+            .debug(
+                "Mobile archive already processed, prompting for import mode",
+                {
+                    provider,
+                    fileName: file.name,
+                    fingerprint: archiveFingerprint,
+                }
+            );
 
         const shouldReprocess = await showDialog(
             this.app,
             "confirmation",
             t("mobile_archive_processed_dialog.title"),
             [
-                t("mobile_archive_processed_dialog.description", { filename: file.name }),
+                t("mobile_archive_processed_dialog.description", {
+                    filename: file.name,
+                }),
                 t("mobile_archive_processed_dialog.choice_help"),
             ],
             undefined,
             {
                 button1: t("mobile_archive_processed_dialog.button_reprocess"),
-                button2: t("mobile_archive_processed_dialog.button_incremental"),
+                button2: t(
+                    "mobile_archive_processed_dialog.button_incremental"
+                ),
             }
         );
 
-        const selectedMode: MobileArchiveImportMode = shouldReprocess ? "reprocess" : "incremental";
-        this.logger.child("ImportFlow").debug("Mobile archive import mode selected", {
-            provider,
-            fileName: file.name,
-            selectedMode,
-        });
+        const selectedMode: MobileArchiveImportMode = shouldReprocess
+            ? "reprocess"
+            : "incremental";
+        this.logger
+            .child("ImportFlow")
+            .debug("Mobile archive import mode selected", {
+                provider,
+                fileName: file.name,
+                selectedMode,
+            });
 
         return selectedMode;
     }
@@ -1278,7 +1486,9 @@ ${report.generateMobileIndexContent(files, links)}
         await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
     }
 
-    private async runPostImportCleanup(operation: "import-all" | "selective-import"): Promise<void> {
+    private async runPostImportCleanup(
+        operation: "import-all" | "selective-import"
+    ): Promise<void> {
         const importFlowLogger = this.logger.child("ImportFlow");
         const isMobile = this.isMobileTaskQueueMode();
 
@@ -1319,18 +1529,27 @@ ${report.generateMobileIndexContent(files, links)}
     ): Promise<void> {
         const importFlowLogger = this.logger.child("ImportFlow");
         const mobileTaskQueueMode = this.isMobileTaskQueueMode();
-        const executionFiles = mobileTaskQueueMode ? filesToImport.slice(0, 1) : filesToImport;
+        const executionFiles = mobileTaskQueueMode
+            ? filesToImport.slice(0, 1)
+            : filesToImport;
 
         if (mobileTaskQueueMode && filesToImport.length > 1) {
-            importFlowLogger.warn("Mobile file strategy guard kept only one ZIP file", {
-                operation,
-                provider,
-                selectedFileCount: filesToImport.length,
-                keptFileName: executionFiles[0]?.name ?? null,
-            });
+            importFlowLogger.warn(
+                "Mobile file strategy guard kept only one ZIP file",
+                {
+                    operation,
+                    provider,
+                    selectedFileCount: filesToImport.length,
+                    keptFileName: executionFiles[0]?.name ?? null,
+                }
+            );
         }
 
-        if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
+        if (
+            !mobileTaskQueueMode &&
+            provider === "chatgpt" &&
+            executionFiles.length > 1
+        ) {
             this.setImportCheckpoint({
                 operation,
                 phase: "attachment-map-build",
@@ -1342,7 +1561,10 @@ ${report.generateMobileIndexContent(files, links)}
                 fileCount: executionFiles.length,
                 mode: "desktop-multi-zip",
             });
-            await this.importService.buildAttachmentMapForMultiZip(executionFiles, provider);
+            await this.importService.buildAttachmentMapForMultiZip(
+                executionFiles,
+                provider
+            );
         }
 
         for (let i = 0; i < executionFiles.length; i++) {
@@ -1363,12 +1585,18 @@ ${report.generateMobileIndexContent(files, links)}
                         task: `${i + 1}/${executionFiles.length}`,
                         conversationCount: conversationsForFile.length,
                     });
-                    importFlowLogger.debug(`Building single-ZIP attachment map for mobile task`, {
-                        provider,
-                        fileName: file.name,
-                        task: `${i + 1}/${executionFiles.length}`,
-                    });
-                    await this.importService.buildAttachmentMapForMultiZip([file], provider);
+                    importFlowLogger.debug(
+                        `Building single-ZIP attachment map for mobile task`,
+                        {
+                            provider,
+                            fileName: file.name,
+                            task: `${i + 1}/${executionFiles.length}`,
+                        }
+                    );
+                    await this.importService.buildAttachmentMapForMultiZip(
+                        [file],
+                        provider
+                    );
                 }
 
                 this.setImportCheckpoint({
@@ -1384,14 +1612,22 @@ ${report.generateMobileIndexContent(files, links)}
                     fileName: file.name,
                     conversationCount: conversationsForFile.length,
                     task: `${i + 1}/${executionFiles.length}`,
-                    mode: mobileTaskQueueMode ? "mobile-single-zip" : "standard",
+                    mode: mobileTaskQueueMode
+                        ? "mobile-single-zip"
+                        : "standard",
                 });
 
-                const archiveImportMode = mobileTaskQueueMode && operation === "import-all"
-                    ? await this.resolveMobileArchiveImportMode(file, provider)
-                    : undefined;
+                const archiveImportMode =
+                    mobileTaskQueueMode && operation === "import-all"
+                        ? await this.resolveMobileArchiveImportMode(
+                              file,
+                              provider
+                          )
+                        : undefined;
                 const fileReprocessIds = selectedExistingConversationIds
-                    ? conversationsForFile.filter((id) => selectedExistingConversationIds.has(id))
+                    ? conversationsForFile.filter((id) =>
+                          selectedExistingConversationIds.has(id)
+                      )
                     : [];
                 const hasFileReprocessIds = fileReprocessIds.length > 0;
 
@@ -1403,14 +1639,18 @@ ${report.generateMobileIndexContent(files, links)}
                     undefined,
                     archiveImportMode || hasFileReprocessIds
                         ? {
-                            archiveImportMode,
-                            reprocessConversationIds: hasFileReprocessIds ? fileReprocessIds : undefined,
-                        }
+                              archiveImportMode,
+                              reprocessConversationIds: hasFileReprocessIds
+                                  ? fileReprocessIds
+                                  : undefined,
+                          }
                         : undefined
                 );
             } catch (error) {
                 this.logger.error(`Error processing file ${file.name}:`, error);
-                new Notice(t('notices.import_error_file', { filename: file.name }));
+                new Notice(
+                    t("notices.import_error_file", { filename: file.name })
+                );
             } finally {
                 if (mobileTaskQueueMode) {
                     this.importService.clearAttachmentMap();
@@ -1426,12 +1666,19 @@ ${report.generateMobileIndexContent(files, links)}
             }
         }
 
-        if (!mobileTaskQueueMode && provider === "chatgpt" && executionFiles.length > 1) {
+        if (
+            !mobileTaskQueueMode &&
+            provider === "chatgpt" &&
+            executionFiles.length > 1
+        ) {
             this.importService.clearAttachmentMap();
         }
     }
 
-    private collectSelectedExistingConversationIds(selectedIds: string[], availableConversations: any[]): Set<string> {
+    private collectSelectedExistingConversationIds(
+        selectedIds: string[],
+        availableConversations: any[]
+    ): Set<string> {
         const selectedSet = new Set(selectedIds);
         const reprocessIds = new Set<string>();
 
@@ -1440,7 +1687,10 @@ ${report.generateMobileIndexContent(files, links)}
                 continue;
             }
 
-            if (conversation.existenceStatus === "updated" || conversation.existenceStatus === "unchanged") {
+            if (
+                conversation.existenceStatus === "updated" ||
+                conversation.existenceStatus === "unchanged"
+            ) {
                 reprocessIds.add(conversation.id);
             }
         }
@@ -1448,7 +1698,9 @@ ${report.generateMobileIndexContent(files, links)}
         return reprocessIds;
     }
 
-    private setImportCheckpoint(checkpoint: Omit<ImportCheckpoint, "timestampMs">): void {
+    private setImportCheckpoint(
+        checkpoint: Omit<ImportCheckpoint, "timestampMs">
+    ): void {
         const nextCheckpoint: ImportCheckpoint = {
             ...checkpoint,
             timestampMs: Date.now(),
@@ -1488,22 +1740,27 @@ ${report.generateMobileIndexContent(files, links)}
             return;
         }
 
-        const groupedCounts = ignoredArchives.reduce<Record<string, number>>((acc, archive) => {
-            acc[archive.reason] = (acc[archive.reason] || 0) + 1;
-            return acc;
-        }, {});
+        const groupedCounts = ignoredArchives.reduce<Record<string, number>>(
+            (acc, archive) => {
+                acc[archive.reason] = (acc[archive.reason] || 0) + 1;
+                return acc;
+            },
+            {}
+        );
 
-        this.logger.child("ImportFlow").warn("Archives ignored during metadata extraction", {
-            operation,
-            provider,
-            ignoredCount: ignoredArchives.length,
-            groupedCounts,
-            archives: ignoredArchives.map(archive => ({
-                fileName: archive.fileName,
-                reason: archive.reason,
-                message: archive.message,
-            })),
-        });
+        this.logger
+            .child("ImportFlow")
+            .warn("Archives ignored during metadata extraction", {
+                operation,
+                provider,
+                ignoredCount: ignoredArchives.length,
+                groupedCounts,
+                archives: ignoredArchives.map((archive) => ({
+                    fileName: archive.fileName,
+                    reason: archive.reason,
+                    message: archive.message,
+                })),
+            });
 
         new Notice(
             `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,

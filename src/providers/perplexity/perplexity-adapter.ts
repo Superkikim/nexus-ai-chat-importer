@@ -18,12 +18,18 @@
 
 import { StandardConversation } from "../../types/standard";
 import { ProviderAdapter } from "../provider-adapter";
-import { PerplexityConversationFile, PerplexityRawConversationFile, PerplexityTurn } from "./perplexity-types";
+import {
+    PerplexityConversationFile,
+    PerplexityRawConversationFile,
+    PerplexityTurn,
+} from "./perplexity-types";
 import { PerplexityConverter } from "./perplexity-converter";
 import { PerplexityReportNamingStrategy } from "./perplexity-report-naming";
 import { normalizePerplexityConversationFile } from "./perplexity-normalizer";
 
-export class PerplexityAdapter implements ProviderAdapter<PerplexityRawConversationFile> {
+export class PerplexityAdapter
+    implements ProviderAdapter<PerplexityRawConversationFile>
+{
     private reportNamingStrategy = new PerplexityReportNamingStrategy();
     constructor(_plugin?: unknown) {}
 
@@ -34,11 +40,15 @@ export class PerplexityAdapter implements ProviderAdapter<PerplexityRawConversat
 
         const sample = this.normalize(rawConversations[0]);
         if (!sample) return false;
-        if (!sample.metadata.thread_id || !sample.metadata.thread_title) return false;
+        if (!sample.metadata.thread_id || !sample.metadata.thread_title)
+            return false;
         if (sample.conversations.length === 0) return false;
 
         const firstTurn = sample.conversations[0];
-        return !!(firstTurn?.uuid && ("query" in firstTurn || "answer" in firstTurn));
+        return !!(
+            firstTurn?.uuid &&
+            ("query" in firstTurn || "answer" in firstTurn)
+        );
     }
 
     getId(chat: PerplexityRawConversationFile): string {
@@ -55,12 +65,14 @@ export class PerplexityAdapter implements ProviderAdapter<PerplexityRawConversat
         const normalized = this.normalize(chat);
         if (!normalized) return 0;
 
-        const fromMeta = this.parseTimestamp(normalized.metadata?.thread_created_at);
+        const fromMeta = this.parseTimestamp(
+            normalized.metadata?.thread_created_at
+        );
         if (fromMeta > 0) return fromMeta;
 
         const timestamps = (normalized.conversations || [])
-            .map(turn => this.parseTimestamp(turn.timestamp))
-            .filter(ts => ts > 0);
+            .map((turn) => this.parseTimestamp(turn.timestamp))
+            .filter((ts) => ts > 0);
         return timestamps.length > 0 ? Math.min(...timestamps) : 0;
     }
 
@@ -68,12 +80,14 @@ export class PerplexityAdapter implements ProviderAdapter<PerplexityRawConversat
         const normalized = this.normalize(chat);
         if (!normalized) return 0;
 
-        const fromMeta = this.parseTimestamp(normalized.metadata?.thread_updated_at);
+        const fromMeta = this.parseTimestamp(
+            normalized.metadata?.thread_updated_at
+        );
         if (fromMeta > 0) return fromMeta;
 
         const timestamps = (normalized.conversations || [])
-            .map(turn => this.parseTimestamp(turn.timestamp))
-            .filter(ts => ts > 0);
+            .map((turn) => this.parseTimestamp(turn.timestamp))
+            .filter((ts) => ts > 0);
         return timestamps.length > 0 ? Math.max(...timestamps) : 0;
     }
 
@@ -89,11 +103,16 @@ export class PerplexityAdapter implements ProviderAdapter<PerplexityRawConversat
         return "perplexity";
     }
 
-    getNewMessages(chat: PerplexityRawConversationFile, existingMessageIds: string[]): PerplexityTurn[] {
+    getNewMessages(
+        chat: PerplexityRawConversationFile,
+        existingMessageIds: string[]
+    ): PerplexityTurn[] {
         const normalized = this.normalize(chat);
         if (!normalized) return [];
 
-        return (normalized.conversations || []).filter(turn => !!turn?.uuid && !existingMessageIds.includes(turn.uuid));
+        return (normalized.conversations || []).filter(
+            (turn) => !!turn?.uuid && !existingMessageIds.includes(turn.uuid)
+        );
     }
 
     getReportNamingStrategy() {
@@ -107,7 +126,9 @@ export class PerplexityAdapter implements ProviderAdapter<PerplexityRawConversat
         return Math.floor(timestamp / 1000);
     }
 
-    private normalize(chat: PerplexityRawConversationFile): PerplexityConversationFile | null {
+    private normalize(
+        chat: PerplexityRawConversationFile
+    ): PerplexityConversationFile | null {
         return normalizePerplexityConversationFile(chat);
     }
 }

@@ -1,21 +1,20 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/services/storage-service.ts
 import { ConversationCatalogEntry } from "../types/plugin";
@@ -24,7 +23,10 @@ import type NexusAiChatImporterPlugin from "../main";
 import { DateParser } from "../utils/date-parser";
 
 export class StorageService {
-    private importedArchives: Record<string, { fileName: string; date: string }> = {};
+    private importedArchives: Record<
+        string,
+        { fileName: string; date: string }
+    > = {};
     private isDirty = false;
     private saveTimeout: number | null = null;
 
@@ -35,17 +37,16 @@ export class StorageService {
             const data = await this.plugin.loadData();
             this.importedArchives = data?.importedArchives || {};
             this.isDirty = false;
-            
+
             // Migration: If old catalog exists, we ignore it (migration handled in upgrade.ts)
             // Old catalog is no longer used
-            
         } catch (error) {
             this.plugin.logger.error("loadData failed:", error);
             throw error;
         }
     }
 
-    async saveData(data: any) {
+    async saveData(data: unknown) {
         try {
             await this.plugin.saveData(data);
             this.isDirty = false;
@@ -56,12 +57,12 @@ export class StorageService {
 
     private debouncedSave() {
         if (this.saveTimeout) {
-            clearTimeout(this.saveTimeout);
+            window.clearTimeout(this.saveTimeout);
         }
-        
-        this.saveTimeout = window.setTimeout(async () => {
+
+        this.saveTimeout = window.setTimeout(() => {
             if (this.isDirty) {
-                await this.plugin.saveSettings();
+                void this.plugin.saveSettings();
             }
         }, 1000);
     }
@@ -69,7 +70,7 @@ export class StorageService {
     // ========================================
     // ARCHIVE TRACKING - HYBRID DETECTION (1.0.x + 1.1.0)
     // ========================================
-    
+
     getImportedArchives() {
         return this.importedArchives;
     }
@@ -83,15 +84,19 @@ export class StorageService {
         if (this.importedArchives[key]) {
             return true;
         }
-        
+
         // Method 2: Search by filename in values (for 1.0.x → 1.1.0 migration)
         // CRITICAL FIX: Handle both old format (string) and new format (object)
-        return Object.values(this.importedArchives).some(archive => {
+        return Object.values(this.importedArchives).some((archive) => {
             // New format 1.1.0: archive = {fileName: "file.zip", date: "2024-01-01"}
-            if (typeof archive === 'object' && archive !== null && archive.fileName) {
+            if (
+                typeof archive === "object" &&
+                archive !== null &&
+                archive.fileName
+            ) {
                 return archive.fileName === key;
             }
-            
+
             // Old format 1.0.x: archive = "2024-01-01" (string date)
             // In this case, we can't match by filename since we don't have it
             // But the key might be the filename itself, which we already checked in Method 1
@@ -102,7 +107,7 @@ export class StorageService {
     addImportedArchive(fileHash: string, fileName: string) {
         this.importedArchives[fileHash] = {
             fileName,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
         };
         this.isDirty = true;
         this.debouncedSave();
@@ -115,10 +120,12 @@ export class StorageService {
     /**
      * Scan vault for existing Nexus conversations using HYBRID approach:
      * 1. Wait for cache to be clean (fast)
-     * 2. Use metadataCache (optimal performance)  
+     * 2. Use metadataCache (optimal performance)
      * 3. Fallback to manual parsing for problematic files
      */
-    async scanExistingConversations(): Promise<Map<string, ConversationCatalogEntry>> {
+    async scanExistingConversations(): Promise<
+        Map<string, ConversationCatalogEntry>
+    > {
         const storageLogger = this.plugin.logger.child("Storage");
         const startedAt = Date.now();
         storageLogger.debug("Begin scanExistingConversations");
@@ -129,21 +136,26 @@ export class StorageService {
         const conversations = new Map<string, ConversationCatalogEntry>();
 
         // Get conversation folder with fallback for backward compatibility
-        const conversationFolder = this.plugin.settings.conversationFolder ||
-                                  this.plugin.settings.archiveFolder ||
-                                  "Nexus/Conversations";
+        const conversationFolder =
+            this.plugin.settings.conversationFolder ||
+            this.plugin.settings.archiveFolder ||
+            "Nexus/Conversations";
 
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
 
         // Filter conversation files (exclude Reports/Attachments)
-        const conversationFiles = allFiles.filter(file => {
+        const conversationFiles = allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder)) return false;
 
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith('Reports/') ||
-                relativePath.startsWith('Attachments/') ||
-                relativePath.startsWith('reports/') ||
-                relativePath.startsWith('attachments/')) {
+            const relativePath = file.path.substring(
+                conversationFolder.length + 1
+            );
+            if (
+                relativePath.startsWith("Reports/") ||
+                relativePath.startsWith("Attachments/") ||
+                relativePath.startsWith("reports/") ||
+                relativePath.startsWith("attachments/")
+            ) {
                 return false;
             }
 
@@ -184,16 +196,18 @@ export class StorageService {
                         conversations.set(entry.conversationId, entry);
                         foundViaManual++;
                     }
-
                 } catch (error) {
                     errors++;
-                    this.plugin.logger.warn(`Error parsing conversation file ${file.path}:`, error);
+                    this.plugin.logger.warn(
+                        `Error parsing conversation file ${file.path}:`,
+                        error
+                    );
                 }
             }
 
             // Small delay between large batches
             if (i + batchSize < conversationFiles.length) {
-                await new Promise(resolve => setTimeout(resolve, 1));
+                await new Promise((resolve) => window.setTimeout(resolve, 1));
             }
         }
 
@@ -214,37 +228,49 @@ export class StorageService {
      */
     private async waitForCacheClean(maxWaitMs: number = 1000): Promise<void> {
         const startTime = Date.now();
-        
+
         // Type assertion for undocumented Obsidian API
         const metadataCache = this.plugin.app.metadataCache as any;
-        
+
         while (!metadataCache.isCacheClean()) {
             if (Date.now() - startTime > maxWaitMs) {
                 break;
             }
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise((resolve) => window.setTimeout(resolve, 10));
         }
     }
 
     /**
      * Parse conversation using metadataCache (fast but potentially unreliable)
      */
-    private async parseWithCache(file: TFile): Promise<ConversationCatalogEntry | null> {
+    private async parseWithCache(
+        file: TFile
+    ): Promise<ConversationCatalogEntry | null> {
         try {
-            const frontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+            const frontmatter =
+                this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
 
             if (!frontmatter) {
-                this.plugin.logger.warn(`[parseWithCache] No frontmatter found for ${file.path}`);
+                this.plugin.logger.warn(
+                    `[parseWithCache] No frontmatter found for ${file.path}`
+                );
                 return null;
             }
 
-            if (!frontmatter.nexus || frontmatter.nexus !== this.plugin.manifest.id) {
-                this.plugin.logger.warn(`[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`);
+            if (
+                !frontmatter.nexus ||
+                frontmatter.nexus !== this.plugin.manifest.id
+            ) {
+                this.plugin.logger.warn(
+                    `[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`
+                );
                 return null;
             }
 
             if (!frontmatter.conversation_id) {
-                this.plugin.logger.warn(`[parseWithCache] No conversation_id for ${file.path}`);
+                this.plugin.logger.warn(
+                    `[parseWithCache] No conversation_id for ${file.path}`
+                );
                 return null;
             }
 
@@ -252,21 +278,25 @@ export class StorageService {
             const updateTime = this.parseTimeString(frontmatter.update_time);
 
             if (createTime === 0 || updateTime === 0) {
-                this.plugin.logger.warn(`[parseWithCache] Failed to parse timestamps for ${file.path}: create=${frontmatter.create_time} (${createTime}), update=${frontmatter.update_time} (${updateTime})`);
+                this.plugin.logger.warn(
+                    `[parseWithCache] Failed to parse timestamps for ${file.path}: create=${frontmatter.create_time} (${createTime}), update=${frontmatter.update_time} (${updateTime})`
+                );
                 return null;
             }
 
             return {
                 conversationId: frontmatter.conversation_id,
-                provider: frontmatter.provider || 'unknown',
+                provider: frontmatter.provider || "unknown",
                 path: file.path,
                 updateTime: updateTime,
                 create_time: createTime,
-                update_time: updateTime
+                update_time: updateTime,
             };
-
         } catch (error) {
-            this.plugin.logger.warn(`[parseWithCache] Exception parsing ${file.path}:`, error);
+            this.plugin.logger.warn(
+                `[parseWithCache] Exception parsing ${file.path}:`,
+                error
+            );
             return null;
         }
     }
@@ -274,35 +304,39 @@ export class StorageService {
     /**
      * Parse single conversation file manually (robust fallback)
      */
-    private async parseConversationFileManually(file: TFile): Promise<ConversationCatalogEntry | null> {
+    private async parseConversationFileManually(
+        file: TFile
+    ): Promise<ConversationCatalogEntry | null> {
         try {
             const content = await this.plugin.app.vault.read(file);
-            
+
             // Extract frontmatter manually
             const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-            
+
             if (!frontmatterMatch) {
                 return null;
             }
 
             const frontmatterContent = frontmatterMatch[1];
-            
+
             // Parse frontmatter lines manually
             const frontmatterData: Record<string, string> = {};
-            const lines = frontmatterContent.split('\n');
-            
+            const lines = frontmatterContent.split("\n");
+
             for (const line of lines) {
-                const colonIndex = line.indexOf(':');
+                const colonIndex = line.indexOf(":");
                 if (colonIndex > 0) {
                     const key = line.substring(0, colonIndex).trim();
                     let value = line.substring(colonIndex + 1).trim();
-                    
+
                     // Remove quotes if present
-                    if ((value.startsWith('"') && value.endsWith('"')) || 
-                        (value.startsWith("'") && value.endsWith("'"))) {
+                    if (
+                        (value.startsWith('"') && value.endsWith('"')) ||
+                        (value.startsWith("'") && value.endsWith("'"))
+                    ) {
                         value = value.slice(1, -1);
                     }
-                    
+
                     frontmatterData[key] = value;
                 }
             }
@@ -317,20 +351,26 @@ export class StorageService {
                 return null;
             }
 
-            const createTime = this.parseTimeString(frontmatterData.create_time);
-            const updateTime = this.parseTimeString(frontmatterData.update_time);
+            const createTime = this.parseTimeString(
+                frontmatterData.create_time
+            );
+            const updateTime = this.parseTimeString(
+                frontmatterData.update_time
+            );
 
             return {
                 conversationId: frontmatterData.conversation_id,
-                provider: frontmatterData.provider || 'unknown',
+                provider: frontmatterData.provider || "unknown",
                 path: file.path,
                 updateTime: updateTime,
                 create_time: createTime,
-                update_time: updateTime
+                update_time: updateTime,
             };
-
         } catch (error) {
-            this.plugin.logger.error(`Error manually parsing ${file.path}:`, error);
+            this.plugin.logger.error(
+                `Error manually parsing ${file.path}:`,
+                error
+            );
             return null;
         }
     }
@@ -343,7 +383,9 @@ export class StorageService {
     private parseTimeString(timeStr: string): number {
         const result = DateParser.parseDate(timeStr);
         if (result === 0) {
-            this.plugin.logger.warn(`[parseTimeString] Failed to parse: "${timeStr}"`);
+            this.plugin.logger.warn(
+                `[parseTimeString] Failed to parse: "${timeStr}"`
+            );
         }
         return result;
     }
@@ -359,7 +401,9 @@ export class StorageService {
     /**
      * Get conversation entry by ID (single lookup)
      */
-    async getConversationById(conversationId: string): Promise<ConversationCatalogEntry | null> {
+    async getConversationById(
+        conversationId: string
+    ): Promise<ConversationCatalogEntry | null> {
         const conversations = await this.scanExistingConversations();
         return conversations.get(conversationId) || null;
     }
@@ -367,9 +411,13 @@ export class StorageService {
     /**
      * Get conversations by provider (for reporting/stats)
      */
-    async getConversationsByProvider(provider: string): Promise<ConversationCatalogEntry[]> {
+    async getConversationsByProvider(
+        provider: string
+    ): Promise<ConversationCatalogEntry[]> {
         const allConversations = await this.scanExistingConversations();
-        return Array.from(allConversations.values()).filter(entry => entry.provider === provider);
+        return Array.from(allConversations.values()).filter(
+            (entry) => entry.provider === provider
+        );
     }
 
     // ========================================
@@ -380,17 +428,16 @@ export class StorageService {
         try {
             this.importedArchives = {};
             this.isDirty = false;
-            
+
             if (this.saveTimeout) {
-                clearTimeout(this.saveTimeout);
+                window.clearTimeout(this.saveTimeout);
                 this.saveTimeout = null;
             }
-            
+
             await this.plugin.saveData({
-                settings: this.plugin.settings
+                settings: this.plugin.settings,
                 // Note: No conversation catalog to reset - it's now vault-based
             });
-            
         } catch (error) {
             this.plugin.logger.error("resetCatalogs failed:", error);
         }
@@ -402,19 +449,18 @@ export class StorageService {
             totalArchives: Object.keys(this.importedArchives).length,
             isDirty: this.isDirty,
             hasPendingSave: this.saveTimeout !== null,
-            catalogMethod: 'vault-based-hybrid',
-            trackingMethod: 'hybrid-hash-filename'
+            catalogMethod: "vault-based-hybrid",
+            trackingMethod: "hybrid-hash-filename",
         };
     }
 
     async forceSave() {
         if (this.saveTimeout) {
-            clearTimeout(this.saveTimeout);
+            window.clearTimeout(this.saveTimeout);
             this.saveTimeout = null;
         }
         if (this.isDirty) {
             await this.plugin.saveSettings();
         }
     }
-
 }

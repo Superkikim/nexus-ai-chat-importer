@@ -1,28 +1,33 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/ui/import-progress-modal.ts
 import { Modal, App } from "obsidian";
-import { t } from '../i18n';
+import { t } from "../i18n";
 
 export interface ImportProgressStep {
-    phase: 'validation' | 'scanning' | 'processing' | 'writing' | 'complete' | 'error';
+    phase:
+        | "validation"
+        | "scanning"
+        | "processing"
+        | "writing"
+        | "complete"
+        | "error";
     title: string;
     detail?: string;
     current?: number;
@@ -62,38 +67,52 @@ export class ImportProgressModal extends Modal {
 
         // Title
         this.modalTitleEl = contentEl.createEl("h2", {
-            text: t('import_progress.title', { filename: this.fileName }),
-            cls: "modal-title"
+            text: t("import_progress.title", { filename: this.fileName }),
+            cls: "modal-title",
         });
 
         const contentContainer = contentEl.createDiv({ cls: "modal-content" });
-        
+
         // Phase indicator
-        this.phaseEl = contentContainer.createEl("div", { cls: "import-phase" });
+        this.phaseEl = contentContainer.createEl("div", {
+            cls: "import-phase",
+        });
 
         // Import mode indicator
-        this.importModeEl = contentContainer.createEl("div", { cls: "import-mode" });
+        this.importModeEl = contentContainer.createEl("div", {
+            cls: "import-mode",
+        });
 
         // Conversation counter
-        this.conversationCountEl = contentContainer.createEl("div", { cls: "conversation-counter" });
+        this.conversationCountEl = contentContainer.createEl("div", {
+            cls: "conversation-counter",
+        });
 
         // Progress bar container
-        const progressContainer = contentContainer.createDiv({ cls: "progress-container" });
+        const progressContainer = contentContainer.createDiv({
+            cls: "progress-container",
+        });
 
         // Progress bar
-        this.progressBarEl = progressContainer.createDiv({ cls: "progress-bar" });
+        this.progressBarEl = progressContainer.createDiv({
+            cls: "progress-bar",
+        });
 
         // Status text
-        this.statusEl = contentContainer.createEl("div", { cls: "status-text" });
+        this.statusEl = contentContainer.createEl("div", {
+            cls: "status-text",
+        });
 
         // Detail text
-        this.detailEl = contentContainer.createEl("div", { cls: "detail-text" });
+        this.detailEl = contentContainer.createEl("div", {
+            cls: "detail-text",
+        });
 
         // Initial state
         this.updateProgress({
-            phase: 'validation',
-            title: t('import_progress.initial.title'),
-            detail: t('import_progress.initial.detail')
+            phase: "validation",
+            title: t("import_progress.initial.title"),
+            detail: t("import_progress.initial.detail"),
         });
     }
 
@@ -103,14 +122,14 @@ export class ImportProgressModal extends Modal {
     updateProgress(step: ImportProgressStep) {
         // Update phase
         const phaseLabels = {
-            'validation': t('common.progress.phase_validation'),
-            'scanning': t('common.progress.phase_scanning'),
-            'processing': t('common.progress.phase_processing'),
-            'writing': t('common.progress.phase_writing'),
-            'complete': t('common.progress.phase_complete'),
-            'error': t('common.progress.phase_error')
+            validation: t("common.progress.phase_validation"),
+            scanning: t("common.progress.phase_scanning"),
+            processing: t("common.progress.phase_processing"),
+            writing: t("common.progress.phase_writing"),
+            complete: t("common.progress.phase_complete"),
+            error: t("common.progress.phase_error"),
         };
-        
+
         this.phaseEl.textContent = phaseLabels[step.phase] || step.phase;
 
         // Update conversation count if provided
@@ -124,29 +143,43 @@ export class ImportProgressModal extends Modal {
         // Update conversation counter display
         if (this.totalConversations > 0) {
             if (this.isSelectiveImport) {
-                this.conversationCountEl.textContent = t('import_progress.conversation_counter_selective', { current: String(this.currentConversation), total: String(this.totalConversations) });
+                this.conversationCountEl.textContent = t(
+                    "import_progress.conversation_counter_selective",
+                    {
+                        current: String(this.currentConversation),
+                        total: String(this.totalConversations),
+                    }
+                );
             } else {
-                this.conversationCountEl.textContent = t('import_progress.conversation_counter', { current: String(this.currentConversation), total: String(this.totalConversations) });
+                this.conversationCountEl.textContent = t(
+                    "import_progress.conversation_counter",
+                    {
+                        current: String(this.currentConversation),
+                        total: String(this.totalConversations),
+                    }
+                );
             }
         } else {
-            this.conversationCountEl.textContent = '';
+            this.conversationCountEl.textContent = "";
         }
 
         // Calculate and update progress bar
         let percentage = 0;
         if (step.percentage !== undefined) {
             percentage = step.percentage;
-        } else if (this.totalConversations > 0 && step.phase === 'processing') {
-            percentage = Math.round((this.currentConversation / this.totalConversations) * 100);
+        } else if (this.totalConversations > 0 && step.phase === "processing") {
+            percentage = Math.round(
+                (this.currentConversation / this.totalConversations) * 100
+            );
         } else {
             // Phase-based progress
             const phaseProgress = {
-                'validation': 10,
-                'scanning': 20,
-                'processing': 80,
-                'writing': 95,
-                'complete': 100,
-                'error': 0
+                validation: 10,
+                scanning: 20,
+                processing: 80,
+                writing: 95,
+                complete: 100,
+                error: 0,
             };
             percentage = phaseProgress[step.phase] || 0;
         }
@@ -159,9 +192,9 @@ export class ImportProgressModal extends Modal {
         this.detailEl.textContent = step.detail || "";
 
         // Handle completion
-        if (step.phase === 'complete') {
+        if (step.phase === "complete") {
             this.showComplete(step.title);
-        } else if (step.phase === 'error') {
+        } else if (step.phase === "error") {
             this.showError(step.title);
         }
     }
@@ -169,13 +202,13 @@ export class ImportProgressModal extends Modal {
     /**
      * Show completion state
      */
-    showComplete(message: string = t('import_progress.complete.message')) {
+    showComplete(message: string = t("import_progress.complete.message")) {
         this.isComplete = true;
-        this.progressBarEl.style.width = "100%";
-        this.progressBarEl.style.background = "var(--text-success)";
+        this.progressBarEl.addClass("nexus-progress-complete");
+        this.progressBarEl.removeClass("nexus-progress-error");
         this.statusEl.textContent = message;
-        this.detailEl.textContent = t('import_progress.complete.detail');
-        
+        this.detailEl.textContent = t("import_progress.complete.detail");
+
         // Auto-close after delay
         this.closeAfterDelay(3000);
     }
@@ -183,17 +216,17 @@ export class ImportProgressModal extends Modal {
     /**
      * Show error state
      */
-    showError(message: string = t('import_progress.error.message')) {
-        this.progressBarEl.style.background = "var(--text-error)";
+    showError(message: string = t("import_progress.error.message")) {
+        this.progressBarEl.addClass("nexus-progress-error");
         this.statusEl.textContent = message;
-        this.detailEl.textContent = t('import_progress.error.detail');
+        this.detailEl.textContent = t("import_progress.error.detail");
     }
 
     /**
      * Close after delay
      */
     closeAfterDelay(delay: number = 2000) {
-        setTimeout(() => {
+        window.setTimeout(() => {
             if (this.isComplete) {
                 this.close();
             }
@@ -209,8 +242,11 @@ export class ImportProgressModal extends Modal {
         this.totalAvailable = totalAvailable;
 
         // Show import mode indicator
-        this.importModeEl.style.display = 'block';
-        this.importModeEl.textContent = t('import_progress.selective_mode_indicator', { selected: String(selectedCount), total: String(totalAvailable) });
+        this.importModeEl.addClass("nexus-display-block");
+        this.importModeEl.textContent = t(
+            "import_progress.selective_mode_indicator",
+            { selected: String(selectedCount), total: String(totalAvailable) }
+        );
     }
 
     /**

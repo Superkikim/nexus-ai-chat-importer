@@ -1,27 +1,24 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/services/link-update-service.ts
 import { TFile } from "obsidian";
-import { logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
-import { UpgradeProgressModal } from "../upgrade/utils/progress-modal";
 
 export interface LinkUpdateStats {
     conversationsScanned: number;
@@ -33,7 +30,13 @@ export interface LinkUpdateStats {
 }
 
 export interface LinkUpdateProgress {
-    phase: 'scanning' | 'updating-attachments' | 'updating-conversations' | 'updating-artifacts' | 'complete' | 'error';
+    phase:
+        | "scanning"
+        | "updating-attachments"
+        | "updating-conversations"
+        | "updating-artifacts"
+        | "complete"
+        | "error";
     current: number;
     total: number;
     detail: string;
@@ -56,7 +59,7 @@ export class LinkUpdateService {
             attachmentLinksUpdated: 0,
             conversationLinksUpdated: 0,
             filesModified: 0,
-            errors: 0
+            errors: 0,
         };
 
         try {
@@ -65,10 +68,10 @@ export class LinkUpdateService {
             stats.conversationsScanned = conversationFiles.length;
 
             progressCallback?.({
-                phase: 'scanning',
+                phase: "scanning",
                 current: 0,
                 total: conversationFiles.length,
-                detail: `Found ${conversationFiles.length} conversations to scan`
+                detail: `Found ${conversationFiles.length} conversations to scan`,
             });
 
             // Process conversations in batches
@@ -77,47 +80,57 @@ export class LinkUpdateService {
                 const batch = conversationFiles.slice(i, i + batchSize);
 
                 progressCallback?.({
-                    phase: 'updating-attachments',
+                    phase: "updating-attachments",
                     current: i,
                     total: conversationFiles.length,
-                    detail: `Updating attachment links: ${i}/${conversationFiles.length} files processed`
+                    detail: `Updating attachment links: ${i}/${conversationFiles.length} files processed`,
                 });
 
                 for (const file of batch) {
                     try {
-                        const result = await this.updateAttachmentLinksInFile(file, oldAttachmentPath, newAttachmentPath);
+                        const result = await this.updateAttachmentLinksInFile(
+                            file,
+                            oldAttachmentPath,
+                            newAttachmentPath
+                        );
                         stats.attachmentLinksUpdated += result.linksUpdated;
                         if (result.fileModified) {
                             stats.filesModified++;
                         }
                     } catch (error) {
                         stats.errors++;
-                        this.plugin.logger.error(`Error updating attachment links in ${file.path}:`, error);
+                        this.plugin.logger.error(
+                            `Error updating attachment links in ${file.path}:`,
+                            error
+                        );
                     }
                 }
 
                 // Small delay between batches to prevent UI blocking
                 if (i + batchSize < conversationFiles.length) {
-                    await new Promise(resolve => setTimeout(resolve, 10));
+                    await new Promise((resolve) =>
+                        window.setTimeout(resolve, 10)
+                    );
                 }
             }
 
             progressCallback?.({
-                phase: 'complete',
+                phase: "complete",
                 current: conversationFiles.length,
                 total: conversationFiles.length,
-                detail: `Updated ${stats.attachmentLinksUpdated} attachment links in ${stats.filesModified} files`
+                detail: `Updated ${stats.attachmentLinksUpdated} attachment links in ${stats.filesModified} files`,
             });
 
             return stats;
-
         } catch (error) {
             this.plugin.logger.error("Error updating attachment links:", error);
             progressCallback?.({
-                phase: 'error',
+                phase: "error",
                 current: 0,
                 total: 0,
-                detail: `Error: ${error instanceof Error ? error.message : String(error)}`
+                detail: `Error: ${
+                    error instanceof Error ? error.message : String(error)
+                }`,
             });
             throw error;
         }
@@ -137,7 +150,7 @@ export class LinkUpdateService {
             attachmentLinksUpdated: 0,
             conversationLinksUpdated: 0,
             filesModified: 0,
-            errors: 0
+            errors: 0,
         };
 
         try {
@@ -148,10 +161,10 @@ export class LinkUpdateService {
             stats.reportsScanned = reportFiles.length;
 
             progressCallback?.({
-                phase: 'scanning',
+                phase: "scanning",
                 current: 0,
                 total: totalFiles,
-                detail: `Found ${reportFiles.length} reports and ${artifactFiles.length} artifacts to scan`
+                detail: `Found ${reportFiles.length} reports and ${artifactFiles.length} artifacts to scan`,
             });
 
             // Process reports in batches
@@ -162,22 +175,29 @@ export class LinkUpdateService {
                 const batch = reportFiles.slice(i, i + batchSize);
 
                 progressCallback?.({
-                    phase: 'updating-conversations',
+                    phase: "updating-conversations",
                     current: processedCount,
                     total: totalFiles,
-                    detail: `Updating conversation links in reports: ${i}/${reportFiles.length} processed`
+                    detail: `Updating conversation links in reports: ${i}/${reportFiles.length} processed`,
                 });
 
                 for (const file of batch) {
                     try {
-                        const result = await this.updateConversationLinksInFile(file, oldConversationPath, newConversationPath);
+                        const result = await this.updateConversationLinksInFile(
+                            file,
+                            oldConversationPath,
+                            newConversationPath
+                        );
                         stats.conversationLinksUpdated += result.linksUpdated;
                         if (result.fileModified) {
                             stats.filesModified++;
                         }
                     } catch (error) {
                         stats.errors++;
-                        this.plugin.logger.error(`Error updating conversation links in ${file.path}:`, error);
+                        this.plugin.logger.error(
+                            `Error updating conversation links in ${file.path}:`,
+                            error
+                        );
                     }
                 }
 
@@ -185,7 +205,9 @@ export class LinkUpdateService {
 
                 // Small delay between batches
                 if (i + batchSize < reportFiles.length) {
-                    await new Promise(resolve => setTimeout(resolve, 10));
+                    await new Promise((resolve) =>
+                        window.setTimeout(resolve, 10)
+                    );
                 }
             }
 
@@ -194,24 +216,33 @@ export class LinkUpdateService {
                 const batch = artifactFiles.slice(i, i + batchSize);
 
                 progressCallback?.({
-                    phase: 'updating-artifacts',
+                    phase: "updating-artifacts",
                     current: processedCount,
                     total: totalFiles,
-                    detail: `Updating conversation links in artifacts: ${i}/${artifactFiles.length} processed`
+                    detail: `Updating conversation links in artifacts: ${i}/${artifactFiles.length} processed`,
                 });
 
                 for (const file of batch) {
                     try {
-                        const result = await this.updateConversationLinkInArtifactFrontmatter(file, oldConversationPath, newConversationPath);
+                        const result =
+                            await this.updateConversationLinkInArtifactFrontmatter(
+                                file,
+                                oldConversationPath,
+                                newConversationPath
+                            );
                         if (result.linksUpdated > 0) {
-                            stats.conversationLinksUpdated += result.linksUpdated;
+                            stats.conversationLinksUpdated +=
+                                result.linksUpdated;
                         }
                         if (result.fileModified) {
                             stats.filesModified++;
                         }
                     } catch (error) {
                         stats.errors++;
-                        this.plugin.logger.error(`Error updating conversation link in artifact ${file.path}:`, error);
+                        this.plugin.logger.error(
+                            `Error updating conversation link in artifact ${file.path}:`,
+                            error
+                        );
                     }
                 }
 
@@ -219,26 +250,32 @@ export class LinkUpdateService {
 
                 // Small delay between batches
                 if (i + batchSize < artifactFiles.length) {
-                    await new Promise(resolve => setTimeout(resolve, 10));
+                    await new Promise((resolve) =>
+                        window.setTimeout(resolve, 10)
+                    );
                 }
             }
 
             progressCallback?.({
-                phase: 'complete',
+                phase: "complete",
                 current: totalFiles,
                 total: totalFiles,
-                detail: `Updated ${stats.conversationLinksUpdated} conversation links in ${stats.filesModified} files`
+                detail: `Updated ${stats.conversationLinksUpdated} conversation links in ${stats.filesModified} files`,
             });
 
             return stats;
-
         } catch (error) {
-            this.plugin.logger.error("Error updating conversation links:", error);
+            this.plugin.logger.error(
+                "Error updating conversation links:",
+                error
+            );
             progressCallback?.({
-                phase: 'error',
+                phase: "error",
                 current: 0,
                 total: 0,
-                detail: `Error: ${error instanceof Error ? error.message : String(error)}`
+                detail: `Error: ${
+                    error instanceof Error ? error.message : String(error)
+                }`,
             });
             throw error;
         }
@@ -250,7 +287,7 @@ export class LinkUpdateService {
      * Used as a fallback when Obsidian's "Automatically update internal links" is disabled.
      */
     async updateAttachmentLinksBatch(
-        pathMappings: Array<{oldPath: string, newPath: string}>,
+        pathMappings: Array<{ oldPath: string; newPath: string }>,
         progressCallback?: (progress: LinkUpdateProgress) => void,
         pluginVersion?: string
     ): Promise<LinkUpdateStats> {
@@ -260,7 +297,7 @@ export class LinkUpdateService {
             attachmentLinksUpdated: 0,
             conversationLinksUpdated: 0,
             filesModified: 0,
-            errors: 0
+            errors: 0,
         };
 
         if (pathMappings.length === 0) {
@@ -272,24 +309,48 @@ export class LinkUpdateService {
             stats.conversationsScanned = conversationFiles.length;
 
             progressCallback?.({
-                phase: 'scanning',
+                phase: "scanning",
                 current: 0,
                 total: conversationFiles.length,
-                detail: `Checking links: ${pathMappings.length} path(s) across ${conversationFiles.length} file(s)`
+                detail: `Checking links: ${pathMappings.length} path(s) across ${conversationFiles.length} file(s)`,
             });
 
             // Pre-build regex patterns for all mappings
-            const mappingPatterns = pathMappings.map(({oldPath, newPath}) => {
-                const normalizedOld = oldPath.replace(/\/+$/, '');
-                const normalizedNew = newPath.replace(/\/+$/, '');
+            const mappingPatterns = pathMappings.map(({ oldPath, newPath }) => {
+                const normalizedOld = oldPath.replace(/\/+$/, "");
+                const normalizedNew = newPath.replace(/\/+$/, "");
                 const escaped = this.escapeRegExp(normalizedOld);
                 return {
                     patterns: [
-                        { regex: new RegExp(`(!\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`, 'g'), replacement: `$1${normalizedNew}$2` },
-                        { regex: new RegExp(`(\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`, 'g'), replacement: `$1${normalizedNew}$2` },
-                        { regex: new RegExp(`(!\\[\\[)${escaped}(/[^\\]]+\\]\\])`, 'g'), replacement: `$1${normalizedNew}$2` },
-                        { regex: new RegExp(`(\\[\\[)${escaped}(/[^\\]]+\\]\\])`, 'g'), replacement: `$1${normalizedNew}$2` },
-                    ]
+                        {
+                            regex: new RegExp(
+                                `(!\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`,
+                                "g"
+                            ),
+                            replacement: `$1${normalizedNew}$2`,
+                        },
+                        {
+                            regex: new RegExp(
+                                `(\\[[^\\]]*\\]\\()${escaped}(/[^)]+\\))`,
+                                "g"
+                            ),
+                            replacement: `$1${normalizedNew}$2`,
+                        },
+                        {
+                            regex: new RegExp(
+                                `(!\\[\\[)${escaped}(/[^\\]]+\\]\\])`,
+                                "g"
+                            ),
+                            replacement: `$1${normalizedNew}$2`,
+                        },
+                        {
+                            regex: new RegExp(
+                                `(\\[\\[)${escaped}(/[^\\]]+\\]\\])`,
+                                "g"
+                            ),
+                            replacement: `$1${normalizedNew}$2`,
+                        },
+                    ],
                 };
             });
 
@@ -300,10 +361,10 @@ export class LinkUpdateService {
 
                 if (i % 50 === 0 || i + batchSize >= conversationFiles.length) {
                     progressCallback?.({
-                        phase: 'updating-attachments',
+                        phase: "updating-attachments",
                         current: i,
                         total: conversationFiles.length,
-                        detail: `Checking links: ${i}/${conversationFiles.length} files`
+                        detail: `Checking links: ${i}/${conversationFiles.length} files`,
                     });
                 }
 
@@ -314,14 +375,22 @@ export class LinkUpdateService {
                         let fileLinksUpdated = 0;
 
                         for (const mapping of mappingPatterns) {
-                            for (const {regex, replacement} of mapping.patterns) {
+                            for (const {
+                                regex,
+                                replacement,
+                            } of mapping.patterns) {
                                 regex.lastIndex = 0;
                                 const before = updatedContent;
-                                updatedContent = updatedContent.replace(regex, replacement);
+                                updatedContent = updatedContent.replace(
+                                    regex,
+                                    replacement
+                                );
                                 if (updatedContent !== before) {
                                     regex.lastIndex = 0;
                                     const matches = before.match(regex);
-                                    fileLinksUpdated += matches ? matches.length : 1;
+                                    fileLinksUpdated += matches
+                                        ? matches.length
+                                        : 1;
                                 }
                             }
                         }
@@ -330,32 +399,46 @@ export class LinkUpdateService {
                         if (content !== updatedContent) {
                             // Update plugin_version in frontmatter if requested
                             if (pluginVersion) {
-                                updatedContent = this.updatePluginVersion(updatedContent, pluginVersion);
+                                updatedContent = this.updatePluginVersion(
+                                    updatedContent,
+                                    pluginVersion
+                                );
                             }
-                            await this.plugin.app.vault.modify(file, updatedContent);
+                            await this.plugin.app.vault.modify(
+                                file,
+                                updatedContent
+                            );
                             stats.filesModified++;
                         }
                     } catch (error) {
                         stats.errors++;
-                        this.plugin.logger.error(`Error updating attachment links in ${file.path}:`, error);
+                        this.plugin.logger.error(
+                            `Error updating attachment links in ${file.path}:`,
+                            error
+                        );
                     }
                 }
 
                 if (i + batchSize < conversationFiles.length) {
-                    await new Promise(resolve => setTimeout(resolve, 10));
+                    await new Promise((resolve) =>
+                        window.setTimeout(resolve, 10)
+                    );
                 }
             }
 
             progressCallback?.({
-                phase: 'complete',
+                phase: "complete",
                 current: conversationFiles.length,
                 total: conversationFiles.length,
-                detail: `Fixed ${stats.attachmentLinksUpdated} stale link(s) in ${stats.filesModified} file(s)`
+                detail: `Fixed ${stats.attachmentLinksUpdated} stale link(s) in ${stats.filesModified} file(s)`,
             });
 
             return stats;
         } catch (error) {
-            this.plugin.logger.error("Error in batch attachment link update:", error);
+            this.plugin.logger.error(
+                "Error in batch attachment link update:",
+                error
+            );
             throw error;
         }
     }
@@ -363,10 +446,12 @@ export class LinkUpdateService {
     /**
      * Estimate time for link updates based on file count
      */
-    async estimateUpdateTime(folderType: 'attachments' | 'conversations'): Promise<{ fileCount: number; estimatedSeconds: number }> {
+    async estimateUpdateTime(
+        folderType: "attachments" | "conversations"
+    ): Promise<{ fileCount: number; estimatedSeconds: number }> {
         let fileCount = 0;
 
-        if (folderType === 'attachments') {
+        if (folderType === "attachments") {
             const conversationFiles = await this.getConversationFiles();
             fileCount = conversationFiles.length;
         } else {
@@ -387,15 +472,19 @@ export class LinkUpdateService {
         const conversationFolder = this.plugin.settings.conversationFolder;
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
 
-        return allFiles.filter(file => {
+        return allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder)) return false;
 
             // Exclude Reports and Attachments folders
-            const relativePath = file.path.substring(conversationFolder.length + 1);
-            if (relativePath.startsWith('Reports/') ||
-                relativePath.startsWith('Attachments/') ||
-                relativePath.startsWith('reports/') ||
-                relativePath.startsWith('attachments/')) {
+            const relativePath = file.path.substring(
+                conversationFolder.length + 1
+            );
+            if (
+                relativePath.startsWith("Reports/") ||
+                relativePath.startsWith("Attachments/") ||
+                relativePath.startsWith("reports/") ||
+                relativePath.startsWith("attachments/")
+            ) {
                 return false;
             }
 
@@ -410,7 +499,7 @@ export class LinkUpdateService {
         const reportFolder = this.plugin.settings.reportFolder;
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
 
-        return allFiles.filter(file => file.path.startsWith(reportFolder));
+        return allFiles.filter((file) => file.path.startsWith(reportFolder));
     }
 
     /**
@@ -421,7 +510,9 @@ export class LinkUpdateService {
         const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
         const allFiles = this.plugin.app.vault.getMarkdownFiles();
 
-        return allFiles.filter(file => file.path.startsWith(claudeArtifactsPath));
+        return allFiles.filter((file) =>
+            file.path.startsWith(claudeArtifactsPath)
+        );
     }
 
     /**
@@ -437,43 +528,67 @@ export class LinkUpdateService {
         let linksUpdated = 0;
 
         // Normalize paths: remove trailing slashes for consistent matching
-        const normalizedOldPath = oldAttachmentPath.replace(/\/+$/, '');
-        const normalizedNewPath = newAttachmentPath.replace(/\/+$/, '');
+        const normalizedOldPath = oldAttachmentPath.replace(/\/+$/, "");
+        const normalizedNewPath = newAttachmentPath.replace(/\/+$/, "");
 
         // Escape special regex characters in paths
         const escapedOldPath = this.escapeRegExp(normalizedOldPath);
 
         // Pattern 1: Markdown image links ![alt](path/...)
         // Matches: ![alt](oldPath/subpath/file.png)
-        const imagePattern = new RegExp(`(!\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, 'g');
-        updatedContent = updatedContent.replace(imagePattern, (match, prefix, suffix) => {
-            linksUpdated++;
-            return `${prefix}${normalizedNewPath}${suffix}`;
-        });
+        const imagePattern = new RegExp(
+            `(!\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`,
+            "g"
+        );
+        updatedContent = updatedContent.replace(
+            imagePattern,
+            (match, prefix, suffix) => {
+                linksUpdated++;
+                return `${prefix}${normalizedNewPath}${suffix}`;
+            }
+        );
 
         // Pattern 2: Markdown file links [text](path/...)
         // Matches: [text](oldPath/subpath/file.pdf)
-        const linkPattern = new RegExp(`(\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`, 'g');
-        updatedContent = updatedContent.replace(linkPattern, (match, prefix, suffix) => {
-            linksUpdated++;
-            return `${prefix}${normalizedNewPath}${suffix}`;
-        });
+        const linkPattern = new RegExp(
+            `(\\[[^\\]]*\\]\\()${escapedOldPath}(/[^)]+\\))`,
+            "g"
+        );
+        updatedContent = updatedContent.replace(
+            linkPattern,
+            (match, prefix, suffix) => {
+                linksUpdated++;
+                return `${prefix}${normalizedNewPath}${suffix}`;
+            }
+        );
 
         // Pattern 3: Obsidian image embeds ![[path/...]]
         // Matches: ![[oldPath/subpath/file.png]]
-        const obsidianImagePattern = new RegExp(`(!\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, 'g');
-        updatedContent = updatedContent.replace(obsidianImagePattern, (match, prefix, suffix) => {
-            linksUpdated++;
-            return `${prefix}${normalizedNewPath}${suffix}`;
-        });
+        const obsidianImagePattern = new RegExp(
+            `(!\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+            "g"
+        );
+        updatedContent = updatedContent.replace(
+            obsidianImagePattern,
+            (match, prefix, suffix) => {
+                linksUpdated++;
+                return `${prefix}${normalizedNewPath}${suffix}`;
+            }
+        );
 
         // Pattern 4: Obsidian file links [[path/...]]
         // Matches: [[oldPath/subpath/file.md]]
-        const obsidianLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, 'g');
-        updatedContent = updatedContent.replace(obsidianLinkPattern, (match, prefix, suffix) => {
-            linksUpdated++;
-            return `${prefix}${normalizedNewPath}${suffix}`;
-        });
+        const obsidianLinkPattern = new RegExp(
+            `(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+            "g"
+        );
+        updatedContent = updatedContent.replace(
+            obsidianLinkPattern,
+            (match, prefix, suffix) => {
+                linksUpdated++;
+                return `${prefix}${normalizedNewPath}${suffix}`;
+            }
+        );
 
         const fileModified = content !== updatedContent;
         if (fileModified) {
@@ -496,25 +611,37 @@ export class LinkUpdateService {
         let linksUpdated = 0;
 
         // Normalize paths: remove trailing slashes for consistent matching
-        const normalizedOldPath = oldConversationPath.replace(/\/+$/, '');
-        const normalizedNewPath = newConversationPath.replace(/\/+$/, '');
+        const normalizedOldPath = oldConversationPath.replace(/\/+$/, "");
+        const normalizedNewPath = newConversationPath.replace(/\/+$/, "");
 
         // Escape special regex characters in paths
         const escapedOldPath = this.escapeRegExp(normalizedOldPath);
 
         // Pattern: Obsidian links with aliases [[path/...|title]]
-        const linkWithAliasPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`, 'g');
-        updatedContent = updatedContent.replace(linkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
-            linksUpdated++;
-            return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
-        });
+        const linkWithAliasPattern = new RegExp(
+            `(\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
+            "g"
+        );
+        updatedContent = updatedContent.replace(
+            linkWithAliasPattern,
+            (match, prefix, pathSuffix, aliasSuffix) => {
+                linksUpdated++;
+                return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
+            }
+        );
 
         // Pattern: Simple Obsidian links [[path/...]]
-        const simpleLinkPattern = new RegExp(`(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`, 'g');
-        updatedContent = updatedContent.replace(simpleLinkPattern, (match, prefix, suffix) => {
-            linksUpdated++;
-            return `${prefix}${normalizedNewPath}${suffix}`;
-        });
+        const simpleLinkPattern = new RegExp(
+            `(\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
+            "g"
+        );
+        updatedContent = updatedContent.replace(
+            simpleLinkPattern,
+            (match, prefix, suffix) => {
+                linksUpdated++;
+                return `${prefix}${normalizedNewPath}${suffix}`;
+            }
+        );
 
         const fileModified = content !== updatedContent;
         if (fileModified) {
@@ -537,8 +664,8 @@ export class LinkUpdateService {
         let linksUpdated = 0;
 
         // Normalize paths: remove trailing slashes for consistent matching
-        const normalizedOldPath = oldConversationPath.replace(/\/+$/, '');
-        const normalizedNewPath = newConversationPath.replace(/\/+$/, '');
+        const normalizedOldPath = oldConversationPath.replace(/\/+$/, "");
+        const normalizedNewPath = newConversationPath.replace(/\/+$/, "");
 
         // Escape special regex characters in paths
         const escapedOldPath = this.escapeRegExp(normalizedOldPath);
@@ -546,32 +673,41 @@ export class LinkUpdateService {
         // Pattern 1: conversation_link in frontmatter: "[[oldPath/...]]" or "[[oldPath/...|alias]]"
         const frontmatterLinkPattern = new RegExp(
             `(conversation_link:\\s*"\\[\\[)${escapedOldPath}(/[^\\]]+)(\\]\\]")`,
-            'g'
+            "g"
         );
-        updatedContent = updatedContent.replace(frontmatterLinkPattern, (match, prefix, pathSuffix, suffix) => {
-            linksUpdated++;
-            return `${prefix}${normalizedNewPath}${pathSuffix}${suffix}`;
-        });
+        updatedContent = updatedContent.replace(
+            frontmatterLinkPattern,
+            (match, prefix, pathSuffix, suffix) => {
+                linksUpdated++;
+                return `${prefix}${normalizedNewPath}${pathSuffix}${suffix}`;
+            }
+        );
 
         // Pattern 2: **Conversation:** link in body with alias [[path/...|title]]
         const bodyLinkWithAliasPattern = new RegExp(
             `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^|\\]]+)(\\|[^\\]]+\\]\\])`,
-            'g'
+            "g"
         );
-        updatedContent = updatedContent.replace(bodyLinkWithAliasPattern, (match, prefix, pathSuffix, aliasSuffix) => {
-            linksUpdated++;
-            return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
-        });
+        updatedContent = updatedContent.replace(
+            bodyLinkWithAliasPattern,
+            (match, prefix, pathSuffix, aliasSuffix) => {
+                linksUpdated++;
+                return `${prefix}${normalizedNewPath}${pathSuffix}${aliasSuffix}`;
+            }
+        );
 
         // Pattern 3: **Conversation:** link in body without alias [[path]]
         const bodyLinkSimplePattern = new RegExp(
             `(\\*\\*Conversation:\\*\\*\\s*\\[\\[)${escapedOldPath}(/[^\\]]+\\]\\])`,
-            'g'
+            "g"
         );
-        updatedContent = updatedContent.replace(bodyLinkSimplePattern, (match, prefix, suffix) => {
-            linksUpdated++;
-            return `${prefix}${newConversationPath}${suffix}`;
-        });
+        updatedContent = updatedContent.replace(
+            bodyLinkSimplePattern,
+            (match, prefix, suffix) => {
+                linksUpdated++;
+                return `${prefix}${newConversationPath}${suffix}`;
+            }
+        );
 
         const fileModified = content !== updatedContent;
         if (fileModified) {
@@ -585,7 +721,7 @@ export class LinkUpdateService {
      * Update plugin_version in frontmatter
      */
     private updatePluginVersion(content: string, version: string): string {
-        if (content.includes('plugin_version:')) {
+        if (content.includes("plugin_version:")) {
             return content.replace(
                 /^plugin_version: .*$/m,
                 `plugin_version: "${version}"`
@@ -602,6 +738,6 @@ export class LinkUpdateService {
      * Escape special regex characters
      */
     private escapeRegExp(string: string): string {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
 }

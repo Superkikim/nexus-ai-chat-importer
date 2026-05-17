@@ -1,4 +1,5 @@
 import { ZipArchiveReader, ZipEntryHandle, ZipEntryMeta } from "./types";
+import type { ZipFile, Entry } from "yauzl";
 
 declare const require: (name: string) => any;
 
@@ -6,22 +7,31 @@ interface DesktopZipEntryRecord extends ZipEntryMeta {
     compressedSize: number;
 }
 
-function openYauzl(filePath: string): Promise<any> {
+function openYauzl(filePath: string): Promise<ZipFile> {
     return new Promise((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const yauzl = require("yauzl");
-        yauzl.open(filePath, { lazyEntries: true, autoClose: true }, (err: Error | null, zipfile: any) => {
-            if (err) reject(err);
-            else resolve(zipfile);
-        });
+        const yauzl = require("yauzl") as {
+            open: (
+                path: string,
+                options: { lazyEntries: boolean; autoClose: boolean },
+                cb: (err: Error | null, zipfile: ZipFile) => void
+            ) => void;
+        };
+        yauzl.open(
+            filePath,
+            { lazyEntries: true, autoClose: true },
+            (err: Error | null, zipfile: ZipFile) => {
+                if (err) reject(err);
+                else resolve(zipfile);
+            }
+        );
     });
 }
 
-function normalizeChunk(chunk: Uint8Array | Buffer | string): Uint8Array {
+function normalizeChunk(chunk: Uint8Array | string): Uint8Array {
     if (typeof chunk === "string") {
         return new TextEncoder().encode(chunk);
     }
-    return chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk);
+    return chunk;
 }
 
 async function* streamToByteChunks(stream: any): AsyncGenerator<Uint8Array> {
@@ -38,7 +48,7 @@ async function* streamToByteChunks(stream: any): AsyncGenerator<Uint8Array> {
         }
     };
 
-    const onData = (chunk: Uint8Array | Buffer | string) => {
+    const onData = (chunk: Uint8Array | string) => {
         queue.push(normalizeChunk(chunk));
         wake();
     };
@@ -80,6 +90,7 @@ async function* streamToByteChunks(stream: any): AsyncGenerator<Uint8Array> {
     }
 
     if (failure) {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw failure;
     }
 }
@@ -106,49 +117,61 @@ async function streamToBuffer(stream: any): Promise<Uint8Array> {
 async function openDesktopEntryReadStream(
     filePath: string,
     entryName: string
-): Promise<{ zipfile: any; stream: any }> {
+): Promise<{ zipfile: ZipFile; stream: any }> {
     const zipfile = await openYauzl(filePath);
 
-    return await new Promise<{ zipfile: any; stream: any }>((resolve, reject) => {
-        let settled = false;
+    return await new Promise<{ zipfile: ZipFile; stream: any }>(
+        (resolve, reject) => {
+            let settled = false;
 
-        const fail = (error: Error) => {
-            if (settled) return;
-            settled = true;
-            zipfile.close();
-            reject(error);
-        };
+            const fail = (error: Error) => {
+                if (settled) return;
+                settled = true;
+                zipfile.close();
+                reject(error);
+            };
 
-        zipfile.on("error", fail);
-        zipfile.on("end", () => {
-            if (!settled) fail(new Error(`Entry not found in ZIP: ${entryName}`));
-        });
+            zipfile.on("error", fail);
+            zipfile.on("end", () => {
+                if (!settled)
+                    fail(new Error(`Entry not found in ZIP: ${entryName}`));
+            });
 
-        zipfile.on("entry", (entry: any) => {
-            if (entry.fileName !== entryName) {
-                zipfile.readEntry();
-                return;
-            }
-
-            zipfile.openReadStream(entry, async (err: Error | null, stream: any) => {
-                if (err) {
-                    fail(err);
+            zipfile.on("entry", (entry: Entry) => {
+                if (entry.fileName !== entryName) {
+                    zipfile.readEntry();
                     return;
                 }
 
-                if (!settled) {
-                    settled = true;
-                    resolve({ zipfile, stream });
-                }
-            });
-        });
+                zipfile.openReadStream(
+                    entry,
+                    (err: Error | null, stream: any) => {
+                        if (err) {
+                            fail(err);
+                            return;
+                        }
 
-        zipfile.readEntry();
-    });
+                        if (!settled) {
+                            settled = true;
+                            resolve({ zipfile, stream });
+                        }
+                    }
+                );
+            });
+
+            zipfile.readEntry();
+        }
+    );
 }
 
-async function readDesktopEntry(filePath: string, entryName: string): Promise<Uint8Array> {
-    const { zipfile, stream } = await openDesktopEntryReadStream(filePath, entryName);
+async function readDesktopEntry(
+    filePath: string,
+    entryName: string
+): Promise<Uint8Array> {
+    const { zipfile, stream } = await openDesktopEntryReadStream(
+        filePath,
+        entryName
+    );
     try {
         return await streamToBuffer(stream);
     } finally {
@@ -173,7 +196,10 @@ class DesktopZipEntryHandle implements ZipEntryHandle {
     }
 
     async *readTextChunks(): AsyncGenerator<string> {
-        const { zipfile, stream } = await openDesktopEntryReadStream(this.filePath, this.name);
+        const { zipfile, stream } = await openDesktopEntryReadStream(
+            this.filePath,
+            this.name
+        );
         const decoder = new TextDecoder("utf-8");
 
         try {
@@ -204,7 +230,10 @@ export class DesktopZipArchiveReader implements ZipArchiveReader {
     }
 
     async listEntries(): Promise<ZipEntryMeta[]> {
-        return Array.from(this.entryMap.values()).map(({ path, size }) => ({ path, size }));
+        return Array.from(this.entryMap.values()).map(({ path, size }) => ({
+            path,
+            size,
+        }));
     }
 
     has(name: string): boolean {
@@ -235,8 +264,12 @@ export async function readDesktopZipEntries(
             resolve(entries);
         });
 
-        zipfile.on("entry", (entry: any) => {
-            if (!entry.fileName.endsWith("/") && (!shouldInclude || shouldInclude(entry.fileName, entry.uncompressedSize))) {
+        zipfile.on("entry", (entry: Entry) => {
+            if (
+                !entry.fileName.endsWith("/") &&
+                (!shouldInclude ||
+                    shouldInclude(entry.fileName, entry.uncompressedSize))
+            ) {
                 entries.push({
                     path: entry.fileName,
                     size: entry.uncompressedSize,

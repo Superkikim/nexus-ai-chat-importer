@@ -25,12 +25,16 @@ import {
     PerplexityTurn,
 } from "./perplexity-types";
 
-export function normalizePerplexityConversationFile(raw: PerplexityRawConversationFile): PerplexityConversationFile | null {
+export function normalizePerplexityConversationFile(
+    raw: PerplexityRawConversationFile
+): PerplexityConversationFile | null {
     if (!raw || typeof raw !== "object") {
         return null;
     }
 
-    const legacy = tryNormalizeLegacy(raw as Partial<PerplexityConversationFile>);
+    const legacy = tryNormalizeLegacy(
+        raw as Partial<PerplexityConversationFile>
+    );
     if (legacy) {
         return legacy;
     }
@@ -38,17 +42,21 @@ export function normalizePerplexityConversationFile(raw: PerplexityRawConversati
     return tryNormalizeEntriesExport(raw as Partial<PerplexityEntryExportFile>);
 }
 
-function tryNormalizeLegacy(raw: Partial<PerplexityConversationFile>): PerplexityConversationFile | null {
+function tryNormalizeLegacy(
+    raw: Partial<PerplexityConversationFile>
+): PerplexityConversationFile | null {
     if (!raw.metadata || !Array.isArray(raw.conversations)) {
         return null;
     }
 
     const turns = raw.conversations
-        .map(turn => normalizeTurnFromLegacy(turn))
+        .map((turn) => normalizeTurnFromLegacy(turn))
         .filter((turn): turn is PerplexityTurn => turn !== null);
 
-    const threadId = normalizeString(raw.metadata.thread_id) || turns[0]?.uuid || "";
-    const threadTitle = normalizeString(raw.metadata.thread_title) || "Untitled";
+    const threadId =
+        normalizeString(raw.metadata.thread_id) || turns[0]?.uuid || "";
+    const threadTitle =
+        normalizeString(raw.metadata.thread_title) || "Untitled";
     const threadUrl = normalizeString(raw.metadata.thread_url);
 
     return {
@@ -66,37 +74,47 @@ function tryNormalizeLegacy(raw: Partial<PerplexityConversationFile>): Perplexit
     };
 }
 
-function tryNormalizeEntriesExport(raw: Partial<PerplexityEntryExportFile>): PerplexityConversationFile | null {
+function tryNormalizeEntriesExport(
+    raw: Partial<PerplexityEntryExportFile>
+): PerplexityConversationFile | null {
     if (!Array.isArray(raw.entries)) {
         return null;
     }
 
     const turns = raw.entries
-        .map(entry => normalizeTurnFromEntry(entry))
+        .map((entry) => normalizeTurnFromEntry(entry))
         .filter((turn): turn is PerplexityTurn => turn !== null)
-        .sort((a, b) => parseTimestampMs(a.timestamp) - parseTimestampMs(b.timestamp));
+        .sort(
+            (a, b) =>
+                parseTimestampMs(a.timestamp) - parseTimestampMs(b.timestamp)
+        );
 
     if (turns.length === 0) {
         return null;
     }
 
-    const firstEntry = raw.entries.find(isRecord) as PerplexityEntry | undefined;
+    const firstEntry = raw.entries.find(isRecord) as
+        | PerplexityEntry
+        | undefined;
     const contextUuid = normalizeString(firstEntry?.context_uuid);
     const slug = normalizeString(firstEntry?.thread_url_slug);
-    const firstEntryTimestamp = normalizeString(firstEntry?.entry_created_datetime)
-        || normalizeString(firstEntry?.entry_updated_datetime)
-        || normalizeString(firstEntry?.updated_datetime);
+    const firstEntryTimestamp =
+        normalizeString(firstEntry?.entry_created_datetime) ||
+        normalizeString(firstEntry?.entry_updated_datetime) ||
+        normalizeString(firstEntry?.updated_datetime);
     const lastEntry = [...raw.entries]
         .filter(isRecord)
         .sort((a, b) => {
             const aEntry = a as PerplexityEntry;
             const bEntry = b as PerplexityEntry;
-            const aTimestamp = normalizeString(aEntry.entry_updated_datetime)
-                || normalizeString(aEntry.updated_datetime)
-                || normalizeString(aEntry.entry_created_datetime);
-            const bTimestamp = normalizeString(bEntry.entry_updated_datetime)
-                || normalizeString(bEntry.updated_datetime)
-                || normalizeString(bEntry.entry_created_datetime);
+            const aTimestamp =
+                normalizeString(aEntry.entry_updated_datetime) ||
+                normalizeString(aEntry.updated_datetime) ||
+                normalizeString(aEntry.entry_created_datetime);
+            const bTimestamp =
+                normalizeString(bEntry.entry_updated_datetime) ||
+                normalizeString(bEntry.updated_datetime) ||
+                normalizeString(bEntry.entry_created_datetime);
             return parseTimestampMs(aTimestamp) - parseTimestampMs(bTimestamp);
         })
         .pop() as PerplexityEntry | undefined;
@@ -104,17 +122,20 @@ function tryNormalizeEntriesExport(raw: Partial<PerplexityEntryExportFile>): Per
     // Prefer context_uuid for backward compatibility with existing Perplexity notes
     // imported from older exporter shapes; fall back to thread URL slug.
     const threadId = contextUuid || slug || turns[0].uuid;
-    const threadTitle = normalizeString(raw.thread_metadata?.title)
-        || normalizeString(firstEntry?.thread_title)
-        || "Untitled";
+    const threadTitle =
+        normalizeString(raw.thread_metadata?.title) ||
+        normalizeString(firstEntry?.thread_title) ||
+        "Untitled";
 
-    const threadCreatedAt = normalizeString(raw.thread_metadata?.created_at)
-        || firstEntryTimestamp
-        || turns[0].timestamp;
-    const threadUpdatedAt = normalizeString(raw.thread_metadata?.updated_at)
-        || normalizeString(lastEntry?.entry_updated_datetime)
-        || normalizeString(lastEntry?.updated_datetime)
-        || turns[turns.length - 1].timestamp;
+    const threadCreatedAt =
+        normalizeString(raw.thread_metadata?.created_at) ||
+        firstEntryTimestamp ||
+        turns[0].timestamp;
+    const threadUpdatedAt =
+        normalizeString(raw.thread_metadata?.updated_at) ||
+        normalizeString(lastEntry?.entry_updated_datetime) ||
+        normalizeString(lastEntry?.updated_datetime) ||
+        turns[turns.length - 1].timestamp;
 
     return {
         metadata: {
@@ -159,7 +180,8 @@ function normalizeTurnFromEntry(raw: unknown): PerplexityTurn | null {
     if (!isRecord(raw)) return null;
 
     const entry = raw as PerplexityEntry;
-    const uuid = normalizeString(entry.uuid) || normalizeString(entry.backend_uuid);
+    const uuid =
+        normalizeString(entry.uuid) || normalizeString(entry.backend_uuid);
     if (!uuid) return null;
 
     const query = normalizeString(entry.query_str);
@@ -169,18 +191,22 @@ function normalizeTurnFromEntry(raw: unknown): PerplexityTurn | null {
         return null;
     }
 
-    const relatedQueries = normalizeRelatedQueries(entry.related_queries)
-        || normalizeRelatedQueryItems(entry.related_query_items);
+    const relatedQueries =
+        normalizeRelatedQueries(entry.related_queries) ||
+        normalizeRelatedQueryItems(entry.related_query_items);
 
     return {
         uuid,
         query,
         answer,
-        model: normalizeString(entry.display_model) || normalizeString(entry.user_selected_model),
+        model:
+            normalizeString(entry.display_model) ||
+            normalizeString(entry.user_selected_model),
         mode: normalizeString(entry.mode),
-        timestamp: normalizeString(entry.entry_created_datetime)
-            || normalizeString(entry.entry_updated_datetime)
-            || normalizeString(entry.updated_datetime),
+        timestamp:
+            normalizeString(entry.entry_created_datetime) ||
+            normalizeString(entry.entry_updated_datetime) ||
+            normalizeString(entry.updated_datetime),
         related_queries: relatedQueries,
     };
 }
@@ -244,12 +270,12 @@ function normalizeSources(value: unknown): PerplexitySource[] | undefined {
 
     const sources: PerplexitySource[] = value
         .filter(isRecord)
-        .map(source => ({
+        .map((source) => ({
             title: normalizeString(source.title),
             url: normalizeString(source.url),
             snippet: normalizeString(source.snippet),
         }))
-        .filter(source => !!(source.title || source.url || source.snippet));
+        .filter((source) => !!(source.title || source.url || source.snippet));
 
     return sources.length > 0 ? sources : undefined;
 }
@@ -266,6 +292,6 @@ function parseTimestampMs(value?: string): number {
     return Number.isFinite(ts) ? ts : 0;
 }
 
-function isRecord(value: unknown): value is Record<string, any> {
+function isRecord(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === "object" && !Array.isArray(value);
 }

@@ -18,65 +18,66 @@ const builtins = new Set(builtinModules.flatMap((m) => [m, `node:${m}`]));
  * by looking in both cli/node_modules AND the parent project's node_modules.
  */
 const resolveParentNodeModules = {
-  name: "resolve-parent-node-modules",
-  setup(build) {
-    const require = createRequire(path.join(__dirname, "package.json"));
+    name: "resolve-parent-node-modules",
+    setup(build) {
+        const require = createRequire(path.join(__dirname, "package.json"));
 
-    build.onResolve({ filter: /^[^./]/ }, (args) => {
-      // Skip obsidian alias and Node.js builtins
-      if (args.path === "obsidian" || builtins.has(args.path)) return undefined;
+        build.onResolve({ filter: /^[^./]/ }, (args) => {
+            // Skip obsidian alias and Node.js builtins
+            if (args.path === "obsidian" || builtins.has(args.path))
+                return undefined;
 
-      try {
-        const resolved = require.resolve(args.path, {
-          paths: [
-            path.join(__dirname, "node_modules"),
-            path.join(parentDir, "node_modules"),
-          ],
+            try {
+                const resolved = require.resolve(args.path, {
+                    paths: [
+                        path.join(__dirname, "node_modules"),
+                        path.join(parentDir, "node_modules"),
+                    ],
+                });
+                return { path: resolved };
+            } catch {
+                return undefined;
+            }
         });
-        return { path: resolved };
-      } catch {
-        return undefined;
-      }
-    });
-  },
+    },
 };
 
 async function build() {
-  const ctx = await esbuild.context({
-    banner: { js: banner },
-    entryPoints: [path.join(__dirname, "src/index.ts")],
-    bundle: true,
-    platform: "node",
-    target: "node18",
-    format: "cjs",
-    outfile: path.join(__dirname, "dist/nexus-cli.js"),
-    sourcemap: true,
-    treeShaking: true,
-    alias: {
-      obsidian: path.join(__dirname, "src/obsidian-shim.ts"),
-    },
-    plugins: [resolveParentNodeModules],
-    external: [],
-    logLevel: "info",
-  });
+    const ctx = await esbuild.context({
+        banner: { js: banner },
+        entryPoints: [path.join(__dirname, "src/index.ts")],
+        bundle: true,
+        platform: "node",
+        target: "node18",
+        format: "cjs",
+        outfile: path.join(__dirname, "dist/nexus-cli.js"),
+        sourcemap: true,
+        treeShaking: true,
+        alias: {
+            obsidian: path.join(__dirname, "src/obsidian-shim.ts"),
+        },
+        plugins: [resolveParentNodeModules],
+        external: [],
+        logLevel: "info",
+    });
 
-  if (watch) {
-    await ctx.watch();
-    console.log("Watching for changes...");
-  } else {
-    await ctx.rebuild();
-    ctx.dispose();
+    if (watch) {
+        await ctx.watch();
+        console.log("Watching for changes...");
+    } else {
+        await ctx.rebuild();
+        ctx.dispose();
 
-    // Prepend shebang for direct execution
-    const outfile = path.join(__dirname, "dist/nexus-cli.js");
-    const fs = await import("fs");
-    const content = fs.readFileSync(outfile, "utf-8");
-    fs.writeFileSync(outfile, "#!/usr/bin/env node\n" + content);
-    fs.chmodSync(outfile, 0o755);
-  }
+        // Prepend shebang for direct execution
+        const outfile = path.join(__dirname, "dist/nexus-cli.js");
+        const fs = await import("fs");
+        const content = fs.readFileSync(outfile, "utf-8");
+        fs.writeFileSync(outfile, "#!/usr/bin/env node\n" + content);
+        fs.chmodSync(outfile, 0o755);
+    }
 }
 
 build().catch((err) => {
-  console.error(err);
-  process.exit(1);
+    console.error(err);
+    process.exit(1);
 });

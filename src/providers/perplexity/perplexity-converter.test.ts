@@ -35,7 +35,9 @@ describe("PerplexityConverter", () => {
         expect(result.metadata?.mode).toBe("CONCISE");
         expect(result.metadata?.models).toEqual(["sonar"]);
         expect(result.metadata?.related_queries).toEqual(["A", "B"]);
-        expect(result.chatUrl).toBe("https://www.perplexity.ai/search/test-thread-abc123");
+        expect(result.chatUrl).toBe(
+            "https://www.perplexity.ai/search/test-thread-abc123"
+        );
     });
 
     it("adds references block when sources are present", () => {
@@ -62,7 +64,9 @@ describe("PerplexityConverter", () => {
         };
 
         const result = PerplexityConverter.convertChat(chat);
-        const assistant = result.messages.find(message => message.role === "assistant");
+        const assistant = result.messages.find(
+            (message) => message.role === "assistant"
+        );
         expect(assistant?.content).toContain("### References");
         expect(assistant?.content).toContain("[OpenAI](https://openai.com)");
     });

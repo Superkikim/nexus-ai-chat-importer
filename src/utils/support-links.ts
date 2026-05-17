@@ -1,16 +1,28 @@
 const NEXUS_DOCS_BASE = "https://nexus-prod.dev";
 const NEXUS_DOCS_SLUG = "nexus-ai-chat-importer";
 const GITHUB_REPO_BASE = "https://github.com/Superkikim/nexus-ai-chat-importer";
-const GITHUB_ISSUES_URL = "https://github.com/superkikim/nexus-ai-chat-importer/issues";
-const NEXUS_FORUM_THREAD_URL = "https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664";
-const SUPPORTED_NEXUS_LOCALES = ["fr", "de", "es", "it", "ru", "zh", "ja", "pt", "ko"] as const;
+const GITHUB_ISSUES_URL =
+    "https://github.com/superkikim/nexus-ai-chat-importer/issues";
+const NEXUS_FORUM_THREAD_URL =
+    "https://forum.obsidian.md/t/plugin-nexus-ai-chat-importer-import-chatgpt-and-claude-conversations-to-your-vault/71664";
+const SUPPORTED_NEXUS_LOCALES = [
+    "fr",
+    "de",
+    "es",
+    "it",
+    "ru",
+    "zh",
+    "ja",
+    "pt",
+    "ko",
+] as const;
 
-type SupportedNexusLocale = typeof SUPPORTED_NEXUS_LOCALES[number];
+type SupportedNexusLocale = (typeof SUPPORTED_NEXUS_LOCALES)[number];
 
 function normalizeLocale(locale?: string): string {
     const runtimeLocale =
         locale ??
-        ((globalThis as any)?.window?.moment?.locale?.() as string | undefined) ??
+        ((window as any)?.window?.moment?.locale?.() as string | undefined) ??
         "en";
 
     return runtimeLocale.toLowerCase().split(/[-_]/)[0];
