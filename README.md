@@ -76,77 +76,18 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le C
 
 ### ✨ What's New
 
-#### v1.6.4 — Community Plugin Review Compliance
-
-🔧 **Improved**
-- Removed Gemini provider (dead code, never shipped to users)
-- Full compliance with Obsidian community plugin ESLint rules (`eslint-plugin-obsidianmd`)
-- Added GPL-3.0 `LICENSE` file recognized by GitHub
-- Fixed duplicate CSS selector definitions causing silent style conflicts
-- Added `isDesktopOnly: false` to `manifest.json` for explicit mobile support declaration
-
-#### v1.6.3 — Filename Length Hardening
-
-✨ **New**
-- Shared filename length guard for conversation note files across providers
-- Safe fallback retry naming when a filesystem rejects a path with `ENAMETOOLONG`
-
-🔧 **Improved**
-- Collision suffixes like ` (1)`, ` (2)` are now kept inside the filename length budget
-- Le Chat title derivation is now centralized so title behavior stays consistent across import paths
-
-#### v1.6.2 — Perplexity Compatibility Patch
-
-✨ **New**
-- Perplexity Thread Exporter dual-schema support:
-  - `metadata + conversations[]`
-  - `status + entries + thread_metadata`
-- Better nested ZIP guidance when an outer archive only contains inner `part*.zip` files
-
-🔧 **Improved**
-- Perplexity conversation IDs are now normalized more reliably (`context_uuid` first) to avoid duplicate notes across schema variants
-- Selective import metadata extraction now uses the same Perplexity normalization path as full import
-- Archive validation messages for provider mismatch / unsupported format are now centralized for consistency
-
-#### v1.6.0 — Perplexity + Universal Metadata
+#### v1.6.x — Highlights
 
 ✨ **New**
 - Perplexity provider support (Perplexity Thread Exporter ZIP archives)
 - Per-turn model-aware assistant headers (`Assistant · <model>`)
-- Universal frontmatter metadata keys:
-  - `mode` (when provider exposes stable mode)
-  - `models` (deduplicated list)
+- Universal frontmatter metadata (`mode`, `models`)
+- Dual-schema support for Perplexity Thread Exporter archives
 
 🔧 **Improved**
-- Perplexity answer Markdown is preserved as-is
-- Related queries can be appended at the end of imported notes
-- Provider auto-detection now recognizes Perplexity archives (`perplexity_*.json`)
-
-#### v1.5.x — Highlights
-
-✨ **New**
-- Full UI localization in 10 languages — automatic, matches your Obsidian language setting
-- Upgrade flow now surfaces current release notes directly inside the plugin
-
-🔧 **Improved**
-- Le Chat generated images now show a proper "not included in export" callout
-- Missing attachment callouts simplified to a single clean line
-- Support links and branding updated throughout
-- Provider is auto-detected from the first supported selected archive
-- Mixed-provider selections are handled cleanly (unsupported provider files are ignored)
-- Mobile now runs imports in single-archive mode for better runtime stability
-- Desktop and mobile now follow the same ZIP-reading model: scan first, then read only what is needed
-- Import logs now identify the exact phase reached during ZIP scan, metadata extraction, attachment indexing, and streaming import
-- Reports are now split into summary + heavy index + mobile index for better readability
-
-🐛 **Bug Fixes**
-- ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly
-- ChatGPT user-uploaded image extraction restored for multi-ZIP imports
-- Claude export format changes handled correctly
-- Missing message updates in Claude imports are now handled correctly
-- Unsupported ZIP files are classified earlier and skipped with clearer messaging
-- Large archive handling no longer relies on loading the whole ZIP into memory
-- CLI now uses the desktop ZIP backend reliably in Node.js and writes correct plugin version metadata
+- Filenames no longer truncate or fail on long conversation titles
+- Perplexity conversations deduplicated correctly across export variants
+- Under the hood quality and compliance improvements for better stability
 
 ---
 

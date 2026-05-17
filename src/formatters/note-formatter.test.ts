@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 async function createFormatter() {
-    const win = (window as any).window || {};
-    win.moment = (value: number) => ({
+    (window as any).moment = (value: number) => ({
         format: (pattern: string) => {
             if (pattern === "L") return "01/01/2024";
             if (pattern === "LTS") return "10:00:00";
@@ -10,7 +9,6 @@ async function createFormatter() {
             return String(value);
         },
     });
-    (window as any).window = win;
 
     const { NoteFormatter } = await import("./note-formatter");
     const logger = {

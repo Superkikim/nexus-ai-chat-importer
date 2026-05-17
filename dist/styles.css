@@ -125,6 +125,9 @@
     display: flex;
     gap: 12px;
     justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--background-modifier-border);
 }
 
 .nexus-btn-primary {
@@ -211,6 +214,8 @@
 
 .nexus-ai-chat-importer-modal .modal-paragraph {
     margin-bottom: 1.5em;
+    font-size: 1em;
+    color: var(--text-normal);
 }
 
 .nexus-ai-chat-importer-modal .modal-line {
@@ -409,11 +414,6 @@
     transform: translateY(-1px);
 }
 
-/* Text formatting improvements */
-.nexus-ai-chat-importer-modal .modal-paragraph {
-    font-size: 1em;
-    color: var(--text-normal);
-}
 
 /* Line break preservation */
 .nexus-ai-chat-importer-modal .preserve-breaks {
@@ -1033,12 +1033,37 @@ body.is-mobile .nexus-file-list-item {
     align-items: stretch;
 }
 
+body.is-mobile .nexus-date-prefix-section .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+body.is-mobile .nexus-date-prefix-section .setting-item .setting-item-control {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+body.is-mobile .nexus-support-section .setting-item .setting-item-control {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+body.is-mobile .nexus-support-section .setting-item .setting-item-control button {
+    flex: 1 1 auto;
+    min-width: fit-content;
+}
+
 /* ============================================================
    Folder migration dialogs
    ============================================================ */
 
 .nexus-migration-title {
     margin-bottom: 1em;
+    font-size: 1.3em;
+    text-align: center;
     color: var(--text-normal);
 }
 
@@ -1392,12 +1417,6 @@ body.is-mobile .nexus-file-list-item {
 
 .nexus-migration-header {
     margin-bottom: 16px;
-}
-
-.nexus-migration-title {
-    font-size: 1.3em;
-    text-align: center;
-    color: var(--text-normal);
 }
 
 .nexus-migration-title strong {
@@ -2212,13 +2231,6 @@ body.is-mobile .nexus-file-list-item {
     color: var(--text-normal);
 }
 
-/* Upgrade 1.2.0 buttons container */
-.nexus-upgrade-buttons {
-    text-align: right;
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid var(--background-modifier-border);
-}
 
 /* Folder migration dialog — enhanced folder-migration-dialog */
 .nexus-folder-migration-desc {
