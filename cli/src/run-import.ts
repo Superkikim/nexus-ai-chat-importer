@@ -1,8 +1,11 @@
 /**
+ * Import orchestration for the Nexus CLI (desktop only — not part of the plugin).
+ *
  * Orchestrates the import using plugin services with the Obsidian shim.
  * Supports ChatGPT, Claude, and Le Chat providers.
  */
 
+// Node.js built-ins — intentional, this file is CLI-only (not part of the plugin)
 import * as fs from "fs";
 import * as path from "path";
 import { App, Plugin } from "obsidian";
@@ -14,6 +17,8 @@ import { FileService } from "../../src/services/file-service";
 import { ImportReport } from "../../src/models/import-report";
 import { Logger } from "../../src/logger";
 import pluginManifest from "../../manifest.json";
+
+const OBSIDIAN_CONFIG_DIR = ".obsidian";
 
 export interface ImportOptions {
     vault: string;
@@ -70,7 +75,7 @@ class NodeFile {
 function readPluginConfig(vaultPath: string): Partial<PluginSettings> {
     const dataPath = path.join(
         vaultPath,
-        ".obsidian",
+        OBSIDIAN_CONFIG_DIR,
         "plugins",
         "nexus-ai-chat-importer",
         "data.json"
@@ -80,7 +85,7 @@ function readPluginConfig(vaultPath: string): Partial<PluginSettings> {
             const data = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
             return data?.settings || {};
         }
-    } catch {}
+    } catch { /* ignore missing config */ }
     return {};
 }
 
@@ -175,10 +180,10 @@ export async function runImport(opts: ImportOptions): Promise<void> {
     if (!fs.existsSync(opts.vault)) {
         throw new Error(`Vault path does not exist: ${opts.vault}`);
     }
-    const obsidianDir = path.join(opts.vault, ".obsidian");
+    const obsidianDir = path.join(opts.vault, OBSIDIAN_CONFIG_DIR);
     if (!fs.existsSync(obsidianDir)) {
         throw new Error(
-            `Not an Obsidian vault (missing .obsidian/): ${opts.vault}`
+            `Not an Obsidian vault (missing ${OBSIDIAN_CONFIG_DIR}/): ${opts.vault}`
         );
     }
 

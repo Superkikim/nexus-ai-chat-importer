@@ -1,18 +1,25 @@
 /**
- * Obsidian API shim for Node.js CLI
+ * Obsidian API shim for Node.js CLI (desktop only — not part of the plugin)
  *
- * Provides mock implementations of Obsidian classes/functions that the
- * plugin's services import. Backed by Node.js `fs` and `js-yaml`.
+ * This file belongs to the optional CLI tool, a separate Node.js package.
+ * It is NOT part of the Obsidian plugin distribution and intentionally uses
+ * Node.js built-in APIs (fs, path, crypto) that are unavailable in the plugin.
+ *
+ * Provides mock implementations of Obsidian classes so the plugin's service
+ * layer can run in a Node.js environment. Backed by `fs` and `js-yaml`.
  */
 
-import * as fs from "fs";
-import * as pathMod from "path";
-import * as yaml from "js-yaml";
-import momentLib from "moment";
-import * as crypto from "crypto";
+/* eslint-disable @typescript-eslint/no-require-imports */
+const fs = require("fs") as typeof import("fs");
+const pathMod = require("path") as typeof import("path");
+const yaml = require("js-yaml") as typeof import("js-yaml");
+const momentLib = require("moment") as { default: typeof import("moment") };
+const crypto = require("crypto") as typeof import("crypto");
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 // Re-export moment so `import { moment } from "obsidian"` works
-export const moment = momentLib;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const moment = (momentLib.default ?? momentLib) as any;
 
 // ---------------------------------------------------------------------------
 // TFile / TFolder
@@ -333,13 +340,15 @@ export class Modal {
     close() {
         this.onClose();
     }
-    onOpen() {}
-    onClose() {}
+    onOpen() { /* noop */ }
+    onClose() { /* noop */ }
 }
 
 // ---------------------------------------------------------------------------
 // Plugin base class
 // ---------------------------------------------------------------------------
+
+const OBSIDIAN_CONFIG_DIR = ".obsidian";
 
 export class Plugin {
     app: App;
@@ -351,7 +360,7 @@ export class Plugin {
         this.manifest = manifest;
         const pluginDir = pathMod.join(
             (app.vault as any).root || (app.vault as any).adapter?.root || ".",
-            ".obsidian",
+            OBSIDIAN_CONFIG_DIR,
             "plugins",
             manifest.id
         );
@@ -363,7 +372,7 @@ export class Plugin {
             if (fs.existsSync(this.dataPath)) {
                 return JSON.parse(fs.readFileSync(this.dataPath, "utf-8"));
             }
-        } catch {}
+        } catch { /* ignore missing data file */ }
         return null;
     }
 
@@ -443,6 +452,7 @@ export async function requestUrl(_opts: {
 
 // The plugin's getFileHash uses browser `crypto.subtle.digest`.
 // We polyfill the global `crypto.subtle` so the original code works.
+/* eslint-disable obsidianmd/no-globalThis */
 if (typeof globalThis.crypto === "undefined") {
     (globalThis as any).crypto = {};
 }
@@ -466,10 +476,16 @@ if (typeof globalThis.crypto.subtle === "undefined") {
 if (typeof globalThis.window === "undefined") {
     (globalThis as any).window = globalThis;
 }
+/* eslint-enable obsidianmd/no-globalThis */
 
 // ---------------------------------------------------------------------------
 // Additional exports the plugin might reference
 // ---------------------------------------------------------------------------
+
+/** Stub — CLI has no DOM sanitizer; returns a text node equivalent */
+export function sanitizeHTMLToDom(html: string): string {
+    return html;
+}
 
 export type PluginManifest = {
     id: string;

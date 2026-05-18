@@ -32,6 +32,7 @@
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
 ### 📚 More
+- [🔒 Privacy & Security](#-privacy--security) - What the plugin accesses and why
 - [✨ What's New](#-whats-new) - Latest changes
 - [☕ Support](#-support-my-work) - Help keep this plugin alive
 - [📜 License](#-license) - GPL-3.0
@@ -746,6 +747,41 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 ```
 
 > **Note**: The CLI reuses the same import engine as the plugin. Conversations imported via CLI are fully compatible with the plugin and vice versa.
+
+---
+
+## 🔒 Privacy & Security
+
+The Obsidian plugin portal lists the following disclosures for this plugin. Here is what each means in practice.
+
+### External domain requests
+
+The plugin may reference external domains. Here is exactly what each is used for:
+
+**GitHub (api.github.com, raw.githubusercontent.com)**
+Used once per version upgrade to display "What's New" release notes inside the upgrade dialog.
+
+**AI provider URLs (chatgpt.com, claude.ai, chat.mistral.ai, perplexity.ai)**
+Each imported conversation contains the original link to the webapp of its provider, allowing you to open it in your browser.
+
+**Support links (github.com, nexus-prod.dev, forum.obsidian.md)**
+Shown as clickable links in the plugin settings panel or dialogs. These links are used for issues and discussions (github.com, forum.obsidian.md), support (github.com, nexus-prod.dev), documentation (nexus-prod.dev).
+
+### Network requests
+
+The plugin makes network requests only to GitHub, and only to display release notes in the upgrade dialog.
+
+### Vault Enumeration
+
+The plugin scans vault files in two situations only:
+1. **During import** — to detect and skip duplicate conversations already in your vault
+2. **During version upgrades** — to migrate existing conversation notes to the new format (runs once per version, automatically)
+
+No vault content is read for any other purpose.
+
+### Vault Read / Write
+
+The plugin reads and writes files in the folders you configure (Conversations, Attachments, Reports). It only accesses files it has created. It does not read, modify, or delete any other files in your vault.
 
 ---
 
