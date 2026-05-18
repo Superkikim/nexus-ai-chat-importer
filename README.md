@@ -131,12 +131,6 @@ If Nexus is valuable to you, please consider a one-time or monthly donation. Tha
 
 ### 📸 See It In Action
 
-<!-- TODO: Add screenshots here
-Suggested screenshots:
-1. Conversation selection dialog showing preview
-2. Example of imported conversation with formatting
-3. Import completion dialog with statistics
--->
 
 > 💡 **Tip**: Screenshots coming soon! For now, try the plugin yourself - it's free and takes 2 minutes to set up.
 
@@ -692,6 +686,8 @@ You can reimport the same ZIP multiple times. The plugin supports two behaviors:
 ## 💻 Command-Line Interface (CLI)
 
 Import conversations without opening Obsidian — useful for automation, large archives, or headless setups.
+
+> ⚠️ **CLI disclaimer**: The CLI is a separate, optional tool — not part of the Obsidian plugin distribution and not verified by Obsidian. It requires Node.js and runs on desktop only. Installation is voluntary and independent from the plugin. See [cli/README.md](cli/README.md) for details.
 
 ### Installation
 

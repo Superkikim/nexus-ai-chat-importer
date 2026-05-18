@@ -31,7 +31,10 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: "dist/main.js"
+          subject-path: |
+            dist/main.js
+            dist/manifest.json
+            dist/styles.css
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

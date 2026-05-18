@@ -14,7 +14,7 @@
         "baseUrl": ".",
         "declaration": false,
         "resolveJsonModule": true,
-        "moduleResolution": "node"
+        "moduleResolution": "bundler"
     },
     "include": ["src/**/*.ts"]
 }
