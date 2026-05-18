@@ -1,24 +1,23 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/ui/settings-tab.ts
-import { App, PluginSettingTab } from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { BaseSettingsSection } from "./settings/base-settings-section";
 import { SupportSection } from "./settings/support-section";
@@ -39,11 +38,11 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
             new SupportSection(this.plugin),
             new FolderSettingsSection(this.plugin),
             new DisplaySettingsSection(this.plugin),
-            new MessageDateFormatSection(this.plugin)
+            new MessageDateFormatSection(this.plugin),
         ].sort((a, b) => a.order - b.order);
 
         // Set redraw callback for each section
-        this.sections.forEach(section => {
+        this.sections.forEach((section) => {
             section.setRedrawCallback(() => this.display());
         });
     }
@@ -52,13 +51,13 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        this.renderSections(containerEl);
+        void this.renderSections(containerEl);
     }
 
     private async renderSections(containerEl: HTMLElement): Promise<void> {
         for (const section of this.sections) {
             if (section.title) {
-                containerEl.createEl("h2", { text: section.title });
+                new Setting(containerEl).setName("").setHeading();
             }
 
             await section.render(containerEl);

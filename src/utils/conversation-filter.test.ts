@@ -19,7 +19,10 @@
 // src/utils/conversation-filter.test.ts
 
 import { describe, it, expect } from "vitest";
-import { DefaultProviderRegistry, ProviderAdapter } from "../providers/provider-adapter";
+import {
+    DefaultProviderRegistry,
+    ProviderAdapter,
+} from "../providers/provider-adapter";
 import { filterConversationsByIds } from "./conversation-filter";
 
 interface TestChat {
@@ -68,7 +71,7 @@ class TestAdapter implements ProviderAdapter<TestChat> {
         return {
             getProviderName: () => this.providerName,
             extractReportPrefix: (name: string) => name,
-            getProviderSpecificColumn: () => ({ header: "" })
+            getProviderSpecificColumn: () => ({ header: "" }),
         };
     }
 }
@@ -76,8 +79,18 @@ class TestAdapter implements ProviderAdapter<TestChat> {
 describe("filterConversationsByIds", () => {
     it("returns empty array when no conversations or no selected IDs", () => {
         const registry = new DefaultProviderRegistry();
-        const result1 = filterConversationsByIds([], ["a"], registry, "chatgpt");
-        const result2 = filterConversationsByIds([{ id: "a" }], [], registry, "chatgpt");
+        const result1 = filterConversationsByIds(
+            [],
+            ["a"],
+            registry,
+            "chatgpt"
+        );
+        const result2 = filterConversationsByIds(
+            [{ id: "a" }],
+            [],
+            registry,
+            "chatgpt"
+        );
         expect(result1).toEqual([]);
         expect(result2).toEqual([]);
     });
@@ -90,10 +103,15 @@ describe("filterConversationsByIds", () => {
         const conversations: TestChat[] = [
             { id: "c1", messages: [] },
             { id: "c2", messages: [] },
-            { id: "c3", messages: [] }
+            { id: "c3", messages: [] },
         ];
 
-        const result = filterConversationsByIds(conversations, ["c2"], registry, "chatgpt");
+        const result = filterConversationsByIds(
+            conversations,
+            ["c2"],
+            registry,
+            "chatgpt"
+        );
 
         expect(result).toHaveLength(1);
         expect(result[0].id).toBe("c2");
@@ -104,7 +122,7 @@ describe("filterConversationsByIds", () => {
 
         const conversations = [
             { id: "a", mapping: {} },
-            { id: "b", mapping: {} }
+            { id: "b", mapping: {} },
         ];
 
         const result = filterConversationsByIds(conversations, ["b"], registry);
@@ -119,14 +137,19 @@ describe("filterConversationsByIds", () => {
         registry.register("lechat", adapter);
 
         const conversations = [
-            [ { chatId: "chat-1", createdAt: "2024-01-01T00:00:00Z" } ],
-            [ { chatId: "chat-2", createdAt: "2024-01-02T00:00:00Z" } ]
+            [{ chatId: "chat-1", createdAt: "2024-01-01T00:00:00Z" }],
+            [{ chatId: "chat-2", createdAt: "2024-01-02T00:00:00Z" }],
         ];
 
-        const result = filterConversationsByIds(conversations, ["chat-2"], registry, "lechat");
+        const result = filterConversationsByIds(
+            conversations,
+            ["chat-2"],
+            registry,
+            "lechat"
+        );
 
         expect(result).toHaveLength(1);
-        expect((result[0] as any)[0].chatId).toBe("chat-2");
+        expect(result[0][0].chatId).toBe("chat-2");
     });
 
     it("handles Claude-style UUID conversations via fallback heuristics", () => {
@@ -134,10 +157,15 @@ describe("filterConversationsByIds", () => {
 
         const conversations = [
             { uuid: "u1", name: "Conv 1" },
-            { uuid: "u2", name: "Conv 2" }
+            { uuid: "u2", name: "Conv 2" },
         ];
 
-        const result = filterConversationsByIds(conversations, ["u2"], registry, "claude");
+        const result = filterConversationsByIds(
+            conversations,
+            ["u2"],
+            registry,
+            "claude"
+        );
 
         expect(result).toHaveLength(1);
         expect(result[0].uuid).toBe("u2");
@@ -148,10 +176,15 @@ describe("filterConversationsByIds", () => {
 
         const conversations = [
             { metadata: { thread_id: "p1" }, conversations: [] },
-            { metadata: { thread_id: "p2" }, conversations: [] }
+            { metadata: { thread_id: "p2" }, conversations: [] },
         ];
 
-        const result = filterConversationsByIds(conversations, ["p2"], registry, "perplexity");
+        const result = filterConversationsByIds(
+            conversations,
+            ["p2"],
+            registry,
+            "perplexity"
+        );
 
         expect(result).toHaveLength(1);
         expect(result[0].metadata.thread_id).toBe("p2");

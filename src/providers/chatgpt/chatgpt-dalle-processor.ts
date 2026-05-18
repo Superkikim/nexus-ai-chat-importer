@@ -1,21 +1,20 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/providers/chatgpt/chatgpt-dalle-processor.ts
 import { Chat, ChatMessage } from "./chatgpt-types";
@@ -34,21 +33,18 @@ export class ChatGPTDalleProcessor {
         imagePrompts: Map<string, { prompt: string; timestamp: number }>;
         orphanedPrompts: Map<string, string>;
     } {
-        const imagePrompts = new Map<string, { prompt: string; timestamp: number }>();
+        const imagePrompts = new Map<
+            string,
+            { prompt: string; timestamp: number }
+        >();
         const orphanedPrompts = new Map<string, string>();
-
-        let promptMessagesFound = 0;
-        let promptsWithImages = 0;
-        let orphanedPromptsCount = 0;
 
         for (const messageObj of Object.values(chat.mapping)) {
             const message = messageObj?.message;
             if (!message || message.author?.role !== "assistant") continue;
 
             if (this.isDallePromptMessage(message)) {
-                promptMessagesFound++;
                 const prompt = this.extractPromptFromJson(message);
-
 
                 if (prompt) {
                     // Recursive search in descendants until we find image or hit user message
@@ -57,20 +53,18 @@ export class ChatGPTDalleProcessor {
                         messageObj.id || ""
                     );
 
-
                     if (imageMessageId) {
-                        promptsWithImages++;
                         // Store prompt with timestamp from prompt message
                         imagePrompts.set(imageMessageId, {
                             prompt,
-                            timestamp: message.create_time || 0
+                            timestamp: message.create_time || 0,
                         });
                     } else {
-                        orphanedPromptsCount++;
                         // No image found - store as orphaned prompt
                         orphanedPrompts.set(messageObj.id || "", prompt);
                     }
                 } else {
+                    // intentionally empty
                 }
             }
         }
@@ -106,7 +100,10 @@ export class ChatGPTDalleProcessor {
             }
 
             // Check if this is a DALL-E image
-            if (message?.author?.role === "tool" && this.hasRealDalleImage(message)) {
+            if (
+                message?.author?.role === "tool" &&
+                this.hasRealDalleImage(message)
+            ) {
                 return currentId;
             }
 
@@ -143,24 +140,26 @@ export class ChatGPTDalleProcessor {
         }
 
         // Format 1: content_type "text" with parts array
-        if (message.content?.parts &&
+        if (
+            message.content?.parts &&
             Array.isArray(message.content.parts) &&
             message.content.parts.length === 1 &&
-            typeof message.content.parts[0] === "string") {
-
+            typeof message.content.parts[0] === "string"
+        ) {
             const content = message.content.parts[0].trim();
-            if (content.startsWith('{') && content.includes('"prompt"')) {
+            if (content.startsWith("{") && content.includes('"prompt"')) {
                 return true;
             }
         }
 
         // Format 2: content_type "code" with text field (OpenAI inconsistency)
-        if (message.content?.content_type === "code" &&
+        if (
+            message.content?.content_type === "code" &&
             message.content?.text &&
-            typeof message.content.text === "string") {
-
+            typeof message.content.text === "string"
+        ) {
             const content = message.content.text.trim();
-            if (content.startsWith('{') && content.includes('"prompt"')) {
+            if (content.startsWith("{") && content.includes('"prompt"')) {
                 return true;
             }
         }
@@ -183,8 +182,11 @@ export class ChatGPTDalleProcessor {
                 jsonStr = message.content.parts[0] as string;
             }
             // Format 2: content_type "code" with text field
-            else if (message.content?.content_type === "code" && message.content?.text) {
-                jsonStr = message.content.text as string;
+            else if (
+                message.content?.content_type === "code" &&
+                message.content?.text
+            ) {
+                jsonStr = message.content.text;
             }
 
             if (jsonStr) {
@@ -192,7 +194,8 @@ export class ChatGPTDalleProcessor {
                 const extractedPrompt = parsed.prompt || null;
                 return extractedPrompt;
             }
-        } catch (error) {
+        } catch {
+            // intentionally empty
         }
         return null;
     }
@@ -204,15 +207,17 @@ export class ChatGPTDalleProcessor {
         if (!message.content?.parts || !Array.isArray(message.content.parts)) {
             return false;
         }
-        
-        return message.content.parts.some(part => {
+
+        return message.content.parts.some((part) => {
             if (typeof part !== "object" || part === null) return false;
-            
-            const contentPart = part as any;
-            return contentPart.content_type === "image_asset_pointer" && 
-                   contentPart.asset_pointer &&
-                   contentPart.metadata?.dalle && 
-                   contentPart.metadata.dalle !== null;
+
+            const contentPart = part;
+            return (
+                contentPart.content_type === "image_asset_pointer" &&
+                contentPart.asset_pointer &&
+                contentPart.metadata?.dalle &&
+                contentPart.metadata.dalle !== null
+            );
         });
     }
 
@@ -220,25 +225,28 @@ export class ChatGPTDalleProcessor {
      * Create StandardAttachment for DALL-E image with provider-agnostic metadata
      * The prompt will be embedded in extractedContent for display
      */
-    static createDalleAttachment(contentPart: any, associatedPrompt?: string, hasImage: boolean = true): StandardAttachment {
-        const fileId = contentPart.asset_pointer.includes('://')
-            ? contentPart.asset_pointer.split('://')[1]
+    static createDalleAttachment(
+        contentPart: any,
+        associatedPrompt?: string,
+        hasImage: boolean = true
+    ): StandardAttachment {
+        const fileId = contentPart.asset_pointer.includes("://")
+            ? contentPart.asset_pointer.split("://")[1]
             : contentPart.asset_pointer;
 
-        const genId = contentPart.metadata.dalle.gen_id || 'unknown';
+        const genId = contentPart.metadata.dalle.gen_id || "unknown";
         const width = contentPart.width || 1024;
         const height = contentPart.height || 1024;
         const fileName = `dalle_${genId}_${width}x${height}.png`;
 
         const prompt = associatedPrompt || contentPart.metadata.dalle.prompt;
 
-
         // Create extracted content with prompt + image callouts (provider-formatted)
-        let extractedContent = '';
+        let extractedContent = "";
 
         if (prompt) {
             // Format prompt in code block with nested callout
-            const formattedPrompt = prompt.split('\n').join('\n>> ');
+            const formattedPrompt = prompt.split("\n").join("\n>> ");
             extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
 >> \`\`\`
 >> ${formattedPrompt}
@@ -257,8 +265,8 @@ export class ChatGPTDalleProcessor {
 >>[!nexus_attachment] **Image Not Found**
 >> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.`;
             }
-
         } else {
+            // intentionally empty
         }
 
         return {
@@ -269,7 +277,7 @@ export class ChatGPTDalleProcessor {
             extractedContent,
 
             // Provider-agnostic metadata
-            attachmentType: 'generated_image',
+            attachmentType: "generated_image",
             generationPrompt: prompt,
 
             // Provider-specific metadata
@@ -278,9 +286,9 @@ export class ChatGPTDalleProcessor {
                     gen_id: contentPart.metadata.dalle.gen_id,
                     seed: contentPart.metadata.dalle.seed,
                     parent_gen_id: contentPart.metadata.dalle.parent_gen_id,
-                    edit_op: contentPart.metadata.dalle.edit_op
-                }
-            }
+                    edit_op: contentPart.metadata.dalle.edit_op,
+                },
+            },
         };
     }
 
@@ -292,8 +300,10 @@ export class ChatGPTDalleProcessor {
         associatedPrompt?: string,
         promptTimestamp?: number
     ): StandardMessage | null {
-
-        if (!toolMessage.content?.parts || !Array.isArray(toolMessage.content.parts)) {
+        if (
+            !toolMessage.content?.parts ||
+            !Array.isArray(toolMessage.content.parts)
+        ) {
             return null;
         }
 
@@ -301,13 +311,18 @@ export class ChatGPTDalleProcessor {
 
         for (const part of toolMessage.content.parts) {
             if (typeof part === "object" && part !== null) {
-                const contentPart = part as any;
-                if (contentPart.content_type === "image_asset_pointer" &&
+                const contentPart = part;
+                if (
+                    contentPart.content_type === "image_asset_pointer" &&
                     contentPart.asset_pointer &&
                     contentPart.metadata?.dalle &&
-                    contentPart.metadata.dalle !== null) {
-
-                    const dalleAttachment = this.createDalleAttachment(contentPart, associatedPrompt, true);
+                    contentPart.metadata.dalle !== null
+                ) {
+                    const dalleAttachment = this.createDalleAttachment(
+                        contentPart,
+                        associatedPrompt,
+                        true
+                    );
                     attachments.push(dalleAttachment);
                 }
             }
@@ -323,7 +338,7 @@ export class ChatGPTDalleProcessor {
             content: "DALL-E Generated Image",
             // Use prompt timestamp if available, otherwise fall back to tool message timestamp
             timestamp: promptTimestamp || toolMessage.create_time || 0,
-            attachments: attachments
+            attachments: attachments,
         };
     }
 
@@ -331,15 +346,18 @@ export class ChatGPTDalleProcessor {
      * Create informational message for orphaned DALL-E prompt (no image found)
      * Creates a "phantom" attachment with the prompt and warning
      */
-    static createOrphanedPromptMessage(promptMessage: ChatMessage, prompt: string): StandardMessage {
+    static createOrphanedPromptMessage(
+        promptMessage: ChatMessage,
+        prompt: string
+    ): StandardMessage {
         // Format prompt with nested callouts (provider-formatted)
-        const formattedPrompt = prompt.split('\n').join('\n>> ');
+        const formattedPrompt = prompt.split("\n").join("\n>> ");
 
         // Create a phantom attachment with prompt and warning
         const phantomAttachment: StandardAttachment = {
-            fileName: 'dalle_image_not_found.png',
-            fileType: 'image/png',
-            attachmentType: 'generated_image',
+            fileName: "dalle_image_not_found.png",
+            fileType: "image/png",
+            attachmentType: "generated_image",
             generationPrompt: prompt,
             extractedContent: `>>[!nexus_prompt] **DALL-E Prompt** (Image Generation Failed or Interrupted)
 >> \`\`\`
@@ -351,9 +369,9 @@ export class ChatGPTDalleProcessor {
             status: {
                 processed: true,
                 found: false,
-                reason: 'missing_from_export',
-                note: 'DALL-E generation was requested but the image was not found in the archive'
-            }
+                reason: "missing_from_export",
+                note: "DALL-E generation was requested but the image was not found in the archive",
+            },
         };
 
         return {
@@ -361,7 +379,7 @@ export class ChatGPTDalleProcessor {
             role: "assistant",
             content: "DALL-E Image Generation (Failed/Interrupted)",
             timestamp: promptMessage.create_time || 0,
-            attachments: [phantomAttachment]
+            attachments: [phantomAttachment],
         };
     }
 }

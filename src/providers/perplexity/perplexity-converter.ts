@@ -23,8 +23,12 @@ import { PROVIDER_URLS } from "../../config/constants";
 export class PerplexityConverter {
     static convertChat(chat: PerplexityConversationFile): StandardConversation {
         const turns = [...(chat.conversations || [])]
-            .filter(turn => !!turn?.uuid)
-            .sort((a, b) => this.parseTimestamp(a.timestamp) - this.parseTimestamp(b.timestamp));
+            .filter((turn) => !!turn?.uuid)
+            .sort(
+                (a, b) =>
+                    this.parseTimestamp(a.timestamp) -
+                    this.parseTimestamp(b.timestamp)
+            );
 
         const messages: StandardMessage[] = [];
         for (const turn of turns) {
@@ -52,14 +56,22 @@ export class PerplexityConverter {
             }
         }
 
-        const uniqueModels = this.uniqueNonEmpty(turns.map(turn => turn.model));
-        const uniqueModes = this.uniqueNonEmpty(turns.map(turn => turn.mode));
-        const relatedQueries = this.uniqueNonEmpty(turns.flatMap(turn => turn.related_queries || []));
+        const uniqueModels = this.uniqueNonEmpty(
+            turns.map((turn) => turn.model)
+        );
+        const uniqueModes = this.uniqueNonEmpty(turns.map((turn) => turn.mode));
+        const relatedQueries = this.uniqueNonEmpty(
+            turns.flatMap((turn) => turn.related_queries || [])
+        );
 
         const threadId = chat.metadata?.thread_id || "";
         const title = (chat.metadata?.thread_title || "").trim() || "Untitled";
-        const createTime = this.parseTimestamp(chat.metadata?.thread_created_at) || this.getMinTimestamp(turns);
-        const updateTime = this.parseTimestamp(chat.metadata?.thread_updated_at) || this.getMaxTimestamp(turns);
+        const createTime =
+            this.parseTimestamp(chat.metadata?.thread_created_at) ||
+            this.getMinTimestamp(turns);
+        const updateTime =
+            this.parseTimestamp(chat.metadata?.thread_updated_at) ||
+            this.getMaxTimestamp(turns);
 
         return {
             id: threadId,
@@ -80,18 +92,24 @@ export class PerplexityConverter {
         };
     }
 
-    private static withReferences(answer: string, sources?: { title?: string; url?: string; snippet?: string }[]): string {
+    private static withReferences(
+        answer: string,
+        sources?: { title?: string; url?: string; snippet?: string }[]
+    ): string {
         if (!sources || sources.length === 0) {
             return answer;
         }
 
         const referenceLines = sources
             .map((source, index) => {
-                const title = (source.title || "").trim() || `Source ${index + 1}`;
+                const title =
+                    (source.title || "").trim() || `Source ${index + 1}`;
                 const url = (source.url || "").trim();
                 const snippet = (source.snippet || "").trim();
 
-                let line = `${index + 1}. ${url ? `[${title}](${url})` : title}`;
+                let line = `${index + 1}. ${
+                    url ? `[${title}](${url})` : title
+                }`;
                 if (snippet) {
                     line += `\n   - ${snippet}`;
                 }
@@ -115,15 +133,15 @@ export class PerplexityConverter {
 
     private static getMinTimestamp(turns: PerplexityTurn[]): number {
         const timestamps = turns
-            .map(turn => this.parseTimestamp(turn.timestamp))
-            .filter(ts => ts > 0);
+            .map((turn) => this.parseTimestamp(turn.timestamp))
+            .filter((ts) => ts > 0);
         return timestamps.length > 0 ? Math.min(...timestamps) : 0;
     }
 
     private static getMaxTimestamp(turns: PerplexityTurn[]): number {
         const timestamps = turns
-            .map(turn => this.parseTimestamp(turn.timestamp))
-            .filter(ts => ts > 0);
+            .map((turn) => this.parseTimestamp(turn.timestamp))
+            .filter((ts) => ts > 0);
         return timestamps.length > 0 ? Math.max(...timestamps) : 0;
     }
 

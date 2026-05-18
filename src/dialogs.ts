@@ -1,76 +1,98 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/dialogs.ts
-import { Modal, App } from "obsidian";
+import { Modal, App, sanitizeHTMLToDom } from "obsidian";
 import { createSupportBox } from "./ui/components/support-box";
 
 // Function to show the modal with improved spacing
-function displayModal(app: App, title: string, paragraphs: string[], note?: string): Modal {
+function displayModal(
+    app: App,
+    title: string,
+    paragraphs: string[],
+    note?: string
+): Modal {
     const modal = new Modal(app);
     modal.contentEl.addClass("nexus-ai-chat-importer-modal");
 
     // Title with reduced top spacing
-    const titleEl = modal.contentEl.createEl("h2", { 
+    modal.contentEl.createEl("h2", {
         text: title,
-        cls: "modal-title"
+        cls: "modal-title",
     });
 
     // Content container
-    const contentContainer = modal.contentEl.createDiv({ cls: "modal-content" });
+    const contentContainer = modal.contentEl.createDiv({
+        cls: "modal-content",
+    });
 
     // Process paragraphs with automatic spacing
-    paragraphs.forEach((paragraph, paragraphIndex) => {
+    paragraphs.forEach((paragraph, _paragraphIndex) => {
         // Add double line breaks to ensure sections are separated
-        const paragraphWithSpacing = paragraph + '\n\n';
-        
-        const paragraphDiv = contentContainer.createDiv({ cls: "modal-paragraph" });
-        
+        const paragraphWithSpacing = paragraph + "\n\n";
+
+        const paragraphDiv = contentContainer.createDiv({
+            cls: "modal-paragraph",
+        });
+
         // Split into sections (double line breaks create new sections)
-        const sections = paragraphWithSpacing.split('\n\n').filter(section => section.trim() !== '');
-        
+        const sections = paragraphWithSpacing
+            .split("\n\n")
+            .filter((section) => section.trim() !== "");
+
         sections.forEach((section, sectionIndex) => {
             const sectionDiv = paragraphDiv.createDiv({ cls: "modal-section" });
-            
+
             // Process each line within the section
-            const lines = section.split('\n').filter(line => line.trim() !== '');
-            
+            const lines = section
+                .split("\n")
+                .filter((line) => line.trim() !== "");
+
             lines.forEach((line) => {
                 const lineDiv = sectionDiv.createDiv({ cls: "modal-line" });
-                
+
                 // Convert markdown formatting to HTML
                 let htmlContent = line
-                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>')
-                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-                
+                    .replace(
+                        /\[([^\]]+)\]\(([^)]+)\)/g,
+                        '<a href="$2" class="external-link" target="_blank">$1</a>'
+                    )
+                    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+                    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
                 // Check for special formatting
-                if (line.trim().endsWith(':') && line.trim().length < 30) {
-                    lineDiv.innerHTML = `<strong class="section-header">${htmlContent}</strong>`;
-                } else if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
-                    lineDiv.innerHTML = htmlContent;
-                    lineDiv.addClass('modal-list-item');
+                if (line.trim().endsWith(":") && line.trim().length < 30) {
+                    lineDiv.append(
+                        sanitizeHTMLToDom(
+                            `<strong class="section-header">${htmlContent}</strong>`
+                        )
+                    );
+                } else if (
+                    line.trim().startsWith("•") ||
+                    line.trim().startsWith("-")
+                ) {
+                    lineDiv.append(sanitizeHTMLToDom(htmlContent));
+                    lineDiv.addClass("modal-list-item");
                 } else {
-                    lineDiv.innerHTML = htmlContent;
+                    lineDiv.append(sanitizeHTMLToDom(htmlContent));
                 }
             });
-            
+
             // Add spacing between sections within paragraph
             if (sectionIndex < sections.length - 1) {
                 paragraphDiv.createDiv({ cls: "modal-section-break" });
@@ -82,16 +104,19 @@ function displayModal(app: App, title: string, paragraphs: string[], note?: stri
     if (note) {
         // Add spacing before note
         contentContainer.createDiv({ cls: "modal-major-break" });
-        
+
         const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
-        
+
         // Process note content with same formatting
         let noteContent = note
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="external-link" target="_blank">$1</a>')
-            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-        
-        noteDiv.innerHTML = noteContent;
+            .replace(
+                /\[([^\]]+)\]\(([^)]+)\)/g,
+                '<a href="$2" class="external-link" target="_blank">$1</a>'
+            )
+            .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+        noteDiv.append(sanitizeHTMLToDom(noteContent));
     }
 
     return modal;
@@ -99,41 +124,44 @@ function displayModal(app: App, title: string, paragraphs: string[], note?: stri
 
 // Function to add buttons with better styling
 function addButtons(
-    modal: Modal, 
-    type: "information" | "confirmation", 
+    modal: Modal,
+    type: "information" | "confirmation",
     resolve: (value: boolean) => void,
     customLabels?: { button1?: string; button2?: string }
 ): void {
-    const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-    
+    const buttonContainer = modal.contentEl.createDiv({
+        cls: "modal-button-container",
+    });
+
     if (type === "information") {
         const buttonLabel = customLabels?.button1 || "Understood";
-        const button = buttonContainer.createEl("button", { 
+        const button = buttonContainer.createEl("button", {
             text: buttonLabel,
-            cls: "mod-cta"  // Obsidian's primary button class
+            cls: "mod-cta", // Obsidian's primary button class
         });
         button.addEventListener("click", () => {
             modal.close();
             resolve(true);
         });
-    } else { // "confirmation"
+    } else {
+        // "confirmation"
         const noLabel = customLabels?.button2 || "No";
         const yesLabel = customLabels?.button1 || "Yes";
-        
+
         // No button (secondary)
-        const noButton = buttonContainer.createEl("button", { 
+        const noButton = buttonContainer.createEl("button", {
             text: noLabel,
-            cls: "mod-muted"  // Obsidian's secondary button class
+            cls: "mod-muted", // Obsidian's secondary button class
         });
         noButton.addEventListener("click", () => {
             modal.close();
             resolve(false);
         });
-        
+
         // Yes button (primary)
-        const yesButton = buttonContainer.createEl("button", { 
+        const yesButton = buttonContainer.createEl("button", {
             text: yesLabel,
-            cls: "mod-cta"  // Obsidian's primary button class
+            cls: "mod-cta", // Obsidian's primary button class
         });
         yesButton.addEventListener("click", () => {
             modal.close();
@@ -202,35 +230,37 @@ class BeautifulUpgradeDialog extends Modal {
         contentEl.empty();
 
         // Add custom CSS class for styling
-        contentEl.addClass('nexus-upgrade-dialog');
+        contentEl.addClass("nexus-upgrade-dialog");
 
         // Create main container
-        const container = contentEl.createDiv('nexus-upgrade-container');
+        const container = contentEl.createDiv("nexus-upgrade-container");
 
         // Header with icon and title
-        const header = container.createDiv('nexus-upgrade-header');
-        const headerIcon = header.createDiv('nexus-upgrade-icon');
-        headerIcon.innerHTML = '🚀';
-        const headerTitle = header.createDiv('nexus-upgrade-title');
+        const header = container.createDiv("nexus-upgrade-header");
+        const headerIcon = header.createDiv("nexus-upgrade-icon");
+        headerIcon.setText("🚀");
+        const headerTitle = header.createDiv("nexus-upgrade-title");
         headerTitle.textContent = this.options.title;
 
         // Content area with rich formatting
-        const content = container.createDiv('nexus-upgrade-content');
-        content.innerHTML = this.options.message;
+        const content = container.createDiv("nexus-upgrade-content");
+        content.append(sanitizeHTMLToDom(this.options.message));
 
         // Centralized support section
         createSupportBox(container);
 
         // Buttons container
-        const buttonsContainer = container.createDiv('nexus-upgrade-buttons');
+        const buttonsContainer = container.createDiv("nexus-upgrade-buttons");
 
-        this.options.buttons.forEach(button => {
-            const btn = buttonsContainer.createEl('button', {
+        this.options.buttons.forEach((button) => {
+            const btn = buttonsContainer.createEl("button", {
                 text: button.text,
-                cls: button.primary ? 'nexus-btn-primary' : 'nexus-btn-secondary'
+                cls: button.primary
+                    ? "nexus-btn-primary"
+                    : "nexus-btn-secondary",
             });
 
-            btn.addEventListener('click', () => {
+            btn.addEventListener("click", () => {
                 this.close();
                 this.resolve(button.value);
             });

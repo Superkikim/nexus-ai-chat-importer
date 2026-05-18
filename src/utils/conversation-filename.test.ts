@@ -91,6 +91,8 @@ describe("conversation filename length policy", () => {
         const fileName = uniquePath.split("/").pop() || "";
 
         expect(fileName.endsWith(" (1).md")).toBe(true);
-        expect(getUtf8ByteLength(fileName)).toBeLessThanOrEqual(CONVERSATION_NOTE_FILENAME_MAX_BYTES);
+        expect(getUtf8ByteLength(fileName)).toBeLessThanOrEqual(
+            CONVERSATION_NOTE_FILENAME_MAX_BYTES
+        );
     });
 });

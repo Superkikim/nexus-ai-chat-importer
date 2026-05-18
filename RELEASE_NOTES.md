@@ -1,5 +1,37 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.4 — Quality & Compliance
+
+![Version](https://img.shields.io/badge/version-1.6.4-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🐛 Fixed
+
+- **Claude conversations with no exportable content are now skipped gracefully**
+  - Claude exports can include conversations where all messages have empty text and content (interrupted sessions, artifact-only interactions)
+  - These are now reported as "Skipped — Empty conversation" in the import report instead of creating empty notes
+
+### 🔧 Improved
+
+- Full compliance with Obsidian community plugin ESLint rules
+- Removed dead code (`checkConversationLink`, Gemini provider stub)
+- Fixed duplicate CSS selector definitions
+- Added GPL-3.0 `LICENSE` file
+- Declared explicit mobile support (`isDesktopOnly: false`)
+- Settings layout improvements on mobile
+- Import statistics now distinguish "skipped unchanged" from "skipped — no exportable content", with count shown in the completion dialog
+
+### 📖 Documentation
+
+- **Privacy & Security section** added to README — addresses all Obsidian portal disclosures (external domains, network requests, vault access)
+- **CLI documented** as desktop-only, best-effort, not verified by Obsidian (`cli/README.md` created)
+
+### ⚙️ CI / Tooling
+
+- **GitHub Actions release workflow** — builds, attests build provenance, and publishes GitHub Release automatically on version tag push
+- **GitHub Actions CI workflow** — validates build on every branch push
+
+---
+
 ## Version 1.6.3 — Filename Length Hardening for Long Conversation Titles
 
 ![Version](https://img.shields.io/badge/version-1.6.3-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)

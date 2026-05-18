@@ -30,11 +30,16 @@ export class PerplexityReportNamingStrategy implements ReportNamingStrategy {
         return "perplexity";
     }
 
-    getProviderSpecificColumn(): { header: string; getValue: (adapter: any, chat: any) => number } {
+    getProviderSpecificColumn(): {
+        header: string;
+        getValue: (adapter: any, chat: any) => number;
+    } {
         return {
             header: "Turns",
-            getValue: (_adapter: any, chat: PerplexityConversationFile) =>
-                Array.isArray(chat?.conversations) ? chat.conversations.length : 0,
+            getValue: (_adapter: unknown, chat: PerplexityConversationFile) =>
+                Array.isArray(chat?.conversations)
+                    ? chat.conversations.length
+                    : 0,
         };
     }
 }

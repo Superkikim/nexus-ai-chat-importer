@@ -96,4 +96,6 @@ export interface PerplexityEntryExportFile {
     thread_metadata?: PerplexityEntryThreadMetadata;
 }
 
-export type PerplexityRawConversationFile = PerplexityConversationFile | PerplexityEntryExportFile;
+export type PerplexityRawConversationFile =
+    | PerplexityConversationFile
+    | PerplexityEntryExportFile;

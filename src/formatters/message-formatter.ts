@@ -1,21 +1,20 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/formatters/message-formatter.ts
 import { StandardMessage, StandardAttachment } from "../types/standard";
@@ -27,11 +26,11 @@ import type NexusAiChatImporterPlugin from "../main";
 export class MessageFormatter {
     // Nexus custom callouts with icons
     private static readonly CALLOUTS = {
-        USER: 'nexus_user',         // 👤 User messages
-        AGENT: 'nexus_agent',       // 🤖 Assistant/Agent messages
-        ATTACHMENT: 'nexus_attachment', // 📎 Attachments
-        ARTIFACT: 'nexus_artifact',     // 🛠️ Claude artifacts
-        PROMPT: 'nexus_prompt'          // 💭 System prompts
+        USER: "nexus_user", // 👤 User messages
+        AGENT: "nexus_agent", // 🤖 Assistant/Agent messages
+        ATTACHMENT: "nexus_attachment", // 📎 Attachments
+        ARTIFACT: "nexus_artifact", // 🛠️ Claude artifacts
+        PROMPT: "nexus_prompt", // 💭 System prompts
     };
 
     constructor(
@@ -41,9 +40,9 @@ export class MessageFormatter {
 
     formatMessages(messages: StandardMessage[]): string {
         return messages
-            .filter(message => message !== undefined)
-            .map(message => this.formatMessage(message))
-            .filter(formattedMessage => formattedMessage !== "")
+            .filter((message) => message !== undefined)
+            .map((message) => this.formatMessage(message))
+            .filter((formattedMessage) => formattedMessage !== "")
             .join("\n");
     }
 
@@ -54,18 +53,26 @@ export class MessageFormatter {
         }
 
         // Get custom format if enabled
-        const customFormat = this.plugin.settings.useCustomMessageTimestampFormat
+        const customFormat = this.plugin.settings
+            .useCustomMessageTimestampFormat
             ? this.plugin.settings.messageTimestampFormat
             : undefined;
 
-        const messageTime = formatMessageTimestamp(message.timestamp, customFormat);
+        const messageTime = formatMessageTimestamp(
+            message.timestamp,
+            customFormat
+        );
 
-        const authorName = message.role === "assistant" && message.model
-            ? `Assistant · ${message.model}`
-            : message.role === "user"
-            ? "User"
-            : "Assistant";
-        const calloutType = message.role === "user" ? MessageFormatter.CALLOUTS.USER : MessageFormatter.CALLOUTS.AGENT;
+        const authorName =
+            message.role === "assistant" && message.model
+                ? `Assistant · ${message.model}`
+                : message.role === "user"
+                ? "User"
+                : "Assistant";
+        const calloutType =
+            message.role === "user"
+                ? MessageFormatter.CALLOUTS.USER
+                : MessageFormatter.CALLOUTS.AGENT;
 
         // Create callout with timestamp and content
         let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}\n`;
@@ -73,7 +80,9 @@ export class MessageFormatter {
         // Format main message content
         if (message.content) {
             // Convert LaTeX delimiters to Obsidian math syntax before processing
-            const contentWithMath = MessageFormatter.convertLatexDelimiters(message.content);
+            const contentWithMath = MessageFormatter.convertLatexDelimiters(
+                message.content
+            );
 
             // Add content inside the callout.
             // IMPORTANT: avoid patterns like `> >[!nexus_artifact]` which break
@@ -81,7 +90,7 @@ export class MessageFormatter {
             // with `>`, we add only one extra `>` (no space) so that
             // `>[!callout]` becomes `>>[!callout]` instead of `> >[!callout]`.
             const lines = contentWithMath.split("\n");
-            const formattedLines = lines.map(line => {
+            const formattedLines = lines.map((line) => {
                 // Preserve empty lines inside the callout
                 if (line.trim() === "") {
                     return ">";
@@ -105,7 +114,8 @@ export class MessageFormatter {
 
         // Format attachments if any
         if (message.attachments && message.attachments.length > 0) {
-            messageContent += "\n" + this.formatAttachments(message.attachments);
+            messageContent +=
+                "\n" + this.formatAttachments(message.attachments);
         }
 
         // Add UID for update tracking
@@ -120,9 +130,11 @@ export class MessageFormatter {
     }
 
     private formatAttachments(attachments: StandardAttachment[]): string {
-        return attachments.map(attachment => {
-            return this.formatSingleAttachment(attachment);
-        }).join("\n>\n");
+        return attachments
+            .map((attachment) => {
+                return this.formatSingleAttachment(attachment);
+            })
+            .join("\n>\n");
     }
 
     /**
@@ -162,12 +174,12 @@ export class MessageFormatter {
 
         // Add a blank line that REMAINS inside the nested callout
         // (no completely empty line without >> while the callout is open)
-        content += '\n>>\n';
+        content += "\n>>\n";
 
         // Handle successful extraction
         if (attachment.status?.found && attachment.url) {
             // Skip sandbox:// URLs - they don't work in Obsidian
-            if (!attachment.url.startsWith('sandbox://')) {
+            if (!attachment.url.startsWith("sandbox://")) {
                 if (isImageFile(attachment)) {
                     content += `>> ![[${attachment.url}]]`; // Embed images
                 } else {
@@ -181,12 +193,18 @@ export class MessageFormatter {
 
         // Handle missing/failed attachments with informative notes
         else if (attachment.status && !attachment.status.found) {
-            if (attachment.status.reason === 'missing_from_export') {
+            if (attachment.status.reason === "missing_from_export") {
                 // Single clean line: status message + optional link
-                const link = attachment.url ? ` [Open original conversation](${attachment.url})` : '';
-                content += `>> ⚠️ ${this.getStatusMessage(attachment.status.reason)}.${link}`;
+                const link = attachment.url
+                    ? ` [Open original conversation](${attachment.url})`
+                    : "";
+                content += `>> ⚠️ ${this.getStatusMessage(
+                    attachment.status.reason
+                )}.${link}`;
             } else {
-                content += `>> ⚠️ ${this.getStatusMessage(attachment.status.reason)}`;
+                content += `>> ⚠️ ${this.getStatusMessage(
+                    attachment.status.reason
+                )}`;
                 if (attachment.status.note) {
                     content += `\n>> **Note:** ${attachment.status.note}`;
                 }
@@ -218,7 +236,10 @@ export class MessageFormatter {
         while ((match = codePattern.exec(text)) !== null) {
             // Non-code segment before this match
             if (match.index > lastIndex) {
-                segments.push({ text: text.slice(lastIndex, match.index), isCode: false });
+                segments.push({
+                    text: text.slice(lastIndex, match.index),
+                    isCode: false,
+                });
             }
             // Code segment
             segments.push({ text: match[0], isCode: true });
@@ -230,17 +251,25 @@ export class MessageFormatter {
         }
 
         // Apply conversions only on non-code segments
-        return segments.map(segment => {
-            if (segment.isCode) return segment.text;
+        return segments
+            .map((segment) => {
+                if (segment.isCode) return segment.text;
 
-            let result = segment.text;
-            // Display math: \[...\] → $$...$$  (can be multiline)
-            // Negative lookbehind: don't match \\[ (escaped backslash)
-            result = result.replace(/(?<!\\)\\\[([\s\S]*?)(?<!\\)\\\]/g, '$$$$$1$$$$');
-            // Inline math: \(...\) → $...$  (single line, non-greedy)
-            result = result.replace(/(?<!\\)\\\((.*?)(?<!\\)\\\)/g, '$$$1$$');
-            return result;
-        }).join('');
+                let result = segment.text;
+                // Display math: \[...\] → $$...$$  (can be multiline)
+                // Negative lookbehind: don't match \\[ (escaped backslash)
+                result = result.replace(
+                    /(?<!\\)\\\[([\s\S]*?)(?<!\\)\\\]/g,
+                    "$$$$$1$$$$"
+                );
+                // Inline math: \(...\) → $...$  (single line, non-greedy)
+                result = result.replace(
+                    /(?<!\\)\\\((.*?)(?<!\\)\\\)/g,
+                    "$$$1$$"
+                );
+                return result;
+            })
+            .join("");
     }
 
     /**
@@ -248,17 +277,16 @@ export class MessageFormatter {
      */
     private getStatusMessage(reason?: string): string {
         switch (reason) {
-            case 'missing_from_export':
-                return 'Not included in export';
-            case 'extraction_failed':
-                return 'Extraction failed';
-            case 'corrupted':
-                return 'File appears corrupted';
-            case 'unsupported_format':
-                return 'Unsupported file format';
+            case "missing_from_export":
+                return "Not included in export";
+            case "extraction_failed":
+                return "Extraction failed";
+            case "corrupted":
+                return "File appears corrupted";
+            case "unsupported_format":
+                return "Unsupported file format";
             default:
-                return 'Processing issue';
+                return "Processing issue";
         }
     }
-
 }

@@ -7,27 +7,39 @@ import { t } from "../i18n";
 const DEFAULT_LARGE_JSON_THRESHOLD_BYTES = 32 * 1024 * 1024; // 32 MB
 const DEFAULT_STREAM_YIELD_EVERY = 25;
 
-export type SupportedArchiveProvider = "chatgpt" | "claude" | "lechat" | "gemini" | "perplexity";
+export type SupportedArchiveProvider =
+    | "chatgpt"
+    | "claude"
+    | "lechat"
+    | "perplexity";
 
 export type ArchiveClassification =
     | {
-        supported: true;
-        provider: SupportedArchiveProvider;
-        reason: "supported";
-        message?: string;
-    }
+          supported: true;
+          provider: SupportedArchiveProvider;
+          reason: "supported";
+          message?: string;
+      }
     | {
-        supported: false;
-        provider?: undefined;
-        reason: "empty" | "unsupported-format" | "provider-mismatch" | "nested-zip-container";
-        message?: string;
-    };
+          supported: false;
+          provider?: undefined;
+          reason:
+              | "empty"
+              | "unsupported-format"
+              | "provider-mismatch"
+              | "nested-zip-container";
+          message?: string;
+      };
 
-export function getArchiveProviderMismatchMessage(provider: SupportedArchiveProvider): string {
+export function getArchiveProviderMismatchMessage(
+    provider: SupportedArchiveProvider
+): string {
     return t(`archive_messages.provider_mismatch.${provider}`);
 }
 
-export function getArchiveNestedZipMessage(provider?: SupportedArchiveProvider): string {
+export function getArchiveNestedZipMessage(
+    provider?: SupportedArchiveProvider
+): string {
     if (provider === "perplexity") {
         return t("archive_messages.nested_zip.perplexity");
     }
@@ -43,24 +55,6 @@ export function getArchiveEmptyMessage(): string {
     return t("archive_messages.empty");
 }
 
-export function findGeminiActivityJsonFiles(fileNames: string[]): string[] {
-    const geminiJsonFiles: string[] = [];
-
-    for (const name of fileNames) {
-        if (!name.toLowerCase().endsWith(".json")) continue;
-
-        const segments = name.split("/");
-        if (segments.length >= 3 && segments[0] === "Takeout") {
-            const thirdLevel = segments[2];
-            if (thirdLevel.toLowerCase().includes("gemini")) {
-                geminiJsonFiles.push(name);
-            }
-        }
-    }
-
-    return geminiJsonFiles;
-}
-
 export function findPerplexityJsonFiles(fileNames: string[]): string[] {
     return fileNames.filter((name) => {
         const lower = name.toLowerCase();
@@ -71,10 +65,14 @@ export function findPerplexityJsonFiles(fileNames: string[]): string[] {
 }
 
 function hasNestedZipContainerSignature(fileNames: string[]): boolean {
-    const zipEntries = fileNames.filter((name) => name.toLowerCase().endsWith(".zip"));
+    const zipEntries = fileNames.filter((name) =>
+        name.toLowerCase().endsWith(".zip")
+    );
     if (zipEntries.length === 0) return false;
 
-    const hasJsonEntries = fileNames.some((name) => name.toLowerCase().endsWith(".json"));
+    const hasJsonEntries = fileNames.some((name) =>
+        name.toLowerCase().endsWith(".json")
+    );
     return !hasJsonEntries;
 }
 
@@ -90,20 +88,20 @@ export function classifyArchiveEntries(
         };
     }
 
-    const hasConversationsJson = fileNames.includes("conversations.json")
-        || fileNames.some(name => /^conversations-\d+\.json$/.test(name));
+    const hasConversationsJson =
+        fileNames.includes("conversations.json") ||
+        fileNames.some((name) => /^conversations-\d+\.json$/.test(name));
     const hasUsersJson = fileNames.includes("users.json");
-    const hasLeChatFiles = fileNames.some(name => /^chat-[a-f0-9-]+\.json$/.test(name));
-    const hasGeminiActivityJson = findGeminiActivityJsonFiles(fileNames).length > 0;
+    const hasLeChatFiles = fileNames.some((name) =>
+        /^chat-[a-f0-9-]+\.json$/.test(name)
+    );
     const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
     const nestedZipContainer = hasNestedZipContainerSignature(fileNames);
 
     const detectedProvider: SupportedArchiveProvider | undefined =
         hasLeChatFiles && !hasConversationsJson
             ? "lechat"
-            : hasGeminiActivityJson && !hasConversationsJson && !hasLeChatFiles
-            ? "gemini"
-            : hasPerplexityFiles && !hasConversationsJson && !hasLeChatFiles && !hasGeminiActivityJson
+            : hasPerplexityFiles && !hasConversationsJson && !hasLeChatFiles
             ? "perplexity"
             : hasConversationsJson && hasUsersJson
             ? "claude"
@@ -116,12 +114,20 @@ export function classifyArchiveEntries(
 
         if (expectedProvider === "chatgpt") {
             if (detectedProvider === "chatgpt") {
-                return { supported: true, provider: "chatgpt", reason: "supported" };
+                return {
+                    supported: true,
+                    provider: "chatgpt",
+                    reason: "supported",
+                };
             }
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                reason: detectedProvider
+                    ? "provider-mismatch"
+                    : nestedZipContainer
+                    ? "nested-zip-container"
+                    : "unsupported-format",
                 message: nestedZipContainer
                     ? getArchiveNestedZipMessage(expectedProvider)
                     : getArchiveProviderMismatchMessage("chatgpt"),
@@ -130,12 +136,20 @@ export function classifyArchiveEntries(
 
         if (expectedProvider === "claude") {
             if (detectedProvider === "claude") {
-                return { supported: true, provider: "claude", reason: "supported" };
+                return {
+                    supported: true,
+                    provider: "claude",
+                    reason: "supported",
+                };
             }
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                reason: detectedProvider
+                    ? "provider-mismatch"
+                    : nestedZipContainer
+                    ? "nested-zip-container"
+                    : "unsupported-format",
                 message: nestedZipContainer
                     ? getArchiveNestedZipMessage(expectedProvider)
                     : getArchiveProviderMismatchMessage("claude"),
@@ -144,40 +158,42 @@ export function classifyArchiveEntries(
 
         if (expectedProvider === "lechat") {
             if (detectedProvider === "lechat") {
-                return { supported: true, provider: "lechat", reason: "supported" };
+                return {
+                    supported: true,
+                    provider: "lechat",
+                    reason: "supported",
+                };
             }
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                reason: detectedProvider
+                    ? "provider-mismatch"
+                    : nestedZipContainer
+                    ? "nested-zip-container"
+                    : "unsupported-format",
                 message: nestedZipContainer
                     ? getArchiveNestedZipMessage(expectedProvider)
                     : getArchiveProviderMismatchMessage("lechat"),
             };
         }
 
-        if (expectedProvider === "gemini") {
-            if (detectedProvider === "gemini") {
-                return { supported: true, provider: "gemini", reason: "supported" };
-            }
-
-            return {
-                supported: false,
-                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
-                message: nestedZipContainer
-                    ? getArchiveNestedZipMessage(expectedProvider)
-                    : getArchiveProviderMismatchMessage("gemini"),
-            };
-        }
-
         if (expectedProvider === "perplexity") {
             if (detectedProvider === "perplexity") {
-                return { supported: true, provider: "perplexity", reason: "supported" };
+                return {
+                    supported: true,
+                    provider: "perplexity",
+                    reason: "supported",
+                };
             }
 
             return {
                 supported: false,
-                reason: detectedProvider ? "provider-mismatch" : nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+                reason: detectedProvider
+                    ? "provider-mismatch"
+                    : nestedZipContainer
+                    ? "nested-zip-container"
+                    : "unsupported-format",
                 message: nestedZipContainer
                     ? getArchiveNestedZipMessage(expectedProvider)
                     : getArchiveProviderMismatchMessage("perplexity"),
@@ -188,7 +204,9 @@ export function classifyArchiveEntries(
     if (!detectedProvider) {
         return {
             supported: false,
-            reason: nestedZipContainer ? "nested-zip-container" : "unsupported-format",
+            reason: nestedZipContainer
+                ? "nested-zip-container"
+                : "unsupported-format",
             message: nestedZipContainer
                 ? getArchiveNestedZipMessage()
                 : getArchiveUnsupportedFormatMessage(),
@@ -216,14 +234,14 @@ export interface ConversationStreamOptions {
 
 async function listFileNames(zip: ZipArchiveReader): Promise<string[]> {
     const entries = await zip.listEntries();
-    return entries.map(entry => entry.path);
+    return entries.map((entry) => entry.path);
 }
 
 async function collectJsonArrayFromEntry(entry: {
     readText(): Promise<string>;
     readTextChunks?: () => AsyncGenerator<string>;
-}): Promise<{ items: any[]; uncompressedBytes: number }> {
-    const items: any[] = [];
+}): Promise<{ items: unknown[]; uncompressedBytes: number }> {
+    const items: unknown[] = [];
     let uncompressedBytes = 0;
     const chunkReader = entry.readTextChunks?.bind(entry);
 
@@ -236,7 +254,9 @@ async function collectJsonArrayFromEntry(entry: {
             }
         }
 
-        for await (const value of StreamingJsonArrayParser.streamConversationsFromChunks(countingChunks())) {
+        for await (const value of StreamingJsonArrayParser.streamConversationsFromChunks(
+            countingChunks()
+        )) {
             items.push(value);
         }
 
@@ -252,8 +272,8 @@ async function collectJsonArrayFromEntry(entry: {
 async function collectLeChatConversationFromEntry(entry: {
     readText(): Promise<string>;
     readTextChunks?: () => AsyncGenerator<string>;
-}): Promise<{ messages: any[]; uncompressedBytes: number }> {
-    const messages: any[] = [];
+}): Promise<{ messages: unknown[]; uncompressedBytes: number }> {
+    const messages: unknown[] = [];
     let uncompressedBytes = 0;
     const chunkReader = entry.readTextChunks?.bind(entry);
 
@@ -266,7 +286,9 @@ async function collectLeChatConversationFromEntry(entry: {
             }
         }
 
-        for await (const message of StreamingJsonArrayParser.streamConversationsFromChunks(countingChunks())) {
+        for await (const message of StreamingJsonArrayParser.streamConversationsFromChunks(
+            countingChunks()
+        )) {
             messages.push(message);
         }
         return { messages, uncompressedBytes };
@@ -280,7 +302,7 @@ async function collectLeChatConversationFromEntry(entry: {
 
 async function collectJsonObjectFromEntry(entry: {
     readText(): Promise<string>;
-}): Promise<{ item: any; uncompressedBytes: number }> {
+}): Promise<{ item: unknown; uncompressedBytes: number }> {
     const text = await entry.readText();
     const uncompressedBytes = text.length;
     const parsed = JSON.parse(text);
@@ -296,7 +318,7 @@ async function collectJsonObjectFromEntry(entry: {
 }
 
 function formatRuntimeMemorySnapshot(): string {
-    const perf = globalThis.performance as Performance & {
+    const perf = window.performance as Performance & {
         memory?: {
             usedJSHeapSize: number;
             totalJSHeapSize: number;
@@ -309,9 +331,12 @@ function formatRuntimeMemorySnapshot(): string {
         return "heap=n/a";
     }
 
-    const usedMb = Math.round((memory.usedJSHeapSize / (1024 * 1024)) * 10) / 10;
-    const totalMb = Math.round((memory.totalJSHeapSize / (1024 * 1024)) * 10) / 10;
-    const limitMb = Math.round((memory.jsHeapSizeLimit / (1024 * 1024)) * 10) / 10;
+    const usedMb =
+        Math.round((memory.usedJSHeapSize / (1024 * 1024)) * 10) / 10;
+    const totalMb =
+        Math.round((memory.totalJSHeapSize / (1024 * 1024)) * 10) / 10;
+    const limitMb =
+        Math.round((memory.jsHeapSizeLimit / (1024 * 1024)) * 10) / 10;
     return `heapUsedMB=${usedMb},heapTotalMB=${totalMb},heapLimitMB=${limitMb}`;
 }
 
@@ -320,7 +345,9 @@ export async function extractRawConversations(
 ): Promise<RawConversationExtractionResult> {
     const fileNames = await listFileNames(zip);
 
-    const leChatFiles = fileNames.filter(name => /^chat-[a-f0-9-]+\.json$/.test(name));
+    const leChatFiles = fileNames.filter((name) =>
+        /^chat-[a-f0-9-]+\.json$/.test(name)
+    );
     if (leChatFiles.length > 0) {
         const conversations: any[] = [];
         let uncompressedBytes = 0;
@@ -328,31 +355,10 @@ export async function extractRawConversations(
         for (const fileName of leChatFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            const { messages, uncompressedBytes: fileBytes } = await collectLeChatConversationFromEntry(entry);
+            const { messages, uncompressedBytes: fileBytes } =
+                await collectLeChatConversationFromEntry(entry);
             uncompressedBytes += fileBytes;
             conversations.push(messages);
-        }
-
-        return { conversations, uncompressedBytes };
-    }
-
-    const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
-    if (geminiJsonFiles.length > 0) {
-        const activityFile = zip.get(geminiJsonFiles[0]);
-        if (!activityFile) {
-            throw new NexusAiChatImporterError(
-                "Missing Gemini activity JSON",
-                "The ZIP file appears to contain a Gemini folder but the activity JSON file is missing."
-            );
-        }
-
-        const { items: conversations, uncompressedBytes } = await collectJsonArrayFromEntry(activityFile);
-
-        if (conversations.length === 0) {
-            throw new NexusAiChatImporterError(
-                "Empty Gemini export",
-                "No entries found in the Gemini activity JSON file."
-            );
         }
 
         return { conversations, uncompressedBytes };
@@ -366,7 +372,8 @@ export async function extractRawConversations(
         for (const fileName of perplexityJsonFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            const { item, uncompressedBytes: fileBytes } = await collectJsonObjectFromEntry(entry);
+            const { item, uncompressedBytes: fileBytes } =
+                await collectJsonObjectFromEntry(entry);
             uncompressedBytes += fileBytes;
             conversations.push(item);
         }
@@ -381,7 +388,9 @@ export async function extractRawConversations(
         return { conversations, uncompressedBytes };
     }
 
-    const numberedConvFiles = fileNames.filter(name => /^conversations-\d+\.json$/.test(name)).sort();
+    const numberedConvFiles = fileNames
+        .filter((name) => /^conversations-\d+\.json$/.test(name))
+        .sort();
     if (numberedConvFiles.length > 0) {
         const conversations: any[] = [];
         let uncompressedBytes = 0;
@@ -411,11 +420,12 @@ export async function extractRawConversations(
     if (!conversationsFile) {
         throw new NexusAiChatImporterError(
             "Missing conversations.json",
-            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Gemini activity JSON file."
+            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or Perplexity thread JSON files."
         );
     }
 
-    const { items: conversations, uncompressedBytes } = await collectJsonArrayFromEntry(conversationsFile);
+    const { items: conversations, uncompressedBytes } =
+        await collectJsonArrayFromEntry(conversationsFile);
 
     if (conversations.length === 0) {
         throw new NexusAiChatImporterError(
@@ -433,10 +443,15 @@ export async function* extractConversationsStream(
 ): AsyncGenerator<any> {
     const streamLogger = logger.child("Stream");
     const startedAt = Date.now();
-    const largeJsonThresholdBytes = options.largeJsonThresholdBytes ?? DEFAULT_LARGE_JSON_THRESHOLD_BYTES;
-    const streamYieldEvery = Math.max(1, options.streamYieldEvery ?? DEFAULT_STREAM_YIELD_EVERY);
+    const largeJsonThresholdBytes =
+        options.largeJsonThresholdBytes ?? DEFAULT_LARGE_JSON_THRESHOLD_BYTES;
+    const streamYieldEvery = Math.max(
+        1,
+        options.streamYieldEvery ?? DEFAULT_STREAM_YIELD_EVERY
+    );
     const isMobileRuntime = !!options.mobileRuntime;
-    const enforceChunkedForLargeJsonOnMobile = options.enforceChunkedForLargeJsonOnMobile ?? isMobileRuntime;
+    const enforceChunkedForLargeJsonOnMobile =
+        options.enforceChunkedForLargeJsonOnMobile ?? isMobileRuntime;
     const yieldToEventLoopIfNeeded = async (count: number): Promise<void> => {
         if (!isMobileRuntime) {
             return;
@@ -450,13 +465,17 @@ export async function* extractConversationsStream(
     streamLogger.debug("Begin conversation stream extraction");
     const entries = await zip.listEntries();
     const fileNames = entries.map((entry) => entry.path);
-    const entrySizeMap = new Map(entries.map((entry) => [entry.path, entry.size]));
+    const entrySizeMap = new Map(
+        entries.map((entry) => [entry.path, entry.size])
+    );
     streamLogger.debug("ZIP entry listing complete for stream extraction", {
         entryCount: fileNames.length,
         durationMs: Date.now() - startedAt,
     });
 
-    const leChatFiles = fileNames.filter(name => /^chat-[a-f0-9-]+\.json$/.test(name));
+    const leChatFiles = fileNames.filter((name) =>
+        /^chat-[a-f0-9-]+\.json$/.test(name)
+    );
     if (leChatFiles.length > 0) {
         streamLogger.debug("Using Le Chat conversation stream", {
             fileCount: leChatFiles.length,
@@ -465,8 +484,11 @@ export async function* extractConversationsStream(
         for (const fileName of leChatFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            streamLogger.debug("Reading Le Chat conversation file", { fileName });
-            const { messages, uncompressedBytes } = await collectLeChatConversationFromEntry(entry);
+            streamLogger.debug("Reading Le Chat conversation file", {
+                fileName,
+            });
+            const { messages, uncompressedBytes } =
+                await collectLeChatConversationFromEntry(entry);
             streamLogger.debug("Le Chat conversation file read complete", {
                 fileName,
                 textLength: uncompressedBytes,
@@ -481,14 +503,6 @@ export async function* extractConversationsStream(
         return;
     }
 
-    const geminiJsonFiles = findGeminiActivityJsonFiles(fileNames);
-    if (geminiJsonFiles.length > 0) {
-        throw new NexusAiChatImporterError(
-            "Gemini streaming not supported",
-            "Gemini imports still require all-at-once processing."
-        );
-    }
-
     const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
     if (perplexityJsonFiles.length > 0) {
         streamLogger.debug("Using Perplexity conversation stream", {
@@ -498,7 +512,8 @@ export async function* extractConversationsStream(
         for (const fileName of perplexityJsonFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            const { item, uncompressedBytes } = await collectJsonObjectFromEntry(entry);
+            const { item, uncompressedBytes } =
+                await collectJsonObjectFromEntry(entry);
             streamLogger.debug("Perplexity thread file read complete", {
                 fileName,
                 textLength: uncompressedBytes,
@@ -514,7 +529,9 @@ export async function* extractConversationsStream(
         return;
     }
 
-    const numberedConvFiles = fileNames.filter(name => /^conversations-\d+\.json$/.test(name)).sort();
+    const numberedConvFiles = fileNames
+        .filter((name) => /^conversations-\d+\.json$/.test(name))
+        .sort();
     if (numberedConvFiles.length > 0) {
         streamLogger.debug("Using numbered conversation stream", {
             fileCount: numberedConvFiles.length,
@@ -525,27 +542,39 @@ export async function* extractConversationsStream(
             if (!entry) continue;
             const entrySize = entrySizeMap.get(fileName);
             const fileReadStartedAt = Date.now();
-            const isLargeJsonFile = typeof entrySize === "number" && entrySize >= largeJsonThresholdBytes;
+            const isLargeJsonFile =
+                typeof entrySize === "number" &&
+                entrySize >= largeJsonThresholdBytes;
             const chunkReader = entry.readTextChunks?.bind(entry);
             const canUseChunkedReader = !!chunkReader;
             streamLogger.debug(
-                `Reading numbered conversation file (${fileName}) [entrySize=${entrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
+                `Reading numbered conversation file (${fileName}) [entrySize=${
+                    entrySize ?? "n/a"
+                } bytes, ${formatRuntimeMemorySnapshot()}]`
             );
             if (isLargeJsonFile) {
-                streamLogger.debug("Large JSON mode activated for numbered conversation file", {
-                    fileName,
-                    entrySize,
-                    thresholdBytes: largeJsonThresholdBytes,
-                    mobileRuntime: isMobileRuntime,
-                    chunkedAvailable: canUseChunkedReader,
-                });
+                streamLogger.debug(
+                    "Large JSON mode activated for numbered conversation file",
+                    {
+                        fileName,
+                        entrySize,
+                        thresholdBytes: largeJsonThresholdBytes,
+                        mobileRuntime: isMobileRuntime,
+                        chunkedAvailable: canUseChunkedReader,
+                    }
+                );
             }
             if (chunkReader) {
-                streamLogger.debug("Using chunked numbered conversation reader", {
-                    fileName,
-                    entrySize: entrySize ?? null,
-                });
-                for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader())) {
+                streamLogger.debug(
+                    "Using chunked numbered conversation reader",
+                    {
+                        fileName,
+                        entrySize: entrySize ?? null,
+                    }
+                );
+                for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(
+                    chunkReader()
+                )) {
                     yieldedCount++;
                     if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
                         streamLogger.debug("Yielding streamed conversation", {
@@ -556,12 +585,19 @@ export async function* extractConversationsStream(
                     yield conv;
                     await yieldToEventLoopIfNeeded(yieldedCount);
                 }
-                streamLogger.debug("Chunked numbered conversation file parse complete", {
-                    fileName,
-                    readDurationMs: Date.now() - fileReadStartedAt,
-                    memorySnapshot: formatRuntimeMemorySnapshot(),
-                });
-            } else if (isMobileRuntime && isLargeJsonFile && enforceChunkedForLargeJsonOnMobile) {
+                streamLogger.debug(
+                    "Chunked numbered conversation file parse complete",
+                    {
+                        fileName,
+                        readDurationMs: Date.now() - fileReadStartedAt,
+                        memorySnapshot: formatRuntimeMemorySnapshot(),
+                    }
+                );
+            } else if (
+                isMobileRuntime &&
+                isLargeJsonFile &&
+                enforceChunkedForLargeJsonOnMobile
+            ) {
                 throw new NexusAiChatImporterError(
                     "MOBILE_LARGE_JSON_STREAM_REQUIRED",
                     {
@@ -571,13 +607,10 @@ export async function* extractConversationsStream(
                     }
                 );
             } else {
-                throw new NexusAiChatImporterError(
-                    "ZIP_TEXT_STREAM_REQUIRED",
-                    {
-                        fileName,
-                        entrySizeBytes: entrySize ?? null,
-                    }
-                );
+                throw new NexusAiChatImporterError("ZIP_TEXT_STREAM_REQUIRED", {
+                    fileName,
+                    entrySizeBytes: entrySize ?? null,
+                });
             }
         }
         streamLogger.debug("Numbered conversation stream complete", {
@@ -591,17 +624,22 @@ export async function* extractConversationsStream(
     if (!conversationsFile) {
         throw new NexusAiChatImporterError(
             "Missing conversations.json",
-            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Gemini activity JSON file."
+            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or Perplexity thread JSON files."
         );
     }
 
     const conversationEntrySize = entrySizeMap.get("conversations.json");
     const readStartedAt = Date.now();
-    const isLargeConversationsJson = typeof conversationEntrySize === "number" && conversationEntrySize >= largeJsonThresholdBytes;
-    const chunkReader = conversationsFile.readTextChunks?.bind(conversationsFile);
+    const isLargeConversationsJson =
+        typeof conversationEntrySize === "number" &&
+        conversationEntrySize >= largeJsonThresholdBytes;
+    const chunkReader =
+        conversationsFile.readTextChunks?.bind(conversationsFile);
     const canUseChunkedReader = !!chunkReader;
     streamLogger.debug(
-        `Reading conversations.json for stream extraction [entrySize=${conversationEntrySize ?? "n/a"} bytes, ${formatRuntimeMemorySnapshot()}]`
+        `Reading conversations.json for stream extraction [entrySize=${
+            conversationEntrySize ?? "n/a"
+        } bytes, ${formatRuntimeMemorySnapshot()}]`
     );
     if (isLargeConversationsJson) {
         streamLogger.debug("Large JSON mode activated for conversations.json", {
@@ -617,7 +655,9 @@ export async function* extractConversationsStream(
             entrySize: conversationEntrySize ?? null,
         });
         try {
-            for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunkReader())) {
+            for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(
+                chunkReader()
+            )) {
                 yieldedCount++;
                 if (yieldedCount <= 3 || yieldedCount % 100 === 0) {
                     streamLogger.debug("Yielding streamed conversation", {
@@ -629,12 +669,16 @@ export async function* extractConversationsStream(
                 await yieldToEventLoopIfNeeded(yieldedCount);
             }
         } catch (error) {
-            streamLogger.error("Failed while chunk-reading conversations.json for stream extraction", {
-                durationMs: Date.now() - readStartedAt,
-                memorySnapshot: formatRuntimeMemorySnapshot(),
-                yieldedCount,
-                message: error instanceof Error ? error.message : String(error),
-            });
+            streamLogger.error(
+                "Failed while chunk-reading conversations.json for stream extraction",
+                {
+                    durationMs: Date.now() - readStartedAt,
+                    memorySnapshot: formatRuntimeMemorySnapshot(),
+                    yieldedCount,
+                    message:
+                        error instanceof Error ? error.message : String(error),
+                }
+            );
             throw error;
         }
         streamLogger.debug("Conversation stream extraction complete", {
@@ -644,7 +688,11 @@ export async function* extractConversationsStream(
             memorySnapshot: formatRuntimeMemorySnapshot(),
             mode: "chunked",
         });
-    } else if (isMobileRuntime && isLargeConversationsJson && enforceChunkedForLargeJsonOnMobile) {
+    } else if (
+        isMobileRuntime &&
+        isLargeConversationsJson &&
+        enforceChunkedForLargeJsonOnMobile
+    ) {
         throw new NexusAiChatImporterError(
             "MOBILE_LARGE_JSON_STREAM_REQUIRED",
             {
@@ -654,12 +702,9 @@ export async function* extractConversationsStream(
             }
         );
     } else {
-        throw new NexusAiChatImporterError(
-            "ZIP_TEXT_STREAM_REQUIRED",
-            {
-                fileName: "conversations.json",
-                entrySizeBytes: conversationEntrySize ?? null,
-            }
-        );
+        throw new NexusAiChatImporterError("ZIP_TEXT_STREAM_REQUIRED", {
+            fileName: "conversations.json",
+            entrySizeBytes: conversationEntrySize ?? null,
+        });
     }
 }

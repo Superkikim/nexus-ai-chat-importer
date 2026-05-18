@@ -6,9 +6,8 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.3** hardens filename generation for long conversation titles:
-> imports now enforce a shared filename length budget across providers and include a safe fallback
-> when the filesystem rejects very long names (`ENAMETOOLONG`).
+> ✅ **v1.6.4** improves Obsidian community plugin review compliance:
+> removes dead Gemini code, fixes CSS selector conflicts, adds GPL-3.0 LICENSE file.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -33,6 +32,7 @@
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
 ### 📚 More
+- [🔒 Privacy & Security](#-privacy--security) - What the plugin accesses and why
 - [✨ What's New](#-whats-new) - Latest changes
 - [☕ Support](#-support-my-work) - Help keep this plugin alive
 - [📜 License](#-license) - GPL-3.0
@@ -77,68 +77,22 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le C
 
 ### ✨ What's New
 
-#### v1.6.3 — Filename Length Hardening
-
-✨ **New**
-- Shared filename length guard for conversation note files across providers
-- Safe fallback retry naming when a filesystem rejects a path with `ENAMETOOLONG`
-
-🔧 **Improved**
-- Collision suffixes like ` (1)`, ` (2)` are now kept inside the filename length budget
-- Le Chat title derivation is now centralized so title behavior stays consistent across import paths
-
-#### v1.6.2 — Perplexity Compatibility Patch
-
-✨ **New**
-- Perplexity Thread Exporter dual-schema support:
-  - `metadata + conversations[]`
-  - `status + entries + thread_metadata`
-- Better nested ZIP guidance when an outer archive only contains inner `part*.zip` files
-
-🔧 **Improved**
-- Perplexity conversation IDs are now normalized more reliably (`context_uuid` first) to avoid duplicate notes across schema variants
-- Selective import metadata extraction now uses the same Perplexity normalization path as full import
-- Archive validation messages for provider mismatch / unsupported format are now centralized for consistency
-
-#### v1.6.0 — Perplexity + Universal Metadata
+#### v1.6.x — Highlights
 
 ✨ **New**
 - Perplexity provider support (Perplexity Thread Exporter ZIP archives)
 - Per-turn model-aware assistant headers (`Assistant · <model>`)
-- Universal frontmatter metadata keys:
-  - `mode` (when provider exposes stable mode)
-  - `models` (deduplicated list)
+- Universal frontmatter metadata (`mode`, `models`)
+- Dual-schema support for Perplexity Thread Exporter archives
 
 🔧 **Improved**
-- Perplexity answer Markdown is preserved as-is
-- Related queries can be appended at the end of imported notes
-- Provider auto-detection now recognizes Perplexity archives (`perplexity_*.json`)
+- Filenames no longer truncate or fail on long conversation titles
+- Perplexity conversations deduplicated correctly across export variants
+- Under the hood quality and compliance improvements for better stability
+- Import summary now shows how many conversations were skipped due to no exportable content
 
-#### v1.5.x — Highlights
-
-✨ **New**
-- Full UI localization in 10 languages — automatic, matches your Obsidian language setting
-- Upgrade flow now surfaces current release notes directly inside the plugin
-
-🔧 **Improved**
-- Le Chat generated images now show a proper "not included in export" callout
-- Missing attachment callouts simplified to a single clean line
-- Support links and branding updated throughout
-- Provider is auto-detected from the first supported selected archive
-- Mixed-provider selections are handled cleanly (unsupported provider files are ignored)
-- Mobile now runs imports in single-archive mode for better runtime stability
-- Desktop and mobile now follow the same ZIP-reading model: scan first, then read only what is needed
-- Import logs now identify the exact phase reached during ZIP scan, metadata extraction, attachment indexing, and streaming import
-- Reports are now split into summary + heavy index + mobile index for better readability
-
-🐛 **Bug Fixes**
-- ChatGPT numbered exports (`conversations-XXX.json`) are recognised correctly
-- ChatGPT user-uploaded image extraction restored for multi-ZIP imports
-- Claude export format changes handled correctly
-- Missing message updates in Claude imports are now handled correctly
-- Unsupported ZIP files are classified earlier and skipped with clearer messaging
-- Large archive handling no longer relies on loading the whole ZIP into memory
-- CLI now uses the desktop ZIP backend reliably in Node.js and writes correct plugin version metadata
+🐛 **Fixed**
+- Claude conversations with no exportable content are now skipped gracefully instead of creating empty notes
 
 ---
 
@@ -794,6 +748,41 @@ nexus-cli import --vault ~/my-vault --input export.zip --provider chatgpt --dry-
 ```
 
 > **Note**: The CLI reuses the same import engine as the plugin. Conversations imported via CLI are fully compatible with the plugin and vice versa.
+
+---
+
+## 🔒 Privacy & Security
+
+The Obsidian plugin portal lists the following disclosures for this plugin. Here is what each means in practice.
+
+### External domain requests
+
+The plugin may reference external domains. Here is exactly what each is used for:
+
+**GitHub (api.github.com, raw.githubusercontent.com)**
+Used once per version upgrade to display "What's New" release notes inside the upgrade dialog.
+
+**AI provider URLs (chatgpt.com, claude.ai, chat.mistral.ai, perplexity.ai)**
+Each imported conversation contains the original link to the webapp of its provider, allowing you to open it in your browser.
+
+**Support links (github.com, nexus-prod.dev, forum.obsidian.md)**
+Shown as clickable links in the plugin settings panel or dialogs. These links are used for issues and discussions (github.com, forum.obsidian.md), support (github.com, nexus-prod.dev), documentation (nexus-prod.dev).
+
+### Network requests
+
+The plugin makes network requests only to GitHub, and only to display release notes in the upgrade dialog.
+
+### Vault Enumeration
+
+The plugin scans vault files in two situations only:
+1. **During import** — to detect and skip duplicate conversations already in your vault
+2. **During version upgrades** — to migrate existing conversation notes to the new format (runs once per version, automatically)
+
+No vault content is read for any other purpose.
+
+### Vault Read / Write
+
+The plugin reads and writes files in the folders you configure (Conversations, Attachments, Reports). It only accesses files it has created. It does not read, modify, or delete any other files in your vault.
 
 ---
 

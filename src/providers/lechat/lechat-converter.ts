@@ -1,23 +1,32 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { StandardConversation, StandardMessage, StandardAttachment } from "../../types/standard";
-import { LeChatConversation, LeChatMessage, LeChatContentChunk, LeChatToolCallChunk, LeChatImageUrlChunk } from "./lechat-types";
+import {
+    StandardConversation,
+    StandardMessage,
+    StandardAttachment,
+} from "../../types/standard";
+import {
+    LeChatConversation,
+    LeChatMessage,
+    LeChatContentChunk,
+    LeChatImageUrlChunk,
+} from "./lechat-types";
 import { deriveLeChatConversationTitle } from "./lechat-title";
 
 /**
@@ -26,7 +35,7 @@ import { deriveLeChatConversationTitle } from "./lechat-title";
 export class LeChatConverter {
     /**
      * Convert Le Chat conversation to StandardConversation
-     * 
+     *
      * Note: Le Chat exports are arrays of messages without conversation-level metadata.
      * We derive conversation metadata from the messages themselves.
      */
@@ -56,7 +65,7 @@ export class LeChatConverter {
             updateTime: updateTime,
             messages: messages,
             chatUrl: `https://chat.mistral.ai/chat/${chatId}`,
-            metadata: {}
+            metadata: {},
         };
     }
 
@@ -82,7 +91,9 @@ export class LeChatConverter {
     /**
      * Convert single Le Chat message to StandardMessage
      */
-    private static convertMessage(message: LeChatMessage): StandardMessage | null {
+    private static convertMessage(
+        message: LeChatMessage
+    ): StandardMessage | null {
         if (!message.id || !message.role) {
             return null;
         }
@@ -93,7 +104,7 @@ export class LeChatConverter {
         // Extract attachments: user uploads from files array + assistant-generated images from content chunks
         const attachments = [
             ...this.extractAttachments(message),
-            ...this.extractImageUrlAttachments(message)
+            ...this.extractImageUrlAttachments(message),
         ];
 
         // Parse timestamp (ISO 8601 to Unix seconds)
@@ -104,7 +115,7 @@ export class LeChatConverter {
             role: message.role,
             content: content,
             timestamp: timestamp,
-            attachments: attachments
+            attachments: attachments,
         };
     }
 
@@ -116,7 +127,9 @@ export class LeChatConverter {
     private static extractContent(message: LeChatMessage): string {
         // If contentChunks exist, use them (they contain text + references + custom elements)
         if (message.contentChunks && message.contentChunks.length > 0) {
-            const chunksContent = this.processContentChunks(message.contentChunks);
+            const chunksContent = this.processContentChunks(
+                message.contentChunks
+            );
             return chunksContent || "(Empty message)";
         }
 
@@ -136,16 +149,22 @@ export class LeChatConverter {
         const parts: string[] = [];
 
         for (const chunk of chunks) {
-            if (chunk.type === 'text' && 'text' in chunk && chunk.text) {
+            if (chunk.type === "text" && "text" in chunk && chunk.text) {
                 // Only add text chunks if they're not duplicates of main content
                 parts.push(chunk.text);
-            } else if (chunk.type === 'tool_call') {
+            } else if (chunk.type === "tool_call") {
                 // Filter out tool calls - not useful for users (same as Claude's web_search filtering)
                 // Tool calls like web_search, open_url, etc. are internal operations
                 continue;
-            } else if (chunk.type === 'reference' && 'referenceIds' in chunk && chunk.referenceIds) {
+            } else if (
+                chunk.type === "reference" &&
+                "referenceIds" in chunk &&
+                chunk.referenceIds
+            ) {
                 // Format references as footnote markers
-                const refMarkers = chunk.referenceIds.map(id => `[^${id}]`).join('');
+                const refMarkers = chunk.referenceIds
+                    .map((id) => `[^${id}]`)
+                    .join("");
                 if (refMarkers) {
                     parts.push(refMarkers);
                 }
@@ -153,15 +172,15 @@ export class LeChatConverter {
             // Ignore custom_element for now
         }
 
-        return parts.join('\n').trim();
+        return parts.join("\n").trim();
     }
-
-
 
     /**
      * Extract attachments from Le Chat message files array
      */
-    private static extractAttachments(message: LeChatMessage): StandardAttachment[] {
+    private static extractAttachments(
+        message: LeChatMessage
+    ): StandardAttachment[] {
         const attachments: StandardAttachment[] = [];
 
         if (!message.files || message.files.length === 0) {
@@ -175,8 +194,8 @@ export class LeChatConverter {
                 fileSize: undefined, // Size not available in Le Chat export
                 status: {
                     processed: false,
-                    found: false
-                }
+                    found: false,
+                },
             };
 
             attachments.push(attachment);
@@ -191,25 +210,30 @@ export class LeChatConverter {
      * We pre-format the callout via extractedContent so the attachment extractor cannot
      * overwrite the note with an ugly internal ZIP path.
      */
-    private static extractImageUrlAttachments(message: LeChatMessage): StandardAttachment[] {
+    private static extractImageUrlAttachments(
+        message: LeChatMessage
+    ): StandardAttachment[] {
         if (!message.contentChunks) return [];
 
         const chatUrl = `https://chat.mistral.ai/chat/${message.chatId}`;
-        const imageChunks = message.contentChunks
-            .filter((chunk): chunk is LeChatImageUrlChunk => chunk.type === 'image_url' && 'imageUrl' in chunk);
+        const imageChunks = message.contentChunks.filter(
+            (chunk): chunk is LeChatImageUrlChunk =>
+                chunk.type === "image_url" && "imageUrl" in chunk
+        );
 
         return imageChunks.map((chunk, index) => {
             // Derive extension from URL (strip query params first)
-            const urlPath = chunk.imageUrl.split('?')[0];
-            const urlExt = urlPath.split('.').pop()?.toLowerCase() || '';
-            const validExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            const ext = validExts.includes(urlExt) ? urlExt : 'jpg';
+            const urlPath = chunk.imageUrl.split("?")[0];
+            const urlExt = urlPath.split(".").pop()?.toLowerCase() || "";
+            const validExts = ["jpg", "jpeg", "png", "gif", "webp"];
+            const ext = validExts.includes(urlExt) ? urlExt : "jpg";
 
             // Clean filename — no UUIDs, numbered only when multiple images
-            const fileName = imageChunks.length === 1
-                ? `generated-image.${ext}`
-                : `generated-image-${index + 1}.${ext}`;
-            const fileType = ext === 'png' ? 'image/png' : 'image/jpeg';
+            const fileName =
+                imageChunks.length === 1
+                    ? `generated-image.${ext}`
+                    : `generated-image-${index + 1}.${ext}`;
+            const fileType = ext === "png" ? "image/png" : "image/jpeg";
 
             // Pre-format the callout: formatter returns extractedContent immediately,
             // bypassing any status.note rewriting by the attachment extractor
@@ -218,14 +242,14 @@ export class LeChatConverter {
             return {
                 fileName,
                 fileType,
-                attachmentType: 'generated_image' as const,
+                attachmentType: "generated_image" as const,
                 url: chatUrl,
                 extractedContent,
                 status: {
                     processed: true,
                     found: false,
-                    reason: 'missing_from_export' as const
-                }
+                    reason: "missing_from_export" as const,
+                },
             };
         });
     }
@@ -235,14 +259,14 @@ export class LeChatConverter {
      */
     private static getFileTypeFromLeChatType(type: string): string {
         switch (type) {
-            case 'image':
-                return 'image/*';
-            case 'text':
-                return 'text/plain';
-            case 'document':
-                return 'application/octet-stream';
+            case "image":
+                return "image/*";
+            case "text":
+                return "text/plain";
+            case "document":
+                return "application/octet-stream";
             default:
-                return 'application/octet-stream';
+                return "application/octet-stream";
         }
     }
 
@@ -251,7 +275,9 @@ export class LeChatConverter {
      * CRITICAL: Le Chat exports messages in random order, not chronological!
      * Uses MILLISECOND precision for accurate sorting (even for sub-second responses)
      */
-    private static sortMessagesByTimestamp(chat: LeChatConversation): LeChatConversation {
+    private static sortMessagesByTimestamp(
+        chat: LeChatConversation
+    ): LeChatConversation {
         return [...chat].sort((a, b) => {
             // Use milliseconds for precise sorting
             const timeA = new Date(a.createdAt).getTime();
@@ -275,8 +301,8 @@ export class LeChatConverter {
      */
     private static getMinTimestamp(chat: LeChatConversation): number {
         const timestamps = chat
-            .map(msg => this.parseTimestamp(msg.createdAt))
-            .filter(ts => ts > 0);
+            .map((msg) => this.parseTimestamp(msg.createdAt))
+            .filter((ts) => ts > 0);
 
         return timestamps.length > 0 ? Math.min(...timestamps) : 0;
     }
@@ -286,8 +312,8 @@ export class LeChatConverter {
      */
     private static getMaxTimestamp(chat: LeChatConversation): number {
         const timestamps = chat
-            .map(msg => this.parseTimestamp(msg.createdAt))
-            .filter(ts => ts > 0);
+            .map((msg) => this.parseTimestamp(msg.createdAt))
+            .filter((ts) => ts > 0);
 
         return timestamps.length > 0 ? Math.max(...timestamps) : 0;
     }
@@ -299,7 +325,7 @@ export class LeChatConverter {
         try {
             const date = new Date(isoString);
             return Math.floor(date.getTime() / 1000);
-        } catch (error) {
+        } catch {
             return 0;
         }
     }

@@ -1,21 +1,20 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/models/import-report.ts
 import { AttachmentStats, MessageTimestampFormat } from "../types/plugin";
@@ -72,7 +71,8 @@ export class ImportReport {
     private fileStats?: Map<string, any>; // Store file analysis stats for duplicate counting
     private analysisInfo?: any; // Store analysis info for completion stats
     private customTimestampFormat?: MessageTimestampFormat; // Custom format for report dates
-    private ignoredArchiveDetails: Map<string, IgnoredArchiveDetail> = new Map();
+    private ignoredArchiveDetails: Map<string, IgnoredArchiveDetail> =
+        new Map();
 
     /**
      * Start a new file section for multi-file imports
@@ -90,8 +90,8 @@ export class ImportReport {
                     totalConversationsProcessed: 0,
                     totalNewConversationsSuccessfullyImported: 0,
                     totalConversationsActuallyUpdated: 0,
-                    totalNonEmptyMessagesAdded: 0
-                }
+                    totalNonEmptyMessagesAdded: 0,
+                },
             });
         }
     }
@@ -130,8 +130,8 @@ export class ImportReport {
     private getTotalAttachmentStats(): AttachmentStats {
         const total = { total: 0, found: 0, missing: 0, failed: 0 };
 
-        this.fileSections.forEach(section => {
-            [...section.created, ...section.updated].forEach(entry => {
+        this.fileSections.forEach((section) => {
+            [...section.created, ...section.updated].forEach((entry) => {
                 // Count regular attachments (uploaded files)
                 if (entry.attachmentStats) {
                     total.total += entry.attachmentStats.total;
@@ -151,10 +151,12 @@ export class ImportReport {
         return total;
     }
 
-    private getFileSectionAttachmentStats(section: FileSection): AttachmentStats {
+    private getFileSectionAttachmentStats(
+        section: FileSection
+    ): AttachmentStats {
         const total = { total: 0, found: 0, missing: 0, failed: 0 };
 
-        [...section.created, ...section.updated].forEach(entry => {
+        [...section.created, ...section.updated].forEach((entry) => {
             // Count regular attachments (uploaded files)
             if (entry.attachmentStats) {
                 total.total += entry.attachmentStats.total;
@@ -181,7 +183,7 @@ export class ImportReport {
         let totalProcessed = 0;
         let newMessages = 0;
 
-        this.fileSections.forEach(section => {
+        this.fileSections.forEach((section) => {
             created += section.created.length;
             updated += section.updated.length;
             skipped += section.skipped.length;
@@ -190,34 +192,107 @@ export class ImportReport {
             newMessages += section.counters.totalNonEmptyMessagesAdded;
         });
 
-        return { created, updated, skipped, failed, totalProcessed, newMessages };
+        return {
+            created,
+            updated,
+            skipped,
+            failed,
+            totalProcessed,
+            newMessages,
+        };
     }
 
-    addCreated(title: string, filePath: string, createTime: number, updateTime: number, messageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+    addCreated(
+        title: string,
+        filePath: string,
+        createTime: number,
+        updateTime: number,
+        messageCount: number,
+        attachmentStats?: AttachmentStats,
+        providerSpecificCount?: number
+    ) {
         const section = this.getCurrentSection();
         if (section) {
-            section.created.push({ title, filePath, createTime, updateTime, messageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            section.created.push({
+                title,
+                filePath,
+                createTime,
+                updateTime,
+                messageCount,
+                attachmentStats,
+                providerSpecificCount,
+                sourceFile: this.currentFileName,
+            });
         }
     }
 
-    addUpdated(title: string, filePath: string, createTime: number, updateTime: number, newMessageCount: number, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+    addUpdated(
+        title: string,
+        filePath: string,
+        createTime: number,
+        updateTime: number,
+        newMessageCount: number,
+        attachmentStats?: AttachmentStats,
+        providerSpecificCount?: number
+    ) {
         const section = this.getCurrentSection();
         if (section) {
-            section.updated.push({ title, filePath, createTime, updateTime, newMessageCount, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            section.updated.push({
+                title,
+                filePath,
+                createTime,
+                updateTime,
+                newMessageCount,
+                attachmentStats,
+                providerSpecificCount,
+                sourceFile: this.currentFileName,
+            });
         }
     }
 
-    addSkipped(title: string, filePath: string, createTime: number, updateTime: number, messageCount: number, reason: string, attachmentStats?: AttachmentStats, providerSpecificCount?: number) {
+    addSkipped(
+        title: string,
+        filePath: string,
+        createTime: number,
+        updateTime: number,
+        messageCount: number,
+        reason: string,
+        attachmentStats?: AttachmentStats,
+        providerSpecificCount?: number
+    ) {
         const section = this.getCurrentSection();
         if (section) {
-            section.skipped.push({ title, filePath, createTime, updateTime, messageCount, reason, attachmentStats, providerSpecificCount, sourceFile: this.currentFileName });
+            section.skipped.push({
+                title,
+                filePath,
+                createTime,
+                updateTime,
+                messageCount,
+                reason,
+                attachmentStats,
+                providerSpecificCount,
+                sourceFile: this.currentFileName,
+            });
         }
     }
 
-    addFailed(title: string, filePath: string, createTime: number, updateTime: number, errorMessage: string) {
+    addFailed(
+        title: string,
+        filePath: string,
+        createTime: number,
+        updateTime: number,
+        errorMessage: string
+    ) {
         const section = this.getCurrentSection();
         if (section) {
-            section.failed.push({ title, filePath, createTime, updateTime, errorMessage, sourceFile: this.currentFileName });
+            section.failed.push({
+                title,
+                filePath,
+                createTime,
+                updateTime,
+                errorMessage,
+                sourceFile: this.currentFileName,
+            });
         }
     }
 
@@ -237,7 +312,9 @@ export class ImportReport {
     ): string {
         const stats = this.getGlobalStats();
         const totalAttachments = this.getTotalAttachmentStats();
-        const totalFilesAnalyzed = allFiles ? allFiles.length : this.fileSections.size;
+        const totalFilesAnalyzed = allFiles
+            ? allFiles.length
+            : this.fileSections.size;
         const processedSet = new Set(processedFiles || []);
         const skippedSet = new Set(skippedFiles || []);
 
@@ -268,12 +345,26 @@ export class ImportReport {
         lines.push("| --- | ---: |");
         lines.push(`| Created | ${stats.created} |`);
         lines.push(`| Updated | ${stats.updated} |`);
-        lines.push(`| Skipped | ${analysisInfo?.conversationsIgnored ?? stats.skipped} |`);
+        lines.push(
+            `| Skipped | ${
+                analysisInfo?.conversationsIgnored ?? stats.skipped
+            } |`
+        );
         lines.push(`| Failed | ${stats.failed} |`);
         if (analysisInfo) {
-            lines.push(`| Found (raw) | ${analysisInfo.totalConversationsFound || 0} |`);
-            lines.push(`| Kept (unique) | ${analysisInfo.uniqueConversationsKept || 0} |`);
-            lines.push(`| Duplicates removed | ${analysisInfo.duplicatesRemoved || 0} |`);
+            lines.push(
+                `| Found (raw) | ${analysisInfo.totalConversationsFound || 0} |`
+            );
+            lines.push(
+                `| Kept (unique) | ${
+                    analysisInfo.uniqueConversationsKept || 0
+                } |`
+            );
+            lines.push(
+                `| Duplicates removed | ${
+                    analysisInfo.duplicatesRemoved || 0
+                } |`
+            );
         }
         lines.push("");
 
@@ -281,32 +372,53 @@ export class ImportReport {
         lines.push("");
         lines.push("| Metric | Value |");
         lines.push("| --- | ---: |");
-        lines.push(`| Extracted | ${totalAttachments.found}/${totalAttachments.total} |`);
+        lines.push(
+            `| Extracted | ${totalAttachments.found}/${totalAttachments.total} |`
+        );
         lines.push(`| Missing | ${totalAttachments.missing} |`);
         lines.push(`| Failed | ${totalAttachments.failed} |`);
         lines.push("");
 
         if (allFiles && allFiles.length > 0) {
-            const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
+            const sortedFiles = [...allFiles].sort(
+                (a, b) => a.lastModified - b.lastModified
+            );
             lines.push("## Archives");
             lines.push("");
-            lines.push("| Archive | Status | Reason | Conversations | Selected | Created | Updated | Failed | Duplicates |");
-            lines.push("| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |");
+            lines.push(
+                "| Archive | Status | Reason | Conversations | Selected | Created | Updated | Failed | Duplicates |"
+            );
+            lines.push(
+                "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |"
+            );
 
             for (const file of sortedFiles) {
                 const section = this.fileSections.get(file.name);
                 const perFileStats = fileStats?.get(file.name);
-                const shortName = archiveDisplayNames?.get(file.name) || file.name;
-                const selectedCount = perFileStats?.selectedForImport ?? ((section?.created.length || 0) + (section?.updated.length || 0));
+                const shortName =
+                    archiveDisplayNames?.get(file.name) || file.name;
+                const selectedCount =
+                    perFileStats?.selectedForImport ??
+                    (section?.created.length || 0) +
+                        (section?.updated.length || 0);
                 const createdCount = section?.created.length || 0;
                 const updatedCount = section?.updated.length || 0;
                 const failedCount = section?.failed.length || 0;
                 const duplicateCount = perFileStats?.duplicates ?? 0;
-                const conversationCount = perFileStats?.totalConversations ?? selectedCount;
-                const status = processedSet.has(file.name) ? "processed" : "skipped";
-                const reason = this.buildArchiveReason(file.name, status, isSelectiveImport);
+                const conversationCount =
+                    perFileStats?.totalConversations ?? selectedCount;
+                const status = processedSet.has(file.name)
+                    ? "processed"
+                    : "skipped";
+                const reason = this.buildArchiveReason(
+                    file.name,
+                    status,
+                    isSelectiveImport
+                );
 
-                lines.push(`| \`${shortName}\` | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`);
+                lines.push(
+                    `| \`${shortName}\` | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`
+                );
             }
             lines.push("");
 
@@ -385,7 +497,10 @@ export class ImportReport {
                 lines.push("");
             }
 
-            const sectionContent = this.generateFileContent(section, multipleFiles).trim();
+            const sectionContent = this.generateFileContent(
+                section,
+                multipleFiles
+            ).trim();
             if (sectionContent.length > 0) {
                 lines.push(sectionContent);
                 lines.push("");
@@ -400,16 +515,22 @@ export class ImportReport {
         links?: ReportCrossLinks
     ): string {
         const fileNames = this.getOrderedFileNames(allFiles);
-        const createdOrUpdatedByPath = new Map<string, {
-            title: string;
-            filePath: string;
-            updateTime: number;
-            sourceFile?: string;
-            status: "created" | "updated";
-        }>();
+        const createdOrUpdatedByPath = new Map<
+            string,
+            {
+                title: string;
+                filePath: string;
+                updateTime: number;
+                sourceFile?: string;
+                status: "created" | "updated";
+            }
+        >();
         const failedEntries: ReportEntry[] = [];
 
-        const upsertEntry = (entry: ReportEntry, status: "created" | "updated") => {
+        const upsertEntry = (
+            entry: ReportEntry,
+            status: "created" | "updated"
+        ) => {
             const current = createdOrUpdatedByPath.get(entry.filePath);
             if (!current) {
                 createdOrUpdatedByPath.set(entry.filePath, {
@@ -422,13 +543,21 @@ export class ImportReport {
                 return;
             }
 
-            const shouldRefreshMetadata = entry.updateTime >= current.updateTime;
+            const shouldRefreshMetadata =
+                entry.updateTime >= current.updateTime;
             createdOrUpdatedByPath.set(entry.filePath, {
                 title: shouldRefreshMetadata ? entry.title : current.title,
                 filePath: current.filePath,
-                updateTime: shouldRefreshMetadata ? entry.updateTime : current.updateTime,
-                sourceFile: shouldRefreshMetadata ? entry.sourceFile : current.sourceFile,
-                status: current.status === "updated" || status === "updated" ? "updated" : "created",
+                updateTime: shouldRefreshMetadata
+                    ? entry.updateTime
+                    : current.updateTime,
+                sourceFile: shouldRefreshMetadata
+                    ? entry.sourceFile
+                    : current.sourceFile,
+                status:
+                    current.status === "updated" || status === "updated"
+                        ? "updated"
+                        : "created",
             });
         };
 
@@ -451,13 +580,23 @@ export class ImportReport {
         const indexedEntries = Array.from(createdOrUpdatedByPath.values());
         const createdEntries = indexedEntries
             .filter((entry) => entry.status === "created")
-            .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+            .sort((a, b) =>
+                a.title.localeCompare(b.title, undefined, {
+                    sensitivity: "base",
+                })
+            );
         const updatedEntries = indexedEntries
             .filter((entry) => entry.status === "updated")
-            .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+            .sort((a, b) =>
+                a.title.localeCompare(b.title, undefined, {
+                    sensitivity: "base",
+                })
+            );
 
         const sortedAllEntries = [...indexedEntries].sort((a, b) => {
-            return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+            return a.title.localeCompare(b.title, undefined, {
+                sensitivity: "base",
+            });
         });
 
         const lines: string[] = [];
@@ -505,12 +644,20 @@ export class ImportReport {
         }
 
         if (failedEntries.length > 0) {
-            const sortedFailures = [...failedEntries].sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+            const sortedFailures = [...failedEntries].sort((a, b) =>
+                a.title.localeCompare(b.title, undefined, {
+                    sensitivity: "base",
+                })
+            );
             lines.push("## Failed");
             lines.push("");
             for (const entry of sortedFailures) {
                 const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
-                lines.push(`- ${sanitizedTitle} — ${entry.errorMessage || "Unknown error"}`);
+                lines.push(
+                    `- ${sanitizedTitle} — ${
+                        entry.errorMessage || "Unknown error"
+                    }`
+                );
             }
             lines.push("");
         }
@@ -529,11 +676,23 @@ export class ImportReport {
         let content = "# Nexus AI Chat Importer Report\n\n";
 
         // Generate global summary
-        content += this.generateGlobalSummary(allFiles, processedFiles, skippedFiles, analysisInfo, fileStats, isSelectiveImport) + "\n\n";
+        content +=
+            this.generateGlobalSummary(
+                allFiles,
+                processedFiles,
+                skippedFiles,
+                analysisInfo,
+                fileStats,
+                isSelectiveImport
+            ) + "\n\n";
 
         // Show skipped files section if any
         if (skippedFiles && skippedFiles.length > 0) {
-            content += this.generateSkippedFilesSection(skippedFiles, isSelectiveImport) + "\n\n";
+            content +=
+                this.generateSkippedFilesSection(
+                    skippedFiles,
+                    isSelectiveImport
+                ) + "\n\n";
         }
 
         // Generate section for each file
@@ -542,7 +701,8 @@ export class ImportReport {
         if (fileNames.length === 0) {
             // No files were processed
             content += "## Result\n\n";
-            content += "No conversations were imported. All conversations are already up to date.\n\n";
+            content +=
+                "No conversations were imported. All conversations are already up to date.\n\n";
         } else if (fileNames.length === 1) {
             // Single file import - use simplified format
             const section = this.fileSections.get(fileNames[0])!;
@@ -576,7 +736,9 @@ export class ImportReport {
             return Array.from(this.fileSections.keys());
         }
 
-        const sortedFiles = [...allFiles].sort((a, b) => a.lastModified - b.lastModified);
+        const sortedFiles = [...allFiles].sort(
+            (a, b) => a.lastModified - b.lastModified
+        );
         const orderedNames: string[] = [];
 
         for (const file of sortedFiles) {
@@ -588,7 +750,10 @@ export class ImportReport {
         return orderedNames;
     }
 
-    private generateSkippedFilesSection(skippedFiles: string[], isSelectiveImport?: boolean): string {
+    private generateSkippedFilesSection(
+        skippedFiles: string[],
+        isSelectiveImport?: boolean
+    ): string {
         const title = isSelectiveImport
             ? "⏭️ Skipped Files (No Selected Conversations)"
             : "⏭️ Skipped Files (Already Up to Date)";
@@ -605,8 +770,12 @@ export class ImportReport {
         section += `> <details>\n`;
         section += `> <summary>View file list</summary>\n`;
         section += `> \n`;
-        skippedFiles.forEach(fileName => {
-            const reason = this.buildArchiveReason(fileName, "skipped", isSelectiveImport);
+        skippedFiles.forEach((fileName) => {
+            const reason = this.buildArchiveReason(
+                fileName,
+                "skipped",
+                isSelectiveImport
+            );
             section += `> - \`${fileName}\` — ${reason}\n`;
         });
         section += `> \n`;
@@ -625,10 +794,6 @@ export class ImportReport {
     ): string {
         const stats = this.getGlobalStats();
         const totalAttachments = this.getTotalAttachmentStats();
-        const fileCount = this.fileSections.size;
-        const totalFilesAnalyzed = allFiles ? allFiles.length : fileCount;
-        const filesSkipped = skippedFiles ? skippedFiles.length : 0;
-
         let summary = `## 📊 Import Summary\n\n`;
 
         // Files analyzed table - show all files with their status
@@ -646,10 +811,10 @@ export class ImportReport {
             const fileInfos: FileInfo[] = [];
 
             // Add all files
-            allFiles.forEach(file => {
+            allFiles.forEach((file) => {
                 fileInfos.push({
                     name: file.name,
-                    file: file
+                    file: file,
                 });
             });
 
@@ -661,7 +826,7 @@ export class ImportReport {
             });
 
             // Generate table rows using fileStats
-            fileInfos.forEach(info => {
+            fileInfos.forEach((info) => {
                 const stats = fileStats?.get(info.name);
                 const section = this.fileSections.get(info.name);
 
@@ -687,14 +852,22 @@ export class ImportReport {
             summary += `> \n`;
             summary += `> | Metric | Count |\n`;
             summary += `> |:---|---:|\n`;
-            summary += `> | Total Conversations Found | ${analysisInfo.totalConversationsFound || 0} |\n`;
-            summary += `> | Unique Conversations | ${analysisInfo.uniqueConversationsKept || 0} |\n`;
+            summary += `> | Total Conversations Found | ${
+                analysisInfo.totalConversationsFound || 0
+            } |\n`;
+            summary += `> | Unique Conversations | ${
+                analysisInfo.uniqueConversationsKept || 0
+            } |\n`;
             if (analysisInfo.duplicatesRemoved > 0) {
                 summary += `> | Duplicates Removed | ${analysisInfo.duplicatesRemoved} |\n`;
             }
             summary += `> | New | ${analysisInfo.conversationsNew || 0} |\n`;
-            summary += `> | Updated | ${analysisInfo.conversationsUpdated || 0} |\n`;
-            summary += `> | Skipped | ${analysisInfo.conversationsIgnored || 0} |\n`;
+            summary += `> | Updated | ${
+                analysisInfo.conversationsUpdated || 0
+            } |\n`;
+            summary += `> | Skipped | ${
+                analysisInfo.conversationsIgnored || 0
+            } |\n`;
             summary += `\n`;
         }
 
@@ -702,7 +875,9 @@ export class ImportReport {
         summary += `### 📥 Import Summary\n\n`;
         summary += `| Category | Count |\n`;
         summary += `|:---|---:|\n`;
-        summary += `| **Total Imported** | **${stats.created + stats.updated}** |\n`;
+        summary += `| **Total Imported** | **${
+            stats.created + stats.updated
+        }** |\n`;
         summary += `| ✨ Created | ${stats.created} |\n`;
         summary += `| 🔄 Updated | ${stats.updated}`;
         if (stats.newMessages > 0) {
@@ -711,7 +886,14 @@ export class ImportReport {
         summary += ` |\n`;
 
         if (stats.skipped > 0) {
-            summary += `| ⏭️ Skipped (unchanged) | ${stats.skipped} |\n`;
+            const emptyCount = this.getEmptyConversationsCount();
+            const unchangedCount = stats.skipped - emptyCount;
+            if (unchangedCount > 0) {
+                summary += `| ⏭️ Skipped (unchanged) | ${unchangedCount} |\n`;
+            }
+            if (emptyCount > 0) {
+                summary += `| ⚠️ Skipped (no exportable content) | ${emptyCount} |\n`;
+            }
         }
         if (stats.failed > 0) {
             summary += `| ❌ Failed | ${stats.failed} |\n`;
@@ -721,8 +903,12 @@ export class ImportReport {
         }
 
         if (totalAttachments.total > 0) {
-            const attachmentIcon = totalAttachments.found === totalAttachments.total ? '✅' :
-                                   totalAttachments.found === 0 ? '❌' : '⚠️';
+            const attachmentIcon =
+                totalAttachments.found === totalAttachments.total
+                    ? "✅"
+                    : totalAttachments.found === 0
+                    ? "❌"
+                    : "⚠️";
             summary += `| ${attachmentIcon} Attachments | ${totalAttachments.found}/${totalAttachments.total} |\n`;
             if (totalAttachments.missing > 0 || totalAttachments.failed > 0) {
                 summary += `| └─ Missing | ${totalAttachments.missing} |\n`;
@@ -735,9 +921,10 @@ export class ImportReport {
 
     private generateFileSummary(section: FileSection): string {
         const attachmentStats = this.getFileSectionAttachmentStats(section);
-        const attachmentSummary = attachmentStats.total > 0
-            ? `\n- **Attachments**: ${attachmentStats.found}/${attachmentStats.total} extracted`
-            : "";
+        const attachmentSummary =
+            attachmentStats.total > 0
+                ? `\n- **Attachments**: ${attachmentStats.found}/${attachmentStats.total} extracted`
+                : "";
 
         return `### Statistics
 - **Created**: ${section.created.length}
@@ -746,7 +933,10 @@ export class ImportReport {
 - **Failed**: ${section.failed.length}${attachmentSummary}`;
     }
 
-    private generateFileContent(section: FileSection, isMultiFile: boolean): string {
+    private generateFileContent(
+        section: FileSection,
+        isMultiFile: boolean
+    ): string {
         let content = "";
 
         if (section.created.length > 0) {
@@ -761,11 +951,26 @@ export class ImportReport {
             content += this.generateFailedTable(section.failed, isMultiFile);
         }
 
+        const emptyConvs = section.skipped.filter(
+            (e) => e.reason === "Empty conversation"
+        );
+        if (emptyConvs.length > 0) {
+            content += this.generateEmptyConversationsTable(
+                emptyConvs,
+                isMultiFile
+            );
+        }
+
         return content;
     }
 
-    private generateCreatedTable(entries: ReportEntry[], isMultiFile: boolean): string {
-        const header = isMultiFile ? "### ✨ Created Notes" : "## ✨ Created Notes";
+    private generateCreatedTable(
+        entries: ReportEntry[],
+        isMultiFile: boolean
+    ): string {
+        const header = isMultiFile
+            ? "### ✨ Created Notes"
+            : "## ✨ Created Notes";
         let table = `${header}\n\n`;
         table += `| | Title | Created | Messages | ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
@@ -781,19 +986,32 @@ export class ImportReport {
             const providerSpecificValue = entry.providerSpecificCount || 0;
 
             // Format timestamp with custom format or default
-            const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
+            const createDate = formatMessageTimestamp(
+                entry.createTime,
+                this.customTimestampFormat
+            );
 
             // Add green checkmark for artifacts/attachments when > 0
-            const providerSpecificDisplay = providerSpecificValue > 0 ? `✅ ${providerSpecificValue}` : providerSpecificValue;
+            const providerSpecificDisplay =
+                providerSpecificValue > 0
+                    ? `✅ ${providerSpecificValue}`
+                    : providerSpecificValue;
 
-            table += `| ✨ | ${titleLink} | ${createDate} | ${entry.messageCount || 0} | ${providerSpecificDisplay} |\n`;
+            table += `| ✨ | ${titleLink} | ${createDate} | ${
+                entry.messageCount || 0
+            } | ${providerSpecificDisplay} |\n`;
         });
 
         return table + "\n\n";
     }
 
-    private generateUpdatedTable(entries: ReportEntry[], isMultiFile: boolean): string {
-        const header = isMultiFile ? "### 🔄 Updated Notes" : "## 🔄 Updated Notes";
+    private generateUpdatedTable(
+        entries: ReportEntry[],
+        isMultiFile: boolean
+    ): string {
+        const header = isMultiFile
+            ? "### 🔄 Updated Notes"
+            : "## 🔄 Updated Notes";
         let table = `${header}\n\n`;
         table += `| | Title | Updated | New Messages | New ${this.providerSpecificColumnHeader} |\n`;
         table += "|:---:|:---|:---:|:---:|:---:|\n";
@@ -809,19 +1027,32 @@ export class ImportReport {
             const providerSpecificValue = entry.providerSpecificCount || 0;
 
             // Format timestamp with custom format or default
-            const updateDate = formatMessageTimestamp(entry.updateTime, this.customTimestampFormat);
+            const updateDate = formatMessageTimestamp(
+                entry.updateTime,
+                this.customTimestampFormat
+            );
 
             // Add green checkmark for artifacts/attachments when > 0
-            const providerSpecificDisplay = providerSpecificValue > 0 ? `✅ ${providerSpecificValue}` : providerSpecificValue;
+            const providerSpecificDisplay =
+                providerSpecificValue > 0
+                    ? `✅ ${providerSpecificValue}`
+                    : providerSpecificValue;
 
-            table += `| 🔄 | ${titleLink} | ${updateDate} | ${entry.newMessageCount || 0} | ${providerSpecificDisplay} |\n`;
+            table += `| 🔄 | ${titleLink} | ${updateDate} | ${
+                entry.newMessageCount || 0
+            } | ${providerSpecificDisplay} |\n`;
         });
 
         return table + "\n\n";
     }
 
-    private generateFailedTable(entries: ReportEntry[], isMultiFile: boolean): string {
-        const header = isMultiFile ? "### 🚫 Failed Imports" : "## 🚫 Failed Imports";
+    private generateFailedTable(
+        entries: ReportEntry[],
+        isMultiFile: boolean
+    ): string {
+        const header = isMultiFile
+            ? "### 🚫 Failed Imports"
+            : "## 🚫 Failed Imports";
         let table = `${header}\n\n`;
         table += "| | Title | Date | Error |\n";
         table += "|:---:|:---|:---:|:---|\n";
@@ -834,8 +1065,48 @@ export class ImportReport {
         sortedEntries.forEach((entry) => {
             const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
             // Format timestamp with custom format or default
-            const createDate = formatMessageTimestamp(entry.createTime, this.customTimestampFormat);
-            table += `| 🚫 | ${sanitizedTitle} | ${createDate} | ${entry.errorMessage || "Unknown error"} |\n`;
+            const createDate = formatMessageTimestamp(
+                entry.createTime,
+                this.customTimestampFormat
+            );
+            table += `| 🚫 | ${sanitizedTitle} | ${createDate} | ${
+                entry.errorMessage || "Unknown error"
+            } |\n`;
+        });
+
+        return table + "\n\n";
+    }
+
+    private generateEmptyConversationsTable(
+        entries: ReportEntry[],
+        isMultiFile: boolean
+    ): string {
+        const header = isMultiFile
+            ? "### ⚠️ Skipped — No Exportable Content"
+            : "## ⚠️ Skipped — No Exportable Content";
+        let table = `${header}\n\n`;
+        table +=
+            "> These conversations exist in the export but contain no importable text. This typically happens when Claude did not include message content in the export (interrupted sessions, artifact-only interactions).\n\n";
+        table += "| | Title | Created | Updated |\n";
+        table += "|:---:|:---|:---:|:---:|\n";
+
+        const sortedEntries = [...entries].sort(
+            (a, b) => a.createTime - b.createTime
+        );
+
+        sortedEntries.forEach((entry) => {
+            const sanitizedTitle = (entry.title || entry.filePath)
+                .replace(/\n/g, " ")
+                .trim();
+            const createDate = formatMessageTimestamp(
+                entry.createTime,
+                this.customTimestampFormat
+            );
+            const updateDate = formatMessageTimestamp(
+                entry.updateTime,
+                this.customTimestampFormat
+            );
+            table += `| ⚠️ | ${sanitizedTitle} | ${createDate} | ${updateDate} |\n`;
         });
 
         return table + "\n\n";
@@ -845,11 +1116,11 @@ export class ImportReport {
         let table = `## ⚠️ Global Errors\n\n`;
         table += "| | Error | Details |\n";
         table += "|:---:|:---|:---|\n";
-        
+
         this.globalErrors.forEach((entry) => {
             table += `| ⚠️ | ${entry.message} | ${entry.details} |\n`;
         });
-        
+
         return table + "\n\n";
     }
 
@@ -858,8 +1129,8 @@ export class ImportReport {
             return "0";
         }
 
-        const { total, found, missing, failed } = stats;
-        
+        const { total, found } = stats;
+
         if (found === total) {
             return `✅ ${found}`;
         } else if (found === 0) {
@@ -871,7 +1142,7 @@ export class ImportReport {
 
     hasErrors(): boolean {
         let hasFailed = false;
-        this.fileSections.forEach(section => {
+        this.fileSections.forEach((section) => {
             if (section.failed.length > 0) {
                 hasFailed = true;
             }
@@ -881,7 +1152,7 @@ export class ImportReport {
 
     getCreatedCount(): number {
         let count = 0;
-        this.fileSections.forEach(section => {
+        this.fileSections.forEach((section) => {
             count += section.created.length;
         });
         return count;
@@ -889,7 +1160,7 @@ export class ImportReport {
 
     getUpdatedCount(): number {
         let count = 0;
-        this.fileSections.forEach(section => {
+        this.fileSections.forEach((section) => {
             count += section.updated.length;
         });
         return count;
@@ -897,7 +1168,7 @@ export class ImportReport {
 
     getSkippedCount(): number {
         let count = 0;
-        this.fileSections.forEach(section => {
+        this.fileSections.forEach((section) => {
             count += section.skipped.length;
         });
         return count;
@@ -905,8 +1176,18 @@ export class ImportReport {
 
     getFailedCount(): number {
         let count = 0;
-        this.fileSections.forEach(section => {
+        this.fileSections.forEach((section) => {
             count += section.failed.length;
+        });
+        return count;
+    }
+
+    getEmptyConversationsCount(): number {
+        let count = 0;
+        this.fileSections.forEach((section) => {
+            count += section.skipped.filter(
+                (e) => e.reason === "Empty conversation"
+            ).length;
         });
         return count;
     }
@@ -939,7 +1220,7 @@ export class ImportReport {
         if (!this.fileStats) return 0;
 
         let totalDuplicates = 0;
-        this.fileStats.forEach(stats => {
+        this.fileStats.forEach((stats) => {
             totalDuplicates += stats.duplicates || 0;
         });
         return totalDuplicates;
@@ -953,9 +1234,13 @@ export class ImportReport {
         const attachmentStats = this.getTotalAttachmentStats();
 
         // Use analysisInfo for accurate counts if available
-        const totalConversations = this.analysisInfo?.uniqueConversationsKept ?? globalStats.totalProcessed;
-        const duplicates = this.analysisInfo?.duplicatesRemoved ?? this.getTotalDuplicates();
-        const skipped = this.analysisInfo?.conversationsIgnored ?? globalStats.skipped;
+        const totalConversations =
+            this.analysisInfo?.uniqueConversationsKept ??
+            globalStats.totalProcessed;
+        const duplicates =
+            this.analysisInfo?.duplicatesRemoved ?? this.getTotalDuplicates();
+        const skipped =
+            this.analysisInfo?.conversationsIgnored ?? globalStats.skipped;
 
         return {
             totalFiles: this.fileSections.size,
@@ -964,11 +1249,12 @@ export class ImportReport {
             created: globalStats.created,
             updated: globalStats.updated,
             skipped: skipped,
+            emptyConversations: this.getEmptyConversationsCount(),
             failed: globalStats.failed,
             attachmentsFound: attachmentStats.found,
             attachmentsTotal: attachmentStats.total,
             attachmentsMissing: attachmentStats.missing,
-            attachmentsFailed: attachmentStats.failed
+            attachmentsFailed: attachmentStats.failed,
         };
     }
 
@@ -990,10 +1276,14 @@ export class ImportReport {
 
         const ignored = this.ignoredArchiveDetails.get(fileName);
         if (ignored) {
-            return `${this.formatIgnoredArchiveReason(ignored.reason)}: ${ignored.message}`;
+            return `${this.formatIgnoredArchiveReason(ignored.reason)}: ${
+                ignored.message
+            }`;
         }
 
-        return isSelectiveImport ? "no selected conversations" : "no importable conversations";
+        return isSelectiveImport
+            ? "no selected conversations"
+            : "no importable conversations";
     }
 
     private formatIgnoredArchiveReason(reason: string): string {

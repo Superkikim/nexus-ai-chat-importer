@@ -1,7 +1,7 @@
 // src/ui/settings/conversation-settings-section.ts
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
-import { t } from '../../i18n';
+import { t } from "../../i18n";
 
 export class ConversationSettingsSection extends BaseSettingsSection {
     readonly title = "Conversation Settings";
@@ -10,7 +10,9 @@ export class ConversationSettingsSection extends BaseSettingsSection {
     render(containerEl: HTMLElement): void {
         new Setting(containerEl)
             .setName("Conversations folder")
-            .setDesc("Choose a folder to store AI chat conversations and import reports")
+            .setDesc(
+                "Choose a folder to store AI chat conversations and import reports"
+            )
             .addText((text) =>
                 text
                     .setPlaceholder("Enter folder name")
@@ -24,8 +26,8 @@ export class ConversationSettingsSection extends BaseSettingsSection {
             );
 
         new Setting(containerEl)
-            .setName(t('settings.display.add_date_prefix.name'))
-            .setDesc(t('settings.display.add_date_prefix.desc'))
+            .setName(t("settings.display.add_date_prefix.name"))
+            .setDesc(t("settings.display.add_date_prefix.desc"))
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.addDatePrefix)
@@ -40,14 +42,19 @@ export class ConversationSettingsSection extends BaseSettingsSection {
             new Setting(containerEl)
                 .setName("Date format")
                 .setDesc("Choose the format for the date prefix")
+                /* eslint-disable obsidianmd/ui/sentence-case */
                 .addDropdown((dropdown) =>
                     dropdown
                         .addOption("YYYY-MM-DD", "YYYY-MM-DD")
                         .addOption("YYYYMMDD", "YYYYMMDD")
+                        /* eslint-enable obsidianmd/ui/sentence-case */
                         .setValue(this.plugin.settings.dateFormat)
                         .onChange(async (value: string) => {
-                            if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {
-                                this.plugin.settings.dateFormat = value as "YYYY-MM-DD" | "YYYYMMDD";
+                            if (
+                                value === "YYYY-MM-DD" ||
+                                value === "YYYYMMDD"
+                            ) {
+                                this.plugin.settings.dateFormat = value;
                                 await this.plugin.saveSettings();
                             }
                         })

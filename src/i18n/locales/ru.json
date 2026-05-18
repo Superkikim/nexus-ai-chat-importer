@@ -1,524 +1,524 @@
 {
-  "common": {
-    "buttons": {
-      "cancel": "Отмена",
-      "ok": "ОК",
-      "select": "Выбрать",
-      "browse": "Обзор",
-      "continue": "Продолжить",
-      "proceed": "Выполнить",
-      "close": "Понятно!",
-      "create": "Создать",
-      "remove": "Удалить",
-      "run": "Запустить",
-      "complete": "Завершить",
-      "view_report": "Просмотреть отчёт",
-      "get_started": "Начать",
-      "create_new_folder": "Создать новую папку"
-    },
-    "status": {
-      "new": "Новый",
-      "updated": "Обновлён",
-      "unchanged": "Без изменений",
-      "unknown": "Неизвестно"
-    },
-    "progress": {
-      "phase_validation": "🔍 Проверка",
-      "phase_scanning": "📋 Сканирование",
-      "phase_processing": "⚙️ Обработка",
-      "phase_writing": "💾 Запись",
-      "phase_complete": "✅ Завершено",
-      "phase_error": "❌ Ошибка"
-    }
-  },
-  "provider_selection": {
-    "title": "Выберите поставщика архива",
-    "providers": {
-      "chatgpt": {
-        "name": "ChatGPT",
-        "description": "Экспорт разговоров OpenAI ChatGPT",
-        "file_formats_0": "conversations.json (старый формат) или файлы conversations-XXX.json"
-      },
-      "claude": {
-        "name": "Claude",
-        "description": "Экспорт разговоров Anthropic Claude",
-        "file_formats_0": "conversations.json + users.json",
-        "file_formats_1": "projects.json (необязательно)"
-      },
-      "lechat": {
-        "name": "Le Chat",
-        "description": "Экспорт разговоров Mistral AI Le Chat",
-        "file_formats_0": "файлы chat-<uuid>.json"
-      },
-      "perplexity": {
-        "name": "Perplexity",
-        "description": "JSON-архивы Perplexity Thread Exporter",
-        "file_formats_0": "файлы perplexity_*.json (metadata + conversations[] | status + entries[])"
-      }
-    },
-    "buttons": {
-      "select": "Выбрать",
-      "cancel": "Отмена"
-    }
-  },
-  "file_selection": {
-    "title": "Импорт разговоров {{provider}}",
-    "import_mode": {
-      "section_title": "Режим импорта",
-      "all_label": "Импортировать всё",
-      "all_description": "Импортировать все разговоры (быстрее)",
-      "selective_label": "Выборочный выбор",
-      "selective_description": "Предварительный просмотр и выбор разговоров"
-    },
-    "file_area": {
-      "section_title": "Выбор файлов",
-      "drop_text_default": "Перетащите ZIP-файлы сюда или нажмите для выбора",
-      "drop_text_gemini": "Перетащите ZIP- и JSON-файлы сюда или нажмите для выбора",
-      "drop_subtext_default": "Поддерживается выбор нескольких файлов",
-      "drop_subtext_gemini": "ZIP (Takeout) + необязательный JSON (индекс из расширения)"
-    },
-    "selected_files": {
-      "section_title": "Выбранные файлы",
-      "remove_button": "Удалить"
-    },
-    "buttons": {
-      "cancel": "Отмена",
-      "continue": "Продолжить"
-    }
-  },
-  "conversation_selection": {
-    "title": "Выберите разговоры для импорта",
-    "controls": {
-      "select_all": "Выбрать всё",
-      "select_none": "Снять выбор",
-      "search_placeholder": "Поиск разговоров...",
-      "status_label": "Статус:",
-      "show_label": "Показать:",
-      "existing_only_label": "Показывать только существующие беседы",
-      "existing_only_help": "При выборе существующей беседы соответствующая заметка будет перезаписана и обработана заново."
-    },
-    "status_filter_options": {
-      "all": "Все",
-      "new": "Новые",
-      "updated": "Обновлённые",
-      "unchanged": "Без изменений"
-    },
-    "table_headers": {
-      "title": "Заголовок",
-      "created": "Создан",
-      "updated": "Обновлён",
-      "messages": "Сообщения",
-      "status": "Статус"
-    },
-    "status_badges": {
-      "new": "Новый",
-      "updated": "Обновлён",
-      "unchanged": "Без изменений",
-      "unknown": "Неизвестно",
-      "tooltip_new": "Этого разговора нет в вашем хранилище",
-      "tooltip_updated": "Этот разговор содержит более новые данные, чем в хранилище ({{existing_date}} → {{new_date}})",
-      "tooltip_unchanged": "Этот разговор совпадает с версией в хранилище"
-    },
-    "pagination": {
-      "showing": "Показаны {{start}}–{{end}} из {{total}} разговоров",
-      "page_of": "Страница {{current}} из {{total}}",
-      "previous": "Назад",
-      "next": "Далее"
-    },
-    "summary": {
-      "unique_conversations": "Уникальные разговоры",
-      "new": "Новые",
-      "updated": "Обновлённые",
-      "unchanged": "Без изменений",
-      "selected_of": "{{selected}} из {{total}} выбрано"
-    },
-    "buttons": {
-      "cancel": "Отмена",
-      "import_selected": "Импортировать выбранные",
-      "import_selected_count": "Импортировать {{count}} выбранных"
-    },
-    "date_unknown": "Неизвестно"
-  },
-  "import_progress": {
-    "title": "Импорт {{filename}}",
-    "initial": {
-      "title": "Подготовка импорта...",
-      "detail": "Проверка структуры ZIP-файла"
-    },
-    "conversation_counter": "{{current}}/{{total}} разговоров",
-    "conversation_counter_selective": "{{current}}/{{total}} выбранных разговоров",
-    "selective_mode_indicator": "📋 Выборочный импорт: {{selected}} из {{total}} разговоров",
-    "complete": {
-      "message": "Импорт успешно завершён",
-      "detail": "Вы можете закрыть это окно"
-    },
-    "error": {
-      "message": "В процессе импорта произошла ошибка",
-      "detail": "Проверьте консоль для получения подробной информации"
-    }
-  },
-  "import_completion": {
-    "title": "Импорт завершён",
-    "success_message": "✅ Разговоры успешно импортированы",
-    "stats": {
-      "zip_files_processed": "Обработано ZIP-файлов",
-      "unique_conversations": "Уникальных разговоров",
-      "duplicates": "Дубликаты",
-      "new": "Новые",
-      "updated": "Обновлённые",
-      "skipped": "Пропущено",
-      "failed": "Ошибка"
-    },
-    "attachments": {
-      "label": "Вложения:",
-      "summary": "{{found}}/{{total}} извлечено ({{percentage}}%)",
-      "missing_failed": "{{missing}} отсутствует, {{failed}} с ошибками"
-    },
-    "report": {
-      "label": "📄 Подробный отчёт:"
-    },
-    "buttons": {
-      "view_report": "Просмотреть отчёт",
-      "ok": "ОК"
-    }
-  },
-  "settings": {
-    "tab_title": "Nexus AI Chat Importer",
-    "folders": {
-      "section_title": "📁 Структура папок",
-      "conversation_folder": {
-        "name": "Папка разговоров",
-        "desc": "Место хранения импортированных разговоров",
-        "placeholder": "Nexus/Conversations",
-        "browse_tooltip": "Обзор папок или создание новой"
-      },
-      "reports_folder": {
-        "name": "Папка отчётов",
-        "desc": "Место хранения отчётов об импорте",
-        "placeholder": "Nexus Reports",
-        "browse_tooltip": "Обзор папок или создание новой"
-      },
-      "attachment_folder": {
-        "name": "Папка вложений",
-        "desc": "Место хранения вложений (⚠️ Исключите из синхронизации для экономии места)",
-        "placeholder": "Nexus/Attachments",
-        "browse_tooltip": "Обзор папок или создание новой"
-      }
-    },
-    "display": {
-      "section_title": "📅 Префикс даты",
-      "add_date_prefix": {
-        "name": "Добавлять префикс даты к именам файлов",
-        "desc": "Добавлять дату создания в качестве префикса к именам файлов разговоров",
-        "format_label": "Выберите формат даты: "
-      }
-    },
-    "timestamps": {
-      "section_title": "📅 Формат даты сообщений",
-      "custom_format": {
-        "name": "Пользовательский формат временных меток сообщений",
-        "desc": "Переопределить стандартный формат временных меток в заголовках сообщений. При отключении временные метки следуют языковым настройкам Obsidian. Если Obsidian настроен на английский язык, используется формат США (YYYY/DD/MM)."
-      },
-      "timestamp_format": {
-        "name": "Формат временной метки",
-        "desc": "Выберите формат временных меток сообщений в заметках разговоров"
-      },
-      "preview_label": "Предпросмотр: "
-    },
-    "attachments": {
-      "section_title": "Настройки вложений",
-      "import_attachments": {
-        "name": "Импортировать вложения",
-        "desc": "Сохранять файлы вложений на диск и добавлять ссылки на них в разговорах (использует стратегию «максимум усилий»)"
-      },
-      "handle_missing": {
-        "name": "Обработка отсутствующих вложений",
-        "desc": "Если вложения отсутствуют в экспорте, создавать информационные заметки вместо их пропуска"
-      },
-      "show_details": {
-        "name": "Показывать детали вложений в отчётах",
-        "desc": "Включать подробную статистику обработки вложений в отчёты об импорте"
-      },
-      "info_box": {
-        "title": "📎 Об обработке вложений",
-        "best_effort": "Стратегия «максимум усилий»: файлы, найденные в экспорте, извлекаются и связываются; для отсутствующих файлов создаются информационные заметки.",
-        "platform_diff": "Различия платформ: экспорты ChatGPT могут не включать все вложения, особенно из старых разговоров.",
-        "organization": "Простая организация: файлы организованы по схеме attachments/provider/category/ (например, attachments/chatgpt/images/).",
-        "sync_tip": "Совет по синхронизации: рассмотрите возможность исключения папки вложений из синхронизации, чтобы избежать загрузки больших файлов.",
-        "tip": "💡 Совет: включите «Показывать детали вложений», чтобы точно видеть, какие файлы были найдены, отсутствовали или не были обработаны во время импорта."
-      }
-    },
-    "migrations": {
-      "section_title": "Миграции",
-      "description_manual": "Ручные операции: необязательные операции обновления, которые можно выполнить в удобное время.",
-      "description_automatic": "Автоматические операции (например, удаление устаревших данных) выполняются автоматически во время обновления и здесь не отображаются.",
-      "version_header": "Версия {{version}}",
-      "no_migrations": {
-        "title": "Нет доступных ручных операций",
-        "desc": "Все операции обновления были выполнены автоматически."
-      },
-      "operation_completed_suffix": " ✅ Завершено",
-      "buttons": {
-        "completed": "✅ Завершено",
-        "cannot_run": "Невозможно выполнить",
-        "run": "Запустить",
-        "running": "Выполняется..."
-      },
-      "tooltips": {
-        "completed": "Эта операция уже выполнена",
-        "cannot_run": "Предварительные условия для этой операции не выполнены",
-        "run": "Выполнить {{operation_name}}"
-      },
-      "error_loading": "Ошибка загрузки миграций:"
-    },
-    "support": {
-      "section_title": "💝 Поддержка и помощь",
-      "resources": {
-        "name": "📚 Ресурсы",
-        "desc": "Документация, примечания к выпуску и ссылки на сообщество",
-        "documentation": "📖 Документация",
-        "release_notes": "📝 История версий",
-        "issues": "🐛 Проблемы",
-        "forum": "💬 Форум"
-      }
-    }
-  },
-  "upgrade": {
-    "progress_modal": {
-      "starting": "Запуск...",
-      "progress_label": "Прогресс: {{percentage}}%",
-      "step_label": "Шаг {{current}}/{{total}}",
-      "complete_label": "Завершено",
-      "complete_message": "Успешно завершено",
-      "error_message": "Произошла ошибка"
-    },
-    "multi_operation_modal": {
-      "progress_label": "Прогресс: {{completed}}/{{total}} операций",
-      "progress_with_failures": "Прогресс: {{completed}}/{{total}} операций ({{failed}} с ошибками)",
-      "all_completed": "Все {{total}} операций успешно завершены",
-      "mark_complete_default": "Все операции успешно завершены",
-      "buttons": {
-        "complete": "Завершить",
-        "close": "Закрыть"
-      }
-    },
-    "modal_130": {
-      "title": "🎉 Nexus AI Chat Importer {{version}}",
-      "migration_section": {
-        "title": "🔄 Требуется миграция",
-        "message": "Следующие задачи будут выполнены автоматически для обновления ваших данных до v1.3.0:",
-        "tasks": {
-          "folder_settings": "✓ Перенос настроек папок в новую структуру",
-          "timestamps": "✓ Обновление временных меток до формата ISO 8601",
-          "aliases": "✓ Исправление псевдонимов frontmatter",
-          "reports": "✓ Перемещение папки отчётов в правильное расположение",
-          "artifacts": "✓ Обновление метаданных артефактов"
+    "common": {
+        "buttons": {
+            "cancel": "Отмена",
+            "ok": "ОК",
+            "select": "Выбрать",
+            "browse": "Обзор",
+            "continue": "Продолжить",
+            "proceed": "Выполнить",
+            "close": "Понятно!",
+            "create": "Создать",
+            "remove": "Удалить",
+            "run": "Запустить",
+            "complete": "Завершить",
+            "view_report": "Просмотреть отчёт",
+            "get_started": "Начать",
+            "create_new_folder": "Создать новую папку"
         },
-        "estimate": "Это займёт несколько секунд."
-      },
-      "buttons": {
-        "run_migration": "🚀 Выполнить задачи миграции"
-      }
+        "status": {
+            "new": "Новый",
+            "updated": "Обновлён",
+            "unchanged": "Без изменений",
+            "unknown": "Неизвестно"
+        },
+        "progress": {
+            "phase_validation": "🔍 Проверка",
+            "phase_scanning": "📋 Сканирование",
+            "phase_processing": "⚙️ Обработка",
+            "phase_writing": "💾 Запись",
+            "phase_complete": "✅ Завершено",
+            "phase_error": "❌ Ошибка"
+        }
     },
-    "complete_modal": {
-      "title": "✅ Обновление завершено — v{{version}}",
-      "fallback_content": "## ✨ Что нового в v{{version}}\n\n### Новое\n- Поддержка Perplexity (импорт ZIP из Perplexity Thread Exporter)\n- Универсальные метаданные frontmatter: `mode` и `models`\n- Автоопределение провайдера теперь включает архивы Perplexity\n\n### Улучшения\n- Совместимость Perplexity с двумя схемами:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- Улучшены подсказки для случая, когда внешний ZIP содержит внутренние ZIP `part*.zip`\n- Улучшена нормализация ID разговоров для снижения риска дубликатов заметок между вариантами схем\n\n### Надёжность\n- Включает улучшения надёжности из 1.5.7 для обработки ZIP и мобильного импорта.",
-      "buttons": {
-        "got_it": "Понятно!"
-      }
+    "provider_selection": {
+        "title": "Выберите поставщика архива",
+        "providers": {
+            "chatgpt": {
+                "name": "ChatGPT",
+                "description": "Экспорт разговоров OpenAI ChatGPT",
+                "file_formats_0": "conversations.json (старый формат) или файлы conversations-XXX.json"
+            },
+            "claude": {
+                "name": "Claude",
+                "description": "Экспорт разговоров Anthropic Claude",
+                "file_formats_0": "conversations.json + users.json",
+                "file_formats_1": "projects.json (необязательно)"
+            },
+            "lechat": {
+                "name": "Le Chat",
+                "description": "Экспорт разговоров Mistral AI Le Chat",
+                "file_formats_0": "файлы chat-<uuid>.json"
+            },
+            "perplexity": {
+                "name": "Perplexity",
+                "description": "JSON-архивы Perplexity Thread Exporter",
+                "file_formats_0": "файлы perplexity_*.json (metadata + conversations[] | status + entries[])"
+            }
+        },
+        "buttons": {
+            "select": "Выбрать",
+            "cancel": "Отмена"
+        }
     },
-    "new_version_modal": {
-      "title": "🎉 Nexus AI Chat Importer {{version}}",
-      "buttons": {
-        "got_it": "Понятно!"
-      }
+    "file_selection": {
+        "title": "Импорт разговоров {{provider}}",
+        "import_mode": {
+            "section_title": "Режим импорта",
+            "all_label": "Импортировать всё",
+            "all_description": "Импортировать все разговоры (быстрее)",
+            "selective_label": "Выборочный выбор",
+            "selective_description": "Предварительный просмотр и выбор разговоров"
+        },
+        "file_area": {
+            "section_title": "Выбор файлов",
+            "drop_text_default": "Перетащите ZIP-файлы сюда или нажмите для выбора",
+            "drop_text_gemini": "Перетащите ZIP- и JSON-файлы сюда или нажмите для выбора",
+            "drop_subtext_default": "Поддерживается выбор нескольких файлов",
+            "drop_subtext_gemini": "ZIP (Takeout) + необязательный JSON (индекс из расширения)"
+        },
+        "selected_files": {
+            "section_title": "Выбранные файлы",
+            "remove_button": "Удалить"
+        },
+        "buttons": {
+            "cancel": "Отмена",
+            "continue": "Продолжить"
+        }
+    },
+    "conversation_selection": {
+        "title": "Выберите разговоры для импорта",
+        "controls": {
+            "select_all": "Выбрать всё",
+            "select_none": "Снять выбор",
+            "search_placeholder": "Поиск разговоров...",
+            "status_label": "Статус:",
+            "show_label": "Показать:",
+            "existing_only_label": "Показывать только существующие беседы",
+            "existing_only_help": "При выборе существующей беседы соответствующая заметка будет перезаписана и обработана заново."
+        },
+        "status_filter_options": {
+            "all": "Все",
+            "new": "Новые",
+            "updated": "Обновлённые",
+            "unchanged": "Без изменений"
+        },
+        "table_headers": {
+            "title": "Заголовок",
+            "created": "Создан",
+            "updated": "Обновлён",
+            "messages": "Сообщения",
+            "status": "Статус"
+        },
+        "status_badges": {
+            "new": "Новый",
+            "updated": "Обновлён",
+            "unchanged": "Без изменений",
+            "unknown": "Неизвестно",
+            "tooltip_new": "Этого разговора нет в вашем хранилище",
+            "tooltip_updated": "Этот разговор содержит более новые данные, чем в хранилище ({{existing_date}} → {{new_date}})",
+            "tooltip_unchanged": "Этот разговор совпадает с версией в хранилище"
+        },
+        "pagination": {
+            "showing": "Показаны {{start}}–{{end}} из {{total}} разговоров",
+            "page_of": "Страница {{current}} из {{total}}",
+            "previous": "Назад",
+            "next": "Далее"
+        },
+        "summary": {
+            "unique_conversations": "Уникальные разговоры",
+            "new": "Новые",
+            "updated": "Обновлённые",
+            "unchanged": "Без изменений",
+            "selected_of": "{{selected}} из {{total}} выбрано"
+        },
+        "buttons": {
+            "cancel": "Отмена",
+            "import_selected": "Импортировать выбранные",
+            "import_selected_count": "Импортировать {{count}} выбранных"
+        },
+        "date_unknown": "Неизвестно"
+    },
+    "import_progress": {
+        "title": "Импорт {{filename}}",
+        "initial": {
+            "title": "Подготовка импорта...",
+            "detail": "Проверка структуры ZIP-файла"
+        },
+        "conversation_counter": "{{current}}/{{total}} разговоров",
+        "conversation_counter_selective": "{{current}}/{{total}} выбранных разговоров",
+        "selective_mode_indicator": "📋 Выборочный импорт: {{selected}} из {{total}} разговоров",
+        "complete": {
+            "message": "Импорт успешно завершён",
+            "detail": "Вы можете закрыть это окно"
+        },
+        "error": {
+            "message": "В процессе импорта произошла ошибка",
+            "detail": "Проверьте консоль для получения подробной информации"
+        }
+    },
+    "import_completion": {
+        "title": "Импорт завершён",
+        "success_message": "✅ Разговоры успешно импортированы",
+        "stats": {
+            "zip_files_processed": "Обработано ZIP-файлов",
+            "unique_conversations": "Уникальных разговоров",
+            "duplicates": "Дубликаты",
+            "new": "Новые",
+            "updated": "Обновлённые",
+            "skipped": "Пропущено",
+            "failed": "Ошибка"
+        },
+        "attachments": {
+            "label": "Вложения:",
+            "summary": "{{found}}/{{total}} извлечено ({{percentage}}%)",
+            "missing_failed": "{{missing}} отсутствует, {{failed}} с ошибками"
+        },
+        "report": {
+            "label": "📄 Подробный отчёт:"
+        },
+        "buttons": {
+            "view_report": "Просмотреть отчёт",
+            "ok": "ОК"
+        }
+    },
+    "settings": {
+        "tab_title": "Nexus AI Chat Importer",
+        "folders": {
+            "section_title": "📁 Структура папок",
+            "conversation_folder": {
+                "name": "Папка разговоров",
+                "desc": "Место хранения импортированных разговоров",
+                "placeholder": "Nexus/Conversations",
+                "browse_tooltip": "Обзор папок или создание новой"
+            },
+            "reports_folder": {
+                "name": "Папка отчётов",
+                "desc": "Место хранения отчётов об импорте",
+                "placeholder": "Nexus Reports",
+                "browse_tooltip": "Обзор папок или создание новой"
+            },
+            "attachment_folder": {
+                "name": "Папка вложений",
+                "desc": "Место хранения вложений (⚠️ Исключите из синхронизации для экономии места)",
+                "placeholder": "Nexus/Attachments",
+                "browse_tooltip": "Обзор папок или создание новой"
+            }
+        },
+        "display": {
+            "section_title": "📅 Префикс даты",
+            "add_date_prefix": {
+                "name": "Добавлять префикс даты к именам файлов",
+                "desc": "Добавлять дату создания в качестве префикса к именам файлов разговоров",
+                "format_label": "Выберите формат даты: "
+            }
+        },
+        "timestamps": {
+            "section_title": "📅 Формат даты сообщений",
+            "custom_format": {
+                "name": "Пользовательский формат временных меток сообщений",
+                "desc": "Переопределить стандартный формат временных меток в заголовках сообщений. При отключении временные метки следуют языковым настройкам Obsidian. Если Obsidian настроен на английский язык, используется формат США (YYYY/DD/MM)."
+            },
+            "timestamp_format": {
+                "name": "Формат временной метки",
+                "desc": "Выберите формат временных меток сообщений в заметках разговоров"
+            },
+            "preview_label": "Предпросмотр: "
+        },
+        "attachments": {
+            "section_title": "Настройки вложений",
+            "import_attachments": {
+                "name": "Импортировать вложения",
+                "desc": "Сохранять файлы вложений на диск и добавлять ссылки на них в разговорах (использует стратегию «максимум усилий»)"
+            },
+            "handle_missing": {
+                "name": "Обработка отсутствующих вложений",
+                "desc": "Если вложения отсутствуют в экспорте, создавать информационные заметки вместо их пропуска"
+            },
+            "show_details": {
+                "name": "Показывать детали вложений в отчётах",
+                "desc": "Включать подробную статистику обработки вложений в отчёты об импорте"
+            },
+            "info_box": {
+                "title": "📎 Об обработке вложений",
+                "best_effort": "Стратегия «максимум усилий»: файлы, найденные в экспорте, извлекаются и связываются; для отсутствующих файлов создаются информационные заметки.",
+                "platform_diff": "Различия платформ: экспорты ChatGPT могут не включать все вложения, особенно из старых разговоров.",
+                "organization": "Простая организация: файлы организованы по схеме attachments/provider/category/ (например, attachments/chatgpt/images/).",
+                "sync_tip": "Совет по синхронизации: рассмотрите возможность исключения папки вложений из синхронизации, чтобы избежать загрузки больших файлов.",
+                "tip": "💡 Совет: включите «Показывать детали вложений», чтобы точно видеть, какие файлы были найдены, отсутствовали или не были обработаны во время импорта."
+            }
+        },
+        "migrations": {
+            "section_title": "Миграции",
+            "description_manual": "Ручные операции: необязательные операции обновления, которые можно выполнить в удобное время.",
+            "description_automatic": "Автоматические операции (например, удаление устаревших данных) выполняются автоматически во время обновления и здесь не отображаются.",
+            "version_header": "Версия {{version}}",
+            "no_migrations": {
+                "title": "Нет доступных ручных операций",
+                "desc": "Все операции обновления были выполнены автоматически."
+            },
+            "operation_completed_suffix": " ✅ Завершено",
+            "buttons": {
+                "completed": "✅ Завершено",
+                "cannot_run": "Невозможно выполнить",
+                "run": "Запустить",
+                "running": "Выполняется..."
+            },
+            "tooltips": {
+                "completed": "Эта операция уже выполнена",
+                "cannot_run": "Предварительные условия для этой операции не выполнены",
+                "run": "Выполнить {{operation_name}}"
+            },
+            "error_loading": "Ошибка загрузки миграций:"
+        },
+        "support": {
+            "section_title": "💝 Поддержка и помощь",
+            "resources": {
+                "name": "📚 Ресурсы",
+                "desc": "Документация, примечания к выпуску и ссылки на сообщество",
+                "documentation": "📖 Документация",
+                "release_notes": "📝 История версий",
+                "issues": "🐛 Проблемы",
+                "forum": "💬 Форум"
+            }
+        }
+    },
+    "upgrade": {
+        "progress_modal": {
+            "starting": "Запуск...",
+            "progress_label": "Прогресс: {{percentage}}%",
+            "step_label": "Шаг {{current}}/{{total}}",
+            "complete_label": "Завершено",
+            "complete_message": "Успешно завершено",
+            "error_message": "Произошла ошибка"
+        },
+        "multi_operation_modal": {
+            "progress_label": "Прогресс: {{completed}}/{{total}} операций",
+            "progress_with_failures": "Прогресс: {{completed}}/{{total}} операций ({{failed}} с ошибками)",
+            "all_completed": "Все {{total}} операций успешно завершены",
+            "mark_complete_default": "Все операции успешно завершены",
+            "buttons": {
+                "complete": "Завершить",
+                "close": "Закрыть"
+            }
+        },
+        "modal_130": {
+            "title": "🎉 Nexus AI Chat Importer {{version}}",
+            "migration_section": {
+                "title": "🔄 Требуется миграция",
+                "message": "Следующие задачи будут выполнены автоматически для обновления ваших данных до v1.3.0:",
+                "tasks": {
+                    "folder_settings": "✓ Перенос настроек папок в новую структуру",
+                    "timestamps": "✓ Обновление временных меток до формата ISO 8601",
+                    "aliases": "✓ Исправление псевдонимов frontmatter",
+                    "reports": "✓ Перемещение папки отчётов в правильное расположение",
+                    "artifacts": "✓ Обновление метаданных артефактов"
+                },
+                "estimate": "Это займёт несколько секунд."
+            },
+            "buttons": {
+                "run_migration": "🚀 Выполнить задачи миграции"
+            }
+        },
+        "complete_modal": {
+            "title": "✅ Обновление завершено — v{{version}}",
+            "fallback_content": "## ✨ Что нового в v{{version}}\n\n### Новое\n- Поддержка Perplexity (импорт ZIP из Perplexity Thread Exporter)\n- Универсальные метаданные frontmatter: `mode` и `models`\n- Автоопределение провайдера теперь включает архивы Perplexity\n\n### Улучшения\n- Совместимость Perplexity с двумя схемами:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- Улучшены подсказки для случая, когда внешний ZIP содержит внутренние ZIP `part*.zip`\n- Улучшена нормализация ID разговоров для снижения риска дубликатов заметок между вариантами схем\n\n### Надёжность\n- Включает улучшения надёжности из 1.5.7 для обработки ZIP и мобильного импорта.",
+            "buttons": {
+                "got_it": "Понятно!"
+            }
+        },
+        "new_version_modal": {
+            "title": "🎉 Nexus AI Chat Importer {{version}}",
+            "buttons": {
+                "got_it": "Понятно!"
+            }
+        },
+        "notices": {
+            "migration_cancelled": "Migration cancelled. Please complete the migration before importing.",
+            "upgrade_failed_console": "Upgrade failed - see console for details",
+            "upgraded_to_version": "Upgraded to Nexus AI Chat Importer v{{version}}"
+        },
+        "legacy_120_modal": {
+            "title": "🚀 Nexus AI Chat Importer {{version}}",
+            "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
+            "buttons": {
+                "proceed": "Proceed"
+            }
+        }
+    },
+    "folder_migration": {
+        "title": "Переместить существующие файлы?",
+        "message_intro": "Вы изменяете расположение папки {{folder_type}}:",
+        "path_from": "Откуда: {{path}}",
+        "path_to": "Куда: {{path}}",
+        "question": "Хотите переместить существующие файлы в новое расположение?",
+        "link_updates": {
+            "title": "🔗 Обновление ссылок:",
+            "attachments_text": "При перемещении вложений также будут обновлены все заметки разговоров, которые на них ссылаются.",
+            "conversations_text": "При перемещении разговоров также будут обновлены все отчёты и вложения, которые на них ссылаются.",
+            "estimated_time_seconds": "Ожидаемое время: ~{{seconds}} секунд",
+            "estimated_time_minutes": "Ожидаемое время: ~{{minutes}} минут(ы)"
+        },
+        "warning": {
+            "title": "⚠️ Важно:",
+            "text": "Если вы выберете «Нет», существующие файлы останутся в прежнем расположении и не будут затронуты будущими обновлениями."
+        },
+        "buttons": {
+            "cancel": "Отмена",
+            "keep": "Нет, оставить файлы на прежнем месте",
+            "move": "Да, переместить файлы",
+            "move_with_links": "Да, переместить файлы и обновить ссылки"
+        },
+        "progress": {
+            "title_moving": "Перемещение {{folder_type}} и обновление ссылок",
+            "step_moving_title": "Перемещение файлов...",
+            "step_moving_detail": "Перемещение из {{old_path}} в {{new_path}}",
+            "step_moving_count": "{{current}} / {{total}} файлов обработано",
+            "step_moved_title": "Файлы перемещены",
+            "step_moved_detail": "{{moved}} файлов перемещено, {{skipped}} пропущено. Подготовка к обновлению ссылок...",
+            "step_updating_attachment_links": "Обновление ссылок на вложения...",
+            "step_updating_conversation_links": "Обновление ссылок на разговоры...",
+            "step_updating_report_links": "Обновление ссылок в отчётах...",
+            "step_updating_artifact_links": "Обновление ссылок в артефактах...",
+            "complete_message": "{{moved}} файлов перемещено. {{links}} ссылок успешно обновлено"
+        },
+        "result_dialog": {
+            "title": "Результат миграции папки",
+            "summary_title": "Сводка миграции",
+            "moved": "✅ Успешно перемещено: {{count}} файл(ов)",
+            "skipped": "⚠️ Пропущено (уже существуют): {{count}} файл(ов)",
+            "errors": "❌ Ошибки: {{count}} файл(ов)",
+            "explanation": "Файлы, которые уже существовали в целевой папке, не были перезаписаны для сохранения ваших данных.",
+            "error_details_title": "Детали ошибок:"
+        },
+        "error_target_not_empty": {
+            "title": "Целевая папка не пуста",
+            "message": "Папка \"{{path}}\" уже содержит файлы.\n\nДля изменения расположения папки:\n• Переместите существующие файлы вручную в Obsidian, ИЛИ\n• Выберите пустую папку или создайте новую"
+        },
+        "error_migration_failed": {
+            "title": "Миграция не выполнена",
+            "message_move": "Не удалось переместить файлы: {{error}}",
+            "message_links": "Не удалось переместить файлы или обновить ссылки: {{error}}"
+        },
+        "notices": {
+            "change_cancelled_reverted": "Change cancelled. Folder setting reverted.",
+            "failed_revert": "Failed to revert setting: {{error}}",
+            "setting_updated_files_remain": "Folder setting updated. Files remain in {{path}}",
+            "failed_update": "Failed to update setting: {{error}}",
+            "files_moved": "Files moved to {{path}}",
+            "failed_move": "Failed to move files: {{error}}",
+            "files_moved_links_updated": "✅ {{moved}} files moved to {{path}}. {{links}} links updated"
+        }
+    },
+    "folder_browser": {
+        "title": "Выбор папки",
+        "vault_root": "Корень хранилища (/)",
+        "buttons": {
+            "create_new_folder": "Создать новую папку",
+            "cancel": "Отмена",
+            "select": "Выбрать"
+        },
+        "create_folder_dialog": {
+            "title": "Создать новую папку",
+            "folder_name_label": "Имя папки:",
+            "buttons": {
+                "cancel": "Отмена",
+                "create": "Создать"
+            }
+        },
+        "notices": {
+            "select_parent_first": "⚠️ Сначала выберите родительскую папку",
+            "invalid_name": "❌ Недопустимое имя папки: содержит недопустимые символы",
+            "already_exists": "❌ Папка уже существует",
+            "invalid_location": "❌ {{error}}",
+            "created_success": "✅ Папка создана: {{name}}",
+            "create_failed": "❌ Не удалось создать папку: {{error}}",
+            "select_first": "⚠️ Сначала выберите папку",
+            "invalid_location_default": "Invalid folder location"
+        }
+    },
+    "configure_folder_dialog": {
+        "title": "🎉 Nexus AI Chat Importer v1.3.0",
+        "description": "В версии 1.3.0 вы можете указать папку для отчётов. Мы переместим существующие отчёты в {{folder}}, или вы можете выбрать предпочтительную папку ниже.",
+        "note": "Примечание: папка не может находиться внутри папок «Разговоры» или «Вложения».",
+        "report_folder_label": "📊 Папка отчётов",
+        "report_folder_placeholder": "Nexus Reports",
+        "buttons": {
+            "browse": "Обзор",
+            "proceed": "Выполнить"
+        },
+        "error_invalid_folder": {
+            "title": "Недопустимое расположение папки",
+            "message": "{{error}}"
+        }
+    },
+    "welcome": {
+        "title": "Nexus AI Chat Importer {{version}}",
+        "icon": "🎉",
+        "heading": "Спасибо за установку Nexus AI Chat Importer!",
+        "description": "Импортируйте и управляйте беседами ChatGPT, Claude, Le Chat и Perplexity прямо в вашем хранилище Obsidian.",
+        "resources_title": "Ресурсы",
+        "resources": {
+            "documentation": {
+                "title": "Документация",
+                "description": "Узнайте, как использовать плагин"
+            },
+            "release_notes": {
+                "title": "Примечания к выпуску",
+                "description": "Что нового в этой версии"
+            },
+            "report_issues": {
+                "title": "Сообщить о проблеме",
+                "description": "Нашли ошибку? Дайте нам знать"
+            },
+            "community_forum": {
+                "title": "Форум сообщества",
+                "description": "Присоединяйтесь к обсуждению"
+            }
+        },
+        "buttons": {
+            "get_started": "Начать"
+        }
+    },
+    "mobile_archive_processed_dialog": {
+        "title": "Архив уже обработан",
+        "description": "Файл {{filename}} уже импортирован на этом устройстве.",
+        "choice_help": "Выберите, как продолжить на мобильном устройстве:",
+        "button_reprocess": "Повторно обработать и пересоздать все заметки",
+        "button_incremental": "Добавить/обновить только отсутствующие или обновлённые заметки"
     },
     "notices": {
-      "migration_cancelled": "Migration cancelled. Please complete the migration before importing.",
-      "upgrade_failed_console": "Upgrade failed - see console for details",
-      "upgraded_to_version": "Upgraded to Nexus AI Chat Importer v{{version}}"
+        "import_analyzing": "Анализ разговоров из {{count}} файл(ов)...",
+        "import_no_new": "Новых или обновлённых разговоров не найдено. Все разговоры уже актуальны.",
+        "import_starting": "Импорт {{count}} разговоров ({{new}} новых, {{updated}} обновлённых)...",
+        "import_starting_selected": "Импорт {{count}} выбранных разговоров из {{files}} файл(ов)...",
+        "import_completed_fallback": "Импорт завершён. {{created}} создано, {{updated}} обновлено.",
+        "import_error": "Ошибка во время импорта: {{error}}",
+        "import_error_analyzing": "Ошибка анализа разговоров: {{error}}",
+        "import_error_file": "Ошибка обработки {{filename}}. Проверьте консоль для получения подробной информации.",
+        "import_error_file_report": "Не удалось импортировать файл: {{filename}}",
+        "import_error_mobile_large_json": "Этот ZIP содержит очень большой файл разговоров ({{size_mb}} MB). Ваше мобильное устройство не смогло надёжно обработать его в этом запуске. Повторите попытку, выбрав меньше ZIP-файлов за раз.",
+        "import_mobile_single_zip_only": "На мобильном устройстве можно импортировать только один ZIP за раз. Выберите один ZIP-файл.",
+        "import_no_selected": "Не выбраны разговоры для импорта.",
+        "import_no_zip_gemini": "Выберите хотя бы один ZIP-файл Gemini Takeout (плюс необязательный JSON-индекс из расширения).",
+        "import_no_zip": "Выберите хотя бы один ZIP-файл экспорта.",
+        "import_gemini_json_failed": "Не удалось прочитать JSON-индекс Gemini. Продолжение без индекса.",
+        "report_failed": "Не удалось создать файл журнала. Проверьте консоль для получения подробной информации.",
+        "attachment_map_failed": "Не удалось создать карту вложений. Проверьте консоль для получения подробной информации.",
+        "ribbon_tooltip": "Nexus AI Chat Importer — импорт нового файла",
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
     },
-    "legacy_120_modal": {
-      "title": "🚀 Nexus AI Chat Importer {{version}}",
-      "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
-      "buttons": {
-        "proceed": "Proceed"
-      }
+    "commands": {
+        "import_conversations": {
+            "name": "Импортировать разговоры ИИ"
+        }
+    },
+    "support_box": {
+        "header": "Поддержать плагин",
+        "header_highlight": "Поддержать плагин",
+        "default_message_emphasis": "Nexus превысил 9 000 загрузок. Сейчас только около 5 пользователей в месяц делают пожертвования в поддержку разработки.",
+        "default_message": "Я поддерживаю этот плагин в личное время, а поддержание моей среды разработки требует постоянных затрат. Добавление новых провайдеров также требует платных подписок, чтобы я мог качественно тестировать и обеспечивать надежную поддержку.",
+        "reality_check": "Если Nexus полезен для вас, пожалуйста, поддержите проект разовым или ежемесячным пожертвованием. Спасибо всем, кто уже поддерживает проект.",
+        "button_alt": "Поддержать мою работу"
     }
-  },
-  "folder_migration": {
-    "title": "Переместить существующие файлы?",
-    "message_intro": "Вы изменяете расположение папки {{folder_type}}:",
-    "path_from": "Откуда: {{path}}",
-    "path_to": "Куда: {{path}}",
-    "question": "Хотите переместить существующие файлы в новое расположение?",
-    "link_updates": {
-      "title": "🔗 Обновление ссылок:",
-      "attachments_text": "При перемещении вложений также будут обновлены все заметки разговоров, которые на них ссылаются.",
-      "conversations_text": "При перемещении разговоров также будут обновлены все отчёты и вложения, которые на них ссылаются.",
-      "estimated_time_seconds": "Ожидаемое время: ~{{seconds}} секунд",
-      "estimated_time_minutes": "Ожидаемое время: ~{{minutes}} минут(ы)"
-    },
-    "warning": {
-      "title": "⚠️ Важно:",
-      "text": "Если вы выберете «Нет», существующие файлы останутся в прежнем расположении и не будут затронуты будущими обновлениями."
-    },
-    "buttons": {
-      "cancel": "Отмена",
-      "keep": "Нет, оставить файлы на прежнем месте",
-      "move": "Да, переместить файлы",
-      "move_with_links": "Да, переместить файлы и обновить ссылки"
-    },
-    "progress": {
-      "title_moving": "Перемещение {{folder_type}} и обновление ссылок",
-      "step_moving_title": "Перемещение файлов...",
-      "step_moving_detail": "Перемещение из {{old_path}} в {{new_path}}",
-      "step_moving_count": "{{current}} / {{total}} файлов обработано",
-      "step_moved_title": "Файлы перемещены",
-      "step_moved_detail": "{{moved}} файлов перемещено, {{skipped}} пропущено. Подготовка к обновлению ссылок...",
-      "step_updating_attachment_links": "Обновление ссылок на вложения...",
-      "step_updating_conversation_links": "Обновление ссылок на разговоры...",
-      "step_updating_report_links": "Обновление ссылок в отчётах...",
-      "step_updating_artifact_links": "Обновление ссылок в артефактах...",
-      "complete_message": "{{moved}} файлов перемещено. {{links}} ссылок успешно обновлено"
-    },
-    "result_dialog": {
-      "title": "Результат миграции папки",
-      "summary_title": "Сводка миграции",
-      "moved": "✅ Успешно перемещено: {{count}} файл(ов)",
-      "skipped": "⚠️ Пропущено (уже существуют): {{count}} файл(ов)",
-      "errors": "❌ Ошибки: {{count}} файл(ов)",
-      "explanation": "Файлы, которые уже существовали в целевой папке, не были перезаписаны для сохранения ваших данных.",
-      "error_details_title": "Детали ошибок:"
-    },
-    "error_target_not_empty": {
-      "title": "Целевая папка не пуста",
-      "message": "Папка \"{{path}}\" уже содержит файлы.\n\nДля изменения расположения папки:\n• Переместите существующие файлы вручную в Obsidian, ИЛИ\n• Выберите пустую папку или создайте новую"
-    },
-    "error_migration_failed": {
-      "title": "Миграция не выполнена",
-      "message_move": "Не удалось переместить файлы: {{error}}",
-      "message_links": "Не удалось переместить файлы или обновить ссылки: {{error}}"
-    },
-    "notices": {
-      "change_cancelled_reverted": "Change cancelled. Folder setting reverted.",
-      "failed_revert": "Failed to revert setting: {{error}}",
-      "setting_updated_files_remain": "Folder setting updated. Files remain in {{path}}",
-      "failed_update": "Failed to update setting: {{error}}",
-      "files_moved": "Files moved to {{path}}",
-      "failed_move": "Failed to move files: {{error}}",
-      "files_moved_links_updated": "✅ {{moved}} files moved to {{path}}. {{links}} links updated"
-    }
-  },
-  "folder_browser": {
-    "title": "Выбор папки",
-    "vault_root": "Корень хранилища (/)",
-    "buttons": {
-      "create_new_folder": "Создать новую папку",
-      "cancel": "Отмена",
-      "select": "Выбрать"
-    },
-    "create_folder_dialog": {
-      "title": "Создать новую папку",
-      "folder_name_label": "Имя папки:",
-      "buttons": {
-        "cancel": "Отмена",
-        "create": "Создать"
-      }
-    },
-    "notices": {
-      "select_parent_first": "⚠️ Сначала выберите родительскую папку",
-      "invalid_name": "❌ Недопустимое имя папки: содержит недопустимые символы",
-      "already_exists": "❌ Папка уже существует",
-      "invalid_location": "❌ {{error}}",
-      "created_success": "✅ Папка создана: {{name}}",
-      "create_failed": "❌ Не удалось создать папку: {{error}}",
-      "select_first": "⚠️ Сначала выберите папку",
-      "invalid_location_default": "Invalid folder location"
-    }
-  },
-  "configure_folder_dialog": {
-    "title": "🎉 Nexus AI Chat Importer v1.3.0",
-    "description": "В версии 1.3.0 вы можете указать папку для отчётов. Мы переместим существующие отчёты в {{folder}}, или вы можете выбрать предпочтительную папку ниже.",
-    "note": "Примечание: папка не может находиться внутри папок «Разговоры» или «Вложения».",
-    "report_folder_label": "📊 Папка отчётов",
-    "report_folder_placeholder": "Nexus Reports",
-    "buttons": {
-      "browse": "Обзор",
-      "proceed": "Выполнить"
-    },
-    "error_invalid_folder": {
-      "title": "Недопустимое расположение папки",
-      "message": "{{error}}"
-    }
-  },
-  "welcome": {
-    "title": "Nexus AI Chat Importer {{version}}",
-    "icon": "🎉",
-    "heading": "Спасибо за установку Nexus AI Chat Importer!",
-    "description": "Импортируйте и управляйте беседами ChatGPT, Claude, Le Chat и Perplexity прямо в вашем хранилище Obsidian.",
-    "resources_title": "Ресурсы",
-    "resources": {
-      "documentation": {
-        "title": "Документация",
-        "description": "Узнайте, как использовать плагин"
-      },
-      "release_notes": {
-        "title": "Примечания к выпуску",
-        "description": "Что нового в этой версии"
-      },
-      "report_issues": {
-        "title": "Сообщить о проблеме",
-        "description": "Нашли ошибку? Дайте нам знать"
-      },
-      "community_forum": {
-        "title": "Форум сообщества",
-        "description": "Присоединяйтесь к обсуждению"
-      }
-    },
-    "buttons": {
-      "get_started": "Начать"
-    }
-  },
-  "mobile_archive_processed_dialog": {
-    "title": "Архив уже обработан",
-    "description": "Файл {{filename}} уже импортирован на этом устройстве.",
-    "choice_help": "Выберите, как продолжить на мобильном устройстве:",
-    "button_reprocess": "Повторно обработать и пересоздать все заметки",
-    "button_incremental": "Добавить/обновить только отсутствующие или обновлённые заметки"
-  },
-  "notices": {
-    "import_analyzing": "Анализ разговоров из {{count}} файл(ов)...",
-    "import_no_new": "Новых или обновлённых разговоров не найдено. Все разговоры уже актуальны.",
-    "import_starting": "Импорт {{count}} разговоров ({{new}} новых, {{updated}} обновлённых)...",
-    "import_starting_selected": "Импорт {{count}} выбранных разговоров из {{files}} файл(ов)...",
-    "import_completed_fallback": "Импорт завершён. {{created}} создано, {{updated}} обновлено.",
-    "import_error": "Ошибка во время импорта: {{error}}",
-    "import_error_analyzing": "Ошибка анализа разговоров: {{error}}",
-    "import_error_file": "Ошибка обработки {{filename}}. Проверьте консоль для получения подробной информации.",
-    "import_error_file_report": "Не удалось импортировать файл: {{filename}}",
-    "import_error_mobile_large_json": "Этот ZIP содержит очень большой файл разговоров ({{size_mb}} MB). Ваше мобильное устройство не смогло надёжно обработать его в этом запуске. Повторите попытку, выбрав меньше ZIP-файлов за раз.",
-    "import_mobile_single_zip_only": "На мобильном устройстве можно импортировать только один ZIP за раз. Выберите один ZIP-файл.",
-    "import_no_selected": "Не выбраны разговоры для импорта.",
-    "import_no_zip_gemini": "Выберите хотя бы один ZIP-файл Gemini Takeout (плюс необязательный JSON-индекс из расширения).",
-    "import_no_zip": "Выберите хотя бы один ZIP-файл экспорта.",
-    "import_gemini_json_failed": "Не удалось прочитать JSON-индекс Gemini. Продолжение без индекса.",
-    "report_failed": "Не удалось создать файл журнала. Проверьте консоль для получения подробной информации.",
-    "attachment_map_failed": "Не удалось создать карту вложений. Проверьте консоль для получения подробной информации.",
-    "ribbon_tooltip": "Nexus AI Chat Importer — импорт нового файла",
-    "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
-  },
-  "commands": {
-    "import_conversations": {
-      "name": "Импортировать разговоры ИИ"
-    }
-  },
-  "support_box": {
-    "header": "Поддержать плагин",
-    "header_highlight": "Поддержать плагин",
-    "default_message_emphasis": "Nexus превысил 9 000 загрузок. Сейчас только около 5 пользователей в месяц делают пожертвования в поддержку разработки.",
-    "default_message": "Я поддерживаю этот плагин в личное время, а поддержание моей среды разработки требует постоянных затрат. Добавление новых провайдеров также требует платных подписок, чтобы я мог качественно тестировать и обеспечивать надежную поддержку.",
-    "reality_check": "Если Nexus полезен для вас, пожалуйста, поддержите проект разовым или ежемесячным пожертвованием. Спасибо всем, кто уже поддерживает проект.",
-    "button_alt": "Поддержать мою работу"
-  }
 }

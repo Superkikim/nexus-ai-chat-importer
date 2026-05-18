@@ -1,25 +1,25 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { App, Modal, MarkdownRenderer } from "obsidian";
+import { App, Component, Modal, MarkdownRenderer, requestUrl } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
-import { t } from '../i18n';
+import { t } from "../i18n";
 
 /**
  * Upgrade complete modal - shown AFTER migrations are done
@@ -39,13 +39,15 @@ export class UpgradeCompleteModal extends Modal {
         const { contentEl, titleEl, modalEl } = this;
 
         // Add custom CSS classes (width is set in styles.css)
-        modalEl.classList.add('nexus-upgrade-complete-modal');
-        contentEl.classList.add('nexus-ai-chat-importer-modal');
+        modalEl.classList.add("nexus-upgrade-complete-modal");
+        contentEl.classList.add("nexus-ai-chat-importer-modal");
 
         // Set title
-        titleEl.setText(t('upgrade.complete_modal.title', { version: this.version }));
+        titleEl.setText(
+            t("upgrade.complete_modal.title", { version: this.version })
+        );
 
-        this.createContent();
+        void this.createContent();
     }
 
     onClose(): void {
@@ -63,124 +65,59 @@ export class UpgradeCompleteModal extends Modal {
 
         // Close button (centered and prominent)
         this.addCloseButton();
-
-        // Add custom styles
-        this.addStyles();
     }
 
     private async addReleaseNotes() {
         // Localized fallback content used when README fetch is unavailable
-        let content = t('upgrade.complete_modal.fallback_content', { version: this.version });
+        let content = t("upgrade.complete_modal.fallback_content", {
+            version: this.version,
+        });
 
         try {
             // Try to fetch Overview section from README
-            const response = await fetch(`https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`);
-            if (response.ok) {
-                const readme = await response.text();
-
+            const response = await requestUrl({
+                url: `https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`,
+                method: "GET",
+            });
+            if (response.status >= 200 && response.status < 300) {
                 // Extract Overview section (between ## Overview and next ##)
-                const overviewMatch = readme.match(/## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/);
+                const overviewMatch = response.text.match(
+                    /## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/
+                );
                 if (overviewMatch && overviewMatch[1]) {
                     content = overviewMatch[1].trim();
                 }
             }
-        } catch (error) {
+        } catch {
             // Use fallback content
         }
 
         // Render markdown
-        const contentDiv = this.contentEl.createDiv({ cls: "nexus-upgrade-notes" });
+        const contentDiv = this.contentEl.createDiv({
+            cls: "nexus-upgrade-notes",
+        });
+        const renderComponent = new Component();
+        renderComponent.load();
         await MarkdownRenderer.render(
             this.app,
             content,
             contentDiv,
             "",
-            this.plugin
+            renderComponent
         );
     }
 
     private addCloseButton() {
-        const buttonContainer = this.contentEl.createDiv({ cls: "nexus-upgrade-button-container nexus-dialog-actions" });
+        const buttonContainer = this.contentEl.createDiv({
+            cls: "nexus-upgrade-button-container nexus-dialog-actions",
+        });
         const button = buttonContainer.createEl("button", {
-            text: t('upgrade.complete_modal.buttons.got_it'),
-            cls: "mod-cta nexus-upgrade-button"
+            text: t("upgrade.complete_modal.buttons.got_it"),
+            cls: "mod-cta nexus-upgrade-button",
         });
 
         button.addEventListener("click", () => {
             this.close();
         });
-    }
-
-    private addStyles() {
-        const style = document.createElement("style");
-        style.textContent = `
-            /* Modal sizing */
-            .nexus-upgrade-complete-modal .modal {
-                max-height: 85vh;
-            }
-
-            .nexus-upgrade-complete-modal .modal-content {
-                padding: 20px 24px;
-                overflow-y: auto;
-                max-height: calc(85vh - 100px);
-            }
-
-            /* Release notes content */
-            .nexus-upgrade-notes {
-                padding: 0 1em;
-                margin-bottom: 2em;
-                overflow-wrap: anywhere;
-            }
-
-            .nexus-upgrade-notes h2 {
-                color: var(--text-accent);
-                margin-top: 1.5em;
-                margin-bottom: 0.8em;
-                border-bottom: 2px solid var(--background-modifier-border);
-                padding-bottom: 0.3em;
-            }
-
-            .nexus-upgrade-notes h2:first-child {
-                margin-top: 0;
-            }
-
-            .nexus-upgrade-notes ul {
-                margin-left: 1.5em;
-                line-height: 1.8;
-            }
-
-            .nexus-upgrade-notes li {
-                margin: 0.5em 0;
-            }
-
-            /* Close button */
-            .nexus-upgrade-button-container {
-                padding: 1.5em 0;
-                border-top: 1px solid var(--background-modifier-border);
-                margin-top: 1em;
-            }
-
-            .nexus-upgrade-button {
-                padding: 0.8em 3em;
-                font-size: 1.1em;
-                font-weight: 600;
-                border-radius: 8px;
-            }
-
-            @media (max-width: 700px) {
-                .nexus-upgrade-complete-modal .modal-content {
-                    padding: 16px !important;
-                }
-
-                .nexus-upgrade-notes {
-                    padding: 0;
-                }
-
-                .nexus-upgrade-button {
-                    width: 100%;
-                }
-            }
-        `;
-        document.head.appendChild(style);
     }
 }

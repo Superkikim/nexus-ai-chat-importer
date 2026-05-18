@@ -54,15 +54,16 @@ export interface RequestUrlParam {
 
 export interface RequestUrlResponse {
     status: number;
-    json: () => Promise<any>;
+    json: () => Promise<unknown>;
     text: () => Promise<string>;
 }
 
-export async function requestUrl(_request: string | RequestUrlParam): Promise<RequestUrlResponse> {
+export async function requestUrl(
+    _request: string | RequestUrlParam
+): Promise<RequestUrlResponse> {
     return {
         status: 200,
         json: async () => ({}),
         text: async () => "",
     };
 }
-

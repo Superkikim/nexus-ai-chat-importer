@@ -1,21 +1,20 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/utils/streaming-json-array-parser.ts
 
@@ -42,7 +41,7 @@ export class StreamingJsonArrayParser {
         for (const element of this.streamArrayElements(arraySlice)) {
             try {
                 yield JSON.parse(element);
-            } catch (error) {
+            } catch {
                 // If a single element fails to parse, skip it but continue
                 // with the rest so one bad conversation does not kill import.
                 // Detailed logging is handled by callers.
@@ -57,18 +56,17 @@ export class StreamingJsonArrayParser {
      * This is primarily used on mobile when a large `conversations.json`
      * could otherwise trigger memory pressure.
      */
-    static async *streamConversationsFromChunks(chunks: AsyncIterable<string>): AsyncGenerator<any> {
+    static async *streamConversationsFromChunks(
+        chunks: AsyncIterable<string>
+    ): AsyncGenerator<any> {
         const arrayState = await this.findConversationsArrayStart(chunks);
         if (!arrayState) {
-            throw new Error("Could not find conversations array in chunked JSON payload");
+            throw new Error(
+                "Could not find conversations array in chunked JSON payload"
+            );
         }
 
-        let {
-            buffer,
-            done,
-            pullNextChunk,
-            scanIndex,
-        } = arrayState;
+        let { buffer, done, pullNextChunk, scanIndex } = arrayState;
 
         let inString = false;
         let escape = false;
@@ -101,18 +99,20 @@ export class StreamingJsonArrayParser {
                         escape = false;
                     } else if (ch === "\\") {
                         escape = true;
-                    } else if (ch === "\"") {
+                    } else if (ch === '"') {
                         inString = false;
                     }
                 } else {
-                    if (ch === "\"") {
+                    if (ch === '"') {
                         inString = true;
                     } else if (ch === "{" || ch === "[") {
                         elementDepth++;
                     } else if (ch === "}" || ch === "]") {
                         elementDepth--;
                         if (elementDepth < 0) {
-                            throw new Error("Invalid chunked JSON array: unbalanced brackets");
+                            throw new Error(
+                                "Invalid chunked JSON array: unbalanced brackets"
+                            );
                         }
                         if (elementDepth === 0) {
                             elementEnd = scanIndex + 1;
@@ -121,7 +121,9 @@ export class StreamingJsonArrayParser {
 
                     if (elementEnd !== -1) {
                         if (ch === "," || ch === "]") {
-                            const element = buffer.slice(elementStart, elementEnd).trim();
+                            const element = buffer
+                                .slice(elementStart, elementEnd)
+                                .trim();
                             if (element.length > 0) {
                                 try {
                                     yield JSON.parse(element);
@@ -145,7 +147,9 @@ export class StreamingJsonArrayParser {
                         }
 
                         if (!/\s/.test(ch)) {
-                            const element = buffer.slice(elementStart, elementEnd).trim();
+                            const element = buffer
+                                .slice(elementStart, elementEnd)
+                                .trim();
                             if (element.length > 0) {
                                 try {
                                     yield JSON.parse(element);
@@ -171,7 +175,9 @@ export class StreamingJsonArrayParser {
 
             if (done) {
                 if (elementStart !== -1 && elementEnd !== -1) {
-                    const element = buffer.slice(elementStart, elementEnd).trim();
+                    const element = buffer
+                        .slice(elementStart, elementEnd)
+                        .trim();
                     if (element.length > 0) {
                         try {
                             yield JSON.parse(element);
@@ -209,7 +215,9 @@ export class StreamingJsonArrayParser {
         // Claude: look for a top-level "conversations" property
         const keyIndex = json.indexOf('"conversations"');
         if (keyIndex === -1) {
-            throw new Error("Could not find conversations array in JSON payload");
+            throw new Error(
+                "Could not find conversations array in JSON payload"
+            );
         }
 
         // Find the colon after the key and then the opening [
@@ -217,12 +225,16 @@ export class StreamingJsonArrayParser {
         const len = json.length;
         while (i < len && json[i] !== ":") i++;
         if (i >= len) {
-            throw new Error("Invalid JSON: missing ':' after conversations key");
+            throw new Error(
+                "Invalid JSON: missing ':' after conversations key"
+            );
         }
         i++; // skip ':'
         while (i < len && /\s/.test(json[i])) i++;
         if (i >= len || json[i] !== "[") {
-            throw new Error("Invalid JSON: conversations value is not an array");
+            throw new Error(
+                "Invalid JSON: conversations value is not an array"
+            );
         }
 
         const start = i;
@@ -275,7 +287,9 @@ export class StreamingJsonArrayParser {
                     } else if (ch === "}" || ch === "]") {
                         depth--;
                         if (depth < 0) {
-                            throw new Error("Invalid JSON array: unbalanced brackets");
+                            throw new Error(
+                                "Invalid JSON array: unbalanced brackets"
+                            );
                         }
                         // When depth reaches 0, we've closed the top-level element
                         if (depth === 0) {
@@ -301,7 +315,9 @@ export class StreamingJsonArrayParser {
         }
     }
 
-    private static async findConversationsArrayStart(chunks: AsyncIterable<string>): Promise<{
+    private static async findConversationsArrayStart(
+        chunks: AsyncIterable<string>
+    ): Promise<{
         buffer: string;
         scanIndex: number;
         done: boolean;
@@ -322,7 +338,8 @@ export class StreamingJsonArrayParser {
         };
 
         while (true) {
-            const arrayStartIndex = this.findArrayStartIndexInChunkedPayload(buffer);
+            const arrayStartIndex =
+                this.findArrayStartIndexInChunkedPayload(buffer);
             if (arrayStartIndex !== null) {
                 return {
                     buffer: buffer.slice(arrayStartIndex),
@@ -342,12 +359,16 @@ export class StreamingJsonArrayParser {
             }
             buffer += nextChunk;
             if (buffer.length > maxStartScanBufferChars) {
-                throw new Error("Could not find conversations array in chunked JSON payload");
+                throw new Error(
+                    "Could not find conversations array in chunked JSON payload"
+                );
             }
         }
     }
 
-    private static findArrayStartIndexInChunkedPayload(buffer: string): number | null {
+    private static findArrayStartIndexInChunkedPayload(
+        buffer: string
+    ): number | null {
         const firstTokenIndex = this.findFirstNonWhitespaceOrBomIndex(buffer);
         if (firstTokenIndex === -1) {
             return null;
@@ -362,7 +383,10 @@ export class StreamingJsonArrayParser {
             return null;
         }
 
-        return this.findTopLevelConversationsArrayStartIndex(buffer, firstTokenIndex + 1);
+        return this.findTopLevelConversationsArrayStartIndex(
+            buffer,
+            firstTokenIndex + 1
+        );
     }
 
     private static findFirstNonWhitespaceOrBomIndex(source: string): number {
@@ -376,7 +400,10 @@ export class StreamingJsonArrayParser {
         return -1;
     }
 
-    private static findTopLevelConversationsArrayStartIndex(source: string, start: number): number | null {
+    private static findTopLevelConversationsArrayStartIndex(
+        source: string,
+        start: number
+    ): number | null {
         let i = start;
         let depth = 1;
         let inString = false;
@@ -391,13 +418,16 @@ export class StreamingJsonArrayParser {
                     escape = false;
                 } else if (ch === "\\") {
                     escape = true;
-                } else if (ch === "\"") {
-                    const isTopLevelKey = depth === 1 && this.isLikelyObjectKeyPosition(source, stringStart);
+                } else if (ch === '"') {
+                    const isTopLevelKey =
+                        depth === 1 &&
+                        this.isLikelyObjectKeyPosition(source, stringStart);
                     if (isTopLevelKey) {
                         const key = source.slice(stringStart, i);
                         if (key === "conversations") {
                             let j = i + 1;
-                            while (j < source.length && /\s/.test(source[j])) j++;
+                            while (j < source.length && /\s/.test(source[j]))
+                                j++;
                             if (j >= source.length) return null;
                             if (source[j] !== ":") {
                                 inString = false;
@@ -407,7 +437,8 @@ export class StreamingJsonArrayParser {
                             }
 
                             j++;
-                            while (j < source.length && /\s/.test(source[j])) j++;
+                            while (j < source.length && /\s/.test(source[j]))
+                                j++;
                             if (j >= source.length) return null;
                             if (source[j] === "[") {
                                 return j + 1;
@@ -421,7 +452,7 @@ export class StreamingJsonArrayParser {
                 continue;
             }
 
-            if (ch === "\"") {
+            if (ch === '"') {
                 inString = true;
                 stringStart = i + 1;
             } else if (ch === "{" || ch === "[") {
@@ -439,7 +470,10 @@ export class StreamingJsonArrayParser {
         return null;
     }
 
-    private static isLikelyObjectKeyPosition(source: string, quoteStart: number): boolean {
+    private static isLikelyObjectKeyPosition(
+        source: string,
+        quoteStart: number
+    ): boolean {
         let i = quoteStart - 2;
         while (i >= 0 && /\s/.test(source[i])) i--;
         if (i < 0) {
@@ -451,7 +485,11 @@ export class StreamingJsonArrayParser {
     /**
      * Find the matching closing bracket for `[` starting at startIndex.
      */
-    private static findMatchingBracket(source: string, startIndex: number, open: "[" | "{"): number {
+    private static findMatchingBracket(
+        source: string,
+        startIndex: number,
+        open: "[" | "{"
+    ): number {
         const close = open === "[" ? "]" : "}";
         const len = source.length;
         let depth = 0;

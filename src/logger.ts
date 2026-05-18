@@ -1,23 +1,23 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-// logger.ts
+/* eslint-disable obsidianmd/rule-custom-message */
+// logger.ts — console usage is intentional here
 type LogLevel = "debug" | "info" | "warn" | "error";
 const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
     debug: 10,
@@ -30,17 +30,24 @@ const DEFAULT_LOG_LEVEL: LogLevel = "warn";
 const LOG_LEVEL_STORAGE_KEY = "nexus-ai-chat-importer:log-level";
 
 function isValidLogLevel(value: unknown): value is LogLevel {
-    return value === "debug" || value === "info" || value === "warn" || value === "error";
+    return (
+        value === "debug" ||
+        value === "info" ||
+        value === "warn" ||
+        value === "error"
+    );
 }
 
 function resolveConfiguredLogLevel(): LogLevel {
-    const globalValue = (globalThis as any)?.NEXUS_LOG_LEVEL;
+    const globalValue = (window as unknown as Record<string, unknown>)?.[
+        "NEXUS_LOG_LEVEL"
+    ];
     if (isValidLogLevel(globalValue)) {
         return globalValue;
     }
 
     try {
-        const stored = globalThis?.localStorage?.getItem(LOG_LEVEL_STORAGE_KEY);
+        const stored = window?.localStorage?.getItem(LOG_LEVEL_STORAGE_KEY);
         if (isValidLogLevel(stored)) {
             return stored;
         }
@@ -94,7 +101,12 @@ export class Logger {
         return new ScopedLogger(this, moduleName);
     }
 
-    log(level: LogLevel, moduleName: string, message: string, details?: unknown): void {
+    log(
+        level: LogLevel,
+        moduleName: string,
+        message: string,
+        details?: unknown
+    ): void {
         if (!this.shouldLog(level)) {
             return;
         }

@@ -1,32 +1,29 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/dialogs/configure-folder-locations-dialog.ts
-import { Modal, Setting, TFolder, Notice } from "obsidian";
-import { logger } from "../logger";
+import { Modal, TFolder, Notice } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
-import { FolderMigrationDialog } from "./folder-migration-dialog";
 import { EnhancedFolderMigrationDialog } from "./enhanced-folder-migration-dialog";
 import { FolderTreeBrowserModal } from "./folder-tree-browser-modal";
 import { validateFolderNesting } from "../utils/folder-validation";
 import { moveAndMergeFolders, type FolderMergeResult } from "../utils";
-import { t } from '../i18n';
+import { t } from "../i18n";
 
 export interface FolderConfigurationResult {
     conversationFolder: {
@@ -69,7 +66,8 @@ export class ConfigureFolderLocationsDialog extends Modal {
         this.onComplete = onComplete;
 
         // Store original value
-        this.originalReportFolder = plugin.settings.reportFolder || "Nexus Reports";
+        this.originalReportFolder =
+            plugin.settings.reportFolder || "Nexus Reports";
     }
 
     onOpen() {
@@ -78,46 +76,56 @@ export class ConfigureFolderLocationsDialog extends Modal {
 
         // Title
         contentEl.createEl("h2", {
-            text: t('configure_folder_dialog.title'),
-            cls: "nexus-upgrade-title"
+            text: t("configure_folder_dialog.title"),
+            cls: "nexus-upgrade-title",
         });
 
         // Main message - SIMPLIFIED AND ABOVE THE FIELD
-        const messageContainer = contentEl.createDiv({ cls: "nexus-upgrade-message" });
+        const messageContainer = contentEl.createDiv({
+            cls: "nexus-upgrade-message",
+        });
 
-        const descriptionEl = messageContainer.createDiv({ cls: "nexus-upgrade-description" });
-        descriptionEl.createEl("p", {
-            text: t('configure_folder_dialog.description', { folder: this.originalReportFolder })
+        const descriptionEl = messageContainer.createDiv({
+            cls: "nexus-upgrade-description",
         });
         descriptionEl.createEl("p", {
-            text: t('configure_folder_dialog.note'),
-            cls: "nexus-upgrade-note"
+            text: t("configure_folder_dialog.description", {
+                folder: this.originalReportFolder,
+            }),
+        });
+        descriptionEl.createEl("p", {
+            text: t("configure_folder_dialog.note"),
+            cls: "nexus-upgrade-note",
         });
 
         // Folder inputs section
-        const folderSection = contentEl.createDiv({ cls: "nexus-upgrade-folder-section" });
+        const folderSection = contentEl.createDiv({
+            cls: "nexus-upgrade-folder-section",
+        });
 
         // Report Folder Label
         folderSection.createEl("div", {
-            text: t('configure_folder_dialog.report_folder_label'),
-            cls: "nexus-upgrade-folder-label"
+            text: t("configure_folder_dialog.report_folder_label"),
+            cls: "nexus-upgrade-folder-label",
         });
 
         // Report Folder Input Container
-        const inputContainer = folderSection.createDiv({ cls: "nexus-upgrade-input-container" });
+        const inputContainer = folderSection.createDiv({
+            cls: "nexus-upgrade-input-container",
+        });
 
         this.reportFolderInput = inputContainer.createEl("input", {
             type: "text",
-            placeholder: t('configure_folder_dialog.report_folder_placeholder'),
+            placeholder: t("configure_folder_dialog.report_folder_placeholder"),
             value: this.originalReportFolder,
-            cls: "nexus-upgrade-folder-input"
+            cls: "nexus-upgrade-folder-input",
         });
         this.reportFolderInput.readOnly = true;
-        this.reportFolderInput.style.cursor = "default";
+        this.reportFolderInput.addClass("nexus-cursor-default");
 
         const browseButton = inputContainer.createEl("button", {
-            text: t('configure_folder_dialog.buttons.browse'),
-            cls: "mod-cta nexus-upgrade-browse-button"
+            text: t("configure_folder_dialog.buttons.browse"),
+            cls: "mod-cta nexus-upgrade-browse-button",
         });
         browseButton.addEventListener("click", () => {
             const modal = new FolderTreeBrowserModal(
@@ -134,18 +142,17 @@ export class ConfigureFolderLocationsDialog extends Modal {
         });
 
         // Buttons - BIG CENTERED PROCEED BUTTON
-        const buttonContainer = contentEl.createDiv({ cls: "nexus-upgrade-button-container-centered" });
+        const buttonContainer = contentEl.createDiv({
+            cls: "nexus-upgrade-button-container-centered",
+        });
 
         const proceedButton = buttonContainer.createEl("button", {
-            text: t('configure_folder_dialog.buttons.proceed'),
-            cls: "mod-cta nexus-upgrade-proceed-button"
+            text: t("configure_folder_dialog.buttons.proceed"),
+            cls: "mod-cta nexus-upgrade-proceed-button",
         });
-        proceedButton.addEventListener("click", async () => {
-            await this.handleSave();
+        proceedButton.addEventListener("click", () => {
+            void this.handleSave();
         });
-
-        // Add styles
-        this.addStyles();
     }
 
     private async handleSave() {
@@ -158,18 +165,18 @@ export class ConfigureFolderLocationsDialog extends Modal {
                 conversationFolder: {
                     changed: false,
                     oldPath: this.plugin.settings.conversationFolder,
-                    newPath: this.plugin.settings.conversationFolder
+                    newPath: this.plugin.settings.conversationFolder,
                 },
                 reportFolder: {
                     changed: false,
                     oldPath: this.originalReportFolder,
-                    newPath: this.originalReportFolder
+                    newPath: this.originalReportFolder,
                 },
                 attachmentFolder: {
                     changed: false,
                     oldPath: this.plugin.settings.attachmentFolder,
-                    newPath: this.plugin.settings.attachmentFolder
-                }
+                    newPath: this.plugin.settings.attachmentFolder,
+                },
             });
             return;
         }
@@ -178,7 +185,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
 
         // Validate that report folder is not inside conversations or attachments
         const validation = validateFolderNesting(
-            'reportFolder',
+            "reportFolder",
             newReportFolder,
             this.plugin.settings.conversationFolder,
             this.originalReportFolder, // Use original to avoid self-check
@@ -186,7 +193,12 @@ export class ConfigureFolderLocationsDialog extends Modal {
         );
 
         if (!validation.valid) {
-            this.showErrorDialog(t('configure_folder_dialog.error_invalid_folder.title'), t('configure_folder_dialog.error_invalid_folder.message', { error: validation.error ?? "Invalid folder configuration" }));
+            this.showErrorDialog(
+                t("configure_folder_dialog.error_invalid_folder.title"),
+                t("configure_folder_dialog.error_invalid_folder.message", {
+                    error: validation.error ?? "Invalid folder configuration",
+                })
+            );
             return; // Don't close dialog, let user fix the path
         }
 
@@ -194,18 +206,18 @@ export class ConfigureFolderLocationsDialog extends Modal {
             conversationFolder: {
                 changed: false,
                 oldPath: this.plugin.settings.conversationFolder,
-                newPath: this.plugin.settings.conversationFolder
+                newPath: this.plugin.settings.conversationFolder,
             },
             reportFolder: {
                 changed: newReportFolder !== this.originalReportFolder,
                 oldPath: this.originalReportFolder,
-                newPath: newReportFolder
+                newPath: newReportFolder,
             },
             attachmentFolder: {
                 changed: false,
                 oldPath: this.plugin.settings.attachmentFolder,
-                newPath: this.plugin.settings.attachmentFolder
-            }
+                newPath: this.plugin.settings.attachmentFolder,
+            },
         };
 
         // Mark as completed before closing
@@ -215,15 +227,20 @@ export class ConfigureFolderLocationsDialog extends Modal {
         this.close();
 
         // Handle report folder change
-        await this.handleFolderChange('reportFolder', result.reportFolder);
+        await this.handleFolderChange("reportFolder", result.reportFolder);
 
         // Call completion callback with results
         this.onComplete(result);
     }
 
     private async handleFolderChange(
-        folderType: 'conversationFolder' | 'reportFolder' | 'attachmentFolder',
-        folderInfo: { changed: boolean; oldPath: string; newPath: string; filesMoved?: number }
+        folderType: "conversationFolder" | "reportFolder" | "attachmentFolder",
+        folderInfo: {
+            changed: boolean;
+            oldPath: string;
+            newPath: string;
+            filesMoved?: number;
+        }
     ): Promise<void> {
         if (!folderInfo.changed) {
             return;
@@ -234,7 +251,11 @@ export class ConfigureFolderLocationsDialog extends Modal {
 
         // Check if target folder exists and is not empty
         const newFolder = this.plugin.app.vault.getAbstractFileByPath(newPath);
-        if (newFolder && newFolder instanceof TFolder && newFolder.children.length > 0) {
+        if (
+            newFolder &&
+            newFolder instanceof TFolder &&
+            newFolder.children.length > 0
+        ) {
             this.showErrorDialog(
                 "Target Folder Not Empty",
                 `The folder "${newPath}" already contains files.\n\nTo change the folder location:\n• Move existing files manually in Obsidian, OR\n• Choose an empty folder or create a new one`
@@ -250,40 +271,71 @@ export class ConfigureFolderLocationsDialog extends Modal {
         // Check if old folder exists and has content
         const oldFolder = this.plugin.app.vault.getAbstractFileByPath(oldPath);
 
-        if (!oldFolder || !(oldFolder instanceof TFolder) || oldFolder.children.length === 0) {
+        if (
+            !oldFolder ||
+            !(oldFolder instanceof TFolder) ||
+            oldFolder.children.length === 0
+        ) {
             // No migration needed
             return;
         }
 
         // Show migration dialog and wait for user choice
         // Use Enhanced dialog for ALL folder types (it handles link updates for conversations/attachments, simple move for reports)
-        const folderTypeLabel = folderType === 'conversationFolder' ? 'conversations' :
-                               folderType === 'reportFolder' ? 'reports' : 'attachments';
+        const folderTypeLabel =
+            folderType === "conversationFolder"
+                ? "conversations"
+                : folderType === "reportFolder"
+                ? "reports"
+                : "attachments";
 
         await new Promise<void>((resolve) => {
-            const handleMigrationAction = async (action: 'move' | 'keep' | 'cancel') => {
-                if (action === 'move') {
+            const handleMigrationAction = async (
+                action: "move" | "keep" | "cancel"
+            ) => {
+                if (action === "move") {
                     try {
-                        const result = await moveAndMergeFolders(oldFolder, newPath, this.plugin.app.vault);
+                        const result = await moveAndMergeFolders(
+                            oldFolder,
+                            newPath,
+                            this.plugin.app.vault
+                        );
                         folderInfo.filesMoved = result.moved;
 
                         // Show result to user
                         if (result.success && result.skipped === 0) {
                             // Perfect success - simple notice
-                            new Notice(t('folder_migration.notices.files_moved', { path: newPath }));
+                            new Notice(
+                                t("folder_migration.notices.files_moved", {
+                                    path: newPath,
+                                })
+                            );
                         } else {
                             // Some files skipped or errors - show detailed dialog
-                            this.showMergeResultDialog(result, oldPath, newPath);
+                            this.showMergeResultDialog(
+                                result,
+                                oldPath,
+                                newPath
+                            );
                         }
                     } catch (error) {
-                        this.plugin.logger.error(`Failed to move ${folderTypeLabel} folder:`, error);
-                        const errorMessage = error instanceof Error ? error.message : String(error);
+                        this.plugin.logger.error(
+                            `Failed to move ${folderTypeLabel} folder:`,
+                            error
+                        );
+                        const errorMessage =
+                            error instanceof Error
+                                ? error.message
+                                : String(error);
                         this.showErrorDialog(
-                            t('folder_migration.error_migration_failed.title'),
-                            t('folder_migration.error_migration_failed.message_move', { error: errorMessage })
+                            t("folder_migration.error_migration_failed.title"),
+                            t(
+                                "folder_migration.error_migration_failed.message_move",
+                                { error: errorMessage }
+                            )
                         );
                     }
-                } else if (action === 'cancel') {
+                } else if (action === "cancel") {
                     // Revert setting
                     this.plugin.settings[folderType] = oldPath;
                     await this.plugin.saveSettings();
@@ -306,43 +358,63 @@ export class ConfigureFolderLocationsDialog extends Modal {
     /**
      * Show dialog with merge result details when files were skipped or errors occurred
      */
-    private showMergeResultDialog(result: FolderMergeResult, oldPath: string, newPath: string): void {
+    private showMergeResultDialog(
+        result: FolderMergeResult,
+        _oldPath: string,
+        _newPath: string
+    ): void {
         const modal = new Modal(this.plugin.app);
-        modal.titleEl.setText(t('folder_migration.result_dialog.title'));
+        modal.titleEl.setText(t("folder_migration.result_dialog.title"));
 
         const { contentEl } = modal;
 
         // Summary
         const summary = contentEl.createDiv({ cls: "nexus-merge-summary" });
-        summary.createEl("h3", { text: t('folder_migration.result_dialog.summary_title') });
+        summary.createEl("h3", {
+            text: t("folder_migration.result_dialog.summary_title"),
+        });
 
         const stats = summary.createDiv({ cls: "nexus-merge-stats" });
-        stats.createEl("p", { text: t('folder_migration.result_dialog.moved', { count: String(result.moved) }) });
+        stats.createEl("p", {
+            text: t("folder_migration.result_dialog.moved", {
+                count: String(result.moved),
+            }),
+        });
 
         if (result.skipped > 0) {
             stats.createEl("p", {
-                text: t('folder_migration.result_dialog.skipped', { count: String(result.skipped) }),
-                cls: "nexus-merge-warning"
+                text: t("folder_migration.result_dialog.skipped", {
+                    count: String(result.skipped),
+                }),
+                cls: "nexus-merge-warning",
             });
         }
 
         if (result.errors > 0) {
             stats.createEl("p", {
-                text: t('folder_migration.result_dialog.errors', { count: String(result.errors) }),
-                cls: "nexus-merge-error"
+                text: t("folder_migration.result_dialog.errors", {
+                    count: String(result.errors),
+                }),
+                cls: "nexus-merge-error",
             });
         }
 
         // Explanation
-        const explanation = contentEl.createDiv({ cls: "nexus-merge-explanation" });
+        const explanation = contentEl.createDiv({
+            cls: "nexus-merge-explanation",
+        });
         explanation.createEl("p", {
-            text: t('folder_migration.result_dialog.explanation')
+            text: t("folder_migration.result_dialog.explanation"),
         });
 
         // Error details if any
         if (result.errorDetails && result.errorDetails.length > 0) {
-            const errorSection = contentEl.createDiv({ cls: "nexus-merge-errors" });
-            errorSection.createEl("h4", { text: t('folder_migration.result_dialog.error_details_title') });
+            const errorSection = contentEl.createDiv({
+                cls: "nexus-merge-errors",
+            });
+            errorSection.createEl("h4", {
+                text: t("folder_migration.result_dialog.error_details_title"),
+            });
             const errorList = errorSection.createEl("ul");
             for (const error of result.errorDetails) {
                 errorList.createEl("li", { text: error });
@@ -350,136 +422,16 @@ export class ConfigureFolderLocationsDialog extends Modal {
         }
 
         // Close button
-        const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-        const closeButton = buttonContainer.createEl("button", { text: t('common.buttons.ok'), cls: "mod-cta" });
+        const buttonContainer = contentEl.createDiv({
+            cls: "modal-button-container",
+        });
+        const closeButton = buttonContainer.createEl("button", {
+            text: t("common.buttons.ok"),
+            cls: "mod-cta",
+        });
         closeButton.addEventListener("click", () => modal.close());
 
-        // Add styles
-        const styleEl = document.createElement("style");
-        styleEl.textContent = `
-            .nexus-merge-summary {
-                margin-bottom: 20px;
-            }
-            .nexus-merge-stats p {
-                margin: 8px 0;
-                font-size: 14px;
-            }
-            .nexus-merge-warning {
-                color: var(--text-warning);
-            }
-            .nexus-merge-error {
-                color: var(--text-error);
-            }
-            .nexus-merge-explanation {
-                padding: 12px;
-                background: var(--background-secondary);
-                border-radius: 4px;
-                margin: 16px 0;
-            }
-            .nexus-merge-errors {
-                margin-top: 16px;
-                padding: 12px;
-                background: var(--background-modifier-error);
-                border-radius: 4px;
-            }
-            .nexus-merge-errors ul {
-                margin: 8px 0;
-                padding-left: 20px;
-            }
-            .nexus-merge-errors li {
-                margin: 4px 0;
-                font-size: 12px;
-                font-family: var(--font-monospace);
-            }
-        `;
-        document.head.appendChild(styleEl);
-
         modal.open();
-    }
-
-    private addStyles() {
-        const styleEl = document.createElement("style");
-        styleEl.textContent = `
-            .nexus-upgrade-title {
-                margin-bottom: 1em;
-                color: var(--text-normal);
-                text-align: center;
-            }
-
-            .nexus-upgrade-message {
-                margin-bottom: 1.5em;
-                line-height: 1.6;
-            }
-
-            .nexus-upgrade-description {
-                font-size: 1.05em;
-                line-height: 1.6;
-                margin-bottom: 1.5em;
-            }
-
-            .nexus-upgrade-description p {
-                margin: 0.8em 0;
-            }
-
-            .nexus-upgrade-note {
-                font-size: 0.95em;
-                color: var(--text-muted);
-                font-style: italic;
-            }
-
-            .nexus-upgrade-folder-section {
-                background-color: var(--background-secondary);
-                padding: 1.5em;
-                margin: 1em 0;
-                border-radius: 8px;
-            }
-
-            .nexus-upgrade-folder-label {
-                font-size: 1.1em;
-                font-weight: 600;
-                margin-bottom: 0.8em;
-                color: var(--text-normal);
-            }
-
-            .nexus-upgrade-input-container {
-                display: flex;
-                gap: 0.8em;
-                align-items: stretch;
-                width: 100%;
-            }
-
-            .nexus-upgrade-folder-input {
-                flex: 1;
-                padding: 0.6em 0.8em;
-                font-size: 1em;
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                background-color: var(--background-primary);
-                color: var(--text-normal);
-                min-width: 0;
-            }
-
-            .nexus-upgrade-browse-button {
-                padding: 0.6em 1.2em !important;
-                font-size: 1em !important;
-                white-space: nowrap;
-                flex-shrink: 0;
-            }
-
-            .nexus-upgrade-button-container-centered {
-                display: flex;
-                justify-content: center;
-                margin-top: 2em;
-            }
-
-            .nexus-upgrade-proceed-button {
-                padding: 12px 48px !important;
-                font-size: 16px !important;
-                font-weight: 600 !important;
-                min-width: 200px;
-            }
-        `;
-        document.head.appendChild(styleEl);
     }
 
     onClose() {
@@ -494,18 +446,18 @@ export class ConfigureFolderLocationsDialog extends Modal {
                 conversationFolder: {
                     changed: false,
                     oldPath: this.plugin.settings.conversationFolder,
-                    newPath: this.plugin.settings.conversationFolder
+                    newPath: this.plugin.settings.conversationFolder,
                 },
                 reportFolder: {
                     changed: false,
                     oldPath: this.originalReportFolder,
-                    newPath: this.originalReportFolder
+                    newPath: this.originalReportFolder,
                 },
                 attachmentFolder: {
                     changed: false,
                     oldPath: this.plugin.settings.attachmentFolder,
-                    newPath: this.plugin.settings.attachmentFolder
-                }
+                    newPath: this.plugin.settings.attachmentFolder,
+                },
             });
         }
     }
@@ -516,17 +468,16 @@ export class ConfigureFolderLocationsDialog extends Modal {
 
         modal.contentEl.createEl("p", {
             text: message,
-            cls: "nexus-error-message"
+            cls: "nexus-error-message",
         });
 
-        const buttonContainer = modal.contentEl.createDiv({ cls: "modal-button-container" });
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.justifyContent = "flex-end";
-        buttonContainer.style.marginTop = "1em";
+        const buttonContainer = modal.contentEl.createDiv({
+            cls: "modal-button-container nexus-button-container-flex-end",
+        });
 
         const okButton = buttonContainer.createEl("button", {
-            text: t('common.buttons.ok'),
-            cls: "mod-cta"
+            text: t("common.buttons.ok"),
+            cls: "mod-cta",
         });
         okButton.addEventListener("click", () => modal.close());
 

@@ -1,28 +1,31 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/providers/claude/claude-attachment-extractor.ts
 import { StandardAttachment } from "../../types/standard";
 import { Logger } from "../../logger";
 import { isImageFile, isTextFile } from "../../utils/file-utils";
 import type NexusAiChatImporterPlugin from "../../main";
-import { ZipArchiveReader, ZipEntryHandle, writeZipEntryToVault } from "../../utils/zip-loader";
+import {
+    ZipArchiveReader,
+    ZipEntryHandle,
+    writeZipEntryToVault,
+} from "../../utils/zip-loader";
 
 export class ClaudeAttachmentExtractor {
     constructor(
@@ -41,9 +44,9 @@ export class ClaudeAttachmentExtractor {
         attachments: StandardAttachment[]
     ): Promise<StandardAttachment[]> {
         if (attachments.length === 0) {
-            return attachments.map(att => ({
+            return attachments.map((att) => ({
                 ...att,
-                extractedContent: `File: ${att.fileName} (no attachments to process)`
+                extractedContent: `File: ${att.fileName} (no attachments to process)`,
             }));
         }
 
@@ -51,14 +54,25 @@ export class ClaudeAttachmentExtractor {
 
         for (const attachment of attachments) {
             try {
-                const processedAttachment = await this.processAttachment(zip, conversationId, attachment);
+                const processedAttachment = await this.processAttachment(
+                    zip,
+                    conversationId,
+                    attachment
+                );
                 processedAttachments.push(processedAttachment);
             } catch (error) {
-                this.logger.error(`Failed to process Claude attachment ${attachment.fileName}:`, error);
+                this.logger.error(
+                    `Failed to process Claude attachment ${attachment.fileName}:`,
+                    error
+                );
                 // Return the attachment with error status
                 processedAttachments.push({
                     ...attachment,
-                    extractedContent: `❌ **File: ${attachment.fileName}**\n\nError processing attachment: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    extractedContent: `❌ **File: ${
+                        attachment.fileName
+                    }**\n\nError processing attachment: ${
+                        error instanceof Error ? error.message : "Unknown error"
+                    }`,
                 });
             }
         }
@@ -82,28 +96,45 @@ export class ClaudeAttachmentExtractor {
 
         if (!zipPath) {
             // This is the normal case for Claude - files are not included in export
-            return this.createFileNotFoundPlaceholder(attachment, conversationId);
+            return this.createFileNotFoundPlaceholder(
+                attachment,
+                conversationId
+            );
         }
 
         const zipFile = zip.get(zipPath);
         if (!zipFile) {
-            return this.createFileNotFoundPlaceholder(attachment, conversationId);
+            return this.createFileNotFoundPlaceholder(
+                attachment,
+                conversationId
+            );
         }
 
         // If file is found (rare), extract it
         if (isImageFile(fileName)) {
-            return await this.processImageAttachment(zipFile, attachment, conversationId);
+            return await this.processImageAttachment(
+                zipFile,
+                attachment,
+                conversationId
+            );
         } else if (isTextFile(fileName)) {
             return await this.processTextAttachment(zipFile, attachment);
         } else {
-            return await this.processBinaryAttachment(zipFile, attachment, conversationId);
+            return await this.processBinaryAttachment(
+                zipFile,
+                attachment,
+                conversationId
+            );
         }
     }
 
     /**
      * Create simple placeholder for missing files (normal for Claude)
      */
-    private createFileNotFoundPlaceholder(attachment: StandardAttachment, conversationId: string): StandardAttachment {
+    private createFileNotFoundPlaceholder(
+        attachment: StandardAttachment,
+        conversationId: string
+    ): StandardAttachment {
         const fileName = attachment.fileName;
         const conversationUrl = `https://claude.ai/chat/${conversationId}`;
         const fileType = this.getFileTypeFromExtension(fileName);
@@ -112,7 +143,7 @@ export class ClaudeAttachmentExtractor {
 
         return {
             ...attachment,
-            extractedContent: placeholder
+            extractedContent: placeholder,
         };
     }
 
@@ -120,25 +151,25 @@ export class ClaudeAttachmentExtractor {
      * Get file type from extension
      */
     private getFileTypeFromExtension(fileName: string): string {
-        const extension = fileName.split('.').pop()?.toLowerCase();
+        const extension = fileName.split(".").pop()?.toLowerCase();
 
         switch (extension) {
-            case 'png':
-            case 'jpg':
-            case 'jpeg':
-            case 'gif':
-            case 'webp':
+            case "png":
+            case "jpg":
+            case "jpeg":
+            case "gif":
+            case "webp":
                 return `image/${extension}`;
-            case 'pdf':
-                return 'application/pdf';
-            case 'txt':
-                return 'text/plain';
-            case 'md':
-                return 'text/markdown';
-            case 'json':
-                return 'application/json';
+            case "pdf":
+                return "application/pdf";
+            case "txt":
+                return "text/plain";
+            case "md":
+                return "text/markdown";
+            case "json":
+                return "application/json";
             default:
-                return 'application/octet-stream';
+                return "application/octet-stream";
         }
     }
 
@@ -146,12 +177,15 @@ export class ClaudeAttachmentExtractor {
      * Find a file in the ZIP archive
      * Claude files might be in root or in subdirectories
      */
-    private async findFileInZip(zip: ZipArchiveReader, fileName: string): Promise<string | null> {
+    private async findFileInZip(
+        zip: ZipArchiveReader,
+        fileName: string
+    ): Promise<string | null> {
         // Try exact match first
         if (zip.has(fileName)) return fileName;
 
         // Try in common subdirectories
-        const commonPaths = ['attachments/', 'files/', 'uploads/'];
+        const commonPaths = ["attachments/", "files/", "uploads/"];
         for (const path of commonPaths) {
             if (zip.has(path + fileName)) return path + fileName;
         }
@@ -159,7 +193,10 @@ export class ClaudeAttachmentExtractor {
         // Search through all files for a match
         const allFiles = await zip.listEntries();
         for (const entry of allFiles) {
-            if (entry.path.endsWith(fileName) || entry.path.includes(fileName)) {
+            if (
+                entry.path.endsWith(fileName) ||
+                entry.path.includes(fileName)
+            ) {
                 return entry.path;
             }
         }
@@ -176,19 +213,31 @@ export class ClaudeAttachmentExtractor {
         conversationId: string
     ): Promise<StandardAttachment> {
         try {
-            const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-            const filePath = await this.saveAttachmentToVault(fileName, zipFile, "images");
+            const fileName = this.generateUniqueFileName(
+                attachment.fileName,
+                conversationId
+            );
+            const filePath = await this.saveAttachmentToVault(
+                fileName,
+                zipFile,
+                "images"
+            );
 
             return {
                 ...attachment,
                 fileName: fileName,
-                extractedContent: `![${attachment.fileName}](${filePath})`
+                extractedContent: `![${attachment.fileName}](${filePath})`,
             };
         } catch (error) {
-            this.logger.error(`Error processing Claude image ${attachment.fileName}:`, error);
+            this.logger.error(
+                `Error processing Claude image ${attachment.fileName}:`,
+                error
+            );
             return {
                 ...attachment,
-                extractedContent: `Error processing image: ${error instanceof Error ? error.message : 'Unknown error'}`
+                extractedContent: `Error processing image: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`,
             };
         }
     }
@@ -202,16 +251,21 @@ export class ClaudeAttachmentExtractor {
     ): Promise<StandardAttachment> {
         try {
             const textContent = await zipFile.readText();
-            
+
             return {
                 ...attachment,
-                extractedContent: `\`\`\`\n${textContent}\n\`\`\``
+                extractedContent: `\`\`\`\n${textContent}\n\`\`\``,
             };
         } catch (error) {
-            this.logger.error(`Error processing Claude text file ${attachment.fileName}:`, error);
+            this.logger.error(
+                `Error processing Claude text file ${attachment.fileName}:`,
+                error
+            );
             return {
                 ...attachment,
-                extractedContent: `Error reading text file: ${error instanceof Error ? error.message : 'Unknown error'}`
+                extractedContent: `Error reading text file: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`,
             };
         }
     }
@@ -225,35 +279,50 @@ export class ClaudeAttachmentExtractor {
         conversationId: string
     ): Promise<StandardAttachment> {
         try {
-            const fileName = this.generateUniqueFileName(attachment.fileName, conversationId);
-            const filePath = await this.saveAttachmentToVault(fileName, zipFile, "documents");
+            const fileName = this.generateUniqueFileName(
+                attachment.fileName,
+                conversationId
+            );
+            const filePath = await this.saveAttachmentToVault(
+                fileName,
+                zipFile,
+                "documents"
+            );
 
             return {
                 ...attachment,
                 fileName: fileName,
-                extractedContent: `[${attachment.fileName}](${filePath})`
+                extractedContent: `[${attachment.fileName}](${filePath})`,
             };
         } catch (error) {
-            this.logger.error(`Error processing Claude binary file ${attachment.fileName}:`, error);
+            this.logger.error(
+                `Error processing Claude binary file ${attachment.fileName}:`,
+                error
+            );
             return {
                 ...attachment,
-                extractedContent: `Error processing file: ${error instanceof Error ? error.message : 'Unknown error'}`
+                extractedContent: `Error processing file: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`,
             };
         }
     }
 
-
-
     /**
      * Generate unique filename to avoid conflicts
      */
-    private generateUniqueFileName(originalFileName: string, conversationId: string): string {
+    private generateUniqueFileName(
+        originalFileName: string,
+        conversationId: string
+    ): string {
         const timestamp = Date.now();
         const shortConversationId = conversationId.substring(0, 8);
-        const extension = originalFileName.includes('.') ? originalFileName.split('.').pop() : '';
+        const extension = originalFileName.includes(".")
+            ? originalFileName.split(".").pop()
+            : "";
         const baseName = originalFileName.replace(/\.[^/.]+$/, "");
-        
-        return extension 
+
+        return extension
             ? `claude_${shortConversationId}_${timestamp}_${baseName}.${extension}`
             : `claude_${shortConversationId}_${timestamp}_${baseName}`;
     }
@@ -261,18 +330,31 @@ export class ClaudeAttachmentExtractor {
     /**
      * Save attachment to vault using attachmentFolder setting
      */
-    private async saveAttachmentToVault(fileName: string, zipFile: { readBytes(): Promise<Uint8Array> }, category: string = "files"): Promise<string> {
+    private async saveAttachmentToVault(
+        fileName: string,
+        zipFile: { readBytes(): Promise<Uint8Array> },
+        category: string = "files"
+    ): Promise<string> {
         const attachmentFolder = `${this.plugin.settings.attachmentFolder}/claude/${category}`;
 
         // Ensure folder exists
         const { ensureFolderExists } = await import("../../utils");
-        const folderResult = await ensureFolderExists(attachmentFolder, this.plugin.app.vault);
+        const folderResult = await ensureFolderExists(
+            attachmentFolder,
+            this.plugin.app.vault
+        );
         if (!folderResult.success) {
-            throw new Error(`Failed to create Claude attachment folder: ${folderResult.error}`);
+            throw new Error(
+                `Failed to create Claude attachment folder: ${folderResult.error}`
+            );
         }
 
         const filePath = `${attachmentFolder}/${fileName}`;
-        const writeResult = await writeZipEntryToVault(zipFile as any, filePath, this.plugin.app.vault);
+        const writeResult = await writeZipEntryToVault(
+            zipFile as any,
+            filePath,
+            this.plugin.app.vault
+        );
         return writeResult.targetPath;
     }
 }

@@ -1,8 +1,11 @@
 /**
+ * Import orchestration for the Nexus CLI (desktop only — not part of the plugin).
+ *
  * Orchestrates the import using plugin services with the Obsidian shim.
  * Supports ChatGPT, Claude, and Le Chat providers.
  */
 
+// Node.js built-ins — intentional, this file is CLI-only (not part of the plugin)
 import * as fs from "fs";
 import * as path from "path";
 import { App, Plugin } from "obsidian";
@@ -15,52 +18,54 @@ import { ImportReport } from "../../src/models/import-report";
 import { Logger } from "../../src/logger";
 import pluginManifest from "../../manifest.json";
 
+const OBSIDIAN_CONFIG_DIR = ".obsidian";
+
 export interface ImportOptions {
-  vault: string;
-  input: string[];
-  provider?: string;
-  conversationFolder?: string;
-  attachmentFolder?: string;
-  reportFolder?: string;
-  datePrefix?: boolean;
-  dateFormat?: "YYYY-MM-DD" | "YYYYMMDD";
-  timestampFormat?: string;
-  dryRun?: boolean;
-  verbose?: boolean;
+    vault: string;
+    input: string[];
+    provider?: string;
+    conversationFolder?: string;
+    attachmentFolder?: string;
+    reportFolder?: string;
+    datePrefix?: boolean;
+    dateFormat?: "YYYY-MM-DD" | "YYYYMMDD";
+    timestampFormat?: string;
+    dryRun?: boolean;
+    verbose?: boolean;
 }
 
 /**
  * Shim for browser `File` API used by the plugin import services.
  */
 class NodeFile {
-  name: string;
-  path: string;
-  lastModified: number;
-  size: number;
-  type = "application/zip";
-  /** @internal raw file contents */
-  _buffer: Buffer;
+    name: string;
+    path: string;
+    lastModified: number;
+    size: number;
+    type = "application/zip";
+    /** @internal raw file contents */
+    _buffer: Buffer;
 
-  constructor(filePath: string) {
-    const absolutePath = path.resolve(filePath);
-    this._buffer = fs.readFileSync(absolutePath);
-    this.path = absolutePath;
-    this.name = path.basename(absolutePath);
-    this.size = this._buffer.length;
+    constructor(filePath: string) {
+        const absolutePath = path.resolve(filePath);
+        this._buffer = fs.readFileSync(absolutePath);
+        this.path = absolutePath;
+        this.name = path.basename(absolutePath);
+        this.size = this._buffer.length;
 
-    try {
-      this.lastModified = fs.statSync(absolutePath).mtimeMs;
-    } catch {
-      this.lastModified = Date.now();
+        try {
+            this.lastModified = fs.statSync(absolutePath).mtimeMs;
+        } catch {
+            this.lastModified = Date.now();
+        }
     }
-  }
 
-  async arrayBuffer(): Promise<ArrayBuffer> {
-    return this._buffer.buffer.slice(
-      this._buffer.byteOffset,
-      this._buffer.byteOffset + this._buffer.byteLength
-    );
-  }
+    async arrayBuffer(): Promise<ArrayBuffer> {
+        return this._buffer.buffer.slice(
+            this._buffer.byteOffset,
+            this._buffer.byteOffset + this._buffer.byteLength
+        );
+    }
 }
 
 /**
@@ -68,20 +73,20 @@ class NodeFile {
  * Returns the settings object or {} if not found.
  */
 function readPluginConfig(vaultPath: string): Partial<PluginSettings> {
-  const dataPath = path.join(
-    vaultPath,
-    ".obsidian",
-    "plugins",
-    "nexus-ai-chat-importer",
-    "data.json"
-  );
-  try {
-    if (fs.existsSync(dataPath)) {
-      const data = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
-      return data?.settings || {};
-    }
-  } catch {}
-  return {};
+    const dataPath = path.join(
+        vaultPath,
+        OBSIDIAN_CONFIG_DIR,
+        "plugins",
+        "nexus-ai-chat-importer",
+        "data.json"
+    );
+    try {
+        if (fs.existsSync(dataPath)) {
+            const data = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
+            return data?.settings || {};
+        }
+    } catch { /* ignore missing config */ }
+    return {};
 }
 
 /**
@@ -91,170 +96,179 @@ function readPluginConfig(vaultPath: string): Partial<PluginSettings> {
  * CLI flags only override when explicitly provided (not undefined).
  */
 function createMockPlugin(opts: ImportOptions): any {
-  const app = new App(opts.vault);
+    const app = new App(opts.vault);
 
-  const manifest = {
-    id: "nexus-ai-chat-importer",
-    name: "Nexus AI Chat Importer",
-    version: pluginManifest.version || "1.5.7",
-  };
+    const manifest = {
+        id: "nexus-ai-chat-importer",
+        name: "Nexus AI Chat Importer",
+        version: pluginManifest.version || "1.5.7",
+    };
 
-  // Layer 1: hardcoded defaults
-  // Layer 2: saved plugin config from the vault
-  const savedConfig = readPluginConfig(opts.vault);
-  const settings: PluginSettings = {
-    ...DEFAULT_SETTINGS,
-    ...savedConfig,
-  };
+    // Layer 1: hardcoded defaults
+    // Layer 2: saved plugin config from the vault
+    const savedConfig = readPluginConfig(opts.vault);
+    const settings: PluginSettings = {
+        ...DEFAULT_SETTINGS,
+        ...savedConfig,
+    };
 
-  // Layer 3: explicit CLI flag overrides (only when provided)
-  if (opts.conversationFolder !== undefined) settings.conversationFolder = opts.conversationFolder;
-  if (opts.attachmentFolder !== undefined) settings.attachmentFolder = opts.attachmentFolder;
-  if (opts.reportFolder !== undefined) settings.reportFolder = opts.reportFolder;
-  if (opts.datePrefix !== undefined) settings.addDatePrefix = opts.datePrefix;
-  if (opts.dateFormat !== undefined) settings.dateFormat = opts.dateFormat;
-  if (opts.timestampFormat !== undefined) {
-    if (opts.timestampFormat === "locale") {
-      settings.useCustomMessageTimestampFormat = false;
-      settings.messageTimestampFormat = "locale";
-    } else {
-      settings.useCustomMessageTimestampFormat = true;
-      settings.messageTimestampFormat = opts.timestampFormat as any;
+    // Layer 3: explicit CLI flag overrides (only when provided)
+    if (opts.conversationFolder !== undefined)
+        settings.conversationFolder = opts.conversationFolder;
+    if (opts.attachmentFolder !== undefined)
+        settings.attachmentFolder = opts.attachmentFolder;
+    if (opts.reportFolder !== undefined)
+        settings.reportFolder = opts.reportFolder;
+    if (opts.datePrefix !== undefined) settings.addDatePrefix = opts.datePrefix;
+    if (opts.dateFormat !== undefined) settings.dateFormat = opts.dateFormat;
+    if (opts.timestampFormat !== undefined) {
+        if (opts.timestampFormat === "locale") {
+            settings.useCustomMessageTimestampFormat = false;
+            settings.messageTimestampFormat = "locale";
+        } else {
+            settings.useCustomMessageTimestampFormat = true;
+            settings.messageTimestampFormat = opts.timestampFormat as any;
+        }
     }
-  }
 
-  // Create a Plugin-like object
-  const plugin = new Plugin(app, manifest) as any;
-  plugin.settings = settings;
-  plugin.logger = new Logger();
+    // Create a Plugin-like object
+    const plugin = new Plugin(app, manifest) as any;
+    plugin.settings = settings;
+    plugin.logger = new Logger();
 
-  // Wire up StorageService
-  const storageService = new StorageService(plugin);
-  plugin.getStorageService = () => storageService;
+    // Wire up StorageService
+    const storageService = new StorageService(plugin);
+    plugin.getStorageService = () => storageService;
 
-  // Wire up FileService
-  const fileService = new FileService(plugin);
-  plugin.getFileService = () => fileService;
+    // Wire up FileService
+    const fileService = new FileService(plugin);
+    plugin.getFileService = () => fileService;
 
-  // Wire up saveSettings
-  plugin.saveSettings = async () => {
-    try {
-      const existingData = (await plugin.loadData()) || {};
-      const mergedData = {
-        ...existingData,
-        settings: plugin.settings,
-        importedArchives: storageService.getImportedArchives(),
-        upgradeHistory: existingData.upgradeHistory || {
-          completedUpgrades: {},
-          completedOperations: {},
-        },
-      };
-      await plugin.saveData(mergedData);
-    } catch (error: any) {
-      plugin.logger.error("saveSettings failed:", error);
-    }
-  };
+    // Wire up saveSettings
+    plugin.saveSettings = async () => {
+        try {
+            const existingData = (await plugin.loadData()) || {};
+            const mergedData = {
+                ...existingData,
+                settings: plugin.settings,
+                importedArchives: storageService.getImportedArchives(),
+                upgradeHistory: existingData.upgradeHistory || {
+                    completedUpgrades: {},
+                    completedOperations: {},
+                },
+            };
+            await plugin.saveData(mergedData);
+        } catch (error: any) {
+            plugin.logger.error("saveSettings failed:", error);
+        }
+    };
 
-  // Load storage data synchronously for simplicity
-  plugin._initStorage = async () => {
-    try {
-      await storageService.loadData();
-    } catch {
-      // Fresh vault — no data yet
-    }
-  };
+    // Load storage data synchronously for simplicity
+    plugin._initStorage = async () => {
+        try {
+            await storageService.loadData();
+        } catch {
+            // Fresh vault — no data yet
+        }
+    };
 
-  return plugin;
+    return plugin;
 }
 
 export async function runImport(opts: ImportOptions): Promise<void> {
-  // Validate vault path
-  if (!fs.existsSync(opts.vault)) {
-    throw new Error(`Vault path does not exist: ${opts.vault}`);
-  }
-  const obsidianDir = path.join(opts.vault, ".obsidian");
-  if (!fs.existsSync(obsidianDir)) {
-    throw new Error(
-      `Not an Obsidian vault (missing .obsidian/): ${opts.vault}`
-    );
-  }
-
-  // Validate input files
-  for (const input of opts.input) {
-    if (!fs.existsSync(input)) {
-      throw new Error(`Input file does not exist: ${input}`);
+    // Validate vault path
+    if (!fs.existsSync(opts.vault)) {
+        throw new Error(`Vault path does not exist: ${opts.vault}`);
     }
-  }
+    const obsidianDir = path.join(opts.vault, OBSIDIAN_CONFIG_DIR);
+    if (!fs.existsSync(obsidianDir)) {
+        throw new Error(
+            `Not an Obsidian vault (missing ${OBSIDIAN_CONFIG_DIR}/): ${opts.vault}`
+        );
+    }
 
-  const provider = opts.provider!;
-
-  if (opts.verbose) {
-    // Show effective config sources
-    const savedConfig = readPluginConfig(opts.vault);
-    const hasPluginConfig = Object.keys(savedConfig).length > 0;
-    console.error(`Vault:    ${opts.vault}`);
-    console.error(`Config:   ${hasPluginConfig ? "loaded from plugin data.json" : "using defaults (no plugin config found)"}`);
-    console.error(`Provider: ${provider}`);
-    console.error(`Files:    ${opts.input.join(", ")}`);
-  }
-
-  if (opts.dryRun) {
-    console.log("[dry-run] Would import the following files:");
+    // Validate input files
     for (const input of opts.input) {
-      console.log(`  - ${input}`);
+        if (!fs.existsSync(input)) {
+            throw new Error(`Input file does not exist: ${input}`);
+        }
     }
-    console.log(`[dry-run] Provider: ${provider}`);
-    console.log(`[dry-run] Vault: ${opts.vault}`);
-    console.log("[dry-run] No files were written.");
-    return;
-  }
 
-  // Create mock plugin
-  const plugin = createMockPlugin({ ...opts, provider });
-  await plugin._initStorage();
+    const provider = opts.provider!;
 
-  // Create ImportService
-  const importService = new ImportService(plugin);
-
-  // Create shared report
-  const report = new ImportReport();
-  if (
-    plugin.settings.useCustomMessageTimestampFormat &&
-    plugin.settings.messageTimestampFormat
-  ) {
-    report.setCustomTimestampFormat(plugin.settings.messageTimestampFormat);
-  }
-
-  // Create File shims
-  const files = opts.input.map((p) => new NodeFile(path.resolve(p)));
-
-  // Process each file
-  for (const file of files) {
     if (opts.verbose) {
-      console.error(`\nProcessing: ${file.name}`);
+        // Show effective config sources
+        const savedConfig = readPluginConfig(opts.vault);
+        const hasPluginConfig = Object.keys(savedConfig).length > 0;
+        console.error(`Vault:    ${opts.vault}`);
+        console.error(
+            `Config:   ${
+                hasPluginConfig
+                    ? "loaded from plugin data.json"
+                    : "using defaults (no plugin config found)"
+            }`
+        );
+        console.error(`Provider: ${provider}`);
+        console.error(`Files:    ${opts.input.join(", ")}`);
     }
-    try {
-      await importService.handleZipFile(
-        file as any, // NodeFile satisfies the shape JSZip/ImportService need
-        provider,
-        undefined, // all conversations
-        report
-      );
-    } catch (error: any) {
-      console.error(`Error processing ${file.name}: ${error.message}`);
-    }
-  }
 
-  // Print summary
-  const stats = report.getCompletionStats();
-  console.log("\n--- Import Summary ---");
-  console.log(`Created:  ${stats.created}`);
-  console.log(`Updated:  ${stats.updated}`);
-  console.log(`Skipped:  ${stats.skipped}`);
-  console.log(`Failed:   ${stats.failed}`);
-  if (stats.attachmentsTotal > 0) {
-    console.log(
-      `Attachments: ${stats.attachmentsFound}/${stats.attachmentsTotal}`
-    );
-  }
+    if (opts.dryRun) {
+        console.log("[dry-run] Would import the following files:");
+        for (const input of opts.input) {
+            console.log(`  - ${input}`);
+        }
+        console.log(`[dry-run] Provider: ${provider}`);
+        console.log(`[dry-run] Vault: ${opts.vault}`);
+        console.log("[dry-run] No files were written.");
+        return;
+    }
+
+    // Create mock plugin
+    const plugin = createMockPlugin({ ...opts, provider });
+    await plugin._initStorage();
+
+    // Create ImportService
+    const importService = new ImportService(plugin);
+
+    // Create shared report
+    const report = new ImportReport();
+    if (
+        plugin.settings.useCustomMessageTimestampFormat &&
+        plugin.settings.messageTimestampFormat
+    ) {
+        report.setCustomTimestampFormat(plugin.settings.messageTimestampFormat);
+    }
+
+    // Create File shims
+    const files = opts.input.map((p) => new NodeFile(path.resolve(p)));
+
+    // Process each file
+    for (const file of files) {
+        if (opts.verbose) {
+            console.error(`\nProcessing: ${file.name}`);
+        }
+        try {
+            await importService.handleZipFile(
+                file as any, // NodeFile satisfies the shape JSZip/ImportService need
+                provider,
+                undefined, // all conversations
+                report
+            );
+        } catch (error: any) {
+            console.error(`Error processing ${file.name}: ${error.message}`);
+        }
+    }
+
+    // Print summary
+    const stats = report.getCompletionStats();
+    console.log("\n--- Import Summary ---");
+    console.log(`Created:  ${stats.created}`);
+    console.log(`Updated:  ${stats.updated}`);
+    console.log(`Skipped:  ${stats.skipped}`);
+    console.log(`Failed:   ${stats.failed}`);
+    if (stats.attachmentsTotal > 0) {
+        console.log(
+            `Attachments: ${stats.attachmentsFound}/${stats.attachmentsTotal}`
+        );
+    }
 }

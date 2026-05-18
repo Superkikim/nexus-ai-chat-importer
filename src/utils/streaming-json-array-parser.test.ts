@@ -54,7 +54,7 @@ describe("StreamingJsonArrayParser", () => {
             {
                 id: "cx",
                 title: "Complex",
-                content: "He said: \"Hello [world]\" and left.",
+                content: 'He said: "Hello [world]" and left.',
                 meta: {
                     examples: [
                         { text: "{ not a brace } inside string" },
@@ -80,10 +80,14 @@ describe("StreamingJsonArrayParser", () => {
         const bad = "{ this is not valid json }";
         const good2 = { id: "g2" };
 
-        const arrayJson = `[${JSON.stringify(good1)},${bad},${JSON.stringify(good2)}]`;
+        const arrayJson = `[${JSON.stringify(good1)},${bad},${JSON.stringify(
+            good2
+        )}]`;
 
         const ids: string[] = [];
-        for (const conv of StreamingJsonArrayParser.streamConversations(arrayJson)) {
+        for (const conv of StreamingJsonArrayParser.streamConversations(
+            arrayJson
+        )) {
             if (conv && typeof conv.id === "string") {
                 ids.push(conv.id);
             }
@@ -102,7 +106,9 @@ describe("StreamingJsonArrayParser", () => {
         const parts = [json.slice(0, 2), json.slice(2, 9), json.slice(9)];
 
         const ids: string[] = [];
-        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunksFrom(parts))) {
+        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(
+            chunksFrom(parts)
+        )) {
             ids.push(conv.id);
         }
 
@@ -111,7 +117,7 @@ describe("StreamingJsonArrayParser", () => {
 
     it("streams chunked Claude root object and ignores string false positives", async () => {
         const payload = {
-            note: "example: \"conversations\":[not-real]",
+            note: 'example: "conversations":[not-real]',
             conversations: [
                 { uuid: "ca", name: "Alpha" },
                 { uuid: "cb", name: "Beta", chat_messages: [{ text: "hi" }] },
@@ -119,7 +125,7 @@ describe("StreamingJsonArrayParser", () => {
             meta: { exported_at: "2024-01-01T00:00:00Z" },
         };
         const json = JSON.stringify(payload);
-        const keyStart = json.indexOf("\"conversations\"");
+        const keyStart = json.indexOf('"conversations"');
         const parts = [
             json.slice(0, keyStart + 5),
             json.slice(keyStart + 5, keyStart + 17),
@@ -127,7 +133,9 @@ describe("StreamingJsonArrayParser", () => {
         ];
 
         const uuids: string[] = [];
-        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(chunksFrom(parts))) {
+        for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(
+            chunksFrom(parts)
+        )) {
             uuids.push(conv.uuid);
         }
 

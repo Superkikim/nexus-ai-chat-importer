@@ -1,21 +1,20 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 // src/services/archive-mode-decider.ts
 
@@ -59,12 +58,15 @@ export const UNCOMPRESSED_LARGE_ARCHIVE_THRESHOLD_BYTES = 250 * 1024 * 1024; // 
  *   the uncompressed threshold, we always select large-archive mode.
  * - Otherwise we fall back to ZIP size as a coarse early indicator.
  */
-export function decideArchiveMode(context: ArchiveSizeContext): ArchiveModeDecision {
+export function decideArchiveMode(
+    context: ArchiveSizeContext
+): ArchiveModeDecision {
     const { zipSizeBytes, conversationsUncompressedBytes } = context;
 
     if (
         typeof conversationsUncompressedBytes === "number" &&
-        conversationsUncompressedBytes >= UNCOMPRESSED_LARGE_ARCHIVE_THRESHOLD_BYTES
+        conversationsUncompressedBytes >=
+            UNCOMPRESSED_LARGE_ARCHIVE_THRESHOLD_BYTES
     ) {
         return {
             mode: "large-archive",
@@ -84,4 +86,3 @@ export function decideArchiveMode(context: ArchiveSizeContext): ArchiveModeDecis
         reason: "within-threshold",
     };
 }
-

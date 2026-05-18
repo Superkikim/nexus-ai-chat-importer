@@ -1,27 +1,25 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/utils.ts
 import { App, TFile, TFolder, Vault } from "obsidian";
 import { Logger } from "./logger";
-import { requestUrl } from "obsidian";
-import { MESSAGE_TIMESTAMP_FORMATS, PROVIDER_URLS } from "./config/constants";
+import { MESSAGE_TIMESTAMP_FORMATS } from "./config/constants";
 import type { MessageTimestampFormat } from "./types/plugin";
 
 // Use window.moment instead of importing from obsidian
@@ -59,7 +57,10 @@ export function truncateToMinute(unixTime: number): number {
  * compareTimestampsIgnoringSeconds(1719582647, 1719582600) // Both 14:30:xx → returns 0 (equal)
  * compareTimestampsIgnoringSeconds(1719582700, 1719582600) // 14:31 vs 14:30 → returns 60 (positive)
  */
-export function compareTimestampsIgnoringSeconds(time1: number, time2: number): number {
+export function compareTimestampsIgnoringSeconds(
+    time1: number,
+    time2: number
+): number {
     return truncateToMinute(time1) - truncateToMinute(time2);
 }
 
@@ -74,13 +75,15 @@ export function formatMessageTimestamp(
     const date = moment(unixTime * 1000);
 
     // If no custom format, use locale (default behavior)
-    if (!customFormat || customFormat === 'locale') {
-        return `${date.format('L')} at ${date.format('LTS')}`;
+    if (!customFormat || customFormat === "locale") {
+        return `${date.format("L")} at ${date.format("LTS")}`;
     }
 
     // Use custom format
     const format = MESSAGE_TIMESTAMP_FORMATS[customFormat];
-    return `${date.format(format.dateFormat)}${format.separator}${date.format(format.timeFormat)}`;
+    return `${date.format(format.dateFormat)}${format.separator}${date.format(
+        format.timeFormat
+    )}`;
 }
 
 /**
@@ -118,14 +121,14 @@ export function generateFileName(title: string): string {
     let fileName = formatTitle(title)
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-        .replace(/[<>:"\/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
+        .replace(/[<>:"/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
 
     // CRITICAL: Remove special characters from the beginning
     // This fixes issues like ".htaccess" becoming an invisible file
     fileName = fileName.replace(/^[^\w\d\s]+/, ""); // Remove non-alphanumeric at start
-    
+
     // Clean up any remaining problematic patterns
     fileName = fileName
         .replace(/\s+/g, " ") // Normalize spaces
@@ -224,7 +227,8 @@ export function enforceFileNameByteLimit(
 
     const extensionBytes = getUtf8ByteLength(extension);
     const availableBaseBytes = Math.max(1, maxBytes - extensionBytes);
-    const truncatedBase = truncateToUtf8Bytes(baseName, availableBaseBytes).trim() || "Untitled";
+    const truncatedBase =
+        truncateToUtf8Bytes(baseName, availableBaseBytes).trim() || "Untitled";
 
     const finalName = `${truncatedBase}${extension}`;
     if (getUtf8ByteLength(finalName) <= maxBytes) {
@@ -242,10 +246,15 @@ export async function generateUniqueFileName(
 ): Promise<string> {
     const lastSlash = filePath.lastIndexOf("/");
     const folderPath = lastSlash >= 0 ? filePath.substring(0, lastSlash) : "";
-    const initialFileName = lastSlash >= 0 ? filePath.substring(lastSlash + 1) : filePath;
+    const initialFileName =
+        lastSlash >= 0 ? filePath.substring(lastSlash + 1) : filePath;
     const extensionIndex = initialFileName.lastIndexOf(".");
-    const extension = extensionIndex > 0 ? initialFileName.substring(extensionIndex) : "";
-    const originalBaseName = extensionIndex > 0 ? initialFileName.substring(0, extensionIndex) : initialFileName;
+    const extension =
+        extensionIndex > 0 ? initialFileName.substring(extensionIndex) : "";
+    const originalBaseName =
+        extensionIndex > 0
+            ? initialFileName.substring(0, extensionIndex)
+            : initialFileName;
 
     const buildCandidatePath = (counter: number): string => {
         const suffix = counter > 0 ? ` (${counter})` : "";
@@ -254,13 +263,26 @@ export async function generateUniqueFileName(
         if (typeof maxFileNameBytes === "number" && maxFileNameBytes > 0) {
             const suffixBytes = getUtf8ByteLength(suffix);
             const extensionBytes = getUtf8ByteLength(extension);
-            const allowedBaseBytes = Math.max(1, maxFileNameBytes - suffixBytes - extensionBytes);
-            const boundedBaseName = truncateToUtf8Bytes(originalBaseName, allowedBaseBytes).trim() || "Untitled";
+            const allowedBaseBytes = Math.max(
+                1,
+                maxFileNameBytes - suffixBytes - extensionBytes
+            );
+            const boundedBaseName =
+                truncateToUtf8Bytes(
+                    originalBaseName,
+                    allowedBaseBytes
+                ).trim() || "Untitled";
             candidateFileName = `${boundedBaseName}${suffix}${extension}`;
-            candidateFileName = enforceFileNameByteLimit(candidateFileName, maxFileNameBytes, true);
+            candidateFileName = enforceFileNameByteLimit(
+                candidateFileName,
+                maxFileNameBytes,
+                true
+            );
         }
 
-        return folderPath ? `${folderPath}/${candidateFileName}` : candidateFileName;
+        return folderPath
+            ? `${folderPath}/${candidateFileName}`
+            : candidateFileName;
     };
 
     let uniqueFileName = buildCandidatePath(0);
@@ -333,27 +355,27 @@ export function generateConversationFileName(
  * Returns either a safe unquoted string or a properly quoted string when necessary
  */
 export function generateSafeAlias(title: string): string {
-    if (!title || typeof title !== 'string') {
+    if (!title || typeof title !== "string") {
         return "Untitled";
     }
 
     // Check if starts with YAML special characters BEFORE any sanitization
     const startsWithYamlSpecial =
-        title.startsWith('#') ||
-        title.startsWith('&') ||
-        title.startsWith('*') ||
-        title.startsWith('!') ||
-        title.startsWith('|') ||
-        title.startsWith('>') ||
-        title.startsWith('%') ||
-        title.startsWith('@') ||
-        title.startsWith('`');
+        title.startsWith("#") ||
+        title.startsWith("&") ||
+        title.startsWith("*") ||
+        title.startsWith("!") ||
+        title.startsWith("|") ||
+        title.startsWith(">") ||
+        title.startsWith("%") ||
+        title.startsWith("@") ||
+        title.startsWith("`");
 
     // Start with the title and apply minimal sanitization
     let cleanName = title
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-        .replace(/[<>\/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters (keep quotes and colons)
+        .replace(/[<>/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters (keep quotes and colons)
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
 
@@ -385,26 +407,21 @@ export function generateSafeAlias(title: string): string {
     const needsQuotes =
         // YAML reserved words
         /^(true|false|null|yes|no|on|off|\d+|\d*\.\d+)$/i.test(cleanName) ||
-
         // Contains quotes
         cleanName.includes('"') ||
-
         // Contains colon (CRITICAL: prevents YAML key-value interpretation)
-        cleanName.includes(':') ||
-
+        cleanName.includes(":") ||
         // Contains square brackets or curly braces (YAML flow collections)
-        cleanName.includes('[') ||
-        cleanName.includes(']') ||
-        cleanName.includes('{') ||
-        cleanName.includes('}') ||
-
+        cleanName.includes("[") ||
+        cleanName.includes("]") ||
+        cleanName.includes("{") ||
+        cleanName.includes("}") ||
         // Started with YAML special characters (before sanitization)
         startsWithYamlSpecial ||
-
         // Contains newlines or tabs (safety check)
-        cleanName.includes('\n') ||
-        cleanName.includes('\r') ||
-        cleanName.includes('\t');
+        cleanName.includes("\n") ||
+        cleanName.includes("\r") ||
+        cleanName.includes("\t");
 
     if (needsQuotes) {
         // Use single quotes and escape any single quotes in the content
@@ -422,30 +439,40 @@ export function isValidMessage(message: any): boolean {
         typeof message.content === "object" &&
         Array.isArray(message.content.parts) &&
         message.content.parts.length > 0 &&
-        message.content.parts.some(
-            (part: any) => {
-                // Handle simple string parts
-                if (typeof part === "string" && part.trim() !== "") {
+        message.content.parts.some((part: any) => {
+            // Handle simple string parts
+            if (typeof part === "string" && part.trim() !== "") {
+                return true;
+            }
+            // Handle object parts with content_type
+            if (typeof part === "object" && part !== null) {
+                // Audio transcription parts
+                if (
+                    part.content_type === "audio_transcription" &&
+                    part.text &&
+                    part.text.trim() !== ""
+                ) {
                     return true;
                 }
-                // Handle object parts with content_type
-                if (typeof part === "object" && part !== null) {
-                    // Audio transcription parts
-                    if (part.content_type === "audio_transcription" && part.text && part.text.trim() !== "") {
-                        return true;
-                    }
-                    // Text parts with content_type
-                    if (part.content_type === "text" && part.text && part.text.trim() !== "") {
-                        return true;
-                    }
-                    // Multimodal text parts
-                    if (part.content_type === "multimodal_text" && part.text && part.text.trim() !== "") {
-                        return true;
-                    }
+                // Text parts with content_type
+                if (
+                    part.content_type === "text" &&
+                    part.text &&
+                    part.text.trim() !== ""
+                ) {
+                    return true;
                 }
-                return false;
+                // Multimodal text parts
+                if (
+                    part.content_type === "multimodal_text" &&
+                    part.text &&
+                    part.text.trim() !== ""
+                ) {
+                    return true;
+                }
             }
-        )
+            return false;
+        })
     );
 }
 
@@ -487,37 +514,6 @@ export async function ensureFolderExists(
         }
     }
     return { success: true };
-}
-
-export async function checkConversationLink(
-    conversationId: string,
-    provider: string = 'chatgpt'
-): Promise<boolean> {
-    // Generate provider-specific URL using centralized constants
-    let url: string;
-    switch (provider) {
-        case 'chatgpt':
-            url = PROVIDER_URLS.CHATGPT.CHAT(conversationId);
-            break;
-        case 'claude':
-            url = PROVIDER_URLS.CLAUDE.CHAT(conversationId);
-            break;
-        default:
-            logger.error(`Unknown provider for link checking: ${provider}`);
-            return false;
-    }
-
-    try {
-        const response = await requestUrl({
-            url: url,
-            method: "HEAD",
-        });
-
-        return response.status >= 200 && response.status < 300; // Returns true for status codes 200-299
-    } catch (error) {
-        logger.error(`Error fetching ${url}:`, error);
-        return false; // Return false in case of error (e.g., network issues)
-    }
 }
 
 export function isNexusRelated(file: TFile, app: App): boolean {
@@ -579,7 +575,10 @@ export async function moveAndMergeFolders(
     /**
      * Recursively move all files from a folder
      */
-    async function moveRecursive(sourceFolder: TFolder, destPath: string): Promise<void> {
+    async function moveRecursive(
+        sourceFolder: TFolder,
+        destPath: string
+    ): Promise<void> {
         // Ensure destination folder exists
         try {
             await vault.createFolder(destPath);
@@ -596,7 +595,8 @@ export async function moveAndMergeFolders(
         foldersToDelete.push(sourceFolder);
 
         // Process all children
-        for (const child of [...sourceFolder.children]) { // Copy array to avoid modification during iteration
+        for (const child of [...sourceFolder.children]) {
+            // Copy array to avoid modification during iteration
             const childNewPath = `${destPath}/${child.name}`;
 
             if (child instanceof TFolder) {
@@ -626,7 +626,9 @@ export async function moveAndMergeFolders(
                         onProgress(processedFiles, totalFiles);
                     }
                 } catch (error: any) {
-                    const errorMsg = `Failed to move ${child.path}: ${error.message || String(error)}`;
+                    const errorMsg = `Failed to move ${child.path}: ${
+                        error.message || String(error)
+                    }`;
                     logger.error(`[moveAndMergeFolders] ${errorMsg}`);
                     errorDetails.push(errorMsg);
                     errors++;
@@ -657,26 +659,35 @@ export async function moveAndMergeFolders(
                 const folderContents = await vault.adapter.list(folder.path);
 
                 // Filter out hidden files (like .DS_Store on macOS)
-                const visibleFiles = folderContents.files.filter(f => {
-                    const fileName = f.split('/').pop() || '';
-                    return !fileName.startsWith('.');
+                const visibleFiles = folderContents.files.filter((f) => {
+                    const fileName = f.split("/").pop() || "";
+                    return !fileName.startsWith(".");
                 });
 
-                const isEmpty = visibleFiles.length === 0 && folderContents.folders.length === 0;
+                const isEmpty =
+                    visibleFiles.length === 0 &&
+                    folderContents.folders.length === 0;
 
                 if (isEmpty) {
                     // Folder is empty (or only contains hidden files), safe to delete
                     // rmdir with recursive=true will handle hidden files
                     await vault.adapter.rmdir(folder.path, true);
                 } else {
-                    logger.warn(`[moveAndMergeFolders] ⚠️ Folder not empty, skipping deletion: ${folder.path} (${visibleFiles.length} files, ${folderContents.folders.length} folders)`);
+                    logger.warn(
+                        `[moveAndMergeFolders] ⚠️ Folder not empty, skipping deletion: ${folder.path} (${visibleFiles.length} files, ${folderContents.folders.length} folders)`
+                    );
                 }
             } catch (error: any) {
                 // Folder might have already been deleted, or might not exist
                 // This is not a critical error - just log it
                 const errorMsg = error.message || String(error);
-                if (!errorMsg.includes("does not exist") && !errorMsg.includes("ENOENT")) {
-                    logger.warn(`[moveAndMergeFolders] ❌ Could not delete folder ${folder.path}: ${errorMsg}`);
+                if (
+                    !errorMsg.includes("does not exist") &&
+                    !errorMsg.includes("ENOENT")
+                ) {
+                    logger.warn(
+                        `[moveAndMergeFolders] ❌ Could not delete folder ${folder.path}: ${errorMsg}`
+                    );
                 }
             }
         }
@@ -693,15 +704,19 @@ export async function moveAndMergeFolders(
                 }
 
                 // Check if folder is actually empty using low-level API
-                const folderContents = await vault.adapter.list(currentFolder.path);
+                const folderContents = await vault.adapter.list(
+                    currentFolder.path
+                );
 
                 // Filter out hidden files (like .DS_Store on macOS)
-                const visibleFiles = folderContents.files.filter(f => {
-                    const fileName = f.split('/').pop() || '';
-                    return !fileName.startsWith('.');
+                const visibleFiles = folderContents.files.filter((f) => {
+                    const fileName = f.split("/").pop() || "";
+                    return !fileName.startsWith(".");
                 });
 
-                const isEmpty = visibleFiles.length === 0 && folderContents.folders.length === 0;
+                const isEmpty =
+                    visibleFiles.length === 0 &&
+                    folderContents.folders.length === 0;
 
                 if (isEmpty) {
                     // Folder is empty (or only contains hidden files), safe to delete
@@ -713,7 +728,7 @@ export async function moveAndMergeFolders(
                     // Parent folder is not empty - stop here
                     break;
                 }
-            } catch (error: any) {
+            } catch {
                 // Parent folder error - stop here
                 break;
             }
@@ -724,7 +739,7 @@ export async function moveAndMergeFolders(
             moved,
             skipped,
             errors,
-            errorDetails: errorDetails.length > 0 ? errorDetails : undefined
+            errorDetails: errorDetails.length > 0 ? errorDetails : undefined,
         };
     } catch (error: any) {
         logger.error(`Failed to merge folders:`, error);
@@ -733,7 +748,7 @@ export async function moveAndMergeFolders(
             moved,
             skipped,
             errors: errors + 1,
-            errorDetails: [`Critical error: ${error.message || String(error)}`]
+            errorDetails: [`Critical error: ${error.message || String(error)}`],
         };
     }
 }

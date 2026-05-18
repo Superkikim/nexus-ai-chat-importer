@@ -18,7 +18,10 @@
 
 // src/utils/conversation-filter.ts
 
-import { ProviderRegistry, ProviderAdapter } from "../providers/provider-adapter";
+import {
+    ProviderRegistry,
+    ProviderAdapter,
+} from "../providers/provider-adapter";
 import { logger } from "../logger";
 
 /**
@@ -45,7 +48,9 @@ export function filterConversationsByIds(
         forcedProvider || providerRegistry.detectProvider(rawConversations);
 
     const adapter: ProviderAdapter | undefined =
-        detectedProvider !== "unknown" ? providerRegistry.getAdapter(detectedProvider) : undefined;
+        detectedProvider !== "unknown"
+            ? providerRegistry.getAdapter(detectedProvider)
+            : undefined;
 
     const getConversationId = (conversation: any): string => {
         // 1) Preferred path: use adapter.getId so providers own their
@@ -84,13 +89,24 @@ export function filterConversationsByIds(
                 return conversation.uuid || "";
             }
 
-            if (conversation && conversation.metadata?.thread_id && Array.isArray(conversation.conversations)) {
+            if (
+                conversation &&
+                conversation.metadata?.thread_id &&
+                Array.isArray(conversation.conversations)
+            ) {
                 return conversation.metadata?.thread_id || "";
             }
 
             if (conversation && Array.isArray(conversation.entries)) {
-                const firstEntry = Array.isArray(conversation.entries) ? conversation.entries[0] : undefined;
-                return firstEntry?.thread_url_slug || firstEntry?.uuid || firstEntry?.backend_uuid || "";
+                const firstEntry = Array.isArray(conversation.entries)
+                    ? conversation.entries[0]
+                    : undefined;
+                return (
+                    firstEntry?.thread_url_slug ||
+                    firstEntry?.uuid ||
+                    firstEntry?.backend_uuid ||
+                    ""
+                );
             }
 
             // Default: ChatGPT-style conversation with id field
@@ -100,7 +116,7 @@ export function filterConversationsByIds(
         }
     };
 
-    return rawConversations.filter(conversation => {
+    return rawConversations.filter((conversation) => {
         const conversationId = getConversationId(conversation);
         if (!conversationId) return false;
         return selectedIdsSet.has(conversationId);

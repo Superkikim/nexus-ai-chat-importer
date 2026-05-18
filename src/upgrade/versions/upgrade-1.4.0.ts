@@ -16,9 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/upgrade/versions/upgrade-1.4.0.ts
-import { VersionUpgrade, UpgradeOperation, UpgradeContext, OperationResult } from "../upgrade-interface";
+import {
+    VersionUpgrade,
+    UpgradeOperation,
+    UpgradeContext,
+    OperationResult,
+} from "../upgrade-interface";
 import { TFile, TFolder } from "obsidian";
 import { StorageService } from "../../services/storage-service";
 import { LinkUpdateService } from "../../services/link-update-service";
@@ -26,7 +30,8 @@ import { LinkUpdateService } from "../../services/link-update-service";
 /**
  * UUID pattern: 8-4-4-4-12 hex chars (e.g. "a3663666-58a8-4835-bef1-308fb59c8609")
  */
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const TARGET_VERSION = "1.4.0";
 
@@ -35,17 +40,14 @@ const TARGET_VERSION = "1.4.0";
  * Handles both existing and missing plugin_version fields.
  */
 function updatePluginVersion(content: string, version: string): string {
-    if (content.includes('plugin_version:')) {
+    if (content.includes("plugin_version:")) {
         return content.replace(
             /^plugin_version: .*$/m,
             `plugin_version: "${version}"`
         );
     }
     // Add plugin_version before the closing --- of frontmatter
-    return content.replace(
-        /\n---\n/,
-        `\nplugin_version: "${version}"\n---\n`
-    );
+    return content.replace(/\n---\n/, `\nplugin_version: "${version}"\n---\n`);
 }
 
 /**
@@ -58,15 +60,20 @@ function updatePluginVersion(content: string, version: string): string {
 class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
     readonly id = "rename-claude-artifact-folders";
     readonly name = "Rename Claude Artifact Folders";
-    readonly description = "Renames Claude artifact folders from UUID to human-readable names matching the conversation file.";
+    readonly description =
+        "Renames Claude artifact folders from UUID to human-readable names matching the conversation file.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+            const attachmentFolder =
+                context.plugin.settings.attachmentFolder || "Nexus/Attachments";
             const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
 
-            const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
+            const folder =
+                context.plugin.app.vault.getAbstractFileByPath(
+                    claudeArtifactsPath
+                );
             if (!folder || !(folder instanceof TFolder)) {
                 return false;
             }
@@ -80,7 +87,10 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
 
             return false;
         } catch (error) {
-            console.error(`[RenameClaudeArtifactFolders] canRun failed:`, error);
+            console.error(
+                `[RenameClaudeArtifactFolders] canRun failed:`,
+                error
+            );
             return false;
         }
     }
@@ -92,14 +102,19 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
         const details: string[] = [];
 
         try {
-            const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+            const attachmentFolder =
+                context.plugin.settings.attachmentFolder || "Nexus/Attachments";
             const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
 
-            const artifactsFolder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
+            const artifactsFolder =
+                context.plugin.app.vault.getAbstractFileByPath(
+                    claudeArtifactsPath
+                );
             if (!artifactsFolder || !(artifactsFolder instanceof TFolder)) {
                 return {
                     success: true,
-                    message: "No Claude artifacts folder found, nothing to migrate."
+                    message:
+                        "No Claude artifacts folder found, nothing to migrate.",
                 };
             }
 
@@ -114,17 +129,19 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
             if (uuidFolders.length === 0) {
                 return {
                     success: true,
-                    message: "No UUID-named artifact folders found."
+                    message: "No UUID-named artifact folders found.",
                 };
             }
 
             // Build conversation lookup ONCE (avoid repeated full vault scans)
             context.onProgress?.(0, "Scanning conversation catalog...");
             const storageService = new StorageService(context.plugin);
-            const conversationMap = await storageService.scanExistingConversations();
+            const conversationMap =
+                await storageService.scanExistingConversations();
 
             const total = uuidFolders.length;
-            const pathMappings: Array<{oldPath: string, newPath: string}> = [];
+            const pathMappings: Array<{ oldPath: string; newPath: string }> =
+                [];
 
             for (let i = 0; i < uuidFolders.length; i++) {
                 const folder = uuidFolders[i];
@@ -137,46 +154,78 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
 
                     if (!entry || !entry.path) {
                         skippedCount++;
-                        details.push(`Skipped: ${conversationId} (conversation not found in vault)`);
-                        context.onProgress?.(progress, `Skipped ${i + 1}/${total}`);
+                        details.push(
+                            `Skipped: ${conversationId} (conversation not found in vault)`
+                        );
+                        context.onProgress?.(
+                            progress,
+                            `Skipped ${i + 1}/${total}`
+                        );
                         continue;
                     }
 
                     // Extract filename from path (e.g. "Nexus/Conversations/claude/2026/02/My Chat.md" → "My Chat")
-                    const pathParts = entry.path.split('/');
+                    const pathParts = entry.path.split("/");
                     const fileNameWithExt = pathParts[pathParts.length - 1];
-                    const conversationFileName = fileNameWithExt.replace(/\.md$/, '');
+                    const conversationFileName = fileNameWithExt.replace(
+                        /\.md$/,
+                        ""
+                    );
 
                     if (!conversationFileName) {
                         skippedCount++;
-                        details.push(`Skipped: ${conversationId} (could not determine file name)`);
-                        context.onProgress?.(progress, `Skipped ${i + 1}/${total}`);
+                        details.push(
+                            `Skipped: ${conversationId} (could not determine file name)`
+                        );
+                        context.onProgress?.(
+                            progress,
+                            `Skipped ${i + 1}/${total}`
+                        );
                         continue;
                     }
 
                     // Check if target folder already exists
                     const newFolderPath = `${claudeArtifactsPath}/${conversationFileName}`;
-                    const existingTarget = context.plugin.app.vault.getAbstractFileByPath(newFolderPath);
+                    const existingTarget =
+                        context.plugin.app.vault.getAbstractFileByPath(
+                            newFolderPath
+                        );
 
                     if (existingTarget) {
                         skippedCount++;
-                        details.push(`Skipped: ${conversationId} → "${conversationFileName}" (target folder already exists)`);
-                        context.onProgress?.(progress, `Skipped ${i + 1}/${total}`);
+                        details.push(
+                            `Skipped: ${conversationId} → "${conversationFileName}" (target folder already exists)`
+                        );
+                        context.onProgress?.(
+                            progress,
+                            `Skipped ${i + 1}/${total}`
+                        );
                         continue;
                     }
 
                     // Rename the folder — vault.rename() updates internal links if Obsidian setting is enabled
                     const oldFolderPath = folder.path;
-                    context.onProgress?.(progress, `Renaming ${i + 1}/${total}: ${conversationFileName}`);
-                    await context.plugin.app.vault.rename(folder, newFolderPath);
+                    context.onProgress?.(
+                        progress,
+                        `Renaming ${i + 1}/${total}: ${conversationFileName}`
+                    );
+                    await context.plugin.app.vault.rename(
+                        folder,
+                        newFolderPath
+                    );
 
-                    pathMappings.push({ oldPath: oldFolderPath, newPath: newFolderPath });
+                    pathMappings.push({
+                        oldPath: oldFolderPath,
+                        newPath: newFolderPath,
+                    });
                     renamedCount++;
-                    details.push(`Renamed: ${conversationId} → "${conversationFileName}"`);
-
+                    details.push(
+                        `Renamed: ${conversationId} → "${conversationFileName}"`
+                    );
                 } catch (error) {
                     errorCount++;
-                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    const errorMsg =
+                        error instanceof Error ? error.message : String(error);
                     details.push(`Error: ${conversationId} — ${errorMsg}`);
                     context.onProgress?.(progress, `Error ${i + 1}/${total}`);
                 }
@@ -188,13 +237,29 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
                 context.onProgress?.(80, "Verifying wikilinks...");
 
                 const linkUpdateService = new LinkUpdateService(context.plugin);
-                const linkStats = await linkUpdateService.updateAttachmentLinksBatch(pathMappings, (progress) => {
-                    const overallProgress = 80 + Math.round((progress.current / Math.max(progress.total, 1)) * 20);
-                    context.onProgress?.(overallProgress, progress.detail);
-                }, TARGET_VERSION);
+                const linkStats =
+                    await linkUpdateService.updateAttachmentLinksBatch(
+                        pathMappings,
+                        (progress) => {
+                            const overallProgress =
+                                80 +
+                                Math.round(
+                                    (progress.current /
+                                        Math.max(progress.total, 1)) *
+                                        20
+                                );
+                            context.onProgress?.(
+                                overallProgress,
+                                progress.detail
+                            );
+                        },
+                        TARGET_VERSION
+                    );
 
                 if (linkStats.filesModified > 0) {
-                    details.push(`Fixed ${linkStats.attachmentLinksUpdated} stale link(s) in ${linkStats.filesModified} file(s)`);
+                    details.push(
+                        `Fixed ${linkStats.attachmentLinksUpdated} stale link(s) in ${linkStats.filesModified} file(s)`
+                    );
                 }
             }
 
@@ -203,15 +268,15 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
             return {
                 success: errorCount === 0,
                 message: summary,
-                details: details
+                details: details,
             };
-
         } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
+            const errorMsg =
+                error instanceof Error ? error.message : String(error);
             return {
                 success: false,
                 message: `Migration failed: ${errorMsg}`,
-                details: details
+                details: details,
             };
         }
     }
@@ -228,16 +293,25 @@ class RenameClaudeArtifactFoldersOperation extends UpgradeOperation {
 class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
     readonly id = "restore-missing-artifact-callouts";
     readonly name = "Restore Missing Artifact Callouts";
-    readonly description = "Restores artifact links in Claude conversation notes affected by Anthropic's export format change.";
+    readonly description =
+        "Restores artifact links in Claude conversation notes affected by Anthropic's export format change.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+            const attachmentFolder =
+                context.plugin.settings.attachmentFolder || "Nexus/Attachments";
             const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
 
-            const folder = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
-            return !!(folder && folder instanceof TFolder && folder.children.length > 0);
+            const folder =
+                context.plugin.app.vault.getAbstractFileByPath(
+                    claudeArtifactsPath
+                );
+            return !!(
+                folder &&
+                folder instanceof TFolder &&
+                folder.children.length > 0
+            );
         } catch {
             return false;
         }
@@ -250,12 +324,19 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
         const details: string[] = [];
 
         try {
-            const attachmentFolder = context.plugin.settings.attachmentFolder || "Nexus/Attachments";
+            const attachmentFolder =
+                context.plugin.settings.attachmentFolder || "Nexus/Attachments";
             const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
 
-            const artifactsRoot = context.plugin.app.vault.getAbstractFileByPath(claudeArtifactsPath);
+            const artifactsRoot =
+                context.plugin.app.vault.getAbstractFileByPath(
+                    claudeArtifactsPath
+                );
             if (!artifactsRoot || !(artifactsRoot instanceof TFolder)) {
-                return { success: true, message: "No Claude artifacts folder found." };
+                return {
+                    success: true,
+                    message: "No Claude artifacts folder found.",
+                };
             }
 
             // Collect artifact subfolders
@@ -273,7 +354,8 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
             // Build conversation lookup
             context.onProgress?.(0, "Scanning conversation catalog...");
             const storageService = new StorageService(context.plugin);
-            const conversationMap = await storageService.scanExistingConversations();
+            const conversationMap =
+                await storageService.scanExistingConversations();
 
             const total = artifactFolders.length;
 
@@ -282,13 +364,17 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
                 const progress = Math.round(((i + 1) / total) * 100);
 
                 if (i % 10 === 0 || i === total - 1) {
-                    context.onProgress?.(progress, `Checking ${i + 1}/${total}: ${folder.name}`);
+                    context.onProgress?.(
+                        progress,
+                        `Checking ${i + 1}/${total}: ${folder.name}`
+                    );
                 }
 
                 try {
                     // Collect .md artifact files in this folder
                     const artifactFiles = folder.children.filter(
-                        (f): f is TFile => f instanceof TFile && f.extension === 'md'
+                        (f): f is TFile =>
+                            f instanceof TFile && f.extension === "md"
                     );
 
                     if (artifactFiles.length === 0) {
@@ -296,12 +382,19 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
                     }
 
                     // Read one artifact to get conversation_id
-                    const sampleContent = await context.plugin.app.vault.read(artifactFiles[0]);
-                    const conversationId = this.extractFrontmatterField(sampleContent, 'conversation_id');
+                    const sampleContent = await context.plugin.app.vault.read(
+                        artifactFiles[0]
+                    );
+                    const conversationId = this.extractFrontmatterField(
+                        sampleContent,
+                        "conversation_id"
+                    );
 
                     if (!conversationId) {
                         skippedCount++;
-                        details.push(`Skipped: ${folder.name} (no conversation_id in artifact)`);
+                        details.push(
+                            `Skipped: ${folder.name} (no conversation_id in artifact)`
+                        );
                         continue;
                     }
 
@@ -309,19 +402,26 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
                     const entry = conversationMap.get(conversationId);
                     if (!entry || !entry.path) {
                         skippedCount++;
-                        details.push(`Skipped: ${folder.name} (conversation not found in vault)`);
+                        details.push(
+                            `Skipped: ${folder.name} (conversation not found in vault)`
+                        );
                         continue;
                     }
 
-                    const noteFile = context.plugin.app.vault.getAbstractFileByPath(entry.path);
+                    const noteFile =
+                        context.plugin.app.vault.getAbstractFileByPath(
+                            entry.path
+                        );
                     if (!noteFile || !(noteFile instanceof TFile)) {
                         skippedCount++;
                         continue;
                     }
 
                     // Check if note already has artifact callouts
-                    const noteContent = await context.plugin.app.vault.read(noteFile);
-                    if (noteContent.includes('nexus_artifact')) {
+                    const noteContent = await context.plugin.app.vault.read(
+                        noteFile
+                    );
+                    if (noteContent.includes("nexus_artifact")) {
                         skippedCount++;
                         continue;
                     }
@@ -335,50 +435,83 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
                     }> = [];
 
                     for (const artFile of artifactFiles) {
-                        const artContent = await context.plugin.app.vault.read(artFile);
-                        const artifactId = this.extractFrontmatterField(artContent, 'artifact_id') || 'unknown';
-                        const versionStr = this.extractFrontmatterField(artContent, 'version_number');
-                        const versionNumber = versionStr ? parseInt(versionStr, 10) : 1;
-                        const title = this.extractArtifactTitle(artContent, artifactId);
+                        const artContent = await context.plugin.app.vault.read(
+                            artFile
+                        );
+                        const artifactId =
+                            this.extractFrontmatterField(
+                                artContent,
+                                "artifact_id"
+                            ) || "unknown";
+                        const versionStr = this.extractFrontmatterField(
+                            artContent,
+                            "version_number"
+                        );
+                        const versionNumber = versionStr
+                            ? parseInt(versionStr, 10)
+                            : 1;
+                        const title = this.extractArtifactTitle(
+                            artContent,
+                            artifactId
+                        );
 
                         // Build artifact link path (without .md extension for wikilinks)
-                        const filePath = artFile.path.replace(/\.md$/, '');
+                        const filePath = artFile.path.replace(/\.md$/, "");
 
-                        artifactEntries.push({ artifactId, versionNumber, title, filePath });
+                        artifactEntries.push({
+                            artifactId,
+                            versionNumber,
+                            title,
+                            filePath,
+                        });
                     }
 
                     // Sort: by artifact_id, then by version_number
                     artifactEntries.sort((a, b) => {
                         const idCmp = a.artifactId.localeCompare(b.artifactId);
-                        return idCmp !== 0 ? idCmp : a.versionNumber - b.versionNumber;
+                        return idCmp !== 0
+                            ? idCmp
+                            : a.versionNumber - b.versionNumber;
                     });
 
                     // Build nested callout lines (artifacts nested inside info callout)
-                    const nestedCalloutLines = artifactEntries.map(art =>
-                        `>>[!nexus_artifact] **${art.title}** v${art.versionNumber}\n>> 🎨 [[${art.filePath}|View Artifact]]`
+                    const nestedCalloutLines = artifactEntries.map(
+                        (art) =>
+                            `>>[!nexus_artifact] **${art.title}** v${art.versionNumber}\n>> 🎨 [[${art.filePath}|View Artifact]]`
                     );
 
                     const section = [
-                        '',
-                        '> [!info] Restored Artifacts',
-                        '> Due to a change in Anthropic\'s Claude export format, artifact references were not included when this conversation was originally imported. The artifacts below have been restored during the v1.4.0 migration.',
-                        '> To get artifacts positioned inline within messages, delete this note and re-import from your Claude export ZIP.',
-                        '>',
-                        nestedCalloutLines.join('\n>\n'),
-                    ].join('\n');
+                        "",
+                        "> [!info] Restored Artifacts",
+                        "> Due to a change in Anthropic's Claude export format, artifact references were not included when this conversation was originally imported. The artifacts below have been restored during the v1.4.0 migration.",
+                        "> To get artifacts positioned inline within messages, delete this note and re-import from your Claude export ZIP.",
+                        ">",
+                        nestedCalloutLines.join("\n>\n"),
+                    ].join("\n");
 
                     // Append to note and update plugin_version
-                    let updatedContent = noteContent + section + '\n';
-                    updatedContent = updatePluginVersion(updatedContent, TARGET_VERSION);
-                    await context.plugin.app.vault.modify(noteFile, updatedContent);
+                    let updatedContent = noteContent + section + "\n";
+                    updatedContent = updatePluginVersion(
+                        updatedContent,
+                        TARGET_VERSION
+                    );
+                    await context.plugin.app.vault.modify(
+                        noteFile,
+                        updatedContent
+                    );
 
                     restoredCount++;
-                    details.push(`Restored ${artifactEntries.length} artifact(s): ${entry.path}`);
-                    context.onProgress?.(progress, `Restored: ${noteFile.name}`);
-
+                    details.push(
+                        `Restored ${artifactEntries.length} artifact(s): ${entry.path}`
+                    );
+                    context.onProgress?.(
+                        progress,
+                        `Restored: ${noteFile.name}`
+                    );
                 } catch (error) {
                     errorCount++;
-                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    const errorMsg =
+                        error instanceof Error ? error.message : String(error);
                     details.push(`Error: ${folder.name} — ${errorMsg}`);
                 }
             }
@@ -387,21 +520,26 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
             return {
                 success: errorCount === 0,
                 message: summary,
-                details: details
+                details: details,
             };
-
         } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
+            const errorMsg =
+                error instanceof Error ? error.message : String(error);
             return {
                 success: false,
                 message: `Migration failed: ${errorMsg}`,
-                details: details
+                details: details,
             };
         }
     }
 
-    private extractFrontmatterField(content: string, field: string): string | null {
-        const match = content.match(new RegExp(`^${field}:\\s*"?([^"\\n]+)"?`, 'm'));
+    private extractFrontmatterField(
+        content: string,
+        field: string
+    ): string | null {
+        const match = content.match(
+            new RegExp(`^${field}:\\s*"?([^"\\n]+)"?`, "m")
+        );
         return match ? match[1].trim() : null;
     }
 
@@ -409,10 +547,10 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
         // Try to get title from aliases array (first element is human-readable title)
         const aliasMatch = content.match(/^aliases:\s*\[([^\]]+)\]/m);
         if (aliasMatch) {
-            const firstAlias = aliasMatch[1].split(',')[0].trim();
+            const firstAlias = aliasMatch[1].split(",")[0].trim();
             // Remove surrounding quotes if present
-            const cleaned = firstAlias.replace(/^["']|["']$/g, '');
-            if (cleaned && cleaned !== 'Untitled Artifact') {
+            const cleaned = firstAlias.replace(/^["']|["']$/g, "");
+            if (cleaned && cleaned !== "Untitled Artifact") {
                 return cleaned;
             }
         }
@@ -433,13 +571,19 @@ class RestoreMissingArtifactCalloutsOperation extends UpgradeOperation {
 class FixCalloutEmptyLinesOperation extends UpgradeOperation {
     readonly id = "fix-callout-empty-lines";
     readonly name = "Fix Callout Empty Lines";
-    readonly description = "Fixes nested callout rendering in conversation notes created by previous versions.";
+    readonly description =
+        "Fixes nested callout rendering in conversation notes created by previous versions.";
     readonly type = "automatic" as const;
 
     async canRun(context: UpgradeContext): Promise<boolean> {
         try {
-            const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
-            const folder = context.plugin.app.vault.getAbstractFileByPath(conversationFolder);
+            const conversationFolder =
+                context.plugin.settings.conversationFolder ||
+                "Nexus/Conversations";
+            const folder =
+                context.plugin.app.vault.getAbstractFileByPath(
+                    conversationFolder
+                );
             return !!(folder && folder instanceof TFolder);
         } catch {
             return false;
@@ -453,11 +597,15 @@ class FixCalloutEmptyLinesOperation extends UpgradeOperation {
         const details: string[] = [];
 
         try {
-            const conversationFolder = context.plugin.settings.conversationFolder || "Nexus/Conversations";
+            const conversationFolder =
+                context.plugin.settings.conversationFolder ||
+                "Nexus/Conversations";
 
             // Get all markdown files under the conversation folder
             const allFiles = context.plugin.app.vault.getMarkdownFiles();
-            const conversationFiles = allFiles.filter(f => f.path.startsWith(conversationFolder));
+            const conversationFiles = allFiles.filter((f) =>
+                f.path.startsWith(conversationFolder)
+            );
 
             // Pattern: ">>" on its own line followed by ">>[!nexus_"
             const brokenPattern = /^>>$/gm;
@@ -470,7 +618,10 @@ class FixCalloutEmptyLinesOperation extends UpgradeOperation {
 
                 // Report progress every 10 files or on last file to avoid excessive UI updates
                 if (i % 10 === 0 || i === total - 1) {
-                    context.onProgress?.(progress, `Scanning ${i + 1}/${total}: ${file.name}`);
+                    context.onProgress?.(
+                        progress,
+                        `Scanning ${i + 1}/${total}: ${file.name}`
+                    );
                 }
 
                 try {
@@ -484,7 +635,7 @@ class FixCalloutEmptyLinesOperation extends UpgradeOperation {
                     brokenPattern.lastIndex = 0;
 
                     // Replace ">>" empty lines with ">" — only when followed by a nexus callout
-                    let fixed = content.replace(/^>>(\n>>\[!nexus_)/gm, '>$1');
+                    let fixed = content.replace(/^>>(\n>>\[!nexus_)/gm, ">$1");
 
                     if (fixed !== content) {
                         // Also update plugin_version in frontmatter
@@ -496,7 +647,8 @@ class FixCalloutEmptyLinesOperation extends UpgradeOperation {
                     }
                 } catch (error) {
                     errorCount++;
-                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    const errorMsg =
+                        error instanceof Error ? error.message : String(error);
                     details.push(`Error: ${file.path} — ${errorMsg}`);
                 }
             }
@@ -505,14 +657,15 @@ class FixCalloutEmptyLinesOperation extends UpgradeOperation {
             return {
                 success: errorCount === 0,
                 message: summary,
-                details: details
+                details: details,
             };
         } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
+            const errorMsg =
+                error instanceof Error ? error.message : String(error);
             return {
                 success: false,
                 message: `Migration failed: ${errorMsg}`,
-                details: details
+                details: details,
             };
         }
     }
@@ -527,7 +680,7 @@ export class Upgrade140 extends VersionUpgrade {
     readonly automaticOperations = [
         new RenameClaudeArtifactFoldersOperation(),
         new RestoreMissingArtifactCalloutsOperation(),
-        new FixCalloutEmptyLinesOperation()
+        new FixCalloutEmptyLinesOperation(),
     ];
 
     readonly manualOperations = [

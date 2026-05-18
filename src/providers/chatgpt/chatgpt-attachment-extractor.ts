@@ -1,51 +1,60 @@
 /**
  * Nexus AI Chat Importer - Obsidian Plugin
  * Copyright (C) 2024 Akim Sissaoui
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 // src/providers/chatgpt/chatgpt-attachment-extractor.ts
 import { StandardAttachment } from "../../types/standard";
 import { ensureFolderExists } from "../../utils";
-import { formatFileSize, getFileCategory, sanitizeFileName } from "../../utils/file-utils";
+import { formatFileSize, sanitizeFileName } from "../../utils/file-utils";
 import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
-import { AttachmentMap, AttachmentLocation } from "../../services/attachment-map-builder";
+import {
+    AttachmentMap,
+    AttachmentLocation,
+} from "../../services/attachment-map-builder";
 import {
     AttachmentLookupIndex,
     buildAttachmentLookupIndex,
     writeZipEntryToVault,
     ZipArchiveReader,
-    ZipEntryHandle,
 } from "../../utils/zip-loader";
 
-
 export class ChatGPTAttachmentExtractor {
-    private zipFileCache = new Map<string, { reader: ZipArchiveReader; path: string } | null>();
+    private zipFileCache = new Map<
+        string,
+        { reader: ZipArchiveReader; path: string } | null
+    >();
     private attachmentMap: AttachmentMap | null = null; // Multi-ZIP attachment map
     private allZips: ZipArchiveReader[] = [];
     private lookupIndexCache = new WeakMap<object, AttachmentLookupIndex>();
 
-    constructor(private plugin: NexusAiChatImporterPlugin, private logger: Logger) {}
+    constructor(
+        private plugin: NexusAiChatImporterPlugin,
+        private logger: Logger
+    ) {}
 
     /**
      * Set attachment map for multi-ZIP support
      * This enables fallback to older ZIPs when files are missing in recent exports
      */
-    setAttachmentMap(attachmentMap: AttachmentMap, allZips: ZipArchiveReader[]): void {
+    setAttachmentMap(
+        attachmentMap: AttachmentMap,
+        allZips: ZipArchiveReader[]
+    ): void {
         this.attachmentMap = attachmentMap;
         this.allZips = allZips;
     }
@@ -71,30 +80,42 @@ export class ChatGPTAttachmentExtractor {
         messageId?: string
     ): Promise<StandardAttachment[]> {
         if (attachments.length === 0) {
-            return attachments.map(att => ({ ...att, status: { processed: false, found: false } }));
+            return attachments.map((att) => ({
+                ...att,
+                status: { processed: false, found: false },
+            }));
         }
 
         const processedAttachments: StandardAttachment[] = [];
 
         for (const attachment of attachments) {
             try {
-                const result = await this.processAttachmentBestEffort(zip, conversationId, attachment, messageId);
+                const result = await this.processAttachmentBestEffort(
+                    zip,
+                    conversationId,
+                    attachment,
+                    messageId
+                );
                 processedAttachments.push(result);
             } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
+                const errorMessage =
+                    error instanceof Error ? error.message : String(error);
                 const context = messageId
                     ? `conversation: ${conversationId}, message: ${messageId}`
                     : `conversation: ${conversationId}`;
-                this.logger.error(`Failed to process ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
+                this.logger.error(
+                    `Failed to process ChatGPT attachment: ${attachment.fileName} (${context})`,
+                    errorMessage
+                );
                 // Even if processing fails, return attachment with error status
                 processedAttachments.push({
                     ...attachment,
                     status: {
                         processed: false,
                         found: false,
-                        reason: 'extraction_failed',
-                        note: `Processing failed: ${errorMessage}`
-                    }
+                        reason: "extraction_failed",
+                        note: `Processing failed: ${errorMessage}`,
+                    },
                 });
             }
         }
@@ -112,46 +133,65 @@ export class ChatGPTAttachmentExtractor {
         messageId?: string
     ): Promise<StandardAttachment> {
         // Try to find file in ZIP
-        const locatedFile = await this.findChatGPTFileById(zip, attachment, conversationId, messageId);
+        const locatedFile = await this.findChatGPTFileById(
+            zip,
+            attachment,
+            conversationId,
+            messageId
+        );
 
         if (!locatedFile) {
             // File not found - handle DALL-E images specially
             let finalExtractedContent = attachment.extractedContent;
 
-            if (attachment.attachmentType === 'generated_image' && attachment.extractedContent) {
+            if (
+                attachment.attachmentType === "generated_image" &&
+                attachment.extractedContent
+            ) {
                 // Replace the attachment callout with "Image Not Found" message
                 // Keep the prompt callout intact, only replace the attachment part
                 finalExtractedContent = attachment.extractedContent.replace(
                     />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
-                    '>>[!nexus_attachment] **Image Not Found**\n>> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive.'
+                    ">>[!nexus_attachment] **Image Not Found**\n>> ⚠️ Image could not be found. Perhaps it was not generated or is missing from the archive."
                 );
             }
 
             return {
                 ...attachment,
                 extractedContent: finalExtractedContent,
-                url: attachment.url || `https://chatgpt.com/c/${conversationId}`,
+                url:
+                    attachment.url || `https://chatgpt.com/c/${conversationId}`,
                 status: {
                     processed: true,
                     found: false,
-                    reason: 'missing_from_export'
-                }
+                    reason: "missing_from_export",
+                },
             };
         }
 
         // File found - try to extract it
         try {
-            const extractResult = await this.extractSingleAttachment(conversationId, attachment, locatedFile);
+            const extractResult = await this.extractSingleAttachment(
+                conversationId,
+                attachment,
+                locatedFile
+            );
 
             if (extractResult) {
                 // For generated images with extractedContent, replace placeholders
                 let finalExtractedContent = attachment.extractedContent;
-                if (attachment.attachmentType === 'generated_image' && attachment.extractedContent) {
+                if (
+                    attachment.attachmentType === "generated_image" &&
+                    attachment.extractedContent
+                ) {
                     finalExtractedContent = attachment.extractedContent
-                        .replace('{{FILENAME}}', extractResult.finalFileName)
-                        .replace('{{FILETYPE}}', extractResult.actualFileType)
-                        .replace('{{FILESIZE}}', formatFileSize(attachment.fileSize || 0))
-                        .replace('{{URL}}', extractResult.localPath);
+                        .replace("{{FILENAME}}", extractResult.finalFileName)
+                        .replace("{{FILETYPE}}", extractResult.actualFileType)
+                        .replace(
+                            "{{FILESIZE}}",
+                            formatFileSize(attachment.fileSize || 0)
+                        )
+                        .replace("{{URL}}", extractResult.localPath);
                 }
 
                 return {
@@ -163,18 +203,21 @@ export class ChatGPTAttachmentExtractor {
                     status: {
                         processed: true,
                         found: true,
-                        localPath: extractResult.localPath
-                    }
+                        localPath: extractResult.localPath,
+                    },
                 };
             } else {
                 // Extraction failed - handle DALL-E images specially
                 let finalExtractedContent = attachment.extractedContent;
 
-                if (attachment.attachmentType === 'generated_image' && attachment.extractedContent) {
+                if (
+                    attachment.attachmentType === "generated_image" &&
+                    attachment.extractedContent
+                ) {
                     // Replace the attachment callout with "Image Not Found" message
                     finalExtractedContent = attachment.extractedContent.replace(
                         />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
-                        '>>[!nexus_attachment] **Image Not Found**\n>> ⚠️ File was found in export but could not be extracted to disk.'
+                        ">>[!nexus_attachment] **Image Not Found**\n>> ⚠️ File was found in export but could not be extracted to disk."
                     );
                 }
 
@@ -184,22 +227,29 @@ export class ChatGPTAttachmentExtractor {
                     status: {
                         processed: true,
                         found: false,
-                        reason: 'extraction_failed',
-                        note: 'File was found in export but could not be extracted to disk.'
-                    }
+                        reason: "extraction_failed",
+                        note: "File was found in export but could not be extracted to disk.",
+                    },
                 };
             }
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
+        } catch (error: any) {
+            const errorMessage =
+                error instanceof Error ? error.message : String(error);
             const context = messageId
                 ? `conversation: ${conversationId}, message: ${messageId}`
                 : `conversation: ${conversationId}`;
-            this.logger.error(`Error extracting ChatGPT attachment: ${attachment.fileName} (${context})`, errorMessage);
+            this.logger.error(
+                `Error extracting ChatGPT attachment: ${attachment.fileName} (${context})`,
+                errorMessage
+            );
 
             // Handle DALL-E images specially
             let finalExtractedContent = attachment.extractedContent;
 
-            if (attachment.attachmentType === 'generated_image' && attachment.extractedContent) {
+            if (
+                attachment.attachmentType === "generated_image" &&
+                attachment.extractedContent
+            ) {
                 // Replace the attachment callout with error message
                 finalExtractedContent = attachment.extractedContent.replace(
                     />>\[!nexus_attachment\] \*\*\{\{FILENAME\}\}\*\* \(\{\{FILETYPE\}\}\) - \{\{FILESIZE\}\}\n>> !\[\[\{\{URL\}\}\]\]/,
@@ -213,9 +263,9 @@ export class ChatGPTAttachmentExtractor {
                 status: {
                     processed: true,
                     found: true, // File exists but extraction failed
-                    reason: 'extraction_failed',
-                    note: `Extraction failed: ${errorMessage}`
-                }
+                    reason: "extraction_failed",
+                    note: `Extraction failed: ${errorMessage}`,
+                },
             };
         }
     }
@@ -227,33 +277,54 @@ export class ChatGPTAttachmentExtractor {
         conversationId: string,
         attachment: StandardAttachment,
         locatedFile: { reader: ZipArchiveReader; path: string }
-    ): Promise<{localPath: string, finalFileName: string, actualFileType: string} | null> {
+    ): Promise<{
+        localPath: string;
+        finalFileName: string;
+        actualFileType: string;
+    } | null> {
         let finalFileName = attachment.fileName;
         let finalFileType = attachment.fileType;
         const entry = locatedFile.reader.get(locatedFile.path);
         if (!entry) {
-            throw new Error(`Attachment entry disappeared from ZIP reader: ${locatedFile.path}`);
+            throw new Error(
+                `Attachment entry disappeared from ZIP reader: ${locatedFile.path}`
+            );
         }
 
         const writeResult = await writeZipEntryToVault(
             entry,
             async (detection) => {
-                if (attachment.attachmentType === 'generated_image' && detection.detectedExtension) {
-                    const baseName = attachment.fileName.replace(/\.(dat|png|jpg|jpeg|gif|webp)$/i, '');
+                if (
+                    attachment.attachmentType === "generated_image" &&
+                    detection.detectedExtension
+                ) {
+                    const baseName = attachment.fileName.replace(
+                        /\.(dat|png|jpg|jpeg|gif|webp)$/i,
+                        ""
+                    );
                     finalFileName = `${baseName}.${detection.detectedExtension}`;
-                    finalFileType = detection.detectedMimeType || attachment.fileType;
+                    finalFileType =
+                        detection.detectedMimeType || attachment.fileType;
                 }
 
                 let targetPath = this.generateLocalPath(conversationId, {
                     ...attachment,
                     fileName: finalFileName,
-                    fileType: finalFileType
+                    fileType: finalFileType,
                 });
 
-                const folderPath = targetPath.substring(0, targetPath.lastIndexOf('/'));
-                const folderResult = await ensureFolderExists(folderPath, this.plugin.app.vault);
+                const folderPath = targetPath.substring(
+                    0,
+                    targetPath.lastIndexOf("/")
+                );
+                const folderResult = await ensureFolderExists(
+                    folderPath,
+                    this.plugin.app.vault
+                );
                 if (!folderResult.success) {
-                    throw new Error(`Failed to create attachment folder: ${folderResult.error}`);
+                    throw new Error(
+                        `Failed to create attachment folder: ${folderResult.error}`
+                    );
                 }
 
                 return this.resolveFileConflict(targetPath);
@@ -264,11 +335,9 @@ export class ChatGPTAttachmentExtractor {
         return {
             localPath: writeResult.targetPath,
             finalFileName: finalFileName,
-            actualFileType: finalFileType || 'application/octet-stream'
+            actualFileType: finalFileType || "application/octet-stream",
         };
     }
-
-
 
     /**
      * Resolve file conflicts by adding numeric suffix
@@ -279,7 +348,7 @@ export class ChatGPTAttachmentExtractor {
 
         while (await this.plugin.app.vault.adapter.exists(finalPath)) {
             // File exists, try with suffix
-            const lastDot = originalPath.lastIndexOf('.');
+            const lastDot = originalPath.lastIndexOf(".");
             if (lastDot === -1) {
                 finalPath = `${originalPath}_${counter}`;
             } else {
@@ -303,12 +372,15 @@ export class ChatGPTAttachmentExtractor {
         messageId?: string
     ): Promise<{ reader: ZipArchiveReader; path: string } | null> {
         if (!attachment.fileId) {
-            const context = conversationId && messageId
-                ? `conversation: ${conversationId}, message: ${messageId}`
-                : conversationId
-                ? `conversation: ${conversationId}`
-                : 'unknown context';
-            this.logger.warn(`No fileId provided for attachment: ${attachment.fileName} (${context})`);
+            const context =
+                conversationId && messageId
+                    ? `conversation: ${conversationId}, message: ${messageId}`
+                    : conversationId
+                    ? `conversation: ${conversationId}`
+                    : "unknown context";
+            this.logger.warn(
+                `No fileId provided for attachment: ${attachment.fileName} (${context})`
+            );
 
             // Fallback: try to find by filename only
             if (zip.has(attachment.fileName)) {
@@ -326,7 +398,11 @@ export class ChatGPTAttachmentExtractor {
 
         // NEW: If attachment map is available, use it for multi-ZIP fallback
         if (this.attachmentMap && this.allZips.length > 0) {
-            const result = await this.findFileUsingAttachmentMap(attachment, conversationId, messageId);
+            const result = await this.findFileUsingAttachmentMap(
+                attachment,
+                conversationId,
+                messageId
+            );
             if (result) {
                 this.zipFileCache.set(cacheKey, result);
                 return result;
@@ -343,8 +419,11 @@ export class ChatGPTAttachmentExtractor {
         }
 
         // Strategy 2: DALL-E Strategy - Check dalle-generations/ folder first (restored from v1.2.0)
-        if (attachment.fileName.startsWith('dalle_')) {
-            const dalleFiles = this.findCandidatePaths(index.byDalleId, attachment.fileId);
+        if (attachment.fileName.startsWith("dalle_")) {
+            const dalleFiles = this.findCandidatePaths(
+                index.byDalleId,
+                attachment.fileId
+            );
             if (dalleFiles.length > 0) {
                 const located = { reader: zip, path: dalleFiles[0] };
                 this.zipFileCache.set(cacheKey, located);
@@ -371,8 +450,12 @@ export class ChatGPTAttachmentExtractor {
             }
         }
 
-        const candidates = this.findCandidatePaths(index.byFileId, attachment.fileId);
-        const foundFile = candidates.length > 0 ? { reader: zip, path: candidates[0] } : null;
+        const candidates = this.findCandidatePaths(
+            index.byFileId,
+            attachment.fileId
+        );
+        const foundFile =
+            candidates.length > 0 ? { reader: zip, path: candidates[0] } : null;
 
         // Cache result (even if null)
         this.zipFileCache.set(cacheKey, foundFile);
@@ -386,22 +469,16 @@ export class ChatGPTAttachmentExtractor {
      */
     private async findFileUsingAttachmentMap(
         attachment: StandardAttachment,
-        conversationId?: string,
-        messageId?: string
+        _conversationId?: string,
+        _messageId?: string
     ): Promise<{ reader: ZipArchiveReader; path: string } | null> {
         if (!this.attachmentMap || this.allZips.length === 0) {
             return null;
         }
 
-        const context = conversationId && messageId
-            ? `conversation: ${conversationId}, message: ${messageId}`
-            : conversationId
-            ? `conversation: ${conversationId}`
-            : 'unknown context';
-
         // Try to find the file in the attachment map
         // The map contains all possible file IDs extracted from filenames
-        const fileId = attachment.fileId || '';
+        const fileId = attachment.fileId || "";
         if (!fileId) {
             return null;
         }
@@ -414,7 +491,9 @@ export class ChatGPTAttachmentExtractor {
             for (const altId of alternativeIds) {
                 const altLocations = this.attachmentMap.get(altId);
                 if (altLocations && altLocations.length > 0) {
-                    return this.getFileFromLocation(altLocations[altLocations.length - 1]);
+                    return this.getFileFromLocation(
+                        altLocations[altLocations.length - 1]
+                    );
                 }
             }
             return null;
@@ -433,20 +512,20 @@ export class ChatGPTAttachmentExtractor {
         const alternatives: string[] = [];
 
         // If fileId starts with "file_", also try without prefix
-        if (fileId.startsWith('file_')) {
+        if (fileId.startsWith("file_")) {
             alternatives.push(fileId.substring(5));
         }
         // If fileId doesn't have prefix, try with "file_" prefix
-        else if (!fileId.startsWith('file-')) {
+        else if (!fileId.startsWith("file-")) {
             alternatives.push(`file_${fileId}`);
         }
 
         // Also try with dash instead of underscore
-        if (fileId.includes('_')) {
-            alternatives.push(fileId.replace(/_/g, '-'));
+        if (fileId.includes("_")) {
+            alternatives.push(fileId.replace(/_/g, "-"));
         }
-        if (fileId.includes('-')) {
-            alternatives.push(fileId.replace(/-/g, '_'));
+        if (fileId.includes("-")) {
+            alternatives.push(fileId.replace(/-/g, "_"));
         }
 
         return alternatives;
@@ -455,16 +534,22 @@ export class ChatGPTAttachmentExtractor {
     /**
      * Get JSZip file object from attachment location
      */
-    private getFileFromLocation(location: AttachmentLocation): { reader: ZipArchiveReader; path: string } | null {
+    private getFileFromLocation(
+        location: AttachmentLocation
+    ): { reader: ZipArchiveReader; path: string } | null {
         if (location.zipIndex >= this.allZips.length) {
-            this.logger.error(`Invalid ZIP index ${location.zipIndex} (only ${this.allZips.length} ZIPs available)`);
+            this.logger.error(
+                `Invalid ZIP index ${location.zipIndex} (only ${this.allZips.length} ZIPs available)`
+            );
             return null;
         }
 
         const zip = this.allZips[location.zipIndex];
 
         if (!zip.has(location.path)) {
-            this.logger.error(`File not found in ZIP ${location.zipIndex}: ${location.path}`);
+            this.logger.error(
+                `File not found in ZIP ${location.zipIndex}: ${location.path}`
+            );
             return null;
         }
 
@@ -475,14 +560,19 @@ export class ChatGPTAttachmentExtractor {
      * Get file extension from filename (restored from v1.2.0)
      */
     private getFileExtension(fileName: string): string {
-        const lastDot = fileName.lastIndexOf('.');
-        return lastDot === -1 ? '' : fileName.substring(lastDot + 1).toLowerCase();
+        const lastDot = fileName.lastIndexOf(".");
+        return lastDot === -1
+            ? ""
+            : fileName.substring(lastDot + 1).toLowerCase();
     }
 
     /**
      * Generate local path for ChatGPT attachment using attachmentFolder setting
      */
-    private generateLocalPath(conversationId: string, attachment: StandardAttachment): string {
+    private generateLocalPath(
+        conversationId: string,
+        attachment: StandardAttachment
+    ): string {
         const category = this.categorizeFile(attachment);
 
         // Clean filename for filesystem - keep original name since it should be unique
@@ -498,30 +588,34 @@ export class ChatGPTAttachmentExtractor {
     private categorizeFile(attachment: StandardAttachment): string {
         // Use MIME type if available
         if (attachment.fileType) {
-            if (attachment.fileType.startsWith('image/')) return 'images';
-            if (attachment.fileType.startsWith('audio/')) return 'audio';
-            if (attachment.fileType.startsWith('video/')) return 'video';
-            if (attachment.fileType === 'application/pdf') return 'documents';
-            if (attachment.fileType.includes('text/') || attachment.fileType.includes('markdown')) return 'documents';
+            if (attachment.fileType.startsWith("image/")) return "images";
+            if (attachment.fileType.startsWith("audio/")) return "audio";
+            if (attachment.fileType.startsWith("video/")) return "video";
+            if (attachment.fileType === "application/pdf") return "documents";
+            if (
+                attachment.fileType.includes("text/") ||
+                attachment.fileType.includes("markdown")
+            )
+                return "documents";
         }
 
         // Fall back to file extension using FileService
-        const ext = this.plugin.getFileService().getFileExtension(attachment.fileName);
-        
-        const audioExts = ['wav', 'mp3', 'ogg', 'm4a', 'flac'];
-        const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
-        const docExts = ['pdf', 'doc', 'docx', 'txt', 'md', 'rtf'];
-        const videoExts = ['mp4', 'avi', 'mov', 'mkv'];
+        const ext = this.plugin
+            .getFileService()
+            .getFileExtension(attachment.fileName);
 
-        if (audioExts.includes(ext)) return 'audio';
-        if (imageExts.includes(ext)) return 'images';
-        if (docExts.includes(ext)) return 'documents';
-        if (videoExts.includes(ext)) return 'video';
-        
-        return 'files';
+        const audioExts = ["wav", "mp3", "ogg", "m4a", "flac"];
+        const imageExts = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
+        const docExts = ["pdf", "doc", "docx", "txt", "md", "rtf"];
+        const videoExts = ["mp4", "avi", "mov", "mkv"];
+
+        if (audioExts.includes(ext)) return "audio";
+        if (imageExts.includes(ext)) return "images";
+        if (docExts.includes(ext)) return "documents";
+        if (videoExts.includes(ext)) return "video";
+
+        return "files";
     }
-
-
 
     /**
      * Clear ZIP file cache (call between different ZIP files)
@@ -530,19 +624,24 @@ export class ChatGPTAttachmentExtractor {
         this.zipFileCache.clear();
     }
 
-    private async getLookupIndex(zip: ZipArchiveReader): Promise<AttachmentLookupIndex> {
-        const cached = this.lookupIndexCache.get(zip as object);
+    private async getLookupIndex(
+        zip: ZipArchiveReader
+    ): Promise<AttachmentLookupIndex> {
+        const cached = this.lookupIndexCache.get(zip);
         if (cached) {
             return cached;
         }
 
         const entries = await zip.listEntries();
         const index = buildAttachmentLookupIndex(entries);
-        this.lookupIndexCache.set(zip as object, index);
+        this.lookupIndexCache.set(zip, index);
         return index;
     }
 
-    private findCandidatePaths(index: Map<string, string[]>, fileId: string): string[] {
+    private findCandidatePaths(
+        index: Map<string, string[]>,
+        fileId: string
+    ): string[] {
         const exact = index.get(fileId);
         if (exact && exact.length > 0) return exact;
 
@@ -565,9 +664,17 @@ export class ChatGPTAttachmentExtractor {
     } {
         return {
             total: attachments.length,
-            found: attachments.filter(a => a.status?.found && a.status?.processed).length,
-            missing: attachments.filter(a => !a.status?.found && a.status?.reason === 'missing_from_export').length,
-            failed: attachments.filter(a => a.status?.reason === 'extraction_failed').length
+            found: attachments.filter(
+                (a) => a.status?.found && a.status?.processed
+            ).length,
+            missing: attachments.filter(
+                (a) =>
+                    !a.status?.found &&
+                    a.status?.reason === "missing_from_export"
+            ).length,
+            failed: attachments.filter(
+                (a) => a.status?.reason === "extraction_failed"
+            ).length,
         };
     }
 }

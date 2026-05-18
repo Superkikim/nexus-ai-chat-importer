@@ -1,15 +1,13 @@
 import { describe, expect, it } from "vitest";
- 
+
 async function createFormatter() {
-    const win = (globalThis as any).window || {};
-    win.moment = (value: number) => ({
+    (window as any).moment = (value: number) => ({
         format: (pattern: string) => {
             if (pattern === "L") return "01/01/2024";
             if (pattern === "LTS") return "10:00:00";
             return String(value);
         },
     });
-    (globalThis as any).window = win;
 
     const { MessageFormatter } = await import("./message-formatter");
     const logger = {
@@ -21,7 +19,7 @@ async function createFormatter() {
             messageTimestampFormat: "locale",
         },
     } as any;
-    return new MessageFormatter(logger, plugin as any);
+    return new MessageFormatter(logger, plugin);
 }
 
 describe("MessageFormatter", () => {
