@@ -89,6 +89,7 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le C
 - Filenames no longer truncate or fail on long conversation titles
 - Perplexity conversations deduplicated correctly across export variants
 - Under the hood quality and compliance improvements for better stability
+- Import summary now shows how many conversations were skipped due to no exportable content
 
 🐛 **Fixed**
 - Claude conversations with no exportable content are now skipped gracefully instead of creating empty notes
