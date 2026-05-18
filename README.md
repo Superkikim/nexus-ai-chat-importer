@@ -490,12 +490,12 @@ Formatted with custom Obsidian callouts:
 > [!nexus_user]
 > **User** - 2024-01-15 14:30:22
 >
-> Your message here...
+> How do I implement binary search in Python?
 
 > [!nexus_agent]
 > **Assistant** - 2024-01-15 14:31:05
 >
-> AI response here...
+> Binary search works by dividing the search space in half repeatedly. Here's a Python implementation:
 ```
 
 **Callout Types**:
