@@ -34,7 +34,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
     render(containerEl: HTMLElement): void {
         // Conversation Folder
         let conversationFolderTextComponent: TextComponent | undefined;
-        new Setting(containerEl)
+        const conversationFolderSetting = new Setting(containerEl)
             .setName(t("settings.folders.conversation_folder.name"))
             .setDesc(t("settings.folders.conversation_folder.desc"))
             .addText((text) => {
@@ -87,10 +87,11 @@ export class FolderSettingsSection extends BaseSettingsSection {
                         modal.open();
                     });
             });
+        conversationFolderSetting.settingEl.addClass("nexus-folder-path-setting");
 
         // Report Folder
         let reportFolderTextComponent: TextComponent | undefined;
-        new Setting(containerEl)
+        const reportFolderSetting = new Setting(containerEl)
             .setName(t("settings.folders.reports_folder.name"))
             .setDesc(t("settings.folders.reports_folder.desc"))
             .addText((text) => {
@@ -141,10 +142,11 @@ export class FolderSettingsSection extends BaseSettingsSection {
                         modal.open();
                     });
             });
+        reportFolderSetting.settingEl.addClass("nexus-folder-path-setting");
 
         // Attachment Folder
         let attachmentFolderTextComponent: TextComponent | undefined;
-        new Setting(containerEl)
+        const attachmentFolderSetting = new Setting(containerEl)
             .setName(t("settings.folders.attachment_folder.name"))
             .setDesc(t("settings.folders.attachment_folder.desc"))
             .addText((text) => {
@@ -197,6 +199,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
                         modal.open();
                     });
             });
+        attachmentFolderSetting.settingEl.addClass("nexus-folder-path-setting");
     }
 
     private async handleFolderChange(

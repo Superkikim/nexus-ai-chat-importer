@@ -187,8 +187,8 @@
 .modal.nexus-provider-selection-dialog,
 .modal.nexus-file-selection-dialog,
 .modal.nexus-conversation-selection-dialog {
-    width: 800px !important;
-    max-width: 90vw !important;
+    width: 800px;
+    max-width: 90vw;
 }
 
 .nexus-ai-chat-importer-modal {
@@ -577,37 +577,37 @@
 }
 
 /* Folder path input styling - force consistent layout with column structure */
-.setting-item:has(.nexus-folder-path-input) {
-    display: grid !important;
-    grid-template-columns: 30% 1fr auto !important;
-    gap: 12px !important;
-    align-items: start !important;
+.nexus-folder-path-setting {
+    display: grid;
+    grid-template-columns: 30% 1fr auto;
+    gap: 12px;
+    align-items: start;
 }
 
-.setting-item:has(.nexus-folder-path-input) .setting-item-info {
-    grid-column: 1 !important;
-    text-align: left !important;
-    padding-right: 0 !important;
+.nexus-folder-path-setting .setting-item-info {
+    grid-column: 1;
+    text-align: left;
+    padding-right: 0;
 }
 
-.setting-item:has(.nexus-folder-path-input) .setting-item-control {
-    grid-column: 2 / 4 !important;
-    display: flex !important;
-    gap: 8px !important;
-    align-items: center !important;
+.nexus-folder-path-setting .setting-item-control {
+    grid-column: 2 / 4;
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 .nexus-folder-path-input {
-    flex: 1 1 auto !important;
-    max-width: 500px !important;
-    min-width: 200px !important;
+    flex: 1 1 auto;
+    max-width: 500px;
+    min-width: 200px;
 }
 
 /* Read-only folder inputs - keep normal appearance but indicate non-editable */
 .nexus-folder-path-input[readonly] {
-    background-color: var(--background-primary) !important;
-    opacity: 1 !important;
-    cursor: default !important;
+    background-color: var(--background-primary);
+    opacity: 1;
+    cursor: default;
 }
 
 /* ========================================
@@ -677,11 +677,11 @@
     display: inline-block;
     padding: 10px 28px;
     background-color: #FF5E5B;
-    color: #ffffff !important;
+    color: #ffffff;
     font-weight: 600;
     font-size: 1em;
     border-radius: 8px;
-    text-decoration: none !important;
+    text-decoration: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: background-color 0.2s ease, transform 0.2s ease;
 }
@@ -701,8 +701,8 @@
 .modal.nexus-file-selection-dialog,
 .modal.nexus-conversation-selection-dialog,
 .modal.nexus-import-completion-dialog {
-    width: min(800px, 90vw) !important;
-    max-width: 90vw !important;
+    width: min(800px, 90vw);
+    max-width: 90vw;
 }
 
 .nexus-ai-chat-importer-modal,
@@ -930,9 +930,9 @@
     }
 
     .nexus-import-progress-modal .modal-content {
-        min-width: 0 !important;
-        width: min(92vw, 520px) !important;
-        max-width: 92vw !important;
+        min-width: 0;
+        width: min(92vw, 520px);
+        max-width: 92vw;
     }
 }
 
@@ -943,15 +943,15 @@
     .modal.nexus-file-selection-dialog,
     .modal.nexus-conversation-selection-dialog,
     .modal.nexus-import-completion-dialog {
-        width: 96vw !important;
-        max-width: 96vw !important;
+        width: 96vw;
+        max-width: 96vw;
     }
 
     .nexus-ai-chat-importer-modal,
     .nexus-file-selection-dialog,
     .nexus-conversation-selection-dialog,
     .nexus-import-completion-dialog {
-        min-width: 0 !important;
+        min-width: 0;
         max-width: 100%;
     }
 
@@ -984,19 +984,19 @@
         max-height: 50vh;
     }
 
-    .setting-item:has(.nexus-folder-path-input) {
-        grid-template-columns: 1fr !important;
+    .nexus-folder-path-setting {
+        grid-template-columns: 1fr;
     }
 
-    .setting-item:has(.nexus-folder-path-input) .setting-item-control {
-        grid-column: 1 !important;
-        flex-wrap: wrap !important;
+    .nexus-folder-path-setting .setting-item-control {
+        grid-column: 1;
+        flex-wrap: wrap;
     }
 
     .nexus-folder-path-input {
-        min-width: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
     }
 }
 
@@ -1006,8 +1006,8 @@ body.is-mobile .modal.nexus-provider-selection-dialog,
 body.is-mobile .modal.nexus-file-selection-dialog,
 body.is-mobile .modal.nexus-conversation-selection-dialog,
 body.is-mobile .modal.nexus-import-completion-dialog {
-    width: 96vw !important;
-    max-width: 96vw !important;
+    width: 96vw;
+    max-width: 96vw;
 }
 
 body.is-mobile .nexus-import-options-grid {
@@ -1153,7 +1153,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 
 .nexus-time-estimate {
     font-style: italic;
-    color: var(--text-muted) !important;
+    color: var(--text-muted);
     font-size: 0.9em;
 }
 
@@ -1267,8 +1267,8 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-upgrade-browse-button {
-    padding: 0.6em 1.2em !important;
-    font-size: 1em !important;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -1280,9 +1280,9 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-upgrade-proceed-button {
-    padding: 12px 48px !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
+    padding: 12px 48px;
+    font-size: 16px;
+    font-weight: 600;
     min-width: 200px;
 }
 
@@ -1291,8 +1291,8 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
    ============================================================ */
 
 .modal.nexus-new-version-modal {
-    max-width: min(1050px, 92vw) !important;
-    width: min(1050px, 92vw) !important;
+    max-width: min(1050px, 92vw);
+    width: min(1050px, 92vw);
 }
 
 .nexus-upgrade-content {
@@ -1306,27 +1306,27 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-close-button {
-    padding: 16px 48px !important;
-    font-size: 1.2em !important;
-    font-weight: 700 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    transition: all 0.2s ease !important;
+    padding: 16px 48px;
+    font-size: 1.2em;
+    font-weight: 700;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
 }
 
 .nexus-close-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 700px) {
     .modal.nexus-new-version-modal .modal-content {
-        padding: 16px !important;
+        padding: 16px;
     }
 
     .nexus-close-button {
         width: 100%;
-        padding: 14px 20px !important;
+        padding: 14px 20px;
     }
 }
 
@@ -1386,7 +1386,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 
 @media (max-width: 700px) {
     .nexus-upgrade-complete-modal .modal-content {
-        padding: 16px !important;
+        padding: 16px;
     }
 
     .nexus-upgrade-notes {
@@ -1403,8 +1403,8 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
    ============================================================ */
 
 .modal.nexus-upgrade-modal-130 {
-    max-width: 1050px !important;
-    width: 1050px !important;
+    max-width: 1050px;
+    width: 1050px;
 }
 
 .nexus-migration-section {
@@ -1452,17 +1452,17 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-migration-button {
-    padding: 16px 48px !important;
-    font-size: 1.2em !important;
-    font-weight: 700 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    transition: all 0.2s ease !important;
+    padding: 16px 48px;
+    font-size: 1.2em;
+    font-weight: 700;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
 }
 
 .nexus-migration-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 /* ============================================================
@@ -1470,13 +1470,13 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
    ============================================================ */
 
 .modal.nexus-import-completion-dialog {
-    max-width: min(700px, 90vw) !important;
-    width: min(700px, 90vw) !important;
+    max-width: min(700px, 90vw);
+    width: min(700px, 90vw);
 }
 
 .modal.nexus-import-completion-dialog .modal-title {
-    padding: 16px 24px !important;
-    margin: 0 !important;
+    padding: 16px 24px;
+    margin: 0;
 }
 
 .modal.nexus-import-completion-dialog .modal-content {
@@ -1582,20 +1582,20 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
    ============================================================ */
 
 .modal.nexus-file-selection-dialog {
-    max-width: min(800px, 90vw) !important;
-    width: min(800px, 90vw) !important;
-    height: auto !important;
-    padding: 0 !important;
+    max-width: min(800px, 90vw);
+    width: min(800px, 90vw);
+    height: auto;
+    padding: 0;
 }
 
 .modal.nexus-file-selection-dialog .modal-title {
-    padding: 16px 24px !important;
-    margin: 0 !important;
+    padding: 16px 24px;
+    margin: 0;
 }
 
 .modal.nexus-file-selection-dialog .modal-content {
-    max-width: 100% !important;
-    width: 100% !important;
+    max-width: 100%;
+    width: 100%;
     max-height: 85vh;
     overflow-y: auto;
     display: flex;
@@ -1614,20 +1614,20 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
    ============================================================ */
 
 .modal.nexus-conversation-selection-dialog {
-    max-width: min(1000px, 90vw) !important;
-    width: min(1000px, 90vw) !important;
-    height: auto !important;
-    padding: 0 !important;
+    max-width: min(1000px, 90vw);
+    width: min(1000px, 90vw);
+    height: auto;
+    padding: 0;
 }
 
 .modal.nexus-conversation-selection-dialog .modal-title {
-    padding: 16px 24px !important;
-    margin: 0 !important;
+    padding: 16px 24px;
+    margin: 0;
 }
 
 .modal.nexus-conversation-selection-dialog .modal-content {
-    max-width: 100% !important;
-    width: 100% !important;
+    max-width: 100%;
+    width: 100%;
     max-height: 85vh;
     overflow-y: visible;
     overflow-x: visible;
@@ -2133,7 +2133,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 
 /* Card hover state (installation welcome dialog) */
 .nexus-card-hover {
-    border-color: var(--interactive-accent) !important;
+    border-color: var(--interactive-accent);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
