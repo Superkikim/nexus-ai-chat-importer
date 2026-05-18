@@ -886,7 +886,14 @@ export class ImportReport {
         summary += ` |\n`;
 
         if (stats.skipped > 0) {
-            summary += `| ⏭️ Skipped (unchanged) | ${stats.skipped} |\n`;
+            const emptyCount = this.getEmptyConversationsCount();
+            const unchangedCount = stats.skipped - emptyCount;
+            if (unchangedCount > 0) {
+                summary += `| ⏭️ Skipped (unchanged) | ${unchangedCount} |\n`;
+            }
+            if (emptyCount > 0) {
+                summary += `| ⚠️ Skipped (no exportable content) | ${emptyCount} |\n`;
+            }
         }
         if (stats.failed > 0) {
             summary += `| ❌ Failed | ${stats.failed} |\n`;
@@ -942,6 +949,16 @@ export class ImportReport {
 
         if (section.failed.length > 0) {
             content += this.generateFailedTable(section.failed, isMultiFile);
+        }
+
+        const emptyConvs = section.skipped.filter(
+            (e) => e.reason === "Empty conversation"
+        );
+        if (emptyConvs.length > 0) {
+            content += this.generateEmptyConversationsTable(
+                emptyConvs,
+                isMultiFile
+            );
         }
 
         return content;
@@ -1060,6 +1077,41 @@ export class ImportReport {
         return table + "\n\n";
     }
 
+    private generateEmptyConversationsTable(
+        entries: ReportEntry[],
+        isMultiFile: boolean
+    ): string {
+        const header = isMultiFile
+            ? "### ⚠️ Skipped — No Exportable Content"
+            : "## ⚠️ Skipped — No Exportable Content";
+        let table = `${header}\n\n`;
+        table +=
+            "> These conversations exist in the export but contain no importable text. This typically happens when Claude did not include message content in the export (interrupted sessions, artifact-only interactions).\n\n";
+        table += "| | Title | Created | Updated |\n";
+        table += "|:---:|:---|:---:|:---:|\n";
+
+        const sortedEntries = [...entries].sort(
+            (a, b) => a.createTime - b.createTime
+        );
+
+        sortedEntries.forEach((entry) => {
+            const sanitizedTitle = (entry.title || entry.filePath)
+                .replace(/\n/g, " ")
+                .trim();
+            const createDate = formatMessageTimestamp(
+                entry.createTime,
+                this.customTimestampFormat
+            );
+            const updateDate = formatMessageTimestamp(
+                entry.updateTime,
+                this.customTimestampFormat
+            );
+            table += `| ⚠️ | ${sanitizedTitle} | ${createDate} | ${updateDate} |\n`;
+        });
+
+        return table + "\n\n";
+    }
+
     private generateErrorTable(): string {
         let table = `## ⚠️ Global Errors\n\n`;
         table += "| | Error | Details |\n";
@@ -1130,6 +1182,16 @@ export class ImportReport {
         return count;
     }
 
+    getEmptyConversationsCount(): number {
+        let count = 0;
+        this.fileSections.forEach((section) => {
+            count += section.skipped.filter(
+                (e) => e.reason === "Empty conversation"
+            ).length;
+        });
+        return count;
+    }
+
     /**
      * Store file analysis stats for duplicate counting
      */
@@ -1187,6 +1249,7 @@ export class ImportReport {
             created: globalStats.created,
             updated: globalStats.updated,
             skipped: skipped,
+            emptyConversations: this.getEmptyConversationsCount(),
             failed: globalStats.failed,
             attachmentsFound: attachmentStats.found,
             attachmentsTotal: attachmentStats.total,

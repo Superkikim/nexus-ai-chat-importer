@@ -19,8 +19,7 @@
 // src/utils.ts
 import { App, TFile, TFolder, Vault } from "obsidian";
 import { Logger } from "./logger";
-import { requestUrl } from "obsidian";
-import { MESSAGE_TIMESTAMP_FORMATS, PROVIDER_URLS } from "./config/constants";
+import { MESSAGE_TIMESTAMP_FORMATS } from "./config/constants";
 import type { MessageTimestampFormat } from "./types/plugin";
 
 // Use window.moment instead of importing from obsidian
@@ -515,37 +514,6 @@ export async function ensureFolderExists(
         }
     }
     return { success: true };
-}
-
-export async function checkConversationLink(
-    conversationId: string,
-    provider: string = "chatgpt"
-): Promise<boolean> {
-    // Generate provider-specific URL using centralized constants
-    let url: string;
-    switch (provider) {
-        case "chatgpt":
-            url = PROVIDER_URLS.CHATGPT.CHAT(conversationId);
-            break;
-        case "claude":
-            url = PROVIDER_URLS.CLAUDE.CHAT(conversationId);
-            break;
-        default:
-            logger.error(`Unknown provider for link checking: ${provider}`);
-            return false;
-    }
-
-    try {
-        const response = await requestUrl({
-            url: url,
-            method: "HEAD",
-        });
-
-        return response.status >= 200 && response.status < 300; // Returns true for status codes 200-299
-    } catch (error) {
-        logger.error(`Error fetching ${url}:`, error);
-        return false; // Return false in case of error (e.g., network issues)
-    }
 }
 
 export function isNexusRelated(file: TFile, app: App): boolean {

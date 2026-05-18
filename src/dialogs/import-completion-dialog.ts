@@ -31,6 +31,7 @@ export interface ImportCompletionStats {
     created: number;
     updated: number;
     skipped: number;
+    emptyConversations: number;
     failed: number;
     attachmentsFound: number;
     attachmentsTotal: number;
@@ -135,11 +136,15 @@ export class ImportCompletionDialog extends Modal {
         );
 
         // Skipped cartouche
+        const skippedLabel =
+            this.stats.emptyConversations > 0
+                ? `${t("import_completion.stats.skipped")} (${this.stats.emptyConversations} with no exportable content)`
+                : t("import_completion.stats.skipped");
         this.createStatCartouche(
             section,
             "⏭️",
             this.stats.skipped.toString(),
-            t("import_completion.stats.skipped"),
+            skippedLabel,
             "var(--text-muted)"
         );
 

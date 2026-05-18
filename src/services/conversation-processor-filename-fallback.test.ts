@@ -70,7 +70,14 @@ describe("ConversationProcessor filename fallback", () => {
             provider: "perplexity",
             createTime: 1_706_745_600,
             updateTime: 1_706_749_200,
-            messages: [],
+            messages: [
+                {
+                    id: "msg-1",
+                    role: "user",
+                    content: "Hello",
+                    timestamp: 1_706_745_600,
+                },
+            ],
             metadata: {},
         };
 

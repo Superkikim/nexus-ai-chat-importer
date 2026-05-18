@@ -89,6 +89,9 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le C
 - Perplexity conversations deduplicated correctly across export variants
 - Under the hood quality and compliance improvements for better stability
 
+🐛 **Fixed**
+- Claude conversations with no exportable content are now skipped gracefully instead of creating empty notes
+
 ---
 
 > Upgrading from a previous version triggers required migration tasks automatically.
