@@ -1,5 +1,8 @@
 # Dependencies
 node_modules/
+
+# Build output (release assets uploaded by CI, not committed)
+dist/
 cli/dist/
 
 # Local resources
