@@ -74,7 +74,7 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le C
 - Detailed import reports
 - Full UI localization in 10 languages
 
-### ✨ What's New
+## ✨ What's New
 
 #### v1.6.x — Highlights
 
