@@ -1,6 +1,6 @@
 # Nexus AI Chat Importer
 
-[![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Superkikim/nexus_stats/main/summary.json&query=%24.total_downloads&label=downloads&color=blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE.md)
+[![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple?logo=obsidian)](https://obsidian.md/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/superkikim/nexus-ai-chat-importer)](https://github.com/Superkikim/nexus-ai-chat-importer/releases/latest) [![Downloads](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Superkikim/nexus_stats/main/summary.json&query=%24.total_downloads&label=downloads&color=blue)](https://github.com/Superkikim/nexus-ai-chat-importer/releases) [![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE)
 
 > 🌍 **Plugin UI and documentation now available in 10 languages**
 >
@@ -128,8 +128,6 @@ If Nexus is valuable to you, please consider a one-time or monthly donation. Tha
 - 🌍 **International Support**: ISO 8601 timestamps, works with all locales
 - ⏱️ **Progress Tracking**: Real-time feedback during large imports
 - 🔄 **Smart Deduplication**: Handles multiple ZIP files without creating duplicates
-
-### 📸 See It In Action
 
 ## 📥 Installation & Settings
 
@@ -896,7 +894,7 @@ This project is licensed under GPL-3.0 starting from version 1.3.0.
 
 This license protects the open-source nature of this project while preventing commercial exploitation without giving back to the community. If you create a commercial product based on this code, it must also be open source under GPL-3.0.
 
-See [LICENSE.md](LICENSE.md) for full details.
+See [LICENSE](LICENSE) for full details.
 
 ## 🙏 Credits
 
