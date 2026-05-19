@@ -19,6 +19,7 @@
 import { App, Component, Modal, MarkdownRenderer, requestUrl } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
+import { createResourceLinks } from "../ui/components/resource-links";
 import { GITHUB } from "../config/constants";
 import { t } from "../i18n";
 
@@ -70,15 +71,15 @@ export class NewVersionModal extends Modal {
         let message = this.fallbackMessage;
 
         try {
-            // Try to fetch the README for the current version and extract the Overview section
+            // Try to fetch What's New section from README
             const response = await requestUrl({
                 url: `${GITHUB.RAW_BASE}/${this.version}/README.md`,
                 method: "GET",
             });
             if (response.status >= 200 && response.status < 300) {
-                const overview = this.extractOverviewFromReadme(response.text);
-                if (overview) {
-                    message = overview;
+                const whatsNew = this.extractWhatsNewFromReadme(response.text);
+                if (whatsNew) {
+                    message = whatsNew;
                 }
             }
         } catch {
@@ -99,15 +100,18 @@ export class NewVersionModal extends Modal {
 
         // Add close button (centered and prominent)
         this.addCloseButton();
+
+        // Resource links grid
+        createResourceLinks(this.contentEl);
     }
 
     /**
      * Extract the "## Overview" section from README content.
      * Returns only the body under the heading (excluding the heading line itself).
      */
-    private extractOverviewFromReadme(readmeText: string): string | null {
-        const overviewRegex = /## Overview\s+([\s\S]*?)(?=^##\s|$)/m;
-        const match = readmeText.match(overviewRegex);
+    private extractWhatsNewFromReadme(readmeText: string): string | null {
+        const whatsNewRegex = /## ✨ What's New\s+([\s\S]*?)(?=^##\s|$)/m;
+        const match = readmeText.match(whatsNewRegex);
         return match ? match[1].trim() : null;
     }
 

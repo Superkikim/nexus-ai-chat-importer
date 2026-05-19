@@ -19,6 +19,7 @@
 import { App, Component, Modal, MarkdownRenderer, requestUrl } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
+import { createResourceLinks } from "../ui/components/resource-links";
 import { t } from "../i18n";
 
 /**
@@ -65,6 +66,9 @@ export class UpgradeCompleteModal extends Modal {
 
         // Close button (centered and prominent)
         this.addCloseButton();
+
+        // Resource links grid
+        createResourceLinks(contentEl);
     }
 
     private async addReleaseNotes() {
@@ -74,18 +78,17 @@ export class UpgradeCompleteModal extends Modal {
         });
 
         try {
-            // Try to fetch Overview section from README
+            // Try to fetch What's New section from README
             const response = await requestUrl({
                 url: `https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`,
                 method: "GET",
             });
             if (response.status >= 200 && response.status < 300) {
-                // Extract Overview section (between ## Overview and next ##)
-                const overviewMatch = response.text.match(
-                    /## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/
+                const whatsNewMatch = response.text.match(
+                    /## ✨ What's New\s+([\s\S]*?)(?=\n## |\n# |$)/
                 );
-                if (overviewMatch && overviewMatch[1]) {
-                    content = overviewMatch[1].trim();
+                if (whatsNewMatch && whatsNewMatch[1]) {
+                    content = whatsNewMatch[1].trim();
                 }
             }
         } catch {

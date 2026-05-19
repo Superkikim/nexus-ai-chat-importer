@@ -204,7 +204,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async hasExistingNexusConversations(): Promise<boolean> {
         try {
-            const files = this.app.vault.getMarkdownFiles();
+            const conversationFolder = this.settings.conversationFolder;
+            const files = this.app.vault.getMarkdownFiles()
+                .filter(f => f.path.startsWith(conversationFolder));
             return files.some((file) => {
                 const frontmatter =
                     this.app.metadataCache.getFileCache(file)?.frontmatter;

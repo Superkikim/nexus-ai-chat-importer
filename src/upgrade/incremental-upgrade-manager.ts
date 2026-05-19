@@ -30,8 +30,6 @@ import {
 import type NexusAiChatImporterPlugin from "../main";
 import { ensureFolderExists } from "../utils";
 import { t } from "../i18n";
-import { Upgrade110 } from "./versions/upgrade-1.1.0";
-import { Upgrade120, NexusUpgradeModal } from "./versions/upgrade-1.2.0";
 import { Upgrade130 } from "./versions/upgrade-1.3.0";
 import { Upgrade140 } from "./versions/upgrade-1.4.0";
 
@@ -68,8 +66,6 @@ export class IncrementalUpgradeManager {
         // Import and register upgrades
 
         this.availableUpgrades = [
-            new Upgrade110(),
-            new Upgrade120(),
             new Upgrade130(),
             new Upgrade140(),
         ];
@@ -98,6 +94,28 @@ export class IncrementalUpgradeManager {
 
             if (hasCompletedThisUpgrade) {
                 return null;
+            }
+
+            // VERSION GUARD — migrations before 1.3.0 have been removed
+            const MIN_SUPPORTED_VERSION = "1.3.0";
+            if (
+                previousVersion &&
+                previousVersion !== "0.0.0" &&
+                VersionUtils.compareVersions(previousVersion, MIN_SUPPORTED_VERSION) < 0
+            ) {
+                new Notice(
+                    `Nexus: Your data is from v${previousVersion}, which is older than the minimum supported upgrade base (v${MIN_SUPPORTED_VERSION}). ` +
+                    `Automatic migration is not available. Please reinstall the plugin and reimport your conversations.`,
+                    15000
+                );
+                await this.markUpgradeComplete(currentVersion);
+                return {
+                    success: false,
+                    upgradesExecuted: 0,
+                    upgradesSkipped: 0,
+                    upgradesFailed: 1,
+                    results: [],
+                };
             }
 
             // FRESH INSTALL DETECTION - Check AFTER upgrade completion check

@@ -525,7 +525,20 @@
 
 .nexus-support-section .setting-item {
     border-bottom: none;
-    padding: 0.8em 0;
+    padding-top: 0.8em;
+    padding-bottom: 0.8em;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.nexus-support-section .setting-item .setting-item-control {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.nexus-support-section .setting-item .setting-item-control button {
+    flex: 1 1 auto;
+    min-width: fit-content;
 }
 
 /* Section separator */
@@ -578,29 +591,26 @@
 
 /* Folder path input styling - force consistent layout with column structure */
 .nexus-folder-path-setting {
-    display: grid;
-    grid-template-columns: 30% 1fr auto;
-    gap: 12px;
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
 }
 
 .nexus-folder-path-setting .setting-item-info {
-    grid-column: 1;
-    text-align: left;
     padding-right: 0;
 }
 
 .nexus-folder-path-setting .setting-item-control {
-    grid-column: 2 / 4;
     display: flex;
     gap: 8px;
     align-items: center;
+    width: 100%;
 }
 
 .nexus-folder-path-input {
     flex: 1 1 auto;
-    max-width: 500px;
-    min-width: 200px;
+    min-width: 0;
 }
 
 /* Read-only folder inputs - keep normal appearance but indicate non-editable */
@@ -692,6 +702,50 @@
 }
 
 /* ========================================
+   RESOURCE LINKS GRID
+   ======================================== */
+
+.nexus-resource-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.nexus-resource-card {
+    display: block;
+    padding: 16px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-normal);
+    background: var(--background-secondary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.nexus-resource-card:hover {
+    background: var(--background-modifier-hover);
+}
+
+.nexus-resource-card-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.nexus-resource-card-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-normal);
+}
+
+.nexus-resource-card-desc {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* ========================================
    RESPONSIVE DIALOG FOUNDATION
    ======================================== */
 
@@ -735,6 +789,7 @@
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .nexus-import-options-grid {
@@ -984,19 +1039,12 @@
         max-height: 50vh;
     }
 
-    .nexus-folder-path-setting {
-        grid-template-columns: 1fr;
-    }
-
     .nexus-folder-path-setting .setting-item-control {
-        grid-column: 1;
         flex-wrap: wrap;
     }
 
     .nexus-folder-path-input {
-        min-width: 0;
         width: 100%;
-        max-width: 100%;
     }
 }
 
@@ -1079,6 +1127,8 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     border-radius: 4px;
     font-family: var(--font-monospace);
     font-size: 0.9em;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .nexus-migration-path-old {
@@ -1114,6 +1164,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     display: flex;
     justify-content: space-between;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .nexus-migration-buttons button {
@@ -1689,7 +1740,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-conversation-selection-dialog .nexus-conversation-search {
-    flex: 1 1 220px;
+    flex: 1 1 100%;
     min-width: 0;
     padding: 8px 12px;
     border: 1px solid var(--background-modifier-border);

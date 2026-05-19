@@ -1,5 +1,34 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.5 — Vault Safety & Dialog Readability
+
+![Version](https://img.shields.io/badge/version-1.6.5-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🔧 Improved
+
+- **Vault enumeration scoped to plugin folders**
+  - File scans now target only the configured conversation, report, and attachment folders instead of the entire vault
+  - Reduces unnecessary access surface and improves scan performance on large vaults
+
+- **Removed legacy migration scripts (1.1.0 and 1.2.0)**
+  - These scripts were already dead code for all practical users (migrations are idempotent and run at most once)
+  - Replaced with an explicit version guard: installations from before v1.3.0 now receive a clear notice to reimport instead of silently failing
+
+- **Conversation selection dialog: controls now wrap on narrow viewports**
+  - The toolbar (Select All / Search / Status filter) now stacks into multiple rows when labels are long (French, German, Japanese, etc.)
+  - The search field always occupies a full row so it remains usable at any width
+
+- **Folder migration dialog: buttons and paths wrap properly**
+  - The three action buttons (Cancel / Keep / Move) now wrap to the next row when translated text is long
+  - Old and new folder paths now break correctly for long vault paths
+
+- **First-install and upgrade dialogs now show contextually relevant content**
+  - First install shows a plugin Overview fetched from the docs (falls back to the master branch if the release tag is not yet published)
+  - Upgrade shows only the What's New section for the installed version
+  - Both dialogs include a quick-links grid (Documentation, Release Notes, Issues, Community Forum) built from a single shared component
+
+---
+
 ## Version 1.6.4 — Quality & Compliance
 
 ![Version](https://img.shields.io/badge/version-1.6.4-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
