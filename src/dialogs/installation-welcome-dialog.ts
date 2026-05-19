@@ -152,33 +152,40 @@ export class InstallationWelcomeDialog extends Modal {
     }
 
     private async loadOverview(container: HTMLElement) {
-        const url = `${GITHUB.RAW_BASE}/master/README.md`;
-        console.log("[Nexus] loadOverview: fetching", url);
-        try {
-            const response = await requestUrl({ url, method: "GET" });
-            console.log("[Nexus] loadOverview: status", response.status);
-            if (response.status >= 200 && response.status < 300) {
-                const overviewMatch = response.text.match(
-                    /## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/
-                );
-                console.log("[Nexus] loadOverview: match", overviewMatch ? "found" : "null");
-                if (overviewMatch && overviewMatch[1]) {
-                    console.log("[Nexus] loadOverview: rendering", overviewMatch[1].slice(0, 80));
-                    const renderComponent = new Component();
-                    renderComponent.load();
-                    await MarkdownRenderer.render(
-                        this.app,
-                        overviewMatch[1].trim(),
-                        container,
-                        "",
-                        renderComponent
-                    );
-                    console.log("[Nexus] loadOverview: render complete");
+        const readmeText = await this.fetchReadme();
+        if (!readmeText) return;
+
+        const overviewMatch = readmeText.match(
+            /## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/
+        );
+        if (!overviewMatch?.[1]) return;
+
+        const renderComponent = new Component();
+        renderComponent.load();
+        await MarkdownRenderer.render(
+            this.app,
+            overviewMatch[1].trim(),
+            container,
+            "",
+            renderComponent
+        );
+    }
+
+    private async fetchReadme(): Promise<string | null> {
+        for (const ref of [this.version, "master"]) {
+            try {
+                const response = await requestUrl({
+                    url: `${GITHUB.RAW_BASE}/${ref}/README.md`,
+                    method: "GET",
+                });
+                if (response.status >= 200 && response.status < 300) {
+                    return response.text;
                 }
+            } catch {
+                // try next ref
             }
-        } catch (err) {
-            console.error("[Nexus] loadOverview: error", err);
         }
+        return null;
     }
 
     /**
