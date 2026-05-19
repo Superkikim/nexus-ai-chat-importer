@@ -131,9 +131,6 @@ If Nexus is valuable to you, please consider a one-time or monthly donation. Tha
 
 ### 📸 See It In Action
 
-
-> 💡 **Tip**: Screenshots coming soon! For now, try the plugin yourself - it's free and takes 2 minutes to set up.
-
 ## 📥 Installation & Settings
 
 ### Installation Methods
