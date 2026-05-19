@@ -22,6 +22,11 @@
   - The three action buttons (Cancel / Keep / Move) now wrap to the next row when translated text is long
   - Old and new folder paths now break correctly for long vault paths
 
+- **First-install and upgrade dialogs now show contextually relevant content**
+  - First install shows a plugin Overview fetched from the docs (falls back to the master branch if the release tag is not yet published)
+  - Upgrade shows only the What's New section for the installed version
+  - Both dialogs include a quick-links grid (Documentation, Release Notes, Issues, Community Forum) built from a single shared component
+
 ---
 
 ## Version 1.6.4 — Quality & Compliance

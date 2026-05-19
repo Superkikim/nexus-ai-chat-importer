@@ -19,6 +19,7 @@
 import { App, Component, Modal, MarkdownRenderer, requestUrl } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
+import { createResourceLinks } from "../ui/components/resource-links";
 import { t } from "../i18n";
 
 /**
@@ -65,6 +66,9 @@ export class UpgradeCompleteModal extends Modal {
 
         // Close button (centered and prominent)
         this.addCloseButton();
+
+        // Resource links grid
+        createResourceLinks(contentEl);
     }
 
     private async addReleaseNotes() {

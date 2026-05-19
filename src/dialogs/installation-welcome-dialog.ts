@@ -1,12 +1,7 @@
 import { App, Component, MarkdownRenderer, Modal, requestUrl } from "obsidian";
 import { createSupportBox } from "../ui/components/support-box";
+import { createResourceLinks } from "../ui/components/resource-links";
 import { t } from "../i18n";
-import {
-    getCommunityForumUrl,
-    getIssuesUrl,
-    getLocalizedDocsUrl,
-    getReleaseNotesUrl,
-} from "../utils/support-links";
 import { GITHUB } from "../config/constants";
 
 /**
@@ -74,59 +69,16 @@ export class InstallationWelcomeDialog extends Modal {
 
         // Resources section
         const resourcesSection = contentEl.createDiv("resources-section");
-        resourcesSection.style.cssText = `
-            margin-top: 24px;
-        `;
 
         const resourcesTitle = resourcesSection.createEl("h3");
         resourcesTitle.textContent = t("welcome.resources_title");
         resourcesTitle.style.cssText = `
-            margin: 0 0 16px 0;
+            margin: 0 0 8px 0;
             color: var(--text-normal);
             font-size: 1.1em;
         `;
 
-        // Resources grid
-        const resourcesGrid = resourcesSection.createDiv("resources-grid");
-        resourcesGrid.style.cssText = `
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        `;
-
-        // Resource links
-        const resources = [
-            {
-                icon: "📖",
-                title: t("welcome.resources.documentation.title"),
-                description: t("welcome.resources.documentation.description"),
-                url: getLocalizedDocsUrl(),
-            },
-            {
-                icon: "📝",
-                title: t("welcome.resources.release_notes.title"),
-                description: t("welcome.resources.release_notes.description"),
-                url: getReleaseNotesUrl(),
-            },
-            {
-                icon: "🐛",
-                title: t("welcome.resources.report_issues.title"),
-                description: t("welcome.resources.report_issues.description"),
-                url: getIssuesUrl(),
-            },
-            {
-                icon: "💬",
-                title: t("welcome.resources.community_forum.title"),
-                description: t("welcome.resources.community_forum.description"),
-                url: getCommunityForumUrl(),
-            },
-        ];
-
-        resources.forEach((resource) => {
-            const card = this.createResourceCard(resourcesGrid, resource);
-            resourcesGrid.appendChild(card);
-        });
+        createResourceLinks(resourcesSection);
 
         // Close button
         const buttonContainer = contentEl.createDiv("button-container");
@@ -186,76 +138,6 @@ export class InstallationWelcomeDialog extends Modal {
             }
         }
         return null;
-    }
-
-    /**
-     * Create a resource card
-     */
-    private createResourceCard(
-        container: HTMLElement,
-        resource: {
-            icon: string;
-            title: string;
-            description: string;
-            url: string;
-        }
-    ): HTMLElement {
-        const card = container.createEl("a", {
-            href: resource.url,
-        });
-        card.style.cssText = `
-            display: block;
-            padding: 16px;
-            border: 1px solid var(--background-modifier-border);
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--text-normal);
-            transition: all 0.2s;
-            background: var(--background-secondary);
-        `;
-
-        // Hover effect
-        card.addEventListener("mouseenter", () => {
-            card.addClass("nexus-card-hover");
-        });
-
-        card.addEventListener("mouseleave", () => {
-            card.removeClass("nexus-card-hover");
-        });
-
-        // Icon
-        const icon = card.createDiv();
-        icon.setText(resource.icon);
-        icon.style.cssText = `
-            font-size: 32px;
-            margin-bottom: 8px;
-        `;
-
-        // Title
-        const title = card.createDiv();
-        title.textContent = resource.title;
-        title.style.cssText = `
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: var(--text-normal);
-        `;
-
-        // Description
-        const description = card.createDiv();
-        description.textContent = resource.description;
-        description.style.cssText = `
-            font-size: 0.9em;
-            color: var(--text-muted);
-            line-height: 1.4;
-        `;
-
-        // Open in external browser
-        card.addEventListener("click", (e) => {
-            e.preventDefault();
-            window.open(resource.url, "_blank");
-        });
-
-        return card;
     }
 
     onClose() {
