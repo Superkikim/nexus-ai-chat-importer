@@ -141,7 +141,8 @@ export class StorageService {
             this.plugin.settings.archiveFolder ||
             "Nexus/Conversations";
 
-        const allFiles = this.plugin.app.vault.getMarkdownFiles();
+        const allFiles = this.plugin.app.vault.getMarkdownFiles()
+            .filter(f => f.path.startsWith(conversationFolder));
 
         // Filter conversation files (exclude Reports/Attachments)
         const conversationFiles = allFiles.filter((file) => {

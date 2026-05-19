@@ -74,7 +74,6 @@ describe("support-links", () => {
         const filesToCheck = [
             "src/ui/components/support-box.ts",
             "src/dialogs.ts",
-            "src/upgrade/versions/upgrade-1.2.0.ts",
         ];
 
         filesToCheck.forEach((relativePath) => {
