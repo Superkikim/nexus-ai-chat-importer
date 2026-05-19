@@ -1,4 +1,4 @@
-import { App, Modal } from "obsidian";
+import { App, Component, MarkdownRenderer, Modal, requestUrl } from "obsidian";
 import { createSupportBox } from "../ui/components/support-box";
 import { t } from "../i18n";
 import {
@@ -7,6 +7,7 @@ import {
     getLocalizedDocsUrl,
     getReleaseNotesUrl,
 } from "../utils/support-links";
+import { GITHUB } from "../config/constants";
 
 /**
  * Welcome dialog shown on first installation
@@ -60,6 +61,13 @@ export class InstallationWelcomeDialog extends Modal {
             line-height: 1.6;
             font-size: 1.05em;
         `;
+
+        // Overview section — fetched async from README
+        const overviewEl = contentEl.createDiv({
+            cls: "nexus-welcome-overview",
+        });
+        overviewEl.style.cssText = `margin: 20px 0;`;
+        void this.loadOverview(overviewEl);
 
         // Support box (using reusable component)
         createSupportBox(contentEl);
@@ -141,6 +149,36 @@ export class InstallationWelcomeDialog extends Modal {
             this.close();
             this.onGetStarted?.();
         });
+    }
+
+    private async loadOverview(container: HTMLElement) {
+        const url = `${GITHUB.RAW_BASE}/master/README.md`;
+        console.log("[Nexus] loadOverview: fetching", url);
+        try {
+            const response = await requestUrl({ url, method: "GET" });
+            console.log("[Nexus] loadOverview: status", response.status);
+            if (response.status >= 200 && response.status < 300) {
+                const overviewMatch = response.text.match(
+                    /## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/
+                );
+                console.log("[Nexus] loadOverview: match", overviewMatch ? "found" : "null");
+                if (overviewMatch && overviewMatch[1]) {
+                    console.log("[Nexus] loadOverview: rendering", overviewMatch[1].slice(0, 80));
+                    const renderComponent = new Component();
+                    renderComponent.load();
+                    await MarkdownRenderer.render(
+                        this.app,
+                        overviewMatch[1].trim(),
+                        container,
+                        "",
+                        renderComponent
+                    );
+                    console.log("[Nexus] loadOverview: render complete");
+                }
+            }
+        } catch (err) {
+            console.error("[Nexus] loadOverview: error", err);
+        }
     }
 
     /**
