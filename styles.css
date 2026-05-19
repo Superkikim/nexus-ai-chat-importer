@@ -735,6 +735,7 @@
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .nexus-import-options-grid {
@@ -1079,6 +1080,8 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     border-radius: 4px;
     font-family: var(--font-monospace);
     font-size: 0.9em;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .nexus-migration-path-old {
@@ -1114,6 +1117,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     display: flex;
     justify-content: space-between;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .nexus-migration-buttons button {
@@ -1689,7 +1693,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-conversation-selection-dialog .nexus-conversation-search {
-    flex: 1 1 220px;
+    flex: 1 1 100%;
     min-width: 0;
     padding: 8px 12px;
     border: 1px solid var(--background-modifier-border);
