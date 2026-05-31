@@ -47,6 +47,7 @@ interface FileSection {
     updated: ReportEntry[];
     skipped: ReportEntry[];
     failed: ReportEntry[];
+    ignored: ReportEntry[];
     counters: ProcessingCounters;
 }
 
@@ -86,6 +87,7 @@ export class ImportReport {
                 updated: [],
                 skipped: [],
                 failed: [],
+                ignored: [],
                 counters: {
                     totalConversationsProcessed: 0,
                     totalNewConversationsSuccessfullyImported: 0,
@@ -271,6 +273,24 @@ export class ImportReport {
                 reason,
                 attachmentStats,
                 providerSpecificCount,
+                sourceFile: this.currentFileName,
+            });
+        }
+    }
+
+    addIgnored(
+        title: string,
+        filePath: string,
+        createTime: number,
+        updateTime: number
+    ) {
+        const section = this.getCurrentSection();
+        if (section) {
+            section.ignored.push({
+                title,
+                filePath,
+                createTime,
+                updateTime,
                 sourceFile: this.currentFileName,
             });
         }
@@ -886,14 +906,11 @@ export class ImportReport {
         summary += ` |\n`;
 
         if (stats.skipped > 0) {
-            const emptyCount = this.getEmptyConversationsCount();
-            const unchangedCount = stats.skipped - emptyCount;
-            if (unchangedCount > 0) {
-                summary += `| ⏭️ Skipped (unchanged) | ${unchangedCount} |\n`;
-            }
-            if (emptyCount > 0) {
-                summary += `| ⚠️ Skipped (no exportable content) | ${emptyCount} |\n`;
-            }
+            summary += `| ⏭️ Skipped (unchanged) | ${stats.skipped} |\n`;
+        }
+        const ignoredCount = this.getIgnoredCount();
+        if (ignoredCount > 0) {
+            summary += `| 🚫 Empty (ignored) | ${ignoredCount} |\n`;
         }
         if (stats.failed > 0) {
             summary += `| ❌ Failed | ${stats.failed} |\n`;
@@ -926,11 +943,15 @@ export class ImportReport {
                 ? `\n- **Attachments**: ${attachmentStats.found}/${attachmentStats.total} extracted`
                 : "";
 
+        const ignoredLine =
+            section.ignored.length > 0
+                ? `\n- **Ignored**: ${section.ignored.length}`
+                : "";
         return `### Statistics
 - **Created**: ${section.created.length}
 - **Updated**: ${section.updated.length} (${section.counters.totalNonEmptyMessagesAdded} new messages)
 - **Skipped**: ${section.skipped.length}
-- **Failed**: ${section.failed.length}${attachmentSummary}`;
+- **Failed**: ${section.failed.length}${ignoredLine}${attachmentSummary}`;
     }
 
     private generateFileContent(
@@ -949,16 +970,6 @@ export class ImportReport {
 
         if (section.failed.length > 0) {
             content += this.generateFailedTable(section.failed, isMultiFile);
-        }
-
-        const emptyConvs = section.skipped.filter(
-            (e) => e.reason === "Empty conversation"
-        );
-        if (emptyConvs.length > 0) {
-            content += this.generateEmptyConversationsTable(
-                emptyConvs,
-                isMultiFile
-            );
         }
 
         return content;
@@ -1077,41 +1088,6 @@ export class ImportReport {
         return table + "\n\n";
     }
 
-    private generateEmptyConversationsTable(
-        entries: ReportEntry[],
-        isMultiFile: boolean
-    ): string {
-        const header = isMultiFile
-            ? "### ⚠️ Skipped — No Exportable Content"
-            : "## ⚠️ Skipped — No Exportable Content";
-        let table = `${header}\n\n`;
-        table +=
-            "> These conversations exist in the export but contain no importable text. This typically happens when Claude did not include message content in the export (interrupted sessions, artifact-only interactions).\n\n";
-        table += "| | Title | Created | Updated |\n";
-        table += "|:---:|:---|:---:|:---:|\n";
-
-        const sortedEntries = [...entries].sort(
-            (a, b) => a.createTime - b.createTime
-        );
-
-        sortedEntries.forEach((entry) => {
-            const sanitizedTitle = (entry.title || entry.filePath)
-                .replace(/\n/g, " ")
-                .trim();
-            const createDate = formatMessageTimestamp(
-                entry.createTime,
-                this.customTimestampFormat
-            );
-            const updateDate = formatMessageTimestamp(
-                entry.updateTime,
-                this.customTimestampFormat
-            );
-            table += `| ⚠️ | ${sanitizedTitle} | ${createDate} | ${updateDate} |\n`;
-        });
-
-        return table + "\n\n";
-    }
-
     private generateErrorTable(): string {
         let table = `## ⚠️ Global Errors\n\n`;
         table += "| | Error | Details |\n";
@@ -1182,12 +1158,10 @@ export class ImportReport {
         return count;
     }
 
-    getEmptyConversationsCount(): number {
+    getIgnoredCount(): number {
         let count = 0;
         this.fileSections.forEach((section) => {
-            count += section.skipped.filter(
-                (e) => e.reason === "Empty conversation"
-            ).length;
+            count += section.ignored.length;
         });
         return count;
     }
@@ -1249,7 +1223,7 @@ export class ImportReport {
             created: globalStats.created,
             updated: globalStats.updated,
             skipped: skipped,
-            emptyConversations: this.getEmptyConversationsCount(),
+            emptyConversations: this.getIgnoredCount(),
             failed: globalStats.failed,
             attachmentsFound: attachmentStats.found,
             attachmentsTotal: attachmentStats.total,

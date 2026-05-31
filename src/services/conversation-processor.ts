@@ -797,13 +797,11 @@ export class ConversationProcessor {
             }
 
             if (standardConversation.messages.length === 0) {
-                importReport.addSkipped(
+                importReport.addIgnored(
                     standardConversation.title || chatId,
                     filePath,
                     standardConversation.createTime,
-                    standardConversation.updateTime,
-                    0,
-                    "Empty conversation"
+                    standardConversation.updateTime
                 );
                 return filePath;
             }
