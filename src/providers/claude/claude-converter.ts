@@ -26,6 +26,7 @@ import {
     ClaudeConversation,
     ClaudeMessage,
     ClaudeContentBlock,
+    ClaudeAttachment,
 } from "./claude-types";
 import { generateSafeAlias, generateConversationFileName } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
@@ -371,8 +372,12 @@ export class ClaudeConverter {
                     conversationCreateTime
                 );
 
-            // Add file attachments
+            // Add file attachments (physical files: images from ZIP)
             const fileAttachments = this.processFileAttachments(message.files);
+            // Add inline attachments (text/docs with extracted_content in JSON)
+            const inlineAttachments = this.processInlineAttachments(
+                message.attachments || []
+            );
 
             const standardMessage: StandardMessage = {
                 id: message.uuid,
@@ -381,7 +386,11 @@ export class ClaudeConverter {
                 timestamp: Math.floor(
                     new Date(message.created_at).getTime() / 1000
                 ),
-                attachments: [...attachments, ...fileAttachments],
+                attachments: [
+                    ...attachments,
+                    ...fileAttachments,
+                    ...inlineAttachments,
+                ],
             };
 
             standardMessages.push(standardMessage);
@@ -985,6 +994,39 @@ export class ClaudeConverter {
         }
 
         return attachments;
+    }
+
+    private static processInlineAttachments(
+        attachments: ClaudeAttachment[]
+    ): StandardAttachment[] {
+        if (!attachments || attachments.length === 0) return [];
+        const result: StandardAttachment[] = [];
+
+        attachments.forEach((att, index) => {
+            if (!att || !att.extracted_content) return;
+
+            const displayName =
+                att.file_name || `Attachment ${result.length + 1}`;
+            const fileType = att.file_type || "txt";
+
+            // Prefix each content line with >> so it renders inside the
+            // outer message callout as a proper nested callout block
+            const contentLines = att.extracted_content
+                .split("\n")
+                .map((line) => (line === "" ? ">>" : `>> ${line}`))
+                .join("\n");
+            const extractedContent = `>>[!nexus_attachment] **${displayName}** (${fileType})\n>>\n${contentLines}`;
+
+            result.push({
+                fileName: displayName,
+                fileSize: att.file_size || 0,
+                fileType: fileType,
+                fileId: att.file_name || `inline-attachment-${index}`,
+                extractedContent,
+            });
+        });
+
+        return result;
     }
 
     private static getFileTypeFromName(fileName: string): string {

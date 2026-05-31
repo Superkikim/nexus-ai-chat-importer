@@ -50,6 +50,14 @@ export interface ClaudeProjectDoc {
 
 export interface ClaudeFile {
     file_name: string;
+    file_uuid?: string;
+}
+
+export interface ClaudeAttachment {
+    file_name: string;         // Often empty for txt uploads
+    file_size: number;
+    file_type: string;         // 'txt', 'docx', etc.
+    extracted_content: string; // Full text content extracted from the uploaded file
 }
 
 export interface ClaudeToolResultContentItem {
@@ -86,8 +94,8 @@ export interface ClaudeMessage {
     sender: "human" | "assistant";
     created_at: string;
     content: ClaudeContentBlock[];
-    attachments: any[]; // Usually empty, files are used instead
-    files: ClaudeFile[];
+    attachments: ClaudeAttachment[]; // Text/document content extracted from uploaded files
+    files: ClaudeFile[];             // Physical files (images) referenced by UUID
 }
 
 export interface ClaudeConversation {

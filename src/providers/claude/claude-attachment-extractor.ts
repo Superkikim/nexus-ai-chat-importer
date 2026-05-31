@@ -91,6 +91,12 @@ export class ClaudeAttachmentExtractor {
     ): Promise<StandardAttachment> {
         const fileName = attachment.fileName;
 
+        // If content was already extracted from the JSON (inline attachments),
+        // skip the ZIP lookup entirely
+        if (attachment.extractedContent) {
+            return attachment;
+        }
+
         // Try to find the file in the ZIP (unlikely for Claude exports)
         const zipPath = await this.findFileInZip(zip, fileName);
 
