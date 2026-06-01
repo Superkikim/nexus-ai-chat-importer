@@ -20,7 +20,7 @@
 import { Plugin, App, PluginManifest, Notice, Platform } from "obsidian";
 import { initLocale, t } from "./i18n";
 import { DEFAULT_SETTINGS } from "./config/constants";
-import { ConversationCatalogEntry, PluginSettings } from "./types/plugin";
+import { ConversationCatalogEntry, MessageTimestampFormat, PluginSettings } from "./types/plugin";
 import { NexusAiChatImporterPluginSettingTab } from "./ui/settings-tab";
 import { CommandRegistry } from "./commands/command-registry";
 import { EventHandlers } from "./events/event-handlers";
@@ -47,6 +47,8 @@ import { ImportReport } from "./models/import-report";
 import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
 import {
     ensureFolderExists,
+    extractZipTimestamp,
+    formatMessageTimestamp,
     formatTimestamp,
     getFileFingerprint,
 } from "./utils";
@@ -1214,6 +1216,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             provider,
             files
         );
+        const archiveTimestamps = this.buildArchiveTimestamps(
+            files,
+            this.settings.useCustomMessageTimestampFormat
+                ? this.settings.messageTimestampFormat
+                : undefined
+        );
         const commonFrontmatter = `importdate: ${currentDate}
 provider: ${provider}
 totalFilesAnalyzed: ${files.length}
@@ -1240,7 +1248,8 @@ ${report.generateSummaryReportContent(
     fileStats,
     isSelectiveImport,
     archiveDisplayNames,
-    links
+    links,
+    archiveTimestamps
 )}
 `;
 
@@ -1282,6 +1291,18 @@ ${report.generateMobileIndexContent(files, links)}
         const map = new Map<string, string>();
         for (const file of files) {
             map.set(file.name, this.getArchiveDisplayName(provider, file.name));
+        }
+        return map;
+    }
+
+    private buildArchiveTimestamps(
+        files: File[],
+        format?: MessageTimestampFormat
+    ): Map<string, string> {
+        const map = new Map<string, string>();
+        for (const file of files) {
+            const ts = extractZipTimestamp(file.name);
+            map.set(file.name, ts !== null ? formatMessageTimestamp(ts, format) : "—");
         }
         return map;
     }
