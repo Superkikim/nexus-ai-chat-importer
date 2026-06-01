@@ -372,8 +372,17 @@ export class ClaudeConverter {
                     conversationCreateTime
                 );
 
+            // Files already covered by inline extracted_content — inline wins, skip ZIP path
+            const inlineCoveredNames = new Set(
+                (message.attachments || [])
+                    .filter(att => att.extracted_content && att.file_name)
+                    .map(att => att.file_name)
+            );
+
             // Add file attachments (physical files: images from ZIP)
-            const fileAttachments = this.processFileAttachments(message.files);
+            const fileAttachments = this.processFileAttachments(
+                (message.files || []).filter(f => !inlineCoveredNames.has(f.file_name))
+            );
             // Add inline attachments (text/docs with extracted_content in JSON)
             const inlineAttachments = this.processInlineAttachments(
                 message.attachments || []
@@ -1023,6 +1032,7 @@ export class ClaudeConverter {
                 fileType: fileType,
                 fileId: att.file_name || `inline-attachment-${index}`,
                 extractedContent,
+                status: { processed: true, found: true }, // no localPath → counts as inline
             });
         });
 

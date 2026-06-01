@@ -144,12 +144,21 @@ export class ClaudeAttachmentExtractor {
         const fileName = attachment.fileName;
         const conversationUrl = `https://claude.ai/chat/${conversationId}`;
         const fileType = this.getFileTypeFromExtension(fileName);
+        const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
 
-        const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})\n>> ⚠️ Not included in archive. [Open original conversation](${conversationUrl})`;
+        const imageExts = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
+        const notAvailable = imageExts.includes(ext)
+            ? "Image not included in Claude's export."
+            : ext === "pdf"
+            ? "PDF not included in Claude's export (text content not provided)."
+            : "File not included in Claude's export.";
+
+        const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})\n>> ⚠️ ${notAvailable} [Open original conversation](${conversationUrl})`;
 
         return {
             ...attachment,
             extractedContent: placeholder,
+            status: { processed: true, found: false, reason: "not_in_export" },
         };
     }
 

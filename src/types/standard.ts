@@ -29,6 +29,7 @@ export interface AttachmentStatus {
     localPath?: string;
     reason?:
         | "missing_from_export"
+        | "not_in_export"       // Provider never includes this content type by design
         | "corrupted"
         | "unsupported_format"
         | "extraction_failed";
