@@ -1,5 +1,48 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.6 — Claude Attachment Fix & Report Improvements
+
+![Version](https://img.shields.io/badge/version-1.6.6-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🐛 Fixed
+
+- **Claude text and document extracts in the JSON were silently ignored**
+  - Claude's export includes the text content of `.txt` and `.docx` attachments
+    in the `extracted_content` field of `conversations.json`
+  - This content was being parsed but never added to conversation notes — a processing bug
+  - These extracts are now rendered as collapsible callouts inside the relevant message
+  - Also fixed: the same attachment could be matched both from the ZIP path and from
+    `extracted_content`; inline now wins and the ZIP lookup is skipped
+
+### 🔧 Improved
+
+- **Attachment placeholders now vary by file type**
+  - Images: *Image not included in Claude's export*
+  - PDFs: *PDF not included in Claude's export (text content not provided)*
+  - Other binaries: generic message
+  - Previously all non-ZIP attachments produced the same generic placeholder
+
+- **Empty conversations classified as "ignored" rather than "skipped"**
+  - Conversations with no exportable content (interrupted sessions, artifact-only)
+    are now tracked with a dedicated `ignored` counter in reports
+  - The "Skipped — No Exportable Content" table is removed in favour of a
+    `🚫 Empty (ignored)` line in the completion summary
+  - `skipped` now means unchanged conversations only, as intended
+
+- **Attachment summary in reports redesigned**
+  - The old Extracted/Missing/Failed counters are replaced by a breakdown table:
+    Extracted to vault / Inline (embedded) / Not provided by export / Missing / Failed
+  - Applied to both the summary report and the completion dialog
+
+- **ZIP timestamp column in import summary**
+  - Archives and Archive Name Map tables include a Timestamp column
+  - Supports all providers: ISO datetime (Claude old, ChatGPT), 10-digit epoch seconds
+    (Claude new), 13-digit epoch ms (Le Chat, Perplexity)
+  - Formatted using the user's locale setting (same as message timestamps)
+  - Resolves ambiguity when multiple archives share the same truncated display name
+
+---
+
 ## Version 1.6.5 — Vault Safety & Dialog Readability
 
 ![Version](https://img.shields.io/badge/version-1.6.5-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
