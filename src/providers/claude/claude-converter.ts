@@ -1019,25 +1019,38 @@ export class ClaudeConverter {
             const displayName =
                 att.file_name || `Attachment ${result.length + 1}`;
             const fileType = att.file_type || "txt";
-            const isTxt = fileType === "txt";
+            const codeLanguage = att.file_name
+                ? this.getCodeLanguage(att.file_name)
+                : null;
+            const isTxt = fileType === "txt" && !codeLanguage;
 
-            // Case 2 (txt): plain header, no link — content IS the file
-            // Case 1 (non-txt): "(text extract)" label + link to original conversation
-            const header = isTxt
-                ? `>>[!nexus_attachment]- **${displayName}** (txt)`
-                : `>>[!nexus_attachment]- **${displayName}** (text extract)${
-                      conversationId
-                          ? ` — [Open original conversation](https://claude.ai/chat/${conversationId})`
-                          : ""
-                  }`;
+            // Case 2 (txt, no code): plain header, no link — content IS the file
+            // Case 1 (non-txt or code): language/extract label + link to original conversation
+            const label = codeLanguage ?? (isTxt ? "txt" : "text extract");
+            const link =
+                !isTxt && conversationId
+                    ? ` — [Open original conversation](https://claude.ai/chat/${conversationId})`
+                    : "";
+            const header = `>>[!nexus_attachment]- **${displayName}** (${label})${link}`;
 
-            // Prefix each content line with >> so it renders inside the
-            // outer message callout as a proper nested callout block
-            const contentLines = att.extracted_content
-                .split("\n")
-                .map((line) => (line === "" ? ">>" : `>> ${line}`))
-                .join("\n");
-            const extractedContent = `${header}\n>>\n${contentLines}`;
+            // For code files: wrap in fenced code block inside the nested callout
+            // For text: prefix each line with >> for nested callout rendering
+            let contentBlock: string;
+            if (codeLanguage) {
+                contentBlock = [
+                    `>> \`\`\`${codeLanguage}`,
+                    ...att.extracted_content
+                        .split("\n")
+                        .map((l) => `>> ${l}`),
+                    ">> \`\`\`",
+                ].join("\n");
+            } else {
+                contentBlock = att.extracted_content
+                    .split("\n")
+                    .map((line) => (line === "" ? ">>" : `>> ${line}`))
+                    .join("\n");
+            }
+            const extractedContent = `${header}\n>>\n${contentBlock}`;
 
             result.push({
                 fileName: displayName,
@@ -1050,6 +1063,24 @@ export class ClaudeConverter {
         });
 
         return result;
+    }
+
+    private static getCodeLanguage(fileName: string): string | null {
+        const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+        const map: Record<string, string> = {
+            ts: "typescript", tsx: "typescript",
+            js: "javascript", jsx: "javascript", mjs: "javascript", cjs: "javascript",
+            py: "python", rb: "ruby", go: "go", rs: "rust", java: "java",
+            c: "c", cpp: "cpp", cc: "cpp", cs: "csharp",
+            swift: "swift", kt: "kotlin", scala: "scala", lua: "lua",
+            php: "php", pl: "perl", r: "r",
+            sh: "bash", bash: "bash", zsh: "bash", ps1: "powershell",
+            sql: "sql", css: "css", scss: "scss", sass: "scss",
+            html: "html", htm: "html", xml: "xml",
+            json: "json", yaml: "yaml", yml: "yaml", toml: "toml",
+            md: "markdown",
+        };
+        return map[ext] ?? null;
     }
 
     private static getFileTypeFromName(fileName: string): string {
