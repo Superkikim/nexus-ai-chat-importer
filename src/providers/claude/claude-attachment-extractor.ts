@@ -143,10 +143,8 @@ export class ClaudeAttachmentExtractor {
     ): StandardAttachment {
         const fileName = attachment.fileName;
         const conversationUrl = `https://claude.ai/chat/${conversationId}`;
-        const fileType = this.getFileTypeFromExtension(fileName);
-        const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
 
-        const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})\n>> ⚠️ Attachment not available in Claude's export. [Open original conversation](${conversationUrl})`;
+        const placeholder = `>>[!nexus_attachment] **${fileName}**\n>> ⚠️ Attachment not provided by export. [Open original conversation](${conversationUrl})`;
 
         return {
             ...attachment,
