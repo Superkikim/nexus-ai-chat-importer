@@ -385,7 +385,8 @@ export class ClaudeConverter {
             );
             // Add inline attachments (text/docs with extracted_content in JSON)
             const inlineAttachments = this.processInlineAttachments(
-                message.attachments || []
+                message.attachments || [],
+                conversationId
             );
 
             const standardMessage: StandardMessage = {
@@ -1006,7 +1007,8 @@ export class ClaudeConverter {
     }
 
     private static processInlineAttachments(
-        attachments: ClaudeAttachment[]
+        attachments: ClaudeAttachment[],
+        conversationId?: string
     ): StandardAttachment[] {
         if (!attachments || attachments.length === 0) return [];
         const result: StandardAttachment[] = [];
@@ -1017,6 +1019,17 @@ export class ClaudeConverter {
             const displayName =
                 att.file_name || `Attachment ${result.length + 1}`;
             const fileType = att.file_type || "txt";
+            const isTxt = fileType === "txt";
+
+            // Case 2 (txt): plain header, no link — content IS the file
+            // Case 1 (non-txt): "(text extract)" label + link to original conversation
+            const header = isTxt
+                ? `>>[!nexus_attachment]- **${displayName}** (txt)`
+                : `>>[!nexus_attachment]- **${displayName}** (text extract)${
+                      conversationId
+                          ? ` — [Open original conversation](https://claude.ai/chat/${conversationId})`
+                          : ""
+                  }`;
 
             // Prefix each content line with >> so it renders inside the
             // outer message callout as a proper nested callout block
@@ -1024,7 +1037,7 @@ export class ClaudeConverter {
                 .split("\n")
                 .map((line) => (line === "" ? ">>" : `>> ${line}`))
                 .join("\n");
-            const extractedContent = `>>[!nexus_attachment] **${displayName}** (${fileType})\n>>\n${contentLines}`;
+            const extractedContent = `${header}\n>>\n${contentLines}`;
 
             result.push({
                 fileName: displayName,

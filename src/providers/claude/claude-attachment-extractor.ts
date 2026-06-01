@@ -146,14 +146,7 @@ export class ClaudeAttachmentExtractor {
         const fileType = this.getFileTypeFromExtension(fileName);
         const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
 
-        const imageExts = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
-        const notAvailable = imageExts.includes(ext)
-            ? "Image not included in Claude's export."
-            : ext === "pdf"
-            ? "PDF not included in Claude's export (text content not provided)."
-            : "File not included in Claude's export.";
-
-        const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})\n>> ⚠️ ${notAvailable} [Open original conversation](${conversationUrl})`;
+        const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})\n>> ⚠️ Attachment not available in Claude's export. [Open original conversation](${conversationUrl})`;
 
         return {
             ...attachment,
