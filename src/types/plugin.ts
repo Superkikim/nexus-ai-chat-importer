@@ -102,10 +102,10 @@ export interface ConfirmationDialogOptions {
 
 export interface AttachmentStats {
     total: number;
-    found: number;       // Extracted and saved to vault (localPath set)
-    inline: number;      // Content embedded in note (no local file)
+    found: number; // Extracted and saved to vault (localPath set)
+    inline: number; // Content embedded in note (no local file)
     notProvided: number; // Provider never includes this content type by design
-    missing: number;     // Expected but absent from export
+    missing: number; // Expected but absent from export
     failed: number;
 }
 

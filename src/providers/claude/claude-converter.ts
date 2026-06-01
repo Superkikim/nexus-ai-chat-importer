@@ -375,13 +375,15 @@ export class ClaudeConverter {
             // Files already covered by inline extracted_content — inline wins, skip ZIP path
             const inlineCoveredNames = new Set(
                 (message.attachments || [])
-                    .filter(att => att.extracted_content && att.file_name)
-                    .map(att => att.file_name)
+                    .filter((att) => att.extracted_content && att.file_name)
+                    .map((att) => att.file_name)
             );
 
             // Add file attachments (physical files: images from ZIP)
             const fileAttachments = this.processFileAttachments(
-                (message.files || []).filter(f => !inlineCoveredNames.has(f.file_name))
+                (message.files || []).filter(
+                    (f) => !inlineCoveredNames.has(f.file_name)
+                )
             );
             // Add inline attachments (text/docs with extracted_content in JSON)
             const inlineAttachments = this.processInlineAttachments(
@@ -1039,10 +1041,8 @@ export class ClaudeConverter {
             if (codeLanguage) {
                 contentBlock = [
                     `>> \`\`\`${codeLanguage}`,
-                    ...att.extracted_content
-                        .split("\n")
-                        .map((l) => `>> ${l}`),
-                    ">> \`\`\`",
+                    ...att.extracted_content.split("\n").map((l) => `>> ${l}`),
+                    ">> ```",
                 ].join("\n");
             } else {
                 contentBlock = att.extracted_content
@@ -1068,16 +1068,43 @@ export class ClaudeConverter {
     private static getCodeLanguage(fileName: string): string | null {
         const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
         const map: Record<string, string> = {
-            ts: "typescript", tsx: "typescript",
-            js: "javascript", jsx: "javascript", mjs: "javascript", cjs: "javascript",
-            py: "python", rb: "ruby", go: "go", rs: "rust", java: "java",
-            c: "c", cpp: "cpp", cc: "cpp", cs: "csharp",
-            swift: "swift", kt: "kotlin", scala: "scala", lua: "lua",
-            php: "php", pl: "perl", r: "r",
-            sh: "bash", bash: "bash", zsh: "bash", ps1: "powershell",
-            sql: "sql", css: "css", scss: "scss", sass: "scss",
-            html: "html", htm: "html", xml: "xml",
-            json: "json", yaml: "yaml", yml: "yaml", toml: "toml",
+            ts: "typescript",
+            tsx: "typescript",
+            js: "javascript",
+            jsx: "javascript",
+            mjs: "javascript",
+            cjs: "javascript",
+            py: "python",
+            rb: "ruby",
+            go: "go",
+            rs: "rust",
+            java: "java",
+            c: "c",
+            cpp: "cpp",
+            cc: "cpp",
+            cs: "csharp",
+            swift: "swift",
+            kt: "kotlin",
+            scala: "scala",
+            lua: "lua",
+            php: "php",
+            pl: "perl",
+            r: "r",
+            sh: "bash",
+            bash: "bash",
+            zsh: "bash",
+            ps1: "powershell",
+            sql: "sql",
+            css: "css",
+            scss: "scss",
+            sass: "scss",
+            html: "html",
+            htm: "html",
+            xml: "xml",
+            json: "json",
+            yaml: "yaml",
+            yml: "yaml",
+            toml: "toml",
             md: "markdown",
         };
         return map[ext] ?? null;

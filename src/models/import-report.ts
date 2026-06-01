@@ -130,17 +130,24 @@ export class ImportReport {
     }
 
     private getTotalAttachmentStats(): AttachmentStats {
-        const total = { total: 0, found: 0, inline: 0, notProvided: 0, missing: 0, failed: 0 };
+        const total = {
+            total: 0,
+            found: 0,
+            inline: 0,
+            notProvided: 0,
+            missing: 0,
+            failed: 0,
+        };
 
         this.fileSections.forEach((section) => {
             [...section.created, ...section.updated].forEach((entry) => {
                 if (entry.attachmentStats) {
-                    total.total       += entry.attachmentStats.total;
-                    total.found       += entry.attachmentStats.found;
-                    total.inline      += entry.attachmentStats.inline;
+                    total.total += entry.attachmentStats.total;
+                    total.found += entry.attachmentStats.found;
+                    total.inline += entry.attachmentStats.inline;
                     total.notProvided += entry.attachmentStats.notProvided;
-                    total.missing     += entry.attachmentStats.missing;
-                    total.failed      += entry.attachmentStats.failed;
+                    total.missing += entry.attachmentStats.missing;
+                    total.failed += entry.attachmentStats.failed;
                 }
 
                 // Artifacts are always successfully created — count as found
@@ -157,16 +164,23 @@ export class ImportReport {
     private getFileSectionAttachmentStats(
         section: FileSection
     ): AttachmentStats {
-        const total = { total: 0, found: 0, inline: 0, notProvided: 0, missing: 0, failed: 0 };
+        const total = {
+            total: 0,
+            found: 0,
+            inline: 0,
+            notProvided: 0,
+            missing: 0,
+            failed: 0,
+        };
 
         [...section.created, ...section.updated].forEach((entry) => {
             if (entry.attachmentStats) {
-                total.total       += entry.attachmentStats.total;
-                total.found       += entry.attachmentStats.found;
-                total.inline      += entry.attachmentStats.inline;
+                total.total += entry.attachmentStats.total;
+                total.found += entry.attachmentStats.found;
+                total.inline += entry.attachmentStats.inline;
                 total.notProvided += entry.attachmentStats.notProvided;
-                total.missing     += entry.attachmentStats.missing;
-                total.failed      += entry.attachmentStats.failed;
+                total.missing += entry.attachmentStats.missing;
+                total.failed += entry.attachmentStats.failed;
             }
 
             if (entry.providerSpecificCount) {
@@ -185,11 +199,15 @@ export class ImportReport {
         s += `| Status | Count |\n`;
         s += `|:---|---:|\n`;
         s += `| **Total** | **${stats.total}** |\n`;
-        if (stats.found > 0)       s += `| ✅ Extracted to vault | ${stats.found} |\n`;
-        if (stats.inline > 0)      s += `| 📄 Inline (embedded) | ${stats.inline} |\n`;
-        if (stats.notProvided > 0) s += `| ℹ️ Not provided by export | ${stats.notProvided} |\n`;
-        if (stats.missing > 0)     s += `| ⚠️ Missing from export | ${stats.missing} |\n`;
-        if (stats.failed > 0)      s += `| ❌ Failed | ${stats.failed} |\n`;
+        if (stats.found > 0)
+            s += `| ✅ Extracted to vault | ${stats.found} |\n`;
+        if (stats.inline > 0)
+            s += `| 📄 Inline (embedded) | ${stats.inline} |\n`;
+        if (stats.notProvided > 0)
+            s += `| ℹ️ Not provided by export | ${stats.notProvided} |\n`;
+        if (stats.missing > 0)
+            s += `| ⚠️ Missing from export | ${stats.missing} |\n`;
+        if (stats.failed > 0) s += `| ❌ Failed | ${stats.failed} |\n`;
         return s + `\n`;
     }
 
@@ -462,7 +480,9 @@ export class ImportReport {
                         continue;
                     }
                     const timestamp = archiveTimestamps?.get(file.name) ?? "—";
-                    lines.push(`| \`${shortName}\` | ${timestamp} | \`${file.name}\` |`);
+                    lines.push(
+                        `| \`${shortName}\` | ${timestamp} | \`${file.name}\` |`
+                    );
                 }
                 lines.push("");
             }

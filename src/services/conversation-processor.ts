@@ -1135,8 +1135,17 @@ export class ConversationProcessor {
     /**
      * Calculate attachment statistics from processed messages
      */
-    private calculateAttachmentStats(messages: StandardMessage[]): AttachmentStats {
-        const stats = { total: 0, found: 0, inline: 0, notProvided: 0, missing: 0, failed: 0 };
+    private calculateAttachmentStats(
+        messages: StandardMessage[]
+    ): AttachmentStats {
+        const stats = {
+            total: 0,
+            found: 0,
+            inline: 0,
+            notProvided: 0,
+            missing: 0,
+            failed: 0,
+        };
 
         for (const message of messages) {
             for (const attachment of message.attachments ?? []) {
@@ -1144,10 +1153,10 @@ export class ConversationProcessor {
                 const s = attachment.status;
                 if (s?.found) {
                     if (s.localPath) stats.found++;
-                    else             stats.inline++;
-                } else if (s?.reason === "not_in_export")     stats.notProvided++;
+                    else stats.inline++;
+                } else if (s?.reason === "not_in_export") stats.notProvided++;
                 else if (s?.reason === "missing_from_export") stats.missing++;
-                else if (s?.reason === "extraction_failed")   stats.failed++;
+                else if (s?.reason === "extraction_failed") stats.failed++;
             }
         }
 
