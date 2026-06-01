@@ -592,18 +592,33 @@ Each AI provider exports data differently.
 
 **✅ Fully Supported**:
 - Conversation titles (exported in JSON)
-- User-uploaded attachments (images, documents)
 - Complete message history
 - Artifacts with full content and versioning
 
+**📎 Attachment Handling by File Type**:
+
+Claude's export contains only `conversations.json` — no binary files. What gets imported depends on the file type:
+
+| File type | What Claude exports | Result in note |
+|---|---|---|
+| Text (`.txt`) | Full text content in `extracted_content` | Inline collapsible callout |
+| Word (`.docx`) | Extracted text in `extracted_content` | Inline collapsible callout |
+| Images (`.png`, `.jpg`, …) | Reference only (no content) | Placeholder: *Image not included in Claude's export* |
+| PDF | Reference only — **text extraction not provided** | Placeholder: *PDF not included in Claude's export (text content not provided)* |
+| Other binaries | Reference only (no content) | Placeholder: *File not included in Claude's export* |
+
+> **Note on PDFs**: Claude can read and reason about PDFs during conversation, but the extracted text is not included in the data export. Only a file reference is present.
+
 **⚠️ Limitations**:
+- Binary file content (images, PDFs, etc.) is never included in Claude's export and cannot be recovered by the plugin
 - Some artifact/tool outputs may be absent from the provider export itself. Missing source data cannot be reconstructed by the plugin.
 - As with all providers, export schema changes may require plugin updates.
 
-**Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
+**Export Format**: Single `conversations.json` file with all conversations + inline text content in ZIP
 
 **💡 Tip for Claude Users**:
 - Artifacts are fully extracted and saved with versioning - check your artifacts folder
+- Text and Word document content is embedded directly in your conversation notes
 - If artifact rendering looks wrong after a provider-side change, reimport and report the issue with logs
 
 ### Le Chat (Mistral AI)
