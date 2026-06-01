@@ -40,7 +40,8 @@ This document defines the conventions for triaging, labeling, and tracking issue
 | `provider` | Related to an AI provider (ChatGPT, Claude, …) |
 | `locale` | Translation / i18n |
 | `duplicate` | Duplicate of an existing issue |
-| `wontfix` | Will not be addressed |
+| `wontfix` | Bug or problem acknowledged but will not be corrected |
+| `wontimplement` | Feature request evaluated and deliberately rejected |
 | `good first issue` | Suitable for new contributors |
 | `help wanted` | External contributions welcome |
 | `urgent` | Blocking or critical — requires immediate attention |
@@ -82,7 +83,7 @@ This document defines the conventions for triaging, labeling, and tracking issue
 1. **Triage** → apply `enhancement` + `status: evaluation in progress`
 2. **Accepted** → switch to `status: in progress` + `target: X.Y.Z`
 3. **Shipped** → switch to `status: released`, close the issue
-4. **Rejected** → apply `wontfix`, close with a short explanation
+4. **Rejected** → apply `wontimplement`, close with a short explanation
 
 ### Chore / Arch / Doc
 
