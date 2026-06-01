@@ -503,7 +503,7 @@ Formatted with custom Obsidian callouts:
 
 **Viewing Modes**:
 - **Reading View**: Full visual experience with colored callouts
-- **Live Preview**: Rendered callouts while editing
+- **Live Preview**: Rendered callouts while editing. If you make a search or click a message, the message you access will be shown as raw markdown. This is an expected behavior of Obsidian Live Preview
 - **Source Mode**: Raw Markdown syntax
 
 ### Date & Time Formats
