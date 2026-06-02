@@ -16,11 +16,11 @@
 
 ### 🔧 Improved
 
-- **Attachment placeholders now vary by file type**
-  - Images: *Image not included in Claude's export*
-  - PDFs: *PDF not included in Claude's export (text content not provided)*
-  - Other binaries: generic message
-  - Previously all non-ZIP attachments produced the same generic placeholder
+- **Attachment and inline content display refined**
+  - `.txt` extracts: collapsible callout, no link (the text content is the file)
+  - Document extracts (`.docx`, etc.): collapsible callout labelled *(text extract)* + link back to original conversation
+  - Code file extracts (`.ts`, `.py`, `.js`, …): collapsible callout with syntax-highlighted code fence
+  - Files with no extracted content (images, PDFs, binaries): single placeholder *"Attachment not provided by export"*
 
 - **Empty conversations classified as "ignored" rather than "skipped"**
   - Conversations with no exportable content (interrupted sessions, artifact-only)
