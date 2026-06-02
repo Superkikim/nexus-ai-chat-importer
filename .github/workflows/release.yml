@@ -36,10 +36,19 @@ jobs:
             dist/manifest.json
             dist/styles.css
 
+      - name: Extract release notes
+        id: extract_notes
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          NOTES=$(awk "/^## Version ${VERSION}/{found=1; next} found && /^---/{exit} found{print}" RELEASE_NOTES.md)
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body: ${{ steps.extract_notes.outputs.RELEASE_NOTES }}
           files: |
             dist/main.js
             dist/manifest.json
