@@ -513,6 +513,15 @@
             "name": "Importa conversazioni IA"
         }
     },
+    "donation_dialog": {
+        "title": "Supporta Nexus",
+        "message_emphasis": "Le donazioni sono davvero importanti.",
+        "message": "Sono attualmente disoccupato e senza reddito. Dedico molto tempo a questo plugin e pago di tasca mia gli abbonamenti alle piattaforme AI che supporta, per testare le esportazioni reali e mantenere tutto accurato.",
+        "reality_check": "Il mese scorso, solo tre utenti hanno fatto una donazione, per un totale di 20 € / 23 $.",
+        "cta": "Se questo plugin ti è utile, una donazione fa davvero la differenza.",
+        "button_donate": "Supporta il progetto",
+        "button_later": "Forse più tardi"
+    },
     "support_box": {
         "header": "Supporta questo plugin",
         "header_highlight": "Supporta questo plugin",

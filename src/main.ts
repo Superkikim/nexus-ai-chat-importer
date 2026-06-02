@@ -45,6 +45,7 @@ import {
 } from "./services/conversation-metadata-extractor";
 import { ImportReport } from "./models/import-report";
 import { ImportCompletionDialog } from "./dialogs/import-completion-dialog";
+import { DonationDialog } from "./dialogs/donation-dialog";
 import {
     ensureFolderExists,
     extractZipTimestamp,
@@ -1358,7 +1359,19 @@ ${report.generateMobileIndexContent(files, links)}
     ): void {
         const stats = report.getCompletionStats();
 
-        new ImportCompletionDialog(this.app, stats, reportPath).open();
+        this.settings.importCompletionCount =
+            (this.settings.importCompletionCount ?? 0) + 1;
+        void this.saveSettings();
+
+        const count = this.settings.importCompletionCount;
+        const showDonation = (count - 1) % 5 === 0;
+
+        new ImportCompletionDialog(
+            this.app,
+            stats,
+            reportPath,
+            showDonation ? () => new DonationDialog(this.app).open() : undefined
+        ).open();
     }
 
     /**

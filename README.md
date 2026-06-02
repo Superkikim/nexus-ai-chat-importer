@@ -117,6 +117,8 @@ If Nexus is valuable to you, please consider a one-time or monthly donation. Tha
 - 💡 **New features** - Your suggestions become reality
 - ❤️ **Motivation** - Shows that my work is appreciated
 
+> **Note:** The plugin will invite you to donate after your first import, and every 5 imports after that. You can always close the dialog.
+
 ## ✨ Key Features
 
 - 🎯 **Selective Import**: Choose exactly which conversations to import with interactive preview

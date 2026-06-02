@@ -39,6 +39,7 @@ export interface PluginSettings {
     // 🔧 INTERNAL SETTINGS (not shown in UI)
     // ========================================
     lastConversationsPerPage: number;
+    importCompletionCount: number;
 
     // ========================================
     // 🔄 MIGRATION FLAGS

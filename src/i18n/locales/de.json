@@ -513,6 +513,15 @@
             "name": "KI-Gespräche importieren"
         }
     },
+    "donation_dialog": {
+        "title": "Nexus unterstützen",
+        "message_emphasis": "Spenden sind wirklich wichtig.",
+        "message": "Ich bin derzeit arbeitslos und habe kein Einkommen. Ich investiere viel Zeit in dieses Plugin und bezahle aus eigener Tasche Abonnements für die KI-Plattformen, die es unterstützt, um echte Exporte testen und alles akkurat halten zu können.",
+        "reality_check": "Letzten Monat haben nur drei Nutzer gespendet, insgesamt 20 € / 23 $.",
+        "cta": "Wenn dieses Plugin nützlich für Sie ist, macht eine Spende wirklich einen Unterschied.",
+        "button_donate": "Projekt unterstützen",
+        "button_later": "Vielleicht später"
+    },
     "support_box": {
         "header": "Dieses Plugin unterstützen",
         "header_highlight": "Dieses Plugin unterstützen",
