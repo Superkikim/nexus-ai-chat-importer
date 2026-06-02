@@ -252,7 +252,7 @@ export class StorageService {
                 this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
 
             if (!frontmatter) {
-                this.plugin.logger.warn(
+                this.plugin.logger.debug(
                     `[parseWithCache] No frontmatter found for ${file.path}`
                 );
                 return null;
@@ -262,14 +262,14 @@ export class StorageService {
                 !frontmatter.nexus ||
                 frontmatter.nexus !== this.plugin.manifest.id
             ) {
-                this.plugin.logger.warn(
+                this.plugin.logger.debug(
                     `[parseWithCache] Wrong nexus ID for ${file.path}: ${frontmatter.nexus} vs ${this.plugin.manifest.id}`
                 );
                 return null;
             }
 
             if (!frontmatter.conversation_id) {
-                this.plugin.logger.warn(
+                this.plugin.logger.debug(
                     `[parseWithCache] No conversation_id for ${file.path}`
                 );
                 return null;
@@ -279,7 +279,7 @@ export class StorageService {
             const updateTime = this.parseTimeString(frontmatter.update_time);
 
             if (createTime === 0 || updateTime === 0) {
-                this.plugin.logger.warn(
+                this.plugin.logger.debug(
                     `[parseWithCache] Failed to parse timestamps for ${file.path}: create=${frontmatter.create_time} (${createTime}), update=${frontmatter.update_time} (${updateTime})`
                 );
                 return null;
@@ -384,7 +384,7 @@ export class StorageService {
     private parseTimeString(timeStr: string): number {
         const result = DateParser.parseDate(timeStr);
         if (result === 0) {
-            this.plugin.logger.warn(
+            this.plugin.logger.debug(
                 `[parseTimeString] Failed to parse: "${timeStr}"`
             );
         }
