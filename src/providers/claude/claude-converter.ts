@@ -26,6 +26,7 @@ import {
     ClaudeConversation,
     ClaudeMessage,
     ClaudeContentBlock,
+    ClaudeAttachment,
 } from "./claude-types";
 import { generateSafeAlias, generateConversationFileName } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
@@ -371,8 +372,24 @@ export class ClaudeConverter {
                     conversationCreateTime
                 );
 
-            // Add file attachments
-            const fileAttachments = this.processFileAttachments(message.files);
+            // Files already covered by inline extracted_content — inline wins, skip ZIP path
+            const inlineCoveredNames = new Set(
+                (message.attachments || [])
+                    .filter((att) => att.extracted_content && att.file_name)
+                    .map((att) => att.file_name)
+            );
+
+            // Add file attachments (physical files: images from ZIP)
+            const fileAttachments = this.processFileAttachments(
+                (message.files || []).filter(
+                    (f) => !inlineCoveredNames.has(f.file_name)
+                )
+            );
+            // Add inline attachments (text/docs with extracted_content in JSON)
+            const inlineAttachments = this.processInlineAttachments(
+                message.attachments || [],
+                conversationId
+            );
 
             const standardMessage: StandardMessage = {
                 id: message.uuid,
@@ -381,7 +398,11 @@ export class ClaudeConverter {
                 timestamp: Math.floor(
                     new Date(message.created_at).getTime() / 1000
                 ),
-                attachments: [...attachments, ...fileAttachments],
+                attachments: [
+                    ...attachments,
+                    ...fileAttachments,
+                    ...inlineAttachments,
+                ],
             };
 
             standardMessages.push(standardMessage);
@@ -985,6 +1006,108 @@ export class ClaudeConverter {
         }
 
         return attachments;
+    }
+
+    private static processInlineAttachments(
+        attachments: ClaudeAttachment[],
+        conversationId?: string
+    ): StandardAttachment[] {
+        if (!attachments || attachments.length === 0) return [];
+        const result: StandardAttachment[] = [];
+
+        attachments.forEach((att, index) => {
+            if (!att || !att.extracted_content) return;
+
+            const displayName =
+                att.file_name || `Attachment ${result.length + 1}`;
+            const fileType = att.file_type || "txt";
+            const codeLanguage = att.file_name
+                ? this.getCodeLanguage(att.file_name)
+                : null;
+            const isTxt = fileType === "txt" && !codeLanguage;
+
+            // Case 2 (txt, no code): plain header, no link — content IS the file
+            // Case 1 (non-txt or code): language/extract label + link to original conversation
+            const label = codeLanguage ?? (isTxt ? "txt" : "text extract");
+            const link =
+                !isTxt && conversationId
+                    ? ` — [Open original conversation](https://claude.ai/chat/${conversationId})`
+                    : "";
+            const header = `>>[!nexus_attachment]- **${displayName}** (${label})${link}`;
+
+            // For code files: wrap in fenced code block inside the nested callout
+            // For text: prefix each line with >> for nested callout rendering
+            let contentBlock: string;
+            if (codeLanguage) {
+                contentBlock = [
+                    `>> \`\`\`${codeLanguage}`,
+                    ...att.extracted_content.split("\n").map((l) => `>> ${l}`),
+                    ">> ```",
+                ].join("\n");
+            } else {
+                contentBlock = att.extracted_content
+                    .split("\n")
+                    .map((line) => (line === "" ? ">>" : `>> ${line}`))
+                    .join("\n");
+            }
+            const extractedContent = `${header}\n>>\n${contentBlock}`;
+
+            result.push({
+                fileName: displayName,
+                fileSize: att.file_size || 0,
+                fileType: fileType,
+                fileId: att.file_name || `inline-attachment-${index}`,
+                extractedContent,
+                status: { processed: true, found: true }, // no localPath → counts as inline
+            });
+        });
+
+        return result;
+    }
+
+    private static getCodeLanguage(fileName: string): string | null {
+        const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+        const map: Record<string, string> = {
+            ts: "typescript",
+            tsx: "typescript",
+            js: "javascript",
+            jsx: "javascript",
+            mjs: "javascript",
+            cjs: "javascript",
+            py: "python",
+            rb: "ruby",
+            go: "go",
+            rs: "rust",
+            java: "java",
+            c: "c",
+            cpp: "cpp",
+            cc: "cpp",
+            cs: "csharp",
+            swift: "swift",
+            kt: "kotlin",
+            scala: "scala",
+            lua: "lua",
+            php: "php",
+            pl: "perl",
+            r: "r",
+            sh: "bash",
+            bash: "bash",
+            zsh: "bash",
+            ps1: "powershell",
+            sql: "sql",
+            css: "css",
+            scss: "scss",
+            sass: "scss",
+            html: "html",
+            htm: "html",
+            xml: "xml",
+            json: "json",
+            yaml: "yaml",
+            yml: "yaml",
+            toml: "toml",
+            md: "markdown",
+        };
+        return map[ext] ?? null;
     }
 
     private static getFileTypeFromName(fileName: string): string {

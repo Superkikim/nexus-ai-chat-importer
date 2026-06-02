@@ -18,7 +18,7 @@
 
 // src/services/conversation-processor.ts
 import { TFile } from "obsidian";
-import { ConversationCatalogEntry } from "../types/plugin";
+import { AttachmentStats, ConversationCatalogEntry } from "../types/plugin";
 import { StandardConversation, StandardMessage } from "../types/standard";
 import { ImportReport } from "../models/import-report";
 import { MessageFormatter } from "../formatters/message-formatter";
@@ -797,13 +797,11 @@ export class ConversationProcessor {
             }
 
             if (standardConversation.messages.length === 0) {
-                importReport.addSkipped(
+                importReport.addIgnored(
                     standardConversation.title || chatId,
                     filePath,
                     standardConversation.createTime,
-                    standardConversation.updateTime,
-                    0,
-                    "Empty conversation"
+                    standardConversation.updateTime
                 );
                 return filePath;
             }
@@ -1137,30 +1135,28 @@ export class ConversationProcessor {
     /**
      * Calculate attachment statistics from processed messages
      */
-    private calculateAttachmentStats(messages: StandardMessage[]): {
-        total: number;
-        found: number;
-        missing: number;
-        failed: number;
-    } {
-        const stats = { total: 0, found: 0, missing: 0, failed: 0 };
+    private calculateAttachmentStats(
+        messages: StandardMessage[]
+    ): AttachmentStats {
+        const stats = {
+            total: 0,
+            found: 0,
+            inline: 0,
+            notProvided: 0,
+            missing: 0,
+            failed: 0,
+        };
 
         for (const message of messages) {
-            if (message.attachments) {
-                for (const attachment of message.attachments) {
-                    stats.total++;
-                    if (attachment.status?.found) {
-                        stats.found++;
-                    } else if (
-                        attachment.status?.reason === "missing_from_export"
-                    ) {
-                        stats.missing++;
-                    } else if (
-                        attachment.status?.reason === "extraction_failed"
-                    ) {
-                        stats.failed++;
-                    }
-                }
+            for (const attachment of message.attachments ?? []) {
+                stats.total++;
+                const s = attachment.status;
+                if (s?.found) {
+                    if (s.localPath) stats.found++;
+                    else stats.inline++;
+                } else if (s?.reason === "not_in_export") stats.notProvided++;
+                else if (s?.reason === "missing_from_export") stats.missing++;
+                else if (s?.reason === "extraction_failed") stats.failed++;
             }
         }
 

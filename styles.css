@@ -759,6 +759,56 @@
     max-width: 90vw;
 }
 
+.modal.nexus-donation-dialog {
+    width: min(520px, 90vw);
+    max-width: 90vw;
+}
+
+.nexus-donation-hero {
+    text-align: center;
+    font-size: 56px;
+    margin: 8px 0 4px 0;
+    line-height: 1;
+}
+
+.nexus-donation-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    align-items: center;
+}
+
+.nexus-donation-btn-primary {
+    width: 100%;
+    padding: 12px 0;
+    font-size: 1.05em;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nexus-donation-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nexus-donation-btn-secondary {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    cursor: pointer;
+    padding: 4px 8px;
+    text-decoration: underline;
+    transition: color 0.15s ease;
+}
+
+.nexus-donation-btn-secondary:hover {
+    color: var(--text-normal);
+}
+
 .nexus-ai-chat-importer-modal,
 .nexus-file-selection-dialog,
 .nexus-conversation-selection-dialog,

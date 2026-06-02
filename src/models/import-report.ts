@@ -47,6 +47,7 @@ interface FileSection {
     updated: ReportEntry[];
     skipped: ReportEntry[];
     failed: ReportEntry[];
+    ignored: ReportEntry[];
     counters: ProcessingCounters;
 }
 
@@ -86,6 +87,7 @@ export class ImportReport {
                 updated: [],
                 skipped: [],
                 failed: [],
+                ignored: [],
                 counters: {
                     totalConversationsProcessed: 0,
                     totalNewConversationsSuccessfullyImported: 0,
@@ -128,22 +130,30 @@ export class ImportReport {
     }
 
     private getTotalAttachmentStats(): AttachmentStats {
-        const total = { total: 0, found: 0, missing: 0, failed: 0 };
+        const total = {
+            total: 0,
+            found: 0,
+            inline: 0,
+            notProvided: 0,
+            missing: 0,
+            failed: 0,
+        };
 
         this.fileSections.forEach((section) => {
             [...section.created, ...section.updated].forEach((entry) => {
-                // Count regular attachments (uploaded files)
                 if (entry.attachmentStats) {
                     total.total += entry.attachmentStats.total;
                     total.found += entry.attachmentStats.found;
+                    total.inline += entry.attachmentStats.inline;
+                    total.notProvided += entry.attachmentStats.notProvided;
                     total.missing += entry.attachmentStats.missing;
                     total.failed += entry.attachmentStats.failed;
                 }
 
-                // Count artifacts as attachments (they are stored in attachmentFolder)
+                // Artifacts are always successfully created — count as found
                 if (entry.providerSpecificCount) {
                     total.total += entry.providerSpecificCount;
-                    total.found += entry.providerSpecificCount; // Artifacts are always successfully created
+                    total.found += entry.providerSpecificCount;
                 }
             });
         });
@@ -154,25 +164,51 @@ export class ImportReport {
     private getFileSectionAttachmentStats(
         section: FileSection
     ): AttachmentStats {
-        const total = { total: 0, found: 0, missing: 0, failed: 0 };
+        const total = {
+            total: 0,
+            found: 0,
+            inline: 0,
+            notProvided: 0,
+            missing: 0,
+            failed: 0,
+        };
 
         [...section.created, ...section.updated].forEach((entry) => {
-            // Count regular attachments (uploaded files)
             if (entry.attachmentStats) {
                 total.total += entry.attachmentStats.total;
                 total.found += entry.attachmentStats.found;
+                total.inline += entry.attachmentStats.inline;
+                total.notProvided += entry.attachmentStats.notProvided;
                 total.missing += entry.attachmentStats.missing;
                 total.failed += entry.attachmentStats.failed;
             }
 
-            // Count artifacts as attachments (they are stored in attachmentFolder)
             if (entry.providerSpecificCount) {
                 total.total += entry.providerSpecificCount;
-                total.found += entry.providerSpecificCount; // Artifacts are always successfully created
+                total.found += entry.providerSpecificCount;
             }
         });
 
         return total;
+    }
+
+    private generateAttachmentSummary(stats: AttachmentStats): string {
+        if (stats.total === 0) return "";
+
+        let s = `### 📎 Attachment Summary\n\n`;
+        s += `| Status | Count |\n`;
+        s += `|:---|---:|\n`;
+        s += `| **Total** | **${stats.total}** |\n`;
+        if (stats.found > 0)
+            s += `| ✅ Extracted to vault | ${stats.found} |\n`;
+        if (stats.inline > 0)
+            s += `| 📄 Inline (embedded) | ${stats.inline} |\n`;
+        if (stats.notProvided > 0)
+            s += `| ℹ️ Not provided by export | ${stats.notProvided} |\n`;
+        if (stats.missing > 0)
+            s += `| ⚠️ Missing from export | ${stats.missing} |\n`;
+        if (stats.failed > 0) s += `| ❌ Failed | ${stats.failed} |\n`;
+        return s + `\n`;
     }
 
     private getGlobalStats() {
@@ -276,6 +312,24 @@ export class ImportReport {
         }
     }
 
+    addIgnored(
+        title: string,
+        filePath: string,
+        createTime: number,
+        updateTime: number
+    ) {
+        const section = this.getCurrentSection();
+        if (section) {
+            section.ignored.push({
+                title,
+                filePath,
+                createTime,
+                updateTime,
+                sourceFile: this.currentFileName,
+            });
+        }
+    }
+
     addFailed(
         title: string,
         filePath: string,
@@ -308,7 +362,8 @@ export class ImportReport {
         fileStats?: Map<string, any>,
         isSelectiveImport?: boolean,
         archiveDisplayNames?: Map<string, string>,
-        links?: ReportCrossLinks
+        links?: ReportCrossLinks,
+        archiveTimestamps?: Map<string, string>
     ): string {
         const stats = this.getGlobalStats();
         const totalAttachments = this.getTotalAttachmentStats();
@@ -368,16 +423,7 @@ export class ImportReport {
         }
         lines.push("");
 
-        lines.push("### Attachments");
-        lines.push("");
-        lines.push("| Metric | Value |");
-        lines.push("| --- | ---: |");
-        lines.push(
-            `| Extracted | ${totalAttachments.found}/${totalAttachments.total} |`
-        );
-        lines.push(`| Missing | ${totalAttachments.missing} |`);
-        lines.push(`| Failed | ${totalAttachments.failed} |`);
-        lines.push("");
+        lines.push(this.generateAttachmentSummary(totalAttachments));
 
         if (allFiles && allFiles.length > 0) {
             const sortedFiles = [...allFiles].sort(
@@ -386,10 +432,10 @@ export class ImportReport {
             lines.push("## Archives");
             lines.push("");
             lines.push(
-                "| Archive | Status | Reason | Conversations | Selected | Created | Updated | Failed | Duplicates |"
+                "| Archive | Timestamp | Status | Reason | Conversations | Selected | Created | Updated | Failed | Duplicates |"
             );
             lines.push(
-                "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |"
+                "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |"
             );
 
             for (const file of sortedFiles) {
@@ -397,6 +443,7 @@ export class ImportReport {
                 const perFileStats = fileStats?.get(file.name);
                 const shortName =
                     archiveDisplayNames?.get(file.name) || file.name;
+                const timestamp = archiveTimestamps?.get(file.name) ?? "—";
                 const selectedCount =
                     perFileStats?.selectedForImport ??
                     (section?.created.length || 0) +
@@ -417,7 +464,7 @@ export class ImportReport {
                 );
 
                 lines.push(
-                    `| \`${shortName}\` | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`
+                    `| \`${shortName}\` | ${timestamp} | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${failedCount} | ${duplicateCount} |`
                 );
             }
             lines.push("");
@@ -425,14 +472,17 @@ export class ImportReport {
             if (archiveDisplayNames && archiveDisplayNames.size > 0) {
                 lines.push("## Archive Name Map");
                 lines.push("");
-                lines.push("| Short Name | Original File Name |");
-                lines.push("| --- | --- |");
+                lines.push("| Short Name | Timestamp | Original File Name |");
+                lines.push("| --- | --- | --- |");
                 for (const file of sortedFiles) {
                     const shortName = archiveDisplayNames.get(file.name);
                     if (!shortName || shortName === file.name) {
                         continue;
                     }
-                    lines.push(`| \`${shortName}\` | \`${file.name}\` |`);
+                    const timestamp = archiveTimestamps?.get(file.name) ?? "—";
+                    lines.push(
+                        `| \`${shortName}\` | ${timestamp} | \`${file.name}\` |`
+                    );
                 }
                 lines.push("");
             }
@@ -886,14 +936,11 @@ export class ImportReport {
         summary += ` |\n`;
 
         if (stats.skipped > 0) {
-            const emptyCount = this.getEmptyConversationsCount();
-            const unchangedCount = stats.skipped - emptyCount;
-            if (unchangedCount > 0) {
-                summary += `| ⏭️ Skipped (unchanged) | ${unchangedCount} |\n`;
-            }
-            if (emptyCount > 0) {
-                summary += `| ⚠️ Skipped (no exportable content) | ${emptyCount} |\n`;
-            }
+            summary += `| ⏭️ Skipped (unchanged) | ${stats.skipped} |\n`;
+        }
+        const ignoredCount = this.getIgnoredCount();
+        if (ignoredCount > 0) {
+            summary += `| 🚫 Empty (ignored) | ${ignoredCount} |\n`;
         }
         if (stats.failed > 0) {
             summary += `| ❌ Failed | ${stats.failed} |\n`;
@@ -902,19 +949,8 @@ export class ImportReport {
             summary += `| ⚠️ Errors | ${this.globalErrors.length} |\n`;
         }
 
-        if (totalAttachments.total > 0) {
-            const attachmentIcon =
-                totalAttachments.found === totalAttachments.total
-                    ? "✅"
-                    : totalAttachments.found === 0
-                    ? "❌"
-                    : "⚠️";
-            summary += `| ${attachmentIcon} Attachments | ${totalAttachments.found}/${totalAttachments.total} |\n`;
-            if (totalAttachments.missing > 0 || totalAttachments.failed > 0) {
-                summary += `| └─ Missing | ${totalAttachments.missing} |\n`;
-                summary += `| └─ Failed | ${totalAttachments.failed} |\n`;
-            }
-        }
+        summary += `\n`;
+        summary += this.generateAttachmentSummary(totalAttachments);
 
         return summary;
     }
@@ -926,11 +962,15 @@ export class ImportReport {
                 ? `\n- **Attachments**: ${attachmentStats.found}/${attachmentStats.total} extracted`
                 : "";
 
+        const ignoredLine =
+            section.ignored.length > 0
+                ? `\n- **Ignored**: ${section.ignored.length}`
+                : "";
         return `### Statistics
 - **Created**: ${section.created.length}
 - **Updated**: ${section.updated.length} (${section.counters.totalNonEmptyMessagesAdded} new messages)
 - **Skipped**: ${section.skipped.length}
-- **Failed**: ${section.failed.length}${attachmentSummary}`;
+- **Failed**: ${section.failed.length}${ignoredLine}${attachmentSummary}`;
     }
 
     private generateFileContent(
@@ -949,16 +989,6 @@ export class ImportReport {
 
         if (section.failed.length > 0) {
             content += this.generateFailedTable(section.failed, isMultiFile);
-        }
-
-        const emptyConvs = section.skipped.filter(
-            (e) => e.reason === "Empty conversation"
-        );
-        if (emptyConvs.length > 0) {
-            content += this.generateEmptyConversationsTable(
-                emptyConvs,
-                isMultiFile
-            );
         }
 
         return content;
@@ -1077,41 +1107,6 @@ export class ImportReport {
         return table + "\n\n";
     }
 
-    private generateEmptyConversationsTable(
-        entries: ReportEntry[],
-        isMultiFile: boolean
-    ): string {
-        const header = isMultiFile
-            ? "### ⚠️ Skipped — No Exportable Content"
-            : "## ⚠️ Skipped — No Exportable Content";
-        let table = `${header}\n\n`;
-        table +=
-            "> These conversations exist in the export but contain no importable text. This typically happens when Claude did not include message content in the export (interrupted sessions, artifact-only interactions).\n\n";
-        table += "| | Title | Created | Updated |\n";
-        table += "|:---:|:---|:---:|:---:|\n";
-
-        const sortedEntries = [...entries].sort(
-            (a, b) => a.createTime - b.createTime
-        );
-
-        sortedEntries.forEach((entry) => {
-            const sanitizedTitle = (entry.title || entry.filePath)
-                .replace(/\n/g, " ")
-                .trim();
-            const createDate = formatMessageTimestamp(
-                entry.createTime,
-                this.customTimestampFormat
-            );
-            const updateDate = formatMessageTimestamp(
-                entry.updateTime,
-                this.customTimestampFormat
-            );
-            table += `| ⚠️ | ${sanitizedTitle} | ${createDate} | ${updateDate} |\n`;
-        });
-
-        return table + "\n\n";
-    }
-
     private generateErrorTable(): string {
         let table = `## ⚠️ Global Errors\n\n`;
         table += "| | Error | Details |\n";
@@ -1182,12 +1177,10 @@ export class ImportReport {
         return count;
     }
 
-    getEmptyConversationsCount(): number {
+    getIgnoredCount(): number {
         let count = 0;
         this.fileSections.forEach((section) => {
-            count += section.skipped.filter(
-                (e) => e.reason === "Empty conversation"
-            ).length;
+            count += section.ignored.length;
         });
         return count;
     }
@@ -1249,7 +1242,7 @@ export class ImportReport {
             created: globalStats.created,
             updated: globalStats.updated,
             skipped: skipped,
-            emptyConversations: this.getEmptyConversationsCount(),
+            emptyConversations: this.getIgnoredCount(),
             failed: globalStats.failed,
             attachmentsFound: attachmentStats.found,
             attachmentsTotal: attachmentStats.total,

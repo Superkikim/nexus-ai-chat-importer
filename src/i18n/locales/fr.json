@@ -513,6 +513,15 @@
             "name": "Importer des conversations IA"
         }
     },
+    "donation_dialog": {
+        "title": "Soutenir Nexus",
+        "message_emphasis": "Les dons font vraiment la différence.",
+        "message": "Je suis actuellement sans emploi et sans revenus. Je consacre beaucoup de temps à ce plugin et je paye de ma poche les abonnements aux plateformes d'IA qu'il supporte, afin de tester les exports réels et maintenir une prise en charge précise.",
+        "reality_check": "Le mois dernier, seulement trois utilisateurs ont fait un don, pour un total de 20 € / 23 $.",
+        "cta": "Si ce plugin vous est utile, un don fait vraiment la différence.",
+        "button_donate": "Soutenir le projet",
+        "button_later": "Peut-être plus tard"
+    },
     "support_box": {
         "header": "Soutenir ce plugin",
         "header_highlight": "Soutenir ce plugin",

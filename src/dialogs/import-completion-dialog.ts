@@ -42,15 +42,18 @@ export interface ImportCompletionStats {
 export class ImportCompletionDialog extends Modal {
     private reportFilePath: string;
     private stats: ImportCompletionStats;
+    private onCloseCallback?: () => void;
 
     constructor(
         app: App,
         stats: ImportCompletionStats,
-        reportFilePath: string
+        reportFilePath: string,
+        onClose?: () => void
     ) {
         super(app);
         this.stats = stats;
         this.reportFilePath = reportFilePath;
+        this.onCloseCallback = onClose;
     }
 
     onOpen() {
@@ -290,5 +293,6 @@ export class ImportCompletionDialog extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
+        this.onCloseCallback?.();
     }
 }

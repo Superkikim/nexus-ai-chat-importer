@@ -41,6 +41,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     // 🔧 INTERNAL SETTINGS
     // ========================================
     lastConversationsPerPage: 50,
+    importCompletionCount: 0,
 
     // ========================================
     // 🔄 MIGRATION FLAGS

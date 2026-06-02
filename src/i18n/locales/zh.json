@@ -513,6 +513,15 @@
             "name": "导入 AI 对话"
         }
     },
+    "donation_dialog": {
+        "title": "支持 Nexus",
+        "message_emphasis": "捐款真的很重要。",
+        "message": "我目前失业，没有收入。我花大量时间在这个插件上，并自掏腰包订阅它所支持的 AI 平台，以便测试真实的导出并保持一切准确。",
+        "reality_check": "上个月，只有三位用户捐款，总计 20 € / 23 $。",
+        "cta": "如果这个插件对您有用，您的捐款将产生真正的影响。",
+        "button_donate": "支持项目",
+        "button_later": "也许以后"
+    },
     "support_box": {
         "header": "支持此插件",
         "header_highlight": "支持此插件",

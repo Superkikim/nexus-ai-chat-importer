@@ -91,6 +91,12 @@ export class ClaudeAttachmentExtractor {
     ): Promise<StandardAttachment> {
         const fileName = attachment.fileName;
 
+        // If content was already extracted from the JSON (inline attachments),
+        // skip the ZIP lookup entirely
+        if (attachment.extractedContent) {
+            return attachment;
+        }
+
         // Try to find the file in the ZIP (unlikely for Claude exports)
         const zipPath = await this.findFileInZip(zip, fileName);
 
@@ -137,13 +143,13 @@ export class ClaudeAttachmentExtractor {
     ): StandardAttachment {
         const fileName = attachment.fileName;
         const conversationUrl = `https://claude.ai/chat/${conversationId}`;
-        const fileType = this.getFileTypeFromExtension(fileName);
 
-        const placeholder = `>>[!nexus_attachment] **${fileName}** (${fileType})\n>> ⚠️ Not included in archive. [Open original conversation](${conversationUrl})`;
+        const placeholder = `>>[!nexus_attachment] **${fileName}**\n>> ⚠️ Attachment not provided by export. [Open original conversation](${conversationUrl})`;
 
         return {
             ...attachment,
             extractedContent: placeholder,
+            status: { processed: true, found: false, reason: "not_in_export" },
         };
     }
 

@@ -6,7 +6,7 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.5** scopes vault file scans to plugin folders, removes legacy migration scripts, and fixes dialog layout on narrow viewports or long-label locales.
+> ✅ **v1.6.6** fixes Claude attachment extraction (inline text/doc content was silently ignored), improves reports with ZIP timestamps and an attachment breakdown table, and classifies empty conversations as ignored.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -116,6 +116,8 @@ If Nexus is valuable to you, please consider a one-time or monthly donation. Tha
 - 🐛 **Better support** - Quicker bug fixes and responses
 - 💡 **New features** - Your suggestions become reality
 - ❤️ **Motivation** - Shows that my work is appreciated
+
+> **Note:** The plugin will invite you to donate after your first import, and every 5 imports after that. You can always close the dialog.
 
 ## ✨ Key Features
 
@@ -503,7 +505,7 @@ Formatted with custom Obsidian callouts:
 
 **Viewing Modes**:
 - **Reading View**: Full visual experience with colored callouts
-- **Live Preview**: Rendered callouts while editing
+- **Live Preview**: Rendered callouts while editing. If you make a search or click a message, the message you access will be shown as raw markdown. This is an expected behavior of Obsidian Live Preview
 - **Source Mode**: Raw Markdown syntax
 
 ### Date & Time Formats
@@ -592,18 +594,33 @@ Each AI provider exports data differently.
 
 **✅ Fully Supported**:
 - Conversation titles (exported in JSON)
-- User-uploaded attachments (images, documents)
 - Complete message history
 - Artifacts with full content and versioning
 
+**📎 Attachment Handling by File Type**:
+
+Claude's export contains only `conversations.json` — no binary files. What gets imported depends on the file type:
+
+| File type | What Claude exports | Result in note |
+|---|---|---|
+| Text (`.txt`) | Full text content in `extracted_content` | Inline collapsible callout |
+| Word (`.docx`) | Extracted text in `extracted_content` | Inline collapsible callout |
+| Images (`.png`, `.jpg`, …) | Reference only (no content) | Placeholder: *Image not included in Claude's export* |
+| PDF | Reference only — **text extraction not provided** | Placeholder: *PDF not included in Claude's export (text content not provided)* |
+| Other binaries | Reference only (no content) | Placeholder: *File not included in Claude's export* |
+
+> **Note on PDFs**: Claude can read and reason about PDFs during conversation, but the extracted text is not included in the data export. Only a file reference is present.
+
 **⚠️ Limitations**:
+- Binary file content (images, PDFs, etc.) is never included in Claude's export and cannot be recovered by the plugin
 - Some artifact/tool outputs may be absent from the provider export itself. Missing source data cannot be reconstructed by the plugin.
 - As with all providers, export schema changes may require plugin updates.
 
-**Export Format**: Single `conversations.json` file with all conversations + attachments in ZIP
+**Export Format**: Single `conversations.json` file with all conversations + inline text content in ZIP
 
 **💡 Tip for Claude Users**:
 - Artifacts are fully extracted and saved with versioning - check your artifacts folder
+- Text and Word document content is embedded directly in your conversation notes
 - If artifact rendering looks wrong after a provider-side change, reimport and report the issue with logs
 
 ### Le Chat (Mistral AI)
