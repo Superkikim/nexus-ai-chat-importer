@@ -87,7 +87,9 @@ export class FolderSettingsSection extends BaseSettingsSection {
                         modal.open();
                     });
             });
-        conversationFolderSetting.settingEl.addClass("nexus-folder-path-setting");
+        conversationFolderSetting.settingEl.addClass(
+            "nexus-folder-path-setting"
+        );
 
         // Report Folder
         let reportFolderTextComponent: TextComponent | undefined;

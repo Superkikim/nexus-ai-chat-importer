@@ -470,8 +470,9 @@ export class LinkUpdateService {
      */
     private async getConversationFiles(): Promise<TFile[]> {
         const conversationFolder = this.plugin.settings.conversationFolder;
-        const allFiles = this.plugin.app.vault.getMarkdownFiles()
-            .filter(f => f.path.startsWith(conversationFolder));
+        const allFiles = this.plugin.app.vault
+            .getMarkdownFiles()
+            .filter((f) => f.path.startsWith(conversationFolder));
 
         return allFiles.filter((file) => {
             if (!file.path.startsWith(conversationFolder)) return false;
@@ -498,8 +499,9 @@ export class LinkUpdateService {
      */
     private async getReportFiles(): Promise<TFile[]> {
         const reportFolder = this.plugin.settings.reportFolder;
-        return this.plugin.app.vault.getMarkdownFiles()
-            .filter(f => f.path.startsWith(reportFolder));
+        return this.plugin.app.vault
+            .getMarkdownFiles()
+            .filter((f) => f.path.startsWith(reportFolder));
     }
 
     /**
@@ -508,8 +510,9 @@ export class LinkUpdateService {
     private async getClaudeArtifactFiles(): Promise<TFile[]> {
         const attachmentFolder = this.plugin.settings.attachmentFolder;
         const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
-        return this.plugin.app.vault.getMarkdownFiles()
-            .filter(f => f.path.startsWith(claudeArtifactsPath));
+        return this.plugin.app.vault
+            .getMarkdownFiles()
+            .filter((f) => f.path.startsWith(claudeArtifactsPath));
     }
 
     /**

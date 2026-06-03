@@ -141,7 +141,9 @@ export class ImportCompletionDialog extends Modal {
         // Skipped cartouche
         const skippedLabel =
             this.stats.emptyConversations > 0
-                ? `${t("import_completion.stats.skipped")} (${this.stats.emptyConversations} with no exportable content)`
+                ? `${t("import_completion.stats.skipped")} (${
+                      this.stats.emptyConversations
+                  } with no exportable content)`
                 : t("import_completion.stats.skipped");
         this.createStatCartouche(
             section,
