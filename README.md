@@ -6,7 +6,7 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.6** fixes Claude attachment extraction (inline text/doc content was silently ignored), improves reports with ZIP timestamps and an attachment breakdown table, and classifies empty conversations as ignored.
+> ✅ **v1.6.7** — Mistral AI has rebranded Le Chat as **Mistral Vibe**. Existing vault folders and frontmatter are migrated automatically on plugin load.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -15,7 +15,7 @@
 ### 🚀 Getting Started
 - [⚡ Quickstart](#-quickstart) - Get up and running in 2 minutes
 - [📥 Installation](#-installation--settings) - Install from Community Plugins
-- [📤 Export Your Chats](#-importing-conversations) - Get your data from ChatGPT/Claude/Le Chat/Perplexity
+- [📤 Export Your Chats](#-importing-conversations) - Get your data from ChatGPT/Claude/Mistral Vibe/Perplexity
 
 ### 💡 Using the Plugin
 - [📥 Import Conversations](#-importing-conversations) - Quick or selective import
@@ -25,7 +25,7 @@
 
 ### 🔧 Advanced
 - [📎 Attachments](#attachments) - Images, DALL-E, artifacts
-- [🤖 Provider Differences](#-provider-specific-features--limitations) - ChatGPT, Claude, Le Chat, Perplexity specifics
+- [🤖 Provider Differences](#-provider-specific-features--limitations) - ChatGPT, Claude, Mistral Vibe, Perplexity specifics
 - [💻 CLI](#-command-line-interface-cli) - Import from command line
 - [⚙️ Settings](#plugin-settings) - Customize folders and formatting
 - [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
@@ -46,7 +46,7 @@
 2. **Export** your chats:
    - **ChatGPT**: Settings → Data controls → Export data → Download ZIP
    - **Claude**: Settings → Privacy → Export data → Download ZIP
-   - **Le Chat**: Click your name → Profile → Le Chat: Export → Download
+   - **Mistral Vibe**: Click your name → Profile → Mistral Vibe: Export → Download
    - **Perplexity**: Export via Perplexity Thread Exporter (ZIP with `perplexity_*.json`)
 3. **Import**: Click the <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" x2="15" y1="10" y2="10"/><line x1="12" x2="12" y1="7" y2="13"/></svg> ribbon icon (chat +) in the left sidebar or use command palette → "Import AI conversations"
 4. **Select** your ZIP file(s) and import mode (all or selective)
@@ -59,11 +59,11 @@
 
 ## Overview
 
-Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le Chat**, **Perplexity**, and more in your local Obsidian vault, so you stay in control of your data.
+Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe**, **Perplexity**, and more in your local Obsidian vault, so you stay in control of your data.
 
 ### 🔍 Features in a Glance
 
-- Multi-provider support (ChatGPT, Claude, Le Chat, Perplexity)
+- Multi-provider support (ChatGPT, Claude, Mistral Vibe, Perplexity)
 - Selective import with interactive preview
 - Smart deduplication across multiple ZIPs
 - Attachment handling — images, documents, DALL-E, artifacts (provider-dependent)
@@ -76,23 +76,58 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Le C
 
 ## ✨ What's New
 
-#### v1.6.x — Highlights
+### v1.6.7 — Mistral Vibe rebrand
 
-✨ **New**
+✨ **Changed**
+- **Mistral Vibe** (formerly Le Chat) — Mistral AI has rebranded their chat product
+- Vault folders renamed automatically on upgrade: `lechat/` → `vibe/`
+- Conversation frontmatter updated: `provider: lechat` → `provider: vibe`
+- Conversation links in import reports updated to reflect new folder paths
+
+🔧 **Improved**
+- Upgrade migrations now run after the vault is fully indexed (`onLayoutReady`), preventing silent no-ops on first load
+
+---
+
+### v1.6.6 — Claude Attachment Fix & Report Improvements
+
+🐛 **Fixed**
+- **Claude inline text/doc content was silently ignored** — `.txt` and `.docx` attachments whose content is embedded in `conversations.json` (`extracted_content`) are now rendered as collapsible callouts in the conversation note
+
+🔧 **Improved**
+- Attachment display refined: `.txt` as plain callout, document extracts labelled *(text extract)* + link, code files with syntax-highlighted fence, binaries with placeholder
+- Empty conversations (interrupted sessions, artifact-only) now classified as `ignored` rather than `skipped`
+- Attachment summary in reports redesigned as a breakdown table (Extracted / Inline / Not provided / Missing / Failed)
+- ZIP timestamp column added to import summary tables (works across all providers)
+
+---
+
+### v1.6.5 — Vault Safety & Dialog Readability
+
+🔧 **Improved**
+- Vault file scans scoped to plugin folders only — no longer enumerates the entire vault
+- Removed legacy migration scripts (pre-1.3.0); replaced with an explicit version guard
+- Conversation selection dialog toolbar wraps correctly on narrow viewports and long-label locales (FR, DE, JA…)
+- Folder migration dialog: buttons and paths wrap properly for long vault paths
+- First-install and upgrade dialogs show contextually relevant content (overview vs. What's New)
+
+---
+
+### v1.6.x — Series highlights
+
+✨ **New across 1.6.x**
 - Perplexity provider support (Perplexity Thread Exporter ZIP archives)
+- Mistral Vibe support (formerly Le Chat)
 - Per-turn model-aware assistant headers (`Assistant · <model>`)
 - Universal frontmatter metadata (`mode`, `models`)
 - Dual-schema support for Perplexity Thread Exporter archives
 
-🔧 **Improved**
+🔧 **Improved across 1.6.x**
 - Filenames no longer truncate or fail on long conversation titles
 - Perplexity conversations deduplicated correctly across export variants
-- Under the hood quality and compliance improvements for better stability
-- Import summary now shows how many conversations were skipped due to no exportable content
-- Vault file scans scoped to plugin folders only — no longer enumerates the entire vault
-- Dialog controls wrap properly on narrow viewports and with long-label locales (FR, DE, JA…)
+- Under-the-hood quality and compliance improvements for better stability
 
-🐛 **Fixed**
+🐛 **Fixed across 1.6.x**
 - Claude conversations with no exportable content are now skipped gracefully instead of creating empty notes
 
 ---
@@ -122,7 +157,7 @@ If Nexus is valuable to you, please consider a one-time or monthly donation. Tha
 ## ✨ Key Features
 
 - 🎯 **Selective Import**: Choose exactly which conversations to import with interactive preview
-- 💬 **Multi-Provider Support**: Full support for ChatGPT, Claude, Le Chat, and Perplexity conversations
+- 💬 **Multi-Provider Support**: Full support for ChatGPT, Claude, Mistral Vibe, and Perplexity conversations
 - 🎨 **Beautiful Formatting**: Custom callouts with role-specific colors and icons
 - 📎 **Complete Attachment Handling**: Images, documents, DALL-E creations with prompts
 - 🎨 **Claude Artifact Versioning**: Separate files for each artifact modification
@@ -228,8 +263,8 @@ Want to reorganize? No problem!
 2. Check your email (arrives in a few minutes)
 3. Download the ZIP file
 
-**Le Chat**:
-1. Click your name → **Profile** → **Le Chat: Export**
+**Mistral Vibe** (formerly Le Chat):
+1. Click your name → **Profile** → **Mistral Vibe: Export**
 2. Wait for the button to change from "Export" to "Download"
 3. Click **Download** to get the ZIP file
 
@@ -451,7 +486,7 @@ Rich metadata written at the top of every note:
 ---
 nexus: nexus-ai-chat-importer        # Plugin identifier (do not modify)
 plugin_version: "1.x.x"             # Plugin version at import time
-provider: chatgpt                    # chatgpt, claude, lechat, or perplexity
+provider: chatgpt                    # chatgpt, claude, vibe, or perplexity
 aliases: My Conversation Title       # YAML-safe alias for Obsidian linking
 conversation_id: abc123...
 create_time: 2024-01-15T14:30:22.000Z # UTC ISO 8601
@@ -623,7 +658,7 @@ Claude's export contains only `conversations.json` — no binary files. What get
 - Text and Word document content is embedded directly in your conversation notes
 - If artifact rendering looks wrong after a provider-side change, reimport and report the issue with logs
 
-### Le Chat (Mistral AI)
+### Mistral Vibe (formerly Le Chat)
 
 **✅ Supported**:
 - User-uploaded attachments (images, documents)
@@ -632,13 +667,13 @@ Claude's export contains only `conversations.json` — no binary files. What get
 - Custom elements
 
 **⚠️ Limitations**:
-- **No conversation titles**: Le Chat exports don't include conversation titles. The plugin automatically generates titles from the first user message (first 50 characters, followed by '...')
-- **No generated images**: Images created by Le Chat's image generation tool are **not included in exports**. Only external URLs are provided, which may expire. The plugin will show the generation prompt but cannot download the images
+- **No conversation titles**: Mistral Vibe exports don't include conversation titles. The plugin automatically generates titles from the first user message (first 50 characters, followed by '...')
+- **No generated images**: Images created by Mistral Vibe's image generation tool are **not included in exports**. Only external URLs are provided, which may expire. The plugin will show the generation prompt but cannot download the images
 - **Tool calls filtered**: Internal tool calls (web_search, etc.) are filtered out as they're not useful for users
 
 **Export Format**: Individual `chat-{uuid}.json` files (one per conversation) + attachments in `chat-{uuid}-files/` directories
 
-**💡 Tip for Le Chat Users**:
+**💡 Tip for Mistral Vibe Users**:
 - If you want to preserve generated images, download them manually before exporting
 - Consider adding custom titles to your conversations by editing the imported notes' frontmatter
 
@@ -727,7 +762,7 @@ nexus-cli import --vault /path/to/vault --input export.zip --provider chatgpt [o
 |--------|-------------|
 | `--vault <path>` | Path to your Obsidian vault (required) |
 | `--input <files...>` | One or more ZIP export files (required) |
-| `--provider <name>` | Provider: `chatgpt`, `claude`, or `lechat` (required) |
+| `--provider <name>` | Provider: `chatgpt`, `claude`, or `vibe` (required) |
 | `--conversation-folder <path>` | Override conversation folder |
 | `--attachment-folder <path>` | Override attachment folder |
 | `--report-folder <path>` | Override report folder |
@@ -746,8 +781,8 @@ nexus-cli import --vault ~/my-vault --input chatgpt-export.zip --provider chatgp
 # Import a Claude export
 nexus-cli import --vault ~/my-vault --input claude-export.zip --provider claude
 
-# Import a Le Chat export
-nexus-cli import --vault ~/my-vault --input lechat-export.zip --provider lechat
+# Import a Mistral Vibe export
+nexus-cli import --vault ~/my-vault --input mistral-vibe-export.zip --provider vibe
 
 # Import multiple files with date prefix
 nexus-cli import --vault ~/my-vault --input export1.zip export2.zip --provider chatgpt --date-prefix
@@ -853,7 +888,7 @@ The plugin reads and writes files in the folders you configure (Conversations, A
 - **Solution**: Disable auto-unzip in Safari:
   - Safari → Preferences → General
   - Uncheck "Open 'safe' files after downloading"
-  - Re-download the export from ChatGPT/Claude/Le Chat/Perplexity
+  - Re-download the export from ChatGPT/Claude/Mistral Vibe/Perplexity
 - **Note**: This is a Safari feature, not a plugin bug
 - **Do NOT manually re-compress** unzipped folders (creates incorrect structure)
 
