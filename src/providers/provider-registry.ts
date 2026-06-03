@@ -38,7 +38,7 @@ export function createProviderRegistry(
     // Register Claude provider
     registry.register("claude", new ClaudeAdapter(plugin));
 
-    // Register Le Chat provider
+    // Register Mistral Vibe provider
     registry.register("vibe", new MistralVibeAdapter(plugin));
 
     // Register Perplexity provider

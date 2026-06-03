@@ -347,14 +347,14 @@ export async function extractRawConversations(
 ): Promise<RawConversationExtractionResult> {
     const fileNames = await listFileNames(zip);
 
-    const leChatFiles = fileNames.filter((name) =>
+    const vibeFiles = fileNames.filter((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
-    if (leChatFiles.length > 0) {
+    if (vibeFiles.length > 0) {
         const conversations: any[] = [];
         let uncompressedBytes = 0;
 
-        for (const fileName of leChatFiles) {
+        for (const fileName of vibeFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
             const { messages, uncompressedBytes: fileBytes } =
@@ -475,15 +475,15 @@ export async function* extractConversationsStream(
         durationMs: Date.now() - startedAt,
     });
 
-    const leChatFiles = fileNames.filter((name) =>
+    const vibeFiles = fileNames.filter((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
-    if (leChatFiles.length > 0) {
+    if (vibeFiles.length > 0) {
         streamLogger.debug("Using Mistral Vibe conversation stream", {
-            fileCount: leChatFiles.length,
+            fileCount: vibeFiles.length,
         });
         let yieldedCount = 0;
-        for (const fileName of leChatFiles) {
+        for (const fileName of vibeFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
             streamLogger.debug("Reading Mistral Vibe conversation file", {

@@ -49,9 +49,9 @@ export class MistralVibeAdapter extends BaseProviderAdapter<MistralVibeConversat
     }
 
     /**
-     * Detect if raw data is from Le Chat
+     * Detect if raw data is from Mistral Vibe
      *
-     * Le Chat format:
+     * Mistral Vibe format:
      * - Array of messages (not wrapped in conversation object)
      * - Each message has: chatId, contentChunks, createdAt, role
      */
@@ -60,7 +60,7 @@ export class MistralVibeAdapter extends BaseProviderAdapter<MistralVibeConversat
 
         const sample = rawConversations[0];
 
-        // Le Chat: array of messages with specific structure
+        // Mistral Vibe: array of messages with specific structure
         return (
             Array.isArray(sample) &&
             sample.length > 0 &&

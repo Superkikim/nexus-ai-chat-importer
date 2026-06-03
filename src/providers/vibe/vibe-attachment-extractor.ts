@@ -25,7 +25,7 @@ import { AttachmentMap } from "../../services/attachment-map-builder";
 import { ZipArchiveReader, writeZipEntryToVault } from "../../utils/zip-loader";
 
 /**
- * Attachment extractor for Le Chat (Mistral AI)
+ * Attachment extractor for Mistral Vibe (formerly Le Chat)
  *
  * Le Chat stores attachments in directories named: chat-{chatId}-files/
  * Each file is stored with its original name.
@@ -258,7 +258,7 @@ export class MistralVibeAttachmentExtractor {
 
     /**
      * Generate unique filename to avoid conflicts
-     * Strategy: lechat_{conversationId}_{messageId}_{timestamp}_{originalName}
+     * Strategy: vibe_{conversationId}_{messageId}_{timestamp}_{originalName}
      */
     private generateUniqueFileName(
         originalFileName: string,
@@ -280,8 +280,8 @@ export class MistralVibeAttachmentExtractor {
         // Sanitize base name (remove special characters)
         const safeBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, "_");
 
-        // Build unique filename: lechat_{convId}_{msgId}_{timestamp}_{name}.{ext}
-        const uniqueName = `lechat_${shortConversationId}_${shortMessageId}_${timestamp}_${safeBaseName}`;
+        // Build unique filename: vibe_{convId}_{msgId}_{timestamp}_{name}.{ext}
+        const uniqueName = `vibe_${shortConversationId}_${shortMessageId}_${timestamp}_${safeBaseName}`;
 
         return extension ? `${uniqueName}.${extension}` : uniqueName;
     }
