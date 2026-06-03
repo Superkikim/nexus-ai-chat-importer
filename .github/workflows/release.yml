@@ -36,9 +36,26 @@ jobs:
             dist/manifest.json
             dist/styles.css
 
+      - name: Extract release notes body
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+        run: |
+          python3 << 'EOF' > /tmp/release-body.md
+          import re, os
+          version = os.environ['RELEASE_VERSION']
+          with open('RELEASE_NOTES.md') as f:
+              text = f.read()
+          m = re.search(
+              rf'^(## Version {re.escape(version)}.*?)(?=^## Version |\Z)',
+              text, re.MULTILINE | re.DOTALL
+          )
+          print(m.group(1).rstrip().rstrip('-').strip() if m else '')
+          EOF
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: /tmp/release-body.md
           generate_release_notes: true
           files: |
             dist/main.js
