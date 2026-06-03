@@ -1,14 +1,14 @@
 /**
  * Nexus AI Chat Importer CLI
  *
- * Non-interactive CLI that imports ChatGPT/Claude/Le Chat ZIP exports
+ * Non-interactive CLI that imports ChatGPT/Claude/Mistral Vibe ZIP exports
  * into an Obsidian vault using the plugin's services.
  */
 
 import { runImport, ImportOptions } from "./run-import";
 
 const CLI_VERSION = "1.0.0";
-const VALID_PROVIDERS = ["chatgpt", "claude", "lechat"] as const;
+const VALID_PROVIDERS = ["chatgpt", "claude", "vibe"] as const;
 const VALID_DATE_FORMATS = ["YYYY-MM-DD", "YYYYMMDD"] as const;
 const VALID_TIMESTAMP_FORMATS = [
     "locale",
@@ -31,7 +31,7 @@ Commands:
 Options:
   --vault <path>               Path to the Obsidian vault (required)
   --input <files...>           One or more ZIP export files (required)
-  --provider <provider>        Provider: chatgpt, claude, or lechat (required)
+  --provider <provider>        Provider: chatgpt, claude, or vibe (required)
   --conversation-folder <dir>  Override conversation folder
   --attachment-folder <dir>    Override attachment folder
   --report-folder <dir>        Override report folder
