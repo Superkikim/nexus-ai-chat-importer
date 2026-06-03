@@ -1,4 +1,4 @@
-import { LeChatConversation } from "./lechat-types";
+import { MistralVibeConversation } from "./vibe-types";
 
 export const LECHAT_VISIBLE_TITLE_MAX_CHARS = 50;
 
@@ -9,8 +9,8 @@ export function truncateLeChatTitle(content: string): string {
     return `${trimmed.substring(0, LECHAT_VISIBLE_TITLE_MAX_CHARS).trim()}...`;
 }
 
-export function deriveLeChatConversationTitle(
-    messages: LeChatConversation,
+export function deriveMistralVibeConversationTitle(
+    messages: MistralVibeConversation,
     options?: { assumeSorted?: boolean }
 ): string {
     if (!Array.isArray(messages) || messages.length === 0) {

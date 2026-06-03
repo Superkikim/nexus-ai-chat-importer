@@ -87,7 +87,7 @@ export const PROVIDER_URLS = {
 export const PROVIDERS = {
     CHATGPT: "chatgpt",
     CLAUDE: "claude",
-    LECHAT: "lechat",
+    LECHAT: "vibe",
     PERPLEXITY: "perplexity",
 } as const;
 

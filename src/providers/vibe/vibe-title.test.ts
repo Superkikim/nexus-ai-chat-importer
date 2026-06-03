@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
-    deriveLeChatConversationTitle,
+    deriveMistralVibeConversationTitle,
     LECHAT_VISIBLE_TITLE_MAX_CHARS,
-} from "./lechat-title";
-import { LeChatConversation } from "./lechat-types";
+} from "./vibe-title";
+import { MistralVibeConversation } from "./vibe-types";
 
 describe("Le Chat title helper", () => {
     it("truncates title to 50 chars with ellipsis", () => {
-        const chat: LeChatConversation = [
+        const chat: MistralVibeConversation = [
             {
                 id: "m1",
                 version: 0,
@@ -29,7 +29,7 @@ describe("Le Chat title helper", () => {
             },
         ];
 
-        const title = deriveLeChatConversationTitle(chat);
+        const title = deriveMistralVibeConversationTitle(chat);
         expect(title).toBe(
             "This is a very long message that should be truncat..."
         );
@@ -39,7 +39,7 @@ describe("Le Chat title helper", () => {
     });
 
     it("derives title from first chronological user message", () => {
-        const chat: LeChatConversation = [
+        const chat: MistralVibeConversation = [
             {
                 id: "m2",
                 version: 0,
@@ -78,6 +78,6 @@ describe("Le Chat title helper", () => {
             },
         ];
 
-        expect(deriveLeChatConversationTitle(chat)).toBe("First question");
+        expect(deriveMistralVibeConversationTitle(chat)).toBe("First question");
     });
 });

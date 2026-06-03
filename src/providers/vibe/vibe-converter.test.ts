@@ -17,13 +17,13 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { LeChatConverter } from "./lechat-converter";
-import { LeChatConversation, LeChatMessage } from "./lechat-types";
+import { MistralVibeConverter } from "./vibe-converter";
+import { MistralVibeConversation, MistralVibeMessage } from "./vibe-types";
 
-describe("LeChatConverter", () => {
+describe("MistralVibeConverter", () => {
     describe("convertChat", () => {
         it("should convert a simple Le Chat conversation", () => {
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,
@@ -62,11 +62,11 @@ describe("LeChatConverter", () => {
                 },
             ];
 
-            const result = LeChatConverter.convertChat(chat);
+            const result = MistralVibeConverter.convertChat(chat);
 
             expect(result.id).toBe("chat-123");
             expect(result.title).toBe("Hello, how are you?");
-            expect(result.provider).toBe("lechat");
+            expect(result.provider).toBe("vibe");
             expect(result.messages).toHaveLength(2);
             expect(result.messages[0].role).toBe("user");
             expect(result.messages[1].role).toBe("assistant");
@@ -78,7 +78,7 @@ describe("LeChatConverter", () => {
         it("should truncate long titles to 50 characters", () => {
             const longContent =
                 "This is a very long message that should be truncated to fifty characters maximum";
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,
@@ -99,7 +99,7 @@ describe("LeChatConverter", () => {
                 },
             ];
 
-            const result = LeChatConverter.convertChat(chat);
+            const result = MistralVibeConverter.convertChat(chat);
 
             expect(result.title).toBe(
                 "This is a very long message that should be truncat..."
@@ -108,7 +108,7 @@ describe("LeChatConverter", () => {
         });
 
         it('should use "Untitled" when no user message exists', () => {
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,
@@ -129,13 +129,13 @@ describe("LeChatConverter", () => {
                 },
             ];
 
-            const result = LeChatConverter.convertChat(chat);
+            const result = MistralVibeConverter.convertChat(chat);
 
             expect(result.title).toBe("Untitled");
         });
 
         it("should calculate correct create and update times", () => {
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,
@@ -174,7 +174,7 @@ describe("LeChatConverter", () => {
                 },
             ];
 
-            const result = LeChatConverter.convertChat(chat);
+            const result = MistralVibeConverter.convertChat(chat);
 
             // First message timestamp
             expect(result.createTime).toBe(
@@ -191,16 +191,16 @@ describe("LeChatConverter", () => {
         });
 
         it("should throw error for empty conversation", () => {
-            const chat: LeChatConversation = [];
+            const chat: MistralVibeConversation = [];
 
-            expect(() => LeChatConverter.convertChat(chat)).toThrow(
+            expect(() => MistralVibeConverter.convertChat(chat)).toThrow(
                 "Le Chat conversation is empty"
             );
         });
 
         it("should sort messages chronologically even when in random order", () => {
             // Messages in RANDOM order (as they appear in real Le Chat exports)
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-3",
                     version: 0,
@@ -257,7 +257,7 @@ describe("LeChatConverter", () => {
                 },
             ];
 
-            const result = LeChatConverter.convertChat(chat);
+            const result = MistralVibeConverter.convertChat(chat);
 
             // Title should be from first USER message chronologically
             expect(result.title).toBe("First user message");
@@ -272,7 +272,7 @@ describe("LeChatConverter", () => {
 
     describe("convertMessages", () => {
         it("should filter out tool calls from messages", () => {
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,
@@ -306,7 +306,7 @@ describe("LeChatConverter", () => {
                 },
             ];
 
-            const result = LeChatConverter.convertMessages(chat);
+            const result = MistralVibeConverter.convertMessages(chat);
 
             expect(result).toHaveLength(1);
             expect(result[0].content).toContain(
@@ -319,7 +319,7 @@ describe("LeChatConverter", () => {
         });
 
         it("should convert messages with file attachments", () => {
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,
@@ -345,7 +345,7 @@ describe("LeChatConverter", () => {
                 },
             ];
 
-            const result = LeChatConverter.convertMessages(chat);
+            const result = MistralVibeConverter.convertMessages(chat);
 
             expect(result).toHaveLength(1);
             expect(result[0].attachments).toHaveLength(1);
@@ -354,7 +354,7 @@ describe("LeChatConverter", () => {
         });
 
         it("should handle messages with references", () => {
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,
@@ -384,7 +384,7 @@ describe("LeChatConverter", () => {
                 },
             ];
 
-            const result = LeChatConverter.convertMessages(chat);
+            const result = MistralVibeConverter.convertMessages(chat);
 
             expect(result).toHaveLength(1);
             expect(result[0].content).toContain("[^1][^2][^3]");

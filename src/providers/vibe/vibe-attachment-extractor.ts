@@ -30,7 +30,7 @@ import { ZipArchiveReader, writeZipEntryToVault } from "../../utils/zip-loader";
  * Le Chat stores attachments in directories named: chat-{chatId}-files/
  * Each file is stored with its original name.
  */
-export class LeChatAttachmentExtractor {
+export class MistralVibeAttachmentExtractor {
     private zipFileCache = new Map<string, string | null>();
     private attachmentMap: AttachmentMap | null = null;
     private allZips: ZipArchiveReader[] = [];
@@ -174,9 +174,9 @@ export class LeChatAttachmentExtractor {
         // Determine file category (images, documents, etc.)
         const category = getFileCategory(uniqueFileName, finalFileType);
 
-        // Build vault path: Attachments/lechat/{category}/{unique_filename}
+        // Build vault path: Attachments/vibe/{category}/{unique_filename}
         const attachmentFolder = this.plugin.settings.attachmentFolder;
-        let vaultPath = `${attachmentFolder}/lechat/${category}/${sanitizeFileName(
+        let vaultPath = `${attachmentFolder}/vibe/${category}/${sanitizeFileName(
             uniqueFileName
         )}`;
 

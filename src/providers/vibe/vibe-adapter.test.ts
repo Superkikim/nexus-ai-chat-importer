@@ -17,7 +17,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { LeChatConversation } from "./lechat-types";
+import { MistralVibeConversation } from "./vibe-types";
 
 /**
  * Basic tests for Le Chat adapter
@@ -25,7 +25,7 @@ import { LeChatConversation } from "./lechat-types";
  * Note: Full adapter tests require Obsidian plugin mocking which is complex.
  * The adapter will be tested during integration testing with real ZIP files.
  */
-describe("LeChatAdapter", () => {
+describe("MistralVibeAdapter", () => {
     describe("Le Chat format detection", () => {
         it("should identify Le Chat format structure", () => {
             const leChatFormat = [

@@ -20,7 +20,7 @@ import { describe, it, expect } from "vitest";
 import JSZip from "jszip";
 import * as fs from "fs";
 import * as path from "path";
-import { LeChatConverter } from "../providers/lechat/lechat-converter";
+import { MistralVibeConverter } from "../providers/vibe/vibe-converter";
 
 /**
  * Integration test for Le Chat provider
@@ -98,7 +98,7 @@ describe("Le Chat Integration Test", () => {
 
             // Convert to standard format
             const standardConversation =
-                LeChatConverter.convertChat(leChatConversation);
+                MistralVibeConverter.convertChat(leChatConversation);
 
             // Verify conversion
             expect(standardConversation).toHaveProperty("id");
