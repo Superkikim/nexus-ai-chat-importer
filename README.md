@@ -87,6 +87,9 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 🔧 **Improved**
 - Upgrade migrations now run after the vault is fully indexed (`onLayoutReady`), preventing silent no-ops on first load
 
+🐛 **Fixed**
+- Claude messages no longer appear out of order when the user replies within the same second as the assistant
+
 ---
 
 ### v1.6.6 — Claude Attachment Fix & Report Improvements

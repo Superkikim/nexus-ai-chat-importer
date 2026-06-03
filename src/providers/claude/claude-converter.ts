@@ -30,7 +30,6 @@ import {
 } from "./claude-types";
 import { generateSafeAlias, generateConversationFileName } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
-import { sortMessagesByTimestamp } from "../../utils/message-utils";
 
 export class ClaudeConverter {
     private static plugin: NexusAiChatImporterPlugin;
@@ -408,8 +407,7 @@ export class ClaudeConverter {
             standardMessages.push(standardMessage);
         }
 
-        // Sort messages by timestamp to maintain chronological order
-        return this.sortMessagesByTimestamp(standardMessages);
+        return standardMessages;
     }
 
     private static shouldIncludeMessage(message: ClaudeMessage): boolean {
@@ -426,18 +424,6 @@ export class ClaudeConverter {
         }
 
         return false;
-    }
-
-    /**
-     * Sort messages by timestamp with UUID as secondary sort for chronological order
-     */
-    private static sortMessagesByTimestamp(
-        messages: StandardMessage[]
-    ): StandardMessage[] {
-        if (messages.length <= 1) return messages;
-
-        // Use native sort with proper comparison function
-        return sortMessagesByTimestamp(messages);
     }
 
     /**

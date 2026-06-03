@@ -1,5 +1,35 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.7 — Mistral Vibe & Message Order Fix
+
+![Version](https://img.shields.io/badge/version-1.6.7-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### ✨ New
+
+- **Mistral AI provider rebranded to "Mistral Vibe"**
+  - Mistral AI has renamed their chat product; the plugin now reflects the new branding throughout the UI
+  - On upgrade, existing vault folders are renamed automatically: `lechat/` → `vibe/`
+  - Conversation frontmatter updated automatically: `provider: lechat` → `provider: vibe`
+  - Import report links updated to reflect the new folder paths
+  - No re-import required
+
+### 🔧 Improved
+
+- **Upgrade migrations now run after the vault is fully indexed**
+  - Migrations execute in `onLayoutReady` instead of `onload`, preventing silent no-ops on first launch
+
+### 🐛 Fixed
+
+- **Claude: messages rendered out of order in fast exchanges**
+  - When a user replied within the same second as the assistant finished, both timestamps
+    truncated to identical values and a UUID-based tiebreaker flipped the pair —
+    producing two consecutive user messages with the assistant reply displaced below them
+  - `chat_messages` in Claude's export is already in correct chronological order;
+    the redundant sort call has been removed
+  - Affected conversations will render correctly on re-import
+
+---
+
 ## Version 1.6.6 — Claude Attachment Fix & Report Improvements
 
 ![Version](https://img.shields.io/badge/version-1.6.6-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
