@@ -32,6 +32,7 @@ import { ensureFolderExists } from "../utils";
 import { t } from "../i18n";
 import { Upgrade130 } from "./versions/upgrade-1.3.0";
 import { Upgrade140 } from "./versions/upgrade-1.4.0";
+import { Upgrade167 } from "./versions/upgrade-1.6.7";
 
 const logger = new Logger();
 
@@ -68,6 +69,7 @@ export class IncrementalUpgradeManager {
         this.availableUpgrades = [
             new Upgrade130(),
             new Upgrade140(),
+            new Upgrade167(),
         ];
 
         // Sort by version for incremental execution
