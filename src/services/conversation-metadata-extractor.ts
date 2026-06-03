@@ -33,7 +33,7 @@ import {
 import { decideArchiveMode } from "./archive-mode-decider";
 import { Logger, ScopedLogger } from "../logger";
 import { normalizePerplexityConversationFile } from "../providers/perplexity/perplexity-normalizer";
-import { deriveLeChatConversationTitle } from "../providers/lechat/lechat-title";
+import { deriveMistralVibeConversationTitle } from "../providers/vibe/vibe-title";
 
 export type ConversationExistenceStatus =
     | "new"
@@ -502,8 +502,8 @@ export class ConversationMetadataExtractor {
         if (forcedProvider === "claude") {
             return getArchiveProviderMismatchMessage("claude");
         }
-        if (forcedProvider === "lechat") {
-            return getArchiveProviderMismatchMessage("lechat");
+        if (forcedProvider === "vibe") {
+            return getArchiveProviderMismatchMessage("vibe");
         }
         if (forcedProvider === "perplexity") {
             return getArchiveProviderMismatchMessage("perplexity");
@@ -532,8 +532,8 @@ export class ConversationMetadataExtractor {
                 return this.extractChatGPTMetadata(rawConversations);
             case "claude":
                 return this.extractClaudeMetadata(rawConversations);
-            case "lechat":
-                return this.extractLeChatMetadata(rawConversations);
+            case "vibe":
+                return this.extractMistralVibeMetadata(rawConversations);
             case "perplexity":
                 return this.extractPerplexityMetadata(rawConversations);
             default:
@@ -613,7 +613,7 @@ export class ConversationMetadataExtractor {
             .filter((metadata) => metadata.messageCount > 0);
     }
 
-    private extractLeChatMetadata(
+    private extractMistralVibeMetadata(
         conversations: any[]
     ): ConversationMetadata[] {
         return conversations
@@ -643,9 +643,12 @@ export class ConversationMetadataExtractor {
                 });
 
                 const chatId = sortedChat[0].chatId;
-                const title = deriveLeChatConversationTitle(sortedChat as any, {
-                    assumeSorted: true,
-                });
+                const title = deriveMistralVibeConversationTitle(
+                    sortedChat as any,
+                    {
+                        assumeSorted: true,
+                    }
+                );
 
                 const timestamps = sortedChat.map(
                     (msg: any) => new Date(msg.createdAt).getTime() / 1000
@@ -657,7 +660,7 @@ export class ConversationMetadataExtractor {
                     createTime: Math.floor(Math.min(...timestamps)),
                     updateTime: Math.floor(Math.max(...timestamps)),
                     messageCount: sortedChat.length,
-                    provider: "lechat",
+                    provider: "vibe",
                     isStarred: false,
                     isArchived: false,
                 };

@@ -133,8 +133,8 @@ describe("filterConversationsByIds", () => {
 
     it("handles Le Chat-style arrays of messages", () => {
         const registry = new DefaultProviderRegistry();
-        const adapter = new TestAdapter("lechat");
-        registry.register("lechat", adapter);
+        const adapter = new TestAdapter("vibe");
+        registry.register("vibe", adapter);
 
         const conversations = [
             [{ chatId: "chat-1", createdAt: "2024-01-01T00:00:00Z" }],
@@ -145,7 +145,7 @@ describe("filterConversationsByIds", () => {
             conversations,
             ["chat-2"],
             registry,
-            "lechat"
+            "vibe"
         );
 
         expect(result).toHaveLength(1);

@@ -3,11 +3,11 @@ import { ConversationMetadataExtractor } from "./conversation-metadata-extractor
 import { DefaultProviderRegistry } from "../providers/provider-adapter";
 import { Chat } from "../providers/chatgpt/chatgpt-types";
 import { ClaudeConversation } from "../providers/claude/claude-types";
-import { LeChatConversation } from "../providers/lechat/lechat-types";
+import { MistralVibeConversation } from "../providers/vibe/vibe-types";
 import { PerplexityConversationFile } from "../providers/perplexity/perplexity-types";
 import { ChatGPTAdapter } from "../providers/chatgpt/chatgpt-adapter";
 import { ClaudeAdapter } from "../providers/claude/claude-adapter";
-import { LeChatAdapter } from "../providers/lechat/lechat-adapter";
+import { MistralVibeAdapter } from "../providers/vibe/vibe-adapter";
 import { PerplexityAdapter } from "../providers/perplexity/perplexity-adapter";
 
 /**
@@ -104,16 +104,16 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
         expect(m.messageCount).toBeGreaterThan(0);
     });
 
-    it("uses the same identifiers and timestamps as LeChatAdapter", () => {
+    it("uses the same identifiers and timestamps as MistralVibeAdapter", () => {
         const plugin = createTestPlugin();
         const registry = new DefaultProviderRegistry();
         const extractor = new ConversationMetadataExtractor(registry, plugin);
-        const adapter = new LeChatAdapter(plugin);
+        const adapter = new MistralVibeAdapter(plugin);
 
-        const conversation: LeChatConversation = [
+        const conversation: MistralVibeConversation = [
             {
                 id: "msg-1",
-                chatId: "lechat-1",
+                chatId: "vibe-1",
                 role: "user",
                 content: "Hello Le Chat",
                 createdAt: "2024-02-01T10:00:00.000Z",
@@ -121,7 +121,7 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             },
             {
                 id: "msg-2",
-                chatId: "lechat-1",
+                chatId: "vibe-1",
                 role: "assistant",
                 content: "Hi there",
                 createdAt: "2024-02-01T10:05:00.000Z",
@@ -129,7 +129,7 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             },
         ] as any;
 
-        const metadata = (extractor as any).extractLeChatMetadata([
+        const metadata = (extractor as any).extractMistralVibeMetadata([
             conversation,
         ]) as any[];
         expect(metadata).toHaveLength(1);

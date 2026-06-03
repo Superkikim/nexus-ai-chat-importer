@@ -788,8 +788,8 @@ export class ImportService {
             firstConversation.name !== undefined ||
             firstConversation.summary !== undefined;
 
-        // Check for Le Chat structure (array of messages)
-        const isLeChat =
+        // Check for Mistral Vibe structure (array of messages)
+        const isMistralVibe =
             Array.isArray(firstConversation) &&
             firstConversation.length > 0 &&
             firstConversation[0].chatId !== undefined &&
@@ -809,10 +809,10 @@ export class ImportService {
             );
         }
 
-        if (forcedProvider === "lechat" && !isLeChat) {
+        if (forcedProvider === "vibe" && !isMistralVibe) {
             throw new NexusAiChatImporterError(
                 "Provider Mismatch",
-                "You selected Le Chat but this archive appears to be from another provider. The structure doesn't match Le Chat exports."
+                "You selected Mistral Vibe but this archive appears to be from another provider. The structure doesn't match Mistral Vibe exports."
             );
         }
     }
