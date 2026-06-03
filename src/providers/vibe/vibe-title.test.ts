@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
     deriveMistralVibeConversationTitle,
-    LECHAT_VISIBLE_TITLE_MAX_CHARS,
+    VIBE_VISIBLE_TITLE_MAX_CHARS,
 } from "./vibe-title";
 import { MistralVibeConversation } from "./vibe-types";
 
@@ -34,7 +34,7 @@ describe("Le Chat title helper", () => {
             "This is a very long message that should be truncat..."
         );
         expect(title.length).toBeLessThanOrEqual(
-            LECHAT_VISIBLE_TITLE_MAX_CHARS + 3
+            VIBE_VISIBLE_TITLE_MAX_CHARS + 3
         );
     });
 

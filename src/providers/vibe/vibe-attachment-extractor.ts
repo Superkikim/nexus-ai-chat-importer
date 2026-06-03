@@ -91,7 +91,7 @@ export class MistralVibeAttachmentExtractor {
                     ? `conversation: ${conversationId}, message: ${messageId}`
                     : `conversation: ${conversationId}`;
                 this.logger.error(
-                    `Failed to process Le Chat attachment: ${attachment.fileName} (${context})`,
+                    `Failed to process Mistral Vibe attachment: ${attachment.fileName} (${context})`,
                     errorMessage
                 );
 

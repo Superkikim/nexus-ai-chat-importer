@@ -194,7 +194,7 @@ describe("MistralVibeConverter", () => {
             const chat: MistralVibeConversation = [];
 
             expect(() => MistralVibeConverter.convertChat(chat)).toThrow(
-                "Le Chat conversation is empty"
+                "Mistral Vibe conversation is empty"
             );
         });
 

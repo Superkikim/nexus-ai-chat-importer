@@ -30,7 +30,7 @@ import {
 import { deriveMistralVibeConversationTitle } from "./vibe-title";
 
 /**
- * Converter for Le Chat (Mistral AI) export format
+ * Converter for Mistral Vibe (formerly Le Chat) export format
  */
 export class MistralVibeConverter {
     /**
@@ -41,7 +41,7 @@ export class MistralVibeConverter {
      */
     static convertChat(chat: MistralVibeConversation): StandardConversation {
         if (!chat || chat.length === 0) {
-            throw new Error("Le Chat conversation is empty");
+            throw new Error("Mistral Vibe conversation is empty");
         }
 
         // CRITICAL: Le Chat messages are NOT in chronological order in the JSON!
@@ -192,7 +192,7 @@ export class MistralVibeConverter {
         for (const file of message.files) {
             const attachment: StandardAttachment = {
                 fileName: file.name,
-                fileType: this.getFileTypeFromLeChatType(file.type),
+                fileType: this.getFileTypeFromVibeType(file.type),
                 fileSize: undefined, // Size not available in Le Chat export
                 status: {
                     processed: false,
@@ -259,7 +259,7 @@ export class MistralVibeConverter {
     /**
      * Convert Le Chat file type to MIME type
      */
-    private static getFileTypeFromLeChatType(type: string): string {
+    private static getFileTypeFromVibeType(type: string): string {
         switch (type) {
             case "image":
                 return "image/*";

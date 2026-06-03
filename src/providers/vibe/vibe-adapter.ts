@@ -29,9 +29,9 @@ import {
 } from "../base/base-provider-adapter";
 
 /**
- * Provider adapter for Le Chat (Mistral AI)
+ * Provider adapter for Mistral Vibe (formerly Le Chat)
  *
- * Le Chat exports conversations as individual JSON files:
+ * Mistral Vibe exports conversations as individual JSON files:
  * - chat-{uuid}.json - Array of messages (no wrapper object)
  * - chat-{uuid}-files/ - Directory containing attachments
  */

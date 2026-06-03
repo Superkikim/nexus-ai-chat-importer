@@ -509,7 +509,7 @@ export class ImportService {
             throw new NexusAiChatImporterError(
                 "Error reading ZIP file",
                 `Failed to read the ZIP file: ${message || "Unknown error"}. ` +
-                    "Please ensure the file is a valid ZIP export from ChatGPT, Claude, Le Chat, or Perplexity."
+                    "Please ensure the file is a valid ZIP export from ChatGPT, Claude, Mistral Vibe, or Perplexity."
             );
         }
     }

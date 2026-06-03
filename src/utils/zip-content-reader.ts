@@ -479,26 +479,26 @@ export async function* extractConversationsStream(
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
     if (leChatFiles.length > 0) {
-        streamLogger.debug("Using Le Chat conversation stream", {
+        streamLogger.debug("Using Mistral Vibe conversation stream", {
             fileCount: leChatFiles.length,
         });
         let yieldedCount = 0;
         for (const fileName of leChatFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            streamLogger.debug("Reading Le Chat conversation file", {
+            streamLogger.debug("Reading Mistral Vibe conversation file", {
                 fileName,
             });
             const { messages, uncompressedBytes } =
                 await collectMistralVibeConversationFromEntry(entry);
-            streamLogger.debug("Le Chat conversation file read complete", {
+            streamLogger.debug("Mistral Vibe conversation file read complete", {
                 fileName,
                 textLength: uncompressedBytes,
             });
             yieldedCount++;
             yield messages;
         }
-        streamLogger.debug("Le Chat conversation stream complete", {
+        streamLogger.debug("Mistral Vibe conversation stream complete", {
             yieldedCount,
             durationMs: Date.now() - startedAt,
         });

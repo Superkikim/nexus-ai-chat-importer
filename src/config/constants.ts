@@ -71,7 +71,7 @@ export const PROVIDER_URLS = {
         BASE: "https://claude.ai",
         CHAT: (id: string) => `https://claude.ai/chat/${id}`,
     },
-    LECHAT: {
+    VIBE: {
         BASE: "https://chat.mistral.ai",
         CHAT: (id: string) => `https://chat.mistral.ai/chat/${id}`,
     },
@@ -87,7 +87,7 @@ export const PROVIDER_URLS = {
 export const PROVIDERS = {
     CHATGPT: "chatgpt",
     CLAUDE: "claude",
-    LECHAT: "vibe",
+    VIBE: "vibe",
     PERPLEXITY: "perplexity",
 } as const;
 

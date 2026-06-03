@@ -620,7 +620,7 @@ export class ConversationMetadataExtractor {
             .filter((chat) => {
                 if (!Array.isArray(chat) || chat.length === 0) {
                     this.plugin.logger.warn(
-                        "Skipping invalid Le Chat conversation: not an array or empty"
+                        "Skipping invalid Mistral Vibe conversation: not an array or empty"
                     );
                     return false;
                 }
@@ -628,7 +628,7 @@ export class ConversationMetadataExtractor {
                 const firstMessage = chat[0];
                 if (!firstMessage.chatId || !firstMessage.createdAt) {
                     this.plugin.logger.warn(
-                        "Skipping Le Chat conversation with missing chatId or createdAt"
+                        "Skipping Mistral Vibe conversation with missing chatId or createdAt"
                     );
                     return false;
                 }
