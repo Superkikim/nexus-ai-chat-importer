@@ -45,9 +45,9 @@
                 "file_formats_0": "conversations.json + users.json",
                 "file_formats_1": "projects.json (optionnel)"
             },
-            "lechat": {
-                "name": "Le Chat",
-                "description": "Exports de conversations Mistral AI Le Chat",
+            "vibe": {
+                "name": "Mistral Vibe",
+                "description": "Mistral Vibe (anciennement Le Chat) exports de conversations",
                 "file_formats_0": "fichiers chat-<uuid>.json"
             },
             "perplexity": {
@@ -456,7 +456,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "Merci d'avoir installé Nexus AI Chat Importer !",
-        "description": "Importez et gérez vos conversations ChatGPT, Claude, Le Chat et Perplexity directement dans votre vault Obsidian.",
+        "description": "Importez et gérez vos conversations ChatGPT, Claude, Mistral Vibe et Perplexity directement dans votre vault Obsidian.",
         "resources_title": "Ressources",
         "resources": {
             "documentation": {

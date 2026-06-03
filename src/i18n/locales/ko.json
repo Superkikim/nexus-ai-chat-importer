@@ -45,9 +45,9 @@
                 "file_formats_0": "conversations.json + users.json",
                 "file_formats_1": "projects.json(선택 사항)"
             },
-            "lechat": {
-                "name": "Le Chat",
-                "description": "Mistral AI Le Chat 대화 내보내기",
+            "vibe": {
+                "name": "Mistral Vibe",
+                "description": "Mistral Vibe (이전 Le Chat) 대화 내보내기",
                 "file_formats_0": "chat-<uuid>.json 파일"
             },
             "perplexity": {
@@ -456,7 +456,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "Nexus AI Chat Importer를 설치해 주셔서 감사합니다!",
-        "description": "ChatGPT, Claude, Le Chat, Perplexity 대화를 Obsidian 볼트로 직접 가져오고 관리하세요.",
+        "description": "ChatGPT, Claude, Mistral Vibe, Perplexity 대화를 Obsidian 볼트로 직접 가져오고 관리하세요.",
         "resources_title": "리소스",
         "resources": {
             "documentation": {
