@@ -54,9 +54,9 @@ export interface ClaudeFile {
 }
 
 export interface ClaudeAttachment {
-    file_name: string;         // Often empty for txt uploads
+    file_name: string; // Often empty for txt uploads
     file_size: number;
-    file_type: string;         // 'txt', 'docx', etc.
+    file_type: string; // 'txt', 'docx', etc.
     extracted_content: string; // Full text content extracted from the uploaded file
 }
 
@@ -95,7 +95,7 @@ export interface ClaudeMessage {
     created_at: string;
     content: ClaudeContentBlock[];
     attachments: ClaudeAttachment[]; // Text/document content extracted from uploaded files
-    files: ClaudeFile[];             // Physical files (images) referenced by UUID
+    files: ClaudeFile[]; // Physical files (images) referenced by UUID
 }
 
 export interface ClaudeConversation {

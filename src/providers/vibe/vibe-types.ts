@@ -17,9 +17,9 @@
  */
 
 /**
- * Type definitions for Le Chat (Mistral AI) export format
+ * Type definitions for Mistral Vibe (formerly Le Chat) export format
  *
- * Le Chat exports conversations as individual JSON files in the format:
+ * Mistral Vibe exports conversations as individual JSON files in the format:
  * - chat-{uuid}.json - Array of messages
  * - chat-{uuid}-files/ - Directory containing attachments
  *
@@ -32,12 +32,12 @@
 /**
  * Content chunk types in Le Chat messages
  */
-export interface LeChatTextChunk {
+export interface MistralVibeTextChunk {
     type: "text";
     text: string;
 }
 
-export interface LeChatToolCallChunk {
+export interface MistralVibeToolCallChunk {
     type: "tool_call";
     id?: string;
     name?: string;
@@ -53,32 +53,32 @@ export interface LeChatToolCallChunk {
     requiresConfirmation?: boolean;
 }
 
-export interface LeChatReferenceChunk {
+export interface MistralVibeReferenceChunk {
     type: "reference";
     referenceIds?: number[];
 }
 
-export interface LeChatCustomElementChunk {
+export interface MistralVibeCustomElementChunk {
     type: "custom_element";
     [key: string]: unknown;
 }
 
-export interface LeChatImageUrlChunk {
+export interface MistralVibeImageUrlChunk {
     type: "image_url";
     imageUrl: string;
 }
 
-export type LeChatContentChunk =
-    | LeChatTextChunk
-    | LeChatToolCallChunk
-    | LeChatReferenceChunk
-    | LeChatCustomElementChunk
-    | LeChatImageUrlChunk;
+export type MistralVibeContentChunk =
+    | MistralVibeTextChunk
+    | MistralVibeToolCallChunk
+    | MistralVibeReferenceChunk
+    | MistralVibeCustomElementChunk
+    | MistralVibeImageUrlChunk;
 
 /**
  * File attachment in Le Chat message
  */
-export interface LeChatFile {
+export interface MistralVibeFile {
     type: "image" | "text" | "document";
     name: string;
 }
@@ -86,12 +86,12 @@ export interface LeChatFile {
 /**
  * Le Chat message structure
  */
-export interface LeChatMessage {
+export interface MistralVibeMessage {
     id: string;
     version: number;
     chatId: string;
     content: string;
-    contentChunks: LeChatContentChunk[] | null;
+    contentChunks: MistralVibeContentChunk[] | null;
     role: "user" | "assistant";
     createdAt: string; // ISO 8601 format
     reaction: string;
@@ -102,16 +102,16 @@ export interface LeChatMessage {
     context: unknown | null;
     canvas: unknown[];
     quotes: unknown[];
-    files: LeChatFile[];
+    files: MistralVibeFile[];
 }
 
 /**
  * Le Chat conversation structure
  * Note: Le Chat exports are arrays of messages, not wrapped in a conversation object
  */
-export type LeChatConversation = LeChatMessage[];
+export type MistralVibeConversation = MistralVibeMessage[];
 
 /**
  * Alias for compatibility with provider adapter interface
  */
-export type LeChatChat = LeChatConversation;
+export type MistralVibeChat = MistralVibeConversation;

@@ -24,7 +24,7 @@ import { describe, it, expect } from "vitest";
  * Note: Full integration tests require Obsidian vault mocking which is complex.
  * The extractor will be tested during integration testing with real ZIP files.
  */
-describe("LeChatAttachmentExtractor", () => {
+describe("MistralVibeAttachmentExtractor", () => {
     describe("Le Chat attachment path format", () => {
         it("should follow chat-{chatId}-files/{filename} pattern", () => {
             const chatId = "123-abc-456";

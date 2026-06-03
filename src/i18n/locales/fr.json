@@ -45,9 +45,9 @@
                 "file_formats_0": "conversations.json + users.json",
                 "file_formats_1": "projects.json (optionnel)"
             },
-            "lechat": {
-                "name": "Le Chat",
-                "description": "Exports de conversations Mistral AI Le Chat",
+            "vibe": {
+                "name": "Mistral Vibe",
+                "description": "Mistral Vibe (anciennement Le Chat) exports de conversations",
                 "file_formats_0": "fichiers chat-<uuid>.json"
             },
             "perplexity": {
@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Mise à niveau terminée - v{{version}}",
-            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### Nouveau\n- Support de Perplexity (imports ZIP Perplexity Thread Exporter)\n- Métadonnées frontmatter universelles : `mode` et `models`\n- La détection automatique du provider inclut désormais les archives Perplexity\n\n### Améliorations\n- Compatibilité Perplexity multi-schémas :\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- Meilleure guidance quand un ZIP externe contient des ZIP internes `part*.zip`\n- Normalisation améliorée des IDs de conversation pour réduire le risque de doublons entre schémas\n\n### Fiabilité\n- Inclut les améliorations de fiabilité 1.5.7 pour le traitement ZIP et les imports mobile.",
+            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### ✨ Nouveau\n- **Mistral Vibe** (anciennement Le Chat) — Mistral AI a renommé son produit\n- Dossiers du coffre renommés automatiquement : `lechat/` → `vibe/`\n- Frontmatter des conversations mis à jour : `provider: lechat` → `provider: vibe`\n\n### 🔧 Amélioré\n- Les migrations s'exécutent après l'indexation complète du coffre, évitant les mises à jour silencieuses au premier chargement\n\n### 🐛 Corrigé\n- Les messages Claude n'apparaissent plus dans le mauvais ordre lorsque l'utilisateur répond dans la même seconde que l'assistant",
             "buttons": {
                 "got_it": "Compris !"
             }
@@ -456,7 +456,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "Merci d'avoir installé Nexus AI Chat Importer !",
-        "description": "Importez et gérez vos conversations ChatGPT, Claude, Le Chat et Perplexity directement dans votre vault Obsidian.",
+        "description": "Importez et gérez vos conversations ChatGPT, Claude, Mistral Vibe et Perplexity directement dans votre vault Obsidian.",
         "resources_title": "Ressources",
         "resources": {
             "documentation": {

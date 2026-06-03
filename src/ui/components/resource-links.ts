@@ -48,9 +48,18 @@ export function createResourceLinks(container: HTMLElement): void {
     for (const resource of resources) {
         const card = grid.createEl("a", { cls: "nexus-resource-card" });
 
-        card.createDiv({ cls: "nexus-resource-card-icon", text: resource.icon });
-        card.createDiv({ cls: "nexus-resource-card-title", text: resource.title });
-        card.createDiv({ cls: "nexus-resource-card-desc", text: resource.description });
+        card.createDiv({
+            cls: "nexus-resource-card-icon",
+            text: resource.icon,
+        });
+        card.createDiv({
+            cls: "nexus-resource-card-title",
+            text: resource.title,
+        });
+        card.createDiv({
+            cls: "nexus-resource-card-desc",
+            text: resource.description,
+        });
 
         card.addEventListener("click", (e) => {
             e.preventDefault();

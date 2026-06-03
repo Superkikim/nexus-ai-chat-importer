@@ -17,11 +17,11 @@
  */
 
 import { StandardConversation } from "../../types/standard";
-import { LeChatConverter } from "./lechat-converter";
-import { LeChatAttachmentExtractor } from "./lechat-attachment-extractor";
-import { LeChatReportNamingStrategy } from "./lechat-report-naming";
-import { LeChatConversation, LeChatMessage } from "./lechat-types";
-import { deriveLeChatConversationTitle } from "./lechat-title";
+import { MistralVibeConverter } from "./vibe-converter";
+import { MistralVibeAttachmentExtractor } from "./vibe-attachment-extractor";
+import { MistralVibeReportNamingStrategy } from "./vibe-report-naming";
+import { MistralVibeConversation, MistralVibeMessage } from "./vibe-types";
+import { deriveMistralVibeConversationTitle } from "./vibe-title";
 import type NexusAiChatImporterPlugin from "../../main";
 import {
     BaseProviderAdapter,
@@ -29,29 +29,29 @@ import {
 } from "../base/base-provider-adapter";
 
 /**
- * Provider adapter for Le Chat (Mistral AI)
+ * Provider adapter for Mistral Vibe (formerly Le Chat)
  *
- * Le Chat exports conversations as individual JSON files:
+ * Mistral Vibe exports conversations as individual JSON files:
  * - chat-{uuid}.json - Array of messages (no wrapper object)
  * - chat-{uuid}-files/ - Directory containing attachments
  */
-export class LeChatAdapter extends BaseProviderAdapter<LeChatConversation> {
-    private attachmentExtractor: LeChatAttachmentExtractor;
-    private reportNamingStrategy: LeChatReportNamingStrategy;
+export class MistralVibeAdapter extends BaseProviderAdapter<MistralVibeConversation> {
+    private attachmentExtractor: MistralVibeAttachmentExtractor;
+    private reportNamingStrategy: MistralVibeReportNamingStrategy;
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
         super();
-        this.attachmentExtractor = new LeChatAttachmentExtractor(
+        this.attachmentExtractor = new MistralVibeAttachmentExtractor(
             plugin,
             plugin.logger
         );
-        this.reportNamingStrategy = new LeChatReportNamingStrategy();
+        this.reportNamingStrategy = new MistralVibeReportNamingStrategy();
     }
 
     /**
-     * Detect if raw data is from Le Chat
+     * Detect if raw data is from Mistral Vibe
      *
-     * Le Chat format:
+     * Mistral Vibe format:
      * - Array of messages (not wrapped in conversation object)
      * - Each message has: chatId, contentChunks, createdAt, role
      */
@@ -60,7 +60,7 @@ export class LeChatAdapter extends BaseProviderAdapter<LeChatConversation> {
 
         const sample = rawConversations[0];
 
-        // Le Chat: array of messages with specific structure
+        // Mistral Vibe: array of messages with specific structure
         return (
             Array.isArray(sample) &&
             sample.length > 0 &&
@@ -74,7 +74,7 @@ export class LeChatAdapter extends BaseProviderAdapter<LeChatConversation> {
     /**
      * Get conversation ID from first message's chatId field
      */
-    getId(chat: LeChatConversation): string {
+    getId(chat: MistralVibeConversation): string {
         return chat[0]?.chatId || "";
     }
 
@@ -82,14 +82,14 @@ export class LeChatAdapter extends BaseProviderAdapter<LeChatConversation> {
      * Get conversation title
      * Derived from first user message (truncated to 50 chars)
      */
-    getTitle(chat: LeChatConversation): string {
-        return deriveLeChatConversationTitle(chat);
+    getTitle(chat: MistralVibeConversation): string {
+        return deriveMistralVibeConversationTitle(chat);
     }
 
     /**
      * Get conversation creation time (minimum message timestamp)
      */
-    getCreateTime(chat: LeChatConversation): number {
+    getCreateTime(chat: MistralVibeConversation): number {
         const timestamps = chat
             .map((msg) => this.parseTimestamp(msg.createdAt))
             .filter((ts) => ts > 0);
@@ -100,7 +100,7 @@ export class LeChatAdapter extends BaseProviderAdapter<LeChatConversation> {
     /**
      * Get conversation update time (maximum message timestamp)
      */
-    getUpdateTime(chat: LeChatConversation): number {
+    getUpdateTime(chat: MistralVibeConversation): number {
         const timestamps = chat
             .map((msg) => this.parseTimestamp(msg.createdAt))
             .filter((ts) => ts > 0);
@@ -111,24 +111,24 @@ export class LeChatAdapter extends BaseProviderAdapter<LeChatConversation> {
     /**
      * Convert Le Chat conversation to StandardConversation
      */
-    convertChat(chat: LeChatConversation): StandardConversation {
-        return LeChatConverter.convertChat(chat);
+    convertChat(chat: MistralVibeConversation): StandardConversation {
+        return MistralVibeConverter.convertChat(chat);
     }
 
     /**
      * Get provider name
      */
     getProviderName(): string {
-        return "lechat";
+        return "vibe";
     }
 
     /**
      * Get new messages not in existing message IDs
      */
     getNewMessages(
-        chat: LeChatConversation,
+        chat: MistralVibeConversation,
         existingMessageIds: string[]
-    ): LeChatMessage[] {
+    ): MistralVibeMessage[] {
         return chat.filter((msg) => !existingMessageIds.includes(msg.id));
     }
 

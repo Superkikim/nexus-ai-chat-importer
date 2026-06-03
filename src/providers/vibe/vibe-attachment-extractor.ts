@@ -25,12 +25,12 @@ import { AttachmentMap } from "../../services/attachment-map-builder";
 import { ZipArchiveReader, writeZipEntryToVault } from "../../utils/zip-loader";
 
 /**
- * Attachment extractor for Le Chat (Mistral AI)
+ * Attachment extractor for Mistral Vibe (formerly Le Chat)
  *
  * Le Chat stores attachments in directories named: chat-{chatId}-files/
  * Each file is stored with its original name.
  */
-export class LeChatAttachmentExtractor {
+export class MistralVibeAttachmentExtractor {
     private zipFileCache = new Map<string, string | null>();
     private attachmentMap: AttachmentMap | null = null;
     private allZips: ZipArchiveReader[] = [];
@@ -91,7 +91,7 @@ export class LeChatAttachmentExtractor {
                     ? `conversation: ${conversationId}, message: ${messageId}`
                     : `conversation: ${conversationId}`;
                 this.logger.error(
-                    `Failed to process Le Chat attachment: ${attachment.fileName} (${context})`,
+                    `Failed to process Mistral Vibe attachment: ${attachment.fileName} (${context})`,
                     errorMessage
                 );
 
@@ -174,9 +174,9 @@ export class LeChatAttachmentExtractor {
         // Determine file category (images, documents, etc.)
         const category = getFileCategory(uniqueFileName, finalFileType);
 
-        // Build vault path: Attachments/lechat/{category}/{unique_filename}
+        // Build vault path: Attachments/vibe/{category}/{unique_filename}
         const attachmentFolder = this.plugin.settings.attachmentFolder;
-        let vaultPath = `${attachmentFolder}/lechat/${category}/${sanitizeFileName(
+        let vaultPath = `${attachmentFolder}/vibe/${category}/${sanitizeFileName(
             uniqueFileName
         )}`;
 
@@ -258,7 +258,7 @@ export class LeChatAttachmentExtractor {
 
     /**
      * Generate unique filename to avoid conflicts
-     * Strategy: lechat_{conversationId}_{messageId}_{timestamp}_{originalName}
+     * Strategy: vibe_{conversationId}_{messageId}_{timestamp}_{originalName}
      */
     private generateUniqueFileName(
         originalFileName: string,
@@ -280,8 +280,8 @@ export class LeChatAttachmentExtractor {
         // Sanitize base name (remove special characters)
         const safeBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, "_");
 
-        // Build unique filename: lechat_{convId}_{msgId}_{timestamp}_{name}.{ext}
-        const uniqueName = `lechat_${shortConversationId}_${shortMessageId}_${timestamp}_${safeBaseName}`;
+        // Build unique filename: vibe_{convId}_{msgId}_{timestamp}_{name}.{ext}
+        const uniqueName = `vibe_${shortConversationId}_${shortMessageId}_${timestamp}_${safeBaseName}`;
 
         return extension ? `${uniqueName}.${extension}` : uniqueName;
     }

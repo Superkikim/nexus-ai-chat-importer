@@ -20,7 +20,11 @@
 import { Plugin, App, PluginManifest, Notice, Platform } from "obsidian";
 import { initLocale, t } from "./i18n";
 import { DEFAULT_SETTINGS } from "./config/constants";
-import { ConversationCatalogEntry, MessageTimestampFormat, PluginSettings } from "./types/plugin";
+import {
+    ConversationCatalogEntry,
+    MessageTimestampFormat,
+    PluginSettings,
+} from "./types/plugin";
 import { NexusAiChatImporterPluginSettingTab } from "./ui/settings-tab";
 import { CommandRegistry } from "./commands/command-registry";
 import { EventHandlers } from "./events/event-handlers";
@@ -110,7 +114,22 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             );
             ribbonIconEl.addClass("nexus-ai-chat-ribbon");
 
-            // Check for upgrades and fresh installation
+            // Defer upgrade checks until vault is fully indexed
+            this.app.workspace.onLayoutReady(() => {
+                void this.runUpgradeChecks();
+            });
+        } catch (error) {
+            this.logger.error("Plugin loading failed:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Run upgrade checks after vault is fully indexed.
+     * Called via onLayoutReady to ensure vault.getAbstractFileByPath() works reliably.
+     */
+    private async runUpgradeChecks(): Promise<void> {
+        try {
             const upgradeResult =
                 await this.upgradeManager.checkAndPerformUpgrade();
 
@@ -124,7 +143,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             }
 
             // Show upgrade completion dialog if upgrade was performed
-            // Called AFTER checkAndPerformUpgrade() returns to ensure styles.css is loaded
             if (
                 upgradeResult?.showCompletionDialog &&
                 upgradeResult?.upgradedToVersion
@@ -144,8 +162,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await this.saveSettings();
             }
         } catch (error) {
-            this.logger.error("Plugin loading failed:", error);
-            throw error;
+            this.logger.error("Upgrade checks failed:", error);
         }
     }
 
@@ -208,8 +225,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private async hasExistingNexusConversations(): Promise<boolean> {
         try {
             const conversationFolder = this.settings.conversationFolder;
-            const files = this.app.vault.getMarkdownFiles()
-                .filter(f => f.path.startsWith(conversationFolder));
+            const files = this.app.vault
+                .getMarkdownFiles()
+                .filter((f) => f.path.startsWith(conversationFolder));
             return files.some((file) => {
                 const frontmatter =
                     this.app.metadataCache.getFileCache(file)?.frontmatter;
@@ -1303,7 +1321,10 @@ ${report.generateMobileIndexContent(files, links)}
         const map = new Map<string, string>();
         for (const file of files) {
             const ts = extractZipTimestamp(file.name);
-            map.set(file.name, ts !== null ? formatMessageTimestamp(ts, format) : "—");
+            map.set(
+                file.name,
+                ts !== null ? formatMessageTimestamp(ts, format) : "—"
+            );
         }
         return map;
     }

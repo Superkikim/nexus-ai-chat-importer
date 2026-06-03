@@ -45,9 +45,9 @@
                 "file_formats_0": "conversations.json + users.json",
                 "file_formats_1": "projects.json (необязательно)"
             },
-            "lechat": {
-                "name": "Le Chat",
-                "description": "Экспорт разговоров Mistral AI Le Chat",
+            "vibe": {
+                "name": "Mistral Vibe",
+                "description": "Mistral Vibe (ранее Le Chat) экспорт разговоров",
                 "file_formats_0": "файлы chat-<uuid>.json"
             },
             "perplexity": {
@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Обновление завершено — v{{version}}",
-            "fallback_content": "## ✨ Что нового в v{{version}}\n\n### Новое\n- Поддержка Perplexity (импорт ZIP из Perplexity Thread Exporter)\n- Универсальные метаданные frontmatter: `mode` и `models`\n- Автоопределение провайдера теперь включает архивы Perplexity\n\n### Улучшения\n- Совместимость Perplexity с двумя схемами:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- Улучшены подсказки для случая, когда внешний ZIP содержит внутренние ZIP `part*.zip`\n- Улучшена нормализация ID разговоров для снижения риска дубликатов заметок между вариантами схем\n\n### Надёжность\n- Включает улучшения надёжности из 1.5.7 для обработки ZIP и мобильного импорта.",
+            "fallback_content": "## ✨ Что нового в v{{version}}\n\n### ✨ Новое\n- **Mistral Vibe** (ранее Le Chat) — Mistral AI переименовали продукт\n- Папки хранилища переименованы автоматически: `lechat/` → `vibe/`\n- Frontmatter разговоров обновлён: `provider: lechat` → `provider: vibe`\n\n### 🔧 Улучшено\n- Миграции запускаются после полной индексации хранилища, предотвращая тихие ошибки при первом запуске\n\n### 🐛 Исправлено\n- Сообщения Claude больше не отображаются в неправильном порядке, если пользователь отвечает в ту же секунду, что и ассистент",
             "buttons": {
                 "got_it": "Понятно!"
             }
@@ -456,7 +456,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "Спасибо за установку Nexus AI Chat Importer!",
-        "description": "Импортируйте и управляйте беседами ChatGPT, Claude, Le Chat и Perplexity прямо в вашем хранилище Obsidian.",
+        "description": "Импортируйте и управляйте беседами ChatGPT, Claude, Mistral Vibe и Perplexity прямо в вашем хранилище Obsidian.",
         "resources_title": "Ресурсы",
         "resources": {
             "documentation": {

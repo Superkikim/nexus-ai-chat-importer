@@ -74,7 +74,7 @@ export function filterConversationsByIds(
         //    or detection returns "unknown".
         try {
             if (
-                forcedProvider === "lechat" ||
+                forcedProvider === "vibe" ||
                 (Array.isArray(conversation) && conversation[0]?.chatId)
             ) {
                 // Le Chat format: array of messages, ID is in first message's chatId

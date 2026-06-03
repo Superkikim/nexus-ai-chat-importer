@@ -94,7 +94,7 @@ export function formatMessageTimestamp(
  *     ChatGPT:    3b00...ef5-2026-05-13-21-26-53-5781...zip
  *   Pattern 2 — Unix epoch embedded in filename:
  *     Claude new: data-...-1777878096-...-batch-0000.zip  (10-digit seconds)
- *     Le Chat:    chat-export-1770754692391.zip            (13-digit milliseconds)
+ *     Mistral Vibe: chat-export-1770754692391.zip          (13-digit milliseconds)
  *     Perplexity: perplexity_export_1777357714391_part3of3.zip (13-digit ms, _ separator)
  * Returns null if no valid timestamp is found.
  */
@@ -105,14 +105,20 @@ export function extractZipTimestamp(fileName: string): number | null {
     if (isoMatch) {
         const [, y, mo, d, h, mi, s] = isoMatch.map(Number);
         if (
-            mo >= 1 && mo <= 12 &&
-            d >= 1 && d <= 31 &&
-            h <= 23 && mi <= 59 && s <= 59
+            mo >= 1 &&
+            mo <= 12 &&
+            d >= 1 &&
+            d <= 31 &&
+            h <= 23 &&
+            mi <= 59 &&
+            s <= 59
         ) {
             return new Date(y, mo - 1, d, h, mi, s).getTime() / 1000;
         }
     }
-    for (const m of fileName.matchAll(/(?:^|[-_])(\d{13}|\d{10})(?:[-_.]|$)/g)) {
+    for (const m of fileName.matchAll(
+        /(?:^|[-_])(\d{13}|\d{10})(?:[-_.]|$)/g
+    )) {
         const raw = parseInt(m[1], 10);
         const ts = m[1].length === 13 ? Math.floor(raw / 1000) : raw;
         if (ts >= 946684800 && ts <= 4102444800) return ts;

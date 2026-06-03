@@ -17,14 +17,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { LeChatReportNamingStrategy } from "./lechat-report-naming";
-import { LeChatConversation } from "./lechat-types";
+import { MistralVibeReportNamingStrategy } from "./vibe-report-naming";
+import { MistralVibeConversation } from "./vibe-types";
 
-describe("LeChatReportNamingStrategy", () => {
-    let strategy: LeChatReportNamingStrategy;
+describe("MistralVibeReportNamingStrategy", () => {
+    let strategy: MistralVibeReportNamingStrategy;
 
     beforeEach(() => {
-        strategy = new LeChatReportNamingStrategy();
+        strategy = new MistralVibeReportNamingStrategy();
 
         // Mock current date to 2025-04-25
         vi.useFakeTimers();
@@ -79,8 +79,8 @@ describe("LeChatReportNamingStrategy", () => {
     });
 
     describe("getProviderName", () => {
-        it('should return "lechat"', () => {
-            expect(strategy.getProviderName()).toBe("lechat");
+        it('should return "vibe"', () => {
+            expect(strategy.getProviderName()).toBe("vibe");
         });
     });
 
@@ -93,7 +93,7 @@ describe("LeChatReportNamingStrategy", () => {
         });
 
         it("should count file attachments in conversation", () => {
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,
@@ -153,7 +153,7 @@ describe("LeChatReportNamingStrategy", () => {
         });
 
         it("should return 0 for conversation without attachments", () => {
-            const chat: LeChatConversation = [
+            const chat: MistralVibeConversation = [
                 {
                     id: "msg-1",
                     version: 0,

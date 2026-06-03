@@ -22,26 +22,26 @@ import {
     StandardAttachment,
 } from "../../types/standard";
 import {
-    LeChatConversation,
-    LeChatMessage,
-    LeChatContentChunk,
-    LeChatImageUrlChunk,
-} from "./lechat-types";
-import { deriveLeChatConversationTitle } from "./lechat-title";
+    MistralVibeConversation,
+    MistralVibeMessage,
+    MistralVibeContentChunk,
+    MistralVibeImageUrlChunk,
+} from "./vibe-types";
+import { deriveMistralVibeConversationTitle } from "./vibe-title";
 
 /**
- * Converter for Le Chat (Mistral AI) export format
+ * Converter for Mistral Vibe (formerly Le Chat) export format
  */
-export class LeChatConverter {
+export class MistralVibeConverter {
     /**
      * Convert Le Chat conversation to StandardConversation
      *
      * Note: Le Chat exports are arrays of messages without conversation-level metadata.
      * We derive conversation metadata from the messages themselves.
      */
-    static convertChat(chat: LeChatConversation): StandardConversation {
+    static convertChat(chat: MistralVibeConversation): StandardConversation {
         if (!chat || chat.length === 0) {
-            throw new Error("Le Chat conversation is empty");
+            throw new Error("Mistral Vibe conversation is empty");
         }
 
         // CRITICAL: Le Chat messages are NOT in chronological order in the JSON!
@@ -60,7 +60,7 @@ export class LeChatConverter {
         return {
             id: chatId,
             title: title,
-            provider: "lechat",
+            provider: "vibe",
             createTime: createTime,
             updateTime: updateTime,
             messages: messages,
@@ -74,7 +74,7 @@ export class LeChatConverter {
      *
      * IMPORTANT: Assumes messages are already sorted chronologically
      */
-    static convertMessages(messages: LeChatMessage[]): StandardMessage[] {
+    static convertMessages(messages: MistralVibeMessage[]): StandardMessage[] {
         const standardMessages: StandardMessage[] = [];
 
         for (const message of messages) {
@@ -92,7 +92,7 @@ export class LeChatConverter {
      * Convert single Le Chat message to StandardMessage
      */
     private static convertMessage(
-        message: LeChatMessage
+        message: MistralVibeMessage
     ): StandardMessage | null {
         if (!message.id || !message.role) {
             return null;
@@ -124,7 +124,7 @@ export class LeChatConverter {
      * IMPORTANT: message.content is a duplicate of text chunks combined
      * We use EITHER contentChunks OR content, not both!
      */
-    private static extractContent(message: LeChatMessage): string {
+    private static extractContent(message: MistralVibeMessage): string {
         // If contentChunks exist, use them (they contain text + references + custom elements)
         if (message.contentChunks && message.contentChunks.length > 0) {
             const chunksContent = this.processContentChunks(
@@ -145,7 +145,9 @@ export class LeChatConverter {
      * Process contentChunks array
      * Handles text, tool_call, reference, and custom_element types
      */
-    private static processContentChunks(chunks: LeChatContentChunk[]): string {
+    private static processContentChunks(
+        chunks: MistralVibeContentChunk[]
+    ): string {
         const parts: string[] = [];
 
         for (const chunk of chunks) {
@@ -179,7 +181,7 @@ export class LeChatConverter {
      * Extract attachments from Le Chat message files array
      */
     private static extractAttachments(
-        message: LeChatMessage
+        message: MistralVibeMessage
     ): StandardAttachment[] {
         const attachments: StandardAttachment[] = [];
 
@@ -190,7 +192,7 @@ export class LeChatConverter {
         for (const file of message.files) {
             const attachment: StandardAttachment = {
                 fileName: file.name,
-                fileType: this.getFileTypeFromLeChatType(file.type),
+                fileType: this.getFileTypeFromVibeType(file.type),
                 fileSize: undefined, // Size not available in Le Chat export
                 status: {
                     processed: false,
@@ -211,13 +213,13 @@ export class LeChatConverter {
      * overwrite the note with an ugly internal ZIP path.
      */
     private static extractImageUrlAttachments(
-        message: LeChatMessage
+        message: MistralVibeMessage
     ): StandardAttachment[] {
         if (!message.contentChunks) return [];
 
         const chatUrl = `https://chat.mistral.ai/chat/${message.chatId}`;
         const imageChunks = message.contentChunks.filter(
-            (chunk): chunk is LeChatImageUrlChunk =>
+            (chunk): chunk is MistralVibeImageUrlChunk =>
                 chunk.type === "image_url" && "imageUrl" in chunk
         );
 
@@ -257,7 +259,7 @@ export class LeChatConverter {
     /**
      * Convert Le Chat file type to MIME type
      */
-    private static getFileTypeFromLeChatType(type: string): string {
+    private static getFileTypeFromVibeType(type: string): string {
         switch (type) {
             case "image":
                 return "image/*";
@@ -276,8 +278,8 @@ export class LeChatConverter {
      * Uses MILLISECOND precision for accurate sorting (even for sub-second responses)
      */
     private static sortMessagesByTimestamp(
-        chat: LeChatConversation
-    ): LeChatConversation {
+        chat: MistralVibeConversation
+    ): MistralVibeConversation {
         return [...chat].sort((a, b) => {
             // Use milliseconds for precise sorting
             const timeA = new Date(a.createdAt).getTime();
@@ -292,14 +294,16 @@ export class LeChatConverter {
      *
      * IMPORTANT: Assumes messages are already sorted chronologically
      */
-    private static deriveConversationTitle(chat: LeChatConversation): string {
-        return deriveLeChatConversationTitle(chat, { assumeSorted: true });
+    private static deriveConversationTitle(
+        chat: MistralVibeConversation
+    ): string {
+        return deriveMistralVibeConversationTitle(chat, { assumeSorted: true });
     }
 
     /**
      * Get minimum timestamp from messages (conversation create time)
      */
-    private static getMinTimestamp(chat: LeChatConversation): number {
+    private static getMinTimestamp(chat: MistralVibeConversation): number {
         const timestamps = chat
             .map((msg) => this.parseTimestamp(msg.createdAt))
             .filter((ts) => ts > 0);
@@ -310,7 +314,7 @@ export class LeChatConverter {
     /**
      * Get maximum timestamp from messages (conversation update time)
      */
-    private static getMaxTimestamp(chat: LeChatConversation): number {
+    private static getMaxTimestamp(chat: MistralVibeConversation): number {
         const timestamps = chat
             .map((msg) => this.parseTimestamp(msg.createdAt))
             .filter((ts) => ts > 0);

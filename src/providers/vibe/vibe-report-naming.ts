@@ -21,16 +21,16 @@ import {
     getCurrentImportDate,
     generateReportPrefix,
 } from "../../utils/report-naming-utils";
-import { LeChatConversation } from "./lechat-types";
+import { MistralVibeConversation } from "./vibe-types";
 
 /**
- * Report naming strategy for Le Chat (Mistral AI)
+ * Report naming strategy for Mistral Vibe (formerly Le Chat)
  */
-export class LeChatReportNamingStrategy implements ReportNamingStrategy {
+export class MistralVibeReportNamingStrategy implements ReportNamingStrategy {
     /**
-     * Extract date prefix from Le Chat ZIP filename
+     * Extract date prefix from Mistral Vibe ZIP filename
      *
-     * Le Chat ZIP format: chat-export-{timestamp}.zip
+     * Mistral Vibe ZIP format: chat-export-{timestamp}.zip
      * Example: chat-export-1760124530481.zip
      *
      * The timestamp is in milliseconds since Unix epoch.
@@ -61,10 +61,10 @@ export class LeChatReportNamingStrategy implements ReportNamingStrategy {
     }
 
     /**
-     * Get Le Chat provider name
+     * Get Mistral Vibe provider name
      */
     getProviderName(): string {
-        return "lechat";
+        return "vibe";
     }
 
     /**
@@ -77,7 +77,7 @@ export class LeChatReportNamingStrategy implements ReportNamingStrategy {
     } {
         return {
             header: "Attachments",
-            getValue: (_adapter: unknown, chat: LeChatConversation) => {
+            getValue: (_adapter: unknown, chat: MistralVibeConversation) => {
                 let attachmentCount = 0;
 
                 if (!Array.isArray(chat)) {

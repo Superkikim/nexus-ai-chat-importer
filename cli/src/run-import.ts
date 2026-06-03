@@ -2,7 +2,7 @@
  * Import orchestration for the Nexus CLI (desktop only — not part of the plugin).
  *
  * Orchestrates the import using plugin services with the Obsidian shim.
- * Supports ChatGPT, Claude, and Le Chat providers.
+ * Supports ChatGPT, Claude, and Mistral Vibe providers.
  */
 
 // Node.js built-ins — intentional, this file is CLI-only (not part of the plugin)

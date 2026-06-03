@@ -45,9 +45,9 @@
                 "file_formats_0": "conversations.json + users.json",
                 "file_formats_1": "projects.json（可选）"
             },
-            "lechat": {
-                "name": "Le Chat",
-                "description": "Mistral AI Le Chat 对话导出",
+            "vibe": {
+                "name": "Mistral Vibe",
+                "description": "Mistral Vibe（原 Le Chat）对话导出",
                 "file_formats_0": "chat-<uuid>.json 文件"
             },
             "perplexity": {
@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### 新增\n- 支持 Perplexity（导入 Perplexity Thread Exporter ZIP）\n- 通用 frontmatter 元数据：`mode` 与 `models`\n- 提供方自动检测现已支持 Perplexity 归档\n\n### 改进\n- 兼容 Perplexity 两种导出结构：\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- 当外层 ZIP 包含内层 `part*.zip` 时提供更清晰指引\n- 改进会话 ID 规范化，降低不同结构之间重复笔记的风险\n\n### 稳定性\n- 包含 1.5.7 的 ZIP 处理与移动端导入稳定性改进。",
+            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### ✨ 新增\n- **Mistral Vibe**（原 Le Chat）— Mistral AI 对产品进行品牌重塑\n- 自动重命名 Vault 文件夹：`lechat/` → `vibe/`\n- 自动更新对话前言：`provider: lechat` → `provider: vibe`\n\n### 🔧 改进\n- 升级迁移在 Vault 完全索引后执行，防止首次加载时静默失败\n\n### 🐛 修复\n- 修复 Claude 消息顺序错乱问题——当用户在助手回复后同一秒内作出回复时，消息顺序现已正确显示",
             "buttons": {
                 "got_it": "知道了！"
             }
@@ -456,7 +456,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "感谢安装 Nexus AI Chat Importer！",
-        "description": "将你的 ChatGPT、Claude、Le Chat 和 Perplexity 对话直接导入并管理到 Obsidian 仓库中。",
+        "description": "将你的 ChatGPT、Claude、Mistral Vibe 和 Perplexity 对话直接导入并管理到 Obsidian 仓库中。",
         "resources_title": "资源",
         "resources": {
             "documentation": {

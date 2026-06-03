@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Nexus AI Chat Importer** is an Obsidian plugin that imports AI chat conversations (ChatGPT, Claude, Mistral Le Chat, Perplexity) as beautifully formatted Markdown files with full attachment support, metadata preservation, and intelligent deduplication.
+**Nexus AI Chat Importer** is an Obsidian plugin that imports AI chat conversations (ChatGPT, Claude, Mistral Vibe, Perplexity) as beautifully formatted Markdown files with full attachment support, metadata preservation, and intelligent deduplication.
 
-- **Current Version**: 1.6.6
+- **Current Version**: 1.6.7
 - **License**: GPL-3.0-or-later
 - **Author**: Akim Sissaoui (Superkikim)
 - **Minimum Obsidian**: 1.4.0
@@ -84,7 +84,7 @@ Provider-Specific Format → ProviderAdapter → StandardConversation → Format
 
 ### Dialog-Driven User Flow
 
-1. **ProviderSelectionDialog** - Choose provider (ChatGPT / Claude / Le Chat / Perplexity)
+1. **ProviderSelectionDialog** - Choose provider (ChatGPT / Claude / Mistral Vibe / Perplexity)
 2. **EnhancedFileSelectionDialog** - Select ZIP file(s) + import mode (all/selective)
 3. **ConversationSelectionDialog** - Choose specific conversations (selective mode only)
 4. **ImportProgressModal** - Real-time import feedback
@@ -117,8 +117,8 @@ Provider-Specific Format → ProviderAdapter → StandardConversation → Format
 - `claude-adapter.ts`, `claude-converter.ts`, `claude-attachment-extractor.ts`, `claude-types.ts`
 - Handles `extracted_content` inline attachments (txt, docx) and artifact versioning
 
-**Le Chat / Mistral** ([src/providers/lechat/](src/providers/lechat/)):
-- `lechat-adapter.ts`, `lechat-converter.ts`, `lechat-attachment-extractor.ts`
+**Mistral Vibe** (formerly Le Chat) ([src/providers/vibe/](src/providers/vibe/)):
+- `vibe-adapter.ts`, `vibe-converter.ts`, `vibe-attachment-extractor.ts`
 
 **Perplexity** ([src/providers/perplexity/](src/providers/perplexity/)):
 - `perplexity-adapter.ts`, `perplexity-converter.ts`

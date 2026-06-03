@@ -10,7 +10,7 @@ const DEFAULT_STREAM_YIELD_EVERY = 25;
 export type SupportedArchiveProvider =
     | "chatgpt"
     | "claude"
-    | "lechat"
+    | "vibe"
     | "perplexity";
 
 export type ArchiveClassification =
@@ -92,16 +92,18 @@ export function classifyArchiveEntries(
         fileNames.includes("conversations.json") ||
         fileNames.some((name) => /^conversations-\d+\.json$/.test(name));
     const hasUsersJson = fileNames.includes("users.json");
-    const hasLeChatFiles = fileNames.some((name) =>
+    const hasMistralVibeFiles = fileNames.some((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
     const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
     const nestedZipContainer = hasNestedZipContainerSignature(fileNames);
 
     const detectedProvider: SupportedArchiveProvider | undefined =
-        hasLeChatFiles && !hasConversationsJson
-            ? "lechat"
-            : hasPerplexityFiles && !hasConversationsJson && !hasLeChatFiles
+        hasMistralVibeFiles && !hasConversationsJson
+            ? "vibe"
+            : hasPerplexityFiles &&
+              !hasConversationsJson &&
+              !hasMistralVibeFiles
             ? "perplexity"
             : hasConversationsJson && hasUsersJson
             ? "claude"
@@ -156,11 +158,11 @@ export function classifyArchiveEntries(
             };
         }
 
-        if (expectedProvider === "lechat") {
-            if (detectedProvider === "lechat") {
+        if (expectedProvider === "vibe") {
+            if (detectedProvider === "vibe") {
                 return {
                     supported: true,
-                    provider: "lechat",
+                    provider: "vibe",
                     reason: "supported",
                 };
             }
@@ -174,7 +176,7 @@ export function classifyArchiveEntries(
                     : "unsupported-format",
                 message: nestedZipContainer
                     ? getArchiveNestedZipMessage(expectedProvider)
-                    : getArchiveProviderMismatchMessage("lechat"),
+                    : getArchiveProviderMismatchMessage("vibe"),
             };
         }
 
@@ -269,7 +271,7 @@ async function collectJsonArrayFromEntry(entry: {
     );
 }
 
-async function collectLeChatConversationFromEntry(entry: {
+async function collectMistralVibeConversationFromEntry(entry: {
     readText(): Promise<string>;
     readTextChunks?: () => AsyncGenerator<string>;
 }): Promise<{ messages: unknown[]; uncompressedBytes: number }> {
@@ -345,18 +347,18 @@ export async function extractRawConversations(
 ): Promise<RawConversationExtractionResult> {
     const fileNames = await listFileNames(zip);
 
-    const leChatFiles = fileNames.filter((name) =>
+    const vibeFiles = fileNames.filter((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
-    if (leChatFiles.length > 0) {
+    if (vibeFiles.length > 0) {
         const conversations: any[] = [];
         let uncompressedBytes = 0;
 
-        for (const fileName of leChatFiles) {
+        for (const fileName of vibeFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
             const { messages, uncompressedBytes: fileBytes } =
-                await collectLeChatConversationFromEntry(entry);
+                await collectMistralVibeConversationFromEntry(entry);
             uncompressedBytes += fileBytes;
             conversations.push(messages);
         }
@@ -473,30 +475,30 @@ export async function* extractConversationsStream(
         durationMs: Date.now() - startedAt,
     });
 
-    const leChatFiles = fileNames.filter((name) =>
+    const vibeFiles = fileNames.filter((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
-    if (leChatFiles.length > 0) {
-        streamLogger.debug("Using Le Chat conversation stream", {
-            fileCount: leChatFiles.length,
+    if (vibeFiles.length > 0) {
+        streamLogger.debug("Using Mistral Vibe conversation stream", {
+            fileCount: vibeFiles.length,
         });
         let yieldedCount = 0;
-        for (const fileName of leChatFiles) {
+        for (const fileName of vibeFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
-            streamLogger.debug("Reading Le Chat conversation file", {
+            streamLogger.debug("Reading Mistral Vibe conversation file", {
                 fileName,
             });
             const { messages, uncompressedBytes } =
-                await collectLeChatConversationFromEntry(entry);
-            streamLogger.debug("Le Chat conversation file read complete", {
+                await collectMistralVibeConversationFromEntry(entry);
+            streamLogger.debug("Mistral Vibe conversation file read complete", {
                 fileName,
                 textLength: uncompressedBytes,
             });
             yieldedCount++;
             yield messages;
         }
-        streamLogger.debug("Le Chat conversation stream complete", {
+        streamLogger.debug("Mistral Vibe conversation stream complete", {
             yieldedCount,
             durationMs: Date.now() - startedAt,
         });

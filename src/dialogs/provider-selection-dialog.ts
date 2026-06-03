@@ -77,15 +77,13 @@ export class ProviderSelectionDialog extends Modal {
         }
 
         // Le Chat
-        if (registry.getAdapter("lechat")) {
+        if (registry.getAdapter("vibe")) {
             providers.push({
-                id: "lechat",
-                name: t("provider_selection.providers.lechat.name"),
-                description: t(
-                    "provider_selection.providers.lechat.description"
-                ),
+                id: "vibe",
+                name: t("provider_selection.providers.vibe.name"),
+                description: t("provider_selection.providers.vibe.description"),
                 fileFormats: [
-                    t("provider_selection.providers.lechat.file_formats_0"),
+                    t("provider_selection.providers.vibe.file_formats_0"),
                 ],
             });
         }

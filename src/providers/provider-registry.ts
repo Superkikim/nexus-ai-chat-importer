@@ -20,7 +20,7 @@
 import { DefaultProviderRegistry } from "./provider-adapter";
 import { ChatGPTAdapter } from "./chatgpt/chatgpt-adapter";
 import { ClaudeAdapter } from "./claude/claude-adapter";
-import { LeChatAdapter } from "./lechat/lechat-adapter";
+import { MistralVibeAdapter } from "./vibe/vibe-adapter";
 import { PerplexityAdapter } from "./perplexity/perplexity-adapter";
 import type NexusAiChatImporterPlugin from "../main";
 
@@ -38,8 +38,8 @@ export function createProviderRegistry(
     // Register Claude provider
     registry.register("claude", new ClaudeAdapter(plugin));
 
-    // Register Le Chat provider
-    registry.register("lechat", new LeChatAdapter(plugin));
+    // Register Mistral Vibe provider
+    registry.register("vibe", new MistralVibeAdapter(plugin));
 
     // Register Perplexity provider
     registry.register("perplexity", new PerplexityAdapter(plugin));

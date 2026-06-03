@@ -20,20 +20,20 @@ import { describe, it, expect } from "vitest";
 import JSZip from "jszip";
 import * as fs from "fs";
 import * as path from "path";
-import { LeChatConverter } from "../providers/lechat/lechat-converter";
+import { MistralVibeConverter } from "../providers/vibe/vibe-converter";
 
 /**
- * Integration test for Le Chat provider
+ * Integration test for Mistral Vibe provider
  *
  * Tests the complete workflow with the real sample export file
  */
-describe("Le Chat Integration Test", () => {
+describe("Mistral Vibe Integration Test", () => {
     const zipPath = path.join(
         __dirname,
         "../../local_resources/le_chat/chat-export-1760124530481.zip"
     );
 
-    it("should load and parse the sample Le Chat export", async () => {
+    it("should load and parse the sample Mistral Vibe export", async () => {
         // Check if file exists
         if (!fs.existsSync(zipPath)) {
             console.warn(`Skipping integration test: ${zipPath} not found`);
@@ -61,7 +61,7 @@ describe("Le Chat Integration Test", () => {
             const content = await firstFile.async("string");
             const conversation = JSON.parse(content);
 
-            // Verify Le Chat structure
+            // Verify Mistral Vibe structure
             expect(Array.isArray(conversation)).toBe(true);
             expect(conversation.length).toBeGreaterThan(0);
             expect(conversation[0]).toHaveProperty("chatId");
@@ -76,7 +76,7 @@ describe("Le Chat Integration Test", () => {
         }
     });
 
-    it("should convert Le Chat conversations to StandardConversation", async () => {
+    it("should convert Mistral Vibe conversations to StandardConversation", async () => {
         if (!fs.existsSync(zipPath)) {
             console.warn(`Skipping integration test: ${zipPath} not found`);
             return;
@@ -94,11 +94,11 @@ describe("Le Chat Integration Test", () => {
         const firstFile = zip.file(chatFiles[0]);
         if (firstFile) {
             const content = await firstFile.async("string");
-            const leChatConversation = JSON.parse(content);
+            const vibeConversation = JSON.parse(content);
 
             // Convert to standard format
             const standardConversation =
-                LeChatConverter.convertChat(leChatConversation);
+                MistralVibeConverter.convertChat(vibeConversation);
 
             // Verify conversion
             expect(standardConversation).toHaveProperty("id");
@@ -115,7 +115,7 @@ describe("Le Chat Integration Test", () => {
         }
     });
 
-    it("should detect Le Chat format structure", async () => {
+    it("should detect Mistral Vibe format structure", async () => {
         if (!fs.existsSync(zipPath)) {
             console.warn(`Skipping integration test: ${zipPath} not found`);
             return;
@@ -139,7 +139,7 @@ describe("Le Chat Integration Test", () => {
             }
         }
 
-        // Verify Le Chat structure
+        // Verify Mistral Vibe structure
         expect(conversations.length).toBeGreaterThan(0);
 
         const firstConv = conversations[0];
@@ -147,7 +147,7 @@ describe("Le Chat Integration Test", () => {
         expect(firstConv[0]).toHaveProperty("chatId");
         expect(firstConv[0]).toHaveProperty("contentChunks");
 
-        console.log(`Le Chat format verified`);
+        console.log("Mistral Vibe format verified");
         console.log(`Total conversations: ${conversations.length}`);
     });
 });

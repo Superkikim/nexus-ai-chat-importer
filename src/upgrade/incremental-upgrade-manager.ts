@@ -32,6 +32,7 @@ import { ensureFolderExists } from "../utils";
 import { t } from "../i18n";
 import { Upgrade130 } from "./versions/upgrade-1.3.0";
 import { Upgrade140 } from "./versions/upgrade-1.4.0";
+import { Upgrade167 } from "./versions/upgrade-1.6.7";
 
 const logger = new Logger();
 
@@ -68,6 +69,7 @@ export class IncrementalUpgradeManager {
         this.availableUpgrades = [
             new Upgrade130(),
             new Upgrade140(),
+            new Upgrade167(),
         ];
 
         // Sort by version for incremental execution
@@ -101,11 +103,14 @@ export class IncrementalUpgradeManager {
             if (
                 previousVersion &&
                 previousVersion !== "0.0.0" &&
-                VersionUtils.compareVersions(previousVersion, MIN_SUPPORTED_VERSION) < 0
+                VersionUtils.compareVersions(
+                    previousVersion,
+                    MIN_SUPPORTED_VERSION
+                ) < 0
             ) {
                 new Notice(
                     `Nexus: Your data is from v${previousVersion}, which is older than the minimum supported upgrade base (v${MIN_SUPPORTED_VERSION}). ` +
-                    `Automatic migration is not available. Please reinstall the plugin and reimport your conversations.`,
+                        `Automatic migration is not available. Please reinstall the plugin and reimport your conversations.`,
                     15000
                 );
                 await this.markUpgradeComplete(currentVersion);
@@ -766,10 +771,7 @@ export class IncrementalUpgradeManager {
 
             // INFORMATION DIALOG - no cancel option
             if (upgradeChain.length > 0) {
-                // Check if this is the v1.2.0 or v1.3.0 upgrade - use beautiful modal
-                const isV120Upgrade = upgradeChain.some(
-                    (upgrade) => upgrade.version === "1.2.0"
-                );
+                // Check if this is the v1.3.0 upgrade - use beautiful modal
                 const isV130Upgrade = upgradeChain.some(
                     (upgrade) => upgrade.version === "1.3.0"
                 );
@@ -792,16 +794,6 @@ export class IncrementalUpgradeManager {
                     if (userChoice !== "ok") {
                         throw new Error("User cancelled upgrade");
                     }
-                } else if (isV120Upgrade) {
-                    // Use beautiful upgrade modal for v1.2.0
-                    await new Promise<string>((resolve) => {
-                        new NexusUpgradeModal(
-                            this.plugin.app,
-                            this.plugin,
-                            "1.2.0",
-                            resolve
-                        ).open();
-                    });
                 } else {
                     // Use standard dialog for other upgrades
                     await showDialog(
