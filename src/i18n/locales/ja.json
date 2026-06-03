@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ アップグレード完了 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} の新機能\n\n### 新機能\n- Perplexity 対応（Perplexity Thread Exporter の ZIP インポート）\n- 汎用フロントマター メタデータ: `mode` / `models`\n- プロバイダー自動判定で Perplexity アーカイブにも対応\n\n### 改善\n- Perplexity の 2 つのスキーマに対応:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- 外側 ZIP に `part*.zip` が入っている場合の案内を改善\n- スキーマ差異による重複ノートを減らすため、会話 ID 正規化を改善\n\n### 安定性\n- ZIP 処理とモバイル import に関する 1.5.7 の安定性改善を含みます。",
+            "fallback_content": "## ✨ v{{version}} の新機能\n\n### ✨ 新機能\n- **Mistral Vibe**（旧 Le Chat）— Mistral AI が製品をリブランド\n- Vault フォルダを自動リネーム：`lechat/` → `vibe/`\n- 会話フロントマターを自動更新：`provider: lechat` → `provider: vibe`\n\n### 🔧 改善\n- Vault のインデックス作成後にアップグレードを実行し、初回起動時のサイレントエラーを防止\n\n### 🐛 修正\n- アシスタントと同じ秒にユーザーが返信した場合、Claude のメッセージ順序が正しく表示されるよう修正",
             "buttons": {
                 "got_it": "了解！"
             }

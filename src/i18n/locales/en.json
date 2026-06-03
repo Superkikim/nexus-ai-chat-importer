@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade Complete - v{{version}}",
-            "fallback_content": "## ✨ What's New in v{{version}}\n\n### Changed\n- **Mistral Vibe** (formerly Le Chat) — Mistral AI has rebranded their chat product\n- Vault folders renamed automatically: `lechat/` → `vibe/`\n- Conversation frontmatter updated: `provider: lechat` → `provider: vibe`\n\n### Migration\n- Existing Le Chat conversations and attachments are migrated automatically on plugin load\n- Wikilinks are updated to reflect the new folder structure\n- No manual action required",
+            "fallback_content": "## ✨ What's New in v{{version}}\n\n### ✨ New\n- **Mistral Vibe** (formerly Le Chat) — Mistral AI has rebranded their chat product\n- Vault folders renamed automatically: `lechat/` → `vibe/`\n- Conversation frontmatter updated: `provider: lechat` → `provider: vibe`\n\n### 🔧 Improved\n- Upgrade migrations now run after the vault is fully indexed, preventing silent no-ops on first load\n\n### 🐛 Fixed\n- Claude messages no longer appear out of order when the user replies within the same second as the assistant",
             "buttons": {
                 "got_it": "Got it!"
             }

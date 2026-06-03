@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Atualização concluída - v{{version}}",
-            "fallback_content": "## ✨ Novidades da v{{version}}\n\n### Novo\n- Suporte a Perplexity (importação de ZIP do Perplexity Thread Exporter)\n- Metadados universais no frontmatter: `mode` e `models`\n- A deteção automática do fornecedor agora inclui arquivos Perplexity\n\n### Melhorias\n- Compatibilidade Perplexity com dois esquemas:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- Melhor orientação quando um ZIP externo contém ZIPs internos `part*.zip`\n- Normalização melhorada dos IDs de conversa para reduzir risco de notas duplicadas entre esquemas\n\n### Fiabilidade\n- Inclui as melhorias de fiabilidade da 1.5.7 para processamento ZIP e importações mobile.",
+            "fallback_content": "## ✨ Novidades da v{{version}}\n\n### ✨ Novo\n- **Mistral Vibe** (antes Le Chat) — Mistral AI renomeou o seu produto\n- Pastas do vault renomeadas automaticamente: `lechat/` → `vibe/`\n- Frontmatter das conversas atualizado: `provider: lechat` → `provider: vibe`\n\n### 🔧 Melhorado\n- Migrações executadas após indexação completa do vault, evitando erros silenciosos no primeiro carregamento\n\n### 🐛 Corrigido\n- Mensagens do Claude já não aparecem fora de ordem quando o utilizador responde no mesmo segundo que o assistente",
             "buttons": {
                 "got_it": "Entendido!"
             }

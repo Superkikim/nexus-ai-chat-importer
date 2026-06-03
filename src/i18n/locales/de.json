@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade abgeschlossen – v{{version}}",
-            "fallback_content": "## ✨ Neu in v{{version}}\n\n### Neu\n- Perplexity-Support (Perplexity Thread Exporter ZIP-Importe)\n- Universelle Frontmatter-Metadaten: `mode` und `models`\n- Die automatische Provider-Erkennung unterstützt jetzt auch Perplexity-Archive\n\n### Verbesserungen\n- Perplexity-Kompatibilität für zwei Schemas:\n  - `metadata + conversations[]`\n  - `status + entries + thread_metadata`\n- Bessere Hinweise, wenn ein äußeres ZIP innere `part*.zip`-Dateien enthält\n- Verbesserte Normalisierung von Konversations-IDs zur Reduzierung von Duplikaten zwischen Schema-Varianten\n\n### Stabilität\n- Enthält die bisherigen 1.5.7-Stabilitätsverbesserungen für ZIP-Verarbeitung und mobile Importe.",
+            "fallback_content": "## ✨ Neu in v{{version}}\n\n### ✨ Neu\n- **Mistral Vibe** (ehemals Le Chat) — Mistral AI hat ihr Produkt umbenannt\n- Vault-Ordner automatisch umbenannt: `lechat/` → `vibe/`\n- Frontmatter der Gespräche aktualisiert: `provider: lechat` → `provider: vibe`\n\n### 🔧 Verbessert\n- Upgrades werden nach vollständiger Vault-Indizierung ausgeführt, um stille Fehler beim ersten Laden zu vermeiden\n\n### 🐛 Behoben\n- Claude-Nachrichten erscheinen nicht mehr in falscher Reihenfolge, wenn der Nutzer innerhalb derselben Sekunde antwortet wie der Assistent",
             "buttons": {
                 "got_it": "Verstanden!"
             }

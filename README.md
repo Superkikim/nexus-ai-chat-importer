@@ -6,7 +6,7 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.7** — Mistral AI has rebranded Le Chat as **Mistral Vibe**. Existing vault folders and frontmatter are migrated automatically on plugin load.
+> ✅ **v1.6.7** — Mistral AI has rebranded Le Chat as **Mistral Vibe** (auto-migrated on upgrade) · Claude message ordering fixed.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -76,7 +76,7 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 
 ## ✨ What's New
 
-### v1.6.7 — Mistral Vibe rebrand
+### v1.6.7 — Mistral Vibe & Claude message order fix
 
 ✨ **Changed**
 - **Mistral Vibe** (formerly Le Chat) — Mistral AI has rebranded their chat product
