@@ -280,9 +280,46 @@ export class ChatGPTConverter {
 
         const finalContent = contentParts.join("\n");
 
-        // Extract attachments from message metadata if available
+        // User uploads live in metadata.attachments ({id, name, size, mime_type}).
+        // Images also appear as image_asset_pointer parts (handled above) with a
+        // synthetic filename — merge by fileId to restore the original name, and
+        // add non-image uploads (PDF, docs) that have no content part at all.
+        if (Array.isArray(chatMessage.metadata?.attachments)) {
+            for (const metaAtt of chatMessage.metadata.attachments) {
+                if (!metaAtt?.id || !metaAtt?.name) continue;
+
+                const existing = attachments.find(
+                    (att) => att.fileId === metaAtt.id
+                );
+                if (existing) {
+                    existing.fileName = metaAtt.name;
+                    if (metaAtt.mime_type) {
+                        existing.fileType = metaAtt.mime_type;
+                    }
+                    if (metaAtt.size && !existing.fileSize) {
+                        existing.fileSize = metaAtt.size;
+                    }
+                } else {
+                    attachments.push({
+                        fileName: metaAtt.name,
+                        fileType:
+                            metaAtt.mime_type || "application/octet-stream",
+                        fileSize: metaAtt.size,
+                        fileId: metaAtt.id,
+                    });
+                }
+            }
+        }
+
+        // Legacy top-level attachments (used by the DALL-E round-trip in
+        // getNewMessages); keep with an anti-duplicate guard
         if (chatMessage.attachments) {
             for (const att of chatMessage.attachments) {
+                if (!att.file_name) continue;
+                const alreadyAdded = attachments.some(
+                    (existing) => existing.fileName === att.file_name
+                );
+                if (alreadyAdded) continue;
                 attachments.push({
                     fileName: att.file_name,
                     fileType: att.file_type || "application/octet-stream",
