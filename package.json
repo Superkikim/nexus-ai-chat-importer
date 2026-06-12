@@ -1,6 +1,6 @@
 {
     "name": "nexus-ai-chat-importer",
-    "version": "1.6.7",
+    "version": "1.6.8",
     "description": "Import and organize AI chat exports from ChatGPT, Claude, Mistral Vibe, Perplexity, and more in your local vault, so you stay in control of your data.",
     "main": "main.js",
     "scripts": {
