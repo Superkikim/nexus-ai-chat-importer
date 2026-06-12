@@ -165,6 +165,15 @@ export class AttachmentMapBuilder {
             fileIds.push(baseFileName);
         }
 
+        // Pattern 5: <fileId>.dat without trailing dash (new 2026 export format,
+        // e.g. file-0HDUFW2JaMMvCvhqOQsPCGxF.dat) — also map the bare id
+        if (/^file[-_]/.test(baseFileName)) {
+            const idOnly = baseFileName.substring(5);
+            if (idOnly && !fileIds.includes(idOnly)) {
+                fileIds.push(idOnly);
+            }
+        }
+
         return fileIds;
     }
 

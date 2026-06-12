@@ -29,4 +29,24 @@ describe("buildAttachmentLookupIndex", () => {
             "dalle-generations/file-abc123-preview.webp"
         );
     });
+
+    it("indexes new-format <fileId>.dat entries under prefixed and bare ids", () => {
+        const index = buildAttachmentLookupIndex([
+            { path: "file-0HDUFW2JaMMvCvhqOQsPCGxF.dat", size: 100 },
+            { path: "file_00000000aad871f49969859f2bccd6cb.dat", size: 200 },
+        ]);
+
+        expect(index.byFileId.get("file-0HDUFW2JaMMvCvhqOQsPCGxF")).toContain(
+            "file-0HDUFW2JaMMvCvhqOQsPCGxF.dat"
+        );
+        expect(index.byFileId.get("0HDUFW2JaMMvCvhqOQsPCGxF")).toContain(
+            "file-0HDUFW2JaMMvCvhqOQsPCGxF.dat"
+        );
+        expect(
+            index.byFileId.get("file_00000000aad871f49969859f2bccd6cb")
+        ).toContain("file_00000000aad871f49969859f2bccd6cb.dat");
+        expect(
+            index.byFileId.get("00000000aad871f49969859f2bccd6cb")
+        ).toContain("file_00000000aad871f49969859f2bccd6cb.dat");
+    });
 });

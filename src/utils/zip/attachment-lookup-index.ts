@@ -36,7 +36,15 @@ function extractFileIds(path: string): string[] {
         /\.(dat|png|jpg|jpeg|gif|webp|pdf|txt|md)$/i,
         ""
     );
-    if (baseName) ids.push(baseName);
+    if (baseName) {
+        ids.push(baseName);
+        // New 2026 export format stores attachments as <fileId>.dat without a
+        // trailing dash (e.g. file-0HDUFW2JaMMvCvhqOQsPCGxF.dat), so the
+        // modern/legacy patterns above miss them — index the bare id too.
+        if (/^file[-_]/.test(baseName)) {
+            ids.push(baseName.substring(5));
+        }
+    }
 
     return Array.from(new Set(ids.filter(Boolean)));
 }
