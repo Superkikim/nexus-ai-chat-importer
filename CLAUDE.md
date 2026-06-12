@@ -110,8 +110,10 @@ Provider-Specific Format → ProviderAdapter → StandardConversation → Format
 
 **ChatGPT** ([src/providers/chatgpt/](src/providers/chatgpt/)):
 - `chatgpt-adapter.ts`, `chatgpt-converter.ts`, `chatgpt-attachment-extractor.ts`
+- `chatgpt-asset-index.ts` - Loads `conversation_asset_file_names.json` (new 2026 export format: all attachments are `<fileId>.dat` at ZIP root; the index maps them to original names and flags DALL-E/voice assets)
 - `chatgpt-dalle-processor.ts` - DALL-E image handling with prompts
 - `chatgpt-message-filter.ts` - Deduplicates messages (ChatGPT exports contain duplicates)
+- Attachments come from two pipelines merged by fileId: `message.metadata.attachments[]` (user uploads incl. PDFs/docs, carries the original filename) and `image_asset_pointer` content parts (carries dimensions). Voice recordings (`audio_asset_pointer`, RIFF/WAVE `.dat`) are intentionally never imported.
 
 **Claude** ([src/providers/claude/](src/providers/claude/)):
 - `claude-adapter.ts`, `claude-converter.ts`, `claude-attachment-extractor.ts`, `claude-types.ts`

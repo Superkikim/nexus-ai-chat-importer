@@ -25,9 +25,9 @@ Attachments/chatgpt/images/image_abc123_1024x768.png
 
 ### ✅ Images DALL-E (ChatGPT uniquement)
 
-**Source** : Disponibles dans le dossier `dalle-generations/` de l'archive ZIP  
+**Source** : Dossier `dalle-generations/` de l'archive ZIP (anciens exports) ou fichiers `<fileId>.dat` à la racine résolus via l'index (nouveau format 2026+)  
 **Traitement** : Extraites avec préservation du prompt de génération  
-**Format** : PNG (généralement)  
+**Format** : PNG ou WebP (l'extension réelle est restaurée par magic bytes)  
 **Nom de fichier** : `dalle_{genId}_{width}x{height}.png`  
 **Contenu additionnel** : Le prompt utilisé pour générer l'image est préservé
 
@@ -53,21 +53,49 @@ def hello_world():
     print("Hello, World!")
 ```
 
-### ❌ Documents (PDF, Word, etc.)
+### ✅ Documents Uploadés (PDF, etc.) — ChatGPT
 
-**Source** : Généralement absents des archives d'exportation  
-**Traitement** : Marqués comme "missing" avec note explicative  
-**Raison** : ChatGPT et Claude n'incluent généralement pas ces fichiers dans leurs exports  
-**Statut** : Affiché comme "❌ missing" dans les rapports
+**Source** : Référencés dans `metadata.attachments` des messages ; présents dans l'archive sous `<fileId>.dat` (nouveau format 2026+)  
+**Traitement** : Extraits dans `Attachments/chatgpt/documents/` avec leur nom original  
+**Note** : Les anciens exports n'incluaient généralement pas ces fichiers — ils restent alors marqués "❌ missing" avec note explicative
 
-### ❌ Fichiers Audio
+### ❌ Fichiers Audio (enregistrements vocaux)
 
-**Source** : Peuvent être présents dans l'archive  
+**Source** : Peuvent être présents dans l'archive (`.dat` au format RIFF/WAVE)  
 **Traitement** : **Volontairement ignorés**  
+**Détection** : Via l'index `conversation_asset_file_names.json` (chemin `<conv-uuid>/audio/<uuid>.wav`) ou par magic bytes RIFF/WAVE  
 **Raison** : 
 - Taille importante des fichiers
 - Transcription déjà disponible dans le texte de la conversation
 - Évite l'encombrement du vault
+
+## Nouveau Format d'Export ChatGPT (2026+)
+
+Depuis mi-2026, les exports ChatGPT empaquettent **tous les attachements** en fichiers
+`<fileId>.dat` à la racine du ZIP (ex. `file-0HDUFW2JaMMvCvhqOQsPCGxF.dat` ou
+`file_00000000aad871f49969859f2bccd6cb.dat`), sans nom original ni extension.
+
+Un fichier d'index `conversation_asset_file_names.json` mappe chaque `.dat` vers son
+nom d'origine :
+
+```json
+{
+  "file-12aRihqTCNon1VFE6ZpQqx.dat": "Screenshot_20250827_125754.jpg",
+  "file-0HDUFW2JaMMvCvhqOQsPCGxF.dat": "dalle-generations/bdd53f7d-....webp",
+  "file_0000000005987246b06f11c12c4e779f.dat": "<conv-uuid>/audio/<uuid>.wav"
+}
+```
+
+Le plugin :
+1. Charge cet index (s'il existe) et résout chaque attachement directement vers son `.dat`
+2. Restaure le **nom original** pour le fichier du vault
+3. Restaure l'**extension réelle** par magic bytes quand elle manque
+4. Ignore les enregistrements vocaux (valeurs `audio/.wav` de l'index)
+5. Retombe sur les stratégies de recherche historiques si l'index est absent (anciens exports)
+
+**Réimport** : pour récupérer les attachements d'archives déjà importées avec une
+version antérieure du plugin, il suffit de réimporter le même ZIP et de choisir
+**« Reprocess »** dans le dialogue — les notes sont régénérées avec les attachements.
 
 ## Organisation des Fichiers
 
@@ -108,6 +136,8 @@ Le plugin détecte automatiquement les formats réels des fichiers `.dat` :
 | JPEG | `FF D8 FF` | `.jpg` |
 | GIF | `47 49 46 38` | `.gif` |
 | WebP | `52 49 46 46...57 45 42 50` | `.webp` |
+| WAV | `52 49 46 46...57 41 56 45` | `.wav` (ignoré : enregistrement vocal) |
+| PDF | `25 50 44 46` | `.pdf` |
 
 ## Statistiques dans les Rapports
 
