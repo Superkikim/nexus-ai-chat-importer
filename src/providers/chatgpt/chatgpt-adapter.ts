@@ -156,8 +156,9 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
      * ChatGPT-specific ZIP entry filter.
      *
      * ChatGPT exports can contain gigabytes of voice-recording files (.dat)
-     * and audio/video files that are NOT user-uploaded attachments. Loading
-     * them into RAM via JSZip would cause Electron to OOM-crash on large exports.
+     * and audio/video files that are NOT user-uploaded attachments. Keeping
+     * an entry only costs its central-directory metadata (both ZIP readers
+     * are lazy), but filtering avoids polluting attachment lookups.
      *
      * Rules (first match wins):
      *  1. Small files (<1 MB) — always keep (JSON, metadata, tiny assets)
@@ -165,6 +166,12 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
      *  3. Audio / video extensions — skip
      *  4. .dat files not matching user-attachment pattern — skip (voice recordings)
      *  5. Everything else — keep
+     *
+     * New 2026 export format: ALL attachments (including voice WAVs) are named
+     * file[-_]<id>.dat and pass rule 2. Voice recordings are skipped later by
+     * the attachment extractor — via the conversation_asset_file_names.json
+     * index (isAudio) or RIFF/WAVE magic-byte detection — and are never read
+     * unless a conversation actually references them.
      */
     shouldIncludeZipEntry(
         entryName: string,
