@@ -150,6 +150,19 @@ export function detectFileFormat(fileContent: Uint8Array): {
         return { extension: "webp", mimeType: "image/webp" };
     }
 
+    // WAV: 52 49 46 46 [4 bytes] 57 41 56 45 (ChatGPT voice recordings)
+    if (
+        header.startsWith("52494646") &&
+        header.substring(16, 24) === "57415645"
+    ) {
+        return { extension: "wav", mimeType: "audio/wav" };
+    }
+
+    // PDF: 25 50 44 46 ("%PDF")
+    if (header.startsWith("25504446")) {
+        return { extension: "pdf", mimeType: "application/pdf" };
+    }
+
     // RIFF (could be WebP or other formats)
     if (header.startsWith("52494646")) {
         return { extension: "webp", mimeType: "image/webp" }; // Assume WebP for RIFF in AI chat context

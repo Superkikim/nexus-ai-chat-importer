@@ -173,6 +173,26 @@ describe("detectFileFormat", () => {
         expect(result.mimeType).toBe("image/webp");
     });
 
+    it("should detect WAV format (not WebP) for RIFF/WAVE headers", () => {
+        const wavHeader = new Uint8Array([
+            0x52, 0x49, 0x46, 0x46, 0x26, 0x2d, 0x02, 0x00, 0x57, 0x41, 0x56,
+            0x45,
+        ]);
+        const result = detectFileFormat(wavHeader);
+        expect(result.extension).toBe("wav");
+        expect(result.mimeType).toBe("audio/wav");
+    });
+
+    it("should detect PDF format", () => {
+        const pdfHeader = new Uint8Array([
+            0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0x00, 0x00, 0x00,
+            0x00,
+        ]);
+        const result = detectFileFormat(pdfHeader);
+        expect(result.extension).toBe("pdf");
+        expect(result.mimeType).toBe("application/pdf");
+    });
+
     it("should return null for unknown format", () => {
         const unknownHeader = new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
