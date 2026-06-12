@@ -32,15 +32,25 @@ import {
     writeZipEntryToVault,
     ZipArchiveReader,
 } from "../../utils/zip-loader";
+import {
+    buildChatGPTAssetIndex,
+    ChatGPTAssetEntry,
+    ChatGPTAssetIndex,
+} from "./chatgpt-asset-index";
+
+interface LocatedZipFile {
+    reader: ZipArchiveReader;
+    path: string;
+    /** Present when resolved via conversation_asset_file_names.json (new 2026 format) */
+    assetEntry?: ChatGPTAssetEntry;
+}
 
 export class ChatGPTAttachmentExtractor {
-    private zipFileCache = new Map<
-        string,
-        { reader: ZipArchiveReader; path: string } | null
-    >();
+    private zipFileCache = new Map<string, LocatedZipFile | null>();
     private attachmentMap: AttachmentMap | null = null; // Multi-ZIP attachment map
     private allZips: ZipArchiveReader[] = [];
     private lookupIndexCache = new WeakMap<object, AttachmentLookupIndex>();
+    private assetIndexCache = new WeakMap<object, ChatGPTAssetIndex | null>();
 
     constructor(
         private plugin: NexusAiChatImporterPlugin,
@@ -169,6 +179,21 @@ export class ChatGPTAttachmentExtractor {
             };
         }
 
+        // Voice recordings are intentionally never imported (export-size policy)
+        if (locatedFile.assetEntry?.isAudio) {
+            return {
+                ...attachment,
+                url:
+                    attachment.url || `https://chatgpt.com/c/${conversationId}`,
+                status: {
+                    processed: true,
+                    found: false,
+                    reason: "not_in_export",
+                    note: "Voice recordings are not imported.",
+                },
+            };
+        }
+
         // File found - try to extract it
         try {
             const extractResult = await this.extractSingleAttachment(
@@ -176,6 +201,21 @@ export class ChatGPTAttachmentExtractor {
                 attachment,
                 locatedFile
             );
+
+            if (extractResult === "voice_skipped") {
+                return {
+                    ...attachment,
+                    url:
+                        attachment.url ||
+                        `https://chatgpt.com/c/${conversationId}`,
+                    status: {
+                        processed: true,
+                        found: false,
+                        reason: "not_in_export",
+                        note: "Voice recordings are not imported.",
+                    },
+                };
+            }
 
             if (extractResult) {
                 // For generated images with extractedContent, replace placeholders
@@ -276,14 +316,31 @@ export class ChatGPTAttachmentExtractor {
     private async extractSingleAttachment(
         conversationId: string,
         attachment: StandardAttachment,
-        locatedFile: { reader: ZipArchiveReader; path: string }
-    ): Promise<{
-        localPath: string;
-        finalFileName: string;
-        actualFileType: string;
-    } | null> {
+        locatedFile: LocatedZipFile
+    ): Promise<
+        | {
+              localPath: string;
+              finalFileName: string;
+              actualFileType: string;
+          }
+        | "voice_skipped"
+        | null
+    > {
         let finalFileName = attachment.fileName;
         let finalFileType = attachment.fileType;
+        const sourceIsDat = /\.dat$/i.test(locatedFile.path);
+
+        // New format: the asset index knows the original filename — prefer it
+        // over synthetic names, except for generated images whose dalle_* name
+        // carries more context (gen id, dimensions)
+        if (
+            locatedFile.assetEntry?.displayName &&
+            attachment.attachmentType !== "generated_image" &&
+            !this.hasMeaningfulFileName(attachment)
+        ) {
+            finalFileName = locatedFile.assetEntry.displayName;
+        }
+
         const entry = locatedFile.reader.get(locatedFile.path);
         if (!entry) {
             throw new Error(
@@ -294,6 +351,12 @@ export class ChatGPTAttachmentExtractor {
         const writeResult = await writeZipEntryToVault(
             entry,
             async (detection) => {
+                // Voice recordings reach this point only when they are not
+                // listed in the asset index — detect and skip them
+                if (sourceIsDat && detection.detectedExtension === "wav") {
+                    return null;
+                }
+
                 if (
                     attachment.attachmentType === "generated_image" &&
                     detection.detectedExtension
@@ -305,6 +368,19 @@ export class ChatGPTAttachmentExtractor {
                     finalFileName = `${baseName}.${detection.detectedExtension}`;
                     finalFileType =
                         detection.detectedMimeType || attachment.fileType;
+                } else if (sourceIsDat && detection.detectedExtension) {
+                    // .dat payload: make sure the vault file has a real extension
+                    const currentExt = this.getFileExtension(finalFileName);
+                    if (!currentExt) {
+                        finalFileName = `${finalFileName}.${detection.detectedExtension}`;
+                    }
+                    if (
+                        !finalFileType ||
+                        finalFileType === "application/octet-stream"
+                    ) {
+                        finalFileType =
+                            detection.detectedMimeType || finalFileType;
+                    }
                 }
 
                 let targetPath = this.generateLocalPath(conversationId, {
@@ -332,11 +408,24 @@ export class ChatGPTAttachmentExtractor {
             this.plugin.app.vault
         );
 
+        if (writeResult.targetPath === null) {
+            return "voice_skipped";
+        }
+
         return {
             localPath: writeResult.targetPath,
             finalFileName: finalFileName,
             actualFileType: finalFileType || "application/octet-stream",
         };
+    }
+
+    /**
+     * True when the attachment already carries a real filename (e.g. restored
+     * from metadata.attachments), as opposed to a synthetic image_<id>_WxH name
+     */
+    private hasMeaningfulFileName(attachment: StandardAttachment): boolean {
+        if (!attachment.fileName) return false;
+        return !attachment.fileName.startsWith(`image_${attachment.fileId}`);
     }
 
     /**
@@ -370,7 +459,7 @@ export class ChatGPTAttachmentExtractor {
         attachment: StandardAttachment,
         conversationId?: string,
         messageId?: string
-    ): Promise<{ reader: ZipArchiveReader; path: string } | null> {
+    ): Promise<LocatedZipFile | null> {
         if (!attachment.fileId) {
             const context =
                 conversationId && messageId
@@ -394,6 +483,34 @@ export class ChatGPTAttachmentExtractor {
         const cacheKey = `${attachment.fileId}_${attachment.fileName}`;
         if (this.zipFileCache.has(cacheKey)) {
             return this.zipFileCache.get(cacheKey)!;
+        }
+
+        // Strategy 0 (new 2026 format): resolve via conversation_asset_file_names.json
+        // where every attachment is stored as <fileId>.dat at the ZIP root
+        const assetIndex = await this.getAssetIndex(zip);
+        if (assetIndex) {
+            const assetEntry = assetIndex.byFileId.get(attachment.fileId);
+            if (assetEntry && zip.has(assetEntry.datPath)) {
+                const located: LocatedZipFile = {
+                    reader: zip,
+                    path: assetEntry.datPath,
+                    assetEntry,
+                };
+                this.zipFileCache.set(cacheKey, located);
+                return located;
+            }
+
+            // Some assets are missing from the index but still follow the
+            // <fileId>.dat naming (observed in real exports)
+            const directDatPath = `${attachment.fileId}.dat`;
+            if (zip.has(directDatPath)) {
+                const located: LocatedZipFile = {
+                    reader: zip,
+                    path: directDatPath,
+                };
+                this.zipFileCache.set(cacheKey, located);
+                return located;
+            }
         }
 
         // NEW: If attachment map is available, use it for multi-ZIP fallback
@@ -622,6 +739,18 @@ export class ChatGPTAttachmentExtractor {
      */
     clearCache(): void {
         this.zipFileCache.clear();
+    }
+
+    private async getAssetIndex(
+        zip: ZipArchiveReader
+    ): Promise<ChatGPTAssetIndex | null> {
+        if (this.assetIndexCache.has(zip)) {
+            return this.assetIndexCache.get(zip) ?? null;
+        }
+
+        const index = await buildChatGPTAssetIndex(zip);
+        this.assetIndexCache.set(zip, index);
+        return index;
     }
 
     private async getLookupIndex(
