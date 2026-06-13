@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Mise à niveau terminée - v{{version}}",
-            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### ✨ Nouveau\n- **Mistral Vibe** (anciennement Le Chat) — Mistral AI a renommé son produit\n- Dossiers du coffre renommés automatiquement : `lechat/` → `vibe/`\n- Frontmatter des conversations mis à jour : `provider: lechat` → `provider: vibe`\n\n### 🔧 Amélioré\n- Les migrations s'exécutent après l'indexation complète du coffre, évitant les mises à jour silencieuses au premier chargement\n\n### 🐛 Corrigé\n- Les messages Claude n'apparaissent plus dans le mauvais ordre lorsque l'utilisateur répond dans la même seconde que l'assistant",
+            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### 🐛 Corrigé\n- **ChatGPT** — Nouveau format d'export 2026 entièrement pris en charge : les attachements sont désormais stockés sous forme de fichiers `.dat` à la racine du ZIP et résolus via `conversation_asset_file_names.json`\n- **ChatGPT** — Les documents uploadés par l'utilisateur (PDF, etc.) sont désormais importés correctement\n- **ChatGPT** — Les enregistrements vocaux (WAV) sont correctement détectés et ignorés au lieu d'être importés comme fichiers WebP corrompus\n\n### 🔧 Amélioré\n- Détection des magic bytes étendue aux formats WAV et PDF pour une identification précise du format des fichiers",
             "buttons": {
                 "got_it": "Compris !"
             }

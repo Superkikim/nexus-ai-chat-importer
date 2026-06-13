@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### ✨ 新增\n- **Mistral Vibe**（原 Le Chat）— Mistral AI 对产品进行品牌重塑\n- 自动重命名 Vault 文件夹：`lechat/` → `vibe/`\n- 自动更新对话前言：`provider: lechat` → `provider: vibe`\n\n### 🔧 改进\n- 升级迁移在 Vault 完全索引后执行，防止首次加载时静默失败\n\n### 🐛 修复\n- 修复 Claude 消息顺序错乱问题——当用户在助手回复后同一秒内作出回复时，消息顺序现已正确显示",
+            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### 🐛 修复\n- **ChatGPT** — 完整支持 2026 年新导出格式：附件现在以 `.dat` 文件形式存储在 ZIP 根目录，并通过 `conversation_asset_file_names.json` 解析\n- **ChatGPT** — 用户上传的文档（PDF 等）现在可以正确导入\n- **ChatGPT** — 语音录音（WAV）现在可以正确检测并跳过，不再导入为损坏的 WebP 文件\n\n### 🔧 改进\n- 扩展了魔术字节检测，新增 WAV 和 PDF 支持，以准确识别文件格式",
             "buttons": {
                 "got_it": "知道了！"
             }

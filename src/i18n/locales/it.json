@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Aggiornamento completato - v{{version}}",
-            "fallback_content": "## ✨ Novità della v{{version}}\n\n### ✨ Nuovo\n- **Mistral Vibe** (ex Le Chat) — Mistral AI ha rinominato il proprio prodotto\n- Cartelle del vault rinominate automaticamente: `lechat/` → `vibe/`\n- Frontmatter delle conversazioni aggiornato: `provider: lechat` → `provider: vibe`\n\n### 🔧 Migliorato\n- Le migrazioni vengono eseguite dopo l'indicizzazione completa del vault, evitando aggiornamenti silenziosi al primo avvio\n\n### 🐛 Corretto\n- I messaggi di Claude non appaiono più fuori ordine quando l'utente risponde entro lo stesso secondo dell'assistente",
+            "fallback_content": "## ✨ Novità della v{{version}}\n\n### 🐛 Corretto\n- **ChatGPT** — Nuovo formato di esportazione 2026 completamente supportato: gli allegati sono ora archiviati come file `.dat` nella directory radice del ZIP e risolti tramite `conversation_asset_file_names.json`\n- **ChatGPT** — I documenti caricati dall'utente (PDF, ecc.) vengono ora importati correttamente\n- **ChatGPT** — Le registrazioni vocali (WAV) vengono correttamente rilevate e saltate invece di essere importate come file WebP corrotti\n\n### 🔧 Migliorato\n- Rilevamento dei magic bytes esteso con supporto per WAV e PDF per un'identificazione precisa del formato dei file",
             "buttons": {
                 "got_it": "Capito!"
             }
