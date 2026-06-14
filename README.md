@@ -6,7 +6,7 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.7** — Mistral AI has rebranded Le Chat as **Mistral Vibe** (auto-migrated on upgrade) · Claude message ordering fixed.
+> ✅ **v1.6.8** — Full ChatGPT 2026 export support: Canvas callouts, Canvas documents, generated-image placeholders, and `.dat` attachment resolution.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -75,6 +75,19 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 - Full UI localization in 10 languages
 
 ## ✨ What's New
+
+### v1.6.8 — ChatGPT 2026 Export Support
+
+✨ **New**
+- **Canvas directives** — `:::writing{…}` blocks in the 2026 export are rendered as collapsible `nexus_canvas` callouts (raw markup no longer leaks into notes)
+- **Canvas documents** — assistant-generated Canvas files (`.docx`, etc.) extracted from `library_files.json` and linked in the originating message
+- **Generated image placeholder** — when recent exports omit AI-generated images entirely, a visible placeholder is inserted with the prompt; older DALL-E exports are unaffected
+
+🐛 **Fixed**
+- **ChatGPT 2026 format** — `.dat` attachments resolved via `conversation_asset_file_names.json`; user-uploaded documents (PDFs, etc.) imported correctly
+- **Voice recordings** — WAVs now correctly detected and skipped (were previously imported as broken WebP files)
+
+---
 
 ### v1.6.7 — Mistral Vibe & Claude message order fix
 

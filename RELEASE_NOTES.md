@@ -1,5 +1,41 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.8 — ChatGPT 2026 Export Support
+
+![Version](https://img.shields.io/badge/version-1.6.8-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
+
+### ✨ New
+
+- **ChatGPT — Canvas directives rendered as callouts**
+  - The 2026 export inlines Canvas ("textdoc") content as `:::writing{variant=…}` blocks — CommonMark generic directives that Obsidian does not render, leaking raw markup into notes
+  - Each block is now converted into a collapsible `>[!nexus_canvas]-` callout with a descriptive label: *Social post*, *Document*, *Email* (with subject), *Draft*, or *Canvas*
+
+- **ChatGPT — Canvas-generated documents imported**
+  - Assistant-generated Canvas artifacts (e.g. a `.docx` report) are stored in `library_files.json` — not in the usual `metadata.attachments` — and were previously invisible to the importer
+  - These files are now detected via `origination_message_id`, extracted from the ZIP, and linked in the originating message
+
+- **ChatGPT — Placeholder for generated images omitted by the export**
+  - Recent ChatGPT exports no longer include AI-generated images (no `.dat`, no metadata) — an OpenAI-side export regression
+  - When an image-generation turn is detected and no image is present, a clear `>[!nexus_attachment]-` placeholder is inserted (with the prompt when available) so the omission is visible rather than silent
+  - Suppressed for older exports that still carry structured DALL-E data — those continue to import unchanged
+
+### 🐛 Fixed
+
+- **ChatGPT — 2026 export `.dat` attachments fully resolved**
+  - All attachments are packaged as `file_<id>.dat` at the ZIP root; `conversation_asset_file_names.json` maps each to its original name and file type
+  - User-uploaded images and documents (PDFs, etc.) are extracted and linked correctly
+
+- **ChatGPT — Voice recordings properly detected and skipped**
+  - WAV files are now detected via magic bytes (RIFF/WAVE header) and via the asset index, and are intentionally omitted — the transcription is already in the conversation text
+  - Previously, WAVs were misdetected as WebP and imported as broken image files
+
+### 🔧 Improved
+
+- **Minimum Obsidian version raised to 1.6.6**
+  - The plugin already relied on APIs introduced in v1.6.6 (`FileManager.trashFile`) and v1.4.10 (`AbstractInputSuggest`); the declared minimum now matches actual requirements
+
+---
+
 ## Version 1.6.7 — Mistral Vibe & Message Order Fix
 
 ![Version](https://img.shields.io/badge/version-1.6.7-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
