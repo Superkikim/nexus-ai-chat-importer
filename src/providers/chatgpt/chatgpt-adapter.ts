@@ -17,13 +17,23 @@
  */
 
 // src/providers/chatgpt/chatgpt-adapter.ts
-import { StandardConversation } from "../../types/standard";
+import {
+    StandardConversation,
+    StandardMessage,
+    StandardAttachment,
+} from "../../types/standard";
 import { ChatGPTConverter } from "./chatgpt-converter";
 import { ChatGPTAttachmentExtractor } from "./chatgpt-attachment-extractor";
 import { ChatGPTReportNamingStrategy } from "./chatgpt-report-naming";
 import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
 import { ChatGPTMessageFilter } from "./chatgpt-message-filter";
+import {
+    buildChatGPTLibraryIndex,
+    ChatGPTLibraryIndex,
+} from "./chatgpt-library-index";
 import { Chat, ChatMessage } from "./chatgpt-types";
+import { sanitizeFileName } from "../../utils/file-utils";
+import { ZipArchiveReader } from "../../utils/zip-loader";
 import type NexusAiChatImporterPlugin from "../../main";
 import {
     BaseProviderAdapter,
@@ -33,6 +43,11 @@ import {
 export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
     private attachmentExtractor: ChatGPTAttachmentExtractor;
     private reportNamingStrategy: ChatGPTReportNamingStrategy;
+    // Cache the library index per ZIP so it is parsed once per import.
+    private libraryIndexCache = new WeakMap<
+        ZipArchiveReader,
+        Promise<ChatGPTLibraryIndex | null>
+    >();
 
     constructor(private plugin: NexusAiChatImporterPlugin) {
         super(); // Call parent constructor
@@ -216,10 +231,80 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
 
     /**
      * Provide ChatGPT-specific attachment extractor
-     * The actual processMessageAttachments() logic is inherited from BaseProviderAdapter
      */
     protected getAttachmentExtractor(): AttachmentExtractor {
         return this.attachmentExtractor;
+    }
+
+    /**
+     * Inject Canvas-generated library files (linked by origination_message_id),
+     * then run the shared attachment extraction. Canvas documents (e.g. a
+     * generated .docx) live in library_files.json rather than the message's
+     * metadata.attachments, so they would otherwise never be imported.
+     */
+    async processMessageAttachments(
+        messages: StandardMessage[],
+        conversationId: string,
+        zip: ZipArchiveReader
+    ): Promise<StandardMessage[]> {
+        const libraryIndex = await this.getLibraryIndex(zip);
+        const prepared = libraryIndex
+            ? messages.map((message) =>
+                  this.injectLibraryAttachments(message, libraryIndex, zip)
+              )
+            : messages;
+
+        return super.processMessageAttachments(prepared, conversationId, zip);
+    }
+
+    private getLibraryIndex(
+        zip: ZipArchiveReader
+    ): Promise<ChatGPTLibraryIndex | null> {
+        let cached = this.libraryIndexCache.get(zip);
+        if (!cached) {
+            cached = buildChatGPTLibraryIndex(zip);
+            this.libraryIndexCache.set(zip, cached);
+        }
+        return cached;
+    }
+
+    /**
+     * Attach library files whose origination_message_id matches this message,
+     * skipping anything already present (by fileId) and anything whose payload
+     * is not actually in the ZIP (avoids spurious "missing" entries).
+     */
+    private injectLibraryAttachments(
+        message: StandardMessage,
+        libraryIndex: ChatGPTLibraryIndex,
+        zip: ZipArchiveReader
+    ): StandardMessage {
+        if (!message.id) return message;
+
+        const entries = libraryIndex.byOriginationMessageId.get(message.id);
+        if (!entries || entries.length === 0) return message;
+
+        const existing = message.attachments ?? [];
+        const seenFileIds = new Set(
+            existing.map((att) => att.fileId).filter(Boolean) as string[]
+        );
+
+        const additions: StandardAttachment[] = [];
+        for (const entry of entries) {
+            if (seenFileIds.has(entry.fileId)) continue;
+            if (!zip.has(`${entry.fileId}.dat`)) continue;
+
+            const baseName = entry.fileName.split("/").pop() || entry.fileName;
+            additions.push({
+                fileName: sanitizeFileName(baseName),
+                fileType: entry.mimeType || "application/octet-stream",
+                fileId: entry.fileId,
+            });
+            seenFileIds.add(entry.fileId);
+        }
+
+        if (additions.length === 0) return message;
+
+        return { ...message, attachments: [...existing, ...additions] };
     }
 
     getReportNamingStrategy() {
