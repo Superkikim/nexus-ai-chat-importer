@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Aggiornamento completato - v{{version}}",
-            "fallback_content": "## ✨ Novità della v{{version}}\n\n### 🐛 Corretto\n- **ChatGPT** — Nuovo formato di esportazione 2026 completamente supportato: gli allegati sono ora archiviati come file `.dat` nella directory radice del ZIP e risolti tramite `conversation_asset_file_names.json`\n- **ChatGPT** — I documenti caricati dall'utente (PDF, ecc.) vengono ora importati correttamente\n- **ChatGPT** — Le registrazioni vocali (WAV) vengono correttamente rilevate e saltate invece di essere importate come file WebP corrotti\n\n### 🔧 Migliorato\n- Rilevamento dei magic bytes esteso con supporto per WAV e PDF per un'identificazione precisa del formato dei file",
+            "fallback_content": "## ✨ Novità della v{{version}}\n\n### ✨ Nuovo\n- **ChatGPT** — I blocchi Canvas `:::writing` vengono ora mostrati come callout comprimibili invece di markup grezzo\n- **ChatGPT** — I documenti generati da Canvas (report, `.docx`, ecc.) vengono importati da `library_files.json` e collegati nelle note\n- **ChatGPT** — Viene inserito un segnaposto quando le immagini generate sono assenti dall'esportazione (regressione recente di OpenAI)\n\n### 🐛 Corretto\n- **ChatGPT** — Nuovo formato di esportazione 2026 completamente supportato: file `.dat` risolti tramite `conversation_asset_file_names.json`\n- **ChatGPT** — Documenti caricati dall'utente (PDF, ecc.) importati correttamente\n- **ChatGPT** — Registrazioni vocali (WAV) rilevate e ignorate invece di essere importate come file danneggiati\n\n### 🔧 Migliorato\n- Rilevamento dei magic byte esteso con supporto WAV e PDF",
             "buttons": {
                 "got_it": "Capito!"
             }

@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade abgeschlossen – v{{version}}",
-            "fallback_content": "## ✨ Neu in v{{version}}\n\n### 🐛 Behoben\n- **ChatGPT** — Neues 2026-Exportformat vollständig unterstützt: Anhänge werden jetzt als `.dat`-Dateien im ZIP-Stammverzeichnis gespeichert und über `conversation_asset_file_names.json` aufgelöst\n- **ChatGPT** — Vom Benutzer hochgeladene Dokumente (PDFs usw.) werden jetzt korrekt importiert\n- **ChatGPT** — Sprachaufnahmen (WAV) werden korrekt erkannt und übersprungen, anstatt als fehlerhafte WebP-Dateien importiert zu werden\n\n### 🔧 Verbessert\n- Magic-Byte-Erkennung um WAV- und PDF-Unterstützung erweitert für genaue Dateiformatidentifikation",
+            "fallback_content": "## ✨ Neu in v{{version}}\n\n### ✨ Neu\n- **ChatGPT** — Canvas-`:::writing`-Blöcke werden als einklappbare Callouts dargestellt statt als Rohtext\n- **ChatGPT** — Canvas-generierte Dokumente (Berichte, `.docx` usw.) werden aus `library_files.json` importiert und in Notizen verlinkt\n- **ChatGPT** — Platzhalter wird eingefügt, wenn generierte Bilder im Export fehlen (aktuelle OpenAI-Regression)\n\n### 🐛 Behoben\n- **ChatGPT** — Neues 2026-Exportformat vollständig unterstützt: `.dat`-Dateien werden über `conversation_asset_file_names.json` aufgelöst\n- **ChatGPT** — Hochgeladene Dokumente (PDFs usw.) werden korrekt importiert\n- **ChatGPT** — Sprachaufnahmen (WAV) werden erkannt und übersprungen statt als fehlerhafte Dateien importiert\n\n### 🔧 Verbessert\n- Magic-Bytes-Erkennung um WAV- und PDF-Unterstützung erweitert",
             "buttons": {
                 "got_it": "Verstanden!"
             }

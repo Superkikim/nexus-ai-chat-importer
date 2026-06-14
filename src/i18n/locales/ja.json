@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ アップグレード完了 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} の新機能\n\n### 🐛 修正\n- **ChatGPT** — 2026年の新しいエクスポート形式に完全対応：添付ファイルがZIPルートに`.dat`ファイルとして保存され、`conversation_asset_file_names.json`で解決されるようになりました\n- **ChatGPT** — ユーザーがアップロードした文書（PDFなど）が正しくインポートされるようになりました\n- **ChatGPT** — 音声録音（WAV）が正しく検出され、壊れたWebPファイルとしてインポートされる代わりにスキップされるようになりました\n\n### 🔧 改善\n- WAVとPDFのサポートを追加したマジックバイト検出の拡張により、ファイル形式の正確な識別が可能になりました",
+            "fallback_content": "## ✨ v{{version}} の新機能\n\n### ✨ 新機能\n- **ChatGPT** — Canvas `:::writing` ブロックが生のマークアップではなく折りたたみ可能なコールアウトとして表示されるようになりました\n- **ChatGPT** — Canvasで生成されたドキュメント（レポート、`.docx` など）が `library_files.json` からインポートされ、ノートにリンクされます\n- **ChatGPT** — エクスポートに生成画像が含まれていない場合（OpenAIの最近の後退）、プレースホルダーが挿入されます\n\n### 🐛 修正\n- **ChatGPT** — 新しい2026エクスポート形式に完全対応：`.dat` ファイルが `conversation_asset_file_names.json` で解決されます\n- **ChatGPT** — ユーザーがアップロードしたドキュメント（PDF等）が正しくインポートされます\n- **ChatGPT** — 音声録音（WAV）が正しく検出・スキップされるようになりました\n\n### 🔧 改善\n- マジックバイト検出にWAVとPDFのサポートを追加",
             "buttons": {
                 "got_it": "了解！"
             }
