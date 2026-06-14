@@ -19,6 +19,11 @@
   - When an image-generation turn is detected and no image is present, a clear `>[!nexus_attachment]-` placeholder is inserted (with the prompt when available) so the omission is visible rather than silent
   - Suppressed for older exports that still carry structured DALL-E data — those continue to import unchanged
 
+### 🔧 Improved
+
+- **Minimum Obsidian version raised to 1.6.6**
+  - The plugin already relied on `FileManager.trashFile` (`@since 1.6.6`) and `AbstractInputSuggest` (`@since 1.4.10`); the declared minimum now matches actual API requirements
+
 ### 🐛 Fixed
 
 - **ChatGPT — 2026 export `.dat` attachments fully resolved**
