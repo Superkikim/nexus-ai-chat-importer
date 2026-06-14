@@ -247,7 +247,7 @@ export class ChatGPTDalleProcessor {
         if (prompt) {
             // Format prompt in code block with nested callout
             const formattedPrompt = prompt.split("\n").join("\n>> ");
-            extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+            extractedContent = `>>[!nexus_prompt] **Image prompt**
 >> \`\`\`
 >> ${formattedPrompt}
 >> \`\`\`
@@ -257,7 +257,7 @@ export class ChatGPTDalleProcessor {
 
             if (!hasImage) {
                 // Image not found - replace image callout with warning
-                extractedContent = `>>[!nexus_prompt] **DALL-E Prompt**
+                extractedContent = `>>[!nexus_prompt] **Image prompt**
 >> \`\`\`
 >> ${formattedPrompt}
 >> \`\`\`
@@ -359,7 +359,7 @@ export class ChatGPTDalleProcessor {
             fileType: "image/png",
             attachmentType: "generated_image",
             generationPrompt: prompt,
-            extractedContent: `>>[!nexus_prompt] **DALL-E Prompt** (Image Generation Failed or Interrupted)
+            extractedContent: `>>[!nexus_prompt] **Image prompt** (image generation failed or interrupted)
 >> \`\`\`
 >> ${formattedPrompt}
 >> \`\`\`
@@ -370,14 +370,14 @@ export class ChatGPTDalleProcessor {
                 processed: true,
                 found: false,
                 reason: "missing_from_export",
-                note: "DALL-E generation was requested but the image was not found in the archive",
+                note: "Image generation was requested but the image was not found in the archive",
             },
         };
 
         return {
             id: promptMessage.id || "",
             role: "assistant",
-            content: "DALL-E Image Generation (Failed/Interrupted)",
+            content: "Generated image (failed or interrupted)",
             timestamp: promptMessage.create_time || 0,
             attachments: [phantomAttachment],
         };

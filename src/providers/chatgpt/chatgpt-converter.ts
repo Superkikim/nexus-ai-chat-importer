@@ -25,6 +25,8 @@ import {
 } from "../../types/standard";
 import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
 import { ChatGPTMessageFilter } from "./chatgpt-message-filter";
+import { transformCanvasDirectives } from "./chatgpt-canvas-directives";
+import { annotateMissingGeneratedImages } from "./chatgpt-generated-image";
 import { sortMessagesByTimestamp } from "../../utils/message-utils";
 
 export class ChatGPTConverter {
@@ -151,10 +153,12 @@ export class ChatGPTConverter {
         }
 
         // Sort by timestamp with ID as secondary sort for chronological order
-        if (messages.length <= 1) return messages;
+        const ordered =
+            messages.length <= 1 ? messages : sortMessagesByTimestamp(messages);
 
-        // Use native sort with proper comparison function
-        return sortMessagesByTimestamp(messages);
+        // Surface generated images that recent exports omit entirely (no-op for
+        // conversations that still carry their generated images).
+        return annotateMissingGeneratedImages(ordered, chat);
     }
 
     /**
@@ -421,6 +425,10 @@ export class ChatGPTConverter {
         for (const { pattern, replacement } of this.CLEANUP_PATTERNS) {
             cleanText = cleanText.replace(pattern, replacement(chatUrl));
         }
+
+        // Convert Canvas ":::writing{...}" directives into nested callouts so
+        // the raw directive syntax never leaks into the note (no-op otherwise).
+        cleanText = transformCanvasDirectives(cleanText);
 
         return cleanText.trim();
     }
