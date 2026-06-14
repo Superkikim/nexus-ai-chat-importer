@@ -31,6 +31,7 @@ export class MessageFormatter {
         ATTACHMENT: "nexus_attachment", // 📎 Attachments
         ARTIFACT: "nexus_artifact", // 🛠️ Claude artifacts
         PROMPT: "nexus_prompt", // 💭 System prompts
+        CANVAS: "nexus_canvas", // 📝 ChatGPT Canvas documents
     };
 
     constructor(

@@ -31,6 +31,12 @@
     --callout-icon: lucide-wand-2;
 }
 
+/* ChatGPT Canvas Documents */
+.callout[data-callout="nexus_canvas"] {
+    --callout-color: 14, 165, 233; /* Sky */
+    --callout-icon: lucide-file-text;
+}
+
 /* Fix excessive spacing in editor mode */
 .markdown-source-view .callout[data-callout^="nexus_"] {
     margin-top: 0.5em;
