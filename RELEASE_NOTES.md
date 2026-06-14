@@ -29,11 +29,6 @@
   - WAV files are now detected via magic bytes (RIFF/WAVE header) and via the asset index, and are intentionally omitted — the transcription is already in the conversation text
   - Previously, WAVs were misdetected as WebP and imported as broken image files
 
-### 🔧 Improved
-
-- **Minimum Obsidian version raised to 1.6.6**
-  - The plugin already relied on APIs introduced in v1.6.6 (`FileManager.trashFile`) and v1.4.10 (`AbstractInputSuggest`); the declared minimum now matches actual requirements
-
 ---
 
 ## Version 1.6.7 — Mistral Vibe & Message Order Fix
