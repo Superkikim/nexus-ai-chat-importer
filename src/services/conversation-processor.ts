@@ -613,14 +613,7 @@ export class ConversationProcessor {
                     );
                 }
 
-                let attachmentStats:
-                    | {
-                          total: number;
-                          found: number;
-                          missing: number;
-                          failed: number;
-                      }
-                    | undefined = undefined;
+                let attachmentStats: AttachmentStats | undefined = undefined;
 
                 // REPROCESS LOGIC: If forced update, recreate the entire note with attachment support
                 if (forceUpdate) {
@@ -781,7 +774,14 @@ export class ConversationProcessor {
             const chatId = standardConversation.id;
 
             // Process attachments if ZIP provided
-            let attachmentStats = { total: 0, found: 0, missing: 0, failed: 0 };
+            let attachmentStats: AttachmentStats = {
+                total: 0,
+                found: 0,
+                inline: 0,
+                notProvided: 0,
+                missing: 0,
+                failed: 0,
+            };
             if (zip && adapter.processMessageAttachments) {
                 standardConversation.messages =
                     await adapter.processMessageAttachments(
