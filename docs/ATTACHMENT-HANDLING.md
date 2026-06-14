@@ -1,82 +1,59 @@
-# Gestion des Attachements
+# Attachment Handling
 
-Ce document explique comment Nexus AI Chat Importer gère les différents types d'attachements lors de l'importation des conversations ChatGPT et Claude.
+This document explains how Nexus AI Chat Importer handles the different attachment types found in ChatGPT and Claude exports.
 
-## Vue d'Ensemble
+## Overview
 
-Le plugin utilise une stratégie de **"meilleur effort"** pour traiter les attachements :
-- Si le fichier existe dans l'archive ZIP : il est extrait et lié
-- Si le fichier est manquant : une note informative est créée
-- Les statistiques d'attachements sont affichées dans les rapports d'importation
+The plugin uses a **best-effort** strategy for attachments:
 
-## Types d'Attachements Supportés
+- If the file exists in the ZIP archive, it is extracted and linked.
+- If the file is missing, an informative placeholder is written instead.
+- Attachment statistics are summarized in the import report.
 
-### ✅ Images Uploadées par l'Utilisateur
+## Supported Attachment Types
 
-**Source** : Disponibles dans l'archive ZIP  
-**Traitement** : Extraites et sauvegardées dans `Attachments/chatgpt/images/` ou `Attachments/claude/images/`  
-**Formats supportés** : PNG, JPEG, GIF, WebP  
-**Détection spéciale** : Magic bytes pour fichiers `.dat` (conversion automatique vers la bonne extension)
+### ✅ User-uploaded images
 
-**Exemple** :
-```
-Attachments/chatgpt/images/image_abc123_1024x768.png
-```
+- **Source**: present in the ZIP archive.
+- **Handling**: extracted to `Attachments/chatgpt/images/` or `Attachments/claude/images/`.
+- **Formats**: PNG, JPEG, GIF, WebP.
+- **Special detection**: magic bytes for `.dat` files (the correct extension is restored automatically).
 
-### ✅ Images DALL-E (ChatGPT uniquement)
+### ✅ Generated images (ChatGPT)
 
-**Source** : Dossier `dalle-generations/` de l'archive ZIP (anciens exports) ou fichiers `<fileId>.dat` à la racine résolus via l'index (nouveau format 2026+)  
-**Traitement** : Extraites avec préservation du prompt de génération  
-**Format** : PNG ou WebP (l'extension réelle est restaurée par magic bytes)  
-**Nom de fichier** : `dalle_{genId}_{width}x{height}.png`  
-**Contenu additionnel** : Le prompt utilisé pour générer l'image est préservé
+- **Source**: the `dalle-generations/` folder (older exports) or `<fileId>.dat` files at the ZIP root resolved through the asset index (2026+ format) — **when the export includes them**.
+- **Handling**: extracted, with the generation prompt preserved when available.
+- **Format**: PNG or WebP (the real extension is restored via magic bytes).
+- **Important — recent exports omit generated images.** Some 2026 exports no longer ship AI-generated images at all (no `.dat`, no index entry, no metadata); only the conversation text survives. This is a change on OpenAI's side. When the importer detects an image-generation turn whose image is absent, it inserts a clear placeholder (with the prompt when known) instead of silently dropping it. See [Generated image omission](#generated-image-omission-2026-regression).
 
-**Exemple** :
-```markdown
-![dalle_gen123_1024x1024.png](Attachments/chatgpt/images/dalle_gen123_1024x1024.png)
+### ✅ Canvas documents (ChatGPT, 2026+)
 
-> **Prompt DALL-E** : "A futuristic cityscape with flying cars"
-```
+- **Source**: assistant-generated Canvas artifacts (e.g. a `.docx` "report") described in `library_files.json` and linked to a message through `origination_message_id` — **not** through the usual `metadata.attachments`.
+- **Handling**: the document is imported and linked like any other document, **and** its body (when inlined as a `:::writing` block) is rendered as a callout. See [Canvas content](#canvas-content-writing-directives).
 
-### ✅ Fichiers Texte (Scripts, Markdown, Code, etc.)
+### ✅ Inline text files (scripts, Markdown, code, etc.)
 
-**Source** : Contenu intégré directement dans les messages JSON  
-**Traitement** : Intégrés directement dans le message, pas de fichier séparé  
-**Formats** : Python, JavaScript, HTML, CSS, Markdown, etc.  
-**Affichage** : Blocs de code avec coloration syntaxique
+- **Source**: content embedded directly in the message JSON.
+- **Handling**: rendered inline in the message (no separate file), as a syntax-highlighted code block.
 
-**Exemple** :
-```markdown
-**Fichier** : `script.py`
-```python
-def hello_world():
-    print("Hello, World!")
-```
+### ✅ Uploaded documents (PDF, etc.) — ChatGPT
 
-### ✅ Documents Uploadés (PDF, etc.) — ChatGPT
+- **Source**: referenced in a message's `metadata.attachments`; present in the archive as `<fileId>.dat` (2026+ format).
+- **Handling**: extracted to `Attachments/chatgpt/documents/` under their original name.
+- **Note**: older exports often did not include these files — in that case they are marked missing with an explanatory note.
 
-**Source** : Référencés dans `metadata.attachments` des messages ; présents dans l'archive sous `<fileId>.dat` (nouveau format 2026+)  
-**Traitement** : Extraits dans `Attachments/chatgpt/documents/` avec leur nom original  
-**Note** : Les anciens exports n'incluaient généralement pas ces fichiers — ils restent alors marqués "❌ missing" avec note explicative
+### ❌ Voice recordings (oral mode)
 
-### ❌ Fichiers Audio (enregistrements vocaux)
+- **Source**: may be present in the archive (`.dat` in RIFF/WAVE format).
+- **Handling**: **intentionally skipped.**
+- **Detection**: via the `conversation_asset_file_names.json` index (paths like `<conv-uuid>/audio/<uuid>.wav`) or by RIFF/WAVE magic bytes.
+- **Why**: large file size, the transcription is already in the conversation text, and it avoids cluttering the vault.
 
-**Source** : Peuvent être présents dans l'archive (`.dat` au format RIFF/WAVE)  
-**Traitement** : **Volontairement ignorés**  
-**Détection** : Via l'index `conversation_asset_file_names.json` (chemin `<conv-uuid>/audio/<uuid>.wav`) ou par magic bytes RIFF/WAVE  
-**Raison** : 
-- Taille importante des fichiers
-- Transcription déjà disponible dans le texte de la conversation
-- Évite l'encombrement du vault
+## ChatGPT 2026+ Export Format
 
-## Nouveau Format d'Export ChatGPT (2026+)
+Since mid-2026, ChatGPT exports package **all attachments** as `<fileId>.dat` files at the ZIP root (e.g. `file-0HDUFW2JaMMvCvhqOQsPCGxF.dat` or `file_00000000aad871f49969859f2bccd6cb.dat`), with no original name or extension.
 
-Depuis mi-2026, les exports ChatGPT empaquettent **tous les attachements** en fichiers
-`<fileId>.dat` à la racine du ZIP (ex. `file-0HDUFW2JaMMvCvhqOQsPCGxF.dat` ou
-`file_00000000aad871f49969859f2bccd6cb.dat`), sans nom original ni extension.
-
-Un fichier d'index `conversation_asset_file_names.json` mappe chaque `.dat` vers son
-nom d'origine :
+A `conversation_asset_file_names.json` index maps each `.dat` to its original name:
 
 ```json
 {
@@ -86,104 +63,96 @@ nom d'origine :
 }
 ```
 
-Le plugin :
-1. Charge cet index (s'il existe) et résout chaque attachement directement vers son `.dat`
-2. Restaure le **nom original** pour le fichier du vault
-3. Restaure l'**extension réelle** par magic bytes quand elle manque
-4. Ignore les enregistrements vocaux (valeurs `audio/.wav` de l'index)
-5. Retombe sur les stratégies de recherche historiques si l'index est absent (anciens exports)
+The plugin:
 
-**Réimport** : pour récupérer les attachements d'archives déjà importées avec une
-version antérieure du plugin, il suffit de réimporter le même ZIP et de choisir
-**« Reprocess »** dans le dialogue — les notes sont régénérées avec les attachements.
+1. Loads this index (when present) and resolves each attachment directly to its `.dat`.
+2. Restores the **original name** for the vault file.
+3. Restores the **real extension** via magic bytes when missing.
+4. Skips voice recordings (`audio/*.wav` index values).
+5. Falls back to the legacy lookup strategies when the index is absent (older exports).
 
-## Organisation des Fichiers
+For a full description of the new files (`library_files.json`, `export_manifest.json`, `sediment://` pointers, Canvas directives), see [CHATGPT-2026-FORMAT.md](CHATGPT-2026-FORMAT.md).
 
-### Structure des Dossiers
+### Canvas content (`:::writing` directives)
+
+Canvas ("textdoc") content is inlined in the export using CommonMark generic directives:
+
+```
+:::writing{variant="document" id="38274"}
+...document body...
+:::
+```
+
+This experimental syntax is not rendered by Obsidian, so the plugin converts each block into a collapsible `nexus_canvas` callout. Known `variant` values map to labels: `social_post` → *Social post*, `document` → *Document*, `email` → *Email* (with subject), `standard` → *Draft*; anything else → *Canvas*.
+
+### Generated image omission (2026 regression)
+
+In some 2026 exports, AI-generated images are absent entirely. The importer detects the generation turn — a user request (e.g. *"génère une image…"* / *"generate an image…"*) or an assistant claim (e.g. *"voici l'image…"* / *"generated image"*) — and, when no image is present, inserts a placeholder callout (including the prompt when available). The heuristic is intentionally conservative and is suppressed whenever the conversation still carries structured generated-image data, so older/DALL-E exports are unaffected.
+
+### Reprocessing existing imports
+
+To recover attachments for archives imported with an older plugin version, re-import the same ZIP and choose **Reprocess** in the dialog — the notes are regenerated with attachments.
+
+## File Organization
 
 ```
 Nexus AI Chat Imports/
 ├── Attachments/
 │   ├── chatgpt/
-│   │   ├── images/          # Images uploadées + DALL-E
-│   │   ├── documents/       # Documents (si disponibles)
-│   │   ├── audio/          # Audio (non traité)
-│   │   └── files/          # Autres fichiers
+│   │   ├── images/          # Uploaded + generated images
+│   │   ├── documents/       # Documents (incl. Canvas docs)
+│   │   ├── audio/           # Audio (skipped)
+│   │   └── files/           # Other files
 │   └── claude/
-│       ├── images/          # Images uploadées
-│       ├── documents/       # Documents (si disponibles)
-│       └── files/          # Autres fichiers
+│       ├── images/          # Uploaded images
+│       ├── documents/       # Documents (when available)
+│       └── files/           # Other files
 └── Conversations/
-    ├── chatgpt/            # Conversations ChatGPT
-    └── claude/             # Conversations Claude
+    ├── chatgpt/             # ChatGPT conversations
+    └── claude/              # Claude conversations
 ```
 
-### Gestion des Conflits
+### Conflict handling
 
-- **Noms de fichiers dupliqués** : Suffixe numérique ajouté (`image_1.png`, `image_2.png`)
-- **Extensions incorrectes** : Détection automatique du format réel via magic bytes
-- **Fichiers corrompus** : Marqués comme "failed" avec message d'erreur
+- **Duplicate file names**: a numeric suffix is appended (`image_1.png`, `image_2.png`).
+- **Wrong extensions**: the real format is detected via magic bytes.
+- **Corrupted files**: marked "failed" with an error message.
 
-## Détection des Formats
+## Format Detection
 
-### Magic Bytes Supportés
-
-Le plugin détecte automatiquement les formats réels des fichiers `.dat` :
+The plugin detects the real format of `.dat` files via magic bytes:
 
 | Format | Magic Bytes | Extension |
 |--------|-------------|-----------|
 | PNG | `89 50 4E 47` | `.png` |
 | JPEG | `FF D8 FF` | `.jpg` |
 | GIF | `47 49 46 38` | `.gif` |
-| WebP | `52 49 46 46...57 45 42 50` | `.webp` |
-| WAV | `52 49 46 46...57 41 56 45` | `.wav` (ignoré : enregistrement vocal) |
+| WebP | `52 49 46 46…57 45 42 50` | `.webp` |
+| WAV | `52 49 46 46…57 41 56 45` | `.wav` (skipped: voice recording) |
 | PDF | `25 50 44 46` | `.pdf` |
 
-## Statistiques dans les Rapports
+## Import Report Statistics
 
-### Affichage Global
-```markdown
-## Summary
-- **Attachments**: 15/18 extracted (2 missing, 1 failed)
-```
+The report summarizes attachments into these buckets:
 
-### Affichage par Conversation
-```markdown
-| Title | Created | Messages | Attachments |
-|-------|---------|----------|-------------|
-| ✨ Ma conversation | 2025-01-15 | 10 | ✅ 6 |
-```
+| Bucket | Meaning |
+|--------|---------|
+| ✅ Extracted to vault | Saved as a file (uploads, generated images, Canvas docs) |
+| 📄 Inline (embedded) | Content embedded in the note, no separate file |
+| ℹ️ Not provided by export | Intentionally absent (voice recordings, omitted generated images) |
+| ⚠️ Missing from export | Expected but absent from the archive |
+| (failed) | Present but could not be extracted |
 
-### Légende des Statuts
-- **✅ 6** : Tous les attachements extraits avec succès
-- **⚠️ 4/6** : Certains attachements manquants ou échoués
-- **❌ 0/3** : Aucun attachement extrait
-- **0** : Aucun attachement dans la conversation
+## Troubleshooting
 
-## Résolution des Problèmes
+### Missing attachments
 
-### Attachements Manquants
+Possible causes: the file was not included in the original export; the conversation predates the provider storing files; or the file type is not included by the export. The plugin writes an explanatory placeholder — this is expected.
 
-**Causes possibles** :
-1. Fichier non inclus dans l'export original
-2. Conversation trop ancienne (avant que le provider sauvegarde les fichiers)
-3. Type de fichier non supporté par l'export
+### Failed attachments
 
-**Solution** : Normal, le plugin crée une note explicative
+Possible causes: a corrupted file in the archive, insufficient permissions, or insufficient disk space. Check the error logs and available disk space.
 
-### Attachements Échoués
+### Generated images not appearing
 
-**Causes possibles** :
-1. Fichier corrompu dans l'archive
-2. Permissions insuffisantes pour écrire dans le vault
-3. Espace disque insuffisant
-
-**Solution** : Vérifier les logs d'erreur et l'espace disque
-
-### DALL-E Non Détectées
-
-**Causes possibles** :
-1. Archive ChatGPT incomplète
-2. Version d'export non supportée
-
-**Solution** : Réexporter depuis ChatGPT avec l'option complète
+Recent ChatGPT exports may omit generated images entirely (see [above](#generated-image-omission-2026-regression)). The plugin cannot recover a file that the export does not contain; it surfaces a placeholder so the loss is visible. Open the original conversation to view the image.
