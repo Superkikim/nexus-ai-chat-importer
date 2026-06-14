@@ -290,6 +290,13 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
 
         const additions: StandardAttachment[] = [];
         for (const entry of entries) {
+            // Only inject assistant-generated artifacts (e.g. Canvas "report").
+            // User uploads (artifactType === undefined/null) are already attached
+            // via metadata.attachments on the user message — injecting them again
+            // via origination_message_id would place them on the wrong (assistant)
+            // message, because OpenAI points origination_message_id at the first
+            // assistant turn that had access to the file, not the upload message.
+            if (!entry.artifactType) continue;
             if (seenFileIds.has(entry.fileId)) continue;
             if (!zip.has(`${entry.fileId}.dat`)) continue;
 
