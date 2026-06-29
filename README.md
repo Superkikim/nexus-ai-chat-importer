@@ -76,12 +76,14 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 
 ## ✨ What's New
 
-### v1.6.8 — ChatGPT 2026 Export Support
+### v1.6.8 — ChatGPT 2026 & Vibe Canvas Support
 
 ✨ **New**
-- **Canvas directives** — `:::writing{…}` blocks in the 2026 export are rendered as collapsible `nexus_canvas` callouts (raw markup no longer leaks into notes)
-- **Canvas documents** — assistant-generated Canvas files (`.docx`, etc.) extracted from `library_files.json` and linked in the originating message
-- **Generated image placeholder** — when recent exports omit AI-generated images entirely, a visible placeholder is inserted with the prompt; older DALL-E exports are unaffected
+- **ChatGPT — Canvas directives** — `:::writing{…}` blocks in the 2026 export are rendered as collapsible `nexus_canvas` callouts (raw markup no longer leaks into notes)
+- **ChatGPT — Canvas documents** — assistant-generated Canvas files (`.docx`, etc.) extracted from `library_files.json` and linked in the originating message
+- **ChatGPT — Generated image placeholder** — when recent exports omit AI-generated images entirely, a visible placeholder is inserted with the prompt; older DALL-E exports are unaffected
+- **Vibe — Canvas rendered inline** — slide decks and markdown documents from the `canvas[]` field are rendered as collapsible `nexus_canvas` callouts
+- **Vibe — Generated file placeholder** — assistant-generated files (`.docx`, etc.) referenced via `file_reference` chunks get a `nexus_attachment` placeholder with a link to the original conversation
 
 🐛 **Fixed**
 - **ChatGPT 2026 format** — `.dat` attachments resolved via `conversation_asset_file_names.json`; user-uploaded documents (PDFs, etc.) imported correctly
