@@ -68,12 +68,35 @@ export interface MistralVibeImageUrlChunk {
     imageUrl: string;
 }
 
+export interface MistralVibeFileReferenceChunk {
+    type: "file_reference";
+    fileReference: string;
+    fileAlt?: string;
+    fileUrl?: string;
+    filePrefix?: string;
+}
+
+export interface MistralVibeCanvaChunk {
+    type: "canva";
+    id: string;
+    version: number;
+}
+
 export type MistralVibeContentChunk =
     | MistralVibeTextChunk
     | MistralVibeToolCallChunk
     | MistralVibeReferenceChunk
     | MistralVibeCustomElementChunk
-    | MistralVibeImageUrlChunk;
+    | MistralVibeImageUrlChunk
+    | MistralVibeFileReferenceChunk
+    | MistralVibeCanvaChunk;
+
+/** A canvas item in a Vibe message (slides presentation or markdown document). */
+export interface MistralVibeCanvasItem {
+    type: "slides" | "text/markdown" | string;
+    content: string;
+    title?: string;
+}
 
 /**
  * File attachment in Le Chat message
@@ -100,7 +123,7 @@ export interface MistralVibeMessage {
     preference: string | null;
     preferenceOver: string | null;
     context: unknown | null;
-    canvas: unknown[];
+    canvas: MistralVibeCanvasItem[];
     quotes: unknown[];
     files: MistralVibeFile[];
 }

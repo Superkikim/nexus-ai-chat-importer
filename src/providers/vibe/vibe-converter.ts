@@ -26,6 +26,8 @@ import {
     MistralVibeMessage,
     MistralVibeContentChunk,
     MistralVibeImageUrlChunk,
+    MistralVibeFileReferenceChunk,
+    MistralVibeCanvasItem,
 } from "./vibe-types";
 import { deriveMistralVibeConversationTitle } from "./vibe-title";
 
@@ -101,10 +103,11 @@ export class MistralVibeConverter {
         // Extract content from message
         const content = this.extractContent(message);
 
-        // Extract attachments: user uploads from files array + assistant-generated images from content chunks
+        // Extract attachments: user uploads + generated images + generated file references
         const attachments = [
             ...this.extractAttachments(message),
             ...this.extractImageUrlAttachments(message),
+            ...this.extractFileReferenceAttachments(message),
         ];
 
         // Parse timestamp (ISO 8601 to Unix seconds)
@@ -120,25 +123,27 @@ export class MistralVibeConverter {
     }
 
     /**
-     * Extract content from Le Chat message
-     * IMPORTANT: message.content is a duplicate of text chunks combined
-     * We use EITHER contentChunks OR content, not both!
+     * Extract content from Le Chat message.
+     * IMPORTANT: message.content is a duplicate of text chunks combined —
+     * use EITHER contentChunks OR content, never both.
+     * Canvas items (slides, markdown documents) are appended after the main text.
      */
     private static extractContent(message: MistralVibeMessage): string {
-        // If contentChunks exist, use them (they contain text + references + custom elements)
+        const parts: string[] = [];
+
         if (message.contentChunks && message.contentChunks.length > 0) {
             const chunksContent = this.processContentChunks(
                 message.contentChunks
             );
-            return chunksContent || "(Empty message)";
+            if (chunksContent) parts.push(chunksContent);
+        } else if (message.content && message.content.trim()) {
+            parts.push(message.content);
         }
 
-        // Fallback to simple content if no contentChunks
-        if (message.content && message.content.trim()) {
-            return message.content;
-        }
+        const canvasContent = this.renderCanvasItems(message.canvas);
+        if (canvasContent) parts.push(canvasContent);
 
-        return "(Empty message)";
+        return parts.join("\n\n") || "(Empty message)";
     }
 
     /**
@@ -170,8 +175,15 @@ export class MistralVibeConverter {
                 if (refMarkers) {
                     parts.push(refMarkers);
                 }
+            } else if (
+                chunk.type === "file_reference" ||
+                chunk.type === "canva"
+            ) {
+                // file_reference → handled as attachment in extractFileReferenceAttachments
+                // canva → content rendered from message.canvas in renderCanvasItems
+                continue;
             }
-            // Ignore custom_element for now
+            // Ignore custom_element
         }
 
         return parts.join("\n").trim();
@@ -254,6 +266,98 @@ export class MistralVibeConverter {
                 },
             };
         });
+    }
+
+    /**
+     * Extract assistant-generated file references from file_reference content chunks.
+     * These files (e.g. a generated .docx) are hosted on Mistral servers and are not
+     * included in the ZIP export — only a placeholder is inserted.
+     */
+    private static extractFileReferenceAttachments(
+        message: MistralVibeMessage
+    ): StandardAttachment[] {
+        if (!message.contentChunks) return [];
+
+        const chatUrl = `https://chat.mistral.ai/chat/${message.chatId}`;
+        const fileChunks = message.contentChunks.filter(
+            (chunk): chunk is MistralVibeFileReferenceChunk =>
+                chunk.type === "file_reference" && "fileReference" in chunk
+        );
+
+        return fileChunks.map((chunk) => {
+            const fileName = chunk.fileReference;
+            const ext = fileName.split(".").pop()?.toLowerCase() || "";
+            const fileType = this.mimeFromExtension(ext);
+            const displayName = chunk.fileAlt || fileName;
+
+            const extractedContent = `>>[!nexus_attachment] **${displayName}** *(not in export)* (${fileType})\n>>\n>> ⚠️ Not included in export. [Open original conversation](${chatUrl})`;
+
+            return {
+                fileName,
+                fileType,
+                extractedContent,
+                status: {
+                    processed: true,
+                    found: false,
+                    reason: "missing_from_export" as const,
+                },
+            };
+        });
+    }
+
+    /**
+     * Render Vibe canvas items (slides presentations, markdown documents) as
+     * collapsible nexus_canvas callouts appended to the message content.
+     * The single leading ">" is doubled by the message formatter when the
+     * callout is nested inside a message callout.
+     */
+    private static renderCanvasItems(canvas: MistralVibeCanvasItem[]): string {
+        if (!canvas || canvas.length === 0) return "";
+
+        const callouts: string[] = [];
+        for (const item of canvas) {
+            const title = (item.title || "Canvas").trim();
+            const isSlides = item.type === "slides";
+            const label = isSlides ? `${title} *(presentation)*` : title;
+
+            const lines: string[] = [`>[!nexus_canvas]- **${label}**`];
+
+            if (isSlides) {
+                lines.push("> ```");
+                for (const line of (item.content || "").split("\n")) {
+                    lines.push(line === "" ? ">" : `> ${line}`);
+                }
+                lines.push("> ```");
+            } else {
+                for (const line of (item.content || "").split("\n")) {
+                    lines.push(line === "" ? ">" : `> ${line}`);
+                }
+            }
+
+            callouts.push(lines.join("\n"));
+        }
+
+        return callouts.join("\n\n");
+    }
+
+    /** Derive MIME type from a file extension. */
+    private static mimeFromExtension(ext: string): string {
+        const map: Record<string, string> = {
+            pdf: "application/pdf",
+            docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            doc: "application/msword",
+            xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            txt: "text/plain",
+            md: "text/markdown",
+            csv: "text/csv",
+            json: "application/json",
+            png: "image/png",
+            jpg: "image/jpeg",
+            jpeg: "image/jpeg",
+            webp: "image/webp",
+        };
+        return map[ext] || "application/octet-stream";
     }
 
     /**
