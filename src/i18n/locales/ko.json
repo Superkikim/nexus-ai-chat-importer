@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ 업그레이드 완료 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### ✨ 새 기능\n- **ChatGPT** — Canvas `:::writing` 블록이 원시 마크업 대신 접을 수 있는 콜아웃으로 렌더링됩니다\n- **ChatGPT** — Canvas로 생성된 문서(보고서, `.docx` 등)가 `library_files.json`에서 가져와 노트에 연결됩니다\n- **ChatGPT** — 내보내기에 생성된 이미지가 없을 경우(OpenAI의 최근 회귀) 플레이스홀더가 삽입됩니다\n\n### 🐛 수정\n- **ChatGPT** — 새로운 2026 내보내기 형식 완전 지원: `.dat` 파일이 `conversation_asset_file_names.json`으로 해결됩니다\n- **ChatGPT** — 사용자가 업로드한 문서(PDF 등)가 올바르게 가져와집니다\n- **ChatGPT** — 음성 녹음(WAV)이 올바르게 감지되고 건너뛰어집니다\n\n### 🔧 개선\n- 매직 바이트 감지에 WAV 및 PDF 지원 추가",
+            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### ✨ 새 기능\n- **Vibe** — Canvas 항목(`slides` 프레젠테이션 및 `text/markdown` 문서)이 접을 수 있는 콜아웃으로 렌더링됩니다\n- **Vibe** — 내보내기에 포함되지 않은 어시스턴트 생성 파일 참조(`file_reference`)에 대한 플레이스홀더가 삽입됩니다\n- **ChatGPT** — Canvas `:::writing` 블록이 원시 마크업 대신 접을 수 있는 콜아웃으로 렌더링됩니다\n- **ChatGPT** — Canvas로 생성된 문서(보고서, `.docx` 등)가 `library_files.json`에서 가져와 노트에 연결됩니다\n- **ChatGPT** — 내보내기에 생성된 이미지가 없을 경우(OpenAI의 최근 회귀) 플레이스홀더가 삽입됩니다\n\n### 🐛 수정\n- **ChatGPT** — 새로운 2026 내보내기 형식 완전 지원: `.dat` 파일이 `conversation_asset_file_names.json`으로 해결됩니다\n- **ChatGPT** — 사용자가 업로드한 문서(PDF 등)가 올바르게 가져와집니다\n- **ChatGPT** — 음성 녹음(WAV)이 올바르게 감지되고 건너뛰어집니다\n\n### 🔧 개선\n- 매직 바이트 감지에 WAV 및 PDF 지원 추가",
             "buttons": {
                 "got_it": "알겠어요!"
             }
