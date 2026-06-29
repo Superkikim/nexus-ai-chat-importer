@@ -143,6 +143,50 @@ The report summarizes attachments into these buckets:
 | ⚠️ Missing from export | Expected but absent from the archive |
 | (failed) | Present but could not be extracted |
 
+## Vibe (Mistral) Export Format
+
+Vibe exports each conversation as an individual `chat-{uuid}.json` file (an array of messages). Attached files are stored in a `chat-{uuid}-files/` sibling directory.
+
+### User-uploaded files
+
+Files attached by the user are listed in `message.files[]` (`{ name, type }`). They are extracted from the `chat-{uuid}-files/` directory and linked in the note.
+
+### Generated images (`image_url` chunks)
+
+When the assistant generates an image, it appears as an `image_url` content chunk:
+
+```json
+{ "type": "image_url", "imageUrl": "https://mistralaichatupprodswe.blob.core.windows.net/…/image.jpg" }
+```
+
+The image is hosted on Mistral's servers and is **not** included in the ZIP export. A `nexus_attachment` placeholder is inserted with a link to the original conversation.
+
+### Generated file references (`file_reference` chunks)
+
+When the assistant generates a file (e.g. a `.docx` summary), it appears as a `file_reference` content chunk:
+
+```json
+{
+  "type": "file_reference",
+  "fileReference": "resume.docx",
+  "fileAlt": "Télécharger le résumé",
+  "fileUrl": "https://mistralaichatupprodswe.blob.core.windows.net/…/resume.docx"
+}
+```
+
+The file is hosted on Mistral's servers and is **not** included in the ZIP export. A `nexus_attachment` placeholder is inserted (using `fileAlt` as display name when available) with a link to the original conversation.
+
+### Canvas items (`canvas[]` field)
+
+The `canvas` field on each message holds a list of canvas items produced during the conversation. Two types are supported:
+
+| Type | Content | Rendering |
+|------|---------|-----------|
+| `slides` | Marp-formatted slide deck | Collapsible `nexus_canvas` callout with content in a code block (preserves `---` slide separators) |
+| `text/markdown` | Markdown document | Collapsible `nexus_canvas` callout with the document rendered directly |
+
+The `canva` content chunk type is a reference marker pointing to a canvas item and is silently skipped (the content comes from `message.canvas[]`).
+
 ## Troubleshooting
 
 ### Missing attachments
