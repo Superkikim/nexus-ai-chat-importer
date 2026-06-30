@@ -178,7 +178,7 @@ If Nexus is valuable to you, please consider a one-time or monthly donation. Tha
 - 🎯 **Selective Import**: Choose exactly which conversations to import with interactive preview
 - 💬 **Multi-Provider Support**: Full support for ChatGPT, Claude, Mistral Vibe, and Perplexity conversations
 - 🎨 **Beautiful Formatting**: Custom callouts with role-specific colors and icons
-- 📎 **Complete Attachment Handling**: Images, documents, DALL-E creations with prompts
+- 📎 **Complete Attachment Handling**: Images, documents, DALL-E creations with prompts (when included in export)
 - 🎨 **Claude Artifact Versioning**: Separate files for each artifact modification
 - 📊 **Detailed Reports**: Comprehensive import statistics with per-file breakdown
 - 🗂️ **Flexible Organization**: Separate folders for conversations, attachments, and reports
@@ -452,7 +452,7 @@ Attachments are organized by provider:
 
 **Images**:
 - User-uploaded photos and screenshots
-- AI-generated images (DALL-E with prompts)
+- AI-generated images (DALL-E with prompts) — when included in the export (see [Provider Limitations](#-provider-specific-features--limitations))
 - Embedded directly in conversation notes
 
 **Documents**:
@@ -631,18 +631,18 @@ Each AI provider exports data differently.
 **✅ Fully Supported**:
 - Conversation titles (exported in JSON)
 - User-uploaded attachments (images, documents)
-- DALL-E generated images with prompts
 - Complete message history
 - Custom instructions and model information
+
+**⚠️ Limitations**:
+- **DALL-E generated images no longer included in exports**: As of 2026, OpenAI stopped including AI-generated images in the data export. The plugin inserts a visible placeholder (with the generation prompt when available) so the omission is explicit rather than silent. This is an OpenAI-side regression — the plugin cannot recover images that are absent from the export.
+- Very large archives (multi-GB) are increasingly common. Mobile stability cannot be guaranteed in those cases.
+- Desktop usually handles larger archives better, but if you hit limits, please report with ZIP size + logs.
 
 **Export Format**:
 - `conversations.json` (single-file exports)
 - `conversations-XXX.json` (split exports)
-- Attachments in the same ZIP
-
-**⚠️ Limitations**:
-- Very large archives (multi-GB) are increasingly common. Mobile stability cannot be guaranteed in those cases.
-- Desktop usually handles larger archives better, but if you hit limits, please report with ZIP size + logs.
+- Attachments in the same ZIP (2026 format: all files as `file_<id>.dat`, resolved via `conversation_asset_file_names.json`)
 
 ### Claude (Anthropic)
 

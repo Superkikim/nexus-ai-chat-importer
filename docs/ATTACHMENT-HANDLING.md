@@ -19,12 +19,12 @@ The plugin uses a **best-effort** strategy for attachments:
 - **Formats**: PNG, JPEG, GIF, WebP.
 - **Special detection**: magic bytes for `.dat` files (the correct extension is restored automatically).
 
-### ✅ Generated images (ChatGPT)
+### ⚠️ Generated images (ChatGPT) — no longer included by OpenAI
 
-- **Source**: the `dalle-generations/` folder (older exports) or `<fileId>.dat` files at the ZIP root resolved through the asset index (2026+ format) — **when the export includes them**.
-- **Handling**: extracted, with the generation prompt preserved when available.
-- **Format**: PNG or WebP (the real extension is restored via magic bytes).
-- **Important — recent exports omit generated images.** Some 2026 exports no longer ship AI-generated images at all (no `.dat`, no index entry, no metadata); only the conversation text survives. This is a change on OpenAI's side. When the importer detects an image-generation turn whose image is absent, it inserts a clear placeholder (with the prompt when known) instead of silently dropping it. See [Generated image omission](#generated-image-omission-2026-regression).
+- **Current status**: as of 2026, OpenAI **no longer includes AI-generated images** in the data export. No `.dat` file, no asset index entry, no DALL-E metadata. This is an OpenAI-side regression — the plugin cannot recover images that are absent from the export.
+- **Older exports** (pre-2026): generated images were shipped as `dalle-generations/<uuid>.webp` inside the ZIP and are still imported correctly when present.
+- **What the plugin does**: when an image-generation turn is detected and no image is present, a visible placeholder callout is inserted (with the generation prompt when recoverable) so the omission is explicit rather than silent. See [Generated image omission](#generated-image-omission-2026-regression).
+- **Format** (when present): PNG or WebP, real extension restored via magic bytes.
 
 ### ✅ Canvas documents (ChatGPT, 2026+)
 
