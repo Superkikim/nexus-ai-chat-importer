@@ -695,10 +695,48 @@ export class ClaudeConverter {
             }
         }
 
+        const referencesSection = this.buildReferencesSection(contentBlocks);
+        if (referencesSection) textParts.push(referencesSection);
+
         return {
             text: textParts.join("\n\n"),
             attachments: attachments,
         };
+    }
+
+    /**
+     * Collect unique web search citation URLs from all text blocks and render
+     * them as a Markdown "References" section appended to the message.
+     * Citations carry character-level positions (start_index/end_index) which
+     * we intentionally ignore — the goal is to surface which sources were
+     * consulted, not to replicate inline footnote numbering.
+     */
+    private static buildReferencesSection(
+        contentBlocks: ClaudeContentBlock[]
+    ): string {
+        const seen = new Set<string>();
+        const refs: { title: string; url: string }[] = [];
+
+        for (const block of contentBlocks) {
+            if (block.type !== "text" || !block.citations) continue;
+            for (const citation of block.citations) {
+                const url = citation?.details?.url;
+                if (!url || seen.has(url)) continue;
+                seen.add(url);
+                const title =
+                    citation?.details?.title ||
+                    citation?.details?.url ||
+                    `Source ${refs.length + 1}`;
+                refs.push({ title, url });
+            }
+        }
+
+        if (refs.length === 0) return "";
+
+        const lines = refs.map(
+            (ref, i) => `${i + 1}. [${ref.title}](${ref.url})`
+        );
+        return `### References\n${lines.join("\n")}`;
     }
 
     private static async processContentBlocks(
