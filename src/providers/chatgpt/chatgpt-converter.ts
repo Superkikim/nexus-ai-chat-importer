@@ -272,6 +272,13 @@ export class ChatGPTConverter {
 
             // Clean up ChatGPT control characters and formatting artifacts
             if (textContent) {
+                if (textContent.includes("products{")) {
+                    textContent = this.replaceProductTokens(
+                        textContent,
+                        chatMessage.metadata?.content_references,
+                        conversationId
+                    );
+                }
                 textContent = this.cleanChatGPTArtifacts(
                     textContent,
                     conversationId
@@ -405,6 +412,79 @@ export class ChatGPTConverter {
         { pattern: / {2,}/g, replacement: () => " " }, // Multiple spaces
         { pattern: /\n{3,}/g, replacement: () => "\n\n" }, // Multiple newlines
     ];
+
+    /**
+     * Replace products{...} UI tokens with a readable nexus_attachment callout.
+     *
+     * ChatGPT embeds a product-carousel token in the text to mark where its web
+     * app injects an Amazon/shopping widget. Product images and purchase links
+     * are never included in the export. We render name, category and price from
+     * metadata.content_references so the information is not lost, then point to
+     * the original conversation for the full visual experience.
+     */
+    private static replaceProductTokens(
+        text: string,
+        contentReferences: any[] | undefined,
+        conversationId?: string
+    ): string {
+        if (!text.includes("products{")) return text;
+
+        // Build cite → product lookup from metadata content_references
+        const byCity = new Map<
+            string,
+            { title: string; price?: string; tag?: string; merchant?: string }
+        >();
+        for (const cr of contentReferences ?? []) {
+            for (const p of cr?.products ?? []) {
+                if (p?.cite) {
+                    byCity.set(p.cite, {
+                        title: p.title || "",
+                        price: p.price || undefined,
+                        tag: p.featured_tag || undefined,
+                        merchant: p.merchants || undefined,
+                    });
+                }
+            }
+        }
+
+        const chatUrl = conversationId
+            ? `https://chatgpt.com/c/${conversationId}`
+            : "https://chatgpt.com";
+
+        // Match products{...} — the JSON has no nested objects, only arrays
+        return text.replace(/products\{([^]*?)\}(?=\n|$)/gm, (match) => {
+            let selections: [string, string][] = [];
+            try {
+                const inner = match.slice("products".length);
+                const parsed = JSON.parse(inner);
+                selections = parsed.selections ?? [];
+            } catch {
+                return "";
+            }
+
+            if (selections.length === 0) return "";
+
+            const lines: string[] = [];
+            for (const [cite, fallbackName] of selections) {
+                const prod = byCity.get(cite);
+                const title = prod?.title || fallbackName || cite;
+                const parts = [
+                    `**${title}**`,
+                    prod?.tag,
+                    prod?.price,
+                    prod?.merchant,
+                ]
+                    .filter(Boolean)
+                    .join(" · ");
+                lines.push(`> - ${parts}`);
+            }
+
+            return [
+                `>[!nexus_attachment]- **Product recommendations** *(images not in export · [view in ChatGPT](${chatUrl}))*`,
+                ...lines,
+            ].join("\n");
+        });
+    }
 
     /**
      * Clean ChatGPT artifacts, citations, and control characters - SMART LINKING

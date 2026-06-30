@@ -79,6 +79,7 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 ### v1.6.8 — ChatGPT 2026, Claude Citations & Vibe Canvas
 
 ✨ **New**
+- **ChatGPT — Product carousels rendered** — `products{…}` shopping widget tokens are replaced by a collapsible callout showing product names, categories and prices; images and purchase links are not in the export, a link to the original conversation is provided
 - **Claude — Web search citations** — sources consulted during web search are now appended as a deduplicated `### References` list at the end of each message
 - **ChatGPT — Canvas directives** — `:::writing{…}` blocks in the 2026 export are rendered as collapsible `nexus_canvas` callouts (raw markup no longer leaks into notes)
 - **ChatGPT — Canvas documents** — assistant-generated Canvas files (`.docx`, etc.) extracted from `library_files.json` and linked in the originating message

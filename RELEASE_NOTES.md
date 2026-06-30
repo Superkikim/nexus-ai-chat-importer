@@ -6,6 +6,10 @@
 
 ### ✨ New
 
+- **ChatGPT — Product recommendation carousels rendered as callouts**
+  - The 2026 export embeds `products{…}` tokens in message text where the web app injects a shopping widget; images and purchase links are not included in the export
+  - Each token is replaced with a collapsible `nexus_attachment` callout showing product names, categories, prices and merchants, with a link to the original conversation for the full visual experience
+
 - **Claude — Web search citations rendered as References**
   - When Claude uses web search, each source URL is now collected from the message's citation metadata and appended as a deduplicated `### References` list at the end of the message
   - Matches the existing behavior for Perplexity imports
