@@ -427,7 +427,11 @@ export class ChatGPTConverter {
         contentReferences: any[] | undefined,
         conversationId?: string
     ): string {
-        if (!text.includes("products{")) return text;
+        // ChatGPT wraps the token with Unicode private-use markers (e.g. U+E200,
+        // U+E202) that its web app uses to locate widget injection points. Strip
+        // them first so the plain "products{...}" form is always matched.
+        const decoded = text.replace(/[-]/g, "");
+        if (!decoded.includes("products{")) return text;
 
         // Build cite → product lookup from metadata content_references
         const byCity = new Map<
@@ -452,7 +456,7 @@ export class ChatGPTConverter {
             : "https://chatgpt.com";
 
         // Match products{...} — the JSON has no nested objects, only arrays
-        return text.replace(/products\{([^]*?)\}(?=\n|$)/gm, (match) => {
+        return decoded.replace(/products\{([^]*?)\}(?=\n|$)/gm, (match) => {
             let selections: [string, string][] = [];
             try {
                 const inner = match.slice("products".length);
