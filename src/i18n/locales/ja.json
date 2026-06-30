@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ アップグレード完了 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} の新機能\n\n### ✨ 新機能\n- **Vibe** — Canvasアイテム（`slides`プレゼンテーションと`text/markdown`ドキュメント）が折りたたみ可能なコールアウトとして表示されます\n- **Vibe** — エクスポートに含まれていないアシスタント生成ファイル参照（`file_reference`）のプレースホルダーが挿入されます\n- **ChatGPT** — Canvas `:::writing` ブロックが生のマークアップではなく折りたたみ可能なコールアウトとして表示されるようになりました\n- **ChatGPT** — Canvasで生成されたドキュメント（レポート、`.docx` など）が `library_files.json` からインポートされ、ノートにリンクされます\n- **ChatGPT** — エクスポートに生成画像が含まれていない場合（OpenAIの最近の後退）、プレースホルダーが挿入されます\n\n### 🐛 修正\n- **ChatGPT** — 新しい2026エクスポート形式に完全対応：`.dat` ファイルが `conversation_asset_file_names.json` で解決されます\n- **ChatGPT** — ユーザーがアップロードしたドキュメント（PDF等）が正しくインポートされます\n- **ChatGPT** — 音声録音（WAV）が正しく検出・スキップされるようになりました\n\n### 🔧 改善\n- マジックバイト検出にWAVとPDFのサポートを追加",
+            "fallback_content": "## ✨ v{{version}} の新機能\n\n### ✨ 新機能\n- **Claude** — ウェブ検索の引用元が重複排除された `### References` リストとして各メッセージの末尾に追加されます\n- **Vibe** — Canvasアイテム（`slides`プレゼンテーションと`text/markdown`ドキュメント）が折りたたみ可能なコールアウトとして表示されます\n- **Vibe** — エクスポートに含まれていないアシスタント生成ファイル参照（`file_reference`）のプレースホルダーが挿入されます\n- **ChatGPT** — Canvas `:::writing` ブロックが生のマークアップではなく折りたたみ可能なコールアウトとして表示されるようになりました\n- **ChatGPT** — Canvasで生成されたドキュメント（レポート、`.docx` など）が `library_files.json` からインポートされ、ノートにリンクされます\n- **ChatGPT** — エクスポートに生成画像が含まれていない場合（OpenAIの最近の後退）、プレースホルダーが挿入されます\n\n### 🐛 修正\n- **ChatGPT** — 新しい2026エクスポート形式に完全対応：`.dat` ファイルが `conversation_asset_file_names.json` で解決されます\n- **ChatGPT** — ユーザーがアップロードしたドキュメント（PDF等）が正しくインポートされます\n- **ChatGPT** — 音声録音（WAV）が正しく検出・スキップされるようになりました\n\n### 🔧 改善\n- マジックバイト検出にWAVとPDFのサポートを追加",
             "buttons": {
                 "got_it": "了解！"
             }

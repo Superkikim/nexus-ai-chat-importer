@@ -47,10 +47,20 @@ A JSON array describing files in the user's library. Relevant fields per entry:
 | `file_id` | Matches `<file_id>.dat` in the ZIP. |
 | `file_name` | Original name, e.g. `lettre_opposition_isabelle_bally.docx`. |
 | `mime_type` | MIME type. |
-| `library_artifact_type` | `report` for assistant-generated Canvas documents; `null` for uploads. |
+| `library_artifact_type` | See table below. `null` for plain user uploads. |
 | `origination_message_id` | The message that produced/owns the file. |
 
-**Why it matters:** Canvas-generated documents (e.g. a `.docx`) appear here and in the ZIP, but are linked to a message only by `origination_message_id` — never in `metadata.attachments`. The adapter loads this index and attaches such files to the originating message (deduped against existing attachments, and only when the `.dat` exists). See [`chatgpt-library-index.ts`](../src/providers/chatgpt/chatgpt-library-index.ts) and the `processMessageAttachments` override in [`chatgpt-adapter.ts`](../src/providers/chatgpt/chatgpt-adapter.ts).
+**Known `library_artifact_type` values:**
+
+| Value | Description | Handled by |
+|-------|-------------|-----------|
+| `null` | Plain user upload — already in `metadata.attachments` on the user message. | Normal attachment path |
+| `report` | Assistant-generated Canvas document (e.g. `.docx`) — **not** in `metadata.attachments`; injected via `origination_message_id`. | Library injection |
+| `writing_block` | User-pasted Canvas content (e.g. `Pasted markdown.md`) — already in `metadata.attachments` on the user message. | Normal attachment path |
+
+**Injection rule (whitelist):** the adapter only injects entries whose `library_artifact_type === "report"`. All other types are already handled by the normal attachment path and would create duplicates if injected again. New assistant-generated types should be added to the whitelist explicitly when observed. See the `injectLibraryAttachments` method in [`chatgpt-adapter.ts`](../src/providers/chatgpt/chatgpt-adapter.ts).
+
+**Why it matters for `report`:** Canvas-generated documents appear here and in the ZIP, but are linked to a message only by `origination_message_id` — never in `metadata.attachments`. The adapter loads this index and attaches such files to the originating message (deduped against existing attachments, and only when the `.dat` exists). See [`chatgpt-library-index.ts`](../src/providers/chatgpt/chatgpt-library-index.ts).
 
 ## Canvas `:::writing` directives
 

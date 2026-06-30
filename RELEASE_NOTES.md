@@ -6,6 +6,10 @@
 
 ### ✨ New
 
+- **Claude — Web search citations rendered as References**
+  - When Claude uses web search, each source URL is now collected from the message's citation metadata and appended as a deduplicated `### References` list at the end of the message
+  - Matches the existing behavior for Perplexity imports
+
 - **Vibe (Mistral) — Canvas presentations and documents rendered inline**
   - New `canvas[]` field in Vibe messages carries full content: Marp slide decks (`type: "slides"`) and Markdown documents (`type: "text/markdown"`)
   - Each canvas item is rendered as a collapsible `>[!nexus_canvas]-` callout appended to the message; slide decks are wrapped in a code block to preserve Marp front-matter
@@ -41,6 +45,10 @@
 - **ChatGPT — Voice recordings properly detected and skipped**
   - WAV files are now detected via magic bytes (RIFF/WAVE header) and via the asset index, and are intentionally omitted — the transcription is already in the conversation text
   - Previously, WAVs were misdetected as WebP and imported as broken image files
+
+- **ChatGPT — Canvas user-pasted files no longer duplicated**
+  - The 2026 export introduced a new `library_artifact_type: "writing_block"` for user-pasted Canvas content (e.g. `Pasted markdown.md`)
+  - These files are already handled via `metadata.attachments` on the user message; the library injection path now ignores them, preventing a duplicate attachment on the assistant message
 
 ---
 
