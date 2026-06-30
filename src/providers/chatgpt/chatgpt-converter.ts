@@ -272,9 +272,15 @@ export class ChatGPTConverter {
 
             // Clean up ChatGPT control characters and formatting artifacts
             if (textContent) {
-                if (textContent.includes("products{")) {
+                // Strip ChatGPT private-use markers (e.g. U+E202 between
+                // "products" and "{") before searching for the token.
+                const strippedForSearch = textContent.replace(
+                    /[-]/g,
+                    ""
+                );
+                if (strippedForSearch.includes("products{")) {
                     textContent = this.replaceProductTokens(
-                        textContent,
+                        strippedForSearch,
                         chatMessage.metadata?.content_references,
                         conversationId
                     );
@@ -427,25 +433,31 @@ export class ChatGPTConverter {
         contentReferences: any[] | undefined,
         conversationId?: string
     ): string {
-        // ChatGPT wraps the token with Unicode private-use markers (e.g. U+E200,
-        // U+E202) that its web app uses to locate widget injection points. Strip
-        // them first so the plain "products{...}" form is always matched.
+        // ChatGPT wraps the token with Unicode private-use markers (e.g. U+E202)
+        // between "products" and "{". Strip them so the plain form is matched.
         const decoded = text.replace(/[-]/g, "");
         if (!decoded.includes("products{")) return text;
 
-        // Build cite → product lookup from metadata content_references
-        const byCity = new Map<
+        // The cite ID in the token ("turn461031productN") and in content_references
+        // ("turn1productN") share only the "productN" suffix — normalize on that.
+        const normCite = (cite: string) =>
+            cite.match(/product\d+$/)?.[0] ?? cite;
+
+        const byNorm = new Map<
             string,
             { title: string; price?: string; tag?: string; merchant?: string }
         >();
         for (const cr of contentReferences ?? []) {
             for (const p of cr?.products ?? []) {
                 if (p?.cite) {
-                    byCity.set(p.cite, {
+                    byNorm.set(normCite(p.cite), {
                         title: p.title || "",
                         price: p.price || undefined,
                         tag: p.featured_tag || undefined,
-                        merchant: p.merchants || undefined,
+                        // "Amazon.de - Amazon.de-Seller" -> "Amazon.de"
+                        merchant: p.merchants
+                            ? (p.merchants as string).split(" - ")[0]
+                            : undefined,
                     });
                 }
             }
@@ -455,7 +467,7 @@ export class ChatGPTConverter {
             ? `https://chatgpt.com/c/${conversationId}`
             : "https://chatgpt.com";
 
-        // Match products{...} — the JSON has no nested objects, only arrays
+        // Match products{...} -- the JSON has no nested objects, only arrays
         return decoded.replace(/products\{([^]*?)\}(?=\n|$)/gm, (match) => {
             let selections: [string, string][] = [];
             try {
@@ -468,24 +480,43 @@ export class ChatGPTConverter {
 
             if (selections.length === 0) return "";
 
-            const lines: string[] = [];
-            for (const [cite, fallbackName] of selections) {
-                const prod = byCity.get(cite);
-                const title = prod?.title || fallbackName || cite;
-                const parts = [
-                    `**${title}**`,
-                    prod?.tag,
-                    prod?.price,
-                    prod?.merchant,
-                ]
-                    .filter(Boolean)
-                    .join(" · ");
-                lines.push(`> - ${parts}`);
-            }
+            const rows = selections.map(([cite, fallbackName]) => {
+                const prod = byNorm.get(normCite(cite));
+                return {
+                    title: prod?.title || fallbackName || cite,
+                    tag: prod?.tag,
+                    price: prod?.price,
+                    merchant: prod?.merchant,
+                };
+            });
+
+            const hasTag = rows.some((r) => r.tag);
+            const hasPrice = rows.some((r) => r.price);
+            const hasMerchant = rows.some((r) => r.merchant);
+
+            const cols = ["Product"];
+            if (hasTag) cols.push("Category");
+            if (hasPrice) cols.push("Price");
+            if (hasMerchant) cols.push("Merchant");
+
+            const header = `> | ${cols.join(" | ")} |`;
+            const divider = `> | ${cols.map(() => "---").join(" | ")} |`;
+            const tableRows = rows.map((r) => {
+                const cells = [r.title];
+                if (hasTag) cells.push(r.tag ?? "");
+                if (hasPrice) cells.push(r.price ?? "");
+                if (hasMerchant) cells.push(r.merchant ?? "");
+                return `> | ${cells.join(" | ")} |`;
+            });
 
             return [
-                `>[!nexus_attachment]- **Product recommendations** *(images not in export · [view in ChatGPT](${chatUrl}))*`,
-                ...lines,
+                `>[!nexus_attachment]- **Product recommendations**`,
+                `>`,
+                header,
+                divider,
+                ...tableRows,
+                `>`,
+                `> *(images not in export · [view in ChatGPT](${chatUrl}))*`,
             ].join("\n");
         });
     }
