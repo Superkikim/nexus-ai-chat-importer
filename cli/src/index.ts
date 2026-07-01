@@ -234,7 +234,8 @@ async function main(): Promise<void> {
     await runImport(options);
 }
 
-main().catch((error: any) => {
-    console.error(`\nError: ${error?.message || String(error)}`);
+main().catch((error: unknown) => {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`\nError: ${msg}`);
     process.exit(1);
 });
