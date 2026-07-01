@@ -93,7 +93,7 @@ export type MistralVibeContentChunk =
 
 /** A canvas item in a Vibe message (slides presentation or markdown document). */
 export interface MistralVibeCanvasItem {
-    type: "slides" | "text/markdown" | string;
+    type: string;
     content: string;
     title?: string;
 }
@@ -122,7 +122,7 @@ export interface MistralVibeMessage {
     reactionComment: string | null;
     preference: string | null;
     preferenceOver: string | null;
-    context: unknown | null;
+    context: unknown;
     canvas: MistralVibeCanvasItem[];
     quotes: unknown[];
     files: MistralVibeFile[];

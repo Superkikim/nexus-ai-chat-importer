@@ -274,10 +274,7 @@ export class ChatGPTConverter {
             if (textContent) {
                 // Strip ChatGPT private-use markers (e.g. U+E202 between
                 // "products" and "{") before searching for the token.
-                const strippedForSearch = textContent.replace(
-                    /[-]/g,
-                    ""
-                );
+                const strippedForSearch = textContent.replace(/[-]/g, "");
                 if (strippedForSearch.includes("products{")) {
                     textContent = this.replaceProductTokens(
                         strippedForSearch,
@@ -430,7 +427,7 @@ export class ChatGPTConverter {
      */
     private static replaceProductTokens(
         text: string,
-        contentReferences: any[] | undefined,
+        contentReferences: unknown[] | undefined,
         conversationId?: string
     ): string {
         // ChatGPT wraps the token with Unicode private-use markers (e.g. U+E202)
@@ -447,8 +444,17 @@ export class ChatGPTConverter {
             string,
             { title: string; price?: string; tag?: string; merchant?: string }
         >();
+        type ProductRef = {
+            cite?: string;
+            title?: string;
+            price?: string;
+            featured_tag?: string;
+            merchants?: string;
+        };
         for (const cr of contentReferences ?? []) {
-            for (const p of cr?.products ?? []) {
+            const products =
+                (cr as { products?: ProductRef[] })?.products ?? [];
+            for (const p of products) {
                 if (p?.cite) {
                     byNorm.set(normCite(p.cite), {
                         title: p.title || "",
@@ -456,7 +462,7 @@ export class ChatGPTConverter {
                         tag: p.featured_tag || undefined,
                         // "Amazon.de - Amazon.de-Seller" -> "Amazon.de"
                         merchant: p.merchants
-                            ? (p.merchants as string).split(" - ")[0]
+                            ? p.merchants.split(" - ")[0]
                             : undefined,
                     });
                 }

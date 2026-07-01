@@ -76,8 +76,9 @@ export function hasStructuredGeneratedImage(chat: Chat): boolean {
             if (
                 part &&
                 typeof part === "object" &&
-                (part as any).content_type === "image_asset_pointer" &&
-                (part as any).metadata?.dalle
+                (part as Record<string, unknown>).content_type ===
+                    "image_asset_pointer" &&
+                (part as Record<string, unknown>).metadata
             ) {
                 return true;
             }
