@@ -85,7 +85,9 @@ function readPluginConfig(vaultPath: string): Partial<PluginSettings> {
             const data = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
             return data?.settings || {};
         }
-    } catch { /* ignore missing config */ }
+    } catch {
+        /* ignore missing config */
+    }
     return {};
 }
 

@@ -9,16 +9,14 @@
  * layer can run in a Node.js environment. Backed by `fs` and `js-yaml`.
  */
 
-/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require("fs") as typeof import("fs");
 const pathMod = require("path") as typeof import("path");
 const yaml = require("js-yaml") as typeof import("js-yaml");
 const momentLib = require("moment") as { default: typeof import("moment") };
 const crypto = require("crypto") as typeof import("crypto");
-/* eslint-enable @typescript-eslint/no-require-imports */
 
 // Re-export moment so `import { moment } from "obsidian"` works
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export const moment = (momentLib.default ?? momentLib) as any;
 
 // ---------------------------------------------------------------------------
@@ -340,8 +338,12 @@ export class Modal {
     close() {
         this.onClose();
     }
-    onOpen() { /* noop */ }
-    onClose() { /* noop */ }
+    onOpen() {
+        /* noop */
+    }
+    onClose() {
+        /* noop */
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -372,7 +374,9 @@ export class Plugin {
             if (fs.existsSync(this.dataPath)) {
                 return JSON.parse(fs.readFileSync(this.dataPath, "utf-8"));
             }
-        } catch { /* ignore missing data file */ }
+        } catch {
+            /* ignore missing data file */
+        }
         return null;
     }
 
