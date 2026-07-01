@@ -23,7 +23,7 @@ function createZipMock(files: Record<string, string>): ZipArchiveReader {
         has: (name: string) => name in files,
         get: (name: string) =>
             name in files ? makeHandle(name, files[name]) : null,
-    } as ZipArchiveReader;
+    };
 }
 
 const SAMPLE = JSON.stringify([

@@ -43,7 +43,8 @@ describe("writeZipEntryToVault", () => {
         const vault = createVault();
         const result = await writeZipEntryToVault(
             createEntry(PNG_BYTES),
-            async (detection) => `attachments/test.${detection.detectedExtension}`,
+            async (detection) =>
+                `attachments/test.${detection.detectedExtension}`,
             vault
         );
 

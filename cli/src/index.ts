@@ -155,6 +155,7 @@ function parseImportArgs(args: string[]): ImportOptions {
             case "-h": {
                 printGlobalHelp();
                 process.exit(0);
+                break;
             }
             default: {
                 throw new Error(`Unknown option: ${arg}`);
@@ -186,9 +187,7 @@ function parseImportArgs(args: string[]): ImportOptions {
 
     if (
         options.dateFormat &&
-        !VALID_DATE_FORMATS.includes(
-            options.dateFormat as (typeof VALID_DATE_FORMATS)[number]
-        )
+        !VALID_DATE_FORMATS.includes(options.dateFormat)
     ) {
         throw new Error(
             `Invalid date format "${

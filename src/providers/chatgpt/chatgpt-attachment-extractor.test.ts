@@ -99,8 +99,7 @@ const NEW_FORMAT_INDEX = JSON.stringify({
         "dalle-generations/bdd53f7d-8240-47c6-9a5d-091f78dbaf75.webp",
     "file_0000000005987246b06f11c12c4e779f.dat":
         "6a1c1a89-9b9c-83eb-81b2-46226805d7b3/audio/c8a38444.wav",
-    "file-111aDjU1njXUJLNmUUSD4F.dat":
-        "9f8a1380-40e1-457a-8d88-742adc20908b",
+    "file-111aDjU1njXUJLNmUUSD4F.dat": "9f8a1380-40e1-457a-8d88-742adc20908b",
 });
 
 describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
@@ -151,11 +150,9 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
             fileId: "file_000000009b8c71f4ace00c77fc58413d",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(true);
         expect(result.status?.localPath).toBe(
@@ -176,11 +173,9 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
             fileId: "file_00000000aad871f49969859f2bccd6cb",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(true);
         expect(result.fileName).toBe(
@@ -200,11 +195,9 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
             fileId: "file-111aDjU1njXUJLNmUUSD4F",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(true);
         expect(result.fileName).toBe(
@@ -227,11 +220,9 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
                 ">>[!nexus_attachment] **{{FILENAME}}** ({{FILETYPE}}) - {{FILESIZE}}\n>> ![[{{URL}}]]",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(true);
         expect(result.fileName).toBe("dalle_gen-abc123_1024x1024.webp");
@@ -250,11 +241,9 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
             fileId: "file_0000000005987246b06f11c12c4e779f",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(false);
         expect(result.status?.reason).toBe("not_in_export");
@@ -273,11 +262,9 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
             fileId: "file_00000000ffffffffffffffffffffffff",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(false);
         expect(result.status?.reason).toBe("not_in_export");
@@ -305,11 +292,9 @@ describe("ChatGPTAttachmentExtractor — old format fallback (no index)", () => 
             fileId: "file-EtspPqHms32ek1BF5bG1F2",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(true);
         expect(result.fileName).toBe("photo.png");
@@ -327,11 +312,9 @@ describe("ChatGPTAttachmentExtractor — old format fallback (no index)", () => 
             attachmentType: "generated_image",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(true);
         expect(result.fileName).toBe("dalle_gen-1_1024x1024.webp");
@@ -346,11 +329,9 @@ describe("ChatGPTAttachmentExtractor — old format fallback (no index)", () => 
             fileId: "file-doesNotExist",
         };
 
-        const [result] = await extractor.extractAttachments(
-            zip,
-            "conv-1",
-            [attachment]
-        );
+        const [result] = await extractor.extractAttachments(zip, "conv-1", [
+            attachment,
+        ]);
 
         expect(result.status?.found).toBe(false);
         expect(result.status?.reason).toBe("missing_from_export");

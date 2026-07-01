@@ -229,7 +229,7 @@ export class MistralVibeAttachmentExtractor {
         path: string
     ): Promise<string | null> {
         // Check cache first — zip identity intentionally used as part of the cache key
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+
         const cacheKey = `${zip}:${path}`;
         if (this.zipFileCache.has(cacheKey)) {
             return this.zipFileCache.get(cacheKey) || null;

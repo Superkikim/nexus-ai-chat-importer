@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable obsidianmd/rule-custom-message */
 // logger.ts — console usage is intentional here
 type LogLevel = "debug" | "info" | "warn" | "error";
 const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
@@ -124,9 +123,9 @@ export class Logger {
 
         if (level === "info") {
             if (details !== undefined) {
-                console.log(prefix, details);
+                console.debug(prefix, details);
             } else {
-                console.log(prefix);
+                console.debug(prefix);
             }
             return;
         }

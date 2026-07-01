@@ -283,7 +283,7 @@ function createDomStub(): any {
             // Methods that should return a new stub
             if (
                 ["createEl", "createDiv", "createSpan", "appendChild"].includes(
-                    prop as string
+                    prop
                 )
             ) {
                 return (..._args: any[]) => createDomStub();
@@ -297,7 +297,7 @@ function createDomStub(): any {
                     "addEventListener",
                     "removeEventListener",
                     "setAttribute",
-                ].includes(prop as string)
+                ].includes(prop)
             ) {
                 return (..._args: any[]) => {};
             }
@@ -310,7 +310,7 @@ function createDomStub(): any {
                     "value",
                     "className",
                     "id",
-                ].includes(prop as string)
+                ].includes(prop)
             ) {
                 return "";
             }
@@ -456,7 +456,6 @@ export async function requestUrl(_opts: {
 
 // The plugin's getFileHash uses browser `crypto.subtle.digest`.
 // We polyfill the global `crypto.subtle` so the original code works.
-/* eslint-disable obsidianmd/no-globalThis */
 if (typeof globalThis.crypto === "undefined") {
     (globalThis as any).crypto = {};
 }
@@ -480,7 +479,6 @@ if (typeof globalThis.crypto.subtle === "undefined") {
 if (typeof globalThis.window === "undefined") {
     (globalThis as any).window = globalThis;
 }
-/* eslint-enable obsidianmd/no-globalThis */
 
 // ---------------------------------------------------------------------------
 // Additional exports the plugin might reference

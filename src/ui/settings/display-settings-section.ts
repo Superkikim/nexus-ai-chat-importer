@@ -45,12 +45,11 @@ export class DisplaySettingsSection extends BaseSettingsSection {
                 cls: "date-format-label",
             });
 
-            /* eslint-disable obsidianmd/ui/sentence-case */
             setting.addDropdown((dropdown) =>
                 dropdown
                     .addOption("YYYY-MM-DD", "YYYY-MM-DD")
                     .addOption("YYYYMMDD", "YYYYMMDD")
-                    /* eslint-enable obsidianmd/ui/sentence-case */
+
                     .setValue(this.plugin.settings.dateFormat)
                     .onChange(async (value: string) => {
                         if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {

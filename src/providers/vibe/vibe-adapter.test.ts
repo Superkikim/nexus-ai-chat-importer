@@ -17,7 +17,6 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { MistralVibeConversation } from "./vibe-types";
 
 /**
  * Basic tests for Le Chat adapter

@@ -118,9 +118,7 @@ describe("buildChatGPTAssetIndex", () => {
         });
         const index = await buildChatGPTAssetIndex(zip);
         const entry = index!.byFileId.get("file-111aDjU1njXUJLNmUUSD4F");
-        expect(entry!.displayName).toBe(
-            "9f8a1380-40e1-457a-8d88-742adc20908b"
-        );
+        expect(entry!.displayName).toBe("9f8a1380-40e1-457a-8d88-742adc20908b");
         expect(entry!.isAudio).toBe(false);
     });
 

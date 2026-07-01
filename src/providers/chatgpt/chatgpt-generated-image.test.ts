@@ -26,23 +26,25 @@ function assistantMsg(
 describe("generation cue detection", () => {
     it("detects user image-generation requests (FR/EN)", () => {
         expect(
-            isImageGenerationRequest("Génère une image humoristique pour LinkedIn")
+            isImageGenerationRequest(
+                "Génère une image humoristique pour LinkedIn"
+            )
         ).toBe(true);
-        expect(
-            isImageGenerationRequest("Crée une image sur ce modèle")
-        ).toBe(true);
-        expect(
-            isImageGenerationRequest("generate an image of a cat")
-        ).toBe(true);
+        expect(isImageGenerationRequest("Crée une image sur ce modèle")).toBe(
+            true
+        );
+        expect(isImageGenerationRequest("generate an image of a cat")).toBe(
+            true
+        );
         expect(isImageGenerationRequest("What is the capital of France?")).toBe(
             false
         );
     });
 
     it("detects assistant image claims", () => {
-        expect(isAssistantImageClaim("L'image générée est au format PNG.")).toBe(
-            true
-        );
+        expect(
+            isAssistantImageClaim("L'image générée est au format PNG.")
+        ).toBe(true);
         expect(isAssistantImageClaim("Voici ton image :")).toBe(true);
         expect(isAssistantImageClaim("Here's the image you asked for")).toBe(
             true
@@ -74,7 +76,11 @@ describe("annotateMissingGeneratedImages", () => {
 
     it("synthesizes an assistant placeholder when no assistant turn survives (LinkedIn case)", () => {
         const messages = [
-            userMsg("u1", "Génère une image humoristique pour ce post LinkedIn", 1),
+            userMsg(
+                "u1",
+                "Génère une image humoristique pour ce post LinkedIn",
+                1
+            ),
         ];
 
         const out = annotateMissingGeneratedImages(messages, emptyChat);

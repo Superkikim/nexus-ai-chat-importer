@@ -42,12 +42,12 @@ export class ConversationSettingsSection extends BaseSettingsSection {
             new Setting(containerEl)
                 .setName("Date format")
                 .setDesc("Choose the format for the date prefix")
-                /* eslint-disable obsidianmd/ui/sentence-case */
+
                 .addDropdown((dropdown) =>
                     dropdown
                         .addOption("YYYY-MM-DD", "YYYY-MM-DD")
                         .addOption("YYYYMMDD", "YYYYMMDD")
-                        /* eslint-enable obsidianmd/ui/sentence-case */
+
                         .setValue(this.plugin.settings.dateFormat)
                         .onChange(async (value: string) => {
                             if (

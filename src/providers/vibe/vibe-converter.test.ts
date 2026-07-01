@@ -18,7 +18,7 @@
 
 import { describe, it, expect } from "vitest";
 import { MistralVibeConverter } from "./vibe-converter";
-import { MistralVibeConversation, MistralVibeMessage } from "./vibe-types";
+import { MistralVibeConversation } from "./vibe-types";
 
 describe("MistralVibeConverter", () => {
     describe("convertChat", () => {

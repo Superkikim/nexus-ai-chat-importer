@@ -46,7 +46,8 @@ describe("transformCanvasDirectives", () => {
     });
 
     it("includes the subject for email variants", () => {
-        const input = ':::writing{variant="email" id="9" subject="Succession Bally"}\nBonjour\n:::';
+        const input =
+            ':::writing{variant="email" id="9" subject="Succession Bally"}\nBonjour\n:::';
         expect(transformCanvasDirectives(input)).toContain(
             ">[!nexus_canvas]- **Email — Succession Bally**"
         );
@@ -80,7 +81,8 @@ describe("transformCanvasDirectives", () => {
     });
 
     it("preserves blank lines inside the body with a quote prefix", () => {
-        const input = ':::writing{variant="document" id="1"}\npara one\n\npara two\n:::';
+        const input =
+            ':::writing{variant="document" id="1"}\npara one\n\npara two\n:::';
         const out = transformCanvasDirectives(input);
         const lines = out.split("\n");
         // The blank body line becomes a lone ">" so the nested callout stays open.
@@ -90,7 +92,8 @@ describe("transformCanvasDirectives", () => {
     });
 
     it("tolerates an unterminated directive (keeps body, drops opener)", () => {
-        const input = ':::writing{variant="document" id="1"}\nstill writing\nmore text';
+        const input =
+            ':::writing{variant="document" id="1"}\nstill writing\nmore text';
         const out = transformCanvasDirectives(input);
         expect(out).toContain(">[!nexus_canvas]- **Document**");
         expect(out).toContain("> still writing");
