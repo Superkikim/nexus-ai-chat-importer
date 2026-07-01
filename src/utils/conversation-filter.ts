@@ -34,11 +34,11 @@ import { logger } from "../logger";
  * throws, it falls back to the legacy structural heuristics.
  */
 export function filterConversationsByIds(
-    rawConversations: any[],
+    rawConversations: unknown[],
     selectedIds: string[],
     providerRegistry: ProviderRegistry,
     forcedProvider?: string
-): any[] {
+): unknown[] {
     if (!rawConversations || rawConversations.length === 0) return [];
     if (!selectedIds || selectedIds.length === 0) return [];
 
@@ -52,7 +52,7 @@ export function filterConversationsByIds(
             ? providerRegistry.getAdapter(detectedProvider)
             : undefined;
 
-    const getConversationId = (conversation: any): string => {
+    const getConversationId = (conversation: unknown): string => {
         // 1) Preferred path: use adapter.getId so providers own their
         //    ID semantics and stay aligned with ConversationProcessor.
         if (adapter && typeof adapter.getId === "function") {
@@ -69,48 +69,55 @@ export function filterConversationsByIds(
             }
         }
 
-        // 2) Fallback: legacy structural heuristics kept for safety and
-        //    backward compatibility, especially if no adapter is found
-        //    or detection returns "unknown".
+        // 2) Fallback: legacy structural heuristics for unknown/unregistered provider formats.
+        const conv =
+            conversation !== null && typeof conversation === "object"
+                ? (conversation as Record<string, unknown>)
+                : null;
         try {
             if (
                 forcedProvider === "vibe" ||
-                (Array.isArray(conversation) && conversation[0]?.chatId)
+                (Array.isArray(conversation) &&
+                    (conversation[0] as Record<string, unknown>)?.chatId)
             ) {
                 // Le Chat format: array of messages, ID is in first message's chatId
-                return conversation[0]?.chatId || "";
+                const firstMsg = Array.isArray(conversation)
+                    ? (conversation[0] as Record<string, unknown>)
+                    : null;
+                return String(firstMsg?.chatId || "");
             }
 
             if (
                 forcedProvider === "claude" ||
-                (conversation && conversation.uuid && conversation.name)
+                (conv?.uuid && conv?.name)
             ) {
                 // Claude format: UUID field
-                return conversation.uuid || "";
+                return String(conv?.uuid || "");
             }
 
-            if (
-                conversation &&
-                conversation.metadata?.thread_id &&
-                Array.isArray(conversation.conversations)
-            ) {
-                return conversation.metadata?.thread_id || "";
+            const metadata =
+                conv?.metadata !== null &&
+                typeof conv?.metadata === "object"
+                    ? (conv.metadata as Record<string, unknown>)
+                    : null;
+            if (metadata?.thread_id && Array.isArray(conv?.conversations)) {
+                return String(metadata.thread_id || "");
             }
 
-            if (conversation && Array.isArray(conversation.entries)) {
-                const firstEntry = Array.isArray(conversation.entries)
-                    ? conversation.entries[0]
-                    : undefined;
-                return (
+            if (Array.isArray(conv?.entries)) {
+                const firstEntry = (conv!.entries as unknown[])[0] as
+                    | Record<string, unknown>
+                    | undefined;
+                return String(
                     firstEntry?.thread_url_slug ||
-                    firstEntry?.uuid ||
-                    firstEntry?.backend_uuid ||
-                    ""
+                        firstEntry?.uuid ||
+                        firstEntry?.backend_uuid ||
+                        ""
                 );
             }
 
             // Default: ChatGPT-style conversation with id field
-            return (conversation && conversation.id) || "";
+            return String(conv?.id || "");
         } catch {
             return "";
         }

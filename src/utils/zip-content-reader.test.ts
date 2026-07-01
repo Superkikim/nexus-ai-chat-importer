@@ -57,10 +57,11 @@ describe("zip-content-reader", () => {
         const result = await extractRawConversations(reader);
 
         expect(result.conversations).toHaveLength(2);
-        expect(result.conversations.map((conv) => conv.id)).toEqual([
-            "c1",
-            "c2",
-        ]);
+        expect(
+            result.conversations.map(
+                (conv) => (conv as { id: string }).id
+            )
+        ).toEqual(["c1", "c2"]);
     });
 
     it("streams legacy conversations.json one conversation at a time", async () => {
@@ -92,7 +93,11 @@ describe("zip-content-reader", () => {
 
         expect(result.conversations).toHaveLength(2);
         expect(
-            result.conversations.map((conv) => conv.metadata.thread_id)
+            result.conversations.map(
+                (conv) =>
+                    (conv as { metadata: { thread_id: string } }).metadata
+                        .thread_id
+            )
         ).toEqual(["t1", "t2"]);
     });
 
@@ -143,7 +148,11 @@ describe("zip-content-reader", () => {
         const result = await extractRawConversations(reader);
 
         expect(result.conversations).toHaveLength(1);
-        expect(Array.isArray(result.conversations[0].entries)).toBe(true);
+        expect(
+            Array.isArray(
+                (result.conversations[0] as { entries: unknown[] }).entries
+            )
+        ).toBe(true);
     });
 
     it("streams Perplexity entries[] JSON one file at a time", async () => {

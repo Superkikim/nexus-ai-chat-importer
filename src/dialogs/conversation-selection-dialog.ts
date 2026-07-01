@@ -18,6 +18,7 @@
 
 // src/dialogs/conversation-selection-dialog.ts
 import { App, Modal, sanitizeHTMLToDom } from "obsidian";
+import type NexusAiChatImporterPlugin from "../main";
 import {
     ConversationMetadata,
     AnalysisInfo,
@@ -32,14 +33,14 @@ import { t } from "../i18n";
 export class ConversationSelectionDialog extends Modal {
     private state: ConversationSelectionState;
     private onSelectionComplete: (result: ConversationSelectionResult) => void;
-    private plugin?: any; // Plugin instance to access settings
-    private analysisInfo?: AnalysisInfo; // Information about analysis and filtering
+    private plugin?: NexusAiChatImporterPlugin;
+    private analysisInfo?: AnalysisInfo;
 
     constructor(
         app: App,
         conversations: ConversationMetadata[],
         onSelectionComplete: (result: ConversationSelectionResult) => void,
-        plugin?: any,
+        plugin?: NexusAiChatImporterPlugin,
         analysisInfo?: AnalysisInfo
     ) {
         super(app);
@@ -476,17 +477,14 @@ export class ConversationSelectionDialog extends Modal {
         // Apply sorting
         filtered.sort((a, b) => {
             const { field, direction } = this.state.sort;
-            let aVal: any = (a as any)[field];
-            let bVal: any = (b as any)[field];
-
+            const dir = direction === "asc" ? 1 : -1;
             if (field === "title") {
-                aVal = aVal.toLowerCase();
-                bVal = bVal.toLowerCase();
+                return (
+                    dir *
+                    a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+                );
             }
-
-            if (aVal < bVal) return direction === "asc" ? -1 : 1;
-            if (aVal > bVal) return direction === "asc" ? 1 : -1;
-            return 0;
+            return dir * (a[field] - b[field]);
         });
 
         this.state.filteredConversations = filtered;
@@ -555,7 +553,7 @@ export class ConversationSelectionDialog extends Modal {
 
             // Add source file info for multi-file imports
             if (conversation.sourceFile) {
-                const sourceInfo = titleCell.createEl("div");
+                const sourceInfo = titleCell.createDiv();
                 sourceInfo.addClass("nexus-td-source-info");
                 sourceInfo.textContent = `📁 ${conversation.sourceFile}`;
             }
@@ -647,7 +645,7 @@ export class ConversationSelectionDialog extends Modal {
     }
 
     private createStatusBadge(conversation: ConversationMetadata): HTMLElement {
-        const badge = activeDocument.createElement("span");
+        const badge = activeDocument.createSpan();
         badge.classList.add("status-badge");
 
         switch (conversation.existenceStatus) {
@@ -734,7 +732,7 @@ export class ConversationSelectionDialog extends Modal {
         });
 
         // Page numbers (simplified - just show current page)
-        const pageSpan = pageControls.createEl("span");
+        const pageSpan = pageControls.createSpan();
         pageSpan.textContent = t("conversation_selection.pagination.page_of", {
             current: String(currentPage),
             total: String(totalPages),

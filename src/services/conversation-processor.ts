@@ -24,7 +24,10 @@ import { ImportReport } from "../models/import-report";
 import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
-import { ProviderRegistry } from "../providers/provider-adapter";
+import {
+    ProviderRegistry,
+    ProviderAdapter,
+} from "../providers/provider-adapter";
 import { ImportProgressCallback } from "../ui/import-progress-modal";
 import {
     isValidMessage,
@@ -34,6 +37,7 @@ import {
     generateConversationFileName,
     CONVERSATION_NOTE_FILENAME_MAX_BYTES,
     compareTimestampsIgnoringSeconds,
+    getErrorMessage,
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 import { ZipArchiveReader } from "../utils/zip-loader";
@@ -74,7 +78,7 @@ export class ConversationProcessor {
      * Process raw conversations (provider agnostic entry point)
      */
     async processRawConversations(
-        rawConversations: any[],
+        rawConversations: unknown[],
         importReport: ImportReport,
         zip?: ZipArchiveReader,
         isReprocess: boolean = false,
@@ -223,7 +227,7 @@ export class ConversationProcessor {
      */
     private async processConversationsWithProvider(
         provider: string,
-        rawConversations: any[],
+        rawConversations: unknown[],
         importReport: ImportReport,
         zip?: ZipArchiveReader,
         isReprocess: boolean = false,
@@ -284,8 +288,8 @@ export class ConversationProcessor {
     }
 
     private async processSingleChat(
-        adapter: any,
-        chat: any,
+        adapter: ProviderAdapter,
+        chat: unknown,
         existingConversations: Map<string, ConversationCatalogEntry>,
         importReport: ImportReport,
         zip?: ZipArchiveReader,
@@ -295,18 +299,19 @@ export class ConversationProcessor {
         const processLogger = this.plugin.logger.child("Process");
         try {
             const isStandardConversation = this.isStandardConversation(chat);
+            const std = chat as StandardConversation;
 
             const chatId = isStandardConversation
-                ? chat.id
+                ? std.id
                 : adapter.getId(chat);
             const chatTitle = isStandardConversation
-                ? chat.title
+                ? std.title
                 : adapter.getTitle(chat) || "Untitled";
             const chatCreateTime = isStandardConversation
-                ? chat.createTime
+                ? std.createTime
                 : adapter.getCreateTime(chat);
             const chatUpdateTime = isStandardConversation
-                ? chat.updateTime
+                ? std.updateTime
                 : adapter.getUpdateTime(chat);
 
             // Validate conversation has required fields
@@ -375,11 +380,12 @@ export class ConversationProcessor {
             });
 
             this.counters.totalConversationsProcessed++;
-        } catch (error: any) {
-            const errorMessage = error.message || "Unknown error occurred";
+        } catch (error: unknown) {
+            const errorMessage = getErrorMessage(error);
             const isStandardConversation = this.isStandardConversation(chat);
+            const std = chat as StandardConversation;
             const chatTitle = isStandardConversation
-                ? chat.title
+                ? std.title
                 : adapter.getTitle(chat) || "Untitled";
             processLogger.error("Single chat processing failed", {
                 provider: this.currentProvider,
@@ -396,35 +402,37 @@ export class ConversationProcessor {
     /**
      * Check if a chat object is already a StandardConversation
      */
-    private isStandardConversation(chat: any): boolean {
+    private isStandardConversation(chat: unknown): boolean {
+        if (!chat || typeof chat !== "object") return false;
+        const c = chat as Record<string, unknown>;
         return (
-            chat &&
-            typeof chat.id === "string" &&
-            typeof chat.title === "string" &&
-            typeof chat.provider === "string" &&
-            typeof chat.createTime === "number" &&
-            typeof chat.updateTime === "number" &&
-            Array.isArray(chat.messages)
+            typeof c.id === "string" &&
+            typeof c.title === "string" &&
+            typeof c.provider === "string" &&
+            typeof c.createTime === "number" &&
+            typeof c.updateTime === "number" &&
+            Array.isArray(c.messages)
         );
     }
 
     private async handleExistingChat(
-        adapter: any,
-        chat: any,
+        adapter: ProviderAdapter,
+        chat: unknown,
         existingRecord: ConversationCatalogEntry,
         importReport: ImportReport,
         zip?: ZipArchiveReader,
         isReprocess: boolean = false,
         isStandardConversation: boolean = false
     ): Promise<string> {
+        const std = chat as StandardConversation;
         const chatTitle = isStandardConversation
-            ? chat.title
+            ? std.title
             : adapter.getTitle(chat);
         const createTime = isStandardConversation
-            ? chat.createTime
+            ? std.createTime
             : adapter.getCreateTime(chat);
         const updateTime = isStandardConversation
-            ? chat.updateTime
+            ? std.updateTime
             : adapter.getUpdateTime(chat);
 
         // Count messages using provider-specific logic
@@ -501,8 +509,8 @@ export class ConversationProcessor {
     }
 
     private async handleNewChat(
-        adapter: any,
-        chat: any,
+        adapter: ProviderAdapter,
+        chat: unknown,
         filePath: string,
         importReport: ImportReport,
         zip?: ZipArchiveReader,
@@ -523,13 +531,13 @@ export class ConversationProcessor {
      * Count messages in a chat using provider-specific logic
      */
     private async countMessages(
-        adapter: any,
-        chat: any,
+        adapter: ProviderAdapter,
+        chat: unknown,
         isStandardConversation: boolean = false
     ): Promise<number> {
         // If already a StandardConversation, just count messages directly
         if (isStandardConversation) {
-            return chat.messages?.length || 0;
+            return (chat as StandardConversation).messages?.length || 0;
         }
 
         // Try to get a standard conversation and count its messages
@@ -538,14 +546,14 @@ export class ConversationProcessor {
             return standardConversation.messages?.length || 0;
         } catch {
             // Fallback: try common patterns
-            if (chat.mapping) {
+            const chatObj = chat as { mapping?: unknown; messages?: unknown };
+            if (chatObj.mapping && typeof chatObj.mapping === "object") {
                 // ChatGPT-style mapping
-                return Object.values(chat.mapping).filter((msg: any) =>
-                    isValidMessage(msg.message)
-                ).length;
-            } else if (chat.messages) {
-                // Direct messages array
-                return Array.isArray(chat.messages) ? chat.messages.length : 0;
+                return Object.values(
+                    chatObj.mapping as Record<string, { message?: unknown }>
+                ).filter((node) => isValidMessage(node.message)).length;
+            } else if (Array.isArray(chatObj.messages)) {
+                return chatObj.messages.length;
             }
             return 0;
         }
@@ -554,7 +562,7 @@ export class ConversationProcessor {
     /**
      * Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
      */
-    private getProviderSpecificCount(adapter: any, chat: any): number {
+    private getProviderSpecificCount(adapter: ProviderAdapter, chat: unknown): number {
         try {
             const strategy = adapter.getReportNamingStrategy();
             if (strategy && strategy.getProviderSpecificColumn) {
@@ -568,8 +576,8 @@ export class ConversationProcessor {
     }
 
     private async updateExistingNote(
-        adapter: any,
-        chat: any,
+        adapter: ProviderAdapter,
+        chat: unknown,
         filePath: string,
         totalMessageCount: number,
         importReport: ImportReport,
@@ -582,27 +590,28 @@ export class ConversationProcessor {
             if (file instanceof TFile) {
                 let content = await this.plugin.app.vault.read(file);
                 const originalContent = content;
+                const std = chat as StandardConversation;
 
                 const chatUpdateTime = isStandardConversation
-                    ? chat.updateTime
+                    ? std.updateTime
                     : adapter.getUpdateTime(chat);
                 const chatCreateTime = isStandardConversation
-                    ? chat.createTime
+                    ? std.createTime
                     : adapter.getCreateTime(chat);
                 const chatTitle = isStandardConversation
-                    ? chat.title
+                    ? std.title
                     : adapter.getTitle(chat);
                 const chatId = isStandardConversation
-                    ? chat.id
+                    ? std.id
                     : adapter.getId(chat);
 
                 const existingMessageIds =
                     this.extractMessageUIDsFromNote(content);
 
                 // For StandardConversation, get new messages directly; otherwise use adapter
-                let newMessages: any[];
+                let newMessages: unknown[];
                 if (isStandardConversation) {
-                    newMessages = chat.messages.filter(
+                    newMessages = std.messages.filter(
                         (msg: StandardMessage) =>
                             !existingMessageIds.includes(msg.id)
                     );
@@ -620,7 +629,7 @@ export class ConversationProcessor {
                     // Get or convert to standard format
                     let standardConversation: StandardConversation;
                     if (isStandardConversation) {
-                        standardConversation = chat;
+                        standardConversation = chat as StandardConversation;
                     } else {
                         standardConversation = await adapter.convertChat(chat);
                     }
@@ -665,7 +674,7 @@ export class ConversationProcessor {
                     // Get or convert to standard conversation
                     let standardConversation: StandardConversation;
                     if (isStandardConversation) {
-                        standardConversation = chat;
+                        standardConversation = chat as StandardConversation;
                     } else {
                         standardConversation = await adapter.convertChat(chat);
                     }
@@ -737,14 +746,14 @@ export class ConversationProcessor {
                     );
                 }
             }
-        } catch (error: any) {
-            this.plugin.logger.error("Error updating note", error.message);
+        } catch (error: unknown) {
+            this.plugin.logger.error("Error updating note", getErrorMessage(error));
         }
     }
 
     private async createNewNote(
-        adapter: any,
-        chat: any,
+        adapter: ProviderAdapter,
+        chat: unknown,
         filePath: string,
         importReport: ImportReport,
         zip?: ZipArchiveReader,
@@ -766,7 +775,7 @@ export class ConversationProcessor {
             // Get or convert to standard format
             let standardConversation: StandardConversation;
             if (isStandardConversation) {
-                standardConversation = chat;
+                standardConversation = chat as StandardConversation;
             } else {
                 standardConversation = await adapter.convertChat(chat);
             }
@@ -815,7 +824,7 @@ export class ConversationProcessor {
 
             try {
                 await this.fileService.writeToFile(finalFilePath, content);
-            } catch (error: any) {
+            } catch (error: unknown) {
                 if (!this.isNameTooLongError(error)) {
                     throw error;
                 }
@@ -865,16 +874,20 @@ export class ConversationProcessor {
             this.counters.totalNewConversationsSuccessfullyImported++;
             this.counters.totalNonEmptyMessagesToImport += messageCount;
             return finalFilePath;
-        } catch (error: any) {
-            this.plugin.logger.error("Error creating new note", error.message);
+        } catch (error: unknown) {
+            this.plugin.logger.error(
+                "Error creating new note",
+                getErrorMessage(error)
+            );
+            const std = chat as StandardConversation;
             const createTime = isStandardConversation
-                ? chat.createTime
+                ? std.createTime
                 : adapter.getCreateTime(chat);
             const updateTime = isStandardConversation
-                ? chat.updateTime
+                ? std.updateTime
                 : adapter.getUpdateTime(chat);
             const chatTitle = isStandardConversation
-                ? chat.title
+                ? std.title
                 : adapter.getTitle(chat);
 
             importReport.addFailed(
@@ -882,7 +895,7 @@ export class ConversationProcessor {
                 filePath,
                 createTime,
                 updateTime,
-                error.message
+                getErrorMessage(error)
             );
             throw error;
         }
@@ -1022,18 +1035,19 @@ export class ConversationProcessor {
     }
 
     private async generateFilePathForChat(
-        adapter: any,
-        chat: any,
+        adapter: ProviderAdapter,
+        chat: unknown,
         isStandardConversation: boolean = false
     ): Promise<string> {
+        const std = chat as StandardConversation;
         const createTime = isStandardConversation
-            ? chat.createTime
+            ? std.createTime
             : adapter.getCreateTime(chat);
         const chatTitle = isStandardConversation
-            ? chat.title
+            ? std.title
             : adapter.getTitle(chat);
         const providerName = isStandardConversation
-            ? chat.provider
+            ? std.provider
             : adapter.getProviderName();
 
         const date = new Date(createTime * 1000);
@@ -1080,15 +1094,16 @@ export class ConversationProcessor {
         return filePath;
     }
 
-    private isNameTooLongError(error: any): boolean {
-        if (!error) return false;
+    private isNameTooLongError(error: unknown): boolean {
+        if (!error || typeof error !== "object") return false;
+        const err = error as { message?: unknown; code?: unknown };
         const message =
-            typeof error?.message === "string"
-                ? error.message
+            typeof err.message === "string"
+                ? err.message
                 : typeof error === "string"
                 ? error
                 : "[unknown error]";
-        const code = typeof error?.code === "string" ? error.code : "";
+        const code = typeof err.code === "string" ? err.code : "";
         return code === "ENAMETOOLONG" || message.includes("ENAMETOOLONG");
     }
 

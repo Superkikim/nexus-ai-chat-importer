@@ -1,7 +1,9 @@
 import { ZipArchiveReader, ZipEntryHandle, ZipEntryMeta } from "./types";
 import type { ZipFile, Entry } from "yauzl";
 
-declare const require: (name: string) => any;
+import type { Readable } from "stream";
+
+declare const require: (name: string) => unknown;
 
 interface DesktopZipEntryRecord extends ZipEntryMeta {
     compressedSize: number;
@@ -34,7 +36,9 @@ function normalizeChunk(chunk: Uint8Array | string): Uint8Array {
     return chunk;
 }
 
-async function* streamToByteChunks(stream: any): AsyncGenerator<Uint8Array> {
+async function* streamToByteChunks(
+    stream: Readable
+): AsyncGenerator<Uint8Array> {
     const queue: Uint8Array[] = [];
     let done = false;
     let failure: Error | null = null;
@@ -90,12 +94,12 @@ async function* streamToByteChunks(stream: any): AsyncGenerator<Uint8Array> {
     }
 
     if (failure) {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        // eslint-disable-next-line @typescript-eslint/only-throw-error -- failure is guaranteed to be Error by the onError handler above
         throw failure;
     }
 }
 
-async function streamToBuffer(stream: any): Promise<Uint8Array> {
+async function streamToBuffer(stream: Readable): Promise<Uint8Array> {
     const chunks: Uint8Array[] = [];
     let totalLength = 0;
 
@@ -117,10 +121,10 @@ async function streamToBuffer(stream: any): Promise<Uint8Array> {
 async function openDesktopEntryReadStream(
     filePath: string,
     entryName: string
-): Promise<{ zipfile: ZipFile; stream: any }> {
+): Promise<{ zipfile: ZipFile; stream: Readable }> {
     const zipfile = await openYauzl(filePath);
 
-    return await new Promise<{ zipfile: ZipFile; stream: any }>(
+    return await new Promise<{ zipfile: ZipFile; stream: Readable }>(
         (resolve, reject) => {
             let settled = false;
 
@@ -145,7 +149,7 @@ async function openDesktopEntryReadStream(
 
                 zipfile.openReadStream(
                     entry,
-                    (err: Error | null, stream: any) => {
+                    (err: Error | null, stream: Readable) => {
                         if (err) {
                             fail(err);
                             return;

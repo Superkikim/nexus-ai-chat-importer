@@ -57,33 +57,31 @@ export function sortMessagesByTimestamp(
  * @param message - Object to validate
  * @returns true if message has valid structure
  */
-export function isValidMessage(message: any): message is StandardMessage {
+export function isValidMessage(message: unknown): message is StandardMessage {
     if (!message || typeof message !== "object") {
         return false;
     }
+    const msg = message as Record<string, unknown>;
 
     // Required fields
-    if (typeof message.id !== "string" || !message.id) {
+    if (typeof msg.id !== "string" || !msg.id) {
         return false;
     }
 
-    if (message.role !== "user" && message.role !== "assistant") {
+    if (msg.role !== "user" && msg.role !== "assistant") {
         return false;
     }
 
-    if (typeof message.content !== "string") {
+    if (typeof msg.content !== "string") {
         return false;
     }
 
-    if (typeof message.timestamp !== "number" || message.timestamp < 0) {
+    if (typeof msg.timestamp !== "number" || msg.timestamp < 0) {
         return false;
     }
 
     // Optional attachments field
-    if (
-        message.attachments !== undefined &&
-        !Array.isArray(message.attachments)
-    ) {
+    if (msg.attachments !== undefined && !Array.isArray(msg.attachments)) {
         return false;
     }
 
@@ -96,7 +94,7 @@ export function isValidMessage(message: any): message is StandardMessage {
  * @param messages - Array of messages (possibly invalid)
  * @returns Array containing only valid messages
  */
-export function filterValidMessages(messages: any[]): StandardMessage[] {
+export function filterValidMessages(messages: unknown[]): StandardMessage[] {
     return messages.filter(isValidMessage);
 }
 

@@ -22,7 +22,11 @@ import { BaseSettingsSection } from "./base-settings-section";
 import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
 import { FolderTreeBrowserModal } from "../../dialogs/folder-tree-browser-modal";
 import { validateFolderNesting } from "../../utils/folder-validation";
-import { moveAndMergeFolders, type FolderMergeResult } from "../../utils";
+import {
+    getErrorMessage,
+    moveAndMergeFolders,
+    type FolderMergeResult,
+} from "../../utils";
 import { t } from "../../i18n";
 
 export class FolderSettingsSection extends BaseSettingsSection {
@@ -392,7 +396,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
                     // Some files skipped or errors - show detailed dialog
                     this.showMergeResultDialog(result, oldPath, newPath);
                 }
-            } catch (error: any) {
+            } catch (error: unknown) {
                 this.plugin.logger.error(
                     `[FolderSettings] Migration failed:`,
                     error
@@ -400,7 +404,7 @@ export class FolderSettingsSection extends BaseSettingsSection {
                 this.showErrorDialog(
                     t("folder_migration.error_migration_failed.title"),
                     t("folder_migration.error_migration_failed.message_move", {
-                        error: error.message,
+                        error: getErrorMessage(error),
                     })
                 );
                 throw error;

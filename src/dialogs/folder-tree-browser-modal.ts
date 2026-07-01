@@ -18,6 +18,7 @@
 
 import { App, Modal, Notice, TFolder } from "obsidian";
 import { t } from "../i18n";
+import { getErrorMessage } from "../utils";
 
 /**
  * Tree-based folder browser with fold/unfold navigation
@@ -317,10 +318,10 @@ export class FolderTreeBrowserModal extends Modal {
 
             // Re-render the tree
             this.renderTree();
-        } catch (error: any) {
+        } catch (error: unknown) {
             new Notice(
                 t("folder_browser.notices.create_failed", {
-                    error: error.message,
+                    error: getErrorMessage(error),
                 })
             );
         }

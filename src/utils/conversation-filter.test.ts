@@ -114,7 +114,7 @@ describe("filterConversationsByIds", () => {
         );
 
         expect(result).toHaveLength(1);
-        expect(result[0].id).toBe("c2");
+        expect((result[0] as { id: string }).id).toBe("c2");
     });
 
     it("falls back to legacy heuristics when no adapter is registered", () => {
@@ -128,7 +128,7 @@ describe("filterConversationsByIds", () => {
         const result = filterConversationsByIds(conversations, ["b"], registry);
 
         expect(result).toHaveLength(1);
-        expect(result[0].id).toBe("b");
+        expect((result[0] as { id: string }).id).toBe("b");
     });
 
     it("handles Le Chat-style arrays of messages", () => {
@@ -149,7 +149,9 @@ describe("filterConversationsByIds", () => {
         );
 
         expect(result).toHaveLength(1);
-        expect(result[0][0].chatId).toBe("chat-2");
+        expect(
+            (result[0] as [{ chatId: string }])[0].chatId
+        ).toBe("chat-2");
     });
 
     it("handles Claude-style UUID conversations via fallback heuristics", () => {
@@ -168,7 +170,7 @@ describe("filterConversationsByIds", () => {
         );
 
         expect(result).toHaveLength(1);
-        expect(result[0].uuid).toBe("u2");
+        expect((result[0] as { uuid: string }).uuid).toBe("u2");
     });
 
     it("handles Perplexity-style thread objects via fallback heuristics", () => {
@@ -187,6 +189,9 @@ describe("filterConversationsByIds", () => {
         );
 
         expect(result).toHaveLength(1);
-        expect(result[0].metadata.thread_id).toBe("p2");
+        expect(
+            (result[0] as { metadata: { thread_id: string } }).metadata
+                .thread_id
+        ).toBe("p2");
     });
 });

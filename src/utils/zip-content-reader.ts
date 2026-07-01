@@ -223,7 +223,7 @@ export function classifyArchiveEntries(
 }
 
 export interface RawConversationExtractionResult {
-    conversations: any[];
+    conversations: unknown[];
     uncompressedBytes: number;
 }
 
@@ -351,7 +351,7 @@ export async function extractRawConversations(
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
     if (vibeFiles.length > 0) {
-        const conversations: any[] = [];
+        const conversations: unknown[] = [];
         let uncompressedBytes = 0;
 
         for (const fileName of vibeFiles) {
@@ -368,7 +368,7 @@ export async function extractRawConversations(
 
     const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
     if (perplexityJsonFiles.length > 0) {
-        const conversations: any[] = [];
+        const conversations: unknown[] = [];
         let uncompressedBytes = 0;
 
         for (const fileName of perplexityJsonFiles) {
@@ -394,7 +394,7 @@ export async function extractRawConversations(
         .filter((name) => /^conversations-\d+\.json$/.test(name))
         .sort();
     if (numberedConvFiles.length > 0) {
-        const conversations: any[] = [];
+        const conversations: unknown[] = [];
         let uncompressedBytes = 0;
 
         for (const fileName of numberedConvFiles) {

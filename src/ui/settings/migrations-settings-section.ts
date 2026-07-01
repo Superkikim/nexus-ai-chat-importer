@@ -1,7 +1,21 @@
 // src/ui/settings/migrations-settings-section.ts
-import { Setting } from "obsidian";
+import { ButtonComponent, Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
+import type { IncrementalUpgradeManager } from "../../upgrade/incremental-upgrade-manager";
 import { t } from "../../i18n";
+
+type SettingsOperationData = {
+    id: string;
+    name: string;
+    description: string;
+    completed: boolean;
+    canRun: boolean;
+};
+
+type SettingsVersionData = {
+    version: string;
+    operations: SettingsOperationData[];
+};
 
 export class MigrationsSettingsSection extends BaseSettingsSection {
     get title() {
@@ -54,9 +68,9 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
      * Get operations status with persistent flags from plugin data
      */
     private async getOperationsWithPersistentStatus(
-        upgradeManager: any
-    ): Promise<unknown[]> {
-        const operationsData =
+        upgradeManager: IncrementalUpgradeManager
+    ): Promise<SettingsVersionData[]> {
+        const operationsData: SettingsVersionData[] =
             await upgradeManager.getManualOperationsForSettings();
         const pluginData = await this.plugin.loadData();
 
@@ -82,8 +96,8 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
 
     private async renderVersionOperations(
         containerEl: HTMLElement,
-        versionData: any,
-        upgradeManager: any
+        versionData: SettingsVersionData,
+        upgradeManager: IncrementalUpgradeManager
     ): Promise<void> {
         containerEl.createEl("h3", {
             text: t("settings.migrations.version_header", {
@@ -104,9 +118,9 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
 
     private async renderOperation(
         containerEl: HTMLElement,
-        operation: any,
+        operation: SettingsOperationData,
         version: string,
-        upgradeManager: any
+        upgradeManager: IncrementalUpgradeManager
     ): Promise<void> {
         new Setting(containerEl)
             .setName(operation.name)
@@ -158,10 +172,10 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
     }
 
     private async executeOperation(
-        buttonEl: any,
-        operation: any,
+        buttonEl: ButtonComponent,
+        operation: SettingsOperationData,
         version: string,
-        upgradeManager: any
+        upgradeManager: IncrementalUpgradeManager
     ): Promise<void> {
         const originalText = buttonEl.buttonEl.textContent;
         buttonEl

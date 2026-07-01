@@ -18,7 +18,12 @@
 
 // src/upgrade/incremental-upgrade-manager.ts
 import { Notice, requestUrl } from "obsidian";
-import { VersionUpgrade, UpgradeContext } from "./upgrade-interface";
+import {
+    VersionUpgrade,
+    UpgradeContext,
+    UpgradeOperation,
+    OperationResult,
+} from "./upgrade-interface";
 import { VersionUtils } from "./utils/version-utils";
 import { showDialog } from "../dialogs";
 import { Logger } from "../logger";
@@ -36,18 +41,23 @@ import { Upgrade167 } from "./versions/upgrade-1.6.7";
 
 const logger = new Logger();
 
+type OperationProgressResult = {
+    success: boolean;
+    results: Array<{ operationId: string; result: OperationResult }>;
+};
+
 export interface IncrementalUpgradeResult {
     success: boolean;
     upgradesExecuted: number;
     upgradesSkipped: number;
     upgradesFailed: number;
-    isFreshInstall?: boolean; // Flag to indicate if this is a fresh installation
-    showCompletionDialog?: boolean; // Flag to show completion dialog from main.ts
-    upgradedToVersion?: string; // Version that was upgraded to
+    isFreshInstall?: boolean;
+    showCompletionDialog?: boolean;
+    upgradedToVersion?: string;
     results: Array<{
         version: string;
-        automaticResults: any;
-        manualResults: any;
+        automaticResults: OperationProgressResult;
+        manualResults: OperationProgressResult;
     }>;
 }
 
@@ -390,12 +400,13 @@ export class IncrementalUpgradeManager {
      * Execute operations with progress updates to modal
      */
     private async executeOperationsWithProgress(
-        operations: any[],
+        operations: UpgradeOperation[],
         context: UpgradeContext,
         version: string,
         progressModal: MultiOperationProgressModal
-    ): Promise<any> {
-        const results: Array<{ operationId: string; result: any }> = [];
+    ): Promise<OperationProgressResult> {
+        const results: Array<{ operationId: string; result: OperationResult }> =
+            [];
         let criticalFailures = 0; // Only count actual critical failures
 
         for (const operation of operations) {
@@ -498,7 +509,7 @@ export class IncrementalUpgradeManager {
     /**
      * Determine if an operation failure is critical
      */
-    private isCriticalFailure(_result: any): boolean {
+    private isCriticalFailure(_result: unknown): boolean {
         // For now, no failures are critical for upgrade operations
         // They're either successful or "nothing to do"
         return false;
@@ -508,11 +519,11 @@ export class IncrementalUpgradeManager {
      * Execute single operation with progress callbacks
      */
     private async executeOperationWithProgress(
-        operation: any,
+        operation: UpgradeOperation,
         context: UpgradeContext,
         modalOperationId: string,
         progressModal: MultiOperationProgressModal
-    ): Promise<any> {
+    ): Promise<OperationResult> {
         // Wire up progress callback so operations can report incremental progress
         const contextWithProgress: UpgradeContext = {
             ...context,
@@ -854,7 +865,7 @@ export class IncrementalUpgradeManager {
                 for (let i = 0; i < rules.length; i++) {
                     const rule = rules[i] as CSSStyleRule;
                     if (
-                        (rule as any).selectorText &&
+                        rule.selectorText &&
                         rule.selectorText.includes(selector)
                     ) {
                         return true;

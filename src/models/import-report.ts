@@ -19,6 +19,10 @@
 // src/models/import-report.ts
 import { AttachmentStats, MessageTimestampFormat } from "../types/plugin";
 import { formatMessageTimestamp } from "../utils";
+import type {
+    AnalysisInfo,
+    FileAnalysisStats,
+} from "../services/conversation-metadata-extractor";
 
 interface ReportEntry {
     title: string;
@@ -69,8 +73,8 @@ export class ImportReport {
     private globalErrors: { message: string; details: string }[] = [];
     private providerSpecificColumnHeader: string = "Attachments";
     private operationStartTime: number = Date.now();
-    private fileStats?: Map<string, any>; // Store file analysis stats for duplicate counting
-    private analysisInfo?: any; // Store analysis info for completion stats
+    private fileStats?: Map<string, FileAnalysisStats>;
+    private analysisInfo?: AnalysisInfo;
     private customTimestampFormat?: MessageTimestampFormat; // Custom format for report dates
     private ignoredArchiveDetails: Map<string, IgnoredArchiveDetail> =
         new Map();
@@ -358,8 +362,8 @@ export class ImportReport {
         allFiles?: File[],
         processedFiles?: string[],
         skippedFiles?: string[],
-        analysisInfo?: any,
-        fileStats?: Map<string, any>,
+        analysisInfo?: AnalysisInfo,
+        fileStats?: Map<string, FileAnalysisStats>,
         isSelectiveImport?: boolean,
         archiveDisplayNames?: Map<string, string>,
         links?: ReportCrossLinks,
@@ -719,8 +723,8 @@ export class ImportReport {
         allFiles?: File[],
         processedFiles?: string[],
         skippedFiles?: string[],
-        analysisInfo?: any,
-        fileStats?: Map<string, any>,
+        analysisInfo?: AnalysisInfo,
+        fileStats?: Map<string, FileAnalysisStats>,
         isSelectiveImport?: boolean
     ): string {
         let content = "# Nexus AI Chat Importer Report\n\n";
@@ -838,8 +842,8 @@ export class ImportReport {
         allFiles?: File[],
         processedFiles?: string[],
         skippedFiles?: string[],
-        analysisInfo?: any,
-        fileStats?: Map<string, any>,
+        analysisInfo?: AnalysisInfo,
+        fileStats?: Map<string, FileAnalysisStats>,
         isSelectiveImport?: boolean
     ): string {
         const stats = this.getGlobalStats();
@@ -1188,14 +1192,14 @@ export class ImportReport {
     /**
      * Store file analysis stats for duplicate counting
      */
-    setFileStats(fileStats: Map<string, any>) {
+    setFileStats(fileStats: Map<string, FileAnalysisStats>) {
         this.fileStats = fileStats;
     }
 
     /**
      * Store analysis info for completion stats
      */
-    setAnalysisInfo(analysisInfo: any) {
+    setAnalysisInfo(analysisInfo: AnalysisInfo) {
         this.analysisInfo = analysisInfo;
     }
 

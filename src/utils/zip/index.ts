@@ -16,7 +16,8 @@ export async function createZipArchiveReader(
     file: File,
     shouldInclude?: (entryName: string, uncompressedSize: number) => boolean
 ): Promise<ZipArchiveReader> {
-    const filePath: string | undefined = (file as any).path;
+    const filePath: string | undefined = (file as unknown as { path?: string })
+        .path;
 
     if (filePath) {
         const entries = await readDesktopZipEntries(filePath, shouldInclude);

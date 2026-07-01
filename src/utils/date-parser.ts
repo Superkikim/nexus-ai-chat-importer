@@ -18,9 +18,15 @@
 
 // src/utils/date-parser.ts
 import { logger } from "../logger";
-
-// Use window.moment instead of importing from obsidian
-const moment = (window as any).moment;
+type MomentResult = { isValid(): boolean; unix(): number };
+type MomentStatic = ((
+    dateStr?: string,
+    format?: string | string[],
+    strict?: boolean
+) => MomentResult) & {
+    ISO_8601: string;
+};
+const moment = (window as unknown as { moment: MomentStatic }).moment;
 
 /**
  * Date format information

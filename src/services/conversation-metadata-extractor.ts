@@ -18,8 +18,17 @@
 
 import { Platform, moment } from "obsidian";
 import { ProviderRegistry } from "../providers/provider-adapter";
-import { Chat } from "../providers/chatgpt/chatgpt-types";
-import { ClaudeConversation } from "../providers/claude/claude-types";
+import { Chat, ChatMessage } from "../providers/chatgpt/chatgpt-types";
+import {
+    ClaudeConversation,
+    ClaudeMessage,
+} from "../providers/claude/claude-types";
+import {
+    MistralVibeConversation,
+    MistralVibeMessage,
+} from "../providers/vibe/vibe-types";
+import { PerplexityRawConversationFile } from "../providers/perplexity/perplexity-types";
+import { ConversationCatalogEntry } from "../types/plugin";
 import { isValidMessage, compareTimestampsIgnoringSeconds } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 import { createZipArchiveReader, ZipArchiveReader } from "../utils/zip-loader";
@@ -513,7 +522,7 @@ export class ConversationMetadataExtractor {
     }
 
     private extractSingleMetadataByProvider(
-        rawConversation: any,
+        rawConversation: unknown,
         provider: string
     ): ConversationMetadata | null {
         const metadata = this.extractMetadataByProvider(
@@ -524,14 +533,16 @@ export class ConversationMetadataExtractor {
     }
 
     private extractMetadataByProvider(
-        rawConversations: any[],
+        rawConversations: unknown[],
         provider: string
     ): ConversationMetadata[] {
         switch (provider) {
             case "chatgpt":
-                return this.extractChatGPTMetadata(rawConversations);
+                return this.extractChatGPTMetadata(rawConversations as Chat[]);
             case "claude":
-                return this.extractClaudeMetadata(rawConversations);
+                return this.extractClaudeMetadata(
+                    rawConversations as ClaudeConversation[]
+                );
             case "vibe":
                 return this.extractMistralVibeMetadata(rawConversations);
             case "perplexity":
@@ -614,9 +625,11 @@ export class ConversationMetadataExtractor {
     }
 
     private extractMistralVibeMetadata(
-        conversations: any[]
+        conversations: unknown[]
     ): ConversationMetadata[] {
-        return conversations
+        const vibeConversations =
+            conversations as MistralVibeConversation[];
+        return vibeConversations
             .filter((chat) => {
                 if (!Array.isArray(chat) || chat.length === 0) {
                     this.plugin.logger.warn(
@@ -625,7 +638,7 @@ export class ConversationMetadataExtractor {
                     return false;
                 }
 
-                const firstMessage = chat[0];
+                const firstMessage = chat[0] as MistralVibeMessage;
                 if (!firstMessage.chatId || !firstMessage.createdAt) {
                     this.plugin.logger.warn(
                         "Skipping Mistral Vibe conversation with missing chatId or createdAt"
@@ -636,22 +649,19 @@ export class ConversationMetadataExtractor {
                 return true;
             })
             .map((chat) => {
-                const sortedChat = [...chat].sort((a: any, b: any) => {
+                const sortedChat = [...chat].sort((a, b) => {
                     const timeA = new Date(a.createdAt).getTime();
                     const timeB = new Date(b.createdAt).getTime();
                     return timeA - timeB;
                 });
 
                 const chatId = sortedChat[0].chatId;
-                const title = deriveMistralVibeConversationTitle(
-                    sortedChat as any,
-                    {
-                        assumeSorted: true,
-                    }
-                );
+                const title = deriveMistralVibeConversationTitle(sortedChat, {
+                    assumeSorted: true,
+                });
 
                 const timestamps = sortedChat.map(
-                    (msg: any) => new Date(msg.createdAt).getTime() / 1000
+                    (msg) => new Date(msg.createdAt).getTime() / 1000
                 );
 
                 return {
@@ -669,11 +679,13 @@ export class ConversationMetadataExtractor {
     }
 
     private extractPerplexityMetadata(
-        conversations: any[]
+        conversations: unknown[]
     ): ConversationMetadata[] {
         return conversations
             .filter((chat) => {
-                const normalized = normalizePerplexityConversationFile(chat);
+                const normalized = normalizePerplexityConversationFile(
+                    chat as PerplexityRawConversationFile
+                );
                 if (!normalized) {
                     this.plugin.logger.warn(
                         "Skipping invalid Perplexity conversation: not an object"
@@ -694,18 +706,18 @@ export class ConversationMetadataExtractor {
                 return normalized.conversations.length > 0;
             })
             .map((chat) => {
-                const normalized = normalizePerplexityConversationFile(chat)!;
-                const turns = [...normalized.conversations].sort(
-                    (a: any, b: any) => {
-                        const timeA = new Date(a.timestamp || 0).getTime();
-                        const timeB = new Date(b.timestamp || 0).getTime();
-                        return timeA - timeB;
-                    }
-                );
+                const normalized = normalizePerplexityConversationFile(
+                    chat as PerplexityRawConversationFile
+                )!;
+                const turns = [...normalized.conversations].sort((a, b) => {
+                    const timeA = new Date(a.timestamp || 0).getTime();
+                    const timeB = new Date(b.timestamp || 0).getTime();
+                    return timeA - timeB;
+                });
 
                 const timestamps = turns
-                    .map((turn: any) => new Date(turn.timestamp || 0).getTime())
-                    .filter((ts: number) => Number.isFinite(ts) && ts > 0);
+                    .map((turn) => new Date(turn.timestamp || 0).getTime())
+                    .filter((ts) => Number.isFinite(ts) && ts > 0);
 
                 const metaCreateMs = new Date(
                     normalized.metadata?.thread_created_at || ""
@@ -725,20 +737,17 @@ export class ConversationMetadataExtractor {
                         : timestamps.length > 0
                         ? Math.floor(Math.max(...timestamps) / 1000)
                         : 0;
-                const messageCount = turns.reduce(
-                    (count: number, turn: any) => {
-                        const query =
-                            typeof turn.query === "string"
-                                ? turn.query.trim()
-                                : "";
-                        const answer =
-                            typeof turn.answer === "string"
-                                ? turn.answer.trim()
-                                : "";
-                        return count + (query ? 1 : 0) + (answer ? 1 : 0);
-                    },
-                    0
-                );
+                const messageCount = turns.reduce((count, turn) => {
+                    const query =
+                        typeof turn.query === "string"
+                            ? turn.query.trim()
+                            : "";
+                    const answer =
+                        typeof turn.answer === "string"
+                            ? turn.answer.trim()
+                            : "";
+                    return count + (query ? 1 : 0) + (answer ? 1 : 0);
+                }, 0);
 
                 return {
                     id: normalized.metadata.thread_id || "",
@@ -788,7 +797,7 @@ export class ConversationMetadataExtractor {
         return count;
     }
 
-    private shouldIncludeChatGPTMessage(message: any): boolean {
+    private shouldIncludeChatGPTMessage(message: ChatMessage): boolean {
         if (!message || !message.author) {
             return false;
         }
@@ -807,7 +816,7 @@ export class ConversationMetadataExtractor {
         return isValidMessage(message);
     }
 
-    private shouldIncludeClaudeMessage(message: any): boolean {
+    private shouldIncludeClaudeMessage(message: ClaudeMessage): boolean {
         if (!message || !message.uuid || !message.sender) {
             return false;
         }
@@ -817,7 +826,7 @@ export class ConversationMetadataExtractor {
 
     private filterConversationsForSelection(
         bestVersions: ConversationMetadata[],
-        existingConversations?: Map<string, any>
+        existingConversations?: Map<string, ConversationCatalogEntry>
     ): {
         conversations: ConversationMetadata[];
         ignoredConversations: ConversationMetadata[];

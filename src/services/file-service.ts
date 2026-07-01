@@ -19,6 +19,7 @@
 // src/services/file-service.ts
 import { TFile, TFolder } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
+import { getErrorMessage } from "../utils";
 
 export class FileService {
     constructor(private plugin: NexusAiChatImporterPlugin) {}
@@ -36,10 +37,10 @@ export class FileService {
             } else {
                 await this.plugin.app.vault.create(filePath, content);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             this.plugin.logger.error(
                 `Error creating or modifying file '${filePath}'`,
-                error.message
+                getErrorMessage(error)
             );
             throw error;
         }

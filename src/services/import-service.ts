@@ -19,7 +19,11 @@
 // src/services/import-service.ts
 import { Notice, Platform } from "obsidian";
 import { ConversationCatalogEntry } from "../types/plugin";
-import { getFileFingerprint, ensureFolderExists } from "../utils";
+import {
+    getFileFingerprint,
+    ensureFolderExists,
+    getErrorMessage,
+} from "../utils";
 import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
 import { ConversationProcessor } from "./conversation-processor";
@@ -366,7 +370,7 @@ export class ImportService {
                 memorySnapshot: getRuntimeMemorySnapshot(),
             });
             this.updateRuntimePhase("completed");
-        } catch (error: any) {
+        } catch (error: unknown) {
             const resolvedError = this.resolveImportError(error, file.name);
 
             this.plugin.logger.error("Error handling zip file", {
@@ -465,20 +469,16 @@ export class ImportService {
             }
 
             return zip;
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = getErrorMessage(error);
             importLogger.error(`ZIP validation failed`, {
                 fileName: file.name,
                 forcedProvider: forcedProvider || "auto",
-                message: error?.message || String(error),
+                message,
             });
             if (error instanceof NexusAiChatImporterError) {
                 throw error;
             }
-
-            const message =
-                typeof error?.message === "string"
-                    ? error.message
-                    : String(error);
 
             if (message.includes("central directory not found")) {
                 throw new NexusAiChatImporterError(
@@ -488,7 +488,7 @@ export class ImportService {
             }
 
             if (
-                error?.name === "NotFoundError" ||
+                (error as { name?: unknown }).name === "NotFoundError" ||
                 message.includes("object can not be found here")
             ) {
                 throw new NexusAiChatImporterError(
@@ -696,7 +696,7 @@ export class ImportService {
                 title: "Finalizing import...",
                 detail: "Saving settings and generating report",
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (error instanceof NexusAiChatImporterError) {
                 this.plugin.logger.error(
                     "Error processing conversations",
@@ -706,7 +706,7 @@ export class ImportService {
                     "Full NexusAiChatImporterError:",
                     error
                 );
-            } else if (typeof error === "object" && error instanceof Error) {
+            } else if (error instanceof Error) {
                 this.plugin.logger.error(
                     "General error processing conversations",
                     error.message
@@ -772,12 +772,15 @@ export class ImportService {
      * Validate that the forced provider matches the actual content structure
      */
     private validateProviderMatch(
-        rawConversations: any[],
+        rawConversations: unknown[],
         forcedProvider: string
     ): void {
         if (rawConversations.length === 0) return;
 
-        const firstConversation = rawConversations[0];
+        const firstConversation = rawConversations[0] as Record<
+            string,
+            unknown
+        >;
 
         // Check for ChatGPT structure
         const isChatGPT = firstConversation.mapping !== undefined;
@@ -792,8 +795,10 @@ export class ImportService {
         const isMistralVibe =
             Array.isArray(firstConversation) &&
             firstConversation.length > 0 &&
-            firstConversation[0].chatId !== undefined &&
-            firstConversation[0].contentChunks !== undefined;
+            (firstConversation[0] as Record<string, unknown>).chatId !==
+                undefined &&
+            (firstConversation[0] as Record<string, unknown>).contentChunks !==
+                undefined;
 
         if (forcedProvider === "chatgpt" && !isChatGPT) {
             throw new NexusAiChatImporterError(
@@ -1091,10 +1096,10 @@ ${report.generateReportContent()}
 
         try {
             await this.plugin.app.vault.create(logFilePath, logContent);
-        } catch (error: any) {
+        } catch (error: unknown) {
             this.plugin.logger.error(
                 `Failed to write import log`,
-                error.message
+                getErrorMessage(error)
             );
             new Notice("Failed to create log file. Check console for details.");
         }

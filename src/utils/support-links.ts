@@ -1,3 +1,5 @@
+import { moment } from "obsidian";
+
 const NEXUS_DOCS_BASE = "https://nexus-prod.dev";
 const NEXUS_DOCS_SLUG = "nexus-ai-chat-importer";
 const GITHUB_REPO_BASE = "https://github.com/Superkikim/nexus-ai-chat-importer";
@@ -22,7 +24,7 @@ type SupportedNexusLocale = (typeof SUPPORTED_NEXUS_LOCALES)[number];
 function normalizeLocale(locale?: string): string {
     const runtimeLocale =
         locale ??
-        ((window as any)?.window?.moment?.locale?.() as string | undefined) ??
+        (moment?.locale?.() as string | undefined) ??
         "en";
 
     return runtimeLocale.toLowerCase().split(/[-_]/)[0];

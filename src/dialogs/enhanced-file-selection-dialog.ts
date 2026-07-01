@@ -18,6 +18,7 @@
 
 // src/dialogs/enhanced-file-selection-dialog.ts
 import { App, Modal, Notice, Platform } from "obsidian";
+import type NexusAiChatImporterPlugin from "../main";
 import {
     FileSelectionResult,
     ImportMode,
@@ -37,7 +38,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         app: App,
         provider: string,
         onFileSelectionComplete: (result: FileSelectionResult) => void,
-        private plugin?: any // Plugin instance to access settings
+        private plugin?: NexusAiChatImporterPlugin
     ) {
         super(app);
         this.provider = provider;

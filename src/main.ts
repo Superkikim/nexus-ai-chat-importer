@@ -44,7 +44,10 @@ import {
     ConversationSelectionResult,
 } from "./types/conversation-selection";
 import {
+    AnalysisInfo,
+    ConversationMetadata,
     ConversationMetadataExtractor,
+    FileAnalysisStats,
     IgnoredArchiveInfo,
 } from "./services/conversation-metadata-extractor";
 import { ImportReport } from "./models/import-report";
@@ -1019,11 +1022,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleConversationSelectionResult(
         result: ConversationSelectionResult,
-        availableConversations: any[],
+        availableConversations: ConversationMetadata[],
         files: File[],
         provider: string,
-        analysisInfo?: any,
-        fileStats?: Map<string, any>,
+        analysisInfo?: AnalysisInfo,
+        fileStats?: Map<string, FileAnalysisStats>,
         ignoredArchives?: IgnoredArchiveInfo[]
     ): Promise<void> {
         try {
@@ -1145,8 +1148,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         report: ImportReport,
         provider: string,
         files: File[],
-        analysisInfo?: any,
-        fileStats?: Map<string, any>,
+        analysisInfo?: AnalysisInfo,
+        fileStats?: Map<string, FileAnalysisStats>,
         isSelectiveImport?: boolean,
         ignoredArchives?: IgnoredArchiveInfo[]
     ): Promise<string> {
@@ -1734,7 +1737,7 @@ ${report.generateMobileIndexContent(files, links)}
 
     private collectSelectedExistingConversationIds(
         selectedIds: string[],
-        availableConversations: any[]
+        availableConversations: ConversationMetadata[]
     ): Set<string> {
         const selectedSet = new Set(selectedIds);
         const reprocessIds = new Set<string>();

@@ -17,13 +17,13 @@
  */
 
 // src/utils.ts
-import { App, TFile, TFolder, Vault } from "obsidian";
+import { App, DataAdapter, TFile, TFolder, Vault } from "obsidian";
+type MomentResult = { format: (f: string) => string };
+type MomentFn = (date: number | string) => MomentResult;
+const moment = (window as unknown as { moment: MomentFn }).moment;
 import { Logger } from "./logger";
 import { MESSAGE_TIMESTAMP_FORMATS } from "./config/constants";
 import type { MessageTimestampFormat } from "./types/plugin";
-
-// Use window.moment instead of importing from obsidian
-const moment = (window as any).moment;
 
 const logger = new Logger();
 const utf8Encoder = new TextEncoder();
@@ -289,7 +289,7 @@ export function enforceFileNameByteLimit(
 
 export async function generateUniqueFileName(
     filePath: string,
-    vaultAdapter: any,
+    vaultAdapter: Pick<DataAdapter, "exists">,
     maxFileNameBytes?: number
 ): Promise<string> {
     const lastSlash = filePath.lastIndexOf("/");
@@ -347,7 +347,7 @@ export async function generateUniqueFileName(
 // Function to check if the full file path exists
 export async function doesFilePathExist(
     filePath: string,
-    vault: any
+    vault: Vault
 ): Promise<boolean> {
     const file = vault.getAbstractFileByPath(filePath);
     return file !== null; // Return true if the file exists, false otherwise
@@ -479,62 +479,47 @@ export function generateSafeAlias(title: string): string {
     return cleanName;
 }
 
-export function isValidMessage(message: any): boolean {
-    return (
-        message &&
-        typeof message === "object" &&
-        message.content &&
-        typeof message.content === "object" &&
-        Array.isArray(message.content.parts) &&
-        message.content.parts.length > 0 &&
-        message.content.parts.some((part: any) => {
-            // Handle simple string parts
-            if (typeof part === "string" && part.trim() !== "") {
-                return true;
+export function isValidMessage(message: unknown): boolean {
+    if (!message || typeof message !== "object") return false;
+    const msg = message as Record<string, unknown>;
+    if (!msg.content || typeof msg.content !== "object") return false;
+    const content = msg.content as Record<string, unknown>;
+    if (!Array.isArray(content.parts) || content.parts.length === 0)
+        return false;
+    return content.parts.some((part: unknown) => {
+        // Handle simple string parts
+        if (typeof part === "string") return part.trim() !== "";
+        // Handle object parts with content_type
+        if (typeof part === "object" && part !== null) {
+            const p = part as Record<string, unknown>;
+            if (
+                (p.content_type === "audio_transcription" ||
+                    p.content_type === "text" ||
+                    p.content_type === "multimodal_text") &&
+                typeof p.text === "string"
+            ) {
+                return p.text.trim() !== "";
             }
-            // Handle object parts with content_type
-            if (typeof part === "object" && part !== null) {
-                // Audio transcription parts
-                if (
-                    part.content_type === "audio_transcription" &&
-                    part.text &&
-                    part.text.trim() !== ""
-                ) {
-                    return true;
-                }
-                // Text parts with content_type
-                if (
-                    part.content_type === "text" &&
-                    part.text &&
-                    part.text.trim() !== ""
-                ) {
-                    return true;
-                }
-                // Multimodal text parts
-                if (
-                    part.content_type === "multimodal_text" &&
-                    part.text &&
-                    part.text.trim() !== ""
-                ) {
-                    return true;
-                }
-            }
-            return false;
-        })
-    );
+        }
+        return false;
+    });
 }
 
 export interface CustomError {
     message: string;
 }
 
-export function isCustomError(error: any): error is CustomError {
-    return error && typeof error.message === "string"; // Check if error has a 'message' property
+export function isCustomError(error: unknown): error is CustomError {
+    return (
+        error !== null &&
+        typeof error === "object" &&
+        typeof (error as Record<string, unknown>).message === "string"
+    );
 }
 
 export async function ensureFolderExists(
     folderPath: string,
-    vault: any
+    vault: Vault
 ): Promise<{ success: boolean; error?: string }> {
     const folders = folderPath.split("/").filter((p) => p.length);
     let currentPath = "";
@@ -546,15 +531,16 @@ export async function ensureFolderExists(
         if (!currentFolder) {
             try {
                 await vault.createFolder(currentPath);
-            } catch (error: any) {
-                if (error.message !== "Folder already exists.") {
+            } catch (error: unknown) {
+                const msg = getErrorMessage(error);
+                if (msg !== "Folder already exists.") {
                     logger.error(
                         `Failed to create folder: ${currentPath}`,
-                        error.message
+                        msg
                     );
                     return {
                         success: false,
-                        error: `Failed to create folder: ${currentPath}. Reason: ${error.message}`,
+                        error: `Failed to create folder: ${currentPath}. Reason: ${msg}`,
                     };
                 }
                 // If folder already exists, continue silently
@@ -630,8 +616,8 @@ export async function moveAndMergeFolders(
         // Ensure destination folder exists
         try {
             await vault.createFolder(destPath);
-        } catch (error: any) {
-            if (!error.message?.includes("Folder already exists")) {
+        } catch (error: unknown) {
+            if (!getErrorMessage(error).includes("Folder already exists")) {
                 throw error;
             }
             // Folder exists, that's fine - we're merging
@@ -673,10 +659,10 @@ export async function moveAndMergeFolders(
                     if (onProgress) {
                         onProgress(processedFiles, totalFiles);
                     }
-                } catch (error: any) {
-                    const errorMsg = `Failed to move ${child.path}: ${
-                        error.message || String(error)
-                    }`;
+                } catch (error: unknown) {
+                    const errorMsg = `Failed to move ${
+                        child.path
+                    }: ${getErrorMessage(error)}`;
                     logger.error(`[moveAndMergeFolders] ${errorMsg}`);
                     errorDetails.push(errorMsg);
                     errors++;
@@ -725,10 +711,10 @@ export async function moveAndMergeFolders(
                         `[moveAndMergeFolders] ⚠️ Folder not empty, skipping deletion: ${folder.path} (${visibleFiles.length} files, ${folderContents.folders.length} folders)`
                     );
                 }
-            } catch (error: any) {
+            } catch (error: unknown) {
                 // Folder might have already been deleted, or might not exist
                 // This is not a critical error - just log it
-                const errorMsg = error.message || String(error);
+                const errorMsg = getErrorMessage(error);
                 if (
                     !errorMsg.includes("does not exist") &&
                     !errorMsg.includes("ENOENT")
@@ -789,14 +775,14 @@ export async function moveAndMergeFolders(
             errors,
             errorDetails: errorDetails.length > 0 ? errorDetails : undefined,
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.error(`Failed to merge folders:`, error);
         return {
             success: false,
             moved,
             skipped,
             errors: errors + 1,
-            errorDetails: [`Critical error: ${error.message || String(error)}`],
+            errorDetails: [`Critical error: ${getErrorMessage(error)}`],
         };
     }
 }

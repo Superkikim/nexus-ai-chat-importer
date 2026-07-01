@@ -26,7 +26,7 @@ import {
 import type NexusAiChatImporterPlugin from "../../main";
 import { generateSafeAlias, moveAndMergeFolders } from "../../utils";
 import { DateParser } from "../../utils/date-parser";
-import { TFolder, TFile } from "obsidian";
+import { FrontMatterCache, TFolder, TFile } from "obsidian";
 import {
     ConfigureFolderLocationsDialog,
     FolderConfigurationResult,
@@ -79,8 +79,10 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
             let foundNonISO = false;
 
             for (const file of conversationFiles) {
-                const fm = context.plugin.app.metadataCache.getFileCache(file)
-                    ?.frontmatter as any;
+                const fm =
+                    context.plugin.app.metadataCache.getFileCache(
+                        file
+                    )?.frontmatter;
                 if (!fm || fm.nexus !== context.plugin.manifest.id) continue;
 
                 const vals = [fm.create_time, fm.update_time].filter(
@@ -146,9 +148,10 @@ class ConvertToISO8601TimestampsOperation extends UpgradeOperation {
             if (!this.globalOrder) {
                 const samples: string[] = [];
                 for (const file of conversationFiles) {
-                    const fm = context.plugin.app.metadataCache.getFileCache(
-                        file
-                    )?.frontmatter as any;
+                    const fm =
+                        context.plugin.app.metadataCache.getFileCache(
+                            file
+                        )?.frontmatter;
                     if (!fm || fm.nexus !== context.plugin.manifest.id)
                         continue;
                     const vals = [fm.create_time, fm.update_time].filter(
@@ -921,7 +924,7 @@ class MigrateToSeparateFoldersOperation extends UpgradeOperation {
                 message: "Reports folder migrated successfully",
                 details: results,
             };
-        } catch (error: any) {
+        } catch (error: unknown) {
             const errorMsg =
                 error instanceof Error ? error.message : String(error);
             console.error(`[MigrateReportsFolder] Failed:`, error);
@@ -986,8 +989,10 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
 
             // Check if any artifacts need migration (missing create_time or has old header)
             for (const file of artifactFiles) {
-                const fm = context.plugin.app.metadataCache.getFileCache(file)
-                    ?.frontmatter as any;
+                const fm =
+                    context.plugin.app.metadataCache.getFileCache(
+                        file
+                    )?.frontmatter;
                 if (!fm || fm.provider !== "claude") continue;
 
                 // Check if create_time is missing
@@ -1053,9 +1058,10 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
 
             for (const file of artifactFiles) {
                 try {
-                    const fm = context.plugin.app.metadataCache.getFileCache(
-                        file
-                    )?.frontmatter as any;
+                    const fm =
+                        context.plugin.app.metadataCache.getFileCache(
+                            file
+                        )?.frontmatter;
                     if (!fm || fm.provider !== "claude") {
                         skippedCount++;
                         continue;
@@ -1200,10 +1206,16 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                     } else {
                         // intentionally empty
                     }
-                } catch (error: any) {
+                } catch (error: unknown) {
                     errorCount++;
                     console.error(`${file.basename}: ❌ ERROR:`, error);
-                    results.push(`❌ ${file.basename}: ${error.message}`);
+                    results.push(
+                        `❌ ${file.basename}: ${
+                            error instanceof Error
+                                ? error.message
+                                : String(error)
+                        }`
+                    );
                 }
             }
 
@@ -1229,10 +1241,12 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                 message: `Migrated ${updatedCount} artifact(s) with ${warningCount} warning(s) and ${errorCount} error(s)`,
                 details: results,
             };
-        } catch (error: any) {
+        } catch (error: unknown) {
             return {
                 success: false,
-                message: `Migration failed: ${error.message}`,
+                message: `Migration failed: ${
+                    error instanceof Error ? error.message : String(error)
+                }`,
                 details: results,
             };
         }
@@ -1242,10 +1256,10 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
      * Extract artifact create_time from conversation note
      */
     private async extractArtifactCreateTime(
-        artifactFm: any,
+        artifactFm: FrontMatterCache,
         conversationFolder: string,
         plugin: NexusAiChatImporterPlugin,
-        artifactFile: any
+        artifactFile: TFile
     ): Promise<{ value: string; source: "message" | "conversation" | "none" }> {
         const artifactId = artifactFm.artifact_id;
         const versionNumber = artifactFm.version_number;
@@ -1281,9 +1295,10 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                     `Artifact ${artifactRef}: Missing artifact_id or version_number, using conversation fallback`
                 );
                 // Fallback to conversation create_time
-                const fm = plugin.app.metadataCache.getFileCache(
-                    conversationFile
-                )?.frontmatter as any;
+                const fm =
+                    plugin.app.metadataCache.getFileCache(
+                        conversationFile
+                    )?.frontmatter;
                 if (fm?.create_time) {
                     return { value: fm.create_time, source: "conversation" };
                 }
@@ -1311,9 +1326,10 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
                     `Artifact ${artifactRef}: Artifact link not found in conversation, using conversation fallback`
                 );
                 // Fallback to conversation create_time
-                const fm = plugin.app.metadataCache.getFileCache(
-                    conversationFile
-                )?.frontmatter as any;
+                const fm =
+                    plugin.app.metadataCache.getFileCache(
+                        conversationFile
+                    )?.frontmatter;
                 if (fm?.create_time) {
                     return { value: fm.create_time, source: "conversation" };
                 }
@@ -1376,8 +1392,10 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
             }
 
             // Fallback to conversation create_time
-            const fm = plugin.app.metadataCache.getFileCache(conversationFile)
-                ?.frontmatter as any;
+            const fm =
+                plugin.app.metadataCache.getFileCache(
+                    conversationFile
+                )?.frontmatter;
             if (fm?.create_time) {
                 return { value: fm.create_time, source: "conversation" };
             }
@@ -1407,8 +1425,7 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
         for (const file of allFiles) {
             if (!file.path.startsWith(claudePath)) continue;
 
-            const fm = plugin.app.metadataCache.getFileCache(file)
-                ?.frontmatter as any;
+            const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
             if (fm?.conversation_id === conversationId) {
                 return file;
             }
@@ -1434,8 +1451,10 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
             return null;
         }
 
-        const fm = plugin.app.metadataCache.getFileCache(conversationFile)
-            ?.frontmatter as any;
+        const fm =
+            plugin.app.metadataCache.getFileCache(
+                conversationFile
+            )?.frontmatter;
         const title = fm?.aliases || conversationFile.basename;
 
         // Remove .md extension from path for Obsidian links
@@ -1457,8 +1476,10 @@ class MigrateClaudeArtifactsOperation extends UpgradeOperation {
 
             // Verify all artifacts have create_time
             for (const file of artifactFiles) {
-                const fm = context.plugin.app.metadataCache.getFileCache(file)
-                    ?.frontmatter as any;
+                const fm =
+                    context.plugin.app.metadataCache.getFileCache(
+                        file
+                    )?.frontmatter;
                 if (fm?.provider === "claude" && !fm.create_time) {
                     return false;
                 }
