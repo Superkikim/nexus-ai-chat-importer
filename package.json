@@ -14,7 +14,8 @@
         "test:ui": "vitest --ui",
         "test:run": "vitest run",
         "test:coverage": "vitest run --coverage",
-        "check:docs-links": "node scripts/check-doc-links.mjs"
+        "check:docs-links": "node scripts/check-doc-links.mjs",
+        "lint:strict": "eslint src/"
     },
     "keywords": [],
     "author": "Akim Sissaoui (Superkikim)",
@@ -31,7 +32,7 @@
         "esbuild": "0.17.3",
         "eslint": "^10.4.0",
         "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-obsidianmd": "^0.3.0",
+        "eslint-plugin-obsidianmd": "^0.4.0",
         "eslint-plugin-prettier": "^5.5.5",
         "obsidian": "^1.8.7",
         "prettier": "^2.3.2",
