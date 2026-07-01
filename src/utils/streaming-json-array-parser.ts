@@ -36,7 +36,7 @@ export class StreamingJsonArrayParser {
      * - ChatGPT:        [ { ... }, { ... }, ... ]
      * - Claude:  { ..., "conversations": [ { ... }, ... ], ... }
      */
-    static *streamConversations(json: string): Generator<any> {
+    static *streamConversations(json: string): Generator<unknown> {
         const arraySlice = this.extractConversationsArray(json);
         for (const element of this.streamArrayElements(arraySlice)) {
             try {
@@ -58,7 +58,7 @@ export class StreamingJsonArrayParser {
      */
     static async *streamConversationsFromChunks(
         chunks: AsyncIterable<string>
-    ): AsyncGenerator<any> {
+    ): AsyncGenerator<unknown> {
         const arrayState = await this.findConversationsArrayStart(chunks);
         if (!arrayState) {
             throw new Error(

@@ -338,7 +338,7 @@ export class ClaudeAttachmentExtractor {
      */
     private async saveAttachmentToVault(
         fileName: string,
-        zipFile: { readBytes(): Promise<Uint8Array> },
+        zipFile: ZipEntryHandle,
         category: string = "files"
     ): Promise<string> {
         const attachmentFolder = `${this.plugin.settings.attachmentFolder}/claude/${category}`;
@@ -357,7 +357,7 @@ export class ClaudeAttachmentExtractor {
 
         const filePath = `${attachmentFolder}/${fileName}`;
         const writeResult = await writeZipEntryToVault(
-            zipFile as any,
+            zipFile,
             filePath,
             this.plugin.app.vault
         );

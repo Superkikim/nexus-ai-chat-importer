@@ -442,7 +442,7 @@ export async function extractRawConversations(
 export async function* extractConversationsStream(
     zip: ZipArchiveReader,
     options: ConversationStreamOptions = {}
-): AsyncGenerator<any> {
+): AsyncGenerator<unknown> {
     const streamLogger = logger.child("Stream");
     const startedAt = Date.now();
     const largeJsonThresholdBytes =

@@ -55,11 +55,10 @@ export default defineConfig([
     {
         files: ["src/**/*.ts"],
         rules: {
-            // ── Tech-debt: any-typing (dedicated cleanup PR) ──────────────────
-            // The no-unsafe-* family fires wherever an `any` value is used in
-            // a typed context. Turning these off together with no-explicit-any
-            // defers the full type-safety audit to a follow-up PR.
-            "@typescript-eslint/no-explicit-any": "off",
+            // ── Tech-debt: no-unsafe-* family ────────────────────────────────
+            // These fire wherever an `unknown` or inferred-any value is used in
+            // a typed context (e.g. JSON.parse results, index-signature access).
+            // Deferred to a follow-up PR focused on full narrowing hygiene.
             "@typescript-eslint/no-unsafe-assignment": "off",
             "@typescript-eslint/no-unsafe-member-access": "off",
             "@typescript-eslint/no-unsafe-argument": "off",

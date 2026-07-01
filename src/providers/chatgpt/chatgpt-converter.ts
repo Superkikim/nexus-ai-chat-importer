@@ -17,7 +17,7 @@
  */
 
 // src/providers/chatgpt/chatgpt-converter.ts
-import { Chat, ChatMessage } from "./chatgpt-types";
+import { Chat, ChatMessage, ContentPart } from "./chatgpt-types";
 import {
     StandardConversation,
     StandardMessage,
@@ -221,7 +221,7 @@ export class ChatGPTConverter {
                     typeof part.content === "string"
                 ) {
                     const codeType = part.type as string;
-                    const codeContent = part.content as string;
+                    const codeContent = part.content;
 
                     if (codeContent.trim() !== "") {
                         // Extract language from type (e.g., "code/markdown" -> "markdown")
@@ -353,7 +353,7 @@ export class ChatGPTConverter {
      * Extract image attachment from content part
      */
     private static extractImageAttachment(
-        part: any,
+        part: ContentPart,
         _conversationId?: string
     ): StandardAttachment | null {
         if (!part.asset_pointer) return null;

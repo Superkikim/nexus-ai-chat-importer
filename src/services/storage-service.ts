@@ -232,7 +232,9 @@ export class StorageService {
         const startTime = Date.now();
 
         // Type assertion for undocumented Obsidian API
-        const metadataCache = this.plugin.app.metadataCache as any;
+        const metadataCache = this.plugin.app.metadataCache as unknown as {
+            isCacheClean(): boolean;
+        };
 
         while (!metadataCache.isCacheClean()) {
             if (Date.now() - startTime > maxWaitMs) {

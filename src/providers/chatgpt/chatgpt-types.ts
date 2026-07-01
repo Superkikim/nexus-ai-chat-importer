@@ -111,6 +111,7 @@ export interface ContentPart {
     width?: number;
     height?: number;
     metadata?: {
+        mime_type?: string;
         dalle?: {
             gen_id?: string;
             prompt?: string;

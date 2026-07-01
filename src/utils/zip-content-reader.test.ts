@@ -58,9 +58,7 @@ describe("zip-content-reader", () => {
 
         expect(result.conversations).toHaveLength(2);
         expect(
-            result.conversations.map(
-                (conv) => (conv as { id: string }).id
-            )
+            result.conversations.map((conv) => (conv as { id: string }).id)
         ).toEqual(["c1", "c2"]);
     });
 
@@ -71,7 +69,7 @@ describe("zip-content-reader", () => {
 
         const ids: string[] = [];
         for await (const conversation of extractConversationsStream(reader)) {
-            ids.push(conversation.id);
+            ids.push((conversation as { id: string }).id);
         }
 
         expect(ids).toEqual(["c1", "c2"]);
@@ -115,7 +113,10 @@ describe("zip-content-reader", () => {
 
         const ids: string[] = [];
         for await (const conversation of extractConversationsStream(reader)) {
-            ids.push(conversation.metadata.thread_id);
+            ids.push(
+                (conversation as { metadata: { thread_id: string } }).metadata
+                    .thread_id
+            );
         }
 
         expect(ids).toEqual(["t1", "t2"]);

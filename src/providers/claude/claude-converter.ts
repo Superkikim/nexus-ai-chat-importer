@@ -17,6 +17,7 @@
  */
 
 // src/providers/claude/claude-converter.ts
+import { TFile } from "obsidian";
 import {
     StandardConversation,
     StandardMessage,
@@ -27,9 +28,36 @@ import {
     ClaudeMessage,
     ClaudeContentBlock,
     ClaudeAttachment,
+    ClaudeFile,
 } from "./claude-types";
 import { generateSafeAlias, generateConversationFileName } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
+
+type ArtifactInput = {
+    _format?: string;
+    _blockId?: string;
+    code?: string;
+    command?: string;
+    content?: string;
+    description?: string;
+    file_text?: string;
+    id?: string;
+    language?: string;
+    old_str?: string;
+    new_str?: string;
+    path?: string;
+    title?: string;
+    type?: string;
+    version_uuid?: string;
+    [key: string]: unknown;
+};
+
+type ArtifactSummaryInfo = {
+    title?: string;
+    totalVersions?: number;
+    latestVersion?: number;
+    [key: string]: unknown;
+};
 
 export class ClaudeConverter {
     private static plugin: NexusAiChatImporterPlugin;
@@ -143,7 +171,7 @@ export class ClaudeConverter {
         // PHASE 1B: Collect ALL artifacts from entire conversation with message timestamps
         // Support BOTH old format (artifacts) and new format (create_file + str_replace)
         const allArtifacts: Array<{
-            artifact: any;
+            artifact: ArtifactInput;
             messageIndex: number;
             blockIndex: number;
             messageTimestamp: number;
@@ -431,7 +459,7 @@ export class ClaudeConverter {
      */
     private static async processAllArtifacts(
         allArtifacts: Array<{
-            artifact: any;
+            artifact: ArtifactInput;
             messageIndex: number;
             blockIndex: number;
             messageTimestamp: number;
@@ -541,7 +569,7 @@ export class ClaudeConverter {
                 // For new format: use path + version number as key
                 const versionKey = isNewFormat
                     ? `${artifact.path}::v${currentVersion}`
-                    : artifact.version_uuid;
+                    : artifact.version_uuid ?? "";
 
                 artifactVersionMap.set(versionKey, {
                     versionNumber: currentVersion,
@@ -550,7 +578,7 @@ export class ClaudeConverter {
 
                 // Build per-message callout map for new format artifacts
                 if (isNewFormat) {
-                    const fileName = artifact.path.split("/").pop();
+                    const fileName = (artifact.path ?? "").split("/").pop();
                     if (fileName) {
                         const title = artifact.title || artifactId;
                         const artifactFileName = `${artifactId}_v${currentVersion}`;
@@ -745,11 +773,11 @@ export class ClaudeConverter {
         conversationTitle?: string,
         conversationCreateTime?: number,
         versionCounters?: Map<string, number>,
-        artifactSummaries?: Map<string, any>
+        artifactSummaries?: Map<string, unknown>
     ): Promise<{ text: string; attachments: StandardAttachment[] }> {
         const textParts: string[] = [];
         const attachments: StandardAttachment[] = [];
-        const artifactVersionsMap = new Map<string, any[]>(); // Track all versions by artifact ID
+        const artifactVersionsMap = new Map<string, ArtifactInput[]>(); // Track all versions by artifact ID
 
         // Handle empty or null content blocks
         if (!contentBlocks || contentBlocks.length === 0) {
@@ -854,7 +882,7 @@ export class ClaudeConverter {
         // Second pass: process artifacts in messages and create specific links
         // Use provided counters or create new ones (for backward compatibility)
         if (!versionCounters) versionCounters = new Map<string, number>();
-        if (!artifactSummaries) artifactSummaries = new Map<string, any>();
+        if (!artifactSummaries) artifactSummaries = new Map<string, unknown>();
 
         // Global artifact content tracking for cumulative updates
         const artifactContents = new Map<string, string>();
@@ -1009,7 +1037,9 @@ export class ClaudeConverter {
         };
     }
 
-    private static processFileAttachments(files: any[]): StandardAttachment[] {
+    private static processFileAttachments(
+        files: ClaudeFile[]
+    ): StandardAttachment[] {
         const attachments: StandardAttachment[] = [];
 
         // Handle empty or null files array
@@ -1162,7 +1192,7 @@ export class ClaudeConverter {
      */
     private static async saveSingleArtifactVersionWithContent(
         artifactId: string,
-        artifactData: any,
+        artifactData: ArtifactInput,
         versionNumber: number,
         finalContent: string,
         conversationId?: string,
@@ -1230,7 +1260,7 @@ export class ClaudeConverter {
      */
     private static createArtifactSummary(
         artifactId: string,
-        info: any,
+        info: ArtifactSummaryInfo,
         conversationTitle?: string,
         conversationCreateTime?: number
     ): string {
@@ -1266,7 +1296,7 @@ export class ClaudeConverter {
      * Format artifact summary for conversation display
      */
     private static formatArtifactSummary(
-        firstVersion: any,
+        firstVersion: ArtifactInput | undefined,
         savedVersions: string[],
         latestVersion: string,
         conversationFolder: string
@@ -1303,7 +1333,7 @@ export class ClaudeConverter {
      * Save a single artifact version with specific content
      */
     private static async saveIndividualArtifactVersion(
-        artifactInput: any,
+        artifactInput: ArtifactInput,
         filePath: string,
         versionNumber: number,
         versionContent: string,
@@ -1455,7 +1485,7 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
      * Check if we should skip saving this artifact version (already exists)
      */
     private static resolveArtifactVersionUuid(
-        artifactInput: any,
+        artifactInput: ArtifactInput,
         versionNumber: number
     ): string {
         const explicitVersionUuid =
@@ -1509,12 +1539,12 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
         try {
             const existingFile =
                 this.plugin.app.vault.getAbstractFileByPath(filePath);
-            if (!existingFile) {
-                return false; // File doesn't exist, don't skip
+            if (!existingFile || !(existingFile instanceof TFile)) {
+                return false; // File doesn't exist or is a folder, don't skip
             }
 
             const existingContent = await this.plugin.app.vault.read(
-                existingFile as any
+                existingFile
             );
             const existingVersionUuid =
                 this.extractVersionUuidFromArtifactContent(existingContent);
@@ -1575,8 +1605,8 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
      * Priority: create > rewrite > update (with content) > view
      */
     private static shouldReplaceArtifact(
-        current: any,
-        candidate: any
+        current: ArtifactInput,
+        candidate: ArtifactInput
     ): boolean {
         const currentCommand = current.command || "create";
         const candidateCommand = candidate.command || "create";
@@ -1591,9 +1621,8 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
             view: 1,
         };
 
-        const currentPriority = commandPriority[currentCommand as string] || 1;
-        const candidatePriority =
-            commandPriority[candidateCommand as string] || 1;
+        const currentPriority = commandPriority[currentCommand] || 1;
+        const candidatePriority = commandPriority[candidateCommand] || 1;
 
         // Higher priority command wins
         if (candidatePriority > currentPriority) {
@@ -1612,7 +1641,7 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
      * Extract artifact ID from file path (new format)
      * Example: "/home/claude/lettre_table.js" → "lettre_table"
      */
-    private static extractArtifactIdFromPath(path: string): string {
+    private static extractArtifactIdFromPath(path: string | undefined): string {
         if (!path) return "unknown";
 
         // Extract filename from path
@@ -1632,7 +1661,7 @@ aliases: [${safeArtifactTitle}, ${safeArtifactAlias}]
      * Detect language from file path extension (new format)
      * Example: "/home/claude/script.py" → "python"
      */
-    private static detectLanguageFromPath(path: string): string {
+    private static detectLanguageFromPath(path: string | undefined): string {
         if (!path) return "text";
 
         const extension = path.split(".").pop()?.toLowerCase() || "";

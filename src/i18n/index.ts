@@ -29,7 +29,7 @@ import ja from "./locales/ja.json";
 import pt from "./locales/pt.json";
 import ko from "./locales/ko.json";
 
-const locales: Record<string, Record<string, any>> = {
+const locales: Record<string, Record<string, unknown>> = {
     en,
     fr,
     de,
@@ -66,12 +66,14 @@ export function initLocale(): void {
  */
 export function t(key: string, vars?: Record<string, string>): string {
     const keys = key.split(".");
-    const resolve = (obj: Record<string, any>): string | undefined =>
+    const resolve = (obj: Record<string, unknown>): string | undefined =>
         keys.reduce(
-            (o: any, k: string) =>
-                o && typeof o === "object" ? o[k] : undefined,
-            obj
-        );
+            (o: unknown, k: string): unknown =>
+                o !== null && typeof o === "object"
+                    ? (o as Record<string, unknown>)[k]
+                    : undefined,
+            obj as unknown
+        ) as string | undefined;
 
     let str: string =
         resolve(locales[_locale]) ?? resolve(locales["en"]) ?? key;

@@ -16,17 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Platform, moment } from "obsidian";
+import { Platform } from "obsidian";
 import { ProviderRegistry } from "../providers/provider-adapter";
 import { Chat, ChatMessage } from "../providers/chatgpt/chatgpt-types";
 import {
     ClaudeConversation,
     ClaudeMessage,
 } from "../providers/claude/claude-types";
-import {
-    MistralVibeConversation,
-    MistralVibeMessage,
-} from "../providers/vibe/vibe-types";
+import { MistralVibeConversation } from "../providers/vibe/vibe-types";
 import { PerplexityRawConversationFile } from "../providers/perplexity/perplexity-types";
 import { ConversationCatalogEntry } from "../types/plugin";
 import { isValidMessage, compareTimestampsIgnoringSeconds } from "../utils";
@@ -127,7 +124,7 @@ export class ConversationMetadataExtractor {
         forcedProvider?: string,
         sourceFileName?: string,
         sourceFileIndex?: number,
-        existingConversations?: Map<string, any>
+        existingConversations?: Map<string, ConversationCatalogEntry>
     ): Promise<ConversationMetadata[]> {
         const startedAt = Date.now();
         const entries = await zip.listEntries();
@@ -227,7 +224,7 @@ export class ConversationMetadataExtractor {
     async extractMetadataFromMultipleZips(
         files: File[],
         forcedProvider?: string,
-        existingConversations?: Map<string, any>
+        existingConversations?: Map<string, ConversationCatalogEntry>
     ): Promise<MetadataExtractionResult> {
         const batchStartedAt = Date.now();
         this.metadataLogger.debug(`Begin metadata extraction batch`, {
@@ -627,8 +624,7 @@ export class ConversationMetadataExtractor {
     private extractMistralVibeMetadata(
         conversations: unknown[]
     ): ConversationMetadata[] {
-        const vibeConversations =
-            conversations as MistralVibeConversation[];
+        const vibeConversations = conversations as MistralVibeConversation[];
         return vibeConversations
             .filter((chat) => {
                 if (!Array.isArray(chat) || chat.length === 0) {
@@ -638,7 +634,7 @@ export class ConversationMetadataExtractor {
                     return false;
                 }
 
-                const firstMessage = chat[0] as MistralVibeMessage;
+                const firstMessage = chat[0];
                 if (!firstMessage.chatId || !firstMessage.createdAt) {
                     this.plugin.logger.warn(
                         "Skipping Mistral Vibe conversation with missing chatId or createdAt"
@@ -739,9 +735,7 @@ export class ConversationMetadataExtractor {
                         : 0;
                 const messageCount = turns.reduce((count, turn) => {
                     const query =
-                        typeof turn.query === "string"
-                            ? turn.query.trim()
-                            : "";
+                        typeof turn.query === "string" ? turn.query.trim() : "";
                     const answer =
                         typeof turn.answer === "string"
                             ? turn.answer.trim()
@@ -862,14 +856,7 @@ export class ConversationMetadataExtractor {
 
             conversation.existingUpdateTime = vaultConversation.updateTime;
 
-            const zipUpdateTimeISO = new Date(
-                conversation.updateTime * 1000
-            ).toISOString();
-            const normalizedZipUpdateTime = (moment as any)(
-                zipUpdateTimeISO,
-                moment.ISO_8601,
-                true
-            ).unix();
+            const normalizedZipUpdateTime = Math.floor(conversation.updateTime);
             const comparison = compareTimestampsIgnoringSeconds(
                 normalizedZipUpdateTime,
                 vaultConversation.updateTime

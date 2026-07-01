@@ -23,7 +23,7 @@ describe("StreamingJsonArrayParser", () => {
 
         const ids: string[] = [];
         for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
-            ids.push(conv.id);
+            ids.push((conv as { id: string }).id);
         }
 
         expect(ids).toEqual(["c1", "c2"]);
@@ -43,7 +43,7 @@ describe("StreamingJsonArrayParser", () => {
         const uuids: string[] = [];
 
         for (const conv of StreamingJsonArrayParser.streamConversations(json)) {
-            uuids.push(conv.uuid);
+            uuids.push((conv as { uuid: string }).uuid);
         }
 
         expect(uuids).toEqual(["ca", "cb"]);
@@ -70,9 +70,10 @@ describe("StreamingJsonArrayParser", () => {
             StreamingJsonArrayParser.streamConversations(json)
         );
 
+        type R = { id: string; meta: { examples: unknown[] } };
         expect(result).toHaveLength(1);
-        expect(result[0].id).toBe("cx");
-        expect(result[0].meta.examples).toHaveLength(2);
+        expect((result[0] as R).id).toBe("cx");
+        expect((result[0] as R).meta.examples).toHaveLength(2);
     });
 
     it("skips elements that fail to parse but continues streaming", () => {
@@ -88,8 +89,9 @@ describe("StreamingJsonArrayParser", () => {
         for (const conv of StreamingJsonArrayParser.streamConversations(
             arrayJson
         )) {
-            if (conv && typeof conv.id === "string") {
-                ids.push(conv.id);
+            const item = conv as Record<string, unknown>;
+            if (item.id && typeof item.id === "string") {
+                ids.push(item.id);
             }
         }
 
@@ -109,7 +111,7 @@ describe("StreamingJsonArrayParser", () => {
         for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(
             chunksFrom(parts)
         )) {
-            ids.push(conv.id);
+            ids.push((conv as { id: string }).id);
         }
 
         expect(ids).toEqual(["c1", "c2"]);
@@ -136,7 +138,7 @@ describe("StreamingJsonArrayParser", () => {
         for await (const conv of StreamingJsonArrayParser.streamConversationsFromChunks(
             chunksFrom(parts)
         )) {
-            uuids.push(conv.uuid);
+            uuids.push((conv as { uuid: string }).uuid);
         }
 
         expect(uuids).toEqual(["ca", "cb"]);

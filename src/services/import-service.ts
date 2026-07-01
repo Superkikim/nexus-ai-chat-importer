@@ -111,7 +111,7 @@ export class ImportService {
     }
 
     async selectZipFile() {
-        const input = activeDocument.createElement("input");
+        const input = activeDocument.createEl("input");
         input.type = "file";
         input.accept = ".zip";
         input.multiple = true;
@@ -875,7 +875,14 @@ export class ImportService {
             // Pass the attachment map to the ChatGPT adapter
             const chatgptAdapter = this.providerRegistry.getAdapter(
                 "chatgpt"
-            ) as any;
+            ) as unknown as
+                | {
+                      setAttachmentMap(
+                          m: AttachmentMap,
+                          z: ZipArchiveReader[]
+                      ): void;
+                  }
+                | undefined;
             if (chatgptAdapter && this.currentAttachmentMap) {
                 chatgptAdapter.setAttachmentMap(
                     this.currentAttachmentMap,
@@ -897,7 +904,7 @@ export class ImportService {
 
         const chatgptAdapter = this.providerRegistry.getAdapter(
             "chatgpt"
-        ) as any;
+        ) as unknown as { clearAttachmentMap(): void } | undefined;
         if (chatgptAdapter) {
             chatgptAdapter.clearAttachmentMap();
         }
