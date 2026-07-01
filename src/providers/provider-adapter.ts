@@ -25,9 +25,9 @@ import {
 import { ZipArchiveReader } from "../utils/zip-loader";
 
 // Minimal provider-agnostic adapter contract
-export interface ProviderAdapter<TChat = any> {
+export interface ProviderAdapter<TChat = unknown> {
     // Identify provider from raw conversation sample
-    detect(rawConversations: any[]): boolean;
+    detect(rawConversations: unknown[]): boolean;
 
     // Basic chat accessors
     getId(chat: TChat): string;
@@ -44,7 +44,7 @@ export interface ProviderAdapter<TChat = any> {
     getProviderName(): string; // e.g., 'chatgpt', 'claude'
 
     // New messages detection given existing message IDs extracted from note
-    getNewMessages(chat: TChat, existingMessageIds: string[]): any[];
+    getNewMessages(chat: TChat, existingMessageIds: string[]): unknown[];
 
     // Attachment processing (best-effort); return messages with updated attachments
     processMessageAttachments?(
@@ -68,8 +68,8 @@ export interface ProviderRegistry {
     // Return adapter for a provider name
     getAdapter(provider: string): ProviderAdapter | undefined;
 
-    // Detect which adapter matches raw data; return provider name
-    detectProvider(rawConversations: any[]): string | "unknown";
+    // Detect which adapter matches raw data; return provider name or "unknown"
+    detectProvider(rawConversations: unknown[]): string;
 }
 
 export class DefaultProviderRegistry implements ProviderRegistry {
@@ -83,7 +83,7 @@ export class DefaultProviderRegistry implements ProviderRegistry {
         return this.adapters[provider];
     }
 
-    detectProvider(rawConversations: any[]): string | "unknown" {
+    detectProvider(rawConversations: unknown[]): string {
         for (const [name, adapter] of Object.entries(this.adapters)) {
             try {
                 if (adapter.detect(rawConversations)) return name;

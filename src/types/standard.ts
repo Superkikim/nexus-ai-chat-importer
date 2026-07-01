@@ -66,7 +66,7 @@ export interface StandardAttachment {
     // Provider-agnostic metadata
     attachmentType?: AttachmentType;
     generationPrompt?: string; // For generated content (images, artifacts, etc.)
-    providerMetadata?: Record<string, any>; // Provider-specific data
+    providerMetadata?: Record<string, unknown>; // Provider-specific data
 }
 
 /**
@@ -92,7 +92,7 @@ export interface StandardConversation {
     updateTime: number; // Unix timestamp
     messages: StandardMessage[];
     chatUrl?: string; // Provider-specific URL
-    metadata?: Record<string, any>; // Provider-specific extra data
+    metadata?: Record<string, unknown>; // Provider-specific extra data
     plugin_version?: string; // Version of plugin that created/last modified this conversation
 }
 
@@ -142,7 +142,7 @@ export interface ReportNamingStrategy {
      */
     getProviderSpecificColumn(): {
         header: string;
-        getValue: (adapter: any, chat: any) => number;
+        getValue: (adapter: unknown, chat: unknown) => number;
     };
 }
 
