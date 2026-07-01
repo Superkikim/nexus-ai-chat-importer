@@ -6,12 +6,12 @@
  * Node.js built-in APIs (fs, path, crypto) that are unavailable in the plugin.
  *
  * Provides mock implementations of Obsidian classes so the plugin's service
- * layer can run in a Node.js environment. Backed by `fs` and `js-yaml`.
+ * layer can run in a Node.js environment. Backed by `fs` and `yaml`.
  */
 
 const fs = require("fs") as typeof import("fs");
 const pathMod = require("path") as typeof import("path");
-const yaml = require("js-yaml") as typeof import("js-yaml");
+const yaml = require("yaml") as typeof import("yaml");
 const momentLib = require("moment") as { default: typeof import("moment") };
 const crypto = require("crypto") as typeof import("crypto");
 
@@ -221,7 +221,7 @@ class MetadataCache {
             const content = fs.readFileSync(abs, "utf-8");
             const match = content.match(/^---\n([\s\S]*?)\n---/);
             if (!match) return { frontmatter: undefined };
-            const frontmatter = yaml.load(match[1]) as Record<string, any>;
+            const frontmatter = yaml.parse(match[1]) as Record<string, unknown>;
             return { frontmatter };
         } catch {
             return null;
