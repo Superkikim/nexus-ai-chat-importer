@@ -272,7 +272,7 @@ export class ChatGPTAttachmentExtractor {
                     },
                 };
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             const errorMessage =
                 error instanceof Error ? error.message : String(error);
             const context = messageId

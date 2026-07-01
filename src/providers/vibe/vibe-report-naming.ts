@@ -73,19 +73,20 @@ export class MistralVibeReportNamingStrategy implements ReportNamingStrategy {
      */
     getProviderSpecificColumn(): {
         header: string;
-        getValue: (adapter: any, chat: any) => number;
+        getValue: (adapter: unknown, chat: unknown) => number;
     } {
         return {
             header: "Attachments",
-            getValue: (_adapter: unknown, chat: MistralVibeConversation) => {
+            getValue: (_adapter: unknown, chat: unknown) => {
+                const vibeChat = chat as MistralVibeConversation;
                 let attachmentCount = 0;
 
-                if (!Array.isArray(chat)) {
+                if (!Array.isArray(vibeChat)) {
                     return 0;
                 }
 
                 // Count file attachments in all messages
-                for (const message of chat) {
+                for (const message of vibeChat) {
                     if (message.files && Array.isArray(message.files)) {
                         attachmentCount += message.files.length;
                     }

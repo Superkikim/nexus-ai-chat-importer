@@ -31,6 +31,14 @@ const utf8Encoder = new TextEncoder();
 export const CONVERSATION_NOTE_FILENAME_MAX_BYTES = 120;
 
 /**
+ * Extract a human-readable error message from an unknown catch value.
+ * Use in `catch (error: unknown)` blocks instead of `error.message`.
+ */
+export function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+}
+
+/**
  * Truncate Unix timestamp to minute precision (remove seconds)
  * Used for comparing conversation timestamps between v1.2.0 (no seconds) and v1.3.0 (with seconds)
  *

@@ -34,6 +34,7 @@ import {
 import { Chat, ChatMessage } from "./chatgpt-types";
 import { sanitizeFileName } from "../../utils/file-utils";
 import { ZipArchiveReader } from "../../utils/zip-loader";
+import { AttachmentMap } from "../../services/attachment-map-builder";
 import type NexusAiChatImporterPlugin from "../../main";
 import {
     BaseProviderAdapter,
@@ -58,10 +59,10 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
         this.reportNamingStrategy = new ChatGPTReportNamingStrategy();
     }
 
-    detect(rawConversations: any[]): boolean {
+    detect(rawConversations: unknown[]): boolean {
         if (rawConversations.length === 0) return false;
 
-        const sample = rawConversations[0];
+        const sample = rawConversations[0] as Record<string, unknown>;
 
         // ChatGPT detection: has mapping property and typical structure
         return !!(
@@ -323,7 +324,7 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
     /**
      * Set attachment map for multi-ZIP support
      */
-    setAttachmentMap(attachmentMap: any, allZips: any[]): void {
+    setAttachmentMap(attachmentMap: AttachmentMap, allZips: ZipArchiveReader[]): void {
         this.attachmentExtractor.setAttachmentMap(attachmentMap, allZips);
     }
 

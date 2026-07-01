@@ -38,7 +38,7 @@ export interface ChatMessage {
         role: "user" | "assistant" | "system" | "tool";
     };
     content: {
-        parts: (string | any)[];
+        parts: (string | ContentPart)[];
         content_type?: string;
         text?: string; // Used when content_type is "code" (OpenAI inconsistency)
     };
@@ -56,7 +56,8 @@ export interface ChatMessage {
             height?: number;
         }>;
         async_task_type?: string; // Used to identify research tasks
-        [key: string]: any;
+        content_references?: unknown[];
+        [key: string]: unknown;
     };
 }
 
@@ -87,7 +88,7 @@ export interface Chat {
     is_starred?: boolean | null;
     current_node?: string;
     plugin_ids?: string[] | null;
-    moderation_results?: any[];
+    moderation_results?: unknown[];
     safe_urls?: string[];
     blocked_urls?: string[];
     conversation_origin?: string | null;
@@ -116,8 +117,8 @@ export interface ContentPart {
             seed?: number | null;
             parent_gen_id?: string | null;
             edit_op?: string | null;
-        };
-        [key: string]: any;
+        } | null;
+        [key: string]: unknown;
     };
-    [key: string]: any;
+    [key: string]: unknown;
 }

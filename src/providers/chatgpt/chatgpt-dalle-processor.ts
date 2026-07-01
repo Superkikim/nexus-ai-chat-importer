@@ -17,7 +17,7 @@
  */
 
 // src/providers/chatgpt/chatgpt-dalle-processor.ts
-import { Chat, ChatMessage } from "./chatgpt-types";
+import { Chat, ChatMapping, ChatMessage, ContentPart } from "./chatgpt-types";
 import { StandardMessage, StandardAttachment } from "../../types/standard";
 
 /**
@@ -77,7 +77,7 @@ export class ChatGPTDalleProcessor {
      * Stops at first user message encountered (limit to prevent going too far)
      */
     private static findDalleImageInDescendants(
-        mapping: Record<string, any>,
+        mapping: Record<string, ChatMapping>,
         startId: string
     ): string | null {
         const queue = [startId];
@@ -226,20 +226,24 @@ export class ChatGPTDalleProcessor {
      * The prompt will be embedded in extractedContent for display
      */
     static createDalleAttachment(
-        contentPart: any,
+        contentPart: ContentPart,
         associatedPrompt?: string,
         hasImage: boolean = true
     ): StandardAttachment {
-        const fileId = contentPart.asset_pointer.includes("://")
-            ? contentPart.asset_pointer.split("://")[1]
-            : contentPart.asset_pointer;
+        // callers verify asset_pointer and metadata.dalle exist before invoking
+        const assetPointer = contentPart.asset_pointer!;
+        const dalle = contentPart.metadata!.dalle!;
 
-        const genId = contentPart.metadata.dalle.gen_id || "unknown";
+        const fileId = assetPointer.includes("://")
+            ? assetPointer.split("://")[1]
+            : assetPointer;
+
+        const genId = dalle.gen_id || "unknown";
         const width = contentPart.width || 1024;
         const height = contentPart.height || 1024;
         const fileName = `dalle_${genId}_${width}x${height}.png`;
 
-        const prompt = associatedPrompt || contentPart.metadata.dalle.prompt;
+        const prompt = associatedPrompt || dalle.prompt;
 
         // Create extracted content with prompt + image callouts (provider-formatted)
         let extractedContent = "";
@@ -283,10 +287,10 @@ export class ChatGPTDalleProcessor {
             // Provider-specific metadata
             providerMetadata: {
                 dalle: {
-                    gen_id: contentPart.metadata.dalle.gen_id,
-                    seed: contentPart.metadata.dalle.seed,
-                    parent_gen_id: contentPart.metadata.dalle.parent_gen_id,
-                    edit_op: contentPart.metadata.dalle.edit_op,
+                    gen_id: dalle.gen_id,
+                    seed: dalle.seed,
+                    parent_gen_id: dalle.parent_gen_id,
+                    edit_op: dalle.edit_op,
                 },
             },
         };

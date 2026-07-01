@@ -41,10 +41,10 @@ export class ClaudeAdapter extends BaseProviderAdapter<ClaudeConversation> {
         this.reportNamingStrategy = new ClaudeReportNamingStrategy();
     }
 
-    detect(rawConversations: any[]): boolean {
+    detect(rawConversations: unknown[]): boolean {
         if (rawConversations.length === 0) return false;
 
-        const sample = rawConversations[0];
+        const sample = rawConversations[0] as Record<string, unknown>;
 
         // Claude detection: has uuid, name field, chat_messages array, created_at/updated_at
         // Note: 'account' field is optional (not present in older Claude exports)

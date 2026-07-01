@@ -19,6 +19,7 @@
 // src/providers/chatgpt/chatgpt-report-naming.ts
 import { ReportNamingStrategy } from "../../types/standard";
 import { extractReportPrefixFromZip } from "../../utils/report-naming-utils";
+import type { Chat } from "./chatgpt-types";
 
 export class ChatGPTReportNamingStrategy implements ReportNamingStrategy {
     /**
@@ -43,29 +44,27 @@ export class ChatGPTReportNamingStrategy implements ReportNamingStrategy {
 
     getProviderSpecificColumn(): {
         header: string;
-        getValue: (adapter: any, chat: any) => number;
+        getValue: (adapter: unknown, chat: unknown) => number;
     } {
         return {
             header: "Attachments",
-            getValue: (adapter: any, chat: any) => {
-                // Count attachments in ChatGPT conversation
+            getValue: (_adapter: unknown, chat: unknown) => {
+                const gptChat = chat as Chat;
                 let attachmentCount = 0;
-                if (chat.mapping) {
-                    Object.values(chat.mapping).forEach((node: any) => {
-                        // Count regular attachments (user uploads)
+                if (gptChat.mapping) {
+                    Object.values(gptChat.mapping).forEach((node) => {
                         if (node.message?.metadata?.attachments) {
                             attachmentCount +=
                                 node.message.metadata.attachments.length;
                         }
-
-                        // Count DALL-E images (generated images)
                         if (node.message?.content?.parts) {
-                            node.message.content.parts.forEach((part: any) => {
+                            node.message.content.parts.forEach((part) => {
+                                if (typeof part === "string") return;
                                 if (
                                     part.content_type ===
                                         "image_asset_pointer" &&
                                     part.asset_pointer &&
-                                    part.metadata?.dalle &&
+                                    part.metadata?.dalle !== undefined &&
                                     part.metadata.dalle !== null
                                 ) {
                                     attachmentCount++;

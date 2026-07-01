@@ -74,7 +74,7 @@ export interface ClaudeContentBlock {
     type: "text" | "thinking" | "tool_use" | "tool_result";
     text?: string;
     thinking?: string;
-    citations?: any[];
+    citations?: Array<{ details?: { url?: string; title?: string } }>;
     summaries?: Array<{
         summary: string;
     }>;
@@ -82,7 +82,16 @@ export interface ClaudeContentBlock {
     name?: string;
     input?: {
         code?: string;
-        [key: string]: any;
+        command?: string;
+        content?: string;
+        description?: string;
+        file_text?: string;
+        id?: string;
+        path?: string;
+        version_uuid?: string;
+        old_str?: string;
+        new_str?: string;
+        [key: string]: unknown;
     };
     // Tool result specific fields
     content?: ClaudeToolResultContentItem[];

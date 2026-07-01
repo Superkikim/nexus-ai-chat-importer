@@ -33,12 +33,12 @@ export class PerplexityAdapter
     private reportNamingStrategy = new PerplexityReportNamingStrategy();
     constructor(_plugin?: unknown) {}
 
-    detect(rawConversations: any[]): boolean {
+    detect(rawConversations: unknown[]): boolean {
         if (!Array.isArray(rawConversations) || rawConversations.length === 0) {
             return false;
         }
 
-        const sample = this.normalize(rawConversations[0]);
+        const sample = this.normalize(rawConversations[0] as PerplexityRawConversationFile);
         if (!sample) return false;
         if (!sample.metadata.thread_id || !sample.metadata.thread_title)
             return false;

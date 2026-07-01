@@ -38,12 +38,14 @@ export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
 
     getProviderSpecificColumn(): {
         header: string;
-        getValue: (adapter: any, chat: any) => number;
+        getValue: (adapter: unknown, chat: unknown) => number;
     } {
         return {
             header: "Artifacts",
-            getValue: (adapter: any, chat: any) =>
-                adapter.countArtifacts ? adapter.countArtifacts(chat) : 0,
+            getValue: (adapter: unknown, chat: unknown) => {
+                const a = adapter as { countArtifacts?: (c: unknown) => number };
+                return a.countArtifacts ? a.countArtifacts(chat) : 0;
+            },
         };
     }
 }

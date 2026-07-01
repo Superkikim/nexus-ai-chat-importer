@@ -43,7 +43,7 @@ export interface AttachmentExtractor {
     extractAttachments(
         zip: ZipArchiveReader,
         conversationId: string,
-        attachments: any[],
+        attachments: StandardAttachment[],
         messageId?: string
     ): Promise<StandardAttachment[]>;
 }
@@ -55,7 +55,7 @@ export interface AttachmentExtractor {
  * This eliminates code duplication and ensures consistent behavior
  * across all provider implementations (ChatGPT, Claude, Mistral, etc.)
  */
-export abstract class BaseProviderAdapter<TChat = any>
+export abstract class BaseProviderAdapter<TChat = unknown>
     implements ProviderAdapter<TChat>
 {
     /**
@@ -116,7 +116,7 @@ export abstract class BaseProviderAdapter<TChat = any>
     /**
      * Identify provider from raw conversation sample
      */
-    abstract detect(rawConversations: any[]): boolean;
+    abstract detect(rawConversations: unknown[]): boolean;
 
     /**
      * Get conversation ID
@@ -153,7 +153,7 @@ export abstract class BaseProviderAdapter<TChat = any>
     /**
      * Get new messages given existing message IDs
      */
-    abstract getNewMessages(chat: TChat, existingMessageIds: string[]): any[];
+    abstract getNewMessages(chat: TChat, existingMessageIds: string[]): unknown[];
 
     /**
      * Get report naming strategy for this provider
