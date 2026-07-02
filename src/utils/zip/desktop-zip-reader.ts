@@ -1,7 +1,26 @@
 import { ZipArchiveReader, ZipEntryHandle, ZipEntryMeta } from "./types";
 import type { ZipFile, Entry } from "yauzl";
 
-import type { Readable } from "stream";
+interface Readable {
+    on(event: "data", listener: (chunk: Uint8Array | string) => void): this;
+    on(event: "end", listener: () => void): this;
+    on(event: "error", listener: (error: Error) => void): this;
+    on(event: string, listener: (...args: unknown[]) => void): this;
+    off?(event: "data", listener: (chunk: Uint8Array | string) => void): this;
+    off?(event: "end", listener: () => void): this;
+    off?(event: "error", listener: (error: Error) => void): this;
+    off?(event: string, listener: (...args: unknown[]) => void): this;
+    removeListener?(
+        event: "data",
+        listener: (chunk: Uint8Array | string) => void
+    ): this;
+    removeListener?(event: "end", listener: () => void): this;
+    removeListener?(event: "error", listener: (error: Error) => void): this;
+    removeListener?(
+        event: string,
+        listener: (...args: unknown[]) => void
+    ): this;
+}
 
 declare const require: (name: string) => unknown;
 

@@ -44,7 +44,7 @@ export function filterConversationsByIds(
 
     const selectedIdsSet = new Set(selectedIds);
 
-    const detectedProvider: string | "unknown" =
+    const detectedProvider: string =
         forcedProvider || providerRegistry.detectProvider(rawConversations);
 
     const adapter: ProviderAdapter | undefined =
