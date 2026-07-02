@@ -22,10 +22,7 @@ const SUPPORTED_NEXUS_LOCALES = [
 type SupportedNexusLocale = (typeof SUPPORTED_NEXUS_LOCALES)[number];
 
 function normalizeLocale(locale?: string): string {
-    const runtimeLocale =
-        locale ??
-        (moment?.locale?.() as string | undefined) ??
-        "en";
+    const runtimeLocale = locale ?? moment?.locale?.() ?? "en";
 
     return runtimeLocale.toLowerCase().split(/[-_]/)[0];
 }

@@ -38,7 +38,9 @@ export class PerplexityAdapter
             return false;
         }
 
-        const sample = this.normalize(rawConversations[0] as PerplexityRawConversationFile);
+        const sample = this.normalize(
+            rawConversations[0] as PerplexityRawConversationFile
+        );
         if (!sample) return false;
         if (!sample.metadata.thread_id || !sample.metadata.thread_title)
             return false;

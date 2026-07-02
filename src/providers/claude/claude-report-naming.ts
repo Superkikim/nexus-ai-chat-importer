@@ -43,7 +43,9 @@ export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
         return {
             header: "Artifacts",
             getValue: (adapter: unknown, chat: unknown) => {
-                const a = adapter as { countArtifacts?: (c: unknown) => number };
+                const a = adapter as {
+                    countArtifacts?: (c: unknown) => number;
+                };
                 return a.countArtifacts ? a.countArtifacts(chat) : 0;
             },
         };

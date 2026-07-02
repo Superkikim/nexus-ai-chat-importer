@@ -74,17 +74,17 @@ export class ImportProgressModal extends Modal {
         const contentContainer = contentEl.createDiv({ cls: "modal-content" });
 
         // Phase indicator
-        this.phaseEl = contentContainer.createEl("div", {
+        this.phaseEl = contentContainer.createDiv({
             cls: "import-phase",
         });
 
         // Import mode indicator
-        this.importModeEl = contentContainer.createEl("div", {
+        this.importModeEl = contentContainer.createDiv({
             cls: "import-mode",
         });
 
         // Conversation counter
-        this.conversationCountEl = contentContainer.createEl("div", {
+        this.conversationCountEl = contentContainer.createDiv({
             cls: "conversation-counter",
         });
 
@@ -99,12 +99,12 @@ export class ImportProgressModal extends Modal {
         });
 
         // Status text
-        this.statusEl = contentContainer.createEl("div", {
+        this.statusEl = contentContainer.createDiv({
             cls: "status-text",
         });
 
         // Detail text
-        this.detailEl = contentContainer.createEl("div", {
+        this.detailEl = contentContainer.createDiv({
             cls: "detail-text",
         });
 

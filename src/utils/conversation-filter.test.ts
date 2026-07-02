@@ -149,9 +149,7 @@ describe("filterConversationsByIds", () => {
         );
 
         expect(result).toHaveLength(1);
-        expect(
-            (result[0] as [{ chatId: string }])[0].chatId
-        ).toBe("chat-2");
+        expect((result[0] as [{ chatId: string }])[0].chatId).toBe("chat-2");
     });
 
     it("handles Claude-style UUID conversations via fallback heuristics", () => {

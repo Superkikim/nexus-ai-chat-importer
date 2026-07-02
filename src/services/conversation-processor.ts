@@ -562,7 +562,10 @@ export class ConversationProcessor {
     /**
      * Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
      */
-    private getProviderSpecificCount(adapter: ProviderAdapter, chat: unknown): number {
+    private getProviderSpecificCount(
+        adapter: ProviderAdapter,
+        chat: unknown
+    ): number {
         try {
             const strategy = adapter.getReportNamingStrategy();
             if (strategy && strategy.getProviderSpecificColumn) {
@@ -747,7 +750,10 @@ export class ConversationProcessor {
                 }
             }
         } catch (error: unknown) {
-            this.plugin.logger.error("Error updating note", getErrorMessage(error));
+            this.plugin.logger.error(
+                "Error updating note",
+                getErrorMessage(error)
+            );
         }
     }
 

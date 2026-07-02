@@ -44,7 +44,7 @@ export class DonationDialog extends Modal {
 
         // Emphasis line (gold)
         const emphasisRow = box.createDiv({ cls: "nexus-support-message" });
-        emphasisRow.createEl("p").createEl("span", {
+        emphasisRow.createEl("p").createSpan({
             cls: "nexus-support-message-emphasis",
             text: t("donation_dialog.message_emphasis"),
         });

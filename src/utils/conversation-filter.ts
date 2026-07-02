@@ -87,17 +87,13 @@ export function filterConversationsByIds(
                 return String(firstMsg?.chatId || "");
             }
 
-            if (
-                forcedProvider === "claude" ||
-                (conv?.uuid && conv?.name)
-            ) {
+            if (forcedProvider === "claude" || (conv?.uuid && conv?.name)) {
                 // Claude format: UUID field
                 return String(conv?.uuid || "");
             }
 
             const metadata =
-                conv?.metadata !== null &&
-                typeof conv?.metadata === "object"
+                conv?.metadata !== null && typeof conv?.metadata === "object"
                     ? (conv.metadata as Record<string, unknown>)
                     : null;
             if (metadata?.thread_id && Array.isArray(conv?.conversations)) {
@@ -105,7 +101,7 @@ export function filterConversationsByIds(
             }
 
             if (Array.isArray(conv?.entries)) {
-                const firstEntry = (conv!.entries as unknown[])[0] as
+                const firstEntry = (conv.entries as unknown[])[0] as
                     | Record<string, unknown>
                     | undefined;
                 return String(

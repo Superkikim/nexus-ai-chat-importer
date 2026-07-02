@@ -56,7 +56,7 @@ export class UpgradeProgressModal extends Modal {
         const contentContainer = contentEl.createDiv({ cls: "modal-content" });
 
         // Step counter
-        this.stepEl = contentContainer.createEl("div", { cls: "step-counter" });
+        this.stepEl = contentContainer.createDiv({ cls: "step-counter" });
         this.stepEl.style.cssText = `
             text-align: center;
             margin: 10px 0;
@@ -88,7 +88,7 @@ export class UpgradeProgressModal extends Modal {
         `;
 
         // Current status
-        this.statusEl = contentContainer.createEl("div", {
+        this.statusEl = contentContainer.createDiv({
             cls: "status-text",
         });
         this.statusEl.style.cssText = `
@@ -99,7 +99,7 @@ export class UpgradeProgressModal extends Modal {
         `;
 
         // Detail text
-        this.detailEl = contentContainer.createEl("div", {
+        this.detailEl = contentContainer.createDiv({
             cls: "detail-text",
         });
         this.detailEl.style.cssText = `

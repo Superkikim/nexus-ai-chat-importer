@@ -120,7 +120,7 @@ export class MessageDateFormatSection extends BaseSettingsSection {
         // Add format description
         const config = MESSAGE_TIMESTAMP_FORMATS[format];
         if (config) {
-            container.createEl("div", {
+            container.createDiv({
                 text: config.description,
                 cls: "nexus-format-description",
             });

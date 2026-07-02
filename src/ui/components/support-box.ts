@@ -19,7 +19,7 @@ export function createSupportBox(
 
     // Header
     const header = supportBox.createDiv("nexus-support-header");
-    header.createEl("span", {
+    header.createSpan({
         cls: "nexus-support-header-highlight",
         text: t("support_box.header_highlight"),
     });
@@ -34,7 +34,7 @@ export function createSupportBox(
             const hasStats = /\d{1,3}[',]\d{3}|\$\d+/.test(pText);
             const p = messageEl.createEl("p");
             if (hasStats) {
-                p.createEl("span", {
+                p.createSpan({
                     cls: "nexus-support-message-emphasis",
                     text: pText,
                 });
@@ -44,7 +44,7 @@ export function createSupportBox(
         });
     } else {
         // Default message - emphasize active maintenance and ongoing updates
-        messageEl.createEl("p").createEl("span", {
+        messageEl.createEl("p").createSpan({
             cls: "nexus-support-message-emphasis",
             text: t("support_box.default_message_emphasis"),
         });

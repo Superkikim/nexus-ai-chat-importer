@@ -74,11 +74,11 @@ export class EnhancedFolderMigrationDialog extends Modal {
         const pathContainer = messageContainer.createDiv({
             cls: "nexus-migration-paths",
         });
-        pathContainer.createEl("div", {
+        pathContainer.createDiv({
             text: t("folder_migration.path_from", { path: this.oldPath }),
             cls: "nexus-migration-path-old",
         });
-        pathContainer.createEl("div", {
+        pathContainer.createDiv({
             text: t("folder_migration.path_to", { path: this.newPath }),
             cls: "nexus-migration-path-new",
         });

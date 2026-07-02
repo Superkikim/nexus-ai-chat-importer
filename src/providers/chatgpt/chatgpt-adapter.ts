@@ -324,7 +324,10 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
     /**
      * Set attachment map for multi-ZIP support
      */
-    setAttachmentMap(attachmentMap: AttachmentMap, allZips: ZipArchiveReader[]): void {
+    setAttachmentMap(
+        attachmentMap: AttachmentMap,
+        allZips: ZipArchiveReader[]
+    ): void {
         this.attachmentExtractor.setAttachmentMap(attachmentMap, allZips);
     }
 

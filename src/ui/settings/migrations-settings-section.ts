@@ -242,7 +242,7 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
         const existingMsg = settingEl.querySelector(".operation-result");
         if (existingMsg) existingMsg.remove();
 
-        const resultEl = activeDocument.createElement("div");
+        const resultEl = activeDocument.createDiv();
         resultEl.className = "operation-result";
         resultEl.textContent = message;
         resultEl.style.cssText = `

@@ -104,7 +104,7 @@ export class ConfigureFolderLocationsDialog extends Modal {
         });
 
         // Report Folder Label
-        folderSection.createEl("div", {
+        folderSection.createDiv({
             text: t("configure_folder_dialog.report_folder_label"),
             cls: "nexus-upgrade-folder-label",
         });

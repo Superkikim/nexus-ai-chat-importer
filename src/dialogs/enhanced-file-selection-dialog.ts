@@ -197,18 +197,18 @@ export class EnhancedFileSelectionDialog extends Modal {
         // Drop zone - more compact
         const dropZone = section.createDiv("drop-zone nexus-drop-zone");
 
-        const dropIcon = dropZone.createEl("div", {
+        const dropIcon = dropZone.createDiv({
             cls: "nexus-drop-zone-icon",
         });
         dropIcon.textContent = "📁";
 
-        const dropText = dropZone.createEl("div", {
+        const dropText = dropZone.createDiv({
             cls: "nexus-drop-zone-text",
         });
 
         dropText.textContent = t("file_selection.file_area.drop_text_default");
 
-        const dropSubtext = dropZone.createEl("div", {
+        const dropSubtext = dropZone.createDiv({
             cls: "nexus-drop-zone-subtext",
         });
 
@@ -382,12 +382,12 @@ export class EnhancedFileSelectionDialog extends Modal {
                     cls: "nexus-file-list-item-info",
                 });
 
-                const fileName = fileInfo.createEl("span", {
+                const fileName = fileInfo.createSpan({
                     cls: "nexus-file-list-item-name",
                 });
                 fileName.textContent = file.name;
 
-                const fileSize = fileInfo.createEl("span", {
+                const fileSize = fileInfo.createSpan({
                     cls: "nexus-file-list-item-size",
                 });
                 fileSize.textContent = formatFileSize(file.size);

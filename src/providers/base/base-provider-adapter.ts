@@ -153,7 +153,10 @@ export abstract class BaseProviderAdapter<TChat = unknown>
     /**
      * Get new messages given existing message IDs
      */
-    abstract getNewMessages(chat: TChat, existingMessageIds: string[]): unknown[];
+    abstract getNewMessages(
+        chat: TChat,
+        existingMessageIds: string[]
+    ): unknown[];
 
     /**
      * Get report naming strategy for this provider
