@@ -52,6 +52,8 @@ export interface ChatGPTLibraryEntry {
     fileName: string;
     /** MIME type when present. */
     mimeType?: string;
+    /** Payload size in bytes, when the export reports it. */
+    fileSize?: number;
     /** Library category/artifact type, e.g. "report" for generated documents. */
     artifactType?: string;
     /** Library artifact subtype, when the export provides one. */
@@ -149,6 +151,7 @@ function normalizeLibraryEntry(raw: unknown): ChatGPTLibraryEntry | null {
         fileId,
         fileName,
         mimeType: readString(record, "mime_type"),
+        fileSize: readNumber(record, "file_size_bytes"),
         artifactType: readString(record, "library_artifact_type"),
         artifactSubtype: readString(record, "library_artifact_subtype"),
         category: readString(record, "library_file_category"),
