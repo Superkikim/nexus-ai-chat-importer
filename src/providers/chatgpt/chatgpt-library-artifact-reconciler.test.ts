@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { reconcileChatGPTLibraryArtifacts } from "./chatgpt-library-artifact-reconciler";
 import {
     ChatGPTLibraryEntry,
@@ -6,6 +6,7 @@ import {
 } from "./chatgpt-library-index";
 import { createMissingGeneratedImageAttachment } from "./chatgpt-generated-image";
 import { StandardAttachment, StandardMessage } from "../../types/standard";
+import { ScopedLogger } from "../../logger";
 
 const CONVERSATION = "thread-1";
 const OTHER_CONVERSATION = "thread-2";
@@ -456,14 +457,17 @@ describe("reconcileChatGPTLibraryArtifacts", () => {
                 }),
             ]);
 
-            const { messages: result } = reconcileChatGPTLibraryArtifacts(
-                messages,
-                CONVERSATION,
-                index,
-                allPresent
-            );
+            const { messages: result, stats } =
+                reconcileChatGPTLibraryArtifacts(
+                    messages,
+                    CONVERSATION,
+                    index,
+                    allPresent
+                );
 
             expect(attachmentsOf(result)).toHaveLength(0);
+            // Counted and logged as a mismatch, not silently dropped.
+            expect(stats.noConversationMatch).toBe(1);
         });
 
         it("does not duplicate a user upload already referenced by its message", () => {
@@ -751,5 +755,80 @@ describe("reconcileChatGPTLibraryArtifacts", () => {
         );
 
         expect(result).toBe(messages);
+    });
+
+    describe("observability", () => {
+        it("logs one aggregate debug entry distinguishing exact, chronological, missing-payload, and no-match outcomes", () => {
+            const debug = vi.fn();
+            const log = { debug } as unknown as ScopedLogger;
+
+            const PROMPT = "Generate an image of a brain";
+            const messages = [
+                message("m1", "user", 1000, PROMPT),
+                message("m2", "assistant", 1001, "Here", []),
+            ];
+            const index = buildIndex([
+                // exact: resolves via origination_message_id
+                documentEntry({
+                    fileId: "file_exact",
+                    libraryFileId: "lib_exact",
+                    originationMessageId: "m2",
+                }),
+                // chronological: message omitted, conversation matches
+                imageEntry({
+                    fileId: "file_chrono",
+                    libraryFileId: "lib_chrono",
+                    imageGenerationId: "gen_chrono",
+                    originationMessageId: "missing-msg",
+                }),
+                // missing payload: present in library, absent from archive
+                imageEntry({
+                    fileId: "file_missing_payload",
+                    libraryFileId: "lib_missing_payload",
+                    imageGenerationId: "gen_missing_payload",
+                    originationMessageId: "another-missing-msg",
+                }),
+                // no conversation match: its own thread claim names a
+                // different conversation, even though its message id
+                // collides with one in this conversation (malformed/edge
+                // case export data)
+                imageEntry({
+                    fileId: "file_elsewhere",
+                    libraryFileId: "lib_elsewhere",
+                    imageGenerationId: "gen_elsewhere",
+                    originationThreadId: OTHER_CONVERSATION,
+                    originationMessageId: "m1",
+                }),
+            ]);
+
+            const hasPayload = (fileId: string) =>
+                fileId !== "file_missing_payload";
+
+            reconcileChatGPTLibraryArtifacts(
+                messages,
+                CONVERSATION,
+                index,
+                hasPayload,
+                log
+            );
+
+            expect(debug).toHaveBeenCalledTimes(1);
+            const [message_, details] = debug.mock.calls[0];
+            expect(message_).toContain("reconciled");
+            expect(details).toMatchObject({
+                conversationId: CONVERSATION,
+                attachedToExportedMessage: 1,
+                attachedToSyntheticMessage: 1,
+                missingPayload: 1,
+                noConversationMatch: 1,
+            });
+
+            // Aggregate counters only — no user content, no prompts, no file
+            // names anywhere in the logged payload.
+            const serialized = JSON.stringify(details);
+            expect(serialized).not.toContain(PROMPT);
+            expect(serialized).not.toContain("Brain vs circuit symbol.png");
+            expect(serialized).not.toContain("Sample generated report.docx");
+        });
     });
 });

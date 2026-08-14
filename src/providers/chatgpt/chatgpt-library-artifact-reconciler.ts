@@ -114,13 +114,30 @@ function entryIdentityKeys(entry: ChatGPTLibraryEntry): string[] {
 }
 
 /**
+ * True when an entry's own thread claim, if any, does not rule out this
+ * conversation. An entry with no thread claim at all is only reached here via
+ * a message-id match, so it is treated as belonging to that message's
+ * conversation.
+ */
+function belongsToConversation(
+    entry: ChatGPTLibraryEntry,
+    conversationId: string
+): boolean {
+    return (
+        !entry.originationThreadId ||
+        entry.originationThreadId === conversationId
+    );
+}
+
+/**
  * Candidate entries for this conversation, deduplicated by file id and ordered
  * deterministically (creation time, then file id) so reconciliation of the same
  * export always produces the same result.
  *
- * An entry reached through a message id is accepted only when it does not claim
- * a different conversation, so a library object belonging elsewhere is never
- * injected here.
+ * A candidate reached only through a message-id collision with a DIFFERENT
+ * conversation's entry is included too (rather than silently dropped here) so
+ * the main loop's ownership check can count and log it as "no conversation
+ * match" instead of the export simply looking like it had nothing to say.
  */
 function collectCandidates(
     messages: StandardMessage[],
@@ -137,12 +154,6 @@ function collectCandidates(
         if (!message.id) continue;
         for (const entry of index.byOriginationMessageId.get(message.id) ??
             []) {
-            if (
-                entry.originationThreadId &&
-                entry.originationThreadId !== conversationId
-            ) {
-                continue;
-            }
             if (!byFileId.has(entry.fileId)) byFileId.set(entry.fileId, entry);
         }
     }
@@ -269,16 +280,22 @@ export function reconcileChatGPTLibraryArtifacts(
             continue;
         }
 
+        // An entry whose own thread claim names a different conversation is
+        // never attached here, even if a message id happens to collide —
+        // it falls through every rule below to rule 5.
+        const ownedHere = belongsToConversation(entry, conversationId);
+
         // Rule 2: the exported message that produced it.
-        let host = entry.originationMessageId
-            ? byMessageId.get(entry.originationMessageId)
-            : undefined;
+        let host =
+            ownedHere && entry.originationMessageId
+                ? byMessageId.get(entry.originationMessageId)
+                : undefined;
         let outcome: keyof LibraryReconciliationStats | undefined = host
             ? "attachedToExportedMessage"
             : undefined;
 
         // Rule 3: take over a waiting placeholder (images only).
-        if (!host && kind === "generated_image") {
+        if (!host && ownedHere && kind === "generated_image") {
             host = working.find((item) => item.placeholderIndex !== null);
             if (host) outcome = "replacedPlaceholder";
         }
