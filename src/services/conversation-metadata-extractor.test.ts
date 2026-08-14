@@ -21,6 +21,8 @@ function createTestPlugin() {
         info: () => {},
         warn: () => {},
         error: () => {},
+        // Real Logger exposes scoped child loggers; adapters build them eagerly.
+        child: () => logger,
     };
     return { logger } as any;
 }

@@ -611,32 +611,40 @@ export class ConversationProcessor {
                 const existingMessageIds =
                     this.extractMessageUIDsFromNote(content);
 
-                // For StandardConversation, get new messages directly; otherwise use adapter
-                let newMessages: unknown[];
+                // Convert and reconcile ONCE, up front. Reconciliation must see
+                // the whole conversation (never a filtered subset) so it can
+                // tell "this artifact is already in the note" from "this
+                // artifact needs a host message" — that is what keeps a repeat
+                // import idempotent.
+                let standardConversation: StandardConversation;
                 if (isStandardConversation) {
-                    newMessages = std.messages.filter(
-                        (msg: StandardMessage) =>
-                            !existingMessageIds.includes(msg.id)
-                    );
+                    standardConversation = chat as StandardConversation;
                 } else {
-                    newMessages = adapter.getNewMessages(
-                        chat,
-                        existingMessageIds
-                    );
+                    standardConversation = await adapter.convertChat(chat);
                 }
+
+                if (zip) {
+                    standardConversation.messages =
+                        await this.reconcileMessages(
+                            adapter,
+                            standardConversation.messages,
+                            chatId,
+                            zip
+                        );
+                }
+
+                // New messages are decided on the reconciled conversation, so a
+                // newly available library artifact counts as new content even
+                // when ChatGPT omitted the raw message that carried it.
+                const newMessages = standardConversation.messages.filter(
+                    (msg: StandardMessage) =>
+                        !existingMessageIds.includes(msg.id)
+                );
 
                 let attachmentStats: AttachmentStats | undefined = undefined;
 
                 // REPROCESS LOGIC: If forced update, recreate the entire note with attachment support
                 if (forceUpdate) {
-                    // Get or convert to standard format
-                    let standardConversation: StandardConversation;
-                    if (isStandardConversation) {
-                        standardConversation = chat as StandardConversation;
-                    } else {
-                        standardConversation = await adapter.convertChat(chat);
-                    }
-
                     // Process attachments if ZIP provided
                     if (zip && adapter.processMessageAttachments) {
                         standardConversation.messages =
@@ -672,16 +680,8 @@ export class ConversationProcessor {
                     return;
                 }
 
-                // Unified update logic - use convertChat for consistency
+                // Unified update logic - append only what the note lacks
                 if (newMessages.length > 0) {
-                    // Get or convert to standard conversation
-                    let standardConversation: StandardConversation;
-                    if (isStandardConversation) {
-                        standardConversation = chat as StandardConversation;
-                    } else {
-                        standardConversation = await adapter.convertChat(chat);
-                    }
-
                     // Update frontmatter metadata only when there are new messages.
                     content = this.updateMetadata(
                         content,
@@ -689,21 +689,15 @@ export class ConversationProcessor {
                         standardConversation
                     );
 
-                    // Filter only new messages for formatting.
-                    // Use note message IDs as source of truth because adapter.getNewMessages()
-                    // may return provider-native objects (e.g. Claude uses uuid, not id).
-                    const newStandardMessages =
-                        standardConversation.messages.filter(
-                            (msg: StandardMessage) =>
-                                !existingMessageIds.includes(msg.id)
-                        );
-
-                    // Process attachments on new messages only
-                    let processedNewMessages = newStandardMessages;
+                    // Process attachments on new messages only. Note message IDs
+                    // are the source of truth here, which also covers providers
+                    // whose raw ids differ from the standard ones (e.g. Claude
+                    // uses uuid, not id).
+                    let processedNewMessages = newMessages;
                     if (zip && adapter.processMessageAttachments) {
                         processedNewMessages =
                             await adapter.processMessageAttachments(
-                                newStandardMessages,
+                                newMessages,
                                 chatId,
                                 zip
                             );
@@ -797,6 +791,15 @@ export class ConversationProcessor {
                 missing: 0,
                 failed: 0,
             };
+            if (zip) {
+                standardConversation.messages = await this.reconcileMessages(
+                    adapter,
+                    standardConversation.messages,
+                    chatId,
+                    zip
+                );
+            }
+
             if (zip && adapter.processMessageAttachments) {
                 standardConversation.messages =
                     await adapter.processMessageAttachments(
@@ -904,6 +907,44 @@ export class ConversationProcessor {
                 getErrorMessage(error)
             );
             throw error;
+        }
+    }
+
+    /**
+     * Run the provider's optional reconciliation pass over a whole
+     * conversation, between conversion and attachment extraction.
+     *
+     * Providers that ship content outside the conversation payload (ChatGPT's
+     * library_files.json) use it to attach that content to the message that
+     * produced it. A failure here must never sink the conversation: the import
+     * continues with the unreconciled messages.
+     */
+    private async reconcileMessages(
+        adapter: ProviderAdapter,
+        messages: StandardMessage[],
+        conversationId: string,
+        zip: ZipArchiveReader
+    ): Promise<StandardMessage[]> {
+        if (!adapter.reconcileConversationMessages) {
+            return messages;
+        }
+
+        try {
+            return await adapter.reconcileConversationMessages(
+                messages,
+                conversationId,
+                zip
+            );
+        } catch (error: unknown) {
+            this.plugin.logger.warn(
+                "Conversation reconciliation failed; continuing without it",
+                {
+                    provider: this.currentProvider,
+                    conversationId,
+                    message: getErrorMessage(error),
+                }
+            );
+            return messages;
         }
     }
 
