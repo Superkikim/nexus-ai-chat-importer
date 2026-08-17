@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Nexus AI Chat Importer** is an Obsidian plugin that imports AI chat conversations (ChatGPT, Claude, Mistral Vibe, Perplexity) as beautifully formatted Markdown files with full attachment support, metadata preservation, and intelligent deduplication.
 
-- **Current Version**: 1.6.8
+- **Current Version**: 1.7.0
 - **License**: GPL-3.0-or-later
 - **Author**: Akim Sissaoui (Superkikim)
 - **Minimum Obsidian**: 1.4.0
