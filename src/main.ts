@@ -63,6 +63,10 @@ import {
 import { sortFilesForImport } from "./utils/file-sort";
 import { createZipArchiveReader } from "./utils/zip-loader";
 import { classifyArchiveEntries } from "./utils/zip-content-reader";
+import {
+    expandOpenAiPrivacyPortalArchives,
+    includeOpenAiPrivacyPortalFileArchives,
+} from "./utils/privacy-portal-archive";
 
 interface ImportCheckpoint {
     operation: "import-all" | "selective-analysis" | "selective-import";
@@ -425,6 +429,34 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             zipFiles = [zipFiles[0]];
         }
 
+        const privacyPortalExpansion = await expandOpenAiPrivacyPortalArchives(
+            zipFiles
+        );
+        zipFiles = privacyPortalExpansion.files;
+        if (privacyPortalExpansion.expandedContainerNames.length > 0) {
+            this.logger
+                .child("ImportFlow")
+                .debug("Expanded OpenAI Privacy Portal archive", {
+                    containerNames:
+                        privacyPortalExpansion.expandedContainerNames,
+                    innerArchiveCount: zipFiles.length,
+                });
+        }
+
+        if (isMobile && zipFiles.length > 1) {
+            this.logger
+                .child("ImportFlow")
+                .warn(
+                    "Mobile Privacy Portal import limited to the first conversation archive",
+                    {
+                        expandedArchiveCount: zipFiles.length,
+                        keptFileName: zipFiles[0].name,
+                    }
+                );
+            new Notice(t("notices.import_mobile_single_zip_only"));
+            zipFiles = [zipFiles[0]];
+        }
+
         const sortedZipFiles = sortFilesForImport(zipFiles);
         const lockedProvider = await this.resolveProviderLockFromSelection(
             sortedZipFiles
@@ -618,6 +650,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const filesToImport = files.filter((file) =>
                 conversationsByFile.has(file.name)
             );
+            const attachmentFiles = includeOpenAiPrivacyPortalFileArchives(
+                filesToImport,
+                files
+            );
             this.setImportCheckpoint({
                 operation: "import-all",
                 phase: "file-processing-start",
@@ -630,7 +666,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 filesToImport,
                 conversationsByFile,
-                operationReport
+                operationReport,
+                undefined,
+                attachmentFiles
             );
 
             // Write the consolidated report (always, even if some files failed)
@@ -1083,6 +1121,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const filesToImport = files.filter((file) =>
                 conversationsByFile.has(file.name)
             );
+            const attachmentFiles = includeOpenAiPrivacyPortalFileArchives(
+                filesToImport,
+                files
+            );
             const selectedExistingConversationIds =
                 this.collectSelectedExistingConversationIds(
                     result.selectedIds,
@@ -1102,7 +1144,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 filesToImport,
                 conversationsByFile,
                 operationReport,
-                selectedExistingConversationIds
+                selectedExistingConversationIds,
+                attachmentFiles
             );
 
             // Write the consolidated report (always, even if some files failed)
@@ -1585,13 +1628,21 @@ ${report.generateMobileIndexContent(files, links)}
         filesToImport: File[],
         conversationsByFile: Map<string, string[]>,
         operationReport: ImportReport,
-        selectedExistingConversationIds?: Set<string>
+        selectedExistingConversationIds?: Set<string>,
+        attachmentFiles?: File[]
     ): Promise<void> {
         const importFlowLogger = this.logger.child("ImportFlow");
         const mobileTaskQueueMode = this.isMobileTaskQueueMode();
         const executionFiles = mobileTaskQueueMode
             ? filesToImport.slice(0, 1)
             : filesToImport;
+        const attachmentFilesToScan = mobileTaskQueueMode
+            ? executionFiles
+            : attachmentFiles ?? executionFiles;
+        const shouldBuildMultiZipAttachmentMap =
+            !mobileTaskQueueMode &&
+            provider === "chatgpt" &&
+            attachmentFilesToScan.length > 1;
 
         if (mobileTaskQueueMode && filesToImport.length > 1) {
             importFlowLogger.warn(
@@ -1605,24 +1656,20 @@ ${report.generateMobileIndexContent(files, links)}
             );
         }
 
-        if (
-            !mobileTaskQueueMode &&
-            provider === "chatgpt" &&
-            executionFiles.length > 1
-        ) {
+        if (shouldBuildMultiZipAttachmentMap) {
             this.setImportCheckpoint({
                 operation,
                 phase: "attachment-map-build",
                 provider,
-                task: `0/${executionFiles.length}`,
+                task: `0/${attachmentFilesToScan.length}`,
             });
             importFlowLogger.debug(`Building multi-ZIP attachment map`, {
                 provider,
-                fileCount: executionFiles.length,
+                fileCount: attachmentFilesToScan.length,
                 mode: "desktop-multi-zip",
             });
             await this.importService.buildAttachmentMapForMultiZip(
-                executionFiles,
+                attachmentFilesToScan,
                 provider
             );
         }
@@ -1726,11 +1773,7 @@ ${report.generateMobileIndexContent(files, links)}
             }
         }
 
-        if (
-            !mobileTaskQueueMode &&
-            provider === "chatgpt" &&
-            executionFiles.length > 1
-        ) {
+        if (shouldBuildMultiZipAttachmentMap) {
             this.importService.clearAttachmentMap();
         }
     }
