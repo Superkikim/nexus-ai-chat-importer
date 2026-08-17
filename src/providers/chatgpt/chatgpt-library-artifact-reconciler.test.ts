@@ -665,6 +665,143 @@ describe("reconcileChatGPTLibraryArtifacts", () => {
             expect(attachment.generationPrompt).toBeUndefined();
             expect(attachment.extractedContent).toBeUndefined();
         });
+
+        // Regression: the real 2026-08-03 export's generated image sits in a
+        // conversation whose only user turn is a raw image prompt with no
+        // generation verb ("A minimalist flat vector logo mark, ..."). The
+        // explicit-request regex rejects it, so requiring a verb dropped the
+        // prompt entirely from the note.
+        it("uses an immediately preceding user turn as the prompt even with no generation verb", () => {
+            const createdAt = Date.parse("2026-07-15T12:25:30.000Z");
+            const rawPrompt =
+                "A minimalist flat vector logo mark, pure monochrome black on " +
+                "a plain white background, thick uniform rounded strokes.";
+            const messages = [
+                message(
+                    "m1",
+                    "user",
+                    Math.floor(createdAt / 1000) - 93,
+                    rawPrompt
+                ),
+            ];
+            const index = buildIndex([
+                imageEntry({ originationMessageId: "omitted", createdAt }),
+            ]);
+
+            const { messages: result } = reconcileChatGPTLibraryArtifacts(
+                messages,
+                CONVERSATION,
+                index,
+                allPresent
+            );
+
+            const attachment = attachmentsOf(result)[0];
+            expect(attachment.generationPrompt).toBe(rawPrompt);
+            expect(attachment.extractedContent).toContain(
+                "[!nexus_prompt] **Image prompt**"
+            );
+        });
+
+        it("does not use an adjacent ASSISTANT turn as a prompt", () => {
+            const createdAt = Date.parse("2026-08-01T10:00:00.000Z");
+            const messages = [
+                message(
+                    "m1",
+                    "user",
+                    Math.floor(createdAt / 1000) - 200,
+                    "Some unrelated question"
+                ),
+                message(
+                    "m2",
+                    "assistant",
+                    Math.floor(createdAt / 1000) - 100,
+                    "Here is my answer."
+                ),
+            ];
+            const index = buildIndex([
+                imageEntry({ originationMessageId: "omitted", createdAt }),
+            ]);
+
+            const { messages: result } = reconcileChatGPTLibraryArtifacts(
+                messages,
+                CONVERSATION,
+                index,
+                allPresent
+            );
+
+            const attachment = attachmentsOf(result).find(
+                (a) => a.fileId === "file_img_1"
+            )!;
+            expect(attachment.generationPrompt).toBeUndefined();
+        });
+
+        it("still prefers an explicit request over a nearer non-request user turn", () => {
+            const createdAt = Date.parse("2026-08-01T10:00:00.000Z");
+            const base = Math.floor(createdAt / 1000);
+            const messages = [
+                message("m1", "user", base - 300, "Generate an image of a cat"),
+                message("m2", "assistant", base - 200, "Working on it."),
+                message("m3", "user", base - 100, "thanks"),
+            ];
+            const index = buildIndex([
+                imageEntry({ originationMessageId: "omitted", createdAt }),
+            ]);
+
+            const { messages: result } = reconcileChatGPTLibraryArtifacts(
+                messages,
+                CONVERSATION,
+                index,
+                allPresent
+            );
+
+            const attachment = attachmentsOf(result).find(
+                (a) => a.fileId === "file_img_1"
+            )!;
+            expect(attachment.generationPrompt).toBe(
+                "Generate an image of a cat"
+            );
+        });
+
+        it("does not hand the same adjacent turn to two competing artifacts", () => {
+            const first = Date.parse("2026-08-01T10:00:00.000Z");
+            const second = Date.parse("2026-08-01T11:00:00.000Z");
+            const messages = [
+                message(
+                    "m1",
+                    "user",
+                    Math.floor(first / 1000) - 60,
+                    "A raw image prompt with no verb"
+                ),
+            ];
+            const index = buildIndex([
+                imageEntry({
+                    fileId: "file_a",
+                    libraryFileId: "lib_a",
+                    imageGenerationId: "gen-a",
+                    originationMessageId: "missing-a",
+                    createdAt: first,
+                }),
+                imageEntry({
+                    fileId: "file_b",
+                    libraryFileId: "lib_b",
+                    imageGenerationId: "gen-b",
+                    originationMessageId: "missing-b",
+                    createdAt: second,
+                }),
+            ]);
+
+            const { messages: result } = reconcileChatGPTLibraryArtifacts(
+                messages,
+                CONVERSATION,
+                index,
+                allPresent
+            );
+
+            const prompts = attachmentsOf(result)
+                .map((a) => a.generationPrompt)
+                .filter(Boolean);
+            expect(prompts).toHaveLength(1);
+        });
     });
 
     describe("idempotency", () => {

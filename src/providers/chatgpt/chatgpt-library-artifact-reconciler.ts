@@ -428,24 +428,62 @@ function createSyntheticHost(
 }
 
 /**
- * Nearest preceding user message that asks for an image, when the choice is
- * unambiguous. A request already claimed by another artifact is not reused —
- * an artifact with no safe prompt simply gets none.
+ * The user turn that produced this image, when the choice is unambiguous.
+ *
+ * Two signals, in order:
+ *   1. The nearest preceding user message that explicitly asks for an image
+ *      ("generate an image of ..."). Strongest signal, used whenever present.
+ *   2. Otherwise, the message immediately preceding the artifact, if it is a
+ *      user turn. Raw image prompts routinely carry no generation verb at all
+ *      ("A minimalist flat vector logo mark, pure monochrome black on ..."),
+ *      so requiring one would drop the very prompt the note exists to
+ *      preserve. Adjacency is the non-ambiguity condition: nothing stands
+ *      between that turn and the generated file.
+ *
+ * A request already claimed by another artifact is never reused — a competing
+ * artifact gets no prompt rather than a wrong one.
  */
 function takeNearestPrompt(
     working: WorkingMessage[],
     artifactTimestamp: number,
     consumedPromptIds: Set<string>
 ): string | undefined {
-    for (let i = working.length - 1; i >= 0; i--) {
-        const message = working[i].message;
-        if (message.role !== "user") continue;
-        if (message.timestamp > artifactTimestamp) continue;
-        if (!isImageGenerationRequest(message.content)) continue;
+    let request: StandardMessage | undefined; // nearest explicit image request
+    let preceding: StandardMessage | undefined; // nearest turn, any role
 
-        if (consumedPromptIds.has(message.id)) return undefined;
-        consumedPromptIds.add(message.id);
-        return message.content.trim();
+    // Scan by timestamp rather than array position so the result does not
+    // depend on the caller having pre-sorted the messages.
+    for (const item of working) {
+        const message = item.message;
+        if (message.timestamp > artifactTimestamp) continue;
+
+        if (!preceding || message.timestamp >= preceding.timestamp) {
+            preceding = message;
+        }
+        if (
+            message.role === "user" &&
+            isImageGenerationRequest(message.content) &&
+            (!request || message.timestamp >= request.timestamp)
+        ) {
+            request = message;
+        }
     }
+
+    if (request) {
+        if (consumedPromptIds.has(request.id)) return undefined;
+        consumedPromptIds.add(request.id);
+        return request.content.trim();
+    }
+
+    if (
+        preceding &&
+        preceding.role === "user" &&
+        preceding.content.trim() &&
+        !consumedPromptIds.has(preceding.id)
+    ) {
+        consumedPromptIds.add(preceding.id);
+        return preceding.content.trim();
+    }
+
     return undefined;
 }
