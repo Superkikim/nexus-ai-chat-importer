@@ -175,7 +175,7 @@ export function generateFileName(title: string): string {
 
     // CRITICAL: Remove special characters from the beginning
     // This fixes issues like ".htaccess" becoming an invisible file
-    fileName = fileName.replace(/^[^\w\d\s]+/, ""); // Remove non-alphanumeric at start
+    fileName = fileName.replace(/^[^\p{L}\p{N}\s]+/u, ""); // Remove non-letter/number characters at start
 
     // Clean up any remaining problematic patterns
     fileName = fileName
